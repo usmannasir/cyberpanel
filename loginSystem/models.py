@@ -88,7 +88,7 @@ class Administrator(models.Model):
    securityLevel = models.IntegerField(default=0)
 
    initWebsitesLimit = models.IntegerField(default=0)
-   acl = models.ForeignKey(ACL, default=1)
+   acl = models.ForeignKey(ACL, default=1, on_delete=models.PROTECT)
 
 
 

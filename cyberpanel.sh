@@ -406,8 +406,8 @@ if [[ $DEV == "ON" ]] ; then
     fi
     if [[ $CENTOS_8 == "True" ]] ; then
       dnf install python3 -y
-      pip3.6 install virtualenv
     fi
+    pip3.6 install virtualenv
 	fi
 fi
 

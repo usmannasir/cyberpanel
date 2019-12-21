@@ -8,7 +8,7 @@ from loginSystem.models import Administrator
 class Containers(models.Model):
     name = models.CharField(max_length=50,unique=True)
     cid = models.CharField(max_length=64, default='')
-    admin = models.ForeignKey(Administrator)
+    admin = models.ForeignKey(Administrator, on_delete=models.CASCADE)
     image = models.CharField(max_length=50, default='unknown')
     tag = models.CharField(max_length=50, default='unknown')
     memory = models.IntegerField(default=0)

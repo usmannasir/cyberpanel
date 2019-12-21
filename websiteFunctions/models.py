@@ -39,7 +39,7 @@ class dest(models.Model):
 
 
 class backupSchedules(models.Model):
-    dest = models.ForeignKey(dest)
+    dest = models.ForeignKey(dest, on_delete=models.CASCADE)
     frequency = models.CharField(max_length=15)
 
 
