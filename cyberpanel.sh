@@ -972,7 +972,6 @@ if [[ $DEV == "ON" ]] ; then
   source /usr/local/CyberPanel/bin/activate
   wget -O requirements.txt https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
   pip install --ignore-installed -r requirements.txt
-  systemctl restart lscpd
 	cd -
 fi
 

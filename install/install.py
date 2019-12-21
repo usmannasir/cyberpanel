@@ -1425,7 +1425,7 @@ imap_folder_list_limit = 0
 
             try:
                 os.remove("/usr/local/lscp/fcgi-bin/lsphp")
-                shutil.copy("/usr/local/lsws/lsphp70/bin/lsphp", "/usr/local/lscp/fcgi-bin/lsphp")
+                shutil.copy("/usr/local/lsws/lsphp71/bin/lsphp", "/usr/local/lscp/fcgi-bin/lsphp")
             except:
                 pass
 
