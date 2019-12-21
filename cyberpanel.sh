@@ -971,7 +971,7 @@ if [[ $DEV == "ON" ]] ; then
 	virtualenv -p /usr/bin/python3 CyberPanel
   source /usr/local/CyberPanel/bin/activate
   wget -O requirements.txt https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
-  pip install --ignore-installed -r requirements.txt
+  pip3.6 install --ignore-installed -r requirements.txt
 	cd -
 fi
 
@@ -1028,7 +1028,7 @@ if [[ $DEV == "ON" ]] ; then
 virtualenv -p /usr/bin/python3 /usr/local/CyberCP
 source /usr/local/CyberCP/bin/activate
 wget -O requirements.txt https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
-pip install --ignore-installed -r requirements.txt
+pip3.6 install --ignore-installed -r requirements.txt
 systemctl restart lscpd
 fi
 
