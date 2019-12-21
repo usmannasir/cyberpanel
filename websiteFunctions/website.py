@@ -758,7 +758,7 @@ class WebsiteManager:
                 diff = finalDate - now
                 Data['viewSSL'] = 1
                 Data['days'] = str(diff.days)
-                Data['authority'] = x509.get_issuer().get_components()[1][1]
+                Data['authority'] = x509.get_issuer().get_components()[1][1].decode('utf-8')
 
                 if Data['authority'] == 'Denial':
                     Data['authority'] = '%s has SELF-SIGNED SSL.' % (self.domain)
@@ -866,7 +866,7 @@ class WebsiteManager:
                 diff = finalDate - now
                 Data['viewSSL'] = 1
                 Data['days'] = str(diff.days)
-                Data['authority'] = x509.get_issuer().get_components()[1][1]
+                Data['authority'] = x509.get_issuer().get_components()[1][1].decode('utf-8')
 
                 if Data['authority'] == 'Denial':
                     Data['authority'] = '%s has SELF-SIGNED SSL.' % (self.childDomain)

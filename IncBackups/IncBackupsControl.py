@@ -137,7 +137,7 @@ class IncJobs(multi.Thread):
                 snapShotid = result.split(' ')[-2]
                 if bType == 'database':
                     newSnapshot = JobSnapshots(job=self.jobid,
-                                               type='%s:%s' % (bType, backupPath.split('/')[-1].strip('.sql')),
+                                               type='%s:%s' % (bType, backupPath.split('/')[-1].rstrip('.sql')),
                                                snapshotid=snapShotid,
                                                destination=self.backupDestinations)
                 else:
@@ -177,7 +177,7 @@ class IncJobs(multi.Thread):
 
             if type == 'database':
                 newSnapshot = JobSnapshots(job=self.jobid,
-                                           type='%s:%s' % (type, backupPath.split('/')[-1].strip('.sql')),
+                                           type='%s:%s' % (type, backupPath.split('/')[-1].rstrip('.sql')),
                                            snapshotid=snapShotid,
                                            destination=self.backupDestinations)
             else:
@@ -202,7 +202,7 @@ class IncJobs(multi.Thread):
 
             if type == 'database':
                 newSnapshot = JobSnapshots(job=self.jobid,
-                                           type='%s:%s' % (type, backupPath.split('/')[-1].strip('.sql')),
+                                           type='%s:%s' % (type, backupPath.split('/')[-1].rstrip('.sql')),
                                            snapshotid=snapShotid,
                                            destination=self.backupDestinations)
             else:
@@ -267,7 +267,7 @@ class IncJobs(multi.Thread):
 
                 if mysqlUtilities.mysqlUtilities.restoreDatabaseBackup(self.jobid.type.split(':')[1].rstrip('.sql'),
                                                                        '/home/cyberpanel', 'dummy', 'dummy') == 0:
-                    raise BaseException
+                    raise BaseException('Can not restore database backup.')
 
             try:
                 if self.reconstruct == 'remote':
@@ -318,7 +318,7 @@ class IncJobs(multi.Thread):
                     self.awsFunction('restore', '', self.jobid.snapshotid)
 
             metaPathNew = '/home/%s/meta.xml' % (self.website)
-            execPath = "nice -n 10 /usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/IncBackups/restoreMeta.py"
+            execPath = "nice -n 10 /usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/restoreMeta.py"
             execPath = execPath + " submitRestore --metaPath %s --statusFile %s" % (metaPathNew, self.statusPath)
             result = ProcessUtilities.outputExecutioner(execPath)
             logging.statusWriter(self.statusPath, result, 1)
@@ -559,7 +559,7 @@ class IncJobs(multi.Thread):
 
             xmlpretty = prettify(metaFileXML).encode('ascii', 'ignore')
             metaFile = open(metaPath, 'w')
-            metaFile.write(xmlpretty)
+            metaFile.write(xmlpretty.decode('utf-8'))
             metaFile.close()
             os.chmod(metaPath, 0o640)
 

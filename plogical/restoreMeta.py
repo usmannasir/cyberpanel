@@ -1,15 +1,11 @@
 #!/usr/local/CyberCP/bin/python
-import os
 import os.path
 import sys
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
-
 import django
-try:
-    django.setup()
-except:
-    pass
+django.setup()
+
 from websiteFunctions.models import Websites
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from xml.etree import ElementTree
