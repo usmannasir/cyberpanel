@@ -1690,6 +1690,9 @@ CSRF_COOKIE_SECURE = True
             command = 'chmod +x /usr/local/CyberCP/plogical/renew.py'
             Upgrade.executioner(command, command, 0)
 
+            command = 'chmod +x /usr/local/CyberCP/CLManager/CLPackages.py'
+            Upgrade.executioner(command, command, 0)
+
             Upgrade.stdOut("Permissions updated.")
 
         except BaseException as msg:
