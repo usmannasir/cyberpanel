@@ -115,6 +115,15 @@ class WebsiteManager:
         except BaseException as msg:
             return HttpResponse(str(msg))
 
+    def listChildDomains(self, request=None, userID=None, data=None):
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+            pagination = self.websitePagination(currentACL, userID)
+
+            return render(request, 'websiteFunctions/listChildDomains.html', {"pagination": pagination})
+        except BaseException as msg:
+            return HttpResponse(str(msg))
+
     def listCron(self, request=None, userID=None, data=None):
         try:
             currentACL = ACLManager.loadedACL(userID)
@@ -355,6 +364,32 @@ class WebsiteManager:
             json_data = json.dumps(dic)
             return HttpResponse(json_data)
 
+    def fetchChildDomainsMain(self, userID=None, data=None):
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+            pageNumber = int(data['page'])
+            recordsToShow = int(data['recordsToShow'])
+
+            endPageNumber, finalPageNumber = self.recordsPointer(pageNumber, recordsToShow)
+            websites = ACLManager.findWebsiteObjects(currentACL, userID)
+            childDomains = []
+
+            for web in websites:
+                for child in web.childdomains_set.all():
+                    childDomains.append(child)
+
+            pagination = self.getPagination(len(childDomains), recordsToShow)
+            json_data = self.findChildsListJson(childDomains[finalPageNumber:endPageNumber])
+
+            final_dic = {'status': 1, 'listWebSiteStatus': 1, 'error_message': "None", "data": json_data,
+                         'pagination': pagination}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+        except BaseException as msg:
+            dic = {'status': 1, 'listWebSiteStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(dic)
+            return HttpResponse(json_data)
+
     def findWebsitesListJson(self, websites):
 
         json_data = "["
@@ -379,6 +414,35 @@ class WebsiteManager:
 
             dic = {'domain': items.domain, 'adminEmail': items.adminEmail, 'ipAddress': ipAddress,
                    'admin': items.admin.userName, 'package': items.package.packageName, 'state': state, 'diskUsed': diskUsed}
+
+            if checker == 0:
+                json_data = json_data + json.dumps(dic)
+                checker = 1
+            else:
+                json_data = json_data + ',' + json.dumps(dic)
+
+        json_data = json_data + ']'
+
+        return json_data
+
+    def findChildsListJson(self, childs):
+
+        json_data = "["
+        checker = 0
+
+        try:
+            ipFile = "/etc/cyberpanel/machineIP"
+            f = open(ipFile)
+            ipData = f.read()
+            ipAddress = ipData.split('\n', 1)[0]
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile("Failed to read machine IP, error:" + str(msg))
+            ipAddress = "192.168.100.1"
+
+        for items in childs:
+
+            dic = {'domain': items.domain, 'masterDomain': items.master.domain, 'adminEmail': items.master.adminEmail, 'ipAddress': ipAddress,
+                   'admin': items.master.admin.userName, 'package': items.master.package.packageName, 'path': items.path}
 
             if checker == 0:
                 json_data = json_data + json.dumps(dic)
