@@ -20,12 +20,14 @@ from plogical.mailUtilities import mailUtilities
 from plogical.processUtilities import ProcessUtilities
 
 
+
 class ApplicationInstaller(multi.Thread):
 
     def __init__(self, installApp, extraArgs):
         multi.Thread.__init__(self)
         self.installApp = installApp
         self.extraArgs = extraArgs
+        self.tempStatusPath = self.extraArgs['tempStatusPath']
 
     def run(self):
         try:
@@ -45,9 +47,90 @@ class ApplicationInstaller(multi.Thread):
                 self.installPrestaShop()
             elif self.installApp == 'magento':
                 self.installMagento()
+            elif self.installApp == 'convertDomainToSite':
+                self.convertDomainToSite()
 
         except BaseException as msg:
             logging.writeToFile(str(msg) + ' [ApplicationInstaller.run]')
+
+    def convertDomainToSite(self):
+        try:
+
+            from websiteFunctions.website import WebsiteManager
+            import json, time
+
+            request = self.extraArgs['request']
+
+            ##
+
+            statusFile = open(self.tempStatusPath, 'w')
+            statusFile.writelines('Deleting domain as child..,20')
+            statusFile.close()
+
+            data = json.loads(request.body)
+
+            domainName = data['domainName']
+
+            childDomain = ChildDomains.objects.get(domain=domainName)
+            path = childDomain.path
+
+            wm = WebsiteManager()
+
+            wm.submitDomainDeletion(request.session['userID'], {'websiteName': domainName})
+            time.sleep(5)
+
+            ##
+
+            statusFile = open(self.tempStatusPath, 'w')
+            statusFile.writelines('Creating domain as website..,40')
+            statusFile.close()
+
+            resp = wm.submitWebsiteCreation(request.session['userID'], data)
+            respData = json.loads(resp.content.decode('utf-8'))
+
+            ##
+
+            while True:
+                respDataStatus = ProcessUtilities.outputExecutioner("cat " + respData['tempStatusPath'])
+
+                if respDataStatus.find('[200]') > -1:
+                    break
+                elif respDataStatus.find('[404]') > -1:
+                    statusFile = open(self.tempStatusPath, 'w')
+                    statusFile.writelines(respDataStatus['currentStatus'] + '  [404]')
+                    statusFile.close()
+                    return 0
+                else:
+                    statusFile = open(self.tempStatusPath, 'w')
+                    statusFile.writelines(respDataStatus)
+                    statusFile.close()
+                    time.sleep(1)
+
+            statusFile = open(self.tempStatusPath, 'w')
+            statusFile.writelines('Moving data..,80')
+            statusFile.close()
+
+
+            command = 'rm -rf  /home/%s/public_html' % (domainName)
+            ProcessUtilities.executioner(command)
+
+            command = 'mv %s /home/%s/public_html' % (path, domainName)
+            ProcessUtilities.executioner(command)
+
+            website = Websites.objects.get(domain=domainName)
+
+            command = 'chown %s:%s /home/%s/public_html' % (website.externalApp, website.externalApp, domainName)
+            ProcessUtilities.executioner(command)
+
+            statusFile = open(self.tempStatusPath, 'w')
+            statusFile.writelines('Successfully converted. [200]')
+            statusFile.close()
+
+        except BaseException as msg:
+            statusFile = open(self.tempStatusPath, 'w')
+            statusFile.writelines(str(msg) + " [404]")
+            statusFile.close()
+            return 0
 
     def installWPCLI(self):
         try:

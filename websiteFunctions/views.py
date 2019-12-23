@@ -189,6 +189,16 @@ def submitDomainDeletion(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+def convertDomainToSite(request):
+    try:
+
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.convertDomainToSite(userID, request)
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
 def submitWebsiteStatus(request):
     try:
 

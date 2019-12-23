@@ -119,8 +119,13 @@ class WebsiteManager:
         try:
             currentACL = ACLManager.loadedACL(userID)
             pagination = self.websitePagination(currentACL, userID)
+            adminNames = ACLManager.loadAllUsers(userID)
+            packagesName = ACLManager.loadPackages(userID, currentACL)
+            phps = PHPManager.findPHPVersions()
 
-            return render(request, 'websiteFunctions/listChildDomains.html', {"pagination": pagination})
+            Data = {'packageList': packagesName, "owernList": adminNames, 'phps': phps}
+
+            return render(request, 'websiteFunctions/listChildDomains.html', Data)
         except BaseException as msg:
             return HttpResponse(str(msg))
 
@@ -2737,5 +2742,24 @@ StrictHostKeyChecking no
 
         except BaseException as msg:
             data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+    def convertDomainToSite(self, userID=None, request=None):
+        try:
+
+            extraArgs = {}
+            extraArgs['request'] = request
+            extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
+            background = ApplicationInstaller('convertDomainToSite', extraArgs)
+            background.start()
+
+            data_ret = {'status': 1, 'createWebSiteStatus': 1, 'tempStatusPath': extraArgs['tempStatusPath']}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'createWebSiteStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)

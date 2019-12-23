@@ -20,6 +20,7 @@ urlpatterns = [
     url(r'^submitWebsiteListing$', views.getFurtherAccounts, name='submitWebsiteListing'),
     url(r'^fetchWebsitesList$', views.fetchWebsitesList, name='fetchWebsitesList'),
     url(r'^fetchChildDomainsMain$', views.fetchChildDomainsMain, name='fetchChildDomainsMain'),
+    url(r'^convertDomainToSite$', views.convertDomainToSite, name='convertDomainToSite'),
     url(r'^searchWebsites$', views.searchWebsites, name='searchWebsites'),
     url(r'^submitWebsiteModification$', views.deleteWebsite, name='submitWebsiteModification'),
     url(r'^submitWebsiteStatus$', views.submitWebsiteStatus, name='submitWebsiteStatus'),
