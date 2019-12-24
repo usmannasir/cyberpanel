@@ -207,7 +207,7 @@ class ProcessUtilities(multi.Thread):
                     logging.writeToFile('Some data could not be decoded to str, error message: %s' % str(msg))
 
             sock.close()
-            #logging.writeToFile('Final data: %s.' % (str(data)))
+            logging.writeToFile('Final data: %s.' % (str(data)))
 
             return data
         except BaseException as msg:

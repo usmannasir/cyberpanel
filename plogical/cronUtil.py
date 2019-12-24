@@ -1,3 +1,5 @@
+import sys
+sys.path.append('/usr/local/CyberCP')
 import argparse
 from plogical.processUtilities import ProcessUtilities
 
