@@ -1470,6 +1470,18 @@ CSRF_COOKIE_SECURE = True
                 else:
                     writeToFile.writelines(items)
 
+            ##
+
+            DATA_UPLOAD_MAX_MEMORY_SIZE = 1
+            for items in data:
+                if items.find('DATA_UPLOAD_MAX_MEMORY_SIZE') > -1:
+                    DATA_UPLOAD_MAX_MEMORY_SIZE = 0
+
+            if DATA_UPLOAD_MAX_MEMORY_SIZE == 1:
+                writeToFile.writelines("DATA_UPLOAD_MAX_MEMORY_SIZE = 52428800'\n")
+
+            ##
+
             MEDIA_URL = 1
             for items in data:
                 if items.find('MEDIA_URL') > -1:
@@ -1478,6 +1490,8 @@ CSRF_COOKIE_SECURE = True
             if MEDIA_URL == 1:
                 writeToFile.writelines("MEDIA_URL = '/home/cyberpanel/media/'\n")
                 writeToFile.writelines('MEDIA_ROOT = MEDIA_URL\n')
+
+            ##
 
             if DATABASE_ROUTERS == 1:
                 writeToFile.writelines("\nDATABASE_ROUTERS = ['backup.backupRouter.backupRouter']\n")
