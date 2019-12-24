@@ -248,7 +248,7 @@ class preFlightsChecks:
         if sys.version_info[0] == 3:
             return 1
         else:
-            preFlightsChecks.stdOut("You are running Unsupported python version, please install python 2.7")
+            preFlightsChecks.stdOut("You are running Unsupported python version, please install python 3.x")
             os._exit(0)
 
     def setup_account_cyberpanel(self):
@@ -263,21 +263,6 @@ class preFlightsChecks:
             ##
 
             if self.distro == ubuntu:
-                # self.stdOut("Fix sudoers")
-                # try:
-                #     fileName = '/etc/sudoers'
-                #     data = open(fileName, 'r').readlines()
-                #
-                #     writeDataToFile = open(fileName, 'w')
-                #     for line in data:
-                #         if line[:5] == '%sudo':
-                #             writeDataToFile.write('%sudo ALL=(ALL:ALL) NOPASSWD: ALL\n')
-                #         else:
-                #             writeDataToFile.write(line)
-                #     writeDataToFile.close()
-                # except IOError as err:
-                #     self.stdOut("Error in fixing sudoers file: " + str(err), 1, 1, os.EX_OSERR)
-
                 self.stdOut("Add Cyberpanel user")
                 command = 'adduser --disabled-login --gecos "" cyberpanel'
                 preFlightsChecks.call(command, self.distro, command,command,1, 1, os.EX_OSERR)
@@ -286,28 +271,6 @@ class preFlightsChecks:
                 command = "useradd -s /bin/false cyberpanel"
                 preFlightsChecks.call(command, self.distro, command,command,1, 1, os.EX_OSERR)
 
-                # ##
-                #
-                # command = "usermod -aG wheel cyberpanel"
-                # preFlightsChecks.call(command, self.distro, '[setup_account_cyberpanel]',
-                #                       'add user cyberpanel',
-                #                       1, 0, os.EX_OSERR)
-
-            ###############################
-
-            # path = "/etc/sudoers"
-            #
-            # data = open(path, 'r').readlines()
-            #
-            # writeToFile = open(path, 'w')
-            #
-            # for items in data:
-            #     if items.find("wheel	ALL=(ALL)	NOPASSWD: ALL") > -1:
-            #         writeToFile.writelines("%wheel	ALL=(ALL)	NOPASSWD: ALL")
-            #     else:
-            #         writeToFile.writelines(items)
-            #
-            # writeToFile.close()
 
             ###############################
 
@@ -2222,13 +2185,7 @@ def main():
 
     checks.checkPythonVersion()
     checks.setup_account_cyberpanel()
-    if distro == centos:
-        checks.yum_update()
     checks.installCyberPanelRepo()
-    if distro == centos:
-        checks.enableEPELRepo()
-    checks.install_pip()
-    checks.install_python_dev()
     #checks.install_gcc()
     if distro == centos:
         checks.install_python_setup_tools()
@@ -2263,7 +2220,6 @@ def main():
 
     checks.install_default_keys()
 
-    checks.test_Requests()
     checks.download_install_CyberPanel(installCyberPanel.InstallCyberPanel.mysqlPassword, mysql)
     checks.downoad_and_install_raindloop()
     checks.download_install_phpmyadmin()
@@ -2308,10 +2264,7 @@ def main():
         preFlightsChecks.stdOut("Pure-FTPD will be installed and enabled.")
         checks.enableDisableFTP('On', distro)
 
-    checks.setUpFirstAccount()
-    # checks.p3(distro)
     logging.InstallLog.writeToFile("CyberPanel installation successfully completed!")
-    #checks.installation_successfull()
 
 
 if __name__ == "__main__":
