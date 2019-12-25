@@ -226,39 +226,7 @@ class virtualHostUtilities:
             CLPath = '/etc/sysconfig/cloudlinux'
 
             if os.path.exists(CLPath):
-                if CLPackages.objects.count() == 0:
-                    package = Package.objects.get(packageName='Default')
-                    clPackage = CLPackages(name='Default', owner=package, speed='100%', vmem='1G', pmem='1G', io='1024',
-                                           iops='1024', ep='20', nproc='50', inodessoft='20', inodeshard='20')
-                    clPackage.save()
-
-                    writeToFile = open(CLPath, 'a')
-                    writeToFile.writelines('CUSTOM_GETPACKAGE_SCRIPT=/usr/local/CyberCP/CLManager/CLPackages.py\n')
-                    writeToFile.close()
-
-                    command = 'chmod +x /usr/local/CyberCP/CLManager/CLPackages.py'
-                    ProcessUtilities.normalExecutioner(command)
-
-                    virtualHostUtilities.EnableCloudLinux()
-                    installUtilities.installUtilities.reStartLiteSpeed()
-
-                    command = 'sudo lvectl package-set %s --speed=%s --pmem=%s --io=%s --nproc=%s --iops=%s --vmem=%s --ep=%s' % (
-                        'Default', '100%', '1G', '1024', '50', '1024', '1G', '20')
-                    ProcessUtilities.normalExecutioner(command)
-
-                    command = 'lvectl apply all'
-                    ProcessUtilities.normalExecutioner(command)
-                else:
-                    try:
-                        clPackage = CLPackages.objects.get(owner=selectedPackage)
-                        command = 'sudo lvectl package-set %s --speed=%s --pmem=%s --io=%s --nproc=%s --iops=%s --vmem=%s --ep=%s' % (
-                            clPackage.name, clPackage.speed, clPackage.pmem, clPackage.io, clPackage.np, clPackage.iops,
-                            clPackage.vmem, clPackage.ep)
-                        ProcessUtilities.normalExecutioner(command)
-                        command = 'sudo lvectl apply all'
-                        ProcessUtilities.normalExecutioner(command)
-                    except:
-                        pass
+                virtualHostUtilities.EnableCloudLinux()
 
             return 1, 'None'
 

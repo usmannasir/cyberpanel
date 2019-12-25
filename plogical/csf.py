@@ -1,4 +1,6 @@
 #!/usr/local/CyberCP/bin/python
+import sys
+sys.path.append('/usr/local/CyberCP')
 from plogical import CyberCPLogFileWriter as logging
 import subprocess
 import shlex
