@@ -448,7 +448,7 @@ class Upgrade:
 
             ####
 
-            command = "virtualenv --system-site-packages /usr/local/CyberCP"
+            command = "virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberCP"
             Upgrade.executioner(command, 'Setting up VirtualEnv [One]', 1)
 
             ##
@@ -463,7 +463,7 @@ class Upgrade:
             command = "pip install --ignore-installed -r /usr/local/CyberCP/requirments.txt"
             Upgrade.executioner(command, 'CyberPanel requirements', 0)
 
-            command = "virtualenv --system-site-packages /usr/local/CyberCP"
+            command = "virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberCP"
             Upgrade.executioner(command, 'Setting up VirtualEnv [Two]', 0)
 
             Upgrade.stdOut('Virtual enviroment for CyberPanel successfully installed.')
@@ -1207,11 +1207,11 @@ class Upgrade:
             cwd = os.getcwd()
             os.chdir('/usr/local/CyberCP')
 
-            command = '/usr/local/CyberPanel/bin/python2 manage.py makemigrations'
+            command = '/usr/local/CyberPanel/bin/python manage.py makemigrations'
             Upgrade.executioner(command, 'python manage.py makemigrations', 0)
 
-            command = '/usr/local/CyberPanel/bin/python2 manage.py makemigrations'
-            Upgrade.executioner(command, '/usr/local/CyberPanel/bin/python2 manage.py migrate', 0)
+            command = '/usr/local/CyberPanel/bin/python manage.py makemigrations'
+            Upgrade.executioner(command, '/usr/local/CyberPanel/bin/python manage.py migrate', 0)
 
             os.chdir(cwd)
 
@@ -1476,6 +1476,7 @@ CSRF_COOKIE_SECURE = True
             for items in data:
                 if items.find('DATA_UPLOAD_MAX_MEMORY_SIZE') > -1:
                     DATA_UPLOAD_MAX_MEMORY_SIZE = 0
+                    writeToFile.writelines("\nDATA_UPLOAD_MAX_MEMORY_SIZE = 52428800\n")
 
             if DATA_UPLOAD_MAX_MEMORY_SIZE == 1:
                 writeToFile.writelines("\nDATA_UPLOAD_MAX_MEMORY_SIZE = 52428800\n")
@@ -1731,6 +1732,13 @@ CSRF_COOKIE_SECURE = True
                       'lsphp73-odbc lsphp73-mysqlnd lsphp73-mcrypt lsphp73-mbstring lsphp73-ldap lsphp73-intl lsphp73-imap ' \
                       'lsphp73-gmp lsphp73-gd lsphp73-enchant lsphp73-dba  lsphp73-common  lsphp73-bcmath'
             Upgrade.executioner(command, 'Install PHP 73, 0')
+
+            command = 'yum install -y lsphp74 lsphp74-json lsphp74-xmlrpc lsphp74-xml lsphp74-tidy lsphp74-soap lsphp74-snmp ' \
+                      'lsphp74-recode lsphp74-pspell lsphp74-process lsphp74-pgsql lsphp74-pear lsphp74-pdo lsphp74-opcache ' \
+                      'lsphp74-odbc lsphp74-mysqlnd lsphp74-mcrypt lsphp74-mbstring lsphp74-ldap lsphp74-intl lsphp74-imap ' \
+                      'lsphp74-gmp lsphp74-gd lsphp74-enchant lsphp74-dba lsphp74-common  lsphp74-bcmath'
+
+            Upgrade.executioner(command, 'Install PHP 74, 0')
         except:
             command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install ' \
                       'lsphp7? lsphp7?-common lsphp7?-curl lsphp7?-dev lsphp7?-imap lsphp7?-intl lsphp7?-json ' \

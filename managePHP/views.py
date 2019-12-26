@@ -1193,6 +1193,34 @@ def installExtensions(request):
 
                 phpExtension.save()
 
+        if PHP.objects.count() == 8:
+
+            newPHP74 = PHP(phpVers="php74")
+            newPHP74.save()
+
+            php74Path = ''
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                php74Path = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'php74.xml')
+            else:
+                php74Path = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'ubuntuphp74.xml')
+
+            php74 = ElementTree.parse(php74Path)
+
+            php74Extensions = php74.findall('extension')
+
+            for extension in php74Extensions:
+                extensionName = extension.find('extensionName').text
+                extensionDescription = extension.find('extensionDescription').text
+                status = int(extension.find('status').text)
+
+                phpExtension = installedPackages(phpVers=newPHP74,
+                                                 extensionName=extensionName,
+                                                 description=extensionDescription,
+                                                 status=status)
+
+                phpExtension.save()
+
         return render(request, 'managePHP/installExtensions.html', {'phps': PHPManager.findPHPVersions()})
     except KeyError:
         return redirect(loadLoginPage)
