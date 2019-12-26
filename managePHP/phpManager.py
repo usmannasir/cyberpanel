@@ -35,6 +35,8 @@ class PHPManager:
             php = "72"
         elif phpVersion == "PHP 7.3":
             php = "73"
+        elif phpVersion == "PHP 7.4":
+            php = "74"
 
         return php
 
