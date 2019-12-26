@@ -20,20 +20,38 @@ class CloudLinuxPackages(CLMain):
     def __init__(self):
         CLMain.__init__(self)
 
-    def listAll(self):
+    def listAll(self, owner=None):
         packages = []
-        for items in Websites.objects.all():
-            itemPackage = items.package
-            try:
-                clPackage = CLPackages.objects.get(owner=itemPackage)
-                packages.append({'name': clPackage.name, 'owner': items.externalApp})
-            except:
-                pass
+
+        if owner == None:
+            for items in Websites.objects.all():
+                itemPackage = items.package
+                try:
+                    clPackage = CLPackages.objects.get(owner=itemPackage)
+                    packages.append({'name': clPackage.name, 'owner': items.externalApp})
+                except:
+                    pass
+        else:
+            for items in Websites.objects.filter(externalApp=owner):
+                itemPackage = items.package
+                try:
+                    clPackage = CLPackages.objects.get(owner=itemPackage)
+                    packages.append({'name': clPackage.name, 'owner': items.externalApp})
+                except:
+                    pass
 
         final = {'data': packages, 'metadata': self.initialMeta}
         print(json.dumps(final))
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='CyberPanel CloudLinux Manager')
+    parser.add_argument('--owner', help='Owner')
+
+    args = parser.parse_args()
+
     pi = CloudLinuxPackages()
-    pi.listAll()
+    try:
+        pi.listAll(args.owner)
+    except:
+        pi.listAll()
