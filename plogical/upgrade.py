@@ -1478,7 +1478,7 @@ CSRF_COOKIE_SECURE = True
                     DATA_UPLOAD_MAX_MEMORY_SIZE = 0
 
             if DATA_UPLOAD_MAX_MEMORY_SIZE == 1:
-                writeToFile.writelines("\nDATA_UPLOAD_MAX_MEMORY_SIZE = 52428800'\n")
+                writeToFile.writelines("\nDATA_UPLOAD_MAX_MEMORY_SIZE = 52428800\n")
 
             ##
 
