@@ -1476,6 +1476,7 @@ CSRF_COOKIE_SECURE = True
             for items in data:
                 if items.find('DATA_UPLOAD_MAX_MEMORY_SIZE') > -1:
                     DATA_UPLOAD_MAX_MEMORY_SIZE = 0
+                    writeToFile.writelines("\nDATA_UPLOAD_MAX_MEMORY_SIZE = 52428800\n")
 
             if DATA_UPLOAD_MAX_MEMORY_SIZE == 1:
                 writeToFile.writelines("\nDATA_UPLOAD_MAX_MEMORY_SIZE = 52428800\n")
