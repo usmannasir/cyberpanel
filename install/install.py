@@ -90,7 +90,7 @@ def get_Ubuntu_release():
 
 class preFlightsChecks:
     cyberPanelMirror = "mirror.cyberpanel.net/pip"
-    cdn = 'cdn.cyberpanel.sh'
+    cdn = 'cyberpanel.sh'
 
     def __init__(self, rootPath, ip, path, cwd, cyberPanelPath, distro):
         self.ipAddr = ip
