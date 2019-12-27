@@ -1,4 +1,5 @@
 import json
+
 class CLMain():
     def __init__(self):
         self.path = '/usr/local/CyberCP/version.txt'
