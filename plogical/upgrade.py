@@ -243,9 +243,9 @@ class Upgrade:
 
             rString = ''.join([random.choice(string.ascii_letters + string.digits) for n in range(32)])
 
-            data = open('phpmyadmin/config.sample.inc.php', 'r').readlines()
+            data = open('/usr/local/CyberCP/public/phpmyadmin/config.sample.inc.php', 'r').readlines()
 
-            writeToFile = open('phpmyadmin/config.inc.php', 'w')
+            writeToFile = open('/usr/local/CyberCP/public/phpmyadmin/config.inc.php', 'w')
 
             for items in data:
                 if items.find('blowfish_secret') > -1:
