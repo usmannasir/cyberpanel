@@ -111,6 +111,7 @@ def get_Ubuntu_release():
 
 class preFlightsChecks:
     cyberPanelMirror = "mirror.cyberpanel.net/pip"
+    cdn = 'cyberpanel.sh'
 
     def __init__(self, rootPath, ip, path, cwd, cyberPanelPath, distro):
         self.ipAddr = ip
@@ -729,11 +730,22 @@ class preFlightsChecks:
             if not os.path.exists("/usr/local/CyberCP/public"):
                 os.mkdir("/usr/local/CyberCP/public")
 
-            os.chdir("/usr/local/CyberCP/public")
-
-            command = 'composer create-project phpmyadmin/phpmyadmin'
+            command = 'wget -O /usr/local/CyberCP/public/phpmyadmin.zip https://%s/misc/phpmyadmin.zip' % (
+                preFlightsChecks.cdn)
             preFlightsChecks.call(command, self.distro, '[download_install_phpmyadmin]',
-                                  'Download PHPMYAdmin', 1, 0, os.EX_OSERR)
+                                  command, 1, 0, os.EX_OSERR)
+
+            command = 'unzip /usr/local/CyberCP/public/phpmyadmin.zip -d /usr/local/CyberCP/public/'
+            preFlightsChecks.call(command, self.distro, '[download_install_phpmyadmin]',
+                                  command, 1, 0, os.EX_OSERR)
+
+            command = 'mv /usr/local/CyberCP/public/phpMyAdmin-5.0.0-all-languages /usr/local/CyberCP/public/phpmyadmin'
+            preFlightsChecks.call(command, self.distro, '[download_install_phpmyadmin]',
+                                  command, 1, 0, os.EX_OSERR)
+
+            command = 'rm -f /usr/local/CyberCP/public/phpmyadmin.zip'
+            preFlightsChecks.call(command, self.distro, '[download_install_phpmyadmin]',
+                                  command, 1, 0, os.EX_OSERR)
 
             ## Write secret phrase
 

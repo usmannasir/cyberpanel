@@ -22,6 +22,7 @@ from mailServer.models import EUsers
 
 class Upgrade:
     logPath = "/usr/local/lscp/logs/upgradeLog"
+    cdn = 'cdn.cyberpanel.sh'
 
     @staticmethod
     def stdOut(message, do_exit=0):
@@ -225,9 +226,17 @@ class Upgrade:
             except:
                 pass
 
-            os.chdir("/usr/local/CyberCP/public")
+            command = 'wget -O /usr/local/CyberCP/public/phpmyadmin.zip https://%s/misc/phpmyadmin.zip' % (
+                Upgrade.cdn)
+            Upgrade.executioner(command, 0)
 
-            command = '/usr/local/lsws/lsphp71/bin/php /usr/bin/composer create-project phpmyadmin/phpmyadmin'
+            command = 'unzip /usr/local/CyberCP/public/phpmyadmin.zip -d /usr/local/CyberCP/public/'
+            Upgrade.executioner(command, 0)
+
+            command = 'mv /usr/local/CyberCP/public/phpMyAdmin-5.0.0-all-languages /usr/local/CyberCP/public/phpmyadmin'
+            Upgrade.executioner(command, 0)
+
+            command = 'rm -f /usr/local/CyberCP/public/phpmyadmin.zip'
             Upgrade.executioner(command, 0)
 
             ## Write secret phrase
