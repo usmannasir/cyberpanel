@@ -679,6 +679,7 @@ class preFlightsChecks:
                 os.mkdir("/usr/local/CyberCP/public")
 
             command = 'wget -O /usr/local/CyberCP/public/phpmyadmin.zip https://%s/misc/phpmyadmin.zip' % (preFlightsChecks.cdn)
+
             preFlightsChecks.call(command, self.distro, '[download_install_phpmyadmin]',
                                   command, 1, 0, os.EX_OSERR)
 
