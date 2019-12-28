@@ -648,6 +648,15 @@ class preFlightsChecks:
         command = 'chmod +x /usr/local/CyberCP/CLManager/CLPackages.py'
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
+        clScripts = ['/usr/local/CyberCP/CLScript/panel_info.py', '/usr/local/CyberCP/CLScript/CloudLinuxPackages.py',
+                     '/usr/local/CyberCP/CLScript/CloudLinuxUsers.py',
+                     '/usr/local/CyberCP/CLScript/CloudLinuxDomains.py'
+            , '/usr/local/CyberCP/CLScript/CloudLinuxResellers.py', '/usr/local/CyberCP/CLScript/CloudLinuxAdmins.py']
+
+        for items in clScripts:
+            command = 'chmod +x %s' % (items)
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
     def install_unzip(self):
         self.stdOut("Install unzip")
         try:
@@ -2123,6 +2132,38 @@ milter_default_action = accept
         except:
             pass
 
+    def installCLScripts(self):
+        try:
+
+            CentOSPath = '/etc/redhat-release'
+
+            if os.path.exists(CentOSPath):
+                command = 'mkdir -p /opt/cpvendor/etc/'
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+                content = """[integration_scripts]
+
+panel_info = /usr/local/CyberCP/CLScript/panel_info.py
+packages = /usr/local/CyberCP/CLScript/CloudLinuxPackages.py
+users = /usr/local/CyberCP/CLScript/CloudLinuxUsers.py
+domains = /usr/local/CyberCP/CLScript/CloudLinuxDomains.py
+resellers = /usr/local/CyberCP/CLScript/CloudLinuxResellers.py
+admins = /usr/local/CyberCP/CLScript/CloudLinuxAdmins.py
+
+
+
+[lvemanager_config]
+run_service = 1
+service_port = 9000
+"""
+
+                writeToFile = open('/opt/cpvendor/etc/integration.ini', 'w')
+                writeToFile.write(content)
+                writeToFile.close()
+
+        except:
+            pass
+
     def installAcme(self):
         command = 'wget -O -  https://get.acme.sh | sh'
         subprocess.call(command, shell=True)
@@ -2276,7 +2317,7 @@ def main():
     else:
         preFlightsChecks.stdOut("Pure-FTPD will be installed and enabled.")
         checks.enableDisableFTP('On', distro)
-
+    checks.installCLScripts()
     logging.InstallLog.writeToFile("CyberPanel installation successfully completed!")
 
 

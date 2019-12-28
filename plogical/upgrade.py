@@ -1723,6 +1723,14 @@ CSRF_COOKIE_SECURE = True
             command = 'chmod +x /usr/local/CyberCP/CLManager/CLPackages.py'
             Upgrade.executioner(command, command, 0)
 
+            clScripts = ['/usr/local/CyberCP/CLScript/panel_info.py', '/usr/local/CyberCP/CLScript/CloudLinuxPackages.py',
+                         '/usr/local/CyberCP/CLScript/CloudLinuxUsers.py', '/usr/local/CyberCP/CLScript/CloudLinuxDomains.py'
+                ,'/usr/local/CyberCP/CLScript/CloudLinuxResellers.py', '/usr/local/CyberCP/CLScript/CloudLinuxAdmins.py']
+
+            for items in clScripts:
+                command = 'chmod +x %s' % (items)
+                Upgrade.executioner(command, 0)
+
             Upgrade.stdOut("Permissions updated.")
 
         except BaseException as msg:
@@ -2048,6 +2056,38 @@ failovermethod=priority
         command = "sed -i 's|<maxSSLConnections>200</maxSSLConnections>|<maxSSLConnections>10000</maxSSLConnections>|g' /usr/local/lsws/conf/httpd_config.xml"
         Upgrade.executioner(command, 0)
 
+    @staticmethod
+    def installCLScripts():
+        try:
+
+            CentOSPath = '/etc/redhat-release'
+
+            if os.path.exists(CentOSPath):
+                command = 'mkdir -p /opt/cpvendor/etc/'
+                Upgrade.executioner(command, 0)
+
+                content = """[integration_scripts]
+
+panel_info = /usr/local/CyberCP/CLScript/panel_info.py
+packages = /usr/local/CyberCP/CLScript/CloudLinuxPackages.py
+users = /usr/local/CyberCP/CLScript/CloudLinuxUsers.py
+domains = /usr/local/CyberCP/CLScript/CloudLinuxDomains.py
+resellers = /usr/local/CyberCP/CLScript/CloudLinuxResellers.py
+admins = /usr/local/CyberCP/CLScript/CloudLinuxAdmins.py
+
+[lvemanager_config]
+run_service = 1
+service_port = 9000
+"""
+
+                if not os.path.exists('/opt/cpvendor/etc/integration.ini'):
+                    writeToFile = open('/opt/cpvendor/etc/integration.ini', 'w')
+                    writeToFile.write(content)
+                    writeToFile.close()
+
+        except:
+            pass
+
 
 
     @staticmethod
@@ -2167,6 +2207,7 @@ failovermethod=priority
         command = 'systemctl start cpssh'
         Upgrade.executioner(command, 'fix csf if there', 0)
         Upgrade.AutoUpgradeAcme()
+        Upgrade.installCLScripts()
 
         Upgrade.stdOut("Upgrade Completed.")
 

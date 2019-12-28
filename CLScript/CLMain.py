@@ -3,9 +3,9 @@ import json
 class CLMain():
     def __init__(self):
         self.path = '/usr/local/CyberCP/version.txt'
-        versionInfo = json.loads(open(self.path, 'r').read())
-        self.version = versionInfo['version']
-        self.build = versionInfo['build']
+        #versionInfo = json.loads(open(self.path, 'r').read())
+        self.version = '1.9'
+        self.build = '2'
 
         ipFile = "/etc/cyberpanel/machineIP"
         f = open(ipFile)
