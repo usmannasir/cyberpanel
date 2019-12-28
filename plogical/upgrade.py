@@ -457,7 +457,7 @@ class Upgrade:
 
             ####
 
-            command = "virtualenv -p /usr/bin/python2 --system-site-packages /usr/local/CyberCP"
+            command = "virtualenv --system-site-packages /usr/local/CyberCP"
             Upgrade.executioner(command, 'Setting up VirtualEnv [One]', 1)
 
             ##
@@ -472,7 +472,7 @@ class Upgrade:
             command = "pip install --ignore-installed -r /usr/local/CyberCP/requirments.txt"
             Upgrade.executioner(command, 'CyberPanel requirements', 0)
 
-            command = "virtualenv -p /usr/bin/python2 --system-site-packages /usr/local/CyberCP"
+            command = "virtualenv --system-site-packages /usr/local/CyberCP"
             Upgrade.executioner(command, 'Setting up VirtualEnv [Two]', 0)
 
             Upgrade.stdOut('Virtual enviroment for CyberPanel successfully installed.')
