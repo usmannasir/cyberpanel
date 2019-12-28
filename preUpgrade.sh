@@ -8,4 +8,4 @@ if [ ! -d "/usr/local/CyberPanel" ]; then
 fi
 rm -rf upgrade.py
 wget https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/plogical/upgrade.py
-/usr/local/CyberPanel/bin/python2 upgrade.py
+/usr/local/CyberPanel/bin/python upgrade.py
