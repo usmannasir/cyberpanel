@@ -2142,11 +2142,25 @@ failovermethod=priority
         Upgrade.upgradeVersion()
         Upgrade.UpdateMaxSSLCons()
 
+        ## Update LSCPD PHP
+
+        phpPath = '/usr/local/lscp/fcgi-bin/lsphp'
+
+        try:
+            os.remove(phpPath)
+        except:
+            pass
+
+        command = 'cp /usr/local/lsws/lsphp73/bin/lsphp %s' % (phpPath)
+        Upgrade.executioner(command, 0)
+
+
         try:
             command = "systemctl start lscpd"
             Upgrade.executioner(command, 'Start LSCPD', 0)
         except:
             pass
+
 
         command = 'csf -uf'
         Upgrade.executioner(command, 'fix csf if there', 0)
