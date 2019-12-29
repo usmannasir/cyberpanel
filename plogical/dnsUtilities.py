@@ -72,17 +72,6 @@ class DNS:
 
                     if zone.type == 'NATIVE':
 
-                        record = Records(domainOwner=zone,
-                                         domain_id=zone.id,
-                                         name=topLevelDomain,
-                                         type="NS",
-                                         content='hostmaster.%s' % (topLevelDomain),
-                                         ttl=3600,
-                                         prio=0,
-                                         disabled=0,
-                                         auth=1)
-                        record.save()
-
                         if os.path.exists(DNS.defaultNameServersPath):
                             defaultNS = open(DNS.defaultNameServersPath, 'r').readlines()
 
