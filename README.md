@@ -12,7 +12,7 @@ Webhosting control panel that uses OpenLiteSpeed as web server.
 * Email Support (Rainloop).
 * FileManager.
 * PHP Managment.
-* Firewall.
+* Firewall (FirewallD & ConfigServer Firewall Intregration).
 * One click Backup and Restore.
 
 # Supported PHPs
@@ -25,6 +25,7 @@ Webhosting control panel that uses OpenLiteSpeed as web server.
 * PHP 7.1
 * PHP 7.2
 * PHP 7.3
+* PHP 7.4
 
 # Installation Instructions
 
