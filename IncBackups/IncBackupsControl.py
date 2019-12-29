@@ -722,7 +722,7 @@ class IncJobs(multi.Thread):
 
             command = 'chmod 600 %s' % (self.passwordFile)
             ProcessUtilities.executioner(command)
-            SUBJECT = "Backup Repository password for %s" % (self.website)
+            SUBJECT = "Backup Repository password for %s" % (self.website.domain)
             text = """Password: %s
 This is password for your incremental backup repository, please save it in safe place as it will be required when you want to restore backup for this site on remote server.
 """ % (password)
