@@ -578,7 +578,7 @@
                 <form>
                     <div class="form-group">
                         <label>{% trans "New Name" %}</label>
-                        <input ng-model="newFileName" type="text" class="form-control">
+                        <input ng-keypress="renameEnter($event)" ng-model="newFileName" type="text" class="form-control">
                         <small class="form-text text-muted">{% trans "Enter new name of file!" %}</small>
                     </div>
                 </form>

@@ -1377,6 +1377,14 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
         $scope.newFileName = "";
     };
 
+    $scope.renameEnter = function ($event) {
+        var keyCode = $event.which || $event.keyCode;
+        if (keyCode === 13) {
+            $scope.htmlEditorLoading = false;
+            $scope.renameFile();
+        }
+    };
+
 
     $scope.renameFile = function () {
 
