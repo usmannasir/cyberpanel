@@ -78,7 +78,7 @@
                         <div class="form-group">
                             <label class="col-sm-3 control-label">{% trans "Alias Domain" %}</label>
                             <div class="col-sm-6">
-                                <input type="text" class="form-control ng-pristine ng-untouched ng-not-empty ng-valid ng-valid-required" ng-model="aliasDomain" required="">
+                                <input ng-keypress="createAliasEnter($event)" type="text" class="form-control ng-pristine ng-untouched ng-not-empty ng-valid ng-valid-required" ng-model="aliasDomain" required="">
                             </div>
                         </div>
 

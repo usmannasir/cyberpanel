@@ -2823,6 +2823,9 @@ app.controller('manageCronController', function ($scope, $http) {
 
 app.controller('manageAliasController', function ($scope, $http, $timeout, $window) {
 
+    $('form').submit(function (e) {
+        e.preventDefault();
+    });
 
     var masterDomain = "";
 
@@ -2834,6 +2837,14 @@ app.controller('manageAliasController', function ($scope, $http, $timeout, $wind
     $scope.aliasCreated = true;
     $scope.manageAliasLoading = true;
     $scope.operationSuccess = true;
+
+    $scope.createAliasEnter = function ($event) {
+        var keyCode = $event.which || $event.keyCode;
+        if (keyCode === 13) {
+            $scope.manageAliasLoading = false;
+            $scope.addAliasFunc();
+        }
+    };
 
     $scope.showAliasForm = function (domainName) {
 
