@@ -25,6 +25,10 @@ fileManager.config(['$interpolateProvider', function ($interpolateProvider) {
 
 fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader, $window) {
 
+    $('form').submit(function(e){
+    e.preventDefault();
+});
+
     $(document.body).click(function () {
         rightClickNode.style.display = "none";
     });
@@ -920,6 +924,15 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
         $scope.newFileName = "";
         $('#showCreateFile').modal('show');
     };
+
+    $scope.createFileEnter = function($event){
+    var keyCode = $event.which || $event.keyCode;
+    if (keyCode === 13) {
+        $scope.htmlEditorLoading = false;
+        $scope.createNewFile();
+    }
+
+  };
 
     $scope.createNewFile = function () {
 
