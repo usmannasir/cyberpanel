@@ -36,7 +36,7 @@
                         <div ng-hide="installationDetailsForm" class="form-group">
                             <label class="col-sm-3 control-label">{% trans "Domain" %}</label>
                             <div class="col-sm-6">
-                                <input type="text" class="form-control" ng-model="domain" required>
+                                <input ng-keypress="cloneEnter($event)" type="text" class="form-control" ng-model="domain" required>
                             </div>
                         </div>
 
