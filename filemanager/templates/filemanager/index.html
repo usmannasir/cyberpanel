@@ -328,7 +328,7 @@
                 <form action="/">
                     <div class="form-group">
                         <label>{% trans "New Folder Name" %}</label>
-                        <input ng-model="newFolderName" type="text" class="form-control" >
+                        <input ng-keypress="createFolderEnter($event)" ng-model="newFolderName" type="text" class="form-control" >
                         <small class="form-text text-muted">{% trans "Folder will be created in your current directory" %}</small>
                     </div>
                     <button type="button" ng-click="createNewFolder()" class="btn btn-primary">{% trans "Create Folder" %}</button>
@@ -372,7 +372,7 @@
                 <form action="/">
                     <div class="form-group">
                         <label>{% trans "New File Name" %}</label>
-                        <input ng-model="newFileName" type="text" class="form-control" >
+                        <input ng-keypress="createFileEnter($event)" ng-model="newFileName" type="text" class="form-control" >
                         <small class="form-text text-muted">{% trans "File will be created in your current directory, if it already exists it will not overwirte." %}</small>
                     </div>
                     <button type="button" ng-click="createNewFile()" class="btn btn-primary">{% trans "Create File" %}</button>
@@ -578,7 +578,7 @@
                 <form>
                     <div class="form-group">
                         <label>{% trans "New Name" %}</label>
-                        <input ng-model="newFileName" type="text" class="form-control">
+                        <input ng-keypress="renameEnter($event)" ng-model="newFileName" type="text" class="form-control">
                         <small class="form-text text-muted">{% trans "Enter new name of file!" %}</small>
                     </div>
                 </form>

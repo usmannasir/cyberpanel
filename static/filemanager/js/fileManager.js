@@ -25,6 +25,10 @@ fileManager.config(['$interpolateProvider', function ($interpolateProvider) {
 
 fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader, $window) {
 
+    $('form').submit(function (e) {
+        e.preventDefault();
+    });
+
     $(document.body).click(function () {
         rightClickNode.style.display = "none";
     });
@@ -861,6 +865,14 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
         $('#showCreateFolder').modal('show');
     };
 
+    $scope.createFolderEnter = function ($event) {
+        var keyCode = $event.which || $event.keyCode;
+        if (keyCode === 13) {
+            $scope.htmlEditorLoading = false;
+            $scope.createNewFolder();
+        }
+    };
+
     $scope.createNewFolder = function () {
 
         $scope.errorMessageFolder = true;
@@ -919,6 +931,15 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
         $scope.errorMessageFile = true;
         $scope.newFileName = "";
         $('#showCreateFile').modal('show');
+    };
+
+    $scope.createFileEnter = function ($event) {
+        var keyCode = $event.which || $event.keyCode;
+        if (keyCode === 13) {
+            $scope.htmlEditorLoading = false;
+            $scope.createNewFile();
+        }
+
     };
 
     $scope.createNewFile = function () {
@@ -1354,6 +1375,14 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
         $('#showRename').modal('show');
         $scope.fileToRename = allFilesAndFolders[0];
         $scope.newFileName = "";
+    };
+
+    $scope.renameEnter = function ($event) {
+        var keyCode = $event.which || $event.keyCode;
+        if (keyCode === 13) {
+            $scope.htmlEditorLoading = false;
+            $scope.renameFile();
+        }
     };
 
 
