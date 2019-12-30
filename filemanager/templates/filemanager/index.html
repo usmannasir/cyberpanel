@@ -328,7 +328,7 @@
                 <form action="/">
                     <div class="form-group">
                         <label>{% trans "New Folder Name" %}</label>
-                        <input ng-model="newFolderName" type="text" class="form-control" >
+                        <input ng-keypress="createFolderEnter($event)" ng-model="newFolderName" type="text" class="form-control" >
                         <small class="form-text text-muted">{% trans "Folder will be created in your current directory" %}</small>
                     </div>
                     <button type="button" ng-click="createNewFolder()" class="btn btn-primary">{% trans "Create Folder" %}</button>
