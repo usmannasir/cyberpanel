@@ -1725,7 +1725,8 @@ CSRF_COOKIE_SECURE = True
 
             clScripts = ['/usr/local/CyberCP/CLScript/panel_info.py', '/usr/local/CyberCP/CLScript/CloudLinuxPackages.py',
                          '/usr/local/CyberCP/CLScript/CloudLinuxUsers.py', '/usr/local/CyberCP/CLScript/CloudLinuxDomains.py'
-                ,'/usr/local/CyberCP/CLScript/CloudLinuxResellers.py', '/usr/local/CyberCP/CLScript/CloudLinuxAdmins.py']
+                ,'/usr/local/CyberCP/CLScript/CloudLinuxResellers.py', '/usr/local/CyberCP/CLScript/CloudLinuxAdmins.py',
+                         '/usr/local/CyberCP/CLScript/CloudLinuxDB.py', '/usr/local/CyberCP/CLScript/UserInfo.py']
 
             for items in clScripts:
                 command = 'chmod +x %s' % (items)
@@ -2074,8 +2075,11 @@ users = /usr/local/CyberCP/CLScript/CloudLinuxUsers.py
 domains = /usr/local/CyberCP/CLScript/CloudLinuxDomains.py
 resellers = /usr/local/CyberCP/CLScript/CloudLinuxResellers.py
 admins = /usr/local/CyberCP/CLScript/CloudLinuxAdmins.py
+db_info = /usr/local/CyberCP/CLScript/CloudLinuxDB.py
 
 [lvemanager_config]
+ui_user_info = /usr/local/CyberCP/CLScript/UserInfo.py
+base_path = /usr/local/lvemanager
 run_service = 1
 service_port = 9000
 """

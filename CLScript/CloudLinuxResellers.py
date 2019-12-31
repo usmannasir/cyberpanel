@@ -11,7 +11,6 @@ except:
     pass
 from loginSystem.models import Administrator, ACL
 import argparse
-import pwd
 import json
 from CLScript.CLMain import CLMain
 

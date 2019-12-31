@@ -216,17 +216,20 @@ class virtualHostUtilities:
                 if dkimCheck == 1:
                     DNS.createDKIMRecords(virtualHostName)
 
-            cageFSPath = '/home/cyberpanel/cagefs'
+            # cageFSPath = '/home/cyberpanel/cagefs'
+            #
+            # if os.path.exists(cageFSPath):
+            #     command = '/usr/sbin/cagefsctl --enable %s' % (virtualHostUser)
+            #     ProcessUtilities.normalExecutioner(command)
 
-            if os.path.exists(cageFSPath):
-                command = '/usr/sbin/cagefsctl --enable %s' % (virtualHostUser)
-                ProcessUtilities.normalExecutioner(command)
-            logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Website successfully created. [200]')
 
             CLPath = '/etc/sysconfig/cloudlinux'
 
             if os.path.exists(CLPath):
-                virtualHostUtilities.EnableCloudLinux()
+                command = '/usr/share/cloudlinux/hooks/post_modify_user.py create --username %s --owner %s' % (virtualHostUser, virtualHostUser)
+                ProcessUtilities.executioner(command)
+
+            logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Website successfully created. [200]')
 
             return 1, 'None'
 

@@ -8,12 +8,11 @@ try:
     django.setup()
 except:
     pass
-from websiteFunctions.models import Websites
-from CLManager.CLPackages import CLPackages
+from packages.models import Package
 import argparse
-import pwd
 import json
 from CLScript.CLMain import CLMain
+from loginSystem.models import Administrator
 
 
 class CloudLinuxPackages(CLMain):
@@ -24,19 +23,16 @@ class CloudLinuxPackages(CLMain):
         packages = []
 
         if owner == None:
-            for items in Websites.objects.all():
-                itemPackage = items.package
+            for items in Package.objects.all():
                 try:
-                    clPackage = CLPackages.objects.get(owner=itemPackage)
-                    packages.append({'name': clPackage.name, 'owner': items.externalApp})
+                    packages.append({'name': items.packageName, 'owner': items.admin.userName})
                 except:
                     pass
         else:
-            for items in Websites.objects.filter(externalApp=owner):
-                itemPackage = items.package
+            admin = Administrator.objects.get(userName=owner)
+            for items in Package.objects.filter(admin=admin):
                 try:
-                    clPackage = CLPackages.objects.get(owner=itemPackage)
-                    packages.append({'name': clPackage.name, 'owner': items.externalApp})
+                    packages.append({'name': items.packageName, 'owner': items.admin.userName})
                 except:
                     pass
 
