@@ -9,9 +9,7 @@ try:
 except:
     pass
 from websiteFunctions.models import Websites
-from CLManager.CLPackages import CLPackages
 import argparse
-import pwd
 import json
 from CLScript.CLMain import CLMain
 
@@ -27,16 +25,14 @@ class CloudLinuxPackages(CLMain):
             for items in Websites.objects.all():
                 itemPackage = items.package
                 try:
-                    clPackage = CLPackages.objects.get(owner=itemPackage)
-                    packages.append({'name': clPackage.name, 'owner': items.externalApp})
+                    packages.append({'name': itemPackage.packageName, 'owner': items.externalApp})
                 except:
                     pass
         else:
             for items in Websites.objects.filter(externalApp=owner):
                 itemPackage = items.package
                 try:
-                    clPackage = CLPackages.objects.get(owner=itemPackage)
-                    packages.append({'name': clPackage.name, 'owner': items.externalApp})
+                    packages.append({'name': itemPackage.packageName, 'owner': items.externalApp})
                 except:
                     pass
 

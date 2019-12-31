@@ -10,7 +10,6 @@ try:
 except:
     pass
 from websiteFunctions.models import Websites
-from CLManager.CLPackages import CLPackages
 import argparse
 import pwd
 import json
@@ -27,7 +26,10 @@ class CloudLinuxUsers(CLMain):
         self.packageName = packageName
         self.packageOwner = packageOwner
         self.fields = fields
-        self.uid = int(uid)
+        if uid!=None:
+            self.uid = int(uid)
+        else:
+            self.uid = uid
 
         if self.fields == None:
             self.id = 1
@@ -78,8 +80,7 @@ class CloudLinuxUsers(CLMain):
         users = []
         for webs in websites:
             itemPackage = webs.package
-            clPackage = CLPackages.objects.get(owner=itemPackage)
-            package = {'name': clPackage.name, 'owner': webs.externalApp}
+            package = {'name': itemPackage.packageName, 'owner': webs.externalApp}
 
             user = {}
 
@@ -124,7 +125,7 @@ class CloudLinuxUsers(CLMain):
         final = {'data': users, 'metadata': self.initialMeta}
         print(json.dumps(final))
 
-    def listAll(self, owner=None, username = None):
+    def listAll(self):
 
         if self.owner == None:
             websites = Websites.objects.all()

@@ -9,7 +9,7 @@ try:
     django.setup()
 except:
     pass
-from websiteFunctions.models import Websites, ChildDomains
+from websiteFunctions.models import Websites
 import argparse
 import json
 from CLScript.CLMain import CLMain
