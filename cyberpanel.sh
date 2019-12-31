@@ -21,6 +21,33 @@ MEMCACHED="ON"
 REDIS="ON"
 TOTAL_RAM=$(free -m | awk '/Mem\:/ { print $2 }')
 CENTOS_8="False"
+WATCHDOG="OFF"
+
+watchdog_setup() {
+if [[ $WATCHDOG == "ON" ]] ; then
+wget -O /etc/cyberpanel/watchdog.sh https://$DOWNLOAD_SERVER/misc/watchdog.sh
+chmod +x /etc/cyberpanel/watchdog.sh
+ln -s /etc/cyberpanel/watchdog.sh /usr/local/bin/watchdog
+pid=$(ps aux | grep "watchdog lsws"  | grep -v grep | awk '{print $2}')
+	if [[ "$pid" == "" ]] ; then
+		nohup watchdog lsws > /dev/null 2>&1 &
+	fi
+echo -e "Checking MariaDB ..."
+pid=$(ps aux | grep "watchdog mariadb"  | grep -v grep | awk '{print $2}')
+	if [[ "$pid" == "" ]] ; then
+		nohup watchdog mariadb > /dev/null 2>&1 &
+	fi
+
+	if [[ $SERVER_OS == "CentOS" ]] ; then
+	echo "nohup watchdog lsws > /dev/null 2>&1 &
+	nohup watchdog mariadb > /dev/null 2>&1 &" >> /etc/rc.d/rc.local
+	else
+	echo "nohup watchdog lsws > /dev/null 2>&1 &
+	nohup watchdog mariadb > /dev/null 2>&1 &" >> /etc/rc.local
+	fi
+echo -e "\n Setting up WatchDog..."
+fi
+}
 
 webadmin_passwd() {
 if [[ $VERSION == "OLS" ]] ; then
@@ -425,7 +452,7 @@ fi
 
 memcached_installation() {
 if [[ $SERVER_OS == "CentOS" ]] ; then
-	yum install -y lsphp73-memcached lsphp72-memcached lsphp71-memcached lsphp70-memcached lsphp56-pecl-memcached lsphp55-pecl-memcached lsphp54-pecl-memcached
+	yum install -y lsphp74-memcached lsphp73-memcached lsphp72-memcached lsphp71-memcached lsphp70-memcached lsphp56-pecl-memcached lsphp55-pecl-memcached lsphp54-pecl-memcached
 		if [[ $TOTAL_RAM -eq "2048" ]] || [[ $TOTAL_RAM -gt "2048" ]] ; then
 			yum groupinstall "Development Tools" -y
 			yum install autoconf automake zlib-devel openssl-devel expat-devel pcre-devel libmemcached-devel cyrus-sasl* -y
@@ -448,7 +475,7 @@ if [[ $SERVER_OS == "CentOS" ]] ; then
 		fi
 fi
 if [[ $SERVER_OS == "Ubuntu" ]] ; then
-	DEBIAN_FRONTEND=noninteractive apt install -y lsphp73-memcached lsphp72-memcached lsphp71-memcached lsphp70-memcached
+	DEBIAN_FRONTEND=noninteractive apt install -y lsphp74-memcached lsphp73-memcached lsphp72-memcached lsphp71-memcached lsphp70-memcached
 		if [[ $TOTAL_RAM -eq "2048" ]] || [[ $TOTAL_RAM -gt "2048" ]] ; then
 			DEBIAN_FRONTEND=noninteractive apt install build-essential zlib1g-dev libexpat1-dev openssl libssl-dev libsasl2-dev libpcre3-dev git -y
 			wget https://$DOWNLOAD/litespeed/lsmcd.tar.gz
@@ -481,10 +508,10 @@ fi
 
 redis_installation() {
 if [[ $SERVER_OS == "CentOS" ]] ; then
-	yum install -y lsphp73-redis lsphp72-redis lsphp71-redis lsphp70-redis lsphp56-redis lsphp55-redis lsphp54-redis redis
+	yum install -y lsphp74-redis lsphp73-redis lsphp72-redis lsphp71-redis lsphp70-redis lsphp56-redis lsphp55-redis lsphp54-redis redis
 fi
 if [[ $SERVER_OS == "Ubuntu" ]] ; then
-	DEBIAN_FRONTEND=noninteractive apt install -y lsphp73-redis lsphp72-redis lsphp71-redis lsphp70-redis redis
+	DEBIAN_FRONTEND=noninteractive apt install -y lsphp74-redis lsphp73-redis lsphp72-redis lsphp71-redis lsphp70-redis redis
 fi
 
 if ifconfig -a | grep inet6 ; then
@@ -887,6 +914,18 @@ if [[ $TMP_YN =~ ^(no|n|N) ]] ; then
 else
 	REDIS="ON"
 fi
+
+echo -e "\nWould you like to set up a WatchDog \e[31m(beta)\e[39m for Web service and Database service ?"
+echo -e "The watchdog script will be automatically started up after installation and server reboot"
+echo -e "If you want to kill the watchdog , run \e[31mwatchdog kill\e[39m"
+echo -e "Please type Yes or no (with captical \e[31mY\e[39m):"
+printf "%s"
+read TMP_YN
+if [[ $TMP_YN == "Yes" ]] ; then
+	WATCHDOG="ON"
+else
+	WATCHDOG="OFF"
+fi
 }
 
 main_install() {
@@ -1063,9 +1102,9 @@ for version in $(ls /usr/local/lsws | grep lsphp);
 				DEBIAN_FRONTEND=noninteractive apt install libmagickwand-dev pkg-config build-essential -y
 				mkdir /usr/local/lsws/cyberpanel-tmp
 				cd /usr/local/lsws/cyberpanel-tmp
-				wget https://pecl.php.net/get/timezonedb-2019.3.tgz
-				tar xzvf timezonedb-2019.3.tgz
-				cd timezonedb-2019.3
+				wget -O timezonedb.tgz https://pecl.php.net/get/timezonedb
+				tar xzvf timezonedb.tgz
+				cd timezonedb-*
 			fi
 		/usr/local/lsws/${version}/bin/phpize
 		./configure --with-php-config=/usr/local/lsws/${version}/bin/php-config${version2}
@@ -1121,6 +1160,8 @@ else
 fi
 
 webadmin_passwd
+
+watchdog_setup
 
 clear
 echo "###################################################################"
@@ -1190,6 +1231,7 @@ sed -i 's|lsws-5.4.2|lsws-'$LSWS_STABLE_VER'|g' /usr/local/CyberCP/serverStatus/
 sed -i 's|lsws-5.3.5|lsws-'$LSWS_STABLE_VER'|g' /usr/local/CyberCP/serverStatus/serverStatusUtil.py
 
 sed -i 's|NoAnonymous                 no|NoAnonymous                 yes|g' /etc/pure-ftpd/pure-ftpd.conf
+
 
 if [[ $SILENT != "ON" ]] ; then
 printf "%s" "Would you like to restart your server now? [y/N]: "
