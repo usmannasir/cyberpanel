@@ -18,10 +18,15 @@ from CLScript.CLMain import CLMain
 
 class CloudLinuxAdmins(CLMain):
 
-    def __init__(self):
+    def __init__(self, name, isMain):
         CLMain.__init__(self)
+        self.name = name
+        if isMain == 'true':
+            self.isMain = 1
+        else:
+            self.isMain = 0
 
-    def listAll(self, owner=None):
+    def listAll(self):
         users = []
         acl = ACL.objects.get(name='admin')
         for items in Administrator.objects.filter(acl=acl):
@@ -31,6 +36,13 @@ class CloudLinuxAdmins(CLMain):
             else:
                 isMain = False
 
+            if self.isMain:
+                if isMain == False:
+                    continue
+
+            if self.name != None:
+                if self.name != items.userName:
+                    continue
 
             user = {'name': items.userName,
                     "locale_code": "EN_us",
@@ -47,12 +59,13 @@ class CloudLinuxAdmins(CLMain):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='CyberPanel CloudLinux Manager')
-    parser.add_argument('--owner', help='Owner')
+    parser.add_argument('-n','--name', help='Owner')
+    parser.add_argument('-m', '--is-main', help='Owner')
 
-    args = parser.parse_args()
+    args = vars(parser.parse_args())
 
-    pi = CloudLinuxAdmins()
+    pi = CloudLinuxAdmins(args['name'], args['is_main'])
     try:
-        pi.listAll(args.owner)
+        pi.listAll()
     except:
         pi.listAll()

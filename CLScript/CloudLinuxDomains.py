@@ -17,21 +17,31 @@ from CLScript.CLMain import CLMain
 
 class CloudLinuxDomains(CLMain):
 
-    def __init__(self):
+    def __init__(self, name, owner):
         CLMain.__init__(self)
+        self.owner = owner
+        self.name = name
 
-    def listAll(self, owner=None):
+    def listAll(self):
         data = {}
 
-        for webs in Websites.objects.all():
+        if self.owner !=None:
+            websites = Websites.objects.filter(externalApp=self.owner)
+        else:
+            websites = Websites.objects.all()
+
+
+        for webs in websites:
+            if self.name != None:
+                if self.name != webs.domain:
+                    continue
             data[webs.domain] = {"owner": webs.externalApp,
                                  "document_root": "/home/%s/public_html/" % (webs.domain),
                                  "is_main": True}
-
-        for webs in ChildDomains.objects.all():
-            data[webs.domain] = {"owner": webs.master.externalApp,
-                                 "document_root": webs.path,
-                                 "is_main": False}
+            for webs in webs.childdomains_set.all():
+                data[webs.domain] = {"owner": webs.master.externalApp,
+                                     "document_root": webs.path,
+                                     "is_main": False}
 
         final = {'data': data, 'metadata': self.initialMeta}
         print(json.dumps(final))
@@ -39,12 +49,13 @@ class CloudLinuxDomains(CLMain):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='CyberPanel CloudLinux Manager')
-    parser.add_argument('--owner', help='Owner')
+    parser.add_argument('-o', '--owner', help='Owner')
+    parser.add_argument('-n', '--name', help='Owner')
 
     args = parser.parse_args()
 
-    pi = CloudLinuxDomains()
+    pi = CloudLinuxDomains(args.owner, args.name)
     try:
-        pi.listAll(args.owner)
+        pi.listAll()
     except:
         pi.listAll()

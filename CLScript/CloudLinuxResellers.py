@@ -18,14 +18,18 @@ from CLScript.CLMain import CLMain
 
 class CloudLinuxResellers(CLMain):
 
-    def __init__(self):
+    def __init__(self, id, name):
         CLMain.__init__(self)
+        self.id = id
+        self.name = name
 
     def listAll(self, owner=None):
         users = []
         acl = ACL.objects.get(name='reseller')
         for items in Administrator.objects.filter(acl=acl):
-
+            if self.name != None:
+                if self.name != items.userName:
+                    continue
 
             user = {'name': items.userName,
                     "locale_code": "EN_us",
@@ -41,12 +45,13 @@ class CloudLinuxResellers(CLMain):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='CyberPanel CloudLinux Manager')
-    parser.add_argument('--owner', help='Owner')
+    parser.add_argument('--id', help='Owner')
+    parser.add_argument('-n', '--name', help='Owner')
 
     args = parser.parse_args()
 
-    pi = CloudLinuxResellers()
+    pi = CloudLinuxResellers(args.id, args.name)
     try:
-        pi.listAll(args.owner)
+        pi.listAll()
     except:
         pi.listAll()

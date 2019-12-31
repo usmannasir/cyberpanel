@@ -46,7 +46,7 @@ class CloudLinuxPackages(CLMain):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='CyberPanel CloudLinux Manager')
-    parser.add_argument('--owner', help='Owner')
+    parser.add_argument('-o', '--owner', help='Owner')
 
     args = parser.parse_args()
 
