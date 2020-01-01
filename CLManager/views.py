@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-
 from django.shortcuts import redirect, HttpResponse
 from loginSystem.views import loadLoginPage
 from plogical.acl import ACLManager

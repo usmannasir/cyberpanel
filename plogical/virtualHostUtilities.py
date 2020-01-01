@@ -50,37 +50,6 @@ class virtualHostUtilities:
     ols = 2
     lsws = 3
 
-    @staticmethod
-    def EnableCloudLinux():
-        if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
-            confPath = '/usr/local/lsws/conf/httpd_config.conf'
-            data = open(confPath, 'r').readlines()
-
-            writeToFile = open(confPath, 'w')
-
-            for items in data:
-                if items.find('priority') > -1:
-                    writeToFile.writelines(items)
-                    writeToFile.writelines('enableLVE                 2\n')
-                else:
-                    writeToFile.writelines(items)
-
-            writeToFile.close()
-        else:
-            confPath = '/usr/local/lsws/conf/httpd_config.xml'
-            data = open(confPath, 'r').readlines()
-
-            writeToFile = open(confPath, 'w')
-
-            for items in data:
-                if items.find('<enableChroot>') > -1:
-                    writeToFile.writelines(items)
-                    writeToFile.writelines('  <enableLVE>2</enableLVE>\n')
-                else:
-                    writeToFile.writelines(items)
-
-            writeToFile.close()
-
     Server_root = "/usr/local/lsws"
     cyberPanel = "/usr/local/CyberCP"
 

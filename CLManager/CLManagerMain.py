@@ -41,24 +41,30 @@ class CLManagerMain(multi.Thread):
         else:
             return ACLManager.loadError()
 
+        ipFile = "/etc/cyberpanel/machineIP"
+        f = open(ipFile)
+        ipData = f.read()
+        ipAddress = ipData.split('\n', 1)[0]
+
         data = {}
         data['CL'] = 0
-        data['CAGEFS'] = 0
+        data['activatedPath'] = 0
+        data['ipAddress'] = ipAddress
         CLPath = '/etc/sysconfig/cloudlinux'
-        CageFSPath = '/usr/sbin/cagefsctl'
+        activatedPath = '/home/cyberpanel/cloudlinux'
 
         if os.path.exists(CLPath):
             data['CL'] = 1
 
-        if os.path.exists(CageFSPath):
-            data['CAGEFS'] = 1
+        if os.path.exists(activatedPath):
+            data['activatedPath'] = 1
 
         if data['CL']  == 0:
             return render(self.request, 'CLManager/notAvailable.html', data)
-        elif data['CAGEFS']  == 0:
+        elif data['activatedPath']  == 0:
             return render(self.request, 'CLManager/notAvailable.html', data)
         else:
-            return render(self.request, self.templateName, self.data)
+            return render(self.request, 'CLManager/cloudLinux.html', data)
 
     def submitCageFSInstall(self):
         try:
