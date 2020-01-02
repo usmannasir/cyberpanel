@@ -1,8 +1,6 @@
 SERVER_OS='Undefined'
 OUTPUT=$(cat /etc/*release)
 
-
-
 echo -e "\nChecking OS..."
 OUTPUT=$(cat /etc/*release)
 if  echo $OUTPUT | grep -q "CentOS Linux 7" ; then
@@ -53,6 +51,7 @@ if [[ $SERVER_OS == "Ubuntu" ]] ; then
 else
   pip3.6 install virtualenv
 fi
+
 rm -rf /usr/local/CyberPanel
 virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberPanel
 source /usr/local/CyberPanel/bin/activate
@@ -85,6 +84,7 @@ fi
 ##
 
 rm -f wsgi-lsapi-1.4.tgz
+rm -rf wsgi-lsapi-1.4
 wget http://www.litespeedtech.com/packages/lsapi/wsgi-lsapi-1.4.tgz
 tar xf wsgi-lsapi-1.4.tgz
 cd wsgi-lsapi-1.4
