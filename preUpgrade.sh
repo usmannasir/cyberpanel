@@ -2,20 +2,24 @@ SERVER_OS='Undefined'
 OUTPUT=$(cat /etc/*release)
 
 
-yum clean all
-yum update -y
 
 echo -e "\nChecking OS..."
 OUTPUT=$(cat /etc/*release)
 if  echo $OUTPUT | grep -q "CentOS Linux 7" ; then
 	echo -e "\nDetecting CentOS 7.X...\n"
 	SERVER_OS="CentOS7"
+	yum clean all
+  yum update -y
 elif echo $OUTPUT | grep -q "CloudLinux 7" ; then
 	echo -e "\nDetecting CloudLinux 7.X...\n"
 	SERVER_OS="CentOS7"
+	yum clean all
+  yum update -y
 elif  echo $OUTPUT | grep -q "CentOS Linux 8" ; then
 	echo -e "\nDetecting CentOS 8.X...\n"
 	SERVER_OS="CentOS8"
+	yum clean all
+  yum update -y
 elif echo $OUTPUT | grep -q "Ubuntu 18.04" ; then
 	echo -e "\nDetecting Ubuntu 18.04...\n"
 	SERVER_OS="Ubuntu"
@@ -44,14 +48,23 @@ else
 	DEBIAN_FRONTEND=noninteractive apt install -y python3-venv
 fi
 
-pip3.6 install virtualenv
-
+if [[ $SERVER_OS == "Ubuntu" ]] ; then
+  pip3 install virtualenv
+else
+  pip3.6 install virtualenv
+fi
 rm -rf /usr/local/CyberPanel
 virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberPanel
 source /usr/local/CyberPanel/bin/activate
 rm -rf requirments.txt
 wget https://raw.githubusercontent.com/usmannasir/cyberpanel/$1/requirments.txt
-pip install --ignore-installed -r requirments.txt
+
+if [[ $SERVER_OS == "Ubuntu" ]] ; then
+  pip3 install --ignore-installed -r requirments.txt
+else
+  pip3.6 install --ignore-installed -r requirments.txt
+fi
+
 virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberPanel
 rm -rf upgrade.py
 wget https://raw.githubusercontent.com/usmannasir/cyberpanel/$1/plogical/upgrade.py
@@ -62,7 +75,11 @@ wget https://raw.githubusercontent.com/usmannasir/cyberpanel/$1/plogical/upgrade
 virtualenv -p /usr/bin/python3 /usr/local/CyberCP
 source /usr/local/CyberCP/bin/activate
 wget -O requirements.txt https://raw.githubusercontent.com/usmannasir/cyberpanel/$1/requirments.txt
-pip3.6 install --ignore-installed -r requirements.txt
+if [[ $SERVER_OS == "Ubuntu" ]] ; then
+  pip3 install --ignore-installed -r requirments.txt
+else
+  pip3.6 install --ignore-installed -r requirments.txt
+fi
 
 
 ##
