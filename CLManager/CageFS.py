@@ -51,6 +51,8 @@ class CageFS:
 
             writeToFile.close()
 
+        ProcessUtilities.restartLitespeed()
+
     @staticmethod
     def submitCageFSInstall():
         try:
