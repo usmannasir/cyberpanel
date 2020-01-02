@@ -79,5 +79,6 @@ cp lswsgi /usr/local/CyberCP/bin/
 
 systemctl restart lscpd
 
-
-echo "                CyberPanel Upgraded                      "
+echo "###################################################################"
+echo "                CyberPanel Upgraded                                "
+echo "###################################################################"
