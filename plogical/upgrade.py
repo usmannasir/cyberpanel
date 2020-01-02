@@ -123,33 +123,6 @@ class Upgrade:
         except BaseException as msg:
             Upgrade.stdOut(str(msg) + " [mountTemp]", 0)
 
-    @staticmethod
-    def setupPythonWSGI():
-        try:
-
-            cwd = os.getcwd()
-
-            command = "wget http://www.litespeedtech.com/packages/lsapi/wsgi-lsapi-1.4.tgz"
-            Upgrade.executioner(command, 0)
-
-            command = "tar xf wsgi-lsapi-1.4.tgz"
-            Upgrade.executioner(command, 0)
-
-            os.chdir("wsgi-lsapi-1.4")
-
-            command = "/usr/local/CyberPanel/bin/python ./configure.py"
-            Upgrade.executioner(command, 0)
-
-            command = "make"
-            Upgrade.executioner(command, 0)
-
-            command = "cp lswsgi /usr/local/CyberCP/bin/"
-            Upgrade.executioner(command, 0)
-
-            os.chdir(cwd)
-
-        except:
-            return 0
 
     @staticmethod
     def dockerUsers():
@@ -263,6 +236,10 @@ class Upgrade:
 
     @staticmethod
     def setupComposer():
+
+        if os.path.exists('composer.sh'):
+            os.remove('composer.sh')
+
         command = "wget https://cyberpanel.sh/composer.sh"
         Upgrade.executioner(command, 0)
 
@@ -2081,7 +2058,6 @@ service_port = 9000
 
         Upgrade.installPHP73()
         Upgrade.setupCLI()
-        Upgrade.setupPythonWSGI()
         Upgrade.someDirectories()
         Upgrade.installLSCPD()
         Upgrade.GeneralMigrations()

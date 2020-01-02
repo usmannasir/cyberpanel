@@ -63,7 +63,21 @@ virtualenv -p /usr/bin/python3 /usr/local/CyberCP
 source /usr/local/CyberCP/bin/activate
 wget -O requirements.txt https://raw.githubusercontent.com/usmannasir/cyberpanel/$1/requirments.txt
 pip3.6 install --ignore-installed -r requirements.txt
+
+
+##
+
+rm -f wsgi-lsapi-1.4.tgz
+wget http://www.litespeedtech.com/packages/lsapi/wsgi-lsapi-1.4.tgz
+tar xf wsgi-lsapi-1.4.tgz
+cd wsgi-lsapi-1.4
+/usr/local/CyberPanel/bin/python ./configure.py
+make
+cp lswsgi /usr/local/CyberCP/bin/
+
+##
+
 systemctl restart lscpd
 
 
-echo "                CyberPanel Upgraded Installed                      "
+echo "                CyberPanel Upgraded                      "
