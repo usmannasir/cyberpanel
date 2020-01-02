@@ -1493,26 +1493,6 @@ CSRF_COOKIE_SECURE = True
             pass
 
     @staticmethod
-    def installPYDNS():
-        try:
-            command = "pip install pydns"
-            Upgrade.executioner(command, 'Install PyDNS', 1)
-        except OSError as msg:
-            Upgrade.stdOut(str(msg) + " [installPYDNS]")
-            return 0
-
-    @staticmethod
-    def installTLDExtract():
-        try:
-            command = "pip install tldextract"
-            Upgrade.executioner(command, 'Install tldextract', 1)
-            command = "pip install bcrypt"
-            Upgrade.executioner(command, 'Install tldextract', 1)
-        except OSError as msg:
-            Upgrade.stdOut(str(msg) + " [installTLDExtract]")
-            return 0
-
-    @staticmethod
     def installLSCPD():
         try:
 
@@ -2072,14 +2052,11 @@ service_port = 9000
 
         ##
 
-        Upgrade.installPYDNS()
         Upgrade.downloadAndUpgrade(versionNumbring, branch)
         Upgrade.download_install_phpmyadmin()
         Upgrade.downoad_and_install_raindloop()
 
         ##
-
-        Upgrade.installTLDExtract()
 
         ##
 

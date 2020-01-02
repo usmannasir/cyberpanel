@@ -66,4 +66,4 @@ pip3.6 install --ignore-installed -r requirements.txt
 systemctl restart lscpd
 
 
-echo "                CyberPanel Upgraded Installed                      "                                                                   "
+echo "                CyberPanel Upgraded Installed                      "
