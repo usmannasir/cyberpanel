@@ -1,24 +1,19 @@
 import os
 import os.path
 import sys
-import django
 import argparse
-
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
-django.setup()
 import shlex
 import subprocess
 import shutil
 import requests
 import json
 import time
-from baseTemplate.models import version
 import MySQLdb as mysql
 from CyberCP import settings
 import random
 import string
-from mailServer.models import EUsers
 
 
 class Upgrade:
@@ -488,6 +483,12 @@ class Upgrade:
     @staticmethod
     def upgradeVersion():
         try:
+
+            import django
+            os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
+            django.setup()
+            from baseTemplate.models import version
+
             vers = version.objects.get(pk=1)
             getVersion = requests.get('https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/version.txt')
             latest = getVersion.json()
@@ -1794,6 +1795,11 @@ enabled=1"""
 
                 writeToFile.close()
 
+                import django
+                os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
+                django.setup()
+                from mailServer.models import EUsers
+
                 Upgrade.stdOut("Upgrading passwords...")
                 for items in EUsers.objects.all():
                     if items.password.find('CRYPT') > -1:
@@ -1921,6 +1927,12 @@ failovermethod=priority
                 writeToFile.close()
 
                 Upgrade.stdOut("Upgrading passwords...")
+
+                import django
+                os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
+                django.setup()
+                from mailServer.models import EUsers
+
                 for items in EUsers.objects.all():
                     if items.password.find('CRYPT') > -1:
                         continue
@@ -1974,49 +1986,6 @@ failovermethod=priority
             writeToFile.writelines("0 2 * * * root /usr/local/CyberPanel/bin/python /usr/local/CyberCP/plogical/renew.py\n")
             writeToFile.close()
 
-
-    @staticmethod
-    def p3():
-
-        ### Virtual Env 3
-
-        CentOSPath = '/etc/redhat-release'
-
-        if os.path.exists(CentOSPath):
-            command = 'yum -y install python36 -y'
-            Upgrade.executioner(command, 0)
-
-            command = 'virtualenv -p python3 /usr/local/CyberPanel/p3'
-            Upgrade.executioner(command, 0)
-
-            env_path = '/usr/local/CyberPanel/p3'
-            subprocess.call(['virtualenv', env_path])
-            activate_this = os.path.join(env_path, 'bin', 'activate_this.py')
-            exec(compile(open(activate_this, "rb").read(), activate_this, 'exec'), dict(__file__=activate_this))
-
-            command = "pip3 install --ignore-installed -r %s" % ('/usr/local/CyberCP/WebTerminal/requirments.txt')
-            Upgrade.executioner(command, 0)
-
-        else:
-            command = 'apt install -y python3-pip'
-            Upgrade.executioner(command, 0)
-
-            command = 'apt install build-essential libssl-dev libffi-dev python3-dev -y'
-            Upgrade.executioner(command, 0)
-
-            command = 'apt install -y python3-venv'
-            Upgrade.executioner(command, 0)
-
-            command = 'virtualenv -p python3 /usr/local/CyberPanel/p3'
-            Upgrade.executioner(command, 0)
-
-            env_path = '/usr/local/CyberPanel/p3'
-            subprocess.call(['virtualenv', env_path])
-            activate_this = os.path.join(env_path, 'bin', 'activate_this.py')
-            exec(compile(open(activate_this, "rb").read(), activate_this, 'exec'), dict(__file__=activate_this))
-
-            command = "pip3 install --ignore-installed -r %s" % ('/usr/local/CyberCP/WebTerminal/requirments.txt')
-            Upgrade.executioner(command, 0)
 
     @staticmethod
     def UpdateMaxSSLCons():
@@ -2085,7 +2054,6 @@ service_port = 9000
 
         ## Current Version
 
-        Version = version.objects.get(pk=1)
 
         command = "systemctl stop lscpd"
         Upgrade.executioner(command, 'stop lscpd', 0)
@@ -2101,10 +2069,6 @@ service_port = 9000
 
         if os.path.exists('/usr/local/CyberPanel.' + versionNumbring):
             os.remove('/usr/local/CyberPanel.' + versionNumbring)
-
-        if float(Version.currentVersion) < 1.6:
-            Upgrade.stdOut('Upgrades works for version 1.6 onwards.')
-            os._exit(0)
 
         ##
 
