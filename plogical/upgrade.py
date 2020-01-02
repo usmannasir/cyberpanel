@@ -2,6 +2,7 @@ import os
 import os.path
 import sys
 import django
+import argparse
 
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
@@ -141,7 +142,7 @@ class Upgrade:
 
             os.chdir("wsgi-lsapi-1.4")
 
-            command = "python ./configure.py"
+            command = "/usr/local/CyberPanel/bin/python ./configure.py"
             Upgrade.executioner(command, 0)
 
             command = "make"
@@ -437,47 +438,6 @@ class Upgrade:
         except BaseException as msg:
             Upgrade.stdOut(str(msg) + ' [downloadLink]')
             os._exit(0)
-
-    @staticmethod
-    def setupVirtualEnv():
-        try:
-            Upgrade.stdOut('Setting up virtual environment for CyberPanel.')
-            ##
-
-            command = "yum install -y libattr-devel xz-devel gpgme-devel mariadb-devel curl-devel"
-            Upgrade.executioner(command, 'VirtualEnv Pre-reqs', 0)
-
-            command = "yum install -y libattr-devel xz-devel gpgme-devel curl-devel"
-            Upgrade.executioner(command, 'VirtualEnv Pre-reqs', 0)
-
-            ##
-
-            command = "pip install virtualenv"
-            Upgrade.executioner(command, 'VirtualEnv Install', 0)
-
-            ####
-
-            command = "virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberCP"
-            Upgrade.executioner(command, 'Setting up VirtualEnv [One]', 1)
-
-            ##
-
-            env_path = '/usr/local/CyberCP'
-            subprocess.call(['virtualenv', env_path])
-            activate_this = os.path.join(env_path, 'bin', 'activate_this.py')
-            exec(compile(open(activate_this, "rb").read(), activate_this, 'exec'), dict(__file__=activate_this))
-
-            ##
-
-            command = "pip install --ignore-installed -r /usr/local/CyberCP/requirments.txt"
-            Upgrade.executioner(command, 'CyberPanel requirements', 0)
-
-            command = "virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberCP"
-            Upgrade.executioner(command, 'Setting up VirtualEnv [Two]', 0)
-
-            Upgrade.stdOut('Virtual enviroment for CyberPanel successfully installed.')
-        except OSError as msg:
-            Upgrade.stdOut(str(msg) + " [setupVirtualEnv]", 0)
 
     @staticmethod
     def fileManager():
@@ -1328,7 +1288,7 @@ class Upgrade:
             pass
 
     @staticmethod
-    def downloadAndUpgrade(versionNumbring):
+    def downloadAndUpgrade(versionNumbring, branch):
         try:
             ## Download latest version.
 
@@ -1356,6 +1316,15 @@ class Upgrade:
             Upgrade.executioner(command, 'Download CyberPanel', 1)
 
             shutil.move('cyberpanel', 'CyberCP')
+
+            if branch != 'stable':
+                os.chdir('CyberCP')
+                command = 'git checkout %s' % (branch)
+                Upgrade.executioner(command, command, 1)
+                os.chdir('/usr/local')
+
+
+
 
             ## Copy settings file
 
@@ -1990,19 +1959,19 @@ failovermethod=priority
         data = open(cronTab, 'r').read()
 
         if data.find('IncScheduler') == -1:
-            cronJob = '0 12 * * * root /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py Daily\n'
+            cronJob = '0 12 * * * root /usr/local/CyberPanel/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py Daily\n'
 
             writeToFile = open(cronTab, 'a')
             writeToFile.writelines(cronJob)
 
-            cronJob = '0 0 * * 0 root /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py Daily\n'
+            cronJob = '0 0 * * 0 root /usr/local/CyberPanel/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py Daily\n'
             writeToFile.writelines(cronJob)
             writeToFile.close()
 
 
         if data.find('renew.py') == -1:
             writeToFile = open(cronTab, 'a')
-            writeToFile.writelines("0 2 * * * root /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/renew.py\n")
+            writeToFile.writelines("0 2 * * * root /usr/local/CyberPanel/bin/python /usr/local/CyberCP/plogical/renew.py\n")
             writeToFile.close()
 
 
@@ -2095,7 +2064,7 @@ service_port = 9000
 
 
     @staticmethod
-    def upgrade():
+    def upgrade(branch):
 
         # Upgrade.stdOut("Upgrades are currently disabled")
         # return 0
@@ -2140,7 +2109,7 @@ service_port = 9000
         ##
 
         Upgrade.installPYDNS()
-        Upgrade.downloadAndUpgrade(versionNumbring)
+        Upgrade.downloadAndUpgrade(versionNumbring, branch)
         Upgrade.download_install_phpmyadmin()
         Upgrade.downoad_and_install_raindloop()
 
@@ -2159,7 +2128,7 @@ service_port = 9000
 
         ##
 
-        Upgrade.setupVirtualEnv()
+        #Upgrade.setupVirtualEnv()
 
         ##
 
@@ -2217,7 +2186,12 @@ service_port = 9000
 
 
 def main():
-    Upgrade.upgrade()
+    parser = argparse.ArgumentParser(description='CyberPanel Installer')
+    parser.add_argument('branch', help='Install from branch name.')
+
+    args = parser.parse_args()
+
+    Upgrade.upgrade(args.branch)
 
 
 if __name__ == "__main__":
