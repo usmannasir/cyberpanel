@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#CyberPanel installer script for Ubuntu 18.04 and CentOS 7.X
+#CyberPanel installer script for CentOS 7.X, CentOS 8.X, CloudLinux 7.X and Ubuntu 18.04
 
 export LC_CTYPE=en_US.UTF-8
 
@@ -925,7 +925,7 @@ fi
 echo -e "\nWould you like to set up a WatchDog \e[31m(beta)\e[39m for Web service and Database service ?"
 echo -e "The watchdog script will be automatically started up after installation and server reboot"
 echo -e "If you want to kill the watchdog , run \e[31mwatchdog kill\e[39m"
-echo -e "Please type Yes or no (with captical \e[31mY\e[39m):"
+echo -e "Please type Yes or no (with capital \e[31mY\e[39m):"
 printf "%s"
 read TMP_YN
 if [[ $TMP_YN == "Yes" ]] ; then
