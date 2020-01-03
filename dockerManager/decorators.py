@@ -38,7 +38,7 @@ def preDockerRun(function):
         try:
             client = docker.from_env()
             client.ping()
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg))
             if isPost:
                 data_ret = {'status': 0, 'error_message': 'Docker daemon not running or not responsive'}

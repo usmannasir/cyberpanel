@@ -1,4 +1,4 @@
-#!/usr/local/CyberCP/bin/python2
+#!/usr/local/CyberCP/bin/python
 import os.path
 import sys
 import django
@@ -30,7 +30,7 @@ class HAManager(multi.Thread):
                 self.setupNode()
             elif self.function == 'addManager':
                 self.setupNode()
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile( str(msg) + ' [HAManager.run]')
 
     def setupNode(self):
@@ -72,7 +72,7 @@ class HAManager(multi.Thread):
             mesg = 'Node successfully configured. [200]'
             logging.statusWriter(self.data['tempStatusPath'], mesg)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg))
             logging.statusWriter(self.data['tempStatusPath'], str(msg) + '. [404]')
 
@@ -99,14 +99,14 @@ class HAManager(multi.Thread):
             workerToken = ''
 
             command = "sudo docker swarm join-token manager"
-            output = subprocess.check_output(shlex.split(command)).splitlines()
+            output = subprocess.check_output(shlex.split(command)).decode("utf-8").splitlines()
 
             for items in output:
                 if items.find('--token') > -1:
                     managerToken = items.split(' ')[-2]
 
             command = "sudo docker swarm join-token worker"
-            output = subprocess.check_output(shlex.split(command)).splitlines()
+            output = subprocess.check_output(shlex.split(command)).decode("utf-8").splitlines()
 
             for items in output:
                 if items.find('--token') > -1:
@@ -118,7 +118,7 @@ class HAManager(multi.Thread):
 
             return proc.ajax(1, None, data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             proc = httpProc(self.request, None, None)
             return proc.ajax(0, None, str(msg))
 
@@ -142,7 +142,7 @@ class HAManager(multi.Thread):
 
             return proc.ajax(1, None)
 
-        except BaseException, msg:
+        except BaseException as msg:
             proc = httpProc(self.request, None, None)
             return proc.ajax(0, None, str(msg))
 
@@ -163,11 +163,11 @@ class HAManager(multi.Thread):
                     result = subprocess.call(command, shell=True)
                     if result != 0:
                         logging.writeToFile(command +  ' Failed.')
-                except BaseException, msg:
+                except BaseException as msg:
                     logging.writeToFile(command + 'Failed.')
                     return 0
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg))
 
     def setUpDataNode(self):
@@ -194,7 +194,7 @@ class HAManager(multi.Thread):
 
             return proc.ajax(1, None)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg))
             proc = httpProc(self.request, None, None)
             return proc.ajax(0, str(msg))
@@ -227,7 +227,7 @@ class HAManager(multi.Thread):
 
             return proc.ajax(1, None)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg))
             proc = httpProc(self.request, None, None)
             return proc.ajax(0, str(msg))

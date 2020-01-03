@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 from django.shortcuts import render,redirect
 from django.http import HttpResponse
@@ -199,7 +199,7 @@ def upgradeStatus(request):
                     return HttpResponse(final_json)
 
 
-        except BaseException,msg:
+        except BaseException as msg:
             final_dic = {'upgradeStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -217,6 +217,6 @@ def upgradeVersion(request):
         vers.build = latest['build']
         vers.save()
         return HttpResponse("Version upgrade OK.")
-    except BaseException, msg:
+    except BaseException as msg:
         logging.CyberCPLogFileWriter.writeToFile(str(msg))
         return HttpResponse(str(msg))

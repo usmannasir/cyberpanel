@@ -1,4 +1,4 @@
-import CyberCPLogFileWriter as logging
+from plogical import CyberCPLogFileWriter as logging
 import argparse
 from random import randint
 
@@ -16,12 +16,12 @@ class filemanager:
             filemanager.write(fileKey)
             filemanager.close()
 
-            print fileKey
+            print(fileKey)
 
-        except BaseException,msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "  [createTemporaryFile]")
-            print "0," + str(msg)
+            print("0," + str(msg))
 
 
 def main():

@@ -378,6 +378,324 @@ app.controller('listWebsites', function ($scope, $http) {
 
 });
 
+app.controller('listChildDomainsMain', function ($scope, $http, $timeout) {
+
+
+    $scope.currentPage = 1;
+    $scope.recordsToShow = 10;
+
+    $scope.getFurtherWebsitesFromDB = function () {
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        var data = {
+            page: $scope.currentPage,
+            recordsToShow: $scope.recordsToShow
+        };
+
+
+        dataurl = "/websites/fetchChildDomainsMain";
+
+        $http.post(dataurl, data, config).then(ListInitialData, cantLoadInitialData);
+
+
+        function ListInitialData(response) {
+            if (response.data.listWebSiteStatus === 1) {
+
+                $scope.WebSitesList = JSON.parse(response.data.data);
+                $scope.pagination = response.data.pagination;
+                $scope.clients = JSON.parse(response.data.data);
+                $("#listFail").hide();
+            } else {
+                $("#listFail").fadeIn();
+                $scope.errorMessage = response.data.error_message;
+
+            }
+        }
+
+        function cantLoadInitialData(response) {
+        }
+
+
+    };
+    $scope.getFurtherWebsitesFromDB();
+
+    $scope.cyberPanelLoading = true;
+
+    $scope.issueSSL = function (virtualHost) {
+        $scope.cyberPanelLoading = false;
+
+        var url = "/manageSSL/issueSSL";
+
+
+        var data = {
+            virtualHost: virtualHost
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.cyberPanelLoading = true;
+            if (response.data.SSL === 1) {
+                new PNotify({
+                    title: 'Success!',
+                    text: 'SSL successfully issued.',
+                    type: 'success'
+                });
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberPanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+        }
+
+
+    };
+
+    $scope.cyberPanelLoading = true;
+
+    $scope.searchWebsites = function () {
+
+        $scope.cyberPanelLoading = false;
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        var data = {
+            patternAdded: $scope.patternAdded
+        };
+
+        dataurl = "/websites/searchWebsites";
+
+        $http.post(dataurl, data, config).then(ListInitialData, cantLoadInitialData);
+
+
+        function ListInitialData(response) {
+            $scope.cyberPanelLoading = true;
+            if (response.data.listWebSiteStatus === 1) {
+
+                var finalData = JSON.parse(response.data.data);
+                $scope.WebSitesList = finalData;
+                $("#listFail").hide();
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+
+            }
+        }
+
+        function cantLoadInitialData(response) {
+            $scope.cyberPanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Connect disrupted, refresh the page.',
+                type: 'error'
+            });
+        }
+
+
+    };
+
+    $scope.initConvert = function(virtualHost){
+        $scope.domainName = virtualHost;
+    };
+
+    var statusFile;
+
+    $scope.installationProgress = true;
+
+    $scope.convert = function () {
+
+        $scope.cyberPanelLoading = false;
+        $scope.installationDetailsForm = true;
+        $scope.installationProgress = false;
+        $scope.goBackDisable = true;
+
+        $scope.currentStatus = "Starting creation..";
+
+        var ssl, dkimCheck, openBasedir;
+
+        if ($scope.sslCheck === true) {
+            ssl = 1;
+        } else {
+            ssl = 0
+        }
+
+        if ($scope.dkimCheck === true) {
+            dkimCheck = 1;
+        } else {
+            dkimCheck = 0
+        }
+
+        if ($scope.openBasedir === true) {
+            openBasedir = 1;
+        } else {
+            openBasedir = 0
+        }
+
+        url = "/websites/convertDomainToSite";
+
+
+        var data = {
+            package: $scope.packageForWebsite,
+            domainName: $scope.domainName,
+            adminEmail: $scope.adminEmail,
+            phpSelection: $scope.phpSelection,
+            websiteOwner: $scope.websiteOwner,
+            ssl: ssl,
+            dkimCheck: dkimCheck,
+            openBasedir: openBasedir
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+            if (response.data.createWebSiteStatus === 1) {
+                statusFile = response.data.tempStatusPath;
+                getCreationStatus();
+            } else {
+
+                $scope.cyberPanelLoading = true;
+                $scope.installationDetailsForm = true;
+                $scope.installationProgress = false;
+                $scope.goBackDisable = false;
+
+                $scope.currentStatus = response.data.error_message;
+            }
+
+
+        }
+
+        function cantLoadInitialDatas(response) {
+
+            $scope.cyberPanelLoading = true;
+            $scope.installationDetailsForm = true;
+            $scope.installationProgress = false;
+            $scope.goBackDisable = false;
+
+        }
+
+
+    };
+    $scope.goBack = function () {
+        $scope.cyberPanelLoading = true;
+        $scope.installationDetailsForm = false;
+        $scope.installationProgress = true;
+        $scope.goBackDisable = true;
+        $("#installProgress").css("width", "0%");
+    };
+
+    function getCreationStatus() {
+
+        url = "/websites/installWordpressStatus";
+
+        var data = {
+            statusFile: statusFile
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+
+            if (response.data.abort === 1) {
+
+                if (response.data.installStatus === 1) {
+
+                    $scope.cyberPanelLoading = true;
+                    $scope.installationDetailsForm = true;
+                    $scope.installationProgress = false;
+                    $scope.goBackDisable = false;
+
+                    $("#installProgress").css("width", "100%");
+                    $scope.installPercentage = "100";
+                    $scope.currentStatus = response.data.currentStatus;
+                    $timeout.cancel();
+
+                } else {
+
+                    $scope.cyberPanelLoading = true;
+                    $scope.installationDetailsForm = true;
+                    $scope.installationProgress = false;
+                    $scope.goBackDisable = false;
+
+                    $scope.currentStatus = response.data.error_message;
+
+                    $("#installProgress").css("width", "0%");
+                    $scope.installPercentage = "0";
+                    $scope.goBackDisable = false;
+
+                }
+
+            } else {
+                $("#installProgress").css("width", response.data.installationProgress + "%");
+                $scope.installPercentage = response.data.installationProgress;
+                $scope.currentStatus = response.data.currentStatus;
+                $timeout(getCreationStatus, 1000);
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+
+            $scope.cyberPanelLoading = true;
+            $scope.installationDetailsForm = true;
+            $scope.installationProgress = false;
+            $scope.goBackDisable = false;
+
+        }
+
+
+    }
+
+
+});
+
 /* Java script code to list accounts ends here */
 
 

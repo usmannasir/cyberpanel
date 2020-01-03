@@ -1,18 +1,17 @@
 import argparse
 import os
-import CyberCPLogFileWriter as logging
-import backupUtilities as backupUtil
+import sys
+sys.path.append('/usr/local/CyberCP')
+from plogical import CyberCPLogFileWriter as logging
+from plogical import backupUtilities as backupUtil
 import time
 from multiprocessing import Process
-import json
-import requests
 import subprocess
 import shlex
 from shutil import move
 from plogical.virtualHostUtilities import virtualHostUtilities
 from plogical.processUtilities import ProcessUtilities
-from backupSchedule import backupSchedule
-import shutil
+from plogical.backupSchedule import backupSchedule
 
 class remoteTransferUtilities:
 
@@ -30,7 +29,7 @@ class remoteTransferUtilities:
                             os.remove(pathToKey)
                         except:
                             pass
-                        print "1,None"
+                        print("1,None")
                         return
             except:
                 pass
@@ -45,12 +44,12 @@ class remoteTransferUtilities:
                     os.remove(pathToKey)
                 except:
                     pass
-                print "1,None"
+                print("1,None")
                 return
 
-        except BaseException,msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile("For remote transfer, I am not able to write key to auth file, Error Message: "+str(msg))
-            print "0,"+"For remote transfer, I am not able to write key to auth file, Error Message: " + str(msg)
+            print("0,"+"For remote transfer, I am not able to write key to auth file, Error Message: " + str(msg))
 
     ## House keeping function to run remote backups
     @staticmethod
@@ -110,7 +109,7 @@ class remoteTransferUtilities:
 
             return
 
-        except BaseException, msg:
+        except BaseException as msg:
             writeToFile = open(backupLogPath, "w+")
             writeToFile.writelines(str(msg) + " [5010]" + "\n")
             writeToFile.close()
@@ -168,7 +167,7 @@ class remoteTransferUtilities:
                             writeToFile.writelines("[" + time.strftime(
                                 "%m.%d.%Y_%H-%M-%S") + "]" + "Failed to generate local backup for: " + virtualHost + "\n")
 
-                    except BaseException, msg:
+                    except BaseException as msg:
                         logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [remoteTransferUtilities.backupProcess:173]")
                         pass
 
@@ -181,7 +180,7 @@ class remoteTransferUtilities:
                 #time.sleep(5)
                 # rmtree(dir)
 
-            except BaseException, msg:
+            except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [backupProcess]")
 
     @staticmethod
@@ -194,7 +193,7 @@ class remoteTransferUtilities:
 
             os.remove(completedPathToSend)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startBackup]")
 
     @staticmethod
@@ -236,7 +235,7 @@ class remoteTransferUtilities:
 
             return
 
-        except BaseException, msg:
+        except BaseException as msg:
             backupLogPath = backupDir + "/backup_log"
             writeToFile = open(backupLogPath, "w+")
             writeToFile.writelines(str(msg) + " [5010]" + "\n")
@@ -262,7 +261,7 @@ class remoteTransferUtilities:
                     writeToFile.close()
 
                     backupFile = backup
-                    execPath = "sudo nice -n 10 /usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
+                    execPath = "sudo nice -n 10 /usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
                     execPath = execPath + " submitRestore --backupFile " + backupFile + " --dir " + dir
                     subprocess.Popen(shlex.split(execPath))
                     time.sleep(4)
@@ -320,7 +319,7 @@ class remoteTransferUtilities:
                 "%m.%d.%Y_%H-%M-%S") + "]" + " Backup Restore complete\n")
             writeToFile.writelines("completed[success]")
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [remoteTransferUtilities.startRestore]")
 
 

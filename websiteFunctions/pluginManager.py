@@ -1,4 +1,4 @@
-from signals import *
+from .signals import *
 from plogical.pluginManagerGlobal import pluginManagerGlobal
 
 class pluginManager:

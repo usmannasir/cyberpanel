@@ -11,6 +11,7 @@ import install
 #distros
 centos=0
 ubuntu=1
+cent8=2
 
 class InstallCyberPanel:
 
@@ -35,10 +36,15 @@ class InstallCyberPanel:
         if self.ent == 0:
             if self.distro == ubuntu:
                 command = "apt-get -y install openlitespeed"
+                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+            elif self.distro == centos:
+                command = 'yum install -y openlitespeed'
+                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
             else:
                 command = 'yum install -y openlitespeed'
+                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
-            install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+
         else:
             try:
                 try:
@@ -86,7 +92,7 @@ class InstallCyberPanel:
                 command = 'chown -R lsadm:lsadm ' + confPath
                 install.preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-            except BaseException, msg:
+            except BaseException as msg:
                 logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [installLiteSpeed]")
                 return 0
 
@@ -116,7 +122,7 @@ class InstallCyberPanel:
             writeDataToFile.close()
 
             InstallCyberPanel.stdOut("OpenLiteSpeed Configurations fixed!", 1)
-        except IOError, msg:
+        except IOError as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [fix_ols_configs]")
             return 0
 
@@ -140,7 +146,7 @@ class InstallCyberPanel:
 
             InstallCyberPanel.stdOut("Default port is now 80 for OpenLiteSpeed!", 1)
 
-        except IOError, msg:
+        except IOError as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [changePortTo80]")
             return 0
 
@@ -158,29 +164,31 @@ class InstallCyberPanel:
             if res != 0:
                 InstallCyberPanel.stdOut("Failed to install PHP on Ubuntu.", 1, 1)
 
-        else:
+        elif self.distro == cent8 or self.distro == centos:
             command = 'yum -y groupinstall lsphp-all'
-
             install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+
+
 
         InstallCyberPanel.stdOut("LiteSpeed PHPs successfully installed!", 1)
 
         ## only php 71
-        if self.distro == centos:
+        if self.distro == centos or self.distro == cent8:
 
-            command = 'yum install lsphp71 lsphp71-json lsphp71-xmlrpc lsphp71-xml lsphp71-tidy lsphp71-soap lsphp71-snmp ' \
+            command = 'yum install lsphp71 lsphp71-json lsphp71-xmlrpc lsphp71-xml lsphp71-soap lsphp71-snmp ' \
                       'lsphp71-recode lsphp71-pspell lsphp71-process lsphp71-pgsql lsphp71-pear lsphp71-pdo lsphp71-opcache ' \
                       'lsphp71-odbc lsphp71-mysqlnd lsphp71-mcrypt lsphp71-mbstring lsphp71-ldap lsphp71-intl lsphp71-imap ' \
                       'lsphp71-gmp lsphp71-gd lsphp71-enchant lsphp71-dba  lsphp71-common  lsphp71-bcmath -y'
             install.preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             ## only php 72
-            command = 'yum install -y lsphp72 lsphp72-json lsphp72-xmlrpc lsphp72-xml lsphp72-tidy lsphp72-soap lsphp72-snmp ' \
+            command = 'yum install -y lsphp72 lsphp72-json lsphp72-xmlrpc lsphp72-xml lsphp72-soap lsphp72-snmp ' \
                       'lsphp72-recode lsphp72-pspell lsphp72-process lsphp72-pgsql lsphp72-pear lsphp72-pdo lsphp72-opcache ' \
                       'lsphp72-odbc lsphp72-mysqlnd lsphp72-mcrypt lsphp72-mbstring lsphp72-ldap lsphp72-intl lsphp72-imap ' \
                       'lsphp72-gmp lsphp72-gd lsphp72-enchant lsphp72-dba  lsphp72-common  lsphp72-bcmath'
 
             install.preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
 
             ## only php 73
             command = 'yum install -y lsphp73 lsphp73-json lsphp73-xmlrpc lsphp73-xml lsphp73-tidy lsphp73-soap lsphp73-snmp ' \
@@ -216,7 +224,7 @@ class InstallCyberPanel:
             InstallCyberPanel.stdOut("MariaDB repo set!", 1)
 
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [setup_mariadb_repo]")
             return 0
 
@@ -291,8 +299,10 @@ class InstallCyberPanel:
     def startMariaDB(self):
 
         ############## Start mariadb ######################
-
-        command = "systemctl start mysql"
+        if self.distro == cent8 or self.distro == ubuntu:
+            command = 'systemctl start mariadb'
+        else:
+            command = "systemctl start mysql"
         install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
         ############## Enable mariadb at system startup ######################
@@ -434,7 +444,7 @@ class InstallCyberPanel:
 
             InstallCyberPanel.stdOut("PureFTPD configured!", 1)
 
-        except IOError, msg:
+        except IOError as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [installPureFTPDConfigurations]")
             return 0
 
@@ -472,11 +482,15 @@ class InstallCyberPanel:
                 #                              "/etc/resolv.conf'", 1, 1, os.EX_OSERR)
 
             if self.distro == centos:
-                command = 'yum -y install epel-release'
-                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-
                 command = 'curl -o /etc/yum.repos.d/powerdns-auth-42.repo ' \
                           'https://repo.powerdns.com/repo-files/centos-auth-42.repo'
+                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+
+            if self.distro == cent8:
+                command = 'dnf config-manager --set-enabled PowerTools'
+                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+
+                command = 'curl -o /etc/yum.repos.d/powerdns-auth-master.repo https://repo.powerdns.com/repo-files/centos-auth-master.repo'
                 install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
             if self.distro == ubuntu:
@@ -488,7 +502,7 @@ class InstallCyberPanel:
 
             install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [powerDNS]")
 
     def installPowerDNSConfigurations(self, mysqlPassword, mysql):
@@ -497,7 +511,7 @@ class InstallCyberPanel:
             InstallCyberPanel.stdOut("Configuring PowerDNS..", 1)
 
             os.chdir(self.cwd)
-            if self.distro == centos:
+            if self.distro == centos or self.distro == cent8:
                 dnsPath = "/etc/pdns/pdns.conf"
             else:
                 dnsPath = "/etc/powerdns/pdns.conf"
@@ -533,7 +547,7 @@ class InstallCyberPanel:
 
             InstallCyberPanel.stdOut("PowerDNS configured!", 1)
 
-        except IOError, msg:
+        except IOError as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [installPowerDNSConfigurations]")
             return 0
         return 1
@@ -608,7 +622,7 @@ def Main(cwd, mysql, distro, ent, serial = None, port = "8090", ftp = None, dns 
         installer.installPureFTPDConfigurations(mysql)
         installer.startPureFTPD()
     else:
-        if ftp == 'On':
+        if ftp == 'ON':
             installer.installPureFTPD()
             installer.installPureFTPDConfigurations(mysql)
             installer.startPureFTPD()
@@ -618,7 +632,7 @@ def Main(cwd, mysql, distro, ent, serial = None, port = "8090", ftp = None, dns 
         installer.installPowerDNSConfigurations(InstallCyberPanel.mysqlPassword, mysql)
         installer.startPowerDNS()
     else:
-        if dns == 'On':
+        if dns == 'ON':
             installer.installPowerDNS()
             installer.installPowerDNSConfigurations(InstallCyberPanel.mysqlPassword, mysql)
             installer.startPowerDNS()

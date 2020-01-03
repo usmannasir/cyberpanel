@@ -1,13 +1,11 @@
-#!/usr/local/CyberCP/bin/python2
-import CyberCPLogFileWriter as logging
+#!/usr/local/CyberCP/bin/python
+import sys
+sys.path.append('/usr/local/CyberCP')
+from plogical import CyberCPLogFileWriter as logging
 import subprocess
 import shlex
 import argparse
-from virtualHostUtilities import virtualHostUtilities
 import os
-import tarfile
-import shutil
-from mailUtilities import mailUtilities
 import threading as multi
 from plogical.processUtilities import ProcessUtilities
 
@@ -27,7 +25,7 @@ class CSF(multi.Thread):
                 self.installCSF()
             elif self.installApp == 'removeCSF':
                 self.removeCSF()
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [CSF.run]')
 
     @staticmethod
@@ -354,7 +352,7 @@ class CSF(multi.Thread):
                 pass
 
             return 1
-        except BaseException, msg:
+        except BaseException as msg:
             try:
                 os.remove('csf.tgz')
                 os.removedirs('csf')
@@ -394,7 +392,7 @@ class CSF(multi.Thread):
             subprocess.call(shlex.split(command))
 
             return 1
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[removeCSF]")
 
     @staticmethod
@@ -438,7 +436,7 @@ class CSF(multi.Thread):
 
             return currentSettings
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [fetchCSFSettings]")
 
     @staticmethod
@@ -448,11 +446,11 @@ class CSF(multi.Thread):
                 if status == 'enable':
                     command = 'csf -s'
                     subprocess.call(shlex.split(command))
-                    print '1,None'
+                    print('1,None')
                 else:
                     command = 'csf -f'
                     subprocess.call(shlex.split(command))
-                    print '1,None'
+                    print('1,None')
 
             elif controller == 'testingMode':
                 data = open('/etc/csf/csf.conf', 'r').readlines()
@@ -468,11 +466,11 @@ class CSF(multi.Thread):
                     else:
                         writeToFile.writelines(items)
                 writeToFile.close()
-                print '1,None'
+                print('1,None')
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[changeStatus]")
-            print '0', str(msg)
+            print('0', str(msg))
 
     @staticmethod
     def modifyPorts(protocol, portsPath):
@@ -528,11 +526,11 @@ class CSF(multi.Thread):
             except:
                 pass
 
-            print '1,None'
+            print('1,None')
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[modifyPorts]")
-            print '0', str(msg)
+            print('0', str(msg))
 
     @staticmethod
     def allowIP(ipAddress):
@@ -543,7 +541,7 @@ class CSF(multi.Thread):
             command = 'sudo csf -a ' + ipAddress
             ProcessUtilities.executioner(command)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[allowIP]")
 
     @staticmethod
@@ -556,7 +554,7 @@ class CSF(multi.Thread):
             command = 'sudo csf -d ' + ipAddress
             ProcessUtilities.executioner(command)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[blockIP]")
 
     @staticmethod
@@ -565,7 +563,7 @@ class CSF(multi.Thread):
             command = 'sudo csf -g ' + ipAddress
             ProcessUtilities.executioner(command)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[checkIP]")
 
 

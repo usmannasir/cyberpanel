@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 from django.shortcuts import render
 from django.http import HttpResponse
-from models import Administrator
+from .models import Administrator
 from plogical import hashPassword
 import json
 from packages.models import Package
@@ -12,7 +12,7 @@ from baseTemplate.models import version
 from plogical.getSystemInformation import SystemInformation
 from django.utils.translation import LANGUAGE_SESSION_KEY
 import CyberCP.settings as settings
-from models import ACL
+from .models import ACL
 from plogical.acl import ACLManager
 from django.views.decorators.csrf import ensure_csrf_cookie
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
@@ -141,7 +141,7 @@ def verifyLogin(request):
                 json_data = json.dumps(data)
                 return HttpResponse(json_data)
 
-        except BaseException,msg:
+        except BaseException as msg:
             data = {'userID': 0, 'loginStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data)
             return HttpResponse(json_data)
@@ -223,7 +223,7 @@ def loadLoginPage(request):
                                   firstName="Cyber",lastName="Panel", acl=acl, token=token)
             admin.save()
 
-            vers = version(currentVersion="1.9", build=1)
+            vers = version(currentVersion="1.9", build=3)
             vers.save()
 
             package = Package(admin=admin, packageName="Default", diskSpace=1000,

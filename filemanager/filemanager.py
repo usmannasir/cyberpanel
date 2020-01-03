@@ -6,7 +6,7 @@ from plogical.processUtilities import ProcessUtilities
 from websiteFunctions.models import Websites
 from random import randint
 from django.core.files.storage import FileSystemStorage
-import HTMLParser
+import html.parser
 import os
 
 class FileManager:
@@ -21,7 +21,7 @@ class FileManager:
         return HttpResponse(final_json)
 
     def returnPathEnclosed(self, path):
-        htmlParser = HTMLParser.HTMLParser()
+        htmlParser = html.parser.HTMLParser()
         path = htmlParser.unescape(path)
         return path
         return "'" + path + "'"
@@ -55,7 +55,7 @@ class FileManager:
             for items in output:
                 try:
                     currentFile = items.split(' ')
-                    currentFile = filter(lambda a: a != '', currentFile)
+                    currentFile = [a for a in currentFile if a != '']
                     if currentFile[-1] == '.' or currentFile[-1] == '..' or currentFile[0] == 'total':
                         continue
 
@@ -72,13 +72,13 @@ class FileManager:
                     finalData[str(counter)] = [currentFile[-1], currentFile[-1], lastModified, size, currentFile[0],
                                                dirCheck]
                     counter = counter + 1
-                except BaseException, msg:
+                except BaseException as msg:
                     logging.writeToFile(str(msg))
 
             json_data = json.dumps(finalData)
             return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def list(self):
@@ -97,7 +97,7 @@ class FileManager:
             for items in output:
                 try:
                     currentFile = items.split(' ')
-                    currentFile = filter(lambda a: a != '', currentFile)
+                    currentFile = [a for a in currentFile if a != '']
 
                     if currentFile[-1] == '.' or currentFile[-1] == '..' or currentFile[0] == 'total':
                         continue
@@ -119,7 +119,7 @@ class FileManager:
             json_data = json.dumps(finalData)
             return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def createNewFile(self):
@@ -142,7 +142,7 @@ class FileManager:
             json_data = json.dumps(finalData)
             return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def createNewFolder(self):
@@ -160,7 +160,7 @@ class FileManager:
             json_data = json.dumps(finalData)
             return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def deleteFolderOrFile(self):
@@ -178,7 +178,7 @@ class FileManager:
             json_data = json.dumps(finalData)
             return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def copy(self):
@@ -212,7 +212,7 @@ class FileManager:
             json_data = json.dumps(finalData)
             return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def move(self):
@@ -238,7 +238,7 @@ class FileManager:
             json_data = json.dumps(finalData)
             return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def rename(self):
@@ -261,7 +261,7 @@ class FileManager:
             json_data = json.dumps(finalData)
             return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def readFileContents(self):
@@ -278,7 +278,7 @@ class FileManager:
             json_data = json.dumps(finalData)
             return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def writeFileContents(self):
@@ -313,7 +313,7 @@ class FileManager:
             json_data = json.dumps(finalData)
             return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def upload(self):
@@ -345,7 +345,7 @@ class FileManager:
             json_data = json.dumps(finalData)
             return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def extract(self):
@@ -372,7 +372,7 @@ class FileManager:
             json_data = json.dumps(finalData)
             return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def compress(self):
@@ -405,7 +405,7 @@ class FileManager:
             json_data = json.dumps(finalData)
             return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
     def changePermissions(self):
@@ -429,5 +429,5 @@ class FileManager:
             json_data = json.dumps(finalData)
             return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             return self.ajaxPre(0, str(msg))

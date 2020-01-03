@@ -1,5 +1,5 @@
 import os
-import CyberCPLogFileWriter as logging
+from plogical import CyberCPLogFileWriter as logging
 import shlex
 import subprocess
 class findBWUsage:
@@ -54,10 +54,10 @@ class findBWUsage:
             writeMeta.writelines(str(newSeekPoint) + "\n")
             writeMeta.close()
 
-        except OSError, msg:
+        except OSError as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [calculateBandwidth]")
             return 0
-        except ValueError, msg:
+        except ValueError as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [calculateBandwidth]")
             return 0
 
@@ -70,7 +70,7 @@ class findBWUsage:
         try:
             for directories in os.listdir("/home"):
                 findBWUsage.calculateBandwidth(directories)
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startCalculations]")
             return 0
 
@@ -110,10 +110,10 @@ class findBWUsage:
                 return [0, 0]
 
 
-        except OSError, msg:
+        except OSError as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [findDomainBW]")
             return 0
-        except ValueError, msg:
+        except ValueError as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [findDomainBW]")
             return 0
 
@@ -140,10 +140,10 @@ class findBWUsage:
             print("###############################################")
 
 
-        except OSError, msg:
+        except OSError as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [changeSystemLanguage]")
             return 0
-        except ValueError, msg:
+        except ValueError as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [changeSystemLanguage]")
             return 0
 

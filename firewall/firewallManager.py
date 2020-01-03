@@ -1,4 +1,4 @@
-#!/usr/local/CyberCP/bin/python2
+#!/usr/local/CyberCP/bin/python
 import os
 import os.path
 import sys
@@ -35,7 +35,7 @@ class FirewallManager:
                 return ACLManager.loadError()
 
             return render(request, 'firewall/index.html')
-        except BaseException, msg:
+        except BaseException as msg:
             return HttpResponse(str(msg))
 
     def firewallHome(self, request = None, userID = None):
@@ -48,7 +48,7 @@ class FirewallManager:
                 return ACLManager.loadError()
 
             return render(request, 'firewall/firewall.html')
-        except BaseException, msg:
+        except BaseException as msg:
             return HttpResponse(str(msg))
 
     def getCurrentRules(self, userID = None):
@@ -84,7 +84,7 @@ class FirewallManager:
             final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": json_data})
             return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -113,7 +113,7 @@ class FirewallManager:
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'status': 0, 'add_status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -143,7 +143,7 @@ class FirewallManager:
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'status': 0, 'delete_status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -171,7 +171,7 @@ class FirewallManager:
                 final_json = json.dumps(final_dic)
                 return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'reload_status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -199,7 +199,7 @@ class FirewallManager:
                 final_json = json.dumps(final_dic)
                 return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'start_status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -227,7 +227,7 @@ class FirewallManager:
                 final_json = json.dumps(final_dic)
                 return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'stop_status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -242,7 +242,7 @@ class FirewallManager:
             else:
                 return ACLManager.loadErrorJson()
 
-            command = 'sudo systemctl status firewalld'
+            command = 'systemctl status firewalld'
             status = ProcessUtilities.outputExecutioner(command)
 
             if status.find("dead") > -1:
@@ -254,7 +254,7 @@ class FirewallManager:
                 final_json = json.dumps(final_dic)
                 return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -269,7 +269,7 @@ class FirewallManager:
                 return ACLManager.loadError()
 
             return render(request, 'firewall/secureSSH.html')
-        except BaseException, msg:
+        except BaseException as msg:
             return HttpResponse(str(msg))
 
     def getSSHConfigs(self, userID = None, data = None):
@@ -348,7 +348,7 @@ class FirewallManager:
                 final_json = json.dumps({'status': 1, 'error_message': "None", "data": json_data})
                 return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -371,7 +371,7 @@ class FirewallManager:
             else:
                 rootLogin = "0"
 
-            execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/firewallUtilities.py"
+            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/firewallUtilities.py"
             execPath = execPath + " saveSSHConfigs --type " + str(type) + " --sshPort " + sshPort + " --rootLogin " + rootLogin
 
             output = ProcessUtilities.outputExecutioner(execPath)
@@ -399,7 +399,7 @@ class FirewallManager:
                             FirewallUtilities.addRule('tcp', sshPort, "0.0.0.0/0")
                             command = 'firewall-cmd --permanent --remove-service=ssh'
                             ProcessUtilities.executioner(command)
-                        except BaseException, msg:
+                        except BaseException as msg:
                             logging.CyberCPLogFileWriter.writeToFile(str(msg))
 
                 final_dic = {'status': 1, 'saveStatus': 1}
@@ -410,7 +410,7 @@ class FirewallManager:
                 final_json = json.dumps(final_dic)
                 return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'status': 0 ,'saveStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -426,7 +426,7 @@ class FirewallManager:
 
             key = data['key']
 
-            execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/firewallUtilities.py"
+            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/firewallUtilities.py"
             execPath = execPath + " deleteSSHKey --key '" + key + "'"
 
             output = ProcessUtilities.outputExecutioner(execPath)
@@ -440,7 +440,7 @@ class FirewallManager:
                 final_json = json.dumps(final_dic)
                 return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'status': 0, 'delete_status': 0, 'error_mssage': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -462,7 +462,7 @@ class FirewallManager:
             writeToFile.write(key)
             writeToFile.close()
 
-            execPath = "sudo /usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/firewallUtilities.py"
+            execPath = "sudo /usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/firewallUtilities.py"
             execPath = execPath + " addSSHKey --tempPath " + tempPath
 
             output = ProcessUtilities.outputExecutioner(execPath)
@@ -476,7 +476,7 @@ class FirewallManager:
                 final_json = json.dumps(final_dic)
                 return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'status': 0, 'add_status': 0, 'error_mssage': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -508,7 +508,7 @@ class FirewallManager:
                 modSecInstalled = 1
 
             return render(request, 'firewall/modSecurity.html', {'modSecInstalled': modSecInstalled, 'OLS': OLS})
-        except BaseException, msg:
+        except BaseException as msg:
             return HttpResponse(str(msg))
 
     def installModSec(self, userID = None, data = None):
@@ -520,7 +520,7 @@ class FirewallManager:
             else:
                 return ACLManager.loadErrorJson('installModSec', 0)
 
-            execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
+            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
             execPath = execPath + " installModSec"
 
             ProcessUtilities.popenExecutioner(execPath)
@@ -530,7 +530,7 @@ class FirewallManager:
             final_json = json.dumps({'installModSec': 1, 'error_message': "None"})
             return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'installModSec': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -543,7 +543,7 @@ class FirewallManager:
 
             if installStatus.find("[200]") > -1:
 
-                execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
+                execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
 
                 execPath = execPath + " installModSecConfigs"
 
@@ -585,7 +585,7 @@ class FirewallManager:
                 })
                 return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'abort': 1, 'installed': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -726,7 +726,7 @@ class FirewallManager:
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'fetchStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -789,7 +789,7 @@ class FirewallManager:
 
                 ## save configuration data
 
-                execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
+                execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
 
                 execPath = execPath + " saveModSecConfigs --tempConfigPath " + tempConfigPath
 
@@ -844,7 +844,7 @@ class FirewallManager:
 
                 ## save configuration data
 
-                execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
+                execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
 
                 execPath = execPath + " saveModSecConfigs --tempConfigPath " + tempConfigPath
 
@@ -859,7 +859,7 @@ class FirewallManager:
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'saveStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -891,7 +891,7 @@ class FirewallManager:
 
             return render(request, 'firewall/modSecurityRules.html', {'modSecInstalled': modSecInstalled})
 
-        except BaseException, msg:
+        except BaseException as msg:
             return HttpResponse(str(msg))
 
     def fetchModSecRules(self, userID = None, data = None):
@@ -945,7 +945,7 @@ class FirewallManager:
                 final_json = json.dumps(final_dic)
                 return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'modSecInstalled': 0,
                          'error_message': str(msg)}
             final_json = json.dumps(final_dic)
@@ -970,7 +970,7 @@ class FirewallManager:
 
             ## save configuration data
 
-            execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
+            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
             execPath = execPath + " saveModSecRules"
             output = ProcessUtilities.outputExecutioner(execPath)
 
@@ -983,7 +983,7 @@ class FirewallManager:
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'saveStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -1016,7 +1016,7 @@ class FirewallManager:
 
             return render(request, 'firewall/modSecurityRulesPacks.html', {'modSecInstalled': modSecInstalled})
 
-        except BaseException, msg:
+        except BaseException as msg:
             return HttpResponse(msg)
 
     def getOWASPAndComodoStatus(self, userID = None, data = None):
@@ -1096,7 +1096,7 @@ class FirewallManager:
                 final_json = json.dumps(final_dic)
                 return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'modSecInstalled': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -1115,7 +1115,7 @@ class FirewallManager:
 
             if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
 
-                execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
+                execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
                 execPath = execPath + " " + packName
 
                 output = ProcessUtilities.outputExecutioner(execPath)
@@ -1133,7 +1133,7 @@ class FirewallManager:
                     final_json = json.dumps({'installStatus': 0, 'error_message': "OWASP will be available later.", })
                     return HttpResponse(final_json)
 
-                execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
+                execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
                 execPath = execPath + " " + packName
                 output = ProcessUtilities.outputExecutioner(execPath)
 
@@ -1146,7 +1146,7 @@ class FirewallManager:
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'installStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -1250,7 +1250,7 @@ class FirewallManager:
                 final_json = json.dumps({'fetchStatus': 1, 'error_message': "None", "data": json_data})
                 return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'fetchStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -1273,7 +1273,7 @@ class FirewallManager:
             else:
                 functionName = 'enableRuleFile'
 
-            execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
+            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
 
             execPath = execPath + " " + functionName + ' --packName ' + packName + ' --fileName ' + fileName
 
@@ -1288,7 +1288,7 @@ class FirewallManager:
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'saveStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -1312,7 +1312,7 @@ class FirewallManager:
             except subprocess.CalledProcessError:
                 csfInstalled = 0
             return render(self.request,'firewall/csf.html', {'csfInstalled' : csfInstalled})
-        except BaseException, msg:
+        except BaseException as msg:
                 return HttpResponse(str(msg))
 
     def installCSF(self):
@@ -1325,7 +1325,12 @@ class FirewallManager:
             else:
                 return ACLManager.loadErrorJson('installStatus', 0)
 
-            execPath = "sudo /usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/csf.py"
+            if os.path.exists('/usr/local/CyberCP/bin/python3'):
+                final_dic = {'installStatus': 0, 'error_message': 'CSF is not yet supported on Python 3'}
+                final_json = json.dumps(final_dic)
+                return HttpResponse(final_json)
+
+            execPath = "sudo /usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/csf.py"
             execPath = execPath + " installCSF"
 
             ProcessUtilities.popenExecutioner(execPath)
@@ -1336,7 +1341,7 @@ class FirewallManager:
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException,msg:
+        except BaseException as msg:
             final_dic = {'installStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -1379,7 +1384,7 @@ class FirewallManager:
                                          })
                 return HttpResponse(final_json)
 
-        except BaseException,msg:
+        except BaseException as msg:
             final_dic = {'abort':1, 'installed':0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -1394,7 +1399,7 @@ class FirewallManager:
             else:
                 return ACLManager.loadErrorJson('installStatus', 0)
 
-            execPath = "sudo /usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/csf.py"
+            execPath = "sudo /usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/csf.py"
             execPath = execPath + " removeCSF"
             ProcessUtilities.popenExecutioner(execPath)
 
@@ -1404,7 +1409,7 @@ class FirewallManager:
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException,msg:
+        except BaseException as msg:
             final_dic = {'installStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -1433,7 +1438,7 @@ class FirewallManager:
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException,msg:
+        except BaseException as msg:
             final_dic = {'fetchStatus': 0, 'error_message': 'CSF is not installed.'}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -1453,7 +1458,7 @@ class FirewallManager:
             controller = data['controller']
             status = data['status']
 
-            execPath = "sudo /usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/csf.py"
+            execPath = "sudo /usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/csf.py"
             execPath = execPath + " changeStatus --controller " + controller + " --status " + status
             output = ProcessUtilities.outputExecutioner(execPath)
 
@@ -1466,7 +1471,7 @@ class FirewallManager:
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-        except BaseException,msg:
+        except BaseException as msg:
             final_dic = {'status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -1494,7 +1499,7 @@ class FirewallManager:
             writeToFile.write(ports)
             writeToFile.close()
 
-            execPath = "sudo /usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/csf.py"
+            execPath = "sudo /usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/csf.py"
             execPath = execPath + " modifyPorts --protocol " + protocol + " --ports " + portsPath
             output = ProcessUtilities.outputExecutioner(execPath)
 
@@ -1507,7 +1512,7 @@ class FirewallManager:
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-        except BaseException,msg:
+        except BaseException as msg:
             final_dic = {'status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -1537,7 +1542,7 @@ class FirewallManager:
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException,msg:
+        except BaseException as msg:
             final_dic = {'status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)

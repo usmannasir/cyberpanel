@@ -9,7 +9,7 @@ import json
 from django.shortcuts import HttpResponse
 from math import ceil
 from websiteFunctions.models import Websites
-from .models import CLPackages
+from CLManager.models import CLPackages
 
 
 class CLManagerMain(multi.Thread):
@@ -28,7 +28,7 @@ class CLManagerMain(multi.Thread):
             elif self.function == 'enableOrDisable':
                 self.enableOrDisable()
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [ContainerManager.run]')
 
     def renderC(self):
@@ -41,24 +41,30 @@ class CLManagerMain(multi.Thread):
         else:
             return ACLManager.loadError()
 
+        ipFile = "/etc/cyberpanel/machineIP"
+        f = open(ipFile)
+        ipData = f.read()
+        ipAddress = ipData.split('\n', 1)[0]
+
         data = {}
         data['CL'] = 0
-        data['CAGEFS'] = 0
+        data['activatedPath'] = 0
+        data['ipAddress'] = ipAddress
         CLPath = '/etc/sysconfig/cloudlinux'
-        CageFSPath = '/usr/sbin/cagefsctl'
+        activatedPath = '/home/cyberpanel/cloudlinux'
 
         if os.path.exists(CLPath):
             data['CL'] = 1
 
-        if os.path.exists(CageFSPath):
-            data['CAGEFS'] = 1
+        if os.path.exists(activatedPath):
+            data['activatedPath'] = 1
 
         if data['CL']  == 0:
             return render(self.request, 'CLManager/notAvailable.html', data)
-        elif data['CAGEFS']  == 0:
+        elif data['activatedPath']  == 0:
             return render(self.request, 'CLManager/notAvailable.html', data)
         else:
-            return render(self.request, self.templateName, self.data)
+            return render(self.request, 'CLManager/cloudLinux.html', data)
 
     def submitCageFSInstall(self):
         try:
@@ -73,11 +79,11 @@ class CLManagerMain(multi.Thread):
                                                           1)
                 return 0
 
-            execPath = "/usr/local/CyberCP/bin/python2 /usr/local/CyberCP/CLManager/CageFS.py"
+            execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/CLManager/CageFS.py"
             execPath = execPath + " --function submitCageFSInstall"
             ProcessUtilities.outputExecutioner(execPath)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath, str(msg) + ' [404].', 1)
 
     def findWebsitesJson(self, currentACL, userID, pageNumber):
@@ -144,7 +150,7 @@ class CLManagerMain(multi.Thread):
                          'pagination': pagination, 'default': default}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
-        except BaseException, msg:
+        except BaseException as msg:
             dic = {'status': 1, 'listWebSiteStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(dic)
             return HttpResponse(json_data)
@@ -160,7 +166,7 @@ class CLManagerMain(multi.Thread):
                 for items in websites:
                     command = '/usr/sbin/cagefsctl --disable %s' % (items.externalApp)
                     ProcessUtilities.executioner(command)
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
 
     def fetchPackages(self, currentACL):

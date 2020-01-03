@@ -1,5 +1,7 @@
+import sys
+sys.path.append('/usr/local/CyberCP')
 import argparse
-from processUtilities import ProcessUtilities
+from plogical.processUtilities import ProcessUtilities
 
 class CronUtil:
 
@@ -14,13 +16,13 @@ class CronUtil:
 
             try:
                 f = open(cronPath, 'r').read()
-                print f
-            except BaseException, msg:
-                print "0,CyberPanel," + str(msg)
+                print(f)
+            except BaseException as msg:
+                print("0,CyberPanel," + str(msg))
                 return 1
 
-        except BaseException, msg:
-            print "0,CyberPanel," + str(msg)
+        except BaseException as msg:
+            print("0,CyberPanel," + str(msg))
 
     @staticmethod
     def saveCronChanges(externalApp, finalCron, line):
@@ -40,9 +42,9 @@ class CronUtil:
             with open(cronPath, 'w') as file:
                 file.writelines(data)
 
-            print "1,None"
-        except BaseException, msg:
-            print "0," + str(msg)
+            print("1,None")
+        except BaseException as msg:
+            print("0," + str(msg))
 
     @staticmethod
     def remCronbyLine(externalApp, line):
@@ -68,9 +70,9 @@ class CronUtil:
 
                 counter = counter + 1
 
-            print "1," + removedLine
-        except BaseException, msg:
-            print "0," + str(msg)
+            print("1," + removedLine)
+        except BaseException as msg:
+            print("0," + str(msg))
 
     @staticmethod
     def addNewCron(externalApp, finalCron):
@@ -80,9 +82,9 @@ class CronUtil:
             with open(CronPath, "a") as file:
                 file.write(finalCron + "\n")
 
-            print "1,None"
-        except BaseException, msg:
-            print "0," + str(msg)
+            print("1,None")
+        except BaseException as msg:
+            print("0," + str(msg))
 
     @staticmethod
     def CronPrem(mode):

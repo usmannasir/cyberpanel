@@ -1,4 +1,4 @@
-#!/usr/local/CyberCP/bin/python2
+#!/usr/local/CyberCP/bin/python
 import socket
 import sys
 sys.path.append('/usr/local/CyberCP')
@@ -17,7 +17,7 @@ class cacheClient:
             writeToFile.write(command)
             writeToFile.close()
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg) + ' [cacheClient.handleCachePurgeRequest]')
 
 

@@ -1,15 +1,11 @@
-#!/usr/local/CyberCP/bin/python2
-import os
+#!/usr/local/CyberCP/bin/python
 import os.path
 import sys
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
-
 import django
-try:
-    django.setup()
-except:
-    pass
+django.setup()
+
 from websiteFunctions.models import Websites
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from xml.etree import ElementTree
@@ -49,7 +45,7 @@ class restoreMeta():
 
                     virtualHostUtilities.createDomain(masterDomain, domain, phpSelection, path, 0, 0, 0,
                                                                   'admin', 0)
-            except BaseException, msg:
+            except BaseException as msg:
                 logging.writeToFile(str(msg) + " [startRestore]")
                 return 0
 
@@ -92,7 +88,7 @@ class restoreMeta():
                                              'Email created: %s' % (
                                                  email))
 
-            except BaseException, msg:
+            except BaseException as msg:
                 logging.writeToFile(str(msg) + " [startRestore]")
                 return 0
 
@@ -148,7 +144,7 @@ class restoreMeta():
             except:
                 pass
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg) + " [startRestore]")
 
 def main():

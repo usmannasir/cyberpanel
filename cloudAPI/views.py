@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
 
-from cloudManager import CloudManager
+
+from .cloudManager import CloudManager
 import json
 from loginSystem.models import Administrator
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
@@ -307,6 +307,6 @@ def router(request):
         else:
             return cm.ajaxPre(0, 'This function is not available in your version of CyberPanel.')
 
-    except BaseException, msg:
+    except BaseException as msg:
         cm = CloudManager(None)
         return cm.ajaxPre(0, str(msg))

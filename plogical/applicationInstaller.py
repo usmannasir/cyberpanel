@@ -1,4 +1,4 @@
-#!/usr/local/CyberCP/bin/python2
+#!/usr/local/CyberCP/bin/python
 import os, sys
 
 sys.path.append('/usr/local/CyberCP')
@@ -9,15 +9,16 @@ django.setup()
 import threading as multi
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 import subprocess
-from vhost import vhost
+from plogical.vhost import vhost
 from websiteFunctions.models import ChildDomains, Websites
-import randomPassword
-from mysqlUtilities import mysqlUtilities
+from plogical import randomPassword
+from plogical.mysqlUtilities import mysqlUtilities
 from databases.models import Databases
-from installUtilities import installUtilities
+from plogical.installUtilities import installUtilities
 import shutil
 from plogical.mailUtilities import mailUtilities
 from plogical.processUtilities import ProcessUtilities
+
 
 
 class ApplicationInstaller(multi.Thread):
@@ -26,6 +27,7 @@ class ApplicationInstaller(multi.Thread):
         multi.Thread.__init__(self)
         self.installApp = installApp
         self.extraArgs = extraArgs
+        self.tempStatusPath = self.extraArgs['tempStatusPath']
 
     def run(self):
         try:
@@ -45,9 +47,90 @@ class ApplicationInstaller(multi.Thread):
                 self.installPrestaShop()
             elif self.installApp == 'magento':
                 self.installMagento()
+            elif self.installApp == 'convertDomainToSite':
+                self.convertDomainToSite()
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg) + ' [ApplicationInstaller.run]')
+
+    def convertDomainToSite(self):
+        try:
+
+            from websiteFunctions.website import WebsiteManager
+            import json, time
+
+            request = self.extraArgs['request']
+
+            ##
+
+            statusFile = open(self.tempStatusPath, 'w')
+            statusFile.writelines('Deleting domain as child..,20')
+            statusFile.close()
+
+            data = json.loads(request.body)
+
+            domainName = data['domainName']
+
+            childDomain = ChildDomains.objects.get(domain=domainName)
+            path = childDomain.path
+
+            wm = WebsiteManager()
+
+            wm.submitDomainDeletion(request.session['userID'], {'websiteName': domainName})
+            time.sleep(5)
+
+            ##
+
+            statusFile = open(self.tempStatusPath, 'w')
+            statusFile.writelines('Creating domain as website..,40')
+            statusFile.close()
+
+            resp = wm.submitWebsiteCreation(request.session['userID'], data)
+            respData = json.loads(resp.content.decode('utf-8'))
+
+            ##
+
+            while True:
+                respDataStatus = ProcessUtilities.outputExecutioner("cat " + respData['tempStatusPath'])
+
+                if respDataStatus.find('[200]') > -1:
+                    break
+                elif respDataStatus.find('[404]') > -1:
+                    statusFile = open(self.tempStatusPath, 'w')
+                    statusFile.writelines(respDataStatus['currentStatus'] + '  [404]')
+                    statusFile.close()
+                    return 0
+                else:
+                    statusFile = open(self.tempStatusPath, 'w')
+                    statusFile.writelines(respDataStatus)
+                    statusFile.close()
+                    time.sleep(1)
+
+            statusFile = open(self.tempStatusPath, 'w')
+            statusFile.writelines('Moving data..,80')
+            statusFile.close()
+
+
+            command = 'rm -rf  /home/%s/public_html' % (domainName)
+            ProcessUtilities.executioner(command)
+
+            command = 'mv %s /home/%s/public_html' % (path, domainName)
+            ProcessUtilities.executioner(command)
+
+            website = Websites.objects.get(domain=domainName)
+
+            command = 'chown %s:%s /home/%s/public_html' % (website.externalApp, website.externalApp, domainName)
+            ProcessUtilities.executioner(command)
+
+            statusFile = open(self.tempStatusPath, 'w')
+            statusFile.writelines('Successfully converted. [200]')
+            statusFile.close()
+
+        except BaseException as msg:
+            statusFile = open(self.tempStatusPath, 'w')
+            statusFile.writelines(str(msg) + " [404]")
+            statusFile.close()
+            return 0
 
     def installWPCLI(self):
         try:
@@ -60,7 +143,7 @@ class ApplicationInstaller(multi.Thread):
             command = 'sudo mv wp-cli.phar /usr/bin/wp'
             ProcessUtilities.executioner(command)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg) + ' [ApplicationInstaller.installWPCLI]')
 
     def dataLossCheck(self, finalPath, tempStatusPath):
@@ -106,7 +189,7 @@ class ApplicationInstaller(multi.Thread):
                 command = 'sudo yum install git -y'
                 ProcessUtilities.executioner(command)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg) + ' [ApplicationInstaller.installGit]')
 
     def dbCreation(self, tempStatusPath, website):
@@ -141,7 +224,7 @@ class ApplicationInstaller(multi.Thread):
 
             return dbName, dbUser, dbPassword
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg) + '[ApplicationInstallerdbCreation]')
 
     def installWordPress(self):
@@ -298,7 +381,7 @@ class ApplicationInstaller(multi.Thread):
             return 0
 
 
-        except BaseException, msg:
+        except BaseException as msg:
             # remove the downloaded files
             FNULL = open(os.devnull, 'w')
 
@@ -469,7 +552,7 @@ class ApplicationInstaller(multi.Thread):
             return 0
 
 
-        except BaseException, msg:
+        except BaseException as msg:
             # remove the downloaded files
 
             homeDir = "/home/" + domainName + "/public_html"
@@ -568,7 +651,7 @@ class ApplicationInstaller(multi.Thread):
             try:
                 command = 'git clone --depth 1 --no-single-branch git@' + defaultProvider + '.com:' + username + '/' + reponame + '.git -b ' + branch + ' ' + finalPath
                 ProcessUtilities.executioner(command, externalApp)
-            except subprocess.CalledProcessError, msg:
+            except subprocess.CalledProcessError as msg:
                 statusFile = open(tempStatusPath, 'w')
                 statusFile.writelines(
                     'Failed to clone repository, make sure you deployed your key to repository. [404]')
@@ -596,7 +679,7 @@ class ApplicationInstaller(multi.Thread):
             return 0
 
 
-        except BaseException, msg:
+        except BaseException as msg:
             os.remove('/home/cyberpanel/' + domainName + '.git')
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines(str(msg) + " [404]")
@@ -636,7 +719,7 @@ class ApplicationInstaller(multi.Thread):
             return 0
 
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg) + " [ApplicationInstaller.gitPull]")
             return 0
 
@@ -679,7 +762,7 @@ class ApplicationInstaller(multi.Thread):
             return 0
 
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg) + " [ApplicationInstaller.gitPull]")
             return 0
 
@@ -829,7 +912,7 @@ class ApplicationInstaller(multi.Thread):
             statusFile.close()
             return 0
 
-        except BaseException, msg:
+        except BaseException as msg:
             # remove the downloaded files
 
             homeDir = "/home/" + domainName + "/public_html"
@@ -873,11 +956,11 @@ class ApplicationInstaller(multi.Thread):
                 try:
                     command = 'sudo git --git-dir=' + finalPath + '/.git  checkout ' + githubBranch
                     ProcessUtilities.executioner(command, externalApp)
-                except subprocess.CalledProcessError, msg:
+                except subprocess.CalledProcessError as msg:
                     logging.writeToFile('Failed to change branch: ' + str(msg))
                     return 0
             return 0
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile('Failed to change branch: ' + str(msg))
             return 0
 
@@ -1038,7 +1121,7 @@ class ApplicationInstaller(multi.Thread):
             return 0
 
 
-        except BaseException, msg:
+        except BaseException as msg:
             # remove the downloaded files
 
             homeDir = "/home/" + domainName + "/public_html"

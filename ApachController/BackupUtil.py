@@ -14,7 +14,7 @@ class BackupUtil:
                 return 1
             else:
                 return 0
-        except BaseException, msg:
+        except BaseException as msg:
             return 0
 
     @staticmethod
@@ -25,9 +25,9 @@ class BackupUtil:
         try:
             smtpObj = smtplib.SMTP('127.0.0.1')
             smtpObj.sendmail(sender, receivers, message)
-            print "Successfully sent email"
-        except BaseException, msg:
-            print "Error: unable to send email %s" % str(msg)
+            print("Successfully sent email")
+        except BaseException as msg:
+            print("Error: unable to send email %s" % str(msg))
 
     @staticmethod
     def SyncHome():

@@ -1,4 +1,4 @@
-#!/usr/local/CyberCP/bin/python2
+#!/usr/local/CyberCP/bin/python
 import os.path
 import sys
 import django
@@ -11,6 +11,7 @@ from plogical import hashPassword
 from plogical.acl import ACLManager
 from packages.models import Package
 from baseTemplate.models import version
+from CLManager.models import CLPackages
 
 def main():
 
@@ -31,13 +32,14 @@ def main():
                               firstName="Cyber", lastName="Panel", acl=acl, token=token)
         admin.save()
 
-        vers = version(currentVersion="1.9", build=2)
+        vers = version(currentVersion="1.9", build=3)
         vers.save()
 
         package = Package(admin=admin, packageName="Default", diskSpace=1000,
                           bandwidth=1000, ftpAccounts=1000, dataBases=1000,
                           emailAccounts=1000, allowedDomains=20)
         package.save()
+
         print("Admin password successfully changed!")
         return 1
 

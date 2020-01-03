@@ -13,7 +13,7 @@ class CyberCPLogFileWriter:
                     "%m.%d.%Y_%H-%M-%S") + "] "+ message + "\n")
             file.close()
 
-        except IOError,msg:
+        except BaseException as msg:
             return "Can not write to error file."
 
     @staticmethod
@@ -24,18 +24,18 @@ class CyberCPLogFileWriter:
                 "%m.%d.%Y_%H-%M-%S") + "] [" + level + ":" + method + "] " + message + "\n")
             file.close()
             file.close()
-        except IOError:
+        except BaseException:
             return "Can not write to error file!"
 
     @staticmethod
     def readLastNFiles(numberOfLines,fileName):
         try:
 
-            lastFewLines = subprocess.check_output(["tail", "-n",str(numberOfLines),fileName])
+            lastFewLines = str(subprocess.check_output(["tail", "-n",str(numberOfLines),fileName]).decode("utf-8"))
 
             return lastFewLines
 
-        except subprocess.CalledProcessError,msg:
+        except subprocess.CalledProcessError as msg:
             return "File was empty"
 
     @staticmethod
@@ -47,8 +47,8 @@ class CyberCPLogFileWriter:
                 statusFile = open(tempStatusPath, 'a')
             statusFile.writelines(mesg + '\n')
             statusFile.close()
-            print(mesg + '\n')
-        except BaseException, msg:
+            print((mesg + '\n'))
+        except BaseException as msg:
             CyberCPLogFileWriter.writeToFile(str(msg) + ' [statusWriter]')
             #print str(msg)
 

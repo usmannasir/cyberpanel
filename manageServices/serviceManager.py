@@ -14,7 +14,7 @@ class ServiceManager:
         path = '/etc/pdns/pdns.conf'
 
         data = ProcessUtilities.outputExecutioner('sudo cat ' + path).splitlines()
-        #data = subprocess.check_output(shlex.split('sudo cat ' + path)).splitlines()
+        #data = subprocess.check_output(shlex.split('sudo cat ' + path)).decode("utf-8").splitlines()
 
 
         if type == 'MASTER':

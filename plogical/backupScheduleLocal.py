@@ -1,7 +1,7 @@
-import CyberCPLogFileWriter as logging
+from plogical import CyberCPLogFileWriter as logging
 import os
 import time
-from backupSchedule import backupSchedule
+from plogical.backupSchedule import backupSchedule
 from plogical.processUtilities import ProcessUtilities
 from re import match,I,M
 import signal
@@ -58,7 +58,7 @@ class backupScheduleLocal:
 
             writeToFile.close()
 
-        except BaseException,msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [214:startBackup]")
 
 def main():

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 from django.db import models
 from websiteFunctions.models import Websites
@@ -39,7 +39,7 @@ class EmailTemplate(models.Model):
     fromName = models.CharField(max_length=100)
     fromEmail = models.CharField(max_length=150)
     replyTo = models.CharField(max_length=150)
-    emailMessage = models.CharField(max_length=3000000)
+    emailMessage = models.TextField(max_length=65532)
 
 class EmailJobs(models.Model):
     owner = models.ForeignKey(EmailTemplate, on_delete=models.CASCADE)

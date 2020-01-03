@@ -1,4 +1,4 @@
-#!/usr/local/CyberCP/bin/python2
+#!/usr/local/CyberCP/bin/python
 import os,sys
 sys.path.append('/usr/local/CyberCP')
 import django
@@ -15,14 +15,14 @@ class cacheManager:
     def flushCache():
         try:
 
-            for domain, domainOBJ in cacheManager.domains.iteritems():
+            for domain, domainOBJ in cacheManager.domains.items():
                 domaindb = Domains.objects.get(domain=domain)
                 dbDomain = DomainLimits.objects.get(domain=domaindb)
 
                 dbDomain.monthlyUsed = domainOBJ.monthlyUsed
                 dbDomain.save()
 
-                for email, emailOBJ in domainOBJ.emails.iteritems():
+                for email, emailOBJ in domainOBJ.emails.items():
                     emailID = EUsers.objects.get(email=email)
                     dbEmail = EmailLimits.objects.get(email=emailID)
 
@@ -30,7 +30,7 @@ class cacheManager:
                     dbEmail.hourlyUsed = emailOBJ.hourlyUsed
                     dbEmail.save()
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg) + ' [cacheManager.flushCache]')
 
     @staticmethod
@@ -44,7 +44,7 @@ class cacheManager:
                     emailOBJ = domainOBJ.emails[emailAddress]
                     emailOBJ.logStatus = operationValue
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg) + ' [cacheManager.disableEnableLogs]')
 
     @staticmethod
@@ -59,7 +59,7 @@ class cacheManager:
                 emailOBJ = domainOBJ.emails[email]
                 emailOBJ.logStatus = operationVal
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg) + ' [cacheManager.purgeLog]')
 
     @staticmethod
@@ -74,7 +74,7 @@ class cacheManager:
                 emailOBJ = domainOBJ.emails[email]
                 emailOBJ.limitStatus = operationVal
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg) + ' [cacheManager.purgeLimit]')
 
     @staticmethod
@@ -87,7 +87,7 @@ class cacheManager:
                 domainOBJ = cacheManager.domains[domain]
                 domainOBJ.limitStatus = operationVal
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg) + ' [cacheManager.purgeLimitDomain]')
 
     @staticmethod
@@ -100,7 +100,7 @@ class cacheManager:
                 domainOBJ = cacheManager.domains[domain]
                 domainOBJ.monthlyLimits = newLimit
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg) + ' [cacheManager.updateDomainLimit]')
 
     @staticmethod
@@ -117,14 +117,14 @@ class cacheManager:
                 emailOBJ.monthlyLimits = monthlyLimit
                 emailOBJ.hourlyLimits = hourlyLimit
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg) + ' [cacheManager.purgeLimitEmail]')
 
     @staticmethod
     def hourlyCleanUP():
         try:
-            for domain, domainOBJ in cacheManager.domains.iteritems():
-                for email, emailOBJ in domainOBJ.emails.iteritems():
+            for domain, domainOBJ in cacheManager.domains.items():
+                for email, emailOBJ in domainOBJ.emails.items():
 
                     emailID = EUsers.objects.get(email=email)
                     dbEmail = EmailLimits.objects.get(email=emailID)
@@ -135,19 +135,19 @@ class cacheManager:
                     dbEmail.hourlyUsed = 0
                     emailOBJ.hourlyUsed = 0
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg) + ' [cacheManager.hourlyCleanUP]')
 
     @staticmethod
     def monthlyCleanUP():
         try:
 
-            for domain, domainOBJ in cacheManager.domains.iteritems():
+            for domain, domainOBJ in cacheManager.domains.items():
                 domaindb = Domains.objects.get(domain=domain)
                 dbDomain = DomainLimits.objects.get(domain=domaindb)
 
 
-                for email, emailOBJ in domainOBJ.emails.iteritems():
+                for email, emailOBJ in domainOBJ.emails.items():
                     emailID = EUsers.objects.get(email=email)
                     dbEmail = EmailLimits.objects.get(email=emailID)
 
@@ -160,7 +160,7 @@ class cacheManager:
                 dbDomain.monthlyUsed = 0
                 dbDomain.save()
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg) + ' [cacheManager.monthlyCleanUP]')
 
 
@@ -191,6 +191,6 @@ class cacheManager:
                 cacheManager.monthlyCleanUP()
 
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg) + ' [cacheManager.handlePurgeRequest]')
 

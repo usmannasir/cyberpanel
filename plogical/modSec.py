@@ -1,13 +1,15 @@
-import CyberCPLogFileWriter as logging
+import sys
+sys.path.append('/usr/local/CyberCP')
+from plogical import CyberCPLogFileWriter as logging
 import subprocess
 import shlex
 import argparse
-from virtualHostUtilities import virtualHostUtilities
+from plogical.virtualHostUtilities import virtualHostUtilities
 import os
 import tarfile
 import shutil
-from mailUtilities import mailUtilities
-from processUtilities import ProcessUtilities
+from plogical.mailUtilities import mailUtilities
+from plogical.processUtilities import ProcessUtilities
 from plogical.installUtilities import installUtilities
 
 class modSec:
@@ -44,7 +46,7 @@ class modSec:
                 writeToFile.close()
 
             return 1
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[installModSec]")
 
     @staticmethod
@@ -101,13 +103,13 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
                 rule.write(initialRules)
                 rule.close()
 
-            print "1,None"
+            print("1,None")
             return
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "  [installModSecConfigs]")
-            print "0," + str(msg)
+            print("0," + str(msg))
 
     @staticmethod
     def saveModSecConfigs(tempConfigPath):
@@ -152,7 +154,7 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
 
                 installUtilities.reStartLiteSpeed()
 
-                print "1,None"
+                print("1,None")
                 return
             else:
                 confFile = os.path.join(virtualHostUtilities.Server_root, "conf/modsec.conf")
@@ -186,13 +188,13 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
 
                 installUtilities.reStartLiteSpeed()
 
-                print "1,None"
+                print("1,None")
                 return
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "  [saveModSecConfigs]")
-            print "0," + str(msg)
+            print("0," + str(msg))
 
     @staticmethod
     def saveModSecRules():
@@ -212,13 +214,13 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
 
             installUtilities.reStartLiteSpeed()
 
-            print "1,None"
+            print("1,None")
             return
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "  [saveModSecRules]")
-            print "0," + str(msg)
+            print("0," + str(msg))
 
     @staticmethod
     def setupComodoRules():
@@ -264,7 +266,7 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
 
                 return 1
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "  [setupComodoRules]")
             return 0
@@ -275,7 +277,7 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
 
             if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
                 if modSec.setupComodoRules() == 0:
-                    print '0, Unable to download Comodo Rules.'
+                    print('0, Unable to download Comodo Rules.')
                     return
 
                 owaspRulesConf = """modsecurity_rules_file /usr/local/lsws/conf/modsec/comodo/modsecurity.conf
@@ -327,7 +329,7 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
                 conf.close()
 
                 installUtilities.reStartLiteSpeed()
-                print "1,None"
+                print("1,None")
                 return
             else:
                 if os.path.exists('/usr/local/lsws/conf/comodo_litespeed'):
@@ -351,13 +353,13 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
                 subprocess.call(shlex.split(command))
 
                 installUtilities.reStartLiteSpeed()
-                print "1,None"
+                print("1,None")
                 return
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "  [installComodo]")
-            print "0," + str(msg)
+            print("0," + str(msg))
 
     @staticmethod
     def disableComodo():
@@ -377,22 +379,22 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
                 conf.close()
                 installUtilities.reStartLiteSpeed()
 
-                print "1,None"
+                print("1,None")
 
             else:
                 try:
                     shutil.rmtree('/usr/local/lsws/conf/comodo_litespeed')
-                except BaseException, msg:
+                except BaseException as msg:
                     logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [disableComodo]')
 
                 installUtilities.reStartLiteSpeed()
-                print "1,None"
+                print("1,None")
 
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "  [disableComodo]")
-            print "0," + str(msg)
+            print("0," + str(msg))
 
     @staticmethod
     def setupOWASPRules():
@@ -418,7 +420,7 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
 
             return 1
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "  [setupOWASPRules]")
             return 0
@@ -427,7 +429,7 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
     def installOWASP():
         try:
             if modSec.setupOWASPRules() == 0:
-                print '0, Unable to download OWASP Rules.'
+                print('0, Unable to download OWASP Rules.')
                 return
 
             owaspRulesConf = """modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/modsecurity.conf
@@ -476,12 +478,12 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/RESPONSE-999-EXCL
             conf.close()
             installUtilities.reStartLiteSpeed()
 
-            print "1,None"
+            print("1,None")
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "  [installOWASP]")
-            print "0," + str(msg)
+            print("0," + str(msg))
 
     @staticmethod
     def disableOWASP():
@@ -500,12 +502,12 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/RESPONSE-999-EXCL
             conf.close()
             installUtilities.reStartLiteSpeed()
 
-            print "1,None"
+            print("1,None")
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "  [disableOWASP]")
-            print "0," + str(msg)
+            print("0," + str(msg))
 
     @staticmethod
     def disableRuleFile(fileName, packName):
@@ -534,12 +536,12 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/RESPONSE-999-EXCL
 
             installUtilities.reStartLiteSpeed()
 
-            print "1,None"
+            print("1,None")
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "  [disableRuleFile]")
-            print "0," + str(msg)
+            print("0," + str(msg))
 
     @staticmethod
     def enableRuleFile(fileName, packName):
@@ -567,12 +569,12 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/RESPONSE-999-EXCL
 
             installUtilities.reStartLiteSpeed()
 
-            print "1,None"
+            print("1,None")
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "  [enableRuleFile]")
-            print "0," + str(msg)
+            print("0," + str(msg))
 
 
 def main():

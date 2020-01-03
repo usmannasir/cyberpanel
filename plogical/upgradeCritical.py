@@ -1,4 +1,4 @@
-#!/usr/local/CyberCP/bin/python2
+#!/usr/local/CyberCP/bin/python
 import sys
 sys.path.append('/usr/local/CyberCP')
 import subprocess, shlex
@@ -16,7 +16,7 @@ class UpgradeCritical:
                 return 1
             else:
                 return 0
-        except BaseException, msg:
+        except BaseException as msg:
             return 0
 
     @staticmethod

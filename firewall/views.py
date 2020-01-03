@@ -1,8 +1,8 @@
 from django.shortcuts import redirect
 import json
 from loginSystem.views import loadLoginPage
-from firewallManager import FirewallManager
-from pluginManager import pluginManager
+from .firewallManager import FirewallManager
+from .pluginManager import pluginManager
 # Create your views here.
 
 

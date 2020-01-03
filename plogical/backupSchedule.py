@@ -1,18 +1,18 @@
-#!/usr/local/CyberCP/bin/python2
+#!/usr/local/CyberCP/bin/python
 import os.path
 import sys
 import django
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
-import CyberCPLogFileWriter as logging
+from plogical import CyberCPLogFileWriter as logging
 import subprocess
 import shlex
 import os
 import time
-from backupUtilities import backupUtilities
+from plogical.backupUtilities import backupUtilities
 from re import match,I,M
-from websiteFunctions.models import Websites, Backups
+from websiteFunctions.models import Backups
 from plogical.processUtilities import ProcessUtilities
 from random import randint
 import json, requests
@@ -28,9 +28,9 @@ class backupSchedule:
         try:
             file = open(fileName,'a')
             file.writelines("[" + time.strftime("%m.%d.%Y_%H-%M-%S") + "] "+ message + "\n")
-            print ("[" + time.strftime("%m.%d.%Y_%H-%M-%S") + "] "+ message + "\n")
+            print(("[" + time.strftime("%m.%d.%Y_%H-%M-%S") + "] "+ message + "\n"))
             file.close()
-        except IOError,msg:
+        except IOError as msg:
             return "Can not write to error file."
 
     @staticmethod
@@ -75,7 +75,7 @@ class backupSchedule:
 
                 if os.path.exists(status):
                     status = open(status, 'r').read()
-                    print status
+                    print(status)
                     time.sleep(2)
 
                     if status.find("Completed") > -1:
@@ -127,11 +127,7 @@ class backupSchedule:
                         os.remove(schedulerPath)
                         return 0, 'Backup process killed without reporting any error.'
 
-
-
-
-
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [119:startBackup]")
             return 0, str(msg)
 
@@ -177,7 +173,7 @@ class backupSchedule:
                 backupSchedule.remoteBackupLogging(backupLogPath, "")
                 backupSchedule.remoteBackupLogging(backupLogPath, "")
 
-        except BaseException,msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [backupSchedule.createBackup]")
 
     @staticmethod
@@ -201,7 +197,7 @@ class backupSchedule:
 
             os.remove(backupPath)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [189:startBackup]")
 
     @staticmethod
@@ -258,7 +254,7 @@ class backupSchedule:
 
 
 
-        except BaseException,msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [prepare]")
 
 def main():

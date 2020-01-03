@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 from django.shortcuts import render,redirect
 from django.http import HttpResponse
@@ -31,7 +31,7 @@ def modifyWebsite(request):
         userID = request.session['userID']
         wm = WebsiteManager()
         return wm.modifyWebsite(request, userID)
-    except BaseException, msg:
+    except BaseException as msg:
         return HttpResponse(str(msg))
 
     except KeyError:
@@ -58,6 +58,14 @@ def listWebsites(request):
         userID = request.session['userID']
         wm = WebsiteManager()
         return wm.listWebsites(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def listChildDomains(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.listChildDomains(request, userID)
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -133,6 +141,14 @@ def fetchWebsitesList(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+def fetchChildDomainsMain(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.fetchChildDomainsMain(userID, json.loads(request.body))
+    except KeyError:
+        return redirect(loadLoginPage)
+
 def submitWebsiteDeletion(request):
     try:
         userID = request.session['userID']
@@ -169,6 +185,16 @@ def submitDomainDeletion(request):
             return result
 
         return coreResult
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def convertDomainToSite(request):
+    try:
+
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.convertDomainToSite(userID, request)
 
     except KeyError:
         return redirect(loadLoginPage)

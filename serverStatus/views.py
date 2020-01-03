@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
@@ -13,7 +13,7 @@ from plogical.acl import ACLManager
 import os
 from plogical.virtualHostUtilities import virtualHostUtilities
 import time
-import serverStatusUtil
+from . import serverStatusUtil
 from plogical.processUtilities import ProcessUtilities
 from plogical.httpProc import httpProc
 from plogical.installUtilities import installUtilities
@@ -75,7 +75,7 @@ def litespeedStatus(request):
                 else:
                     loadedModules.append(items)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[litespeedStatus]")
             return render(request, "serverStatus/litespeedStatus.html", {"processList": processList,
                                                                          "liteSpeedVersionStatus": "For some reaons not able to load version details, see CyberCP main log file.",
@@ -89,7 +89,7 @@ def litespeedStatus(request):
                            "loadedModules": loadedModules, 'OLS': OLS, 'message': message}
             return render(request, "serverStatus/litespeedStatus.html", dataForHtml)
 
-    except KeyError, msg:
+    except KeyError as msg:
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[litespeedStatus]")
         return redirect(loadLoginPage)
 
@@ -123,7 +123,7 @@ def stopOrRestartLitespeed(request):
         final_json = json.dumps(status)
         return HttpResponse(final_json)
 
-    except KeyError, msg:
+    except KeyError as msg:
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[stopOrRestartLitespeed]")
         return HttpResponse("Not Logged in as admin")
 
@@ -141,7 +141,7 @@ def cyberCPMainLogFile(request):
 
         return render(request, 'serverStatus/cybercpmainlogfile.html')
 
-    except KeyError, msg:
+    except KeyError as msg:
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[cyberCPMainLogFile]")
         return redirect(loadLoginPage)
 
@@ -163,7 +163,7 @@ def getFurtherDataFromLogFile(request):
         final_json = json.dumps(status)
         return HttpResponse(final_json)
 
-    except KeyError, msg:
+    except KeyError as msg:
         status = {"logstatus": 0,
                   "error": "Could not fetch data from log file, please see CyberCP main log file through command line."}
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[getFurtherDataFromLogFile]")
@@ -335,11 +335,11 @@ def servicesAction(request):
                     return HttpResponse(final_json)
 
 
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'serviceAction': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
-    except KeyError, msg:
+    except KeyError as msg:
         final_dic = {'serviceAction': 0, 'error_message': str(msg)}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
@@ -373,7 +373,7 @@ def switchTOLSWS(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
-    except BaseException, msg:
+    except BaseException as msg:
         data_ret = {'status': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
@@ -402,7 +402,7 @@ def switchTOLSWSStatus(request):
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-    except BaseException, msg:
+    except BaseException as msg:
         command = "sudo rm -f " + serverStatusUtil.ServerStatusUtil.lswsInstallStatusPath
         ProcessUtilities.popenExecutioner(command)
         data_ret = {'status': 0,'abort': 1, 'requestStatus': str(msg), 'installed': 0}
@@ -431,11 +431,11 @@ def licenseStatus(request):
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'status': 0, 'erroMessage': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
-    except KeyError, msg:
+    except KeyError as msg:
         final_dic = {'status': 0, 'erroMessage': str(msg)}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
@@ -477,11 +477,11 @@ def changeLicense(request):
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'status': 0, 'erroMessage': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
-    except KeyError, msg:
+    except KeyError as msg:
         final_dic = {'status': 0, 'erroMessage': str(msg)}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
@@ -501,7 +501,7 @@ def topProcesses(request):
         proc = httpProc(request, templateName)
         return proc.renderPre()
 
-    except KeyError, msg:
+    except KeyError as msg:
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[litespeedStatus]")
         return redirect(loadLoginPage)
 
@@ -526,19 +526,19 @@ def topProcessesStatus(request):
         counter = 0
 
         loadAVG = data[0].split(' ')
-        loadAVG = filter(lambda a: a != '', loadAVG)
+        loadAVG = [a for a in loadAVG if a != '']
 
         loadNow = data[2].split(' ')
-        loadNow = filter(lambda a: a != '', loadNow)
+        loadNow = [a for a in loadNow if a != '']
 
         memory = data[3].split(' ')
-        memory = filter(lambda a: a != '', memory)
+        memory = [a for a in memory if a != '']
 
         swap = data[4].split(' ')
-        swap = filter(lambda a: a != '', swap)
+        swap = [a for a in swap if a != '']
 
         processes = data[1].split(' ')
-        processes = filter(lambda a: a != '', processes)
+        processes = [a for a in processes if a != '']
 
         for items in data:
             counter = counter + 1
@@ -546,7 +546,7 @@ def topProcessesStatus(request):
                 continue
 
             points = items.split(' ')
-            points = filter(lambda a: a != '', points)
+            points = [a for a in points if a != '']
 
             dic = {'PID': points[0], 'User': points[1], 'VIRT': points[4],
                    'RES': points[5], 'S': points[7], 'CPU': points[8], 'MEM': points[9],
@@ -623,7 +623,7 @@ def topProcessesStatus(request):
         final_json = json.dumps(data)
         return HttpResponse(final_json)
 
-    except BaseException, msg:
+    except BaseException as msg:
         data_ret = {'status': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
@@ -649,11 +649,11 @@ def killProcess(request):
             proc = httpProc(request, None)
             return proc.ajax(1, None)
 
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'status': 0, 'erroMessage': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
-    except KeyError, msg:
+    except KeyError as msg:
         final_dic = {'status': 0, 'erroMessage': str(msg)}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)

@@ -1,4 +1,4 @@
-#!/usr/local/CyberCP/bin/python2
+#!/usr/local/CyberCP/bin/python
 import os,sys
 sys.path.append('/usr/local/CyberCP')
 import django
@@ -7,12 +7,12 @@ try:
     django.setup()
 except:
     pass
-import CyberCPLogFileWriter as logging
+from plogical import CyberCPLogFileWriter as logging
 import subprocess
 import shlex
 try:
     from dns.models import Domains,Records
-    from processUtilities import ProcessUtilities
+    from plogical.processUtilities import ProcessUtilities
     from manageServices.models import PDNSStatus, SlaveServers
 except:
     pass
@@ -369,7 +369,7 @@ class DNS:
                 command = 'sudo systemctl restart pdns'
                 ProcessUtilities.executioner(command)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 "We had errors while creating DNS records for: " + domain + ". Error message: " + str(msg))
 
@@ -386,7 +386,7 @@ class DNS:
 
             path = "/etc/opendkim/keys/" + topLevelDomain + "/default.txt"
             command = "sudo cat " + path
-            output = subprocess.check_output(shlex.split(command))
+            output = subprocess.check_output(shlex.split(command)).decode("utf-8")
             leftIndex = output.index('(') + 2
             rightIndex = output.rindex(')') - 1
 
@@ -405,7 +405,7 @@ class DNS:
                 command = 'sudo systemctl restart pdns'
                 ProcessUtilities.executioner(command)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 "We had errors while creating DKIM record for: " + domain + ". Error message: " + str(msg))
 
@@ -498,7 +498,7 @@ class DNS:
                 if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
                     command = 'sudo systemctl restart pdns'
                     ProcessUtilities.executioner(command)
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [createDNSRecord]")
 
     @staticmethod

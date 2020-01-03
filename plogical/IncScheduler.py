@@ -1,4 +1,4 @@
-#!/usr/local/CyberCP/bin/python2
+#!/usr/local/CyberCP/bin/python
 import os.path
 import sys
 sys.path.append('/usr/local/CyberCP')
@@ -79,7 +79,7 @@ class IncScheduler():
                                     logging.statusWriter(IncScheduler.logPath, 'Failed backup for %s, error: %s.' % (web.website, result), 1)
                                     break
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg))
 
 
