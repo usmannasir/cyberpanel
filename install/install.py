@@ -1958,7 +1958,7 @@ milter_default_action = accept
         try:
             servicePath = '/home/cyberpanel/powerdns'
 
-            if state == 'Off':
+            if state == 'off':
 
                 command = 'sudo systemctl stop pdns'
                 subprocess.call(shlex.split(command))
@@ -1984,7 +1984,7 @@ milter_default_action = accept
         try:
             servicePath = '/home/cyberpanel/postfix'
 
-            if state == 'Off':
+            if state == 'off':
 
                 command = 'sudo systemctl stop postfix'
                 subprocess.call(shlex.split(command))
@@ -2010,7 +2010,7 @@ milter_default_action = accept
         try:
             servicePath = '/home/cyberpanel/pureftpd'
 
-            if state == 'Off':
+            if state == 'off':
 
                 command = 'sudo systemctl stop ' + preFlightsChecks.pureFTPDServiceName(distro)
                 subprocess.call(shlex.split(command))
@@ -2303,22 +2303,23 @@ def main():
     checks.fixCyberPanelPermissions()
 
     if args.postfix != None:
-        checks.enableDisableEmail(args.postfix)
+        checks.enableDisableEmail(args.postfix.lower())
     else:
         preFlightsChecks.stdOut("Postfix will be installed and enabled.")
-        checks.enableDisableEmail('On')
+        checks.enableDisableEmail('on')
 
     if args.powerdns != None:
-        checks.enableDisableDNS(args.powerdns)
+        checks.enableDisableDNS(args.powerdns.lower())
     else:
         preFlightsChecks.stdOut("PowerDNS will be installed and enabled.")
-        checks.enableDisableDNS('On')
+        checks.enableDisableDNS('on')
 
     if args.ftp != None:
-        checks.enableDisableFTP(args.ftp, distro)
+        checks.enableDisableFTP(args.ftp.lower(), distro)
     else:
         preFlightsChecks.stdOut("Pure-FTPD will be installed and enabled.")
-        checks.enableDisableFTP('On', distro)
+        checks.enableDisableFTP('on', distro)
+
     checks.installCLScripts()
     logging.InstallLog.writeToFile("CyberPanel installation successfully completed!")
 

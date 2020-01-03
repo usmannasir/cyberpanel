@@ -793,7 +793,7 @@ case "$num" in
 	;;
 esac
 
-<<COMMENT
+
 echo -e "\nInstall minimal service for CyberPanel? This will skip PowerDNS, Postfix and Pure-FTPd."
 printf "%s" "Minimal installation [y/N]: "
 read TMP_YN
@@ -825,31 +825,35 @@ else
 		PUREFTPD_VARIABLE="ON"
 		fi
 fi
-COMMENT
+
 #above comment for future use
 
 #if [[ $DEV_ARG == "ON" ]] ; then
-echo -e "Press \e[31mEnter\e[39m to continue with stable version of CyberPanel, or"
-echo -e "\nPlease enter \e[31mbeta\e[39m and then press \e[31mEnter\e[39m to install CyberPanel with Python 3."
-echo -e "\nCentOS 8 will autoamtically proceed with Python 3 branch."
-printf "%s" ""
-read TMP_YN
+#echo -e "Press \e[31mEnter\e[39m to continue with stable version of CyberPanel, or"
+#echo -e "\nPlease enter \e[31mbeta\e[39m and then press \e[31mEnter\e[39m to install CyberPanel with Python 3."
+#echo -e "\nCentOS 8 will autoamtically proceed with Python 3 branch."
+#printf "%s" ""
+#read TMP_YN
 
-if [[ $TMP_YN == "beta" ]] ; then
-  DEV="ON"
-#	echo -e "\nPlease specify branch name"
-#	printf "%s" ""
-#	read TMP_YN
-	BRANCH_NAME="p3"
-	echo -e "Branch name set to $BRANCH_NAME"
-else
-	DEV="OFF"
+DEV="ON"
+BRANCH_NAME="p3"
+echo -e "Branch name set to $BRANCH_NAME"
 
-	if [[ $CENTOS_8 == "True" ]] ; then
-	DEV="ON"
-	BRANCH_NAME="p3"
-		fi
-fi
+#if [[ $TMP_YN == "beta" ]] ; then
+#  DEV="ON"
+##	echo -e "\nPlease specify branch name"
+##	printf "%s" ""
+##	read TMP_YN
+#	BRANCH_NAME="p3"
+#	echo -e "Branch name set to $BRANCH_NAME"
+#else
+#	DEV="OFF"
+#
+#	if [[ $CENTOS_8 == "True" ]] ; then
+#	DEV="ON"
+#	BRANCH_NAME="p3"
+#		fi
+#fi
 
 
 
@@ -954,12 +958,12 @@ echo -e "Installation will start in 10 seconds, if you wish to stop please press
 sleep 10
 debug="1"
 if [[ $debug == "0" ]] ; then
-	echo "/usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY"
+	echo "/usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY --postfix $POSTFIX_VARIABLE --powerdns $POWERDNS_VARIABLE --ftp $PUREFTPD_VARIABLE"
 	exit
 fi
 
 if [[ $debug == "1" ]] ; then
-	/usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY
+	/usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY --postfix $POSTFIX_VARIABLE --powerdns $POWERDNS_VARIABLE --ftp $PUREFTPD_VARIABLE
 
 	if grep "CyberPanel installation successfully completed" /var/log/installLogs.txt > /dev/null; then
 		echo -e "\nCyberPanel installation sucessfully completed..."
