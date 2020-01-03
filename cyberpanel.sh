@@ -25,6 +25,7 @@ REDIS="ON"
 TOTAL_RAM=$(free -m | awk '/Mem\:/ { print $2 }')
 CENTOS_8="False"
 WATCHDOG="OFF"
+BRANCH_NAME="stable"
 
 watchdog_setup() {
 if [[ $WATCHDOG == "ON" ]] ; then
@@ -54,9 +55,9 @@ fi
 
 webadmin_passwd() {
 if [[ $VERSION == "OLS" ]] ; then
-php_command="admin_php"
+	php_command="admin_php"
 else
-php_command="admin_php5"
+	php_command="admin_php5"
 fi
 
 WEBADMIN_PASS=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 16 ; echo '')
@@ -69,10 +70,10 @@ echo ${WEBADMIN_PASS} > /etc/cyberpanel/webadmin_passwd
 check_virtualization() {
 echo -e "Checking virtualization type..."
 if hostnamectl | grep "Virtualization: lxc" ; then
-echo -e "\nLXC detected..."
-echo -e "CyberPanel does not support LXC"
-echo -e "Exiting..."
-exit
+	echo -e "\nLXC detected..."
+	echo -e "CyberPanel does not support LXC"
+	echo -e "Exiting..."
+	exit
 fi
 }
 
@@ -80,7 +81,7 @@ license_validation() {
 CURRENT_DIR=$(pwd)
 
 if [ -f /root/cyberpanel-tmp ] ; then
-rm -rf /root/cyberpanel-tmp
+	rm -rf /root/cyberpanel-tmp
 fi
 
 mkdir /root/cyberpanel-tmp
@@ -89,12 +90,12 @@ wget -q https://$DOWNLOAD_SERVER/litespeed/lsws-$LSWS_STABLE_VER-ent-x86_64-linu
 tar xzvf lsws-$LSWS_STABLE_VER-ent-x86_64-linux.tar.gz > /dev/null
 cd  /root/cyberpanel-tmp/lsws-$LSWS_STABLE_VER/conf
 if [[ $LICENSE_KEY == "TRIAL" ]] ; then
-wget -q http://license.litespeedtech.com/reseller/trial.key
-sed -i "s|writeSerial = open('lsws-5.4.2/serial.no', 'w')|command = 'wget -q --output-document=./lsws-$LSWS_STABLE_VER/trial.key http://license.litespeedtech.com/reseller/trial.key'|g" $CURRENT_DIR/installCyberPanel.py
-sed -i 's|writeSerial.writelines(self.serial)|subprocess.call(command, shell=True)|g' $CURRENT_DIR/installCyberPanel.py
-sed -i 's|writeSerial.close()||g' $CURRENT_DIR/installCyberPanel.py
+	wget -q http://license.litespeedtech.com/reseller/trial.key
+	sed -i "s|writeSerial = open('lsws-5.4.2/serial.no', 'w')|command = 'wget -q --output-document=./lsws-$LSWS_STABLE_VER/trial.key http://license.litespeedtech.com/reseller/trial.key'|g" $CURRENT_DIR/installCyberPanel.py
+	sed -i 's|writeSerial.writelines(self.serial)|subprocess.call(command, shell=True)|g' $CURRENT_DIR/installCyberPanel.py
+	sed -i 's|writeSerial.close()||g' $CURRENT_DIR/installCyberPanel.py
 else
-echo $LICENSE_KEY > serial.no
+	echo $LICENSE_KEY > serial.no
 fi
 
 cd /root/cyberpanel-tmp/lsws-$LSWS_STABLE_VER/bin
@@ -127,10 +128,10 @@ sed -i 's|git clone https://github.com/usmannasir/cyberpanel|echo downloaded|g' 
 sed -i 's|http://|https://|g' install.py
 
 if ! grep -q "1.1.1.1" /etc/resolv.conf ; then
-echo -e "\nnameserver 1.1.1.1" >> /etc/resolv.conf
+	echo -e "\nnameserver 1.1.1.1" >> /etc/resolv.conf
 fi
 if ! grep -q "8.8.8.8" /etc/resolv.conf ; then
-echo -e "\nnameserver 8.8.8.8" >> /etc/resolv.conf
+	echo -e "\nnameserver 8.8.8.8" >> /etc/resolv.conf
 fi
 cp /etc/resolv.conf /etc/resolv.conf-tmp
 
@@ -162,21 +163,17 @@ if [[ $SERVER_COUNTRY == "CN" ]] ; then
 #sed -i "${line2}i\ \ \ \ \ \ \ \ command = 'tar xzvf cyberpanel-git.tar.gz'" install.py
 #sed -i "${line2}i\ \ \ \ \ \ \ \ subprocess.call(command, shell=True)" install.py
 #sed -i "${line2}i\ \ \ \ \ \ \ \ command = 'wget cyberpanel.sh/cyberpanel-git.tar.gz'" install.py
-sed -i 's|wget https://rpms.litespeedtech.com/debian/|wget --no-check-certificate https://rpms.litespeedtech.com/debian/|g' install.py
-sed -i 's|https://repo.powerdns.com/repo-files/centos-auth-42.repo|https://'$DOWNLOAD_SERVER'/powerdns/powerdns.repo|g' installCyberPanel.py
-sed -i 's|https://www.rainloop.net/repository/webmail/rainloop-community-latest.zip|https://'$DOWNLOAD_SERVER'/misc/rainloop-community-latest.zip|g' install.py
-
-sed -i 's|rpm -ivh https://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el7.noarch.rpm|curl -o /etc/yum.repos.d/litespeed.repo https://'$DOWNLOAD_SERVER'/litespeed/litespeed.repo|g' install.py
-
-
-sed -i 's|https://copr.fedorainfracloud.org/coprs/copart/restic/repo/epel-7/copart-restic-epel-7.repo|https://'$DOWNLOAD_SERVER'/restic/restic.repo|g' install.py
-
-sed -i 's|yum -y install https://cyberpanel.sh/gf-release-latest.gf.el7.noarch.rpm|wget -O /etc/yum.repos.d/gf.repo https://'$DOWNLOAD_SERVER'/gf-plus/gf.repo|g' install.py
-sed -i 's|dovecot-2.3-latest|dovecot-2.3-latest-mirror|g' install.py
-sed -i 's|git clone https://github.com/usmannasir/cyberpanel|wget https://cyberpanel.sh/cyberpanel-git.tar.gz \&\& tar xzvf cyberpanel-git.tar.gz|g' install.py
-sed -i 's|https://repo.dovecot.org/ce-2.3-latest/centos/$releasever/RPMS/$basearch|https://'$DOWNLOAD_SERVER'/dovecot/|g' install.py
-sed -i 's|'$DOWNLOAD_SERVER'|cyberpanel.sh|g' install.py
-sed -i 's|https://www.litespeedtech.com/packages/5.0/lsws-5.4.2-ent-x86_64-linux.tar.gz|https://'$DOWNLOAD_SERVER'/litespeed/lsws-'$LSWS_STABLE_VER'-ent-x86_64-linux.tar.gz|g' installCyberPanel.py
+	sed -i 's|wget https://rpms.litespeedtech.com/debian/|wget --no-check-certificate https://rpms.litespeedtech.com/debian/|g' install.py
+	sed -i 's|https://repo.powerdns.com/repo-files/centos-auth-42.repo|https://'$DOWNLOAD_SERVER'/powerdns/powerdns.repo|g' installCyberPanel.py
+	sed -i 's|https://www.rainloop.net/repository/webmail/rainloop-community-latest.zip|https://'$DOWNLOAD_SERVER'/misc/rainloop-community-latest.zip|g' install.py
+	sed -i 's|rpm -ivh https://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el7.noarch.rpm|curl -o /etc/yum.repos.d/litespeed.repo https://'$DOWNLOAD_SERVER'/litespeed/litespeed.repo|g' install.py
+	sed -i 's|https://copr.fedorainfracloud.org/coprs/copart/restic/repo/epel-7/copart-restic-epel-7.repo|https://'$DOWNLOAD_SERVER'/restic/restic.repo|g' install.py
+	sed -i 's|yum -y install https://cyberpanel.sh/gf-release-latest.gf.el7.noarch.rpm|wget -O /etc/yum.repos.d/gf.repo https://'$DOWNLOAD_SERVER'/gf-plus/gf.repo|g' install.py
+	sed -i 's|dovecot-2.3-latest|dovecot-2.3-latest-mirror|g' install.py
+	sed -i 's|git clone https://github.com/usmannasir/cyberpanel|wget https://cyberpanel.sh/cyberpanel-git.tar.gz \&\& tar xzvf cyberpanel-git.tar.gz|g' install.py
+	sed -i 's|https://repo.dovecot.org/ce-2.3-latest/centos/$releasever/RPMS/$basearch|https://'$DOWNLOAD_SERVER'/dovecot/|g' install.py
+	sed -i 's|'$DOWNLOAD_SERVER'|cyberpanel.sh|g' install.py
+	sed -i 's|https://www.litespeedtech.com/packages/5.0/lsws-5.4.2-ent-x86_64-linux.tar.gz|https://'$DOWNLOAD_SERVER'/litespeed/lsws-'$LSWS_STABLE_VER'-ent-x86_64-linux.tar.gz|g' installCyberPanel.py
 # global change for CN , regardless provider and system
 
 	if [[ $SERVER_OS == "CentOS" ]] ; then
@@ -371,7 +368,7 @@ root             hard    nofile          65535
 *                hard    nproc           65535
 root             soft    nproc           65535
 root             hard    nproc           65535" >> /etc/security/limits.conf
-fi
+	fi
 
 #sed -i 's|#DefaultLimitNOFILE=|DefaultLimitNOFILE=65535|g' /etc/systemd/system.conf
 
@@ -646,13 +643,12 @@ echo -e "\n Please be aware, this serial number must be obtained from LiteSpeed 
 echo -e "\n And if this serial number has been used before, it must be released/migrated in Store first, otherwise it will fail to start."
 echo -e "\n -a or --addons: install addons: memcached, redis, PHP extension for memcached and redis, 1 for install addons, 0 for not to install, default 0, only applicable for CentOS system."
 echo -e "\n -p or --password: set password of new installation, empty for default 1234567, [r] or [random] for randomly generated 16 digital password, any other value besdies [d] and [r(andom)] will be accept as password, default use 1234567."
-#echo -e "\n -m: set to minimal mode which will not install PowerDNS, Pure-FTPd and Postfix"
+echo -e "\n -m: set to minimal mode which will not install PowerDNS, Pure-FTPd and Postfix"
 echo -e "\n Example:"
 echo -e "\n ./cyberpanel.sh -v ols -p r or ./cyberpanel.sh --version ols --password random"
 echo -e "\n This will install CyberPanel OpenLiteSpeed and randomly generate the password."
 echo -e "\n ./cyberpanel.sh default"
 echo -e "\n This will install everything default , which is OpenLiteSpeed and nothing more.\n"
-
 }
 
 license_input() {
@@ -798,6 +794,7 @@ esac
 
 
 echo -e "\nInstall minimal service for CyberPanel? This will skip PowerDNS, Postfix and Pure-FTPd."
+echo -e ""
 printf "%s" "Minimal installation [y/N]: "
 read TMP_YN
 if [ `expr "x$TMP_YN" : 'x[Yy]'` -gt 1 ]; then
@@ -806,6 +803,7 @@ if [ `expr "x$TMP_YN" : 'x[Yy]'` -gt 1 ]; then
 		POWERDNS_VARIABLE="OFF"
 		PUREFTPD_VARIABLE="OFF"
 else
+		echo -e ""
 		printf "%s" "Install Postfix? [Y/n]: "
 		read TMP_YN
 		if [[ $TMP_YN =~ ^(no|n|N) ]] ; then
@@ -813,6 +811,7 @@ else
 		else
 		POSTFIX_VARIABLE="ON"
 		fi
+		echo -e ""
 		printf "%s" "Install PowerDNS? [Y/n]: "
 		read TMP_YN
 		if [[ $TMP_YN =~ ^(no|n|N) ]] ; then
@@ -820,6 +819,7 @@ else
 		else
 		POWERDNS_VARIABLE="ON"
 		fi
+		echo -e ""
 		printf "%s" "Install PureFTPd? [Y/n]: "
 		read TMP_YN
 		if [[ $TMP_YN =~ ^(no|n|N) ]] ; then
@@ -840,7 +840,7 @@ fi
 
 DEV="ON"
 BRANCH_NAME="stable"
-echo -e "Branch name set to $BRANCH_NAME"
+echo -e "\nBranch name set to $BRANCH_NAME"
 
 #if [[ $TMP_YN == "beta" ]] ; then
 #  DEV="ON"
@@ -1104,8 +1104,10 @@ for version in $(ls /usr/local/lsws | grep lsphp);
 
 		if [[ $SERVER_OS == "Ubuntu" ]] ; then
 			if [[ ! -d /usr/local/lsws/cyberpanel-tmp ]] ; then
+				if [[ -d /etc/pure-ftpd/conf ]] ; then
 				echo "yes" > /etc/pure-ftpd/conf/ChrootEveryone
 				systemctl restart pure-ftpd-mysql
+				fi
 				DEBIAN_FRONTEND=noninteractive apt install libmagickwand-dev pkg-config build-essential -y
 				mkdir /usr/local/lsws/cyberpanel-tmp
 				cd /usr/local/lsws/cyberpanel-tmp
@@ -1237,8 +1239,9 @@ sed -i 's|lsws-5.3.8|lsws-'$LSWS_STABLE_VER'|g' /usr/local/CyberCP/serverStatus/
 sed -i 's|lsws-5.4.2|lsws-'$LSWS_STABLE_VER'|g' /usr/local/CyberCP/serverStatus/serverStatusUtil.py
 sed -i 's|lsws-5.3.5|lsws-'$LSWS_STABLE_VER'|g' /usr/local/CyberCP/serverStatus/serverStatusUtil.py
 
+if [[ -f /etc/pure-ftpd/pure-ftpd.conf ]] ; then
 sed -i 's|NoAnonymous                 no|NoAnonymous                 yes|g' /etc/pure-ftpd/pure-ftpd.conf
-
+fi
 
 if [[ $SILENT != "ON" ]] ; then
 printf "%s" "Would you like to restart your server now? [y/N]: "
@@ -1264,6 +1267,9 @@ fi
 }
 
 argument_mode() {
+DEV="ON"
+BRANCH_NAME="stable"
+#default to python3 branch.
 KEY_SIZE=${#VERSION}
 TMP=$(echo $VERSION | cut -c5)
 TMP2=$(echo $VERSION | cut -c10)
@@ -1350,8 +1356,9 @@ else
 						REDIS="ON"
         		;;
 				-m | --minimal)
-						echo "minimal installation is still work in progress..."
-						exit
+						POSTFIX_VARIABLE="OFF"
+						POWERDNS_VARIABLE="OFF"
+						PUREFTPD_VARIABLE="OFF"
         		;;
 				-h | --help)
 						show_help
