@@ -95,8 +95,6 @@ make
 cp lswsgi /usr/local/CyberCP/bin/
 
 ##
-
-sed -i 's|import views|from . import views|g' /usr/local/CyberCP/configservercsf/urls.py
 systemctl restart lscpd
 
 echo "###################################################################"
