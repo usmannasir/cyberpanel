@@ -836,7 +836,7 @@ fi
 #read TMP_YN
 
 DEV="ON"
-BRANCH_NAME="p3"
+BRANCH_NAME="stable"
 echo -e "Branch name set to $BRANCH_NAME"
 
 #if [[ $TMP_YN == "beta" ]] ; then
