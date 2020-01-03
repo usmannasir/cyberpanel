@@ -1,3 +1,5 @@
+#!/bin/sh
+
 SERVER_OS='Undefined'
 OUTPUT=$(cat /etc/*release)
 
@@ -28,12 +30,12 @@ else
 	exit 1
 fi
 
-if [[ $SERVER_OS == "CentOS7" ]] ; then
+if [ $SERVER_OS = "CentOS7" ] ; then
   yum -y install yum-utils
   yum -y groupinstall development
   yum -y install https://centos7.iuscommunity.org/ius-release.rpm
   yum -y install python36u python36u-pip python36u-devel
-elif [[ $SERVER_OS == "CentOS8" ]] ; then
+elif [ $SERVER_OS = "CentOS8" ] ; then
   yum install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-devel curl-devel git platform-python-devel tar
 	dnf --enablerepo=PowerTools install gpgme-devel -y
 	dnf install python3 -y
@@ -46,7 +48,7 @@ else
 	DEBIAN_FRONTEND=noninteractive apt install -y python3-venv
 fi
 
-if [[ $SERVER_OS == "Ubuntu" ]] ; then
+if [ $SERVER_OS = "Ubuntu" ] ; then
   pip3 install virtualenv
 else
   pip3.6 install virtualenv
@@ -58,7 +60,7 @@ source /usr/local/CyberPanel/bin/activate
 rm -rf requirments.txt
 wget https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/requirments.txt
 
-if [[ $SERVER_OS == "Ubuntu" ]] ; then
+if [ $SERVER_OS = "Ubuntu" ] ; then
   pip3 install --ignore-installed -r requirments.txt
 else
   pip3.6 install --ignore-installed -r requirments.txt
@@ -74,7 +76,7 @@ wget https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/plogical/upg
 virtualenv -p /usr/bin/python3 /usr/local/CyberCP
 source /usr/local/CyberCP/bin/activate
 wget -O requirements.txt https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/requirments.txt
-if [[ $SERVER_OS == "Ubuntu" ]] ; then
+if [ $SERVER_OS = "Ubuntu" ] ; then
   pip3 install --ignore-installed -r requirments.txt
 else
   pip3.6 install --ignore-installed -r requirments.txt
