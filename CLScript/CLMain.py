@@ -5,7 +5,7 @@ class CLMain():
         self.path = '/usr/local/CyberCP/version.txt'
         #versionInfo = json.loads(open(self.path, 'r').read())
         self.version = '1.9'
-        self.build = '2'
+        self.build = '3'
 
         ipFile = "/etc/cyberpanel/machineIP"
         f = open(ipFile)

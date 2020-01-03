@@ -1325,6 +1325,11 @@ class FirewallManager:
             else:
                 return ACLManager.loadErrorJson('installStatus', 0)
 
+            if os.path.exists('/usr/local/CyberCP/bin/python3'):
+                final_dic = {'installStatus': 0, 'error_message': 'CSF is not yet supported on Python 3'}
+                final_json = json.dumps(final_dic)
+                return HttpResponse(final_json)
+
             execPath = "sudo /usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/csf.py"
             execPath = execPath + " installCSF"
 
