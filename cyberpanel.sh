@@ -1,6 +1,9 @@
 #!/bin/bash
 
 #CyberPanel installer script for Ubuntu 18.04 and CentOS 7.X
+
+export LC_CTYPE=en_US.UTF-8
+
 DEV="OFF"
 BRANCH="stable"
 POSTFIX_VARIABLE="ON"
