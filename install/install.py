@@ -2263,7 +2263,7 @@ def main():
         checks.setup_email_Passwords(installCyberPanel.InstallCyberPanel.mysqlPassword, mysql)
         checks.setup_postfix_davecot_config(mysql)
     else:
-        if args.postfix == 'On':
+        if args.postfix == 'ON':
             checks.install_postfix_davecot()
             checks.setup_email_Passwords(installCyberPanel.InstallCyberPanel.mysqlPassword, mysql)
             checks.setup_postfix_davecot_config(mysql)
@@ -2291,7 +2291,7 @@ def main():
         checks.installOpenDKIM()
         checks.configureOpenDKIM()
     else:
-        if args.postfix == 'On':
+        if args.postfix == 'ON':
             checks.installOpenDKIM()
             checks.configureOpenDKIM()
 

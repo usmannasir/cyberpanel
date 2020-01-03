@@ -622,7 +622,7 @@ def Main(cwd, mysql, distro, ent, serial = None, port = "8090", ftp = None, dns 
         installer.installPureFTPDConfigurations(mysql)
         installer.startPureFTPD()
     else:
-        if ftp == 'On':
+        if ftp == 'ON':
             installer.installPureFTPD()
             installer.installPureFTPDConfigurations(mysql)
             installer.startPureFTPD()
@@ -632,7 +632,7 @@ def Main(cwd, mysql, distro, ent, serial = None, port = "8090", ftp = None, dns 
         installer.installPowerDNSConfigurations(InstallCyberPanel.mysqlPassword, mysql)
         installer.startPowerDNS()
     else:
-        if dns == 'On':
+        if dns == 'ON':
             installer.installPowerDNS()
             installer.installPowerDNSConfigurations(InstallCyberPanel.mysqlPassword, mysql)
             installer.startPowerDNS()
