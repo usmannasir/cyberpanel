@@ -1998,6 +1998,14 @@ service_port = 9000
         command = 'systemctl stop cpssh'
         Upgrade.executioner(command, 'fix csf if there', 0)
 
+
+        ## Add LSPHP7.4 TO LSWS Ent configs
+
+        if os.path.exists('/usr/local/lsws/bin/openlitespeed'):
+            command = 'wget https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/install/litespeed/httpd_config.xml'
+            os.remove('/usr/local/lsws/conf/httpd_config.xml')
+            shutil.copy('httpd_config.xml', '/usr/local/lsws/conf/httpd_config.xml')
+
         postfixPath = '/home/cyberpanel/postfix'
         pdns = '/home/cyberpanel/pdns'
         pureftpd = '/home/cyberpanel/ftp'
