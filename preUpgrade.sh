@@ -61,10 +61,10 @@ wget https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/requirments.
 . /usr/local/CyberPanel/bin/activate
 
 if [ $SERVER_OS = "Ubuntu" ] ; then
-  . /usr/local/CyberCP/bin/activate
+  . /usr/local/CyberPanel/bin/activate
   pip3 install --ignore-installed -r requirments.txt
 else
-  source /usr/local/CyberCP/bin/activate
+  source /usr/local/CyberPanel/bin/activate
   pip3.6 install --ignore-installed -r requirments.txt
 fi
 
