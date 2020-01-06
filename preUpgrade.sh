@@ -61,8 +61,10 @@ wget https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/requirments.
 . /usr/local/CyberPanel/bin/activate
 
 if [ $SERVER_OS = "Ubuntu" ] ; then
+  . /usr/local/CyberPanel/bin/activate
   pip3 install --ignore-installed -r requirments.txt
 else
+  source /usr/local/CyberPanel/bin/activate
   pip3.6 install --ignore-installed -r requirments.txt
 fi
 
@@ -75,10 +77,12 @@ wget https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/plogical/upg
 
 virtualenv -p /usr/bin/python3 /usr/local/CyberCP
 wget -O requirements.txt https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/requirments.txt
-. /usr/local/CyberPanel/bin/activate
+
 if [ $SERVER_OS = "Ubuntu" ] ; then
+  . /usr/local/CyberPanel/bin/activate
   pip3 install --ignore-installed -r requirments.txt
 else
+  source /usr/local/CyberPanel/bin/activate
   pip3.6 install --ignore-installed -r requirments.txt
 fi
 
