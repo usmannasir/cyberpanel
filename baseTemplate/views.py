@@ -110,7 +110,7 @@ def versionManagment(request):
         else:
             return ACLManager.loadError()
 
-        vers = version.objects.get(pk=1)
+        ## Get latest version
 
         getVersion = requests.get('https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/version.txt')
 
@@ -119,8 +119,21 @@ def versionManagment(request):
         latestVersion = latest['version']
         latestBuild = latest['build']
 
-        return render(request, 'baseTemplate/versionManagment.html', {'build': vers.build,
-                                                                      'currentVersion': vers.currentVersion,
+        ## Get local version
+
+
+        versionFile = '/usr/local/CyberCP/version.txt'
+
+        try:
+            data = open(versionFile, 'r').read().split('\n')
+            currentVersion = data[0]
+            currentBuild = data[1]
+        except:
+            currentVersion = latestVersion
+            currentBuild = latestBuild + 'E'
+
+        return render(request, 'baseTemplate/versionManagment.html', {'build': currentBuild,
+                                                                      'currentVersion': currentVersion,
                                                                       'latestVersion': latestVersion,
                                                                       'latestBuild': latestBuild})
 
