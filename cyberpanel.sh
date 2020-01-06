@@ -27,6 +27,17 @@ CENTOS_8="False"
 WATCHDOG="OFF"
 BRANCH_NAME="stable"
 
+check_return() {
+#check previous command result , 0 = ok ,  non-0 = something wrong.
+if [[ $? -eq "0" ]] ; then
+	:
+else
+	echo -e "\ncommand failed, exiting..."
+	exit
+fi
+}
+
+
 watchdog_setup() {
 if [[ $WATCHDOG == "ON" ]] ; then
 wget -O /etc/cyberpanel/watchdog.sh https://$DOWNLOAD_SERVER/misc/watchdog.sh
@@ -418,10 +429,13 @@ if [[ $SERVER_OS == "CentOS" ]] ; then
 
 	if [[ $CENTOS_8 == "False" ]] ; then
 	  yum install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc python-devel libattr-devel xz-devel gpgme-devel mariadb-devel curl-devel python-pip git
-  fi
+		check_return
+	fi
 	if [[ $CENTOS_8 == "True" ]] ; then
 		yum install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-devel curl-devel git platform-python-devel tar
+		check_return
 		dnf --enablerepo=PowerTools install gpgme-devel -y
+		check_return
 	fi
 
 if [[ $DEV == "ON" ]] ; then
@@ -430,11 +444,14 @@ if [[ $DEV == "ON" ]] ; then
       yum -y groupinstall development
       yum -y install https://centos7.iuscommunity.org/ius-release.rpm
       yum -y install python36u python36u-pip python36u-devel
+			check_return
     fi
     if [[ $CENTOS_8 == "True" ]] ; then
       dnf install python3 -y
+			check_return
     fi
     pip3.6 install virtualenv
+		check_return
 	fi
 fi
 
@@ -442,10 +459,14 @@ if [[ $SERVER_OS == "Ubuntu" ]] ; then
 	apt update -y
 	DEBIAN_FRONTEND=noninteractive apt upgrade -y
 	DEBIAN_FRONTEND=noninteracitve apt install -y htop telnet python-mysqldb python-dev libcurl4-gnutls-dev libgnutls28-dev libgcrypt20-dev libattr1 libattr1-dev liblzma-dev libgpgme-dev libmariadbclient-dev libcurl4-gnutls-dev libssl-dev nghttp2 libnghttp2-dev idn2 libidn2-dev libidn2-0-dev librtmp-dev libpsl-dev nettle-dev libgnutls28-dev libldap2-dev libgssapi-krb5-2 libk5crypto3 libkrb5-dev libcomerr2 libldap2-dev python-gpg python python-minimal python-setuptools virtualenv python-dev python-pip git
+	check_return
 	if [[ $DEV == "ON" ]] ; then
 		DEBIAN_FRONTEND=noninteractive apt install -y python3-pip
+		check_return
 		DEBIAN_FRONTEND=noninteractive apt install -y build-essential libssl-dev libffi-dev python3-dev
+		check_return
 		DEBIAN_FRONTEND=noninteractive apt install -y python3-venv
+		check_return
 	fi
 fi
 }
@@ -1007,6 +1028,7 @@ source /usr/local/CyberPanel/bin/activate
 rm -rf requirements.txt
 wget -O requirements.txt https://raw.githubusercontent.com/usmannasir/cyberpanel/1.8.0/requirments.txt
 pip install --ignore-installed -r requirements.txt
+check_return
 virtualenv --system-site-packages /usr/local/CyberPanel
 fi
 
@@ -1018,6 +1040,7 @@ if [[ $DEV == "ON" ]] ; then
   source /usr/local/CyberPanel/bin/activate
   wget -O requirements.txt https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
   pip3.6 install --ignore-installed -r requirements.txt
+	check_return
 	cd -
 fi
 
@@ -1075,6 +1098,7 @@ virtualenv -p /usr/bin/python3 /usr/local/CyberCP
 source /usr/local/CyberCP/bin/activate
 wget -O requirements.txt https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
 pip3.6 install --ignore-installed -r requirements.txt
+check_return
 systemctl restart lscpd
 fi
 
