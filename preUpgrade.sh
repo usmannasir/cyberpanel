@@ -56,9 +56,9 @@ fi
 
 rm -rf /usr/local/CyberPanel
 virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberPanel
-source /usr/local/CyberPanel/bin/activate
 rm -rf requirments.txt
 wget https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/requirments.txt
+. /usr/local/CyberPanel/bin/activate
 
 if [ $SERVER_OS = "Ubuntu" ] ; then
   pip3 install --ignore-installed -r requirments.txt
@@ -74,8 +74,8 @@ wget https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/plogical/upg
 ##
 
 virtualenv -p /usr/bin/python3 /usr/local/CyberCP
-source /usr/local/CyberCP/bin/activate
 wget -O requirements.txt https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/requirments.txt
+. /usr/local/CyberPanel/bin/activate
 if [ $SERVER_OS = "Ubuntu" ] ; then
   pip3 install --ignore-installed -r requirments.txt
 else
