@@ -27,7 +27,8 @@ class ApplicationInstaller(multi.Thread):
         multi.Thread.__init__(self)
         self.installApp = installApp
         self.extraArgs = extraArgs
-        self.tempStatusPath = self.extraArgs['tempStatusPath']
+        if extraArgs != None:
+            self.tempStatusPath = self.extraArgs['tempStatusPath']
 
     def run(self):
         try:

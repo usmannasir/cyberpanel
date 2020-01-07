@@ -187,12 +187,12 @@ class ProcessUtilities(multi.Thread):
             sock = ret[0]
 
             if user == None:
-                logging.writeToFile(ProcessUtilities.token + command)
+                #logging.writeToFile(ProcessUtilities.token + command)
                 sock.sendall((ProcessUtilities.token + command).encode('utf-8'))
             else:
                 command = '%s-u %s %s' % (ProcessUtilities.token, user, command)
                 command = command.replace('sudo', '')
-                logging.writeToFile(ProcessUtilities.token + command)
+                #logging.writeToFile(ProcessUtilities.token + command)
                 sock.sendall(command.encode('utf-8'))
 
             data = ""
@@ -207,7 +207,7 @@ class ProcessUtilities(multi.Thread):
                     logging.writeToFile('Some data could not be decoded to str, error message: %s' % str(msg))
 
             sock.close()
-            logging.writeToFile('Final data: %s.' % (str(data)))
+            #logging.writeToFile('Final data: %s.' % (str(data)))
 
             return data
         except BaseException as msg:

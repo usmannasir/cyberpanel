@@ -88,6 +88,8 @@ class StagingSetup(multi.Thread):
 
             data = open(configPath, 'r').readlines()
 
+            logging.writeToFile(str(type(data)))
+
             for items in data:
                 if items.find('DB_NAME') > -1:
                     try:
@@ -161,7 +163,7 @@ class StagingSetup(multi.Thread):
 
             return 0
         except BaseException as msg:
-            mesg = '%s. [404]' % (str(msg))
+            mesg = '%s. [168][404]' % (str(msg))
             logging.statusWriter(self.tempStatusPath, mesg)
 
     def startSyncing(self):
