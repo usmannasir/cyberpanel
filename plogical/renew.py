@@ -1,4 +1,4 @@
-#!/usr/local/CyberCP/bin/python2
+#!/usr/local/CyberCP/bin/python
 import os
 import os.path
 import sys
@@ -99,7 +99,7 @@ class Renew:
                     virtualHostUtilities.issueSSL(website.domain, website.path,
                                                   website.master.adminEmail)
 
-        except BaseException, msg:
+        except BaseException as msg:
            logging.writeToFile(str(msg) + '. Renew.SSLObtainer')
 
 

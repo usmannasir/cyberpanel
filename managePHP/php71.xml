@@ -232,7 +232,7 @@
 
     <extension>
          <extensionName>lsphp71-xml</extensionName>
-         <extensionDescription>Standard PHP extension provides tidy library support.</extensionDescription>
+         <extensionDescription>A module for PHP applications which use XML.</extensionDescription>
          <status>1</status>
     </extension>
 
@@ -253,7 +253,7 @@
          <extensionDescription>Standard PHP extension provides mcrypt library support.</extensionDescription>
          <status>1</status>
     </extension>
-	
+
 	<extension>
          <extensionName>lsphp71-dbg</extensionName>
          <extensionDescription>php71-dbg lsphp71-package</extensionDescription>

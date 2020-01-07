@@ -1,4 +1,4 @@
-from CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 import subprocess
 import shlex
 import os
@@ -6,12 +6,14 @@ import socket
 import threading as multi
 import time
 import getpass
+import codecs
 
 class ProcessUtilities(multi.Thread):
     litespeedProcess = "litespeed"
     ent = 1
     OLS = 0
     centos = 1
+    cent8 = 2
     ubuntu = 0
     server_address = '/usr/local/lscpd/admin/comm.sock'
     token = "unset"
@@ -25,7 +27,7 @@ class ProcessUtilities(multi.Thread):
         try:
             if self.function == 'popen':
                 self.customPoen()
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile( str(msg) + ' [ApplicationInstaller.run]')
 
     @staticmethod
@@ -38,7 +40,7 @@ class ProcessUtilities(multi.Thread):
                 if proc.name().find(ProcessUtilities.litespeedProcess) > -1:
                     finalListOfProcesses.append(proc.pid)
 
-        except BaseException,msg:
+        except BaseException as msg:
             logging.writeToFile(
                 str(msg) + " [getLitespeedProcessNumber]")
             return 0
@@ -52,9 +54,9 @@ class ProcessUtilities(multi.Thread):
     def restartLitespeed():
         try:
             if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
-                command = "sudo systemctl restart lsws"
+                command = "systemctl restart lsws"
             else:
-                command = "sudo /usr/local/lsws/bin/lswsctrl restart"
+                command = "/usr/local/lsws/bin/lswsctrl restart"
 
             cmd = shlex.split(command)
             res = subprocess.call(cmd)
@@ -64,16 +66,16 @@ class ProcessUtilities(multi.Thread):
             else:
                 return 0
 
-        except subprocess.CalledProcessError,msg:
+        except subprocess.CalledProcessError as msg:
             logging.writeToFile(str(msg) + "[restartLitespeed]")
 
     @staticmethod
     def stopLitespeed():
         try:
             if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
-                command = "sudo systemctl stop lsws"
+                command = "systemctl stop lsws"
             else:
-                command = "sudo /usr/local/lsws/bin/lswsctrl stop"
+                command = "/usr/local/lsws/bin/lswsctrl stop"
 
             cmd = shlex.split(command)
             res = subprocess.call(cmd)
@@ -83,7 +85,7 @@ class ProcessUtilities(multi.Thread):
             else:
                 return 0
 
-        except subprocess.CalledProcessError, msg:
+        except subprocess.CalledProcessError as msg:
             logging.writeToFile(str(msg) + "[stopLitespeed]")
 
     @staticmethod
@@ -98,17 +100,17 @@ class ProcessUtilities(multi.Thread):
                 return 1
             else:
                 return 0
-        except subprocess.CalledProcessError, msg:
+        except subprocess.CalledProcessError as msg:
             logging.writeToFile('%s. [ProcessUtilities.normalExecutioner]' % (str(msg)))
             return 0
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile('%s. [ProcessUtilities.normalExecutioner.Base]' % (str(msg)))
             return 0
 
     @staticmethod
     def killLiteSpeed():
         try:
-            command = 'sudo systemctl stop lsws'
+            command = 'systemctl stop lsws'
             ProcessUtilities.normalExecutioner(command)
         except:
             pass
@@ -124,8 +126,6 @@ class ProcessUtilities(multi.Thread):
 
     @staticmethod
     def decideServer():
-        entPath = '/usr/local/lsws/bin/lshttpd'
-
         if os.path.exists('/usr/local/lsws/bin/openlitespeed'):
             return ProcessUtilities.OLS
         else:
@@ -138,12 +138,14 @@ class ProcessUtilities(multi.Thread):
         if os.path.exists(distroPath):
             return ProcessUtilities.ubuntu
         else:
+            if open('/etc/redhat-release', 'r').read().find('CentOS Linux release 8') > -1:
+                return ProcessUtilities.cent8
             return ProcessUtilities.centos
 
     @staticmethod
     def containerCheck():
         try:
-            command = 'sudo cat /etc/cgrules.conf'
+            command = 'cat /etc/cgrules.conf'
             output = ProcessUtilities.outputExecutioner(command)
             if output.find('No such') > -1:
                 return 0
@@ -160,7 +162,7 @@ class ProcessUtilities(multi.Thread):
                 sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
                 sock.connect(ProcessUtilities.server_address)
                 return [sock, "None"]
-            except BaseException, msg:
+            except BaseException as msg:
                 if count == 3:
                     logging.writeToFile("Failed to connect to LSCPD socket, run 'systemctl restart lscpd' on command line to fix this issue.")
                     return [-1, str(msg)]
@@ -173,12 +175,6 @@ class ProcessUtilities(multi.Thread):
     @staticmethod
     def sendCommand(command, user=None):
         try:
-            # if user == None:
-            #     pass
-            # else:
-            #     cmd = 'usermod -a -G %s %s' % ('cyberpanel', user)
-            #     ProcessUtilities.executioner(cmd)
-
             ret = ProcessUtilities.setupUDSConnection()
 
             if ret[0] == -1:
@@ -191,13 +187,13 @@ class ProcessUtilities(multi.Thread):
             sock = ret[0]
 
             if user == None:
-                #logging.writeToFile(ProcessUtilities.token + command)
-                sock.sendall(ProcessUtilities.token + command)
+                logging.writeToFile(ProcessUtilities.token + command)
+                sock.sendall((ProcessUtilities.token + command).encode('utf-8'))
             else:
                 command = '%s-u %s %s' % (ProcessUtilities.token, user, command)
-                #logging.writeToFile(ProcessUtilities.token + command)
                 command = command.replace('sudo', '')
-                sock.sendall(command)
+                logging.writeToFile(ProcessUtilities.token + command)
+                sock.sendall(command.encode('utf-8'))
 
             data = ""
 
@@ -205,19 +201,17 @@ class ProcessUtilities(multi.Thread):
                 currentData = sock.recv(32)
                 if len(currentData) == 0 or currentData == None:
                     break
-                data = data + currentData
+                try:
+                    data = data + currentData.decode(errors = 'ignore')
+                except BaseException as msg:
+                    logging.writeToFile('Some data could not be decoded to str, error message: %s' % str(msg))
 
             sock.close()
-
-            # if user == None:
-            #     pass
-            # else:
-            #     cmd = 'deluser %s cyberpanel' % (user)
-            #     ProcessUtilities.executioner(cmd)
+            logging.writeToFile('Final data: %s.' % (str(data)))
 
             return data
-        except BaseException, msg:
-            logging.writeToFile(str(msg) + " [sendCommand]")
+        except BaseException as msg:
+            logging.writeToFile(str(msg) + " [hey:sendCommand]")
             return "0" + str(msg)
 
     @staticmethod
@@ -230,14 +224,14 @@ class ProcessUtilities(multi.Thread):
             ret = ProcessUtilities.sendCommand(command, user)
 
             exitCode = ret[len(ret) -1]
-            exitCode = int(exitCode.encode('hex'), 16)
+            exitCode = int(codecs.encode(exitCode.encode(), 'hex'))
 
             if exitCode == 0:
                 return 1
             else:
                 return 0
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg) + " [executioner]")
             return 0
 
@@ -245,20 +239,18 @@ class ProcessUtilities(multi.Thread):
     def outputExecutioner(command, user=None):
         try:
             if getpass.getuser() == 'root':
-                return subprocess.check_output(command, shell=True)
+                return subprocess.check_output(command, shell=True).decode("utf-8")
 
-            if type(command) == str or type(command) == unicode:
-                pass
-            else:
+            if type(command) == list:
                 command = " ".join(command)
 
             return ProcessUtilities.sendCommand(command, user)[:-1]
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg) + "[outputExecutioner:188]")
 
     def customPoen(self):
         try:
-            if type(self.extraArgs['command']) == str or type(self.extraArgs['command']) == unicode:
+            if type(self.extraArgs['command']) == str or type(self.extraArgs['command']) == bytes:
                 command = self.extraArgs['command']
             else:
                 command = " ".join(self.extraArgs['command'])
@@ -266,7 +258,7 @@ class ProcessUtilities(multi.Thread):
             ProcessUtilities.sendCommand(command, self.extraArgs['user'])
 
             return 1
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg) + " [customPoen]")
 
     @staticmethod
@@ -277,13 +269,13 @@ class ProcessUtilities(multi.Thread):
             extraArgs['user'] = user
             pu = ProcessUtilities("popen", extraArgs)
             pu.start()
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg) + " [popenExecutioner]")
 
     @staticmethod
     def BuildCommand(path, functionName, parameters):
-        execPath = "/usr/local/CyberCP/bin/python2 %s %s " % (path, functionName)
-        for key, value in parameters.iteritems():
+        execPath = "/usr/local/CyberCP/bin/python %s %s " % (path, functionName)
+        for key, value in parameters.items():
             execPath = execPath + ' --%s %s' % (key, value)
 
         return execPath

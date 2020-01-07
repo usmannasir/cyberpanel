@@ -1,4 +1,4 @@
-#!/usr/local/CyberCP/bin/python2
+#!/usr/local/CyberCP/bin/python
 import os,sys
 sys.path.append('/usr/local/CyberCP')
 import django
@@ -6,11 +6,11 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
 import threading as multi
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
-from policyConstraint import policyConstraints
+from .policyConstraint import policyConstraints
 from emailPremium.models import DomainLimits, EmailLogs
 from mailServer.models import Domains, EUsers
 import time
-from cacheManager import cacheManager
+from .cacheManager import cacheManager
 
 limitThreads = multi.BoundedSemaphore(10)
 
@@ -23,7 +23,7 @@ class HandleRequest(multi.Thread):
     def __del__(self):
         try:
             self.connection.close()
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg) + ' [HandleRequest.__del__]')
 
     def run(self):
@@ -62,7 +62,7 @@ class HandleRequest(multi.Thread):
                     self.connection.close()
                     break
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile( str(msg) + ' [HandleRequest.run]')
         finally:
             limitThreads.release()
@@ -136,6 +136,6 @@ class HandleRequest(multi.Thread):
                 self.connection.sendall('action=dunno\n\n')
 
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg) + " [HandleRequest.manageRequest]")
             self.connection.sendall('action=defer_if_permit Service temporarily unavailable\n\n')

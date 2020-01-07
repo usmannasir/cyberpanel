@@ -1,4 +1,4 @@
-#!/usr/local/CyberCP/bin/python2
+#!/usr/local/CyberCP/bin/python
 import os,sys
 sys.path.append('/usr/local/CyberCP')
 import django
@@ -12,7 +12,7 @@ from dns.models import Domains
 import json
 from subprocess import call, CalledProcessError
 from shlex import split
-from CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+from .CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from dockerManager.models import Containers
 
 class ACLManager:
@@ -30,7 +30,7 @@ class ACLManager:
             f = open(ipFile)
             ipData = f.read()
             serverIPAddress = ipData.split('\n', 1)[0]
-        except BaseException, msg:
+        except BaseException as msg:
             serverIPAddress = "192.168.100.1"
 
         finalResponse['serverIPAddress'] = serverIPAddress
@@ -534,7 +534,7 @@ class ACLManager:
                 return 0, 'Something bad happened'
             else:
                 return 1, 'None'
-        except CalledProcessError, msg:
+        except CalledProcessError as msg:
             logging.writeToFile(str(msg) + ' [ACLManager.executeCall]')
             return 0, str(msg)
 

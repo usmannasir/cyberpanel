@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 from django.shortcuts import render, redirect, HttpResponse
 from plogical.acl import ACLManager
@@ -49,7 +49,7 @@ def terminal(request):
             newFWRule.save()
 
         return render(request, 'WebTerminal/WebTerminal.html', {'verifyPath': verifyPath, 'password': password})
-    except BaseException, msg:
+    except BaseException as msg:
         logging.writeToFile(str(msg))
         return redirect(loadLoginPage)
 
@@ -73,7 +73,7 @@ def restart(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
-    except BaseException, msg:
+    except BaseException as msg:
         data_ret = {'status': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)

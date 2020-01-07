@@ -1,12 +1,14 @@
-import CyberCPLogFileWriter as logging
+import sys
+sys.path.append('/usr/local/CyberCP')
+from plogical import CyberCPLogFileWriter as logging
 import subprocess
 import shlex
-import thread
-import installUtilities
+import _thread
+from plogical import installUtilities
 import argparse
 import os
-from mailUtilities import mailUtilities
-from processUtilities import ProcessUtilities
+from plogical.mailUtilities import mailUtilities
+from plogical.processUtilities import ProcessUtilities
 
 class phpUtilities:
 
@@ -43,7 +45,7 @@ class phpUtilities:
                 logging.CyberCPLogFileWriter.writeToFile("[Could not Install]")
                 installUtilities.installUtilities.reStartLiteSpeed()
                 return 0
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[installPHPExtension]")
 
     @staticmethod
@@ -77,21 +79,21 @@ class phpUtilities:
                 installUtilities.installUtilities.reStartLiteSpeed()
                 return 0
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[unInstallPHPExtension]")
 
     @staticmethod
     def initiateInstall(extension):
         try:
-            thread.start_new_thread(phpUtilities.installPHPExtension, (extension, extension))
-        except BaseException, msg:
+            _thread.start_new_thread(phpUtilities.installPHPExtension, (extension, extension))
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [initiateInstall]")
 
     @staticmethod
     def initiateRemoval(extension):
         try:
-            thread.start_new_thread(phpUtilities.unInstallPHPExtension, (extension, extension))
-        except BaseException, msg:
+            _thread.start_new_thread(phpUtilities.unInstallPHPExtension, (extension, extension))
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [initiateRestore]")
 
     @staticmethod
@@ -144,12 +146,12 @@ class phpUtilities:
 
             installUtilities.installUtilities.reStartLiteSpeed()
 
-            print "1,None"
+            print("1,None")
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + " [savePHPConfigBasic]")
-            print "0,"+str(msg)
+            print("0,"+str(msg))
 
     @staticmethod
     def savePHPConfigAdvance(phpVers,tempPath):
@@ -162,11 +164,11 @@ class phpUtilities:
             if os.path.exists(tempPath):
                 os.remove(tempPath)
 
-            print "1,None"
-        except BaseException, msg:
+            print("1,None")
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + " [savePHPConfigAdvance]")
-            print "0,"+str(msg)
+            print("0,"+str(msg))
 
 
 

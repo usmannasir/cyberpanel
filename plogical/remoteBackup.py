@@ -1,9 +1,9 @@
-import CyberCPLogFileWriter as logging
+from plogical import CyberCPLogFileWriter as logging
 import os
 import requests
 import json
 import time
-import backupUtilities as backupUtil
+from plogical import backupUtilities as backupUtil
 import subprocess
 import shlex
 from multiprocessing import Process
@@ -25,7 +25,7 @@ class remoteBackup:
             else:
                 return [0, data['error_message']]
 
-        except BaseException,msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [getKey]")
             return [0,"Not able to fetch key from remote server, Error Message:" + str(msg)]
 
@@ -105,7 +105,7 @@ class remoteBackup:
             writeToFile.writelines("completed[success]")
 
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [initiateRestore]")
 
     @staticmethod
@@ -144,7 +144,7 @@ class remoteBackup:
             pid.write(str(p.pid))
             pid.close()
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [remoteRestore]")
             return [0, msg]
 
@@ -164,7 +164,7 @@ class remoteBackup:
             else:
                 return [0, data['error_message']]
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [postRemoteTransfer]")
             return [0, msg]
 
@@ -210,7 +210,7 @@ class remoteBackup:
             writeToFile.writelines("\n")
             writeToFile.writelines("\n")
 
-        except BaseException,msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [214:startBackup]")
 
 
@@ -223,7 +223,7 @@ class remoteBackup:
             subprocess.call(shlex.split(command), stdout=writeToFile)
             os.remove(completedPathToSend)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startBackup]")
 
     @staticmethod
@@ -308,7 +308,7 @@ class remoteBackup:
             time.sleep(5)
             #rmtree(dir)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [backupProcess]")
 
     @staticmethod
@@ -358,6 +358,6 @@ class remoteBackup:
 
             return [1, None]
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [remoteTransfer]")
             return [0, msg]

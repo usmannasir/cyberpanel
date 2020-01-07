@@ -6,7 +6,7 @@ try:
     django.setup()
 except:
     pass
-import CyberCPLogFileWriter as logging
+from plogical import CyberCPLogFileWriter as logging
 import subprocess
 import shlex
 try:
@@ -65,7 +65,7 @@ class mysqlUtilities:
 
             return conn, cursor
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return 0, 0
 
@@ -85,7 +85,7 @@ class mysqlUtilities:
 
             return 1
 
-        except BaseException, msg:
+        except BaseException as msg:
             mysqlUtilities.deleteDatabase(dbname, dbuser)
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[createDatabase]")
             return 0
@@ -104,7 +104,7 @@ class mysqlUtilities:
 
             return 1
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[createDBUser]")
             return 0
 
@@ -122,7 +122,7 @@ class mysqlUtilities:
 
             return 1
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[createDatabase]")
             return 0
 
@@ -141,7 +141,7 @@ class mysqlUtilities:
 
             return 1
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[deleteDatabase]")
             return str(msg)
 
@@ -167,7 +167,7 @@ password=%s
                 writeToFile.write(cnfContent)
                 writeToFile.close()
 
-                os.chmod(cnfPath, 0600)
+                os.chmod(cnfPath, 0o600)
 
             command = 'mysqldump --defaults-extra-file=/home/cyberpanel/.my.cnf --host=localhost ' + databaseName
             cmd = shlex.split(command)
@@ -182,12 +182,12 @@ password=%s
                             "Database: " + databaseName + "could not be backed! [createDatabaseBackup]")
                         return 0
 
-            except subprocess.CalledProcessError, msg:
+            except subprocess.CalledProcessError as msg:
                 logging.CyberCPLogFileWriter.writeToFile(
                     "Database: " + databaseName + "could not be backed! Error: %s. [createDatabaseBackup]" % (str(msg)))
                 return 0
             return 1
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[createDatabaseBackup]")
             return 0
 
@@ -214,7 +214,7 @@ password=%s
                 writeToFile.write(cnfContent)
                 writeToFile.close()
 
-                os.chmod(cnfPath, 0600)
+                os.chmod(cnfPath, 0o600)
                 command = 'chown cyberpanel:cyberpanel %s' % (cnfPath)
                 subprocess.call(shlex.split(command))
 
@@ -247,7 +247,7 @@ password=%s
                 connection.close()
 
             return 1
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[restoreDatabaseBackup]")
             return 0
 
@@ -282,7 +282,7 @@ password=%s
 
             return 1,'None'
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return 0,str(msg)
 
@@ -299,7 +299,7 @@ password=%s
             else:
                 return 0,result
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return 0, str(msg)
 
@@ -383,7 +383,7 @@ password=%s
 
             return data
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[showStatus]")
             return 0
 
@@ -430,7 +430,7 @@ password=%s
 
             return 1, None
 
-        except BaseException, msg:
+        except BaseException as msg:
             if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
                 command = 'sudo mv /etc/my.cnf.bak /etc/my.cnf'
             else:
@@ -457,7 +457,7 @@ password=%s
 
             ##
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[showStatus]")
             return 0
 
@@ -469,7 +469,7 @@ password=%s
 
             return 1, None
 
-        except BaseException, msg:
+        except BaseException as msg:
             command = 'sudo mv /etc/my.cnf.bak /etc/my.cnf'
             subprocess.call(shlex.split(command))
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
@@ -517,7 +517,7 @@ password=%s
             data['databases'] = json_data
             return data
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[fetchDatabases]")
             return 0
 
@@ -563,7 +563,7 @@ password=%s
             data['tables'] = json_data
             return data
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[fetchDatabases]")
             return 0
 
@@ -584,7 +584,7 @@ password=%s
 
             return data
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[fetchDatabases]")
             return 0
 
@@ -644,7 +644,7 @@ password=%s
 
             return data
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[fetchTableData]")
             return 0
 
@@ -694,7 +694,7 @@ password=%s
 
             return data
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[showStatus]")
             return 0
 
@@ -722,7 +722,7 @@ password=%s
 
             return 1
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[mysqlUtilities.changePassword]")
             return 0
 
@@ -762,6 +762,6 @@ password=%s
 
             return 1
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[mysqlUtilities.fetchuser]")
             return 0

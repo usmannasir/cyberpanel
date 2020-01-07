@@ -1,21 +1,21 @@
-#!/usr/local/CyberCP/bin/python2
+#!/usr/local/CyberCP/bin/python
 import os
 import os.path
 import sys
 import django
+#PACKAGE_PARENT = '..'
+#SCRIPT_DIR = os.path.dirname(os.path.realpath(os.path.join(os.getcwd(), os.path.expanduser(__file__))))
+#sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT)))
 
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 
-try:
-    django.setup()
-except:
-    pass
+django.setup()
 
 import shutil
 import argparse
-import installUtilities
-import sslUtilities
+from plogical import installUtilities
+from plogical import sslUtilities
 from os.path import join
 from os import listdir, rmdir
 from shutil import move
@@ -23,12 +23,12 @@ from multiprocessing import Process
 import subprocess
 import shlex
 from plogical.mailUtilities import mailUtilities
-import CyberCPLogFileWriter as logging
-from dnsUtilities import DNS
-from vhost import vhost
-from applicationInstaller import ApplicationInstaller
-from acl import ACLManager
-from processUtilities import ProcessUtilities
+from plogical import CyberCPLogFileWriter as logging
+from plogical.dnsUtilities import DNS
+from plogical.vhost import vhost
+from plogical.applicationInstaller import ApplicationInstaller
+from plogical.acl import ACLManager
+from plogical.processUtilities import ProcessUtilities
 from ApachController.ApacheController import ApacheController
 from ApachController.ApacheVhosts import ApacheVhost
 from managePHP.phpManager import PHPManager
@@ -49,37 +49,6 @@ class virtualHostUtilities:
     apache = 1
     ols = 2
     lsws = 3
-
-    @staticmethod
-    def EnableCloudLinux():
-        if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
-            confPath = '/usr/local/lsws/conf/httpd_config.conf'
-            data = open(confPath, 'r').readlines()
-
-            writeToFile = open(confPath, 'w')
-
-            for items in data:
-                if items.find('priority') > -1:
-                    writeToFile.writelines(items)
-                    writeToFile.writelines('enableLVE                 2\n')
-                else:
-                    writeToFile.writelines(items)
-
-            writeToFile.close()
-        else:
-            confPath = '/usr/local/lsws/conf/httpd_config.xml'
-            data = open(confPath, 'r').readlines()
-
-            writeToFile = open(confPath, 'w')
-
-            for items in data:
-                if items.find('<enableChroot>') > -1:
-                    writeToFile.writelines(items)
-                    writeToFile.writelines('  <enableLVE>2</enableLVE>\n')
-                else:
-                    writeToFile.writelines(items)
-
-            writeToFile.close()
 
     Server_root = "/usr/local/lsws"
     cyberPanel = "/usr/local/CyberCP"
@@ -216,53 +185,24 @@ class virtualHostUtilities:
                 if dkimCheck == 1:
                     DNS.createDKIMRecords(virtualHostName)
 
-            cageFSPath = '/home/cyberpanel/cagefs'
+            # cageFSPath = '/home/cyberpanel/cagefs'
+            #
+            # if os.path.exists(cageFSPath):
+            #     command = '/usr/sbin/cagefsctl --enable %s' % (virtualHostUser)
+            #     ProcessUtilities.normalExecutioner(command)
 
-            if os.path.exists(cageFSPath):
-                command = '/usr/sbin/cagefsctl --enable %s' % (virtualHostUser)
-                ProcessUtilities.normalExecutioner(command)
-            logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Website successfully created. [200]')
 
             CLPath = '/etc/sysconfig/cloudlinux'
 
             if os.path.exists(CLPath):
-                if CLPackages.objects.count() == 0:
-                    package = Package.objects.get(packageName='Default')
-                    clPackage = CLPackages(name='Default', owner=package, speed='100%', vmem='1G', pmem='1G', io='1024',
-                                           iops='1024', ep='20', nproc='50', inodessoft='20', inodeshard='20')
-                    clPackage.save()
+                command = '/usr/share/cloudlinux/hooks/post_modify_user.py create --username %s --owner %s' % (virtualHostUser, virtualHostUser)
+                ProcessUtilities.executioner(command)
 
-                    writeToFile = open(CLPath, 'a')
-                    writeToFile.writelines('CUSTOM_GETPACKAGE_SCRIPT=/usr/local/CyberCP/CLManager/CLPackages.py\n')
-                    writeToFile.close()
-
-                    command = 'chmod +x /usr/local/CyberCP/CLManager/CLPackages.py'
-                    ProcessUtilities.normalExecutioner(command)
-
-                    virtualHostUtilities.EnableCloudLinux()
-                    installUtilities.installUtilities.reStartLiteSpeed()
-
-                    command = 'sudo lvectl package-set %s --speed=%s --pmem=%s --io=%s --nproc=%s --iops=%s --vmem=%s --ep=%s' % (
-                        'Default', '100%', '1G', '1024', '50', '1024', '1G', '20')
-                    ProcessUtilities.normalExecutioner(command)
-
-                    command = 'sudo lvectl apply all'
-                    ProcessUtilities.normalExecutioner(command)
-                else:
-                    try:
-                        clPackage = CLPackages.objects.get(owner=selectedPackage)
-                        command = 'sudo lvectl package-set %s --speed=%s --pmem=%s --io=%s --nproc=%s --iops=%s --vmem=%s --ep=%s' % (
-                            clPackage.name, clPackage.speed, clPackage.pmem, clPackage.io, clPackage.np, clPackage.iops,
-                            clPackage.vmem, clPackage.ep)
-                        ProcessUtilities.normalExecutioner(command)
-                        command = 'sudo lvectl apply all'
-                        ProcessUtilities.normalExecutioner(command)
-                    except:
-                        pass
+            logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Website successfully created. [200]')
 
             return 1, 'None'
 
-        except BaseException, msg:
+        except BaseException as msg:
             vhost.deleteVirtualHostConfigurations(virtualHostName)
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "  [createVirtualHost]")
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, str(msg) + " [404]")
@@ -275,18 +215,18 @@ class virtualHostUtilities:
             retValues = sslUtilities.issueSSLForDomain(virtualHost, adminEmail, path)
 
             if retValues[0] == 0:
-                print "0," + str(retValues[1])
+                print("0," + str(retValues[1]))
                 logging.CyberCPLogFileWriter.writeToFile(str(retValues[1]))
                 return 0, str(retValues[1])
 
             installUtilities.installUtilities.reStartLiteSpeed()
 
-            print "1,None"
+            print("1,None")
             return 1, None
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [issueSSL]")
-            print "0," + str(msg)
+            print("0," + str(msg))
             return 0, str(msg)
 
     @staticmethod
@@ -294,7 +234,7 @@ class virtualHostUtilities:
         try:
 
             if os.path.islink(fileName):
-                print "0, %s file is symlinked." % (fileName)
+                print("0, %s file is symlinked." % (fileName))
                 return 0
 
             numberOfTotalLines = int(ProcessUtilities.outputExecutioner('wc -l %s' % (fileName), externalApp).split(" ")[0])
@@ -318,12 +258,12 @@ class virtualHostUtilities:
                     startingAndEnding = "'" + str(start) + "," + str(end) + "p'"
                     command = "sed -n " + startingAndEnding + " " + fileName
                     data = ProcessUtilities.outputExecutioner(command, externalApp)
-            print data
+            print(data)
             return data
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "  [getAccessLogs]")
-            print "1,None"
+            print("1,None")
             return "1,None"
 
     @staticmethod
@@ -331,7 +271,7 @@ class virtualHostUtilities:
         try:
 
             if os.path.islink(fileName):
-                print "0, %s file is symlinked." % (fileName)
+                print("0, %s file is symlinked." % (fileName))
                 return 0
 
             numberOfTotalLines = int(
@@ -356,12 +296,12 @@ class virtualHostUtilities:
                     startingAndEnding = "'" + str(start) + "," + str(end) + "p'"
                     command = "sed -n " + startingAndEnding + " " + fileName
                     data = ProcessUtilities.outputExecutioner(command, externalApp)
-            print data
+            print(data)
             return data
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "  [getErrorLogs]")
-            print "1,None"
+            print("1,None")
             return "1,None"
 
     @staticmethod
@@ -379,19 +319,19 @@ class virtualHostUtilities:
 
             installUtilities.installUtilities.reStartLiteSpeed()
 
-            print "1,None"
+            print("1,None")
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "  [saveVHostConfigs]")
-            print "0," + str(msg)
+            print("0," + str(msg))
 
     @staticmethod
     def saveRewriteRules(virtualHost, fileName, tempPath):
         try:
 
             if os.path.islink(fileName):
-                print "0, .htaccess file is symlinked."
+                print("0, .htaccess file is symlinked.")
                 return 0
 
             vhost.addRewriteRules(virtualHost, fileName)
@@ -406,12 +346,12 @@ class virtualHostUtilities:
             except:
                 pass
 
-            print "1,None"
+            print("1,None")
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "  [saveRewriteRules]")
-            print "0," + str(msg)
+            print("0," + str(msg))
 
     @staticmethod
     def installWordPress(domainName, finalPath, virtualHostUser, dbName, dbUser, dbPassword):
@@ -430,12 +370,12 @@ class virtualHostUtilities:
                 if dirFiles[0] == ".well-known":
                     pass
                 else:
-                    print "0,Target directory should be empty before installation, otherwise data loss could occur."
+                    print("0,Target directory should be empty before installation, otherwise data loss could occur.")
                     return
             elif len(dirFiles) == 0:
                 pass
             else:
-                print "0,Target directory should be empty before installation, otherwise data loss could occur."
+                print("0,Target directory should be empty before installation, otherwise data loss could occur.")
                 return
 
             ## Get wordpress
@@ -514,10 +454,10 @@ class virtualHostUtilities:
 
             installUtilities.installUtilities.reStartLiteSpeed()
 
-            print "1,None"
+            print("1,None")
 
 
-        except BaseException, msg:
+        except BaseException as msg:
             # remove the downloaded files
             try:
 
@@ -534,7 +474,7 @@ class virtualHostUtilities:
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
-            print "0," + str(msg)
+            print("0," + str(msg))
             return
 
     @staticmethod
@@ -559,7 +499,7 @@ class virtualHostUtilities:
             background.start()
 
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [installJoomla]')
 
     @staticmethod
@@ -584,7 +524,7 @@ class virtualHostUtilities:
                 retValues = sslUtilities.issueSSLForDomain(virtualHost, adminEmail, path)
 
                 if retValues[0] == 0:
-                    print "0," + str(retValues[1])
+                    print("0," + str(retValues[1]))
                     return 0, retValues[1]
 
             ## removing old certs for lscpd
@@ -629,13 +569,13 @@ class virtualHostUtilities:
             cmd = shlex.split(command)
             subprocess.call(cmd)
 
-            print "1,None"
+            print("1,None")
             return 1, 'None'
 
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "  [issueSSLForHostName]")
-            print "0," + str(msg)
+            print("0," + str(msg))
             return 0, str(msg)
 
     @staticmethod
@@ -650,7 +590,7 @@ class virtualHostUtilities:
                 retValues = sslUtilities.issueSSLForDomain(virtualHost, adminEmail, path)
 
                 if retValues[0] == 0:
-                    print "0," + str(retValues[1])
+                    print("0," + str(retValues[1]))
                     return 0, retValues[1]
 
             ## MailServer specific functions
@@ -732,13 +672,13 @@ class virtualHostUtilities:
             p = Process(target=mailUtilities.restartServices, args=())
             p.start()
 
-            print "1,None"
+            print("1,None")
             return 1, 'None'
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "  [issueSSLForHostName]")
-            print "0," + str(msg)
+            print("0," + str(msg))
             return 0, str(msg)
 
     @staticmethod
@@ -749,7 +689,7 @@ class virtualHostUtilities:
             DNS.dnsTemplate(aliasDomain, admin)
 
             if vhost.checkIfAliasExists(aliasDomain) == 1:
-                print "0, This domain already exists as vHost or Alias."
+                print("0, This domain already exists as vHost or Alias.")
                 return
 
             if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
@@ -762,7 +702,7 @@ class virtualHostUtilities:
                     if items.find("listener") > -1 and items.find("Default") > -1:
                         listenerTrueCheck = 1
                     if items.find(' ' + masterDomain) > -1 and items.find('map') > -1 and listenerTrueCheck == 1:
-                        data = filter(None, items.split(" "))
+                        data = [_f for _f in items.split(" ") if _f]
                         if data[1] == masterDomain:
                             writeToFile.writelines(items.rstrip('\n') + ", " + aliasDomain + "\n")
                             listenerTrueCheck = 0
@@ -791,14 +731,14 @@ class virtualHostUtilities:
                 retValues = sslUtilities.issueSSLForDomain(masterDomain, administratorEmail, sslPath, aliasDomain)
                 if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
                     if retValues[0] == 0:
-                        print "0," + str(retValues[1])
+                        print("0," + str(retValues[1]))
                         return
                     else:
                         vhost.createAliasSSLMap(confPath, masterDomain, aliasDomain)
                 else:
                     retValues = sslUtilities.issueSSLForDomain(masterDomain, administratorEmail, sslPath, aliasDomain)
                     if retValues[0] == 0:
-                        print "0," + str(retValues[1])
+                        print("0," + str(retValues[1]))
                         return
 
             website = Websites.objects.get(domain=masterDomain)
@@ -806,11 +746,11 @@ class virtualHostUtilities:
             newAlias = aliasDomains(master=website, aliasDomain=aliasDomain)
             newAlias.save()
 
-            print "1,None"
+            print("1,None")
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "  [createAlias]")
-            print "0," + str(msg)
+            print("0," + str(msg))
 
     @staticmethod
     def issueAliasSSL(masterDomain, aliasDomain, sslPath, administratorEmail):
@@ -821,21 +761,21 @@ class virtualHostUtilities:
             if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
                 confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
                 if retValues[0] == 0:
-                    print "0," + str(retValues[1])
+                    print("0," + str(retValues[1]))
                     return
                 else:
                     vhost.createAliasSSLMap(confPath, masterDomain, aliasDomain)
             else:
                 if retValues[0] == 0:
-                    print "0," + str(retValues[1])
+                    print("0," + str(retValues[1]))
                     return
 
-            print "1,None"
+            print("1,None")
 
-        except BaseException, msg:
+        except BaseException as msg:
 
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "  [issueAliasSSL]")
-            print "0," + str(msg)
+            print("0," + str(msg))
 
     @staticmethod
     def deleteAlias(masterDomain, aliasDomain):
@@ -850,7 +790,7 @@ class virtualHostUtilities:
 
                 for items in data:
                     if items.find(masterDomain) > -1 and items.find('map') > -1:
-                        data = filter(None, items.split(" "))
+                        data = [_f for _f in items.split(" ") if _f]
                         if data[1] == masterDomain:
                             length = len(data)
                             for i in range(3, length):
@@ -879,10 +819,10 @@ class virtualHostUtilities:
                 delAlias = aliasDomains.objects.get(aliasDomain=aliasDomain)
                 delAlias.delete()
 
-                print "1,None"
-            except BaseException, msg:
+                print("1,None")
+            except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + "  [deleteAlias]")
-                print "0," + str(msg)
+                print("0," + str(msg))
         else:
             try:
 
@@ -903,10 +843,10 @@ class virtualHostUtilities:
                 alias = aliasDomains.objects.get(aliasDomain=aliasDomain)
                 alias.delete()
 
-                print "1,None"
-            except BaseException, msg:
+                print("1,None")
+            except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + "  [deleteAlias]")
-                print "0," + str(msg)
+                print("0," + str(msg))
 
     @staticmethod
     def changeOpenBasedir(domainName, openBasedirValue):
@@ -954,10 +894,10 @@ class virtualHostUtilities:
                     writeToFile.close()
 
                 installUtilities.installUtilities.reStartLiteSpeed()
-                print "1,None"
-            except BaseException, msg:
+                print("1,None")
+            except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + "  [changeOpenBasedir]")
-                print "0," + str(msg)
+                print("0," + str(msg))
         else:
             try:
                 confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + domainName
@@ -1007,10 +947,10 @@ class virtualHostUtilities:
                     writeToFile.close()
 
                 installUtilities.installUtilities.reStartLiteSpeed()
-                print "1,None"
-            except BaseException, msg:
+                print("1,None")
+            except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + "  [changeOpenBasedir]")
-                print "0," + str(msg)
+                print("0," + str(msg))
 
     @staticmethod
     def saveSSL(virtualHost, keyPath, certPath):
@@ -1045,12 +985,12 @@ class virtualHostUtilities:
             cmd = shlex.split(command)
             subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
-            print "1,None"
+            print("1,None")
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "  [saveSSL]")
-            print "0," + str(msg)
+            print("0," + str(msg))
 
     @staticmethod
     def createDomain(masterDomain, virtualHostName, phpVersion, path, ssl, dkimCheck, openBasedir, owner, apache,
@@ -1191,7 +1131,7 @@ class virtualHostUtilities:
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Domain successfully created. [200]')
             return 1, "None"
 
-        except BaseException, msg:
+        except BaseException as msg:
             numberOfWebsites = Websites.objects.count() + ChildDomains.objects.count()
             vhost.deleteCoreConf(virtualHostName, numberOfWebsites)
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, str(msg) + ". [404]")
@@ -1209,13 +1149,13 @@ class virtualHostUtilities:
             delWebsite.delete()
             installUtilities.installUtilities.reStartLiteSpeed()
 
-            print "1,None"
+            print("1,None")
             return 1, 'None'
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "  [deleteDomain]")
-            print "0," + str(msg)
+            print("0," + str(msg))
             return 0, str(msg)
 
     @staticmethod
@@ -1278,7 +1218,7 @@ class virtualHostUtilities:
                 installUtilities.installUtilities.reStartLiteSpeed()
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Successfully converted. [200]')
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, '%s[404]' % str(msg))
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "  [switchServer]")
 
@@ -1310,7 +1250,7 @@ class virtualHostUtilities:
 
             res = subprocess.call(cmd)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
 
     @staticmethod
@@ -1322,7 +1262,7 @@ class virtualHostUtilities:
 
             res = subprocess.call(cmd)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
 
 

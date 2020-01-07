@@ -1,11 +1,11 @@
-#!/usr/local/CyberCP/bin/python2
+#!/usr/local/CyberCP/bin/python
 import os,sys
 sys.path.append('/usr/local/CyberCP')
 import django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
 from inspect import stack
-from cliLogger import cliLogger as logger
+from cli.cliLogger import cliLogger as logger
 import json
 from plogical.virtualHostUtilities import virtualHostUtilities
 import re
@@ -17,7 +17,7 @@ import requests
 from loginSystem.models import Administrator
 from packages.models import Package
 from plogical.mysqlUtilities import mysqlUtilities
-from cliParser import cliParser
+from cli.cliParser import cliParser
 from plogical.vhost import vhost
 from plogical.mailUtilities import mailUtilities
 from plogical.ftpUtilities import FTPUtilities
@@ -33,7 +33,7 @@ class cyberPanel:
         data = json.dumps({'success': operationStatus,
                            'errorMessage': errorMessage
                         })
-        print data
+        print(data)
 
     ## Website Functions
 
@@ -51,7 +51,7 @@ class cyberPanel:
             else:
                 self.printStatus(0, result[1])
 
-        except BaseException, msg:
+        except BaseException as msg:
             logger.writeforCLI(str(msg), "Error", stack()[0][3])
             self.printStatus(0, str(msg))
 
@@ -68,7 +68,7 @@ class cyberPanel:
             else:
                 self.printStatus(0, result[1])
 
-        except BaseException, msg:
+        except BaseException as msg:
             logger.writeforCLI(str(msg), "Error", stack()[0][3])
             self.printStatus(0, str(msg))
 
@@ -77,9 +77,9 @@ class cyberPanel:
             vhost.deleteVirtualHostConfigurations(domainName)
             self.printStatus(1, 'None')
 
-        except BaseException, msg:
+        except BaseException as msg:
             logger.writeforCLI(str(msg), "Error", stack()[0][3])
-            print 0
+            print(0)
 
     def deleteChild(self, childDomain):
         try:
@@ -91,9 +91,9 @@ class cyberPanel:
             else:
                 self.printStatus(0, result[1])
 
-        except BaseException, msg:
+        except BaseException as msg:
             logger.writeforCLI(str(msg), "Error", stack()[0][3])
-            print 0
+            print(0)
 
     def listWebsitesJson(self):
         try:
@@ -122,11 +122,11 @@ class cyberPanel:
 
             json_data = json_data + ']'
             final_json = json.dumps(json_data)
-            print final_json
+            print(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logger.writeforCLI(str(msg), "Error", stack()[0][3])
-            print 0
+            print(0)
 
     def listWebsitesPretty(self):
         try:
@@ -146,11 +146,11 @@ class cyberPanel:
                 else:
                     state = "Active"
                 table.add_row([items.id, items.domain, ipAddress, items.package.packageName, items.admin.userName, state, items.adminEmail])
-            print table
+            print(table)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logger.writeforCLI(str(msg), "Error", stack()[0][3])
-            print 0
+            print(0)
 
     def changePHP(self, virtualHostName, phpVersion):
         try:
@@ -167,7 +167,7 @@ class cyberPanel:
             else:
                 self.printStatus(0, result[1])
 
-        except BaseException, msg:
+        except BaseException as msg:
             logger.writeforCLI(str(msg), "Error", stack()[0][3])
             self.printStatus(0, str(msg))
 
@@ -186,7 +186,7 @@ class cyberPanel:
 
             self.printStatus(1, 'None')
 
-        except BaseException, msg:
+        except BaseException as msg:
             logger.writeforCLI(str(msg), "Error", stack()[0][3])
             self.printStatus(0, str(msg))
 
@@ -218,11 +218,11 @@ class cyberPanel:
 
             json_data = json_data + ']'
             final_json = json.dumps(json_data)
-            print final_json
+            print(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logger.writeforCLI(str(msg), "Error", stack()[0][3])
-            print 0
+            print(0)
 
     def listDNSPretty(self, virtualHostName):
         try:
@@ -237,11 +237,11 @@ class cyberPanel:
                 else:
                     content = items.content
                 table.add_row([items.id, items.type, items.name, content, items.prio, items.ttl])
-            print table
+            print(table)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logger.writeforCLI(str(msg), "Error", stack()[0][3])
-            print 0
+            print(0)
 
     def listDNSZonesJson(self):
         try:
@@ -264,11 +264,11 @@ class cyberPanel:
 
             json_data = json_data + ']'
             final_json = json.dumps(json_data)
-            print final_json
+            print(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logger.writeforCLI(str(msg), "Error", stack()[0][3])
-            print 0
+            print(0)
 
     def listDNSZonesPretty(self):
         try:
@@ -280,18 +280,18 @@ class cyberPanel:
 
             for items in records:
                 table.add_row([items.id, items.name])
-            print table
+            print(table)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logger.writeforCLI(str(msg), "Error", stack()[0][3])
-            print 0
+            print(0)
 
     def createDNSZone(self, virtualHostName, owner):
         try:
             admin = Administrator.objects.get(userName=owner)
             DNS.dnsTemplate(virtualHostName, admin)
             self.printStatus(1, 'None')
-        except BaseException, msg:
+        except BaseException as msg:
             logger.writeforCLI(str(msg), "Error", stack()[0][3])
             self.printStatus(0, str(msg))
 
@@ -300,7 +300,7 @@ class cyberPanel:
             zone = DNS.getZoneObject(virtualHostName)
             DNS.createDNSRecord(zone, name, recordType, value, int(priority), int(ttl))
             self.printStatus(1, 'None')
-        except BaseException, msg:
+        except BaseException as msg:
             logger.writeforCLI(str(msg), "Error", stack()[0][3])
             self.printStatus(0, str(msg))
 
@@ -308,7 +308,7 @@ class cyberPanel:
         try:
             DNS.deleteDNSZone(virtualHostName)
             self.printStatus(1, 'None')
-        except BaseException, msg:
+        except BaseException as msg:
             logger.writeforCLI(str(msg), "Error", stack()[0][3])
             self.printStatus(0, str(msg))
 
@@ -316,7 +316,7 @@ class cyberPanel:
         try:
             DNS.deleteDNSRecord(recordID)
             self.printStatus(1, 'None')
-        except BaseException, msg:
+        except BaseException as msg:
             logger.writeforCLI(str(msg), "Error", stack()[0][3])
             self.printStatus(0, str(msg))
 
@@ -326,13 +326,13 @@ class cyberPanel:
         try:
             backupLogPath = "/usr/local/lscp/logs/backup_log."+time.strftime("%I-%M-%S-%a-%b-%Y")
 
-            print 'Backup logs to be generated in %s' % (backupLogPath)
+            print('Backup logs to be generated in %s' % (backupLogPath))
 
             backupSchedule.createLocalBackup(virtualHostName, backupLogPath)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logger.writeforCLI(str(msg), "Error", stack()[0][3])
-            print 0
+            print(0)
 
     def restoreBackup(self, fileName):
         try:
@@ -351,19 +351,19 @@ class cyberPanel:
                 data = json.loads(r.text)
 
                 if data['abort'] == 1 and data['running'] == "Error":
-                    print 'Failed to restore backup, Error message : ' + data['status'] + '\n'
+                    print('Failed to restore backup, Error message : ' + data['status'] + '\n')
                     break
                 elif data['abort'] == 1 and data['running'] == "Completed":
-                    print '\n\n'
-                    print 'Backup restore completed.\n'
+                    print('\n\n')
+                    print('Backup restore completed.\n')
                     break
                 else:
-                    print 'Waiting for restore to complete. Current status: ' + data['status']
+                    print('Waiting for restore to complete. Current status: ' + data['status'])
 
 
-        except BaseException, msg:
+        except BaseException as msg:
             logger.writeforCLI(str(msg), "Error", stack()[0][3])
-            print 0
+            print(0)
 
     ## Packages
 
@@ -380,7 +380,7 @@ class cyberPanel:
 
             self.printStatus(1, 'None')
 
-        except BaseException, msg:
+        except BaseException as msg:
             logger.writeforCLI(str(msg), "Error", stack()[0][3])
             self.printStatus(0, str(msg))
 
@@ -391,7 +391,7 @@ class cyberPanel:
             delPack.delete()
             self.printStatus(1, 'None')
 
-        except BaseException, msg:
+        except BaseException as msg:
             logger.writeforCLI(str(msg), "Error", stack()[0][3])
             self.printStatus(0, str(msg))
 
@@ -422,11 +422,11 @@ class cyberPanel:
 
             json_data = json_data + ']'
             final_json = json.dumps(json_data)
-            print final_json
+            print(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logger.writeforCLI(str(msg), "Error", stack()[0][3])
-            print 0
+            print(0)
 
     def listPackagesPretty(self):
         try:
@@ -438,11 +438,11 @@ class cyberPanel:
 
             for items in records:
                 table.add_row([items.packageName, items.allowedDomains, items.diskSpace, items.bandwidth, items.ftpAccounts, items.dataBases, items.emailAccounts])
-            print table
+            print(table)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logger.writeforCLI(str(msg), "Error", stack()[0][3])
-            print 0
+            print(0)
 
 
     ## Database functions
@@ -455,7 +455,7 @@ class cyberPanel:
                 self.printStatus(1, 'None')
             else:
                 self.printStatus(1, result[1])
-        except BaseException, msg:
+        except BaseException as msg:
             logger.writeforCLI(str(msg), "Error", stack()[0][3])
             self.printStatus(0, str(msg))
 
@@ -468,7 +468,7 @@ class cyberPanel:
                 self.printStatus(1, 'None')
             else:
                 self.printStatus(1, result[1])
-        except BaseException, msg:
+        except BaseException as msg:
             logger.writeforCLI(str(msg), "Error", stack()[0][3])
             self.printStatus(0, str(msg))
 
@@ -494,11 +494,11 @@ class cyberPanel:
 
             json_data = json_data + ']'
             final_json = json.dumps(json_data)
-            print final_json
+            print(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logger.writeforCLI(str(msg), "Error", stack()[0][3])
-            print 0
+            print(0)
 
     def listDatabasesPretty(self, virtualHostName):
         try:
@@ -510,11 +510,11 @@ class cyberPanel:
 
             for items in records:
                 table.add_row([items.id, items.dbName, items.dbUser])
-            print table
+            print(table)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logger.writeforCLI(str(msg), "Error", stack()[0][3])
-            print 0
+            print(0)
 
     ## Email functions
 
@@ -526,7 +526,7 @@ class cyberPanel:
                 self.printStatus(1, 'None')
             else:
                 self.printStatus(1, result[1])
-        except BaseException, msg:
+        except BaseException as msg:
             logger.writeforCLI(str(msg), "Error", stack()[0][3])
             self.printStatus(0, str(msg))
 
@@ -538,7 +538,7 @@ class cyberPanel:
                 self.printStatus(1, 'None')
             else:
                 self.printStatus(1, result[1])
-        except BaseException, msg:
+        except BaseException as msg:
             logger.writeforCLI(str(msg), "Error", stack()[0][3])
             self.printStatus(0, str(msg))
 
@@ -550,7 +550,7 @@ class cyberPanel:
                 self.printStatus(1, 'None')
             else:
                 self.printStatus(1, result[1])
-        except BaseException, msg:
+        except BaseException as msg:
             logger.writeforCLI(str(msg), "Error", stack()[0][3])
             self.printStatus(0, str(msg))
 
@@ -575,11 +575,11 @@ class cyberPanel:
 
             json_data = json_data + ']'
             final_json = json.dumps(json_data)
-            print final_json
+            print(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logger.writeforCLI(str(msg), "Error", stack()[0][3])
-            print 0
+            print(0)
 
     def listEmailsPretty(self, virtualHostName):
         try:
@@ -591,11 +591,11 @@ class cyberPanel:
 
             for items in records:
                 table.add_row([items.email])
-            print table
+            print(table)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logger.writeforCLI(str(msg), "Error", stack()[0][3])
-            print 0
+            print(0)
 
     ## FTP Functions
 
@@ -612,7 +612,7 @@ class cyberPanel:
                 self.printStatus(1, 'None')
             else:
                 self.printStatus(1, result[1])
-        except BaseException, msg:
+        except BaseException as msg:
             logger.writeforCLI(str(msg), "Error", stack()[0][3])
             self.printStatus(0, str(msg))
 
@@ -624,7 +624,7 @@ class cyberPanel:
                 self.printStatus(1, 'None')
             else:
                 self.printStatus(1, result[1])
-        except BaseException, msg:
+        except BaseException as msg:
             logger.writeforCLI(str(msg), "Error", stack()[0][3])
             self.printStatus(0, str(msg))
 
@@ -636,7 +636,7 @@ class cyberPanel:
                 self.printStatus(1, 'None')
             else:
                 self.printStatus(1, result[1])
-        except BaseException, msg:
+        except BaseException as msg:
             logger.writeforCLI(str(msg), "Error", stack()[0][3])
             self.printStatus(0, str(msg))
 
@@ -662,11 +662,11 @@ class cyberPanel:
 
             json_data = json_data + ']'
             final_json = json.dumps(json_data)
-            print final_json
+            print(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logger.writeforCLI(str(msg), "Error", stack()[0][3])
-            print 0
+            print(0)
 
     def listFTPPretty(self, virtualHostName):
         try:
@@ -678,11 +678,11 @@ class cyberPanel:
 
             for items in records:
                 table.add_row([items.id, items.user, items.dir])
-            print table
+            print(table)
 
-        except BaseException, msg:
+        except BaseException as msg:
             logger.writeforCLI(str(msg), "Error", stack()[0][3])
-            print 0
+            print(0)
 
     ## FTP Functions
 
@@ -709,7 +709,7 @@ class cyberPanel:
                 self.printStatus(1, 'None')
             else:
                 self.printStatus(1, result[1])
-        except BaseException, msg:
+        except BaseException as msg:
             logger.writeforCLI(str(msg), "Error", stack()[0][3])
             self.printStatus(0, str(msg))
 
@@ -733,7 +733,7 @@ class cyberPanel:
                 self.printStatus(1, 'None')
             else:
                 self.printStatus(1, result[1])
-        except BaseException, msg:
+        except BaseException as msg:
             logger.writeforCLI(str(msg), "Error", stack()[0][3])
             self.printStatus(0, str(msg))
 
@@ -757,7 +757,7 @@ class cyberPanel:
                 self.printStatus(1, 'None')
             else:
                 self.printStatus(1, result[1])
-        except BaseException, msg:
+        except BaseException as msg:
             logger.writeforCLI(str(msg), "Error", stack()[0][3])
             self.printStatus(0, str(msg))
 
@@ -786,7 +786,7 @@ class cyberPanel:
             ProcessUtilities.restartLitespeed()
             self.printStatus(1, 'None')
 
-        except BaseException, msg:
+        except BaseException as msg:
             logger.writeforCLI(str(msg), "Error", stack()[0][3])
             self.printStatus(0, str(msg))
 
@@ -803,23 +803,23 @@ def main():
         completeCommandExample = 'cyberpanel createWebsite --package Detault --owner admin --domainName cyberpanel.net --email support@cyberpanel.net --php 5.6'
 
         if not args.package:
-            print "\n\nPlease enter the package name. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter the package name. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         if not args.owner:
-            print "\n\nPlease enter the owner name. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter the owner name. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         if not args.domainName:
-            print "\n\nPlease enter the domain name. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter the domain name. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         if not args.email:
-            print "\n\nPlease enter the email. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter the email. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         if not args.php:
-            print "\n\nPlease enter the PHP version such as 5.6 for PHP version 5.6. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter the PHP version such as 5.6 for PHP version 5.6. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         if args.ssl:
@@ -843,7 +843,7 @@ def main():
         completeCommandExample = 'cyberpanel deleteWebsite --domainName cyberpanel.net'
 
         if not args.domainName:
-            print "\n\nPlease enter the domain to delete. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter the domain to delete. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         cyberpanel.deleteWebsite(args.domainName)
@@ -853,19 +853,19 @@ def main():
                                  ' --owner admin --php 5.6'
 
         if not args.masterDomain:
-            print "\n\nPlease enter Master domain. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter Master domain. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         if not args.childDomain:
-            print "\n\nPlease enter the Child Domain. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter the Child Domain. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         if not args.owner:
-            print "\n\nPlease enter owner for this domain DNS records. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter owner for this domain DNS records. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         if not args.php:
-            print "\n\nPlease enter required PHP version. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter required PHP version. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         if args.ssl:
@@ -889,7 +889,7 @@ def main():
         completeCommandExample = 'cyberpanel deleteChild --childDomain cyberpanel.net'
 
         if not args.childDomain:
-            print "\n\nPlease enter the child domain to delete. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter the child domain to delete. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         cyberpanel.deleteChild(args.childDomain)
@@ -903,11 +903,11 @@ def main():
         completeCommandExample = 'cyberpanel changePHP --domainName cyberpanel.net --php 5.6'
 
         if not args.domainName:
-            print "\n\nPlease enter Domain. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter Domain. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         if not args.php:
-            print "\n\nPlease enter required PHP version. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter required PHP version. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
 
@@ -917,11 +917,11 @@ def main():
         completeCommandExample = 'cyberpanel changePackage --domainName cyberpanel.net --packageName CLI'
 
         if not args.domainName:
-            print "\n\nPlease enter the Domain. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter the Domain. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         if not args.packageName:
-            print "\n\nPlease enter the package name. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter the package name. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         cyberpanel.changePackage(args.domainName, args.packageName)
@@ -933,7 +933,7 @@ def main():
         completeCommandExample = 'cyberpanel listDNSJson --domainName cyberpanel.net'
 
         if not args.domainName:
-            print "\n\nPlease enter the domain. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter the domain. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         cyberpanel.listDNSJson(args.domainName)
@@ -942,7 +942,7 @@ def main():
         completeCommandExample = 'cyberpanel listDNSPretty --domainName cyberpanel.net'
 
         if not args.domainName:
-            print "\n\nPlease enter the domain. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter the domain. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         cyberpanel.listDNSPretty(args.domainName)
@@ -954,11 +954,11 @@ def main():
         completeCommandExample = 'cyberpanel createDNSZone --owner admin --domainName cyberpanel.net'
 
         if not args.domainName:
-            print "\n\nPlease enter the domain. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter the domain. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         if not args.owner:
-            print "\n\nPlease enter the owner name. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter the owner name. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         cyberpanel.createDNSZone(args.domainName, args.owner)
@@ -966,7 +966,7 @@ def main():
         completeCommandExample = 'cyberpanel deleteDNSZone --domainName cyberpanel.net'
 
         if not args.domainName:
-            print "\n\nPlease enter the domain. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter the domain. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         cyberpanel.deleteDNSZone(args.domainName)
@@ -975,27 +975,27 @@ def main():
                                  ' --recordType A --value 192.168.100.1 --priority 0 --ttl 3600'
 
         if not args.domainName:
-            print "\n\nPlease enter the domain. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter the domain. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         if not args.name:
-            print "\n\nPlease enter the record name. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter the record name. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         if not args.recordType:
-            print "\n\nPlease enter the record type. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter the record type. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         if not args.value:
-            print "\n\nPlease enter the record value. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter the record value. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         if not args.priority:
-            print "\n\nPlease enter the priority. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter the priority. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         if not args.ttl:
-            print "\n\nPlease enter the ttl. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter the ttl. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         cyberpanel.createDNSRecord(args.domainName, args.name, args.recordType, args.value, args.priority, args.ttl)
@@ -1003,7 +1003,7 @@ def main():
         completeCommandExample = 'cyberpanel deleteDNSRecord --recordID 200'
 
         if not args.recordID:
-            print "\n\nPlease enter the record ID to be deleted, you can find record ID by listing the current DNS records. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter the record ID to be deleted, you can find record ID by listing the current DNS records. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         cyberpanel.deleteDNSRecord(args.recordID)
@@ -1015,7 +1015,7 @@ def main():
         completeCommandExample = 'cyberpanel createBackup --domainName cyberpanel.net'
 
         if not args.domainName:
-            print "\n\nPlease enter the domain. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter the domain. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         cyberpanel.createBackup(args.domainName)
@@ -1024,7 +1024,7 @@ def main():
         completeCommandExample = 'cyberpanel restoreBackup --fileName /home/talkshosting.com/backup/backup-talksho-01-30-53-Fri-Jun-2018.tar.gz'
 
         if not args.fileName:
-            print "\n\nPlease enter the file name or complete path to file. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter the file name or complete path to file. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         cyberpanel.restoreBackup(args.fileName)
@@ -1037,33 +1037,33 @@ def main():
                                  ' --dataBases 100 --ftpAccounts 100 --allowedDomains 100'
 
         if not args.owner:
-            print "\n\nPlease enter the owner name. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter the owner name. For example:\n\n" + completeCommandExample + "\n\n")
             return
         if not args.packageName:
-            print "\n\nPlease enter the package name. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter the package name. For example:\n\n" + completeCommandExample + "\n\n")
             return
         if not args.diskSpace:
-            print "\n\nPlease enter value for Disk Space. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter value for Disk Space. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         if not args.bandwidth:
-            print "\n\nPlease enter value for Bandwidth. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter value for Bandwidth. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         if not args.emailAccounts:
-            print "\n\nPlease enter value for Email accounts. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter value for Email accounts. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         if not args.dataBases:
-            print "\n\nPlease enter value for Databases. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter value for Databases. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         if not args.ftpAccounts:
-            print "\n\nPlease enter value for Ftp accounts. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter value for Ftp accounts. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         if not args.allowedDomains:
-            print "\n\nPlease enter value for Allowed Child Domains. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter value for Allowed Child Domains. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
 
@@ -1073,7 +1073,7 @@ def main():
     elif args.function == "deletePackage":
         completeCommandExample = 'cyberpanel deletePackage --packageName CLI'
         if not args.packageName:
-            print "\n\nPlease enter the package name. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter the package name. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         cyberpanel.deletePackage(args.packageName)
@@ -1090,24 +1090,24 @@ def main():
                                  '--dbUsername cyberpanel --dbPassword cyberpanel'
 
         if not args.databaseWebsite:
-            print "\n\nPlease enter database website. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter database website. For example:\n\n" + completeCommandExample + "\n\n")
             return
         if not args.dbName:
-            print "\n\nPlease enter the database name. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter the database name. For example:\n\n" + completeCommandExample + "\n\n")
             return
         if not args.dbUsername:
-            print "\n\nPlease enter the database username. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter the database username. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         if not args.dbPassword:
-            print "\n\nPlease enter the password for database. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter the password for database. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         cyberpanel.createDatabase(args.dbName, args.dbUsername, args.dbPassword, args.databaseWebsite)
     elif args.function == "deleteDatabase":
         completeCommandExample = 'cyberpanel deleteDatabase --dbName cyberpanel'
         if not args.dbName:
-            print "\n\nPlease enter the database name. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter the database name. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         cyberpanel.deleteDatabase(args.dbName)
@@ -1116,14 +1116,14 @@ def main():
         completeCommandExample = 'cyberpanel listDatabasesJson --databaseWebsite cyberpanel.net'
 
         if not args.databaseWebsite:
-            print "\n\nPlease enter database website. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter database website. For example:\n\n" + completeCommandExample + "\n\n")
             return
         cyberpanel.listDatabasesJson(args.databaseWebsite)
     elif args.function == "listDatabasesPretty":
         completeCommandExample = 'cyberpanel listDatabasesPretty --databaseWebsite cyberpanel.net'
 
         if not args.databaseWebsite:
-            print "\n\nPlease enter database website. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter database website. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         cyberpanel.listDatabasesPretty(args.databaseWebsite)
@@ -1136,14 +1136,14 @@ def main():
                                  '--password cyberpanel'
 
         if not args.domainName:
-            print "\n\nPlease enter Domain name. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter Domain name. For example:\n\n" + completeCommandExample + "\n\n")
             return
         if not args.userName:
-            print "\n\nPlease enter the user name. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter the user name. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         if not args.password:
-            print "\n\nPlease enter the password for database. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter the password for database. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         cyberpanel.createEmail(args.domainName, args.userName, args.password)
@@ -1151,7 +1151,7 @@ def main():
         completeCommandExample = 'cyberpanel deleteEmail --email cyberpanel@cyberpanel.net'
 
         if not args.email:
-            print "\n\nPlease enter the email. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter the email. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         cyberpanel.deleteEmail(args.email)
@@ -1160,11 +1160,11 @@ def main():
         completeCommandExample = 'cyberpanel changeEmailPassword --email cyberpanel@cyberpanel.net --password cyberpanel'
 
         if not args.email:
-            print "\n\nPlease enter email. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter email. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         if not args.password:
-            print "\n\nPlease enter the password. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter the password. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         cyberpanel.changeEmailPassword(args.email, args.password)
@@ -1172,7 +1172,7 @@ def main():
         completeCommandExample = 'cyberpanel listEmailsJson --domainName cyberpanel.net'
 
         if not args.domainName:
-            print "\n\nPlease enter domain name. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter domain name. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         cyberpanel.listEmailsJson(args.domainName)
@@ -1180,7 +1180,7 @@ def main():
         completeCommandExample = 'cyberpanel listEmailsPretty --domainName cyberpanel.net'
 
         if not args.domainName:
-            print "\n\nPlease enter domain name. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter domain name. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         cyberpanel.listEmailsPretty(args.domainName)
@@ -1193,18 +1193,18 @@ def main():
                                  '--password cyberpanel --owner admin'
 
         if not args.domainName:
-            print "\n\nPlease enter Domain name. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter Domain name. For example:\n\n" + completeCommandExample + "\n\n")
             return
         if not args.userName:
-            print "\n\nPlease enter the user name. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter the user name. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         if not args.password:
-            print "\n\nPlease enter the password for database. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter the password for database. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         if not args.owner:
-            print "\n\nPlease enter the owner name. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter the owner name. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         cyberpanel.createFTPAccount(args.domainName, args.userName, args.password, args.owner)
@@ -1212,7 +1212,7 @@ def main():
         completeCommandExample = 'cyberpanel deleteFTPAccount --userName cyberpanel'
 
         if not args.userName:
-            print "\n\nPlease enter the user name. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter the user name. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         cyberpanel.deleteFTPAccount(args.userName)
@@ -1221,11 +1221,11 @@ def main():
         completeCommandExample = 'cyberpanel changeFTPPassword --userName cyberpanel --password cyberpanel'
 
         if not args.userName:
-            print "\n\nPlease enter the user name. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter the user name. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         if not args.password:
-            print "\n\nPlease enter the password for database. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter the password for database. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         cyberpanel.changeFTPPassword(args.userName, args.password)
@@ -1233,7 +1233,7 @@ def main():
         completeCommandExample = 'cyberpanel listFTPJson --domainName cyberpanel.net'
 
         if not args.domainName:
-            print "\n\nPlease enter domain name. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter domain name. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         cyberpanel.listFTPJson(args.domainName)
@@ -1241,7 +1241,7 @@ def main():
         completeCommandExample = 'cyberpanel listFTPPretty --domainName cyberpanel.net'
 
         if not args.domainName:
-            print "\n\nPlease enter domain name. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter domain name. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         cyberpanel.listFTPPretty(args.domainName)
@@ -1251,7 +1251,7 @@ def main():
         completeCommandExample = 'cyberpanel issueSSL --domainName cyberpanel.net'
 
         if not args.domainName:
-            print "\n\nPlease enter Domain name. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter Domain name. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         cyberpanel.issueSSL(args.domainName)
@@ -1259,7 +1259,7 @@ def main():
         completeCommandExample = 'cyberpanel hostNameSSL --domainName cyberpanel.net'
 
         if not args.domainName:
-            print "\n\nPlease enter Domain name. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter Domain name. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         cyberpanel.issueSSLForHostName(args.domainName)
@@ -1268,7 +1268,7 @@ def main():
         completeCommandExample = 'cyberpanel mailServerSSL --domainName cyberpanel.net'
 
         if not args.domainName:
-            print "\n\nPlease enter Domain name. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter Domain name. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         cyberpanel.issueSSLForMailServer(args.domainName)
@@ -1277,7 +1277,7 @@ def main():
         completeCommandExample = 'cyberpanel issueSelfSignedSSL --domainName cyberpanel.net'
 
         if not args.domainName:
-            print "\n\nPlease enter Domain name. For example:\n\n" + completeCommandExample + "\n\n"
+            print("\n\nPlease enter Domain name. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         cyberpanel.issueSelfSignedSSL(args.domainName)

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 from django.shortcuts import render
 from django.shortcuts import HttpResponse, redirect
@@ -9,7 +9,7 @@ import os
 import json
 from plogical.mailUtilities import mailUtilities
 from plogical.acl import ACLManager
-from models import PDNSStatus, SlaveServers
+from .models import PDNSStatus, SlaveServers
 from .serviceManager import ServiceManager
 from plogical.processUtilities import ProcessUtilities
 # Create your views here.
@@ -27,7 +27,7 @@ def managePowerDNS(request):
         try:
             return render(request, 'manageServices/managePowerDNS.html', {"status": 1})
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return HttpResponse("See CyberCP main log file.")
 
@@ -47,7 +47,7 @@ def managePostfix(request):
 
             return render(request, 'manageServices/managePostfix.html', {"status": 1})
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return HttpResponse("See CyberCP main log file.")
 
@@ -65,7 +65,7 @@ def managePureFtpd(request):
             return ACLManager.loadError()
         try:
             return render(request, 'manageServices/managePureFtpd.html', {"status": 1})
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return HttpResponse("See CyberCP main log file.")
 
@@ -125,12 +125,12 @@ def fetchStatus(request):
                         json_data = json.dumps(data_ret)
                         return HttpResponse(json_data)
 
-        except BaseException,msg:
+        except BaseException as msg:
             data_ret = {'status': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-    except KeyError,msg:
+    except KeyError as msg:
         logging.CyberCPLogFileWriter.writeToFile(str(msg))
         data_ret = {'status': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
@@ -268,12 +268,12 @@ def saveStatus(request):
                 return HttpResponse(json_data)
 
 
-        except BaseException,msg:
+        except BaseException as msg:
             data_ret = {'status': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-    except KeyError,msg:
+    except KeyError as msg:
         logging.CyberCPLogFileWriter.writeToFile(str(msg))
         data_ret = {'status': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)

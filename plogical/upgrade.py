@@ -1,23 +1,19 @@
 import os
 import os.path
 import sys
-import django
-
+import argparse
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
-django.setup()
 import shlex
 import subprocess
 import shutil
 import requests
 import json
 import time
-from baseTemplate.models import version
 import MySQLdb as mysql
 from CyberCP import settings
 import random
 import string
-from mailServer.models import EUsers
 
 
 class Upgrade:
@@ -27,11 +23,11 @@ class Upgrade:
     @staticmethod
     def stdOut(message, do_exit=0):
         print("\n\n")
-        print ("[" + time.strftime(
-            "%m.%d.%Y_%H-%M-%S") + "] #########################################################################\n")
-        print("[" + time.strftime("%m.%d.%Y_%H-%M-%S") + "] " + message + "\n")
-        print ("[" + time.strftime(
-            "%m.%d.%Y_%H-%M-%S") + "] #########################################################################\n")
+        print(("[" + time.strftime(
+            "%m.%d.%Y_%H-%M-%S") + "] #########################################################################\n"))
+        print(("[" + time.strftime("%m.%d.%Y_%H-%M-%S") + "] " + message + "\n"))
+        print(("[" + time.strftime(
+            "%m.%d.%Y_%H-%M-%S") + "] #########################################################################\n"))
 
         if do_exit:
             os._exit(0)
@@ -124,36 +120,9 @@ class Upgrade:
             writeToFile.writelines(varTmp)
             writeToFile.close()
 
-        except BaseException, msg:
+        except BaseException as msg:
             Upgrade.stdOut(str(msg) + " [mountTemp]", 0)
 
-    @staticmethod
-    def setupPythonWSGI():
-        try:
-
-            cwd = os.getcwd()
-
-            command = "wget http://www.litespeedtech.com/packages/lsapi/wsgi-lsapi-1.4.tgz"
-            Upgrade.executioner(command, 0)
-
-            command = "tar xf wsgi-lsapi-1.4.tgz"
-            Upgrade.executioner(command, 0)
-
-            os.chdir("wsgi-lsapi-1.4")
-
-            command = "python ./configure.py"
-            Upgrade.executioner(command, 0)
-
-            command = "make"
-            Upgrade.executioner(command, 0)
-
-            command = "cp lswsgi /usr/local/CyberCP/bin/"
-            Upgrade.executioner(command, 0)
-
-            os.chdir(cwd)
-
-        except:
-            return 0
 
     @staticmethod
     def dockerUsers():
@@ -241,7 +210,7 @@ class Upgrade:
 
             ## Write secret phrase
 
-            rString = ''.join([random.choice(string.ascii_letters + string.digits) for n in xrange(32)])
+            rString = ''.join([random.choice(string.ascii_letters + string.digits) for n in range(32)])
 
             data = open('/usr/local/CyberCP/public/phpmyadmin/config.sample.inc.php', 'r').readlines()
 
@@ -262,11 +231,15 @@ class Upgrade:
 
             os.chdir(cwd)
 
-        except BaseException, msg:
+        except BaseException as msg:
             Upgrade.stdOut(str(msg) + " [download_install_phpmyadmin]", 0)
 
     @staticmethod
     def setupComposer():
+
+        if os.path.exists('composer.sh'):
+            os.remove('composer.sh')
+
         command = "wget https://cyberpanel.sh/composer.sh"
         Upgrade.executioner(command, 0)
 
@@ -410,7 +383,7 @@ class Upgrade:
 
             os.chdir(cwd)
 
-        except BaseException, msg:
+        except BaseException as msg:
             Upgrade.stdOut(str(msg) + " [downoad_and_install_raindloop]", 0)
 
         return 1
@@ -434,50 +407,9 @@ class Upgrade:
                 pass
 
             return (version_number + "." + version_build + ".tar.gz")
-        except BaseException, msg:
+        except BaseException as msg:
             Upgrade.stdOut(str(msg) + ' [downloadLink]')
             os._exit(0)
-
-    @staticmethod
-    def setupVirtualEnv():
-        try:
-            Upgrade.stdOut('Setting up virtual environment for CyberPanel.')
-            ##
-
-            command = "yum install -y libattr-devel xz-devel gpgme-devel mariadb-devel curl-devel"
-            Upgrade.executioner(command, 'VirtualEnv Pre-reqs', 0)
-
-            command = "yum install -y libattr-devel xz-devel gpgme-devel curl-devel"
-            Upgrade.executioner(command, 'VirtualEnv Pre-reqs', 0)
-
-            ##
-
-            command = "pip install virtualenv"
-            Upgrade.executioner(command, 'VirtualEnv Install', 0)
-
-            ####
-
-            command = "virtualenv --system-site-packages /usr/local/CyberCP"
-            Upgrade.executioner(command, 'Setting up VirtualEnv [One]', 1)
-
-            ##
-
-            env_path = '/usr/local/CyberCP'
-            subprocess.call(['virtualenv', env_path])
-            activate_this = os.path.join(env_path, 'bin', 'activate_this.py')
-            execfile(activate_this, dict(__file__=activate_this))
-
-            ##
-
-            command = "pip install --ignore-installed -r /usr/local/CyberCP/requirments.txt"
-            Upgrade.executioner(command, 'CyberPanel requirements', 0)
-
-            command = "virtualenv --system-site-packages /usr/local/CyberCP"
-            Upgrade.executioner(command, 'Setting up VirtualEnv [Two]', 0)
-
-            Upgrade.stdOut('Virtual enviroment for CyberPanel successfully installed.')
-        except OSError, msg:
-            Upgrade.stdOut(str(msg) + " [setupVirtualEnv]", 0)
 
     @staticmethod
     def fileManager():
@@ -508,7 +440,7 @@ class Upgrade:
             command = "chmod +x /usr/local/CyberCP/cli/cyberPanel.py"
             Upgrade.executioner(command, 'CLI Permissions', 0)
 
-        except OSError, msg:
+        except OSError as msg:
             Upgrade.stdOut(str(msg) + " [setupCLI]")
             return 0
 
@@ -528,6 +460,12 @@ class Upgrade:
     @staticmethod
     def upgradeVersion():
         try:
+
+            import django
+            os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
+            django.setup()
+            from baseTemplate.models import version
+
             vers = version.objects.get(pk=1)
             getVersion = requests.get('https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/version.txt')
             latest = getVersion.json()
@@ -568,7 +506,7 @@ class Upgrade:
             cursor = conn.cursor()
             return conn, cursor
 
-        except BaseException, msg:
+        except BaseException as msg:
             Upgrade.stdOut(str(msg))
             return 0, 0
 
@@ -670,7 +608,7 @@ class Upgrade:
             except:
                 pass
 
-        except OSError, msg:
+        except OSError as msg:
             Upgrade.stdOut(str(msg) + " [applyLoginSystemMigrations]")
 
     @staticmethod
@@ -856,7 +794,7 @@ class Upgrade:
             except:
                 pass
 
-        except OSError, msg:
+        except OSError as msg:
             Upgrade.stdOut(str(msg) + " [applyLoginSystemMigrations]")
 
     @staticmethod
@@ -1216,11 +1154,11 @@ class Upgrade:
             cwd = os.getcwd()
             os.chdir('/usr/local/CyberCP')
 
-            command = '/usr/local/CyberPanel/bin/python2 manage.py makemigrations'
+            command = '/usr/local/CyberPanel/bin/python manage.py makemigrations'
             Upgrade.executioner(command, 'python manage.py makemigrations', 0)
 
-            command = '/usr/local/CyberPanel/bin/python2 manage.py makemigrations'
-            Upgrade.executioner(command, '/usr/local/CyberPanel/bin/python2 manage.py migrate', 0)
+            command = '/usr/local/CyberPanel/bin/python manage.py makemigrations'
+            Upgrade.executioner(command, '/usr/local/CyberPanel/bin/python manage.py migrate', 0)
 
             os.chdir(cwd)
 
@@ -1324,11 +1262,11 @@ class Upgrade:
                 command = 'sudo yum install git -y'
                 Upgrade.executioner(command, 'installGit', 0)
 
-        except BaseException, msg:
+        except BaseException as msg:
             pass
 
     @staticmethod
-    def downloadAndUpgrade(versionNumbring):
+    def downloadAndUpgrade(versionNumbring, branch):
         try:
             ## Download latest version.
 
@@ -1356,6 +1294,15 @@ class Upgrade:
             Upgrade.executioner(command, 'Download CyberPanel', 1)
 
             shutil.move('cyberpanel', 'CyberCP')
+
+            if branch != 'stable':
+                os.chdir('CyberCP')
+                command = 'git checkout %s' % (branch)
+                Upgrade.executioner(command, command, 1)
+                os.chdir('/usr/local')
+
+
+
 
             ## Copy settings file
 
@@ -1523,26 +1470,6 @@ CSRF_COOKIE_SECURE = True
             pass
 
     @staticmethod
-    def installPYDNS():
-        try:
-            command = "pip install pydns"
-            Upgrade.executioner(command, 'Install PyDNS', 1)
-        except OSError, msg:
-            Upgrade.stdOut(str(msg) + " [installPYDNS]")
-            return 0
-
-    @staticmethod
-    def installTLDExtract():
-        try:
-            command = "pip install tldextract"
-            Upgrade.executioner(command, 'Install tldextract', 1)
-            command = "pip install bcrypt"
-            Upgrade.executioner(command, 'Install tldextract', 1)
-        except OSError, msg:
-            Upgrade.stdOut(str(msg) + " [installTLDExtract]")
-            return 0
-
-    @staticmethod
     def installLSCPD():
         try:
 
@@ -1593,7 +1520,7 @@ CSRF_COOKIE_SECURE = True
 
             Upgrade.stdOut("LSCPD successfully installed!")
 
-        except BaseException, msg:
+        except BaseException as msg:
             Upgrade.stdOut(str(msg) + " [installLSCPD]")
 
     @staticmethod
@@ -1723,9 +1650,18 @@ CSRF_COOKIE_SECURE = True
             command = 'chmod +x /usr/local/CyberCP/CLManager/CLPackages.py'
             Upgrade.executioner(command, command, 0)
 
+            clScripts = ['/usr/local/CyberCP/CLScript/panel_info.py', '/usr/local/CyberCP/CLScript/CloudLinuxPackages.py',
+                         '/usr/local/CyberCP/CLScript/CloudLinuxUsers.py', '/usr/local/CyberCP/CLScript/CloudLinuxDomains.py'
+                ,'/usr/local/CyberCP/CLScript/CloudLinuxResellers.py', '/usr/local/CyberCP/CLScript/CloudLinuxAdmins.py',
+                         '/usr/local/CyberCP/CLScript/CloudLinuxDB.py', '/usr/local/CyberCP/CLScript/UserInfo.py']
+
+            for items in clScripts:
+                command = 'chmod +x %s' % (items)
+                Upgrade.executioner(command, 0)
+
             Upgrade.stdOut("Permissions updated.")
 
-        except BaseException, msg:
+        except BaseException as msg:
             Upgrade.stdOut(str(msg) + " [installLSCPD]")
 
     @staticmethod
@@ -1816,12 +1752,17 @@ enabled=1"""
 
                 writeToFile.close()
 
+                import django
+                os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
+                django.setup()
+                from mailServer.models import EUsers
+
                 Upgrade.stdOut("Upgrading passwords...")
                 for items in EUsers.objects.all():
                     if items.password.find('CRYPT') > -1:
                         continue
                     command = 'doveadm pw -p %s' % (items.password)
-                    items.password = subprocess.check_output(shlex.split(command)).strip('\n')
+                    items.password = subprocess.check_output(shlex.split(command)).decode("utf-8").strip('\n')
                     items.save()
 
                 command = "systemctl restart dovecot"
@@ -1943,11 +1884,17 @@ failovermethod=priority
                 writeToFile.close()
 
                 Upgrade.stdOut("Upgrading passwords...")
+
+                import django
+                os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
+                django.setup()
+                from mailServer.models import EUsers
+
                 for items in EUsers.objects.all():
                     if items.password.find('CRYPT') > -1:
                         continue
                     command = 'doveadm pw -p %s' % (items.password)
-                    items.password = subprocess.check_output(shlex.split(command)).strip('\n')
+                    items.password = subprocess.check_output(shlex.split(command)).decode("utf-8").strip('\n')
                     items.save()
 
 
@@ -1956,7 +1903,7 @@ failovermethod=priority
 
             Upgrade.stdOut("Dovecot upgraded.")
 
-        except BaseException, msg:
+        except BaseException as msg:
             Upgrade.stdOut(str(msg) + " [upgradeDovecot]")
 
     @staticmethod
@@ -1981,64 +1928,21 @@ failovermethod=priority
         data = open(cronTab, 'r').read()
 
         if data.find('IncScheduler') == -1:
-            cronJob = '0 12 * * * root /usr/local/CyberCP/bin/python2 /usr/local/CyberCP/IncBackups/IncScheduler.py Daily\n'
+            cronJob = '0 12 * * * root /usr/local/CyberPanel/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py Daily\n'
 
             writeToFile = open(cronTab, 'a')
             writeToFile.writelines(cronJob)
 
-            cronJob = '0 0 * * 0 root /usr/local/CyberCP/bin/python2 /usr/local/CyberCP/IncBackups/IncScheduler.py Daily\n'
+            cronJob = '0 0 * * 0 root /usr/local/CyberPanel/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py Daily\n'
             writeToFile.writelines(cronJob)
             writeToFile.close()
 
 
         if data.find('renew.py') == -1:
             writeToFile = open(cronTab, 'a')
-            writeToFile.writelines("0 2 * * * root /usr/local/CyberCP/bin/python2 /usr/local/CyberCP/plogical/renew.py\n")
+            writeToFile.writelines("0 2 * * * root /usr/local/CyberPanel/bin/python /usr/local/CyberCP/plogical/renew.py\n")
             writeToFile.close()
 
-
-    @staticmethod
-    def p3():
-
-        ### Virtual Env 3
-
-        CentOSPath = '/etc/redhat-release'
-
-        if os.path.exists(CentOSPath):
-            command = 'yum -y install python36 -y'
-            Upgrade.executioner(command, 0)
-
-            command = 'virtualenv -p python3 /usr/local/CyberPanel/p3'
-            Upgrade.executioner(command, 0)
-
-            env_path = '/usr/local/CyberPanel/p3'
-            subprocess.call(['virtualenv', env_path])
-            activate_this = os.path.join(env_path, 'bin', 'activate_this.py')
-            execfile(activate_this, dict(__file__=activate_this))
-
-            command = "pip3 install --ignore-installed -r %s" % ('/usr/local/CyberCP/WebTerminal/requirments.txt')
-            Upgrade.executioner(command, 0)
-
-        else:
-            command = 'apt install -y python3-pip'
-            Upgrade.executioner(command, 0)
-
-            command = 'apt install build-essential libssl-dev libffi-dev python3-dev -y'
-            Upgrade.executioner(command, 0)
-
-            command = 'apt install -y python3-venv'
-            Upgrade.executioner(command, 0)
-
-            command = 'virtualenv -p python3 /usr/local/CyberPanel/p3'
-            Upgrade.executioner(command, 0)
-
-            env_path = '/usr/local/CyberPanel/p3'
-            subprocess.call(['virtualenv', env_path])
-            activate_this = os.path.join(env_path, 'bin', 'activate_this.py')
-            execfile(activate_this, dict(__file__=activate_this))
-
-            command = "pip3 install --ignore-installed -r %s" % ('/usr/local/CyberCP/WebTerminal/requirments.txt')
-            Upgrade.executioner(command, 0)
 
     @staticmethod
     def UpdateMaxSSLCons():
@@ -2048,16 +1952,60 @@ failovermethod=priority
         command = "sed -i 's|<maxSSLConnections>200</maxSSLConnections>|<maxSSLConnections>10000</maxSSLConnections>|g' /usr/local/lsws/conf/httpd_config.xml"
         Upgrade.executioner(command, 0)
 
+    @staticmethod
+    def installCLScripts():
+        try:
+
+            CentOSPath = '/etc/redhat-release'
+
+            if os.path.exists(CentOSPath):
+                command = 'mkdir -p /opt/cpvendor/etc/'
+                Upgrade.executioner(command, 0)
+
+                content = """[integration_scripts]
+
+panel_info = /usr/local/CyberCP/CLScript/panel_info.py
+packages = /usr/local/CyberCP/CLScript/CloudLinuxPackages.py
+users = /usr/local/CyberCP/CLScript/CloudLinuxUsers.py
+domains = /usr/local/CyberCP/CLScript/CloudLinuxDomains.py
+resellers = /usr/local/CyberCP/CLScript/CloudLinuxResellers.py
+admins = /usr/local/CyberCP/CLScript/CloudLinuxAdmins.py
+db_info = /usr/local/CyberCP/CLScript/CloudLinuxDB.py
+
+[lvemanager_config]
+ui_user_info = /usr/local/CyberCP/CLScript/UserInfo.py
+base_path = /usr/local/lvemanager
+run_service = 1
+service_port = 9000
+"""
+
+                if not os.path.exists('/opt/cpvendor/etc/integration.ini'):
+                    writeToFile = open('/opt/cpvendor/etc/integration.ini', 'w')
+                    writeToFile.write(content)
+                    writeToFile.close()
+
+        except:
+            pass
+
 
 
     @staticmethod
-    def upgrade():
+    def upgrade(branch):
 
         # Upgrade.stdOut("Upgrades are currently disabled")
         # return 0
 
         command = 'systemctl stop cpssh'
         Upgrade.executioner(command, 'fix csf if there', 0)
+
+
+        ## Add LSPHP7.4 TO LSWS Ent configs
+
+        if not os.path.exists('/usr/local/lsws/bin/openlitespeed'):
+            command = 'wget https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/install/litespeed/httpd_config.xml'
+            Upgrade.executioner(command, command, 0)
+            os.remove('/usr/local/lsws/conf/httpd_config.xml')
+            shutil.copy('httpd_config.xml', '/usr/local/lsws/conf/httpd_config.xml')
 
         postfixPath = '/home/cyberpanel/postfix'
         pdns = '/home/cyberpanel/pdns'
@@ -2072,7 +2020,6 @@ failovermethod=priority
 
         ## Current Version
 
-        Version = version.objects.get(pk=1)
 
         command = "systemctl stop lscpd"
         Upgrade.executioner(command, 'stop lscpd', 0)
@@ -2089,20 +2036,13 @@ failovermethod=priority
         if os.path.exists('/usr/local/CyberPanel.' + versionNumbring):
             os.remove('/usr/local/CyberPanel.' + versionNumbring)
 
-        if float(Version.currentVersion) < 1.6:
-            Upgrade.stdOut('Upgrades works for version 1.6 onwards.')
-            os._exit(0)
-
         ##
 
-        Upgrade.installPYDNS()
-        Upgrade.downloadAndUpgrade(versionNumbring)
+        Upgrade.downloadAndUpgrade(versionNumbring, branch)
         Upgrade.download_install_phpmyadmin()
         Upgrade.downoad_and_install_raindloop()
 
         ##
-
-        Upgrade.installTLDExtract()
 
         ##
 
@@ -2115,7 +2055,7 @@ failovermethod=priority
 
         ##
 
-        Upgrade.setupVirtualEnv()
+        #Upgrade.setupVirtualEnv()
 
         ##
 
@@ -2127,7 +2067,6 @@ failovermethod=priority
 
         Upgrade.installPHP73()
         Upgrade.setupCLI()
-        Upgrade.setupPythonWSGI()
         Upgrade.someDirectories()
         Upgrade.installLSCPD()
         Upgrade.GeneralMigrations()
@@ -2167,12 +2106,18 @@ failovermethod=priority
         command = 'systemctl start cpssh'
         Upgrade.executioner(command, 'fix csf if there', 0)
         Upgrade.AutoUpgradeAcme()
+        Upgrade.installCLScripts()
 
         Upgrade.stdOut("Upgrade Completed.")
 
 
 def main():
-    Upgrade.upgrade()
+    parser = argparse.ArgumentParser(description='CyberPanel Installer')
+    parser.add_argument('branch', help='Install from branch name.')
+
+    args = parser.parse_args()
+
+    Upgrade.upgrade(args.branch)
 
 
 if __name__ == "__main__":

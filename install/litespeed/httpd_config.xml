@@ -340,7 +340,27 @@ SecFilterSelective ARGS &quot;into[[:space:]]+outfile|load[[:space:]]+data|/\*.+
       <memHardLimit>2047M</memHardLimit>
       <procSoftLimit>400</procSoftLimit>
       <procHardLimit>500</procHardLimit>
-    </extProcessor>  
+    </extProcessor>
+    <extProcessor>
+      <type>lsapi</type>
+      <name>lsphp74</name>
+      <address>uds://tmp/lshttpd/lsphp74.sock</address>
+      <maxConns>35</maxConns>
+      <env>PHP_LSAPI_CHILDREN=35</env>
+      <initTimeout>60</initTimeout>
+      <retryTimeout>0</retryTimeout>
+      <persistConn>1</persistConn>
+      <respBuffer>0</respBuffer>
+      <autoStart>3</autoStart>
+      <path>$SERVER_ROOT/lsphp74/bin/lsphp</path>
+      <backlog>100</backlog>
+      <instances>1</instances>
+      <priority>0</priority>
+      <memSoftLimit>2047M</memSoftLimit>
+      <memHardLimit>2047M</memHardLimit>
+      <procSoftLimit>400</procSoftLimit>
+      <procHardLimit>500</procHardLimit>
+    </extProcessor>
   </extProcessorList>
   <scriptHandlerList>
     <scriptHandler>

@@ -1,4 +1,4 @@
-#!/usr/local/CyberCP/bin/python2
+#!/usr/local/CyberCP/bin/python
 import os.path
 import sys
 import django
@@ -12,8 +12,6 @@ import plogical.CyberCPLogFileWriter as logging
 from plogical.tuning import tuning
 from loginSystem.views import loadLoginPage
 from plogical.virtualHostUtilities import virtualHostUtilities
-import subprocess
-import shlex
 from plogical.acl import ACLManager
 from plogical.processUtilities import ProcessUtilities
 
@@ -124,7 +122,7 @@ class tuningManager:
                 inMemCache = data['inMemCache']
                 gzipCompression = data['gzipCompression']
 
-                execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/tuning.py"
+                execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/tuning.py"
                 execPath = execPath + " saveTuningDetails --maxConn " + maxConn + " --maxSSLConn " + maxSSLConn + " --connTime " + connTime + " --keepAlive " + keepAlive + " --inMemCache '" + inMemCache + "' --gzipCompression " + gzipCompression
                 output = ProcessUtilities.outputExecutioner(execPath)
 
@@ -137,7 +135,7 @@ class tuningManager:
                     final_json = json.dumps(data_ret)
                     return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'fetch_status': 0, 'error_message': str(msg), 'tuneStatus': 0}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -175,7 +173,7 @@ class tuningManager:
                 procHardLimit = str(data['procHardLimit'])
                 persistConn = data['persistConn']
 
-                execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/tuning.py"
+                execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/tuning.py"
                 execPath = execPath + " tunePHP --virtualHost " + domainSelection + " --initTimeout " + initTimeout + " --maxConns " + maxConns + " --memSoftLimit " + memSoftLimit + " --memHardLimit '" + memHardLimit + "' --procSoftLimit " + procSoftLimit + " --procHardLimit " + procHardLimit + " --persistConn " + persistConn
 
                 output = ProcessUtilities.outputExecutioner(execPath)
@@ -190,7 +188,7 @@ class tuningManager:
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'fetch_status': 0, 'error_message': str(msg), 'tuneStatus': 0}
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [tunePHP]]")
             json_data = json.dumps(data_ret)

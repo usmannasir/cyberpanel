@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-import sys
 
-reload(sys)
-sys.setdefaultencoding("utf-8")
+import sys
+import importlib
+
+importlib.reload(sys)
 from django.shortcuts import render, redirect
 from loginSystem.views import loadLoginPage
 from .models import PHP, installedPackages, ApachePHP, installedPackagesApache
@@ -19,7 +19,7 @@ from random import randint
 from xml.etree import ElementTree
 from plogical.acl import ACLManager
 from plogical.processUtilities import ProcessUtilities
-from phpManager import PHPManager
+from .phpManager import PHPManager
 
 
 # Create your views here.
@@ -1275,7 +1275,7 @@ def getExtensionsInformation(request):
                 final_json = json.dumps({'fetchStatus': 1, 'error_message': "None", "data": json_data})
                 return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'fetchStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
 
@@ -1303,10 +1303,10 @@ def submitExtensionRequest(request):
                 type = data['type']
 
                 if type == "install":
-                    execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/phpUtilities.py"
+                    execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/phpUtilities.py"
                     execPath = execPath + " installPHPExtension --extension " + extensionName
                 else:
-                    execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/phpUtilities.py"
+                    execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/phpUtilities.py"
                     execPath = execPath + " unInstallPHPExtension --extension " + extensionName
 
                 ProcessUtilities.popenExecutioner(execPath)
@@ -1314,7 +1314,7 @@ def submitExtensionRequest(request):
                 final_json = json.dumps({'extensionRequestStatus': 1, 'error_message': "None"})
                 return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'extensionRequestStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
 
@@ -1441,7 +1441,7 @@ def getRequestStatus(request):
 
 
 
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'extensionRequestStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -1563,12 +1563,12 @@ def getRequestStatusApache(request):
 
 
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg) + ' [getRequestStatusApache]')
             final_dic = {'status': 0, 'extensionRequestStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
-    except KeyError, msg:
+    except KeyError as msg:
         logging.writeToFile(str(msg) + ' [getRequestStatusApache]')
         final_dic = {'status': 0, 'extensionRequestStatus': 0,
                      'error_message': "Not Logged In, please refresh the page or login again."}
@@ -1667,7 +1667,7 @@ def getCurrentPHPConfig(request):
 
                 return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'fetchStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
 
@@ -1726,7 +1726,7 @@ def savePHPConfigBasic(request):
 
                 ##
 
-                execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/phpUtilities.py"
+                execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/phpUtilities.py"
                 execPath = execPath + " savePHPConfigBasic --phpVers " + phpVers + " --allow_url_fopen '" + allow_url_fopen + "' --display_errors '" + display_errors + "' --file_uploads '" + file_uploads + "' --allow_url_include '" + allow_url_include + "' --memory_limit " + memory_limit + " --max_execution_time " + max_execution_time + " --upload_max_filesize " + upload_max_filesize + " --max_input_time " + max_input_time + " --post_max_size " + post_max_size
 
                 output = ProcessUtilities.outputExecutioner(execPath)
@@ -1740,7 +1740,7 @@ def savePHPConfigBasic(request):
                     final_json = json.dumps(final_dic)
                     return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'saveStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -1784,7 +1784,7 @@ def getCurrentAdvancedPHPConfig(request):
                 return HttpResponse(final_json)
 
 
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'fetchStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -1824,7 +1824,7 @@ def savePHPConfigAdvance(request):
                 vhost.write(data['configData'])
                 vhost.close()
 
-                execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/phpUtilities.py"
+                execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/phpUtilities.py"
                 execPath = execPath + " savePHPConfigAdvance --phpVers " + path + " --tempPath " + tempPath
 
                 output = ProcessUtilities.outputExecutioner(execPath)
@@ -1838,11 +1838,11 @@ def savePHPConfigAdvance(request):
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
 
-            except BaseException, msg:
+            except BaseException as msg:
                 data_ret = {'saveStatus': 0, 'error_message': str(msg)}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-    except KeyError, msg:
+    except KeyError as msg:
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[saveConfigsToFile]")
         return HttpResponse("Not Logged in as admin")

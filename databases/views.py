@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 from django.shortcuts import redirect, HttpResponse
 from loginSystem.views import loadLoginPage
-from databaseManager import DatabaseManager
-from pluginManager import pluginManager
+from .databaseManager import DatabaseManager
+from .pluginManager import pluginManager
 import json
 from plogical.processUtilities import ProcessUtilities
 from loginSystem.models import Administrator
@@ -134,7 +134,7 @@ def setupPHPMYAdminSession(request):
         userID = request.session['userID']
         admin = Administrator.objects.get(id = userID)
 
-        execPath = "/usr/local/CyberCP/bin/python2 /usr/local/CyberCP/databases/databaseManager.py"
+        execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/databases/databaseManager.py"
         execPath = execPath + " generatePHPMYAdminData --userID " + str(userID)
 
         output = ProcessUtilities.outputExecutioner(execPath)
@@ -151,7 +151,7 @@ def setupPHPMYAdminSession(request):
             return HttpResponse(json_data)
 
 
-    except BaseException, msg:
+    except BaseException as msg:
         data_ret = {'status': 0, 'createDBStatus': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)

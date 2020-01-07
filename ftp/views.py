@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 from django.shortcuts import redirect
-from ftpManager import FTPManager
+from .ftpManager import FTPManager
 from loginSystem.views import loadLoginPage
-from pluginManager import pluginManager
+from .pluginManager import pluginManager
 # Create your views here.
 
 def loadFTPHome(request):

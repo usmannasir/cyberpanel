@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
@@ -25,7 +25,7 @@ def loadUserHome(request):
             else:
                 listUsers = currentACL['listUsers']
             return render(request, 'userManagment/index.html', {"type": admin.type, 'listUsers': listUsers})
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return HttpResponse(str(msg))
 
@@ -70,7 +70,7 @@ def createUser(request):
         else:
             return ACLManager.loadError()
 
-    except BaseException, msg:
+    except BaseException as msg:
         logging.CyberCPLogFileWriter.writeToFile(str(msg))
         return redirect(loadLoginPage)
 
@@ -87,7 +87,7 @@ def apiAccess(request):
         else:
             return ACLManager.loadError()
 
-    except BaseException, msg:
+    except BaseException as msg:
         logging.CyberCPLogFileWriter.writeToFile(str(msg))
         return redirect(loadLoginPage)
 
@@ -118,7 +118,7 @@ def saveChangesAPIAccess(request):
             finalResponse = {'status': 1}
             json_data = json.dumps(finalResponse)
             return HttpResponse(json_data)
-    except BaseException, msg:
+    except BaseException as msg:
         finalResponse = {'status': 0, 'errorMessage': str(msg), 'error_message': str(msg)}
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
@@ -222,7 +222,7 @@ def submitUserCreation(request):
             final_json = json.dumps(data_ret)
             return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'status': 0, 'createStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -292,7 +292,7 @@ def fetchUserDetails(request):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'fetchStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -352,7 +352,7 @@ def saveModifications(request):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'status': 0, 'saveStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -414,7 +414,7 @@ def submitUserDeletion(request):
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'status': 0, 'deleteStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -525,7 +525,7 @@ def createACLFunc(request):
 
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
-    except BaseException, msg:
+    except BaseException as msg:
         finalResponse = {'status': 0, 'errorMessage': str(msg), 'error_message': str(msg)}
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
@@ -566,7 +566,7 @@ def deleteACLFunc(request):
 
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
-    except BaseException, msg:
+    except BaseException as msg:
         finalResponse = {'status': 0, 'errorMessage': str(msg), 'error_message': str(msg)}
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
@@ -672,7 +672,7 @@ def fetchACLDetails(request):
 
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
-    except BaseException, msg:
+    except BaseException as msg:
         finalResponse = {'status': 0, 'errorMessage': str(msg)}
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
@@ -778,7 +778,7 @@ def submitACLModifications(request):
 
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
-    except BaseException, msg:
+    except BaseException as msg:
         finalResponse = {'status': 0, 'errorMessage': str(msg), 'error_message': str(msg)}
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
@@ -841,7 +841,7 @@ def changeACLFunc(request):
 
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
-    except BaseException, msg:
+    except BaseException as msg:
         finalResponse = {'status': 0, 'errorMessage': str(msg), 'error_message': str(msg)}
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
@@ -914,7 +914,7 @@ def saveResellerChanges(request):
         finalResponse = {'status': 1}
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
-    except BaseException, msg:
+    except BaseException as msg:
         finalResponse = {'status': 0, 'errorMessage': str(msg), 'error_message': str(msg)}
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)

@@ -41,5 +41,5 @@ class mysqlUtilities:
                     return 0
 
             return 1
-        except BaseException, msg:
+        except BaseException as msg:
             return 0

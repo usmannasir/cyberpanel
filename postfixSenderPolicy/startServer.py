@@ -1,4 +1,4 @@
-#!/usr/local/CyberCP/bin/python2
+#!/usr/local/CyberCP/bin/python
 import os,sys
 sys.path.append('/usr/local/CyberCP')
 import django
@@ -6,10 +6,10 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
 import socket
 import os
-import accept_traffic as handle
+from . import accept_traffic as handle
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from signal import *
-from cacheManager import cacheManager
+from .cacheManager import cacheManager
 import pwd
 import grp
 
@@ -39,10 +39,10 @@ class SetupConn:
             uid = pwd.getpwnam("postfix").pw_uid
             gid = grp.getgrnam("postfix").gr_gid
             os.chown(self.server_addr, uid, gid)
-            os.chmod(self.server_addr, 0755)
+            os.chmod(self.server_addr, 0o755)
 
             logging.writeToFile('CyberPanel Email Policy Server Successfully started!')
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg) + ' [SetupConn.setup_conn]')
 
     def start_listening(self):
@@ -63,7 +63,7 @@ class SetupConn:
                 connection, client_address = self.sock.accept()
                 background = handle.HandleRequest(connection)
                 background.start()
-        except BaseException, msg:
+        except BaseException as msg:
             logging.writeToFile(str(msg) + ' [SetupConn.start_listening]')
 
     def __del__(self):

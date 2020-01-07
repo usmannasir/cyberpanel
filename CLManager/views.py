@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
 
 from django.shortcuts import redirect, HttpResponse
 from loginSystem.views import loadLoginPage
 from plogical.acl import ACLManager
-from CLManagerMain import CLManagerMain
+from .CLManagerMain import CLManagerMain
 import json
 from websiteFunctions.models import Websites
 from plogical.processUtilities import ProcessUtilities
@@ -43,7 +42,7 @@ def submitCageFSInstall(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
-    except BaseException, msg:
+    except BaseException as msg:
         data_ret = {'status': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
@@ -104,7 +103,7 @@ def enableOrDisable(request):
 
 
 
-    except BaseException, msg:
+    except BaseException as msg:
         data_ret = {'status': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
@@ -169,7 +168,7 @@ def submitCreatePackage(request):
         return HttpResponse(json_data)
 
 
-    except BaseException, msg:
+    except BaseException as msg:
         data_ret = {'status': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
@@ -213,7 +212,7 @@ def deleteCLPackage(request):
         return HttpResponse(json_data)
 
 
-    except BaseException, msg:
+    except BaseException as msg:
         data_ret = {'status': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
@@ -266,7 +265,7 @@ def saveSettings(request):
         return HttpResponse(json_data)
 
 
-    except BaseException, msg:
+    except BaseException as msg:
         data_ret = {'status': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
@@ -352,7 +351,7 @@ def getUsageData(request):
         final_json = json.dumps(finalData)
         return HttpResponse(final_json)
 
-    except BaseException, msg:
+    except BaseException as msg:
         data_ret = {'status': 0, 'error_message': str(msg), 'cpu': 0, 'memory':0}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)

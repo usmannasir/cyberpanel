@@ -1,11 +1,11 @@
  # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 from django.shortcuts import render, redirect, HttpResponse
 from loginSystem.models import Administrator
 from loginSystem.views import loadLoginPage
 from .container import ContainerManager
-from decorators import preDockerRun
+from .decorators import preDockerRun
 from plogical.acl import ACLManager
 import json
 
@@ -48,7 +48,7 @@ def installDocker(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
-    except BaseException, msg:
+    except BaseException as msg:
         data_ret = {'status': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)

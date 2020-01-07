@@ -20,9 +20,9 @@ class cliLogger:
     def readLastNFiles(numberOfLines,fileName):
         try:
 
-            lastFewLines = subprocess.check_output(["tail", "-n",str(numberOfLines),fileName])
+            lastFewLines = subprocess.check_output(["tail", "-n",str(numberOfLines),fileName]).decode("utf-8")
 
             return lastFewLines
 
-        except subprocess.CalledProcessError,msg:
+        except subprocess.CalledProcessError as msg:
             return "File was empty"

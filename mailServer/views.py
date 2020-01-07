@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 from django.shortcuts import redirect
 from django.http import HttpResponse
 from loginSystem.views import loadLoginPage
 import json
-from mailserverManager import MailServerManager
-from pluginManager import pluginManager
+from .mailserverManager import MailServerManager
+from .pluginManager import pluginManager
 
 def loadEmailHome(request):
     try:
@@ -66,7 +66,7 @@ def getEmailsForDomain(request):
     try:
         msM = MailServerManager(request)
         return msM.getEmailsForDomain()
-    except KeyError,msg:
+    except KeyError as msg:
         data_ret = {'fetchStatus': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
@@ -86,7 +86,7 @@ def submitEmailDeletion(request):
             return result
 
         return coreResult
-    except KeyError,msg:
+    except KeyError as msg:
         data_ret = {'deleteEmailStatus': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
@@ -102,7 +102,7 @@ def fetchCurrentForwardings(request):
     try:
         msM = MailServerManager(request)
         return msM.fetchCurrentForwardings()
-    except KeyError,msg:
+    except KeyError as msg:
         data_ret = {'fetchStatus': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
@@ -122,7 +122,7 @@ def submitForwardDeletion(request):
             return result
 
         return coreResult
-    except KeyError,msg:
+    except KeyError as msg:
         data_ret = {'deleteEmailStatus': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
@@ -142,7 +142,7 @@ def submitEmailForwardingCreation(request):
             return result
 
         return coreResult
-    except KeyError,msg:
+    except KeyError as msg:
         data_ret = {'createStatus': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
@@ -171,7 +171,7 @@ def submitPasswordChange(request):
             return result
 
         return coreResult
-    except KeyError,msg:
+    except KeyError as msg:
         data_ret = {'passChangeStatus': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
@@ -189,7 +189,7 @@ def fetchDKIMKeys(request):
     try:
         msM = MailServerManager(request)
         return msM.fetchDKIMKeys()
-    except KeyError,msg:
+    except KeyError as msg:
         data_ret = {'fetchStatus': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
@@ -209,7 +209,7 @@ def generateDKIMKeys(request):
             return result
 
         return coreResult
-    except BaseException, msg:
+    except BaseException as msg:
         data_ret = {'generateStatus': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)

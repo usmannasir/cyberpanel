@@ -1,4 +1,4 @@
-#!/usr/local/CyberCP/bin/python2
+#!/usr/local/CyberCP/bin/python
 import os
 import os.path
 import sys
@@ -38,7 +38,7 @@ from plogical.vhostConfs import vhostConfs
 from plogical.cronUtil import CronUtil
 from re import match,I,M
 from plogical import randomPassword
-from StagingSetup import StagingSetup
+from .StagingSetup import StagingSetup
 
 
 class WebsiteManager:
@@ -63,7 +63,7 @@ class WebsiteManager:
             Data = {'packageList': packagesName, "owernList": adminNames, 'phps': phps}
             return render(request, 'websiteFunctions/createWebsite.html', Data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             return HttpResponse(str(msg))
 
     def modifyWebsite(self, request=None, userID=None, data=None):
@@ -78,7 +78,7 @@ class WebsiteManager:
             phps = PHPManager.findPHPVersions()
 
             return render(request, 'websiteFunctions/modifyWebsite.html', {'websiteList': websitesName, 'phps': phps})
-        except BaseException, msg:
+        except BaseException as msg:
             return HttpResponse(str(msg))
 
     def deleteWebsite(self, request=None, userID=None, data=None):
@@ -90,7 +90,7 @@ class WebsiteManager:
             websitesName = ACLManager.findAllSites(currentACL, userID)
 
             return render(request, 'websiteFunctions/deleteWebsite.html', {'websiteList': websitesName})
-        except BaseException, msg:
+        except BaseException as msg:
             return HttpResponse(str(msg))
 
     def siteState(self, request=None, userID=None, data=None):
@@ -103,7 +103,7 @@ class WebsiteManager:
             websitesName = ACLManager.findAllSites(currentACL, userID)
 
             return render(request, 'websiteFunctions/suspendWebsite.html', {'websiteList': websitesName})
-        except BaseException, msg:
+        except BaseException as msg:
             return HttpResponse(str(msg))
 
     def listWebsites(self, request=None, userID=None, data=None):
@@ -112,7 +112,21 @@ class WebsiteManager:
             pagination = self.websitePagination(currentACL, userID)
 
             return render(request, 'websiteFunctions/listWebsites.html', {"pagination": pagination})
-        except BaseException, msg:
+        except BaseException as msg:
+            return HttpResponse(str(msg))
+
+    def listChildDomains(self, request=None, userID=None, data=None):
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+            pagination = self.websitePagination(currentACL, userID)
+            adminNames = ACLManager.loadAllUsers(userID)
+            packagesName = ACLManager.loadPackages(userID, currentACL)
+            phps = PHPManager.findPHPVersions()
+
+            Data = {'packageList': packagesName, "owernList": adminNames, 'phps': phps}
+
+            return render(request, 'websiteFunctions/listChildDomains.html', Data)
+        except BaseException as msg:
             return HttpResponse(str(msg))
 
     def listCron(self, request=None, userID=None, data=None):
@@ -120,7 +134,7 @@ class WebsiteManager:
             currentACL = ACLManager.loadedACL(userID)
             websitesName = ACLManager.findAllSites(currentACL, userID)
             return render(request, 'websiteFunctions/listCron.html', {'websiteList': websitesName})
-        except BaseException, msg:
+        except BaseException as msg:
             return HttpResponse(str(msg))
 
     def domainAlias(self, request=None, userID=None, data=None):
@@ -144,7 +158,7 @@ class WebsiteManager:
                 'path': path,
                 'noAlias': noAlias
             })
-        except BaseException, msg:
+        except BaseException as msg:
             return HttpResponse(str(msg))
 
     def submitWebsiteCreation(self, userID=None, data=None):
@@ -197,7 +211,7 @@ class WebsiteManager:
 
             ## Create Configurations
 
-            execPath = "sudo /usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+            execPath = "sudo /usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
             execPath = execPath + " createVirtualHost --virtualHostName " + domain + \
                        " --administratorEmail " + adminEmail + " --phpVersion '" + phpSelection + \
                        "' --virtualHostUser " + externalApp + " --ssl " + str(data['ssl']) + " --dkimCheck " \
@@ -213,7 +227,7 @@ class WebsiteManager:
             return HttpResponse(json_data)
 
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'status': 0, 'createWebSiteStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -255,7 +269,7 @@ class WebsiteManager:
             except:
                 apacheBackend = "0"
 
-            execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
 
             execPath = execPath + " createDomain --masterDomain " + masterDomain + " --virtualHostName " + domain + \
                        " --phpVersion '" + phpSelection + "' --ssl " + str(data['ssl']) + " --dkimCheck " + str(
@@ -271,7 +285,7 @@ class WebsiteManager:
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'status': 0, 'createWebSiteStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -294,7 +308,7 @@ class WebsiteManager:
             final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": json_data})
             return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -304,7 +318,7 @@ class WebsiteManager:
             currentACL = ACLManager.loadedACL(userID)
             try:
                 json_data = self.searchWebsitesJson(currentACL, userID, data['patternAdded'])
-            except BaseException, msg:
+            except BaseException as msg:
                 tempData = {}
                 tempData['page'] = 1
                 return self.getFurtherAccounts(userID, tempData)
@@ -314,7 +328,7 @@ class WebsiteManager:
                          'pagination': pagination}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
-        except BaseException, msg:
+        except BaseException as msg:
             dic = {'status': 1, 'listWebSiteStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(dic)
             return HttpResponse(json_data)
@@ -329,7 +343,7 @@ class WebsiteManager:
                          'pagination': pagination}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
-        except BaseException, msg:
+        except BaseException as msg:
             dic = {'status': 1, 'listWebSiteStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(dic)
             return HttpResponse(json_data)
@@ -350,7 +364,33 @@ class WebsiteManager:
                          'pagination': pagination}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
-        except BaseException, msg:
+        except BaseException as msg:
+            dic = {'status': 1, 'listWebSiteStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(dic)
+            return HttpResponse(json_data)
+
+    def fetchChildDomainsMain(self, userID=None, data=None):
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+            pageNumber = int(data['page'])
+            recordsToShow = int(data['recordsToShow'])
+
+            endPageNumber, finalPageNumber = self.recordsPointer(pageNumber, recordsToShow)
+            websites = ACLManager.findWebsiteObjects(currentACL, userID)
+            childDomains = []
+
+            for web in websites:
+                for child in web.childdomains_set.all():
+                    childDomains.append(child)
+
+            pagination = self.getPagination(len(childDomains), recordsToShow)
+            json_data = self.findChildsListJson(childDomains[finalPageNumber:endPageNumber])
+
+            final_dic = {'status': 1, 'listWebSiteStatus': 1, 'error_message': "None", "data": json_data,
+                         'pagination': pagination}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+        except BaseException as msg:
             dic = {'status': 1, 'listWebSiteStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(dic)
             return HttpResponse(json_data)
@@ -365,7 +405,7 @@ class WebsiteManager:
             f = open(ipFile)
             ipData = f.read()
             ipAddress = ipData.split('\n', 1)[0]
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile("Failed to read machine IP, error:" + str(msg))
             ipAddress = "192.168.100.1"
 
@@ -379,6 +419,35 @@ class WebsiteManager:
 
             dic = {'domain': items.domain, 'adminEmail': items.adminEmail, 'ipAddress': ipAddress,
                    'admin': items.admin.userName, 'package': items.package.packageName, 'state': state, 'diskUsed': diskUsed}
+
+            if checker == 0:
+                json_data = json_data + json.dumps(dic)
+                checker = 1
+            else:
+                json_data = json_data + ',' + json.dumps(dic)
+
+        json_data = json_data + ']'
+
+        return json_data
+
+    def findChildsListJson(self, childs):
+
+        json_data = "["
+        checker = 0
+
+        try:
+            ipFile = "/etc/cyberpanel/machineIP"
+            f = open(ipFile)
+            ipData = f.read()
+            ipAddress = ipData.split('\n', 1)[0]
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile("Failed to read machine IP, error:" + str(msg))
+            ipAddress = "192.168.100.1"
+
+        for items in childs:
+
+            dic = {'domain': items.domain, 'masterDomain': items.master.domain, 'adminEmail': items.master.adminEmail, 'ipAddress': ipAddress,
+                   'admin': items.master.admin.userName, 'package': items.master.package.packageName, 'path': items.path}
 
             if checker == 0:
                 json_data = json_data + json.dumps(dic)
@@ -431,7 +500,7 @@ class WebsiteManager:
 
             ## Deleting master domain
 
-            execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
             execPath = execPath + " deleteVirtualHostConfigurations --virtualHostName " + websiteName
             ProcessUtilities.popenExecutioner(execPath)
 
@@ -439,7 +508,7 @@ class WebsiteManager:
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'status': 0, 'websiteDeleteStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -456,7 +525,7 @@ class WebsiteManager:
             else:
                 return ACLManager.loadErrorJson('websiteDeleteStatus', 0)
 
-            execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
             execPath = execPath + " deleteDomain --virtualHostName " + websiteName
             ProcessUtilities.outputExecutioner(execPath)
 
@@ -464,7 +533,7 @@ class WebsiteManager:
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'status': 0, 'websiteDeleteStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -504,7 +573,7 @@ class WebsiteManager:
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
 
             data_ret = {'websiteStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
@@ -572,7 +641,7 @@ class WebsiteManager:
             final_json = json.dumps(data_ret)
             return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             dic = {'status': 0, 'modifyStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(dic)
             return HttpResponse(json_data)
@@ -624,7 +693,7 @@ class WebsiteManager:
             final_json = json.dumps(data_ret)
             return HttpResponse(final_json)
 
-        except BaseException, msg:
+        except BaseException as msg:
             dic = {'status': 0, 'error_message': str(msg)}
             json_data = json.dumps(dic)
             return HttpResponse(json_data)
@@ -650,7 +719,7 @@ class WebsiteManager:
             confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + domain
             completePathToConfigFile = confPath + "/vhost.conf"
 
-            execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
             execPath = execPath + " changePHP --phpVersion '" + phpVersion + "' --path " + completePathToConfigFile
             ProcessUtilities.popenExecutioner(execPath)
 
@@ -672,7 +741,7 @@ class WebsiteManager:
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'status': 0, 'saveStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -708,13 +777,13 @@ class WebsiteManager:
             ## bw usage calculation
 
             try:
-                execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+                execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
                 execPath = execPath + " findDomainBW --virtualHostName " + self.domain + " --bandwidth " + str(
                     website.package.bandwidth)
 
                 output = ProcessUtilities.outputExecutioner(execPath)
                 bwData = output.split(",")
-            except BaseException, msg:
+            except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(str(msg))
                 bwData = [0, 0]
 
@@ -758,14 +827,14 @@ class WebsiteManager:
                 diff = finalDate - now
                 Data['viewSSL'] = 1
                 Data['days'] = str(diff.days)
-                Data['authority'] = x509.get_issuer().get_components()[1][1]
+                Data['authority'] = x509.get_issuer().get_components()[1][1].decode('utf-8')
 
                 if Data['authority'] == 'Denial':
                     Data['authority'] = '%s has SELF-SIGNED SSL.' % (self.domain)
                 else:
                     Data['authority'] = '%s has SSL from %s.' % (self.domain, Data['authority'])
 
-            except BaseException, msg:
+            except BaseException as msg:
                 Data['viewSSL'] = 0
                 logging.CyberCPLogFileWriter.writeToFile(str(msg))
 
@@ -810,13 +879,13 @@ class WebsiteManager:
             ## bw usage calculation
 
             try:
-                execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+                execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
                 execPath = execPath + " findDomainBW --virtualHostName " + self.domain + " --bandwidth " + str(
                     website.package.bandwidth)
 
                 output = ProcessUtilities.outputExecutioner(execPath)
                 bwData = output.split(",")
-            except BaseException, msg:
+            except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(str(msg))
                 bwData = [0, 0]
 
@@ -866,14 +935,14 @@ class WebsiteManager:
                 diff = finalDate - now
                 Data['viewSSL'] = 1
                 Data['days'] = str(diff.days)
-                Data['authority'] = x509.get_issuer().get_components()[1][1]
+                Data['authority'] = x509.get_issuer().get_components()[1][1].decode('utf-8')
 
                 if Data['authority'] == 'Denial':
                     Data['authority'] = '%s has SELF-SIGNED SSL.' % (self.childDomain)
                 else:
                     Data['authority'] = '%s has SSL from %s.' % (self.childDomain, Data['authority'])
 
-            except BaseException, msg:
+            except BaseException as msg:
                 Data['viewSSL'] = 0
                 logging.CyberCPLogFileWriter.writeToFile(str(msg))
 
@@ -1027,7 +1096,7 @@ class WebsiteManager:
 
         ## save configuration data
 
-        execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+        execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
         execPath = execPath + " saveVHostConfigs --path " + filePath + " --tempPath " + tempPath
 
         output = ProcessUtilities.outputExecutioner(execPath)
@@ -1152,7 +1221,7 @@ class WebsiteManager:
 
         ## writing data temporary to file
 
-        execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+        execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
         execPath = execPath + " saveSSL --virtualHostName " + self.domain + " --tempKeyPath " + tempKeyPath + " --tempCertPath " + tempCertPath
         output = ProcessUtilities.outputExecutioner(execPath)
 
@@ -1182,7 +1251,7 @@ class WebsiteManager:
         confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + self.domain
         completePathToConfigFile = confPath + "/vhost.conf"
 
-        execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+        execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
         execPath = execPath + " changePHP --phpVersion '" + phpVersion + "' --path " + completePathToConfigFile
         ProcessUtilities.popenExecutioner(execPath)
 
@@ -1215,7 +1284,7 @@ class WebsiteManager:
 
             crons = []
 
-            execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/cronUtil.py"
+            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/cronUtil.py"
             execPath = execPath + " getWebsiteCron --externalApp " + website.externalApp
 
             f = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
@@ -1244,7 +1313,7 @@ class WebsiteManager:
             data_ret = {'getWebsiteCron': 1, "user": website.externalApp, "crons": crons}
             final_json = json.dumps(data_ret)
             return HttpResponse(final_json)
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             dic = {'getWebsiteCron': 0, 'error_message': str(msg)}
             json_data = json.dumps(dic)
@@ -1276,7 +1345,7 @@ class WebsiteManager:
 
             try:
                 CronUtil.CronPrem(1)
-                execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/cronUtil.py"
+                execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/cronUtil.py"
                 execPath = execPath + " getWebsiteCron --externalApp " + website.externalApp
 
                 f = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
@@ -1308,8 +1377,8 @@ class WebsiteManager:
                         "line": line}
             final_json = json.dumps(data_ret)
             return HttpResponse(final_json)
-        except BaseException, msg:
-            print msg
+        except BaseException as msg:
+            print(msg)
             dic = {'getWebsiteCron': 0, 'error_message': str(msg)}
             json_data = json.dumps(dic)
             return HttpResponse(json_data)
@@ -1341,7 +1410,7 @@ class WebsiteManager:
 
             CronUtil.CronPrem(1)
 
-            execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/cronUtil.py"
+            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/cronUtil.py"
             execPath = execPath + " saveCronChanges --externalApp " + website.externalApp + " --line " + str(
                 line) + " --finalCron '" + finalCron + "'"
             output = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
@@ -1359,7 +1428,7 @@ class WebsiteManager:
                 json_data = json.dumps(dic)
                 return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             dic = {'getWebsiteCron': 0, 'error_message': str(msg)}
             json_data = json.dumps(dic)
             return HttpResponse(json_data)
@@ -1381,7 +1450,7 @@ class WebsiteManager:
 
             CronUtil.CronPrem(1)
 
-            execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/cronUtil.py"
+            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/cronUtil.py"
             execPath = execPath + " remCronbyLine --externalApp " + website.externalApp + " --line " + str(
                 line)
             output = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
@@ -1401,7 +1470,7 @@ class WebsiteManager:
                 return HttpResponse(json_data)
 
 
-        except BaseException, msg:
+        except BaseException as msg:
             dic = {'remCronbyLine': 0, 'error_message': str(msg)}
             json_data = json.dumps(dic)
             return HttpResponse(json_data)
@@ -1438,7 +1507,7 @@ class WebsiteManager:
 
             finalCron = "%s %s %s %s %s %s" % (minute, hour, monthday, month, weekday, command)
 
-            execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/cronUtil.py"
+            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/cronUtil.py"
             execPath = execPath + " addNewCron --externalApp " + website.externalApp + " --finalCron '" + finalCron + "'"
             output = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
 
@@ -1457,7 +1526,7 @@ class WebsiteManager:
                 return HttpResponse(json_data)
 
 
-        except BaseException, msg:
+        except BaseException as msg:
             dic = {'addNewCron': 0, 'error_message': str(msg)}
             json_data = json.dumps(dic)
             return HttpResponse(json_data)
@@ -1487,7 +1556,7 @@ class WebsiteManager:
 
             ## Create Configurations
 
-            execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
 
             execPath = execPath + " createAlias --masterDomain " + self.domain + " --aliasDomain " + aliasDomain + " --ssl " + str(
                 ssl) + " --sslPath " + sslpath + " --administratorEmail " + admin.email + ' --websiteOwner ' + admin.userName
@@ -1509,7 +1578,7 @@ class WebsiteManager:
 
 
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'createAliasStatus': 0, 'error_message': str(msg), "existsStatus": 0}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -1532,7 +1601,7 @@ class WebsiteManager:
 
             ## Create Configurations
 
-            execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
             execPath = execPath + " issueAliasSSL --masterDomain " + self.domain + " --aliasDomain " + aliasDomain + " --sslPath " + sslpath + " --administratorEmail " + admin.email
 
             output = ProcessUtilities.outputExecutioner(execPath)
@@ -1546,7 +1615,7 @@ class WebsiteManager:
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'sslStatus': 0, 'error_message': str(msg), "existsStatus": 0}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -1567,7 +1636,7 @@ class WebsiteManager:
 
             ## Create Configurations
 
-            execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
             execPath = execPath + " deleteAlias --masterDomain " + self.domain + " --aliasDomain " + aliasDomain
             output = ProcessUtilities.outputExecutioner(execPath)
 
@@ -1581,7 +1650,7 @@ class WebsiteManager:
                 return HttpResponse(json_data)
 
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'deleteAlias': 0, 'error_message': str(msg), "existsStatus": 0}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -1599,7 +1668,7 @@ class WebsiteManager:
             else:
                 return ACLManager.loadErrorJson('changeOpenBasedir', 0)
 
-            execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
             execPath = execPath + " changeOpenBasedir --virtualHostName '" + self.domain + "' --openBasedirValue " + openBasedirValue
             output = ProcessUtilities.popenExecutioner(execPath)
 
@@ -1607,7 +1676,7 @@ class WebsiteManager:
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'status': 0, 'changeOpenBasedir': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -1624,7 +1693,7 @@ class WebsiteManager:
 
             return render(request, 'websiteFunctions/installWordPress.html', {'domainName': self.domain})
 
-        except BaseException, msg:
+        except BaseException as msg:
             return HttpResponse(str(msg))
 
     def installWordpress(self, userID=None, data=None):
@@ -1666,7 +1735,7 @@ class WebsiteManager:
             return HttpResponse(json_data)
 
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -1703,7 +1772,7 @@ class WebsiteManager:
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'abort': 1, 'installStatus': 0, 'installationProgress': "0", 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -1719,7 +1788,7 @@ class WebsiteManager:
                 return ACLManager.loadError()
 
             return render(request, 'websiteFunctions/installJoomla.html', {'domainName': self.domain})
-        except BaseException, msg:
+        except BaseException as msg:
             return HttpResponse(str(msg))
 
     def installJoomla(self, userID=None, data=None):
@@ -1750,7 +1819,7 @@ class WebsiteManager:
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines('Setting up paths,0')
             statusFile.close()
-            os.chmod(tempStatusPath, 0777)
+            os.chmod(tempStatusPath, 0o777)
 
             finalPath = ""
 
@@ -1851,7 +1920,7 @@ class WebsiteManager:
 
             ## Installation ends
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -1908,7 +1977,7 @@ StrictHostKeyChecking no
 
             return render(request, 'websiteFunctions/setupGit.html',
                           {'domainName': self.domain, 'deploymentKey': deploymentKey, 'installed': 0})
-        except BaseException, msg:
+        except BaseException as msg:
             return HttpResponse(str(msg))
 
     def setupGitRepo(self, userID=None, data=None):
@@ -1945,7 +2014,7 @@ StrictHostKeyChecking no
             return HttpResponse(json_data)
 
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'installStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -1963,7 +2032,7 @@ StrictHostKeyChecking no
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'pulled': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -1996,7 +2065,7 @@ StrictHostKeyChecking no
             return HttpResponse(json_data)
 
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'status': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -2030,7 +2099,7 @@ StrictHostKeyChecking no
             return HttpResponse(json_data)
 
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'status': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -2046,7 +2115,7 @@ StrictHostKeyChecking no
                 return ACLManager.loadError()
 
             return render(request, 'websiteFunctions/installPrestaShop.html', {'domainName': self.domain})
-        except BaseException, msg:
+        except BaseException as msg:
             return HttpResponse(str(msg))
 
     def installMagento(self, request=None, userID=None, data=None):
@@ -2060,7 +2129,7 @@ StrictHostKeyChecking no
                 return ACLManager.loadError()
 
             return render(request, 'websiteFunctions/installMagento.html', {'domainName': self.domain})
-        except BaseException, msg:
+        except BaseException as msg:
             return HttpResponse(str(msg))
 
     def magentoInstall(self, userID=None, data=None):
@@ -2105,7 +2174,7 @@ StrictHostKeyChecking no
 
             ## Installation ends
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -2152,7 +2221,7 @@ StrictHostKeyChecking no
 
             ## Installation ends
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -2206,7 +2275,7 @@ StrictHostKeyChecking no
 
             return self.submitWebsiteCreation(admin.pk, data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'createWebSiteStatus': 0, 'error_message': str(msg), "existsStatus": 0}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -2223,7 +2292,7 @@ StrictHostKeyChecking no
             f = open(ipFile)
             ipData = f.read()
             ipAddress = ipData.split('\n', 1)[0]
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile("Failed to read machine IP, error:" + str(msg))
             ipAddress = "192.168.100.1"
 
@@ -2261,7 +2330,7 @@ StrictHostKeyChecking no
             f = open(ipFile)
             ipData = f.read()
             ipAddress = ipData.split('\n', 1)[0]
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile("Failed to read machine IP, error:" + str(msg))
             ipAddress = "192.168.100.1"
 
@@ -2368,7 +2437,7 @@ StrictHostKeyChecking no
             json_data = json.dumps(data)
             return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'status': 0, 'saveStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -2388,7 +2457,7 @@ StrictHostKeyChecking no
 
         tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
 
-        execPath = "/usr/local/CyberCP/bin/python2 " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+        execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
         execPath = execPath + " switchServer --phpVersion '" + phpVersion + "' --server " + str(
             server) + " --virtualHostName " + domainName + " --tempStatusPath " + tempStatusPath
         ProcessUtilities.popenExecutioner(execPath)
@@ -2484,7 +2553,7 @@ StrictHostKeyChecking no
 
             return render(request, 'websiteFunctions/sshAccess.html',
                           {'domainName': self.domain, 'externalApp': externalApp})
-        except BaseException, msg:
+        except BaseException as msg:
             return HttpResponse(str(msg))
 
     def saveSSHAccessChanges(self, userID=None, data=None):
@@ -2515,7 +2584,7 @@ StrictHostKeyChecking no
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -2536,7 +2605,7 @@ StrictHostKeyChecking no
 
             return render(request, 'websiteFunctions/setupStaging.html',
                           {'domainName': self.domain, 'externalApp': externalApp})
-        except BaseException, msg:
+        except BaseException as msg:
             return HttpResponse(str(msg))
 
 
@@ -2590,7 +2659,7 @@ StrictHostKeyChecking no
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -2611,7 +2680,7 @@ StrictHostKeyChecking no
 
             return render(request, 'websiteFunctions/syncMaster.html',
                           {'domainName': self.domain, 'externalApp': externalApp, 'childDomain': childDomain})
-        except BaseException, msg:
+        except BaseException as msg:
             return HttpResponse(str(msg))
 
 
@@ -2671,7 +2740,26 @@ StrictHostKeyChecking no
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+    def convertDomainToSite(self, userID=None, request=None):
+        try:
+
+            extraArgs = {}
+            extraArgs['request'] = request
+            extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
+            background = ApplicationInstaller('convertDomainToSite', extraArgs)
+            background.start()
+
+            data_ret = {'status': 1, 'createWebSiteStatus': 1, 'tempStatusPath': extraArgs['tempStatusPath']}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'createWebSiteStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)

@@ -50,7 +50,7 @@ app.controller('installCageFS', function ($scope, $http, $timeout, $window) {
     };
 
     function getRequestStatus() {
-        $scope.cyberPanelLoading = false;
+        $scope.installDockerStatus = false;
 
         url = "/serverstatus/switchTOLSWSStatus";
 
@@ -72,7 +72,7 @@ app.controller('installCageFS', function ($scope, $http, $timeout, $window) {
                 $timeout(getRequestStatus, 1000);
             } else {
                 // Notifications
-                $scope.cyberPanelLoading = true;
+                $scope.installDockerStatus = true;
                 $timeout.cancel();
                 $scope.requestData = response.data.requestStatus;
                 if (response.data.installed === 1) {
@@ -85,7 +85,7 @@ app.controller('installCageFS', function ($scope, $http, $timeout, $window) {
         }
 
         function cantLoadInitialDatas(response) {
-            $scope.cyberPanelLoading = true;
+            $scope.installDockerStatus = true;
             new PNotify({
                 title: 'Operation Failed!',
                 text: 'Could not connect to server, please refresh this page',

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 from django.shortcuts import render,redirect
 from django.http import HttpResponse
@@ -110,7 +110,7 @@ def versionManagment(request):
         else:
             return ACLManager.loadError()
 
-        vers = version.objects.get(pk=1)
+        ## Get latest version
 
         getVersion = requests.get('https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/version.txt')
 
@@ -119,8 +119,21 @@ def versionManagment(request):
         latestVersion = latest['version']
         latestBuild = latest['build']
 
-        return render(request, 'baseTemplate/versionManagment.html', {'build': vers.build,
-                                                                      'currentVersion': vers.currentVersion,
+        ## Get local version
+
+
+        versionFile = '/usr/local/CyberCP/version.txt'
+
+        try:
+            data = open(versionFile, 'r').read().split('\n')
+            currentVersion = data[0]
+            currentBuild = data[1]
+        except:
+            currentVersion = latestVersion
+            currentBuild = latestBuild + 'E'
+
+        return render(request, 'baseTemplate/versionManagment.html', {'build': currentBuild,
+                                                                      'currentVersion': currentVersion,
                                                                       'latestVersion': latestVersion,
                                                                       'latestBuild': latestBuild})
 
@@ -199,7 +212,7 @@ def upgradeStatus(request):
                     return HttpResponse(final_json)
 
 
-        except BaseException,msg:
+        except BaseException as msg:
             final_dic = {'upgradeStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -217,6 +230,6 @@ def upgradeVersion(request):
         vers.build = latest['build']
         vers.save()
         return HttpResponse("Version upgrade OK.")
-    except BaseException, msg:
+    except BaseException as msg:
         logging.CyberCPLogFileWriter.writeToFile(str(msg))
         return HttpResponse(str(msg))

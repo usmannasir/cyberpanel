@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+
 
 from django.shortcuts import render,redirect
 from loginSystem.models import Administrator
@@ -70,7 +70,7 @@ def changePermissions(request):
             return HttpResponse(json_data)
 
 
-        except BaseException, msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             data_ret = {'permissionsChanged': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
@@ -145,7 +145,7 @@ def controller(request):
             return fm.changePermissions()
 
 
-    except BaseException, msg:
+    except BaseException as msg:
         fm = FM(request, None)
         return fm.ajaxPre(0, str(msg))
 

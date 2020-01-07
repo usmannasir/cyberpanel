@@ -1,4 +1,4 @@
-#!/usr/local/CyberCP/bin/python2
+#!/usr/local/CyberCP/bin/python
 import os
 import os.path
 import sys
@@ -29,10 +29,10 @@ class FirewallUtilities:
                 logging.CyberCPLogFileWriter.writeToFile("Failed to apply rule: " + command + " Error #" + str(res))
                 return 0
 
-        except OSError, msg:
+        except OSError as msg:
             logging.CyberCPLogFileWriter.writeToFile("Failed to apply rule: " + command + " Error: " + str(msg))
             return 0
-        except ValueError, msg:
+        except ValueError as msg:
             logging.CyberCPLogFileWriter.writeToFile("Failed to apply rule: " + command + " Error: " + str(msg), 1)
             return 0
         return 1
@@ -45,23 +45,20 @@ class FirewallUtilities:
         ruleProtocol = 'port protocol="' + proto + '"'
         rulePort = 'port="' + port + '"'
 
-        command = "sudo firewall-cmd --permanent --zone=public --add-rich-rule='" + ruleFamily + " " + sourceAddress + " " + ruleProtocol + " " + rulePort + " " + "accept'"
+        command = "firewall-cmd --permanent --zone=public --add-rich-rule='" + ruleFamily + " " + sourceAddress + " " + ruleProtocol + " " + rulePort + " " + "accept'"
 
-        if not FirewallUtilities.doCommand(command):
-            return 0
+        ProcessUtilities.executioner(command)
 
         ruleFamily = 'rule family="ipv6"'
         sourceAddress = ''
 
-        command = "sudo firewall-cmd --permanent --zone=public --add-rich-rule='" + ruleFamily + " " + sourceAddress + " " + ruleProtocol + " " + rulePort + " " + "accept'"
+        command = "firewall-cmd --permanent --zone=public --add-rich-rule='" + ruleFamily + " " + sourceAddress + " " + ruleProtocol + " " + rulePort + " " + "accept'"
 
-        if not FirewallUtilities.doCommand(command):
-            return 0
+        ProcessUtilities.executioner(command)
 
-        command = 'sudo firewall-cmd --reload'
+        command = 'firewall-cmd --reload'
 
-        if not FirewallUtilities.doCommand(command):
-            return 0
+        ProcessUtilities.executioner(command)
 
         return 1
 
@@ -72,23 +69,20 @@ class FirewallUtilities:
         ruleProtocol = 'port protocol="' + proto + '"'
         rulePort = 'port="' + port + '"'
 
-        command = "sudo firewall-cmd --permanent --zone=public --remove-rich-rule='" + ruleFamily + " " + sourceAddress + " " + ruleProtocol + " " + rulePort + " " + "accept'"
+        command = "firewall-cmd --permanent --zone=public --remove-rich-rule='" + ruleFamily + " " + sourceAddress + " " + ruleProtocol + " " + rulePort + " " + "accept'"
 
-        if ProcessUtilities.executioner(command) == 0:
-            return 0
+        ProcessUtilities.executioner(command)
 
         ruleFamily = 'rule family="ipv6"'
         sourceAddress = ''
 
-        command = "sudo firewall-cmd --permanent --zone=public --remove-rich-rule='" + ruleFamily + " " + sourceAddress + " " + ruleProtocol + " " + rulePort + " " + "accept'"
+        command = "firewall-cmd --permanent --zone=public --remove-rich-rule='" + ruleFamily + " " + sourceAddress + " " + ruleProtocol + " " + rulePort + " " + "accept'"
 
-        if ProcessUtilities.executioner(command) == 0:
-            return 0
+        ProcessUtilities.executioner(command)
 
-        command = 'sudo firewall-cmd --reload'
+        command = 'firewall-cmd --reload'
 
-        if ProcessUtilities.executioner(command) == 0:
-            return 0
+        ProcessUtilities.executioner(command)
 
         return 1
 
@@ -97,7 +91,7 @@ class FirewallUtilities:
         try:
             if type == "1":
 
-                command = 'sudo semanage port -a -t ssh_port_t -p tcp ' + sshPort
+                command = 'semanage port -a -t ssh_port_t -p tcp ' + sshPort
                 ProcessUtilities.normalExecutioner(command)
 
                 FirewallUtilities.addRule('tcp', sshPort, "0.0.0.0/0")
@@ -127,13 +121,13 @@ class FirewallUtilities:
                         writeToFile.writelines(items)
                 writeToFile.close()
 
-                command = 'sudo systemctl restart sshd'
+                command = 'systemctl restart sshd'
                 ProcessUtilities.normalExecutioner(command)
 
-                print "1,None"
+                print("1,None")
 
-        except BaseException, msg:
-            print "0," + str(msg)
+        except BaseException as msg:
+            print("0," + str(msg))
 
     @staticmethod
     def addSSHKey(tempPath):
@@ -176,10 +170,10 @@ class FirewallUtilities:
             if os.path.split(tempPath):
                 os.remove(tempPath)
 
-            print "1,None"
+            print("1,None")
 
-        except BaseException, msg:
-            print "0," + str(msg)
+        except BaseException as msg:
+            print("0," + str(msg))
 
     @staticmethod
     def deleteSSHKey(key):
@@ -199,10 +193,10 @@ class FirewallUtilities:
 
             writeToFile.close()
 
-            print "1,None"
+            print("1,None")
 
-        except BaseException, msg:
-            print "0," + str(msg)
+        except BaseException as msg:
+            print("0," + str(msg))
 
 
 def main():

@@ -6,12 +6,12 @@ from random import randint
 import time
 from .models import EmailMarketing, EmailLists, EmailsInList, EmailJobs
 from websiteFunctions.models import Websites
-from emailMarketing import emailMarketing as EM
+from .emailMarketing import emailMarketing as EM
 from math import ceil
 import smtplib
 from .models import SMTPHosts, EmailTemplate
 from loginSystem.models import Administrator
-from emACL import emACL
+from .emACL import emACL
 
 class EmailMarketingManager:
 
@@ -30,7 +30,7 @@ class EmailMarketingManager:
                 return ACLManager.loadError()
 
             return render(self.request, 'emailMarketing/emailMarketing.html')
-        except KeyError, msg:
+        except KeyError as msg:
             return redirect(loadLoginPage)
 
     def fetchUsers(self):
@@ -74,7 +74,7 @@ class EmailMarketingManager:
             data_ret = {"status": 1, 'data': json_data}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -103,7 +103,7 @@ class EmailMarketingManager:
             data_ret = {"status": 1}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -123,7 +123,7 @@ class EmailMarketingManager:
                 return ACLManager.loadError()
 
             return render(self.request, 'emailMarketing/createEmailList.html', {'domain': self.domain})
-        except KeyError, msg:
+        except KeyError as msg:
             return redirect(loadLoginPage)
 
     def submitEmailList(self):
@@ -157,7 +157,7 @@ class EmailMarketingManager:
             data_ret = {"status": 1, 'tempStatusPath': extraArgs['tempStatusPath']}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -178,7 +178,7 @@ class EmailMarketingManager:
             listNames = emACL.getEmailsLists(self.domain)
 
             return render(self.request, 'emailMarketing/manageLists.html', {'listNames': listNames, 'domain': self.domain})
-        except KeyError, msg:
+        except KeyError as msg:
             return redirect(loadLoginPage)
 
     def fetchEmails(self):
@@ -251,7 +251,7 @@ class EmailMarketingManager:
             data_ret = {"status": 1, 'data': json_data, 'pagination': pagination}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -281,7 +281,7 @@ class EmailMarketingManager:
             data_ret = {"status": 1}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -314,7 +314,7 @@ class EmailMarketingManager:
             data_ret = {"status": 1}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -344,7 +344,7 @@ class EmailMarketingManager:
             data_ret = {"status": 1}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -370,7 +370,7 @@ class EmailMarketingManager:
             for items in emailLists:
                 listNames.append(items.listName)
             return render(self.request, 'emailMarketing/manageSMTPHosts.html', {'listNames': listNames, 'domain': self.domain})
-        except KeyError, msg:
+        except KeyError as msg:
             return redirect(loadLoginPage)
 
     def saveSMTPHost(self):
@@ -420,7 +420,7 @@ class EmailMarketingManager:
             data_ret = {"status": 1}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -463,7 +463,7 @@ class EmailMarketingManager:
             data_ret = {"status": 1, 'data': json_data}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -515,7 +515,7 @@ class EmailMarketingManager:
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
 
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -529,7 +529,7 @@ class EmailMarketingManager:
                 return ACLManager.loadErrorJson()
 
             return render(self.request, 'emailMarketing/composeMessages.html')
-        except KeyError, msg:
+        except KeyError as msg:
             return redirect(loadLoginPage)
 
     def saveEmailTemplate(self):
@@ -557,7 +557,7 @@ class EmailMarketingManager:
             data_ret = {"status": 1}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -581,7 +581,7 @@ class EmailMarketingManager:
             Data['hostNames'] = hostNames
             Data['listNames'] = listNames
             return render(self.request, 'emailMarketing/sendEmails.html', Data)
-        except KeyError, msg:
+        except KeyError as msg:
             return redirect(loadLoginPage)
 
     def templatePreview(self):
@@ -597,7 +597,7 @@ class EmailMarketingManager:
                 return ACLManager.loadError()
 
             return HttpResponse(template.emailMessage)
-        except KeyError, msg:
+        except KeyError as msg:
             return redirect(loadLoginPage)
 
     def fetchJobs(self):
@@ -647,7 +647,7 @@ class EmailMarketingManager:
             data_ret = {"status": 1, 'data': json_data}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -689,7 +689,7 @@ class EmailMarketingManager:
             data_ret = {"status": 1, 'tempStatusPath': extraArgs['tempStatusPath']}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -714,7 +714,7 @@ class EmailMarketingManager:
             data_ret = {"status": 1}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -734,7 +734,7 @@ class EmailMarketingManager:
             data_ret = {"status": 1}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
-        except BaseException, msg:
+        except BaseException as msg:
             final_dic = {'status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)

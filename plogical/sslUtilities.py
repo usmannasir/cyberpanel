@@ -1,4 +1,4 @@
-import CyberCPLogFileWriter as logging
+from plogical import CyberCPLogFileWriter as logging
 import os
 import shlex
 import subprocess
@@ -28,11 +28,11 @@ class sslUtilities:
                     if items.find("}") > -1:
                         return 0
                 if items.find(virtualHostName) > -1 and sslCheck == 1:
-                    data = filter(None, items.split(" "))
+                    data = [_f for _f in items.split(" ") if _f]
                     if data[1] == virtualHostName:
                         return 1
 
-        except BaseException,msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [IO Error with main config file [checkIfSSLMap]]")
             return 0
 
@@ -44,7 +44,7 @@ class sslUtilities:
                 if items.find("listener SSL") > -1:
                     return 1
 
-        except BaseException,msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [IO Error with main config file [checkSSLListener]]")
             return str(msg)
         return 0
@@ -58,7 +58,7 @@ class sslUtilities:
 
             return [1, withWWW, withoutWWW]
 
-        except BaseException, msg:
+        except BaseException as msg:
             return [0, "347 " + str(msg) + " [issueSSLForDomain]"]
 
     @staticmethod
@@ -182,7 +182,7 @@ class sslUtilities:
                         writeSSLConfig.close()
 
                 return 1
-            except BaseException, msg:
+            except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [installSSLForDomain]]")
                 return 0
         else:
@@ -203,7 +203,7 @@ class sslUtilities:
                     chilDomain = ChildDomains.objects.get(domain=virtualHostName)
                     externalApp = chilDomain.master.externalApp
                     DocumentRoot = '    DocumentRoot ' + chilDomain.path + '\n'
-                except BaseException, msg:
+                except BaseException as msg:
                     website = Websites.objects.get(domain=virtualHostName)
                     externalApp = website.externalApp
                     DocumentRoot = '    DocumentRoot /home/' + virtualHostName + '/public_html\n'
@@ -255,7 +255,7 @@ class sslUtilities:
                 confFile.close()
                 return 1
 
-            except BaseException, msg:
+            except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [installSSLForDomain]")
                 return 0
 
@@ -284,7 +284,7 @@ class sslUtilities:
 
                     logging.CyberCPLogFileWriter.writeToFile(command)
 
-                    output = subprocess.check_output(shlex.split(command))
+                    output = subprocess.check_output(shlex.split(command)).decode("utf-8")
                     logging.CyberCPLogFileWriter.writeToFile("Successfully obtained SSL for: " + virtualHostName + " and: www." + virtualHostName)
 
 
@@ -297,7 +297,7 @@ class sslUtilities:
                         command = acmePath + " --issue -d " + virtualHostName + ' --cert-file ' + existingCertPath \
                                   + '/cert.pem' + ' --key-file ' + existingCertPath + '/privkey.pem' \
                                   + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w ' + sslpath + ' --force'
-                        output = subprocess.check_output(shlex.split(command))
+                        output = subprocess.check_output(shlex.split(command)).decode("utf-8")
                         logging.CyberCPLogFileWriter.writeToFile("Successfully obtained SSL for: " + virtualHostName)
                     except subprocess.CalledProcessError:
                         logging.CyberCPLogFileWriter.writeToFile('Failed to obtain SSL, issuing self-signed SSL for: ' + virtualHostName)
@@ -318,7 +318,7 @@ class sslUtilities:
                               + ' --cert-file ' + existingCertPath + '/cert.pem' + ' --key-file ' + existingCertPath + '/privkey.pem' \
                               + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w ' + sslpath + ' --force'
 
-                    output = subprocess.check_output(shlex.split(command))
+                    output = subprocess.check_output(shlex.split(command)).decode("utf-8")
                     logging.CyberCPLogFileWriter.writeToFile(
                         "Successfully obtained SSL for: " + virtualHostName + ", www." + virtualHostName + ", " + aliasDomain + "and www." + aliasDomain + ",")
 
@@ -335,7 +335,7 @@ class sslUtilities:
             else:
                 return 0
 
-        except BaseException,msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [Failed to obtain SSL. [obtainSSLForADomain]]")
             return 0
 
@@ -362,6 +362,6 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain = None):
             else:
                 return [0, "210 Failed to install SSL for domain. [issueSSLForDomain]"]
 
-    except BaseException,msg:
+    except BaseException as msg:
         return [0, "347 "+ str(msg)+ " [issueSSLForDomain]"]
 

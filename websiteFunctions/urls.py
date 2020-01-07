@@ -1,11 +1,12 @@
 from django.conf.urls import url
-import views
+from . import views
 
 
 urlpatterns = [
     url(r'^$', views.loadWebsitesHome, name='loadWebsitesHome'),
     url(r'^createWebsite$', views.createWebsite, name='createWebsite'),
     url(r'^listWebsites$', views.listWebsites, name='listWebsites'),
+    url(r'^listChildDomains$', views.listChildDomains, name='listChildDomains'),
     url(r'^modifyWebsite$', views.modifyWebsite, name='modifyWebsite'),
     url(r'^deleteWebsite$', views.deleteWebsite, name='deleteWebsite'),
     url(r'^siteState$', views.siteState, name='siteState'),
@@ -18,6 +19,8 @@ urlpatterns = [
     url(r'^submitWebsiteDeletion$', views.submitWebsiteDeletion, name='submitWebsiteDeletion'),
     url(r'^submitWebsiteListing$', views.getFurtherAccounts, name='submitWebsiteListing'),
     url(r'^fetchWebsitesList$', views.fetchWebsitesList, name='fetchWebsitesList'),
+    url(r'^fetchChildDomainsMain$', views.fetchChildDomainsMain, name='fetchChildDomainsMain'),
+    url(r'^convertDomainToSite$', views.convertDomainToSite, name='convertDomainToSite'),
     url(r'^searchWebsites$', views.searchWebsites, name='searchWebsites'),
     url(r'^submitWebsiteModification$', views.deleteWebsite, name='submitWebsiteModification'),
     url(r'^submitWebsiteStatus$', views.submitWebsiteStatus, name='submitWebsiteStatus'),
