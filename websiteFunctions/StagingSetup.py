@@ -88,8 +88,6 @@ class StagingSetup(multi.Thread):
 
             data = open(configPath, 'r').readlines()
 
-            logging.writeToFile(str(type(data)))
-
             for items in data:
                 if items.find('DB_NAME') > -1:
                     try:
