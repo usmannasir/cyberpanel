@@ -2,7 +2,6 @@
 
 
 from django.shortcuts import render
-from django.http import HttpResponse
 from .models import Administrator
 from plogical import hashPassword
 import json
@@ -10,12 +9,13 @@ from packages.models import Package
 from firewall.models import FirewallRules
 from baseTemplate.models import version
 from plogical.getSystemInformation import SystemInformation
-from django.utils.translation import LANGUAGE_SESSION_KEY
-import CyberCP.settings as settings
 from .models import ACL
 from plogical.acl import ACLManager
 from django.views.decorators.csrf import ensure_csrf_cookie
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+from django.conf import settings
+from django.http import HttpResponse
+from django.utils import translation
 # Create your views here.
 
 def verifyLogin(request):
@@ -38,83 +38,43 @@ def verifyLogin(request):
                 try:
                     if data['languageSelection'] == "English":
                         user_Language = "en"
-                        request.session[LANGUAGE_SESSION_KEY] = user_Language
-                        request.COOKIES['django_language'] = user_Language
-                        settings.LANGUAGE_CODE = user_Language
                     elif data['languageSelection'] == "Chinese":
                         user_Language = "cn"
-                        request.session[LANGUAGE_SESSION_KEY] = user_Language
-                        request.COOKIES['django_language'] = user_Language
-                        settings.LANGUAGE_CODE = user_Language
                     elif data['languageSelection'] == "Bulgarian":
                         user_Language = "br"
-                        request.session[LANGUAGE_SESSION_KEY] = user_Language
-                        request.COOKIES['django_language'] = user_Language
-                        settings.LANGUAGE_CODE = user_Language
                     elif data['languageSelection'] == "Portuguese":
                         user_Language = "pt"
-                        request.session[LANGUAGE_SESSION_KEY] = user_Language
-                        request.COOKIES['django_language'] = user_Language
-                        settings.LANGUAGE_CODE = user_Language
                     elif data['languageSelection'] == "Japanese":
                         user_Language = "ja"
-                        request.session[LANGUAGE_SESSION_KEY] = user_Language
-                        request.COOKIES['django_language'] = user_Language
-                        settings.LANGUAGE_CODE = user_Language
                     elif data['languageSelection'] == "Bosnian":
                         user_Language = "bs"
-                        request.session[LANGUAGE_SESSION_KEY] = user_Language
-                        request.COOKIES['django_language'] = user_Language
-                        settings.LANGUAGE_CODE = user_Language
                     elif data['languageSelection'] == "Greek":
                         user_Language = "gr"
-                        request.session[LANGUAGE_SESSION_KEY] = user_Language
-                        request.COOKIES['django_language'] = user_Language
-                        settings.LANGUAGE_CODE = user_Language
                     elif data['languageSelection'] == "Russian":
                         user_Language = "ru"
-                        request.session[LANGUAGE_SESSION_KEY] = user_Language
-                        request.COOKIES['django_language'] = user_Language
-                        settings.LANGUAGE_CODE = user_Language
                     elif data['languageSelection'] == "Turkish":
                         user_Language = "tr"
-                        request.session[LANGUAGE_SESSION_KEY] = user_Language
-                        request.COOKIES['django_language'] = user_Language
-                        settings.LANGUAGE_CODE = user_Language
                     elif data['languageSelection'] == "Spanish":
                         user_Language = "es"
-                        request.session[LANGUAGE_SESSION_KEY] = user_Language
-                        request.COOKIES['django_language'] = user_Language
-                        settings.LANGUAGE_CODE = user_Language
                     elif data['languageSelection'] == "French":
                         user_Language = "fr"
-                        request.session[LANGUAGE_SESSION_KEY] = user_Language
-                        request.COOKIES['django_language'] = user_Language
-                        settings.LANGUAGE_CODE = user_Language
                     elif data['languageSelection'] == "Polish":
                         user_Language = "pl"
-                        request.session[LANGUAGE_SESSION_KEY] = user_Language
-                        request.COOKIES['django_language'] = user_Language
-                        settings.LANGUAGE_CODE = user_Language
                     elif data['languageSelection'] == "Vietnamese":
                         user_Language = "vi"
-                        request.session[LANGUAGE_SESSION_KEY] = user_Language
-                        request.COOKIES['django_language'] = user_Language
-                        settings.LANGUAGE_CODE = user_Language
                     elif data['languageSelection'] == "Italian":
                         user_Language = "it"
-                        request.session[LANGUAGE_SESSION_KEY] = user_Language
-                        request.COOKIES['django_language'] = user_Language
-                        settings.LANGUAGE_CODE = user_Language
                     elif data['languageSelection'] == "German":
                         user_Language = "de"
-                        request.session[LANGUAGE_SESSION_KEY] = user_Language
-                        request.COOKIES['django_language'] = user_Language
-                        settings.LANGUAGE_CODE = user_Language
+
+                    translation.activate(user_Language)
+                    response = HttpResponse()
+                    response.set_cookie(settings.LANGUAGE_COOKIE_NAME, user_Language)
                 except:
-                    request.session[LANGUAGE_SESSION_KEY] = "en"
-                    request.COOKIES['django_language'] = "en"
-                    settings.LANGUAGE_CODE = "en"
+                    user_Language = 'en'
+                    translation.activate(user_Language)
+                    response = HttpResponse()
+                    response.set_cookie(settings.LANGUAGE_COOKIE_NAME, user_Language)
 
 
             admin = Administrator.objects.get(userName=username)
@@ -134,12 +94,14 @@ def verifyLogin(request):
                 request.session.set_expiry(3600)
                 data = {'userID': admin.pk, 'loginStatus': 1, 'error_message': "None"}
                 json_data = json.dumps(data)
-                return HttpResponse(json_data)
+                response.write(json_data)
+                return response
 
             else:
                 data = {'userID': 0, 'loginStatus': 0, 'error_message': "wrong-password"}
                 json_data = json.dumps(data)
-                return HttpResponse(json_data)
+                response.write(json_data)
+                return response
 
         except BaseException as msg:
             data = {'userID': 0, 'loginStatus': 0, 'error_message': str(msg)}
