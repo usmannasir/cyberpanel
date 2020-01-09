@@ -631,12 +631,13 @@ class IncJobs(multi.Thread):
 
             backupPath = '/home/vmail/%s' % (self.website.domain)
 
-            if self.backupDestinations == 'local':
-                self.localFunction(backupPath, 'email')
-            elif self.backupDestinations[:4] == 'sftp':
-                self.sftpFunction(backupPath, 'email')
-            else:
-                self.awsFunction('backup', backupPath, '', 'email')
+            if os.path.exists(backupPath):
+                if self.backupDestinations == 'local':
+                    self.localFunction(backupPath, 'email')
+                elif self.backupDestinations[:4] == 'sftp':
+                    self.sftpFunction(backupPath, 'email')
+                else:
+                    self.awsFunction('backup', backupPath, '', 'email')
 
             logging.statusWriter(self.statusPath,
                                  'Emails for %s backed to %s.' % (self.website.domain, self.backupDestinations), 1)
