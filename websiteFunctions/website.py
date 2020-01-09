@@ -1129,11 +1129,15 @@ class WebsiteManager:
         try:
             childDom = ChildDomains.objects.get(domain=self.domain)
             filePath = childDom.path + '/.htaccess'
+            externalApp = childDom.master.externalApp
         except:
+            website = Websites.objects.get(domain=self.domain)
+            externalApp = website.externalApp
             filePath = "/home/" + self.domain + "/public_html/.htaccess"
 
         try:
-            rewriteRules = open(filePath, "r").read()
+            command = 'cat %s' % (filePath)
+            rewriteRules = ProcessUtilities.outputExecutioner(command, externalApp)
 
             if len(rewriteRules) == 0:
                 status = {"rewriteStatus": 1, "error_message": "Rules file is currently empty"}
@@ -1145,54 +1149,59 @@ class WebsiteManager:
             final_json = json.dumps(status)
             return HttpResponse(final_json)
 
-        except IOError:
-            status = {"rewriteStatus": 1, "error_message": "none", "rewriteRules": ""}
+        except BaseException as msg:
+            status = {"rewriteStatus": 1, "error_message": str(msg), "rewriteRules": ""}
             final_json = json.dumps(status)
             return HttpResponse(final_json)
 
     def saveRewriteRules(self, userID=None, data=None):
-
-        currentACL = ACLManager.loadedACL(userID)
-        admin = Administrator.objects.get(pk=userID)
-        self.domain = data['virtualHost']
-        rewriteRules = data['rewriteRules']
-
-        if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
-            pass
-        else:
-            return ACLManager.loadErrorJson('rewriteStatus', 0)
-
-        ## writing data temporary to file
-
-        mailUtilities.checkHome()
-        tempPath = "/tmp/" + str(randint(1000, 9999))
-        vhost = open(tempPath, "w")
-        vhost.write(rewriteRules)
-        vhost.close()
-
-        ## writing data temporary to file
-
         try:
-            childDomain = ChildDomains.objects.get(domain=self.domain)
-            filePath = childDomain.path + '/.htaccess'
-            externalApp = childDomain.master.externalApp
-        except:
-            filePath = "/home/" + self.domain + "/public_html/.htaccess"
-            website = Websites.objects.get(domain=self.domain)
-            externalApp = website.externalApp
 
-        ## save configuration data
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+            self.domain = data['virtualHost']
+            rewriteRules = data['rewriteRules'].encode('utf-8')
 
-        command = 'cp %s %s' % (tempPath, filePath)
-        ProcessUtilities.executioner(command, externalApp)
+            if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson('rewriteStatus', 0)
 
-        command = 'rm -f %s' % (tempPath)
-        ProcessUtilities.executioner(command, 'cyberpanel')
+            ## writing data temporary to file
 
-        installUtilities.reStartLiteSpeedSocket()
-        status = {"rewriteStatus": 1, 'error_message': 'None'}
-        final_json = json.dumps(status)
-        return HttpResponse(final_json)
+            mailUtilities.checkHome()
+            tempPath = "/tmp/" + str(randint(1000, 9999))
+            vhost = open(tempPath, "wb")
+            vhost.write(rewriteRules)
+            vhost.close()
+
+            ## writing data temporary to file
+
+            try:
+                childDomain = ChildDomains.objects.get(domain=self.domain)
+                filePath = childDomain.path + '/.htaccess'
+                externalApp = childDomain.master.externalApp
+            except:
+                filePath = "/home/" + self.domain + "/public_html/.htaccess"
+                website = Websites.objects.get(domain=self.domain)
+                externalApp = website.externalApp
+
+            ## save configuration data
+
+            command = 'cp %s %s' % (tempPath, filePath)
+            ProcessUtilities.executioner(command, externalApp)
+
+            command = 'rm -f %s' % (tempPath)
+            ProcessUtilities.executioner(command, 'cyberpanel')
+
+            installUtilities.reStartLiteSpeedSocket()
+            status = {"rewriteStatus": 1, 'error_message': 'None'}
+            final_json = json.dumps(status)
+            return HttpResponse(final_json)
+        except BaseException as msg:
+            status = {"rewriteStatus": 0, 'error_message': str(msg)}
+            final_json = json.dumps(status)
+            return HttpResponse(final_json)
 
     def saveSSL(self, userID=None, data=None):
 

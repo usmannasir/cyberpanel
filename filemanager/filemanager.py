@@ -292,8 +292,8 @@ class FileManager:
             domainName = self.data['domainName']
             website = Websites.objects.get(domain=domainName)
 
-            writeToFile = open(tempPath, 'w')
-            writeToFile.write(self.data['fileContent'])
+            writeToFile = open(tempPath, 'wb')
+            writeToFile.write(self.data['fileContent'].encode('utf-8'))
             writeToFile.close()
 
             if os.path.islink(self.data['fileName']):
