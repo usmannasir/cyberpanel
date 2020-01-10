@@ -814,7 +814,7 @@ case "$num" in
 esac
 
 
-echo -e "\nInstall minimal service for CyberPanel? This will skip PowerDNS, Postfix and Pure-FTPd."
+echo -e "\nInstall Full service for CyberPanel? This will include PowerDNS, Postfix and Pure-FTPd."
 echo -e ""
 printf "%s" "Minimal installation [y/N]: "
 read TMP_YN
