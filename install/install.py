@@ -2173,6 +2173,22 @@ service_port = 9000
         command = '/root/.acme.sh/acme.sh --upgrade --auto-upgrade'
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
+    def installRedis(self):
+        if self.distro == ubuntu:
+            command = 'apt install redis-server -y'
+        elif self.distro == centos:
+            command = 'yum install redis -y'
+        else:
+            command = 'dnf install redis -y'
+        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+        command = 'systemctl start redis'
+        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+        command = 'systemctl enable redis'
+        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+
 
 
 def main():
@@ -2185,6 +2201,7 @@ def main():
     parser.add_argument('--ent', help='Install LS Ent or OpenLiteSpeed')
     parser.add_argument('--serial', help='Install LS Ent or OpenLiteSpeed')
     parser.add_argument('--port', help='LSCPD Port')
+    parser.add_argument('--redis', help='vHosts on Redis - Requires LiteSpeed Enterprise')
     args = parser.parse_args()
 
     logging.InstallLog.writeToFile("Starting CyberPanel installation..")
@@ -2319,6 +2336,9 @@ def main():
     else:
         preFlightsChecks.stdOut("Pure-FTPD will be installed and enabled.")
         checks.enableDisableFTP('on', distro)
+
+    if args.redis != None:
+        checks.installRedis()
 
     checks.installCLScripts()
     logging.InstallLog.writeToFile("CyberPanel installation successfully completed!")
