@@ -816,13 +816,13 @@ esac
 
 echo -e "\nInstall Full service for CyberPanel? This will include PowerDNS, Postfix and Pure-FTPd."
 echo -e ""
-printf "%s" "Minimal installation [y/N]: "
+printf "%s" "Full installation [Y/n]: "
 read TMP_YN
-if [ `expr "x$TMP_YN" : 'x[Yy]'` -gt 1 ]; then
-		echo -e "\nMinimal installation selected..."
-		POSTFIX_VARIABLE="OFF"
-		POWERDNS_VARIABLE="OFF"
-		PUREFTPD_VARIABLE="OFF"
+if [[ `expr "x$TMP_YN" : 'x[Yy]'` -gt 1 ]] || [[ $TMP_YN == "" ]] ; then
+		echo -e "\nFull installation selected..."
+		POSTFIX_VARIABLE="ON"
+		POWERDNS_VARIABLE="ON"
+		PUREFTPD_VARIABLE="ON"
 else
 		echo -e ""
 		printf "%s" "Install Postfix? [Y/n]: "
