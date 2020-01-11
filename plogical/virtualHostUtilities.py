@@ -52,6 +52,7 @@ class virtualHostUtilities:
 
     Server_root = "/usr/local/lsws"
     cyberPanel = "/usr/local/CyberCP"
+    redisConf = '/usr/local/lsws/conf/dvhost_redis.conf'
 
     @staticmethod
     def createVirtualHost(virtualHostName, administratorEmail, phpVersion, virtualHostUser, ssl,
@@ -123,9 +124,10 @@ class virtualHostUtilities:
 
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Creating configurations..,50')
 
-            retValues = vhost.createConfigInMainVirtualHostFile(virtualHostName)
-            if retValues[0] == 0:
-                raise BaseException(retValues[1])
+            if not os.path.exists(virtualHostUtilities.redisConf):
+                retValues = vhost.createConfigInMainVirtualHostFile(virtualHostName)
+                if retValues[0] == 0:
+                    raise BaseException(retValues[1])
 
             selectedPackage = Package.objects.get(packageName=packageName)
 
@@ -138,15 +140,18 @@ class virtualHostUtilities:
             if ssl == 1:
                 sslPath = "/home/" + virtualHostName + "/public_html"
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Setting up SSL..,70')
-                installUtilities.installUtilities.reStartLiteSpeed()
+                if not os.path.exists(virtualHostUtilities.redisConf):
+                    installUtilities.installUtilities.reStartLiteSpeed()
                 retValues = sslUtilities.issueSSLForDomain(virtualHostName, administratorEmail, sslPath)
                 if retValues[0] == 0:
                     raise BaseException(retValues[1])
                 else:
-                    installUtilities.installUtilities.reStartLiteSpeed()
+                    if not os.path.exists(virtualHostUtilities.redisConf):
+                        installUtilities.installUtilities.reStartLiteSpeed()
 
             if ssl == 0:
-                installUtilities.installUtilities.reStartLiteSpeed()
+                if not os.path.exists(virtualHostUtilities.redisConf):
+                    installUtilities.installUtilities.reStartLiteSpeed()
 
             vhost.finalizeVhostCreation(virtualHostName, virtualHostUser)
 
@@ -1072,8 +1077,8 @@ class virtualHostUtilities:
                                                        master.adminEmail, master.externalApp, openBasedir)
             if retValues[0] == 0:
                 raise BaseException(retValues[1])
-
-            retValues = vhost.createConfigInMainDomainHostFile(virtualHostName, masterDomain)
+            if not os.path.exists(virtualHostUtilities.redisConf):
+                retValues = vhost.createConfigInMainDomainHostFile(virtualHostName, masterDomain)
 
             if retValues[0] == 0:
                 raise BaseException(retValues[1])
@@ -1085,15 +1090,18 @@ class virtualHostUtilities:
 
             if ssl == 1:
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Creating SSL..,50')
-                installUtilities.installUtilities.reStartLiteSpeed()
+                if not os.path.exists(virtualHostUtilities.redisConf):
+                    installUtilities.installUtilities.reStartLiteSpeed()
                 retValues = sslUtilities.issueSSLForDomain(virtualHostName, master.adminEmail, path)
-                installUtilities.installUtilities.reStartLiteSpeed()
+                if not os.path.exists(virtualHostUtilities.redisConf):
+                    installUtilities.installUtilities.reStartLiteSpeed()
                 if retValues[0] == 0:
                     raise BaseException(retValues[1])
 
             ## Final Restart
             if ssl == 0:
-                installUtilities.installUtilities.reStartLiteSpeed()
+                if not os.path.exists(virtualHostUtilities.redisConf):
+                    installUtilities.installUtilities.reStartLiteSpeed()
 
             vhost.finalizeDomainCreation(master.externalApp, path)
 

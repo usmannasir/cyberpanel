@@ -35,6 +35,7 @@ class vhost:
 
     Server_root = "/usr/local/lsws"
     cyberPanel = "/usr/local/CyberCP"
+    redisConf = '/usr/local/lsws/conf/dvhost_redis.conf'
 
     @staticmethod
     def addUser(virtualHostUser, path):
@@ -239,19 +240,21 @@ class vhost:
             return 1
         else:
             try:
-                confFile = open(vhFile, "w+")
-                php = PHPManager.getPHPString(phpVersion)
 
-                currentConf = vhostConfs.lswsMasterConf
+                if not os.path.exists(vhost.redisConf):
+                    confFile = open(vhFile, "w+")
+                    php = PHPManager.getPHPString(phpVersion)
 
-                currentConf = currentConf.replace('{virtualHostName}', virtualHostName)
-                currentConf = currentConf.replace('{administratorEmail}', administratorEmail)
-                currentConf = currentConf.replace('{externalApp}', virtualHostUser)
-                currentConf = currentConf.replace('{php}', php)
+                    currentConf = vhostConfs.lswsMasterConf
 
-                confFile.write(currentConf)
+                    currentConf = currentConf.replace('{virtualHostName}', virtualHostName)
+                    currentConf = currentConf.replace('{administratorEmail}', administratorEmail)
+                    currentConf = currentConf.replace('{externalApp}', virtualHostUser)
+                    currentConf = currentConf.replace('{php}', php)
 
-                confFile.close()
+                    confFile.write(currentConf)
+
+                    confFile.close()
             except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(
                     str(msg) + " [IO Error with per host config file [perHostVirtualConf]]")
@@ -808,21 +811,23 @@ class vhost:
         else:
             try:
 
-                confFile = open(vhFile, "w+")
-                php = PHPManager.getPHPString(phpVersion)
+                if not os.path.exists(vhost.redisConf):
 
-                currentConf = vhostConfs.lswsChildConf
+                    confFile = open(vhFile, "w+")
+                    php = PHPManager.getPHPString(phpVersion)
 
-                currentConf = currentConf.replace('{virtualHostName}', domain)
-                currentConf = currentConf.replace('{masterDomain}', masterDomain)
-                currentConf = currentConf.replace('{administratorEmail}', administratorEmail)
-                currentConf = currentConf.replace('{externalApp}', virtualHostUser)
-                currentConf = currentConf.replace('{path}', path)
-                currentConf = currentConf.replace('{php}', php)
+                    currentConf = vhostConfs.lswsChildConf
 
-                confFile.write(currentConf)
+                    currentConf = currentConf.replace('{virtualHostName}', domain)
+                    currentConf = currentConf.replace('{masterDomain}', masterDomain)
+                    currentConf = currentConf.replace('{administratorEmail}', administratorEmail)
+                    currentConf = currentConf.replace('{externalApp}', virtualHostUser)
+                    currentConf = currentConf.replace('{path}', path)
+                    currentConf = currentConf.replace('{php}', php)
 
-                confFile.close()
+                    confFile.write(currentConf)
+
+                    confFile.close()
             except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(
                     str(msg) + " [IO Error with per host config file [perHostDomainConf]]")

@@ -2182,6 +2182,23 @@ service_port = 9000
             command = 'dnf install redis -y'
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
+        ## install redis conf
+
+        redisConf = '/usr/local/lsws/conf/dvhost_redis.conf'
+
+        writeToFile = open(redisConf, 'w')
+        writeToFile.write('127.0.0.1,6379,<auth_password>\n')
+        writeToFile.close()
+
+        confPath = '/usr/local/lsws/conf/'
+
+        if os.path.exists('%shttpd.conf' % (confPath)):
+            os.remove('%shttpd.conf' % (confPath))
+
+        shutil.copy('litespeed/httpd.conf', confPath)
+
+        ## start and enable
+
         command = 'systemctl start redis'
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
