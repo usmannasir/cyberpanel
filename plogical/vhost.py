@@ -28,6 +28,9 @@ try:
     from databases.models import Databases
 except:
     pass
+import pwd
+import grp
+
 ## If you want justice, you have come to the wrong place.
 
 
@@ -255,6 +258,21 @@ class vhost:
                     confFile.write(currentConf)
 
                     confFile.close()
+
+                else:
+                    currentConf = vhostConfs.lswsRediConfMaster
+
+                    currentConf = currentConf.replace('{virtualHostName}', virtualHostName)
+                    currentConf = currentConf.replace('{administratorEmail}', administratorEmail)
+                    currentConf = currentConf.replace('{externalApp}', virtualHostUser)
+                    currentConf = currentConf.replace('{php}', phpVersion.lstrip('PHP '))
+                    currentConf = currentConf.replace('{uid}', str(pwd.getpwnam(virtualHostUser).pw_uid))
+                    currentConf = currentConf.replace('{gid}', str(grp.getgrnam(virtualHostUser).gr_gid))
+
+                    command = 'redis-cli set %s' % (currentConf)
+                    ProcessUtilities.executioner(command)
+
+
             except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(
                     str(msg) + " [IO Error with per host config file [perHostVirtualConf]]")
@@ -812,7 +830,6 @@ class vhost:
             try:
 
                 if not os.path.exists(vhost.redisConf):
-
                     confFile = open(vhFile, "w+")
                     php = PHPManager.getPHPString(phpVersion)
 
@@ -828,6 +845,7 @@ class vhost:
                     confFile.write(currentConf)
 
                     confFile.close()
+
             except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(
                     str(msg) + " [IO Error with per host config file [perHostDomainConf]]")

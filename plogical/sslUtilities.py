@@ -12,6 +12,7 @@ except:
 class sslUtilities:
 
     Server_root = "/usr/local/lsws"
+    redisConf = '/usr/local/lsws/conf/dvhost_redis.conf'
 
     @staticmethod
     def checkIfSSLMap(virtualHostName):
@@ -186,78 +187,82 @@ class sslUtilities:
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [installSSLForDomain]]")
                 return 0
         else:
-            confPath = sslUtilities.Server_root + "/conf/vhosts/" + virtualHostName
-            completePathToConfigFile = confPath + "/vhost.conf"
+            if not os.path.exists(sslUtilities.redisConf):
+                confPath = sslUtilities.Server_root + "/conf/vhosts/" + virtualHostName
+                completePathToConfigFile = confPath + "/vhost.conf"
 
-            ## Check if SSL VirtualHost already exists
-
-            data = open(completePathToConfigFile, 'r').readlines()
-
-            for items in data:
-                if items.find('*:443') > -1:
-                    return 1
-
-            try:
-
-                try:
-                    chilDomain = ChildDomains.objects.get(domain=virtualHostName)
-                    externalApp = chilDomain.master.externalApp
-                    DocumentRoot = '    DocumentRoot ' + chilDomain.path + '\n'
-                except BaseException as msg:
-                    website = Websites.objects.get(domain=virtualHostName)
-                    externalApp = website.externalApp
-                    DocumentRoot = '    DocumentRoot /home/' + virtualHostName + '/public_html\n'
+                ## Check if SSL VirtualHost already exists
 
                 data = open(completePathToConfigFile, 'r').readlines()
-                phpHandler = ''
 
                 for items in data:
-                    if items.find('AddHandler') > -1 and items.find('php') > -1:
-                        phpHandler = items
-                        break
+                    if items.find('*:443') > -1:
+                        return 1
 
-                confFile = open(completePathToConfigFile, 'a')
+                try:
 
-                cacheRoot = """    <IfModule LiteSpeed>
-        CacheRoot lscache
-    </IfModule>
-"""
+                    try:
+                        chilDomain = ChildDomains.objects.get(domain=virtualHostName)
+                        externalApp = chilDomain.master.externalApp
+                        DocumentRoot = '    DocumentRoot ' + chilDomain.path + '\n'
+                    except BaseException as msg:
+                        website = Websites.objects.get(domain=virtualHostName)
+                        externalApp = website.externalApp
+                        DocumentRoot = '    DocumentRoot /home/' + virtualHostName + '/public_html\n'
 
-                VirtualHost = '\n<VirtualHost *:443>\n\n'
-                ServerName = '    ServerName ' + virtualHostName + '\n'
-                ServerAlias = '    ServerAlias www.' + virtualHostName + '\n'
-                ServerAdmin = '    ServerAdmin ' + adminEmail + '\n'
-                SeexecUserGroup = '    SuexecUserGroup ' + externalApp + ' ' + externalApp + '\n'
-                CustomLogCombined = '    CustomLog /home/' + virtualHostName + '/logs/' + virtualHostName + '.access_log combined\n'
+                    data = open(completePathToConfigFile, 'r').readlines()
+                    phpHandler = ''
 
-                confFile.writelines(VirtualHost)
-                confFile.writelines(ServerName)
-                confFile.writelines(ServerAlias)
-                confFile.writelines(ServerAdmin)
-                confFile.writelines(SeexecUserGroup)
-                confFile.writelines(DocumentRoot)
-                confFile.writelines(CustomLogCombined)
-                confFile.writelines(cacheRoot)
+                    for items in data:
+                        if items.find('AddHandler') > -1 and items.find('php') > -1:
+                            phpHandler = items
+                            break
 
-                SSLEngine = '    SSLEngine on\n'
-                SSLVerifyClient = '    SSLVerifyClient none\n'
-                SSLCertificateFile = '    SSLCertificateFile /etc/letsencrypt/live/' + virtualHostName + '/fullchain.pem\n'
-                SSLCertificateKeyFile = '    SSLCertificateKeyFile /etc/letsencrypt/live/' + virtualHostName + '/privkey.pem\n'
+                    confFile = open(completePathToConfigFile, 'a')
 
-                confFile.writelines(SSLEngine)
-                confFile.writelines(SSLVerifyClient)
-                confFile.writelines(SSLCertificateFile)
-                confFile.writelines(SSLCertificateKeyFile)
-                confFile.writelines(phpHandler)
+                    cacheRoot = """    <IfModule LiteSpeed>
+            CacheRoot lscache
+        </IfModule>
+    """
 
-                VirtualHostEnd = '</VirtualHost>\n'
-                confFile.writelines(VirtualHostEnd)
-                confFile.close()
-                return 1
+                    VirtualHost = '\n<VirtualHost *:443>\n\n'
+                    ServerName = '    ServerName ' + virtualHostName + '\n'
+                    ServerAlias = '    ServerAlias www.' + virtualHostName + '\n'
+                    ServerAdmin = '    ServerAdmin ' + adminEmail + '\n'
+                    SeexecUserGroup = '    SuexecUserGroup ' + externalApp + ' ' + externalApp + '\n'
+                    CustomLogCombined = '    CustomLog /home/' + virtualHostName + '/logs/' + virtualHostName + '.access_log combined\n'
 
-            except BaseException as msg:
-                logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [installSSLForDomain]")
-                return 0
+                    confFile.writelines(VirtualHost)
+                    confFile.writelines(ServerName)
+                    confFile.writelines(ServerAlias)
+                    confFile.writelines(ServerAdmin)
+                    confFile.writelines(SeexecUserGroup)
+                    confFile.writelines(DocumentRoot)
+                    confFile.writelines(CustomLogCombined)
+                    confFile.writelines(cacheRoot)
+
+                    SSLEngine = '    SSLEngine on\n'
+                    SSLVerifyClient = '    SSLVerifyClient none\n'
+                    SSLCertificateFile = '    SSLCertificateFile /etc/letsencrypt/live/' + virtualHostName + '/fullchain.pem\n'
+                    SSLCertificateKeyFile = '    SSLCertificateKeyFile /etc/letsencrypt/live/' + virtualHostName + '/privkey.pem\n'
+
+                    confFile.writelines(SSLEngine)
+                    confFile.writelines(SSLVerifyClient)
+                    confFile.writelines(SSLCertificateFile)
+                    confFile.writelines(SSLCertificateKeyFile)
+                    confFile.writelines(phpHandler)
+
+                    VirtualHostEnd = '</VirtualHost>\n'
+                    confFile.writelines(VirtualHostEnd)
+                    confFile.close()
+                    return 1
+                except BaseException as msg:
+                    logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [installSSLForDomain]")
+                    return 0
+            else:
+                command = 'redis-cli hmset "ssl:%s" crt "%s" key "%s"' % (virtualHostName, open('/etc/letsencrypt/live/' + virtualHostName + '/fullchain.pem', 'r').read(), open('/etc/letsencrypt/live/' + virtualHostName + '/privkey.pem', 'r').read())
+                ProcessUtilities.executioner(command)
+
 
 
     @staticmethod

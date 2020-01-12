@@ -365,3 +365,20 @@ pm.start_servers = {pmStartServers}
 pm.min_spare_servers = {pmMinSpareServers}
 pm.max_spare_servers = {pmMaxSpareServers}
 """
+
+    lswsRediConfMaster = """"vhost:{virtualHostName}" '{
+   "username": "{externalApp}",
+   "documentRoot": "/home/{virtualHostName}/public_html",
+   "vh_root": "/home/{virtualHostName}",
+   "uid": {uid},
+   "gid": {gid},
+   "phpVersion": {php},
+   "custom_conf": {
+    ServerAlias www.{virtualHostName}
+    ServerAdmin {administratorEmail}
+    CustomLog /home/{virtualHostName}/logs/{virtualHostName}.access_log combined
+    <IfModule LiteSpeed>
+        CacheRoot lscache
+    </IfModule>
+   }
+}'"""
