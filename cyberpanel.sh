@@ -610,13 +610,18 @@ fi
 
 check_root() {
 echo -e "\nChecking root privileges...\n"
+if echo $(set) | grep SUDO > /dev/null ; then
+	echo -e "\nYou are using SUDO , please run as root user...\n"
+	exit
+fi
+
 if [[ $(id -u) != 0 ]]  > /dev/null; then
-	echo -e "You must use root account to do this"
-	echo -e "or run following command: (do NOT miss the quotes)"
-	echo -e "\e[31msudo su -c \"sh <(curl https://cyberpanel.sh || wget -O - https://cyberpanel.sh)\"\e[39m"
+	echo -e "\nYou must use root user to install CyberPanel...\n"
+#	echo -e "or run following command: (do NOT miss the quotes)"
+#	echo -e "\e[31msudo su -c \"sh <(curl https://cyberpanel.sh || wget -O - https://cyberpanel.sh)\"\e[39m"
 	exit 1
 else
-	echo -e "You are runing as root...\n"
+	echo -e "\nYou are runing as root...\n"
 fi
 }
 

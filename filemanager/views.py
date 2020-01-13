@@ -81,18 +81,26 @@ def changePermissions(request):
 
 def downloadFile(request):
     try:
+        userID = request.session['userID']
+        admin = Administrator.objects.get(pk=userID)
 
-        data = json.loads(request.body)
-        fileToDownload = data['fileToDownload']
+        fileToDownload = '/home/cyberpanel.xyz/public_html/hello.txt'
+        domainName = 'cyberpanel.xyz'
 
-        response = ''
-        if os.path.isfile(fileToDownload):
-            try:
-                with open(fileToDownload, 'rb') as f:
-                    response = HttpResponse(f.read(), content_type="application/octet-stream")
-                    response['Content-Disposition'] = 'inline; filename=' + os.path.basename(fileToDownload)
-            except Exception as e:
-                raise Http404
+        currentACL = ACLManager.loadedACL(userID)
+
+        if ACLManager.checkOwnership(domainName, admin, currentACL) == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('permissionsChanged', 0)
+
+        logging.CyberCPLogFileWriter.writeToFile('test')
+
+        response = HttpResponse(content_type='application/force-download')
+        response['Content-Disposition'] = 'attachment; filename=%s' % (fileToDownload.split('/')[-1])
+        response['X-LiteSpeed-Location'] = '%s' % (fileToDownload)
+
+        logging.CyberCPLogFileWriter.writeToFile('test 2')
         return response
 
     except KeyError:
