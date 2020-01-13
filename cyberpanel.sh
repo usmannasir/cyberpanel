@@ -4,6 +4,7 @@
 
 export LC_CTYPE=en_US.UTF-8
 
+SUDO_TEST=$(set)
 DEV="OFF"
 BRANCH="stable"
 POSTFIX_VARIABLE="ON"
@@ -610,7 +611,7 @@ fi
 
 check_root() {
 echo -e "\nChecking root privileges...\n"
-if echo $(set) | grep SUDO > /dev/null ; then
+if echo $SUDO_TEST | grep SUDO > /dev/null ; then
 	echo -e "\nYou are using SUDO , please run as root user...\n"
 	exit
 fi
