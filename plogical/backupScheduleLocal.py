@@ -39,7 +39,7 @@ class backupScheduleLocal:
 
                             command = 'mv %s %s' % (backupPath, localBackupPath)
                             ProcessUtilities.normalExecutioner(command)
-                    except BaseException, msg:
+                    except BaseException as msg:
                         backupSchedule.remoteBackupLogging(backupLogPath,
                                                            '[ERROR] Backup failed for %s, error: %s moving on..' % (virtualHost, str(msg)))
 
