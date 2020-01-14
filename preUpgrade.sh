@@ -98,6 +98,8 @@ cd wsgi-lsapi-1.4
 make
 cp lswsgi /usr/local/CyberCP/bin/
 
+chmod 700 /usr/bin/adminPass
+
 ##
 systemctl restart lscpd
 
