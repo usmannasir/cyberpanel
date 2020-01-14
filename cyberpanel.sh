@@ -1168,7 +1168,7 @@ systemctl restart lscpd
 systemctl restart lsws
 echo "/usr/local/CyberPanel/bin/python /usr/local/CyberCP/plogical/adminPass.py --password \$@" > /usr/bin/adminPass
 echo "systemctl restart lscpd" >> /usr/bin/adminPass
-chmod +x /usr/bin/adminPass
+chmod 700 /usr/bin/adminPass
 if [[ $VERSION = "OLS" ]] ; then
 	WORD="OpenLiteSpeed"
 #	sed -i 's|maxConnections               10000|maxConnections               100000|g' /usr/local/lsws/conf/httpd_config.conf
