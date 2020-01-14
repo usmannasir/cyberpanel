@@ -1,3 +1,14 @@
+#!/usr/local/CyberCP/bin/python
+import os
+import os.path
+import sys
+import django
+sys.path.append('/usr/local/CyberCP')
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
+try:
+    django.setup()
+except:
+    pass
 from plogical import CyberCPLogFileWriter as logging
 import os
 import time
@@ -39,7 +50,7 @@ class backupScheduleLocal:
 
                             command = 'mv %s %s' % (backupPath, localBackupPath)
                             ProcessUtilities.normalExecutioner(command)
-                    except BaseException, msg:
+                    except BaseException as msg:
                         backupSchedule.remoteBackupLogging(backupLogPath,
                                                            '[ERROR] Backup failed for %s, error: %s moving on..' % (virtualHost, str(msg)))
 
