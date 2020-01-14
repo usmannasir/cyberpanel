@@ -658,6 +658,9 @@ class preFlightsChecks:
             command = 'chmod +x %s' % (items)
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
+        command = 'chmod 600 /usr/local/CyberCP/plogical/adminPass.py'
+        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
     def install_unzip(self):
         self.stdOut("Install unzip")
         try:

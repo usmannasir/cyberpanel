@@ -1659,6 +1659,9 @@ CSRF_COOKIE_SECURE = True
                 command = 'chmod +x %s' % (items)
                 Upgrade.executioner(command, 0)
 
+            command = 'chmod 600 /usr/local/CyberCP/plogical/adminPass.py'
+            Upgrade.executioner(command, 0)
+
             Upgrade.stdOut("Permissions updated.")
 
         except BaseException as msg:
@@ -2004,8 +2007,8 @@ service_port = 9000
         if not os.path.exists('/usr/local/lsws/bin/openlitespeed'):
             command = 'wget https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/install/litespeed/httpd_config.xml'
             Upgrade.executioner(command, command, 0)
-            os.remove('/usr/local/lsws/conf/httpd_config.xml')
-            shutil.copy('httpd_config.xml', '/usr/local/lsws/conf/httpd_config.xml')
+            #os.remove('/usr/local/lsws/conf/httpd_config.xml')
+            #shutil.copy('httpd_config.xml', '/usr/local/lsws/conf/httpd_config.xml')
 
         postfixPath = '/home/cyberpanel/postfix'
         pdns = '/home/cyberpanel/pdns'
