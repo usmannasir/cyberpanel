@@ -260,8 +260,13 @@ class sslUtilities:
                     logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [installSSLForDomain]")
                     return 0
             else:
-                command = 'redis-cli hmset "ssl:%s" crt "%s" key "%s"' % (virtualHostName, open('/etc/letsencrypt/live/' + virtualHostName + '/fullchain.pem', 'r').read(), open('/etc/letsencrypt/live/' + virtualHostName + '/privkey.pem', 'r').read())
+                cert = open('/etc/letsencrypt/live/' + virtualHostName + '/fullchain.pem').read().rstrip('\n')
+                key = open('/etc/letsencrypt/live/' + virtualHostName + '/privkey.pem', 'r').read().rstrip('\n')
+                command = 'redis-cli hmset "ssl:%s" crt "%s" key "%s"' % (virtualHostName, cert, key)
+                logging.CyberCPLogFileWriter.writeToFile('hello world aaa')
+                logging.CyberCPLogFileWriter.writeToFile(command)
                 ProcessUtilities.executioner(command)
+                return 1
 
 
 
