@@ -180,7 +180,9 @@ class FTPManager:
             admin = Administrator.objects.get(pk=userID)
             ftp = Users.objects.get(user=ftpUserName)
 
-            if ftp.domain.admin != admin:
+            if ACLManager.checkOwnership(ftp.domain.domain, admin, currentACL) == 1:
+                pass
+            else:
                 return ACLManager.loadErrorJson()
 
             FTPUtilities.submitFTPDeletion(ftpUserName)
