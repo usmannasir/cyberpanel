@@ -681,7 +681,7 @@ echo -e "\n This will install everything default , which is OpenLiteSpeed and no
 
 license_input() {
 VERSION="ENT"
-echo -e "\nPlease note that your server has \e[31m$TOTAL_RAM\e[39m RAM"
+echo -e "\nPlease note that your server has \e[31m$TOTAL_RAM MB\e[39m RAM"
 echo -e "If you are using \e[31mFree Start\e[39m license, It will not start due to \e[31m2GB RAM limit\e[39m.\n"
 echo -e "If you do not have any license, you can also use trial license (if server has not used trial license before), type \e[31mTRIAL\e[39m\n"
 
