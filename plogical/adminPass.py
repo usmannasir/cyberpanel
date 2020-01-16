@@ -11,7 +11,6 @@ from plogical import hashPassword
 from plogical.acl import ACLManager
 from packages.models import Package
 from baseTemplate.models import version
-from CLManager.models import CLPackages
 
 if not os.geteuid() == 0:
     sys.exit("\nOnly root can run this script\n")
