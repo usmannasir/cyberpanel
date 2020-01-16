@@ -139,11 +139,20 @@ sed -i 's|git clone https://github.com/usmannasir/cyberpanel|echo downloaded|g' 
 #change to CDN first, regardless country
 sed -i 's|http://|https://|g' install.py
 
-if ! grep -q "1.1.1.1" /etc/resolv.conf ; then
-	echo -e "\nnameserver 1.1.1.1" >> /etc/resolv.conf
-fi
-if ! grep -q "8.8.8.8" /etc/resolv.conf ; then
-	echo -e "\nnameserver 8.8.8.8" >> /etc/resolv.conf
+if [[ $PROVIDER == "Alibaba Cloud" ]] ; then
+	if ! grep -q "100.100.2.136" /etc/resolv.conf ; then
+		echo -e "\nnameserver 100.100.2.136" >> /etc/resolv.conf
+	fi
+	if ! grep -q "100.100.2.138" /etc/resolv.conf ; then
+		echo -e "\nnameserver 100.100.2.138" >> /etc/resolv.conf
+	fi
+else
+	if ! grep -q "1.1.1.1" /etc/resolv.conf ; then
+		echo -e "\nnameserver 1.1.1.1" >> /etc/resolv.conf
+	fi
+	if ! grep -q "8.8.8.8" /etc/resolv.conf ; then
+		echo -e "\nnameserver 8.8.8.8" >> /etc/resolv.conf
+	fi
 fi
 cp /etc/resolv.conf /etc/resolv.conf-tmp
 
@@ -162,9 +171,11 @@ if [[ $PROVIDER == "Alibaba Cloud" ]] && [[ $SERVER_OS == "Ubuntu" ]] ; then
 		mkdir /root/.config/pip
 		cat << EOF > /root/.config/pip/pip.conf
 [global]
-index-url = https://mirrors.aliyun.com/pypi/simple/
+index-url = https://pypi.python.org/simple/
+[install]
+trusted-host=pypi.python.org
 EOF
-		echo -e "\nSet to Aliyun pip repo..."
+		echo -e "\nSet pip repo..."
 fi
 #seems Alibaba cloud , other than CN , also requires change on ubuntu.
 
@@ -203,7 +214,9 @@ gpgcheck = 1" > MariaDB.repo
 		mkdir /root/.config/pip
 		cat << EOF > /root/.config/pip/pip.conf
 [global]
-index-url = https://mirrors.aliyun.com/pypi/simple/
+index-url = https://pypi.tuna.tsinghua.edu.cn/simple
+[install]
+trusted-host=pypi.tuna.tsinghua.edu.cn
 EOF
 		echo -e "\nSet to Aliyun pip repo..."
 		cat << EOF > composer.sh
@@ -248,12 +261,14 @@ EOF
 	if [[ $SERVER_OS == "Ubuntu" ]] ; then
 		echo $'\n89.208.248.38 rpms.litespeedtech.com\n' >> /etc/hosts
 		echo -e "Mirror server set..."
-		pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/
+		pip config set global.index-url https://pypi.python.org/simple/
 		mkdir /root/.config
 		mkdir /root/.config/pip
 		cat << EOF > /root/.config/pip/pip.conf
 [global]
-index-url = https://mirrors.aliyun.com/pypi/simple/
+index-url = https://pypi.python.org/simple/
+[install]
+trusted-host=pypi.python.org
 EOF
 	echo -e "\nSet to Aliyun pip repo..."
 		if [[ $PROVIDER == "Tencent Cloud" ]] ; then
@@ -549,6 +564,8 @@ if [[ $SERVER_OS == "CentOS" ]] ; then
 fi
 
 if [[ $SERVER_OS == "Ubuntu" ]] ; then
+	systemctl stop redis-server
+	rm -f /var/run/redis/redis-server.pid
 	systemctl enable redis-server
 	systemctl start redis-server
 fi
@@ -1101,6 +1118,16 @@ fi
 if grep "CyberPanel installation successfully completed" /var/log/installLogs.txt > /dev/null; then
 
 if [[ $DEV == "ON" ]] ; then
+
+	if [[ $PROVIDER == "Alibaba Cloud" ]] && [[ $SERVER_OS == "Ubuntu" ]] ; then
+	cat << EOF > /root/.config/pip/pip.conf
+[global]
+index-url = https://pypi.python.org/simple/
+[install]
+trusted-host=pypi.python.org
+EOF
+	fi
+
 virtualenv -p /usr/bin/python3 /usr/local/CyberCP
 source /usr/local/CyberCP/bin/activate
 wget -O requirements.txt https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
