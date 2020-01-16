@@ -84,8 +84,8 @@ def downloadFile(request):
         userID = request.session['userID']
         admin = Administrator.objects.get(pk=userID)
 
-        fileToDownload = '/home/cyberpanel.xyz/public_html/hello.txt'
-        domainName = 'cyberpanel.xyz'
+        fileToDownload = request.GET.get('fileToDownload')
+        domainName = request.GET.get('domainName')
 
         currentACL = ACLManager.loadedACL(userID)
 
@@ -93,8 +93,6 @@ def downloadFile(request):
             pass
         else:
             return ACLManager.loadErrorJson('permissionsChanged', 0)
-
-        logging.CyberCPLogFileWriter.writeToFile('test')
 
         response = HttpResponse(content_type='application/force-download')
         response['Content-Disposition'] = 'attachment; filename=%s' % (fileToDownload.split('/')[-1])
