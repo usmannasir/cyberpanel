@@ -41,7 +41,7 @@ fi
 install_utility() {
 if [[ ! -f /usr/bin/cyberpanel_utility ]] ; then
 wget -q -O /usr/bin/cyberpanel_utility https://cyberpanel.sh/misc/cyberpanel_utility.sh
-chmod +x 700 /usr/bin/cyberpanel_utility
+chmod 700 /usr/bin/cyberpanel_utility
 fi
 
 if ! cat /root/.bashrc | grep -q cyberpanel_utility ; then
@@ -59,7 +59,7 @@ fi
 watchdog_setup() {
 if [[ $WATCHDOG == "ON" ]] ; then
 wget -O /etc/cyberpanel/watchdog.sh https://$DOWNLOAD_SERVER/misc/watchdog.sh
-chmod +x /etc/cyberpanel/watchdog.sh
+chmod 700 /etc/cyberpanel/watchdog.sh
 ln -s /etc/cyberpanel/watchdog.sh /usr/local/bin/watchdog
 pid=$(ps aux | grep "watchdog lsws"  | grep -v grep | awk '{print $2}')
 	if [[ "$pid" == "" ]] ; then
