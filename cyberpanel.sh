@@ -38,6 +38,23 @@ else
 fi
 }
 
+install_utility() {
+if [[ ! -f /usr/bin/cyberpanel_utility ]] ; then
+wget -q -O /usr/bin/cyberpanel_utility https://cyberpanel.sh/misc/cyberpanel_utility.sh
+chmod +x 700 /usr/bin/cyberpanel_utility
+fi
+
+if ! cat /root/.bashrc | grep -q cyberpanel_utility ; then
+echo -e "\n\ncyberpanel() {
+if [[ $1 == "utility" ]] ; then
+/usr/bin/cyberpanel_utility ${@:2:99}
+else
+/usr/bin/cyberpanel "$@"
+fi
+}" >> /root/.bashrc
+source /root/.bashrc
+fi
+}
 
 watchdog_setup() {
 if [[ $WATCHDOG == "ON" ]] ; then
@@ -1205,8 +1222,8 @@ if [[ $VERSION = "OLS" ]] ; then
 #	tar xzvf openlitespeed-$OLS_LATEST.tgz
 #	cd openlitespeed
 #	./install.sh
-	/usr/local/lsws/bin/lswsctrl stop
-	/usr/local/lsws/bin/lswsctrl start
+	systemctl stop lsws
+	systemctl start lsws
 #	rm -f openlitespeed-$OLS_LATEST.tgz
 #	rm -rf openlitespeed
 #	cd ..
@@ -1229,6 +1246,8 @@ fi
 webadmin_passwd
 
 watchdog_setup
+
+#install_utility
 
 clear
 echo "###################################################################"
