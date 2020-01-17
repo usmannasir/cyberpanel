@@ -272,6 +272,11 @@ class FileManager:
             domainName = self.data['domainName']
             website = Websites.objects.get(domain=domainName)
 
+            pathCheck = '/home/%s' % (domainName)
+
+            if self.data['fileName'].find(pathCheck) == -1:
+                return self.ajaxPre(0, 'Not allowed.')
+
             command = 'cat ' + self.returnPathEnclosed(self.data['fileName'])
             finalData['fileContents'] = ProcessUtilities.outputExecutioner(command, website.externalApp)
 
