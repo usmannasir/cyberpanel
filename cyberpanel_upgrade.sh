@@ -6,6 +6,28 @@ SUDO_TEST=$(set)
 SERVER_OS='Undefined'
 OUTPUT=$(cat /etc/*release)
 
+install_utility() {
+if [[ ! -f /usr/bin/cyberpanel_utility ]] ; then
+wget -q -O /usr/bin/cyberpanel_utility https://cyberpanel.sh/misc/cyberpanel_utility.sh
+chmod 700 /usr/bin/cyberpanel_utility
+fi
+
+if ! cat /etc/bash.bashrc | grep -q cyberpanel_utility ; then
+echo -e "\n\ncyberpanel() {
+if [[ $1 == "utility" ]] ; then
+/usr/bin/cyberpanel_utility ${@:2:99}
+elif [[ $1 == "help" ]] ; then
+/usr/bin/cyberpanel_utility --help
+elif [[ $1 == "upgrade" ]] || [[ $1 == "update" ]] ; then
+/usr/bin/cyberpanel_utility --upgrade
+else
+/usr/bin/cyberpanel "$@"
+fi
+}" >> /etc/bash.bashrc
+source /etc/bash.bashrc
+fi
+}
+
 check_root() {
 echo -e "\nChecking root privileges...\n"
 if echo $SUDO_TEST | grep SUDO > /dev/null ; then
@@ -146,6 +168,10 @@ make
 cp lswsgi /usr/local/CyberCP/bin/
 
 chmod 700 /usr/bin/adminPass
+
+install_utility
+
+
 
 ##
 systemctl restart lscpd

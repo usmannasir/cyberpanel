@@ -20,7 +20,7 @@ if [[ $TMP_YN == "1" ]] ; then
 	if [[ ! -f /etc/cyberpanel/watchdog.sh ]] ; then
 		echo -e "\nWatchDog no found..."
 		wget -O /etc/cyberpanel/watchdog.sh https://cyberpanel.sh/misc/watchdog.sh
-		chmod +x /etc/cyberpanel/watchdog.sh
+		chmod 700 /etc/cyberpanel/watchdog.sh
 		ln -s /etc/cyberpanel/watchdog.sh /usr/local/bin/watchdog
 		echo -e "\nWatchDos has been installed..."
 		set_watchdog
@@ -105,13 +105,13 @@ cyberpanel_upgrade() {
 echo -e "CyberPanel upgrading..."
 rm -f /usr/local/cyberpanel_upgrade.sh
 wget -O /usr/local/cyberpanel_upgrade.sh -q https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/cyberpanel_upgrade.sh
-chmod +x /usr/local/cyberpanel_upgrade.sh
+chmod 700 /usr/local/cyberpanel_upgrade.sh
 /usr/local/cyberpanel_upgrade.sh
 rm -f /usr/local/cyberpanel_upgrade.sh
 exit
 }
 
-get_faq() {
+show_help() {
 echo -e "\nFetching information...\n"
 curl https://cyberpanel.sh/misc/faq.txt
 exit
@@ -184,12 +184,6 @@ sudo_check() {
 	fi
 }
 
-show_help() {
-echo -e "\nCyberPanel Utility Script"
-echo -e "\nYou can use argument --upgrade to run CyberPanel upgrade without interaction for automated job."
-echo -e "\nExample: cyberpanel utility --upgrade"
-exit
-}
 
 panel_check
 

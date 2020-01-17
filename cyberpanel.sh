@@ -44,15 +44,19 @@ wget -q -O /usr/bin/cyberpanel_utility https://cyberpanel.sh/misc/cyberpanel_uti
 chmod 700 /usr/bin/cyberpanel_utility
 fi
 
-if ! cat /root/.bashrc | grep -q cyberpanel_utility ; then
+if ! cat /etc/bash.bashrc | grep -q cyberpanel_utility ; then
 echo -e "\n\ncyberpanel() {
 if [[ $1 == "utility" ]] ; then
 /usr/bin/cyberpanel_utility ${@:2:99}
+elif [[ $1 == "help" ]] ; then
+/usr/bin/cyberpanel_utility --help
+elif [[ $1 == "upgrade" ]] || [[ $1 == "update" ]] ; then
+/usr/bin/cyberpanel_utility --upgrade
 else
 /usr/bin/cyberpanel "$@"
 fi
-}" >> /root/.bashrc
-source /root/.bashrc
+}" >> /etc/bash.bashrc
+source /etc/bash.bashrc
 fi
 }
 
