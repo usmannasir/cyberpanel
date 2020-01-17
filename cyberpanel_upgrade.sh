@@ -169,7 +169,7 @@ cp lswsgi /usr/local/CyberCP/bin/
 
 chmod 700 /usr/bin/adminPass
 
-install_utility
+#install_utility
 
 
 
