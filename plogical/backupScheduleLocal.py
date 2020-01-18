@@ -22,15 +22,17 @@ class backupScheduleLocal:
     localBackupPath = '/home/cyberpanel/localBackupPath'
     now = datetime.now()
 
+
     @staticmethod
     def prepare():
         try:
-            backupLogPath = "/usr/local/lscp/logs/local_backup_log." + time.strftime("%m.%d.%Y_%H-%M-%S")
+            backupRunTime = time.strftime("%m.%d.%Y_%H-%M-%S")
+            backupLogPath = "/usr/local/lscp/logs/local_backup_log." + backupRunTime
 
             writeToFile = open(backupLogPath, "a")
 
             backupSchedule.remoteBackupLogging(backupLogPath, "#################################################")
-            backupSchedule.remoteBackupLogging(backupLogPath,"      Local Backup log for: " + time.strftime("%m.%d.%Y_%H-%M-%S"))
+            backupSchedule.remoteBackupLogging(backupLogPath,"      Local Backup log for: " + backupRunTime)
             backupSchedule.remoteBackupLogging(backupLogPath, "#################################################\n")
 
             backupSchedule.remoteBackupLogging(backupLogPath, "")
@@ -43,7 +45,7 @@ class backupScheduleLocal:
 
                         if os.path.exists(backupScheduleLocal.localBackupPath):
                             backupPath = retValues[1] + ".tar.gz"
-                            localBackupPath = '%s/%s' % (open(backupScheduleLocal.localBackupPath, 'r').read().rstrip('/'), time.strftime("%b-%d-%Y"))
+                            localBackupPath = '%s/%s' % (open(backupScheduleLocal.localBackupPath, 'r').read().rstrip('/'), backupRunTime)
 
                             command = 'mkdir -p %s' % (localBackupPath)
                             ProcessUtilities.normalExecutioner(command)
