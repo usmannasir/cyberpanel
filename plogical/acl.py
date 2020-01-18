@@ -444,22 +444,22 @@ class ACLManager:
         domainsList = []
 
         if currentACL['admin'] == 1:
-            domains = Domains.objects.all()
+            domains = Websites.objects.all()
             for items in domains:
-                domainsList.append(items.name)
+                domainsList.append(items.domain)
         else:
             admin = Administrator.objects.get(pk=userID)
-            domains = admin.domains_set.all()
+            domains = admin.websites_set.all()
 
             for items in domains:
-                domainsList.append(items.name)
+                domainsList.append(items.domain)
 
             admins = Administrator.objects.filter(owner=admin.pk)
 
             for items in admins:
-                doms = items.domains_set.all()
+                doms = items.websites_set.all()
                 for dom in doms:
-                    domainsList.append(dom.name)
+                    domainsList.append(dom.domain)
 
         return domainsList
 
