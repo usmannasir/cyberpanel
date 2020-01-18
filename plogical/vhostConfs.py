@@ -382,3 +382,20 @@ pm.max_spare_servers = {pmMaxSpareServers}
     </IfModule>
    }
 }'"""
+
+    lswsRediConfChild = """"vhost:{virtualHostName}" '{
+    "username": "{externalApp}",
+    "documentRoot": "{path}",
+    "vh_root": "{path}",
+    "uid": {uid},
+    "gid": {gid},
+    "phpVersion": {php},
+    "custom_conf": {
+    ServerAlias www.{virtualHostName}
+    ServerAdmin {administratorEmail}
+    CustomLog /home/{masterDomain}/logs/{masterDomain}.access_log combined
+    <IfModule LiteSpeed>
+        CacheRoot lscache
+    </IfModule>
+    }
+}'"""
