@@ -139,7 +139,10 @@ def submitUserCreation(request):
             password = data['password']
             websitesLimit = data['websitesLimit']
             selectedACL = data['selectedACL']
-            securityLevel = data['securityLevel']
+            try:
+                securityLevel = data['securityLevel']
+            except:
+                securityLevel = 'HIGH'
 
             selectedACL = ACL.objects.get(name=selectedACL)
 
@@ -313,7 +316,10 @@ def saveModifications(request):
                 firstName = data['firstName']
                 lastName = data['lastName']
                 email = data['email']
-                securityLevel = data['securityLevel']
+                try:
+                    securityLevel = data['securityLevel']
+                except:
+                    securityLevel = 'HIGH'
 
                 user = Administrator.objects.get(userName=accountUsername)
 

@@ -1662,6 +1662,10 @@ CSRF_COOKIE_SECURE = True
             command = 'chmod 600 /usr/local/CyberCP/plogical/adminPass.py'
             Upgrade.executioner(command, 0)
 
+            command = "find /usr/local/CyberCP/ -name '*.pyc' -delete"
+            Upgrade.executioner(command, 0)
+
+
             Upgrade.stdOut("Permissions updated.")
 
         except BaseException as msg:

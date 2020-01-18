@@ -44,7 +44,9 @@ class FileManager:
             domainName = self.data['domainName']
             website = Websites.objects.get(domain=domainName)
 
-            if not self.data['completeStartingPath'].find(self.data['home']) > -1:
+            pathCheck = '/home/%s' % (domainName)
+
+            if self.data['completeStartingPath'].find(pathCheck) == -1:
                 return self.ajaxPre(0, 'Not allowed to browse this path, going back home!')
 
             command = "ls -la --group-directories-first " + self.returnPathEnclosed(
@@ -271,6 +273,11 @@ class FileManager:
             finalData['status'] = 1
             domainName = self.data['domainName']
             website = Websites.objects.get(domain=domainName)
+
+            pathCheck = '/home/%s' % (domainName)
+
+            if self.data['fileName'].find(pathCheck) == -1:
+                return self.ajaxPre(0, 'Not allowed.')
 
             command = 'cat ' + self.returnPathEnclosed(self.data['fileName'])
             finalData['fileContents'] = ProcessUtilities.outputExecutioner(command, website.externalApp)
