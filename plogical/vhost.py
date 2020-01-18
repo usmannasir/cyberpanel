@@ -368,7 +368,8 @@ class vhost:
 
                 DNS.deleteDNSZone(virtualHostName)
 
-                installUtilities.installUtilities.reStartLiteSpeed()
+                if not os.path.exists(vhost.redisConf):
+                    installUtilities.installUtilities.reStartLiteSpeed()
 
                 ## Delete mail accounts
 
@@ -482,31 +483,35 @@ class vhost:
                 logging.CyberCPLogFileWriter.writeToFile(
                     str(msg) + " [Not able to remove virtual host directory from /home continuing..]")
 
-            try:
-                confPath = vhost.Server_root + "/conf/vhosts/" + virtualHostName
-                shutil.rmtree(confPath)
-            except BaseException as msg:
-                logging.CyberCPLogFileWriter.writeToFile(
-                    str(msg) + " [Not able to remove virtual host configuration directory from /conf ]")
+            if not os.path.exists(vhost.redisConf):
+                try:
+                    confPath = vhost.Server_root + "/conf/vhosts/" + virtualHostName
+                    shutil.rmtree(confPath)
+                except BaseException as msg:
+                    logging.CyberCPLogFileWriter.writeToFile(
+                        str(msg) + " [Not able to remove virtual host configuration directory from /conf ]")
 
-            try:
-                data = open("/usr/local/lsws/conf/httpd.conf").readlines()
+                try:
+                    data = open("/usr/local/lsws/conf/httpd.conf").readlines()
 
-                writeDataToFile = open("/usr/local/lsws/conf/httpd.conf", 'w')
+                    writeDataToFile = open("/usr/local/lsws/conf/httpd.conf", 'w')
 
-                for items in data:
-                    if items.find('/' + virtualHostName + '/') > -1:
-                        pass
-                    else:
-                        writeDataToFile.writelines(items)
+                    for items in data:
+                        if items.find('/' + virtualHostName + '/') > -1:
+                            pass
+                        else:
+                            writeDataToFile.writelines(items)
 
-                writeDataToFile.close()
+                    writeDataToFile.close()
 
-            except BaseException as msg:
-                logging.CyberCPLogFileWriter.writeToFile(
-                    str(msg) + " [Not able to remove virtual host configuration from main configuration file.]")
-                return 0
-            return 1
+                except BaseException as msg:
+                    logging.CyberCPLogFileWriter.writeToFile(
+                        str(msg) + " [Not able to remove virtual host configuration from main configuration file.]")
+                    return 0
+                return 1
+            else:
+                command = 'redis-cli delete "vhost:%s"' % (virtualHostName)
+                ProcessUtilities.executioner(command)
 
     @staticmethod
     def checkIfVirtualHostExists(virtualHostName):

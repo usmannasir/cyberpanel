@@ -395,7 +395,7 @@ pm.max_spare_servers = {pmMaxSpareServers}
     ServerAdmin {administratorEmail}
     CustomLog /home/{masterDomain}/logs/{masterDomain}.access_log combined
     <IfModule LiteSpeed>
-        CacheRoot lscache
+        CacheRoot /home/{masterDomain}/lscache
     </IfModule>
     }
 }'"""
