@@ -334,8 +334,9 @@ class FileManager:
             fs = FileSystemStorage()
             filename = fs.save(myfile.name, myfile)
             finalData['fileName'] = fs.url(filename)
+            pathCheck = '/home/%s' % (self.data['domainName'])
 
-            if not self.data['completePath'].find(self.data['home']) > -1:
+            if self.data['completePath'].find(pathCheck) == -1:
                 return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
             command = 'mv ' + self.returnPathEnclosed('/home/cyberpanel/media/' + myfile.name) + ' ' + self.returnPathEnclosed(self.data['completePath'] + '/' + myfile.name)
