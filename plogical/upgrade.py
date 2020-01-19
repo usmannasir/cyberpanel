@@ -1662,10 +1662,10 @@ CSRF_COOKIE_SECURE = True
             command = 'chmod 600 /usr/local/CyberCP/plogical/adminPass.py'
             Upgrade.executioner(command, 0)
 
-            pycsettings = '/usr/local/CyberCP/CyberCP/settings.pyc'
-
-            if os.path.exists(pycsettings):
-                os.remove(pycsettings)
+            # pycsettings = '/usr/local/CyberCP/CyberCP/settings.pyc'
+            #
+            # if os.path.exists(pycsettings):
+            #     os.remove(pycsettings)
 
 
             Upgrade.stdOut("Permissions updated.")
