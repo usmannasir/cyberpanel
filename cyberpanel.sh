@@ -394,6 +394,13 @@ fi
 
 
 system_tweak() {
+
+server_name=$(hostname)
+
+echo "127.0.0.1 $server_name
+$(cat /etc/hosts)" > /etc/hosts
+#this should address on "sudo: unable to resolve host ..." on Ubuntu , it's not issue but annoying.
+
 if [[ $SERVER_OS == "CentOS" ]] ; then
 	setenforce 0
 	sed -i 's/SELINUX=enforcing/SELINUX=permissive/g' /etc/selinux/config
