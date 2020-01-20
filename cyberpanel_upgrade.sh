@@ -1,7 +1,53 @@
 #!/bin/bash
+#CyberPanel Upgrade script
 
+export LC_CTYPE=en_US.UTF-8
+SUDO_TEST=$(set)
 SERVER_OS='Undefined'
 OUTPUT=$(cat /etc/*release)
+
+install_utility() {
+if [[ ! -f /usr/bin/cyberpanel_utility ]] ; then
+wget -q -O /usr/bin/cyberpanel_utility https://cyberpanel.sh/misc/cyberpanel_utility.sh
+chmod 700 /usr/bin/cyberpanel_utility
+fi
+
+BASH_PATH="/root/.bashrc"
+
+if ! cat $BASH_PATH | grep -q cyberpanel_utility ; then
+echo -e "\n\ncyberpanel() {
+if [[ \$1 == \"utility\" ]] ; then
+/usr/bin/cyberpanel_utility \${@:2:99}
+elif [[ \$1 == \"help\" ]] ; then
+/usr/bin/cyberpanel_utility --help
+elif [[ \$1 == \"upgrade\" ]] || [[ \$1 == \"update\" ]] ; then
+/usr/bin/cyberpanel_utility --upgrade
+else
+/usr/bin/cyberpanel \"\$@\"
+fi
+}" >> $BASH_PATH
+
+
+source $BASH_PATH
+fi
+}
+
+check_root() {
+echo -e "\nChecking root privileges...\n"
+if echo $SUDO_TEST | grep SUDO > /dev/null ; then
+	echo -e "\nYou are using SUDO , please run as root user...\n"
+	echo -e "If you don't have direct access to root user, please run \e[31msudo su -\e[39m command and then run upgrade command again."
+	exit
+fi
+
+if [[ $(id -u) != 0 ]]  > /dev/null; then
+	echo -e "\nYou must use root user to upgrade CyberPanel...\n"
+	exit
+else
+	echo -e "\nYou are runing as root...\n"
+fi
+}
+
 
 check_return() {
 #check previous command result , 0 = ok ,  non-0 = something wrong.
@@ -12,6 +58,8 @@ else
 	exit
 fi
 }
+
+check_root
 
 echo -e "\nChecking OS..."
 OUTPUT=$(cat /etc/*release)
@@ -124,6 +172,10 @@ make
 cp lswsgi /usr/local/CyberCP/bin/
 
 chmod 700 /usr/bin/adminPass
+
+#install_utility
+
+
 
 ##
 systemctl restart lscpd

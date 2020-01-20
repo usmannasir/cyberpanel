@@ -41,25 +41,32 @@ fi
 install_utility() {
 if [[ ! -f /usr/bin/cyberpanel_utility ]] ; then
 wget -q -O /usr/bin/cyberpanel_utility https://cyberpanel.sh/misc/cyberpanel_utility.sh
-chmod +x 700 /usr/bin/cyberpanel_utility
+chmod 700 /usr/bin/cyberpanel_utility
 fi
 
-if ! cat /root/.bashrc | grep -q cyberpanel_utility ; then
+#<< --COMMENTOUT--
+BASH_PATH="/root/.bashrc"
+if ! cat $BASH_PATH | grep -q cyberpanel_utility ; then
 echo -e "\n\ncyberpanel() {
-if [[ $1 == "utility" ]] ; then
-/usr/bin/cyberpanel_utility ${@:2:99}
+if [[ \$1 == \"utility\" ]] ; then
+/usr/bin/cyberpanel_utility \${@:2:99}
+elif [[ \$1 == \"help\" ]] ; then
+/usr/bin/cyberpanel_utility --help
+elif [[ \$1 == \"upgrade\" ]] || [[ \$1 == \"update\" ]] ; then
+/usr/bin/cyberpanel_utility --upgrade
 else
-/usr/bin/cyberpanel "$@"
+/usr/bin/cyberpanel \"\$@\"
 fi
-}" >> /root/.bashrc
-source /root/.bashrc
+}" >> $BASH_PATH
 fi
+#--COMMENTOUT--
+
 }
 
 watchdog_setup() {
 if [[ $WATCHDOG == "ON" ]] ; then
 wget -O /etc/cyberpanel/watchdog.sh https://$DOWNLOAD_SERVER/misc/watchdog.sh
-chmod +x /etc/cyberpanel/watchdog.sh
+chmod 700 /etc/cyberpanel/watchdog.sh
 ln -s /etc/cyberpanel/watchdog.sh /usr/local/bin/watchdog
 pid=$(ps aux | grep "watchdog lsws"  | grep -v grep | awk '{print $2}')
 	if [[ "$pid" == "" ]] ; then
@@ -387,6 +394,13 @@ fi
 
 
 system_tweak() {
+
+server_name=$(hostname)
+
+echo "127.0.0.1 $server_name
+$(cat /etc/hosts)" > /etc/hosts
+#this should address on "sudo: unable to resolve host ..." on Ubuntu , it's not issue but annoying.
+
 if [[ $SERVER_OS == "CentOS" ]] ; then
 	setenforce 0
 	sed -i 's/SELINUX=enforcing/SELINUX=permissive/g' /etc/selinux/config
@@ -1247,7 +1261,7 @@ webadmin_passwd
 
 watchdog_setup
 
-#install_utility
+install_utility
 
 clear
 echo "###################################################################"
