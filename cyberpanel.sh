@@ -44,20 +44,23 @@ wget -q -O /usr/bin/cyberpanel_utility https://cyberpanel.sh/misc/cyberpanel_uti
 chmod 700 /usr/bin/cyberpanel_utility
 fi
 
-if ! cat /etc/bash.bashrc | grep -q cyberpanel_utility ; then
+#<< --COMMENTOUT--
+BASH_PATH="/root/.bashrc"
+if ! cat $BASH_PATH | grep -q cyberpanel_utility ; then
 echo -e "\n\ncyberpanel() {
-if [[ $1 == "utility" ]] ; then
-/usr/bin/cyberpanel_utility ${@:2:99}
-elif [[ $1 == "help" ]] ; then
+if [[ \$1 == \"utility\" ]] ; then
+/usr/bin/cyberpanel_utility \${@:2:99}
+elif [[ \$1 == \"help\" ]] ; then
 /usr/bin/cyberpanel_utility --help
-elif [[ $1 == "upgrade" ]] || [[ $1 == "update" ]] ; then
+elif [[ \$1 == \"upgrade\" ]] || [[ \$1 == \"update\" ]] ; then
 /usr/bin/cyberpanel_utility --upgrade
 else
-/usr/bin/cyberpanel "$@"
+/usr/bin/cyberpanel \"\$@\"
 fi
-}" >> /etc/bash.bashrc
-source /etc/bash.bashrc
+}" >> $BASH_PATH
 fi
+#--COMMENTOUT--
+
 }
 
 watchdog_setup() {
@@ -1251,7 +1254,7 @@ webadmin_passwd
 
 watchdog_setup
 
-#install_utility
+install_utility
 
 clear
 echo "###################################################################"
