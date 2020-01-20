@@ -1665,7 +1665,6 @@ CSRF_COOKIE_SECURE = True
             command = "find /usr/local/CyberCP/ -name '*.pyc' -delete"
             Upgrade.executioner(command, 0)
 
-
             Upgrade.stdOut("Permissions updated.")
 
         except BaseException as msg:

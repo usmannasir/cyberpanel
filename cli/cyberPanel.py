@@ -1282,6 +1282,37 @@ def main():
 
         cyberpanel.issueSelfSignedSSL(args.domainName)
 
+    elif args.function == 'utility':
+        if not os.path.exists('/usr/bin/cyberpanel_utility'):
+            command = 'wget -q -O /usr/bin/cyberpanel_utility https://cyberpanel.sh/misc/cyberpanel_utility.sh'
+            ProcessUtilities.executioner(command)
+
+            command = 'chmod 700 /usr/bin/cyberpanel_utility'
+            ProcessUtilities.executioner(command)
+
+        command = '/usr/bin/cyberpanel_utility'
+        ProcessUtilities.executioner(command)
+    elif args.function == 'upgrade' or args.function == 'update':
+        if not os.path.exists('/usr/bin/cyberpanel_utility'):
+            command = 'wget -q -O /usr/bin/cyberpanel_utility https://cyberpanel.sh/misc/cyberpanel_utility.sh'
+            ProcessUtilities.executioner(command)
+
+            command = 'chmod 700 /usr/bin/cyberpanel_utility'
+            ProcessUtilities.executioner(command)
+
+        command = '/usr/bin/cyberpanel_utility --upgrade'
+        ProcessUtilities.executioner(command)
+    elif args.function == 'help':
+        if not os.path.exists('/usr/bin/cyberpanel_utility'):
+            command = 'wget -q -O /usr/bin/cyberpanel_utility https://cyberpanel.sh/misc/cyberpanel_utility.sh'
+            ProcessUtilities.executioner(command)
+
+            command = 'chmod 700 /usr/bin/cyberpanel_utility'
+            ProcessUtilities.executioner(command)
+
+        command = '/usr/bin/cyberpanel_utility --help'
+        ProcessUtilities.executioner(command)
+
 
 
 if __name__ == "__main__":

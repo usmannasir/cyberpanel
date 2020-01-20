@@ -14,7 +14,6 @@ function getCookie(name) {
     return cookieValue;
 }
 
-
 var fileManager = angular.module('fileManager', ['angularFileUpload']);
 
 fileManager.config(['$interpolateProvider', function ($interpolateProvider) {
@@ -1483,8 +1482,7 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
 
         url = "/filemanager/downloadFile";
         var downloadURL = $scope.currentPath + "/" + allFilesAndFolders[0];
-        var indexPublicHTML = downloadURL.indexOf("public_html") + 11;
-        $window.location.href = '/preview/' + domainName + downloadURL.slice(indexPublicHTML);
+        window.location.href = url + '?domainName=' + domainName + '&fileToDownload=' + downloadURL;
     };
 
 
