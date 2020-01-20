@@ -1282,6 +1282,16 @@ def main():
 
         cyberpanel.issueSelfSignedSSL(args.domainName)
 
+    elif args.function == 'utility':
+        command = '/usr/bin/cyberpanel_utility'
+        ProcessUtilities.executioner(command)
+    elif args.function == 'upgrade' or args.function == 'update':
+        command = '/usr/bin/cyberpanel_utility --upgrade'
+        ProcessUtilities.executioner(command)
+    elif args.function == 'utilhelp':
+        command = '/usr/bin/cyberpanel_utility --help'
+        ProcessUtilities.executioner(command)
+
 
 
 if __name__ == "__main__":
