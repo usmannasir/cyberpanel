@@ -1302,7 +1302,7 @@ def main():
 
         command = '/usr/bin/cyberpanel_utility --upgrade'
         ProcessUtilities.executioner(command)
-    elif args.function == 'utilhelp':
+    elif args.function == 'help':
         if not os.path.exists('/usr/bin/cyberpanel_utility'):
             command = 'wget -q -O /usr/bin/cyberpanel_utility https://cyberpanel.sh/misc/cyberpanel_utility.sh'
             ProcessUtilities.executioner(command)
