@@ -34,6 +34,7 @@
                                     <th>{% trans "Disk Usage" %}</th>
                                     <th>{% trans "ACL" %}</th>
                                     <th>{% trans "Owner" %}</th>
+                                    <th>{% trans "State" %}</th>
                                     <th>{% trans "Actions" %}</th>
                                 </tr>
                                 </thead>
@@ -44,7 +45,14 @@
                                     <td ng-bind="record.diskUsage"></td>
                                     <td ng-bind="record.acl"></td>
                                     <td ng-bind="record.owner"></td>
+                                    <td ng-bind="record.state"></td>
                                     <td>
+                                        <a ng-show="record.state=='ACTIVE'"
+                                           class="btn btn-border btn-alt border-red btn-link font-red" href="#"
+                                           ng-click="controlUserState('SUSPEND')" title=""><span>{% trans 'Suspend' %}</span></a>
+                                        <a ng-show="record.state=='SUSPENDED'"
+                                           class="btn btn-border btn-alt border-green btn-link font-green" href="#"
+                                           ng-click="controlUserState('ACTIVATE')" title=""><span>{% trans 'Activate' %}</span></a>
                                         <a data-toggle="modal" data-target="#settings"
                                            ng-click="editInitial(record.name)"
                                            class="btn btn-border btn-alt border-purple btn-link font-purple" href="#"

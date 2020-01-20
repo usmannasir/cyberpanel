@@ -1685,6 +1685,10 @@ app.controller('listTableUsers', function ($scope, $http) {
 
 
     };
+    
+    $scope.controlUserState = function (state) {
+        alert(state);
+    }
 
 });
 

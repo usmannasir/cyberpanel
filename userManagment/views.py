@@ -989,7 +989,8 @@ def fetchTableUsers(request):
                    'owner': owner.userName,
                    'acl': items.acl.name,
                    'diskUsage': '%sMB' % str(diskUsage),
-                   'websites': items.initWebsitesLimit
+                   'websites': items.initWebsitesLimit,
+                   'state': items.state
                    }
 
             if checker == 0:
