@@ -553,18 +553,36 @@ class WebsiteManager:
 
             if state == "Suspend":
                 confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + websiteName
-                command = "sudo mv " + confPath + " " + confPath + "-suspended"
+                command = "mv " + confPath + " " + confPath + "-suspended"
                 ProcessUtilities.popenExecutioner(command)
+
+                childDomains = website.childdomains_set.all()
+
+                for items in childDomains:
+                    confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + items.domain
+                    command = "mv " + confPath + " " + confPath + "-suspended"
+
                 installUtilities.reStartLiteSpeedSocket()
                 website.state = 0
             else:
                 confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + websiteName
 
-                command = "sudo mv " + confPath + "-suspended" + " " + confPath
+                command = "mv " + confPath + "-suspended" + " " + confPath
                 ProcessUtilities.executioner(command)
 
                 command = "chown -R " + "lsadm" + ":" + "lsadm" + " " + confPath
                 ProcessUtilities.popenExecutioner(command)
+
+                childDomains = website.childdomains_set.all()
+
+                for items in childDomains:
+                    confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + items.domain
+
+                    command = "mv " + confPath + "-suspended" + " " + confPath
+                    ProcessUtilities.executioner(command)
+
+                    command = "chown -R " + "lsadm" + ":" + "lsadm" + " " + confPath
+                    ProcessUtilities.popenExecutioner(command)
 
                 installUtilities.reStartLiteSpeedSocket()
                 website.state = 1

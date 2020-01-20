@@ -86,6 +86,8 @@ class Administrator(models.Model):
    token = models.CharField(max_length=500, default='None')
    api = models.IntegerField(default=0)
    securityLevel = models.IntegerField(default=0)
+   state = models.CharField(max_length=10, default='ACTIVE')
+
 
    initWebsitesLimit = models.IntegerField(default=0)
    acl = models.ForeignKey(ACL, default=1, on_delete=models.PROTECT)
