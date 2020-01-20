@@ -2,6 +2,7 @@
 
 SERVER_OS='Undefined'
 OUTPUT=$(cat /etc/*release)
+BRANCH_NAME=$1
 
 echo -e "\nChecking OS..."
 OUTPUT=$(cat /etc/*release)
@@ -57,7 +58,7 @@ fi
 rm -rf /usr/local/CyberPanel
 virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberPanel
 rm -rf requirments.txt
-wget https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/requirments.txt
+wget https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
 . /usr/local/CyberPanel/bin/activate
 
 if [ $SERVER_OS = "Ubuntu" ] ; then
@@ -70,13 +71,13 @@ fi
 
 virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberPanel
 rm -rf upgrade.py
-wget https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/plogical/upgrade.py
-/usr/local/CyberPanel/bin/python upgrade.py stable
+wget https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/plogical/upgrade.py
+/usr/local/CyberPanel/bin/python upgrade.py $BRANCH_NAME
 
 ##
 
 virtualenv -p /usr/bin/python3 /usr/local/CyberCP
-wget -O requirements.txt https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/requirments.txt
+wget -O requirements.txt https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
 
 if [ $SERVER_OS = "Ubuntu" ] ; then
   . /usr/local/CyberCP/bin/activate
