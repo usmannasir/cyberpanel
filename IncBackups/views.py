@@ -678,6 +678,42 @@ def getCurrentBackupSchedules(request):
             dic = {'id': items.id,
                    'destination': items.destination,
                    'frequency': items.frequency,
+                   'numberOfSites': items.jobsites_set.all().count()
+                   }
+
+            if checker == 0:
+                json_data = json_data + json.dumps(dic)
+                checker = 1
+            else:
+                json_data = json_data + ',' + json.dumps(dic)
+
+        json_data = json_data + ']'
+        final_json = json.dumps({'status': 1, 'error_message': "None", "data": json_data})
+        return HttpResponse(final_json)
+
+    except BaseException as msg:
+        final_dic = {'status': 0, 'error_message': str(msg)}
+        final_json = json.dumps(final_dic)
+        return HttpResponse(final_json)
+
+def fetchSites(request):
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if ACLManager.currentContextPermission(currentACL, 'scheDuleBackups') == 0:
+            return ACLManager.loadErrorJson('fetchStatus', 0)
+
+        data = json.loads(request.body)
+
+        job = BackupJob.objects.get(pk=data['id'])
+
+        json_data = "["
+        checker = 0
+
+        for items in job.jobsites_set.all():
+            dic = {'id': items.id,
+                   'website': items.website,
                    }
 
             if checker == 0:

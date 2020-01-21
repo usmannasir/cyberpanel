@@ -18,4 +18,5 @@ urlpatterns = [
     url(r'^submitBackupSchedule$', views.submitBackupSchedule, name='submitBackupScheduleInc'),
     url(r'^scheduleDelete$', views.scheduleDelete, name='scheduleDeleteInc'),
     url(r'^getCurrentBackupSchedules$', views.getCurrentBackupSchedules, name='getCurrentBackupSchedulesInc'),
+    url(r'^fetchSites$', views.fetchSites, name='fetchSites'),
 ]

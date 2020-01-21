@@ -169,6 +169,7 @@
                                         <th>{% trans "ID" %}</th>
                                         <th>{% trans "Destination" %}</th>
                                         <th>{% trans "Frequency" %}</th>
+                                        <th>{% trans "Sites" %}</th>
                                         <th>{% trans "Delete" %}</th>
                                     </tr>
                                     </thead>
@@ -177,8 +178,117 @@
                                         <td ng-bind="record.id"></td>
                                         <td ng-bind="record.destination"></td>
                                         <td ng-bind="record.frequency"></td>
-                                        <td ng-click="delSchedule(record.id)"><img
-                                                src="{% static 'images/delete.png' %}"></td>
+                                        <td ng-bind="record.numberOfSites"></td>
+                                        <td>
+                                            <a ng-click="delSchedule(record.id)"
+                                               class="btn btn-border btn-alt border-red btn-link font-red"
+                                               href="#"
+                                               title=""><span>{% trans 'Delete' %}</span></a>
+                                            <a data-toggle="modal" data-target="#settings"
+                                               ng-click="editInitial(record.id)"
+                                               class="btn btn-border btn-alt border-purple btn-link font-purple"
+                                               href="#"
+                                               title=""><span>{% trans 'Edit' %}</span></a>
+
+                                            <!--- Modal --->
+                                            <div id="settings" class="modal fade" role="dialog">
+                                                <div class="modal-dialog">
+
+                                                    <!-- Modal content-->
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <button type="button" class="close" data-dismiss="modal">
+                                                                &times;
+                                                            </button>
+                                                            <h4 class="modal-title">Edit User
+                                                                <img ng-hide="cyberpanelLoading"
+                                                                     src="{% static 'images/loading.gif' %}">
+                                                            </h4>
+                                                        </div>
+                                                        <div class="modal-body">
+
+                                                            <form name="containerSettingsForm" action="/"
+                                                                  class="form-horizontal">
+
+                                                                <div ng-hide="installationDetailsForm"
+                                                                     class="form-group">
+                                                                    <label class="col-sm-3 control-label">{% trans "Job ID" %}</label>
+                                                                    <div class="col-sm-4">
+                                                                        <input name="name" type="number"
+                                                                               class="form-control"
+                                                                               ng-model="jobID" readonly>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div ng-hide="installationDetailsForm"
+                                                                     class="form-group">
+                                                                    <label class="col-sm-3 control-label">{% trans "Data" %}</label>
+                                                                    <div class="checkbox">
+                                                                        <label>
+                                                                            <input ng-model="websiteData"
+                                                                                   type="checkbox" value="">
+                                                                            Data
+                                                                        </label>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div ng-hide="installationDetailsForm"
+                                                                     class="form-group">
+                                                                    <label class="col-sm-3 control-label">{% trans "Databases" %}</label>
+                                                                    <div class="checkbox">
+                                                                        <label>
+                                                                            <input ng-model="websiteDatabases"
+                                                                                   type="checkbox" value="">
+                                                                            Databases
+                                                                        </label>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div ng-hide="installationDetailsForm"
+                                                                     class="form-group">
+                                                                    <label class="col-sm-3 control-label">{% trans "Emails" %}</label>
+                                                                    <div class="checkbox">
+                                                                        <label>
+                                                                            <input ng-model="websiteEmails"
+                                                                                   type="checkbox" value="">
+                                                                            Emails
+                                                                        </label>
+                                                                    </div>
+                                                                </div>
+
+                                                                <hr>
+                                                                <table class="table">
+                                                                    <thead>
+                                                                    <tr>
+                                                                        <th>{% trans "ID" %}</th>
+                                                                        <th>{% trans "Website" %}</th>
+                                                                        <th>{% trans "Actions" %}</th>
+                                                                    </tr>
+                                                                    </thead>
+                                                                    <tbody>
+                                                                    <tr ng-repeat="record in websites track by $index">
+                                                                        <td ng-bind="record.id"></td>
+                                                                        <td ng-bind="record.website"></td>
+                                                                        <td>
+                                                                            <a ng-click="delSchedule(record.id)"
+                                                                               class="btn btn-border btn-alt border-red btn-link font-red"
+                                                                               href="#"
+                                                                               title=""><span>{% trans 'Delete' %}</span></a>
+                                                                        </td>
+
+                                                                    </tr>
+                                                                    </tbody>
+                                                                </table>
+
+
+                                                            </form>
+
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <!--- Modal End--->
+                                        </td>
 
                                     </tr>
                                     </tbody>
