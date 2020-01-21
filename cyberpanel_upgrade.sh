@@ -11,25 +11,6 @@ if [[ ! -f /usr/bin/cyberpanel_utility ]] ; then
 wget -q -O /usr/bin/cyberpanel_utility https://cyberpanel.sh/misc/cyberpanel_utility.sh
 chmod 700 /usr/bin/cyberpanel_utility
 fi
-
-BASH_PATH="/root/.bashrc"
-
-if ! cat $BASH_PATH | grep -q cyberpanel_utility ; then
-echo -e "\n\ncyberpanel() {
-if [[ \$1 == \"utility\" ]] ; then
-/usr/bin/cyberpanel_utility \${@:2:99}
-elif [[ \$1 == \"help\" ]] ; then
-/usr/bin/cyberpanel_utility --help
-elif [[ \$1 == \"upgrade\" ]] || [[ \$1 == \"update\" ]] ; then
-/usr/bin/cyberpanel_utility --upgrade
-else
-/usr/bin/cyberpanel \"\$@\"
-fi
-}" >> $BASH_PATH
-
-
-source $BASH_PATH
-fi
 }
 
 check_root() {
@@ -172,6 +153,11 @@ make
 cp lswsgi /usr/local/CyberCP/bin/
 
 chmod 700 /usr/bin/adminPass
+
+if [[ -f /etc/pure-ftpd/pure-ftpd.conf ]] ; then
+sed -i 's|NoAnonymous                 no|NoAnonymous                 yes|g' /etc/pure-ftpd/pure-ftpd.conf
+fi
+
 
 #install_utility
 
