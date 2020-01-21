@@ -1686,8 +1686,59 @@ app.controller('listTableUsers', function ($scope, $http) {
 
     };
     
-    $scope.controlUserState = function (state) {
-        alert(state);
+    $scope.controlUserState = function (userName, state) {
+        $scope.cyberpanelLoading = false;
+
+        var url = "/users/controlUserState";
+
+        var data = {
+            accountUsername: userName,
+            state : state
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            if (response.data.status === 1) {
+                $scope.populateCurrentRecords();
+                new PNotify({
+                    title: 'Success!',
+                    text: 'Action successfully started.',
+                    type: 'success'
+                });
+
+            } else {
+
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+
+
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+
+            $scope.cyberpanelLoading = false;
+            new PNotify({
+                title: 'Error!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+
+
+        }
     }
 
 });

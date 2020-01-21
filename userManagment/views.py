@@ -240,7 +240,6 @@ def submitUserCreation(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
-
 def modifyUsers(request):
     try:
         userID = request.session['userID']
@@ -1011,3 +1010,59 @@ def fetchTableUsers(request):
 
     except KeyError:
         return redirect(loadLoginPage)
+
+def controlUserState(request):
+    try:
+        val = request.session['userID']
+        try:
+            if request.method == 'POST':
+                data = json.loads(request.body)
+                accountUsername = data['accountUsername']
+                state = data['state']
+
+                user = Administrator.objects.get(userName=accountUsername)
+
+                currentACL = ACLManager.loadedACL(val)
+                loggedUser = Administrator.objects.get(pk=val)
+
+                if currentACL['admin'] == 1:
+                    pass
+                elif user.owner == loggedUser.pk:
+                    pass
+                elif user.pk == loggedUser.pk:
+                    pass
+                else:
+                    data_ret = {'fetchStatus': 0, 'error_message': 'Un-authorized access.'}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+
+                if state == 'SUSPEND':
+                    user.state = 'SUSPENDED'
+                else:
+                    user.state = 'ACTIVE'
+
+                user.save()
+
+                extraArgs = {}
+                extraArgs['user'] = user
+                extraArgs['currentACL'] = currentACL
+                extraArgs['state'] = state
+
+                from userManagment.userManager import UserManager
+
+                um = UserManager('controlUserState', extraArgs)
+                um.start()
+
+                data_ret = {'status': 1}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'saveStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    except KeyError:
+        data_ret = {'status': 0, 'saveStatus': 0, 'error_message': "Not logged in as admin", }
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)

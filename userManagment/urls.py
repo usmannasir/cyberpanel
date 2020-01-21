@@ -32,4 +32,5 @@ urlpatterns = [
     url(r'^saveChangesAPIAccess$', views.saveChangesAPIAccess, name="saveChangesAPIAccess"),
     url(r'^listUsers$', views.listUsers, name="listUsers"),
     url(r'^fetchTableUsers$', views.fetchTableUsers, name="fetchTableUsers"),
+    url(r'^controlUserState$', views.controlUserState, name="controlUserState"),
 ]
