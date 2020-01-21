@@ -44,22 +44,20 @@ wget -q -O /usr/bin/cyberpanel_utility https://cyberpanel.sh/misc/cyberpanel_uti
 chmod 700 /usr/bin/cyberpanel_utility
 fi
 
-#<< --COMMENTOUT--
-BASH_PATH="/root/.bashrc"
-if ! cat $BASH_PATH | grep -q cyberpanel_utility ; then
-echo -e "\n\ncyberpanel() {
-if [[ \$1 == \"utility\" ]] ; then
-/usr/bin/cyberpanel_utility \${@:2:99}
-elif [[ \$1 == \"help\" ]] ; then
-/usr/bin/cyberpanel_utility --help
-elif [[ \$1 == \"upgrade\" ]] || [[ \$1 == \"update\" ]] ; then
-/usr/bin/cyberpanel_utility --upgrade
-else
-/usr/bin/cyberpanel \"\$@\"
-fi
-}" >> $BASH_PATH
-fi
-#--COMMENTOUT--
+#BASH_PATH="/root/.bashrc"
+#if ! cat $BASH_PATH | grep -q cyberpanel_utility ; then
+#echo -e "\n\ncyberpanel() {
+#if [[ \$1 == \"utility\" ]] ; then
+#/usr/bin/cyberpanel_utility \${@:2:99}
+#elif [[ \$1 == \"help\" ]] ; then
+#/usr/bin/cyberpanel_utility --help
+#elif [[ \$1 == \"upgrade\" ]] || [[ \$1 == \"update\" ]] ; then
+#/usr/bin/cyberpanel_utility --upgrade
+#else
+#/usr/bin/cyberpanel \"\$@\"
+#fi
+#}" >> $BASH_PATH
+#fi
 
 }
 
