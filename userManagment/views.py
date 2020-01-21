@@ -91,7 +91,6 @@ def apiAccess(request):
         logging.CyberCPLogFileWriter.writeToFile(str(msg))
         return redirect(loadLoginPage)
 
-
 def saveChangesAPIAccess(request):
     try:
         userID = request.session['userID']
@@ -122,7 +121,6 @@ def saveChangesAPIAccess(request):
         finalResponse = {'status': 0, 'errorMessage': str(msg), 'error_message': str(msg)}
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
-
 
 def submitUserCreation(request):
     try:
@@ -199,6 +197,13 @@ def submitUserCreation(request):
                                          )
                 newAdmin.save()
             elif currentACL['createNewUser'] == 1:
+
+                if selectedACL != 'user':
+                    data_ret = {'status': 0, 'createStatus': 0,
+                                'error_message': "You are not authorized to access this resource."}
+
+                    final_json = json.dumps(data_ret)
+                    return HttpResponse(final_json)
 
                 newAdmin = Administrator(firstName=firstName,
                                          lastName=lastName,
