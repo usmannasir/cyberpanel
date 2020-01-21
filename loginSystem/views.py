@@ -79,6 +79,11 @@ def verifyLogin(request):
 
             admin = Administrator.objects.get(userName=username)
 
+            if admin.state == 'SUSPENDED':
+                data = {'userID': 0, 'loginStatus': 0, 'error_message': 'Account currently suspended.'}
+                json_data = json.dumps(data)
+                return HttpResponse(json_data)
+
             if hashPassword.check_password(admin.password, password):
 
                 request.session['userID'] = admin.pk
