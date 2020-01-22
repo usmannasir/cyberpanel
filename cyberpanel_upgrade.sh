@@ -5,6 +5,7 @@ export LC_CTYPE=en_US.UTF-8
 SUDO_TEST=$(set)
 SERVER_OS='Undefined'
 OUTPUT=$(cat /etc/*release)
+BRANCH_NAME="v1.9.4"
 
 install_utility() {
 if [[ ! -f /usr/bin/cyberpanel_utility ]] ; then
@@ -99,7 +100,7 @@ rm -rf /usr/local/CyberPanel
 virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberPanel
 check_return
 rm -rf requirments.txt
-wget https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/requirments.txt
+wget https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
 . /usr/local/CyberPanel/bin/activate
 check_return
 
@@ -118,14 +119,14 @@ fi
 virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberPanel
 check_return
 rm -rf upgrade.py
-wget https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/plogical/upgrade.py
-/usr/local/CyberPanel/bin/python upgrade.py stable
+wget https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/plogical/upgrade.py
+/usr/local/CyberPanel/bin/python upgrade.py $BRANCH_NAME
 check_return
 ##
 
 virtualenv -p /usr/bin/python3 /usr/local/CyberCP
 check_return
-wget -O requirements.txt https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/requirments.txt
+wget -O requirements.txt https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
 
 if [ $SERVER_OS = "Ubuntu" ] ; then
   . /usr/local/CyberCP/bin/activate

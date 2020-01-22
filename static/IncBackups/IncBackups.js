@@ -741,6 +741,53 @@ app.controller('scheduleBackupInc', function ($scope, $http) {
 
     };
 
+    $scope.editInitial = function (id) {
+
+        $scope.jobID = id;
+
+        $scope.cyberpanelLoading = false;
+
+
+        url = "/IncrementalBackups/fetchSites";
+
+
+        var data = {id: id};
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            if (response.data.status === 1) {
+                $scope.websites = JSON.parse(response.data.data);
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+        }
+
+    };
+
 
 });
 
