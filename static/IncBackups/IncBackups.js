@@ -767,6 +767,181 @@ app.controller('scheduleBackupInc', function ($scope, $http) {
             $scope.cyberpanelLoading = true;
             if (response.data.status === 1) {
                 $scope.websites = JSON.parse(response.data.data);
+
+                if(response.data.websiteData === 1){
+                    $scope.websiteData = true;
+                }
+                if(response.data.websiteDatabases === 1){
+                    $scope.websiteDatabases = true;
+                }
+                if(response.data.websiteEmails === 1){
+                    $scope.websiteEmails = true;
+                }
+
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+        }
+
+    };
+
+    $scope.saveChanges = function () {
+
+        $scope.cyberpanelLoading = false;
+
+        url = "/IncrementalBackups/saveChanges";
+
+
+        var data = {
+            id: $scope.jobID,
+            websiteData: $scope.websiteData,
+            websiteDatabases: $scope.websiteDatabases,
+            websiteEmails: $scope.websiteEmails
+
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+
+            if (response.data.status === 1) {
+                $scope.editInitial($scope.jobID);
+                new PNotify({
+                    title: 'Success!',
+                    text: 'Operation successful.',
+                    type: 'success'
+                });
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+        }
+
+    };
+
+    $scope.removeSite = function (website) {
+
+        $scope.cyberpanelLoading = false;
+
+        url = "/IncrementalBackups/removeSite";
+
+
+        var data = {
+            id: $scope.jobID,
+            website: website
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+
+            if (response.data.status === 1) {
+                $scope.editInitial($scope.jobID);
+                new PNotify({
+                    title: 'Success!',
+                    text: 'Operation successful.',
+                    type: 'success'
+                });
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+        }
+
+    };
+
+    $scope.cyberpanelLoading = true;
+
+    $scope.addWebsite = function () {
+
+        $scope.cyberpanelLoading = false;
+
+        url = "/IncrementalBackups/addWebsite";
+
+
+        var data = {
+            id: $scope.jobID,
+            website: $scope.websiteToBeAdded
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+
+            if (response.data.status === 1) {
+                $scope.editInitial($scope.jobID);
+                new PNotify({
+                    title: 'Success!',
+                    text: 'Operation successful.',
+                    type: 'success'
+                });
             } else {
                 new PNotify({
                     title: 'Operation Failed!',

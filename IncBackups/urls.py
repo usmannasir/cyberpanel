@@ -19,4 +19,7 @@ urlpatterns = [
     url(r'^scheduleDelete$', views.scheduleDelete, name='scheduleDeleteInc'),
     url(r'^getCurrentBackupSchedules$', views.getCurrentBackupSchedules, name='getCurrentBackupSchedulesInc'),
     url(r'^fetchSites$', views.fetchSites, name='fetchSites'),
+    url(r'^saveChanges$', views.saveChanges, name='saveChanges'),
+    url(r'^removeSite$', views.removeSite, name='removeSite'),
+    url(r'^addWebsite$', views.addWebsite, name='addWebsite'),
 ]

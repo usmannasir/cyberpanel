@@ -200,7 +200,7 @@
                                                             <button type="button" class="close" data-dismiss="modal">
                                                                 &times;
                                                             </button>
-                                                            <h4 class="modal-title">Edit User
+                                                            <h4 class="modal-title">Edit Job
                                                                 <img ng-hide="cyberpanelLoading"
                                                                      src="{% static 'images/loading.gif' %}">
                                                             </h4>
@@ -225,7 +225,7 @@
                                                                     <label class="col-sm-3 control-label">{% trans "Data" %}</label>
                                                                     <div class="checkbox">
                                                                         <label>
-                                                                            <input ng-model="websiteData"
+                                                                            <input ng-model="$parent.websiteData"
                                                                                    type="checkbox" value="">
                                                                             Data
                                                                         </label>
@@ -237,7 +237,7 @@
                                                                     <label class="col-sm-3 control-label">{% trans "Databases" %}</label>
                                                                     <div class="checkbox">
                                                                         <label>
-                                                                            <input ng-model="websiteDatabases"
+                                                                            <input ng-model="$parent.websiteDatabases"
                                                                                    type="checkbox" value="">
                                                                             Databases
                                                                         </label>
@@ -249,36 +249,104 @@
                                                                     <label class="col-sm-3 control-label">{% trans "Emails" %}</label>
                                                                     <div class="checkbox">
                                                                         <label>
-                                                                            <input ng-model="websiteEmails"
+                                                                            <input ng-model="$parent.websiteEmails"
                                                                                    type="checkbox" value="">
                                                                             Emails
                                                                         </label>
                                                                     </div>
                                                                 </div>
 
-                                                                <hr>
-                                                                <table class="table">
-                                                                    <thead>
-                                                                    <tr>
-                                                                        <th>{% trans "ID" %}</th>
-                                                                        <th>{% trans "Website" %}</th>
-                                                                        <th>{% trans "Actions" %}</th>
-                                                                    </tr>
-                                                                    </thead>
-                                                                    <tbody>
-                                                                    <tr ng-repeat="record in websites track by $index">
-                                                                        <td ng-bind="record.id"></td>
-                                                                        <td ng-bind="record.website"></td>
-                                                                        <td>
-                                                                            <a ng-click="delSchedule(record.id)"
-                                                                               class="btn btn-border btn-alt border-red btn-link font-red"
-                                                                               href="#"
-                                                                               title=""><span>{% trans 'Delete' %}</span></a>
-                                                                        </td>
+                                                                <div ng-hide="installationDetailsForm"
+                                                                     class="form-group">
+                                                                    <label class="col-sm-3 control-label">{% trans "" %}</label>
+                                                                    <button type="button" ng-click="saveChanges()"
+                                                                            class="btn btn-primary btn-lg">{% trans "Save Changes" %}</button>
+                                                                </div>
 
-                                                                    </tr>
-                                                                    </tbody>
-                                                                </table>
+                                                                <hr>
+                                                                <ul class="nav nav-tabs">
+
+                                                                    <li class="col-md-3 nav-item tab-mod active">
+                                                                        <a href="#tab-example-1" data-toggle="tab"
+                                                                           class="h4 nav-link">
+                                                                            <span>{% trans "Sites" %}</span>
+                                                                        </a>
+
+                                                                    </li>
+                                                                    <li class="col-md-4 tab-mod nav-item">
+                                                                        <a href="#tab-example-3" data-toggle="tab"
+                                                                           class="h4 nav-link">
+                                                                            <span>{% trans "Add Sites" %}</span>
+                                                                        </a>
+                                                                    </li>
+                                                                </ul>
+                                                                <div class="tab-content">
+                                                                    <div class="tab-pane fade active in"
+                                                                         id="tab-example-1">
+                                                                        <div class="example-box-wrapper">
+                                                                            <table class="table">
+                                                                                <thead>
+                                                                                <tr>
+                                                                                    <th>{% trans "ID" %}</th>
+                                                                                    <th>{% trans "Website" %}</th>
+                                                                                    <th>{% trans "Actions" %}</th>
+                                                                                </tr>
+                                                                                </thead>
+                                                                                <tbody>
+                                                                                <tr ng-repeat="record in websites track by $index">
+                                                                                    <td ng-bind="record.id"></td>
+                                                                                    <td ng-bind="record.website"></td>
+                                                                                    <td>
+                                                                                        <a ng-click="removeSite(record.website)"
+                                                                                           class="btn btn-border btn-alt border-red btn-link font-red"
+                                                                                           href="#"
+                                                                                           title=""><span>{% trans 'Delete' %}</span></a>
+                                                                                    </td>
+
+                                                                                </tr>
+                                                                                </tbody>
+                                                                            </table>
+                                                                        </div>
+                                                                    </div>
+
+
+                                                                    <div class="tab-pane fade" id="tab-example-3">
+
+                                                                        <form action="/"
+                                                                              class="form-horizontal bordered-row">
+
+
+                                                                            <div class="form-group">
+                                                                                <label class="col-sm-3 control-label">{% trans "Select Site" %}</label>
+                                                                                <div class="col-sm-6">
+                                                                                    <select ng-model="$parent.websiteToBeAdded"
+                                                                                                class="form-control">
+                                                                                            {% for items in websiteList %}
+                                                                                                <option>{{ items }}</option>
+                                                                                            {% endfor %}
+                                                                                        </select>
+                                                                                </div>
+                                                                                <img ng-hide="cyberpanelLoading"
+                                                                                     src="{% static 'images/loading.gif' %}">
+                                                                            </div>
+
+                                                                            <div ng-hide="savebtn"
+                                                                                 class="form-group">
+                                                                                <label class="col-sm-3 control-label"></label>
+                                                                                <div class="col-sm-4">
+                                                                                    <button type="button"
+                                                                                            ng-click="addWebsite()"
+                                                                                            class="btn btn-primary btn-lg btn-block">{% trans "Add" %}</button>
+
+                                                                                </div>
+                                                                            </div>
+
+
+                                                                        </form>
+
+
+                                                                    </div>
+                                                                </div>
 
 
                                                             </form>
