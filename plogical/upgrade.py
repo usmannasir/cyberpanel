@@ -527,7 +527,7 @@ class Upgrade:
                 pass
 
             try:
-                cursor.execute('ALTER TABLE loginSystem_administrator ADD state varchar(15)')
+                cursor.execute("ALTER TABLE loginSystem_administrator ADD state varchar(15) DEFAULT 'ACTIVE'")
             except:
                 pass
 
