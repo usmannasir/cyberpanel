@@ -796,7 +796,7 @@ def saveChanges(request):
         data = json.loads(request.body)
 
         id = data['id']
-        try
+        try:
             websiteData = data['websiteData']
         except:
             websiteData = 0
