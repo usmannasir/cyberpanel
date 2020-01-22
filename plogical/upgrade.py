@@ -1494,8 +1494,14 @@ CSRF_COOKIE_SECURE = True
             if os.path.exists(lscpdPath):
                 os.remove(lscpdPath)
 
-            command = 'wget  https://cyberpanel.sh/lscpd-0.2.3 -P /usr/local/lscp/bin/lscpd'
-            Upgrade.executioner(command, 'LSCPD Download.', 0)
+            command = 'wget  https://cyberpanel.sh/lscpd-0.2.3 -P /usr/local/lscp/bin/'
+            Upgrade.executioner(command, command, 0)
+
+            command = 'rm -f /usr/local/lscp/bin/lscpd'
+            Upgrade.executioner(command, command, 0)
+
+            command = 'mv /usr/local/lscp/bin/lscpd-0.2.3 /usr/local/lscp/bin/lscpd'
+            Upgrade.executioner(command, command, 0)
 
             command = 'chmod 755 %s' % (lscpdPath)
             Upgrade.executioner(command, 'LSCPD Download.', 0)
