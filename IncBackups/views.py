@@ -796,15 +796,24 @@ def saveChanges(request):
         data = json.loads(request.body)
 
         id = data['id']
-        websiteData = data['websiteData']
-        websiteDatabases = data['websiteDatabases']
-        websiteEmails = data['websiteEmails']
+        try
+            websiteData = data['websiteData']
+        except:
+            websiteData = 0
+        try:
+            websiteDatabases = data['websiteDatabases']
+        except:
+            websiteDatabases = 0
+        try:
+            websiteEmails = data['websiteEmails']
+        except:
+            websiteEmails = 0
 
         job = BackupJob.objects.get(pk=id)
 
         job.websiteData = int(websiteData)
         job.websiteDatabases = int(websiteDatabases)
-        job.websiteEmails = int(websiteEmails)
+        job.websiteDataEmails = int(websiteEmails)
         job.save()
 
         final_json = json.dumps({'status': 1, 'error_message': "None"})
