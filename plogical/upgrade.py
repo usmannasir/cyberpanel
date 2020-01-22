@@ -527,6 +527,11 @@ class Upgrade:
                 pass
 
             try:
+                cursor.execute('ALTER TABLE loginSystem_administrator ADD state varchar(15)')
+            except:
+                pass
+
+            try:
                 cursor.execute('ALTER TABLE loginSystem_administrator ADD securityLevel integer DEFAULT 1')
             except:
                 pass
