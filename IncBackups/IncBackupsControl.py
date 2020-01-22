@@ -462,6 +462,9 @@ class IncJobs(multi.Thread):
 
                     userToTry = mysqlUtilities.mysqlUtilities.fetchuser(items.dbUser)
 
+                    if userToTry == 0:
+                        userToTry = items.dbName
+
                     try:
                         dbuser = DBUsers.objects.get(user=userToTry)
                     except:
