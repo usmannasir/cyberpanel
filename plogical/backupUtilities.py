@@ -113,7 +113,7 @@ class backupUtilities:
                             dbuser = it
                             break
 
-                        userToTry = mysqlUtilities.mysqlUtilities.fetchuser(items.dbUser)
+                        userToTry = mysqlUtilities.mysqlUtilities.fetchuser(items.dbName)
 
                         try:
                             dbuser = DBUsers.objects.get(user=userToTry)
@@ -121,8 +121,9 @@ class backupUtilities:
                             try:
                                 dbusers = DBUsers.objects.all().filter(user=userToTry)
                                 for it in dbusers:
-                                    dbuser = it
-                                    break
+                                    if it.find('_') > -1:
+                                        dbuser = it
+                                        break
                             except BaseException as msg:
                                 logging.CyberCPLogFileWriter.writeToFile(
                                     'While creating backup for %s, we failed to backup database %s. Error message: %s' % (
