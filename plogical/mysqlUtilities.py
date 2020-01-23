@@ -727,13 +727,11 @@ password=%s
             return 0
 
     @staticmethod
-    def fetchuser(userName):
+    def fetchuser(databaseName):
         try:
             connection, cursor = mysqlUtilities.setupConnection()
             cursor.execute("use mysql")
-
-            database = Databases.objects.get(dbUser=userName)
-            databaseName = database.dbName
+            database = Databases.objects.get(dbName=databaseName)
             databaseName = databaseName.replace('_', '\_')
             query = "select user from db where db = '%s'" % (databaseName)
 
@@ -748,6 +746,7 @@ password=%s
                 if row[0].find('_') > -1:
                     database.dbUser = row[0]
                     database.save()
+
                     try:
                         connection.close()
                     except:

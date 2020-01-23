@@ -527,6 +527,11 @@ class Upgrade:
                 pass
 
             try:
+                cursor.execute('alter table databases_databases drop index dbUser;')
+            except:
+                pass
+
+            try:
                 cursor.execute("ALTER TABLE loginSystem_administrator ADD state varchar(15) DEFAULT 'ACTIVE'")
             except:
                 pass

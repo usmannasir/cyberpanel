@@ -461,14 +461,17 @@ class IncJobs(multi.Thread):
 
                     userToTry = mysqlUtilities.mysqlUtilities.fetchuser(items.dbName)
 
+                    if userToTry == 0 or userToTry == 1:
+                        continue
+
                     try:
                         dbuser = DBUsers.objects.get(user=userToTry)
                     except:
                         dbusers = DBUsers.objects.all().filter(user=userToTry)
                         for it in dbusers:
-                            if it.find('_') > -1:
-                                dbuser = it
-                                break
+                            dbuser = it
+                            break
+
 
                 databaseXML = Element('database')
 
