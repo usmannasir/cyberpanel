@@ -130,8 +130,10 @@ class IncJobs(multi.Thread):
         try:
             if fType == 'backup':
                 key, secret = self.getAWSData()
+
                 command = 'export AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s  && restic -r s3:s3.amazonaws.com/%s backup %s --password-file %s' % (
                     key, secret, self.website.domain, backupPath, self.passwordFile)
+
                 result = ProcessUtilities.outputExecutioner(command)
 
                 if result.find('saved') == -1:
@@ -139,6 +141,7 @@ class IncJobs(multi.Thread):
                     return 0
 
                 snapShotid = result.split(' ')[-2]
+
                 if bType == 'database':
                     newSnapshot = JobSnapshots(job=self.jobid,
                                                type='%s:%s' % (bType, backupPath.split('/')[-1].rstrip('.sql')),
@@ -149,22 +152,37 @@ class IncJobs(multi.Thread):
                                                snapshotid=snapShotid,
                                                destination=self.backupDestinations)
                 newSnapshot.save()
+                return 1
             else:
                 if self.reconstruct == 'remote':
                     self.backupDestinations = self.backupDestinations
+
                     key, secret = self.getAWSData()
+
                     command = 'export RESTIC_PASSWORD=%s AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s  && restic -r s3:s3.amazonaws.com/%s restore %s --target /' % (
                         self.passwordFile,
                         key, secret, self.website, snapshotID)
+
                     result = ProcessUtilities.outputExecutioner(command)
-                    logging.statusWriter(self.statusPath, result, 1)
+
+                    if result.find('restoring') == -1:
+                        logging.statusWriter(self.statusPath, 'Failed: %s. [5009]' % (result), 1)
+                        return 0
                 else:
                     self.backupDestinations = self.jobid.destination
+
                     key, secret = self.getAWSData()
+
                     command = 'export AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s  && restic -r s3:s3.amazonaws.com/%s restore %s --password-file %s --target /' % (
                         key, secret, self.website, snapshotID, self.passwordFile)
+
                     result = ProcessUtilities.outputExecutioner(command)
-                    logging.statusWriter(self.statusPath, result, 1)
+
+                    if result.find('restoring') == -1:
+                        logging.statusWriter(self.statusPath, 'Failed: %s. [5009]' % (result), 1)
+                        return 0
+
+                return 1
 
 
         except BaseException as msg:
@@ -192,15 +210,19 @@ class IncJobs(multi.Thread):
                 newSnapshot = JobSnapshots(job=self.jobid, type='%s:%s' % (type, backupPath), snapshotid=snapShotid,
                                            destination=self.backupDestinations)
             newSnapshot.save()
+            return 1
         else:
             repoLocation = '/home/%s/incbackup' % (self.website)
             command = 'restic -r %s restore %s --target / --password-file %s' % (
                 repoLocation, self.jobid.snapshotid, self.passwordFile)
+
             result = ProcessUtilities.outputExecutioner(command)
-            logging.statusWriter(self.statusPath, result, 1)
 
-        return 1
+            if result.find('restoring') == -1:
+                logging.statusWriter(self.statusPath, 'Failed: %s. [5009]' % (result), 1)
+                return 0
 
+            return 1
 
     def sftpFunction(self, backupPath, type, restore=None):
         if restore == None:
@@ -224,6 +246,7 @@ class IncJobs(multi.Thread):
                 newSnapshot = JobSnapshots(job=self.jobid, type='%s:%s' % (type, backupPath), snapshotid=snapShotid,
                                            destination=self.backupDestinations)
             newSnapshot.save()
+            return 1
         else:
             if self.reconstruct == 'remote':
                 repoLocation = '/home/backup/%s' % (self.website)
@@ -231,13 +254,19 @@ class IncJobs(multi.Thread):
                     self.passwordFile,
                     self.backupDestinations, repoLocation, self.jobid)
                 result = ProcessUtilities.outputExecutioner(command)
-                logging.statusWriter(self.statusPath, result, 1)
+                if result.find('restoring') == -1:
+                    logging.statusWriter(self.statusPath, 'Failed: %s. [5009]' % (result), 1)
+                    return 0
             else:
                 repoLocation = '/home/backup/%s' % (self.website)
                 command = 'export PATH=${PATH}:/usr/bin && restic -r %s:%s restore %s --target / --password-file %s' % (
                     self.jobid.destination, repoLocation, self.jobid.snapshotid, self.passwordFile)
                 result = ProcessUtilities.outputExecutioner(command)
-                logging.statusWriter(self.statusPath, result, 1)
+                if result.find('restoring') == -1:
+                    logging.statusWriter(self.statusPath, 'Failed: %s. [5009]' % (result), 1)
+                    return 0
+
+            return 1
 
     def restoreData(self):
         try:
@@ -246,14 +275,15 @@ class IncJobs(multi.Thread):
                 if self.backupDestinations[:4] == 'sftp':
                     self.sftpFunction('none', 'none', 1)
                 else:
-                    self.awsFunction('restore', '', self.jobid)
+                    if self.awsFunction('restore', '', self.jobid) == 0:
+                        return 0
             else:
                 if self.jobid.destination == 'local':
-                    self.localFunction('none', 'none', 1)
+                    return self.localFunction('none', 'none', 1)
                 elif self.jobid.destination[:4] == 'sftp':
-                    self.sftpFunction('none', 'none', 1)
+                    return self.sftpFunction('none', 'none', 1)
                 else:
-                    self.awsFunction('restore', '', self.jobid.snapshotid)
+                    return self.awsFunction('restore', '', self.jobid.snapshotid)
 
         except BaseException as msg:
             logging.statusWriter(self.statusPath, "%s [138][5009]" % (str(msg)), 1)
@@ -264,9 +294,21 @@ class IncJobs(multi.Thread):
 
             if self.reconstruct == 'remote':
                 if self.backupDestinations[:4] == 'sftp':
-                    self.sftpFunction('none', 'none', 1)
+                    if self.sftpFunction('none', 'none', 1) == 0:
+                        return 0
                 else:
-                    self.awsFunction('restore', '', self.jobid)
+                    if self.awsFunction('restore', '', self.jobid) == 0:
+                        return 0
+
+                ## Restore proper permissions
+
+                command = 'chown cyberpanel:cyberpanel /home/cyberpanel'
+                ProcessUtilities.executioner(command)
+
+                command = 'chmod 755 /home/cyberpanel'
+                ProcessUtilities.executioner(command)
+
+                ##
 
                 if mysqlUtilities.mysqlUtilities.restoreDatabaseBackup(self.path.split('/')[-1].rstrip('.sql'),
                                                                        '/home/cyberpanel', 'dummy', 'dummy') == 0:
@@ -274,11 +316,14 @@ class IncJobs(multi.Thread):
             else:
 
                 if self.jobid.destination == 'local':
-                    self.localFunction('none', 'none', 1)
+                    if self.localFunction('none', 'none', 1) == 0:
+                        return 0
                 elif self.jobid.destination[:4] == 'sftp':
-                    self.sftpFunction('none', 'none', 1)
+                    if self.sftpFunction('none', 'none', 1) == 0:
+                        return 0
                 else:
-                    self.awsFunction('restore', '', self.jobid.snapshotid)
+                    if self.awsFunction('restore', '', self.jobid.snapshotid) == 0:
+                        return 0
 
                 if mysqlUtilities.mysqlUtilities.restoreDatabaseBackup(self.jobid.type.split(':')[1].rstrip('.sql'),
                                                                        '/home/cyberpanel', 'dummy', 'dummy') == 0:
@@ -292,6 +337,8 @@ class IncJobs(multi.Thread):
             except BaseException as msg:
                 logging.writeToFile(str(msg))
 
+            return 1
+
         except BaseException as msg:
             logging.statusWriter(self.statusPath, "%s [160][5009]" % (str(msg)), 1)
             return 0
@@ -301,16 +348,18 @@ class IncJobs(multi.Thread):
 
             if self.reconstruct == 'remote':
                 if self.backupDestinations[:4] == 'sftp':
-                    self.sftpFunction('none', 'none', 1)
+                    if self.sftpFunction('none', 'none', 1) == 0:
+                        return 0
                 else:
-                    self.awsFunction('restore', '', self.jobid)
+                    if self.awsFunction('restore', '', self.jobid) == 0:
+                        return 0
             else:
                 if self.jobid.destination == 'local':
-                    self.localFunction('none', 'none', 1)
+                    return self.localFunction('none', 'none', 1)
                 elif self.jobid.destination[:4] == 'sftp':
-                    self.sftpFunction('none', 'none', 1)
+                    return self.sftpFunction('none', 'none', 1)
                 else:
-                    self.awsFunction('restore', '', self.jobid.snapshotid)
+                    return self.awsFunction('restore', '', self.jobid.snapshotid)
 
         except BaseException as msg:
             logging.statusWriter(self.statusPath, "%s [46][5009]" % (str(msg)), 1)
@@ -321,16 +370,21 @@ class IncJobs(multi.Thread):
 
             if self.reconstruct == 'remote':
                 if self.backupDestinations[:4] == 'sftp':
-                    self.sftpFunction('none', 'none', 1)
+                    if self.sftpFunction('none', 'none', 1) == 0:
+                        return 0
                 else:
-                    self.awsFunction('restore', '', self.jobid)
+                    if self.awsFunction('restore', '', self.jobid) == 0:
+                        return 0
             else:
                 if self.jobid.destination == 'local':
-                    self.localFunction('none', 'none', 1)
+                    if self.localFunction('none', 'none', 1) == 0:
+                        return 0
                 elif self.jobid.destination[:4] == 'sftp':
-                    self.sftpFunction('none', 'none', 1)
+                    if self.sftpFunction('none', 'none', 1) == 0:
+                        return 0
                 else:
-                    self.awsFunction('restore', '', self.jobid.snapshotid)
+                    if self.awsFunction('restore', '', self.jobid.snapshotid) == 0:
+                        return 0
 
             metaPathNew = '/home/%s/meta.xml' % (self.website)
             execPath = "nice -n 10 /usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/restoreMeta.py"
@@ -400,7 +454,12 @@ class IncJobs(multi.Thread):
                     message = 'Database restored.'
                     logging.statusWriter(self.statusPath, message, 1)
                 elif self.jobid.type[:4] == 'data':
-                    self.restoreData()
+                    message = 'Restoring data..'
+                    logging.statusWriter(self.statusPath, message, 1)
+                    if self.restoreData() == 0:
+                        return 0
+                    message = 'Data restored.'
+                    logging.statusWriter(self.statusPath, message, 1)
                 elif self.jobid.type[:5] == 'email':
                     message = 'Restoring email..'
                     logging.statusWriter(self.statusPath, message, 1)
@@ -560,7 +619,8 @@ class IncJobs(multi.Thread):
 
                 metaFileXML.append(emailRecordsXML)
             except BaseException as msg:
-                logging.statusWriter(self.statusPath, '%s. [warning:179:prepMeta]' % (str(msg)), 1)
+                pass
+                #logging.statusWriter(self.statusPath, '%s. [warning:179:prepMeta]' % (str(msg)), 1)
 
             ## Email meta generated!
 
@@ -607,7 +667,8 @@ class IncJobs(multi.Thread):
                 if self.sftpFunction(backupPath, 'data') == 0:
                     return 0
             else:
-                self.awsFunction('backup', backupPath, '', 'data')
+                if self.awsFunction('backup', backupPath, '', 'data') == 0:
+                    return 0
 
             logging.statusWriter(self.statusPath,
                                  'Data for %s backed to %s.' % (self.website.domain, self.backupDestinations), 1)
@@ -629,11 +690,14 @@ class IncJobs(multi.Thread):
                 dbPath = '/home/cyberpanel/%s.sql' % (items.dbName)
 
                 if self.backupDestinations == 'local':
-                    self.localFunction(dbPath, 'database')
+                    if self.localFunction(dbPath, 'database') == 0:
+                        return 0
                 elif self.backupDestinations[:4] == 'sftp':
-                    self.sftpFunction(dbPath, 'database')
+                    if self.sftpFunction(dbPath, 'database') == 0:
+                        return 0
                 else:
-                    self.awsFunction('backup', dbPath, '', 'database')
+                    if self.awsFunction('backup', dbPath, '', 'database') == 0:
+                        return 0
 
                 try:
                     os.remove('/home/cyberpanel/%s.sql' % (items.dbName))
@@ -653,11 +717,14 @@ class IncJobs(multi.Thread):
 
             if os.path.exists(backupPath):
                 if self.backupDestinations == 'local':
-                    self.localFunction(backupPath, 'email')
+                    if self.localFunction(backupPath, 'email') == 0:
+                        return 0
                 elif self.backupDestinations[:4] == 'sftp':
-                    self.sftpFunction(backupPath, 'email')
+                    if self.sftpFunction(backupPath, 'email') == 0:
+                        return 0
                 else:
-                    self.awsFunction('backup', backupPath, '', 'email')
+                    if self.awsFunction('backup', backupPath, '', 'email') == 0:
+                        return 0
 
             logging.statusWriter(self.statusPath,
                                  'Emails for %s backed to %s.' % (self.website.domain, self.backupDestinations), 1)
@@ -673,11 +740,14 @@ class IncJobs(multi.Thread):
             backupPath = '/home/%s/meta.xml' % (self.website.domain)
 
             if self.backupDestinations == 'local':
-                self.localFunction(backupPath, 'meta')
+                if self.localFunction(backupPath, 'meta') == 0:
+                    return 0
             elif self.backupDestinations[:4] == 'sftp':
-                self.sftpFunction(backupPath, 'meta')
+                if self.sftpFunction(backupPath, 'meta') == 0:
+                    return 0
             else:
-                self.awsFunction('backup', backupPath, '', 'meta')
+                if self.awsFunction('backup', backupPath, '', 'meta') == 0:
+                    return 0
 
             logging.statusWriter(self.statusPath,
                                  'Meta for %s backed to %s.' % (self.website.domain, self.backupDestinations), 1)
@@ -742,7 +812,6 @@ Subject: %s
         self.backupDestinations = self.extraArgs['backupDestinations']
         websiteData = self.extraArgs['websiteData']
         websiteEmails = self.extraArgs['websiteEmails']
-        websiteSSLs = self.extraArgs['websiteSSLs']
         websiteDatabases = self.extraArgs['websiteDatabases']
 
         ### Checking if restic is installed before moving on
@@ -775,6 +844,8 @@ Subject: %s
 
             self.sendEmail(password)
 
+        ## Completed password generation
+
         if self.initiateRepo() == 0:
             return 0
 
@@ -792,6 +863,8 @@ Subject: %s
         if websiteEmails:
             if self.emailBackup() == 0:
                 return 0
+
+        ## Backup job done
 
         self.metaBackup()
 
