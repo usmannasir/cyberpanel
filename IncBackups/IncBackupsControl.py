@@ -133,7 +133,11 @@ class IncJobs(multi.Thread):
                 command = 'export AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s  && restic -r s3:s3.amazonaws.com/%s backup %s --password-file %s' % (
                     key, secret, self.website.domain, backupPath, self.passwordFile)
                 result = ProcessUtilities.outputExecutioner(command)
-                logging.statusWriter(self.statusPath, result, 1)
+
+                if result.find('saved') == -1:
+                    logging.statusWriter(self.statusPath, '%s. [5009].' % (result), 1)
+                    return 0
+
                 snapShotid = result.split(' ')[-2]
                 if bType == 'database':
                     newSnapshot = JobSnapshots(job=self.jobid,
@@ -172,7 +176,11 @@ class IncJobs(multi.Thread):
             command = 'restic -r %s backup %s --password-file %s --exclude %s' % (
                 self.repoPath, backupPath, self.passwordFile, self.repoPath)
             result = ProcessUtilities.outputExecutioner(command)
-            logging.statusWriter(self.statusPath, result, 1)
+
+            if result.find('saved') == -1:
+                logging.statusWriter(self.statusPath, '%s. [5009].' % (result), 1)
+                return 0
+
             snapShotid = result.split(' ')[-2]
 
             if type == 'database':
@@ -191,13 +199,20 @@ class IncJobs(multi.Thread):
             result = ProcessUtilities.outputExecutioner(command)
             logging.statusWriter(self.statusPath, result, 1)
 
+        return 1
+
+
     def sftpFunction(self, backupPath, type, restore=None):
         if restore == None:
             remotePath = '/home/backup/%s' % (self.website.domain)
             command = 'export PATH=${PATH}:/usr/bin && restic -r %s:%s backup %s --password-file %s --exclude %s' % (
                 self.backupDestinations, remotePath, backupPath, self.passwordFile, self.repoPath)
             result = ProcessUtilities.outputExecutioner(command)
-            logging.statusWriter(self.statusPath, result, 1)
+
+            if result.find('saved') == -1:
+                logging.statusWriter(self.statusPath, '%s. [5009].' % (result), 1)
+                return 0
+
             snapShotid = result.split(' ')[-2]
 
             if type == 'database':
@@ -586,9 +601,11 @@ class IncJobs(multi.Thread):
             backupPath = '/home/%s' % (self.website.domain)
 
             if self.backupDestinations == 'local':
-                self.localFunction(backupPath, 'data')
+                if self.localFunction(backupPath, 'data') == 0:
+                    return 0
             elif self.backupDestinations[:4] == 'sftp':
-                self.sftpFunction(backupPath, 'data')
+                if self.sftpFunction(backupPath, 'data') == 0:
+                    return 0
             else:
                 self.awsFunction('backup', backupPath, '', 'data')
 
@@ -676,20 +693,23 @@ class IncJobs(multi.Thread):
             if self.backupDestinations == 'local':
                 command = 'restic init --repo %s --password-file %s' % (self.repoPath, self.passwordFile)
                 result = ProcessUtilities.outputExecutioner(command)
-                logging.statusWriter(self.statusPath, result, 1)
+                if result.find('config file already exists') == -1:
+                    logging.statusWriter(self.statusPath, result, 1)
 
             elif self.backupDestinations[:4] == 'sftp':
                 remotePath = '/home/backup/%s' % (self.website.domain)
                 command = 'export PATH=${PATH}:/usr/bin && restic init --repo %s:%s --password-file %s' % (
                     self.backupDestinations, remotePath, self.passwordFile)
                 result = ProcessUtilities.outputExecutioner(command)
-                logging.statusWriter(self.statusPath, result, 1)
+                if result.find('config file already exists') == -1:
+                    logging.statusWriter(self.statusPath, result, 1)
             else:
                 key, secret = self.getAWSData()
                 command = 'export AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s  && restic -r s3:s3.amazonaws.com/%s init --password-file %s' % (
                     key, secret, self.website.domain, self.passwordFile)
                 result = ProcessUtilities.outputExecutioner(command)
-                logging.statusWriter(self.statusPath, result, 1)
+                if result.find('config file already exists') == -1:
+                    logging.statusWriter(self.statusPath, result, 1)
                 return 1
 
             logging.statusWriter(self.statusPath,
@@ -698,6 +718,23 @@ class IncJobs(multi.Thread):
         except BaseException as msg:
             logging.statusWriter(self.statusPath, '%s. [IncJobs.initiateRepo.47][5009]' % str(msg), 1)
             return 0
+
+    def sendEmail(self, password):
+        SUBJECT = "Backup Repository password for %s" % (self.website.domain)
+        text = """Password: %s
+This is password for your incremental backup repository, please save it in safe place as it will be required when you want to restore backup for this site on remote server.
+""" % (password)
+
+        sender = 'cyberpanel@%s' % (self.website.domain)
+        TO = [self.website.adminEmail]
+        message = """\
+From: %s
+To: %s
+Subject: %s
+
+%s
+""" % (sender, ", ".join(TO), SUBJECT, text)
+        mailUtilities.SendEmail(sender, TO, message)
 
     def createBackup(self):
         self.statusPath = self.extraArgs['tempPath']
@@ -708,12 +745,21 @@ class IncJobs(multi.Thread):
         websiteSSLs = self.extraArgs['websiteSSLs']
         websiteDatabases = self.extraArgs['websiteDatabases']
 
+        ### Checking if restic is installed before moving on
+
+        command = 'restic'
+        if ProcessUtilities.outputExecutioner(command).find('restic is a backup program which') == -1:
+            logging.statusWriter(self.statusPath, 'It seems restic is not installed, for incremental backups to work '
+                                                  'restic must be installed. You can manually install restic using this '
+                                                  'guide -> http://go.cyberpanel.net/restic. [5009]', 1)
+            return 0
+
+        ## Restic check completed.
+
         self.website = Websites.objects.get(domain=website)
 
-        newJob = IncJob(website=self.website)
-        newJob.save()
-
-        self.jobid = newJob
+        self.jobid = IncJob(website=self.website)
+        self.jobid.save()
 
         self.passwordFile = '/home/%s/%s' % (self.website.domain, self.website.domain)
 
@@ -726,39 +772,26 @@ class IncJobs(multi.Thread):
 
             command = 'chmod 600 %s' % (self.passwordFile)
             ProcessUtilities.executioner(command)
-            SUBJECT = "Backup Repository password for %s" % (self.website.domain)
-            text = """Password: %s
-This is password for your incremental backup repository, please save it in safe place as it will be required when you want to restore backup for this site on remote server.
-""" % (password)
 
-            sender = 'cyberpanel@%s' % (self.website.domain)
-            TO = [self.website.adminEmail]
-            message = """\
-From: %s
-To: %s
-Subject: %s
-
-%s
-""" % (sender, ", ".join(TO), SUBJECT, text)
-            mailUtilities.SendEmail(sender, TO, message)
+            self.sendEmail(password)
 
         if self.initiateRepo() == 0:
-            return
+            return 0
 
         if self.prepareBackupMeta() == 0:
-            return
+            return 0
 
         if websiteData:
             if self.backupData() == 0:
-                return
+                return 0
 
         if websiteDatabases:
             if self.backupDatabases() == 0:
-                return
+                return 0
 
         if websiteEmails:
             if self.emailBackup() == 0:
-                return
+                return 0
 
         self.metaBackup()
 

@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-
 from django.shortcuts import render
 from plogical.acl import ACLManager
 from django.shortcuts import HttpResponse, redirect
@@ -391,7 +390,6 @@ def submitBackupCreation(request):
 
         startJob = IncJobs('createBackup', extraArgs)
         startJob.start()
-
 
         time.sleep(2)
 

@@ -1955,7 +1955,7 @@ failovermethod=priority
             writeToFile = open(cronTab, 'a')
             writeToFile.writelines(cronJob)
 
-            cronJob = '0 0 * * 0 root /usr/local/CyberPanel/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py Daily\n'
+            cronJob = '0 0 * * 0 root /usr/local/CyberPanel/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py Weekly\n'
             writeToFile.writelines(cronJob)
             writeToFile.close()
 
