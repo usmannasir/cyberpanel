@@ -2,9 +2,17 @@
 
 #CyberPanel installer script for CentOS 7.X, CentOS 8.X, CloudLinux 7.X and Ubuntu 18.04
 
-export LC_CTYPE=en_US.UTF-8
-
 SUDO_TEST=$(set)
+
+export LC_CTYPE=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
+if [[ $? != "0" ]] ; then
+	apt upgrade
+	DEBIAN_FRONTEND=noninteractive apt install -y locales
+	locale-gen "en_US.UTF-8"
+	update-locale LC_ALL="en_US.UTF-8"
+fi
+
 DEV="OFF"
 BRANCH="stable"
 POSTFIX_VARIABLE="ON"
@@ -99,6 +107,7 @@ TEMP=`/usr/local/lsws/admin/fcgi-bin/${php_command} /usr/local/lsws/admin/misc/h
 echo "" > /usr/local/lsws/admin/conf/htpasswd
 echo "admin:$TEMP" > /usr/local/lsws/admin/conf/htpasswd
 echo ${WEBADMIN_PASS} > /etc/cyberpanel/webadmin_passwd
+chmod 600 /etc/cyberpanel/webadmin_passwd
 }
 
 check_virtualization() {
