@@ -198,7 +198,7 @@ def submitUserCreation(request):
                 newAdmin.save()
             elif currentACL['createNewUser'] == 1:
 
-                if selectedACL != 'user':
+                if selectedACL.name != 'user':
                     data_ret = {'status': 0, 'createStatus': 0,
                                 'error_message': "You are not authorized to access this resource."}
 

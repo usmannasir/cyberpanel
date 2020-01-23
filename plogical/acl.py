@@ -613,3 +613,16 @@ class ACLManager:
                 childDomains.append(childDomain.domain)
 
         return childDomains
+
+    @staticmethod
+    def checkOwnerProtection(currentACL, owner, child):
+        if currentACL['admin'] == 1:
+            return 1
+        elif child.owner == owner.pk:
+            return 1
+        elif child == owner:
+            return 1
+        else:
+            return 0
+
+
