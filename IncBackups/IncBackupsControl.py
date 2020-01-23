@@ -285,6 +285,8 @@ class IncJobs(multi.Thread):
                 else:
                     return self.awsFunction('restore', '', self.jobid.snapshotid)
 
+            return 1
+
         except BaseException as msg:
             logging.statusWriter(self.statusPath, "%s [138][5009]" % (str(msg)), 1)
             return 0
@@ -361,6 +363,8 @@ class IncJobs(multi.Thread):
                 else:
                     return self.awsFunction('restore', '', self.jobid.snapshotid)
 
+            return 1
+
         except BaseException as msg:
             logging.statusWriter(self.statusPath, "%s [46][5009]" % (str(msg)), 1)
             return 0
@@ -397,6 +401,7 @@ class IncJobs(multi.Thread):
             except:
                 pass
 
+            return 1
         except BaseException as msg:
             logging.statusWriter(self.statusPath, "%s [46][5009]" % (str(msg)), 1)
             return 0
@@ -417,25 +422,29 @@ class IncJobs(multi.Thread):
                 if self.path.find('.sql') > -1:
                     message = 'Restoring database..'
                     logging.statusWriter(self.statusPath, message, 1)
-                    self.restoreDatabase()
+                    if self.restoreDatabase() == 0:
+                        return 0
                     message = 'Database restored.'
                     logging.statusWriter(self.statusPath, message, 1)
                 elif self.path == '/home/%s' % (self.website):
                     message = 'Restoring data..'
                     logging.statusWriter(self.statusPath, message, 1)
-                    self.restoreData()
+                    if self.restoreData() == 0:
+                        return 0
                     message = 'Data restored..'
                     logging.statusWriter(self.statusPath, message, 1)
                 elif self.path.find('vmail') > -1:
                     message = 'Restoring email..'
                     logging.statusWriter(self.statusPath, message, 1)
-                    self.restoreEmail()
+                    if self.restoreEmail() == 0:
+                        return 0
                     message = 'Emails restored.'
                     logging.statusWriter(self.statusPath, message, 1)
                 elif self.path.find('meta.xml') > -1:
                     message = 'Reconstructing with meta..'
                     logging.statusWriter(self.statusPath, message, 1)
-                    self.reconstructWithMeta()
+                    if self.reconstructWithMeta() == 0:
+                        return 0
                     message = 'Reconstructed'
                     logging.statusWriter(self.statusPath, message, 1)
             else:
