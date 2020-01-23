@@ -163,16 +163,22 @@ class WebsiteManager:
 
     def submitWebsiteCreation(self, userID=None, data=None):
         try:
-
             currentACL = ACLManager.loadedACL(userID)
-            if ACLManager.currentContextPermission(currentACL, 'createWebsite') == 0:
-                return ACLManager.loadErrorJson('createWebSiteStatus', 0)
 
             domain = data['domainName']
             adminEmail = data['adminEmail']
             phpSelection = data['phpSelection']
             packageName = data['package']
             websiteOwner = data['websiteOwner']
+
+            loggedUser = Administrator.objects.get(pk=userID)
+            newOwner = Administrator.objects.get(userName=websiteOwner)
+            if ACLManager.currentContextPermission(currentACL, 'createWebsite') == 0:
+                return ACLManager.loadErrorJson('createWebSiteStatus', 0)
+
+            if ACLManager.checkOwnerProtection(currentACL, loggedUser, newOwner) == 0:
+                return ACLManager.loadErrorJson('createWebSiteStatus', 0)
+
 
             if not match(r'([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?', domain,
                   M | I):
