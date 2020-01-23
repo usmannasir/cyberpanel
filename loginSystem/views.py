@@ -96,7 +96,7 @@ def verifyLogin(request):
                 else:
                     request.session['ipAddr'] = request.META.get('REMOTE_ADDR')
 
-                request.session.set_expiry(3600)
+                request.session.set_expiry(43200)
                 data = {'userID': admin.pk, 'loginStatus': 1, 'error_message': "None"}
                 json_data = json.dumps(data)
                 response.write(json_data)
