@@ -95,7 +95,7 @@ class IncJobs(multi.Thread):
                         dbuser = it
                         break
 
-                    userToTry = mysqlUtilities.mysqlUtilities.fetchuser(items.dbUser)
+                    userToTry = mysqlUtilities.mysqlUtilities.fetchuser(items.dbName)
 
                     try:
                         dbuser = DBUsers.objects.get(user=userToTry)
