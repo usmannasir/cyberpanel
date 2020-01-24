@@ -402,10 +402,20 @@ fi
 
 system_tweak() {
 
-server_name=$(hostname)
+number=$(grep -n "127.0.0.1" /etc/hosts |  cut -d: -f 1)
+my_hostname=$(hostname)
 
-echo "127.0.0.1 $server_name
-$(cat /etc/hosts)" > /etc/hosts
+for number2 in $number;
+	do
+		string=$(sed "${number2}q;d" /etc/hosts)
+		if [[ "$string" == *"my_hostname"* ]] ; then
+	  :
+	  else
+	  new_string="$string $my_hostname"
+	  sed -i "${number2}s/.*/${new_string}/" /etc/hosts
+	  fi
+done
+
 #this should address on "sudo: unable to resolve host ..." on Ubuntu , it's not issue but annoying.
 
 if [[ $SERVER_OS == "CentOS" ]] ; then
