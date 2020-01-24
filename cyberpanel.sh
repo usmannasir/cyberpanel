@@ -401,20 +401,23 @@ fi
 
 
 system_tweak() {
-
 number=$(grep -n "127.0.0.1" /etc/hosts |  cut -d: -f 1)
 my_hostname=$(hostname)
 
-for number2 in $number;
-	do
-		string=$(sed "${number2}q;d" /etc/hosts)
-		if [[ "$string" == *"my_hostname"* ]] ; then
-	  :
-	  else
-	  new_string="$string $my_hostname"
-	  sed -i "${number2}s/.*/${new_string}/" /etc/hosts
-	  fi
-done
+	if [[ ! -z $number ]] ; then
+		for number2 in $number;
+			do
+				string=$(sed "${number2}q;d" /etc/hosts)
+				if [[ "$string" == *"$my_hostname"* ]] ; then
+		  	:
+		  	else
+		  	new_string="$string $my_hostname"
+		  	sed -i "${number2}s/.*/${new_string}/" /etc/hosts
+		  	fi
+			done
+	else
+		echo "127.0.0.1 $my_hostname " >> /etc/hosts
+	fi
 
 #this should address on "sudo: unable to resolve host ..." on Ubuntu , it's not issue but annoying.
 
