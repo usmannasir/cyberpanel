@@ -155,12 +155,16 @@ cp lswsgi /usr/local/CyberCP/bin/
 
 chmod 700 /usr/bin/adminPass
 
+if [[ -f /etc/cyberpanel/webadmin_passwd ]] ; then
+chmod 600 /etc/cyberpanel/webadmin_passwd
+fi
+
 if [[ -f /etc/pure-ftpd/pure-ftpd.conf ]] ; then
 sed -i 's|NoAnonymous                 no|NoAnonymous                 yes|g' /etc/pure-ftpd/pure-ftpd.conf
 fi
 
 
-#install_utility
+install_utility
 
 
 
