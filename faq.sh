@@ -74,4 +74,10 @@ ${BLUE}------------------------------------------------------------${NC}
 ${PURPLE}8.${NC} How to remove 8090 port in CyberPanel URL ?
 
 Please check this post ${GREEN}https://blog.cyberpanel.net/2018/12/25/how-to-remove-port-8090-from-cyberpanel/${NC}
+
+${BLUE}------------------------------------------------------------${NC}
+
+${PURPLE}9.${NC} How to enable Auto-Index for my site ?
+
+Please check this post ${GREEN}https://forums.cyberpanel.net/discussion/3850/tutorial-how-to-enable-auto-index-on-openlitespeed-and-litespeed-enterprise${NC}
 "
