@@ -9,7 +9,7 @@ import getpass
 import codecs
 
 class ProcessUtilities(multi.Thread):
-    debugPath = '/home/cyberpanel/debug'
+    debugPath = '/usr/local/CyberCP/debug'
     litespeedProcess = "litespeed"
     ent = 1
     OLS = 0
