@@ -9,6 +9,7 @@ import django
 
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
+from random import randint
 
 django.setup()
 
@@ -180,7 +181,7 @@ class virtualHostUtilities:
 
             ## Create Configurations ends here
 
-            logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'DKIM Setup..,90')
+            logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'DKIM Setup..,70')
 
             ## DKIM Check
 
@@ -201,6 +202,31 @@ class virtualHostUtilities:
 
             if os.path.exists(CLPath):
                 command = '/usr/share/cloudlinux/hooks/post_modify_user.py create --username %s --owner %s' % (virtualHostUser, virtualHostUser)
+                ProcessUtilities.executioner(command)
+
+            logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Creating mail child domain,80')
+            childDomain = 'mail.%s' % (virtualHostName)
+            childPath = '/home/%s/public_html/%s' % (virtualHostName, childDomain)
+
+            virtualHostUtilities.createDomain(virtualHostName, childDomain, 'PHP 7.2', childPath, 1, 0, 0, admin.userName, 0, "/home/cyberpanel/" + str(randint(1000, 9999)))
+
+            ## update dovecot conf to enable auto-discover
+
+            dovecotPath = '/etc/dovecot/dovecot.conf'
+
+            dovecotContent = open(dovecotPath, 'r').read()
+
+            if dovecotContent.find(childDomain) == -1:
+                content = """\nlocal_name %s {
+  ssl_cert = </etc/letsencrypt/live/%s/fullchain.pem
+  ssl_key = </etc/letsencrypt/live/%s/privkey.pem
+}\n""" % (childDomain, childDomain, childDomain)
+
+                writeToFile = open(dovecotPath, 'a')
+                writeToFile.write(content)
+                writeToFile.close()
+
+                command = 'systemctl restart dovecot'
                 ProcessUtilities.executioner(command)
 
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Website successfully created. [200]')
