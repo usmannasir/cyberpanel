@@ -204,7 +204,9 @@ class virtualHostUtilities:
                 command = '/usr/share/cloudlinux/hooks/post_modify_user.py create --username %s --owner %s' % (virtualHostUser, virtualHostUser)
                 ProcessUtilities.executioner(command)
 
-            logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Creating mail child domain,80')
+            ### For autodiscover of mail clients.
+
+            logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Creating mail child domain..,80')
             childDomain = 'mail.%s' % (virtualHostName)
             childPath = '/home/%s/public_html/%s' % (virtualHostName, childDomain)
 
