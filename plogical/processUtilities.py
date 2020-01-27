@@ -9,6 +9,7 @@ import getpass
 import codecs
 
 class ProcessUtilities(multi.Thread):
+    debugPath = '/home/cyberpanel/debug'
     litespeedProcess = "litespeed"
     ent = 1
     OLS = 0
@@ -187,12 +188,14 @@ class ProcessUtilities(multi.Thread):
             sock = ret[0]
 
             if user == None:
-                #logging.writeToFile(ProcessUtilities.token + command)
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.writeToFile(ProcessUtilities.token + command)
                 sock.sendall((ProcessUtilities.token + command).encode('utf-8'))
             else:
                 command = '%s-u %s %s' % (ProcessUtilities.token, user, command)
                 command = command.replace('sudo', '')
-                #logging.writeToFile(command)
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.writeToFile(command)
                 sock.sendall(command.encode('utf-8'))
 
             data = ""
