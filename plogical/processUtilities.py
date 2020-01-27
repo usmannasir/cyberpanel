@@ -192,7 +192,7 @@ class ProcessUtilities(multi.Thread):
             else:
                 command = '%s-u %s %s' % (ProcessUtilities.token, user, command)
                 command = command.replace('sudo', '')
-                #logging.writeToFile(ProcessUtilities.token + command)
+                #logging.writeToFile(command)
                 sock.sendall(command.encode('utf-8'))
 
             data = ""

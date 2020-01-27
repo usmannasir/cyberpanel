@@ -1923,6 +1923,32 @@ failovermethod=priority
                 command = "systemctl restart dovecot"
                 Upgrade.executioner(command, 0)
 
+            dovecotConf = '/etc/dovecot/dovecot.conf'
+
+            dovecotContent = open(dovecotConf, 'r').read()
+
+            if dovecotContent.find('service stats') == -1:
+                writeToFile  = open(dovecotConf, 'a')
+
+                content = """\nservice stats {
+    unix_listener stats-reader {
+        user = vmail
+        group = vmail
+        mode = 0660
+    }
+    unix_listener stats-writer {
+        user = vmail
+        group = vmail
+        mode = 0660
+    }
+}\n"""
+
+                writeToFile.write(content)
+                writeToFile.close()
+
+                command = 'systemctl restart dovecot'
+                Upgrade.executioner(command, command, 0)
+
             Upgrade.stdOut("Dovecot upgraded.")
 
         except BaseException as msg:
