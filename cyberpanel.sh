@@ -1206,6 +1206,7 @@ for version in $(ls /usr/local/lsws | grep lsphp);
 		/usr/local/lsws/${version}/bin/pear config-set temp_dir /usr/local/lsws/${version}/tmp
 		/usr/local/lsws/${version}/bin/pecl install timezonedb
 		echo "extension=timezonedb.so" > /usr/local/lsws/${version}/etc/php.d/20-timezone.ini
+		chmod 755 /usr/local/lsws/${version}/lib64/php/modules/timezonedb.so
 		sed -i 's|expose_php = On|expose_php = Off|g' $php_ini
 		sed -i 's|mail.add_x_header = On|mail.add_x_header = Off|g' $php_ini
 		sed -i 's|;session.save_path = "/tmp"|session.save_path = "/var/lib/php/session"|g' $php_ini
@@ -1288,6 +1289,7 @@ if [[ ! -f /usr/local/lsws/lsphp74/lib64/php/modules/zip.so ]] && [[ $SERVER_OS 
 	yum install -y http://packages.psychotic.ninja/7/plus/x86_64/RPMS/libzip-devel-0.11.2-6.el7.psychotic.x86_64.rpm
 	/usr/local/lsws/lsphp74/bin/pecl install zip
 	echo "extension=zip.so" > /usr/local/lsws/lsphp74/etc/php.d/20-zip.ini
+	chmod 755 /usr/local/lsws/lsphp74/lib64/php/modules/zip.so
 fi
 #fix the lsphp74-zip missing issue.
 
