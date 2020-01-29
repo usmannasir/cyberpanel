@@ -34,7 +34,7 @@ REDIS="ON"
 TOTAL_RAM=$(free -m | awk '/Mem\:/ { print $2 }')
 CENTOS_8="False"
 WATCHDOG="OFF"
-BRANCH_NAME=v${TEMP:12:3}.${TEMP:25:1}
+BRANCH_NAME="v${TEMP:12:3}.${TEMP:25:1}"
 
 check_return() {
 #check previous command result , 0 = ok ,  non-0 = something wrong.
@@ -934,9 +934,37 @@ fi
 #printf "%s" ""
 #read TMP_YN
 
+echo -e "\nPleaase enter the version number you want to install."
+echo -e "\nPress Enter key to continue will latest version."
+echo -e "\nExample value: \e[31m1.9.4\e[39m , \e[31m1.9.5\e[39m ...etc"
+printf "%s" ""
+read TMP_YN
+
 DEV="ON"
-BRANCH_NAME=v${TEMP:12:3}.${TEMP:25:1}
-echo -e "\nBranch name set to $BRANCH_NAME"
+if [[ $TMP_YN == "" ]] ; then
+	BRANCH_NAME="v${TEMP:12:3}.${TEMP:25:1}"
+	echo -e "\nBranch name set to $BRANCH_NAME"
+else
+	base_number="1.9.3"
+		if [[ $TMP_YN == *.*.* ]] ; then
+			#check input if it's valid format as X.Y.Z
+			output=$(awk -v num1="$base_number" -v num2="$TMP_YN" '
+			BEGIN {
+				print "num1", (num1 < num2 ? "<" : ">="), "num2"
+			}
+			')
+			if [[ $output == *">="* ]] ; then
+				echo -e "\nYou must use version number higher than 1.9.4"
+				exit
+			else
+				BRANCH_NAME="v$TMP_YN"
+				echo "set branch name to $BRANCH_NAME"
+			fi
+		else
+			echo -e "\nPlease input a valid format version number."
+			exit
+		fi
+fi
 
 #if [[ $TMP_YN == "beta" ]] ; then
 #  DEV="ON"
@@ -1134,6 +1162,7 @@ else
 	git clone https://github.com/usmannasir/cyberpanel
 	cd cyberpanel
 	git checkout $BRANCH_NAME
+	check_return
 	cd -
 	cp -r cyberpanel /usr/local/cyberpanel
 	cd cyberpanel/install
