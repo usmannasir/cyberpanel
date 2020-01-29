@@ -465,7 +465,7 @@ class backupUtilities:
             else:
                 path = "/home/backup/" + backupFile
 
-            admin = Administrator.objects.get(pk=1)
+            admin = Administrator.objects.get(userName='admin')
 
             ## open meta file to read data
 

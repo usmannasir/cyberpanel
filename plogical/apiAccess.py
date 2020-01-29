@@ -8,7 +8,7 @@ django.setup()
 from loginSystem.models import Administrator, ACL
 
 def main():
-    admin = Administrator.objects.get(pk=1)
+    admin = Administrator.objects.get(userName='admin')
     admin.api = 1
     admin.save()
 

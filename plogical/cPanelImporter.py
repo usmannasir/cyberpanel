@@ -496,7 +496,7 @@ class cPanelImporter:
             f = open(ipFile)
             ipData = f.read()
             ipAddress = ipData.split('\n', 1)[0]
-            admin = Administrator.objects.get(pk=1)
+            admin = Administrator.objects.get(userName='admin')
 
             CompletPathToExtractedArchive = cPanelImporter.mainBackupPath + self.fileName
             DNSZonesPath = '%s/dnszones' % (CompletPathToExtractedArchive)

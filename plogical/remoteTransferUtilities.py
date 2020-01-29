@@ -164,8 +164,10 @@ class remoteTransferUtilities:
 
                             writeToFile.close()
                         else:
+                            writeToFile = open(backupLogPath, "a")
                             writeToFile.writelines("[" + time.strftime(
-                                "%m.%d.%Y_%H-%M-%S") + "]" + "Failed to generate local backup for: " + virtualHost + "\n")
+                                "%m.%d.%Y_%H-%M-%S") + "]" + "Failed to generate local backup for: " + virtualHost + ". Error message: %s\n" % (retValue[1]))
+                            writeToFile.close()
 
                     except BaseException as msg:
                         logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [remoteTransferUtilities.backupProcess:173]")

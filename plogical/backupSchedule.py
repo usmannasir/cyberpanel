@@ -50,6 +50,9 @@ class backupSchedule:
             finalData = json.dumps({'randomFile': pathToFile, 'websiteToBeBacked': virtualHost})
             r = requests.post("https://localhost:8090/backup/localInitiate", data=finalData, verify=False)
 
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.CyberCPLogFileWriter.writeToFile(r.text)
+
             data = json.loads(r.text)
             tempStoragePath = data['tempStorage']
 

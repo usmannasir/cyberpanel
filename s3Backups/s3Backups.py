@@ -1302,7 +1302,7 @@ class S3Backups(multi.Thread):
 
     def runAWSBackups(self):
         try:
-            admin = Administrator.objects.get(pk=1)
+            admin = Administrator.objects.get(userName='admin')
             self.request.session['userID'] = admin.pk
 
             for plan in BackupPlan.objects.all():

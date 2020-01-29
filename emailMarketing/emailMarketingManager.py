@@ -390,7 +390,7 @@ class EmailMarketingManager:
             smtpPassword = data['smtpPassword']
 
             if SMTPHosts.objects.count() == 0:
-                admin = Administrator.objects.get(pk=1)
+                admin = Administrator.objects.get(userName='admin')
                 defaultHost = SMTPHosts(owner=admin, host='localhost', port=25, userName='None', password='None')
                 defaultHost.save()
 
