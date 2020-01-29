@@ -1326,6 +1326,18 @@ class WebsiteManager:
 
             CronUtil.CronPrem(0)
 
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                cronPath = "/var/spool/cron/" + website.externalApp
+            else:
+                cronPath = "/var/spool/cron/crontabs/" + website.externalApp
+
+            if f.find('Permission denied') > -1:
+                command = 'chmod 644 %s' % (cronPath)
+                ProcessUtilities.executioner(command)
+
+                command = 'chown %s:%s %s' % (website.externalApp, website.externalApp, cronPath)
+                ProcessUtilities.executioner(command)
+
             if f.find("0,CyberPanel,") > -1:
                 data_ret = {'getWebsiteCron': 0, "user": website.externalApp, "crons": {}}
                 final_json = json.dumps(data_ret)
