@@ -34,7 +34,7 @@ REDIS="ON"
 TOTAL_RAM=$(free -m | awk '/Mem\:/ { print $2 }')
 CENTOS_8="False"
 WATCHDOG="OFF"
-BRANCH_NAME="stable"
+BRANCH_NAME=${TEMP:12:3}.${TEMP:25:1}
 
 check_return() {
 #check previous command result , 0 = ok ,  non-0 = something wrong.
