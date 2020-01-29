@@ -6,9 +6,7 @@ SUDO_TEST=$(set)
 SERVER_OS='Undefined'
 OUTPUT=$(cat /etc/*release)
 TEMP=$(curl --silent https://cyberpanel.net/version.txt)
-CP_VER1=${TEMP:12:3}
-CP_VER2=${TEMP:25:1}
-BRANCH_NAME=${TEMP:12:3}.${TEMP:25:1}
+BRANCH_NAME=v${TEMP:12:3}.${TEMP:25:1}
 
 install_utility() {
 if [[ ! -f /usr/bin/cyberpanel_utility ]] ; then
