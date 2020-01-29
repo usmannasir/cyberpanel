@@ -13,8 +13,7 @@ import subprocess
 import argparse
 import shlex
 from plogical.processUtilities import ProcessUtilities
-import os, getpass
-import hashlib
+import os
 import bcrypt
 import getpass
 import smtplib
@@ -381,20 +380,22 @@ milter_default_action = accept
                 FNULL = open(os.devnull, 'w')
 
                 if getpass.getuser() == 'root':
-                    command = "sudo mkdir " + mailUtilities.cyberPanelHome
-                    subprocess.call(shlex.split(command), stdout=FNULL)
+                    if not os.path.exists(mailUtilities.cyberPanelHome):
+                        command = "mkdir " + mailUtilities.cyberPanelHome
+                        subprocess.call(shlex.split(command), stdout=FNULL)
 
-                    command = "sudo chown -R cyberpanel:cyberpanel " + mailUtilities.cyberPanelHome
-                    subprocess.call(shlex.split(command), stdout=FNULL)
+                        command = "sudo chown -R cyberpanel:cyberpanel " + mailUtilities.cyberPanelHome
+                        subprocess.call(shlex.split(command), stdout=FNULL)
                 else:
-                    command = "sudo mkdir " + mailUtilities.cyberPanelHome
-                    ProcessUtilities.executioner(command)
+                    if not os.path.exists(mailUtilities.cyberPanelHome):
+                        command = "mkdir " + mailUtilities.cyberPanelHome
+                        ProcessUtilities.executioner(command)
 
-                    command = "sudo chown -R cyberpanel:cyberpanel " + mailUtilities.cyberPanelHome
-                    ProcessUtilities.executioner(command)
+                        command = "chown -R cyberpanel:cyberpanel " + mailUtilities.cyberPanelHome
+                        ProcessUtilities.executioner(command)
             except:
                 FNULL = open(os.devnull, 'w')
-                command = "sudo chown -R cyberpanel:cyberpanel " + mailUtilities.cyberPanelHome
+                command = "chown -R cyberpanel:cyberpanel " + mailUtilities.cyberPanelHome
                 subprocess.call(shlex.split(command), stdout=FNULL)
 
         except BaseException as msg:
