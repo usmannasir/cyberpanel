@@ -384,15 +384,15 @@ milter_default_action = accept
                         command = "mkdir " + mailUtilities.cyberPanelHome
                         subprocess.call(shlex.split(command), stdout=FNULL)
 
-                        command = "sudo chown -R cyberpanel:cyberpanel " + mailUtilities.cyberPanelHome
-                        subprocess.call(shlex.split(command), stdout=FNULL)
+                    command = "sudo chown -R cyberpanel:cyberpanel " + mailUtilities.cyberPanelHome
+                    subprocess.call(shlex.split(command), stdout=FNULL)
                 else:
                     if not os.path.exists(mailUtilities.cyberPanelHome):
                         command = "mkdir " + mailUtilities.cyberPanelHome
                         ProcessUtilities.executioner(command)
 
-                        command = "chown -R cyberpanel:cyberpanel " + mailUtilities.cyberPanelHome
-                        ProcessUtilities.executioner(command)
+                    command = "chown -R cyberpanel:cyberpanel " + mailUtilities.cyberPanelHome
+                    ProcessUtilities.executioner(command)
             except:
                 FNULL = open(os.devnull, 'w')
                 command = "chown -R cyberpanel:cyberpanel " + mailUtilities.cyberPanelHome
