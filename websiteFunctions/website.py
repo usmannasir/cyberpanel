@@ -1338,6 +1338,8 @@ class WebsiteManager:
                 command = 'chown %s:%s %s' % (website.externalApp, website.externalApp, cronPath)
                 ProcessUtilities.executioner(command)
 
+                f = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
+
             if f.find("0,CyberPanel,") > -1:
                 data_ret = {'getWebsiteCron': 0, "user": website.externalApp, "crons": {}}
                 final_json = json.dumps(data_ret)
