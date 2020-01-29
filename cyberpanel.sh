@@ -934,9 +934,7 @@ fi
 #printf "%s" ""
 #read TMP_YN
 
-echo -e "\nPleaase enter the version number you want to install."
-echo -e "\nPress Enter key to continue will latest version."
-echo -e "\nExample value: \e[31m1.9.4\e[39m , \e[31m1.9.5\e[39m ...etc"
+echo -e "\nPress Enter key to continue with latest version or Enter specific version such as: \e[31m1.9.4\e[39m , \e[31m1.9.5\e[39m ...etc"
 printf "%s" ""
 read TMP_YN
 
