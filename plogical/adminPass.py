@@ -34,7 +34,7 @@ def main():
                               firstName="Cyber", lastName="Panel", acl=acl, token=token)
         admin.save()
 
-        vers = version(currentVersion="1.9", build=3)
+        vers = version(currentVersion="1.9", build=4)
         vers.save()
 
         package = Package(admin=admin, packageName="Default", diskSpace=1000,
