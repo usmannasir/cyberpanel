@@ -1678,6 +1678,9 @@ CSRF_COOKIE_SECURE = True
             command = 'chmod 600 /usr/local/CyberCP/plogical/adminPass.py'
             Upgrade.executioner(command, 0)
 
+            command = 'chmod 600 /etc/cagefs/exclude/cyberpanelexclude'
+            Upgrade.executioner(command, 0)
+
             command = "find /usr/local/CyberCP/ -name '*.pyc' -delete"
             Upgrade.executioner(command, 0)
 
@@ -2031,6 +2034,23 @@ service_port = 9000
                     writeToFile = open('/opt/cpvendor/etc/integration.ini', 'w')
                     writeToFile.write(content)
                     writeToFile.close()
+
+
+                command = 'mkdir -p /etc/cagefs/exclude'
+                Upgrade.executioner(command, command, 0)
+
+                content = """cyberpanel
+docker
+ftpuser
+lscpd
+opendkim
+pdns
+vmail
+"""
+
+                writeToFile = open('/etc/cagefs/exclude/cyberpanelexclude', 'w')
+                writeToFile.write(content)
+                writeToFile.close()
 
         except:
             pass

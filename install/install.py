@@ -661,6 +661,9 @@ class preFlightsChecks:
         command = 'chmod 600 /usr/local/CyberCP/plogical/adminPass.py'
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
+        command = 'chmod 600 /etc/cagefs/exclude/cyberpanelexclude'
+        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
         command = "find /usr/local/CyberCP/ -name '*.pyc' -delete"
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
@@ -2166,6 +2169,22 @@ service_port = 9000
 """
 
                 writeToFile = open('/opt/cpvendor/etc/integration.ini', 'w')
+                writeToFile.write(content)
+                writeToFile.close()
+
+                command = 'mkdir -p /etc/cagefs/exclude'
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+                content = """cyberpanel
+docker
+ftpuser
+lscpd
+opendkim
+pdns
+vmail
+"""
+
+                writeToFile = open('/etc/cagefs/exclude/cyberpanelexclude', 'w')
                 writeToFile.write(content)
                 writeToFile.close()
 
