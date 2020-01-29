@@ -112,7 +112,7 @@ def versionManagment(request):
 
         ## Get latest version
 
-        getVersion = requests.get('https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/version.txt')
+        getVersion = requests.get('https://cyberpanel.net/version.txt')
 
         latest = getVersion.json()
 

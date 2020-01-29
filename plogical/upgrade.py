@@ -467,7 +467,7 @@ class Upgrade:
             from baseTemplate.models import version
 
             vers = version.objects.get(pk=1)
-            getVersion = requests.get('https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/version.txt')
+            getVersion = requests.get('https://cyberpanel.net/version.txt')
             latest = getVersion.json()
             vers.currentVersion = latest['version']
             vers.build = latest['build']

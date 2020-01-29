@@ -519,7 +519,7 @@ class preFlightsChecks:
 
         try:
             import requests
-            getVersion = requests.get('https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/version.txt')
+            getVersion = requests.get('https://cyberpanel.net/version.txt')
             latest = getVersion.json()
             path = "/usr/local/CyberCP/version.txt"
             writeToFile = open(path, 'w')
