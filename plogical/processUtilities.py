@@ -92,6 +92,8 @@ class ProcessUtilities(multi.Thread):
     @staticmethod
     def normalExecutioner(command, shell=False):
         try:
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.writeToFile(command)
             if shell == False:
                 res = subprocess.call(shlex.split(command))
             else:

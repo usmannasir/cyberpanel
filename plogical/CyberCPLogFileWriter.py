@@ -1,12 +1,32 @@
+import os,sys
+sys.path.append('/usr/local/CyberCP')
+import django
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
+try:
+    django.setup()
+except:
+    pass
 import subprocess
 import time
-from plogical.mailUtilities import mailUtilities
 import socket
-from loginSystem.models import Administrator
+try:
+    from loginSystem.models import Administrator
+except:
+    pass
 import os
+import smtplib
 
 class CyberCPLogFileWriter:
     fileName = "/home/cyberpanel/error-logs.txt"
+
+    @staticmethod
+    def SendEmail(sender, receivers, message):
+        try:
+            smtpObj = smtplib.SMTP('localhost')
+            smtpObj.sendmail(sender, receivers, message)
+            print("Successfully sent email")
+        except BaseException as msg:
+            CyberCPLogFileWriter.writeToFile(str(msg))
 
     @staticmethod
     def writeToFile(message):
@@ -20,20 +40,26 @@ class CyberCPLogFileWriter:
 
             emailPath = '/usr/local/CyberCP/emailDebug'
 
-            if os.path.exists(emailPath):
-                SUBJECT = "CyberPanel log reporting"
-                admin = Administrator.objects.get(userName='admin')
-                sender = 'root@%s' % (socket.gethostname())
-                TO = [admin.email]
-                message = """\
+            try:
+                if os.path.exists(emailPath):
+                    SUBJECT = "CyberPanel log reporting"
+                    admin = Administrator.objects.get(userName='admin')
+                    sender = 'root@%s' % (socket.gethostname())
+                    TO = [admin.email]
+                    message = """\
 From: %s
 To: %s
 Subject: %s
-    
-%s
-    """ % (sender, ", ".join(TO), SUBJECT, '[%s] %s. \n' % (time.strftime("%m.%d.%Y_%H-%M-%S"), message))
-                mailUtilities.SendEmail(sender, TO, message)
 
+%s
+""" % (
+                    sender, ", ".join(TO), SUBJECT, '[%s] %s. \n' % (time.strftime("%m.%d.%Y_%H-%M-%S"), message))
+                    CyberCPLogFileWriter.SendEmail(sender, TO, message)
+            except BaseException as msg:
+                file = open(CyberCPLogFileWriter.fileName, 'a')
+                file.writelines("[" + time.strftime(
+                    "%m.%d.%Y_%H-%M-%S") + "] " + str(msg) + "\n")
+                file.close()
 
         except BaseException as msg:
             return "Can not write to error file."

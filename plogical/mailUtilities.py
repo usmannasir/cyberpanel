@@ -217,7 +217,7 @@ class mailUtilities:
             #extractDomain = tldextract.extract(virtualHostName)
             #virtualHostName = extractDomain.domain + '.' + extractDomain.suffix
 
-            if os.path.exists("/etc/opendkim/keys/" + virtualHostName):
+            if os.path.exists("/etc/opendkim/keys/" + virtualHostName + "/default.txt"):
                 return 1, "None"
 
 
@@ -227,7 +227,11 @@ class mailUtilities:
 
             ## Generate keys
 
-            command = "opendkim-genkey -D /etc/opendkim/keys/%s -d %s -s default" % (virtualHostName, virtualHostName)
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                command = "/usr/sbin/opendkim-genkey -D /etc/opendkim/keys/%s -d %s -s default" % (virtualHostName, virtualHostName)
+            else:
+                command = "opendkim-genkey -D /etc/opendkim/keys/%s -d %s -s default" % (
+                virtualHostName, virtualHostName)
             ProcessUtilities.normalExecutioner(command)
             ## Fix permissions
 
