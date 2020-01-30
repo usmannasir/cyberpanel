@@ -1285,6 +1285,10 @@ watchdog_setup
 install_utility
 
 if [[ ! -f /usr/local/lsws/lsphp74/lib64/php/modules/zip.so ]] && [[ $SERVER_OS == "CentOS" ]] && [[ $CENTOS_8 == "False" ]]; then
+	yum list installed libzip-devel
+		if [[ $? == "0" ]] ; then
+			yum remove -y libzip-devel
+	fi
 	yum install -y http://packages.psychotic.ninja/7/plus/x86_64/RPMS/libzip-0.11.2-6.el7.psychotic.x86_64.rpm
 	yum install -y http://packages.psychotic.ninja/7/plus/x86_64/RPMS/libzip-devel-0.11.2-6.el7.psychotic.x86_64.rpm
 	/usr/local/lsws/lsphp74/bin/pecl install zip
