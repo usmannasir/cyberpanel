@@ -2596,6 +2596,11 @@ StrictHostKeyChecking no
 
             website = Websites.objects.get(domain=self.domain)
 
+            if website.externalApp != data['externalApp']:
+                data_ret = {'status': 0, 'error_message': 'External app mis-match.'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
             uBuntuPath = '/etc/lsb-release'
 
             if os.path.exists(uBuntuPath):
