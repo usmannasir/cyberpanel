@@ -1,18 +1,6 @@
-import os,sys
-sys.path.append('/usr/local/CyberCP')
-import django
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
-try:
-    django.setup()
-except:
-    pass
 import subprocess
 import time
 import socket
-try:
-    from loginSystem.models import Administrator
-except:
-    pass
 import os
 import smtplib
 
@@ -29,7 +17,7 @@ class CyberCPLogFileWriter:
             CyberCPLogFileWriter.writeToFile(str(msg))
 
     @staticmethod
-    def writeToFile(message):
+    def writeToFile(message, email=None):
         try:
             file = open(CyberCPLogFileWriter.fileName,'a')
             file.writelines("[" + time.strftime(
@@ -43,9 +31,10 @@ class CyberCPLogFileWriter:
             try:
                 if os.path.exists(emailPath):
                     SUBJECT = "CyberPanel log reporting"
-                    admin = Administrator.objects.get(userName='admin')
+                    adminEmailPath = '/home/cyberpanel/adminEmail'
+                    adminEmail = open(adminEmailPath, 'r').read().rstrip('\n')
                     sender = 'root@%s' % (socket.gethostname())
-                    TO = [admin.email]
+                    TO = [adminEmail]
                     message = """\
 From: %s
 To: %s
@@ -54,7 +43,9 @@ Subject: %s
 %s
 """ % (
                     sender, ", ".join(TO), SUBJECT, '[%s] %s. \n' % (time.strftime("%m.%d.%Y_%H-%M-%S"), message))
-                    CyberCPLogFileWriter.SendEmail(sender, TO, message)
+
+                    if email == None or email == 1:
+                        CyberCPLogFileWriter.SendEmail(sender, TO, message)
             except BaseException as msg:
                 file = open(CyberCPLogFileWriter.fileName, 'a')
                 file.writelines("[" + time.strftime(
@@ -99,5 +90,3 @@ Subject: %s
         except BaseException as msg:
             CyberCPLogFileWriter.writeToFile(str(msg) + ' [statusWriter]')
             #print str(msg)
-
-

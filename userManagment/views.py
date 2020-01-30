@@ -358,6 +358,13 @@ def saveModifications(request):
 
                 user.save()
 
+                adminEmailPath = '/home/cyberpanel/adminEmail'
+
+                if accountUsername == 'admin':
+                    writeToFile = open(adminEmailPath, 'w')
+                    writeToFile.write(email)
+                    writeToFile.close()
+
                 data_ret = {'status': 1, 'saveStatus': 1, 'error_message': 'None'}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)

@@ -22,11 +22,11 @@ class Renew:
             ## For websites
 
             for website in Websites.objects.all():
-                logging.writeToFile('Checking SSL for %s.' % (website.domain))
+                logging.writeToFile('Checking SSL for %s.' % (website.domain), 0)
                 filePath = '/etc/letsencrypt/live/%s/fullchain.pem' % (website.domain)
 
                 if path.exists(filePath):
-                    logging.writeToFile('SSL exists for %s. Checking if SSL will expire in 15 days..' % (website.domain))
+                    logging.writeToFile('SSL exists for %s. Checking if SSL will expire in 15 days..' % (website.domain), 0)
                     x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM,
                                                            open(filePath, 'r').read())
                     expireData = x509.get_notAfter().decode('ascii')
@@ -36,37 +36,37 @@ class Renew:
 
                     if int(diff.days) >= 15:
                         logging.writeToFile(
-                            'SSL exists for %s and is not ready to renew, skipping..' % (website.domain))
+                            'SSL exists for %s and is not ready to renew, skipping..' % (website.domain), 0)
                     elif x509.get_issuer().get_components()[1][1] == 'Denial':
                         logging.writeToFile(
-                            'SSL exists for %s and ready to renew..' % (website.domain))
+                            'SSL exists for %s and ready to renew..' % (website.domain), 0)
                         logging.writeToFile(
-                            'Renewing SSL for %s..' % (website.domain))
+                            'Renewing SSL for %s..' % (website.domain), 0)
 
                         virtualHostUtilities.issueSSL(website.domain, '/home/%s/public_html' % (website.domain),
                                                       website.adminEmail)
                     else:
                         logging.writeToFile(
-                            'SSL exists for %s and ready to renew..' % (website.domain))
+                            'SSL exists for %s and ready to renew..' % (website.domain), 0)
                         logging.writeToFile(
-                            'Renewing SSL for %s..' % (website.domain))
+                            'Renewing SSL for %s..' % (website.domain), 0)
 
                         virtualHostUtilities.issueSSL(website.domain, '/home/%s/public_html' % (website.domain), website.adminEmail)
                 else:
                     logging.writeToFile(
-                        'SSL does not exist for %s. Obtaining now..' % (website.domain))
+                        'SSL does not exist for %s. Obtaining now..' % (website.domain), 0)
                     virtualHostUtilities.issueSSL(website.domain, '/home/%s/public_html' % (website.domain),
                                                   website.adminEmail)
 
             ## For child-domains
 
             for website in ChildDomains.objects.all():
-                logging.writeToFile('Checking SSL for %s.' % (website.domain))
+                logging.writeToFile('Checking SSL for %s.' % (website.domain), 0)
                 filePath = '/etc/letsencrypt/live/%s/fullchain.pem' % (website.domain)
 
                 if path.exists(filePath):
                     logging.writeToFile(
-                        'SSL exists for %s. Checking if SSL will expire in 15 days..' % (website.domain))
+                        'SSL exists for %s. Checking if SSL will expire in 15 days..' % (website.domain), 0)
                     x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM,
                                                            open(filePath, 'r').read())
                     expireData = x509.get_notAfter().decode('ascii')
@@ -76,26 +76,26 @@ class Renew:
 
                     if int(diff.days) >= 15:
                         logging.writeToFile(
-                            'SSL exists for %s and is not ready to renew, skipping..' % (website.domain))
+                            'SSL exists for %s and is not ready to renew, skipping..' % (website.domain), 0)
                     elif x509.get_issuer().get_components()[1][1] == 'Denial':
                         logging.writeToFile(
-                            'SSL exists for %s and ready to renew..' % (website.domain))
+                            'SSL exists for %s and ready to renew..' % (website.domain), 0)
                         logging.writeToFile(
-                            'Renewing SSL for %s..' % (website.domain))
+                            'Renewing SSL for %s..' % (website.domain), 0)
 
                         virtualHostUtilities.issueSSL(website.domain, website.path,
                                                       website.master.adminEmail)
                     else:
                         logging.writeToFile(
-                            'SSL exists for %s and ready to renew..' % (website.domain))
+                            'SSL exists for %s and ready to renew..' % (website.domain), 0)
                         logging.writeToFile(
-                            'Renewing SSL for %s..' % (website.domain))
+                            'Renewing SSL for %s..' % (website.domain), 0)
 
                         virtualHostUtilities.issueSSL(website.domain, website.path,
                                                       website.master.adminEmail)
                 else:
                     logging.writeToFile(
-                        'SSL does not exist for %s. Obtaining now..' % (website.domain))
+                        'SSL does not exist for %s. Obtaining now..' % (website.domain), 0)
                     virtualHostUtilities.issueSSL(website.domain, website.path,
                                                   website.master.adminEmail)
 
