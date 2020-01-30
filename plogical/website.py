@@ -2312,6 +2312,12 @@ IdentityFile /home/%s/.ssh/%s
 
             website = Websites.objects.get(domain=self.domain)
 
+            if website.externalApp != data['externalApp']:
+                data_ret = {'status': 0, 'error_message': 'External app mis-match.'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+
             command = 'echo "%s" | passwd --stdin %s' % (data['password'], data['externalApp'])
             ProcessUtilities.executioner(command)
 
