@@ -1,6 +1,9 @@
 import subprocess
 import time
-
+from plogical.mailUtilities import mailUtilities
+import socket
+from loginSystem.models import Administrator
+import os
 
 class CyberCPLogFileWriter:
     fileName = "/home/cyberpanel/error-logs.txt"
@@ -12,6 +15,25 @@ class CyberCPLogFileWriter:
             file.writelines("[" + time.strftime(
                     "%m.%d.%Y_%H-%M-%S") + "] "+ message + "\n")
             file.close()
+
+            ## Send Email
+
+            emailPath = '/usr/local/CyberCP/emailDebug'
+
+            if os.path.exists(emailPath):
+                SUBJECT = "CyberPanel log reporting"
+                admin = Administrator.objects.get(userName='admin')
+                sender = 'root@%s' % (socket.gethostname())
+                TO = [admin.email]
+                message = """\
+From: %s
+To: %s
+Subject: %s
+    
+%s
+    """ % (sender, ", ".join(TO), SUBJECT, '[%s] %s. \n' % (time.strftime("%m.%d.%Y_%H-%M-%S"), message))
+                mailUtilities.SendEmail(sender, TO, message)
+
 
         except BaseException as msg:
             return "Can not write to error file."

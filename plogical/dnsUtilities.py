@@ -385,7 +385,7 @@ class DNS:
             zone = Domains.objects.get(name=topLevelDomain)
 
             path = "/etc/opendkim/keys/" + topLevelDomain + "/default.txt"
-            command = "sudo cat " + path
+            command = "cat " + path
             output = subprocess.check_output(shlex.split(command)).decode("utf-8")
             leftIndex = output.index('(') + 2
             rightIndex = output.rindex(')') - 1
@@ -402,8 +402,8 @@ class DNS:
             record.save()
 
             if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
-                command = 'sudo systemctl restart pdns'
-                ProcessUtilities.executioner(command)
+                command = ' systemctl restart pdns'
+                ProcessUtiities.executioner(command)
 
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(

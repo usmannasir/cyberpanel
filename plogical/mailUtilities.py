@@ -227,7 +227,7 @@ class mailUtilities:
 
             ## Generate keys
 
-            command = "sudo opendkim-genkey -D /etc/opendkim/keys/%s -d %s -s default" % (virtualHostName, virtualHostName)
+            command = "opendkim-genkey -D /etc/opendkim/keys/%s -d %s -s default" % (virtualHostName, virtualHostName)
             ProcessUtilities.normalExecutioner(command)
             ## Fix permissions
 

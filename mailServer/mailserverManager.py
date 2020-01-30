@@ -667,7 +667,7 @@ class MailServerManager:
                 zone.save()
 
                 path = "/etc/opendkim/keys/" + domainName + "/default.txt"
-                command = "sudo cat " + path
+                command = "cat " + path
                 output = ProcessUtilities.outputExecutioner(command)
                 leftIndex = output.index('(') + 2
                 rightIndex = output.rindex(')') - 1
