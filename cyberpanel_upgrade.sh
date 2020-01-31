@@ -152,6 +152,7 @@ make
 
 cp lswsgi /usr/local/CyberCP/bin/
 
+sed -i 's|python2|python|g' /usr/bin/adminPass
 chmod 700 /usr/bin/adminPass
 
 if [[ -f /etc/cyberpanel/webadmin_passwd ]] ; then
@@ -177,6 +178,7 @@ if [[ ! -f /usr/local/lsws/lsphp74/lib64/php/modules/zip.so ]] && [[ $SERVER_OS 
 fi
 #fix the lsphp74-zip missing issue.
 
+#change python2 to python
 
 ##
 systemctl restart lscpd
