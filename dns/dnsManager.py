@@ -15,7 +15,6 @@ from .models import Domains,Records
 from re import match,I,M
 from plogical.mailUtilities import mailUtilities
 from plogical.acl import ACLManager
-from manageServices.models import PDNSStatus
 
 class DNSManager:
     defaultNameServersPath = '/home/cyberpanel/defaultNameservers'
@@ -511,19 +510,19 @@ class DNSManager:
             if os.path.exists(DNSManager.defaultNameServersPath):
                 nsData = open(DNSManager.defaultNameServersPath, 'r').readlines()
                 try:
-                    data['firstNS'] = nsData[0]
+                    data['firstNS'] = nsData[0].rstrip('\n')
                 except:
                     pass
                 try:
-                    data['secondNS'] = nsData[1]
+                    data['secondNS'] = nsData[1].rstrip('\n')
                 except:
                     pass
                 try:
-                    data['thirdNS'] = nsData[2]
+                    data['thirdNS'] = nsData[2].rstrip('\n')
                 except:
                     pass
                 try:
-                    data['forthNS'] = nsData[3]
+                    data['forthNS'] = nsData[3].rstrip('\n')
                 except:
                     pass
 
@@ -545,16 +544,16 @@ class DNSManager:
             nsContent = ''
 
             try:
-                nsContent = '%s\n%s\n%s\n%s\n' % (data['firstNS'], data['secondNS'], data['thirdNS'], data['forthNS'])
+                nsContent = '%s\n%s\n%s\n%s\n' % (data['firstNS'].rstrip('\n'), data['secondNS'].rstrip('\n'), data['thirdNS'].rstrip('\n'), data['forthNS'].rstrip('\n'))
             except:
                 try:
-                    nsContent = '%s\n%s\n%s\n' % (data['firstNS'], data['secondNS'], data['thirdNS'])
+                    nsContent = '%s\n%s\n%s\n' % (data['firstNS'].rstrip('\n'), data['secondNS'].rstrip('\n'), data['thirdNS'].rstrip('\n'))
                 except:
                     try:
-                        nsContent = '%s\n%s\n' % (data['firstNS'], data['secondNS'])
+                        nsContent = '%s\n%s\n' % (data['firstNS'].rstrip('\n'), data['secondNS'].rstrip('\n'))
                     except:
                         try:
-                            nsContent = '%s\n' % (data['firstNS'])
+                            nsContent = '%s\n' % (data['firstNS'].rstrip('\n'))
                         except:
                             pass
 

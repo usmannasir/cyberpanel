@@ -76,16 +76,17 @@ class DNS:
                             defaultNS = open(DNS.defaultNameServersPath, 'r').readlines()
 
                             for items in defaultNS:
-                                record = Records(domainOwner=zone,
-                                                 domain_id=zone.id,
-                                                 name=topLevelDomain,
-                                                 type="NS",
-                                                 content=items,
-                                                 ttl=3600,
-                                                 prio=0,
-                                                 disabled=0,
-                                                 auth=1)
-                                record.save()
+                                if len(items) > 5:
+                                    record = Records(domainOwner=zone,
+                                                     domain_id=zone.id,
+                                                     name=topLevelDomain,
+                                                     type="NS",
+                                                     content=items.rstrip('\n'),
+                                                     ttl=3600,
+                                                     prio=0,
+                                                     disabled=0,
+                                                     auth=1)
+                                    record.save()
                         else:
                             record = Records(domainOwner=zone,
                                              domain_id=zone.id,
