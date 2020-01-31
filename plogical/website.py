@@ -1713,14 +1713,14 @@ class WebsiteManager:
             ## Installation
             salt = randomPassword.generate_pass(32)
             # return salt
-            password_hash = hashlib.md5(password + salt).hexdigest()
+            password_hash = hashlib.md5((password + salt).encode('utf-8')).hexdigest()
             password = password_hash + ":" + salt
 
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines('Downloading Joomla Core..,20')
             statusFile.close()
 
-            execPath = "sudo python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
 
             execPath = execPath + " installJoomla --virtualHostName " + domainName + \
                        " --virtualHostUser " + externalApp + " --path " + finalPath + " --dbName " + dbName + \
