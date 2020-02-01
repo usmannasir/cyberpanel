@@ -1373,6 +1373,7 @@ imap_folder_list_limit = 0
             FirewallUtilities.addRule("tcp", "110")
             FirewallUtilities.addRule("tcp", "143")
             FirewallUtilities.addRule("tcp", "993")
+            FirewallUtilities.addRule("tcp", "995")
             FirewallUtilities.addRule("udp", "53")
             FirewallUtilities.addRule("tcp", "53")
             FirewallUtilities.addRule("udp", "443")

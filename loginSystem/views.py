@@ -176,6 +176,9 @@ def loadLoginPage(request):
             newFWRule = FirewallRules(name="ftptls", proto="tcp", port="40110-40210")
             newFWRule.save()
 
+            newFWRule = FirewallRules(name="POP3S", proto="tcp", port="995")
+            newFWRule.save()
+
             newFWRule = FirewallRules(name="quic", proto="udp", port="443")
             newFWRule.save()
 
