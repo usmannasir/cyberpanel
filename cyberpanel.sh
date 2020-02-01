@@ -1284,6 +1284,10 @@ watchdog_setup
 
 install_utility
 
+if [[ ! -f /usr/sbin/ipset ]] && [[ $SERVER_OS == "Ubuntu" ]] ; then
+ln -s /sbin/ipset /usr/sbin/ipset
+fi
+
 if [[ ! -f /usr/local/lsws/lsphp74/lib64/php/modules/zip.so ]] && [[ $SERVER_OS == "CentOS" ]] && [[ $CENTOS_8 == "False" ]]; then
 	yum list installed libzip-devel
 		if [[ $? == "0" ]] ; then
