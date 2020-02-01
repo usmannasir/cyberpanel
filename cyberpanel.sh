@@ -1202,7 +1202,7 @@ for version in $(ls /usr/local/lsws | grep lsphp);
 			if [[ ! -d /usr/local/lsws/$version/tmp ]] ; then
 				mkdir /usr/local/lsws/$version/tmp
 			fi
-		/usr/local/lsws/${version}/bin/pecl channel-update pecl.php.net;
+		/usr/local/lsws/${version}/bin/pecl channel-update pecl.php.net
 		/usr/local/lsws/${version}/bin/pear config-set temp_dir /usr/local/lsws/${version}/tmp
 		/usr/local/lsws/${version}/bin/pecl install timezonedb
 		echo "extension=timezonedb.so" > /usr/local/lsws/${version}/etc/php.d/20-timezone.ini
