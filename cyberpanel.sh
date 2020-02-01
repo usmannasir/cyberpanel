@@ -667,12 +667,17 @@ elif  echo $OUTPUT | grep -q "CentOS Linux 8" ; then
 	SERVER_OS="CentOS"
 	CENTOS_8="True"
 elif echo $OUTPUT | grep -q "Ubuntu 18.04" ; then
+	if uname -m | grep -q 64 ; then
 	echo -e "\nDetecting Ubuntu 18.04...\n"
 	SERVER_OS="Ubuntu"
+	else
+		echo -e "\nUbuntu 18.04 x32 detected...ths only works on x64 system."
+		exit
+	fi
 else
 	cat /etc/*release
 	echo -e "\nUnable to detect your OS...\n"
-	echo -e "\nCyberPanel is supported on Ubuntu 18.04, CentOS 7.x, CentOS 8.x and CloudLinux 7.x...\n"
+	echo -e "\nCyberPanel is supported on Ubuntu 18.04 x86_64, CentOS 7.x, CentOS 8.x and CloudLinux 7.x...\n"
 	exit 1
 fi
 }
