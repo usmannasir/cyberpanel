@@ -667,12 +667,17 @@ elif  echo $OUTPUT | grep -q "CentOS Linux 8" ; then
 	SERVER_OS="CentOS"
 	CENTOS_8="True"
 elif echo $OUTPUT | grep -q "Ubuntu 18.04" ; then
+	if uname -m | grep -q 64 ; then
 	echo -e "\nDetecting Ubuntu 18.04...\n"
 	SERVER_OS="Ubuntu"
+	else
+		echo -e "\nUbuntu 18.04 x32 detected...ths only works on x64 system."
+		exit
+	fi
 else
 	cat /etc/*release
 	echo -e "\nUnable to detect your OS...\n"
-	echo -e "\nCyberPanel is supported on Ubuntu 18.04, CentOS 7.x, CentOS 8.x and CloudLinux 7.x...\n"
+	echo -e "\nCyberPanel is supported on Ubuntu 18.04 x86_64, CentOS 7.x, CentOS 8.x and CloudLinux 7.x...\n"
 	exit 1
 fi
 }
@@ -1229,7 +1234,7 @@ for version in $(ls /usr/local/lsws | grep lsphp);
 			if [[ ! -d /usr/local/lsws/$version/tmp ]] ; then
 				mkdir /usr/local/lsws/$version/tmp
 			fi
-		/usr/local/lsws/${version}/bin/pecl channel-update pecl.php.net;
+		/usr/local/lsws/${version}/bin/pecl channel-update pecl.php.net
 		/usr/local/lsws/${version}/bin/pear config-set temp_dir /usr/local/lsws/${version}/tmp
 		/usr/local/lsws/${version}/bin/pecl install timezonedb
 		echo "extension=timezonedb.so" > /usr/local/lsws/${version}/etc/php.d/20-timezone.ini
@@ -1311,7 +1316,15 @@ watchdog_setup
 
 install_utility
 
+if [[ ! -f /usr/sbin/ipset ]] && [[ $SERVER_OS == "Ubuntu" ]] ; then
+ln -s /sbin/ipset /usr/sbin/ipset
+fi
+
 if [[ ! -f /usr/local/lsws/lsphp74/lib64/php/modules/zip.so ]] && [[ $SERVER_OS == "CentOS" ]] && [[ $CENTOS_8 == "False" ]]; then
+	yum list installed libzip-devel
+		if [[ $? == "0" ]] ; then
+			yum remove -y libzip-devel
+	fi
 	yum install -y http://packages.psychotic.ninja/7/plus/x86_64/RPMS/libzip-0.11.2-6.el7.psychotic.x86_64.rpm
 	yum install -y http://packages.psychotic.ninja/7/plus/x86_64/RPMS/libzip-devel-0.11.2-6.el7.psychotic.x86_64.rpm
 	/usr/local/lsws/lsphp74/bin/pecl install zip
