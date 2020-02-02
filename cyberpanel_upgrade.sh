@@ -197,6 +197,7 @@ if [[ ! -f /usr/local/lsws/lsphp74/lib64/php/modules/zip.so ]] && [[ $SERVER_OS 
 	echo "extension=zip.so" > /usr/local/lsws/lsphp74/etc/php.d/20-zip.ini
 	else
 	echo -e "\nlsphp74-zip compilation failed..."
+	fi
 fi
 #fix the lsphp74-zip missing issue.
 
