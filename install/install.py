@@ -1680,7 +1680,7 @@ imap_folder_list_limit = 0
             ##
 
             cronFile = open("/etc/crontab", "a")
-            cronFile.writelines("0 * * * * root python /usr/local/CyberCP/plogical/findBWUsage.py" + "\n")
+            cronFile.writelines("0 * * * * root /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/findBWUsage.py" + "\n")
             cronFile.writelines("0 * * * * root /usr/local/CyberCP/postfixSenderPolicy/client.py hourlyCleanup" + "\n")
             cronFile.writelines("0 0 1 * * root /usr/local/CyberCP/postfixSenderPolicy/client.py monthlyCleanup" + "\n")
             cronFile.writelines("0 2 * * * root /usr/local/CyberCP/plogical/upgradeCritical.py" + "\n")
