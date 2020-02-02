@@ -1963,7 +1963,7 @@ class WebsiteManager:
             ## Installation
             salt = randomPassword.generate_pass(32)
             # return salt
-            password_hash = hashlib.md5(password + salt).hexdigest()
+            password_hash = hashlib.md5((password + salt).encode('utf-8')).hexdigest()
             password = password_hash + ":" + salt
 
             statusFile = open(tempStatusPath, 'w')

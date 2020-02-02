@@ -897,7 +897,7 @@ class ApplicationInstaller(multi.Thread):
             VALUES (LAST_INSERT_ID(),'8');""" % (prefix, username, password, prefix)
 
             out, err = proc.communicate(
-                file(finalPath + 'installation/sql/mysql/joomlaInstall.sql').read() + "\n" + usercreation)
+                open(finalPath + 'installation/sql/mysql/joomlaInstall.sql', 'rb').read() + ("\n" + usercreation).encode('utf-8'))
 
             shutil.rmtree(finalPath + "installation")
 
