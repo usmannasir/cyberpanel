@@ -244,7 +244,7 @@ class virtualHostUtilities:
 
             postfixMapFile = '/etc/postfix/vmail_ssl.map'
 
-            mapContent = '%s /etc/letsencrypt/live/%s/privkey.pem /etc/letsencrypt/live/%s/fullchain.pem' % (childDomain, childDomain, childDomain)
+            mapContent = '%s /etc/letsencrypt/live/%s/privkey.pem /etc/letsencrypt/live/%s/fullchain.pem\n' % (childDomain, childDomain, childDomain)
 
             writeToFile = open(postfixMapFile, 'a')
             writeToFile.write(mapContent)
