@@ -231,6 +231,33 @@ class virtualHostUtilities:
                 command = 'systemctl restart dovecot'
                 ProcessUtilities.executioner(command)
 
+            ### Update postfix configurations
+
+            postFixPath = '/etc/postfix/main.cf'
+
+            postFixContent = open(postFixPath, 'r').read()
+
+            if postFixContent.find('tls_server_sni_maps') == -1:
+                writeToFile = open(postFixPath, 'a')
+                writeToFile.write('\ntls_server_sni_maps = hash:/etc/postfix/vmail_ssl.map\n')
+                writeToFile.close()
+
+            postfixMapFile = '/etc/postfix/vmail_ssl.map'
+
+            mapContent = '%s /etc/letsencrypt/live/%s/privkey.pem /etc/letsencrypt/live/%s/fullchain.pem' % (childDomain, childDomain, childDomain)
+
+            writeToFile = open(postfixMapFile, 'a')
+            writeToFile.write(mapContent)
+            writeToFile.close()
+
+            command = 'postmap -F hash:/etc/postfix/vmail_ssl.map'
+            ProcessUtilities.executioner(command)
+
+            command = 'systemctl restart postfix'
+            ProcessUtilities.executioner(command)
+
+            ###
+
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Website successfully created. [200]')
 
             return 1, 'None'
