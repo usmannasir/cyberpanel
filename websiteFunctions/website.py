@@ -1004,7 +1004,7 @@ class WebsiteManager:
 
         if output.find("1,None") > -1:
             final_json = json.dumps(
-                {'status': 0, 'logstatus': 0, 'error_message': "Not able to fetch logs, see CyberPanel main log file!"})
+                {'status': 0, 'logstatus': 0, 'error_message': "Not able to fetch logs, see CyberPanel main log file, Error: %s" % (output)})
             return HttpResponse(final_json)
 
         ## get log ends here.
@@ -1017,11 +1017,11 @@ class WebsiteManager:
         for items in reversed(data):
             if len(items) > 10:
                 logData = items.split(" ")
-                domain = logData[0].strip('"')
-                ipAddress = logData[1]
-                time = (logData[4]).strip("[").strip("]")
-                resource = logData[7].strip('"')
-                size = logData[10].replace('"', '')
+                domain = logData[5].strip('"')
+                ipAddress = logData[0].strip('"')
+                time = (logData[3]).strip("[").strip("]")
+                resource = logData[6].strip('"')
+                size = logData[9].replace('"', '')
 
                 dic = {'domain': domain,
                        'ipAddress': ipAddress,

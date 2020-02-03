@@ -297,10 +297,10 @@ class virtualHostUtilities:
                 print("0, %s file is symlinked." % (fileName))
                 return 0
 
-            numberOfTotalLines = int(ProcessUtilities.outputExecutioner('wc -l %s' % (fileName), externalApp).split(" ")[0])
+            numberOfTotalLines = int(ProcessUtilities.outputExecutioner('wc -l %s' % (fileName), 'nobody').split(" ")[0])
 
             if numberOfTotalLines < 25:
-                data = ProcessUtilities.outputExecutioner('cat %s' % (fileName), externalApp)
+                data = ProcessUtilities.outputExecutioner('cat %s' % (fileName), 'nobody')
             else:
                 if page == 1:
                     end = numberOfTotalLines
@@ -309,7 +309,7 @@ class virtualHostUtilities:
                         start = 1
                     startingAndEnding = "'" + str(start) + "," + str(end) + "p'"
                     command = "sed -n " + startingAndEnding + " " + fileName
-                    data = ProcessUtilities.outputExecutioner(command, externalApp)
+                    data = ProcessUtilities.outputExecutioner(command, 'nobody')
                 else:
                     end = numberOfTotalLines - ((page - 1) * 25)
                     start = end - 24
@@ -317,7 +317,7 @@ class virtualHostUtilities:
                         start = 1
                     startingAndEnding = "'" + str(start) + "," + str(end) + "p'"
                     command = "sed -n " + startingAndEnding + " " + fileName
-                    data = ProcessUtilities.outputExecutioner(command, externalApp)
+                    data = ProcessUtilities.outputExecutioner(command, 'nobody')
             print(data)
             return data
         except BaseException as msg:
