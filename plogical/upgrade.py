@@ -2064,6 +2064,31 @@ vmail
         command = """find /usr/local/lsws/conf/vhosts/ -type f -name 'vhost.conf' -exec sed -i "s/.*CustomLog.*/    LogFormat '%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"' combined\n&/g" {} \;"""
         subprocess.call(command, shell=True)
 
+        # Install findBWUsage cron if missing
+
+        command = """command="root /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/findBWUsage.py"; job="0 * * * * $command >/dev/null 2>&1"; cat <(grep -Fiv "$command" <(crontab -l)) <(echo "$job") | crontab -"""
+        subprocess.call(command, shell=True)
+
+        # Install postfix hourly cron if missing
+
+        command = """command="root /usr/local/CyberCP/bin/python /usr/local/CyberCP/postfixSenderPolicy/client.py hourlyCleanup"; job="0 * * * * $command >/dev/null 2>&1"; cat <(grep -Fiv "$command" <(crontab -l)) <(echo "$job") | crontab -"""
+        subprocess.call(command, shell=True)
+
+        # Install postfix monthyl cron if missing
+
+        command = """command="root /usr/local/CyberCP/bin/python /usr/local/CyberCP/postfixSenderPolicy/client.py monthlyCleanup"; job="0 0 1 * * $command >/dev/null 2>&1"; cat <(grep -Fiv "$command" <(crontab -l)) <(echo "$job") | crontab -"""
+        subprocess.call(command, shell=True)
+
+        # Install upgradeCritical cron if missing
+
+        command = """command="root /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/upgradeCritical.py"; job="0 2 * * * $command >/dev/null 2>&1"; cat <(grep -Fiv "$command" <(crontab -l)) <(echo "$job") | crontab -"""
+        subprocess.call(command, shell=True)
+
+        # Install upgradeCritical cron if missing
+
+        command = """command="root /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/renew.py"; job="0 2 * * * $command >/dev/null 2>&1"; cat <(grep -Fiv "$command" <(crontab -l)) <(echo "$job") | crontab -"""
+        subprocess.call(command, shell=True)
+
 
 
     @staticmethod
@@ -2184,6 +2209,7 @@ vmail
         Upgrade.executioner(command, 'fix csf if there', 0)
         Upgrade.AutoUpgradeAcme()
         Upgrade.installCLScripts()
+        Upgrade.runSomeImportantBash()
 
         Upgrade.stdOut("Upgrade Completed.")
 
