@@ -2055,6 +2055,15 @@ vmail
         except:
             pass
 
+    @staticmethod
+    def runSomeImportantBash():
+
+        command = """sed -i "s|^LogFormat.*|LogFormat '%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"' combined|g" /usr/local/lsws/conf/httpd.conf"""
+        subprocess.call(command, shell=True)
+
+        command = """find /usr/local/lsws/conf/vhosts/ -type f -name 'vhost.conf' -exec sed -i "s/.*CustomLog.*/    LogFormat '%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"' combined\n&/g" {} \;"""
+        subprocess.call(command, shell=True)
+
 
 
     @staticmethod
