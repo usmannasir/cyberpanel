@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <httpServerConfig>
   <serverName>$HOSTNAME</serverName>
+  <workerProcesses>1</workerProcesses>
   <user>nobody</user>
   <group>nobody</group>
   <priority>0</priority>
@@ -18,6 +19,7 @@
   <phpSuExecMaxConn>5</phpSuExecMaxConn>
   <mime>$SERVER_ROOT/conf/mime.properties</mime>
   <showVersionNumber>0</showVersionNumber>
+  <useIpInProxyHeader>0</useIpInProxyHeader>
   <autoUpdateInterval>86400</autoUpdateInterval>
   <autoUpdateDownloadPkg>1</autoUpdateDownloadPkg>
   <adminEmails>usman@cyberpersons.com</adminEmails>
@@ -33,9 +35,10 @@
     </log>
     <accessLog>
       <fileName>$SERVER_ROOT/logs/access.log</fileName>
+      <logFormat>%h %l %u %t \&quot;%r\&quot; %&gt;s %b \&quot;%{Referer}i\&quot; \&quot;%{User-Agent}i\&quot;</logFormat>
       <rollingSize>10M</rollingSize>
       <keepDays>30</keepDays>
-      <compressArchive>0</compressArchive>
+      <compressArchive>1</compressArchive>
     </accessLog>
   </logging>
   <indexFiles>index.html, index.php</indexFiles>
@@ -48,12 +51,10 @@
     <expiresByType>image/*=A604800, text/css=A604800, application/x-javascript=A604800, application/javascript=A604800</expiresByType>
   </expires>
   <tuning>
-    <eventDispatcher>best</eventDispatcher>
     <maxConnections>10000</maxConnections>
     <maxSSLConnections>10000</maxSSLConnections>
     <connTimeout>300</connTimeout>
     <maxKeepAliveReq>1000</maxKeepAliveReq>
-    <smartKeepAlive>0</smartKeepAlive>
     <keepAliveTimeout>5</keepAliveTimeout>
     <sndBufSize>0</sndBufSize>
     <rcvBufSize>0</rcvBufSize>
@@ -70,9 +71,9 @@
     <useAIO>1</useAIO>
     <AIOBlockSize>4</AIOBlockSize>
     <enableGzipCompress>1</enableGzipCompress>
+    <compressibleTypes>text/*,application/x-javascript,application/javascript,application/xml, image/svg+xml</compressibleTypes>
     <enableDynGzipCompress>1</enableDynGzipCompress>
     <gzipCompressLevel>1</gzipCompressLevel>
-    <compressibleTypes>text/*,application/x-javascript,application/javascript,application/xml, image/svg+xml</compressibleTypes>
     <gzipAutoUpdateStatic>1</gzipAutoUpdateStatic>
     <gzipStaticCompressLevel>6</gzipStaticCompressLevel>
     <gzipMaxFileSize>1M</gzipMaxFileSize>
@@ -157,7 +158,7 @@ SecFilterSelective ARGS &quot;into[[:space:]]+outfile|load[[:space:]]+data|/\*.+
       <dir>$SERVER_ROOT/admin/conf/*</dir>
     </accessDenyDir>
     <accessControl>
-      <allow>ALL</allow>
+      <allow>ALL, localhostT, 127.0.0.1T, 103.21.244.0/22T, 103.22.200.0/22T, 103.31.4.0/22T, 104.16.0.0/12T, 108.162.192.0/18T, 131.0.72.0/22T, 141.101.64.0/18T, 162.158.0.0/15T, 172.64.0.0/13T, 173.245.48.0/20T, 188.114.96.0/20T, 190.93.240.0/20T, 197.234.240.0/22T, 198.41.128.0/17T, 2400:cb00::/32T, 2405:8100::/32T, 2405:b500::/32T, 2606:4700::/32T, 2803:f800::/32T, 2a06:98c0::/29T, 2c0f:f248::/32T, 192.88.134.0/23T, 185.93.228.0/22, 66.248.200.0/22T, 208.109.0.0/22T, 2a02:fe80::/29T</allow>
     </accessControl>
   </security>
   <extProcessorList>
@@ -181,86 +182,6 @@ SecFilterSelective ARGS &quot;into[[:space:]]+outfile|load[[:space:]]+data|/\*.+
       <procSoftLimit>400</procSoftLimit>
       <procHardLimit>500</procHardLimit>
     </extProcessor>
-	<extProcessor>
-      <type>lsapi</type>
-      <name>lsphp53</name>
-      <address>uds://tmp/lshttpd/lsphp53.sock</address>
-      <maxConns>35</maxConns>
-      <env>PHP_LSAPI_CHILDREN=35</env>
-      <initTimeout>60</initTimeout>
-      <retryTimeout>0</retryTimeout>
-      <persistConn>1</persistConn>
-      <respBuffer>0</respBuffer>
-      <autoStart>3</autoStart>
-      <path>$SERVER_ROOT/lsphp53/bin/lsphp</path>
-      <backlog>100</backlog>
-      <instances>1</instances>
-      <priority>0</priority>
-      <memSoftLimit>2047M</memSoftLimit>
-      <memHardLimit>2047M</memHardLimit>
-      <procSoftLimit>400</procSoftLimit>
-      <procHardLimit>500</procHardLimit>
-    </extProcessor>
-	<extProcessor>
-      <type>lsapi</type>
-      <name>lsphp54</name>
-      <address>uds://tmp/lshttpd/lsphp54.sock</address>
-      <maxConns>35</maxConns>
-      <env>PHP_LSAPI_CHILDREN=35</env>
-      <initTimeout>60</initTimeout>
-      <retryTimeout>0</retryTimeout>
-      <persistConn>1</persistConn>
-      <respBuffer>0</respBuffer>
-      <autoStart>3</autoStart>
-      <path>$SERVER_ROOT/lsphp54/bin/lsphp</path>
-      <backlog>100</backlog>
-      <instances>1</instances>
-      <priority>0</priority>
-      <memSoftLimit>2047M</memSoftLimit>
-      <memHardLimit>2047M</memHardLimit>
-      <procSoftLimit>400</procSoftLimit>
-      <procHardLimit>500</procHardLimit>
-    </extProcessor> 
-	<extProcessor>
-      <type>lsapi</type>
-      <name>lsphp55</name>
-      <address>uds://tmp/lshttpd/lsphp55.sock</address>
-      <maxConns>35</maxConns>
-      <env>PHP_LSAPI_CHILDREN=35</env>
-      <initTimeout>60</initTimeout>
-      <retryTimeout>0</retryTimeout>
-      <persistConn>1</persistConn>
-      <respBuffer>0</respBuffer>
-      <autoStart>3</autoStart>
-      <path>$SERVER_ROOT/lsphp55/bin/lsphp</path>
-      <backlog>100</backlog>
-      <instances>1</instances>
-      <priority>0</priority>
-      <memSoftLimit>2047M</memSoftLimit>
-      <memHardLimit>2047M</memHardLimit>
-      <procSoftLimit>400</procSoftLimit>
-      <procHardLimit>500</procHardLimit>
-    </extProcessor> 
-	<extProcessor>
-      <type>lsapi</type>
-      <name>lsphp56</name>
-      <address>uds://tmp/lshttpd/lsphp56.sock</address>
-      <maxConns>35</maxConns>
-      <env>PHP_LSAPI_CHILDREN=35</env>
-      <initTimeout>60</initTimeout>
-      <retryTimeout>0</retryTimeout>
-      <persistConn>1</persistConn>
-      <respBuffer>0</respBuffer>
-      <autoStart>3</autoStart>
-      <path>$SERVER_ROOT/lsphp56/bin/lsphp</path>
-      <backlog>100</backlog>
-      <instances>1</instances>
-      <priority>0</priority>
-      <memSoftLimit>2047M</memSoftLimit>
-      <memHardLimit>2047M</memHardLimit>
-      <procSoftLimit>400</procSoftLimit>
-      <procHardLimit>500</procHardLimit>
-    </extProcessor> 
     <extProcessor>
       <type>lsapi</type>
       <name>lsphp70</name>
@@ -281,7 +202,7 @@ SecFilterSelective ARGS &quot;into[[:space:]]+outfile|load[[:space:]]+data|/\*.+
       <procSoftLimit>400</procSoftLimit>
       <procHardLimit>500</procHardLimit>
     </extProcessor>
-	<extProcessor>
+    <extProcessor>
       <type>lsapi</type>
       <name>lsphp71</name>
       <address>uds://tmp/lshttpd/lsphp71.sock</address>
@@ -301,7 +222,7 @@ SecFilterSelective ARGS &quot;into[[:space:]]+outfile|load[[:space:]]+data|/\*.+
       <procSoftLimit>400</procSoftLimit>
       <procHardLimit>500</procHardLimit>
     </extProcessor>
-	<extProcessor>
+    <extProcessor>
       <type>lsapi</type>
       <name>lsphp72</name>
       <address>uds://tmp/lshttpd/lsphp72.sock</address>
@@ -321,13 +242,13 @@ SecFilterSelective ARGS &quot;into[[:space:]]+outfile|load[[:space:]]+data|/\*.+
       <procSoftLimit>400</procSoftLimit>
       <procHardLimit>500</procHardLimit>
     </extProcessor>
-	<extProcessor>
+    <extProcessor>
       <type>lsapi</type>
       <name>lsphp73</name>
       <address>uds://tmp/lshttpd/lsphp73.sock</address>
       <maxConns>35</maxConns>
       <env>PHP_LSAPI_CHILDREN=35</env>
-      <initTimeout>60</initTimeout>
+      <initTimeout>300</initTimeout>
       <retryTimeout>0</retryTimeout>
       <persistConn>1</persistConn>
       <respBuffer>0</respBuffer>
@@ -373,47 +294,54 @@ SecFilterSelective ARGS &quot;into[[:space:]]+outfile|load[[:space:]]+data|/\*.+
       <type>lsapi</type>
       <handler>lsphp5</handler>
     </scriptHandler>
-	<scriptHandler>
+    <scriptHandler>
       <suffix>php53</suffix>
       <type>lsapi</type>
       <handler>lsphp53</handler>
-    </scriptHandler> 
-	<scriptHandler>
+    </scriptHandler>
+    <scriptHandler>
       <suffix>php54</suffix>
       <type>lsapi</type>
       <handler>lsphp54</handler>
-    </scriptHandler> 
-	<scriptHandler>
+    </scriptHandler>
+    <scriptHandler>
       <suffix>php55</suffix>
       <type>lsapi</type>
       <handler>lsphp55</handler>
-    </scriptHandler> 
-	<scriptHandler>
+    </scriptHandler>
+    <scriptHandler>
       <suffix>php56</suffix>
       <type>lsapi</type>
       <handler>lsphp56</handler>
-    </scriptHandler>  
+    </scriptHandler>
     <scriptHandler>
       <suffix>php70</suffix>
       <type>lsapi</type>
       <handler>lsphp70</handler>
     </scriptHandler>
-	<scriptHandler>
+    <scriptHandler>
       <suffix>php71</suffix>
       <type>lsapi</type>
       <handler>lsphp71</handler>
     </scriptHandler>
-	<scriptHandler>
+    <scriptHandler>
       <suffix>php72</suffix>
       <type>lsapi</type>
       <handler>lsphp72</handler>
     </scriptHandler>
-	<scriptHandler>
+    <scriptHandler>
       <suffix>php73</suffix>
       <type>lsapi</type>
       <handler>lsphp73</handler>
     </scriptHandler>
+    <scriptHandler>
+      <suffix>php74</suffix>
+      <type>lsapi</type>
+      <handler>lsphp74</handler>
+    </scriptHandler>
   </scriptHandlerList>
+  <phpConfig>
+  </phpConfig>
   <railsDefaults>
     <railsEnv>1</railsEnv>
     <maxConns>5</maxConns>
