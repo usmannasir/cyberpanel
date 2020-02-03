@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <httpServerConfig>
   <serverName>$HOSTNAME</serverName>
-  <workerProcesses>1</workerProcesses>
   <user>nobody</user>
   <group>nobody</group>
   <priority>0</priority>
@@ -51,10 +50,12 @@
     <expiresByType>image/*=A604800, text/css=A604800, application/x-javascript=A604800, application/javascript=A604800</expiresByType>
   </expires>
   <tuning>
+    <eventDispatcher>best</eventDispatcher>
     <maxConnections>10000</maxConnections>
     <maxSSLConnections>10000</maxSSLConnections>
     <connTimeout>300</connTimeout>
     <maxKeepAliveReq>1000</maxKeepAliveReq>
+    <smartKeepAlive>0</smartKeepAlive>
     <keepAliveTimeout>5</keepAliveTimeout>
     <sndBufSize>0</sndBufSize>
     <rcvBufSize>0</rcvBufSize>
@@ -71,9 +72,9 @@
     <useAIO>1</useAIO>
     <AIOBlockSize>4</AIOBlockSize>
     <enableGzipCompress>1</enableGzipCompress>
-    <compressibleTypes>text/*,application/x-javascript,application/javascript,application/xml, image/svg+xml</compressibleTypes>
     <enableDynGzipCompress>1</enableDynGzipCompress>
     <gzipCompressLevel>1</gzipCompressLevel>
+    <compressibleTypes>text/*,application/x-javascript,application/javascript,application/xml, image/svg+xml</compressibleTypes>
     <gzipAutoUpdateStatic>1</gzipAutoUpdateStatic>
     <gzipStaticCompressLevel>6</gzipStaticCompressLevel>
     <gzipMaxFileSize>1M</gzipMaxFileSize>
@@ -182,6 +183,86 @@ SecFilterSelective ARGS &quot;into[[:space:]]+outfile|load[[:space:]]+data|/\*.+
       <procSoftLimit>400</procSoftLimit>
       <procHardLimit>500</procHardLimit>
     </extProcessor>
+    	<extProcessor>
+      <type>lsapi</type>
+      <name>lsphp53</name>
+      <address>uds://tmp/lshttpd/lsphp53.sock</address>
+      <maxConns>35</maxConns>
+      <env>PHP_LSAPI_CHILDREN=35</env>
+      <initTimeout>60</initTimeout>
+      <retryTimeout>0</retryTimeout>
+      <persistConn>1</persistConn>
+      <respBuffer>0</respBuffer>
+      <autoStart>3</autoStart>
+      <path>$SERVER_ROOT/lsphp53/bin/lsphp</path>
+      <backlog>100</backlog>
+      <instances>1</instances>
+      <priority>0</priority>
+      <memSoftLimit>2047M</memSoftLimit>
+      <memHardLimit>2047M</memHardLimit>
+      <procSoftLimit>400</procSoftLimit>
+      <procHardLimit>500</procHardLimit>
+    </extProcessor>
+	<extProcessor>
+      <type>lsapi</type>
+      <name>lsphp54</name>
+      <address>uds://tmp/lshttpd/lsphp54.sock</address>
+      <maxConns>35</maxConns>
+      <env>PHP_LSAPI_CHILDREN=35</env>
+      <initTimeout>60</initTimeout>
+      <retryTimeout>0</retryTimeout>
+      <persistConn>1</persistConn>
+      <respBuffer>0</respBuffer>
+      <autoStart>3</autoStart>
+      <path>$SERVER_ROOT/lsphp54/bin/lsphp</path>
+      <backlog>100</backlog>
+      <instances>1</instances>
+      <priority>0</priority>
+      <memSoftLimit>2047M</memSoftLimit>
+      <memHardLimit>2047M</memHardLimit>
+      <procSoftLimit>400</procSoftLimit>
+      <procHardLimit>500</procHardLimit>
+    </extProcessor>
+	<extProcessor>
+      <type>lsapi</type>
+      <name>lsphp55</name>
+      <address>uds://tmp/lshttpd/lsphp55.sock</address>
+      <maxConns>35</maxConns>
+      <env>PHP_LSAPI_CHILDREN=35</env>
+      <initTimeout>60</initTimeout>
+      <retryTimeout>0</retryTimeout>
+      <persistConn>1</persistConn>
+      <respBuffer>0</respBuffer>
+      <autoStart>3</autoStart>
+      <path>$SERVER_ROOT/lsphp55/bin/lsphp</path>
+      <backlog>100</backlog>
+      <instances>1</instances>
+      <priority>0</priority>
+      <memSoftLimit>2047M</memSoftLimit>
+      <memHardLimit>2047M</memHardLimit>
+      <procSoftLimit>400</procSoftLimit>
+      <procHardLimit>500</procHardLimit>
+    </extProcessor>
+	<extProcessor>
+      <type>lsapi</type>
+      <name>lsphp56</name>
+      <address>uds://tmp/lshttpd/lsphp56.sock</address>
+      <maxConns>35</maxConns>
+      <env>PHP_LSAPI_CHILDREN=35</env>
+      <initTimeout>60</initTimeout>
+      <retryTimeout>0</retryTimeout>
+      <persistConn>1</persistConn>
+      <respBuffer>0</respBuffer>
+      <autoStart>3</autoStart>
+      <path>$SERVER_ROOT/lsphp56/bin/lsphp</path>
+      <backlog>100</backlog>
+      <instances>1</instances>
+      <priority>0</priority>
+      <memSoftLimit>2047M</memSoftLimit>
+      <memHardLimit>2047M</memHardLimit>
+      <procSoftLimit>400</procSoftLimit>
+      <procHardLimit>500</procHardLimit>
+    </extProcessor>
     <extProcessor>
       <type>lsapi</type>
       <name>lsphp70</name>
@@ -248,7 +329,7 @@ SecFilterSelective ARGS &quot;into[[:space:]]+outfile|load[[:space:]]+data|/\*.+
       <address>uds://tmp/lshttpd/lsphp73.sock</address>
       <maxConns>35</maxConns>
       <env>PHP_LSAPI_CHILDREN=35</env>
-      <initTimeout>300</initTimeout>
+      <initTimeout>60</initTimeout>
       <retryTimeout>0</retryTimeout>
       <persistConn>1</persistConn>
       <respBuffer>0</respBuffer>
