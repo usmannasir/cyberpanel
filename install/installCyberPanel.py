@@ -18,7 +18,7 @@ class InstallCyberPanel:
     mysql_Root_password = ""
     mysqlPassword = ""
 
-    def __init__(self, rootPath, cwd, distro, ent, serial = None, port = None, ftp = None, dns = None):
+    def __init__(self, rootPath, cwd, distro, ent, serial = None, port = None, ftp = None, dns = None, publicip = None):
         self.server_root_path = rootPath
         self.cwd = cwd
         self.distro = distro
@@ -27,6 +27,7 @@ class InstallCyberPanel:
         self.port = port
         self.ftp = None
         self.dns = dns
+        self.publicip = publicip
 
     @staticmethod
     def stdOut(message, log=0, exit=0, code=os.EX_OK):
@@ -438,6 +439,11 @@ class InstallCyberPanel:
 
                 command = 'echo 1 > /etc/pure-ftpd/conf/TLS'
                 subprocess.call(command, shell=True)
+
+                command = 'echo %s > /etc/pure-ftpd/conf/ForcePassiveIP' % (self.publicip)
+                subprocess.call(command, shell=True)
+
+
 
                 command = 'systemctl restart pure-ftpd-mysql.service'
                 install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
