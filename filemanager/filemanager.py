@@ -306,7 +306,7 @@ class FileManager:
             if os.path.islink(self.data['fileName']):
                 return self.ajaxPre(0, 'File exists and is symlink.')
 
-            if not self.data['fileName'].find(self.data['home']) > -1:
+            if self.data['fileName'].find(self.data['home']) == -1 or self.data['fileName'].find('..') > -1:
                 return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
             command = 'mv ' + tempPath + ' ' + self.returnPathEnclosed(self.data['fileName'])
