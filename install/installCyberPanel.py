@@ -443,6 +443,9 @@ class InstallCyberPanel:
                 command = 'echo %s > /etc/pure-ftpd/conf/ForcePassiveIP' % (self.publicip)
                 subprocess.call(command, shell=True)
 
+                command = 'echo "40110 40210" > /etc/pure-ftpd/conf/PassivePortRange'
+                subprocess.call(command, shell=True)
+
                 command = 'systemctl restart pure-ftpd-mysql.service'
                 install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
