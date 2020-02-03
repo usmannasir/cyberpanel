@@ -29,7 +29,7 @@ errorlog $VH_ROOT/logs/$VH_NAME.error_log {
 
 accesslog $VH_ROOT/logs/$VH_NAME.access_log {
   useServer               0
-  logFormat               "%v %h %l %u %t "%r" %>s %b"
+  logFormat               "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\""
   logHeaders              5
   rollingSize             10M
   keepDays                10  compressArchive         1
@@ -98,7 +98,7 @@ errorlog $VH_ROOT/logs/{masterDomain}.error_log {
 
 accesslog $VH_ROOT/logs/{masterDomain}.access_log {
   useServer               0
-  logFormat               "%v %h %l %u %t "%r" %>s %b"
+  logFormat               "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\""
   logHeaders              5
   rollingSize             10M
   keepDays                10  compressArchive         1
@@ -320,7 +320,7 @@ errorlog $VH_ROOT/logs/$VH_NAME.error_log {
 
 accesslog $VH_ROOT/logs/$VH_NAME.access_log {
   useServer               0
-  logFormat               "%v %h %l %u %t "%r" %>s %b"
+  logFormat               "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\""
   logHeaders              5
   rollingSize             10M
   keepDays                10  compressArchive         1
