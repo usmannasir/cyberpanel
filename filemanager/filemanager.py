@@ -176,13 +176,12 @@ class FileManager:
 
             domainName = self.data['domainName']
             website = Websites.objects.get(domain=domainName)
-            homePath = '/home/%s' % (domainName)
+            self.homePath = '/home/%s' % (domainName)
 
             for item in self.data['fileAndFolders']:
 
-                if item.find('..') > -1 or item.find(homePath) == -1:
+                if (self.data['path'] + '/' + item).find('..') > -1 or (self.data['path'] + '/' + item).find(self.homePath) == -1:
                     return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
-
 
                 command = 'rm -rf ' + self.returnPathEnclosed(self.data['path'] + '/' + item)
                 ProcessUtilities.executioner(command, website.externalApp)
@@ -208,6 +207,10 @@ class FileManager:
                 return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
             if len(self.data['fileAndFolders']) == 1:
+
+                if (self.data['basePath']+ '/' + self.data['fileAndFolders'][0]).find('..') > -1 or (self.data['basePath']+ '/' + self.data['fileAndFolders'][0]).find(homePath) == -1:
+                    return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
+
                 command = 'yes| cp -Rf %s %s' % (self.returnPathEnclosed(self.data['basePath']+ '/' + self.data['fileAndFolders'][0]), self.data['newPath'])
                 ProcessUtilities.executioner(command, website.externalApp)
                 self.changeOwner(self.data['newPath'])
@@ -218,6 +221,9 @@ class FileManager:
             ProcessUtilities.executioner(command, website.externalApp)
 
             for item in self.data['fileAndFolders']:
+                if (self.data['basePath']+ '/' + item).find('..') > -1 or (self.data['basePath']+ '/' + item).find(homePath) == -1:
+                    return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
+
                 command = '%scp -Rf ' % ('yes |') + self.returnPathEnclosed(self.data['basePath'] + '/' + item) + ' ' + self.returnPathEnclosed(self.data['newPath'])
                 ProcessUtilities.executioner(command, website.externalApp)
 
@@ -239,13 +245,17 @@ class FileManager:
 
             homePath = '/home/%s' % (domainName)
 
-            if self.data['newPath'].find('..') > -1 or self.data['newPath'].find(homePath) == -1:
-                return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
-
             command = 'mkdir ' + self.returnPathEnclosed(self.data['newPath'])
             ProcessUtilities.executioner(command, website.externalApp)
 
             for item in self.data['fileAndFolders']:
+
+                if (self.data['basePath']+ '/' + item).find('..') > -1 or (self.data['basePath']+ '/' + item).find(homePath) == -1:
+                    return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
+
+                if (self.data['newPath']+ '/' + item).find('..') > -1 or (self.data['newPath']+ '/' + item).find(homePath) == -1:
+                    return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
+
                 command = 'mv ' + self.returnPathEnclosed(self.data['basePath'] + '/' + item) + ' ' + self.returnPathEnclosed(self.data['newPath'] + '/' + item)
                 ProcessUtilities.executioner(command, website.externalApp)
 
@@ -267,7 +277,10 @@ class FileManager:
 
             homePath = '/home/%s' % (domainName)
 
-            if self.data['newFileName'].find('..') > -1 or self.data['newFileName'].find(homePath) == -1:
+            if (self.data['basePath'] + '/' + self.data['existingName']).find('..') > -1 or (self.data['basePath'] + '/' + self.data['existingName']).find(homePath) == -1:
+                return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
+
+            if (self.data['newFileName']).find('..') > -1 or (self.data['basePath']).find(homePath) == -1:
                 return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
 
@@ -386,6 +399,9 @@ class FileManager:
             if self.data['extractionLocation'].find('..') > -1 or self.data['extractionLocation'].find(homePath) == -1:
                 return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
+            if self.data['fileToExtract'].find('..') > -1 or self.data['fileToExtract'].find(homePath) == -1:
+                return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
+
             if self.data['extractionType'] == 'zip':
                 command = 'unzip -o ' + self.returnPathEnclosed(self.data['fileToExtract']) + ' -d ' + self.returnPathEnclosed(self.data['extractionLocation'])
             else:
@@ -422,7 +438,7 @@ class FileManager:
 
             for item in self.data['listOfFiles']:
 
-                if item.find('..') > -1 or item.find(
+                if (self.data['basePath'] + item).find('..') > -1 or (self.data['basePath'] + item).find(
                         homePath) == -1:
                     return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
