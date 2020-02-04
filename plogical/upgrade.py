@@ -1974,26 +1974,6 @@ failovermethod=priority
             command = 'apt-get install restic -y'
             Upgrade.executioner(command, 'Install Restic')
 
-        cronTab = '/etc/crontab'
-
-        data = open(cronTab, 'r').read()
-
-        if data.find('IncScheduler') == -1:
-            cronJob = '0 12 * * * root /usr/local/CyberPanel/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py Daily\n'
-
-            writeToFile = open(cronTab, 'a')
-            writeToFile.writelines(cronJob)
-
-            cronJob = '0 0 * * 0 root /usr/local/CyberPanel/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py Weekly\n'
-            writeToFile.writelines(cronJob)
-            writeToFile.close()
-
-
-        if data.find('renew.py') == -1:
-            writeToFile = open(cronTab, 'a')
-            writeToFile.writelines("0 2 * * * root /usr/local/CyberPanel/bin/python /usr/local/CyberCP/plogical/renew.py\n")
-            writeToFile.close()
-
 
     @staticmethod
     def UpdateMaxSSLCons():
@@ -2058,35 +2038,43 @@ vmail
     @staticmethod
     def runSomeImportantBash():
 
+        # Remove invalid crons from /etc/crontab Reference: https://github.com/usmannasir/cyberpanel/issues/216
+        command = """sed -i '/CyberCP/d' /etc/crontab"""
+        subprocess.call(command, shell=True)
+
+        # Setup /usr/local/lsws/conf/httpd.conf to use new Logformat standard for better stats and accesslogs
         command = """sed -i "s|^LogFormat.*|LogFormat '%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"' combined|g" /usr/local/lsws/conf/httpd.conf"""
         subprocess.call(command, shell=True)
 
+        # Fix all existing vhost confs to use new Logformat standard for better stats and accesslogs
         command = """find /usr/local/lsws/conf/vhosts/ -type f -name 'vhost.conf' -exec sed -i "s/.*CustomLog.*/    LogFormat '%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"' combined\n&/g" {} \;"""
         subprocess.call(command, shell=True)
 
+        # Install any Cyberpanel missing crons to root crontab so its visible to users via crontab -l as root user
+
         # Install findBWUsage cron if missing
 
-        command = """command="root /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/findBWUsage.py"; job="0 * * * * $command >/dev/null 2>&1"; cat <(grep -Fiv "$command" <(crontab -l)) <(echo "$job") | crontab -"""
+        command = """command="/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/findBWUsage.py"; job="0 * * * * $command >/dev/null 2>&1"; cat <(grep -Fiv "$command" <(crontab -l)) <(echo "$job") | crontab -"""
         subprocess.call(command, shell=True)
 
         # Install postfix hourly cron if missing
 
-        command = """command="root /usr/local/CyberCP/bin/python /usr/local/CyberCP/postfixSenderPolicy/client.py hourlyCleanup"; job="0 * * * * $command >/dev/null 2>&1"; cat <(grep -Fiv "$command" <(crontab -l)) <(echo "$job") | crontab -"""
+        command = """command="/usr/local/CyberCP/bin/python /usr/local/CyberCP/postfixSenderPolicy/client.py hourlyCleanup"; job="0 * * * * $command >/dev/null 2>&1"; cat <(grep -Fiv "$command" <(crontab -l)) <(echo "$job") | crontab -"""
         subprocess.call(command, shell=True)
 
-        # Install postfix monthyl cron if missing
+        # Install postfix monthly cron if missing
 
-        command = """command="root /usr/local/CyberCP/bin/python /usr/local/CyberCP/postfixSenderPolicy/client.py monthlyCleanup"; job="0 0 1 * * $command >/dev/null 2>&1"; cat <(grep -Fiv "$command" <(crontab -l)) <(echo "$job") | crontab -"""
-        subprocess.call(command, shell=True)
-
-        # Install upgradeCritical cron if missing
-
-        command = """command="root /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/upgradeCritical.py"; job="0 2 * * * $command >/dev/null 2>&1"; cat <(grep -Fiv "$command" <(crontab -l)) <(echo "$job") | crontab -"""
+        command = """command="/usr/local/CyberCP/bin/python /usr/local/CyberCP/postfixSenderPolicy/client.py monthlyCleanup"; job="0 0 1 * * $command >/dev/null 2>&1"; cat <(grep -Fiv "$command" <(crontab -l)) <(echo "$job") | crontab -"""
         subprocess.call(command, shell=True)
 
         # Install upgradeCritical cron if missing
 
-        command = """command="root /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/renew.py"; job="0 2 * * * $command >/dev/null 2>&1"; cat <(grep -Fiv "$command" <(crontab -l)) <(echo "$job") | crontab -"""
+        command = """command="/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/upgradeCritical.py"; job="0 2 * * * $command >/dev/null 2>&1"; cat <(grep -Fiv "$command" <(crontab -l)) <(echo "$job") | crontab -"""
+        subprocess.call(command, shell=True)
+
+        # Install upgradeCritical cron if missing
+
+        command = """command="/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/renew.py"; job="0 2 * * * $command >/dev/null 2>&1"; cat <(grep -Fiv "$command" <(crontab -l)) <(echo "$job") | crontab -"""
         subprocess.call(command, shell=True)
 
 
