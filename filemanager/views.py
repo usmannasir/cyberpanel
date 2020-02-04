@@ -94,11 +94,15 @@ def downloadFile(request):
         else:
             return ACLManager.loadErrorJson('permissionsChanged', 0)
 
+        homePath = '/home/%s' % (domainName)
+
+        if fileToDownload.find('..') > -1 or fileToDownload.find(homePath) == -1:
+            return HttpResponse("Unauthorized access.")
+
         response = HttpResponse(content_type='application/force-download')
         response['Content-Disposition'] = 'attachment; filename=%s' % (fileToDownload.split('/')[-1])
         response['X-LiteSpeed-Location'] = '%s' % (fileToDownload)
 
-        logging.CyberCPLogFileWriter.writeToFile('test 2')
         return response
 
     except KeyError:

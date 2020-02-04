@@ -1,6 +1,5 @@
 from django.shortcuts import HttpResponse
 import json
-import subprocess, shlex
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from plogical.processUtilities import ProcessUtilities
 from websiteFunctions.models import Websites
@@ -22,7 +21,7 @@ class FileManager:
 
     def returnPathEnclosed(self, path):
         htmlParser = html.parser.HTMLParser()
-        path = htmlParser.unescape(path)
+        path = html.unescape(path)
         return path
         return "'" + path + "'"
 
@@ -131,10 +130,10 @@ class FileManager:
 
             domainName = self.data['domainName']
             website = Websites.objects.get(domain=domainName)
+            homePath = '/home/%s' % (domainName)
 
-            if self.data['fileName'].find('..') > -1:
+            if self.data['fileName'].find('..') > -1 or self.data['fileName'].find(homePath) == -1:
                 return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
-
 
             command = "touch " + self.returnPathEnclosed(self.data['fileName'])
             ProcessUtilities.executioner(command, website.externalApp)
@@ -154,6 +153,11 @@ class FileManager:
             domainName = self.data['domainName']
             website = Websites.objects.get(domain=domainName)
 
+            homePath = '/home/%s' % (domainName)
+
+            if self.data['folderName'].find('..') > -1 or self.data['folderName'].find(homePath) == -1:
+                return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
+
             command = "mkdir " + self.returnPathEnclosed(self.data['folderName'])
             ProcessUtilities.executioner(command, website.externalApp)
 
@@ -172,8 +176,14 @@ class FileManager:
 
             domainName = self.data['domainName']
             website = Websites.objects.get(domain=domainName)
+            homePath = '/home/%s' % (domainName)
 
             for item in self.data['fileAndFolders']:
+
+                if item.find('..') > -1 or item.find(homePath) == -1:
+                    return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
+
+
                 command = 'rm -rf ' + self.returnPathEnclosed(self.data['path'] + '/' + item)
                 ProcessUtilities.executioner(command, website.externalApp)
 
@@ -192,7 +202,9 @@ class FileManager:
             domainName = self.data['domainName']
             website = Websites.objects.get(domain=domainName)
 
-            if not self.data['newPath'].find(self.data['home']) > -1:
+            homePath = '/home/%s' % (domainName)
+
+            if self.data['newPath'].find('..') > -1 or self.data['newPath'].find(homePath) == -1:
                 return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
             if len(self.data['fileAndFolders']) == 1:
@@ -225,7 +237,9 @@ class FileManager:
             domainName = self.data['domainName']
             website = Websites.objects.get(domain=domainName)
 
-            if not self.data['newPath'].find(self.data['home']) > -1:
+            homePath = '/home/%s' % (domainName)
+
+            if self.data['newPath'].find('..') > -1 or self.data['newPath'].find(homePath) == -1:
                 return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
             command = 'mkdir ' + self.returnPathEnclosed(self.data['newPath'])
@@ -251,7 +265,9 @@ class FileManager:
             domainName = self.data['domainName']
             website = Websites.objects.get(domain=domainName)
 
-            if self.data['newFileName'].find('..') > -1:
+            homePath = '/home/%s' % (domainName)
+
+            if self.data['newFileName'].find('..') > -1 or self.data['newFileName'].find(homePath) == -1:
                 return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
 
@@ -365,7 +381,9 @@ class FileManager:
             domainName = self.data['domainName']
             website = Websites.objects.get(domain=domainName)
 
-            if not self.data['extractionLocation'].find(self.data['home']) > -1:
+            homePath = '/home/%s' % (domainName)
+
+            if self.data['extractionLocation'].find('..') > -1 or self.data['extractionLocation'].find(homePath) == -1:
                 return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
             if self.data['extractionType'] == 'zip':
@@ -400,7 +418,14 @@ class FileManager:
                     self.data['basePath'] + '/' + self.data['compressedFileName'] + '.tar.gz')
                 command = 'tar -czvf ' + compressedFileName + ' '
 
+            homePath = '/home/%s' % (domainName)
+
             for item in self.data['listOfFiles']:
+
+                if item.find('..') > -1 or item.find(
+                        homePath) == -1:
+                    return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
+
                 command = '%s%s ' % (command, self.returnPathEnclosed(item))
 
 
