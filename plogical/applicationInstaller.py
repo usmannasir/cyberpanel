@@ -151,31 +151,9 @@ class ApplicationInstaller(multi.Thread):
 
         dirFiles = os.listdir(finalPath)
 
-        if len(dirFiles) == 1:
-            if dirFiles[0] == ".well-known" or dirFiles[0] == 'index.html':
-                return 1
-            else:
-                statusFile = open(tempStatusPath, 'w')
-                statusFile.writelines(
-                    "Target directory should be empty before installation, otherwise data loss could occur." + " [404]")
-                statusFile.close()
-                return 0
-        elif len(dirFiles) == 2:
-            if ".well-known" in dirFiles and "index.html" in dirFiles:
-                return 1
-            else:
-                statusFile = open(tempStatusPath, 'w')
-                statusFile.writelines(
-                    "Target directory should be empty before installation, otherwise data loss could occur." + " [404]")
-                statusFile.close()
-                return 0
-        elif len(dirFiles) == 0:
+        if len(dirFiles) <= 3:
             return 1
         else:
-            statusFile = open(tempStatusPath, 'w')
-            statusFile.writelines(
-                "Target directory should be empty before installation, otherwise data loss could occur." + " [404]")
-            statusFile.close()
             return 0
 
     def installGit(self):
