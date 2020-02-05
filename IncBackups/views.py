@@ -418,10 +418,19 @@ def getBackupStatus(request):
         else:
             return ACLManager.loadErrorJson('fetchStatus', 0)
 
+        if (status[:16] == "/home/cyberpanel" or status[:4] == '/tmp' or status[:18] == '/usr/local/CyberCP') \
+                and status != '/usr/local/CyberCP/CyberCP/settings.py' and status.find('..') == -1:
+            pass
+        else:
+            data_ret = {'abort': 1, 'installStatus': 0, 'installationProgress': "100",
+                        'currentStatus': 'Invalid status file.'}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
         ## file name read ends
 
         if os.path.exists(status):
-            command = "sudo cat " + status
+            command = "cat " + status
             result = ProcessUtilities.outputExecutioner(command, 'cyberpanel')
 
             if result.find("Completed") > -1:
