@@ -216,45 +216,46 @@ class virtualHostUtilities:
 
             dovecotPath = '/etc/dovecot/dovecot.conf'
 
-            dovecotContent = open(dovecotPath, 'r').read()
+            if os.path.exists(dovecotPath):
+                dovecotContent = open(dovecotPath, 'r').read()
 
-            if dovecotContent.find(childDomain) == -1:
-                content = """\nlocal_name %s {
-  ssl_cert = </etc/letsencrypt/live/%s/fullchain.pem
-  ssl_key = </etc/letsencrypt/live/%s/privkey.pem
-}\n""" % (childDomain, childDomain, childDomain)
+                if dovecotContent.find(childDomain) == -1:
+                    content = """\nlocal_name %s {
+      ssl_cert = </etc/letsencrypt/live/%s/fullchain.pem
+      ssl_key = </etc/letsencrypt/live/%s/privkey.pem
+    }\n""" % (childDomain, childDomain, childDomain)
 
-                writeToFile = open(dovecotPath, 'a')
-                writeToFile.write(content)
+                    writeToFile = open(dovecotPath, 'a')
+                    writeToFile.write(content)
+                    writeToFile.close()
+
+                    command = 'systemctl restart dovecot'
+                    ProcessUtilities.executioner(command)
+
+                ### Update postfix configurations
+
+                postFixPath = '/etc/postfix/main.cf'
+
+                postFixContent = open(postFixPath, 'r').read()
+
+                if postFixContent.find('tls_server_sni_maps') == -1:
+                    writeToFile = open(postFixPath, 'a')
+                    writeToFile.write('\ntls_server_sni_maps = hash:/etc/postfix/vmail_ssl.map\n')
+                    writeToFile.close()
+
+                postfixMapFile = '/etc/postfix/vmail_ssl.map'
+
+                mapContent = '%s /etc/letsencrypt/live/%s/privkey.pem /etc/letsencrypt/live/%s/fullchain.pem\n' % (childDomain, childDomain, childDomain)
+
+                writeToFile = open(postfixMapFile, 'a')
+                writeToFile.write(mapContent)
                 writeToFile.close()
 
-                command = 'systemctl restart dovecot'
+                command = 'postmap -F hash:/etc/postfix/vmail_ssl.map'
                 ProcessUtilities.executioner(command)
 
-            ### Update postfix configurations
-
-            postFixPath = '/etc/postfix/main.cf'
-
-            postFixContent = open(postFixPath, 'r').read()
-
-            if postFixContent.find('tls_server_sni_maps') == -1:
-                writeToFile = open(postFixPath, 'a')
-                writeToFile.write('\ntls_server_sni_maps = hash:/etc/postfix/vmail_ssl.map\n')
-                writeToFile.close()
-
-            postfixMapFile = '/etc/postfix/vmail_ssl.map'
-
-            mapContent = '%s /etc/letsencrypt/live/%s/privkey.pem /etc/letsencrypt/live/%s/fullchain.pem\n' % (childDomain, childDomain, childDomain)
-
-            writeToFile = open(postfixMapFile, 'a')
-            writeToFile.write(mapContent)
-            writeToFile.close()
-
-            command = 'postmap -F hash:/etc/postfix/vmail_ssl.map'
-            ProcessUtilities.executioner(command)
-
-            command = 'systemctl restart postfix'
-            ProcessUtilities.executioner(command)
+                command = 'systemctl restart postfix'
+                ProcessUtilities.executioner(command)
 
             ###
 
