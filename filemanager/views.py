@@ -59,10 +59,10 @@ def changePermissions(request):
             command = "sudo chown -R lscpd:lscpd /home/" + domainName+"/logs"
             ProcessUtilities.popenExecutioner(command)
 
-            command = "sudo find %s -type d -exec chmod 0755 {} \;" % ("/home/" + domainName + "/public_html")
+            command = "find %s -type d -exec chmod 0755 {} \;" % ("/home/" + domainName + "/public_html")
             ProcessUtilities.popenExecutioner(command)
 
-            command = "sudo find %s -type f -exec chmod 0644 {} \;" % ("/home/" + domainName + "/public_html")
+            command = "find %s -type f -exec chmod 0644 {} \;" % ("/home/" + domainName + "/public_html")
             ProcessUtilities.popenExecutioner(command)
 
             data_ret = {'permissionsChanged': 1, 'error_message': "None"}

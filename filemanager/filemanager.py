@@ -365,7 +365,7 @@ class FileManager:
             finalData['fileName'] = fs.url(filename)
             pathCheck = '/home/%s' % (self.data['domainName'])
 
-            if self.data['completePath'].find(pathCheck) == -1 or self.data['completePath'].find('..') > -1:
+            if (self.data['completePath'] + '/' + myfile.name).find(pathCheck) == -1 or ((self.data['completePath'] + '/' + myfile.name)).find('..') > -1:
                 return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
             command = 'mv ' + self.returnPathEnclosed('/home/cyberpanel/media/' + myfile.name) + ' ' + self.returnPathEnclosed(self.data['completePath'] + '/' + myfile.name)
