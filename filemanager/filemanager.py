@@ -332,7 +332,10 @@ class FileManager:
             writeToFile.write(self.data['fileContent'].encode('utf-8'))
             writeToFile.close()
 
-            if os.path.islink(self.data['fileName']):
+            command = 'ls -la %s' % (self.data['fileName'])
+            output = ProcessUtilities.outputExecutioner(command)
+
+            if output.find(website.externalApp) == -1:
                 return self.ajaxPre(0, 'File exists and is symlink.')
 
             if self.data['fileName'].find(self.data['home']) == -1 or self.data['fileName'].find('..') > -1:
