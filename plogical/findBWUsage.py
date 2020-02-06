@@ -48,7 +48,7 @@ class findBWUsage:
                 line = line.strip('"\n')
                 newSeekPoint = newSeekPoint + len(line)
                 if len(line)>10:
-                    currentUsed = int(findBWUsage.parse_last_digits(line)[-1]) + currentUsed
+                    currentUsed = int(findBWUsage.parse_last_digits(line)[9].replace('"', '')) + currentUsed
 
 
             writeMeta = open(bwmeta,'w')
