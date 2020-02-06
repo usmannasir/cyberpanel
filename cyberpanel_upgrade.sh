@@ -194,11 +194,20 @@ if [[ ! -f /usr/local/lsws/lsphp74/lib64/php/modules/zip.so ]] && [[ $SERVER_OS 
 
 	yum install -y http://packages.psychotic.ninja/7/plus/x86_64/RPMS/libzip-0.11.2-6.el7.psychotic.x86_64.rpm
 	yum install -y http://packages.psychotic.ninja/7/plus/x86_64/RPMS/libzip-devel-0.11.2-6.el7.psychotic.x86_64.rpm
+	yum install lsphp74-devel
+
+	if [[ ! -d /usr/local/lsws/lsphp74/tmp ]] ; then
+		mkdir /usr/local/lsws/lsphp74/tmp
+	fi
+
+	/usr/local/lsws/lsphp74/bin/pecl channel-update pecl.php.net
+	/usr/local/lsws/lsphp74/bin/pear config-set temp_dir /usr/local/lsws/lsphp74/tmp
 	/usr/local/lsws/lsphp74/bin/pecl install zip
 	if [[ $? == 0 ]] ; then
-	echo "extension=zip.so" > /usr/local/lsws/lsphp74/etc/php.d/20-zip.ini
+		echo "extension=zip.so" > /usr/local/lsws/lsphp74/etc/php.d/20-zip.ini
+		chmod 755 /usr/local/lsws/lsphp74/lib64/php/modules/zip.so
 	else
-	echo -e "\nlsphp74-zip compilation failed..."
+		echo -e "\nlsphp74-zip compilation failed..."
 	fi
 fi
 #fix the lsphp74-zip missing issue.
