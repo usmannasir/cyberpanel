@@ -335,7 +335,7 @@ class FileManager:
             command = 'ls -la %s' % (self.data['fileName'])
             output = ProcessUtilities.outputExecutioner(command)
 
-            if output.find(website.externalApp) == -1:
+            if output.find(website.externalApp) == -1 and output.find('No such file') == -1:
                 return self.ajaxPre(0, 'File exists and is symlink.')
 
             if self.data['fileName'].find(self.data['home']) == -1 or self.data['fileName'].find('..') > -1:
