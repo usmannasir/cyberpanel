@@ -1,9 +1,10 @@
 import argparse
+import re
 
 class cliParser:
 
     def prepareArguments(self):
-        ## Website creation arguemtns
+        ## Website creation Arguments
 
         parser = argparse.ArgumentParser(description='CyberPanel Command Line Interface!')
         parser.add_argument('function', help='Specific a operation to perform!')
@@ -22,7 +23,7 @@ class cliParser:
         parser.add_argument('--openBasedir', help='To enable or disable open_basedir protection for domain.')
         parser.add_argument('--fileName', help='Complete path to a file that needs to be restored.')
 
-        ## Package arguments.
+        ## Package Arguments.
 
         parser.add_argument('--packageName', help='Package name.')
         parser.add_argument('--diskSpace', help='Package disk space in MBs')
@@ -49,10 +50,19 @@ class cliParser:
         parser.add_argument('--dbPassword', help='Database password.')
         parser.add_argument('--databaseWebsite', help='Database website.')
 
-        ## Email arguments
+        ## Email Arguments
         parser.add_argument('--userName', help='Email Username.')
         parser.add_argument('--password', help='Email password.')
 
-
+        ## Get CurrentVersion
+        with open('/usr/local/CyberCP/version.txt') as file:
+            file_contents = file.read()
+            version = re.search('\d.\d', file_contents)
+            version = version.group()
+            build = file_contents[-2:]
+            build = build[0:1]
+            currentversion = version + '.' + build
+        parser.add_argument('--version', action='version', version=currentversion)
+        parser.parse_args(['--version'])
 
         return parser.parse_args()
