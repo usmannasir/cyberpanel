@@ -13,11 +13,9 @@ from loginSystem.models import Administrator
 import plogical.CyberCPLogFileWriter as logging
 from loginSystem.views import loadLoginPage
 from websiteFunctions.models import Websites
-from plogical.virtualHostUtilities import virtualHostUtilities
 from plogical.ftpUtilities import FTPUtilities
 import os
 from plogical.acl import ACLManager
-from plogical.processUtilities import ProcessUtilities
 
 class FTPManager:
     def __init__(self, request):

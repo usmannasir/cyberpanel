@@ -1053,7 +1053,7 @@ def controlUserState(request):
 
                 extraArgs = {}
                 extraArgs['user'] = user
-                extraArgs['currentACL'] = currentACL
+                extraArgs['currentACL'] = ACLManager.loadedACL(user.pk)
                 extraArgs['state'] = state
 
                 from userManagment.userManager import UserManager

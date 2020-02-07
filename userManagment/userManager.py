@@ -28,7 +28,7 @@ class UserManager(multi.Thread):
 
     def controlUserState(self):
         try:
-            websites = ACLManager.findAllSites(self.extraArgs['currentACL'],self.extraArgs['user'])
+            websites = ACLManager.findAllSites(self.extraArgs['currentACL'],self.extraArgs['user'].pk)
             from websiteFunctions.website import WebsiteManager
 
             wm = WebsiteManager()
