@@ -332,6 +332,12 @@ class FileManager:
             writeToFile.write(self.data['fileContent'].encode('utf-8'))
             writeToFile.close()
 
+            command = 'ls -la %s' % (self.data['fileName'])
+            output = ProcessUtilities.outputExecutioner(command)
+
+            if output.find('lrwxrwxrwx') > -1 and output.find('->') > -1:
+                return self.ajaxPre(0, 'File exists and is symlink.')
+
             if ACLManager.commandInjectionCheck(self.data['fileName']) == 1:
                 return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
