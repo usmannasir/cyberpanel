@@ -37,7 +37,7 @@ class Renew:
                     if int(diff.days) >= 15:
                         logging.writeToFile(
                             'SSL exists for %s and is not ready to renew, skipping..' % (website.domain), 0)
-                    elif x509.get_issuer().get_components()[1][1] == 'Denial':
+                    elif x509.get_issuer().get_components()[1][1].decode('utf-8') == 'Denial':
                         logging.writeToFile(
                             'SSL exists for %s and ready to renew..' % (website.domain), 0)
                         logging.writeToFile(
@@ -45,6 +45,9 @@ class Renew:
 
                         virtualHostUtilities.issueSSL(website.domain, '/home/%s/public_html' % (website.domain),
                                                       website.adminEmail)
+                    elif x509.get_issuer().get_components()[1][1].decode('utf-8') != "Let's Encrypt":
+                        logging.writeToFile(
+                            'Custom SSL exists for %s and ready to renew..' % (website.domain), 1)
                     else:
                         logging.writeToFile(
                             'SSL exists for %s and ready to renew..' % (website.domain), 0)
