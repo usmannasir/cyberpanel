@@ -991,7 +991,8 @@ def fetchTableUsers(request):
             diskUsage = 0
 
             for webs in items.websites_set.all():
-                diskUsage = virtualHostUtilities.getDiskUsage("/home/" + webs.domain, webs.package.diskSpace)[0] + diskUsage
+                #diskUsage = virtualHostUtilities.getDiskUsage("/home/" + webs.domain, webs.package.diskSpace)[0] + diskUsage
+                diskUsage = 1
 
             owner = Administrator.objects.get(pk=items.owner)
 
