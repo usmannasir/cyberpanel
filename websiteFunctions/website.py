@@ -261,6 +261,9 @@ class WebsiteManager:
             else:
                 return ACLManager.loadErrorJson('createWebSiteStatus', 0)
 
+            if data['path'].find('..') > -1:
+                return ACLManager.loadErrorJson('createWebSiteStatus', 0)
+
             if currentACL['admin'] != 1:
                 data['openBasedir'] = 1
 
