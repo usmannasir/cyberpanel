@@ -3,7 +3,6 @@ import sys
 import os
 import django
 sys.path.append('/usr/local/CyberCP')
-
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 
 django.setup()

@@ -6,7 +6,8 @@ urlpatterns = [
     url(r'^createNameserver', views.createNameserver, name='createNameserver'),
     url(r'^configureDefaultNameServers$', views.configureDefaultNameServers, name='configureDefaultNameServers'),
     url(r'^createDNSZone', views.createDNSZone, name='createDNSZone'),
-    url(r'^addDeleteDNSRecords', views.addDeleteDNSRecords, name='addDeleteDNSRecords'),
+    url(r'^addDeleteDNSRecords$', views.addDeleteDNSRecords, name='addDeleteDNSRecords'),
+    url(r'^addDeleteDNSRecordsCloudFlare$', views.addDeleteDNSRecordsCloudFlare, name='addDeleteDNSRecordsCloudFlare'),
 
     # JS Functions
     url(r'^NSCreation',views.NSCreation,name="NSCreation"),
@@ -17,4 +18,5 @@ urlpatterns = [
     url(r'^deleteDNSZone',views.deleteDNSZone,name='deleteDNSZone'),
     url(r'^submitZoneDeletion',views.submitZoneDeletion,name='submitZoneDeletion'),
     url(r'^saveNSConfigurations$', views.saveNSConfigurations, name='saveNSConfigurations'),
+    url(r'^saveCFConfigs$', views.saveCFConfigs, name='saveCFConfigs'),
 ]

@@ -571,3 +571,58 @@ class DNSManager:
             final_dic = {'status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
+
+    def addDeleteDNSRecordsCloudFlare(self, request = None, userID = None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            if ACLManager.currentContextPermission(currentACL, 'addDeleteRecords') == 0:
+                return ACLManager.loadError()
+
+            if not os.path.exists('/home/cyberpanel/powerdns'):
+                return render(request, 'dns/addDeleteDNSRecordsCloudFlare.html', {"status": 0})
+
+            admin = Administrator.objects.get(pk=userID)
+
+            CloudFlare = 0
+
+            cfPath = '%s%s' %(DNS.CFPath, admin.userName)
+
+            if os.path.exists(cfPath):
+                CloudFlare = 1
+
+            domainsList = ACLManager.findAllDomains(currentACL, userID)
+
+            return render(request, 'dns/addDeleteDNSRecordsCloudFlare.html', {"domainsList": domainsList, "status": 1, 'CloudFlare': CloudFlare})
+
+        except BaseException as msg:
+            return HttpResponse(str(msg))
+
+    def saveCFConfigs(self, userID = None, data = None):
+        try:
+            cfEmail = data['cfEmail']
+            cfToken = data['cfToken']
+            cfSync = data['cfSync']
+
+            currentACL = ACLManager.loadedACL(userID)
+
+            if ACLManager.currentContextPermission(currentACL, 'addDeleteRecords') == 0:
+                return ACLManager.loadErrorJson('status', 0)
+
+            admin = Administrator.objects.get(pk=userID)
+            cfPath = '%s%s' % (DNS.CFPath, admin.userName)
+
+            writeToFile = open(cfPath, 'w')
+            writeToFile.write('%s\n%s\n%s' % (cfEmail, cfToken, cfSync))
+            writeToFile.close()
+
+            os.chmod(cfPath, 0o600)
+
+            final_dic = {'status': 1, 'error_message': "None"}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+        except BaseException as msg:
+            final_dic = {'status': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)

@@ -169,7 +169,24 @@ def saveNSConfigurations(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+def addDeleteDNSRecordsCloudFlare(request):
+    try:
+        userID = request.session['userID']
+        dm = DNSManager()
+        return dm.addDeleteDNSRecordsCloudFlare(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
 
+def saveCFConfigs(request):
+    try:
+        userID = request.session['userID']
+
+        dm = DNSManager()
+        coreResult = dm.saveCFConfigs(userID, json.loads(request.body))
+
+        return coreResult
+    except KeyError:
+        return redirect(loadLoginPage)
 
 
 
