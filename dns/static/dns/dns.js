@@ -899,7 +899,7 @@ app.controller('addModifyDNSRecordsCloudFlare', function ($scope, $http) {
 
         var selectedZone = $scope.selectedZone;
 
-        url = "/dns/getCurrentRecordsForDomain";
+        url = "/dns/getCurrentRecordsForDomainCloudFlare";
 
         var data = {
             selectedZone: selectedZone,

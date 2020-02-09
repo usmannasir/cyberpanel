@@ -190,4 +190,10 @@ def saveCFConfigs(request):
 
 
 
-
+def getCurrentRecordsForDomainCloudFlare(request):
+    try:
+        userID = request.session['userID']
+        dm = DNSManager()
+        return dm.getCurrentRecordsForDomainCloudFlare(userID, json.loads(request.body))
+    except KeyError:
+        return redirect(loadLoginPage)

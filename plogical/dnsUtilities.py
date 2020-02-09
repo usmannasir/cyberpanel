@@ -37,9 +37,6 @@ class DNS:
             ipData = f.read()
             ipAddress = ipData.split('\n', 1)[0]
 
-            #cf = CloudFlare.CloudFlare(email='help@cyberhosting.org',token='5c033412c01a5bf8c1979182ea500057690d7')
-            #zone_info = cf.zones.post(data={'jump_start': False, 'name': domain})
-
             import tldextract
 
             extractDomain = tldextract.extract(domain)

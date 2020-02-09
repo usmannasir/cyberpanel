@@ -15,9 +15,19 @@ from .models import Domains,Records
 from re import match,I,M
 from plogical.mailUtilities import mailUtilities
 from plogical.acl import ACLManager
+import CloudFlare
+import re
+from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 
 class DNSManager:
     defaultNameServersPath = '/home/cyberpanel/defaultNameservers'
+
+    def loadCFKeys(self):
+        cfFile = '%s%s' % (DNS.CFPath, self.admin.userName)
+        data = open(cfFile, 'r').readlines()
+        self.email = data[0].rstrip('\n')
+        self.key = data[1].rstrip('\n')
+
 
     def loadDNSHome(self, request = None, userID = None):
         try:
@@ -624,5 +634,106 @@ class DNSManager:
 
         except BaseException as msg:
             final_dic = {'status': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+    def getCurrentRecordsForDomainCloudFlare(self, userID = None, data = None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+
+            if ACLManager.currentContextPermission(currentACL, 'addDeleteRecords') == 0:
+                return ACLManager.loadErrorJson('fetchStatus', 0)
+
+
+            zoneDomain = data['selectedZone']
+            currentSelection = data['currentSelection']
+
+            admin = Administrator.objects.get(pk=userID)
+            self.admin = admin
+
+            if ACLManager.checkOwnershipZone(zoneDomain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson()
+
+            self.loadCFKeys()
+
+            params = {'name': zoneDomain, 'per_page':50}
+            cf = CloudFlare.CloudFlare(email=self.email,token=self.key)
+
+            try:
+                zones = cf.zones.get(params=params)
+            except CloudFlare.CloudFlareAPIError as e:
+                final_json = json.dumps({'status': 0, 'fetchStatus': 0, 'error_message': str(e), "data": '[]'})
+                return HttpResponse(final_json)
+
+            # there should only be one zone
+
+            if len(zones) == 0:
+                final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': '', "data": '[]'})
+                return HttpResponse(final_json)
+
+            for zone in sorted(zones, key=lambda v: v['name']):
+                zone_name = zone['name']
+                zone_id = zone['id']
+
+                fetchType = ""
+
+                if currentSelection == 'aRecord':
+                    fetchType = 'A'
+                elif currentSelection == 'aaaaRecord':
+                    fetchType = 'AAAA'
+                elif currentSelection == 'cNameRecord':
+                    fetchType = 'CNAME'
+                elif currentSelection == 'mxRecord':
+                    fetchType = 'MX'
+                elif currentSelection == 'txtRecord':
+                    fetchType = 'TXT'
+                elif currentSelection == 'spfRecord':
+                    fetchType = 'SPF'
+                elif currentSelection == 'nsRecord':
+                    fetchType = 'NS'
+                elif currentSelection == 'soaRecord':
+                    fetchType = 'SOA'
+                elif currentSelection == 'srvRecord':
+                    fetchType = 'SRV'
+                elif currentSelection == 'caaRecord':
+                    fetchType = 'CAA'
+
+                try:
+                    dns_records = cf.zones.dns_records.get(zone_id, params={'per_page':50, 'type':fetchType})
+                except CloudFlare.exceptions.CloudFlareAPIError as e:
+                    final_json = json.dumps({'status': 0, 'fetchStatus': 0, 'error_message': str(e), "data": '[]'})
+                    return HttpResponse(final_json)
+
+                prog = re.compile('\.*' + zone_name + '$')
+                dns_records = sorted(dns_records, key=lambda v: prog.sub('', v['name']) + '_' + v['type'])
+
+                json_data = "["
+                checker = 0
+
+                for dns_record in dns_records:
+                    dic = {'id': dns_record['id'],
+                           'type': dns_record['type'],
+                           'name': dns_record['name'],
+                           'content': dns_record['content'],
+                           'priority': '1400',
+                           'ttl': dns_record['ttl']
+                           }
+
+                    if checker == 0:
+                        json_data = json_data + json.dumps(dic)
+                        checker = 1
+                    else:
+                        json_data = json_data + ',' + json.dumps(dic)
+
+
+                json_data = json_data + ']'
+                final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": json_data})
+                return HttpResponse(final_json)
+
+        except BaseException as msg:
+            final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
