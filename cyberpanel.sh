@@ -480,13 +480,13 @@ fi
 install_required() {
 echo -e "\nInstalling necessary components..."
 if [[ $SERVER_OS == "CentOS" ]] ; then
-	rpm --import https://$DOWNLOAD_SERVER/mariadb/RPM-GPG-KEY-MariaDB
-	rpm --import https://$DOWNLOAD_SERVER/litespeed/RPM-GPG-KEY-litespeed
-	rpm --import https://$DOWNLOAD_SERVER/powerdns/FD380FBB-pub.asc
-	rpm --import http://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-7
-	rpm --import https://$DOWNLOAD_SERVER/gf-plus/RPM-GPG-KEY-gf.el7
-	rpm --import https://repo.dovecot.org/DOVECOT-REPO-GPG
-	rpm --import https://copr-be.cloud.fedoraproject.org/results/copart/restic/pubkey.gpg
+	timeout 10 rpm --import https://$DOWNLOAD_SERVER/mariadb/RPM-GPG-KEY-MariaDB
+	timeout 10 rpm --import https://$DOWNLOAD_SERVER/litespeed/RPM-GPG-KEY-litespeed
+	timeout 10 rpm --import https://$DOWNLOAD_SERVER/powerdns/FD380FBB-pub.asc
+	timeout 10 rpm --import http://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-7
+	timeout 10 rpm --import https://$DOWNLOAD_SERVER/gf-plus/RPM-GPG-KEY-gf.el7
+	timeout 10 rpm --import https://repo.dovecot.org/DOVECOT-REPO-GPG
+	timeout 10 rpm --import https://copr-be.cloud.fedoraproject.org/results/copart/restic/pubkey.gpg
 	yum clean all
 	yum update -y
 	yum autoremove epel-release -y
@@ -646,8 +646,10 @@ else
 	PROVIDER='undefined'
 fi
 
+if [[ -f /sys/devices/virtual/dmi/id/product_uuid ]] ; then
 if [ "$(cat /sys/devices/virtual/dmi/id/product_uuid | cut -c 1-3)" = 'EC2' ] && [ -d /home/ubuntu ]; then
 	PROVIDER='Amazon Web Service'
+fi
 fi
 
 }
