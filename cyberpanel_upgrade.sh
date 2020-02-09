@@ -8,6 +8,39 @@ OUTPUT=$(cat /etc/*release)
 TEMP=$(curl --silent https://cyberpanel.net/version.txt)
 BRANCH_NAME=v${TEMP:12:3}.${TEMP:25:1}
 
+input_branch() {
+	echo -e "\nPress Enter key to continue with latest version or Enter specific version such as: \e[31m1.9.4\e[39m , \e[31m1.9.5\e[39m ...etc"
+	echo -e "\nIf nothing is input in 10 seconds , script will proceed with latest stable. "
+	echo -e "\nPlease press Enter key , or specify a version number ,or wait for 10 seconds timeout: "
+	printf "%s" ""
+	read -t 10 TMP_YN
+
+	if [[ $TMP_YN == "" ]] ; then
+		BRANCH_NAME="v${TEMP:12:3}.${TEMP:25:1}"
+		echo -e "\nBranch name set to $BRANCH_NAME"
+	else
+		base_number="1.9.3"
+			if [[ $TMP_YN == *.*.* ]] ; then
+				#check input if it's valid format as X.Y.Z
+				output=$(awk -v num1="$base_number" -v num2="$TMP_YN" '
+				BEGIN {
+					print "num1", (num1 < num2 ? "<" : ">="), "num2"
+				}
+				')
+				if [[ $output == *">="* ]] ; then
+					echo -e "\nYou must use version number higher than 1.9.4"
+					exit
+				else
+					BRANCH_NAME="v$TMP_YN"
+					echo "set branch name to $BRANCH_NAME"
+				fi
+			else
+				echo -e "\nPlease input a valid format version number."
+				exit
+			fi
+	fi
+}
+
 install_utility() {
 if [[ ! -f /usr/bin/cyberpanel_utility ]] ; then
 wget -q -O /usr/bin/cyberpanel_utility https://cyberpanel.sh/misc/cyberpanel_utility.sh
@@ -41,6 +74,8 @@ else
 	exit
 fi
 }
+
+input_branch
 
 check_root
 
@@ -100,7 +135,7 @@ fi
 rm -rf /usr/local/CyberPanel
 virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberPanel
 check_return
-rm -rf requirments.txt
+rm -f requirments.txt
 wget https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
 . /usr/local/CyberPanel/bin/activate
 check_return
@@ -215,6 +250,15 @@ fi
 
 ##
 systemctl restart lscpd
+
+rm -f requirements.txt
+rm -f requirments.txt
+rm -f upgrade.py
+rm -rf wsgi-lsapi-1.5
+rm -f wsgi-lsapi-1.5.tgz
+rm -f /usr/local/composer.sh
+
+# clean up
 
 echo "###################################################################"
 echo "                CyberPanel Upgraded                                "
