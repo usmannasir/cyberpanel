@@ -628,6 +628,16 @@ class backupUtilities:
                 for childDomain in childDomains:
 
                     domain = childDomain.find('domain').text
+
+                    ## mail domain check
+
+                    mailDomain = 'mail.%s' % (masterDomain)
+
+                    if domain == mailDomain:
+                        continue
+
+                    ## Mail domain check
+
                     phpSelection = childDomain.find('phpSelection').text
                     path = childDomain.find('path').text
 
@@ -668,6 +678,7 @@ class backupUtilities:
 
                         continue
                     else:
+                        logging.CyberCPLogFileWriter.writeToFile('Error domain %s' % (domain))
                         logging.CyberCPLogFileWriter.statusWriter(status, "Error Message: " + retValues[1] + ". Not able to create child domains, aborting. [635][5009]")
                         return 0
             except BaseException as msg:
