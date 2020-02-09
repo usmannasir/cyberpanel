@@ -3,3 +3,4 @@
 .LSOverride
 *.pyc
 .idea
+venv

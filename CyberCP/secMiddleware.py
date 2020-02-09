@@ -45,6 +45,7 @@ class secMiddleware:
                     return HttpResponse(final_json)
         except:
             pass
+
         if request.method == 'POST':
             try:
                 #logging.writeToFile(request.body)

@@ -6,7 +6,7 @@ from websiteFunctions.models import Websites
 from random import randint
 from django.core.files.storage import FileSystemStorage
 import html.parser
-import os
+from plogical.acl import ACLManager
 
 class FileManager:
     def __init__(self, request, data):
@@ -332,8 +332,14 @@ class FileManager:
             writeToFile.write(self.data['fileContent'].encode('utf-8'))
             writeToFile.close()
 
-            if os.path.islink(self.data['fileName']):
+            command = 'ls -la %s' % (self.data['fileName'])
+            output = ProcessUtilities.outputExecutioner(command)
+
+            if output.find('lrwxrwxrwx') > -1 and output.find('->') > -1:
                 return self.ajaxPre(0, 'File exists and is symlink.')
+
+            if ACLManager.commandInjectionCheck(self.data['fileName']) == 1:
+                return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
             if self.data['fileName'].find(self.data['home']) == -1 or self.data['fileName'].find('..') > -1:
                 return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
@@ -364,6 +370,9 @@ class FileManager:
             filename = fs.save(myfile.name, myfile)
             finalData['fileName'] = fs.url(filename)
             pathCheck = '/home/%s' % (self.data['domainName'])
+
+            if ACLManager.commandInjectionCheck(self.data['completePath'] + '/' + myfile.name) == 1:
+                return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
             if (self.data['completePath'] + '/' + myfile.name).find(pathCheck) == -1 or ((self.data['completePath'] + '/' + myfile.name)).find('..') > -1:
                 return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')

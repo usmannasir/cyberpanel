@@ -18,6 +18,17 @@ from dockerManager.models import Containers
 class ACLManager:
 
     @staticmethod
+    def commandInjectionCheck(value):
+        if value.find(';') > -1 or value.find('&&') > -1 or value.find('|') > -1 or value.find('...') > -1 \
+                or value.find("`") > -1 or value.find("$") > -1 or value.find("(") > -1 or value.find(")") > -1 \
+                or value.find("'") > -1 or value.find("[") > -1 or value.find("]") > -1 or value.find(
+            "{") > -1 or value.find("}") > -1 \
+                or value.find(":") > -1 or value.find("<") > -1 or value.find(">") > -1:
+            return 1
+        else:
+            return 0
+
+    @staticmethod
     def loadedACL(val):
 
         admin = Administrator.objects.get(pk=val)
