@@ -10,6 +10,7 @@ certbot==0.21.1
 certifi==2018.4.16
 cffi==1.11.5
 chardet==3.0.4
+cloudflare==2.6.1
 ConfigArgParse==0.15.2
 configobj==5.0.6
 cryptography==2.8
