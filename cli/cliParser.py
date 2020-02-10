@@ -54,15 +54,4 @@ class cliParser:
         parser.add_argument('--userName', help='Email Username.')
         parser.add_argument('--password', help='Email password.')
 
-        ## Get CurrentVersion
-        with open('/usr/local/CyberCP/version.txt') as file:
-            file_contents = file.read()
-            version = re.search('\d.\d', file_contents)
-            version = version.group()
-            build = file_contents[-2:]
-            build = build[0:1]
-            currentversion = version + '.' + build
-        parser.add_argument('--version', action='version', version=currentversion)
-        parser.parse_args(['--version'])
-
         return parser.parse_args()
