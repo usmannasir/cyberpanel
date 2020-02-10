@@ -420,6 +420,12 @@ class DNS:
             return 0
 
     @staticmethod
+    def createDNSRecordCloudFlare(cf, zone, name, type, value, priority, ttl):
+        dns_record = {'name': name, 'type': type, 'content': value, 'ttl': ttl, 'priority': priority}
+        r = cf.zones.dns_records.post(zone, data=dns_record)
+
+
+    @staticmethod
     def createDNSRecord(zone, name, type, value, priority, ttl):
         try:
 

@@ -763,7 +763,7 @@ app.controller('addModifyDNSRecordsCloudFlare', function ($scope, $http) {
         $scope.recordsLoading = false;
 
 
-        url = "/dns/addDNSRecord";
+        url = "/dns/addDNSRecordCloudFlare";
 
 
         // Record specific values

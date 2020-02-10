@@ -255,8 +255,6 @@ class DNSManager:
             if ACLManager.currentContextPermission(currentACL, 'addDeleteRecords') == 0:
                 return ACLManager.loadErrorJson('add_status', 0)
 
-
-
             zoneDomain = data['selectedZone']
             recordType = data['recordType']
             recordName = data['recordName']
@@ -770,7 +768,7 @@ class DNSManager:
             for zone in sorted(zones, key=lambda v: v['name']):
                 zone_id = zone['id']
 
-                dns_record = cf.zones.dns_records.delete(zone_id, int(id))
+                cf.zones.dns_records.delete(zone_id, int(id))
 
                 final_dic = {'status': 1, 'delete_status': 1, 'error_message': "None"}
                 final_json = json.dumps(final_dic)
@@ -778,5 +776,193 @@ class DNSManager:
 
         except BaseException as msg:
             final_dic = {'status': 0, 'delete_status': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+
+    def addDNSRecordCloudFlare(self, userID = None, data = None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+
+            if ACLManager.currentContextPermission(currentACL, 'addDeleteRecords') == 0:
+                return ACLManager.loadErrorJson('add_status', 0)
+
+            zoneDomain = data['selectedZone']
+            recordType = data['recordType']
+            recordName = data['recordName']
+            ttl = int(data['ttl'])
+
+            admin = Administrator.objects.get(pk=userID)
+            self.admin = admin
+            if ACLManager.checkOwnershipZone(zoneDomain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson()
+
+            ## Get zone
+
+            self.loadCFKeys()
+
+            params = {'name': zoneDomain, 'per_page': 50}
+            cf = CloudFlare.CloudFlare(email=self.email, token=self.key)
+
+            try:
+                zones = cf.zones.get(params=params)
+            except CloudFlare.CloudFlareAPIError as e:
+                final_json = json.dumps({'status': 0, 'delete_status': 0, 'error_message': str(e), "data": '[]'})
+                return HttpResponse(final_json)
+
+            for zone in sorted(zones, key=lambda v: v['name']):
+                zone = zone['id']
+
+                value = ""
+
+                if recordType == "A":
+
+                    recordContentA = data['recordContentA']  ## IP or ponting value
+
+                    if recordName == "@":
+                        value = zoneDomain
+                    ## re.match
+                    elif match(r'([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?', recordName,
+                               M | I):
+                        value = recordName
+                    else:
+                        value = recordName + "." + zoneDomain
+
+                    DNS.createDNSRecordCloudFlare(cf, zone, value, recordType, recordContentA, 0, ttl)
+
+                elif recordType == "MX":
+
+                    if recordName == "@":
+                        value = zoneDomain
+                    ## re.match
+                    elif match(r'([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?', recordName,
+                               M | I):
+                        value = recordName
+                    else:
+                        value = recordName + "." + zoneDomain
+
+                    recordContentMX = data['recordContentMX']
+                    priority = data['priority']
+
+                    DNS.createDNSRecordCloudFlare(cf, zone, value, recordType, recordContentMX, priority, ttl)
+
+                elif recordType == "AAAA":
+
+                    if recordName == "@":
+                        value = zoneDomain
+                    ## re.match
+                    elif match(r'([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?', recordName,
+                               M | I):
+                        value = recordName
+                    else:
+                        value = recordName + "." + zoneDomain
+
+                    recordContentAAAA = data['recordContentAAAA']  ## IP or ponting value
+
+                    DNS.createDNSRecordCloudFlare(cf, zone, value, recordType, recordContentAAAA, 0, ttl)
+
+                elif recordType == "CNAME":
+
+                    if recordName == "@":
+                        value = zoneDomain
+                    ## re.match
+                    elif match(r'([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?', recordName,
+                               M | I):
+                        value = recordName
+                    else:
+                        value = recordName + "." + zoneDomain
+
+                    recordContentCNAME = data['recordContentCNAME']  ## IP or ponting value
+
+                    DNS.createDNSRecordCloudFlare(cf, zone, value, recordType, recordContentCNAME, 0, ttl)
+
+                elif recordType == "SPF":
+
+                    if recordName == "@":
+                        value = zoneDomain
+                    ## re.match
+                    elif match(r'([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?', recordName,
+                               M | I):
+                        value = recordName
+                    else:
+                        value = recordName + "." + zoneDomain
+
+                    recordContentSPF = data['recordContentSPF']  ## IP or ponting value
+
+                    DNS.createDNSRecordCloudFlare(cf, zone, value, recordType, recordContentSPF, 0, ttl)
+
+                elif recordType == "TXT":
+
+                    if recordName == "@":
+                        value = zoneDomain
+                    ## re.match
+                    elif match(r'([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?', recordName,
+                               M | I):
+                        value = recordName
+                    else:
+                        value = recordName + "." + zoneDomain
+
+                    recordContentTXT = data['recordContentTXT']  ## IP or ponting value
+
+                    DNS.createDNSRecordCloudFlare(cf, zone, value, recordType, recordContentTXT, 0, ttl)
+
+                elif recordType == "SOA":
+
+                    recordContentSOA = data['recordContentSOA']
+
+                    DNS.createDNSRecordCloudFlare(cf, zone, recordName, recordType, recordContentSOA, 0, ttl)
+
+                elif recordType == "NS":
+
+                    recordContentNS = data['recordContentNS']
+
+                    if recordContentNS == "@":
+                        recordContentNS = "ns1." + zoneDomain
+                    ## re.match
+                    elif match(r'([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?',
+                               recordContentNS, M | I):
+                        recordContentNS = recordContentNS
+                    else:
+                        recordContentNS = recordContentNS + "." + zoneDomain
+
+                    DNS.createDNSRecordCloudFlare(cf, zone, recordName, recordType, recordContentNS, 0, ttl)
+
+                elif recordType == "SRV":
+
+                    if recordName == "@":
+                        value = zoneDomain
+                    ## re.match
+                    elif match(r'([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?', recordName,
+                               M | I):
+                        value = recordName
+                    else:
+                        value = recordName + "." + zoneDomain
+
+                    recordContentSRV = data['recordContentSRV']
+                    priority = data['priority']
+
+                    DNS.createDNSRecordCloudFlare(cf, zone, value, recordType, recordContentSRV, priority, ttl)
+
+                elif recordType == "CAA":
+                    if recordName == "@":
+                        value = zoneDomain
+                    ## re.match
+                    elif match(r'([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?', recordName,
+                               M | I):
+                        value = recordName
+                    else:
+                        value = recordName + "." + zoneDomain
+                    recordContentCAA = data['recordContentCAA']  ## IP or ponting value
+                    DNS.createDNSRecordCloudFlare(cf, zone, value, recordType, recordContentCAA, 0, ttl)
+
+                final_dic = {'status': 1, 'add_status': 1, 'error_message': "None"}
+                final_json = json.dumps(final_dic)
+                return HttpResponse(final_json)
+
+        except BaseException as msg:
+            final_dic = {'status': 0, 'add_status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)

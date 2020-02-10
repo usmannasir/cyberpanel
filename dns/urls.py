@@ -13,7 +13,7 @@ urlpatterns = [
     url(r'^NSCreation',views.NSCreation,name="NSCreation"),
     url(r'^zoneCreation', views.zoneCreation, name='zoneCreation'),
     url(r'^getCurrentRecordsForDomain$',views.getCurrentRecordsForDomain,name='getCurrentRecordsForDomain'),
-    url(r'^addDNSRecord',views.addDNSRecord,name='addDNSRecord'),
+    url(r'^addDNSRecord$',views.addDNSRecord,name='addDNSRecord'),
     url(r'^deleteDNSRecord$',views.deleteDNSRecord,name='deleteDNSRecord'),
     url(r'^deleteDNSZone',views.deleteDNSZone,name='deleteDNSZone'),
     url(r'^submitZoneDeletion',views.submitZoneDeletion,name='submitZoneDeletion'),
@@ -21,6 +21,6 @@ urlpatterns = [
     url(r'^saveCFConfigs$', views.saveCFConfigs, name='saveCFConfigs'),
 
     url(r'^getCurrentRecordsForDomainCloudFlare$', views.getCurrentRecordsForDomainCloudFlare, name='getCurrentRecordsForDomainCloudFlare'),
-    url(r'^deleteDNSRecordCloudFlare$', views.deleteDNSRecordCloudFlare,
-        name='deleteDNSRecordCloudFlare'),
+    url(r'^deleteDNSRecordCloudFlare$', views.deleteDNSRecordCloudFlare, name='deleteDNSRecordCloudFlare'),
+    url(r'^addDNSRecordCloudFlare$', views.addDNSRecordCloudFlare,name='addDNSRecordCloudFlare')
 ]

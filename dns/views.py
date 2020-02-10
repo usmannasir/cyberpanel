@@ -208,3 +208,15 @@ def deleteDNSRecordCloudFlare(request):
         return coreResult
     except KeyError:
         return redirect(loadLoginPage)
+
+def addDNSRecordCloudFlare(request):
+    try:
+        userID = request.session['userID']
+
+        dm = DNSManager()
+        coreResult =  dm.addDNSRecordCloudFlare(userID, json.loads(request.body))
+
+        return coreResult
+
+    except KeyError:
+        return redirect(loadLoginPage)
