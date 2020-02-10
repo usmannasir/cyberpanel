@@ -80,4 +80,23 @@ ${BLUE}------------------------------------------------------------${NC}
 ${PURPLE}9.${NC} How to enable Auto-Index for my site ?
 
 Please check this post ${GREEN}https://forums.cyberpanel.net/discussion/3850/tutorial-how-to-enable-auto-index-on-openlitespeed-and-litespeed-enterprise${NC}
+
+${BLUE}------------------------------------------------------------${NC}
+
+${PURPLE}10.${NC} How to fix error when export database in phpMyAdmin?
+
+You may see error message:
+
+The dynamic response body size is over the limit, the response will be truncated by the web server.
+The limit is set in the key 'maxDynRespSize' located in the tuning section of the server configuration,
+and labeled 'max dynamic response body size
+
+Solution:  add following code into ${RED}/etc/my.cnf${NC}
+
+${GREEN}[mysqld]
+max_allowed_packet=500M${NC}
+
+if ${GREEN}[mysql]${NC} already exists, then add the second line into that section , and restart mysql by command
+
+${RED}systemctl restart mariadb${NC}
 "
