@@ -641,3 +641,417 @@ app.controller('configureDefaultNameservers', function ($scope, $http) {
 
 });
 /* Java script code to create NS ends here */
+
+/* Java script code for CloudFlare */
+
+app.controller('addModifyDNSRecordsCloudFlare', function ($scope, $http) {
+
+    $scope.saveCFConfigs = function () {
+
+        $scope.recordsLoading = false;
+
+        url = "/dns/saveCFConfigs";
+
+        var data = {
+            cfEmail: $scope.cfEmail,
+            cfToken: $scope.cfToken,
+            cfSync: $scope.cfSync,
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.recordsLoading = true;
+
+            if (response.data.status === 1) {
+
+                new PNotify({
+                    title: 'Success',
+                    text: 'Changes successfully saved.',
+                    type: 'success'
+                });
+
+
+            } else {
+
+
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+
+
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.recordsLoading = true;
+
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+
+
+        }
+
+
+    };
+
+
+    ////
+
+    $scope.addRecordsBox = true;
+    $scope.currentRecords = true;
+    $scope.canNotFetchRecords = true;
+    $scope.recordsFetched = true;
+    $scope.recordDeleted = true;
+    $scope.recordAdded = true;
+    $scope.couldNotConnect = true;
+    $scope.recordsLoading = true;
+    $scope.recordDeleted = true;
+    $scope.couldNotDeleteRecords = true;
+    $scope.couldNotAddRecord = true;
+    $scope.recordValueDefault = false;
+
+    // Hide records boxes
+    $(".aaaaRecord").hide();
+    $(".cNameRecord").hide();
+    $(".mxRecord").hide();
+    $(".txtRecord").hide();
+    $(".spfRecord").hide();
+    $(".nsRecord").hide();
+    $(".soaRecord").hide();
+    $(".srvRecord").hide();
+    $(".caaRecord").hide();
+
+
+    var currentSelection = "aRecord";
+    $("#" + currentSelection).addClass("active");
+
+    $scope.fetchRecordsTabs = function (recordType) {
+        $("#" + currentSelection).removeClass("active");
+        $("." + currentSelection).hide();
+        $scope.recordsLoading = false;
+        currentSelection = recordType;
+        $("#" + currentSelection).addClass("active");
+        $("." + currentSelection).show();
+        populateCurrentRecords();
+    };
+
+
+    $scope.fetchRecords = function () {
+        $scope.recordsLoading = false;
+        $scope.addRecordsBox = false;
+        populateCurrentRecords();
+    };
+
+
+    $scope.addDNSRecord = function (type) {
+
+        $scope.recordsLoading = false;
+
+
+        url = "/dns/addDNSRecordCloudFlare";
+
+
+        // Record specific values
+
+        var data = {};
+
+        if (type === "MX") {
+            data.selectedZone = $scope.selectedZone;
+            data.recordName = $scope.recordName;
+            data.recordContentMX = $scope.recordContentMX;
+            data.priority = $scope.priority;
+            data.ttl = $scope.ttl;
+            data.recordType = type;
+        } else if (type === "A") {
+
+            data.selectedZone = $scope.selectedZone;
+            data.recordName = $scope.recordName;
+            data.recordContentA = $scope.recordContentA;
+            data.ttl = $scope.ttl;
+            data.recordType = type;
+
+        } else if (type === "AAAA") {
+            data.selectedZone = $scope.selectedZone;
+            data.recordName = $scope.recordName;
+            data.recordContentAAAA = $scope.recordContentAAAA;
+            data.ttl = $scope.ttl;
+            data.recordType = type;
+        } else if (type === "CNAME") {
+            data.selectedZone = $scope.selectedZone;
+            data.recordName = $scope.recordName;
+            data.recordContentCNAME = $scope.recordContentCNAME;
+            data.ttl = $scope.ttl;
+            data.recordType = type;
+        } else if (type === "SPF") {
+            data.selectedZone = $scope.selectedZone;
+            data.recordName = $scope.recordName;
+            data.recordContentSPF = $scope.recordContentSPF;
+            data.ttl = $scope.ttl;
+            data.recordType = type;
+        } else if (type === "SOA") {
+            data.selectedZone = $scope.selectedZone;
+            data.recordName = $scope.selectedZone;
+            data.recordContentSOA = $scope.recordContentSOA;
+            data.ttl = $scope.ttl;
+            data.recordType = type;
+        } else if (type === "TXT") {
+            data.selectedZone = $scope.selectedZone;
+            data.recordName = $scope.recordName;
+            data.recordContentTXT = $scope.recordContentTXT;
+            data.ttl = $scope.ttl;
+            data.recordType = type;
+        } else if (type === "NS") {
+            data.selectedZone = $scope.selectedZone;
+            data.recordName = $scope.selectedZone;
+            data.recordContentNS = $scope.recordContentNS;
+            data.ttl = $scope.ttl;
+            data.recordType = type;
+        } else if (type === "SRV") {
+            data.selectedZone = $scope.selectedZone;
+            data.recordName = $scope.recordName;
+            data.recordContentSRV = $scope.recordContentSRV;
+            data.priority = $scope.priority;
+            data.ttl = $scope.ttl;
+            data.recordType = type;
+        } else if (type === "CAA") {
+            data.selectedZone = $scope.selectedZone;
+            data.recordName = $scope.recordName;
+            data.recordContentCAA = $scope.recordContentCAA;
+            data.ttl = $scope.ttl;
+            data.recordType = type;
+        }
+
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+
+            if (response.data.add_status === 1) {
+
+
+                populateCurrentRecords();
+
+                $scope.canNotFetchRecords = true;
+                $scope.recordsFetched = false;
+                $scope.recordDeleted = true;
+                $scope.recordAdded = false;
+                $scope.couldNotConnect = true;
+                $scope.couldNotAddRecord = true;
+                $scope.recordsLoading = true;
+
+
+            } else {
+
+                $scope.recordsFetched = true;
+                $scope.recordDeleted = true;
+                $scope.recordAdded = true;
+                $scope.couldNotConnect = true;
+                $scope.recordsLoading = true;
+                $scope.couldNotAddRecord = false;
+
+                $scope.errorMessage = response.data.error_message;
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+
+            $scope.addRecordsBox = true;
+            $scope.currentRecords = true;
+            $scope.canNotFetchRecords = true;
+            $scope.recordsFetched = true;
+            $scope.recordDeleted = true;
+            $scope.recordAdded = true;
+            $scope.couldNotConnect = false;
+            $scope.couldNotAddRecord = true;
+
+
+        }
+
+    };
+
+
+    function populateCurrentRecords() {
+
+        var selectedZone = $scope.selectedZone;
+
+        url = "/dns/getCurrentRecordsForDomainCloudFlare";
+
+        var data = {
+            selectedZone: selectedZone,
+            currentSelection: currentSelection
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            if (response.data.fetchStatus === 1) {
+
+                $scope.records = JSON.parse(response.data.data);
+
+                $scope.currentRecords = false;
+                $scope.canNotFetchRecords = true;
+                $scope.recordsFetched = false;
+                $scope.recordDeleted = true;
+                $scope.recordAdded = true;
+                $scope.couldNotConnect = true;
+                $scope.recordsLoading = true;
+                $scope.couldNotAddRecord = true;
+
+                $scope.domainFeteched = $scope.selectedZone;
+
+            } else {
+
+                $scope.addRecordsBox = true;
+                $scope.currentRecords = true;
+                $scope.canNotFetchRecords = false;
+                $scope.recordsFetched = true;
+                $scope.recordDeleted = true;
+                $scope.recordAdded = true;
+                $scope.couldNotConnect = true;
+                $scope.recordsLoading = true;
+                $scope.couldNotAddRecord = true;
+
+                $scope.errorMessage = response.data.error_message;
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+
+            $scope.addRecordsBox = true;
+            $scope.currentRecords = true;
+            $scope.canNotFetchRecords = true;
+            $scope.recordsFetched = true;
+            $scope.recordDeleted = true;
+            $scope.recordAdded = true;
+            $scope.couldNotConnect = false;
+            $scope.couldNotAddRecord = true;
+
+
+        }
+
+    }
+
+
+    $scope.deleteRecord = function (id) {
+
+
+        var selectedZone = $scope.selectedZone;
+
+        url = "/dns/deleteDNSRecordCloudFlare";
+
+        var data = {
+            selectedZone: selectedZone,
+            id: id
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+
+            if (response.data.delete_status == 1) {
+
+
+                $scope.addRecordsBox = false;
+                $scope.currentRecords = false;
+                $scope.canNotFetchRecords = true;
+                $scope.recordsFetched = true;
+                $scope.recordDeleted = false;
+                $scope.recordAdded = true;
+                $scope.couldNotConnect = true;
+                $scope.recordsLoading = true;
+                $scope.recordDeleted = true;
+                $scope.couldNotDeleteRecords = true;
+                $scope.couldNotAddRecord = true;
+
+                populateCurrentRecords();
+
+
+            } else {
+
+                $scope.addRecordsBox = true;
+                $scope.currentRecords = true;
+                $scope.canNotFetchRecords = true;
+                $scope.recordsFetched = false;
+                $scope.recordDeleted = true;
+                $scope.recordAdded = true;
+                $scope.couldNotConnect = true;
+                $scope.recordsLoading = true;
+                $scope.recordDeleted = true;
+                $scope.couldNotDeleteRecords = false;
+                $scope.couldNotAddRecord = true;
+
+
+                $scope.errorMessage = response.data.error_message;
+
+
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+
+            $scope.addRecordsBox = false;
+            $scope.currentRecords = false;
+            $scope.canNotFetchRecords = true;
+            $scope.recordsFetched = true;
+            $scope.recordDeleted = true;
+            $scope.recordAdded = true;
+            $scope.couldNotConnect = false;
+            $scope.recordsLoading = true;
+            $scope.recordDeleted = true;
+            $scope.couldNotDeleteRecords = true;
+            $scope.couldNotAddRecord = true;
+
+
+        }
+
+
+    };
+
+
+});
+
+/* Java script code for CloudFlare */
