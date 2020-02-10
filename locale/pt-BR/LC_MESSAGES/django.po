@@ -5974,7 +5974,7 @@ msgstr "Detalhes do Website"
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:54
 msgid "Do not enter WWW, it will be auto created!"
-msgstr ""
+msgstr "Não digite WWW, ele será criado automaticamente!"
 
 #: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:3
 msgid "Delete Website - CyberPanel"
