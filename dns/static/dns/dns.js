@@ -971,10 +971,11 @@ app.controller('addModifyDNSRecordsCloudFlare', function ($scope, $http) {
 
         var selectedZone = $scope.selectedZone;
 
-        url = "/dns/deleteDNSRecord";
+        url = "/dns/deleteDNSRecordCloudFlare";
 
         var data = {
-            id: id,
+            selectedZone: selectedZone,
+            id: id
         };
 
         var config = {

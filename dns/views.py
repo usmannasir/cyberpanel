@@ -197,3 +197,14 @@ def getCurrentRecordsForDomainCloudFlare(request):
         return dm.getCurrentRecordsForDomainCloudFlare(userID, json.loads(request.body))
     except KeyError:
         return redirect(loadLoginPage)
+
+def deleteDNSRecordCloudFlare(request):
+    try:
+        userID = request.session['userID']
+
+        dm = DNSManager()
+        coreResult =  dm.deleteDNSRecordCloudFlare(userID, json.loads(request.body))
+
+        return coreResult
+    except KeyError:
+        return redirect(loadLoginPage)

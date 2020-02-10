@@ -737,3 +737,46 @@ class DNSManager:
             final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
+
+    def deleteDNSRecordCloudFlare(self, userID = None, data = None):
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+
+            if ACLManager.currentContextPermission(currentACL, 'addDeleteRecords') == 0:
+                return ACLManager.loadErrorJson('fetchStatus', 0)
+
+            zoneDomain = data['selectedZone']
+            id = data['id']
+
+            admin = Administrator.objects.get(pk=userID)
+            self.admin = admin
+
+            if ACLManager.checkOwnershipZone(zoneDomain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson()
+
+            self.loadCFKeys()
+
+            params = {'name': zoneDomain, 'per_page': 50}
+            cf = CloudFlare.CloudFlare(email=self.email, token=self.key)
+
+            try:
+                zones = cf.zones.get(params=params)
+            except CloudFlare.CloudFlareAPIError as e:
+                final_json = json.dumps({'status': 0, 'delete_status': 0, 'error_message': str(e), "data": '[]'})
+                return HttpResponse(final_json)
+
+            for zone in sorted(zones, key=lambda v: v['name']):
+                zone_id = zone['id']
+
+                dns_record = cf.zones.dns_records.delete(zone_id, int(id))
+
+                final_dic = {'status': 1, 'delete_status': 1, 'error_message': "None"}
+                final_json = json.dumps(final_dic)
+                return HttpResponse(final_json)
+
+        except BaseException as msg:
+            final_dic = {'status': 0, 'delete_status': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
