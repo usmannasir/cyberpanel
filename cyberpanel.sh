@@ -168,7 +168,7 @@ sed -i 's|cyberpanel.sh|'$DOWNLOAD_SERVER'|g' install.py
 sed -i 's|mirror.cyberpanel.net|'$DOWNLOAD_SERVER'|g' install.py
 sed -i 's|git clone https://github.com/usmannasir/cyberpanel|echo downloaded|g' install.py
 #change to CDN first, regardless country
-sed -i 's|http://|https://|g' install.py
+#sed -i 's|http://|https://|g' install.py
 
 if [[ $PROVIDER == "Alibaba Cloud" ]] ; then
 	if ! grep -q "100.100.2.136" /etc/resolv.conf ; then
