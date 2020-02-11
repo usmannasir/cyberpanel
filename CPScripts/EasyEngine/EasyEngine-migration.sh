@@ -397,6 +397,16 @@ echo -e "\nNo file on this server will be touched.\n"
 read -rsn1 -p "Please press any key to continue..."
 }
 
+db_length_check() {
+  ssh_v="ssh -o StrictHostKeyChecking=no root@$server_ip -p$server_port -i /root/.ssh/cyberpanel_migration_key"
+  output=$($ssh_v "$sudoer cat /usr/local/CyberCP/plogical/mysqlUtilities.py")
+  if echo $output | grep -q "should be 16 at max" ; then
+    echo -e "\nPlease upgrade your CyberPanel to latest first..."
+    clean_up
+    exit
+  fi
+}
+
 check_dir
 #check if this is an easyengine server and create a temp dir for storing files during the process.
 
@@ -429,8 +439,9 @@ echo -e "\n\nchecking necessary package..."
   fi
 
 fetch_cyberpanel_key
-
 #function to get cyberpanel server key so future SSH command won't require password input.
+
+db_length_check
 
 tLen=${#domains[@]}
 #get the domain list and number of domains.
