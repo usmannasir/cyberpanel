@@ -77,9 +77,12 @@ class CronUtil:
     @staticmethod
     def addNewCron(externalApp, finalCron):
         try:
-            CronPath = '/var/spool/cron/%s' % (externalApp)
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                cronPath = "/var/spool/cron/" + externalApp
+            else:
+                cronPath = "/var/spool/cron/crontabs/" + externalApp
 
-            with open(CronPath, "a") as file:
+            with open(cronPath, "a") as file:
                 file.write(finalCron + "\n")
 
             print("1,None")
@@ -92,10 +95,19 @@ class CronUtil:
             cronParent = '/var/spool/cron'
             commandT = 'chmod 755 %s' % (cronParent)
             ProcessUtilities.executioner(commandT, 'root')
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+                command = 'chmod 755 /var/spool/cron/crontabs'
+                ProcessUtilities.outputExecutioner(command)
+
         else:
             cronParent = '/var/spool/cron'
             commandT = 'chmod 700 %s' % (cronParent)
             ProcessUtilities.executioner(commandT, 'root')
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+                command = 'chmod 1730 /var/spool/cron/crontabs'
+                ProcessUtilities.outputExecutioner(command)
 
 
 
