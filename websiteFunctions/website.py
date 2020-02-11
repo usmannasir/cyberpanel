@@ -1548,11 +1548,14 @@ class WebsiteManager:
 
             website = Websites.objects.get(domain=self.domain)
 
-            CronPath = '/var/spool/cron/%s' % (website.externalApp)
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                cronPath = "/var/spool/cron/" + website.externalApp
+            else:
+                cronPath = "/var/spool/cron/crontabs/" + website.externalApp
 
-            commandT = 'touch %s' % (CronPath)
+            commandT = 'touch %s' % (cronPath)
             ProcessUtilities.executioner(commandT, 'root')
-            commandT = 'chown %s:%s %s' % (website.externalApp, website.externalApp, CronPath)
+            commandT = 'chown %s:%s %s' % (website.externalApp, website.externalApp, cronPath)
             ProcessUtilities.executioner(commandT, 'root')
 
             CronUtil.CronPrem(1)
