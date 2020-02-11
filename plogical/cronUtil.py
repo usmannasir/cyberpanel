@@ -95,10 +95,19 @@ class CronUtil:
             cronParent = '/var/spool/cron'
             commandT = 'chmod 755 %s' % (cronParent)
             ProcessUtilities.executioner(commandT, 'root')
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+                command = 'chmod 755 /var/spool/cron/crontabs'
+                ProcessUtilities.outputExecutioner(command)
+
         else:
             cronParent = '/var/spool/cron'
             commandT = 'chmod 700 %s' % (cronParent)
             ProcessUtilities.executioner(commandT, 'root')
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+                command = 'chmod 1730 /var/spool/cron/crontabs'
+                ProcessUtilities.outputExecutioner(command)
 
 
 
