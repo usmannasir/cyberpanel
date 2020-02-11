@@ -329,8 +329,16 @@ fi
 
 install_lscwp() {
 ssh_v="ssh -o StrictHostKeyChecking=no root@$server_ip -p$server_port -i /root/.ssh/cyberpanel_migration_key"
+
+$ssh_v "ls -l /usr/bin/wp"
+if [[ $? != "0" ]] ; then
+  $ssh_v "$sudoer wget -O /usr/bin/wp https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar"
+  $ssh_v "$sudoer chmod +x /usr/bin/wp"
+fi
+#install WP CLI if not yet installed.
 $ssh_v "sudo -u $owner_user -i -- wp --path=/home/${domains[$i]}/public_html plugin install litespeed-cache"
 echo -e "\nInstalling LiteSpeed Cache for WordPress..."
+
 }
 
 export_database() {
