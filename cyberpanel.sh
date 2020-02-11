@@ -1130,7 +1130,12 @@ if [[ $PROVIDER == "Alibaba Cloud" ]] ; then
 	pip install setuptools==40.8.0
 fi
 
-pip install virtualenv
+if [[ $SERVER_OS == "CentOS" ]] ; then
+    pip install virtualenv==16.7.9
+  else
+    pip install virtualenv
+fi
+
 virtualenv --system-site-packages /usr/local/CyberPanel
 source /usr/local/CyberPanel/bin/activate
 rm -rf requirements.txt
