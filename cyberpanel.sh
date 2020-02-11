@@ -517,7 +517,11 @@ if [[ $DEV == "ON" ]] ; then
       dnf install python3 -y
 			check_return
     fi
-    pip3.6 install virtualenv
+    if [[ $SERVER_OS == "CentOS" ]] ; then
+      pip3.6 install virtualenv==16.7.9
+    else
+      pip3.6 install virtualenv
+    fi
 		check_return
 	fi
 fi
