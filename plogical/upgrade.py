@@ -2054,28 +2054,39 @@ vmail
 
         # Install findBWUsage cron if missing
 
-        command = """command="/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/findBWUsage.py"; job="0 * * * * $command >/dev/null 2>&1"; cat <(grep -Fiv "$command" <(crontab -l)) <(echo "$job") | crontab -"""
-        subprocess.call(command, shell=True)
+        CentOSPath = '/etc/redhat-release'
 
-        # Install postfix hourly cron if missing
+        if not os.path.exists(CentOSPath):
+            cronPath = '/var/spool/cron/root'
+        else:
+            cronPath = '/var/spool/cron/crontabs/root'
 
-        command = """command="/usr/local/CyberCP/bin/python /usr/local/CyberCP/postfixSenderPolicy/client.py hourlyCleanup"; job="0 * * * * $command >/dev/null 2>&1"; cat <(grep -Fiv "$command" <(crontab -l)) <(echo "$job") | crontab -"""
-        subprocess.call(command, shell=True)
+        if os.path.exists(cronPath):
+            data = open(cronPath, 'r').read()
 
-        # Install postfix monthly cron if missing
+            if data.find('findBWUsage') == -1:
+                content = """0 * * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/findBWUsage.py >/dev/null 2>&1
+    0 * * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/postfixSenderPolicy/client.py hourlyCleanup >/dev/null 2>&1
+    0 0 1 * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/postfixSenderPolicy/client.py monthlyCleanup >/dev/null 2>&1
+    0 2 * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/upgradeCritical.py >/dev/null 2>&1
+    0 2 * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/renew.py >/dev/null 2>&1
+    7 0 * * * "/root/.acme.sh"/acme.sh --cron --home "/root/.acme.sh" > /dev/null
+    """
 
-        command = """command="/usr/local/CyberCP/bin/python /usr/local/CyberCP/postfixSenderPolicy/client.py monthlyCleanup"; job="0 0 1 * * $command >/dev/null 2>&1"; cat <(grep -Fiv "$command" <(crontab -l)) <(echo "$job") | crontab -"""
-        subprocess.call(command, shell=True)
-
-        # Install upgradeCritical cron if missing
-
-        command = """command="/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/upgradeCritical.py"; job="0 2 * * * $command >/dev/null 2>&1"; cat <(grep -Fiv "$command" <(crontab -l)) <(echo "$job") | crontab -"""
-        subprocess.call(command, shell=True)
-
-        # Install upgradeCritical cron if missing
-
-        command = """command="/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/renew.py"; job="0 2 * * * $command >/dev/null 2>&1"; cat <(grep -Fiv "$command" <(crontab -l)) <(echo "$job") | crontab -"""
-        subprocess.call(command, shell=True)
+                writeToFile = open(cronPath, 'w')
+                writeToFile.write(content)
+                writeToFile.close()
+        else:
+            content = """0 * * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/findBWUsage.py >/dev/null 2>&1
+0 * * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/postfixSenderPolicy/client.py hourlyCleanup >/dev/null 2>&1
+0 0 1 * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/postfixSenderPolicy/client.py monthlyCleanup >/dev/null 2>&1
+0 2 * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/upgradeCritical.py >/dev/null 2>&1
+0 2 * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/renew.py >/dev/null 2>&1
+7 0 * * * "/root/.acme.sh"/acme.sh --cron --home "/root/.acme.sh" > /dev/null
+"""
+            writeToFile = open(cronPath, 'w')
+            writeToFile.write(content)
+            writeToFile.close()
 
 
 
