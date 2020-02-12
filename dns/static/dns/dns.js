@@ -1053,7 +1053,7 @@ app.controller('addModifyDNSRecordsCloudFlare', function ($scope, $http) {
 
     $scope.syncCF = function () {
 
-
+         $scope.recordsLoading = false;
         var selectedZone = $scope.selectedZone;
 
         url = "/dns/syncCF";
