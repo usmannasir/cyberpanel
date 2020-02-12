@@ -768,7 +768,7 @@ class DNSManager:
             for zone in sorted(zones, key=lambda v: v['name']):
                 zone_id = zone['id']
 
-                cf.zones.dns_records.delete(zone_id, int(id))
+                cf.zones.dns_records.delete(zone_id, id)
 
                 final_dic = {'status': 1, 'delete_status': 1, 'error_message': "None"}
                 final_json = json.dumps(final_dic)
@@ -964,5 +964,79 @@ class DNSManager:
 
         except BaseException as msg:
             final_dic = {'status': 0, 'add_status': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+    def syncCF(self, userID = None, data = None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+
+            if ACLManager.currentContextPermission(currentACL, 'addDeleteRecords') == 0:
+                return ACLManager.loadErrorJson('add_status', 0)
+
+            zoneDomain = data['selectedZone']
+
+            admin = Administrator.objects.get(pk=userID)
+            self.admin = admin
+
+            if ACLManager.checkOwnershipZone(zoneDomain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson()
+
+            ## Get zone
+
+            self.loadCFKeys()
+
+            params = {'name': zoneDomain, 'per_page': 50}
+            cf = CloudFlare.CloudFlare(email=self.email, token=self.key)
+
+            try:
+                zones = cf.zones.get(params=params)
+
+                for zone in sorted(zones, key=lambda v: v['name']):
+                    zone = zone['id']
+
+                    domain = Domains.objects.get(name=zoneDomain)
+                    records = Records.objects.filter(domain_id=domain.id)
+
+                    for record in records:
+                        DNS.createDNSRecordCloudFlare(cf, zone, record.name, record.type, record.content, record.prio,
+                                                      record.ttl)
+
+                    final_dic = {'status': 1, 'error_message': "None"}
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
+
+            except CloudFlare.CloudFlareAPIError as e:
+                try:
+                    zone_info = cf.zones.post(data={'jump_start': False, 'name': zoneDomain})
+
+                    zone = zone_info['id']
+
+                    domain = Domains.objects.get(name=zoneDomain)
+                    records = Records.objects.filter(domain_id=domain.id)
+
+                    for record in records:
+                        DNS.createDNSRecordCloudFlare(cf, zone, record.name, record.type, record.content, record.prio,
+                                                      record.ttl)
+
+                    final_dic = {'status': 1, 'error_message': "None"}
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
+
+                except BaseException as msg:
+                    logging.writeToFile(str(msg))
+                    final_dic = {'status': 0, 'error_message': str(msg)}
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
+
+            final_dic = {'status': 1, 'error_message': "None"}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+        except BaseException as msg:
+            final_dic = {'status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)

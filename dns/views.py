@@ -220,3 +220,15 @@ def addDNSRecordCloudFlare(request):
 
     except KeyError:
         return redirect(loadLoginPage)
+
+def syncCF(request):
+    try:
+        userID = request.session['userID']
+
+        dm = DNSManager()
+        coreResult =  dm.syncCF(userID, json.loads(request.body))
+
+        return coreResult
+
+    except KeyError:
+        return redirect(loadLoginPage)

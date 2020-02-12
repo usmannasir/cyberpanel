@@ -22,5 +22,6 @@ urlpatterns = [
 
     url(r'^getCurrentRecordsForDomainCloudFlare$', views.getCurrentRecordsForDomainCloudFlare, name='getCurrentRecordsForDomainCloudFlare'),
     url(r'^deleteDNSRecordCloudFlare$', views.deleteDNSRecordCloudFlare, name='deleteDNSRecordCloudFlare'),
-    url(r'^addDNSRecordCloudFlare$', views.addDNSRecordCloudFlare,name='addDNSRecordCloudFlare')
+    url(r'^addDNSRecordCloudFlare$', views.addDNSRecordCloudFlare,name='addDNSRecordCloudFlare'),
+    url(r'^syncCF$', views.syncCF, name='syncCF')
 ]

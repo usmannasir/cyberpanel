@@ -421,8 +421,11 @@ class DNS:
 
     @staticmethod
     def createDNSRecordCloudFlare(cf, zone, name, type, value, priority, ttl):
-        dns_record = {'name': name, 'type': type, 'content': value, 'ttl': ttl, 'priority': priority}
-        r = cf.zones.dns_records.post(zone, data=dns_record)
+        try:
+            dns_record = {'name': name, 'type': type, 'content': value, 'ttl': ttl, 'priority': priority}
+            r = cf.zones.dns_records.post(zone, data=dns_record)
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg))
 
 
     @staticmethod

@@ -88,13 +88,17 @@
 
 
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">{% trans "Select Domain" %} </label>
+                                    <label class="col-sm-2 control-label">{% trans "Select Domain" %} </label>
                                     <div class="col-sm-6">
                                         <select ng-change="fetchRecords()" ng-model="selectedZone" class="form-control">
                                             {% for items in domainsList %}
                                                 <option>{{ items }}</option>
                                             {% endfor %}
                                         </select>
+                                    </div>
+                                <div ng-hide="addRecordsBox" class="col-sm-4">
+                                        <button style="width: 100%;" type="button" ng-click="syncCF()"
+                                                class="btn btn-primary">{% trans "Sync Local Records to CloudFlare" %}</button>
                                     </div>
                                 </div>
 
