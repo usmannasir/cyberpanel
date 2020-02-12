@@ -255,8 +255,8 @@ password=%s
     def submitDBCreation(dbName, dbUsername, dbPassword, databaseWebsite):
         try:
 
-            if len(dbName) > 16 or len(dbUsername) > 16:
-                raise BaseException("Length of Database name or Database user should be 16 at max.")
+            if len(dbName) > 32 or len(dbUsername) > 32:
+                raise BaseException("Length of Database name or Database user should be 32 at max.")
 
             website = Websites.objects.get(domain=databaseWebsite)
 
