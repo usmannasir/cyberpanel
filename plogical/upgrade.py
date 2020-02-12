@@ -2056,7 +2056,7 @@ vmail
 
         CentOSPath = '/etc/redhat-release'
 
-        if not os.path.exists(CentOSPath):
+        if os.path.exists(CentOSPath):
             cronPath = '/var/spool/cron/root'
         else:
             cronPath = '/var/spool/cron/crontabs/root'
