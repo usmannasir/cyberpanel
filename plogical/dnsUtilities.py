@@ -422,6 +422,11 @@ class DNS:
     @staticmethod
     def createDNSRecordCloudFlare(cf, zone, name, type, value, priority, ttl):
         try:
+
+            if value.find('DKIM')> -1:
+                value = value.replace('\n\t', '')
+                value = value.replace('"', '')
+
             dns_record = {'name': name, 'type': type, 'content': value, 'ttl': ttl, 'priority': priority}
             r = cf.zones.dns_records.post(zone, data=dns_record)
         except BaseException as msg:
