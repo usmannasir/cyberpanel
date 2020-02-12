@@ -1,3 +1,10 @@
+#!/usr/local/CyberCP/bin/python
+import sys
+import os
+import django
+sys.path.append('/usr/local/CyberCP')
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
+from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 import signal
 import sys
 import ssl
@@ -7,6 +14,7 @@ import os
 import json
 import threading as multi
 import time
+
 
 class SSHServer(multi.Thread):
     OKGREEN = '\033[92m'
@@ -25,8 +33,8 @@ class SSHServer(multi.Thread):
                         pass
                     else:
                         SSHServer.DEFAULT_PORT = int(items.split(' ')[1])
-        except:
-            pass
+        except BaseException as msg:
+            logging.writeToFile(str(msg))
 
     def loadPublicKey(self):
         pubkey = '/root/.ssh/cyberpanel.pub'
@@ -130,6 +138,8 @@ if __name__ == "__main__":
    writeToFile.close()
 
    SSHServer.findSSHPort()
+
+   print ('SSH Port is set to: %s' % (str(SSHServer.DEFAULT_PORT)))
 
    server = SimpleSSLWebSocketServer('0.0.0.0', '5678', WebTerminalServer,  '/usr/local/lscp/conf/cert.pem', '/usr/local/lscp/conf/key.pem', version=ssl.PROTOCOL_TLSv1)
 

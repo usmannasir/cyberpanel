@@ -16,6 +16,7 @@ try:
     from manageServices.models import PDNSStatus, SlaveServers
 except:
     pass
+import CloudFlare
 
 class DNS:
 
@@ -23,6 +24,7 @@ class DNS:
     zones_base_dir = "/usr/local/lsws/conf/zones/"
     create_zone_dir = "/usr/local/lsws/conf/zones"
     defaultNameServersPath = '/home/cyberpanel/defaultNameservers'
+    CFPath = '/home/cyberpanel/CloudFlare'
 
     ## DNS Functions
 
@@ -416,6 +418,12 @@ class DNS:
             return Domains.objects.get(name=virtualHostName)
         except:
             return 0
+
+    @staticmethod
+    def createDNSRecordCloudFlare(cf, zone, name, type, value, priority, ttl):
+        dns_record = {'name': name, 'type': type, 'content': value, 'ttl': ttl, 'priority': priority}
+        r = cf.zones.dns_records.post(zone, data=dns_record)
+
 
     @staticmethod
     def createDNSRecord(zone, name, type, value, priority, ttl):

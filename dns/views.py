@@ -169,8 +169,54 @@ def saveNSConfigurations(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+def addDeleteDNSRecordsCloudFlare(request):
+    try:
+        userID = request.session['userID']
+        dm = DNSManager()
+        return dm.addDeleteDNSRecordsCloudFlare(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def saveCFConfigs(request):
+    try:
+        userID = request.session['userID']
+
+        dm = DNSManager()
+        coreResult = dm.saveCFConfigs(userID, json.loads(request.body))
+
+        return coreResult
+    except KeyError:
+        return redirect(loadLoginPage)
 
 
 
+def getCurrentRecordsForDomainCloudFlare(request):
+    try:
+        userID = request.session['userID']
+        dm = DNSManager()
+        return dm.getCurrentRecordsForDomainCloudFlare(userID, json.loads(request.body))
+    except KeyError:
+        return redirect(loadLoginPage)
 
+def deleteDNSRecordCloudFlare(request):
+    try:
+        userID = request.session['userID']
 
+        dm = DNSManager()
+        coreResult =  dm.deleteDNSRecordCloudFlare(userID, json.loads(request.body))
+
+        return coreResult
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def addDNSRecordCloudFlare(request):
+    try:
+        userID = request.session['userID']
+
+        dm = DNSManager()
+        coreResult =  dm.addDNSRecordCloudFlare(userID, json.loads(request.body))
+
+        return coreResult
+
+    except KeyError:
+        return redirect(loadLoginPage)

@@ -1312,6 +1312,16 @@ def main():
 
         command = '/usr/bin/cyberpanel_utility --help'
         ProcessUtilities.executioner(command)
+    elif args.function == 'version' or args.function == 'v' or args.function == 'V':
+        ## Get CurrentVersion
+        with open('/usr/local/CyberCP/version.txt') as file:
+            file_contents = file.read()
+            version = re.search('\d.\d', file_contents)
+            version = version.group()
+            build = file_contents[-2:]
+            build = build[0:1]
+            currentversion = version + '.' + build
+            print (currentversion)
 
 
 
