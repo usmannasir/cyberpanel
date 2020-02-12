@@ -168,7 +168,7 @@ sed -i 's|cyberpanel.sh|'$DOWNLOAD_SERVER'|g' install.py
 sed -i 's|mirror.cyberpanel.net|'$DOWNLOAD_SERVER'|g' install.py
 sed -i 's|git clone https://github.com/usmannasir/cyberpanel|echo downloaded|g' install.py
 #change to CDN first, regardless country
-sed -i 's|http://|https://|g' install.py
+#sed -i 's|http://|https://|g' install.py
 
 if [[ $PROVIDER == "Alibaba Cloud" ]] ; then
 	if ! grep -q "100.100.2.136" /etc/resolv.conf ; then
@@ -1099,6 +1099,9 @@ if [[ $debug == "0" ]] ; then
 fi
 
 if [[ $debug == "1" ]] ; then
+	wget -O requirements.txt https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
+	/usr/local/CyberPanel/bin/pip3 install --ignore-installed -r requirements.txt
+	rm -f requirements.txt
 	/usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY --postfix $POSTFIX_VARIABLE --powerdns $POWERDNS_VARIABLE --ftp $PUREFTPD_VARIABLE
 
 	if grep "CyberPanel installation successfully completed" /var/log/installLogs.txt > /dev/null; then

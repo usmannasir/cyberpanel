@@ -356,6 +356,17 @@ class InstallCyberPanel:
 
         ####### Install pureftpd to system startup
 
+        ### Deal with some Centos 7 OpenVZ issues:
+        if self.distro == centos:
+            if subprocess.check_output('systemd-detect-virt').decode("utf-8").find("openvz") > -1:
+                varTmp = "[Service]\nPIDFile=/run/pure-ftpd.pid"
+                writeToFile = open("/etc/systemd/system/pure-ftpd.service.d/override.conf", "w")
+                writeToFile.writelines(varTmp)
+                writeToFile.close()
+            
+                command = "systemctl daemon-reload"
+                install.preFlightsCheck.call(command, self.distro. command, command, 1, 1, os.EX_OSERR);
+
         command = "systemctl enable " + install.preFlightsChecks.pureFTPDServiceName(self.distro)
         install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
@@ -366,7 +377,7 @@ class InstallCyberPanel:
 
         command = 'useradd -u 2001 -s /bin/false -d /bin/null -c "pureftpd user" -g ftpgroup ftpuser'
         install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-
+        
     def startPureFTPD(self):
         ############## Start pureftpd ######################
         if self.distro == ubuntu:
