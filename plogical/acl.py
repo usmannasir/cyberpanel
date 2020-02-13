@@ -526,7 +526,7 @@ class ACLManager:
 
     @staticmethod
     def checkOwnershipZone(domain, admin, currentACL):
-        domain = Domains.objects.get(name=domain)
+        domain = Websites.objects.get(domain=domain)
 
         if currentACL['admin'] == 1:
             return 1

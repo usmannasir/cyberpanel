@@ -1480,7 +1480,7 @@ CSRF_COOKIE_SECURE = True
             pass
 
     @staticmethod
-    def installLSCPD():
+    def installLSCPD(branch):
         try:
 
             Upgrade.stdOut("Starting LSCPD installation..")
@@ -1499,7 +1499,7 @@ CSRF_COOKIE_SECURE = True
             if os.path.exists(lscpdPath):
                 os.remove(lscpdPath)
 
-            command = 'wget  https://raw.githubusercontent.com/usmannasir/cyberpanel/v1.9.4/lscpd-0.2.4 -P /usr/local/lscp/bin/'
+            command = 'wget  https://raw.githubusercontent.com/usmannasir/cyberpanel/%s/lscpd-0.2.4 -P /usr/local/lscp/bin/' % (branch)
             Upgrade.executioner(command, command, 0)
 
             command = 'rm -f /usr/local/lscp/bin/lscpd'
@@ -2169,7 +2169,7 @@ vmail
         Upgrade.installPHP73()
         Upgrade.setupCLI()
         Upgrade.someDirectories()
-        Upgrade.installLSCPD()
+        Upgrade.installLSCPD(branch)
         Upgrade.GeneralMigrations()
         #Upgrade.p3()
 
