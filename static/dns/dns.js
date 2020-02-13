@@ -1051,6 +1051,90 @@ app.controller('addModifyDNSRecordsCloudFlare', function ($scope, $http) {
 
     };
 
+    $scope.syncCF = function () {
+
+         $scope.recordsLoading = false;
+        var selectedZone = $scope.selectedZone;
+
+        url = "/dns/syncCF";
+
+        var data = {
+            selectedZone: selectedZone
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+
+            if (response.data.status === 1) {
+
+
+                $scope.addRecordsBox = false;
+                $scope.currentRecords = false;
+                $scope.canNotFetchRecords = true;
+                $scope.recordsFetched = true;
+                $scope.recordDeleted = false;
+                $scope.recordAdded = true;
+                $scope.couldNotConnect = true;
+                $scope.recordsLoading = true;
+                $scope.recordDeleted = true;
+                $scope.couldNotDeleteRecords = true;
+                $scope.couldNotAddRecord = true;
+
+                populateCurrentRecords();
+
+
+            } else {
+
+                $scope.addRecordsBox = true;
+                $scope.currentRecords = true;
+                $scope.canNotFetchRecords = true;
+                $scope.recordsFetched = false;
+                $scope.recordDeleted = true;
+                $scope.recordAdded = true;
+                $scope.couldNotConnect = true;
+                $scope.recordsLoading = true;
+                $scope.recordDeleted = true;
+                $scope.couldNotDeleteRecords = false;
+                $scope.couldNotAddRecord = true;
+
+
+                $scope.errorMessage = response.data.error_message;
+
+
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+
+            $scope.addRecordsBox = false;
+            $scope.currentRecords = false;
+            $scope.canNotFetchRecords = true;
+            $scope.recordsFetched = true;
+            $scope.recordDeleted = true;
+            $scope.recordAdded = true;
+            $scope.couldNotConnect = false;
+            $scope.recordsLoading = true;
+            $scope.recordDeleted = true;
+            $scope.couldNotDeleteRecords = true;
+            $scope.couldNotAddRecord = true;
+
+
+        }
+
+
+    };
+
 
 });
 
