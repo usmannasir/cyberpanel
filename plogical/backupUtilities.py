@@ -75,6 +75,45 @@ class backupUtilities:
             child = SubElement(metaFileXML, 'externalApp')
             child.text = website.externalApp
 
+            ### Find user of site
+
+            siteUser = website.admin
+
+            child = SubElement(metaFileXML, 'userName')
+            child.text = siteUser.userName
+
+            child = SubElement(metaFileXML, 'userPassword')
+            child.text = siteUser.password
+
+            child = SubElement(metaFileXML, 'firstName')
+            child.text = siteUser.firstName
+
+            child = SubElement(metaFileXML, 'lastName')
+            child.text = siteUser.lastName
+
+            child = SubElement(metaFileXML, 'email')
+            child.text = siteUser.email
+
+            child = SubElement(metaFileXML, 'type')
+            child.text = str(siteUser.type)
+
+            child = SubElement(metaFileXML, 'owner')
+            child.text = str(siteUser.owner)
+
+            child = SubElement(metaFileXML, 'token')
+            child.text = siteUser.token
+
+            child = SubElement(metaFileXML, 'api')
+            child.text = str(siteUser.api)
+
+            child = SubElement(metaFileXML, 'securityLevel')
+            child.text = str(siteUser.securityLevel)
+
+            child = SubElement(metaFileXML, 'state')
+            child.text = siteUser.state
+
+            #####################
+
             childDomains = website.childdomains_set.all()
 
             databases = website.databases_set.all()
