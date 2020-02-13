@@ -167,12 +167,12 @@ wget -O requirements.txt https://raw.githubusercontent.com/usmannasir/cyberpanel
 if [ $SERVER_OS = "Ubuntu" ] ; then
   . /usr/local/CyberCP/bin/activate
   check_return
-  pip3 install --ignore-installed -r requirments.txt
+  pip3 install --ignore-installed -r requirements.txt
   check_return
 else
   source /usr/local/CyberCP/bin/activate
   check_return
-  pip3.6 install --ignore-installed -r requirments.txt
+  pip3.6 install --ignore-installed -r requirements.txt
   check_return
 fi
 
