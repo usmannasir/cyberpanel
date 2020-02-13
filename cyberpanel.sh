@@ -4,15 +4,6 @@
 
 SUDO_TEST=$(set)
 
-export LC_CTYPE=en_US.UTF-8
-export LC_ALL=en_US.UTF-8
-if [[ $? != "0" ]] ; then
-	apt upgrade
-	DEBIAN_FRONTEND=noninteractive apt install -y locales
-	locale-gen "en_US.UTF-8"
-	update-locale LC_ALL="en_US.UTF-8"
-fi
-
 DEV="OFF"
 BRANCH="stable"
 POSTFIX_VARIABLE="ON"
@@ -35,6 +26,7 @@ TOTAL_RAM=$(free -m | awk '/Mem\:/ { print $2 }')
 CENTOS_8="False"
 WATCHDOG="OFF"
 BRANCH_NAME="v${TEMP:12:3}.${TEMP:25:1}"
+VIRT_TYPE=""
 
 check_return() {
 #check previous command result , 0 = ok ,  non-0 = something wrong.
@@ -110,6 +102,17 @@ echo ${WEBADMIN_PASS} > /etc/cyberpanel/webadmin_passwd
 chmod 600 /etc/cyberpanel/webadmin_passwd
 }
 
+openvz_change() {
+if [[ $VIRT_TYPE == "OpenVZ" ]] ; then
+	if [[ ! -d /etc/systemd/system/pure-ftpd.service.d ]] ; then
+		mkdir /etc/systemd/system/pure-ftpd.service.d
+		echo "[Service]
+PIDFile=/run/pure-ftpd.pid" > /etc/systemd/system/pure-ftpd.service.d/override.conf
+		echo -e "PureFTPd service file modified for OpenVZ..."
+	fi
+fi
+}
+
 check_virtualization() {
 echo -e "Checking virtualization type..."
 if hostnamectl | grep "Virtualization: lxc" ; then
@@ -117,6 +120,12 @@ if hostnamectl | grep "Virtualization: lxc" ; then
 	echo -e "CyberPanel does not support LXC"
 	echo -e "Exiting..."
 	exit
+fi
+
+if hostnamectl | grep "Virtualization: openvz" ; then
+	echo -e "\nOpenVZ detected..."
+	VIRT_TYPE="OpenVZ"
+	openvz_change
 fi
 }
 
@@ -1122,6 +1131,16 @@ fi
 }
 
 pip_virtualenv() {
+if [[ $SERVER_OS == "Ubuntu" ]] ; then
+DEBIAN_FRONTEND=noninteractive apt install -y locales
+locale-gen "en_US.UTF-8"
+update-locale LC_ALL="en_US.UTF-8"
+fi
+
+export LC_CTYPE=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
+#need to set lang to address some pip module installation issue.
+
 if [[ $DEV == "OFF" ]] ; then
 if [[ $SERVER_COUNTRY == "CN" ]] ; then
 		mkdir /root/.config
@@ -1595,6 +1614,8 @@ fi
 
 SECONDS=0
 install_required
+
+openvz_change
 
 pip_virtualenv
 
