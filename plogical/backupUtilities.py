@@ -112,6 +112,12 @@ class backupUtilities:
             child = SubElement(metaFileXML, 'state')
             child.text = siteUser.state
 
+            child = SubElement(metaFileXML, 'initWebsitesLimit')
+            child.text = str(siteUser.initWebsitesLimit)
+
+            child = SubElement(metaFileXML, 'aclName')
+            child.text = siteUser.acl.name
+
             #####################
 
             childDomains = website.childdomains_set.all()
@@ -516,6 +522,33 @@ class backupUtilities:
             phpSelection = backupMetaData.find('phpSelection').text
             externalApp = backupMetaData.find('externalApp').text
 
+            ### Fetch user details
+
+            userName = backupMetaData.find('userName').text
+
+            try:
+                siteUser = Administrator.objects.get(userName=userName)
+            except:
+                userPassword = backupMetaData.find('userPassword').text
+                firstName = backupMetaData.find('firstName').text
+                lastName = backupMetaData.find('lastName').text
+                email = backupMetaData.find('email').text
+                type = int(backupMetaData.find('type').text)
+                owner = int(backupMetaData.find('owner').text)
+                token = backupMetaData.find('token').text
+                api = int(backupMetaData.find('api').text)
+                securityLevel = int(backupMetaData.find('securityLevel').text)
+                state = backupMetaData.find('state').text
+                initWebsitesLimit = int(backupMetaData.find('initWebsitesLimit').text)
+                from loginSystem.models import ACL
+                acl = ACL.objects.get(name=backupMetaData.find('aclName').text)
+                siteUser = Administrator(userName=userName, password=userPassword, firstName=firstName,
+                                         initWebsitesLimit=initWebsitesLimit, acl=acl,
+                                         lastName=lastName, email=email, type=type, owner=owner, token=token,
+                                         api=api, securityLevel=securityLevel, state=state)
+                siteUser.save()
+
+
             ## Pre-creation checks
 
             if Websites.objects.filter(domain=domain).count() > 0:
@@ -531,8 +564,8 @@ class backupUtilities:
 
             ## Create Configurations
 
-            result = virtualHostUtilities.createVirtualHost(domain, admin.email, phpSelection, externalApp, 0, 1, 0,
-                                                            admin.userName, 'Default', 0)
+            result = virtualHostUtilities.createVirtualHost(domain, siteUser.email, phpSelection, externalApp, 0, 1, 0,
+                                                            siteUser.userName, 'Default', 0)
 
             if result[0] == 0:
                 raise BaseException(result[1])
