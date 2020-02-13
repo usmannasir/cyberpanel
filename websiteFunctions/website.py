@@ -570,6 +570,7 @@ class WebsiteManager:
                 for items in childDomains:
                     confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + items.domain
                     command = "mv " + confPath + " " + confPath + "-suspended"
+                    ProcessUtilities.executioner(command)
 
                 installUtilities.reStartLiteSpeedSocket()
                 website.state = 0
