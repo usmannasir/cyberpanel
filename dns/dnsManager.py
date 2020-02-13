@@ -987,65 +987,16 @@ class DNSManager:
 
             ## Get zone
 
-            self.loadCFKeys()
+            dns = DNS()
 
+            status, error = dns.cfTemplate(zoneDomain, admin)
 
-            cf = CloudFlare.CloudFlare(email=self.email, token=self.key)
-
-
-            try:
-                params = {'name': zoneDomain, 'per_page': 50}
-                zones = cf.zones.get(params=params)
-
-                for zone in sorted(zones, key=lambda v: v['name']):
-                    zone = zone['id']
-
-                    domain = Domains.objects.get(name=zoneDomain)
-                    records = Records.objects.filter(domain_id=domain.id)
-
-                    for record in records:
-                        DNS.createDNSRecordCloudFlare(cf, zone, record.name, record.type, record.content, record.prio,
-                                                      record.ttl)
-
-                    final_dic = {'status': 1, 'error_message': "None"}
-                    final_json = json.dumps(final_dic)
-                    return HttpResponse(final_json)
-
-
-            except CloudFlare.exceptions.CloudFlareAPIError as e:
-                logging.writeToFile(str(e))
-            except Exception as e:
-                logging.writeToFile(str(e))
-
-
-            try:
-                zone_info = cf.zones.post(data={'jump_start': False, 'name': zoneDomain})
-
-                zone = zone_info['id']
-
-                domain = Domains.objects.get(name=zoneDomain)
-                records = Records.objects.filter(domain_id=domain.id)
-
-                for record in records:
-                    DNS.createDNSRecordCloudFlare(cf, zone, record.name, record.type, record.content, record.prio,
-                                                  record.ttl)
-
-                final_dic = {'status': 1, 'error_message': "None"}
+            if status == 1:
+                final_dic = {'status': 1, 'error_message': 'None'}
                 final_json = json.dumps(final_dic)
                 return HttpResponse(final_json)
-
-
-            except CloudFlare.exceptions.CloudFlareAPIError as e:
-
-                logging.writeToFile(str(e))
-                final_dic = {'status': 0, 'error_message': str(e)}
-                final_json = json.dumps(final_dic)
-                return HttpResponse(final_json)
-
-            except Exception as e:
-
-                logging.writeToFile(str(e))
-                final_dic = {'status': 0, 'error_message': str(e)}
+            else:
+                final_dic = {'status': 0, 'error_message': error}
                 final_json = json.dumps(final_dic)
                 return HttpResponse(final_json)
 
