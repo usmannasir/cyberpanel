@@ -70,6 +70,10 @@ class ApplicationInstaller(multi.Thread):
 
             data = json.loads(request.body)
 
+            if data['package'] == None or data['domainName'] == None or data['adminEmail'] == None \
+                    or data['phpSelection'] == None or data['websiteOwner'] == None:
+                raise BaseException('Please provide all values.')
+
             domainName = data['domainName']
 
             childDomain = ChildDomains.objects.get(domain=domainName)
