@@ -215,6 +215,16 @@ class WebsiteManager:
             except:
                 apacheBackend = "0"
 
+            import pwd
+            counter = 0
+            while 1:
+                try:
+                    pwd.getpwnam(externalApp)
+                    externalApp = '%s%s' % (externalApp, str(counter))
+                    counter = counter + 1
+                except:
+                    break
+
             ## Create Configurations
 
             execPath = "sudo /usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
