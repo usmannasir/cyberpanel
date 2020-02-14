@@ -28,7 +28,10 @@ class ApplicationInstaller(multi.Thread):
         self.installApp = installApp
         self.extraArgs = extraArgs
         if extraArgs != None:
-            self.tempStatusPath = self.extraArgs['tempStatusPath']
+            try:
+                self.tempStatusPath = self.extraArgs['tempStatusPath']
+            except:
+                pass
 
     def run(self):
         try:
@@ -633,7 +636,12 @@ class ApplicationInstaller(multi.Thread):
 
             try:
                 command = 'git clone --depth 1 --no-single-branch git@' + defaultProvider + '.com:' + username + '/' + reponame + '.git -b ' + branch + ' ' + finalPath
-                ProcessUtilities.executioner(command, externalApp)
+                output = ProcessUtilities.outputExecutioner(command, externalApp)
+                if output.find('Checking out files: 100%') == -1:
+                    statusFile = open(tempStatusPath, 'w')
+                    statusFile.writelines('%s. [404]' % (output))
+                    statusFile.close()
+                    return 0
             except subprocess.CalledProcessError as msg:
                 statusFile = open(tempStatusPath, 'w')
                 statusFile.writelines(
@@ -688,7 +696,7 @@ class ApplicationInstaller(multi.Thread):
                 logging.writeToFile('Git is not setup for this website.')
                 return 0
 
-            command = 'sudo git --git-dir=' + finalPath + '.git --work-tree=' + finalPath + '  pull'
+            command = 'git --git-dir=' + finalPath + '.git --work-tree=' + finalPath + '  pull'
             ProcessUtilities.executioner(command, externalApp)
 
             ##
@@ -696,7 +704,7 @@ class ApplicationInstaller(multi.Thread):
             website = Websites.objects.get(domain=domain)
             externalApp = website.externalApp
 
-            command = "sudo chown -R " + externalApp + ":" + externalApp + " " + finalPath
+            command = "chown -R " + externalApp + ":" + externalApp + " " + finalPath
             ProcessUtilities.executioner(command, externalApp)
 
             return 0
@@ -727,15 +735,15 @@ class ApplicationInstaller(multi.Thread):
                 childDomain = ChildDomains.objects.get(domain=domain)
                 finalPath = childDomain.path
 
-            command = 'sudo rm -rf ' + finalPath
+            command = 'rm -rf ' + finalPath
             ProcessUtilities.executioner(command, website.externalApp)
 
-            command = 'sudo mkdir ' + finalPath
+            command = 'mkdir ' + finalPath
             ProcessUtilities.executioner(command, website.externalApp)
 
             ##
 
-            command = "sudo chown -R " + externalApp + ":" + externalApp + " " + finalPath
+            command = "chown -R " + externalApp + ":" + externalApp + " " + finalPath
             ProcessUtilities.executioner(command, website.externalApp)
 
             gitPath = '/home/cyberpanel/' + domain + '.git'
