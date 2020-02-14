@@ -712,12 +712,17 @@ class DNSManager:
                 checker = 0
 
                 for dns_record in dns_records:
+                    if dns_record['ttl'] == 1:
+                        ttl = 'AUTO'
+                    else:
+                        ttl = dns_record['ttl']
+
                     dic = {'id': dns_record['id'],
                            'type': dns_record['type'],
                            'name': dns_record['name'],
                            'content': dns_record['content'],
                            'priority': '1400',
-                           'ttl': dns_record['ttl']
+                           'ttl': ttl
                            }
 
                     if checker == 0:

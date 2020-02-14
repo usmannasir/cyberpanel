@@ -1,7 +1,9 @@
 #!/usr/local/CyberCP/bin/python
-import os,sys
+import os, sys
+
 sys.path.append('/usr/local/CyberCP')
 import django
+
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 try:
     django.setup()
@@ -10,16 +12,17 @@ except:
 from plogical import CyberCPLogFileWriter as logging
 import subprocess
 import shlex
+
 try:
-    from dns.models import Domains,Records
+    from dns.models import Domains, Records
     from manageServices.models import PDNSStatus, SlaveServers
 except:
     pass
 import CloudFlare
 from plogical.processUtilities import ProcessUtilities
 
-class DNS:
 
+class DNS:
     nsd_base = "/etc/nsd/nsd.conf"
     zones_base_dir = "/usr/local/lsws/conf/zones/"
     create_zone_dir = "/usr/local/lsws/conf/zones"
@@ -35,7 +38,7 @@ class DNS:
         self.key = data[1].rstrip('\n')
         self.status = data[2].rstrip('\n')
 
-    def cfTemplate(self, zoneDomain, admin, enableCheck = None):
+    def cfTemplate(self, zoneDomain, admin, enableCheck=None):
         try:
             self.admin = admin
             ## Get zone
@@ -50,9 +53,7 @@ class DNS:
                 else:
                     return 0, 'Sync not enabled.'
 
-
             cf = CloudFlare.CloudFlare(email=self.email, token=self.key)
-
 
             try:
                 params = {'name': zoneDomain, 'per_page': 50}
@@ -139,7 +140,6 @@ class DNS:
                             zone = Domains(admin=admin, name=topLevelDomain, type="NATIVE")
                     except:
                         zone = Domains(admin=admin, name=topLevelDomain, type="NATIVE")
-
 
                     zone.save()
 
@@ -480,7 +480,33 @@ class DNS:
 
             if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
                 command = ' systemctl restart pdns'
-                ProcessUtiities.executioner(command)
+                ProcessUtilities.executioner(command)
+
+            ## Add record to CF If sync enabled
+
+            dns = DNS()
+            dns.admin = zone.admin
+            dns.loadCFKeys()
+
+            cf = CloudFlare.CloudFlare(email=dns.email, token=dns.key)
+
+            if dns.status == 'Enable':
+                try:
+                    params = {'name': domain, 'per_page': 50}
+                    zones = cf.zones.get(params=params)
+
+                    for zone in sorted(zones, key=lambda v: v['name']):
+                        zone = zone['id']
+
+                        DNS.createDNSRecordCloudFlare(cf, zone, "default._domainkey." + topLevelDomain, 'TXT',
+                                                      output[leftIndex:rightIndex], 0,
+                                                      3600)
+
+
+                except CloudFlare.exceptions.CloudFlareAPIError as e:
+                    logging.CyberCPLogFileWriter.writeToFile(str(e))
+                except Exception as e:
+                    logging.CyberCPLogFileWriter.writeToFile(str(e))
 
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(
@@ -497,15 +523,18 @@ class DNS:
     def createDNSRecordCloudFlare(cf, zone, name, type, value, priority, ttl):
         try:
 
-            if value.find('DKIM')> -1:
+            if value.find('DKIM') > -1:
                 value = value.replace('\n\t', '')
                 value = value.replace('"', '')
 
-            dns_record = {'name': name, 'type': type, 'content': value, 'ttl': ttl, 'priority': priority}
-            r = cf.zones.dns_records.post(zone, data=dns_record)
-        except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg))
+            if ttl > 0:
+                dns_record = {'name': name, 'type': type, 'content': value, 'ttl': ttl, 'priority': priority}
+            else:
+                dns_record = {'name': name, 'type': type, 'content': value, 'priority': priority}
 
+            cf.zones.dns_records.post(zone, data=dns_record)
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + '. [createDNSRecordCloudFlare]')
 
     @staticmethod
     def createDNSRecord(zone, name, type, value, priority, ttl):
@@ -517,8 +546,6 @@ class DNS:
                 soaContent[2] = str(int(soaContent[2]) + 1)
                 getSOA.content = " ".join(soaContent)
                 getSOA.save()
-
-
 
             if type == 'NS':
                 if Records.objects.filter(name=name, type=type, content=value).count() == 0:
@@ -574,7 +601,6 @@ class DNS:
                     ProcessUtilities.executioner(command)
                 return
 
-
             if Records.objects.filter(name=name, type=type).count() == 0:
                 record = Records(domainOwner=zone,
                                  domain_id=zone.id,
@@ -589,6 +615,30 @@ class DNS:
                 if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
                     command = 'sudo systemctl restart pdns'
                     ProcessUtilities.executioner(command)
+
+            ## Add Record to CF if SYNC Enabled
+
+            dns = DNS()
+            dns.admin = zone.admin
+            dns.loadCFKeys()
+
+            cf = CloudFlare.CloudFlare(email=dns.email, token=dns.key)
+
+            if dns.status == 'Enable':
+                try:
+                    params = {'name': zone.name, 'per_page': 50}
+                    zones = cf.zones.get(params=params)
+
+                    for zone in sorted(zones, key=lambda v: v['name']):
+                        zone = zone['id']
+
+                        DNS.createDNSRecordCloudFlare(cf, zone, name, type, value, ttl, priority)
+
+                except CloudFlare.exceptions.CloudFlareAPIError as e:
+                    logging.CyberCPLogFileWriter.writeToFile(str(e))
+                except Exception as e:
+                    logging.CyberCPLogFileWriter.writeToFile(str(e))
+
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [createDNSRecord]")
 
