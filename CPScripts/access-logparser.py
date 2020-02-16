@@ -1,6 +1,10 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-# Originally based on code from: https://leancrew.com/all-this/2013/07/parsing-my-apache-logs/
+# Apache Regex portion original credits to: https://leancrew.com/all-this/2013/07/parsing-my-apache-logs/
+
+__author__ = "Michael Ramsey"
+__version__ = "0.1.0"
+__license__ = "GPL-3.0"
 
 import os
 import re
@@ -21,10 +25,10 @@ def main():
     # filenametest = "/home/example.com.access_log"
     # username = 'server'
     username = str(sys.argv[1])
-    # Define the day of interest in the Apache common log format.
+    # Define the day of interest in the Apache common log format. Default if not specified
     try:
         daysago = int(sys.argv[2])
-        # daysago = 4
+        # daysago = 0
     except:
         daysago = 0
     the_day = date.today() - timedelta(daysago)
@@ -37,7 +41,7 @@ def main():
 
     try:
         if os.path.isfile('/usr/local/cpanel/cpanel') | os.path.isfile(os.getcwd() + '/cpanel'):
-            controlpanel = 'cpanel'
+            controlpanel = 'Cpanel'
             datetime_dcpumon = date.today().strftime('%Y/%b/%d')  # 2020/Feb/10
             # Current Dcpumon file
             dcpumon_current_log = "/var/log/dcpumon/" + datetime_dcpumon  # /var/log/dcpumon/2019/Feb/15
@@ -50,7 +54,7 @@ def main():
                 domlogs_path = "/usr/local/apache/domlogs/" + username
 
         elif os.path.isfile('/usr/bin/cyberpanel') | os.path.isfile(os.getcwd() + '/cyberpanel'):
-            controlpanel = 'cyberpanel'
+            controlpanel = 'CyberPanel'
             acesslog_sed = ".access_log"
             if username == 'server':
                 # Needs updated to glob all /home/*/logs/
@@ -228,14 +232,27 @@ def main():
                     continue
         # print >> stats_output, log + "|" + line,
         # print(log + "|" + line, end="", file=stats_output)
-
+        # print(wp_login_hit_count)
         log = log.replace('-ssl_log', '', 1)
         log = log.replace('.access_log', '', 1)
 
-        wp_login_dict[log] = int(wp_login_hit_count)
-        wp_cron_dict[log] = int(wp_cron_hit_count)
-        wp_xmlrpc_dict[log] = int(wp_xmlrpc_hit_count)
-        wp_admin_ajax_dict[log] = int(wp_admin_ajax_hit_count)
+        #        wp_login_dict[log] = int(wp_login_hit_count)
+        #        wp_cron_dict[log] = int(wp_cron_hit_count)
+        #        wp_xmlrpc_dict[log] = int(wp_xmlrpc_hit_count)
+        #        wp_admin_ajax_dict[log] = int(wp_admin_ajax_hit_count)
+
+        # Only add hit count to dictionary if not equal to '0'
+        if wp_login_hit_count != '0':
+            wp_login_dict[log] = int(wp_login_hit_count)
+
+        if wp_cron_hit_count != '0':
+            wp_cron_dict[log] = int(wp_cron_hit_count)
+
+        if wp_xmlrpc_hit_count != '0':
+            wp_xmlrpc_dict[log] = int(wp_xmlrpc_hit_count)
+
+        if wp_admin_ajax_hit_count != '0':
+            wp_admin_ajax_dict[log] = int(wp_admin_ajax_hit_count)
 
         #    print(log)
         #    print("Wordpress Logins => " + str(wp_login_hit_count))
@@ -250,7 +267,7 @@ def main():
     print('============================================')
     print('Snapshot for ' + username)
     print(time.strftime('%H:%M%p %Z on %b %d, %Y'))
-    if controlpanel == 'cpanel' or controlpanel == 'cyberpanel':
+    if controlpanel == 'Cpanel' or controlpanel == 'CyberPanel':
         print(controlpanel + " detected")
     else:
         print('No control Panel detected')
@@ -297,7 +314,15 @@ def main():
     print('============================================')
 
     d = wp_login_dict
+    # Using dictionary comprehension to find list
+    # keys having value in 0 will be removed from results
+    delete = [key for key in d if d[key] == 0]
+
+    # delete the key
+    for key in delete: del d[key]
+
     # print(d)
+
     print('''Wordpress Bruteforce Logins for wp-login.php %s''' % the_day.strftime('%b %d, %Y'))
     print('          ')
     # sort by dictionary by the values and print top 10 {key, value} pairs
@@ -307,6 +332,12 @@ def main():
     print('          ')
 
     d = wp_cron_dict
+    # Using dictionary comprehension to find list
+    # keys having value in 0 will be removed from results
+    delete = [key for key in d if d[key] == 0]
+
+    # delete the key
+    for key in delete: del d[key]
 
     print('''Wordpress Cron wp-cron.php(virtual cron) checks for %s''' % the_day.strftime('%b %d, %Y'))
     print('          ')
@@ -317,6 +348,12 @@ def main():
     print('          ')
 
     d = wp_xmlrpc_dict
+    # Using dictionary comprehension to find list
+    # keys having value in 0 will be removed from results
+    delete = [key for key in d if d[key] == 0]
+
+    # delete the key
+    for key in delete: del d[key]
 
     print('''Wordpress XMLRPC Attacks checks for xmlrpc.php for %s''' % the_day.strftime('%b %d, %Y'))
     print('          ')
@@ -327,6 +364,12 @@ def main():
     print('          ')
 
     d = wp_admin_ajax_dict
+    # Using dictionary comprehension to find list
+    # keys having value in 0 will be removed from results
+    delete = [key for key in d if d[key] == 0]
+
+    # delete the key
+    for key in delete: del d[key]
 
     print('''Wordpress Heartbeat API checks for admin-ajax.php for %s''' % the_day.strftime('%b %d, %Y'))
     print('          ')
