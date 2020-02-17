@@ -4,15 +4,6 @@
 
 SUDO_TEST=$(set)
 
-export LC_CTYPE=en_US.UTF-8
-export LC_ALL=en_US.UTF-8
-if [[ $? != "0" ]] ; then
-	apt upgrade
-	DEBIAN_FRONTEND=noninteractive apt install -y locales
-	locale-gen "en_US.UTF-8"
-	update-locale LC_ALL="en_US.UTF-8"
-fi
-
 DEV="OFF"
 BRANCH="stable"
 POSTFIX_VARIABLE="ON"
@@ -35,6 +26,7 @@ TOTAL_RAM=$(free -m | awk '/Mem\:/ { print $2 }')
 CENTOS_8="False"
 WATCHDOG="OFF"
 BRANCH_NAME="v${TEMP:12:3}.${TEMP:25:1}"
+VIRT_TYPE=""
 
 check_return() {
 #check previous command result , 0 = ok ,  non-0 = something wrong.
@@ -110,13 +102,45 @@ echo ${WEBADMIN_PASS} > /etc/cyberpanel/webadmin_passwd
 chmod 600 /etc/cyberpanel/webadmin_passwd
 }
 
+openvz_change() {
+if [[ $VIRT_TYPE == "OpenVZ" ]] ; then
+	if [[ ! -d /etc/systemd/system/pure-ftpd.service.d ]] ; then
+		mkdir /etc/systemd/system/pure-ftpd.service.d
+		echo "[Service]
+PIDFile=/run/pure-ftpd.pid" > /etc/systemd/system/pure-ftpd.service.d/override.conf
+		echo -e "PureFTPd service file modified for OpenVZ..."
+	fi
+
+	if [[ ! -d /etc/systemd/system/lshttpd.service.d ]] ; then
+		mkdir /etc/systemd/system/lshttpd.service.d
+		echo "[Service]
+PIDFile=/tmp/lshttpd/lshttpd.pid" > /etc/systemd/system/lshttpd.service.d/override.conf
+		echo -e "LiteSPeed service file modified for OpenVZ..."
+	fi
+
+	if [[ ! -d /etc/systemd/system/spamassassin.service.d ]] ; then
+		mkdir /etc/systemd/system/spamassassin.service.d
+		echo "[Service]
+PIDFile=/run/spamassassin.pid" > /etc/systemd/system/spamassassin.service.d/override.conf
+		echo -e "SpamAssassin service file modified for OpenVZ..."
+	fi
+
+fi
+}
+
 check_virtualization() {
 echo -e "Checking virtualization type..."
-if hostnamectl | grep "Virtualization: lxc" ; then
+if hostnamectl | grep -q "Virtualization: lxc" ; then
 	echo -e "\nLXC detected..."
 	echo -e "CyberPanel does not support LXC"
 	echo -e "Exiting..."
 	exit
+fi
+
+if hostnamectl | grep -q "Virtualization: openvz" ; then
+	echo -e "\nOpenVZ detected..."
+	VIRT_TYPE="OpenVZ"
+	openvz_change
 fi
 }
 
@@ -168,7 +192,7 @@ sed -i 's|cyberpanel.sh|'$DOWNLOAD_SERVER'|g' install.py
 sed -i 's|mirror.cyberpanel.net|'$DOWNLOAD_SERVER'|g' install.py
 sed -i 's|git clone https://github.com/usmannasir/cyberpanel|echo downloaded|g' install.py
 #change to CDN first, regardless country
-sed -i 's|http://|https://|g' install.py
+#sed -i 's|http://|https://|g' install.py
 
 if [[ $PROVIDER == "Alibaba Cloud" ]] ; then
 	if ! grep -q "100.100.2.136" /etc/resolv.conf ; then
@@ -1099,6 +1123,9 @@ if [[ $debug == "0" ]] ; then
 fi
 
 if [[ $debug == "1" ]] ; then
+	wget -O requirements.txt https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
+	/usr/local/CyberPanel/bin/pip3 install --ignore-installed -r requirements.txt
+	rm -f requirements.txt
 	/usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY --postfix $POSTFIX_VARIABLE --powerdns $POWERDNS_VARIABLE --ftp $PUREFTPD_VARIABLE
 
 	if grep "CyberPanel installation successfully completed" /var/log/installLogs.txt > /dev/null; then
@@ -1119,6 +1146,16 @@ fi
 }
 
 pip_virtualenv() {
+if [[ $SERVER_OS == "Ubuntu" ]] ; then
+DEBIAN_FRONTEND=noninteractive apt install -y locales
+locale-gen "en_US.UTF-8"
+update-locale LC_ALL="en_US.UTF-8"
+fi
+
+export LC_CTYPE=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
+#need to set lang to address some pip module installation issue.
+
 if [[ $DEV == "OFF" ]] ; then
 if [[ $SERVER_COUNTRY == "CN" ]] ; then
 		mkdir /root/.config
@@ -1592,6 +1629,8 @@ fi
 
 SECONDS=0
 install_required
+
+openvz_change
 
 pip_virtualenv
 
