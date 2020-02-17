@@ -200,22 +200,42 @@ def main():
     pages = []
 
     # Initialize dictionaries for hit counters
+    post_request_dict = {}
+    get_request_dict = {}
     wp_login_dict = {}
     wp_cron_dict = {}
     wp_xmlrpc_dict = {}
     wp_admin_ajax_dict = {}
+    drupal_login_dict = {}
+    magento_login_dict = {}
+    joomla_login_dict = {}
+    vbulletin_login_dict = {}
+    opencart_login_dict = {}
+    prestashop_login_dict = {}
 
     # Parse all the lines associated with the day of interest.
 
     for log in logs:
         file = os.path.join(path, log)
         text = open(file, "r")
+        post_request_hit_count = 0
+        get_request_hit_count = 0
         wp_login_hit_count = 0
         wp_cron_hit_count = 0
         wp_xmlrpc_hit_count = 0
         wp_admin_ajax_hit_count = 0
+        drupal_hit_count = 0
+        magento_hit_count = 0
+        joomla_hit_count = 0
+        vbulletin_hit_count = 0
+        opencart_hit_count = 0
+        prestashop_hit_count = 0
         for line in text:
             if apache_day in line:
+                if re.match("(.*)(POST)(.*)", line):
+                    post_request_hit_count = post_request_hit_count + 1
+                if re.match("(.*)(GET)(.*)", line):
+                    get_request_hit_count = get_request_hit_count + 1
                 if re.match("(.*)(wp-login.php)(.*)", line):
                     wp_login_hit_count = wp_login_hit_count + 1
                 if re.match("(.*)(wp-cron.php)(.*)", line):
@@ -224,6 +244,18 @@ def main():
                     wp_xmlrpc_hit_count = wp_xmlrpc_hit_count + 1
                 if re.match("(.*)(admin-ajax.php)(.*)", line):
                     wp_admin_ajax_hit_count = wp_admin_ajax_hit_count + 1
+                if re.match("(.*)(user/login/)(.*)", line):
+                    drupal_hit_count = drupal_hit_count + 1
+                if re.match("(.*)(admin_[a-zA-Z0-9_]*[/admin/index/index])(.*)", line):
+                    magento_hit_count = magento_hit_count + 1
+                if re.match("(.*)(/administrator/index.php)(.*)", line):
+                    joomla_hit_count = joomla_hit_count + 1
+                if re.match("(.*)(admincp)(.*)", line):
+                    vbulletin_hit_count = vbulletin_hit_count + 1
+                if re.match("(.*)(/admin/index.php)(.*)", line):
+                    opencart_hit_count = opencart_hit_count + 1
+                if re.match("(.*)(/admin[a-zA-Z0-9_]*$)(.*)", line):
+                    prestashop_hit_count = prestashop_hit_count + 1
                 m = pattern.match(line)
                 hit = m.groupdict()
                 if ispage(hit):
@@ -242,6 +274,12 @@ def main():
         #        wp_admin_ajax_dict[log] = int(wp_admin_ajax_hit_count)
 
         # Only add hit count to dictionary if not equal to '0'
+        if post_request_hit_count != '0':
+            post_request_dict[log] = int(post_request_hit_count)
+
+        if get_request_hit_count != '0':
+            get_request_dict[log] = int(get_request_hit_count)
+
         if wp_login_hit_count != '0':
             wp_login_dict[log] = int(wp_login_hit_count)
 
@@ -253,6 +291,24 @@ def main():
 
         if wp_admin_ajax_hit_count != '0':
             wp_admin_ajax_dict[log] = int(wp_admin_ajax_hit_count)
+
+        if drupal_hit_count != '0':
+            drupal_login_dict[log] = int(drupal_hit_count)
+
+        if magento_hit_count != '0':
+            magento_login_dict[log] = int(magento_hit_count)
+
+        if joomla_hit_count != '0':
+            joomla_login_dict[log] = int(joomla_hit_count)
+
+        if vbulletin_hit_count != '0':
+            vbulletin_login_dict[log] = int(vbulletin_hit_count)
+
+        if opencart_hit_count != '0':
+            opencart_login_dict[log] = int(opencart_hit_count)
+
+        if prestashop_hit_count != '0':
+            prestashop_login_dict[log] = int(prestashop_hit_count)
 
         #    print(log)
         #    print("Wordpress Logins => " + str(wp_login_hit_count))
@@ -275,7 +331,39 @@ def main():
     print('Accesslog path used: ' + path)
     # print(dcpumon_current_log)
 
-    # Show the top five pages and the total.
+    d = post_request_dict
+    # Using dictionary comprehension to find list
+    # keys having value in 0 will be removed from results
+    delete = [key for key in d if d[key] == 0]
+
+    # delete the key
+    for key in delete: del d[key]
+
+    print('''Top POST requests for %s''' % the_day.strftime('%b %d, %Y'))
+    print('          ')
+    # sort by dictionary by the values and print top 10 {key, value} pairs
+    for key in sorted(d, key=keyfunction, reverse=True)[:10]:
+        print('  %5d  %s' % (d[key], key))
+    print('  %5d  total hits' % sum(dict.values(d)))
+    print('============================================')
+
+    d = get_request_dict
+    # Using dictionary comprehension to find list
+    # keys having value in 0 will be removed from results
+    delete = [key for key in d if d[key] == 0]
+
+    # delete the key
+    for key in delete: del d[key]
+
+    print('''Top GET requests for %s''' % the_day.strftime('%b %d, %Y'))
+    print('          ')
+    # sort by dictionary by the values and print top 10 {key, value} pairs
+    for key in sorted(d, key=keyfunction, reverse=True)[:10]:
+        print('  %5d  %s' % (d[key], key))
+    print('  %5d  total hits' % sum(dict.values(d)))
+    print('============================================')
+
+    # Show the top 10 pages and the total.
     print('''
     Show top 10 pages %s''' % the_day.strftime('%b %d, %Y'))
     pageviews = Counter(x['request'] for x in pages if goodagent(x))
@@ -372,6 +460,106 @@ def main():
     for key in delete: del d[key]
 
     print('''Wordpress Heartbeat API checks for admin-ajax.php for %s''' % the_day.strftime('%b %d, %Y'))
+    print('          ')
+    # sort by dictionary by the values and print top 10 {key, value} pairs
+    for key in sorted(d, key=keyfunction, reverse=True)[:10]:
+        print('  %5d  %s' % (d[key], key))
+    print('  %5d  total hits' % sum(dict.values(d)))
+    print('============================================')
+
+    d = drupal_login_dict
+    # Using dictionary comprehension to find list
+    # keys having value in 0 will be removed from results
+    delete = [key for key in d if d[key] == 0]
+
+    # delete the key
+    for key in delete: del d[key]
+
+    print('''Drupal Login Bruteforcing checks for user/login/ for %s''' % the_day.strftime('%b %d, %Y'))
+    print('          ')
+    # sort by dictionary by the values and print top 10 {key, value} pairs
+    for key in sorted(d, key=keyfunction, reverse=True)[:10]:
+        print('  %5d  %s' % (d[key], key))
+    print('  %5d  total hits' % sum(dict.values(d)))
+    print('============================================')
+
+    d = magento_login_dict
+    # Using dictionary comprehension to find list
+    # keys having value in 0 will be removed from results
+    delete = [key for key in d if d[key] == 0]
+
+    # delete the key
+    for key in delete: del d[key]
+
+    print(
+        '''Magento Login Bruteforcing checks for admin pages /admin_xxxxx/admin/index/index for %s''' % the_day.strftime(
+            '%b %d, %Y'))
+    print('          ')
+    # sort by dictionary by the values and print top 10 {key, value} pairs
+    for key in sorted(d, key=keyfunction, reverse=True)[:10]:
+        print('  %5d  %s' % (d[key], key))
+    print('  %5d  total hits' % sum(dict.values(d)))
+    print('============================================')
+
+    d = joomla_login_dict
+    # Using dictionary comprehension to find list
+    # keys having value in 0 will be removed from results
+    delete = [key for key in d if d[key] == 0]
+
+    # delete the key
+    for key in delete: del d[key]
+
+    print('''Joomla Login Bruteforcing checks for admin pages /administrator/index.php for %s''' % the_day.strftime(
+        '%b %d, %Y'))
+    print('          ')
+    # sort by dictionary by the values and print top 10 {key, value} pairs
+    for key in sorted(d, key=keyfunction, reverse=True)[:10]:
+        print('  %5d  %s' % (d[key], key))
+    print('  %5d  total hits' % sum(dict.values(d)))
+    print('============================================')
+
+    d = vbulletin_login_dict
+    # Using dictionary comprehension to find list
+    # keys having value in 0 will be removed from results
+    delete = [key for key in d if d[key] == 0]
+
+    # delete the key
+    for key in delete: del d[key]
+
+    print('''vBulletin Login Bruteforcing checks for admin pages admincp for %s''' % the_day.strftime('%b %d, %Y'))
+    print('          ')
+    # sort by dictionary by the values and print top 10 {key, value} pairs
+    for key in sorted(d, key=keyfunction, reverse=True)[:10]:
+        print('  %5d  %s' % (d[key], key))
+    print('  %5d  total hits' % sum(dict.values(d)))
+    print('============================================')
+
+    d = opencart_login_dict
+    # Using dictionary comprehension to find list
+    # keys having value in 0 will be removed from results
+    delete = [key for key in d if d[key] == 0]
+
+    # delete the key
+    for key in delete: del d[key]
+
+    print('''Opencart Login Bruteforcing checks for admin pages /admin/index.php for %s''' % the_day.strftime(
+        '%b %d, %Y'))
+    print('          ')
+    # sort by dictionary by the values and print top 10 {key, value} pairs
+    for key in sorted(d, key=keyfunction, reverse=True)[:10]:
+        print('  %5d  %s' % (d[key], key))
+    print('  %5d  total hits' % sum(dict.values(d)))
+    print('============================================')
+
+    d = prestashop_login_dict
+    # Using dictionary comprehension to find list
+    # keys having value in 0 will be removed from results
+    delete = [key for key in d if d[key] == 0]
+
+    # delete the key
+    for key in delete: del d[key]
+
+    print('''Prestashop Login Bruteforcing checks for admin pages /adminxxxx for %s''' % the_day.strftime('%b %d, %Y'))
     print('          ')
     # sort by dictionary by the values and print top 10 {key, value} pairs
     for key in sorted(d, key=keyfunction, reverse=True)[:10]:
