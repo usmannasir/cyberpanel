@@ -58,7 +58,7 @@ class virtualHostUtilities:
     @staticmethod
     def createVirtualHost(virtualHostName, administratorEmail, phpVersion, virtualHostUser, ssl,
                           dkimCheck, openBasedir, websiteOwner, packageName, apache,
-                          tempStatusPath='/home/cyberpanel/fakePath'):
+                          tempStatusPath='/home/cyberpanel/fakePath', mailDomain = None):
         try:
 
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Running some checks..,0')
@@ -206,56 +206,57 @@ class virtualHostUtilities:
 
             ### For autodiscover of mail clients.
 
-            logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Creating mail child domain..,80')
-            childDomain = 'mail.%s' % (virtualHostName)
-            childPath = '/home/%s/public_html/%s' % (virtualHostName, childDomain)
+            if mailDomain:
+                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Creating mail child domain..,80')
+                childDomain = 'mail.%s' % (virtualHostName)
+                childPath = '/home/%s/public_html/%s' % (virtualHostName, childDomain)
 
-            virtualHostUtilities.createDomain(virtualHostName, childDomain, 'PHP 7.2', childPath, 1, 0, 0, admin.userName, 0, "/home/cyberpanel/" + str(randint(1000, 9999)))
+                virtualHostUtilities.createDomain(virtualHostName, childDomain, 'PHP 7.2', childPath, 1, 0, 0, admin.userName, 0, "/home/cyberpanel/" + str(randint(1000, 9999)))
 
-            ## update dovecot conf to enable auto-discover
+                ## update dovecot conf to enable auto-discover
 
-            dovecotPath = '/etc/dovecot/dovecot.conf'
+                dovecotPath = '/etc/dovecot/dovecot.conf'
 
-            if os.path.exists(dovecotPath):
-                dovecotContent = open(dovecotPath, 'r').read()
+                if os.path.exists(dovecotPath):
+                    dovecotContent = open(dovecotPath, 'r').read()
 
-                if dovecotContent.find(childDomain) == -1:
-                    content = """\nlocal_name %s {
-      ssl_cert = </etc/letsencrypt/live/%s/fullchain.pem
-      ssl_key = </etc/letsencrypt/live/%s/privkey.pem
-    }\n""" % (childDomain, childDomain, childDomain)
+                    if dovecotContent.find(childDomain) == -1:
+                        content = """\nlocal_name %s {
+          ssl_cert = </etc/letsencrypt/live/%s/fullchain.pem
+          ssl_key = </etc/letsencrypt/live/%s/privkey.pem
+        }\n""" % (childDomain, childDomain, childDomain)
 
-                    writeToFile = open(dovecotPath, 'a')
-                    writeToFile.write(content)
+                        writeToFile = open(dovecotPath, 'a')
+                        writeToFile.write(content)
+                        writeToFile.close()
+
+                        command = 'systemctl restart dovecot'
+                        ProcessUtilities.executioner(command)
+
+                    ### Update postfix configurations
+
+                    postFixPath = '/etc/postfix/main.cf'
+
+                    postFixContent = open(postFixPath, 'r').read()
+
+                    if postFixContent.find('tls_server_sni_maps') == -1:
+                        writeToFile = open(postFixPath, 'a')
+                        writeToFile.write('\ntls_server_sni_maps = hash:/etc/postfix/vmail_ssl.map\n')
+                        writeToFile.close()
+
+                    postfixMapFile = '/etc/postfix/vmail_ssl.map'
+
+                    mapContent = '%s /etc/letsencrypt/live/%s/privkey.pem /etc/letsencrypt/live/%s/fullchain.pem\n' % (childDomain, childDomain, childDomain)
+
+                    writeToFile = open(postfixMapFile, 'a')
+                    writeToFile.write(mapContent)
                     writeToFile.close()
 
-                    command = 'systemctl restart dovecot'
+                    command = 'postmap -F hash:/etc/postfix/vmail_ssl.map'
                     ProcessUtilities.executioner(command)
 
-                ### Update postfix configurations
-
-                postFixPath = '/etc/postfix/main.cf'
-
-                postFixContent = open(postFixPath, 'r').read()
-
-                if postFixContent.find('tls_server_sni_maps') == -1:
-                    writeToFile = open(postFixPath, 'a')
-                    writeToFile.write('\ntls_server_sni_maps = hash:/etc/postfix/vmail_ssl.map\n')
-                    writeToFile.close()
-
-                postfixMapFile = '/etc/postfix/vmail_ssl.map'
-
-                mapContent = '%s /etc/letsencrypt/live/%s/privkey.pem /etc/letsencrypt/live/%s/fullchain.pem\n' % (childDomain, childDomain, childDomain)
-
-                writeToFile = open(postfixMapFile, 'a')
-                writeToFile.write(mapContent)
-                writeToFile.close()
-
-                command = 'postmap -F hash:/etc/postfix/vmail_ssl.map'
-                ProcessUtilities.executioner(command)
-
-                command = 'systemctl restart postfix'
-                ProcessUtilities.executioner(command)
+                    command = 'systemctl restart postfix'
+                    ProcessUtilities.executioner(command)
 
             ###
 
@@ -1391,6 +1392,7 @@ def main():
 
     parser.add_argument('--openBasedirValue', help='open_base dir protection value!')
     parser.add_argument('--tempStatusPath', help='Temporary Status file path.')
+    parser.add_argument('--mailDomain', help='To create or not to create mail domain.')
 
     ## Switch Server
 
@@ -1421,7 +1423,7 @@ def main():
 
         virtualHostUtilities.createVirtualHost(args.virtualHostName, args.administratorEmail, args.phpVersion,
                                                args.virtualHostUser, int(args.ssl), dkimCheck, openBasedir,
-                                               args.websiteOwner, args.package, apache, tempStatusPath)
+                                               args.websiteOwner, args.package, apache, tempStatusPath, int(args.mailDomain))
     elif args.function == "deleteVirtualHostConfigurations":
         vhost.deleteVirtualHostConfigurations(args.virtualHostName)
     elif args.function == "createDomain":

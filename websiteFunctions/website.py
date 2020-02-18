@@ -199,6 +199,8 @@ class WebsiteManager:
             except:
                 externalApp = "".join(re.findall("[a-zA-Z]+", domain))[:7]
 
+
+
             try:
                 counter = 0
                 while 1:
@@ -214,6 +216,11 @@ class WebsiteManager:
                 apacheBackend = str(data['apacheBackend'])
             except:
                 apacheBackend = "0"
+
+            try:
+                mailDomain = str(data['mailDomain'])
+            except:
+                mailDomain = "1"
 
             import pwd
             counter = 0
@@ -232,7 +239,7 @@ class WebsiteManager:
                        " --administratorEmail " + adminEmail + " --phpVersion '" + phpSelection + \
                        "' --virtualHostUser " + externalApp + " --ssl " + str(data['ssl']) + " --dkimCheck " \
                        + str(data['dkimCheck']) + " --openBasedir " + str(data['openBasedir']) + \
-                       ' --websiteOwner ' + websiteOwner + ' --package ' + packageName + ' --tempStatusPath ' + tempStatusPath + " --apache " + apacheBackend
+                       ' --websiteOwner ' + websiteOwner + ' --package ' + packageName + ' --tempStatusPath ' + tempStatusPath + " --apache " + apacheBackend  + " --mailDomain %s" % (mailDomain)
 
             ProcessUtilities.popenExecutioner(execPath)
             time.sleep(2)
