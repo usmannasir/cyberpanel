@@ -45,7 +45,7 @@ app.controller('createWebsite', function ($scope, $http, $timeout, $window) {
 
         $scope.currentStatus = "Starting creation..";
 
-        var ssl, dkimCheck, openBasedir;
+        var ssl, dkimCheck, openBasedir, mailDomain;
 
         if ($scope.sslCheck === true) {
             ssl = 1;
@@ -65,6 +65,13 @@ app.controller('createWebsite', function ($scope, $http, $timeout, $window) {
             openBasedir = 0
         }
 
+        if ($scope.mailDomain === true) {
+            mailDomain = 1;
+        } else {
+            mailDomain = 0
+        }
+
+
         url = "/websites/submitWebsiteCreation";
 
         var package = $scope.packageForWebsite;
@@ -82,7 +89,8 @@ app.controller('createWebsite', function ($scope, $http, $timeout, $window) {
             ssl: ssl,
             websiteOwner: websiteOwner,
             dkimCheck: dkimCheck,
-            openBasedir: openBasedir
+            openBasedir: openBasedir,
+            mailDomain: mailDomain
         };
 
         var config = {
