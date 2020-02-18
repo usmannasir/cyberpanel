@@ -908,8 +908,15 @@ def saveResellerChanges(request):
         else:
             return ACLManager.loadErrorJson()
 
+        loggedUser = Administrator.objects.get(pk=val)
+
         userToBeModified = Administrator.objects.get(userName=data['userToBeModified'])
         newOwner = Administrator.objects.get(userName=data['newOwner'])
+
+        ### Check user owners
+
+        if ACLManager.checkUserOwnerShip(currentACL, loggedUser, userToBeModified) == 0 or ACLManager.checkUserOwnerShip(currentACL, loggedUser, newOwner) == 0:
+            return ACLManager.loadErrorJson()
 
         try:
             if ACLManager.websitesLimitCheck(newOwner, data['websitesLimit'], userToBeModified) == 0:
