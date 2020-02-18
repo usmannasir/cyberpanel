@@ -80,4 +80,29 @@ ${BLUE}------------------------------------------------------------${NC}
 ${PURPLE}9.${NC} How to enable Auto-Index for my site ?
 
 Please check this post ${GREEN}https://forums.cyberpanel.net/discussion/3850/tutorial-how-to-enable-auto-index-on-openlitespeed-and-litespeed-enterprise${NC}
+
+${BLUE}------------------------------------------------------------${NC}
+
+${PURPLE}10.${NC} How to add additional headers for my website ?
+
+Please check this post ${GREEN}https://openlitespeed.org/kb/how-to-set-up-custom-headers/${NC}
+
+${BLUE}------------------------------------------------------------${NC}
+
+${PURPLE}11.${NC} How to mimic Apache deny/allow directive ?
+
+Please check this post ${GREEN}https://openlitespeed.org/kb/access-control/${NC}
+
+${BLUE}------------------------------------------------------------${NC}
+
+${PURPLE}12.${NC} How to fix max_allowed_packet error ?
+
+You may see this error when your PHP script requires a larger packet size
+
+add following code into ${RED}/etc/my.cnf${NC}
+
+${GREEN}[mysqld]
+max_allowed_packet=500M${NC}
+
+and then restart MariaDB by command ${RED}systemctl restart mariadb${NC}
 "
