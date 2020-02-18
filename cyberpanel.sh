@@ -110,19 +110,33 @@ if [[ $VIRT_TYPE == "OpenVZ" ]] ; then
 PIDFile=/run/pure-ftpd.pid" > /etc/systemd/system/pure-ftpd.service.d/override.conf
 		echo -e "PureFTPd service file modified for OpenVZ..."
 	fi
+
+	if [[ ! -d /etc/systemd/system/lshttpd.service.d ]] ; then
+		mkdir /etc/systemd/system/lshttpd.service.d
+		echo "[Service]
+PIDFile=/tmp/lshttpd/lshttpd.pid" > /etc/systemd/system/lshttpd.service.d/override.conf
+		echo -e "LiteSPeed service file modified for OpenVZ..."
+	fi
+
+	if [[ ! -d /etc/systemd/system/spamassassin.service.d ]] ; then
+		mkdir /etc/systemd/system/spamassassin.service.d
+		echo "[Service]
+PIDFile=/run/spamassassin.pid" > /etc/systemd/system/spamassassin.service.d/override.conf
+		echo -e "SpamAssassin service file modified for OpenVZ..."
+	fi
 fi
 }
 
 check_virtualization() {
 echo -e "Checking virtualization type..."
-if hostnamectl | grep "Virtualization: lxc" ; then
+if hostnamectl | grep -q "Virtualization: lxc" ; then
 	echo -e "\nLXC detected..."
 	echo -e "CyberPanel does not support LXC"
 	echo -e "Exiting..."
 	exit
 fi
 
-if hostnamectl | grep "Virtualization: openvz" ; then
+if hostnamectl | grep -q "Virtualization: openvz" ; then
 	echo -e "\nOpenVZ detected..."
 	VIRT_TYPE="OpenVZ"
 	openvz_change
@@ -1358,8 +1372,8 @@ if [[ ! -f /usr/local/lsws/lsphp74/lib64/php/modules/zip.so ]] && [[ $SERVER_OS 
 		if [[ $? == "0" ]] ; then
 			yum remove -y libzip-devel
 	fi
-	yum install -y http://packages.psychotic.ninja/7/plus/x86_64/RPMS/libzip-0.11.2-6.el7.psychotic.x86_64.rpm
-	yum install -y http://packages.psychotic.ninja/7/plus/x86_64/RPMS/libzip-devel-0.11.2-6.el7.psychotic.x86_64.rpm
+	yum install -y https://$DOWNLOAD_SERVER/libzip-0.11.2-6.el7.psychotic.x86_64.rpm
+	yum install -y https://$DOWNLOAD_SERVER/misc/libzip-devel-0.11.2-6.el7.psychotic.x86_64.rpm
 	/usr/local/lsws/lsphp74/bin/pecl install zip
 	echo "extension=zip.so" > /usr/local/lsws/lsphp74/etc/php.d/20-zip.ini
 	chmod 755 /usr/local/lsws/lsphp74/lib64/php/modules/zip.so
