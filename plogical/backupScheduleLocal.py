@@ -39,7 +39,7 @@ class backupScheduleLocal:
             backupSchedule.remoteBackupLogging(backupLogPath, "")
 
             for virtualHost in os.listdir("/home"):
-                if match(r'([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?', virtualHost, M | I):
+                if match(r'^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9](?:\.[a-zA-Z]{2,})+$', virtualHost, M | I):
                     try:
                         retValues = backupSchedule.createLocalBackup(virtualHost, backupLogPath)
 
