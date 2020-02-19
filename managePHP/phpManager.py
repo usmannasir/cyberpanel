@@ -151,7 +151,7 @@ class PHPManager:
             allow_url_include = "allow_url_include = Off"
 
         path = PHPManager.FindPHPFPMPath(phpVersion)
-        command = "sudo cat " + path
+        command = "cat " + path
         data = ProcessUtilities.outputExecutioner(command).splitlines()
 
         tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
@@ -187,7 +187,7 @@ class PHPManager:
 
         writeToFile.close()
 
-        command = "sudo mv %s %s" % (tempStatusPath, path)
+        command = "mv %s %s" % (tempStatusPath, path)
         ProcessUtilities.executioner(command)
 
         php = PHPManager.getPHPString(phpVersion)
@@ -204,7 +204,7 @@ class PHPManager:
 
     @staticmethod
     def fetchPHPSettingsAdvance(phpVersion):
-        command = "sudo cat " + PHPManager.FindPHPFPMPath(phpVersion)
+        command = "cat " + PHPManager.FindPHPFPMPath(phpVersion)
         data = ProcessUtilities.outputExecutioner(command)
         final_dic = {'fetchStatus': 1,
                      'configData': data,
@@ -227,7 +227,7 @@ class PHPManager:
         writeToFile.write(configData)
         writeToFile.close()
 
-        command = "sudo mv %s %s" % (tempStatusPath, path)
+        command = "mv %s %s" % (tempStatusPath, path)
         ProcessUtilities.executioner(command)
 
         php = PHPManager.getPHPString(phpVersion)

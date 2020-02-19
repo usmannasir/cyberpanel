@@ -99,6 +99,9 @@ class phpUtilities:
     @staticmethod
     def savePHPConfigBasic(phpVers,allow_url_fopen,display_errors,file_uploads,allow_url_include,memory_limit,max_execution_time,upload_max_filesize,max_input_time,post_max_size):
         try:
+            serverLevelPHPRestart = '/usr/local/lsws/admin/tmp/.lsphp_restart.txt'
+            command = 'touch %s' % (serverLevelPHPRestart)
+            ProcessUtilities.executioner(command)
 
             if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
                 path = "/usr/local/lsws/ls" + phpVers + "/etc/php.ini"
@@ -156,13 +159,19 @@ class phpUtilities:
     @staticmethod
     def savePHPConfigAdvance(phpVers,tempPath):
         try:
+
+            serverLevelPHPRestart = '/usr/local/lsws/admin/tmp/.lsphp_restart.txt'
+            command = 'touch %s' % (serverLevelPHPRestart)
+            ProcessUtilities.executioner(command)
+
             phpINI = open(phpVers, 'w')
             phpINI.write(open(tempPath, "r").read())
             phpINI.close()
-            installUtilities.installUtilities.reStartLiteSpeed()
 
-            if os.path.exists(tempPath):
-                os.remove(tempPath)
+            if os.path.exists(serverLevelPHPRestart):
+                os.remove(serverLevelPHPRestart)
+
+            installUtilities.installUtilities.reStartLiteSpeed()
 
             print("1,None")
         except BaseException as msg:
