@@ -598,10 +598,15 @@ class DNSManager:
 
             if os.path.exists(cfPath):
                 CloudFlare = 1
+                domainsList = ACLManager.findAllDomains(currentACL, userID)
 
-            domainsList = ACLManager.findAllDomains(currentACL, userID)
+                self.admin = admin
+                self.loadCFKeys()
 
-            return render(request, 'dns/addDeleteDNSRecordsCloudFlare.html', {"domainsList": domainsList, "status": 1, 'CloudFlare': CloudFlare})
+                return render(request, 'dns/addDeleteDNSRecordsCloudFlare.html',
+                              {"domainsList": domainsList, "status": 1, 'CloudFlare': CloudFlare, 'cfEmail': self.email, 'cfToken': self.key})
+            else:
+                return render(request, 'dns/addDeleteDNSRecordsCloudFlare.html', {"status": 1, 'CloudFlare': CloudFlare})
 
         except BaseException as msg:
             return HttpResponse(str(msg))

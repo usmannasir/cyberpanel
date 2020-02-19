@@ -644,7 +644,7 @@ app.controller('configureDefaultNameservers', function ($scope, $http) {
 
 /* Java script code for CloudFlare */
 
-app.controller('addModifyDNSRecordsCloudFlare', function ($scope, $http) {
+app.controller('addModifyDNSRecordsCloudFlare', function ($scope, $http, $window) {
 
     $scope.saveCFConfigs = function () {
 
@@ -678,8 +678,7 @@ app.controller('addModifyDNSRecordsCloudFlare', function ($scope, $http) {
                     text: 'Changes successfully saved.',
                     type: 'success'
                 });
-
-
+                $window.location.reload();
             } else {
 
 
@@ -964,7 +963,6 @@ app.controller('addModifyDNSRecordsCloudFlare', function ($scope, $http) {
         }
 
     }
-
 
     $scope.deleteRecord = function (id) {
 
