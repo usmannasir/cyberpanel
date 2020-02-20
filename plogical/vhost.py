@@ -95,7 +95,11 @@ class vhost:
             try:
                 os.makedirs(pathHTML)
 
-                command = "chown " + virtualHostUser + ":" + virtualHostUser + " " + pathHTML
+                command = "chown " + virtualHostUser + ":nobody " + pathHTML
+                cmd = shlex.split(command)
+                subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+
+                command = "chmod 750 %s" % (pathHTML)
                 cmd = shlex.split(command)
                 subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
@@ -771,9 +775,14 @@ class vhost:
 
         try:
             os.makedirs(path)
-            command = "chown " + virtualHostUser + ":" + virtualHostUser + " " + path
+            command = "chown " + virtualHostUser + ":nobody " + path
             cmd = shlex.split(command)
             subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+
+            command = "chmod 755 %s" % (path)
+            cmd = shlex.split(command)
+            subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+
         except OSError as msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "329 [Not able to create directories for virtual host [createDirectoryForDomain]]")
