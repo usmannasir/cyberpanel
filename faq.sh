@@ -105,4 +105,10 @@ ${GREEN}[mysqld]
 max_allowed_packet=500M${NC}
 
 and then restart MariaDB by command ${RED}systemctl restart mariadb${NC}
+
+${BLUE}------------------------------------------------------------${NC}
+
+${PURPLE}13.${NC} How to enable PHP error log ?
+
+Please check this post ${GREEN}https://forums.cyberpanel.net/discussion/3977/tutorial-how-to-enable-php-error-log/p1${NC}
 "
