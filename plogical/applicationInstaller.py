@@ -154,11 +154,15 @@ class ApplicationInstaller(multi.Thread):
         except BaseException as msg:
             logging.writeToFile(str(msg) + ' [ApplicationInstaller.installWPCLI]')
 
-    def dataLossCheck(self, finalPath, tempStatusPath):
+    def dataLossCheck(self, finalPath, externalApp):
+        return 1
 
-        dirFiles = os.listdir(finalPath)
+        command = 'ls -la %s' % (finalPath)
+        output = ProcessUtilities.outputExecutioner(command, 'nobody').splitlines()
 
-        if len(dirFiles) <= 3:
+        logging.writeToFile(str(output))
+
+        if len(output) <= 3:
             return 1
         else:
             return 0
@@ -775,13 +779,17 @@ class ApplicationInstaller(multi.Thread):
 
             FNULL = open(os.devnull, 'w')
 
+            permPath = '/home/%s/public_html' % (domainName)
+            command = 'chmod 755 %s' % (permPath)
+            ProcessUtilities.executioner(command)
+
             if not os.path.exists(finalPath):
                 os.makedirs(finalPath)
 
             ## checking for directories/files
 
             if self.dataLossCheck(finalPath, tempStatusPath) == 0:
-                return 0
+                raise BaseException('Directory is not empty.')
 
             ## Get Joomla
 
@@ -794,7 +802,7 @@ class ApplicationInstaller(multi.Thread):
                 statusFile = open(tempStatusPath, 'w')
                 statusFile.writelines("File already exists." + " [404]")
                 statusFile.close()
-                return 0
+                raise BaseException('File already exists.')
 
             command = 'unzip ' + finalPath + 'staging.zip -d ' + finalPath
             ProcessUtilities.executioner(command, virtualHostUser)
@@ -898,6 +906,10 @@ class ApplicationInstaller(multi.Thread):
 
             installUtilities.reStartLiteSpeedSocket()
 
+            permPath = '/home/%s/public_html' % (domainName)
+            command = 'chmod 750 %s' % (permPath)
+            ProcessUtilities.executioner(command)
+
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines("Successfully Installed. [200]")
             statusFile.close()
@@ -918,6 +930,10 @@ class ApplicationInstaller(multi.Thread):
                 db.delete()
             except:
                 pass
+
+            permPath = '/home/%s/public_html' % (domainName)
+            command = 'chmod 755 %s' % (permPath)
+            ProcessUtilities.executioner(command)
 
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines(str(msg) + " [404]")
