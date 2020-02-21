@@ -208,6 +208,10 @@ fi
 install_utility
 
 if [[ $SERVER_OS == "CentOS7" ]] ; then
+
+sed -i 's|error_reporting = E_ALL \&amp; ~E_DEPRECATED \&amp; ~E_STRICT|error_reporting = E_ALL \& ~E_DEPRECATED \& ~E_STRICT|g' /usr/local/lsws/{lsphp72,lsphp73}/etc/php.ini
+#fix php.ini &amp; issue
+
 yum list installed lsphp74-devel
 	if [[ $? != "0" ]] ; then
 		yum install -y lsphp74-devel

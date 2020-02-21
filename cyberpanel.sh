@@ -1381,6 +1381,10 @@ if [[ ! -f /usr/local/lsws/lsphp74/lib64/php/modules/zip.so ]] && [[ $SERVER_OS 
 fi
 #fix the lsphp74-zip missing issue.
 
+		if [[ $SERVER_OS == "CentOS" ]] ; then
+			sed -i 's|error_reporting = E_ALL \&amp; ~E_DEPRECATED \&amp; ~E_STRICT|error_reporting = E_ALL \& ~E_DEPRECATED \& ~E_STRICT|g' /usr/local/lsws/{lsphp72,lsphp73}/etc/php.ini
+		fi
+#fix php.ini &amp; issue
 
 clear
 echo "###################################################################"
