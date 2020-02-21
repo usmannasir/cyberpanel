@@ -230,7 +230,7 @@ class ApplicationInstaller(multi.Thread):
             ### Check WP CLI
 
             try:
-                command = 'sudo wp --info'
+                command = 'wp --info'
                 outout = ProcessUtilities.outputExecutioner(command)
 
                 if not outout.find('WP-CLI root dir:') > -1:
