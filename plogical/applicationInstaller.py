@@ -358,7 +358,7 @@ class ApplicationInstaller(multi.Thread):
 
             ##
 
-            command = "chown -R " + externalApp + ":" + externalApp + " " + finalPath
+            command = "chown -R " + externalApp + ":" + 'nobody' + " " + finalPath
             ProcessUtilities.executioner(command, externalApp)
 
             statusFile = open(tempStatusPath, 'w')
@@ -374,7 +374,7 @@ class ApplicationInstaller(multi.Thread):
             homeDir = "/home/" + domainName + "/public_html"
 
             if not os.path.exists(homeDir):
-                command = "chown -R " + externalApp + ":" + externalApp + " " + homeDir
+                command = "chown -R " + externalApp + ":" + 'nobody' + " " + homeDir
                 ProcessUtilities.executioner(command, externalApp)
 
             try:
@@ -521,15 +521,15 @@ class ApplicationInstaller(multi.Thread):
 
             ##
 
-            command = "sudo rm -rf " + finalPath + "install"
+            command = "rm -rf " + finalPath + "install"
             ProcessUtilities.executioner(command, externalApp)
 
             ##
 
-            command = "sudo chown -R " + externalApp + ":" + externalApp + " " + finalPath
+            command = "chown -R " + externalApp + ":" + 'nobody' + " " + finalPath
             ProcessUtilities.executioner(command, externalApp)
 
-            command = "sudo rm -f prestashop_1.7.4.2.zip"
+            command = "rm -f prestashop_1.7.4.2.zip"
             ProcessUtilities.executioner(command, externalApp)
 
             statusFile = open(tempStatusPath, 'w')
@@ -544,7 +544,7 @@ class ApplicationInstaller(multi.Thread):
             homeDir = "/home/" + domainName + "/public_html"
 
             if not os.path.exists(homeDir):
-                command = "sudo chown -R " + externalApp + ":" + externalApp + " " + homeDir
+                command = "chown -R " + externalApp + ":" + 'nobody' + " " + homeDir
                 ProcessUtilities.executioner(command, externalApp)
 
             try:
@@ -651,7 +651,7 @@ class ApplicationInstaller(multi.Thread):
 
             ##
 
-            command = "sudo chown -R " + externalApp + ":" + externalApp + " " + finalPath
+            command = "chown -R " + externalApp + ":" + 'nobody' + " " + finalPath
             ProcessUtilities.executioner(command, externalApp)
 
             vhost.addRewriteRules(domainName)
@@ -704,7 +704,7 @@ class ApplicationInstaller(multi.Thread):
             website = Websites.objects.get(domain=domain)
             externalApp = website.externalApp
 
-            command = "chown -R " + externalApp + ":" + externalApp + " " + finalPath
+            command = "chown -R " + externalApp + ":" + 'nobody' + " " + finalPath
             ProcessUtilities.executioner(command, externalApp)
 
             return 0
@@ -743,7 +743,7 @@ class ApplicationInstaller(multi.Thread):
 
             ##
 
-            command = "chown -R " + externalApp + ":" + externalApp + " " + finalPath
+            command = "chown -R " + externalApp + ":" + 'nobody' + " " + finalPath
             ProcessUtilities.executioner(command, website.externalApp)
 
             gitPath = '/home/cyberpanel/' + domain + '.git'
@@ -891,7 +891,7 @@ class ApplicationInstaller(multi.Thread):
 
             shutil.rmtree(finalPath + "installation")
 
-            command = "chown -R " + virtualHostUser + ":" + virtualHostUser + " " + finalPath
+            command = "chown -R " + virtualHostUser + ":" + 'nobody' + " " + finalPath
             ProcessUtilities.executioner(command)
 
             vhost.addRewriteRules(domainName)
@@ -909,7 +909,7 @@ class ApplicationInstaller(multi.Thread):
             homeDir = "/home/" + domainName + "/public_html"
 
             if not os.path.exists(homeDir):
-                command = "chown -R " + virtualHostUser + ":" + virtualHostUser + " " + homeDir
+                command = "chown -R " + virtualHostUser + ":" + 'nobody' + " " + homeDir
                 ProcessUtilities.executioner(command)
 
             try:
@@ -1101,7 +1101,7 @@ class ApplicationInstaller(multi.Thread):
 
             ##
 
-            command = "sudo chown -R " + externalApp + ":" + externalApp + " " + finalPath
+            command = "chown -R " + externalApp + ":" + 'nobody' + " " + finalPath
             ProcessUtilities.executioner(command, externalApp)
 
             installUtilities.reStartLiteSpeed()
@@ -1118,7 +1118,7 @@ class ApplicationInstaller(multi.Thread):
             homeDir = "/home/" + domainName + "/public_html"
 
             if not os.path.exists(homeDir):
-                command = "sudo chown -R " + externalApp + ":" + externalApp + " " + homeDir
+                command = "chown -R " + externalApp + ":" + 'nobody' + " " + homeDir
                 ProcessUtilities.executioner(command, externalApp)
 
             try:
