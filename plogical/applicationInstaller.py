@@ -154,15 +154,10 @@ class ApplicationInstaller(multi.Thread):
         except BaseException as msg:
             logging.writeToFile(str(msg) + ' [ApplicationInstaller.installWPCLI]')
 
-    def dataLossCheck(self, finalPath, externalApp):
-        return 1
+    def dataLossCheck(self, finalPath, tempStatusPath):
+        dirFiles = os.listdir(finalPath)
 
-        command = 'ls -la %s' % (finalPath)
-        output = ProcessUtilities.outputExecutioner(command, 'nobody').splitlines()
-
-        logging.writeToFile(str(output))
-
-        if len(output) <= 3:
+        if len(dirFiles) <= 3:
             return 1
         else:
             return 0
@@ -173,10 +168,10 @@ class ApplicationInstaller(multi.Thread):
                 command = 'apt -y install git'
                 ProcessUtilities.executioner(command)
             else:
-                command = 'sudo yum -y install http://repo.iotti.biz/CentOS/7/noarch/lux-release-7-1.noarch.rpm'
+                command = 'yum -y install http://repo.iotti.biz/CentOS/7/noarch/lux-release-7-1.noarch.rpm'
                 ProcessUtilities.executioner(command)
 
-                command = 'sudo yum install git -y'
+                command = 'yum install git -y'
                 ProcessUtilities.executioner(command)
 
         except BaseException as msg:
@@ -302,6 +297,10 @@ class ApplicationInstaller(multi.Thread):
 
             ## Security Check
 
+            permPath = '/home/%s/public_html' % (domainName)
+            command = 'chmod 755 %s' % (permPath)
+            ProcessUtilities.executioner(command)
+
             if finalPath.find("..") > -1:
                 statusFile = open(tempStatusPath, 'w')
                 statusFile.writelines("Specified path must be inside virtual host home." + " [404]")
@@ -315,7 +314,7 @@ class ApplicationInstaller(multi.Thread):
             ## checking for directories/files
 
             if self.dataLossCheck(finalPath, tempStatusPath) == 0:
-                return 0
+                raise BaseException('Directory is not empty.')
 
             ####
 
@@ -365,6 +364,10 @@ class ApplicationInstaller(multi.Thread):
             command = "chown -R " + externalApp + ":" + 'nobody' + " " + finalPath
             ProcessUtilities.executioner(command, externalApp)
 
+            permPath = '/home/%s/public_html' % (domainName)
+            command = 'chmod 750 %s' % (permPath)
+            ProcessUtilities.executioner(command)
+
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines("Successfully Installed. [200]")
             statusFile.close()
@@ -387,6 +390,10 @@ class ApplicationInstaller(multi.Thread):
                 db.delete()
             except:
                 pass
+
+            permPath = '/home/%s/public_html' % (domainName)
+            command = 'chmod 750 %s' % (permPath)
+            ProcessUtilities.executioner(command)
 
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines(str(msg) + " [404]")
@@ -469,20 +476,24 @@ class ApplicationInstaller(multi.Thread):
 
             ## Security Check
 
+            permPath = '/home/%s/public_html' % (domainName)
+            command = 'chmod 755 %s' % (permPath)
+            ProcessUtilities.executioner(command)
+
             if finalPath.find("..") > -1:
                 statusFile = open(tempStatusPath, 'w')
                 statusFile.writelines("Specified path must be inside virtual host home." + " [404]")
                 statusFile.close()
-                return 0
+                raise BaseException('Specified path must be inside virtual host home.')
 
             if not os.path.exists(finalPath):
-                command = 'sudo mkdir -p ' + finalPath
+                command = 'mkdir -p ' + finalPath
                 ProcessUtilities.executioner(command, externalApp)
 
             ## checking for directories/files
 
             if self.dataLossCheck(finalPath, tempStatusPath) == 0:
-                return 0
+                raise BaseException('Directory is not empty.')
 
             ####
 
@@ -517,7 +528,7 @@ class ApplicationInstaller(multi.Thread):
             statusFile.writelines('Installing and configuring PrestaShop..,60')
             statusFile.close()
 
-            command = "sudo php " + finalPath + "install/index_cli.php --domain=" + finalURL + \
+            command = "php " + finalPath + "install/index_cli.php --domain=" + finalURL + \
                       " --db_server=localhost --db_name=" + dbName + " --db_user=" + dbUser + " --db_password=" + dbPassword \
                       + " --name='" + shopName + "' --firstname=" + firstName + " --lastname=" + lastName + \
                       " --email=" + email + " --password=" + password
@@ -535,6 +546,10 @@ class ApplicationInstaller(multi.Thread):
 
             command = "rm -f prestashop_1.7.4.2.zip"
             ProcessUtilities.executioner(command, externalApp)
+
+            permPath = '/home/%s/public_html' % (domainName)
+            command = 'chmod 750 %s' % (permPath)
+            ProcessUtilities.executioner(command)
 
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines("Successfully Installed. [200]")
@@ -558,6 +573,10 @@ class ApplicationInstaller(multi.Thread):
             except:
                 pass
 
+            permPath = '/home/%s/public_html' % (domainName)
+            command = 'chmod 750 %s' % (permPath)
+            ProcessUtilities.executioner(command)
+
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines(str(msg) + " [404]")
             statusFile.close()
@@ -580,7 +599,7 @@ class ApplicationInstaller(multi.Thread):
             ### Check git
 
             try:
-                command = 'sudo git --help'
+                command = 'git --help'
                 output = ProcessUtilities.outputExecutioner(command)
 
                 if output.find('command not found') > -1:
@@ -622,15 +641,19 @@ class ApplicationInstaller(multi.Thread):
                 statusFile = open(tempStatusPath, 'w')
                 statusFile.writelines("Specified path must be inside virtual host home." + " [404]")
                 statusFile.close()
-                return 0
+                raise BaseException('Specified path must be inside virtual host home.')
 
-            command = 'sudo mkdir -p ' + finalPath
+            permPath = '/home/%s/public_html' % (domainName)
+            command = 'chmod 755 %s' % (permPath)
+            ProcessUtilities.executioner(command)
+
+            command = 'mkdir -p ' + finalPath
             ProcessUtilities.executioner(command, externalApp)
 
             ## checking for directories/files
 
             if self.dataLossCheck(finalPath, tempStatusPath) == 0:
-                return 0
+                raise BaseException('Directory is not empty.')
 
             ####
 
@@ -668,6 +691,10 @@ class ApplicationInstaller(multi.Thread):
             writeToFile.write(username + ':' + reponame)
             writeToFile.close()
 
+            permPath = '/home/%s/public_html' % (domainName)
+            command = 'chmod 750 %s' % (permPath)
+            ProcessUtilities.executioner(command)
+
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines("GIT Repository successfully attached. [200]")
             statusFile.close()
@@ -675,7 +702,14 @@ class ApplicationInstaller(multi.Thread):
 
 
         except BaseException as msg:
-            os.remove('/home/cyberpanel/' + domainName + '.git')
+            try:
+                os.remove('/home/cyberpanel/' + domainName + '.git')
+            except:
+                pass
+
+            permPath = '/home/%s/public_html' % (domainName)
+            command = 'chmod 750 %s' % (permPath)
+            ProcessUtilities.executioner(command)
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines(str(msg) + " [404]")
             statusFile.close()
@@ -932,7 +966,7 @@ class ApplicationInstaller(multi.Thread):
                 pass
 
             permPath = '/home/%s/public_html' % (domainName)
-            command = 'chmod 755 %s' % (permPath)
+            command = 'chmod 750 %s' % (permPath)
             ProcessUtilities.executioner(command)
 
             statusFile = open(tempStatusPath, 'w')
@@ -957,11 +991,11 @@ class ApplicationInstaller(multi.Thread):
                 externalApp = childDomain.master.externalApp
 
             try:
-                command = 'sudo git --git-dir=' + finalPath + '/.git  checkout -b ' + githubBranch
+                command = 'git --git-dir=' + finalPath + '/.git  checkout -b ' + githubBranch
                 ProcessUtilities.executioner(command, externalApp)
             except:
                 try:
-                    command = 'sudo git --git-dir=' + finalPath + '/.git  checkout ' + githubBranch
+                    command = 'git --git-dir=' + finalPath + '/.git  checkout ' + githubBranch
                     ProcessUtilities.executioner(command, externalApp)
                 except subprocess.CalledProcessError as msg:
                     logging.writeToFile('Failed to change branch: ' + str(msg))
@@ -1052,14 +1086,18 @@ class ApplicationInstaller(multi.Thread):
                 statusFile.close()
                 return 0
 
+            permPath = '/home/%s/public_html' % (domainName)
+            command = 'chmod 755 %s' % (permPath)
+            ProcessUtilities.executioner(command)
+
             if not os.path.exists(finalPath):
-                command = 'sudo mkdir -p ' + finalPath
+                command = 'mkdir -p ' + finalPath
                 ProcessUtilities.executioner(command, externalApp)
 
             ## checking for directories/files
 
             if self.dataLossCheck(finalPath, tempStatusPath) == 0:
-                return 0
+                raise BaseException('Directory not empty.')
 
             ####
 
@@ -1068,9 +1106,9 @@ class ApplicationInstaller(multi.Thread):
             statusFile.close()
 
             if sampleData:
-                command = "sudo wget http://cyberpanelsh.b-cdn.net/latest-sample.tar.gz -P %s" % (finalPath)
+                command = "wget http://cyberpanelsh.b-cdn.net/latest-sample.tar.gz -P %s" % (finalPath)
             else:
-                command = "sudo wget http://cyberpanelsh.b-cdn.net/latest.tar.gz -P %s" % (finalPath)
+                command = "wget http://cyberpanelsh.b-cdn.net/latest.tar.gz -P %s" % (finalPath)
 
             ProcessUtilities.executioner(command, externalApp)
 
@@ -1122,6 +1160,10 @@ class ApplicationInstaller(multi.Thread):
 
             installUtilities.reStartLiteSpeed()
 
+            permPath = '/home/%s/public_html' % (domainName)
+            command = 'chmod 750 %s' % (permPath)
+            ProcessUtilities.executioner(command)
+
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines("Successfully Installed. [200]")
             statusFile.close()
@@ -1143,6 +1185,10 @@ class ApplicationInstaller(multi.Thread):
                 db.delete()
             except:
                 pass
+
+            permPath = '/home/%s/public_html' % (domainName)
+            command = 'chmod 750 %s' % (permPath)
+            ProcessUtilities.executioner(command)
 
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines(str(msg) + " [404]")
