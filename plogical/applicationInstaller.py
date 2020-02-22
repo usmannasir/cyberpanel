@@ -258,11 +258,7 @@ class ApplicationInstaller(multi.Thread):
                 if website.master.package.dataBases > website.master.databases_set.all().count():
                     pass
                 else:
-                    statusFile = open(tempStatusPath, 'w')
-                    statusFile.writelines(
-                        "Maximum database limit reached for this website." + " [404]")
-                    statusFile.close()
-                    return 0
+                    raise BaseException("Maximum database limit reached for this website.")
 
                 statusFile = open(tempStatusPath, 'w')
                 statusFile.writelines('Setting up Database,20')
@@ -283,11 +279,7 @@ class ApplicationInstaller(multi.Thread):
                 if website.package.dataBases > website.databases_set.all().count():
                     pass
                 else:
-                    statusFile = open(tempStatusPath, 'w')
-                    statusFile.writelines(
-                        "Maximum database limit reached for this website." + " [404]")
-                    statusFile.close()
-                    return 0
+                    raise BaseException("Maximum database limit reached for this website.")
 
                 statusFile = open(tempStatusPath, 'w')
                 statusFile.writelines('Setting up Database,20')
@@ -302,10 +294,7 @@ class ApplicationInstaller(multi.Thread):
             ProcessUtilities.executioner(command)
 
             if finalPath.find("..") > -1:
-                statusFile = open(tempStatusPath, 'w')
-                statusFile.writelines("Specified path must be inside virtual host home." + " [404]")
-                statusFile.close()
-                return 0
+                raise BaseException("Specified path must be inside virtual host home.")
 
             if not os.path.exists(finalPath):
                 command = 'mkdir -p ' + finalPath
@@ -361,8 +350,9 @@ class ApplicationInstaller(multi.Thread):
 
             ##
 
-            command = "chown -R " + externalApp + ":" + 'nobody' + " " + finalPath
-            ProcessUtilities.executioner(command, externalApp)
+            if home != '0':
+                command = "chown " + externalApp + ":" + 'nobody' + " " + finalPath
+                ProcessUtilities.executioner(command, externalApp)
 
             permPath = '/home/%s/public_html' % (domainName)
             command = 'chmod 750 %s' % (permPath)
@@ -381,7 +371,7 @@ class ApplicationInstaller(multi.Thread):
             homeDir = "/home/" + domainName + "/public_html"
 
             if not os.path.exists(homeDir):
-                command = "chown -R " + externalApp + ":" + 'nobody' + " " + homeDir
+                command = "chown " + externalApp + ":" + 'nobody' + " " + homeDir
                 ProcessUtilities.executioner(command, externalApp)
 
             try:
@@ -437,11 +427,7 @@ class ApplicationInstaller(multi.Thread):
                 if website.master.package.dataBases > website.master.databases_set.all().count():
                     pass
                 else:
-                    statusFile = open(tempStatusPath, 'w')
-                    statusFile.writelines(
-                        "Maximum database limit reached for this website." + " [404]")
-                    statusFile.close()
-                    return 0
+                    raise BaseException("Maximum database limit reached for this website.")
 
                 statusFile = open(tempStatusPath, 'w')
                 statusFile.writelines('Setting up Database,20')
@@ -462,11 +448,7 @@ class ApplicationInstaller(multi.Thread):
                 if website.package.dataBases > website.databases_set.all().count():
                     pass
                 else:
-                    statusFile = open(tempStatusPath, 'w')
-                    statusFile.writelines(
-                        "Maximum database limit reached for this website." + " [404]")
-                    statusFile.close()
-                    return 0
+                    raise BaseException("Maximum database limit reached for this website.")
 
                 statusFile = open(tempStatusPath, 'w')
                 statusFile.writelines('Setting up Database,20')
@@ -481,9 +463,6 @@ class ApplicationInstaller(multi.Thread):
             ProcessUtilities.executioner(command)
 
             if finalPath.find("..") > -1:
-                statusFile = open(tempStatusPath, 'w')
-                statusFile.writelines("Specified path must be inside virtual host home." + " [404]")
-                statusFile.close()
                 raise BaseException('Specified path must be inside virtual host home.')
 
             if not os.path.exists(finalPath):
@@ -501,14 +480,14 @@ class ApplicationInstaller(multi.Thread):
             statusFile.writelines('Downloading and extracting PrestaShop Core..,30')
             statusFile.close()
 
-            command = "sudo wget https://download.prestashop.com/download/releases/prestashop_1.7.4.2.zip -P %s" % (
+            command = "wget https://download.prestashop.com/download/releases/prestashop_1.7.4.2.zip -P %s" % (
                 finalPath)
             ProcessUtilities.executioner(command, externalApp)
 
-            command = "sudo unzip -o %sprestashop_1.7.4.2.zip -d " % (finalPath) + finalPath
+            command = "unzip -o %sprestashop_1.7.4.2.zip -d " % (finalPath) + finalPath
             ProcessUtilities.executioner(command, externalApp)
 
-            command = "sudo unzip -o %sprestashop.zip -d " % (finalPath) + finalPath
+            command = "unzip -o %sprestashop.zip -d " % (finalPath) + finalPath
             ProcessUtilities.executioner(command, externalApp)
 
             ##
@@ -541,8 +520,9 @@ class ApplicationInstaller(multi.Thread):
 
             ##
 
-            command = "chown -R " + externalApp + ":" + 'nobody' + " " + finalPath
-            ProcessUtilities.executioner(command, externalApp)
+            if home == '0':
+                command = "chown -R " + externalApp + ":" + 'nobody' + " " + finalPath
+                ProcessUtilities.executioner(command, externalApp)
 
             command = "rm -f prestashop_1.7.4.2.zip"
             ProcessUtilities.executioner(command, externalApp)
@@ -610,7 +590,8 @@ class ApplicationInstaller(multi.Thread):
                     statusFile = open(tempStatusPath, 'w')
                     statusFile.writelines('GIT successfully installed,20')
                     statusFile.close()
-            except subprocess.CalledProcessError:
+
+            except BaseException as msg:
                 statusFile = open(tempStatusPath, 'w')
                 statusFile.writelines('Installing GIT..,0')
                 statusFile.close()
@@ -638,9 +619,6 @@ class ApplicationInstaller(multi.Thread):
             ## Security Check
 
             if finalPath.find("..") > -1:
-                statusFile = open(tempStatusPath, 'w')
-                statusFile.writelines("Specified path must be inside virtual host home." + " [404]")
-                statusFile.close()
                 raise BaseException('Specified path must be inside virtual host home.')
 
             permPath = '/home/%s/public_html' % (domainName)
@@ -664,17 +642,11 @@ class ApplicationInstaller(multi.Thread):
             try:
                 command = 'git clone --depth 1 --no-single-branch git@' + defaultProvider + '.com:' + username + '/' + reponame + '.git -b ' + branch + ' ' + finalPath
                 output = ProcessUtilities.outputExecutioner(command, externalApp)
-                if output.find('Checking out files: 100%') == -1:
-                    statusFile = open(tempStatusPath, 'w')
-                    statusFile.writelines('%s. [404]' % (output))
-                    statusFile.close()
-                    return 0
-            except subprocess.CalledProcessError as msg:
-                statusFile = open(tempStatusPath, 'w')
-                statusFile.writelines(
-                    'Failed to clone repository, make sure you deployed your key to repository. [404]')
-                statusFile.close()
-                return 0
+                finalPathGit = '%s/.git' % (finalPath.rstrip('/'))
+                if not os.path.exists(finalPathGit):
+                    raise BaseException(output)
+            except BaseException as msg:
+                raise BaseException('Failed to clone repository, make sure you deployed your key to repository. Error: %s' % (str(msg)))
 
             ##
 
@@ -710,6 +682,7 @@ class ApplicationInstaller(multi.Thread):
             permPath = '/home/%s/public_html' % (domainName)
             command = 'chmod 750 %s' % (permPath)
             ProcessUtilities.executioner(command)
+
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines(str(msg) + " [404]")
             statusFile.close()
@@ -833,9 +806,6 @@ class ApplicationInstaller(multi.Thread):
                 command = 'wget --no-check-certificate https://github.com/joomla/joomla-cms/archive/staging.zip -P ' + finalPath
                 ProcessUtilities.executioner(command, virtualHostUser)
             else:
-                statusFile = open(tempStatusPath, 'w')
-                statusFile.writelines("File already exists." + " [404]")
-                statusFile.close()
                 raise BaseException('File already exists.')
 
             command = 'unzip ' + finalPath + 'staging.zip -d ' + finalPath
@@ -1041,11 +1011,7 @@ class ApplicationInstaller(multi.Thread):
                 if website.master.package.dataBases > website.master.databases_set.all().count():
                     pass
                 else:
-                    statusFile = open(tempStatusPath, 'w')
-                    statusFile.writelines(
-                        "Maximum database limit reached for this website." + " [404]")
-                    statusFile.close()
-                    return 0
+                    raise BaseException( "Maximum database limit reached for this website.")
 
                 statusFile = open(tempStatusPath, 'w')
                 statusFile.writelines('Setting up Database,20')
@@ -1066,11 +1032,7 @@ class ApplicationInstaller(multi.Thread):
                 if website.package.dataBases > website.databases_set.all().count():
                     pass
                 else:
-                    statusFile = open(tempStatusPath, 'w')
-                    statusFile.writelines(
-                        "Maximum database limit reached for this website." + " [404]")
-                    statusFile.close()
-                    return 0
+                    raise BaseException( "Maximum database limit reached for this website.")
 
                 statusFile = open(tempStatusPath, 'w')
                 statusFile.writelines('Setting up Database,20')
@@ -1081,10 +1043,7 @@ class ApplicationInstaller(multi.Thread):
             ## Security Check
 
             if finalPath.find("..") > -1:
-                statusFile = open(tempStatusPath, 'w')
-                statusFile.writelines("Specified path must be inside virtual host home." + " [404]")
-                statusFile.close()
-                return 0
+                raise BaseException( "Specified path must be inside virtual host home.")
 
             permPath = '/home/%s/public_html' % (domainName)
             command = 'chmod 755 %s' % (permPath)
@@ -1155,8 +1114,9 @@ class ApplicationInstaller(multi.Thread):
 
             ##
 
-            command = "chown -R " + externalApp + ":" + 'nobody' + " " + finalPath
-            ProcessUtilities.executioner(command, externalApp)
+            if home != '0':
+                command = "chown -R " + externalApp + ":" + 'nobody' + " " + finalPath
+                ProcessUtilities.executioner(command, externalApp)
 
             installUtilities.reStartLiteSpeed()
 
