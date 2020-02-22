@@ -1082,10 +1082,10 @@ fi
 echo -e "\nWould you like to set up a WatchDog \e[31m(beta)\e[39m for Web service and Database service ?"
 echo -e "The watchdog script will be automatically started up after installation and server reboot"
 echo -e "If you want to kill the watchdog , run \e[31mwatchdog kill\e[39m"
-echo -e "Please type Yes or no (with capital \e[31mY\e[39m):"
+echo -e "Please type Yes or no (with capital \e[31mY\e[39m, default Yes):"
 printf "%s"
 read TMP_YN
-if [[ $TMP_YN == "Yes" ]] ; then
+if [[ $TMP_YN == "Yes" ]] || [[ $TMP_YN == "" ]] ; then
 	WATCHDOG="ON"
 else
 	WATCHDOG="OFF"
@@ -1373,7 +1373,7 @@ if [[ ! -f /usr/local/lsws/lsphp74/lib64/php/modules/zip.so ]] && [[ $SERVER_OS 
 		if [[ $? == "0" ]] ; then
 			yum remove -y libzip-devel
 	fi
-	yum install -y https://$DOWNLOAD_SERVER/libzip-0.11.2-6.el7.psychotic.x86_64.rpm
+	yum install -y https://$DOWNLOAD_SERVER/misc/libzip-0.11.2-6.el7.psychotic.x86_64.rpm
 	yum install -y https://$DOWNLOAD_SERVER/misc/libzip-devel-0.11.2-6.el7.psychotic.x86_64.rpm
 	/usr/local/lsws/lsphp74/bin/pecl install zip
 	echo "extension=zip.so" > /usr/local/lsws/lsphp74/etc/php.d/20-zip.ini
@@ -1381,6 +1381,10 @@ if [[ ! -f /usr/local/lsws/lsphp74/lib64/php/modules/zip.so ]] && [[ $SERVER_OS 
 fi
 #fix the lsphp74-zip missing issue.
 
+		if [[ $SERVER_OS == "CentOS" ]] ; then
+			sed -i 's|error_reporting = E_ALL \&amp; ~E_DEPRECATED \&amp; ~E_STRICT|error_reporting = E_ALL \& ~E_DEPRECATED \& ~E_STRICT|g' /usr/local/lsws/{lsphp72,lsphp73}/etc/php.ini
+		fi
+#fix php.ini &amp; issue
 
 clear
 echo "###################################################################"
@@ -1398,12 +1402,9 @@ echo "                Panel password: $ADMIN_PASS                        "
 echo "                WebAdmin console username: admin                         "
 echo "                WebAdmin console password: $WEBADMIN_PASS                "
 echo "                                                                   "
-echo "            Please change your default admin password              "
-echo "          If you need to reset your panel password, please run:    "
-echo "        	adminPass YOUR_NEW_PASSWORD     					   "
-echo "                                                                   "
-echo "          If you change mysql password, please  modify file in     "
-echo -e "         \e[31m/etc/cyberpanel/mysqlPassword\e[39m with new password as well   "
+echo -e "             Run \e[31mcyberpanel help\e[39m to get FAQ info"
+echo -e "             Run \e[31mcyberpanel upgrade\e[39m to upgrade it to latest version."
+echo -e "             Run \e[31mcyberpanel utility\e[39m to access some handy tools ."
 echo "                                                                   "
 echo "              Website : https://www.cyberpanel.net                 "
 echo "              Forums  : https://forums.cyberpanel.net              "
