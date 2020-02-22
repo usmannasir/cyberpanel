@@ -83,20 +83,32 @@ Please check this post ${GREEN}https://forums.cyberpanel.net/discussion/3850/tut
 
 ${BLUE}------------------------------------------------------------${NC}
 
-${PURPLE}10.${NC} How to fix error when export database in phpMyAdmin?
+${PURPLE}10.${NC} How to add additional headers for my website ?
 
-You may see error message:
+Please check this post ${GREEN}https://openlitespeed.org/kb/how-to-set-up-custom-headers/${NC}
 
-The dynamic response body size is over the limit, the response will be truncated by the web server.
-The limit is set in the key 'maxDynRespSize' located in the tuning section of the server configuration,
-and labeled 'max dynamic response body size
+${BLUE}------------------------------------------------------------${NC}
 
-Solution:  add following code into ${RED}/etc/my.cnf${NC}
+${PURPLE}11.${NC} How to mimic Apache deny/allow directive ?
+
+Please check this post ${GREEN}https://openlitespeed.org/kb/access-control/${NC}
+
+${BLUE}------------------------------------------------------------${NC}
+
+${PURPLE}12.${NC} How to fix max_allowed_packet error ?
+
+You may see this error when your PHP script requires a larger packet size
+
+add following code into ${RED}/etc/my.cnf${NC}
 
 ${GREEN}[mysqld]
 max_allowed_packet=500M${NC}
 
-if ${GREEN}[mysql]${NC} already exists, then add the second line into that section , and restart mysql by command
+and then restart MariaDB by command ${RED}systemctl restart mariadb${NC}
 
-${RED}systemctl restart mariadb${NC}
+${BLUE}------------------------------------------------------------${NC}
+
+${PURPLE}13.${NC} How to enable PHP error log ?
+
+Please check this post ${GREEN}https://forums.cyberpanel.net/discussion/3977/tutorial-how-to-enable-php-error-log/p1${NC}
 "
