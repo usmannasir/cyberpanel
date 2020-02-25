@@ -33,34 +33,60 @@ class DNS:
 
     def loadCFKeys(self):
         cfFile = '%s%s' % (DNS.CFPath, self.admin.userName)
-        data = open(cfFile, 'r').readlines()
-        self.email = data[0].rstrip('\n')
-        self.key = data[1].rstrip('\n')
-        self.status = data[2].rstrip('\n')
+
+        if os.path.exists(cfFile):
+            data = open(cfFile, 'r').readlines()
+            self.email = data[0].rstrip('\n')
+            self.key = data[1].rstrip('\n')
+            self.status = data[2].rstrip('\n')
+            return 1
+        else:
+            logging.CyberCPLogFileWriter.writeToFile('User %s does not have CoudFlare configured.' % (self.admin.userName))
+            return 0
 
     def cfTemplate(self, zoneDomain, admin, enableCheck=None):
         try:
             self.admin = admin
             ## Get zone
 
-            self.loadCFKeys()
+            if self.loadCFKeys():
 
-            if enableCheck == None:
-                pass
-            else:
-                if self.status == 'Enable':
+                if enableCheck == None:
                     pass
                 else:
-                    return 0, 'Sync not enabled.'
+                    if self.status == 'Enable':
+                        pass
+                    else:
+                        return 0, 'Sync not enabled.'
 
-            cf = CloudFlare.CloudFlare(email=self.email, token=self.key)
+                cf = CloudFlare.CloudFlare(email=self.email, token=self.key)
 
-            try:
-                params = {'name': zoneDomain, 'per_page': 50}
-                zones = cf.zones.get(params=params)
+                try:
+                    params = {'name': zoneDomain, 'per_page': 50}
+                    zones = cf.zones.get(params=params)
 
-                for zone in sorted(zones, key=lambda v: v['name']):
-                    zone = zone['id']
+                    for zone in sorted(zones, key=lambda v: v['name']):
+                        zone = zone['id']
+
+                        domain = Domains.objects.get(name=zoneDomain)
+                        records = Records.objects.filter(domain_id=domain.id)
+
+                        for record in records:
+                            DNS.createDNSRecordCloudFlare(cf, zone, record.name, record.type, record.content, record.prio,
+                                                          record.ttl)
+
+                        return 1, None
+
+
+                except CloudFlare.exceptions.CloudFlareAPIError as e:
+                    logging.CyberCPLogFileWriter.writeToFile(str(e))
+                except Exception as e:
+                    logging.CyberCPLogFileWriter.writeToFile(str(e))
+
+                try:
+                    zone_info = cf.zones.post(data={'jump_start': False, 'name': zoneDomain})
+
+                    zone = zone_info['id']
 
                     domain = Domains.objects.get(name=zoneDomain)
                     records = Records.objects.filter(domain_id=domain.id)
@@ -71,31 +97,10 @@ class DNS:
 
                     return 1, None
 
-
-            except CloudFlare.exceptions.CloudFlareAPIError as e:
-                logging.CyberCPLogFileWriter.writeToFile(str(e))
-            except Exception as e:
-                logging.CyberCPLogFileWriter.writeToFile(str(e))
-
-            try:
-                zone_info = cf.zones.post(data={'jump_start': False, 'name': zoneDomain})
-
-                zone = zone_info['id']
-
-                domain = Domains.objects.get(name=zoneDomain)
-                records = Records.objects.filter(domain_id=domain.id)
-
-                for record in records:
-                    DNS.createDNSRecordCloudFlare(cf, zone, record.name, record.type, record.content, record.prio,
-                                                  record.ttl)
-
-                return 1, None
-
-
-            except CloudFlare.exceptions.CloudFlareAPIError as e:
-                return 0, str(e)
-            except Exception as e:
-                return 0, str(e)
+                except CloudFlare.exceptions.CloudFlareAPIError as e:
+                    return 0, str(e)
+                except Exception as e:
+                    return 0, str(e)
 
         except BaseException as msg:
             return 0, str(e)
@@ -486,27 +491,26 @@ class DNS:
 
             dns = DNS()
             dns.admin = zone.admin
-            dns.loadCFKeys()
+            if dns.loadCFKeys():
+                cf = CloudFlare.CloudFlare(email=dns.email, token=dns.key)
 
-            cf = CloudFlare.CloudFlare(email=dns.email, token=dns.key)
+                if dns.status == 'Enable':
+                    try:
+                        params = {'name': domain, 'per_page': 50}
+                        zones = cf.zones.get(params=params)
 
-            if dns.status == 'Enable':
-                try:
-                    params = {'name': domain, 'per_page': 50}
-                    zones = cf.zones.get(params=params)
+                        for zone in sorted(zones, key=lambda v: v['name']):
+                            zone = zone['id']
 
-                    for zone in sorted(zones, key=lambda v: v['name']):
-                        zone = zone['id']
-
-                        DNS.createDNSRecordCloudFlare(cf, zone, "default._domainkey." + topLevelDomain, 'TXT',
-                                                      output[leftIndex:rightIndex], 0,
-                                                      3600)
+                            DNS.createDNSRecordCloudFlare(cf, zone, "default._domainkey." + topLevelDomain, 'TXT',
+                                                          output[leftIndex:rightIndex], 0,
+                                                          3600)
 
 
-                except CloudFlare.exceptions.CloudFlareAPIError as e:
-                    logging.CyberCPLogFileWriter.writeToFile(str(e))
-                except Exception as e:
-                    logging.CyberCPLogFileWriter.writeToFile(str(e))
+                    except CloudFlare.exceptions.CloudFlareAPIError as e:
+                        logging.CyberCPLogFileWriter.writeToFile(str(e))
+                    except Exception as e:
+                        logging.CyberCPLogFileWriter.writeToFile(str(e))
 
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(
