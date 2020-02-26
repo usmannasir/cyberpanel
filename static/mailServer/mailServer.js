@@ -886,6 +886,11 @@ app.controller('emailForwarding', function ($scope, $http) {
 
     $scope.fetchCurrentForwardings = function () {
 
+        if($scope.forwardingOption == null || $scope.selectedEmail == null ){
+            $scope.forwardLoading = true;
+            return 0;
+        }
+
         $scope.creationBox = false;
         $scope.emailDetails = false;
         $scope.forwardLoading = false;

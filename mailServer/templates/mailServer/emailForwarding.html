@@ -51,7 +51,7 @@
                 <div ng-hide="emailDetails" class="form-group">
                     <label class="col-sm-3 control-label">{% trans "Select Email" %} </label>
                     <div class="col-sm-6">
-                        <select ng-model="selectedEmail" class="form-control">
+                        <select ng-change="selectForwardingEmail()" ng-model="selectedEmail" class="form-control">
                                 <option ng-repeat="email in emails track by $index">{$ email.email $}</option>
                         </select>
                     </div>
