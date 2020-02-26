@@ -20,10 +20,8 @@ class FileManager:
         return HttpResponse(final_json)
 
     def returnPathEnclosed(self, path):
-        htmlParser = html.parser.HTMLParser()
-        path = html.unescape(path)
-        return path
         return "'" + path + "'"
+
 
     def changeOwner(self,  path):
         domainName = self.data['domainName']
@@ -367,8 +365,13 @@ class FileManager:
 
             myfile = self.request.FILES['file']
             fs = FileSystemStorage()
-            filename = fs.save(myfile.name, myfile)
-            finalData['fileName'] = fs.url(filename)
+
+            try:
+                filename = fs.save(myfile.name, myfile)
+                finalData['fileName'] = fs.url(filename)
+            except BaseException as msg:
+                logging.writeToFile('%s. [375:upload]' % (str(msg)))
+
             pathCheck = '/home/%s' % (self.data['domainName'])
 
             if ACLManager.commandInjectionCheck(self.data['completePath'] + '/' + myfile.name) == 1:
