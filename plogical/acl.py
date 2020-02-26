@@ -19,14 +19,17 @@ class ACLManager:
 
     @staticmethod
     def commandInjectionCheck(value):
-        if value.find(';') > -1 or value.find('&&') > -1 or value.find('|') > -1 or value.find('...') > -1 \
-                or value.find("`") > -1 or value.find("$") > -1 or value.find("(") > -1 or value.find(")") > -1 \
-                or value.find("'") > -1 or value.find("[") > -1 or value.find("]") > -1 or value.find(
-            "{") > -1 or value.find("}") > -1 \
-                or value.find(":") > -1 or value.find("<") > -1 or value.find(">") > -1:
-            return 1
-        else:
-            return 0
+        try:
+            if value.find(';') > -1 or value.find('&&') > -1 or value.find('|') > -1 or value.find('...') > -1 \
+                    or value.find("`") > -1 or value.find("$") > -1 or value.find("(") > -1 or value.find(")") > -1 \
+                    or value.find("'") > -1 or value.find("[") > -1 or value.find("]") > -1 or value.find(
+                "{") > -1 or value.find("}") > -1 \
+                    or value.find(":") > -1 or value.find("<") > -1 or value.find(">") > -1:
+                return 1
+            else:
+                return 0
+        except BaseException as msg:
+            logging.writeToFile('%s. [32:commandInjectionCheck]' % (str(msg)))
 
     @staticmethod
     def loadedACL(val):
