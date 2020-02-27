@@ -756,7 +756,6 @@ app.controller('addModifyDNSRecordsCloudFlare', function ($scope, $http, $window
         populateCurrentRecords();
     };
 
-
     $scope.addDNSRecord = function (type) {
 
         $scope.recordsLoading = false;
@@ -892,7 +891,6 @@ app.controller('addModifyDNSRecordsCloudFlare', function ($scope, $http, $window
         }
 
     };
-
 
     function populateCurrentRecords() {
 
@@ -1074,6 +1072,94 @@ app.controller('addModifyDNSRecordsCloudFlare', function ($scope, $http, $window
 
 
             if (response.data.status === 1) {
+
+
+                $scope.addRecordsBox = false;
+                $scope.currentRecords = false;
+                $scope.canNotFetchRecords = true;
+                $scope.recordsFetched = true;
+                $scope.recordDeleted = false;
+                $scope.recordAdded = true;
+                $scope.couldNotConnect = true;
+                $scope.recordsLoading = true;
+                $scope.recordDeleted = true;
+                $scope.couldNotDeleteRecords = true;
+                $scope.couldNotAddRecord = true;
+
+                populateCurrentRecords();
+
+
+            } else {
+
+                $scope.addRecordsBox = true;
+                $scope.currentRecords = true;
+                $scope.canNotFetchRecords = true;
+                $scope.recordsFetched = false;
+                $scope.recordDeleted = true;
+                $scope.recordAdded = true;
+                $scope.couldNotConnect = true;
+                $scope.recordsLoading = true;
+                $scope.recordDeleted = true;
+                $scope.couldNotDeleteRecords = false;
+                $scope.couldNotAddRecord = true;
+
+
+                $scope.errorMessage = response.data.error_message;
+
+
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+
+            $scope.addRecordsBox = false;
+            $scope.currentRecords = false;
+            $scope.canNotFetchRecords = true;
+            $scope.recordsFetched = true;
+            $scope.recordDeleted = true;
+            $scope.recordAdded = true;
+            $scope.couldNotConnect = false;
+            $scope.recordsLoading = true;
+            $scope.recordDeleted = true;
+            $scope.couldNotDeleteRecords = true;
+            $scope.couldNotAddRecord = true;
+
+
+        }
+
+
+    };
+
+    $scope.enableProxy = function (id, value) {
+
+        alert(value);
+        return 0;
+
+
+        var selectedZone = $scope.selectedZone;
+
+        url = "/dns/deleteDNSRecordCloudFlare";
+
+        var data = {
+            selectedZone: selectedZone,
+            id: id
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+
+            if (response.data.delete_status == 1) {
 
 
                 $scope.addRecordsBox = false;

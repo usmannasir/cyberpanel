@@ -727,7 +727,9 @@ class DNSManager:
                            'name': dns_record['name'],
                            'content': dns_record['content'],
                            'priority': '1400',
-                           'ttl': ttl
+                           'ttl': ttl,
+                           'proxy': dns_record['proxied'],
+                           'proxiable': dns_record['proxiable']
                            }
 
                     if checker == 0:

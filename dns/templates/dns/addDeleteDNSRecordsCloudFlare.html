@@ -496,6 +496,7 @@
                                                             <th>{% trans "TTL" %}</th>
                                                             <th>{% trans "Value" %}</th>
                                                             <th>{% trans "Priority" %}</th>
+                                                            <th>{% trans "Proxy" %}</th>
                                                             <th>{% trans "Delete" %}</th>
                                                         </tr>
                                                         </thead>
@@ -506,6 +507,9 @@
                                                             <td ng-bind="record.ttl"></td>
                                                             <td ng-bind="record.content"></td>
                                                             <td ng-bind="record.priority"></td>
+                                                            <td>
+                                                                <input ng-click="enableProxy(record.id, this)" ng-disabled="!record.proxiable" ng-checked="record.proxy" type="checkbox" data-toggle="toggle">
+                                                            </td>
                                                             <td ng-click="deleteRecord(record.id)"><img
                                                                     src="{% static 'images/delete.png' %}"></td>
                                                         </tr>
@@ -576,7 +580,8 @@
                                         <div class="form-group">
                                             <label class="col-sm-3 control-label">{% trans "CloudFlare Email" %}</label>
                                             <div class="col-sm-6">
-                                                <input ng-init="cfEmail='{{ cfEmail }}'" name="cfEmail" type="text" class="form-control"
+                                                <input ng-init="cfEmail='{{ cfEmail }}'" name="cfEmail" type="text"
+                                                       class="form-control"
                                                        ng-model="cfEmail"
                                                        required>
                                             </div>
@@ -585,7 +590,8 @@
                                         <div class="form-group">
                                             <label class="col-sm-3 control-label">{% trans "API Token" %}</label>
                                             <div class="col-sm-6">
-                                                <input ng-init="cfToken='{{ cfToken }}'" name="cfToken" type="text" class="form-control"
+                                                <input ng-init="cfToken='{{ cfToken }}'" name="cfToken" type="text"
+                                                       class="form-control"
                                                        ng-model="cfToken"
                                                        required>
                                             </div>
