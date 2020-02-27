@@ -1125,7 +1125,7 @@ if [[ $debug == "1" ]] ; then
 	wget -O requirements.txt https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
 	/usr/local/CyberPanel/bin/pip3 install --ignore-installed -r requirements.txt
 	rm -f requirements.txt
-	/usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY --postfix $POSTFIX_VARIABLE --powerdns $POWERDNS_VARIABLE --ftp $PUREFTPD_VARIABLE --redis
+	/usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY --postfix $POSTFIX_VARIABLE --powerdns $POWERDNS_VARIABLE --ftp $PUREFTPD_VARIABLE --redis enable
 
 	if grep "CyberPanel installation successfully completed" /var/log/installLogs.txt > /dev/null; then
 		echo -e "\nCyberPanel installation sucessfully completed..."
