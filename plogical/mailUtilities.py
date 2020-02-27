@@ -483,15 +483,15 @@ milter_default_action = accept
     def checkIfSpamAssassinInstalled():
         try:
 
-            path = "/etc/mail/spamassassin/local.cf"
+            path = "/etc/postfix/master.cf"
 
-            command = "sudo cat " + path
+            command = "cat " + path
             output = ProcessUtilities.outputExecutioner(command)
 
-            if output.find('No such') > -1:
-                return 0
-            else:
+            if output.find('content_filter=spamassassin') > -1:
                 return 1
+            else:
+                return 0
 
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(
