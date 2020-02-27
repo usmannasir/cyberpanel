@@ -1016,3 +1016,86 @@ class DNSManager:
             final_dic = {'status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
+
+
+    def enableProxy(self, userID = None, data = None):
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+
+            if ACLManager.currentContextPermission(currentACL, 'addDeleteRecords') == 0:
+                return ACLManager.loadErrorJson('fetchStatus', 0)
+
+            zoneDomain = data['selectedZone']
+            name = data['name']
+            value = data['value']
+
+            admin = Administrator.objects.get(pk=userID)
+            self.admin = admin
+
+            if ACLManager.checkOwnershipZone(zoneDomain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson()
+
+            self.loadCFKeys()
+
+            params = {'name': zoneDomain, 'per_page': 50}
+            cf = CloudFlare.CloudFlare(email=self.email, token=self.key)
+
+            ## Get zone
+
+            zones = cf.zones.get(params=params)
+
+            zone = zones[0]
+
+            ##
+
+            zone_id = zone['id']
+
+            params = {'name': name}
+            dns_records = cf.zones.dns_records.get(zone_id, params=params)
+
+            ##
+
+
+            if value == True:
+                new_r_proxied_flag = False
+            else:
+                new_r_proxied_flag = True
+
+            for dns_record in dns_records:
+                r_zone_id = dns_record['zone_id']
+                r_id = dns_record['id']
+                r_name = dns_record['name']
+                r_type = dns_record['type']
+                r_content = dns_record['content']
+                r_ttl = dns_record['ttl']
+                r_proxied = dns_record['proxied']
+                r_proxiable = dns_record['proxiable']
+
+                if r_proxied == new_r_proxied_flag:
+                    # Nothing to do
+                    continue
+
+                dns_record_id = dns_record['id']
+
+                new_dns_record = {
+                    'zone_id': r_zone_id,
+                    'id': r_id,
+                    'type': r_type,
+                    'name': r_name,
+                    'content': r_content,
+                    'ttl': r_ttl,
+                    'proxied': new_r_proxied_flag
+                }
+
+                cf.zones.dns_records.put(zone_id, dns_record_id, data=new_dns_record)
+
+                final_dic = {'status': 1, 'delete_status': 1, 'error_message': "None"}
+                final_json = json.dumps(final_dic)
+                return HttpResponse(final_json)
+
+        except BaseException as msg:
+            final_dic = {'status': 0, 'delete_status': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)

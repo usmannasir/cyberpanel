@@ -508,7 +508,7 @@
                                                             <td ng-bind="record.content"></td>
                                                             <td ng-bind="record.priority"></td>
                                                             <td>
-                                                                <input ng-click="enableProxy(record.id, this)" ng-disabled="!record.proxiable" ng-checked="record.proxy" type="checkbox" data-toggle="toggle">
+                                                                <input ng-click="enableProxy(record.name, record.proxy)" ng-disabled="!record.proxiable" ng-checked="record.proxy" type="checkbox" ng-true-value="true" ng-false-value="false" data-toggle="toggle">
                                                             </td>
                                                             <td ng-click="deleteRecord(record.id)"><img
                                                                     src="{% static 'images/delete.png' %}"></td>

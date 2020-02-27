@@ -1131,19 +1131,17 @@ app.controller('addModifyDNSRecordsCloudFlare', function ($scope, $http, $window
 
     };
 
-    $scope.enableProxy = function (id, value) {
-
-        alert(value);
-        return 0;
-
+    $scope.enableProxy = function (name, value) {
+        $scope.recordsLoading = false;
 
         var selectedZone = $scope.selectedZone;
 
-        url = "/dns/deleteDNSRecordCloudFlare";
+        url = "/dns/enableProxy";
 
         var data = {
             selectedZone: selectedZone,
-            id: id
+            name: name,
+            value: value
         };
 
         var config = {
@@ -1157,9 +1155,9 @@ app.controller('addModifyDNSRecordsCloudFlare', function ($scope, $http, $window
 
 
         function ListInitialDatas(response) {
+            populateCurrentRecords();
 
-
-            if (response.data.delete_status == 1) {
+            if (response.data.status === 1) {
 
 
                 $scope.addRecordsBox = false;

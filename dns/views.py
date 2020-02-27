@@ -232,3 +232,14 @@ def syncCF(request):
 
     except KeyError:
         return redirect(loadLoginPage)
+
+def enableProxy(request):
+    try:
+        userID = request.session['userID']
+
+        dm = DNSManager()
+        coreResult =  dm.enableProxy(userID, json.loads(request.body))
+
+        return coreResult
+    except KeyError:
+        return redirect(loadLoginPage)
