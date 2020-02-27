@@ -159,7 +159,7 @@ class WebsiteManager:
             packageName = data['package']
             websiteOwner = data['websiteOwner']
 
-            if not match(r'^[a-zA-Z0-9-]*[a-zA-Z0-9-]{0,61}[a-zA-Z0-9-](?:\.[a-zA-Z-]{2,})+$', domain,
+            if not match(r'^[a-zA-Z0-9-]*[a-zA-Z0-9-]{0,61}[a-zA-Z0-9-](?:\.[a-zA-Z0-9-]{2,})+$', domain,
                   M | I):
                 data_ret = {'status': 0, 'createWebSiteStatus': 0, 'error_message': "Invalid domain."}
                 json_data = json.dumps(data_ret)
@@ -229,7 +229,7 @@ class WebsiteManager:
             path = data['path']
             tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
 
-            if not match(r'^[a-zA-Z0-9-]*[a-zA-Z0-9-]{0,61}[a-zA-Z0-9-](?:\.[a-zA-Z-]{2,})+$', domain,
+            if not match(r'^[a-zA-Z0-9-]*[a-zA-Z0-9-]{0,61}[a-zA-Z0-9-](?:\.[a-zA-Z0-9-]{2,})+$', domain,
                   M | I):
                 data_ret = {'status': 0, 'createWebSiteStatus': 0, 'error_message': "Invalid domain."}
                 json_data = json.dumps(data_ret)
@@ -1349,7 +1349,7 @@ class WebsiteManager:
             aliasDomain = data['aliasDomain']
             ssl = data['ssl']
 
-            if not match(r'^[a-zA-Z0-9-]*[a-zA-Z0-9-]{0,61}[a-zA-Z0-9-](?:\.[a-zA-Z-]{2,})+$', aliasDomain,
+            if not match(r'^[a-zA-Z0-9-]*[a-zA-Z0-9-]{0,61}[a-zA-Z0-9-](?:\.[a-zA-Z0-9-]{2,})+$', aliasDomain,
                   M | I):
                 data_ret = {'status': 0, 'createAliasStatus': 0, 'error_message': "Invalid domain."}
                 json_data = json.dumps(data_ret)
