@@ -216,6 +216,7 @@ class ApplicationInstaller(multi.Thread):
             domainName = self.extraArgs['domainName']
             home = self.extraArgs['home']
             tempStatusPath = self.extraArgs['tempStatusPath']
+            self.tempStatusPath = tempStatusPath
             blogTitle = self.extraArgs['blogTitle']
             adminUser = self.extraArgs['adminUser']
             adminPassword = self.extraArgs['adminPassword']
@@ -226,7 +227,7 @@ class ApplicationInstaller(multi.Thread):
             ### Check WP CLI
 
             try:
-                command = 'sudo wp --info'
+                command = 'wp --info'
                 outout = ProcessUtilities.outputExecutioner(command)
 
                 if not outout.find('WP-CLI root dir:') > -1:
@@ -380,7 +381,7 @@ class ApplicationInstaller(multi.Thread):
             except:
                 pass
 
-            statusFile = open(tempStatusPath, 'w')
+            statusFile = open(self.tempStatusPath, 'w')
             statusFile.writelines(str(msg) + " [404]")
             statusFile.close()
             return 0
@@ -398,6 +399,7 @@ class ApplicationInstaller(multi.Thread):
             email = self.extraArgs['email']
             password = self.extraArgs['password']
             tempStatusPath = self.extraArgs['tempStatusPath']
+            self.tempStatusPath = tempStatusPath
 
             FNULL = open(os.devnull, 'w')
 
@@ -482,14 +484,14 @@ class ApplicationInstaller(multi.Thread):
             statusFile.writelines('Downloading and extracting PrestaShop Core..,30')
             statusFile.close()
 
-            command = "sudo wget https://download.prestashop.com/download/releases/prestashop_1.7.4.2.zip -P %s" % (
+            command = "wget https://download.prestashop.com/download/releases/prestashop_1.7.4.2.zip -P %s" % (
                 finalPath)
             ProcessUtilities.executioner(command, externalApp)
 
-            command = "sudo unzip -o %sprestashop_1.7.4.2.zip -d " % (finalPath) + finalPath
+            command = "unzip -o %sprestashop_1.7.4.2.zip -d " % (finalPath) + finalPath
             ProcessUtilities.executioner(command, externalApp)
 
-            command = "sudo unzip -o %sprestashop.zip -d " % (finalPath) + finalPath
+            command = "unzip -o %sprestashop.zip -d " % (finalPath) + finalPath
             ProcessUtilities.executioner(command, externalApp)
 
             ##
@@ -509,7 +511,7 @@ class ApplicationInstaller(multi.Thread):
             statusFile.writelines('Installing and configuring PrestaShop..,60')
             statusFile.close()
 
-            command = "sudo php " + finalPath + "install/index_cli.php --domain=" + finalURL + \
+            command = "php " + finalPath + "install/index_cli.php --domain=" + finalURL + \
                       " --db_server=localhost --db_name=" + dbName + " --db_user=" + dbUser + " --db_password=" + dbPassword \
                       + " --name='" + shopName + "' --firstname=" + firstName + " --lastname=" + lastName + \
                       " --email=" + email + " --password=" + password
@@ -517,15 +519,15 @@ class ApplicationInstaller(multi.Thread):
 
             ##
 
-            command = "sudo rm -rf " + finalPath + "install"
+            command = "rm -rf " + finalPath + "install"
             ProcessUtilities.executioner(command, externalApp)
 
             ##
 
-            command = "sudo chown -R " + externalApp + ":" + externalApp + " " + finalPath
+            command = "chown -R " + externalApp + ":" + externalApp + " " + finalPath
             ProcessUtilities.executioner(command, externalApp)
 
-            command = "sudo rm -f prestashop_1.7.4.2.zip"
+            command = "rm -f prestashop_1.7.4.2.zip"
             ProcessUtilities.executioner(command, externalApp)
 
             statusFile = open(tempStatusPath, 'w')
@@ -550,7 +552,7 @@ class ApplicationInstaller(multi.Thread):
             except:
                 pass
 
-            statusFile = open(tempStatusPath, 'w')
+            statusFile = open(self.tempStatusPath, 'w')
             statusFile.writelines(str(msg) + " [404]")
             statusFile.close()
             return 0
@@ -564,6 +566,7 @@ class ApplicationInstaller(multi.Thread):
             branch = self.extraArgs['branch']
             tempStatusPath = self.extraArgs['tempStatusPath']
             defaultProvider = self.extraArgs['defaultProvider']
+            self.tempStatusPath = tempStatusPath
 
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines('Checking if GIT installed..,0')
@@ -668,7 +671,7 @@ class ApplicationInstaller(multi.Thread):
 
         except BaseException as msg:
             os.remove('/home/cyberpanel/' + domainName + '.git')
-            statusFile = open(tempStatusPath, 'w')
+            statusFile = open(self.tempStatusPath, 'w')
             statusFile.writelines(str(msg) + " [404]")
             statusFile.close()
             return 0
@@ -768,6 +771,7 @@ class ApplicationInstaller(multi.Thread):
             prefix = self.extraArgs['prefix']
             sitename = self.extraArgs['sitename']
             tempStatusPath = self.extraArgs['tempStatusPath']
+            self.tempStatusPath = tempStatusPath
 
             FNULL = open(os.devnull, 'w')
 
@@ -915,7 +919,7 @@ class ApplicationInstaller(multi.Thread):
             except:
                 pass
 
-            statusFile = open(tempStatusPath, 'w')
+            statusFile = open(self.tempStatusPath, 'w')
             statusFile.writelines(str(msg) + " [404]")
             statusFile.close()
             logging.writeToFile(str(msg))
@@ -963,6 +967,7 @@ class ApplicationInstaller(multi.Thread):
             password = self.extraArgs['password']
             tempStatusPath = self.extraArgs['tempStatusPath']
             sampleData = self.extraArgs['sampleData']
+            self.tempStatusPath = tempStatusPath
 
             FNULL = open(os.devnull, 'w')
 
@@ -1124,7 +1129,7 @@ class ApplicationInstaller(multi.Thread):
             except:
                 pass
 
-            statusFile = open(tempStatusPath, 'w')
+            statusFile = open(self.tempStatusPath, 'w')
             statusFile.writelines(str(msg) + " [404]")
             statusFile.close()
             return 0
