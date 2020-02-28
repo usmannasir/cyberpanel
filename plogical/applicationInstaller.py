@@ -219,6 +219,7 @@ class ApplicationInstaller(multi.Thread):
             domainName = self.extraArgs['domainName']
             home = self.extraArgs['home']
             tempStatusPath = self.extraArgs['tempStatusPath']
+            self.tempStatusPath = tempStatusPath
             blogTitle = self.extraArgs['blogTitle']
             adminUser = self.extraArgs['adminUser']
             adminPassword = self.extraArgs['adminPassword']
@@ -385,7 +386,8 @@ class ApplicationInstaller(multi.Thread):
             command = 'chmod 750 %s' % (permPath)
             ProcessUtilities.executioner(command)
 
-            statusFile = open(tempStatusPath, 'w')
+
+            statusFile = open(self.tempStatusPath, 'w')
             statusFile.writelines(str(msg) + " [404]")
             statusFile.close()
             return 0
@@ -403,6 +405,7 @@ class ApplicationInstaller(multi.Thread):
             email = self.extraArgs['email']
             password = self.extraArgs['password']
             tempStatusPath = self.extraArgs['tempStatusPath']
+            self.tempStatusPath = tempStatusPath
 
             FNULL = open(os.devnull, 'w')
 
@@ -557,7 +560,7 @@ class ApplicationInstaller(multi.Thread):
             command = 'chmod 750 %s' % (permPath)
             ProcessUtilities.executioner(command)
 
-            statusFile = open(tempStatusPath, 'w')
+            statusFile = open(self.tempStatusPath, 'w')
             statusFile.writelines(str(msg) + " [404]")
             statusFile.close()
             return 0
@@ -571,6 +574,7 @@ class ApplicationInstaller(multi.Thread):
             branch = self.extraArgs['branch']
             tempStatusPath = self.extraArgs['tempStatusPath']
             defaultProvider = self.extraArgs['defaultProvider']
+            self.tempStatusPath = tempStatusPath
 
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines('Checking if GIT installed..,0')
@@ -683,7 +687,7 @@ class ApplicationInstaller(multi.Thread):
             command = 'chmod 750 %s' % (permPath)
             ProcessUtilities.executioner(command)
 
-            statusFile = open(tempStatusPath, 'w')
+            statusFile = open(self.tempStatusPath, 'w')
             statusFile.writelines(str(msg) + " [404]")
             statusFile.close()
             return 0
@@ -783,6 +787,7 @@ class ApplicationInstaller(multi.Thread):
             prefix = self.extraArgs['prefix']
             sitename = self.extraArgs['sitename']
             tempStatusPath = self.extraArgs['tempStatusPath']
+            self.tempStatusPath = tempStatusPath
 
             FNULL = open(os.devnull, 'w')
 
@@ -939,7 +944,7 @@ class ApplicationInstaller(multi.Thread):
             command = 'chmod 750 %s' % (permPath)
             ProcessUtilities.executioner(command)
 
-            statusFile = open(tempStatusPath, 'w')
+            statusFile = open(self.tempStatusPath, 'w')
             statusFile.writelines(str(msg) + " [404]")
             statusFile.close()
             logging.writeToFile(str(msg))
@@ -987,6 +992,7 @@ class ApplicationInstaller(multi.Thread):
             password = self.extraArgs['password']
             tempStatusPath = self.extraArgs['tempStatusPath']
             sampleData = self.extraArgs['sampleData']
+            self.tempStatusPath = tempStatusPath
 
             FNULL = open(os.devnull, 'w')
 
@@ -1150,7 +1156,7 @@ class ApplicationInstaller(multi.Thread):
             command = 'chmod 750 %s' % (permPath)
             ProcessUtilities.executioner(command)
 
-            statusFile = open(tempStatusPath, 'w')
+            statusFile = open(self.tempStatusPath, 'w')
             statusFile.writelines(str(msg) + " [404]")
             statusFile.close()
             return 0
