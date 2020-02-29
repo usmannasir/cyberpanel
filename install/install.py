@@ -1679,22 +1679,28 @@ imap_folder_list_limit = 0
 
             ##
 
-            cronFile = open("/var/spool/cron/root", "a")
-            cronFile.writelines("0 * * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/findBWUsage.py >/dev/null 2>&1" + "\n")
-            cronFile.writelines("0 * * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/postfixSenderPolicy/client.py hourlyCleanup >/dev/null 2>&1" + "\n")
-            cronFile.writelines("0 0 1 * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/postfixSenderPolicy/client.py monthlyCleanup >/dev/null 2>&1" + "\n")
-            cronFile.writelines("0 2 * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/upgradeCritical.py >/dev/null 2>&1" + "\n")
-            cronFile.writelines("0 2 * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/renew.py >/dev/null 2>&1" + "\n")
+            CentOSPath = '/etc/redhat-release'
+
+            if os.path.exists(CentOSPath):
+                cronPath = '/var/spool/cron/root'
+            else:
+                cronPath = '/var/spool/cron/crontabs/root'
+
+            cronFile = open(cronPath, "w")
+
+
+            content = """
+0 * * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/findBWUsage.py >/dev/null 2>&1
+0 * * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/postfixSenderPolicy/client.py hourlyCleanup >/dev/null 2>&1
+0 0 1 * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/postfixSenderPolicy/client.py monthlyCleanup >/dev/null 2>&1
+0 2 * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/upgradeCritical.py >/dev/null 2>&1
+0 2 * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/renew.py >/dev/null 2>&1
+7 0 * * * "/root/.acme.sh"/acme.sh --cron --home "/root/.acme.sh" > /dev/null
+0 12 * * * root /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py Daily
+0 0 * * 0 root /usr/local/CyberCP/bin/python /usr/local/CyberCP
+"""
+            cronFile.write(content)
             cronFile.close()
-
-            command = 'chmod +x /usr/local/CyberCP/plogical/findBWUsage.py'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            command = 'chmod +x /usr/local/CyberCP/plogical/upgradeCritical.py'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            command = 'chmod +x /usr/local/CyberCP/postfixSenderPolicy/client.py'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             if self.distro == centos or self.distro == cent8:
                 command = 'systemctl restart crond.service'
@@ -2131,15 +2137,6 @@ milter_default_action = accept
 
             data = open(cronTab, 'r').read()
 
-            if data.find('IncScheduler') == -1:
-                cronJob = '0 12 * * * root /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py Daily\n'
-
-                writeToFile = open(cronTab, 'a')
-                writeToFile.writelines(cronJob)
-
-                cronJob = '0 0 * * 0 root /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py Weekly\n'
-                writeToFile.writelines(cronJob)
-                writeToFile.close()
         except:
             pass
 
