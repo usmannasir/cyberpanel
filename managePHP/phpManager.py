@@ -73,7 +73,7 @@ class PHPManager:
         upload_max_filesize = ""
         max_input_time = ""
 
-        command = "sudo cat " + PHPManager.FindPHPFPMPath(phpVersion)
+        command = "cat " + PHPManager.FindPHPFPMPath(phpVersion)
 
         data = ProcessUtilities.outputExecutioner(command).split('\n')
 

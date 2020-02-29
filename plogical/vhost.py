@@ -570,34 +570,45 @@ class vhost:
                 return [0, str(msg) + " [IO Error with per host config file [changePHP]"]
         else:
             try:
-                data = open(vhFile, "r").readlines()
+                if not os.path.exists(vhost.redisConf):
+                    data = open(vhFile, "r").readlines()
 
-                php = PHPManager.getPHPString(phpVersion)
+                    php = PHPManager.getPHPString(phpVersion)
 
-                if not os.path.exists("/usr/local/lsws/lsphp" + str(php) + "/bin/lsphp"):
-                    print(0, 'This PHP version is not available on your CyberPanel.')
-                    return [0, "[This PHP version is not available on your CyberPanel. [changePHP]"]
+                    if not os.path.exists("/usr/local/lsws/lsphp" + str(php) + "/bin/lsphp"):
+                        print(0, 'This PHP version is not available on your CyberPanel.')
+                        return [0, "[This PHP version is not available on your CyberPanel. [changePHP]"]
 
-                writeDataToFile = open(vhFile, "w")
+                    writeDataToFile = open(vhFile, "w")
 
-                finalString = '    AddHandler application/x-httpd-php' + str(php) + ' .php\n'
+                    finalString = '    AddHandler application/x-httpd-php' + str(php) + ' .php\n'
 
-                for items in data:
-                    if items.find("AddHandler application/x-httpd") > -1:
-                        writeDataToFile.writelines(finalString)
-                    else:
-                        writeDataToFile.writelines(items)
+                    for items in data:
+                        if items.find("AddHandler application/x-httpd") > -1:
+                            writeDataToFile.writelines(finalString)
+                        else:
+                            writeDataToFile.writelines(items)
 
-                writeDataToFile.close()
+                    writeDataToFile.close()
 
-                writeToFile = open(phpDetachUpdatePath, 'w')
-                writeToFile.close()
+                    writeToFile = open(phpDetachUpdatePath, 'w')
+                    writeToFile.close()
 
-                installUtilities.installUtilities.reStartLiteSpeed()
-                try:
-                    os.remove(phpDetachUpdatePath)
-                except:
-                    pass
+                    installUtilities.installUtilities.reStartLiteSpeed()
+                    try:
+                        os.remove(phpDetachUpdatePath)
+                    except:
+                        pass
+                else:
+                    command = 'redis-cli get "vhost:%s"' % (vhFile.split('/')[-2])
+                    configData = ProcessUtilities.outputExecutioner(command)
+
+                    import re
+                    configData = re.sub(r'"phpVersion": .*,', '"phpVersion": %s,' % (phpVersion.lstrip('PHP ')), configData)
+
+                    command = "redis-cli set vhost:%s '%s'" % (vhFile.split('/')[-2], configData)
+                    ProcessUtilities.executioner(command)
+
 
                 print("1,None")
                 return 1, 'None'
