@@ -2218,7 +2218,7 @@ vmail
         if os.path.exists('%shttpd.conf' % (confPath)):
             os.remove('%shttpd.conf' % (confPath))
 
-        shutil.copy('litespeed/httpd.conf', confPath)
+        shutil.copy('litespeed/httpd-redis.conf', confPath)
 
         ## start and enable
 

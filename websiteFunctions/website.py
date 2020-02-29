@@ -39,6 +39,7 @@ from plogical.cronUtil import CronUtil
 from re import match,I,M
 from plogical import randomPassword
 from .StagingSetup import StagingSetup
+from plogical.vhost import vhost
 
 
 class WebsiteManager:
@@ -1102,16 +1103,24 @@ class WebsiteManager:
         else:
             return ACLManager.loadErrorJson('configstatus', 0)
 
-        filePath = installUtilities.Server_root_path + "/conf/vhosts/" + self.domain + "/vhost.conf"
+        command = 'cat %s' % ('/usr/local/lsws/conf/dvhost_redis.conf')
 
-        command = 'sudo cat ' + filePath
-        configData = ProcessUtilities.outputExecutioner(command, 'lsadm')
+        if ProcessUtilities.outputExecutioner(command).find('127.0.0.1') == -1:
+            filePath = installUtilities.Server_root_path + "/conf/vhosts/" + self.domain + "/vhost.conf"
 
-        if len(configData) == 0:
-            status = {'status': 0, "configstatus": 0, "error_message": "Configuration file is currently empty!"}
+            command = 'cat ' + filePath
+            configData = ProcessUtilities.outputExecutioner(command, 'lsadm')
 
-            final_json = json.dumps(status)
-            return HttpResponse(final_json)
+            if len(configData) == 0:
+                status = {'status': 0, "configstatus": 0, "error_message": "Configuration file is currently empty!"}
+
+                final_json = json.dumps(status)
+                return HttpResponse(final_json)
+
+        else:
+            command = 'redis-cli get "vhost:%s"' % (self.domain)
+            configData = ProcessUtilities.outputExecutioner(command)
+            configData = '#### This configuration is fetched from redis as Redis-Mass Hosting is being used.\n%s' % (configData)
 
         status = {'status': 1, "configstatus": 1, "configData": configData}
         final_json = json.dumps(status)
@@ -1127,38 +1136,51 @@ class WebsiteManager:
         configData = data['configData']
         self.domain = data['virtualHost']
 
-        mailUtilities.checkHome()
+        command = 'cat %s' % ('/usr/local/lsws/conf/dvhost_redis.conf')
 
-        tempPath = "/home/cyberpanel/" + str(randint(1000, 9999))
+        if ProcessUtilities.outputExecutioner(command).find('127.0.0.1') == -1:
 
-        vhost = open(tempPath, "w")
+            mailUtilities.checkHome()
 
-        vhost.write(configData)
+            tempPath = "/home/cyberpanel/" + str(randint(1000, 9999))
 
-        vhost.close()
+            vhost = open(tempPath, "w")
 
-        ## writing data temporary to file
+            vhost.write(configData)
 
-        filePath = installUtilities.Server_root_path + "/conf/vhosts/" + self.domain + "/vhost.conf"
+            vhost.close()
 
-        ## save configuration data
+            ## writing data temporary to file
 
-        execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-        execPath = execPath + " saveVHostConfigs --path " + filePath + " --tempPath " + tempPath
+            filePath = installUtilities.Server_root_path + "/conf/vhosts/" + self.domain + "/vhost.conf"
 
-        output = ProcessUtilities.outputExecutioner(execPath)
+            ## save configuration data
 
-        if output.find("1,None") > -1:
+            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+            execPath = execPath + " saveVHostConfigs --path " + filePath + " --tempPath " + tempPath
+
+            output = ProcessUtilities.outputExecutioner(execPath)
+
+            if output.find("1,None") > -1:
+                status = {"configstatus": 1}
+
+                final_json = json.dumps(status)
+                return HttpResponse(final_json)
+            else:
+                data_ret = {'configstatus': 0, 'error_message': output}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+                ## save configuration data ends
+        else:
+            command = "redis-cli set vhost:%s '%s'" % (self.domain, configData.replace('#### This configuration is fetched from redis as Redis-Mass Hosting is being used.\n', ''))
+            ProcessUtilities.executioner(command)
+
             status = {"configstatus": 1}
 
             final_json = json.dumps(status)
             return HttpResponse(final_json)
-        else:
-            data_ret = {'configstatus': 0, 'error_message': output}
-            json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
 
-            ## save configuration data ends
 
     def getRewriteRules(self, userID=None, data=None):
 

@@ -15,7 +15,6 @@ from plogical import installUtilities
 import subprocess
 import shlex
 from plogical import CyberCPLogFileWriter as logging
-
 from plogical.mysqlUtilities import mysqlUtilities
 from plogical.dnsUtilities import DNS
 from random import randint
