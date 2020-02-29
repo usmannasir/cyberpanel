@@ -1697,7 +1697,7 @@ imap_folder_list_limit = 0
 0 2 * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/renew.py >/dev/null 2>&1
 7 0 * * * "/root/.acme.sh"/acme.sh --cron --home "/root/.acme.sh" > /dev/null
 0 12 * * * root /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py Daily
-0 0 * * 0 root /usr/local/CyberCP/bin/python /usr/local/CyberCP
+0 0 * * 0 root /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py Weekly
 """
             cronFile.write(content)
             cronFile.close()
