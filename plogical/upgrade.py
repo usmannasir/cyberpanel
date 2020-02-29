@@ -2083,7 +2083,7 @@ vmail
 0 12 * * * root /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py Daily
 0 0 * * 0 root /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py Weekly
 """
-                writeToFile = open(cronPath, 'w')
+                writeToFile = open(cronPath, 'a')
                 writeToFile.write(content)
                 writeToFile.close()
         else:
