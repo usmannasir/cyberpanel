@@ -817,6 +817,12 @@ else
 	echo -e "\nIf you are copying/pasting, please make sure you didn't paste blank space...\n"
 	exit
 fi
+
+echo -e "\nWould you like use Redis Mass Hosting?"
+echo -e "Please type Yes or No (with capital \e[31mY\e[39m, default No):"
+printf "%s"
+read REDIS_HOSTING
+
 }
 
 interactive_mode() {
@@ -1105,11 +1111,6 @@ if [[ $VERSION == "ENT" ]] ; then
 	echo -e "\nThis may take a minute..."
 	echo -e "\nplease be patient...\n\n"
 	license_validation
-
-	echo -e "\nWould you like use Redis Mass Hosting?"
-  echo -e "Please type Yes or No (with capital \e[31mY\e[39m, default No):"
-  printf "%s"
-  read REDIS_HOSTING
 
 	SERIAL_NO="--ent ent --serial "
 fi
