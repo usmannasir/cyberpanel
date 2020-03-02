@@ -2213,6 +2213,10 @@ vmail
         writeToFile.write('127.0.0.1,6379,<auth_password>\n')
         writeToFile.close()
 
+        ##
+
+        os.chdir(self.cwd)
+
         confPath = '/usr/local/lsws/conf/'
 
         if os.path.exists('%shttpd.conf' % (confPath)):
