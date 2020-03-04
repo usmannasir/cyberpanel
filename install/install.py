@@ -2361,6 +2361,10 @@ def main():
     checks.setupPort()
     checks.setupPythonWSGI()
     checks.setupLSCPDDaemon()
+
+    if args.redis != None:
+        checks.installRedis()
+
     checks.fixCyberPanelPermissions()
 
     if args.postfix != None:
@@ -2380,9 +2384,6 @@ def main():
     else:
         preFlightsChecks.stdOut("Pure-FTPD will be installed and enabled.")
         checks.enableDisableFTP('on', distro)
-
-    if args.redis != None:
-        checks.installRedis()
 
     checks.installCLScripts()
     logging.InstallLog.writeToFile("CyberPanel installation successfully completed!")
