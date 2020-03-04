@@ -524,30 +524,33 @@ class backupUtilities:
 
             ### Fetch user details
 
-            userName = backupMetaData.find('userName').text
-
             try:
-                siteUser = Administrator.objects.get(userName=userName)
-            except:
-                userPassword = backupMetaData.find('userPassword').text
-                firstName = backupMetaData.find('firstName').text
-                lastName = backupMetaData.find('lastName').text
-                email = backupMetaData.find('email').text
-                type = int(backupMetaData.find('type').text)
-                owner = int(backupMetaData.find('owner').text)
-                token = backupMetaData.find('token').text
-                api = int(backupMetaData.find('api').text)
-                securityLevel = int(backupMetaData.find('securityLevel').text)
-                state = backupMetaData.find('state').text
-                initWebsitesLimit = int(backupMetaData.find('initWebsitesLimit').text)
-                from loginSystem.models import ACL
-                acl = ACL.objects.get(name=backupMetaData.find('aclName').text)
-                siteUser = Administrator(userName=userName, password=userPassword, firstName=firstName,
-                                         initWebsitesLimit=initWebsitesLimit, acl=acl,
-                                         lastName=lastName, email=email, type=type, owner=owner, token=token,
-                                         api=api, securityLevel=securityLevel, state=state)
-                siteUser.save()
 
+                userName = backupMetaData.find('userName').text
+
+                try:
+                    siteUser = Administrator.objects.get(userName=userName)
+                except:
+                    userPassword = backupMetaData.find('userPassword').text
+                    firstName = backupMetaData.find('firstName').text
+                    lastName = backupMetaData.find('lastName').text
+                    email = backupMetaData.find('email').text
+                    type = int(backupMetaData.find('type').text)
+                    owner = int(backupMetaData.find('owner').text)
+                    token = backupMetaData.find('token').text
+                    api = int(backupMetaData.find('api').text)
+                    securityLevel = int(backupMetaData.find('securityLevel').text)
+                    state = backupMetaData.find('state').text
+                    initWebsitesLimit = int(backupMetaData.find('initWebsitesLimit').text)
+                    from loginSystem.models import ACL
+                    acl = ACL.objects.get(name=backupMetaData.find('aclName').text)
+                    siteUser = Administrator(userName=userName, password=userPassword, firstName=firstName,
+                                             initWebsitesLimit=initWebsitesLimit, acl=acl,
+                                             lastName=lastName, email=email, type=type, owner=owner, token=token,
+                                             api=api, securityLevel=securityLevel, state=state)
+                    siteUser.save()
+            except:
+                siteUser = Administrator.objects.get(userName='admin')
 
             ## Pre-creation checks
 
