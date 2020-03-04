@@ -849,7 +849,11 @@ class backupUtilities:
 
             installUtilities.reStartLiteSpeed()
 
-            command = "chown -R " + externalApp + ":" + externalApp + " " + websiteHome
+            command = "chown -R " + externalApp + ":nobody" " " + websiteHome
+            cmd = shlex.split(command)
+            subprocess.call(cmd)
+
+            command = 'chmod 750 %s' % (websiteHome)
             cmd = shlex.split(command)
             subprocess.call(cmd)
 
