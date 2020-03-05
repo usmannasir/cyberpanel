@@ -349,6 +349,7 @@ class vhost:
                 vhost.deleteCoreConf(virtualHostName, numberOfSites)
 
                 delWebsite = Websites.objects.get(domain=virtualHostName)
+                externalApp = delWebsite.externalApp
 
                 ##
 
@@ -376,8 +377,16 @@ class vhost:
 
                 ## Delete mail accounts
 
-                command = "sudo rm -rf /home/vmail/" + virtualHostName
+                command = "rm -rf /home/vmail/" + virtualHostName
                 subprocess.call(shlex.split(command))
+
+                if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                    command = 'userdel %s' % (externalApp)
+                else:
+                    command = 'deluser %s' % (externalApp)
+
+                ProcessUtilities.executioner(command)
+
             except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [Not able to remove virtual host configuration from main configuration file.]")
                 return 0
