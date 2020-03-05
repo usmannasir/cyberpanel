@@ -17,7 +17,7 @@ elif [ "$ID" = "centos" ] || [ "$ID" = "cloudlinux" ]; then
     7|7.*)
       yum install curl wget -y 1> /dev/null
       yum update curl wget ca-certificates -y 1> /dev/null
-      if [[ "$ID" == "centos" ]] ; then
+      if [ "$ID" = "centos" ]; then
         SERVER_OS="CentOS"
       else
         SERVER_OS="CloudLinux"
