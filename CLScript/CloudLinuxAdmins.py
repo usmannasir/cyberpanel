@@ -52,6 +52,22 @@ class CloudLinuxAdmins(CLMain):
 
             users.append(user)
 
+
+        ## Add root users
+
+        admin = Administrator.objects.get(userName='admin')
+
+        user = {'name': 'root',
+                "locale_code": "EN_us",
+                "unix_user": 'root',
+                "email": admin.email,
+                "is_main": True
+                }
+
+        ##
+
+        users.append(user)
+
         final = {'data': users, 'metadata': self.initialMeta}
         print(json.dumps(final))
 
