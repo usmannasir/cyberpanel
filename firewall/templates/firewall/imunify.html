@@ -1,0 +1,37 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "CloudLinux - CyberPanel" %}{% endblock %}
+{% block content %}
+
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
+
+
+    <div class="container">
+        <div id="page-title">
+            <h2>{% trans "CloudLinux" %}</h2>
+            <p>{% trans "Access LVEManager" %}</p>
+        </div>
+
+        <div class="panel">
+            <div class="panel-body">
+                <h3 class="title-hero">
+                    {% trans "CloudLinux" %}
+                </h3>
+                <div class="example-box-wrapper">
+
+                    <p>{% trans "CloudLinux is now integrated via their new API. You can manage CageFS and Package limits directly from LVEManager by clicking below. You can use your server root credentials to access LVEManager." %}</p>
+                    <br>
+                    <a target="_blank" href="http://{{ ipAddress }}:9000">
+                        <button class="btn btn-primary">Access Now
+                        </button>
+                    </a>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+{% endblock %}
+

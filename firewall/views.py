@@ -548,3 +548,15 @@ def modifyIPs(request):
         return coreResult
     except KeyError:
         return redirect(loadLoginPage)
+
+## Imunify
+
+def imunify(request):
+    try:
+        userID = request.session['userID']
+
+        fm = FirewallManager(request)
+        return fm.imunify()
+
+    except KeyError:
+        return redirect(loadLoginPage)

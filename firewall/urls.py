@@ -51,6 +51,11 @@ urlpatterns = [
     url(r'^modifyPorts$', views.modifyPorts, name='modifyPorts'),
     url(r'^modifyIPs$', views.modifyIPs, name='modifyIPs'),
 
+    ## Imunify
+
+    url(r'^imunify$', views.imunify, name='imunify'),
+
+
 
 
 ]

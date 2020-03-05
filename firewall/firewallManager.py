@@ -1305,7 +1305,7 @@ class FirewallManager:
 
             csfInstalled = 1
             try:
-                command = 'sudo csf -h'
+                command = 'csf -h'
                 output = ProcessUtilities.outputExecutioner(command)
                 if output.find("command not found") > -1:
                     csfInstalled = 0
@@ -1541,3 +1541,17 @@ class FirewallManager:
             final_dic = {'status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
+
+    def imunify(self):
+        try:
+            userID = self.request.session['userID']
+            currentACL = ACLManager.loadedACL(userID)
+
+            if currentACL['admin'] == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
+            return render(self.request, 'firewall/imunify.html', {})
+        except BaseException as msg:
+            return HttpResponse(str(msg))
