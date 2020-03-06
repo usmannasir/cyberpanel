@@ -1570,7 +1570,7 @@ class FirewallManager:
                 data['CL'] = 0
 
             if os.path.exists(FirewallManager.imunifyPath):
-                data['imunify'] = 0
+                data['imunify'] = 1
             else:
                 data['imunify'] = 0
 
