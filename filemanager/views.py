@@ -5,13 +5,9 @@ from django.shortcuts import render,redirect
 from loginSystem.models import Administrator
 from loginSystem.views import loadLoginPage
 import plogical.CyberCPLogFileWriter as logging
-from django.http import HttpResponse,Http404
+from django.http import HttpResponse
 import json
 from websiteFunctions.models import Websites
-import subprocess
-import shlex
-import os
-from plogical.virtualHostUtilities import virtualHostUtilities
 from plogical.acl import ACLManager
 from .filemanager import FileManager as FM
 from plogical.processUtilities import ProcessUtilities
@@ -53,7 +49,7 @@ def changePermissions(request):
             website = Websites.objects.get(domain=domainName)
             externalApp = website.externalApp
 
-            command = "chown -R " + externalApp + ":" + externalApp +" /home/"+domainName
+            command = 'chown -R %s:%s /home/%s/public_html/*' % (externalApp, externalApp, domainName)
             ProcessUtilities.popenExecutioner(command)
 
             command = "chown root:nobody /home/" + domainName+"/logs"
