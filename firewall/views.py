@@ -553,10 +553,18 @@ def modifyIPs(request):
 
 def imunify(request):
     try:
-        userID = request.session['userID']
 
         fm = FirewallManager(request)
         return fm.imunify()
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def submitinstallImunify(request):
+    try:
+
+        fm = FirewallManager(request)
+        return fm.submitinstallImunify()
 
     except KeyError:
         return redirect(loadLoginPage)

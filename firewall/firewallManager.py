@@ -19,8 +19,12 @@ from firewall.models import FirewallRules
 from plogical.modSec import modSec
 from plogical.csf import CSF
 from plogical.processUtilities import ProcessUtilities
+from serverStatus.serverStatusUtil import ServerStatusUtil
 
 class FirewallManager:
+
+    imunifyPath = '/usr/bin/imunify360-agent'
+    CLPath = '/etc/sysconfig/cloudlinux'
 
     def __init__(self, request = None):
         self.request = request
@@ -1560,6 +1564,49 @@ class FirewallManager:
             data = {}
             data['ipAddress'] = ipAddress
 
-            return render(self.request, 'firewall/imunify.html', data)
+            if os.path.exists(FirewallManager.CLPath):
+                data['CL'] = 1
+            else:
+                data['CL'] = 0
+
+            if os.path.exists(FirewallManager.imunifyPath):
+                data['imunify'] = 0
+            else:
+                data['imunify'] = 0
+
+            if data['CL'] == 0:
+                return render(self.request, 'firewall/notAvailable.html', data)
+            elif data['imunify'] == 0:
+                return render(self.request, 'firewall/notAvailable.html', data)
+            else:
+                return render(self.request, 'firewall/imunify.html', data)
+
+
         except BaseException as msg:
             return HttpResponse(str(msg))
+
+    def submitinstallImunify(self):
+        try:
+            userID = self.request.session['userID']
+            currentACL = ACLManager.loadedACL(userID)
+
+            if currentACL['admin'] == 1:
+                pass
+            else:
+                logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
+                                                          'Not authorized to install container packages. [404].',
+                                                          1)
+                return 0
+
+            data = json.loads(self.request.body)
+
+            execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/CLManager/CageFS.py"
+            execPath = execPath + " --function submitinstallImunify --key %s" % (data['key'])
+            ProcessUtilities.popenExecutioner(execPath)
+
+            data_ret = {'status': 1, 'error_message': 'None'}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath, str(msg) + ' [404].', 1)

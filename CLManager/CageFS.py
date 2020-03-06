@@ -114,16 +114,75 @@ class CageFS:
         except BaseException as msg:
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath, str(msg) + ' [404].', 1)
 
+    @staticmethod
+    def submitinstallImunify(key):
+        try:
+
+            mailUtilities.checkHome()
+
+            statusFile = open(ServerStatusUtil.lswsInstallStatusPath, 'w')
+
+            logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
+                                                      "Starting Imunify Installation..\n", 1)
+
+            ##
+
+            command = 'mkdir -p /etc/sysconfig/imunify360/generic'
+            ServerStatusUtil.executioner(command, statusFile)
+
+            command = 'touch /etc/sysconfig/imunify360/generic/modsec.conf'
+            ServerStatusUtil.executioner(command, statusFile)
+
+            integrationFile = '/etc/sysconfig/imunify360/integration.conf'
+
+            content = """[paths]
+ui_path =/usr/local/CyberCP/public/imunify
+[web_server]
+server_type = litespeed
+graceful_restart_script = /usr/local/lsws/bin/lswsctrl restart
+modsec_audit_log = /usr/local/lsws/logs/auditmodsec.log
+modsec_audit_logdir = /usr/local/lsws/logs/
+
+[malware]
+basedir = /home
+pattern_to_watch = ^/home/.+?/(public_html|public_ftp|private_html)(/.*)?$
+"""
+
+            writeToFile = open(integrationFile, 'w')
+            writeToFile.write(content)
+            writeToFile.close()
+
+            ##
+
+            if not os.path.exists('i360deploy.sh'):
+                command = 'wget https://repo.imunify360.cloudlinux.com/defence360/i360deploy.sh'
+                ServerStatusUtil.executioner(command, statusFile)
+
+            command = 'bash i360deploy.sh --key %s --beta' % (key)
+            ServerStatusUtil.executioner(command, statusFile)
+
+            logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
+                                                      "Imunify reinstalled..\n", 1)
+
+            logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
+                                                      "Packages successfully installed.[200]\n", 1)
+
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath, str(msg) + ' [404].', 1)
+
 def main():
 
     parser = argparse.ArgumentParser(description='CyberPanel CageFS Manager')
     parser.add_argument('--function', help='Function')
+    parser.add_argument('--key', help='Imunify Key')
 
 
     args = vars(parser.parse_args())
 
     if args["function"] == "submitCageFSInstall":
         CageFS.submitCageFSInstall()
+    elif args["function"] == "submitinstallImunify":
+        CageFS.submitinstallImunify(args["key"])
 
 
 
