@@ -1552,6 +1552,14 @@ class FirewallManager:
             else:
                 return ACLManager.loadError()
 
-            return render(self.request, 'firewall/imunify.html', {})
+            ipFile = "/etc/cyberpanel/machineIP"
+            f = open(ipFile)
+            ipData = f.read()
+            ipAddress = ipData.split('\n', 1)[0]
+
+            data = {}
+            data['ipAddress'] = ipAddress
+
+            return render(self.request, 'firewall/imunify.html', data)
         except BaseException as msg:
             return HttpResponse(str(msg))

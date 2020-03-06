@@ -597,6 +597,11 @@ class Upgrade:
             except:
                 pass
 
+            try:
+                cursor.execute("ALTER TABLE websiteFunctions_websites MODIFY externalApp varchar(30)")
+            except:
+                pass
+
 
             try:
                 cursor.execute("ALTER TABLE loginSystem_acl ADD COLUMN listUsers INT DEFAULT 0;")

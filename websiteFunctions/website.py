@@ -173,13 +173,12 @@ class WebsiteManager:
 
             loggedUser = Administrator.objects.get(pk=userID)
             newOwner = Administrator.objects.get(userName=websiteOwner)
+
             if ACLManager.currentContextPermission(currentACL, 'createWebsite') == 0:
                 return ACLManager.loadErrorJson('createWebSiteStatus', 0)
 
             if ACLManager.checkOwnerProtection(currentACL, loggedUser, newOwner) == 0:
                 return ACLManager.loadErrorJson('createWebSiteStatus', 0)
-
-
 
             if not validators.domain(domain):
                 data_ret = {'status': 0, 'createWebSiteStatus': 0, 'error_message': "Invalid domain."}
@@ -223,6 +222,7 @@ class WebsiteManager:
 
             import pwd
             counter = 0
+
             while 1:
                 try:
                     pwd.getpwnam(externalApp)
@@ -233,7 +233,7 @@ class WebsiteManager:
 
             ## Create Configurations
 
-            execPath = "sudo /usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
             execPath = execPath + " createVirtualHost --virtualHostName " + domain + \
                        " --administratorEmail " + adminEmail + " --phpVersion '" + phpSelection + \
                        "' --virtualHostUser " + externalApp + " --ssl " + str(data['ssl']) + " --dkimCheck " \

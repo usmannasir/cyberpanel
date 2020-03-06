@@ -16,7 +16,7 @@ class Websites(models.Model):
     phpSelection = models.CharField(max_length=10)
     ssl = models.IntegerField()
     state = models.IntegerField(default=1)
-    externalApp = models.CharField(max_length=10, default=None)
+    externalApp = models.CharField(max_length=30, default=None)
 
 class ChildDomains(models.Model):
     master = models.ForeignKey(Websites,on_delete=models.CASCADE)
