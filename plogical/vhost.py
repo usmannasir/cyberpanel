@@ -49,16 +49,13 @@ class vhost:
             else:
                 command = "adduser " + virtualHostUser + " -M -d " + path
 
-            cmd = shlex.split(command)
-            subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+            ProcessUtilities.executioner(command)
 
             command = "groupadd " + virtualHostUser
-            cmd = shlex.split(command)
-            subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+            ProcessUtilities.executioner(command)
 
             command = "usermod -a -G " + virtualHostUser + " " + virtualHostUser
-            cmd = shlex.split(command)
-            subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+            ProcessUtilities.executioner(command)
 
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [addingUsers]")
@@ -135,7 +132,8 @@ class vhost:
 
             try:
                 ## For configuration files permissions will be changed later globally.
-                os.makedirs(confPath)
+                if not os.path.exists(confPath):
+                    os.makedirs(confPath)
             except OSError as msg:
                 logging.CyberCPLogFileWriter.writeToFile(
                     str(msg) + " [45 Not able to directories for virtual host [createDirectories]]")
@@ -380,12 +378,21 @@ class vhost:
                 command = "rm -rf /home/vmail/" + virtualHostName
                 subprocess.call(shlex.split(command))
 
+                ##
+
                 if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
-                    command = 'userdel %s' % (externalApp)
+                    command = 'userdel -r -f %s' % (externalApp)
                 else:
                     command = 'deluser %s' % (externalApp)
 
                 ProcessUtilities.executioner(command)
+
+                #
+
+                command = 'groupdel %s' % (externalApp)
+                ProcessUtilities.executioner(command)
+
+                ##
 
             except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [Not able to remove virtual host configuration from main configuration file.]")
@@ -398,6 +405,7 @@ class vhost:
                 vhost.deleteCoreConf(virtualHostName, numberOfSites)
 
                 delWebsite = Websites.objects.get(domain=virtualHostName)
+                externalApp = delWebsite.externalApp
 
                 ## Cagefs
 
@@ -427,8 +435,22 @@ class vhost:
 
                 ## Delete mail accounts
 
-                command = "sudo rm -rf /home/vmail/" + virtualHostName
+                command = "rm -rf /home/vmail/" + virtualHostName
                 subprocess.call(shlex.split(command))
+
+                ##
+
+                if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                    command = 'userdel -r -f %s' % (externalApp)
+                else:
+                    command = 'deluser %s' % (externalApp)
+
+                ProcessUtilities.executioner(command)
+
+                #
+
+                command = 'groupdel %s' % (externalApp)
+                ProcessUtilities.executioner(command)
             except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(
                     str(msg) + " [Not able to remove virtual host configuration from main configuration file.]")
