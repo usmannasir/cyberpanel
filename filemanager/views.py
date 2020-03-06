@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-
-
 from django.shortcuts import render,redirect
 from loginSystem.models import Administrator
 from loginSystem.views import loadLoginPage
@@ -50,6 +48,9 @@ def changePermissions(request):
             externalApp = website.externalApp
 
             command = 'chown -R %s:%s /home/%s/public_html/*' % (externalApp, externalApp, domainName)
+            ProcessUtilities.popenExecutioner(command)
+
+            command = 'chown -R %s:%s /home/%s/public_html/.[^.]*' % (externalApp, externalApp, domainName)
             ProcessUtilities.popenExecutioner(command)
 
             command = "chown root:nobody /home/" + domainName+"/logs"
