@@ -511,7 +511,9 @@ if [[ $SERVER_COUNTRY == "CN" ]] ; then
 	mkdir /root/.config/pip
 	cat << EOF > /root/.config/pip/pip.conf
 [global]
-index-url = https://mirrors.aliyun.com/pypi/simple/
+index-url = https://pypi.tuna.tsinghua.edu.cn/simple
+[install]
+trusted-host=pypi.tuna.tsinghua.edu.cn
 EOF
 fi
 
@@ -571,6 +573,7 @@ if [[ $SERVER_OS == "Ubuntu" ]] ; then
 	if [[ $DEV == "ON" ]] ; then
 		DEBIAN_FRONTEND=noninteractive apt install -y python3-pip
 		check_return
+		ln -s /usr/bin/pip3 /usr/bin/pip3.6
 		DEBIAN_FRONTEND=noninteractive apt install -y build-essential libssl-dev libffi-dev python3-dev
 		check_return
 		DEBIAN_FRONTEND=noninteractive apt install -y python3-venv
