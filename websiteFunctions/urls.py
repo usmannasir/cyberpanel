@@ -120,6 +120,7 @@ urlpatterns = [
     ### Manage GIT
 
     url(r'^(?P<domain>(.*))/manageGIT$', views.manageGIT, name='manageGIT'),
+    url(r'^fetchFolderDetails$', views.fetchFolderDetails, name='fetchFolderDetails'),
 
     ## Catch all for domains
     url(r'^(?P<domain>(.*))/(?P<childDomain>(.*))$', views.launchChild, name='launchChild'),

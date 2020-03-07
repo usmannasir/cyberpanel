@@ -2789,7 +2789,6 @@ StrictHostKeyChecking no
         except BaseException as msg:
             return HttpResponse(str(msg))
 
-
     def startSync(self, userID=None, data=None):
         try:
 
@@ -2851,7 +2850,6 @@ StrictHostKeyChecking no
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-
     def convertDomainToSite(self, userID=None, request=None):
         try:
 
@@ -2881,7 +2879,6 @@ StrictHostKeyChecking no
                 return ACLManager.loadError()
 
             website = Websites.objects.get(domain=self.domain)
-            externalApp = website.externalApp
 
             folders = ['/home/%s' % (self.domain), '/home/vmail/%s' % (self.domain)]
 
@@ -2895,3 +2892,62 @@ StrictHostKeyChecking no
                           {'domainName': self.domain, 'folders': folders})
         except BaseException as msg:
             return HttpResponse(str(msg))
+
+    def folderCheck(self):
+        domainPath = '/home/%s' % (self.domain)
+        vmailPath = '/home/vmail/%s' % (self.domain)
+
+        if self.folder == domainPath:
+            return 1
+
+        if self.folder == vmailPath:
+            return 1
+
+        website = Websites.objects.get(domain=self.domain)
+
+        for database in website.databases_set.all():
+            basePath = '/var/lib/mysql/'
+            dbPath = '%s%s' % (basePath, database.dbName)
+
+            if self.folder == dbPath:
+                return 1
+
+        return 0
+
+    def fetchFolderDetails(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            self.domain = data['domain']
+            self.folder = data['folder']
+
+            if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson('status', 0)
+
+            if self.folderCheck():
+                pass
+            else:
+                return ACLManager.loadErrorJson()
+
+
+            gitPath = '%s/.git' % (self.folder)
+
+            command = 'ls -la %s' % (gitPath)
+
+            if ProcessUtilities.outputExecutioner(command).find('No such file or directory') > -1:
+                data_ret = {'status': 1, 'repo': 0}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            else:
+                data_ret = {'status': 1, 'repo': 1}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)

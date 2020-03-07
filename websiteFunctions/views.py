@@ -725,3 +725,11 @@ def manageGIT(request, domain):
 
     except KeyError:
         return redirect(loadLoginPage)
+
+def fetchFolderDetails(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.fetchFolderDetails(userID, json.loads(request.body))
+    except KeyError:
+        return redirect(loadLoginPage)

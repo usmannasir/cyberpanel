@@ -533,7 +533,7 @@ app.controller('listChildDomainsMain', function ($scope, $http, $timeout) {
 
     };
 
-    $scope.initConvert = function(virtualHost){
+    $scope.initConvert = function (virtualHost) {
         $scope.domainName = virtualHost;
     };
 
@@ -5785,3 +5785,142 @@ app.controller('installMagentoCTRL', function ($scope, $http, $timeout) {
 
 
 });
+
+/* Java script code to git tracking */
+app.controller('manageGIT', function ($scope, $http, $timeout, $window) {
+
+    $scope.cyberpanelLoading = true;
+    $scope.gitTracking = true;
+    $scope.gitEnable = true;
+
+    var statusFile;
+
+    $scope.fetchFolderDetails = function () {
+
+        $scope.cyberpanelLoading = false;
+
+        url = "/websites/fetchFolderDetails";
+
+
+        var data = {
+            domain: $("#domain").text(),
+            folder: $scope.folder
+
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+
+            if (response.data.status === 1) {
+                if (response.data.repo === 1) {
+                    $scope.gitTracking = true;
+                    $scope.gitEnable = false;
+                } else {
+                    $scope.gitTracking = false;
+                    $scope.gitEnable = true;
+                }
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+
+
+        }
+
+    };
+
+    function getCreationStatus() {
+
+        url = "/websites/installWordpressStatus";
+
+        var data = {
+            statusFile: statusFile
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+
+            if (response.data.abort === 1) {
+
+                if (response.data.installStatus === 1) {
+
+                    $scope.cyberpanelLoading = true;
+                    $scope.installationDetailsForm = true;
+                    $scope.installationProgress = false;
+                    $scope.goBackDisable = false;
+
+                    $("#installProgress").css("width", "100%");
+                    $scope.installPercentage = "100";
+                    $scope.currentStatus = response.data.currentStatus;
+                    $timeout.cancel();
+
+                } else {
+
+                    $scope.cyberpanelLoading = true;
+                    $scope.installationDetailsForm = true;
+                    $scope.installationProgress = false;
+                    $scope.goBackDisable = false;
+
+                    $scope.currentStatus = response.data.error_message;
+
+                    $("#installProgress").css("width", "0%");
+                    $scope.installPercentage = "0";
+                    $scope.goBackDisable = false;
+
+                }
+
+            } else {
+                $("#installProgress").css("width", response.data.installationProgress + "%");
+                $scope.installPercentage = response.data.installationProgress;
+                $scope.currentStatus = response.data.currentStatus;
+                $timeout(getCreationStatus, 1000);
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+
+            $scope.cyberpanelLoading = true;
+            $scope.installationDetailsForm = true;
+            $scope.installationProgress = false;
+            $scope.goBackDisable = false;
+
+        }
+
+
+    }
+
+});
+/* Java script code to git tracking ends here */
