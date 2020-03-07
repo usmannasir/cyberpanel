@@ -1499,7 +1499,7 @@ CSRF_COOKIE_SECURE = True
             if os.path.exists(lscpdPath):
                 os.remove(lscpdPath)
 
-            command = 'wget  https://raw.githubusercontent.com/usmannasir/cyberpanel/v1.9.4/lscpd-0.2.4 -P /usr/local/lscp/bin/'
+            command = 'cp -f /usr/local/CyberCP/lscpd-0.2.4 /usr/local/lscp/bin/lscpd-0.2.4'
             Upgrade.executioner(command, command, 0)
 
             command = 'rm -f /usr/local/lscp/bin/lscpd'
