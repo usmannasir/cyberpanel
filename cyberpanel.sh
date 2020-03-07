@@ -27,6 +27,9 @@ CENTOS_8="False"
 WATCHDOG="OFF"
 BRANCH_NAME="v${TEMP:12:3}.${TEMP:25:1}"
 VIRT_TYPE=""
+GIT_URL="github.com/usmannasir/cyberpanel"
+GIT_CONTENT_URL="raw.githubusercontent.com/usmannasir/cyberpanel"
+
 
 check_return() {
 #check previous command result , 0 = ok ,  non-0 = something wrong.
@@ -241,17 +244,18 @@ if [[ $SERVER_COUNTRY == "CN" ]] ; then
 #sed -i "${line2}i\ \ \ \ \ \ \ \ command = 'tar xzvf cyberpanel-git.tar.gz'" install.py
 #sed -i "${line2}i\ \ \ \ \ \ \ \ subprocess.call(command, shell=True)" install.py
 #sed -i "${line2}i\ \ \ \ \ \ \ \ command = 'wget cyberpanel.sh/cyberpanel-git.tar.gz'" install.py
-	sed -i 's|wget https://rpms.litespeedtech.com/debian/|wget --no-check-certificate https://rpms.litespeedtech.com/debian/|g' install.py
+	sed -i 's|wget http://rpms.litespeedtech.com/debian/|wget --no-check-certificate https://rpms.litespeedtech.com/debian/|g' install.py
 	sed -i 's|https://repo.powerdns.com/repo-files/centos-auth-42.repo|https://'$DOWNLOAD_SERVER'/powerdns/powerdns.repo|g' installCyberPanel.py
 	sed -i 's|https://www.rainloop.net/repository/webmail/rainloop-community-latest.zip|https://'$DOWNLOAD_SERVER'/misc/rainloop-community-latest.zip|g' install.py
-	sed -i 's|rpm -ivh https://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el7.noarch.rpm|curl -o /etc/yum.repos.d/litespeed.repo https://'$DOWNLOAD_SERVER'/litespeed/litespeed.repo|g' install.py
+	sed -i 's|rpm -ivh http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el7.noarch.rpm|curl -o /etc/yum.repos.d/litespeed.repo https://'$DOWNLOAD_SERVER'/litespeed/litespeed.repo|g' install.py
 	sed -i 's|https://copr.fedorainfracloud.org/coprs/copart/restic/repo/epel-7/copart-restic-epel-7.repo|https://'$DOWNLOAD_SERVER'/restic/restic.repo|g' install.py
 	sed -i 's|yum -y install https://cyberpanel.sh/gf-release-latest.gf.el7.noarch.rpm|wget -O /etc/yum.repos.d/gf.repo https://'$DOWNLOAD_SERVER'/gf-plus/gf.repo|g' install.py
 	sed -i 's|dovecot-2.3-latest|dovecot-2.3-latest-mirror|g' install.py
 	sed -i 's|git clone https://github.com/usmannasir/cyberpanel|wget https://cyberpanel.sh/cyberpanel-git.tar.gz \&\& tar xzvf cyberpanel-git.tar.gz|g' install.py
-	sed -i 's|https://repo.dovecot.org/ce-2.3-latest/centos/$releasever/RPMS/$basearch|https://'$DOWNLOAD_SERVER'/dovecot/|g' install.py
+	sed -i 's|http://repo.dovecot.org/ce-2.3-latest/centos/$releasever/RPMS/$basearch|https://'$DOWNLOAD_SERVER'/dovecot/|g' install.py
 	sed -i 's|'$DOWNLOAD_SERVER'|cyberpanel.sh|g' install.py
 	sed -i 's|https://www.litespeedtech.com/packages/5.0/lsws-5.4.2-ent-x86_64-linux.tar.gz|https://'$DOWNLOAD_SERVER'/litespeed/lsws-'$LSWS_STABLE_VER'-ent-x86_64-linux.tar.gz|g' installCyberPanel.py
+	sed -i 's|wget -O -  https://get.acme.sh \| sh|git clone https://gitee.com/qtwrk/acme.sh.git ; cd acme.sh ; ./acme.sh --install ; cd - ; rm -rf acme.sh|g' install.py
 # global change for CN , regardless provider and system
 
 	if [[ $SERVER_OS == "CentOS" ]] ; then
@@ -502,6 +506,15 @@ fi
 
 
 install_required() {
+if [[ $SERVER_COUNTRY == "CN" ]] ; then
+	mkdir /root/.config
+	mkdir /root/.config/pip
+	cat << EOF > /root/.config/pip/pip.conf
+[global]
+index-url = https://mirrors.aliyun.com/pypi/simple/
+EOF
+fi
+
 echo -e "\nInstalling necessary components..."
 if [[ $SERVER_OS == "CentOS" ]] ; then
 	timeout 10 rpm --import https://$DOWNLOAD_SERVER/mariadb/RPM-GPG-KEY-MariaDB
@@ -1123,7 +1136,8 @@ if [[ $debug == "0" ]] ; then
 fi
 
 if [[ $debug == "1" ]] ; then
-	wget -O requirements.txt https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
+	wget -O requirements.txt https://$GIT_CONTENT_URL/${BRANCH_NAME}/requirments.txt
+	check_return
 	/usr/local/CyberPanel/bin/pip3 install --ignore-installed -r requirements.txt
 	rm -f requirements.txt
 	/usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY --postfix $POSTFIX_VARIABLE --powerdns $POWERDNS_VARIABLE --ftp $PUREFTPD_VARIABLE
@@ -1157,14 +1171,6 @@ export LC_ALL=en_US.UTF-8
 #need to set lang to address some pip module installation issue.
 
 if [[ $DEV == "OFF" ]] ; then
-if [[ $SERVER_COUNTRY == "CN" ]] ; then
-		mkdir /root/.config
-		mkdir /root/.config/pip
-		cat << EOF > /root/.config/pip/pip.conf
-[global]
-index-url = https://mirrors.aliyun.com/pypi/simple/
-EOF
-fi
 
 if [[ $PROVIDER == "Alibaba Cloud" ]] ; then
 	pip install --upgrade pip
@@ -1180,7 +1186,8 @@ fi
 virtualenv --system-site-packages /usr/local/CyberPanel
 source /usr/local/CyberPanel/bin/activate
 rm -rf requirements.txt
-wget -O requirements.txt https://raw.githubusercontent.com/usmannasir/cyberpanel/1.8.0/requirments.txt
+wget -O requirements.txt https://$GIT_CONTENT_URL/1.8.0/requirments.txt
+check_return
 pip install --ignore-installed -r requirements.txt
 check_return
 virtualenv --system-site-packages /usr/local/CyberPanel
@@ -1192,7 +1199,8 @@ if [[ $DEV == "ON" ]] ; then
 	cd /usr/local/
 	virtualenv -p /usr/bin/python3 CyberPanel
   source /usr/local/CyberPanel/bin/activate
-  wget -O requirements.txt https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
+  wget -O requirements.txt https://$GIT_CONTENT_URL/${BRANCH_NAME}/requirments.txt
+	check_return
   pip3.6 install --ignore-installed -r requirements.txt
 	check_return
 	cd -
@@ -1203,26 +1211,15 @@ if [ -f requirements.txt ] && [ -d cyberpanel ] ; then
 	rm -f requirements.txt
 fi
 
-if [[ $SERVER_COUNTRY == "CN" ]] ; then
-	wget https://cyberpanel.sh/cyberpanel-git.tar.gz
-	tar xzvf cyberpanel-git.tar.gz > /dev/null
-	cp -r cyberpanel /usr/local/cyberpanel
-	cd cyberpanel/install
-else
-	if [[ $DEV == "ON" ]] ; then
-	git clone https://github.com/usmannasir/cyberpanel
-	cd cyberpanel
-	git checkout $BRANCH_NAME
-	check_return
-	cd -
-	cp -r cyberpanel /usr/local/cyberpanel
-	cd cyberpanel/install
-	else
-	git clone https://github.com/usmannasir/cyberpanel
-	cp -r cyberpanel /usr/local/cyberpanel
-	cd cyberpanel/install
-	fi
-fi
+git clone https://${GIT_URL}
+cd cyberpanel
+git checkout $BRANCH_NAME
+check_return
+cd -
+cp -r cyberpanel /usr/local/cyberpanel
+cd cyberpanel/install
+
+
 curl https://cyberpanel.sh/?version
 }
 
@@ -1261,7 +1258,8 @@ EOF
 
 virtualenv -p /usr/bin/python3 /usr/local/CyberCP
 source /usr/local/CyberCP/bin/activate
-wget -O requirements.txt https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
+wget -O requirements.txt https://$GIT_CONTENT_URL/${BRANCH_NAME}/requirments.txt
+check_return
 pip3.6 install --ignore-installed -r requirements.txt
 check_return
 systemctl restart lscpd
@@ -1555,7 +1553,7 @@ else
 						elif [[ "${1}" == 'r' ]] || [[ $1 == 'random' ]] ; then
 							ADMIN_PASS=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 16 ; echo '')
 						else
-							if [ ${1} -lt 8 ] ; then
+							if [ ${#1} -lt 8 ] ; then
 								echo -e "\nPassword lenth less than 8 digital, please choose a more complicated password.\n"
 								exit
 							fi
@@ -1607,6 +1605,8 @@ fi
 #test string
 if [[ $SERVER_COUNTRY == "CN" ]] ; then
 DOWNLOAD_SERVER="cyberpanel.sh"
+GIT_URL="gitee.com/qtwrk/cyberpanel"
+GIT_CONTENT_URL="gitee.com/qtwrk/cyberpanel/raw"
 else
 DOWNLOAD_SERVER="cdn.cyberpanel.sh"
 fi
