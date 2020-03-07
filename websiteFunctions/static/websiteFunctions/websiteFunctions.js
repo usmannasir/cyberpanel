@@ -5823,6 +5823,8 @@ app.controller('manageGIT', function ($scope, $http, $timeout, $window) {
                 if (response.data.repo === 1) {
                     $scope.gitTracking = true;
                     $scope.gitEnable = false;
+                    $scope.branches = response.data.finalBranches;
+                    $scope.deploymentKey = response.data.deploymentKey;
                 } else {
                     $scope.gitTracking = false;
                     $scope.gitEnable = true;

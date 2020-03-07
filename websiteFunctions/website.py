@@ -2070,7 +2070,7 @@ StrictHostKeyChecking no
                 command = 'mv %s /home/%s/.ssh/config' % (path, self.domain)
                 ProcessUtilities.executioner(command)
 
-                command = 'sudo chown %s:%s /home/%s/.ssh/config' % (website.externalApp, website.externalApp, self.domain)
+                command = 'chown %s:%s /home/%s/.ssh/config' % (website.externalApp, website.externalApp, self.domain)
                 ProcessUtilities.executioner(command)
 
                 command = 'cat /home/%s/.ssh/%s.pub' % (self.domain, website.externalApp)
@@ -2934,8 +2934,9 @@ StrictHostKeyChecking no
                 return ACLManager.loadErrorJson()
 
 
-            gitPath = '%s/.git' % (self.folder)
+            website = Websites.objects.get(domain=self.domain)
 
+            gitPath = '%s/.git' % (self.folder)
             command = 'ls -la %s' % (gitPath)
 
             if ProcessUtilities.outputExecutioner(command).find('No such file or directory') > -1:
@@ -2943,7 +2944,38 @@ StrictHostKeyChecking no
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
             else:
-                data_ret = {'status': 1, 'repo': 1}
+
+                ## Find git branches
+
+                command = 'git --git-dir=%s/.git branch' % (self.folder)
+                branches = ProcessUtilities.outputExecutioner(command).split('\n')
+
+                ## Fetch key
+
+                command = 'cat /home/%s/.ssh/config' % (self.domain)
+
+                if ProcessUtilities.outputExecutioner(command).find('No such file or directory') == -1:
+
+                    configContent = """Host github.com
+IdentityFile /home/%s/.ssh/%s
+StrictHostKeyChecking no
+""" % (self.domain, website.externalApp)
+
+                    path = "/home/cyberpanel/config"
+                    writeToFile = open(path, 'w')
+                    writeToFile.writelines(configContent)
+                    writeToFile.close()
+
+                    command = 'mv %s /home/%s/.ssh/config' % (path, self.domain)
+                    ProcessUtilities.executioner(command)
+
+                    command = 'chown %s:%s /home/%s/.ssh/config' % (website.externalApp, website.externalApp, self.domain)
+                    ProcessUtilities.executioner(command)
+
+                command = 'cat /home/%s/.ssh/%s.pub' % (self.domain, website.externalApp)
+                deploymentKey = ProcessUtilities.outputExecutioner(command, website.externalApp)
+
+                data_ret = {'status': 1, 'repo': 1, 'finalBranches': branches, 'deploymentKey': deploymentKey}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 

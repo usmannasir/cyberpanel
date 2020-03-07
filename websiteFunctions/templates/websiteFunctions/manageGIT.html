@@ -33,28 +33,61 @@
                             </div>
                         </div>
                     </form>
-                    <p style="margin: 2%" ng-hide="gitTracking">{% trans "This folder does not have Git tracking, click below to initiate a repository and start tracking files." %}</p>
-                    <button ng-hide="gitTracking"  style="margin-left: 2%" type="button" class="btn btn-primary"
+                    <p style="margin: 2%"
+                       ng-hide="gitTracking">{% trans "This folder does not have Git tracking, click below to initiate a repository and start tracking files." %}</p>
+                    <button ng-hide="gitTracking" style="margin-left: 2%" type="button" class="btn btn-primary"
                             ng-click="initRepo()">
                         Init Repo
                     </button>
+
+                    <form action="/" class="form-horizontal bordered-row">
+
+                        <div class="form-group">
+
+                            <div class="col-sm-12">
+
+                                <table class="table">
+                                    <thead>
+                                    <tr>
+                                        <th>{% trans "Deployment Key" %}</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr>
+                                        <td>
+                                            <div class="form-group">
+                                                <div class="col-sm-12">
+                                                    <textarea rows="5"
+                                                              class="form-control">{$ deploymentKey $}</textarea>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                    </form>
+
                     <table ng-hide="gitEnable" style="margin-top: 2%" class="table">
                         <thead>
                         <tr>
-                            <th>Folder</th>
-                            <th>Remote</th>
                             <th>Branch</th>
+                            <th>Remote</th>
                             <th>Status</th>
                             <th>Manage</th>
                         </tr>
                         </thead>
                         <tbody>
-                        <tr ng-repeat="record in records | filter:logSearch">
-                            <td ng-bind="record.domain"></td>
-                            <td ng-bind="record.ipAddress"></td>
-                            <td ng-bind="record.time"></td>
-                            <td ng-bind="record.resource"></td>
-                            <td ng-bind="record.size"></td>
+                        <tr>
+                            <td>
+                                <select ng-change="fetchFolderDetails()" ng-model="branchName" class="form-control">
+                                    <option ng-repeat="branch in branches track by $index">{$ branch $}</option>
+                                </select></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
                         </tr>
                         </tbody>
                     </table>
