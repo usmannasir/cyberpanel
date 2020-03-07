@@ -19,8 +19,6 @@ import shutil
 from plogical.mailUtilities import mailUtilities
 from plogical.processUtilities import ProcessUtilities
 
-
-
 class ApplicationInstaller(multi.Thread):
 
     def __init__(self, installApp, extraArgs):
@@ -142,13 +140,13 @@ class ApplicationInstaller(multi.Thread):
 
     def installWPCLI(self):
         try:
-            command = 'sudo wget https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar'
+            command = 'wget https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar'
             ProcessUtilities.executioner(command)
 
-            command = 'sudo chmod +x wp-cli.phar'
+            command = 'chmod +x wp-cli.phar'
             ProcessUtilities.executioner(command)
 
-            command = 'sudo mv wp-cli.phar /usr/bin/wp'
+            command = 'mv wp-cli.phar /usr/bin/wp'
             ProcessUtilities.executioner(command)
 
         except BaseException as msg:

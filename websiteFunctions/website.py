@@ -2869,3 +2869,29 @@ StrictHostKeyChecking no
             data_ret = {'status': 0, 'createWebSiteStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
+
+    def manageGIT(self, request=None, userID=None, data=None):
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
+            website = Websites.objects.get(domain=self.domain)
+            externalApp = website.externalApp
+
+            folders = ['/home/%s' % (self.domain), '/home/vmail/%s' % (self.domain)]
+
+            databases = website.databases_set.all()
+
+            for database in databases:
+                basePath = '/var/lib/mysql/'
+                folders.append('%s%s' % (basePath, database.dbName))
+
+            return render(request, 'websiteFunctions/manageGIT.html',
+                          {'domainName': self.domain, 'folders': folders})
+        except BaseException as msg:
+            return HttpResponse(str(msg))

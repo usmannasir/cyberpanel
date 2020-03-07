@@ -117,6 +117,10 @@ urlpatterns = [
     url(r'^detachRepo$', views.detachRepo, name='detachRepo'),
     url(r'^changeBranch$', views.changeBranch, name='changeBranch'),
 
+    ### Manage GIT
+
+    url(r'^(?P<domain>(.*))/manageGIT$', views.manageGIT, name='manageGIT'),
+
     ## Catch all for domains
     url(r'^(?P<domain>(.*))/(?P<childDomain>(.*))$', views.launchChild, name='launchChild'),
     url(r'^(?P<domain>(.*))$', views.domain, name='domain'),

@@ -707,3 +707,21 @@ def startSync(request):
         return wm.startSync(userID, json.loads(request.body))
     except KeyError:
         return redirect(loadLoginPage)
+
+
+### Manage GIT
+
+def manageGIT(request, domain):
+    try:
+
+        if not request.GET._mutable:
+            request.GET._mutable = True
+
+        request.GET['domain'] = domain
+
+        userID = request.session['userID']
+        wm = WebsiteManager(domain)
+        return wm.manageGIT(request, userID)
+
+    except KeyError:
+        return redirect(loadLoginPage)

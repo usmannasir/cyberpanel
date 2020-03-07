@@ -26,13 +26,15 @@
 
                     <h3 class="content-box-header">
                         {% trans "Resource Usage" %} <img ng-hide="domainLoading" src="/static/images/loading.gif">
+
+                        <a style="float: right; margin-left: 2%" class="btn btn-border btn-alt border-orange btn-link font-orange" href="/websites/{{ domain }}/manageGIT" title="Manage Git"><span>{% trans "Manage Git" %}</span></a>
+
                         <a style="float: right; margin-left: 2%"
                            class="btn btn-border btn-alt border-azure btn-link font-azure"
                            href="/websites/{{ domain }}/setupStaging" title=""><span>{% trans "Clone/Staging" %}</span></a>
                         <a style="float: right" class="btn btn-border btn-alt border-blue-alt btn-link font-blue-alt"
                            href="/websites/{{ domain }}/sshAccess" title=""><span>{% trans "Set up SSH Access" %}</span></a>
                     </h3>
-
 
                     <div class="content-box-wrapper">
                         <div class="row">
@@ -107,6 +109,7 @@
                             </div>
                         </div>
                     </div>
+
                 </div>
             </div>
 

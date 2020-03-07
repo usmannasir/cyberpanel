@@ -44,34 +44,12 @@ def changePermissions(request):
             else:
                 return ACLManager.loadErrorJson('permissionsChanged', 0)
 
-            website = Websites.objects.get(domain=domainName)
-            externalApp = website.externalApp
-
-            command = 'chown -R %s:%s /home/%s/public_html/*' % (externalApp, externalApp, domainName)
-            ProcessUtilities.popenExecutioner(command)
-
-            command = 'chown -R %s:%s /home/%s/public_html/.[^.]*' % (externalApp, externalApp, domainName)
-            ProcessUtilities.popenExecutioner(command)
-
-            command = "chown root:nobody /home/" + domainName+"/logs"
-            ProcessUtilities.popenExecutioner(command)
-
-            command = "find %s -type d -exec chmod 0755 {} \;" % ("/home/" + domainName + "/public_html")
-            ProcessUtilities.popenExecutioner(command)
-
-            command = "find %s -type f -exec chmod 0644 {} \;" % ("/home/" + domainName + "/public_html")
-            ProcessUtilities.popenExecutioner(command)
-
-            command = 'chown %s:nobody /home/%s/public_html' % (externalApp, domainName)
-            ProcessUtilities.executioner(command)
-
-            command = 'chmod 750 /home/%s/public_html' % (domainName)
-            ProcessUtilities.executioner(command)
+            fm = FM(request, data)
+            fm.fixPermissions(domainName)
 
             data_ret = {'permissionsChanged': 1, 'error_message': "None"}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
-
 
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
