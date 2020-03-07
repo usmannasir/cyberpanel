@@ -18,7 +18,8 @@ else
 	SERVER_COUNTRY="unknow"
 fi
 
-SERVER_COUNTRY="CN"
+#SERVER_COUNTRY="CN"
+#for test
 
 if [[ $SERVER_COUNTRY == "CN" ]] ; then
 	GIT_URL="gitee.com/qtwrk/cyberpanel"
