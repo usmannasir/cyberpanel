@@ -4,6 +4,8 @@
 export LC_CTYPE=en_US.UTF-8
 SUDO_TEST=$(set)
 BRANCH_NAME="stable"
+GIT_URL="github.com/usmannasir/cyberpanel"
+GIT_CONTENT_URL="raw.githubusercontent.com/usmannasir/cyberpanel"
 
 check_OS() {
 echo -e "\nChecking OS..."
@@ -125,12 +127,26 @@ rm -f /tmp/cyberpanel_utility.sh
 }
 
 cyberpanel_upgrade() {
+SERVER_COUNTRY="unknow"
+SERVER_COUNTRY=$(curl --silent --max-time 5 https://cyberpanel.sh/?country)
+if [[ ${#SERVER_COUNTRY} == "2" ]] || [[ ${#SERVER_COUNTRY} == "6" ]] ; then
+	echo -e "\nChecking server..."
+else
+	echo -e "\nChecking server..."
+	SERVER_COUNTRY="unknow"
+fi
+
+if [[ $SERVER_COUNTRY == "CN" ]] ; then
+	GIT_URL="gitee.com/qtwrk/cyberpanel"
+	GIT_CONTENT_URL="gitee.com/qtwrk/cyberpanel/raw"
+fi
+
 echo -e "CyberPanel Upgrade will start in 10 seconds"
 echo -e "If you want to cancel, please press CTRL + C to cancel it"
 sleep 10
 echo -e "CyberPanel upgrading..."
 rm -f /usr/local/cyberpanel_upgrade.sh
-wget -O /usr/local/cyberpanel_upgrade.sh -q https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/cyberpanel_upgrade.sh
+wget -O /usr/local/cyberpanel_upgrade.sh -q https://$GIT_CONTENT_URL/${BRANCH_NAME}/cyberpanel_upgrade.sh
 chmod 700 /usr/local/cyberpanel_upgrade.sh
 /usr/local/cyberpanel_upgrade.sh
 rm -f /usr/local/cyberpanel_upgrade.sh
