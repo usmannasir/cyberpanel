@@ -27,6 +27,9 @@ CENTOS_8="False"
 WATCHDOG="OFF"
 BRANCH_NAME="v${TEMP:12:3}.${TEMP:25:1}"
 VIRT_TYPE=""
+GIT_URL="github.com/usmannasir/cyberpanel"
+GIT_CONTENT_URL="raw.githubusercontent.com/usmannasir/cyberpanel"
+
 
 check_return() {
 #check previous command result , 0 = ok ,  non-0 = something wrong.
@@ -251,6 +254,7 @@ if [[ $SERVER_COUNTRY == "CN" ]] ; then
 	sed -i 's|http://repo.dovecot.org/ce-2.3-latest/centos/$releasever/RPMS/$basearch|https://'$DOWNLOAD_SERVER'/dovecot/|g' install.py
 	sed -i 's|'$DOWNLOAD_SERVER'|cyberpanel.sh|g' install.py
 	sed -i 's|https://www.litespeedtech.com/packages/5.0/lsws-5.4.2-ent-x86_64-linux.tar.gz|https://'$DOWNLOAD_SERVER'/litespeed/lsws-'$LSWS_STABLE_VER'-ent-x86_64-linux.tar.gz|g' installCyberPanel.py
+	sed -i 's|wget -O -  https://get.acme.sh \| sh|git clone https://gitee.com/qtwrk/acme.sh.git ; cd acme.sh ; ./acme.sh --install ; cd - ; rm -rf acme.sh|g' install.py
 # global change for CN , regardless provider and system
 
 	if [[ $SERVER_OS == "CentOS" ]] ; then
@@ -506,7 +510,9 @@ if [[ $SERVER_COUNTRY == "CN" ]] ; then
 	mkdir /root/.config/pip
 	cat << EOF > /root/.config/pip/pip.conf
 [global]
-index-url = https://mirrors.aliyun.com/pypi/simple/
+index-url = https://pypi.tuna.tsinghua.edu.cn/simple
+[install]
+trusted-host=pypi.tuna.tsinghua.edu.cn
 EOF
 fi
 
@@ -566,6 +572,7 @@ if [[ $SERVER_OS == "Ubuntu" ]] ; then
 	if [[ $DEV == "ON" ]] ; then
 		DEBIAN_FRONTEND=noninteractive apt install -y python3-pip
 		check_return
+		ln -s /usr/bin/pip3 /usr/bin/pip3.6
 		DEBIAN_FRONTEND=noninteractive apt install -y build-essential libssl-dev libffi-dev python3-dev
 		check_return
 		DEBIAN_FRONTEND=noninteractive apt install -y python3-venv
@@ -1138,7 +1145,7 @@ if [[ $debug == "0" ]] ; then
 fi
 
 if [[ $debug == "1" ]] ; then
-	wget -O requirements.txt https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
+	wget -O requirements.txt https://$GIT_CONTENT_URL/${BRANCH_NAME}/requirments.txt
 	check_return
 	/usr/local/CyberPanel/bin/pip3 install --ignore-installed -r requirements.txt
 	rm -f requirements.txt
@@ -1193,7 +1200,7 @@ fi
 virtualenv --system-site-packages /usr/local/CyberPanel
 source /usr/local/CyberPanel/bin/activate
 rm -rf requirements.txt
-wget -O requirements.txt https://raw.githubusercontent.com/usmannasir/cyberpanel/1.8.0/requirments.txt
+wget -O requirements.txt https://$GIT_CONTENT_URL/1.8.0/requirments.txt
 check_return
 pip install --ignore-installed -r requirements.txt
 check_return
@@ -1206,7 +1213,7 @@ if [[ $DEV == "ON" ]] ; then
 	cd /usr/local/
 	virtualenv -p /usr/bin/python3 CyberPanel
   source /usr/local/CyberPanel/bin/activate
-  wget -O requirements.txt https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
+  wget -O requirements.txt https://$GIT_CONTENT_URL/${BRANCH_NAME}/requirments.txt
 	check_return
   pip3.6 install --ignore-installed -r requirements.txt
 	check_return
@@ -1218,26 +1225,15 @@ if [ -f requirements.txt ] && [ -d cyberpanel ] ; then
 	rm -f requirements.txt
 fi
 
-if [[ $SERVER_COUNTRY == "CN" ]] ; then
-	wget https://cyberpanel.sh/cyberpanel-git.tar.gz
-	tar xzvf cyberpanel-git.tar.gz > /dev/null
-	cp -r cyberpanel /usr/local/cyberpanel
-	cd cyberpanel/install
-else
-	if [[ $DEV == "ON" ]] ; then
-	git clone https://github.com/usmannasir/cyberpanel
-	cd cyberpanel
-	git checkout $BRANCH_NAME
-	check_return
-	cd -
-	cp -r cyberpanel /usr/local/cyberpanel
-	cd cyberpanel/install
-	else
-	git clone https://github.com/usmannasir/cyberpanel
-	cp -r cyberpanel /usr/local/cyberpanel
-	cd cyberpanel/install
-	fi
-fi
+git clone https://${GIT_URL}
+cd cyberpanel
+git checkout $BRANCH_NAME
+check_return
+cd -
+cp -r cyberpanel /usr/local/cyberpanel
+cd cyberpanel/install
+
+
 curl https://cyberpanel.sh/?version
 }
 
@@ -1276,7 +1272,7 @@ EOF
 
 virtualenv -p /usr/bin/python3 /usr/local/CyberCP
 source /usr/local/CyberCP/bin/activate
-wget -O requirements.txt https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
+wget -O requirements.txt https://$GIT_CONTENT_URL/${BRANCH_NAME}/requirments.txt
 check_return
 pip3.6 install --ignore-installed -r requirements.txt
 check_return
@@ -1623,6 +1619,8 @@ fi
 #test string
 if [[ $SERVER_COUNTRY == "CN" ]] ; then
 DOWNLOAD_SERVER="cyberpanel.sh"
+GIT_URL="gitee.com/qtwrk/cyberpanel"
+GIT_CONTENT_URL="gitee.com/qtwrk/cyberpanel/raw"
 else
 DOWNLOAD_SERVER="cdn.cyberpanel.sh"
 fi

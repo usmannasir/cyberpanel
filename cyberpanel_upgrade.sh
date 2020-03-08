@@ -7,6 +7,25 @@ SERVER_OS='Undefined'
 OUTPUT=$(cat /etc/*release)
 TEMP=$(curl --silent https://cyberpanel.net/version.txt)
 BRANCH_NAME=v${TEMP:12:3}.${TEMP:25:1}
+GIT_URL="github.com/usmannasir/cyberpanel"
+GIT_CONTENT_URL="raw.githubusercontent.com/usmannasir/cyberpanel"
+SERVER_COUNTRY="unknow"
+SERVER_COUNTRY=$(curl --silent --max-time 5 https://cyberpanel.sh/?country)
+if [[ ${#SERVER_COUNTRY} == "2" ]] || [[ ${#SERVER_COUNTRY} == "6" ]] ; then
+	echo -e "\nChecking server..."
+else
+	echo -e "\nChecking server..."
+	SERVER_COUNTRY="unknow"
+fi
+
+#SERVER_COUNTRY="CN"
+#for test
+
+if [[ $SERVER_COUNTRY == "CN" ]] ; then
+	GIT_URL="gitee.com/qtwrk/cyberpanel"
+	GIT_CONTENT_URL="gitee.com/qtwrk/cyberpanel/raw"
+fi
+
 
 input_branch() {
 	echo -e "\nPress Enter key to continue with latest version or Enter specific version such as: \e[31m1.9.4\e[39m , \e[31m1.9.5\e[39m ...etc"
@@ -136,33 +155,40 @@ rm -rf /usr/local/CyberPanel
 virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberPanel
 check_return
 rm -f requirments.txt
-wget https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
+wget -O requirements.txt https://$GIT_CONTENT_URL/${BRANCH_NAME}/requirments.txt
 . /usr/local/CyberPanel/bin/activate
 check_return
 
 if [ $SERVER_OS = "Ubuntu" ] ; then
   . /usr/local/CyberPanel/bin/activate
   check_return
-  pip3 install --ignore-installed -r requirments.txt
+  pip3 install --ignore-installed -r requirements.txt
   check_return
 else
   source /usr/local/CyberPanel/bin/activate
   check_return
-  pip3.6 install --ignore-installed -r requirments.txt
+  pip3.6 install --ignore-installed -r requirements.txt
   check_return
 fi
 
 virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberPanel
 check_return
 rm -rf upgrade.py
-wget https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/plogical/upgrade.py
+wget https://$GIT_CONTENT_URL/${BRANCH_NAME}/plogical/upgrade.py
+
+if [[ $SERVER_COUNTRY == "CN" ]] ; then
+sed -i 's|wget  https://raw.githubusercontent.com/usmannasir/cyberpanel/v1.9.4/lscpd-0.2.4 -P /usr/local/lscp/bin/|cp -f /usr/local/CyberCP/lscpd-0.2.4 /usr/local/lscp/bin/lscpd-0.2.4|g' upgrade.py
+sed -i 's|wget  https://raw.githubusercontent.com/usmannasir/cyberpanel/%s/lscpd-0.2.4 -P /usr/local/lscp/bin/|cp -f /usr/local/CyberCP/lscpd-0.2.4 /usr/local/lscp/bin/lscpd-0.2.4|g' upgrade.py
+sed -i $'s/0.2.4\' % (branch)/0.2.4\'/' upgrade.py
+sed -i 's|raw.githubusercontent.com/usmannasir/cyberpanel|'${GIT_CONTENT_URL}'|g' upgrade.py
+sed -i 's|git clone https://github.com/usmannasir/cyberpanel|git clone https://'${GIT_URL}'|g' upgrade.py
+fi
+
 /usr/local/CyberPanel/bin/python upgrade.py $BRANCH_NAME
 check_return
-##
-
 virtualenv -p /usr/bin/python3 /usr/local/CyberCP
 check_return
-wget -O requirements.txt https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
+wget -O requirements.txt https://$GIT_CONTENT_URL/${BRANCH_NAME}/requirments.txt
 
 if [ $SERVER_OS = "Ubuntu" ] ; then
   . /usr/local/CyberCP/bin/activate
