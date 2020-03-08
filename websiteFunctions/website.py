@@ -180,14 +180,12 @@ class WebsiteManager:
                 return ACLManager.loadErrorJson('createWebSiteStatus', 0)
 
 
-            if not match(r'([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?', domain,
-                  M | I):
+            if not validators.domain(domain):
                 data_ret = {'status': 0, 'createWebSiteStatus': 0, 'error_message': "Invalid domain."}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-            if not match(r'\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b', adminEmail,
-                  M | I):
+            if not validators.email(adminEmail):
                 data_ret = {'status': 0, 'createWebSiteStatus': 0, 'error_message': "Invalid email."}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
@@ -250,8 +248,7 @@ class WebsiteManager:
             path = data['path']
             tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
 
-            if not match(r'([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?', domain,
-                  M | I):
+            if not validators.domain(domain):
                 data_ret = {'status': 0, 'createWebSiteStatus': 0, 'error_message': "Invalid domain."}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
@@ -1593,8 +1590,7 @@ class WebsiteManager:
             aliasDomain = data['aliasDomain']
             ssl = data['ssl']
 
-            if not match(r'([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?', aliasDomain,
-                  M | I):
+            if not validators.domain(aliasDomain):
                 data_ret = {'status': 0, 'createAliasStatus': 0, 'error_message': "Invalid domain."}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
@@ -2683,14 +2679,12 @@ StrictHostKeyChecking no
 
             self.domain = data['masterDomain']
 
-            if not match(r'([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?', self.domain,
-                  M | I):
+            if not validators.domain(self.domain):
                 data_ret = {'status': 0, 'createWebSiteStatus': 0, 'error_message': "Invalid domain."}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-            if not match(r'([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?', data['domainName'],
-                  M | I):
+            if not validators.domain(data['domainName']):
                 data_ret = {'status': 0, 'createWebSiteStatus': 0, 'error_message': "Invalid domain."}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
@@ -2756,8 +2750,7 @@ StrictHostKeyChecking no
             currentACL = ACLManager.loadedACL(userID)
             admin = Administrator.objects.get(pk=userID)
 
-            if not match(r'([\da-z\.-]+\.[a-z\.]{2,12}|[\d\.]+)([\/:?=&#]{1}[\da-z\.-]+)*[\/\?]?', data['childDomain'],
-                  M | I):
+            if not validators.domain(data['childDomain']):
                 data_ret = {'status': 0, 'createWebSiteStatus': 0, 'error_message': "Invalid domain."}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
