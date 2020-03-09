@@ -5825,10 +5825,66 @@ app.controller('manageGIT', function ($scope, $http, $timeout, $window) {
                     $scope.gitEnable = false;
                     $scope.branches = response.data.finalBranches;
                     $scope.deploymentKey = response.data.deploymentKey;
+                    $scope.remote = response.data.remote;
                 } else {
                     $scope.gitTracking = false;
                     $scope.gitEnable = true;
                 }
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+
+
+        }
+
+    };
+
+    $scope.initRepo = function () {
+
+        $scope.cyberpanelLoading = false;
+
+        url = "/websites/initRepo";
+
+
+        var data = {
+            domain: $("#domain").text(),
+            folder: $scope.folder
+
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success',
+                    text: 'Repo initiated.',
+                    type: 'success'
+                });
+                $scope.fetchFolderDetails();
             } else {
                 new PNotify({
                     title: 'Operation Failed!',

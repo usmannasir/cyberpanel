@@ -733,3 +733,11 @@ def fetchFolderDetails(request):
         return wm.fetchFolderDetails(userID, json.loads(request.body))
     except KeyError:
         return redirect(loadLoginPage)
+
+def initRepo(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.initRepo(userID, json.loads(request.body))
+    except KeyError:
+        return redirect(loadLoginPage)

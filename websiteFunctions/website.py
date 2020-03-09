@@ -2947,8 +2947,8 @@ StrictHostKeyChecking no
 
                 ## Find git branches
 
-                command = 'git --git-dir=%s/.git branch' % (self.folder)
-                branches = ProcessUtilities.outputExecutioner(command).split('\n')
+                command = 'git -C %s branch' % (self.folder)
+                branches = ProcessUtilities.outputExecutioner(command).split('\n')[:-1]
 
                 ## Fetch key
 
@@ -2975,7 +2975,59 @@ StrictHostKeyChecking no
                 command = 'cat /home/%s/.ssh/%s.pub' % (self.domain, website.externalApp)
                 deploymentKey = ProcessUtilities.outputExecutioner(command, website.externalApp)
 
-                data_ret = {'status': 1, 'repo': 1, 'finalBranches': branches, 'deploymentKey': deploymentKey}
+                if deploymentKey.find('No such file or directory') > -1:
+                    command = "ssh-keygen -f /home/%s/.ssh/%s -t rsa -N ''" % (self.domain, website.externalApp)
+                    ProcessUtilities.executioner(command, website.externalApp)
+
+                    command = 'cat /home/%s/.ssh/%s.pub' % (self.domain, website.externalApp)
+                    deploymentKey = ProcessUtilities.outputExecutioner(command, website.externalApp)
+
+                ## Find Remote if any
+
+                command = 'git -C %s remote -v' % (self.folder)
+                remoteResult = ProcessUtilities.outputExecutioner(command)
+
+                remote = 1
+                if remoteResult.find('origin') == -1:
+                    remote = 0
+
+                data_ret = {'status': 1, 'repo': 1, 'finalBranches': branches, 'deploymentKey': deploymentKey, 'remote': remote, 'remoteResult': remoteResult}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def initRepo(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            self.domain = data['domain']
+            self.folder = data['folder']
+
+            if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson('status', 0)
+
+            if self.folderCheck():
+                pass
+            else:
+                return ACLManager.loadErrorJson()
+
+            command = 'git -C %s init' % (self.folder)
+            result = ProcessUtilities.outputExecutioner(command)
+
+            if result.find('Initialized empty Git repository in') > -1:
+                data_ret = {'status': 1}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            else:
+                data_ret = {'status': 0, 'error_message': result}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 

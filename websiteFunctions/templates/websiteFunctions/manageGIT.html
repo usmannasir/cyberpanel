@@ -85,7 +85,20 @@
                                 <select ng-change="fetchFolderDetails()" ng-model="branchName" class="form-control">
                                     <option ng-repeat="branch in branches track by $index">{$ branch $}</option>
                                 </select></td>
-                            <td></td>
+                            <td>
+                                <button ng-hide="remote==1" style="margin-left: 2%" type="button"
+                                        class="btn btn-primary"
+                                        ng-click="initRepo()">
+                                    Setup Remote
+                                </button>
+
+                                <button ng-hide="remote==0" style="margin-left: 2%" type="button"
+                                        class="btn btn-primary"
+                                        ng-click="initRepo()">
+                                    View Remote
+                                </button>
+
+                            </td>
                             <td></td>
                             <td></td>
                         </tr>
