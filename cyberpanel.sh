@@ -256,6 +256,7 @@ if [[ $SERVER_COUNTRY == "CN" ]] ; then
 	sed -i 's|'$DOWNLOAD_SERVER'|cyberpanel.sh|g' install.py
 	sed -i 's|https://www.litespeedtech.com/packages/5.0/lsws-5.4.2-ent-x86_64-linux.tar.gz|https://'$DOWNLOAD_SERVER'/litespeed/lsws-'$LSWS_STABLE_VER'-ent-x86_64-linux.tar.gz|g' installCyberPanel.py
 	sed -i 's|wget -O -  https://get.acme.sh \| sh|git clone https://gitee.com/qtwrk/acme.sh.git ; cd acme.sh ; ./acme.sh --install ; cd - ; rm -rf acme.sh|g' install.py
+	sed -i 's|composer.sh|composer_cn.sh|g' install.py
 # global change for CN , regardless provider and system
 
 	if [[ $SERVER_OS == "CentOS" ]] ; then
@@ -278,42 +279,6 @@ index-url = https://pypi.tuna.tsinghua.edu.cn/simple
 trusted-host=pypi.tuna.tsinghua.edu.cn
 EOF
 		echo -e "\nSet to Aliyun pip repo..."
-		cat << EOF > composer.sh
-#!/usr/bin/env bash
-php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
-php composer-setup.php
-php -r "unlink('composer-setup.php');"
-mv composer.phar /usr/bin/composer
-
-if [ ! -d /root/.config ]; then
-mkdir /root/.config
-fi
-
-if [ ! -d /root/.config/composer ]; then
-mkdir /root/.config/composer
-fi
-
-echo '{
-    "bitbucket-oauth": {},
-    "github-oauth": {},
-    "gitlab-oauth": {},
-    "gitlab-token": {},
-    "http-basic": {}
-}
-' > /root/.config/composer/auth.json
-
-echo '{
-    "config": {},
-    "repositories": {
-        "packagist": {
-            "type": "composer",
-            "url": "https://mirrors.aliyun.com/composer/"
-        }
-    }
-}
-' > /root/.config/composer/config.json
-composer clear-cache
-EOF
 	fi
 
 
@@ -349,79 +314,6 @@ deb-src http://mirrors.aliyun.com/ubuntu/ bionic-backports main restricted unive
 EOF
 		DEBIAN_FRONTEND=noninteractive apt update -y
 		pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/
-		cat << EOF > composer.sh
-#!/usr/bin/env bash
-php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
-php composer-setup.php
-php -r "unlink('composer-setup.php');"
-mv composer.phar /usr/bin/composer
-
-if [ ! -d /root/.config ]; then
-mkdir /root/.config
-fi
-
-if [ ! -d /root/.config/composer ]; then
-mkdir /root/.config/composer
-fi
-
-echo '{
-    "bitbucket-oauth": {},
-    "github-oauth": {},
-    "gitlab-oauth": {},
-    "gitlab-token": {},
-    "http-basic": {}
-}
-' > /root/.config/composer/auth.json
-
-echo '{
-    "config": {},
-    "repositories": {
-        "packagist": {
-            "type": "composer",
-            "url": "https://mirrors.cloud.tencent.com/composer/"
-        }
-    }
-}
-' > /root/.config/composer/config.json
-composer clear-cache
-EOF
-		else
-	cat << EOF > composer.sh
-#!/usr/bin/env bash
-php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
-php composer-setup.php
-php -r "unlink('composer-setup.php');"
-mv composer.phar /usr/bin/composer
-
-if [ ! -d /root/.config ]; then
-mkdir /root/.config
-fi
-
-if [ ! -d /root/.config/composer ]; then
-mkdir /root/.config/composer
-fi
-
-echo '{
-    "bitbucket-oauth": {},
-    "github-oauth": {},
-    "gitlab-oauth": {},
-    "gitlab-token": {},
-    "http-basic": {}
-}
-' > /root/.config/composer/auth.json
-
-echo '{
-    "config": {},
-    "repositories": {
-        "packagist": {
-            "type": "composer",
-            "url": "https://packagist.phpcomposer.com"
-        }
-    }
-}
-' > /root/.config/composer/config.json
-composer clear-cache
-EOF
 		fi
 	fi
 fi
