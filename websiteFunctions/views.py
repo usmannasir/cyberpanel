@@ -741,3 +741,11 @@ def initRepo(request):
         return wm.initRepo(userID, json.loads(request.body))
     except KeyError:
         return redirect(loadLoginPage)
+
+def setupRemote(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.setupRemote(userID, json.loads(request.body))
+    except KeyError:
+        return redirect(loadLoginPage)

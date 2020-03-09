@@ -122,7 +122,7 @@ urlpatterns = [
     url(r'^(?P<domain>(.*))/manageGIT$', views.manageGIT, name='manageGIT'),
     url(r'^fetchFolderDetails$', views.fetchFolderDetails, name='fetchFolderDetails'),
     url(r'^initRepo$', views.initRepo, name='initRepo'),
-
+    url(r'^setupRemote$', views.setupRemote, name='setupRemote'),
     ## Catch all for domains
     url(r'^(?P<domain>(.*))/(?P<childDomain>(.*))$', views.launchChild, name='launchChild'),
     url(r'^(?P<domain>(.*))$', views.domain, name='domain'),

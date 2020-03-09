@@ -5826,6 +5826,7 @@ app.controller('manageGIT', function ($scope, $http, $timeout, $window) {
                     $scope.branches = response.data.finalBranches;
                     $scope.deploymentKey = response.data.deploymentKey;
                     $scope.remote = response.data.remote;
+                    $scope.remoteResult = response.data.remoteResult;
                 } else {
                     $scope.gitTracking = false;
                     $scope.gitEnable = true;
@@ -5882,6 +5883,63 @@ app.controller('manageGIT', function ($scope, $http, $timeout, $window) {
                 new PNotify({
                     title: 'Success',
                     text: 'Repo initiated.',
+                    type: 'success'
+                });
+                $scope.fetchFolderDetails();
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+
+
+        }
+
+    };
+
+    $scope.setupRemote = function () {
+
+        $scope.cyberpanelLoading = false;
+
+        url = "/websites/setupRemote";
+
+
+        var data = {
+            domain: $("#domain").text(),
+            folder: $scope.folder,
+            gitHost: $scope.gitHost,
+            gitUsername: $scope.gitUsername,
+            gitReponame: $scope.gitReponame,
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success',
+                    text: 'Remote successfully set.',
                     type: 'success'
                 });
                 $scope.fetchFolderDetails();

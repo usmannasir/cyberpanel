@@ -2990,6 +2990,7 @@ StrictHostKeyChecking no
                 remote = 1
                 if remoteResult.find('origin') == -1:
                     remote = 0
+                    remoteResult = 'Remote currently not set.'
 
                 data_ret = {'status': 1, 'repo': 1, 'finalBranches': branches, 'deploymentKey': deploymentKey, 'remote': remote, 'remoteResult': remoteResult}
                 json_data = json.dumps(data_ret)
@@ -3028,6 +3029,62 @@ StrictHostKeyChecking no
                 return HttpResponse(json_data)
             else:
                 data_ret = {'status': 0, 'error_message': result}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def setupRemote(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            self.domain = data['domain']
+            self.folder = data['folder']
+            self.gitHost = data['gitHost']
+            self.gitUsername = data['gitUsername']
+            self.gitReponame = data['gitReponame']
+
+            if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson('status', 0)
+
+            if self.folderCheck():
+                pass
+            else:
+                return ACLManager.loadErrorJson()
+
+            ## Check if remote exists
+
+            command = 'git -C %s remote -v' % (self.folder)
+            remoteResult = ProcessUtilities.outputExecutioner(command)
+
+            ## Set new remote
+
+            if remoteResult.find('origin') == -1:
+                command = 'git -C %s remote add origin git@%s:%s/%s.git' % (self.folder, self.gitHost, self.gitUsername, self.gitReponame)
+            else:
+                command = 'git -C %s remote set-url origin git@%s:%s/%s.git' % (
+                self.folder, self.gitHost, self.gitUsername, self.gitReponame)
+
+            possibleError = ProcessUtilities.outputExecutioner(command)
+
+            ## Check if set correctly.
+
+            command = 'git -C %s remote -v' % (self.folder)
+            remoteResult = ProcessUtilities.outputExecutioner(command)
+
+            if remoteResult.find(self.gitUsername) > -1:
+                data_ret = {'status': 1}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            else:
+                data_ret = {'status': 0, 'error_message': possibleError}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
