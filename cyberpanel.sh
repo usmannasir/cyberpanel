@@ -1181,8 +1181,6 @@ if [[ $DEV == "ON" ]] ; then
   source /usr/local/CyberPanel/bin/activate
   wget -O requirements.txt https://$GIT_CONTENT_URL/${BRANCH_NAME}/requirments.txt
 	check_return
-	pip3 uninstall setuptools -y
-	pip3 install setuptools==45.3.0
   pip3.6 install --ignore-installed -r requirements.txt
 	check_return
 	cd -
