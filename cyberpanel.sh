@@ -249,7 +249,7 @@ if [[ $SERVER_COUNTRY == "CN" ]] ; then
 	sed -i 's|https://www.rainloop.net/repository/webmail/rainloop-community-latest.zip|https://'$DOWNLOAD_SERVER'/misc/rainloop-community-latest.zip|g' install.py
 	sed -i 's|rpm -ivh http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el7.noarch.rpm|curl -o /etc/yum.repos.d/litespeed.repo https://'$DOWNLOAD_SERVER'/litespeed/litespeed.repo|g' install.py
 	sed -i 's|https://copr.fedorainfracloud.org/coprs/copart/restic/repo/epel-7/copart-restic-epel-7.repo|https://'$DOWNLOAD_SERVER'/restic/restic.repo|g' install.py
-	sed -i 's|yum -y install https://cyberpanel.sh/gf-release-latest.gf.el7.noarch.rpm|wget -O /etc/yum.repos.d/gf.repo https://'$DOWNLOAD_SERVER'/gf-plus/gf.repo|g' install.py
+	sed -i 's|yum -y install http://cyberpanel.sh/gf-release-latest.gf.el7.noarch.rpm|wget -O /etc/yum.repos.d/gf.repo https://'$DOWNLOAD_SERVER'/gf-plus/gf.repo|g' install.py
 	sed -i 's|dovecot-2.3-latest|dovecot-2.3-latest-mirror|g' install.py
 	sed -i 's|git clone https://github.com/usmannasir/cyberpanel|wget https://cyberpanel.sh/cyberpanel-git.tar.gz \&\& tar xzvf cyberpanel-git.tar.gz|g' install.py
 	sed -i 's|http://repo.dovecot.org/ce-2.3-latest/centos/$releasever/RPMS/$basearch|https://'$DOWNLOAD_SERVER'/dovecot/|g' install.py
@@ -257,6 +257,7 @@ if [[ $SERVER_COUNTRY == "CN" ]] ; then
 	sed -i 's|https://www.litespeedtech.com/packages/5.0/lsws-5.4.2-ent-x86_64-linux.tar.gz|https://'$DOWNLOAD_SERVER'/litespeed/lsws-'$LSWS_STABLE_VER'-ent-x86_64-linux.tar.gz|g' installCyberPanel.py
 	sed -i 's|wget -O -  https://get.acme.sh \| sh|git clone https://gitee.com/qtwrk/acme.sh.git ; cd acme.sh ; ./acme.sh --install ; cd - ; rm -rf acme.sh|g' install.py
 	sed -i 's|composer.sh|composer_cn.sh|g' install.py
+	sed -i 's|yum -y install http://repo.iotti.biz/CentOS/7/noarch/lux-release-7-1.noarch.rpm|wget -O /etc/yum.repos.d/lux.repo https://'$DOWNLOAD_SERVER'/lux/lux.repo|g' install.py
 # global change for CN , regardless provider and system
 
 	if [[ $SERVER_OS == "CentOS" ]] ; then
@@ -416,6 +417,8 @@ if [[ $SERVER_OS == "CentOS" ]] ; then
 	timeout 10 rpm --import https://$DOWNLOAD_SERVER/powerdns/FD380FBB-pub.asc
 	timeout 10 rpm --import http://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-7
 	timeout 10 rpm --import https://$DOWNLOAD_SERVER/gf-plus/RPM-GPG-KEY-gf.el7
+	timeout 10 rpm --import https://$DOWNLOAD_SERVER/lux/RPM-GPG-KEY-LUX
+	timeout 10 rpm --import https://$DOWNLOAD_SERVER/ius/RPM-GPG-KEY-IUS-7
 	timeout 10 rpm --import https://repo.dovecot.org/DOVECOT-REPO-GPG
 	timeout 10 rpm --import https://copr-be.cloud.fedoraproject.org/results/copart/restic/pubkey.gpg
 	yum clean all
@@ -440,8 +443,12 @@ if [[ $DEV == "ON" ]] ; then
 	  if [[ $CENTOS_8 == "False" ]] ; then
       yum -y install yum-utils
       yum -y groupinstall development
-      yum -y install https://centos7.iuscommunity.org/ius-release.rpm
-      yum -y install python36u python36u-pip python36u-devel
+			if [[ $SERVER_COUNTRY == "CN" ]] ; then
+				wget -O /etc/yum.repos.d/ius.repo https://$DOWNLOAD_SERVER/ius/ius.repo
+			else
+      	yum -y install https://centos7.iuscommunity.org/ius-release.rpm
+			fi
+			yum -y install python36u python36u-pip python36u-devel
 			check_return
     fi
     if [[ $CENTOS_8 == "True" ]] ; then
