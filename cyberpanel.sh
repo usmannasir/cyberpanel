@@ -1173,29 +1173,6 @@ export LC_CTYPE=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
 #need to set lang to address some pip module installation issue.
 
-if [[ $DEV == "OFF" ]] ; then
-
-if [[ $PROVIDER == "Alibaba Cloud" ]] ; then
-	pip install --upgrade pip
-	pip install setuptools==40.8.0
-fi
-
-if [[ $SERVER_OS == "CentOS" ]] ; then
-    pip install virtualenv==16.7.9
-  else
-    pip install virtualenv
-fi
-
-virtualenv --system-site-packages /usr/local/CyberPanel
-source /usr/local/CyberPanel/bin/activate
-rm -rf requirements.txt
-wget -O requirements.txt https://$GIT_CONTENT_URL/1.8.0/requirments.txt
-check_return
-pip install --ignore-installed -r requirements.txt
-check_return
-virtualenv --system-site-packages /usr/local/CyberPanel
-fi
-
 if [[ $DEV == "ON" ]] ; then
 	#install dev branch
 	#wget https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
@@ -1204,6 +1181,8 @@ if [[ $DEV == "ON" ]] ; then
   source /usr/local/CyberPanel/bin/activate
   wget -O requirements.txt https://$GIT_CONTENT_URL/${BRANCH_NAME}/requirments.txt
 	check_return
+	pip3 uninstall setuptools -y
+	pip3 install setuptools==45.3.0
   pip3.6 install --ignore-installed -r requirements.txt
 	check_return
 	cd -
