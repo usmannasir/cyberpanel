@@ -43,18 +43,21 @@
                     <table ng-hide="gitEnable" style="margin-top: 2%" class="table">
                         <thead>
                         <tr>
+                            <th>Total Commits</th>
                             <th>Branch</th>
                             <th>Remote</th>
-                            <th>Status</th>
+
                             <th>Manage</th>
                         </tr>
                         </thead>
                         <tbody>
                         <tr>
+                            <td>{$ totalCommits $}</td>
                             <td>
-                                <select ng-change="fetchFolderDetails()" ng-model="branchName" class="form-control">
+                                <select ng-change="changeBranch()" ng-model="branchName" class="form-control">
                                     <option ng-repeat="branch in branches track by $index">{$ branch $}</option>
-                                </select></td>
+                                </select>
+                            </td>
                             <td>
 
                                 <button data-toggle="modal" data-target="#settings" style="margin-left: 2%"
@@ -177,10 +180,51 @@
 
                             </td>
                             <td></td>
-                            <td></td>
                         </tr>
                         </tbody>
                     </table>
+                    <div id="showStatus" class="modal fade" role="dialog">
+                                    <div class="modal-dialog">
+
+                                        <!-- Modal content-->
+                                        <div class="modal-content">
+                                            <div class="modal-body">
+
+                                                <form name="containerSettingsForm" action="/" class="form-horizontal">
+                                                    <div ng-hide="loadingSticks" class="form-group">
+                                                        <div class="col-sm-12">
+                                                            <div class="loading-stick">
+                                                                <div class="stick bg-azure"></div>
+                                                                <div class="stick bg-azure"></div>
+                                                                <div class="stick bg-azure"></div>
+                                                                <div class="stick bg-azure"></div>
+                                                                <div class="stick bg-azure"></div>
+                                                                <div class="stick bg-azure"></div>
+                                                                <div class="stick bg-azure"></div>
+                                                                <div class="stick bg-azure"></div>
+                                                                <div class="stick bg-azure"></div>
+                                                                <div class="stick bg-azure"></div>
+                                                                <h1>Pleas wait...</h1>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <hr>
+
+                                                    <div class="form-group">
+
+                                                        <div class="col-sm-12">
+                                                            <textarea rows="3"
+                                                                      class="form-control">{$ commandStatus $}</textarea>
+                                                        </div>
+                                                    </div>
+
+                                                </form>
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                 </div>
             </div>
         </div>

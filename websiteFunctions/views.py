@@ -749,3 +749,11 @@ def setupRemote(request):
         return wm.setupRemote(userID, json.loads(request.body))
     except KeyError:
         return redirect(loadLoginPage)
+
+def changeGitBranch(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.changeGitBranch(userID, json.loads(request.body))
+    except KeyError:
+        return redirect(loadLoginPage)

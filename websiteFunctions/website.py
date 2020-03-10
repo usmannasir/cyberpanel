@@ -2992,7 +2992,16 @@ StrictHostKeyChecking no
                     remote = 0
                     remoteResult = 'Remote currently not set.'
 
-                data_ret = {'status': 1, 'repo': 1, 'finalBranches': branches, 'deploymentKey': deploymentKey, 'remote': remote, 'remoteResult': remoteResult}
+                ## Find Total commits on current branch
+
+                command = 'git -C %s rev-list --count HEAD' % (self.folder)
+                totalCommits = ProcessUtilities.outputExecutioner(command)
+
+                if totalCommits.find('fatal') > -1:
+                    totalCommits = '0'
+
+                data_ret = {'status': 1, 'repo': 1, 'finalBranches': branches, 'deploymentKey': deploymentKey,
+                            'remote': remote, 'remoteResult': remoteResult, 'totalCommits': totalCommits}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
@@ -3090,5 +3099,44 @@ StrictHostKeyChecking no
 
         except BaseException as msg:
             data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def changeGitBranch(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            self.domain = data['domain']
+            self.folder = data['folder']
+            self.branchName = data['branchName']
+
+            if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson('status', 0)
+
+            if self.folderCheck():
+                pass
+            else:
+                return ACLManager.loadErrorJson()
+
+            ## Check if remote exists
+
+            command = 'git -C %s checkout %s' % (self.folder, self.branchName.strip(' '))
+            commandStatus = ProcessUtilities.outputExecutioner(command)
+
+            if commandStatus.find('Switched to branch') > -1:
+                data_ret = {'status': 1, 'commandStatus': commandStatus + 'Refreshing page in 3 seconds..'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            else:
+                data_ret = {'status': 0, 'error_message': 'Failed to change branch', 'commandStatus': commandStatus}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)

@@ -5790,6 +5790,7 @@ app.controller('installMagentoCTRL', function ($scope, $http, $timeout) {
 app.controller('manageGIT', function ($scope, $http, $timeout, $window) {
 
     $scope.cyberpanelLoading = true;
+    $scope.loadingSticks = true;
     $scope.gitTracking = true;
     $scope.gitEnable = true;
 
@@ -5827,6 +5828,7 @@ app.controller('manageGIT', function ($scope, $http, $timeout, $window) {
                     $scope.deploymentKey = response.data.deploymentKey;
                     $scope.remote = response.data.remote;
                     $scope.remoteResult = response.data.remoteResult;
+                    $scope.totalCommits = response.data.totalCommits;
                 } else {
                     $scope.gitTracking = false;
                     $scope.gitEnable = true;
@@ -5965,6 +5967,66 @@ app.controller('manageGIT', function ($scope, $http, $timeout, $window) {
 
         }
 
+    };
+
+    $scope.changeBranch = function () {
+
+        $scope.loadingSticks = false;
+        $("#showStatus").modal();
+
+        url = "/websites/changeGitBranch";
+
+
+        var data = {
+            domain: $("#domain").text(),
+            folder: $scope.folder,
+            branchName: $scope.branchName
+
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+            $scope.loadingSticks = true;
+
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success',
+                    text: 'Changes applied.',
+                    type: 'success'
+                });
+                $scope.commandStatus = response.data.commandStatus;
+               $timeout(function () {
+                        $window.location.reload();
+                    }, 3000);
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+                $scope.commandStatus = response.data.commandStatus;
+            }
+
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.loadingSticks = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+
+
+        }
     };
 
     function getCreationStatus() {
