@@ -124,6 +124,8 @@ urlpatterns = [
     url(r'^initRepo$', views.initRepo, name='initRepo'),
     url(r'^setupRemote$', views.setupRemote, name='setupRemote'),
     url(r'^changeGitBranch$', views.changeGitBranch, name='changeGitBranch'),
+    url(r'^createNewBranch$', views.createNewBranch, name='createNewBranch'),
+    url(r'^commitChanges$', views.commitChanges, name='commitChanges'),
     ## Catch all for domains
     url(r'^(?P<domain>(.*))/(?P<childDomain>(.*))$', views.launchChild, name='launchChild'),
     url(r'^(?P<domain>(.*))$', views.domain, name='domain'),

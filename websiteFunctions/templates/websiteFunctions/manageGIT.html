@@ -40,6 +40,131 @@
                         Init Repo
                     </button>
 
+                    <div style="margin-bottom: 0px" ng-hide="gitEnable" class="btn-group" data-toggle="buttons">
+                        <a data-toggle="modal" data-target="#createNewBranch" href="#" class="btn btn-info">
+                            <input name="radio-toggle-1" type="radio">
+                            Create New Branch
+                        </a>
+
+                        <div id="createNewBranch" class="modal fade" role="dialog">
+                            <div class="modal-dialog">
+                                <!-- Modal content-->
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <button type="button" class="close" data-dismiss="modal">&times;
+                                        </button>
+                                        <h4 class="modal-title">{% trans "Create New Branch" %}</h4>
+                                    </div>
+                                    <div class="modal-body">
+
+                                        <form name="containerSettingsForm" action="/" class="form-horizontal">
+                                            <div ng-hide="installationDetailsForm" class="form-group">
+                                                <label class="col-sm-3 control-label">{% trans "Branch Name" %}</label>
+                                                <div class="col-sm-6">
+                                                    <input placeholder="Ex. newbranch (without spaces)"
+                                                           name="newBranchName" type="text" class="form-control"
+                                                           ng-model="$parent.newBranchName" required>
+                                                </div>
+                                            </div>
+
+                                            <hr>
+
+                                            <div ng-hide="statusBox" class="form-group">
+
+                                                <div class="col-sm-12">
+                                                            <textarea rows="3"
+                                                                      class="form-control">{$ commandStatus $}</textarea>
+                                                </div>
+                                            </div>
+
+                                        </form>
+
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button"
+                                                class="btn btn-primary"
+                                                ng-click="createNewBranch()">Commit<img id="cyberpanelLoading"
+                                                                                     src="/static/images/loading.gif"
+                                                                                     style="display: none;">
+                                        </button>
+                                        <button type="button"
+                                                class="btn btn-default" data-dismiss="modal">
+                                            Close
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <a data-toggle="modal" data-target="#commitChanges" href="#" class="btn btn-info">
+                            <input name="radio-toggle-1" type="radio">
+                            Commit Changes
+                        </a>
+
+                        <div id="commitChanges" class="modal fade" role="dialog">
+                            <div class="modal-dialog">
+                                <!-- Modal content-->
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <button type="button" class="close" data-dismiss="modal">&times;
+                                        </button>
+                                        <h4 class="modal-title">{% trans "Commit Changes" %}</h4>
+                                    </div>
+                                    <div class="modal-body">
+
+                                        <form name="containerSettingsForm" action="/" class="form-horizontal">
+                                            <div ng-hide="installationDetailsForm" class="form-group">
+                                                <label class="col-sm-3 control-label">{% trans "Commit Message" %}</label>
+                                                <div class="col-sm-6">
+                                                    <input placeholder="Ex. Initial commit"
+                                                           name="newBranchName" type="text" class="form-control"
+                                                           ng-model="$parent.commitMessage" required>
+                                                </div>
+                                            </div>
+
+                                            <hr>
+
+                                            <div ng-hide="statusBox" class="form-group">
+
+                                                <div class="col-sm-12">
+                                                            <textarea rows="3"
+                                                                      class="form-control">{$ commandStatus $}</textarea>
+                                                </div>
+                                            </div>
+
+                                        </form>
+
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button"
+                                                class="btn btn-primary"
+                                                ng-click="commitChanges()">Create New Branch<img id="cyberpanelLoading"
+                                                                                     src="/static/images/loading.gif"
+                                                                                     style="display: none;">
+                                        </button>
+                                        <button type="button"
+                                                class="btn btn-default" data-dismiss="modal">
+                                            Close
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <a href="#" class="btn btn-info">
+                            <input name="radio-toggle-1" type="radio">
+                            Pull From Remote
+                        </a>
+                        <a href="#" class="btn btn-info">
+                            <input name="radio-toggle-1" type="radio">
+                            Push To Remote
+                        </a>
+                        <a href="#" class="btn btn-info">
+                            <input name="radio-toggle-1" type="radio">
+                            Edit .gitignore
+                        </a>
+                    </div>
+
                     <table ng-hide="gitEnable" style="margin-top: 2%" class="table">
                         <thead>
                         <tr>
@@ -52,7 +177,7 @@
                         </thead>
                         <tbody>
                         <tr>
-                            <td>{$ totalCommits $}</td>
+                            <td><span class="bs-badge badge-success">{$ totalCommits $}</span></td>
                             <td>
                                 <select ng-change="changeBranch()" ng-model="branchName" class="form-control">
                                     <option ng-repeat="branch in branches track by $index">{$ branch $}</option>
@@ -183,48 +308,49 @@
                         </tr>
                         </tbody>
                     </table>
+
                     <div id="showStatus" class="modal fade" role="dialog">
-                                    <div class="modal-dialog">
+                        <div class="modal-dialog">
 
-                                        <!-- Modal content-->
-                                        <div class="modal-content">
-                                            <div class="modal-body">
+                            <!-- Modal content-->
+                            <div class="modal-content">
+                                <div class="modal-body">
 
-                                                <form name="containerSettingsForm" action="/" class="form-horizontal">
-                                                    <div ng-hide="loadingSticks" class="form-group">
-                                                        <div class="col-sm-12">
-                                                            <div class="loading-stick">
-                                                                <div class="stick bg-azure"></div>
-                                                                <div class="stick bg-azure"></div>
-                                                                <div class="stick bg-azure"></div>
-                                                                <div class="stick bg-azure"></div>
-                                                                <div class="stick bg-azure"></div>
-                                                                <div class="stick bg-azure"></div>
-                                                                <div class="stick bg-azure"></div>
-                                                                <div class="stick bg-azure"></div>
-                                                                <div class="stick bg-azure"></div>
-                                                                <div class="stick bg-azure"></div>
-                                                                <h1>Pleas wait...</h1>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                    <hr>
-
-                                                    <div class="form-group">
-
-                                                        <div class="col-sm-12">
-                                                            <textarea rows="3"
-                                                                      class="form-control">{$ commandStatus $}</textarea>
-                                                        </div>
-                                                    </div>
-
-                                                </form>
-
+                                    <form name="containerSettingsForm" action="/" class="form-horizontal">
+                                        <div ng-hide="loadingSticks" class="form-group">
+                                            <div class="col-sm-12">
+                                                <div class="loading-stick">
+                                                    <div class="stick bg-azure"></div>
+                                                    <div class="stick bg-azure"></div>
+                                                    <div class="stick bg-azure"></div>
+                                                    <div class="stick bg-azure"></div>
+                                                    <div class="stick bg-azure"></div>
+                                                    <div class="stick bg-azure"></div>
+                                                    <div class="stick bg-azure"></div>
+                                                    <div class="stick bg-azure"></div>
+                                                    <div class="stick bg-azure"></div>
+                                                    <div class="stick bg-azure"></div>
+                                                    <h1>Pleas wait...</h1>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
+
+                                        <hr>
+
+                                        <div class="form-group">
+
+                                            <div class="col-sm-12">
+                                                            <textarea rows="3"
+                                                                      class="form-control">{$ commandStatus $}</textarea>
+                                            </div>
+                                        </div>
+
+                                    </form>
+
                                 </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

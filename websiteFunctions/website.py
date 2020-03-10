@@ -3140,3 +3140,84 @@ StrictHostKeyChecking no
             data_ret = {'status': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
+
+    def createNewBranch(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            self.domain = data['domain']
+            self.folder = data['folder']
+            self.newBranchName = data['newBranchName']
+
+            if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson('status', 0)
+
+            if self.folderCheck():
+                pass
+            else:
+                return ACLManager.loadErrorJson()
+
+            ## Check if remote exists
+
+            command = 'git -C %s checkout -b %s' % (self.folder, self.newBranchName)
+            commandStatus = ProcessUtilities.outputExecutioner(command)
+
+            if commandStatus.find(self.newBranchName) > -1:
+                data_ret = {'status': 1, 'commandStatus': commandStatus}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            else:
+                data_ret = {'status': 0, 'error_message': 'Failed to create branch', 'commandStatus': commandStatus}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def commitChanges(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            self.domain = data['domain']
+            self.folder = data['folder']
+            self.commitMessage = data['commitMessage']
+
+            if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson('status', 0)
+
+            if self.folderCheck():
+                pass
+            else:
+                return ACLManager.loadErrorJson()
+
+            ## Check if remote exists
+
+            command = 'git -C %s add -A' % (self.folder)
+            ProcessUtilities.outputExecutioner(command)
+
+            command = 'git -C %s commit -m %s' % (self.folder, self.commitMessage)
+            commandStatus = ProcessUtilities.outputExecutioner(command)
+
+            if commandStatus.find('nothing to commit') == -1:
+                data_ret = {'status': 1, 'commandStatus': commandStatus}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            else:
+                data_ret = {'status': 0, 'error_message': 'Nothing to commit.', 'commandStatus': commandStatus}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)

@@ -5793,6 +5793,7 @@ app.controller('manageGIT', function ($scope, $http, $timeout, $window) {
     $scope.loadingSticks = true;
     $scope.gitTracking = true;
     $scope.gitEnable = true;
+    $scope.statusBox = true;
 
     var statusFile;
 
@@ -6019,6 +6020,122 @@ app.controller('manageGIT', function ($scope, $http, $timeout, $window) {
 
         function cantLoadInitialDatas(response) {
             $scope.loadingSticks = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+
+
+        }
+    };
+
+    $scope.createNewBranch = function () {
+        $scope.cyberpanelLoading = false;
+        $scope.commandStatus = "";
+        $scope.statusBox = false;
+
+        url = "/websites/createNewBranch";
+
+
+        var data = {
+            domain: $("#domain").text(),
+            folder: $scope.folder,
+            newBranchName: $scope.newBranchName
+
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success',
+                    text: 'Changes applied.',
+                    type: 'success'
+                });
+                $scope.commandStatus = response.data.commandStatus;
+                $scope.fetchFolderDetails();
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+                $scope.commandStatus = response.data.commandStatus;
+            }
+
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberpanelLoading = false;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+
+
+        }
+    };
+
+    $scope.commitChanges = function () {
+        $scope.cyberpanelLoading = false;
+        $scope.commandStatus = "";
+        $scope.statusBox = false;
+
+        url = "/websites/commitChanges";
+
+
+        var data = {
+            domain: $("#domain").text(),
+            folder: $scope.folder,
+            commitMessage: $scope.commitMessage
+
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success',
+                    text: 'Changes applied.',
+                    type: 'success'
+                });
+                $scope.commandStatus = response.data.commandStatus;
+                $scope.fetchFolderDetails();
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+                $scope.commandStatus = response.data.commandStatus;
+            }
+
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberpanelLoading = false;
             new PNotify({
                 title: 'Operation Failed!',
                 text: 'Could not connect to server, please refresh this page.',
