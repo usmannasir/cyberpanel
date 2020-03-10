@@ -1102,6 +1102,41 @@ cd cyberpanel/install
 curl https://cyberpanel.sh/?version
 }
 
+regenerate_cert() {
+cat << EOF > /root/cyberpanel/cert_conf
+[req]
+prompt=no
+distinguished_name=cyberpanel
+[cyberpanel]
+commonName = www.example.com
+countryName = CP
+localityName = CyberPanel
+organizationName = CyberPanel
+organizationalUnitName = CyberPanel
+stateOrProvinceName = CP
+emailAddress = mail@example.com
+name = CyberPanel
+surname = CyberPanel
+givenName = CyberPanel
+initials = CP
+dnQualifier = CyberPanel
+[server_exts]
+extendedKeyUsage = 1.3.6.1.5.5.7.3.1
+EOF
+openssl req -x509 -config /root/cyberpanel/cert_conf -extensions 'server_exts' -nodes -days 820 -newkey rsa:3072 -keyout /usr/local/lscp/conf/key.pem -out /usr/local/lscp/conf/cert.pem
+
+if [[ $VERSION == "OLS" ]] ; then
+	key_path="/usr/local/lsws/admin/conf/webadmin.key"
+	cert_path="/usr/local/lsws/admin/conf/webadmin.crt"
+else
+	key_path="/usr/local/lsws/admin/conf/cert/admin.key"
+	cert_path="/usr/local/lsws/admin/conf/cert/admin.crt"
+fi
+
+openssl req -x509 -config /root/cyberpanel/cert_conf -extensions 'server_exts' -nodes -days 820 -newkey rsa:3072 -keyout $key_path -out $cert_path
+rm -f /root/cyberpanel/cert_conf
+}
+
 after_install() {
 if [ ! -d "/var/lib/php" ]; then
 	mkdir /var/lib/php
@@ -1201,6 +1236,9 @@ MYSQLPASSWD=$(cat /etc/cyberpanel/mysqlPassword)
 echo "$ADMIN_PASS" > /etc/cyberpanel/adminPass
 /usr/local/CyberPanel/bin/python /usr/local/CyberCP/plogical/adminPass.py --password $ADMIN_PASS
 mkdir -p /etc/opendkim
+
+regenerate_cert
+
 systemctl restart lscpd
 systemctl restart lsws
 echo "/usr/local/CyberPanel/bin/python /usr/local/CyberCP/plogical/adminPass.py --password \$@" > /usr/bin/adminPass
