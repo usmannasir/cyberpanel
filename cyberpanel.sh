@@ -1123,7 +1123,7 @@ dnQualifier = CyberPanel
 [server_exts]
 extendedKeyUsage = 1.3.6.1.5.5.7.3.1
 EOF
-openssl req -x509 -config /root/cyberpanel/cert_conf -extensions 'server_exts' -nodes -days 820 -newkey rsa:3072 -keyout /usr/local/lscp/conf/key.pem -out /usr/local/lscp/conf/cert.pem
+openssl req -x509 -config /root/cyberpanel/cert_conf -extensions 'server_exts' -nodes -days 820 -newkey rsa:2048 -keyout /usr/local/lscp/conf/key.pem -out /usr/local/lscp/conf/cert.pem
 
 if [[ $VERSION == "OLS" ]] ; then
 	key_path="/usr/local/lsws/admin/conf/webadmin.key"
@@ -1133,7 +1133,7 @@ else
 	cert_path="/usr/local/lsws/admin/conf/cert/admin.crt"
 fi
 
-openssl req -x509 -config /root/cyberpanel/cert_conf -extensions 'server_exts' -nodes -days 820 -newkey rsa:3072 -keyout $key_path -out $cert_path
+openssl req -x509 -config /root/cyberpanel/cert_conf -extensions 'server_exts' -nodes -days 820 -newkey rsa:2048 -keyout $key_path -out $cert_path
 rm -f /root/cyberpanel/cert_conf
 }
 
