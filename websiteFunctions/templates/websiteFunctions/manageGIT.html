@@ -83,7 +83,7 @@
                                     <div class="modal-footer">
                                         <button type="button"
                                                 class="btn btn-primary"
-                                                ng-click="createNewBranch()">Commit<img id="cyberpanelLoading"
+                                                ng-click="createNewBranch()">Create New Branch<img id="cyberpanelLoading"
                                                                                      src="/static/images/loading.gif"
                                                                                      style="display: none;">
                                         </button>
@@ -138,7 +138,7 @@
                                     <div class="modal-footer">
                                         <button type="button"
                                                 class="btn btn-primary"
-                                                ng-click="commitChanges()">Create New Branch<img id="cyberpanelLoading"
+                                                ng-click="commitChanges()">Commit<img id="cyberpanelLoading"
                                                                                      src="/static/images/loading.gif"
                                                                                      style="display: none;">
                                         </button>
@@ -151,11 +151,11 @@
                             </div>
                         </div>
 
-                        <a href="#" class="btn btn-info">
+                        <a ng-click="gitPull()" ng-disabled="remote==0" href="#" class="btn btn-info">
                             <input name="radio-toggle-1" type="radio">
                             Pull From Remote
                         </a>
-                        <a href="#" class="btn btn-info">
+                        <a ng-click="gitPush()" ng-disabled="remote==0" href="#" class="btn btn-info">
                             <input name="radio-toggle-1" type="radio">
                             Push To Remote
                         </a>

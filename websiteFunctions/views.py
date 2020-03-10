@@ -773,3 +773,19 @@ def commitChanges(request):
         return wm.commitChanges(userID, json.loads(request.body))
     except KeyError:
         return redirect(loadLoginPage)
+
+def gitPull(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.gitPull(userID, json.loads(request.body))
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def gitPush(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.gitPush(userID, json.loads(request.body))
+    except KeyError:
+        return redirect(loadLoginPage)

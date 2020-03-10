@@ -126,6 +126,10 @@ urlpatterns = [
     url(r'^changeGitBranch$', views.changeGitBranch, name='changeGitBranch'),
     url(r'^createNewBranch$', views.createNewBranch, name='createNewBranch'),
     url(r'^commitChanges$', views.commitChanges, name='commitChanges'),
+    url(r'^gitPull$', views.gitPull, name='gitPull'),
+    url(r'^gitPush$', views.gitPush, name='gitPush'),
+
+
     ## Catch all for domains
     url(r'^(?P<domain>(.*))/(?P<childDomain>(.*))$', views.launchChild, name='launchChild'),
     url(r'^(?P<domain>(.*))$', views.domain, name='domain'),

@@ -6146,6 +6146,116 @@ app.controller('manageGIT', function ($scope, $http, $timeout, $window) {
         }
     };
 
+    $scope.gitPull = function () {
+
+        $scope.loadingSticks = false;
+        $("#showStatus").modal();
+
+        url = "/websites/gitPull";
+
+
+        var data = {
+            domain: $("#domain").text(),
+            folder: $scope.folder,
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+            $scope.loadingSticks = true;
+
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success',
+                    text: 'Changes applied.',
+                    type: 'success'
+                });
+                $scope.commandStatus = response.data.commandStatus;
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+                $scope.commandStatus = response.data.commandStatus;
+            }
+
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.loadingSticks = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+
+
+        }
+    };
+
+    $scope.gitPush = function () {
+
+        $scope.loadingSticks = false;
+        $("#showStatus").modal();
+
+        url = "/websites/gitPush";
+
+
+        var data = {
+            domain: $("#domain").text(),
+            folder: $scope.folder,
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+            $scope.loadingSticks = true;
+
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success',
+                    text: 'Changes applied.',
+                    type: 'success'
+                });
+                $scope.commandStatus = response.data.commandStatus;
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+                $scope.commandStatus = response.data.commandStatus;
+            }
+
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.loadingSticks = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+
+
+        }
+    };
+
     function getCreationStatus() {
 
         url = "/websites/installWordpressStatus";

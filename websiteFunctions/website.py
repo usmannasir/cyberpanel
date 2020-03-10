@@ -3068,6 +3068,13 @@ StrictHostKeyChecking no
             else:
                 return ACLManager.loadErrorJson()
 
+            ### set default ssh key
+
+            externalApp = Websites.objects.get(domain=self.domain).externalApp
+
+            command = 'git -C %s config --local core.sshCommand "ssh -i /home/%s/.ssh/%s"' % (self.folder, self.domain, externalApp)
+            ProcessUtilities.executioner(command)
+
             ## Check if remote exists
 
             command = 'git -C %s remote -v' % (self.folder)
@@ -3214,6 +3221,82 @@ StrictHostKeyChecking no
                 return HttpResponse(json_data)
             else:
                 data_ret = {'status': 0, 'error_message': 'Nothing to commit.', 'commandStatus': commandStatus}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def gitPull(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            self.domain = data['domain']
+            self.folder = data['folder']
+
+
+            if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson('status', 0)
+
+            if self.folderCheck():
+                pass
+            else:
+                return ACLManager.loadErrorJson()
+
+            ## Check if remote exists
+
+            command = 'git -C %s pull' % (self.folder)
+            commandStatus = ProcessUtilities.outputExecutioner(command)
+
+            if commandStatus.find('Already up to date') == -1:
+                data_ret = {'status': 1, 'commandStatus': commandStatus}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            else:
+                data_ret = {'status': 0, 'error_message': 'Pull not required.', 'commandStatus': commandStatus}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def gitPush(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            self.domain = data['domain']
+            self.folder = data['folder']
+
+
+            if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson('status', 0)
+
+            if self.folderCheck():
+                pass
+            else:
+                return ACLManager.loadErrorJson()
+
+            command = 'git -C %s push -u origin master' % (self.folder)
+            commandStatus = ProcessUtilities.outputExecutioner(command)
+
+            if commandStatus.find('Everything up-to-date') == -1 and commandStatus.find('rejected') == -1:
+                data_ret = {'status': 1, 'commandStatus': commandStatus}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            else:
+                data_ret = {'status': 0, 'error_message': 'Push not required.', 'commandStatus': commandStatus}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
