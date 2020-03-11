@@ -789,3 +789,19 @@ def gitPush(request):
         return wm.gitPush(userID, json.loads(request.body))
     except KeyError:
         return redirect(loadLoginPage)
+
+def attachRepoGIT(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.attachRepoGIT(userID, json.loads(request.body))
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def removeTracking(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.removeTracking(userID, json.loads(request.body))
+    except KeyError:
+        return redirect(loadLoginPage)

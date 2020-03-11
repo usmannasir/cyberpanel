@@ -5830,9 +5830,12 @@ app.controller('manageGIT', function ($scope, $http, $timeout, $window) {
                     $scope.remote = response.data.remote;
                     $scope.remoteResult = response.data.remoteResult;
                     $scope.totalCommits = response.data.totalCommits;
+                    $scope.home = response.data.home;
                 } else {
                     $scope.gitTracking = false;
                     $scope.gitEnable = true;
+                    $scope.home = response.data.home;
+                    $scope.deploymentKey = response.data.deploymentKey;
                 }
             } else {
                 new PNotify({
@@ -6246,6 +6249,118 @@ app.controller('manageGIT', function ($scope, $http, $timeout, $window) {
 
         function cantLoadInitialDatas(response) {
             $scope.loadingSticks = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+
+
+        }
+    };
+
+    $scope.attachRepoGIT = function () {
+        $scope.cyberpanelLoading = false;
+        $scope.commandStatus = "";
+        $scope.statusBox = false;
+
+        url = "/websites/attachRepoGIT";
+
+
+        var data = {
+            domain: $("#domain").text(),
+            folder: $scope.folder,
+            gitHost: $scope.gitHost,
+            gitUsername: $scope.gitUsername,
+            gitReponame: $scope.gitReponame,
+            overrideData: $scope.overrideData
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success',
+                    text: 'Changes applied.',
+                    type: 'success'
+                });
+                $scope.commandStatus = response.data.commandStatus;
+                $scope.fetchFolderDetails();
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+                $scope.commandStatus = response.data.commandStatus;
+            }
+
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberpanelLoading = false;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+
+
+        }
+    };
+
+    $scope.removeTracking = function () {
+
+        $scope.cyberpanelLoading = false;
+
+        url = "/websites/removeTracking";
+
+
+        var data = {
+            domain: $("#domain").text(),
+            folder: $scope.folder
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success',
+                    text: 'Changes applied.',
+                    type: 'success'
+                });
+                $scope.fetchFolderDetails();
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
             new PNotify({
                 title: 'Operation Failed!',
                 text: 'Could not connect to server, please refresh this page.',

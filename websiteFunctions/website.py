@@ -2880,7 +2880,7 @@ StrictHostKeyChecking no
 
             website = Websites.objects.get(domain=self.domain)
 
-            folders = ['/home/%s' % (self.domain), '/home/vmail/%s' % (self.domain)]
+            folders = ['/home/%s/public_html' % (self.domain), '/home/vmail/%s' % (self.domain)]
 
             databases = website.databases_set.all()
 
@@ -2894,7 +2894,7 @@ StrictHostKeyChecking no
             return HttpResponse(str(msg))
 
     def folderCheck(self):
-        domainPath = '/home/%s' % (self.domain)
+        domainPath = '/home/%s/public_html' % (self.domain)
         vmailPath = '/home/vmail/%s' % (self.domain)
 
         if self.folder == domainPath:
@@ -2940,7 +2940,22 @@ StrictHostKeyChecking no
             command = 'ls -la %s' % (gitPath)
 
             if ProcessUtilities.outputExecutioner(command).find('No such file or directory') > -1:
-                data_ret = {'status': 1, 'repo': 0}
+
+                command = 'cat /home/%s/.ssh/%s.pub' % (self.domain, website.externalApp)
+                deploymentKey = ProcessUtilities.outputExecutioner(command, website.externalApp)
+
+                if deploymentKey.find('No such file or directory') > -1:
+                    command = "ssh-keygen -f /home/%s/.ssh/%s -t rsa -N ''" % (self.domain, website.externalApp)
+                    ProcessUtilities.executioner(command, website.externalApp)
+
+                    command = 'cat /home/%s/.ssh/%s.pub' % (self.domain, website.externalApp)
+                    deploymentKey = ProcessUtilities.outputExecutioner(command, website.externalApp)
+
+                home = 0
+                if self.folder == '/home/%s/public_html' % (self.domain):
+                    home = 1
+
+                data_ret = {'status': 1, 'repo': 0, 'deploymentKey': deploymentKey, 'home': home}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
             else:
@@ -3000,8 +3015,14 @@ StrictHostKeyChecking no
                 if totalCommits.find('fatal') > -1:
                     totalCommits = '0'
 
+                ## Check if home
+
+                home = 0
+                if self.folder == '/home/%s' % (self.domain):
+                    home = 1
+
                 data_ret = {'status': 1, 'repo': 1, 'finalBranches': branches, 'deploymentKey': deploymentKey,
-                            'remote': remote, 'remoteResult': remoteResult, 'totalCommits': totalCommits}
+                            'remote': remote, 'remoteResult': remoteResult, 'totalCommits': totalCommits, 'home': home}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
@@ -3170,7 +3191,7 @@ StrictHostKeyChecking no
 
             ## Check if remote exists
 
-            command = 'git -C %s checkout -b %s' % (self.folder, self.newBranchName)
+            command = 'git -C %s checkout -b "%s"' % (self.folder, self.newBranchName)
             commandStatus = ProcessUtilities.outputExecutioner(command)
 
             if commandStatus.find(self.newBranchName) > -1:
@@ -3212,7 +3233,7 @@ StrictHostKeyChecking no
             command = 'git -C %s add -A' % (self.folder)
             ProcessUtilities.outputExecutioner(command)
 
-            command = 'git -C %s commit -m %s' % (self.folder, self.commitMessage)
+            command = 'git -C %s commit -m "%s"' % (self.folder, self.commitMessage)
             commandStatus = ProcessUtilities.outputExecutioner(command)
 
             if commandStatus.find('nothing to commit') == -1:
@@ -3248,6 +3269,14 @@ StrictHostKeyChecking no
                 pass
             else:
                 return ACLManager.loadErrorJson()
+
+            ### set default ssh key
+
+            externalApp = Websites.objects.get(domain=self.domain).externalApp
+
+            command = 'git -C %s config --local core.sshCommand "ssh -i /home/%s/.ssh/%s"' % (
+            self.folder, self.domain, externalApp)
+            ProcessUtilities.executioner(command)
 
             ## Check if remote exists
 
@@ -3288,8 +3317,26 @@ StrictHostKeyChecking no
             else:
                 return ACLManager.loadErrorJson()
 
-            command = 'git -C %s push -u origin master' % (self.folder)
+            ### set default ssh key
+
+            externalApp = Websites.objects.get(domain=self.domain).externalApp
+
+            command = 'git -C %s config --local core.sshCommand "ssh -i /home/%s/.ssh/%s"' % (
+                    self.folder, self.domain, externalApp)
+            ProcessUtilities.executioner(command)
+
+            ##
+
+            command = 'git -C %s push' % (self.folder)
             commandStatus = ProcessUtilities.outputExecutioner(command)
+
+            if commandStatus.find('has no upstream branch') > -1:
+                command = 'git -C %s rev-parse --abbrev-ref HEAD' % (self.folder)
+                currentBranch = ProcessUtilities.outputExecutioner(command).rstrip('\n')
+
+                command = 'git -C %s push --set-upstream origin %s' % (self.folder, currentBranch)
+                commandStatus = ProcessUtilities.outputExecutioner(command)
+
 
             if commandStatus.find('Everything up-to-date') == -1 and commandStatus.find('rejected') == -1:
                 data_ret = {'status': 1, 'commandStatus': commandStatus}
@@ -3299,6 +3346,105 @@ StrictHostKeyChecking no
                 data_ret = {'status': 0, 'error_message': 'Push not required.', 'commandStatus': commandStatus}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def attachRepoGIT(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            self.domain = data['domain']
+            self.folder = data['folder']
+            self.gitHost = data['gitHost']
+            self.gitUsername = data['gitUsername']
+            self.gitReponame = data['gitReponame']
+            try:
+                self.overrideData = data['overrideData']
+            except:
+                self.overrideData = False
+
+
+            if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson('status', 0)
+
+            if self.folderCheck():
+                pass
+            else:
+                return ACLManager.loadErrorJson()
+
+
+            if self.overrideData:
+                command = 'rm -rf %s' % (self.folder)
+                ProcessUtilities.executioner(command)
+
+            ## Set defauly key
+
+            externalApp = Websites.objects.get(domain=self.domain).externalApp
+
+            command = 'git config --global core.sshCommand "ssh -i /home/%s/.ssh/%s"' % (self.domain, externalApp)
+            ProcessUtilities.executioner(command)
+
+            ##
+
+            command = 'git clone git@%s:%s/%s.git %s' % (self.gitHost, self.gitUsername, self.gitReponame, self.folder)
+            commandStatus = ProcessUtilities.outputExecutioner(command)
+
+            if commandStatus.find('already exists') == -1 and commandStatus.find('Permission denied') == -1:
+
+                command = 'git config --global --unset core.sshCommand'
+                ProcessUtilities.executioner(command)
+
+                data_ret = {'status': 1, 'commandStatus': commandStatus}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+            else:
+
+                command = 'git config --global --unset core.sshCommand'
+                ProcessUtilities.executioner(command)
+
+                data_ret = {'status': 0, 'error_message': 'Failed to clone.', 'commandStatus': commandStatus}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def removeTracking(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            self.domain = data['domain']
+            self.folder = data['folder']
+
+
+            if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson('status', 0)
+
+            if self.folderCheck():
+                pass
+            else:
+                return ACLManager.loadErrorJson()
+
+            command = 'rm -rf %s/.git' % (self.folder)
+            ProcessUtilities.executioner(command)
+
+            data_ret = {'status': 1}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
 
         except BaseException as msg:
             data_ret = {'status': 0, 'error_message': str(msg)}
