@@ -876,7 +876,7 @@ html {
 }
 
  /* Paddings */
-    
+
     .pad5A {
         padding: 5px !important;
     }
@@ -968,7 +968,7 @@ html {
         padding-left: 45px !important;
     }
     /* Remove paddings */
-    
+
     .pad0A {
         padding: 0 !important;
     }
@@ -985,7 +985,7 @@ html {
         padding-left: 0 !important;
     }
     /* Margins */
-    
+
     .mrg5A {
         margin: 5px !important;
     }
@@ -1077,7 +1077,7 @@ html {
         margin-left: 45px !important;
     }
     /* Remove margins */
-    
+
     .mrg0A {
         margin: 0 !important;
     }
@@ -4066,8 +4066,8 @@ body .button-pane-top {
 
 /* Default color scheme */
 
-@import url(https://fonts.googleapis.com/css?family=Raleway:300);
-@import url(https://fonts.googleapis.com/css?family=Open+Sans);
+@import url(https://cdn.jsdelivr.net/npm/fonts-raleway@0.0.4/css/raleway.css);
+@import url(https://cdn.jsdelivr.net/npm/open-sans-fontface@1.4.0/open-sans.css);
 
 /* General */
 

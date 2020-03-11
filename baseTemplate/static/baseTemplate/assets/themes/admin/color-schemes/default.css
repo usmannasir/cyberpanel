@@ -1,7 +1,7 @@
 /* Default color scheme */
 
-@import url(https://fonts.googleapis.com/css?family=Raleway:300);
-@import url(https://fonts.googleapis.com/css?family=Open+Sans);
+@import url(https://cdn.jsdelivr.net/npm/fonts-raleway@0.0.4/css/raleway.css);
+@import url(https://cdn.jsdelivr.net/npm/open-sans-fontface@1.4.0/open-sans.css);
 
 /* General */
 
@@ -135,4 +135,3 @@ h1, h2, h3, h4, h5, h6,
 /* Admin responsive */
 
 @media only screen and (min-width:20em){#header-logo,#theme-options{display:none}#page-sidebar{transform:translateX(0);-ms-transform:translateX(0);-o-transform:translateX(0);-webkit-transform:translateX(0);visibility:hidden}#page-content{margin-left:0}}@media only screen and (min-width:56.25em){#header-logo,#page-sidebar.collapse,#theme-options{display:block}#mobile-navigation{display:none}#page-sidebar{transform:translateX(0);-ms-transform:translateX(0);-o-transform:translateX(0);-webkit-transform:translateX(0);visibility:visible}#page-content{margin-left:260px}}@media only screen and (max-width:760px){#cloud-btn,#header-nav-right #fullscreen-btn{display:none}}@media only screen and (max-width:630px){#page-header .user-account-btn>a.user-profile span{display:none}#page-header .user-account-btn .dropdown-menu:after,#page-header .user-account-btn .dropdown-menu:before{left:56px}}@media only screen and (max-width:545px){#header-nav-right #chatbox-btn{display:none}}@media only screen and (max-width:520px){#dashnav-btn,#page-header .user-account-btn>a.user-profile span{display:none}.popover{width:100%;border-radius:0}.box-md{width:auto}}@media only screen and (max-width:460px){.box-sm,.timeline-box .popover{width:auto}#page-content{padding:10px}#page-title{padding:10px 0 15px;text-align:center}.col-lg-1,.col-lg-10,.col-lg-11,.col-lg-12,.col-lg-2,.col-lg-3,.col-lg-4,.col-lg-5,.col-lg-6,.col-lg-7,.col-lg-8,.col-lg-9,.col-md-1,.col-md-10,.col-md-11,.col-md-12,.col-md-2,.col-md-3,.col-md-4,.col-md-5,.col-md-6,.col-md-7,.col-md-8,.col-md-9,.col-sm-1,.col-sm-10,.col-sm-11,.col-sm-12,.col-sm-2,.col-sm-3,.col-sm-4,.col-sm-5,.col-sm-6,.col-sm-7,.col-sm-8,.col-sm-9,.col-xs-1,.col-xs-10,.col-xs-11,.col-xs-12,.col-xs-2,.col-xs-3,.col-xs-4,.col-xs-5,.col-xs-6,.col-xs-7,.col-xs-8,.col-xs-9{margin-bottom:20px}.content-box{margin-top:0!important}.row.mrg20B{margin-bottom:0!important}#page-title p,#progress-btn,.dashboard-box .list-grade,.header-buttons-separator,.todo-box .bs-label,.todo-box .btn,.tooltip .tooltip-arrow{display:none}}@media only screen and (max-width:410px){#header-nav-right #logout-btn,#notifications-btn{display:none}#header-nav-left{float:right}#header-nav-right{margin-right:0;margin-left:15px;float:left}.dropdown-menu{position:fixed;left:0!important;width:100%;border-radius:0}#page-header .user-account-btn .dropdown-menu{top:65px}#page-header .user-account-btn .dropdown-menu:after,#page-header .user-account-btn .dropdown-menu:before{left:auto;right:24px}}
-
