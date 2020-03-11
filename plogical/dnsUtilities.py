@@ -313,6 +313,8 @@ class DNS:
                     except:
                         zone = Domains(admin=admin, name=topLevelDomain, type="NATIVE")
 
+                    zone.save()
+
                     content = "ns1." + topLevelDomain + " hostmaster." + topLevelDomain + " 1 10800 3600 604800 3600"
 
                     soaRecord = Records(domainOwner=zone,
