@@ -384,10 +384,56 @@
                             <input name="radio-toggle-1" type="radio">
                             Push To Remote
                         </a>
-                        <a href="#" class="btn btn-info">
+                        <a ng-click="fetchGitignore()" data-toggle="modal" data-target="#gitignore" href="#" class="btn btn-info">
                             <input name="radio-toggle-1" type="radio">
                             Edit .gitignore
                         </a>
+
+                        <div id="gitignore" class="modal fade" role="dialog">
+                            <div class="modal-dialog">
+                                <!-- Modal content-->
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <button type="button" class="close" data-dismiss="modal">&times;
+                                        </button>
+                                        <h4 class="modal-title">{% trans "Edit .gitignore" %}</h4>
+                                    </div>
+                                    <div class="modal-body">
+
+                                        <form name="containerSettingsForm" action="/" class="form-horizontal">
+
+                                            <div class="form-group">
+                                                <label class="col-sm-12 control-label" style="text-align: center;">{% trans "Contents of .gitignore, use the box below to Add/Edit content of .gitingore file." %}</label>
+                                            </div>
+
+                                            <hr>
+
+                                            <div class="form-group">
+
+                                                <div class="col-sm-12">
+                                                            <textarea ng-model="gitIgnoreContent" rows="3" class="form-control"></textarea>
+                                                </div>
+                                            </div>
+
+                                        </form>
+
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button"
+                                                class="btn btn-primary"
+                                                ng-click="saveGitIgnore()">Save<img ng-hide="$parent.cyberpanelLoading"
+                                                                                      src="/static/images/loading.gif"
+                                                                                      style="display: none;">
+                                        </button>
+                                        <button type="button"
+                                                class="btn btn-default" data-dismiss="modal">
+                                            Close
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <a data-toggle="modal" data-target="#removeGit" href="#" class="btn btn-info">
                             <input name="radio-toggle-1" type="radio">
                             Remove Git
@@ -405,7 +451,7 @@
                                     <div class="modal-body">
 
                                         <form name="containerSettingsForm" action="/" class="form-horizontal">
-                                            <div ng-hide="installationDetailsForm" class="form-group">
+                                            <div class="form-group">
                                                 <label class="col-sm-13 control-label" style="text-align: center;">{% trans "Removing git tracking is not reversible, it will delete all of your commit history, however your files stays there." %}</label>
                                             </div>
                                         </form>
@@ -435,13 +481,14 @@
                             <th>Total Commits</th>
                             <th>Branch</th>
                             <th>Remote</th>
-
-                            <th>Manage</th>
+                            <th>Commits</th>
                         </tr>
                         </thead>
                         <tbody>
                         <tr>
-                            <td><span class="bs-badge badge-success">{$ totalCommits $}</span></td>
+                            <td>
+                                <span class="bs-badge badge-success">{$ totalCommits $}</span>
+                            </td>
                             <td>
                                 <select ng-change="changeBranch()" ng-model="branchName" class="form-control">
                                     <option ng-repeat="branch in branches track by $index">{$ branch $}</option>
@@ -568,7 +615,162 @@
                                 </div>
 
                             </td>
-                            <td></td>
+                            <td>
+                                <button data-toggle="modal" data-target="#settings" style="margin-left: 2%"
+                                        type="button" class="btn btn-primary">
+                                    {% trans "View Commits" %}
+                                </button>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+
+                    <table ng-hide="gitCommitsTable" style="margin-top: 2%" class="table">
+                        <thead>
+                        <tr>
+                            <th>Total Commits</th>
+                            <th>Branch</th>
+                            <th>Remote</th>
+                            <th>Commits</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td>
+                                <span class="bs-badge badge-success">{$ totalCommits $}</span>
+                            </td>
+                            <td>
+                                <select ng-change="changeBranch()" ng-model="branchName" class="form-control">
+                                    <option ng-repeat="branch in branches track by $index">{$ branch $}</option>
+                                </select>
+                            </td>
+                            <td>
+
+                                <button data-toggle="modal" data-target="#settings" style="margin-left: 2%"
+                                        type="button" class="btn btn-primary">
+                                    {% trans "View/Setup Remote" %}
+                                </button>
+
+                                <div id="settings" class="modal fade" role="dialog">
+                                    <div class="modal-dialog">
+
+                                        <!-- Modal content-->
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <button type="button" class="close" data-dismiss="modal">&times;
+                                                </button>
+                                                <h4 class="modal-title">{% trans "Setup Remote" %}</h4>
+                                            </div>
+                                            <div class="modal-body">
+
+                                                <form name="containerSettingsForm" action="/" class="form-horizontal">
+                                                    <div ng-hide="installationDetailsForm" class="form-group">
+                                                        <label class="col-sm-3 control-label">{% trans "Git Host" %}</label>
+                                                        <div class="col-sm-6">
+                                                            <input placeholder="Ex. github.com or gitlab.com"
+                                                                   name="gitHost" type="text" class="form-control"
+                                                                   ng-model="$parent.gitHost" required>
+                                                        </div>
+                                                    </div>
+
+                                                    <div ng-hide="installationDetailsForm" class="form-group">
+                                                        <label class="col-sm-3 control-label">{% trans "Username" %}</label>
+                                                        <div class="col-sm-6">
+                                                            <input name="gitUsername" type="text" class="form-control"
+                                                                   ng-model="$parent.gitUsername" required>
+                                                        </div>
+                                                    </div>
+
+                                                    <div ng-hide="installationDetailsForm" class="form-group">
+                                                        <label class="col-sm-3 control-label">{% trans "Repo Name" %}</label>
+                                                        <div class="col-sm-6">
+                                                            <input name="gitReponame" type="text" class="form-control"
+                                                                   ng-model="$parent.gitReponame" required>
+                                                        </div>
+                                                    </div>
+
+                                                    <hr>
+
+                                                    <div class="form-group">
+
+                                                        <div class="col-sm-12">
+
+                                                            <table class="table">
+                                                                <thead>
+                                                                <tr>
+                                                                    <th>{% trans "Current Remote" %}</th>
+                                                                </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                <tr>
+                                                                    <td>
+                                                                        <div class="form-group">
+                                                                            <div class="col-sm-12">
+                                                    <textarea rows="2"
+                                                              class="form-control">{$ remoteResult $}</textarea>
+                                                                            </div>
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    </div>
+
+                                                    <hr>
+
+                                                    <div class="form-group">
+
+                                                        <div class="col-sm-12">
+
+                                                            <table class="table">
+                                                                <thead>
+                                                                <tr>
+                                                                    <th>{% trans "Deployment Key" %}</th>
+                                                                </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                <tr>
+                                                                    <td>
+                                                                        <div class="form-group">
+                                                                            <div class="col-sm-12">
+                                                    <textarea rows="5"
+                                                              class="form-control">{$ deploymentKey $}</textarea>
+                                                                            </div>
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    </div>
+
+                                                </form>
+
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" ng-disabled="savingSettings"
+                                                        class="btn btn-primary"
+                                                        ng-click="setupRemote()">Save <img ng-hide="cyberpanelLoading"
+                                                                                           src="/static/images/loading.gif"
+                                                                                           style="display: none;">
+                                                </button>
+                                                <button type="button" ng-disabled="savingSettings"
+                                                        class="btn btn-default" data-dismiss="modal">
+                                                    Close
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </td>
+                            <td>
+                                <button data-toggle="modal" data-target="#settings" style="margin-left: 2%"
+                                        type="button" class="btn btn-primary">
+                                    {% trans "View Commits" %}
+                                </button>
+                            </td>
                         </tr>
                         </tbody>
                     </table>

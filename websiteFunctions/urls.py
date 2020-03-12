@@ -130,6 +130,8 @@ urlpatterns = [
     url(r'^gitPush$', views.gitPush, name='gitPush'),
     url(r'^attachRepoGIT$', views.attachRepoGIT, name='attachRepoGIT'),
     url(r'^removeTracking$', views.removeTracking, name='removeTracking'),
+    url(r'^fetchGitignore$', views.fetchGitignore, name='fetchGitignore'),
+    url(r'^saveGitIgnore$', views.saveGitIgnore, name='saveGitIgnore'),
 
 
     ## Catch all for domains

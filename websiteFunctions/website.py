@@ -3150,6 +3150,12 @@ StrictHostKeyChecking no
             else:
                 return ACLManager.loadErrorJson()
 
+
+            if self.branchName.find('*') > -1:
+                data_ret = {'status': 0, 'commandStatus': 'Already on this branch.', 'error_message': 'Already on this branch.'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
             ## Check if remote exists
 
             command = 'git -C %s checkout %s' % (self.folder, self.branchName.strip(' '))
@@ -3401,11 +3407,21 @@ StrictHostKeyChecking no
                 command = 'git config --global --unset core.sshCommand'
                 ProcessUtilities.executioner(command)
 
+                from filemanager.filemanager import FileManager
+
+                fm = FileManager(None, None)
+                fm.fixPermissions(self.domain)
+
                 data_ret = {'status': 1, 'commandStatus': commandStatus}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
             else:
+
+                from filemanager.filemanager import FileManager
+
+                fm = FileManager(None, None)
+                fm.fixPermissions(self.domain)
 
                 command = 'git config --global --unset core.sshCommand'
                 ProcessUtilities.executioner(command)
@@ -3441,6 +3457,91 @@ StrictHostKeyChecking no
 
             command = 'rm -rf %s/.git' % (self.folder)
             ProcessUtilities.executioner(command)
+
+            data_ret = {'status': 1}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def fetchGitignore(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            self.domain = data['domain']
+            self.folder = data['folder']
+
+
+            if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson('status', 0)
+
+            if self.folderCheck():
+                pass
+            else:
+                return ACLManager.loadErrorJson()
+
+            command = 'cat %s/.gitignore' % (self.folder)
+            gitIgnoreContent = ProcessUtilities.outputExecutioner(command)
+
+            if gitIgnoreContent.find('No such file or directory') > -1:
+                gitIgnoreContent = 'File is currently empty.'
+
+            data_ret = {'status': 1, 'gitIgnoreContent': gitIgnoreContent}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def saveGitIgnore(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            self.domain = data['domain']
+            self.folder = data['folder']
+            self.gitIgnoreContent = data['gitIgnoreContent']
+
+            tempPath = "/home/cyberpanel/" + str(randint(1000, 9999))
+
+
+            if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson('status', 0)
+
+            if self.folderCheck():
+                pass
+            else:
+                return ACLManager.loadErrorJson()
+
+            ## Write to temp file
+
+            writeToFile = open(tempPath, 'w')
+            writeToFile.write(self.gitIgnoreContent)
+            writeToFile.close()
+
+            ## Move to original file
+
+            command = 'mv %s %s/.gitignore' % (tempPath, self.folder)
+            ProcessUtilities.executioner(command)
+
+            ## Fix permissions
+
+            from filemanager.filemanager import FileManager
+
+            fm = FileManager(None, None)
+            fm.fixPermissions(self.domain)
 
             data_ret = {'status': 1}
             json_data = json.dumps(data_ret)

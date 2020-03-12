@@ -805,3 +805,19 @@ def removeTracking(request):
         return wm.removeTracking(userID, json.loads(request.body))
     except KeyError:
         return redirect(loadLoginPage)
+
+def fetchGitignore(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.fetchGitignore(userID, json.loads(request.body))
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def saveGitIgnore(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.saveGitIgnore(userID, json.loads(request.body))
+    except KeyError:
+        return redirect(loadLoginPage)
