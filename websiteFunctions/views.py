@@ -821,3 +821,11 @@ def saveGitIgnore(request):
         return wm.saveGitIgnore(userID, json.loads(request.body))
     except KeyError:
         return redirect(loadLoginPage)
+
+def fetchCommits(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.fetchCommits(userID, json.loads(request.body))
+    except KeyError:
+        return redirect(loadLoginPage)

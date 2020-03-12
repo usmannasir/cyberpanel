@@ -5801,6 +5801,7 @@ app.controller('manageGIT', function ($scope, $http, $timeout, $window) {
     $scope.fetchFolderDetails = function () {
 
         $scope.cyberpanelLoading = false;
+        $scope.gitCommitsTable = true;
 
         url = "/websites/fetchFolderDetails";
 
@@ -5808,7 +5809,6 @@ app.controller('manageGIT', function ($scope, $http, $timeout, $window) {
         var data = {
             domain: $("#domain").text(),
             folder: $scope.folder
-
         };
 
         var config = {
@@ -6454,6 +6454,59 @@ app.controller('manageGIT', function ($scope, $http, $timeout, $window) {
                     text: 'Successfully saved.',
                     type: 'success'
                 });
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+
+
+        }
+    };
+
+    $scope.fetchCommits = function () {
+
+        $scope.cyberpanelLoading = false;
+
+        url = "/websites/fetchCommits";
+
+
+        var data = {
+            domain: $("#domain").text(),
+            folder: $scope.folder
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            $scope.gitCommitsTable = false;
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success',
+                    text: 'Successfully fetched.',
+                    type: 'success'
+                });
+                $scope.commits = JSON.parse(response.data.commits);
             } else {
                 new PNotify({
                     title: 'Operation Failed!',

@@ -2770,7 +2770,6 @@ StrictHostKeyChecking no
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-
     def syncToMaster(self, request=None, userID=None, data=None, childDomain = None):
         try:
             currentACL = ACLManager.loadedACL(userID)
@@ -2833,13 +2832,10 @@ StrictHostKeyChecking no
             writeToFile.write(message)
             writeToFile.close()
 
-
             extraArgs['tempStatusPath'] = tempStatusPath
 
             st = StagingSetup('startSyncing', extraArgs)
             st.start()
-
-
 
             data_ret = {'status': 1, 'error_message': 'None', 'tempStatusPath': tempStatusPath}
             json_data = json.dumps(data_ret)
@@ -3544,6 +3540,42 @@ StrictHostKeyChecking no
             fm.fixPermissions(self.domain)
 
             data_ret = {'status': 1}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def fetchCommits(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            self.domain = data['domain']
+            self.folder = data['folder']
+
+            if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson('status', 0)
+
+            if self.folderCheck():
+                pass
+            else:
+                return ACLManager.loadErrorJson()
+
+            initCommand = """log --pretty=format:'{%n  "commit": "%h",%n  "message": "%s", %n  "name": "%cn", %n  "date": "%cd"%n},' -10"""
+
+            command = 'git -C %s %s' % (self.folder, initCommand)
+            commits = '[%s]' % (ProcessUtilities.outputExecutioner(command).rstrip(','))
+
+            commits = json.loads(commits)
+            commits = json.dumps(commits)
+
+            data_ret = {'status': 1, 'commits': commits}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 

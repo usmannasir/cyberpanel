@@ -132,6 +132,7 @@ urlpatterns = [
     url(r'^removeTracking$', views.removeTracking, name='removeTracking'),
     url(r'^fetchGitignore$', views.fetchGitignore, name='fetchGitignore'),
     url(r'^saveGitIgnore$', views.saveGitIgnore, name='saveGitIgnore'),
+    url(r'^fetchCommits$', views.fetchCommits, name='fetchCommits'),
 
 
     ## Catch all for domains
