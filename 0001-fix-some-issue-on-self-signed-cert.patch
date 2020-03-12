@@ -1,0 +1,121 @@
+From 348f6dbaa4b3e7141c9d32e1c44e3ea1ba2d9984 Mon Sep 17 00:00:00 2001
+From: qtwrk <qtwrk555@gmail.com>
+Date: Tue, 10 Mar 2020 17:23:30 +0100
+Subject: [PATCH] fix some issue on self-signed cert
+
+---
+ cyberpanel.sh         |  4 ++--
+ cyberpanel_upgrade.sh | 55 +++++++++++++++++++++++++++++++++++++++++--
+ 2 files changed, 55 insertions(+), 4 deletions(-)
+
+diff --git a/cyberpanel.sh b/cyberpanel.sh
+index d4ce5caf..d657d3e3 100644
+--- a/cyberpanel.sh
++++ b/cyberpanel.sh
+@@ -1123,7 +1123,7 @@ dnQualifier = CyberPanel
+ [server_exts]
+ extendedKeyUsage = 1.3.6.1.5.5.7.3.1
+ EOF
+-openssl req -x509 -config /root/cyberpanel/cert_conf -extensions 'server_exts' -nodes -days 820 -newkey rsa:3072 -keyout /usr/local/lscp/conf/key.pem -out /usr/local/lscp/conf/cert.pem
++openssl req -x509 -config /root/cyberpanel/cert_conf -extensions 'server_exts' -nodes -days 820 -newkey rsa:2048 -keyout /usr/local/lscp/conf/key.pem -out /usr/local/lscp/conf/cert.pem
+ 
+ if [[ $VERSION == "OLS" ]] ; then
+ 	key_path="/usr/local/lsws/admin/conf/webadmin.key"
+@@ -1133,7 +1133,7 @@ else
+ 	cert_path="/usr/local/lsws/admin/conf/cert/admin.crt"
+ fi
+ 
+-openssl req -x509 -config /root/cyberpanel/cert_conf -extensions 'server_exts' -nodes -days 820 -newkey rsa:3072 -keyout $key_path -out $cert_path
++openssl req -x509 -config /root/cyberpanel/cert_conf -extensions 'server_exts' -nodes -days 820 -newkey rsa:2048 -keyout $key_path -out $cert_path
+ rm -f /root/cyberpanel/cert_conf
+ }
+ 
+diff --git a/cyberpanel_upgrade.sh b/cyberpanel_upgrade.sh
+index db0c76bd..41004b66 100644
+--- a/cyberpanel_upgrade.sh
++++ b/cyberpanel_upgrade.sh
+@@ -26,6 +26,44 @@ if [[ $SERVER_COUNTRY == "CN" ]] ; then
+ 	GIT_CONTENT_URL="gitee.com/qtwrk/cyberpanel/raw"
+ fi
+ 
++regenerate_cert() {
++cat << EOF > /usr/local/CyberCP/cert_conf
++[req]
++prompt=no
++distinguished_name=cyberpanel
++[cyberpanel]
++commonName = www.example.com
++countryName = CP
++localityName = CyberPanel
++organizationName = CyberPanel
++organizationalUnitName = CyberPanel
++stateOrProvinceName = CP
++emailAddress = mail@example.com
++name = CyberPanel
++surname = CyberPanel
++givenName = CyberPanel
++initials = CP
++dnQualifier = CyberPanel
++[server_exts]
++extendedKeyUsage = 1.3.6.1.5.5.7.3.1
++EOF
++if [[ $1 == "8090" ]] ; then
++openssl req -x509 -config /usr/local/CyberCP/cert_conf -extensions 'server_exts' -nodes -days 820 -newkey rsa:2048 -keyout /usr/local/lscp/conf/key.pem -out /usr/local/lscp/conf/cert.pem
++fi
++
++if [[ $1 == "7080" ]] ; then
++	if [[ -f /usr/local/lsws/admin/conf/webadmin.key ]] ; then
++		key_path="/usr/local/lsws/admin/conf/webadmin.key"
++		cert_path="/usr/local/lsws/admin/conf/webadmin.crt"
++	else
++		key_path="/usr/local/lsws/admin/conf/cert/admin.key"
++		cert_path="/usr/local/lsws/admin/conf/cert/admin.crt"
++	fi
++openssl req -x509 -config /usr/local/CyberCP/cert_conf -extensions 'server_exts' -nodes -days 820 -newkey rsa:2048 -keyout $key_path -out $cert_path
++fi
++rm -f /usr/local/CyberCP/cert_conf
++
++}
+ 
+ input_branch() {
+ 	echo -e "\nPress Enter key to continue with latest version or Enter specific version such as: \e[31m1.9.4\e[39m , \e[31m1.9.5\e[39m ...etc"
+@@ -233,6 +271,19 @@ fi
+ 
+ install_utility
+ 
++output=$(timeout 3 openssl s_client -connect 127.0.0.1:8090 2>/dev/null)
++echo $output | grep -q "mail@example.com"
++if [[ $? == "0" ]] ; then
++# it is using default installer generated cert
++regenerate_cert 8090
++fi
++output=$(timeout 3 openssl s_client -connect 127.0.0.1:7080 2>/dev/null)
++echo $output | grep -q "mail@example.com"
++if [[ $? == "0" ]] ; then
++regenerate_cert 7080
++fi
++
++
+ if [[ $SERVER_OS == "CentOS7" ]] ; then
+ 
+ sed -i 's|error_reporting = E_ALL \&amp; ~E_DEPRECATED \&amp; ~E_STRICT|error_reporting = E_ALL \& ~E_DEPRECATED \& ~E_STRICT|g' /usr/local/lsws/{lsphp72,lsphp73}/etc/php.ini
+@@ -245,14 +296,14 @@ yum list installed lsphp74-devel
+ fi
+ 
+ if [[ $SERVER_OS == "Ubuntu" ]] ; then
+- dpkg -l lsphp74-dev
++ dpkg -l lsphp74-dev > /dev/null 2>&1
+ 	if [[ $? != "0" ]] ; then
+ 	apt install -y lsphp74-dev
+ 	fi
+ fi
+ 
+ if [[ ! -f /usr/local/lsws/lsphp74/lib64/php/modules/zip.so ]] && [[ $SERVER_OS == "CentOS7" ]] ; then
+-	yum list installed libzip-devel
++	yum list installed libzip-devel > /dev/null 2>&1
+ 		if [[ $? == "0" ]] ; then
+ 			yum remove -y libzip-devel
+ 		fi
+-- 
+2.17.1
+

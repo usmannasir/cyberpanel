@@ -3567,13 +3567,26 @@ StrictHostKeyChecking no
             else:
                 return ACLManager.loadErrorJson()
 
-            initCommand = """log --pretty=format:'{%n  "commit": "%h",%n  "message": "%s", %n  "name": "%cn", %n  "date": "%cd"%n},' -10"""
+            initCommand = """log --pretty=format:"%h|%s|%cn|%cd" -50"""
 
             command = 'git -C %s %s' % (self.folder, initCommand)
-            commits = '[%s]' % (ProcessUtilities.outputExecutioner(command).rstrip(','))
+            commits = ProcessUtilities.outputExecutioner(command).split('\n')
 
-            commits = json.loads(commits)
-            commits = json.dumps(commits)
+            json_data = "["
+            checker = 0
+
+            for commit in commits:
+                cm = commit.split('|')
+
+                dic = {'commit': cm[0], 'message': cm[1].replace('"', "'"), 'name': cm[2], 'date': cm[3]}
+
+                if checker == 0:
+                    json_data = json_data + json.dumps(dic)
+                    checker = 1
+                else:
+                    json_data = json_data + ',' + json.dumps(dic)
+
+            commits = json_data + ']'
 
             data_ret = {'status': 1, 'commits': commits}
             json_data = json.dumps(data_ret)
