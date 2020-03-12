@@ -5794,6 +5794,7 @@ app.controller('manageGIT', function ($scope, $http, $timeout, $window) {
     $scope.gitTracking = true;
     $scope.gitEnable = true;
     $scope.statusBox = true;
+    $scope.gitCommitsTable = true;
 
     var statusFile;
 
