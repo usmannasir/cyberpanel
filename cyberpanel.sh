@@ -1469,6 +1469,8 @@ else
 							ADMIN_PASS="1234567"
 						elif [[ "${1}" == 'r' ]] || [[ $1 == 'random' ]] ; then
 							ADMIN_PASS=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 16 ; echo '')
+						elif [[ ${1} == "d" ]] ; then
+							ADMIN_PASS="1234567"
 						else
 							if [ ${#1} -lt 8 ] ; then
 								echo -e "\nPassword lenth less than 8 digital, please choose a more complicated password.\n"
