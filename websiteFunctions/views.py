@@ -829,3 +829,19 @@ def fetchCommits(request):
         return wm.fetchCommits(userID, json.loads(request.body))
     except KeyError:
         return redirect(loadLoginPage)
+
+def fetchFiles(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.fetchFiles(userID, json.loads(request.body))
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def fetchChangesInFile(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.fetchChangesInFile(userID, json.loads(request.body))
+    except KeyError:
+        return redirect(loadLoginPage)

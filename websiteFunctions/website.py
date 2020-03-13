@@ -3574,11 +3574,13 @@ StrictHostKeyChecking no
 
             json_data = "["
             checker = 0
+            id = 1
 
             for commit in commits:
                 cm = commit.split('|')
 
-                dic = {'commit': cm[0], 'message': cm[1].replace('"', "'"), 'name': cm[2], 'date': cm[3]}
+                dic = {'id': str(id),'commit': cm[0], 'message': cm[1].replace('"', "'"), 'name': cm[2], 'date': cm[3]}
+                id = id + 1
 
                 if checker == 0:
                     json_data = json_data + json.dumps(dic)
@@ -3589,6 +3591,71 @@ StrictHostKeyChecking no
             commits = json_data + ']'
 
             data_ret = {'status': 1, 'commits': commits}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def fetchFiles(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            self.domain = data['domain']
+            self.folder = data['folder']
+            self.commit = data['commit']
+
+            if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson('status', 0)
+
+            if self.folderCheck():
+                pass
+            else:
+                return ACLManager.loadErrorJson()
+
+            command = 'git -C %s diff-tree --no-commit-id --name-only -r %s' % (self.folder, self.commit)
+            files = ProcessUtilities.outputExecutioner(command).split('\n')
+
+            data_ret = {'status': 1, 'files': files}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def fetchChangesInFile(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            self.domain = data['domain']
+            self.folder = data['folder']
+            self.file = data['file']
+            self.commit = data['commit']
+
+            if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson('status', 0)
+
+            if self.folderCheck():
+                pass
+            else:
+                return ACLManager.loadErrorJson()
+
+            command = 'git -C %s show %s -- %s/%s' % (self.folder, self.commit, self.folder, self.file.strip('\n').strip(' '))
+            fileChangedContent = ProcessUtilities.outputExecutioner(command)
+
+            data_ret = {'status': 1, 'fileChangedContent': fileChangedContent}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 

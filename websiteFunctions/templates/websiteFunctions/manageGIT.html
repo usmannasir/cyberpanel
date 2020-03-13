@@ -138,9 +138,8 @@
                                 </div>
                                 <div class="modal-footer">
                                     <button type="button" class="btn btn-primary"
-                                            ng-click="attachRepoGIT()">Attach <img ng-hide="cyberpanelLoading"
-                                                                                   src="/static/images/loading.gif"
-                                                                                   style="display: none;">
+                                            ng-click="attachRepoGIT()">Attach <img
+                                            ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}">
                                     </button>
                                     <button type="button" ng-disabled="savingSettings"
                                             class="btn btn-default" data-dismiss="modal">
@@ -252,9 +251,8 @@
                                     </div>
                                     <div class="modal-footer">
                                         <button type="button" class="btn btn-primary"
-                                                ng-click="attachRepoGIT()">Attach <img ng-hide="cyberpanelLoading"
-                                                                                       src="/static/images/loading.gif"
-                                                                                       style="display: none;">
+                                                ng-click="attachRepoGIT()">Attach <img
+                                                ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}">
                                         </button>
                                         <button type="button" ng-disabled="savingSettings"
                                                 class="btn btn-default" data-dismiss="modal">
@@ -307,10 +305,8 @@
                                     <div class="modal-footer">
                                         <button type="button"
                                                 class="btn btn-primary"
-                                                ng-click="createNewBranch()">Create New Branch<img
-                                                ng-hide="cyberpanelLoading"
-                                                src="/static/images/loading.gif"
-                                                style="display: none;">
+                                                ng-click="createNewBranch()">Create New Branch <img
+                                                ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}">
                                         </button>
                                         <button type="button"
                                                 class="btn btn-default" data-dismiss="modal">
@@ -363,9 +359,8 @@
                                     <div class="modal-footer">
                                         <button type="button"
                                                 class="btn btn-primary"
-                                                ng-click="commitChanges()">Commit<img ng-hide="cyberpanelLoading"
-                                                                                      src="/static/images/loading.gif"
-                                                                                      style="display: none;">
+                                                ng-click="commitChanges()">Commit <img
+                                                ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}">
                                         </button>
                                         <button type="button"
                                                 class="btn btn-default" data-dismiss="modal">
@@ -424,9 +419,8 @@
                                     <div class="modal-footer">
                                         <button type="button"
                                                 class="btn btn-primary"
-                                                ng-click="saveGitIgnore()">Save<img ng-hide="$parent.cyberpanelLoading"
-                                                                                    src="/static/images/loading.gif"
-                                                                                    style="display: none;">
+                                                ng-click="saveGitIgnore()">Save <img
+                                                ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}">
                                         </button>
                                         <button type="button"
                                                 class="btn btn-default" data-dismiss="modal">
@@ -464,10 +458,8 @@
                                     <div class="modal-footer">
                                         <button type="button"
                                                 class="btn btn-primary"
-                                                ng-click="removeTracking()">Remove<img
-                                                ng-hide="cyberpanelLoading"
-                                                src="/static/images/loading.gif"
-                                                style="display: none;" data-dismiss="modal">
+                                                ng-click="removeTracking()">Remove <img
+                                                ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}">
                                         </button>
                                         <button type="button"
                                                 class="btn btn-default" data-dismiss="modal">
@@ -605,9 +597,9 @@
                                             <div class="modal-footer">
                                                 <button type="button" ng-disabled="savingSettings"
                                                         class="btn btn-primary"
-                                                        ng-click="setupRemote()">Save <img ng-hide="cyberpanelLoading"
-                                                                                           src="/static/images/loading.gif"
-                                                                                           style="display: none;">
+                                                        ng-click="setupRemote()">Save <img
+                                                        ng-hide="cyberpanelLoading"
+                                                        src="{% static 'images/loading.gif' %}">
                                                 </button>
                                                 <button type="button" ng-disabled="savingSettings"
                                                         class="btn btn-default" data-dismiss="modal">
@@ -634,18 +626,78 @@
                     <table ng-hide="gitCommitsTable" style="margin-top: 2%" class="table">
                         <thead>
                         <tr>
+                            <th>ID/th>
                             <th>Commit Hash</th>
                             <th>Description</th>
                             <th>Commiter</th>
                             <th>Commit Time</th>
+                            <th>Actions</th>
                         </tr>
                         </thead>
                         <tbody>
                         <tr ng-repeat="commit in commits track by $index">
+                            <td ng-bind="commit.id"></td>
                             <td ng-bind="commit.commit"></td>
                             <td ng-bind="commit.message"></td>
                             <td ng-bind="commit.name"></td>
                             <td ng-bind="commit.date"></td>
+                            <td>
+
+                                <button ng-click="fetchFiles(commit.commit)" data-toggle="modal"
+                                        data-target="#viewChanges" style="margin-left: 2%"
+                                        type="button" class="btn btn-primary">
+                                    {% trans "View Changes" %}
+                                </button>
+
+                                <div id="viewChanges" class="modal fade" role="dialog">
+                                    <div class="modal-dialog modal-lg">
+                                        <!-- Modal content-->
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <button type="button" class="close" data-dismiss="modal">&times;
+                                                </button>
+                                                <h4 class="modal-title">{% trans "View Changes" %}</h4> <img
+                                                    ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}">
+                                            </div>
+                                            <div class="modal-body">
+
+                                                <form name="containerSettingsForm" action="/" class="form-horizontal">
+
+                                                    <div class="form-group">
+                                                        <label class="col-sm-2 control-label">{% trans "Select File" %}</label>
+                                                        <div class="col-sm-10">
+                                                            <select ng-change="fetchChangesInFile()" ng-model="$parent.changeFile" class="form-control">
+                                                                <option ng-repeat="file in files track by $index">
+                                                                    {$ file $}
+                                                                </option>
+                                                            </select>
+                                                        </div>
+
+                                                        <hr>
+
+                                                        <div ng-hide="fileStatus"
+                                                             style="margin-left: 0px; margin-right: 0px"
+                                                             class="form-group">
+                                                            <label class="col-sm-2 control-label">{% trans "Git Diff" %}</label>
+
+                                                            <div class="col-sm-10">
+                                                    <textarea ng-model="fileChangedContent" rows="12"
+                                                              class="form-control"></textarea>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                </form>
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <img title="Delete this commit." ng-click="deleteRecord(record.id)"
+                                     src="{% static 'images/delete.png' %}">
+
+                            </td>
                         </tr>
                         </tbody>
                     </table>

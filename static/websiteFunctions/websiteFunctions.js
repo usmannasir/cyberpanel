@@ -6530,5 +6530,119 @@ app.controller('manageGIT', function ($scope, $http, $timeout, $window) {
         }
     };
 
+    var currentComit;
+
+    $scope.fetchFiles = function (commit) {
+
+        currentComit = commit;
+        $scope.cyberpanelLoading = false;
+
+        url = "/websites/fetchFiles";
+
+
+        var data = {
+            domain: $("#domain").text(),
+            folder: $scope.folder,
+            commit: commit
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            $scope.gitCommitsTable = false;
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success',
+                    text: 'Successfully fetched.',
+                    type: 'success'
+                });
+                $scope.files = response.data.files;
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+
+
+        }
+    };
+
+    $scope.fileStatus = true;
+
+    $scope.fetchChangesInFile = function () {
+
+        $scope.cyberpanelLoading = false;
+
+        url = "/websites/fetchChangesInFile";
+
+
+        var data = {
+            domain: $("#domain").text(),
+            folder: $scope.folder,
+            file: $scope.changeFile,
+            commit: currentComit
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success',
+                    text: 'Successfully fetched.',
+                    type: 'success'
+                });
+                $scope.fileStatus = false;
+                $scope.fileChangedContent = response.data.fileChangedContent;
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+
+
+        }
+    };
+
 });
 /* Java script code to git tracking ends here */
