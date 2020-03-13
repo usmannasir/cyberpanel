@@ -6620,7 +6620,7 @@ app.controller('manageGIT', function ($scope, $http, $timeout, $window) {
                     type: 'success'
                 });
                 $scope.fileStatus = false;
-                $scope.fileChangedContent = response.data.fileChangedContent;
+                document.getElementById("fileChangedContent").innerHTML = response.data.fileChangedContent;
             } else {
                 new PNotify({
                     title: 'Operation Failed!',

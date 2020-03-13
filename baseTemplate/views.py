@@ -130,7 +130,7 @@ def versionManagment(request):
             currentBuild = data[1]
         except:
             currentVersion = latestVersion
-            currentBuild = str(latestBuild) + 'E'
+            currentBuild = str(5) + 'E'
 
         return render(request, 'baseTemplate/versionManagment.html', {'build': currentBuild,
                                                                       'currentVersion': currentVersion,

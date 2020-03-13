@@ -2,9 +2,7 @@
  * Created by usman on 7/24/17.
  */
 
-
 /* Utilities */
-
 
 function getCookie(name) {
     var cookieValue = null;
@@ -34,17 +32,14 @@ function randomPassword(length) {
 
 /* Utilities ends here */
 
-
 /* Java script code to monitor system status */
 
 var app = angular.module('CyberCP', []);
-
 
 app.config(['$interpolateProvider', function($interpolateProvider) {
         $interpolateProvider.startSymbol('{$');
         $interpolateProvider.endSymbol('$}');
     }]);
-
 
 app.filter('getwebsitename', function() {
     return function(domain, uppercase) {
@@ -93,12 +88,7 @@ app.controller('systemStatusInfo', function($scope,$http,$timeout) {
     }
 });
 
-
-
 /*  Admin status */
-
-
-
 
 app.controller('adminController', function($scope,$http,$timeout) {
 
@@ -315,10 +305,7 @@ app.controller('adminController', function($scope,$http,$timeout) {
         function cantLoadInitialData(response) {}
 });
 
-
-
 /* Load average */
-
 
 app.controller('loadAvg', function($scope,$http,$timeout) {
 
@@ -350,12 +337,7 @@ app.controller('loadAvg', function($scope,$http,$timeout) {
     }
 });
 
-
-
-
-
 /// home page system status
-
 
 app.controller('homePageStatus', function($scope,$http,$timeout) {
 
@@ -472,9 +454,6 @@ app.controller('homePageStatus', function($scope,$http,$timeout) {
     }
 });
 
-
-
-
 ////////////
 
 function increment(){
@@ -488,10 +467,7 @@ function increment(){
 
 increment();
 
-
-
 ////////////
-
 
 app.controller('versionManagment', function($scope,$http,$timeout) {
 

@@ -626,7 +626,7 @@
                     <table ng-hide="gitCommitsTable" style="margin-top: 2%" class="table">
                         <thead>
                         <tr>
-                            <th>ID/th>
+                            <th>ID</th>
                             <th>Commit Hash</th>
                             <th>Description</th>
                             <th>Commiter</th>
@@ -665,29 +665,32 @@
 
                                                     <div class="form-group">
                                                         <label class="col-sm-2 control-label">{% trans "Select File" %}</label>
+
                                                         <div class="col-sm-10">
-                                                            <select ng-change="fetchChangesInFile()" ng-model="$parent.changeFile" class="form-control">
+                                                            <select ng-change="fetchChangesInFile()"
+                                                                    ng-model="$parent.changeFile" class="form-control">
                                                                 <option ng-repeat="file in files track by $index">
                                                                     {$ file $}
                                                                 </option>
                                                             </select>
                                                         </div>
 
-                                                        <hr>
+                                                        <hr ng-hide="fileStatus">
 
-                                                        <div ng-hide="fileStatus"
-                                                             style="margin-left: 0px; margin-right: 0px"
-                                                             class="form-group">
-                                                            <label class="col-sm-2 control-label">{% trans "Git Diff" %}</label>
-
-                                                            <div class="col-sm-10">
-                                                    <textarea ng-model="fileChangedContent" rows="12"
-                                                              class="form-control"></textarea>
+                                                        <div ng-hide="fileStatus" class="example-box-wrapper">
+                                                            <div class="row">
+                                                                <div class="col-md-12">
+                                                                    <div class="content-box">
+                                                                        <div id="fileChangedContent" class="content-box-wrapper">
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>
 
                                                 </form>
+
 
                                             </div>
                                         </div>

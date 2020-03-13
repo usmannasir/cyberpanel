@@ -3653,9 +3653,21 @@ StrictHostKeyChecking no
                 return ACLManager.loadErrorJson()
 
             command = 'git -C %s show %s -- %s/%s' % (self.folder, self.commit, self.folder, self.file.strip('\n').strip(' '))
-            fileChangedContent = ProcessUtilities.outputExecutioner(command)
+            fileChangedContent = ProcessUtilities.outputExecutioner(command).split('\n')
 
-            data_ret = {'status': 1, 'fileChangedContent': fileChangedContent}
+            fileLen = len(fileChangedContent)
+            finalContent = ''
+
+            for i in range(12, fileLen-1):
+                if fileChangedContent[i][0] == '+':
+                    finalContent = finalContent + '<p style="color:green">%s</p><br>' % (fileChangedContent[i])
+                elif fileChangedContent[i][0] == '-':
+                    finalContent = finalContent + '<p style="color:red">%s</p><br>' % (fileChangedContent[i])
+                else:
+                    finalContent = finalContent + '<p>%s</p><br>' % (fileChangedContent[i])
+
+
+            data_ret = {'status': 1, 'fileChangedContent': finalContent}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
