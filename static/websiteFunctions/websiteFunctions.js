@@ -6592,6 +6592,7 @@ app.controller('manageGIT', function ($scope, $http, $timeout, $window) {
     $scope.fetchChangesInFile = function () {
 
         $scope.cyberpanelLoading = false;
+        $scope.currentSelectedFile = $scope.changeFile;
 
         url = "/websites/fetchChangesInFile";
 
