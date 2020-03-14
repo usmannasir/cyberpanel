@@ -681,20 +681,18 @@ fi
 
 show_help() {
 echo -e "\nCyberPanel Installer Script Help\n"
-echo -e "\nUsage: wget https://cyberpanel.sh/cyberpanel.sh"
-echo -e "\nchmod +x cyberpanel.sh"
-echo -e "\n./cyberpanel.sh -v ols/SERIAL_NUMBER -c 1 -a 1"
+echo -e "\nUsage: sh <(curl cyberpanel.sh) --argument"
 echo -e "\n -v or --version: choose to install CyberPanel OpenLiteSpeed or CyberPanel Enterprise, available options are \e[31mols\e[39m and \e[31mSERIAL_NUMBER\e[39m, default ols"
 echo -e "\n Please be aware, this serial number must be obtained from LiteSpeed Store."
 echo -e "\n And if this serial number has been used before, it must be released/migrated in Store first, otherwise it will fail to start."
-echo -e "\n -a or --addons: install addons: memcached, redis, PHP extension for memcached and redis, 1 for install addons, 0 for not to install, default 0, only applicable for CentOS system."
-echo -e "\n -p or --password: set password of new installation, empty for default 1234567, [r] or [random] for randomly generated 16 digital password, any other value besdies [d] and [r(andom)] will be accept as password, default use 1234567."
+echo -e "\n -a or --addons: install addons: memcached, redis, PHP extension for memcached and redis"
+echo -e "\n -p or --password: set password of new installation, empty for default 1234567, [r] or [random] for randomly generated 16 digital password, any other value besides [d] and [r(andom)] will be accept as password, default use 1234567."
 echo -e "\n -m: set to minimal mode which will not install PowerDNS, Pure-FTPd and Postfix"
 echo -e "\n Example:"
-echo -e "\n ./cyberpanel.sh -v ols -p r or ./cyberpanel.sh --version ols --password random"
+echo -e "\n sh <(curl cyberpanel.sh) -v ols -p r or ./cyberpanel.sh --version ols --password random"
 echo -e "\n This will install CyberPanel OpenLiteSpeed and randomly generate the password."
-echo -e "\n ./cyberpanel.sh default"
-echo -e "\n This will install everything default , which is OpenLiteSpeed and nothing more.\n"
+echo -e "\n sh <(curl cyberpanel.sh) -v LICENSE_KEY -a -p my_pass_word"
+echo -e "\n This will install LiteSpeed Enterise , replace LICENSE_KEY to actual license key and set password to my_pass_word\n"
 }
 
 license_input() {
