@@ -666,23 +666,28 @@
                                                     <div class="form-group">
                                                         <label class="col-sm-2 control-label">{% trans "Select File" %}</label>
 
-                                                        <div class="col-sm-10">
-                                                            <select ng-change="fetchChangesInFile()"
-                                                                    ng-model="$parent.changeFile" class="form-control">
-                                                                <option ng-repeat="file in files track by $index">
+                                                        <div class="col-sm-10" style="margin-bottom: 2%;">
+                                                            <select ng-change="fetchChangesInFile()" ng-model="$parent.changeFile" class="form-control">
+                                                                <option ng-repeat="file in files">
                                                                     {$ file $}
                                                                 </option>
                                                             </select>
                                                         </div>
 
-                                                        <hr ng-hide="fileStatus">
-
                                                         <div ng-hide="fileStatus" class="example-box-wrapper">
                                                             <div class="row">
                                                                 <div class="col-md-12">
                                                                     <div class="content-box">
-                                                                        <div id="fileChangedContent" class="content-box-wrapper">
-                                                                        </div>
+                                                                        <table style="margin-top: 3%; margin-right: 0px; margin-left: 0px" class="table">
+                                                                            <thead style="background-color: #f9fafe;">
+                                                                            <tr>
+                                                                                <th>#</th>
+                                                                                <th>{$ currentSelectedFile $}</th>
+                                                                            </tr>
+                                                                            </thead>
+                                                                            <tbody id="fileChangedContent">
+                                                                            </tbody>
+                                                                        </table>
                                                                     </div>
                                                                 </div>
                                                             </div>

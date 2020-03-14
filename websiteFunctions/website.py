@@ -2893,15 +2893,18 @@ StrictHostKeyChecking no
         domainPath = '/home/%s/public_html' % (self.domain)
         vmailPath = '/home/vmail/%s' % (self.domain)
 
+        website = Websites.objects.get(domain=self.domain)
+
         if self.folder == domainPath:
+            self.externalApp = website.externalApp
             return 1
 
         if self.folder == vmailPath:
+            self.externalApp = 'vmail'
             return 1
 
-        website = Websites.objects.get(domain=self.domain)
-
         for database in website.databases_set.all():
+            self.externalApp = 'mysql'
             basePath = '/var/lib/mysql/'
             dbPath = '%s%s' % (basePath, database.dbName)
 
@@ -2935,7 +2938,7 @@ StrictHostKeyChecking no
             gitPath = '%s/.git' % (self.folder)
             command = 'ls -la %s' % (gitPath)
 
-            if ProcessUtilities.outputExecutioner(command).find('No such file or directory') > -1:
+            if ProcessUtilities.outputExecutioner(command, self.externalApp).find('No such file or directory') > -1:
 
                 command = 'cat /home/%s/.ssh/%s.pub' % (self.domain, website.externalApp)
                 deploymentKey = ProcessUtilities.outputExecutioner(command, website.externalApp)
@@ -2959,29 +2962,9 @@ StrictHostKeyChecking no
                 ## Find git branches
 
                 command = 'git -C %s branch' % (self.folder)
-                branches = ProcessUtilities.outputExecutioner(command).split('\n')[:-1]
+                branches = ProcessUtilities.outputExecutioner(command, self.externalApp).split('\n')[:-1]
 
                 ## Fetch key
-
-                command = 'cat /home/%s/.ssh/config' % (self.domain)
-
-                if ProcessUtilities.outputExecutioner(command).find('No such file or directory') == -1:
-
-                    configContent = """Host github.com
-IdentityFile /home/%s/.ssh/%s
-StrictHostKeyChecking no
-""" % (self.domain, website.externalApp)
-
-                    path = "/home/cyberpanel/config"
-                    writeToFile = open(path, 'w')
-                    writeToFile.writelines(configContent)
-                    writeToFile.close()
-
-                    command = 'mv %s /home/%s/.ssh/config' % (path, self.domain)
-                    ProcessUtilities.executioner(command)
-
-                    command = 'chown %s:%s /home/%s/.ssh/config' % (website.externalApp, website.externalApp, self.domain)
-                    ProcessUtilities.executioner(command)
 
                 command = 'cat /home/%s/.ssh/%s.pub' % (self.domain, website.externalApp)
                 deploymentKey = ProcessUtilities.outputExecutioner(command, website.externalApp)
@@ -2996,7 +2979,7 @@ StrictHostKeyChecking no
                 ## Find Remote if any
 
                 command = 'git -C %s remote -v' % (self.folder)
-                remoteResult = ProcessUtilities.outputExecutioner(command)
+                remoteResult = ProcessUtilities.outputExecutioner(command, self.externalApp)
 
                 remote = 1
                 if remoteResult.find('origin') == -1:
@@ -3006,7 +2989,7 @@ StrictHostKeyChecking no
                 ## Find Total commits on current branch
 
                 command = 'git -C %s rev-list --count HEAD' % (self.folder)
-                totalCommits = ProcessUtilities.outputExecutioner(command)
+                totalCommits = ProcessUtilities.outputExecutioner(command, self.externalApp)
 
                 if totalCommits.find('fatal') > -1:
                     totalCommits = '0'
@@ -3047,7 +3030,7 @@ StrictHostKeyChecking no
                 return ACLManager.loadErrorJson()
 
             command = 'git -C %s init' % (self.folder)
-            result = ProcessUtilities.outputExecutioner(command)
+            result = ProcessUtilities.outputExecutioner(command, self.externalApp)
 
             if result.find('Initialized empty Git repository in') > -1:
                 data_ret = {'status': 1}
@@ -3090,12 +3073,12 @@ StrictHostKeyChecking no
             externalApp = Websites.objects.get(domain=self.domain).externalApp
 
             command = 'git -C %s config --local core.sshCommand "ssh -i /home/%s/.ssh/%s"' % (self.folder, self.domain, externalApp)
-            ProcessUtilities.executioner(command)
+            ProcessUtilities.executioner(command, self.externalApp)
 
             ## Check if remote exists
 
             command = 'git -C %s remote -v' % (self.folder)
-            remoteResult = ProcessUtilities.outputExecutioner(command)
+            remoteResult = ProcessUtilities.outputExecutioner(command, self.externalApp)
 
             ## Set new remote
 
@@ -3105,12 +3088,12 @@ StrictHostKeyChecking no
                 command = 'git -C %s remote set-url origin git@%s:%s/%s.git' % (
                 self.folder, self.gitHost, self.gitUsername, self.gitReponame)
 
-            possibleError = ProcessUtilities.outputExecutioner(command)
+            possibleError = ProcessUtilities.outputExecutioner(command, self.externalApp)
 
             ## Check if set correctly.
 
             command = 'git -C %s remote -v' % (self.folder)
-            remoteResult = ProcessUtilities.outputExecutioner(command)
+            remoteResult = ProcessUtilities.outputExecutioner(command, self.externalApp)
 
             if remoteResult.find(self.gitUsername) > -1:
                 data_ret = {'status': 1}
@@ -3152,10 +3135,8 @@ StrictHostKeyChecking no
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-            ## Check if remote exists
-
             command = 'git -C %s checkout %s' % (self.folder, self.branchName.strip(' '))
-            commandStatus = ProcessUtilities.outputExecutioner(command)
+            commandStatus = ProcessUtilities.outputExecutioner(command, self.externalApp)
 
             if commandStatus.find('Switched to branch') > -1:
                 data_ret = {'status': 1, 'commandStatus': commandStatus + 'Refreshing page in 3 seconds..'}
@@ -3191,10 +3172,8 @@ StrictHostKeyChecking no
             else:
                 return ACLManager.loadErrorJson()
 
-            ## Check if remote exists
-
             command = 'git -C %s checkout -b "%s"' % (self.folder, self.newBranchName)
-            commandStatus = ProcessUtilities.outputExecutioner(command)
+            commandStatus = ProcessUtilities.outputExecutioner(command, self.externalApp)
 
             if commandStatus.find(self.newBranchName) > -1:
                 data_ret = {'status': 1, 'commandStatus': commandStatus}
@@ -3233,10 +3212,10 @@ StrictHostKeyChecking no
             ## Check if remote exists
 
             command = 'git -C %s add -A' % (self.folder)
-            ProcessUtilities.outputExecutioner(command)
+            ProcessUtilities.outputExecutioner(command, self.externalApp)
 
             command = 'git -C %s commit -m "%s"' % (self.folder, self.commitMessage)
-            commandStatus = ProcessUtilities.outputExecutioner(command)
+            commandStatus = ProcessUtilities.outputExecutioner(command, self.externalApp)
 
             if commandStatus.find('nothing to commit') == -1:
                 data_ret = {'status': 1, 'commandStatus': commandStatus}
@@ -3278,7 +3257,7 @@ StrictHostKeyChecking no
 
             command = 'git -C %s config --local core.sshCommand "ssh -i /home/%s/.ssh/%s"' % (
             self.folder, self.domain, externalApp)
-            ProcessUtilities.executioner(command)
+            ProcessUtilities.executioner(command, self.externalApp)
 
             ## Check if remote exists
 
@@ -3325,20 +3304,19 @@ StrictHostKeyChecking no
 
             command = 'git -C %s config --local core.sshCommand "ssh -i /home/%s/.ssh/%s"' % (
                     self.folder, self.domain, externalApp)
-            ProcessUtilities.executioner(command)
+            ProcessUtilities.executioner(command, self.externalApp)
 
             ##
 
             command = 'git -C %s push' % (self.folder)
-            commandStatus = ProcessUtilities.outputExecutioner(command)
+            commandStatus = ProcessUtilities.outputExecutioner(command, self.externalApp)
 
             if commandStatus.find('has no upstream branch') > -1:
                 command = 'git -C %s rev-parse --abbrev-ref HEAD' % (self.folder)
-                currentBranch = ProcessUtilities.outputExecutioner(command).rstrip('\n')
+                currentBranch = ProcessUtilities.outputExecutioner(command, self.externalApp).rstrip('\n')
 
                 command = 'git -C %s push --set-upstream origin %s' % (self.folder, currentBranch)
-                commandStatus = ProcessUtilities.outputExecutioner(command)
-
+                commandStatus = ProcessUtilities.outputExecutioner(command, self.externalApp)
 
             if commandStatus.find('Everything up-to-date') == -1 and commandStatus.find('rejected') == -1:
                 data_ret = {'status': 1, 'commandStatus': commandStatus}
@@ -3384,24 +3362,24 @@ StrictHostKeyChecking no
 
             if self.overrideData:
                 command = 'rm -rf %s' % (self.folder)
-                ProcessUtilities.executioner(command)
+                ProcessUtilities.executioner(command, self.externalApp)
 
             ## Set defauly key
 
             externalApp = Websites.objects.get(domain=self.domain).externalApp
 
             command = 'git config --global core.sshCommand "ssh -i /home/%s/.ssh/%s"' % (self.domain, externalApp)
-            ProcessUtilities.executioner(command)
+            ProcessUtilities.executioner(command, self.externalApp)
 
             ##
 
             command = 'git clone git@%s:%s/%s.git %s' % (self.gitHost, self.gitUsername, self.gitReponame, self.folder)
-            commandStatus = ProcessUtilities.outputExecutioner(command)
+            commandStatus = ProcessUtilities.outputExecutioner(command, self.externalApp)
 
             if commandStatus.find('already exists') == -1 and commandStatus.find('Permission denied') == -1:
 
                 command = 'git config --global --unset core.sshCommand'
-                ProcessUtilities.executioner(command)
+                ProcessUtilities.executioner(command, self.externalApp)
 
                 from filemanager.filemanager import FileManager
 
@@ -3420,7 +3398,7 @@ StrictHostKeyChecking no
                 fm.fixPermissions(self.domain)
 
                 command = 'git config --global --unset core.sshCommand'
-                ProcessUtilities.executioner(command)
+                ProcessUtilities.executioner(command, self.externalApp)
 
                 data_ret = {'status': 0, 'error_message': 'Failed to clone.', 'commandStatus': commandStatus}
                 json_data = json.dumps(data_ret)
@@ -3452,7 +3430,7 @@ StrictHostKeyChecking no
                 return ACLManager.loadErrorJson()
 
             command = 'rm -rf %s/.git' % (self.folder)
-            ProcessUtilities.executioner(command)
+            ProcessUtilities.executioner(command, self.externalApp)
 
             data_ret = {'status': 1}
             json_data = json.dumps(data_ret)
@@ -3484,7 +3462,7 @@ StrictHostKeyChecking no
                 return ACLManager.loadErrorJson()
 
             command = 'cat %s/.gitignore' % (self.folder)
-            gitIgnoreContent = ProcessUtilities.outputExecutioner(command)
+            gitIgnoreContent = ProcessUtilities.outputExecutioner(command, self.externalApp)
 
             if gitIgnoreContent.find('No such file or directory') > -1:
                 gitIgnoreContent = 'File is currently empty.'
@@ -3570,7 +3548,7 @@ StrictHostKeyChecking no
             initCommand = """log --pretty=format:"%h|%s|%cn|%cd" -50"""
 
             command = 'git -C %s %s' % (self.folder, initCommand)
-            commits = ProcessUtilities.outputExecutioner(command).split('\n')
+            commits = ProcessUtilities.outputExecutioner(command, self.externalApp).split('\n')
 
             json_data = "["
             checker = 0
@@ -3620,7 +3598,7 @@ StrictHostKeyChecking no
                 return ACLManager.loadErrorJson()
 
             command = 'git -C %s diff-tree --no-commit-id --name-only -r %s' % (self.folder, self.commit)
-            files = ProcessUtilities.outputExecutioner(command).split('\n')
+            files = ProcessUtilities.outputExecutioner(command, self.externalApp).split('\n')
 
             data_ret = {'status': 1, 'files': files}
             json_data = json.dumps(data_ret)
@@ -3653,21 +3631,38 @@ StrictHostKeyChecking no
                 return ACLManager.loadErrorJson()
 
             command = 'git -C %s show %s -- %s/%s' % (self.folder, self.commit, self.folder, self.file.strip('\n').strip(' '))
-            fileChangedContent = ProcessUtilities.outputExecutioner(command).split('\n')
+            fileChangedContent = ProcessUtilities.outputExecutioner(command, self.externalApp).split('\n')
 
+
+
+            ## Find initial line numbers
+
+            lineNumber = int(fileChangedContent[10].split('+')[1].split(',')[0])
             fileLen = len(fileChangedContent)
-            finalContent = ''
+            finalConent = '<tr><td style="border-top: none;color:blue">%s</td><td style="border-top: none;"><p style="color:blue">%s</p></td></tr>' % ('#', fileChangedContent[10])
 
-            for i in range(12, fileLen-1):
-                if fileChangedContent[i][0] == '+':
-                    finalContent = finalContent + '<p style="color:green">%s</p><br>' % (fileChangedContent[i])
-                elif fileChangedContent[i][0] == '-':
-                    finalContent = finalContent + '<p style="color:red">%s</p><br>' % (fileChangedContent[i])
+            for i in range(11, fileLen-1):
+
+                if fileChangedContent[i][0] == '@':
+                    lineNumber = int(fileChangedContent[i].split('+')[1].split(',')[0])
+                    finalConent = finalConent + '<tr><td style="border-top: none;color:blue">%s</td><td style="border-top: none;"><p style="color:blue">%s</p></td></tr>' % ('#', fileChangedContent[i])
+                    continue
+
                 else:
-                    finalContent = finalContent + '<p>%s</p><br>' % (fileChangedContent[i])
+                    if fileChangedContent[i][0] == '+':
+                        content = '<p style="color:green">%s</p>' % (fileChangedContent[i])
+                        finalConent = finalConent + '<tr style="color:green"><td style="border-top: none;">%s</td><td style="border-top: none;">%s</td></tr>' % (str(lineNumber), content)
+                        lineNumber = lineNumber + 1
+                    elif fileChangedContent[i][0] == '-':
+                        content = '<p style="color:red">%s</p>' % (fileChangedContent[i])
+                        finalConent = finalConent + '<tr style="color:red"><td style="border-top: none;">%s</td><td style="border-top: none;">%s</td></tr>' % (str(lineNumber), content)
+                        lineNumber = lineNumber + 1
+                    else:
+                        content = '<p>%s</p>' % (fileChangedContent[i])
+                        finalConent = finalConent + '<tr><td style="border-top: none;">%s</td><td style="border-top: none;">%s</td></tr>' % (str(lineNumber), content)
+                        lineNumber = lineNumber + 1
 
-
-            data_ret = {'status': 1, 'fileChangedContent': finalContent}
+            data_ret = {'status': 1, 'fileChangedContent': finalConent}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
