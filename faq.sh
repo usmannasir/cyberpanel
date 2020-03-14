@@ -10,7 +10,7 @@ NC='\033[0m' # No Color
 #${RED}text${NC}
 #${GREEN}  ${BLUE}
 
-
+echo -e "Use Up/Down Arrow key to navigate\n"
 echo -e "Frequently Asked Question
 
 ${PURPLE}1.${NC} How to reset CyberPanel admin password?
