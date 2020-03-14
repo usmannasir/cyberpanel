@@ -3072,21 +3072,20 @@ StrictHostKeyChecking no
 
             externalApp = Websites.objects.get(domain=self.domain).externalApp
 
-            command = 'git -C %s config --local core.sshCommand "ssh -i /home/%s/.ssh/%s"' % (self.folder, self.domain, externalApp)
-            ProcessUtilities.executioner(command, self.externalApp)
+            command = 'git -C %s config --local core.sshCommand "ssh -i /home/%s/.ssh/%s -o "StrictHostKeyChecking=no""' % (self.folder, self.domain, externalApp)
+            ProcessUtilities.executioner(command)
 
             ## Check if remote exists
 
             command = 'git -C %s remote -v' % (self.folder)
-            remoteResult = ProcessUtilities.outputExecutioner(command, self.externalApp)
+            remoteResult = ProcessUtilities.outputExecutioner(command)
 
             ## Set new remote
 
             if remoteResult.find('origin') == -1:
                 command = 'git -C %s remote add origin git@%s:%s/%s.git' % (self.folder, self.gitHost, self.gitUsername, self.gitReponame)
             else:
-                command = 'git -C %s remote set-url origin git@%s:%s/%s.git' % (
-                self.folder, self.gitHost, self.gitUsername, self.gitReponame)
+                command = 'git -C %s remote set-url origin git@%s:%s/%s.git' % (self.folder, self.gitHost, self.gitUsername, self.gitReponame)
 
             possibleError = ProcessUtilities.outputExecutioner(command, self.externalApp)
 
@@ -3343,6 +3342,7 @@ StrictHostKeyChecking no
             self.gitHost = data['gitHost']
             self.gitUsername = data['gitUsername']
             self.gitReponame = data['gitReponame']
+
             try:
                 self.overrideData = data['overrideData']
             except:
@@ -3362,24 +3362,21 @@ StrictHostKeyChecking no
 
             if self.overrideData:
                 command = 'rm -rf %s' % (self.folder)
-                ProcessUtilities.executioner(command, self.externalApp)
+                ProcessUtilities.executioner(command)
 
             ## Set defauly key
 
             externalApp = Websites.objects.get(domain=self.domain).externalApp
 
-            command = 'git config --global core.sshCommand "ssh -i /home/%s/.ssh/%s"' % (self.domain, externalApp)
-            ProcessUtilities.executioner(command, self.externalApp)
+            command = 'git config --global core.sshCommand "ssh -i /home/%s/.ssh/%s -o "StrictHostKeyChecking=no""' % (self.domain, externalApp)
+            ProcessUtilities.executioner(command)
 
             ##
 
             command = 'git clone git@%s:%s/%s.git %s' % (self.gitHost, self.gitUsername, self.gitReponame, self.folder)
-            commandStatus = ProcessUtilities.outputExecutioner(command, self.externalApp)
+            commandStatus = ProcessUtilities.outputExecutioner(command)
 
             if commandStatus.find('already exists') == -1 and commandStatus.find('Permission denied') == -1:
-
-                command = 'git config --global --unset core.sshCommand'
-                ProcessUtilities.executioner(command, self.externalApp)
 
                 from filemanager.filemanager import FileManager
 
@@ -3396,9 +3393,6 @@ StrictHostKeyChecking no
 
                 fm = FileManager(None, None)
                 fm.fixPermissions(self.domain)
-
-                command = 'git config --global --unset core.sshCommand'
-                ProcessUtilities.executioner(command, self.externalApp)
 
                 data_ret = {'status': 0, 'error_message': 'Failed to clone.', 'commandStatus': commandStatus}
                 json_data = json.dumps(data_ret)
