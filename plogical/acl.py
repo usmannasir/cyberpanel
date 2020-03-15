@@ -8,14 +8,25 @@ from loginSystem.models import Administrator, ACL
 from django.shortcuts import HttpResponse
 from packages.models import Package
 from websiteFunctions.models import Websites, ChildDomains
-from dns.models import Domains
 import json
 from subprocess import call, CalledProcessError
 from shlex import split
 from .CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from dockerManager.models import Containers
-
+from re import M, I, compile
 class ACLManager:
+
+    @staticmethod
+    def validateInput(value, regex = None):
+        if regex == None:
+            verifier = compile(r'[\sa-zA-Z0-9_-]+')
+        else:
+            verifier = regex
+
+        if verifier.match(value):
+            return 1
+        else:
+            return 0
 
     @staticmethod
     def commandInjectionCheck(value):

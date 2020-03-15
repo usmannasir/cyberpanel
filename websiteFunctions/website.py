@@ -2938,14 +2938,14 @@ StrictHostKeyChecking no
             gitPath = '%s/.git' % (self.folder)
             command = 'ls -la %s' % (gitPath)
 
-            if ProcessUtilities.outputExecutioner(command, self.externalApp).find('No such file or directory') > -1:
+            if ProcessUtilities.outputExecutioner(command).find('No such file or directory') > -1:
 
                 command = 'cat /home/%s/.ssh/%s.pub' % (self.domain, website.externalApp)
                 deploymentKey = ProcessUtilities.outputExecutioner(command)
 
                 if deploymentKey.find('No such file or directory') > -1:
                     command = "ssh-keygen -f /home/%s/.ssh/%s -t rsa -N ''" % (self.domain, website.externalApp)
-                    ProcessUtilities.executioner(command)
+                    ProcessUtilities.executioner(command, website.externalApp)
 
                     command = 'cat /home/%s/.ssh/%s.pub' % (self.domain, website.externalApp)
                     deploymentKey = ProcessUtilities.outputExecutioner(command)
@@ -2971,7 +2971,7 @@ StrictHostKeyChecking no
 
                 if deploymentKey.find('No such file or directory') > -1:
                     command = "ssh-keygen -f /home/%s/.ssh/%s -t rsa -N ''" % (self.domain, website.externalApp)
-                    ProcessUtilities.executioner(command)
+                    ProcessUtilities.executioner(command, website.externalApp)
 
                     command = 'cat /home/%s/.ssh/%s.pub' % (self.domain, website.externalApp)
                     deploymentKey = ProcessUtilities.outputExecutioner(command)
@@ -3032,16 +3032,16 @@ StrictHostKeyChecking no
             website = Websites.objects.get(domain=self.domain)
 
             command = 'git -C %s init' % (self.folder)
-            result = ProcessUtilities.outputExecutioner(command )
+            result = ProcessUtilities.outputExecutioner(command)
 
             if result.find('Initialized empty Git repository in') > -1:
 
                 command = 'git -C %s config --local user.email %s' % (self.folder, website.adminEmail)
-                ProcessUtilities.executioner(command )
+                ProcessUtilities.executioner(command)
 
                 command = 'git -C %s config --local user.name "%s %s"' % (
                 self.folder, website.admin.firstName, website.admin.lastName)
-                ProcessUtilities.executioner(command )
+                ProcessUtilities.executioner(command)
 
                 data_ret = {'status': 1}
                 json_data = json.dumps(data_ret)
@@ -3073,10 +3073,17 @@ StrictHostKeyChecking no
             else:
                 return ACLManager.loadErrorJson('status', 0)
 
+            ## Security checks
+
             if self.folderCheck():
                 pass
             else:
                 return ACLManager.loadErrorJson()
+
+            if validators.domain(self.gitHost) and ACLManager.validateInput(self.gitUsername) and ACLManager.validateInput(self.gitReponame):
+                pass
+            else:
+                return ACLManager.loadErrorJson('status', 'Invalid characters in your input.')
 
             ### set default ssh key
 
@@ -3138,6 +3145,13 @@ StrictHostKeyChecking no
             else:
                 return ACLManager.loadErrorJson()
 
+            ## Security check
+
+            if ACLManager.validateInput(self.branchName):
+                pass
+            else:
+                return ACLManager.loadErrorJson('status', 'Invalid characters in your input.')
+
 
             if self.branchName.find('*') > -1:
                 data_ret = {'status': 0, 'commandStatus': 'Already on this branch.', 'error_message': 'Already on this branch.'}
@@ -3181,6 +3195,15 @@ StrictHostKeyChecking no
             else:
                 return ACLManager.loadErrorJson()
 
+            ## Security check
+
+            if ACLManager.validateInput(self.newBranchName):
+                pass
+            else:
+                return ACLManager.loadErrorJson('status', 'Invalid characters in your input.')
+
+            ##
+
             command = 'git -C %s checkout -b "%s"' % (self.folder, self.newBranchName)
             commandStatus = ProcessUtilities.outputExecutioner(command )
 
@@ -3217,6 +3240,13 @@ StrictHostKeyChecking no
                 pass
             else:
                 return ACLManager.loadErrorJson()
+
+            # security check
+
+            if ACLManager.validateInput(self.commitMessage):
+                pass
+            else:
+                return ACLManager.loadErrorJson('status', 'Invalid characters in your input.')
 
             ## Check if remote exists
 
@@ -3313,16 +3343,16 @@ StrictHostKeyChecking no
 
             command = 'git -C %s config --local core.sshCommand "ssh -i /home/%s/.ssh/%s -o "StrictHostKeyChecking=no""' % (
                     self.folder, self.domain, externalApp)
-            ProcessUtilities.executioner(command )
+            ProcessUtilities.executioner(command)
 
             ##
 
             command = 'git -C %s push' % (self.folder)
-            commandStatus = ProcessUtilities.outputExecutioner(command )
+            commandStatus = ProcessUtilities.outputExecutioner(command)
 
             if commandStatus.find('has no upstream branch') > -1:
                 command = 'git -C %s rev-parse --abbrev-ref HEAD' % (self.folder)
-                currentBranch = ProcessUtilities.outputExecutioner(command ).rstrip('\n')
+                currentBranch = ProcessUtilities.outputExecutioner(command).rstrip('\n')
 
                 if currentBranch.find('fatal: ambiguous argument') > -1:
                     data_ret = {'status': 0, 'error_message': 'You need to commit first.', 'commandStatus': 'You need to commit first.'}
@@ -3330,7 +3360,7 @@ StrictHostKeyChecking no
                     return HttpResponse(json_data)
 
                 command = 'git -C %s push --set-upstream origin %s' % (self.folder, currentBranch)
-                commandStatus = ProcessUtilities.outputExecutioner(command )
+                commandStatus = ProcessUtilities.outputExecutioner(command)
 
             if commandStatus.find('Everything up-to-date') == -1 and commandStatus.find('rejected') == -1:
                 data_ret = {'status': 1, 'commandStatus': commandStatus}
@@ -3373,6 +3403,15 @@ StrictHostKeyChecking no
                 pass
             else:
                 return ACLManager.loadErrorJson()
+
+            ## Security check
+
+            if validators.domain(self.gitHost) and ACLManager.validateInput(self.gitUsername) and ACLManager.validateInput(self.gitReponame):
+                pass
+            else:
+                return ACLManager.loadErrorJson('status', 'Invalid characters in your input.')
+
+            ##
 
 
             if self.overrideData:
@@ -3477,7 +3516,7 @@ StrictHostKeyChecking no
                 return ACLManager.loadErrorJson()
 
             command = 'cat %s/.gitignore' % (self.folder)
-            gitIgnoreContent = ProcessUtilities.outputExecutioner(command )
+            gitIgnoreContent = ProcessUtilities.outputExecutioner(command, self.externalApp)
 
             if gitIgnoreContent.find('No such file or directory') > -1:
                 gitIgnoreContent = 'File is currently empty.'
@@ -3587,6 +3626,11 @@ StrictHostKeyChecking no
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
+        except IndexError:
+            data_ret = {'status': 0, 'error_message': 'No commits found.'}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
         except BaseException as msg:
             data_ret = {'status': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
@@ -3611,6 +3655,15 @@ StrictHostKeyChecking no
                 pass
             else:
                 return ACLManager.loadErrorJson()
+
+            ## Security check
+
+            if ACLManager.validateInput(self.commit):
+                pass
+            else:
+                return ACLManager.loadErrorJson('status', 'Invalid characters in your input.')
+
+            ##
 
             command = 'git -C %s diff-tree --no-commit-id --name-only -r %s' % (self.folder, self.commit)
             files = ProcessUtilities.outputExecutioner(command).split('\n')
@@ -3644,6 +3697,13 @@ StrictHostKeyChecking no
                 pass
             else:
                 return ACLManager.loadErrorJson()
+
+            ## security check
+
+            if ACLManager.validateInput(self.commit) and self.file.find('..') == -1:
+                pass
+            else:
+                return ACLManager.loadErrorJson('status', 'Invalid characters in your input.')
 
             command = 'git -C %s show %s -- %s/%s' % (self.folder, self.commit, self.folder, self.file.strip('\n').strip(' '))
             fileChangedContent = ProcessUtilities.outputExecutioner(command).split('\n')
