@@ -5974,7 +5974,14 @@ app.controller('manageGIT', function ($scope, $http, $timeout, $window) {
 
     };
 
+    var changeBranch = 0;
+
     $scope.changeBranch = function () {
+
+        if(changeBranch === 1){
+            changeBranch = 0;
+            return 0;
+        }
 
         $scope.loadingSticks = false;
         $("#showStatus").modal();
@@ -6038,6 +6045,7 @@ app.controller('manageGIT', function ($scope, $http, $timeout, $window) {
         $scope.cyberpanelLoading = false;
         $scope.commandStatus = "";
         $scope.statusBox = false;
+        changeBranch = 1;
 
         url = "/websites/createNewBranch";
 
@@ -6531,11 +6539,13 @@ app.controller('manageGIT', function ($scope, $http, $timeout, $window) {
     };
 
     var currentComit;
+    var fetchFileCheck = 0;
 
     $scope.fetchFiles = function (commit) {
 
         currentComit = commit;
         $scope.cyberpanelLoading = false;
+        fetchFileCheck = 1;
 
         url = "/websites/fetchFiles";
 
@@ -6590,12 +6600,16 @@ app.controller('manageGIT', function ($scope, $http, $timeout, $window) {
     $scope.fileStatus = true;
 
     $scope.fetchChangesInFile = function () {
+        $scope.fileStatus = true;
+        if(fetchFileCheck === 1){
+            fetchFileCheck = 0;
+            return 0;
+        }
 
         $scope.cyberpanelLoading = false;
         $scope.currentSelectedFile = $scope.changeFile;
 
         url = "/websites/fetchChangesInFile";
-
 
         var data = {
             domain: $("#domain").text(),
@@ -6623,14 +6637,13 @@ app.controller('manageGIT', function ($scope, $http, $timeout, $window) {
                 $scope.fileStatus = false;
                 document.getElementById("fileChangedContent").innerHTML = response.data.fileChangedContent;
             } else {
+                $scope.fileStatus = true;
                 new PNotify({
                     title: 'Operation Failed!',
                     text: response.data.error_message,
                     type: 'error'
                 });
             }
-
-
         }
 
         function cantLoadInitialDatas(response) {
