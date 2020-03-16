@@ -130,6 +130,15 @@ class mysqlUtilities:
     def deleteDatabase(dbname, dbuser):
         try:
 
+            ## Remove possible git folder
+
+            dbPath = '/var/lib/mysql/%s/.git' % (dbname)
+
+            command = 'rm -rf %s' % (dbPath)
+            ProcessUtilities.executioner(command)
+
+            ##
+
             connection, cursor = mysqlUtilities.setupConnection()
 
             if connection == 0:

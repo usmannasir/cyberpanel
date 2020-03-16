@@ -3005,8 +3005,16 @@ StrictHostKeyChecking no
                 gitConfFolder = '/home/cyberpanel/git'
                 gitConFile = '%s/%s' % (gitConfFolder, self.domain)
 
-                if os.path.exists(gitConFile):
-                    gitConf = json.loads(open(gitConFile, 'r').read())
+                if not os.path.exists(gitConfFolder):
+                    os.mkdir(gitConfFolder)
+
+                if not os.path.exists(gitConFile):
+                    os.mkdir(gitConFile)
+
+                finalFile = '%s/%s' % (gitConFile, self.folder.split('/')[-1])
+
+                if os.path.exists(finalFile):
+                    gitConf = json.loads(open(finalFile, 'r').read())
 
                     autoCommitCurrent = gitConf['autoCommit']
                     autoPushCurrent = gitConf['autoPush']
@@ -3820,7 +3828,12 @@ StrictHostKeyChecking no
             if not os.path.exists(gitConfFolder):
                 os.mkdir(gitConfFolder)
 
-            writeToFile = open(gitConFile, 'w')
+            if not os.path.exists(gitConFile):
+                os.mkdir(gitConFile)
+
+            finalFile = '%s/%s' % (gitConFile, self.folder.split('/')[-1])
+
+            writeToFile = open(finalFile, 'w')
             writeToFile.write(json.dumps(dic))
             writeToFile.close()
 
