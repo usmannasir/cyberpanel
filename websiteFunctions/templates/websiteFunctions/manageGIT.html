@@ -158,6 +158,89 @@
                             Attach Existing Repo
                         </a>
 
+                        <a data-toggle="modal" data-target="#configureModal" href="#" class="btn btn-info">
+                            <input name="radio-toggle-1" type="radio">
+                            Configure
+                        </a>
+
+                        <div id="configureModal" class="modal fade" role="dialog">
+                            <div class="modal-dialog">
+
+                                <!-- Modal content-->
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <button type="button" class="close" data-dismiss="modal">&times;
+                                        </button>
+                                        <h4 class="modal-title">{% trans "Repo Settings" %}</h4>
+                                    </div>
+                                    <div class="modal-body">
+
+                                        <form name="containerSettingsForm" action="/" class="form-horizontal">
+                                            <div class="form-group">
+                                                <label class="col-sm-3 control-label">{% trans "Auto Commit" %}</label>
+                                                <div class="col-sm-6">
+                                                    <select ng-model="$parent.autoCommit" class="form-control">
+                                                        <option>Never</option>
+                                                        <option>Daily</option>
+                                                        <option>Weekly</option>
+                                                    </select>
+                                                </div>
+                                                <div class="current-pack ng-binding">Currently: {$ autoCommitCurrent $}</div>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label class="col-sm-3 control-label">{% trans "Auto Push" %}</label>
+                                                <div class="col-sm-6">
+                                                    <select ng-disabled="remote==0" ng-model="$parent.autoPush" class="form-control">
+                                                        <option>Never</option>
+                                                        <option>Daily</option>
+                                                        <option>Weekly</option>
+                                                    </select>
+                                                </div>
+                                                <div class="current-pack ng-binding">Currently: {$ autoPushCurrent $}</div>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label class="col-sm-3 control-label">{% trans "" %}</label>
+                                                <div class="col-sm-6">
+                                                    <div class="checkbox">
+                                                        <label>
+                                                            <input ng-model="$parent.emailLogs" type="checkbox"
+                                                                   value="">
+                                                            Email Logs
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <div class="current-pack ng-binding">Currently: {$ emailLogsCurrent $}</div>
+                                            </div>
+
+                                            <div ng-hide="installationDetailsForm" class="form-group">
+                                                <label class="col-sm-3 control-label">{% trans "Webhook URL" %}</label>
+                                                <div class="col-sm-6">
+                                                    <input name="webHookURL" type="text" class="form-control"
+                                                           ng-model="webHookURL" readonly>
+                                                </div>
+                                            </div>
+
+                                        </form>
+
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" ng-disabled="savingSettings"
+                                                class="btn btn-primary"
+                                                ng-click="saveGitConfigurations()">Save <img
+                                                ng-hide="cyberpanelLoading"
+                                                src="{% static 'images/loading.gif' %}">
+                                        </button>
+                                        <button type="button" ng-disabled="savingSettings"
+                                                class="btn btn-default" data-dismiss="modal">
+                                            Close
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div id="attachExistingRepo" class="modal fade" role="dialog">
                             <div class="modal-dialog">
 
@@ -319,7 +402,7 @@
 
                         <a data-toggle="modal" data-target="#commitChanges" href="#" class="btn btn-info">
                             <input name="radio-toggle-1" type="radio">
-                            Commit Changes
+                            Commit
                         </a>
 
                         <div id="commitChanges" class="modal fade" role="dialog">
@@ -373,11 +456,11 @@
 
                         <a ng-click="gitPull()" ng-disabled="remote==0" href="#" class="btn btn-info">
                             <input name="radio-toggle-1" type="radio">
-                            Pull From Remote
+                            Pull
                         </a>
                         <a ng-click="gitPush()" ng-disabled="remote==0" href="#" class="btn btn-info">
                             <input name="radio-toggle-1" type="radio">
-                            Push To Remote
+                            Push
                         </a>
                         <a ng-click="fetchGitignore()" data-toggle="modal" data-target="#gitignore" href="#"
                            class="btn btn-info">
@@ -433,7 +516,7 @@
 
                         <a data-toggle="modal" data-target="#removeGit" href="#" class="btn btn-info">
                             <input name="radio-toggle-1" type="radio">
-                            Remove Git
+                            Remove
                         </a>
 
                         <div id="removeGit" class="modal fade" role="dialog">
@@ -667,7 +750,8 @@
                                                         <label class="col-sm-2 control-label">{% trans "Select File" %}</label>
 
                                                         <div class="col-sm-10" style="margin-bottom: 2%;">
-                                                            <select ng-change="fetchChangesInFile()" ng-model="$parent.changeFile" class="form-control">
+                                                            <select ng-change="fetchChangesInFile()"
+                                                                    ng-model="$parent.changeFile" class="form-control">
                                                                 <option ng-repeat="file in files">
                                                                     {$ file $}
                                                                 </option>
@@ -675,21 +759,22 @@
                                                         </div>
 
                                                         <div ng-hide='fileStatus' class="row">
-                                                                <div class="col-md-12">
-                                                                    <div class="content-box">
-                                                                        <table style="margin-top: 3%; margin-right: 0px; margin-left: 0px" class="table">
-                                                                            <thead style="background-color: #f9fafe;">
-                                                                            <tr>
-                                                                                <th>#</th>
-                                                                                <th>{$ currentSelectedFile $}</th>
-                                                                            </tr>
-                                                                            </thead>
-                                                                            <tbody id="fileChangedContent">
-                                                                            </tbody>
-                                                                        </table>
-                                                                    </div>
+                                                            <div class="col-md-12">
+                                                                <div class="content-box">
+                                                                    <table style="margin-top: 3%; margin-right: 0px; margin-left: 0px"
+                                                                           class="table">
+                                                                        <thead style="background-color: #f9fafe;">
+                                                                        <tr>
+                                                                            <th>#</th>
+                                                                            <th>{$ currentSelectedFile $}</th>
+                                                                        </tr>
+                                                                        </thead>
+                                                                        <tbody id="fileChangedContent">
+                                                                        </tbody>
+                                                                    </table>
                                                                 </div>
                                                             </div>
+                                                        </div>
                                                     </div>
 
                                                 </form>

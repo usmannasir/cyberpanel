@@ -5832,6 +5832,10 @@ app.controller('manageGIT', function ($scope, $http, $timeout, $window) {
                     $scope.remoteResult = response.data.remoteResult;
                     $scope.totalCommits = response.data.totalCommits;
                     $scope.home = response.data.home;
+                    $scope.webHookURL = response.data.webHookURL;
+                    $scope.autoCommitCurrent = response.data.autoCommitCurrent;
+                    $scope.autoPushCurrent = response.data.autoPushCurrent;
+                    $scope.emailLogsCurrent = response.data.emailLogsCurrent;
                 } else {
                     $scope.gitTracking = false;
                     $scope.gitEnable = true;
@@ -6638,6 +6642,58 @@ app.controller('manageGIT', function ($scope, $http, $timeout, $window) {
                 document.getElementById("fileChangedContent").innerHTML = response.data.fileChangedContent;
             } else {
                 $scope.fileStatus = true;
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+
+
+        }
+    };
+
+    $scope.saveGitConfigurations = function () {
+
+        $scope.cyberpanelLoading = false;
+
+        url = "/websites/saveGitConfigurations";
+
+
+        var data = {
+            domain: $("#domain").text(),
+            folder: $scope.folder,
+            autoCommit: $scope.autoCommit,
+            autoPush: $scope.autoPush,
+            emailLogs: $scope.emailLogs,
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success',
+                    text: 'Successfully saved.',
+                    type: 'success'
+                });
+            } else {
                 new PNotify({
                     title: 'Operation Failed!',
                     text: response.data.error_message,

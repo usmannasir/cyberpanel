@@ -3000,8 +3000,31 @@ StrictHostKeyChecking no
                 if self.folder == '/home/%s' % (self.domain):
                     home = 1
 
+                ## Fetch Configurations
+
+                gitConfFolder = '/home/cyberpanel/git'
+                gitConFile = '%s/%s' % (gitConfFolder, self.domain)
+
+                if os.path.exists(gitConFile):
+                    gitConf = json.loads(open(gitConFile, 'r').read())
+
+                    autoCommitCurrent = gitConf['autoCommit']
+                    autoPushCurrent = gitConf['autoPush']
+                    emailLogsCurrent = gitConf['emailLogs']
+                else:
+                    autoCommitCurrent = 'Never'
+                    autoPushCurrent = 'Never'
+                    emailLogsCurrent = 'False'
+
+                ##
+
+                webHookURL = 'https://%s/websites/%s/webhook' % (ACLManager.fetchIP(), self.domain)
+
                 data_ret = {'status': 1, 'repo': 1, 'finalBranches': branches, 'deploymentKey': deploymentKey,
-                            'remote': remote, 'remoteResult': remoteResult, 'totalCommits': totalCommits, 'home': home}
+                            'remote': remote, 'remoteResult': remoteResult, 'totalCommits': totalCommits, 'home': home,
+                            'webHookURL': webHookURL, 'autoCommitCurrent': autoCommitCurrent,
+                            'autoPushCurrent':autoPushCurrent, 'emailLogsCurrent': emailLogsCurrent}
+
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
@@ -3750,6 +3773,61 @@ StrictHostKeyChecking no
             data_ret = {'status': 0, 'error_message': 'Not a text file.'}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
+        except BaseException as msg:
+            data_ret = {'status': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def saveGitConfigurations(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            self.domain = data['domain']
+            self.folder = data['folder']
+
+            dic = {}
+
+            dic['autoCommit'] = data['autoCommit']
+
+            try:
+                dic['autoPush'] = data['autoPush']
+            except:
+                dic['autoCommit'] = 'Never'
+
+            try:
+                dic['emailLogs'] = data['emailLogs']
+            except:
+                dic['emailLogs'] = False
+
+
+            if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson('status', 0)
+
+            if self.folderCheck():
+                pass
+            else:
+                return ACLManager.loadErrorJson()
+
+            ##
+
+            gitConfFolder = '/home/cyberpanel/git'
+            gitConFile = '%s/%s' % (gitConfFolder, self.domain)
+
+            if not os.path.exists(gitConfFolder):
+                os.mkdir(gitConfFolder)
+
+            writeToFile = open(gitConFile, 'w')
+            writeToFile.write(json.dumps(dic))
+            writeToFile.close()
+
+            data_ret = {'status': 1}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
         except BaseException as msg:
             data_ret = {'status': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)

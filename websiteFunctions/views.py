@@ -845,3 +845,11 @@ def fetchChangesInFile(request):
         return wm.fetchChangesInFile(userID, json.loads(request.body))
     except KeyError:
         return redirect(loadLoginPage)
+
+def saveGitConfigurations(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.saveGitConfigurations(userID, json.loads(request.body))
+    except KeyError:
+        return redirect(loadLoginPage)

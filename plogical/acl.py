@@ -17,6 +17,16 @@ from re import M, I, compile
 class ACLManager:
 
     @staticmethod
+    def fetchIP():
+        try:
+            ipFile = "/etc/cyberpanel/machineIP"
+            f = open(ipFile)
+            ipData = f.read()
+            return ipData.split('\n', 1)[0]
+        except BaseException:
+            return "192.168.100.1"
+
+    @staticmethod
     def validateInput(value, regex = None):
         if regex == None:
             verifier = compile(r'[\sa-zA-Z0-9_-]+')
