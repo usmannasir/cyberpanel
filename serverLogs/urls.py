@@ -10,5 +10,6 @@ urlpatterns = [
     url(r'^modSecAuditLogs', views.modSecAuditLogs, name='modSecAuditLogs'),
     url(r'^getLogsFromFile',views.getLogsFromFile, name="getLogsFromFile"),
     url(r'^clearLogFile',views.clearLogFile, name="clearLogFile"),
-
+    url(r'^serverMail$', views.serverMail, name="serverMail"),
+    url(r'^saveSMTPSettings$', views.saveSMTPSettings, name="saveSMTPSettings"),
 ]

@@ -1,0 +1,88 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Server Mail - CyberPanel" %}{% endblock %}
+{% block content %}
+
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
+
+
+    <div class="container">
+        <div id="page-title">
+            <h2>{% trans "Manage Server Mail" %}</h2>
+            <p>{% trans "On this page you can configure how CyberPanel send mails. (Notifications or Errors from CyberPanel)" %}</p>
+        </div>
+        <div ng-controller="serverMail" class="panel">
+            <div class="panel-body">
+                <h3 class="title-hero">
+                    {% trans "Manage SMTP Hosts" %} <img ng-hide="cyberPanelLoading"
+                                                         src="{% static 'images/loading.gif' %}">
+                </h3>
+                <div class="example-box-wrapper">
+
+
+                    <form action="/" class="form-horizontal bordered-row">
+
+                        <!---- Create SMTP Host --->
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Mailer" %}</label>
+                            <div class="col-sm-6">
+                                <select ng-change="mailerSettings()" ng-model="mailer" class="form-control">
+                                    <option>Default</option>
+                                    <option>SMTP</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div ng-hide="installationDetailsForm" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "SMTP Host" %}</label>
+                            <div ng-init="smtpHost='{{ smtpHost }}'" class="col-sm-6">
+                                <input type="text" class="form-control" ng-model="smtpHost" required>
+                            </div>
+                        </div>
+
+                        <div ng-hide="installationDetailsForm" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Port" %}</label>
+                            <div ng-init="smtpPort='{{ smtpPort }}'" class="col-sm-6">
+                                <input type="text" class="form-control" ng-model="smtpPort" required>
+                            </div>
+                        </div>
+
+                        <div ng-hide="installationDetailsForm" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Username" %}</label>
+                            <div ng-init="smtpUserName='{{ smtpUserName }}'" class="col-sm-6">
+                                <input type="text" class="form-control" ng-model="smtpUserName" required>
+                            </div>
+                        </div>
+
+                        <div ng-hide="installationDetailsForm" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Password" %}</label>
+                            <div ng-init="smtpPassword='{{ smtpPassword }}'" class="col-sm-6">
+                                <input type="password" class="form-control" ng-model="smtpPassword" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-4">
+                                <button type="button" ng-click="saveSMTPSettings()"
+                                        class="btn btn-primary btn-lg btn-block">{% trans "Save" %}</button>
+                            </div>
+                        </div>
+
+                        <!---- Create SMTP Host --->
+
+                    </form>
+
+
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+
+
+{% endblock %}

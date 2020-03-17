@@ -185,19 +185,23 @@
                                                         <option>Weekly</option>
                                                     </select>
                                                 </div>
-                                                <div class="current-pack ng-binding">Currently: {$ autoCommitCurrent $}</div>
+                                                <div class="current-pack ng-binding">Currently: {$ autoCommitCurrent
+                                                    $}
+                                                </div>
                                             </div>
 
                                             <div class="form-group">
                                                 <label class="col-sm-3 control-label">{% trans "Auto Push" %}</label>
                                                 <div class="col-sm-6">
-                                                    <select ng-disabled="remote==0" ng-model="$parent.autoPush" class="form-control">
+                                                    <select ng-disabled="remote==0" ng-model="$parent.autoPush"
+                                                            class="form-control">
                                                         <option>Never</option>
                                                         <option>Daily</option>
                                                         <option>Weekly</option>
                                                     </select>
                                                 </div>
-                                                <div class="current-pack ng-binding">Currently: {$ autoPushCurrent $}</div>
+                                                <div class="current-pack ng-binding">Currently: {$ autoPushCurrent $}
+                                                </div>
                                             </div>
 
                                             <div class="form-group">
@@ -211,7 +215,8 @@
                                                         </label>
                                                     </div>
                                                 </div>
-                                                <div class="current-pack ng-binding">Currently: {$ emailLogsCurrent $}</div>
+                                                <div class="current-pack ng-binding">Currently: {$ emailLogsCurrent $}
+                                                </div>
                                             </div>
 
                                             <div ng-hide="installationDetailsForm" class="form-group">
@@ -462,6 +467,7 @@
                             <input name="radio-toggle-1" type="radio">
                             Push
                         </a>
+
                         <a ng-click="fetchGitignore()" data-toggle="modal" data-target="#gitignore" href="#"
                            class="btn btn-info">
                             <input name="radio-toggle-1" type="radio">
@@ -509,6 +515,81 @@
                                                 class="btn btn-default" data-dismiss="modal">
                                             Close
                                         </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <a ng-click="fetchGitLogs()" data-toggle="modal" data-target="#gitLogs" href="#"
+                           class="btn btn-info">
+                            <input name="radio-toggle-1" type="radio">
+                            Git Logs
+                        </a>
+
+                        <div id="gitLogs" class="modal fade" role="dialog">
+                            <div class="modal-dialog modal-lg">
+                                <!-- Modal content-->
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <button type="button" class="close" data-dismiss="modal">&times;
+                                        </button>
+                                        <h4 class="modal-title">{% trans "Git Logs" %} <img
+                                                ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}"></h4>
+                                    </div>
+                                    <div class="modal-body">
+
+                                        <div class="row">
+                                            <div class="col-sm-10">
+                                            </div>
+                                            <div class="col-sm-2">
+                                                <div class="form-group">
+                                                    <select ng-model="recordsToShow"
+                                                            ng-change="fetchGitLogs()"
+                                                            class="form-control" id="example-select">
+                                                        <option>10</option>
+                                                        <option>50</option>
+                                                        <option>100</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <table style="margin-top: 2%" class="table">
+                                            <thead>
+                                            <tr>
+                                                <th>Type</th>
+                                                <th>Date</th>
+                                                <th>Message</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            <tr ng-repeat="log in logs track by $index">
+                                                <td ng-bind="log.type"></td>
+                                                <td ng-bind="log.date"></td>
+                                                <td ng-bind="log.message"></td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+
+                                        <div style="margin-top: 2%" class="row">
+                                            <div class="col-md-12">
+                                                <div class="row">
+                                                    <div class="col-md-9">
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <div class="form-group">
+                                                            <select ng-model="currentPage" class="form-control"
+                                                                    ng-change="fetchGitLogs()">
+                                                                <option ng-repeat="page in pagination">{$ $index + 1
+                                                                    $}
+                                                                </option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+                                                </div> <!-- end row -->
+                                            </div>
+                                        </div>
+
                                     </div>
                                 </div>
                             </div>

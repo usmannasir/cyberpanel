@@ -203,3 +203,90 @@ def clearLogFile(request):
         data_ret = {'cleanStatus': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
+
+def serverMail(request):
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
+
+        smtpPath = '/home/cyberpanel/smtpDetails'
+        data = {}
+
+        if os.path.exists(smtpPath):
+            mailSettings = json.loads(open(smtpPath, 'r').read())
+            data['smtpHost'] = mailSettings['smtpHost']
+            data['smtpPort'] = mailSettings['smtpPort']
+            data['smtpUserName'] = mailSettings['smtpUserName']
+            data['smtpPassword'] = mailSettings['smtpPassword']
+
+        return render(request,'serverLogs/serverMail.html', data)
+
+    except KeyError as msg:
+        logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[accessLogs]")
+        return redirect(loadLoginPage)
+
+def saveSMTPSettings(request):
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('logstatus', 0)
+
+        data = json.loads(request.body)
+        mailer = data['mailer']
+
+        smtpPath = '/home/cyberpanel/smtpDetails'
+
+        if mailer != 'SMTP':
+
+            if os.path.exists(smtpPath):
+                os.remove(smtpPath)
+        else:
+            import smtplib
+
+            smtpHost = data['smtpHost']
+            smtpPort = data['smtpPort']
+            smtpUserName = data['smtpUserName']
+            smtpPassword = data['smtpPassword']
+
+            try:
+                verifyLogin = smtplib.SMTP(str(smtpHost), int(smtpPort))
+                verifyLogin.login(str(smtpUserName), str(smtpPassword))
+
+                writeToFile = open(smtpPath, 'w')
+                writeToFile.write(json.dumps(data))
+                writeToFile.close()
+
+                command = 'chmod 600 %s' % (smtpPath)
+                ProcessUtilities.executioner(command)
+
+            except smtplib.SMTPHeloError:
+                data_ret = {"status": 0, 'error_message': 'The server did not reply properly to the HELO greeting.'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            except smtplib.SMTPAuthenticationError:
+                data_ret = {"status": 0, 'error_message': 'Username and password combination not accepted.'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            except smtplib.SMTPException:
+                data_ret = {"status": 0, 'error_message': 'No suitable authentication method was found.'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+
+        status = {"status": 1}
+        final_json = json.dumps(status)
+        return HttpResponse(final_json)
+
+    except BaseException as msg:
+        status = {"status": 0, 'error_message': str(msg)}
+        final_json = json.dumps(status)
+        return HttpResponse(final_json)

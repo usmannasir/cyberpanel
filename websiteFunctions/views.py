@@ -853,3 +853,11 @@ def saveGitConfigurations(request):
         return wm.saveGitConfigurations(userID, json.loads(request.body))
     except KeyError:
         return redirect(loadLoginPage)
+
+def fetchGitLogs(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.fetchGitLogs(userID, json.loads(request.body))
+    except KeyError:
+        return redirect(loadLoginPage)

@@ -9,6 +9,11 @@ from IncBackups.IncBackupsControl import IncJobs
 from IncBackups.models import BackupJob
 from random import randint
 import argparse
+import json
+from websiteFunctions.models import GitLogs, Websites
+from websiteFunctions.website import WebsiteManager
+import time
+
 try:
     from plogical.virtualHostUtilities import virtualHostUtilities
     from plogical.mailUtilities import mailUtilities
@@ -18,6 +23,7 @@ except:
 
 class IncScheduler():
     logPath = '/home/cyberpanel/incbackuplogs'
+    gitFolder = '/home/cyberpanel/git'
 
     @staticmethod
     def startBackup(type):
@@ -82,6 +88,76 @@ class IncScheduler():
         except BaseException as msg:
             logging.writeToFile(str(msg))
 
+    @staticmethod
+    def git(type):
+        try:
+            for website in os.listdir(IncScheduler.gitFolder):
+                finalText = ''
+                web = Websites.objects.get(domain=website)
+
+                message = '[%s Cron] Checking if %s has any pending commits on %s.' % (type, website, time.strftime("%m.%d.%Y_%H-%M-%S"))
+                finalText = '%s\n' % (message)
+                GitLogs(owner=web, type='INFO', message = message).save()
+
+                finalPathInside = '%s/%s' % (IncScheduler.gitFolder, website)
+
+                for file in os.listdir(finalPathInside):
+                    if file.find('public_html') > -1:
+                        finalPath = '/home/%s/public_html' % (website)
+                        finalPathConf = '%s/%s' % (finalPathInside, file)
+                    elif file.find('vmail') > -1:
+                        finalPath = '/home/vmail/%s' % (website)
+                        finalPathConf = '%s/%s' % (finalPathInside, file)
+                    else:
+                        finalPath = '/var/lib/mysql/%s' % (file)
+                        finalPathConf = '%s/%s' % (finalPathInside, file)
+
+                    gitConf = json.loads(open(finalPathConf, 'r').read())
+                    data = {}
+                    data['domain'] = website
+                    data['folder'] = finalPath
+                    data['commitMessage'] = 'Auto commit by CyberPanel %s cron on %s.' % (type, time.strftime('%m.%d.%Y_%H-%M-%S'))
+
+
+                    if gitConf['autoCommit'] == type:
+
+                        wm = WebsiteManager()
+                        resp = wm.commitChanges(1, data)
+                        logging.writeToFile(resp.content)
+                        resp = json.loads(resp.content)
+
+                        message = 'Folder: %s, Status: %s' % (finalPath, resp['commandStatus'])
+                        finalText = '%s\n%s' % (finalText, message)
+
+                        if resp['status'] == 1:
+                            GitLogs(owner=web, type='INFO', message=message).save()
+                        else:
+                            GitLogs(owner=web, type='ERROR', message=message).save()
+
+                    if gitConf['autoPush'] == type:
+
+                        wm = WebsiteManager()
+                        resp = wm.gitPush(1, data)
+                        resp = json.loads(resp.content)
+
+                        if resp['status'] == 1:
+                            GitLogs(owner=web, type='INFO', message=resp['commandStatus']).save()
+                            finalText = '%s\n%s' % (finalText, resp['commandStatus'])
+                        else:
+                            GitLogs(owner=web, type='ERROR', message=resp['commandStatus']).save()
+                            finalText = '%s\n%s' % (finalText, resp['commandStatus'])
+
+
+                message = '[%s Cron] Finished checking for %s on %s.' % (type, website, time.strftime("%m.%d.%Y_%H-%M-%S"))
+                finalText = '%s\n%s' % (finalText, message)
+                logging.SendEmail(web.adminEmail, web.adminEmail, finalText, 'Git report for %s.' % (web.domain))
+                GitLogs(owner=web, type='INFO', message=message).save()
+
+        except BaseException as msg:
+            logging.writeToFile('%s. [IncScheduler.git:90]' % (str(msg)))
+
+
+
 
 def main():
 
@@ -90,6 +166,7 @@ def main():
     args = parser.parse_args()
 
     IncScheduler.startBackup(args.function)
+    IncScheduler.git(args.function)
 
 
 if __name__ == "__main__":

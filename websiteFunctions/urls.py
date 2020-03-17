@@ -136,6 +136,7 @@ urlpatterns = [
     url(r'^fetchFiles$', views.fetchFiles, name='fetchFiles'),
     url(r'^fetchChangesInFile$', views.fetchChangesInFile, name='fetchChangesInFile'),
     url(r'^saveGitConfigurations$', views.saveGitConfigurations, name='saveGitConfigurations'),
+    url(r'^fetchGitLogs$', views.fetchGitLogs, name='fetchGitLogs'),
 
 
     ## Catch all for domains

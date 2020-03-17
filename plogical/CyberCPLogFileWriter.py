@@ -8,11 +8,32 @@ class CyberCPLogFileWriter:
     fileName = "/home/cyberpanel/error-logs.txt"
 
     @staticmethod
-    def SendEmail(sender, receivers, message):
+    def SendEmail(sender, receivers, message, subject=None, type=None):
         try:
-            smtpObj = smtplib.SMTP('localhost')
-            smtpObj.sendmail(sender, receivers, message)
-            print("Successfully sent email")
+            smtpPath = '/home/cyberpanel/smtpDetails'
+
+            if os.path.exists(smtpPath):
+                import json
+
+                mailSettings = json.loads(open(smtpPath, 'r').read())
+                smtpHost = mailSettings['smtpHost']
+                smtpPort = mailSettings['smtpPort']
+                smtpUserName = mailSettings['smtpUserName']
+                smtpPassword = mailSettings['smtpPassword']
+
+                smtpServer = smtplib.SMTP(str(smtpHost), int(smtpPort))
+                smtpServer.login(smtpUserName, smtpPassword)
+
+                ##
+
+                if subject != None:
+                    message = 'Subject: {}\n\n{}'.format(subject, message)
+
+                smtpServer.sendmail(smtpUserName, receivers, message)
+            else:
+                smtpObj = smtplib.SMTP('localhost')
+                smtpObj.sendmail(sender, receivers, message)
+                print("Successfully sent email")
         except BaseException as msg:
             CyberCPLogFileWriter.writeToFile(str(msg))
 

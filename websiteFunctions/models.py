@@ -4,6 +4,7 @@
 from django.db import models
 from packages.models import Package
 from loginSystem.models import Administrator
+from datetime import datetime
 
 # Create your models here.
 
@@ -46,4 +47,11 @@ class backupSchedules(models.Model):
 class aliasDomains(models.Model):
     master = models.ForeignKey(Websites, on_delete=models.CASCADE)
     aliasDomain = models.CharField(max_length=75)
+
+class GitLogs(models.Model):
+    owner = models.ForeignKey(Websites, on_delete=models.CASCADE)
+    date = models.DateTimeField(default=datetime.now, blank=True)
+    type = models.CharField(max_length=5)
+    message = models.TextField(max_length=65532)
+
 

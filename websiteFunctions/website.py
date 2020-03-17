@@ -3284,8 +3284,8 @@ StrictHostKeyChecking no
             command = 'git -C %s add -A' % (self.folder)
             ProcessUtilities.outputExecutioner(command )
 
-            command = 'git -C %s commit -m "%s"' % (self.folder, self.commitMessage)
-            commandStatus = ProcessUtilities.outputExecutioner(command )
+            command = 'git -C %s commit -m "%s"' % (self.folder, self.commitMessage.replace('"', ''))
+            commandStatus = ProcessUtilities.outputExecutioner(command)
 
             if commandStatus.find('nothing to commit') == -1:
                 data_ret = {'status': 1, 'commandStatus': commandStatus}
@@ -3297,7 +3297,7 @@ StrictHostKeyChecking no
                 return HttpResponse(json_data)
 
         except BaseException as msg:
-            data_ret = {'status': 0, 'error_message': str(msg)}
+            data_ret = {'status': 0, 'error_message': str(msg), 'commandStatus': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -3403,7 +3403,7 @@ StrictHostKeyChecking no
                 return HttpResponse(json_data)
 
         except BaseException as msg:
-            data_ret = {'status': 0, 'error_message': str(msg)}
+            data_ret = {'status': 0, 'error_message': str(msg), 'commandStatus': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -3802,7 +3802,7 @@ StrictHostKeyChecking no
             try:
                 dic['autoPush'] = data['autoPush']
             except:
-                dic['autoCommit'] = 'Never'
+                dic['autoPush'] = 'Never'
 
             try:
                 dic['emailLogs'] = data['emailLogs']
@@ -3841,6 +3841,67 @@ StrictHostKeyChecking no
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
+        except BaseException as msg:
+            data_ret = {'status': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+    def getLogsInJson(self, logs):
+        json_data = "["
+        checker = 0
+        counter = 1
+
+        for items in logs:
+            dic = {'type': items.type, 'date': items.date.strftime('%m.%d.%Y_%H-%M-%S'), 'message': items.message}
+
+            if checker == 0:
+                json_data = json_data + json.dumps(dic)
+                checker = 1
+            else:
+                json_data = json_data + ',' + json.dumps(dic)
+            counter = counter + 1
+
+        json_data = json_data + ']'
+        return json_data
+
+    def fetchGitLogs(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            self.domain = data['domain']
+            self.folder = data['folder']
+            recordsToShow = int(data['recordsToShow'])
+            page = int(data['page'])
+
+            if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson('status', 0)
+
+            if self.folderCheck():
+                pass
+            else:
+                return ACLManager.loadErrorJson()
+
+            website = Websites.objects.get(domain=self.domain)
+            logs = website.gitlogs_set.all().order_by('-id')
+
+            from s3Backups.s3Backups import S3Backups
+
+            pagination = S3Backups.getPagination(len(logs), recordsToShow)
+            endPageNumber, finalPageNumber = S3Backups.recordsPointer(page, recordsToShow)
+            jsonData = self.getLogsInJson(logs[finalPageNumber:endPageNumber])
+
+            data_ret = {'status': 1, 'logs': jsonData, 'pagination': pagination}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+        except IndexError:
+            data_ret = {'status': 0, 'error_message': 'Not a text file.'}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
         except BaseException as msg:
             data_ret = {'status': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
