@@ -33,7 +33,6 @@ class CyberCPLogFileWriter:
             else:
                 smtpObj = smtplib.SMTP('localhost')
                 smtpObj.sendmail(sender, receivers, message)
-                print("Successfully sent email")
         except BaseException as msg:
             CyberCPLogFileWriter.writeToFile(str(msg))
 

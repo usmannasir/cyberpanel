@@ -269,7 +269,6 @@ class sslUtilities:
                 return 1
 
 
-
     @staticmethod
     def obtainSSLForADomain(virtualHostName,adminEmail,sslpath, aliasDomain = None):
         try:
@@ -286,31 +285,41 @@ class sslUtilities:
                     subprocess.call(shlex.split(command))
 
                 try:
-                    logging.CyberCPLogFileWriter.writeToFile("Trying to obtain SSL for: " + virtualHostName + " and: www." + virtualHostName)
+                    logging.CyberCPLogFileWriter.writeToFile("Trying to obtain SSL for: " + virtualHostName + " and: www." + virtualHostName, 0)
 
                     command = acmePath + " --issue -d " + virtualHostName + " -d www." + virtualHostName \
                               + ' --cert-file ' + existingCertPath + '/cert.pem' + ' --key-file ' + existingCertPath + '/privkey.pem' \
                               + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w ' + sslpath + ' --force'
 
-                    logging.CyberCPLogFileWriter.writeToFile(command)
+                    logging.CyberCPLogFileWriter.writeToFile(command, 0)
 
                     output = subprocess.check_output(shlex.split(command)).decode("utf-8")
-                    logging.CyberCPLogFileWriter.writeToFile("Successfully obtained SSL for: " + virtualHostName + " and: www." + virtualHostName)
+                    logging.CyberCPLogFileWriter.writeToFile("Successfully obtained SSL for: " + virtualHostName + " and: www." + virtualHostName, 0)
+
+                    logging.CyberCPLogFileWriter.SendEmail(adminEmail, adminEmail, output, 'SSL Notification for %s.' % (virtualHostName))
 
 
                 except subprocess.CalledProcessError:
                     logging.CyberCPLogFileWriter.writeToFile(
-                        "Failed to obtain SSL for: " + virtualHostName + " and: www." + virtualHostName)
+                        "Failed to obtain SSL for: " + virtualHostName + " and: www." + virtualHostName, 0)
+
+                    finalText = "Failed to obtain SSL for: " + virtualHostName + " and: www." + virtualHostName
 
                     try:
-                        logging.CyberCPLogFileWriter.writeToFile("Trying to obtain SSL for: " + virtualHostName)
+                        finalText = '%s\nTrying to obtain SSL for: %s' % (finalText, virtualHostName)
+                        logging.CyberCPLogFileWriter.writeToFile("Trying to obtain SSL for: " + virtualHostName, 0)
                         command = acmePath + " --issue -d " + virtualHostName + ' --cert-file ' + existingCertPath \
                                   + '/cert.pem' + ' --key-file ' + existingCertPath + '/privkey.pem' \
                                   + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w ' + sslpath + ' --force'
                         output = subprocess.check_output(shlex.split(command)).decode("utf-8")
-                        logging.CyberCPLogFileWriter.writeToFile("Successfully obtained SSL for: " + virtualHostName)
+                        logging.CyberCPLogFileWriter.writeToFile("Successfully obtained SSL for: " + virtualHostName, 0)
+                        finalText = '%s\nSuccessfully obtained SSL for: %s.' % (finalText, virtualHostName)
+                        logging.CyberCPLogFileWriter.SendEmail(adminEmail, adminEmail, finalText,
+                                                               'SSL Notification for %s.' % (virtualHostName))
                     except subprocess.CalledProcessError:
-                        logging.CyberCPLogFileWriter.writeToFile('Failed to obtain SSL, issuing self-signed SSL for: ' + virtualHostName)
+                        logging.CyberCPLogFileWriter.writeToFile('Failed to obtain SSL, issuing self-signed SSL for: ' + virtualHostName, 0)
+                        logging.CyberCPLogFileWriter.SendEmail(adminEmail, adminEmail, 'Failed to obtain SSL, issuing self-signed SSL for: ' + virtualHostName,
+                                                               'SSL Notification for %s.' % (virtualHostName))
                         return 0
             else:
 
