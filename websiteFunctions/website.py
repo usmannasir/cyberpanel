@@ -3379,11 +3379,11 @@ StrictHostKeyChecking no
             ##
 
             command = 'git -C %s push' % (self.folder)
-            commandStatus = ProcessUtilities.outputExecutioner(command)
+            commandStatus = ProcessUtilities.outputExecutioner(command, 'root', False)
 
             if commandStatus.find('has no upstream branch') > -1:
                 command = 'git -C %s rev-parse --abbrev-ref HEAD' % (self.folder)
-                currentBranch = ProcessUtilities.outputExecutioner(command).rstrip('\n')
+                currentBranch = ProcessUtilities.outputExecutioner(command, 'root', False).rstrip('\n')
 
                 if currentBranch.find('fatal: ambiguous argument') > -1:
                     data_ret = {'status': 0, 'error_message': 'You need to commit first.', 'commandStatus': 'You need to commit first.'}
@@ -3391,7 +3391,7 @@ StrictHostKeyChecking no
                     return HttpResponse(json_data)
 
                 command = 'git -C %s push --set-upstream origin %s' % (self.folder, currentBranch)
-                commandStatus = ProcessUtilities.outputExecutioner(command)
+                commandStatus = ProcessUtilities.outputExecutioner(command, 'root', False)
 
             if commandStatus.find('Everything up-to-date') == -1 and commandStatus.find('rejected') == -1 and commandStatus.find('Permission denied') == -1:
                 data_ret = {'status': 1, 'commandStatus': commandStatus}
