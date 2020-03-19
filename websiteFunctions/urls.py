@@ -120,6 +120,7 @@ urlpatterns = [
     ### Manage GIT
 
     url(r'^(?P<domain>(.*))/manageGIT$', views.manageGIT, name='manageGIT'),
+    url(r'^(?P<domain>(.*))/webhook$', views.webhook, name='webhook'),
     url(r'^fetchFolderDetails$', views.fetchFolderDetails, name='fetchFolderDetails'),
     url(r'^initRepo$', views.initRepo, name='initRepo'),
     url(r'^setupRemote$', views.setupRemote, name='setupRemote'),

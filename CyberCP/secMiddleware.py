@@ -67,7 +67,7 @@ class secMiddleware:
                             final_json = json.dumps(final_dic)
                             return HttpResponse(final_json)
 
-                    if request.build_absolute_uri().find('saveSpamAssassinConfigurations') > -1 or request.build_absolute_uri().find('docker') > -1 or request.build_absolute_uri().find('cloudAPI') > -1 or request.build_absolute_uri().find('filemanager') > -1 or request.build_absolute_uri().find('verifyLogin') > -1 or request.build_absolute_uri().find('submitUserCreation') > -1:
+                    if request.build_absolute_uri().find('webhook') > -1 or request.build_absolute_uri().find('saveSpamAssassinConfigurations') > -1 or request.build_absolute_uri().find('docker') > -1 or request.build_absolute_uri().find('cloudAPI') > -1 or request.build_absolute_uri().find('filemanager') > -1 or request.build_absolute_uri().find('verifyLogin') > -1 or request.build_absolute_uri().find('submitUserCreation') > -1:
                         continue
                     if key == 'recordContentAAAA' or key == 'backupDestinations' or key == 'ports' or key == 'imageByPass' or key == 'passwordByPass' or key == 'cronCommand' or key == 'emailMessage' or key == 'configData' or key == 'rewriteRules' or key == 'modSecRules' or key == 'recordContentTXT' or key == 'SecAuditLogRelevantStatus' or key == 'fileContent':
                         continue

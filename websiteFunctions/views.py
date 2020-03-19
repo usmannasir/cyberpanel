@@ -861,3 +861,11 @@ def fetchGitLogs(request):
         return wm.fetchGitLogs(userID, json.loads(request.body))
     except KeyError:
         return redirect(loadLoginPage)
+
+@csrf_exempt
+def webhook(request, domain):
+    try:
+        wm = WebsiteManager()
+        return wm.webhook(domain, json.loads(request.body))
+    except KeyError:
+        return redirect(loadLoginPage)

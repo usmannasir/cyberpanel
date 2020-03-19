@@ -10,7 +10,7 @@ django.setup()
 import json
 from plogical.acl import ACLManager
 import plogical.CyberCPLogFileWriter as logging
-from websiteFunctions.models import Websites, ChildDomains
+from websiteFunctions.models import Websites, ChildDomains, GitLogs
 from plogical.virtualHostUtilities import virtualHostUtilities
 import subprocess
 import shlex
@@ -2714,7 +2714,6 @@ StrictHostKeyChecking no
         except BaseException as msg:
             return HttpResponse(str(msg))
 
-
     def startCloning(self, userID=None, data=None):
         try:
 
@@ -3026,7 +3025,7 @@ StrictHostKeyChecking no
 
                 ##
 
-                webHookURL = 'https://%s/websites/%s/webhook' % (ACLManager.fetchIP(), self.domain)
+                webHookURL = 'https://%s:8090/websites/%s/webhook' % (ACLManager.fetchIP(), self.domain)
 
                 data_ret = {'status': 1, 'repo': 1, 'finalBranches': branches, 'deploymentKey': deploymentKey,
                             'remote': remote, 'remoteResult': remoteResult, 'totalCommits': totalCommits, 'home': home,
@@ -3846,7 +3845,6 @@ StrictHostKeyChecking no
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-
     def getLogsInJson(self, logs):
         json_data = "["
         checker = 0
@@ -3902,6 +3900,40 @@ StrictHostKeyChecking no
             data_ret = {'status': 0, 'error_message': 'Not a text file.'}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
+        except BaseException as msg:
+            data_ret = {'status': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def webhook(self,domain, data=None):
+        try:
+
+            self.domain = domain
+            self.folder = '/home/%s/public_html' % (domain)
+
+            ### set default ssh key
+
+            web = Websites.objects.get(domain=self.domain)
+            externalApp = web.externalApp
+
+            ## Check if remote exists
+
+            command = 'git -C %s pull' % (self.folder)
+            commandStatus = ProcessUtilities.outputExecutioner(command , externalApp)
+
+            if commandStatus.find('Already up to date') == -1:
+                message = '[Webhook Fired] Status: %s.' % (commandStatus)
+                GitLogs(owner=web, type='INFO', message=message).save()
+                data_ret = {'status': 1, 'commandStatus': commandStatus}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            else:
+                message = '[Webhook Fired] Status: %s.' % (commandStatus)
+                GitLogs(owner=web, type='ERROR', message=message).save()
+                data_ret = {'status': 0, 'error_message': 'Pull not required.', 'commandStatus': commandStatus}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
         except BaseException as msg:
             data_ret = {'status': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
