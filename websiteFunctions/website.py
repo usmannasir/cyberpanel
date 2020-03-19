@@ -3393,12 +3393,12 @@ StrictHostKeyChecking no
                 command = 'git -C %s push --set-upstream origin %s' % (self.folder, currentBranch)
                 commandStatus = ProcessUtilities.outputExecutioner(command)
 
-            if commandStatus.find('Everything up-to-date') == -1 and commandStatus.find('rejected') == -1:
+            if commandStatus.find('Everything up-to-date') == -1 and commandStatus.find('rejected') == -1 and commandStatus.find('Permission denied') == -1:
                 data_ret = {'status': 1, 'commandStatus': commandStatus}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
             else:
-                data_ret = {'status': 0, 'error_message': 'Push not required.', 'commandStatus': commandStatus}
+                data_ret = {'status': 0, 'error_message': 'Push failed.', 'commandStatus': commandStatus}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 

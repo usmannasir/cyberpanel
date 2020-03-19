@@ -246,7 +246,10 @@ class ProcessUtilities(multi.Thread):
     def outputExecutioner(command, user=None):
         try:
             if getpass.getuser() == 'root':
-                return subprocess.check_output(command, shell=True).decode("utf-8")
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.writeToFile(command)
+                p = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                return p.communicate()[0].decode("utf-8")
 
             if type(command) == list:
                 command = " ".join(command)

@@ -1240,6 +1240,22 @@ class Upgrade:
             except:
                 pass
 
+            query = """CREATE TABLE `websiteFunctions_gitlogs` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `date` datetime(6) NOT NULL,
+  `type` varchar(5) NOT NULL,
+  `message` longtext NOT NULL,
+  `owner_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `websiteFunctions_git_owner_id_ce74c7de_fk_websiteFu` (`owner_id`),
+  CONSTRAINT `websiteFunctions_git_owner_id_ce74c7de_fk_websiteFu` FOREIGN KEY (`owner_id`) REFERENCES `websiteFunctions_websites` (`id`)
+)"""
+
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
             try:
                 connection.close()
             except:
