@@ -13,7 +13,7 @@ from subprocess import call, CalledProcessError
 from shlex import split
 from .CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from dockerManager.models import Containers
-from re import M, I, compile
+from re import compile
 class ACLManager:
 
     @staticmethod
@@ -33,7 +33,7 @@ class ACLManager:
         else:
             verifier = regex
 
-        if verifier.match(value):
+        if verifier.fullmatch(value):
             return 1
         else:
             return 0
