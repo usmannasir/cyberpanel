@@ -2136,7 +2136,7 @@ vmail
                 Upgrade.executioner(command, command)
 
             command = 'bash i360deploy.sh --key %s --beta' % (key)
-            Upgrade.executioner(command, command)
+            subprocess.call(command, shell=True)
 
 
 
