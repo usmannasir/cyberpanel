@@ -156,7 +156,42 @@ class IncScheduler():
         except BaseException as msg:
             logging.writeToFile('%s. [IncScheduler.git:90]' % (str(msg)))
 
+    @staticmethod
+    def checkDiskUsage():
 
+        try:
+
+            import psutil, math
+            from websiteFunctions.models import Administrator
+            admin = Administrator.objects.get(pk=1)
+
+            diskUsage = math.floor(psutil.disk_usage('/')[3])
+
+            from plogical.acl import ACLManager
+            message = '%s - Disk Usage Warning - CyberPanel' % (ACLManager.fetchIP())
+
+            if diskUsage >= 50 and diskUsage <= 60 :
+
+                finalText = 'Current disk usage at "/" is %s percent. No action required.' % (str(diskUsage))
+                logging.SendEmail(admin.email, admin.email, finalText, message)
+
+            elif diskUsage >= 60 and diskUsage <= 80:
+
+                finalText = 'Current disk usage at "/" is %s percent. We recommend clearing log directory by running \n\n rm -rf /usr/local/lsws/logs/*. \n\n When disk usage go above 80 percent we will automatically run this command.' % (str(diskUsage))
+                logging.SendEmail(admin.email, admin.email, finalText, message)
+
+            elif diskUsage > 80:
+
+                finalText = 'Current disk usage at "/" is %s percent. We are going to run below command to free up space, If disk usage is still high, manual action is required by the system administrator. \n\n rm -rf /usr/local/lsws/logs/*.' % (
+                    str(diskUsage))
+                logging.SendEmail(admin.email, admin.email, finalText, message)
+
+                command = 'rm -rf /usr/local/lsws/logs/*'
+                import subprocess
+                subprocess.call(command, shell=True)
+
+        except BaseException as msg:
+            logging.writeToFile('[IncScheduler:193:checkDiskUsage] %s.' % str(msg))
 
 
 def main():
@@ -167,6 +202,7 @@ def main():
 
     IncScheduler.startBackup(args.function)
     IncScheduler.git(args.function)
+    IncScheduler.checkDiskUsage()
 
 
 if __name__ == "__main__":
