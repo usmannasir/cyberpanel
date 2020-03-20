@@ -1318,6 +1318,19 @@ class Upgrade:
             if os.path.exists('cyberpanel'):
                 shutil.rmtree('cyberpanel')
 
+            ### check if imunify exists
+
+            imunifyPublic = '/usr/local/CyberCP/public/imunify'
+            imunifyPublicBackup = '/usr/local'
+
+            try:
+
+                if os.path.exists(imunifyPublic):
+                    shutil.move(imunifyPublic, imunifyPublicBackup)
+
+            except:
+                pass
+
             if os.path.exists('CyberCP'):
                 shutil.rmtree('CyberCP')
 
@@ -1331,9 +1344,6 @@ class Upgrade:
                 command = 'git checkout %s' % (branch)
                 Upgrade.executioner(command, command, 1)
                 os.chdir('/usr/local')
-
-
-
 
             ## Copy settings file
 
@@ -1497,6 +1507,16 @@ CSRF_COOKIE_SECURE = True
             ## Move static files
 
             Upgrade.staticContent()
+
+            ### get back imunify
+
+            imunifyPublicBackup = '%s/imunify' % (imunifyPublicBackup)
+
+            try:
+                shutil.move(imunifyPublicBackup, '/usr/local/CyberCP/public')
+            except:
+                pass
+
         except:
             pass
 
@@ -2123,22 +2143,6 @@ vmail
             writeToFile.close()
 
 
-    @staticmethod
-    def checkImunify():
-
-        imunifyKeyPath = '/home/cyberpanel/imunifyKeyPath'
-
-        if os.path.exists(imunifyKeyPath):
-            key = open(imunifyKeyPath, 'r').read().rstrip('\n')
-
-            if not os.path.exists('i360deploy.sh'):
-                command = 'wget https://repo.imunify360.cloudlinux.com/defence360/i360deploy.sh'
-                Upgrade.executioner(command, command)
-
-            command = 'bash i360deploy.sh --key %s --beta' % (key)
-            subprocess.call(command, shell=True)
-
-
 
     @staticmethod
     def upgrade(branch):
@@ -2228,7 +2232,6 @@ vmail
         time.sleep(3)
 
         ## Upgrade version
-        Upgrade.checkImunify()
         Upgrade.fixPermissions()
         Upgrade.upgradeVersion()
         Upgrade.UpdateMaxSSLCons()
