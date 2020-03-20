@@ -118,6 +118,16 @@ class CageFS:
     def submitinstallImunify(key):
         try:
 
+            imunifyKeyPath = '/home/cyberpanel/imunifyKeyPath'
+
+            ##
+
+            writeToFile = open(imunifyKeyPath, 'w')
+            writeToFile.write(key)
+            writeToFile.close()
+
+            ##
+
             mailUtilities.checkHome()
 
             statusFile = open(ServerStatusUtil.lswsInstallStatusPath, 'w')

@@ -2123,6 +2123,22 @@ vmail
             writeToFile.close()
 
 
+    @staticmethod
+    def checkImunify():
+
+        imunifyKeyPath = '/home/cyberpanel/imunifyKeyPath'
+
+        if os.path.exists(imunifyKeyPath):
+            key = open(imunifyKeyPath, 'r').read().rstrip('\n')
+
+            if not os.path.exists('i360deploy.sh'):
+                command = 'wget https://repo.imunify360.cloudlinux.com/defence360/i360deploy.sh'
+                Upgrade.executioner(command, command)
+
+            command = 'bash i360deploy.sh --key %s --beta' % (key)
+            Upgrade.executioner(command, command)
+
+
 
     @staticmethod
     def upgrade(branch):
@@ -2212,6 +2228,7 @@ vmail
         time.sleep(3)
 
         ## Upgrade version
+        Upgrade.checkImunify()
         Upgrade.fixPermissions()
         Upgrade.upgradeVersion()
         Upgrade.UpdateMaxSSLCons()
