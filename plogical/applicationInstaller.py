@@ -243,6 +243,7 @@ class ApplicationInstaller(multi.Thread):
             statusFile.close()
 
             finalPath = ''
+            self.permPath = ''
 
             try:
                 website = ChildDomains.objects.get(domain=domainName)
@@ -264,6 +265,7 @@ class ApplicationInstaller(multi.Thread):
                 statusFile.close()
 
                 dbName, dbUser, dbPassword = self.dbCreation(tempStatusPath, website.master)
+                self.permPath = '/home/%s/public_html' % (website.master.domain)
 
             except:
                 website = Websites.objects.get(domain=domainName)
@@ -285,11 +287,11 @@ class ApplicationInstaller(multi.Thread):
                 statusFile.close()
 
                 dbName, dbUser, dbPassword = self.dbCreation(tempStatusPath, website)
+                self.permPath = '/home/%s/public_html' % (website.domain)
 
             ## Security Check
 
-            permPath = '/home/%s/public_html' % (domainName)
-            command = 'chmod 755 %s' % (permPath)
+            command = 'chmod 755 %s' % (self.permPath)
             ProcessUtilities.executioner(command)
 
             if finalPath.find("..") > -1:
@@ -353,8 +355,7 @@ class ApplicationInstaller(multi.Thread):
                 command = "chown " + externalApp + ":" + 'nobody' + " " + finalPath
                 ProcessUtilities.executioner(command, externalApp)
 
-            permPath = '/home/%s/public_html' % (domainName)
-            command = 'chmod 750 %s' % (permPath)
+            command = 'chmod 750 %s' % (self.permPath)
             ProcessUtilities.executioner(command)
 
             statusFile = open(tempStatusPath, 'w')
@@ -380,8 +381,7 @@ class ApplicationInstaller(multi.Thread):
             except:
                 pass
 
-            permPath = '/home/%s/public_html' % (domainName)
-            command = 'chmod 750 %s' % (permPath)
+            command = 'chmod 750 %s' % (self.permPath)
             ProcessUtilities.executioner(command)
 
 
@@ -414,6 +414,7 @@ class ApplicationInstaller(multi.Thread):
             statusFile.close()
 
             finalPath = ''
+            self.permPath = ''
 
             try:
                 website = ChildDomains.objects.get(domain=domainName)
@@ -435,6 +436,7 @@ class ApplicationInstaller(multi.Thread):
                 statusFile.close()
 
                 dbName, dbUser, dbPassword = self.dbCreation(tempStatusPath, website.master)
+                self.permPath = '/home/%s/public_html' % (website.master.domain)
 
             except:
                 website = Websites.objects.get(domain=domainName)
@@ -456,11 +458,11 @@ class ApplicationInstaller(multi.Thread):
                 statusFile.close()
 
                 dbName, dbUser, dbPassword = self.dbCreation(tempStatusPath, website)
+                self.permPath = '/home/%s/public_html' % (website.domain)
 
             ## Security Check
 
-            permPath = '/home/%s/public_html' % (domainName)
-            command = 'chmod 755 %s' % (permPath)
+            command = 'chmod 755 %s' % (self.permPath)
             ProcessUtilities.executioner(command)
 
             if finalPath.find("..") > -1:
@@ -528,8 +530,7 @@ class ApplicationInstaller(multi.Thread):
             command = "rm -f prestashop_1.7.4.2.zip"
             ProcessUtilities.executioner(command, externalApp)
 
-            permPath = '/home/%s/public_html' % (domainName)
-            command = 'chmod 750 %s' % (permPath)
+            command = 'chmod 750 %s' % (self.permPath)
             ProcessUtilities.executioner(command)
 
             statusFile = open(tempStatusPath, 'w')
@@ -554,8 +555,7 @@ class ApplicationInstaller(multi.Thread):
             except:
                 pass
 
-            permPath = '/home/%s/public_html' % (domainName)
-            command = 'chmod 750 %s' % (permPath)
+            command = 'chmod 750 %s' % (self.permPath)
             ProcessUtilities.executioner(command)
 
             statusFile = open(self.tempStatusPath, 'w')
@@ -1001,6 +1001,7 @@ class ApplicationInstaller(multi.Thread):
             statusFile.close()
 
             finalPath = ''
+            self.premPath = ''
 
             try:
                 website = ChildDomains.objects.get(domain=domainName)
@@ -1022,6 +1023,7 @@ class ApplicationInstaller(multi.Thread):
                 statusFile.close()
 
                 dbName, dbUser, dbPassword = self.dbCreation(tempStatusPath, website.master)
+                self.permPath = '/home/%s/public_html' % (website.master.domain)
 
             except:
                 website = Websites.objects.get(domain=domainName)
@@ -1043,14 +1045,14 @@ class ApplicationInstaller(multi.Thread):
                 statusFile.close()
 
                 dbName, dbUser, dbPassword = self.dbCreation(tempStatusPath, website)
+                self.permPath = '/home/%s/public_html' % (website.domain)
 
             ## Security Check
 
             if finalPath.find("..") > -1:
                 raise BaseException( "Specified path must be inside virtual host home.")
 
-            permPath = '/home/%s/public_html' % (domainName)
-            command = 'chmod 755 %s' % (permPath)
+            command = 'chmod 755 %s' % (self.permPath)
             ProcessUtilities.executioner(command)
 
             if not os.path.exists(finalPath):
@@ -1124,8 +1126,7 @@ class ApplicationInstaller(multi.Thread):
 
             installUtilities.reStartLiteSpeed()
 
-            permPath = '/home/%s/public_html' % (domainName)
-            command = 'chmod 750 %s' % (permPath)
+            command = 'chmod 750 %s' % (self.permPath)
             ProcessUtilities.executioner(command)
 
             statusFile = open(tempStatusPath, 'w')
