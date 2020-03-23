@@ -1508,15 +1508,6 @@ CSRF_COOKIE_SECURE = True
 
             Upgrade.staticContent()
 
-            ### get back imunify
-
-            imunifyPublicBackup = '%s/imunify' % (imunifyPublicBackup)
-
-            try:
-                shutil.move(imunifyPublicBackup, '/usr/local/CyberCP/public')
-            except:
-                pass
-
         except:
             pass
 
@@ -2142,8 +2133,6 @@ vmail
             writeToFile.write(content)
             writeToFile.close()
 
-
-
     @staticmethod
     def upgrade(branch):
 
@@ -2233,6 +2222,19 @@ vmail
 
         ## Upgrade version
         Upgrade.fixPermissions()
+
+        ### get back imunify
+
+        imunifyPublicBackup = '/usr/local'
+        imunifyPublicBackup = '%s/imunify' % (imunifyPublicBackup)
+
+        try:
+            shutil.move(imunifyPublicBackup, '/usr/local/CyberCP/public')
+        except:
+            pass
+
+        ##
+
         Upgrade.upgradeVersion()
         Upgrade.UpdateMaxSSLCons()
 
