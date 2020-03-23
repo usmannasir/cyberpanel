@@ -261,9 +261,27 @@ class vhost:
                     confFile.close()
 
                 else:
+
+                    ## Non-www
+
                     currentConf = vhostConfs.lswsRediConfMaster
 
                     currentConf = currentConf.replace('{virtualHostName}', virtualHostName)
+                    currentConf = currentConf.replace('{administratorEmail}', administratorEmail)
+                    currentConf = currentConf.replace('{externalApp}', virtualHostUser)
+                    currentConf = currentConf.replace('{php}', phpVersion.lstrip('PHP '))
+                    currentConf = currentConf.replace('{uid}', str(pwd.getpwnam(virtualHostUser).pw_uid))
+                    currentConf = currentConf.replace('{gid}', str(grp.getgrnam(virtualHostUser).gr_gid))
+
+                    command = 'redis-cli set %s' % (currentConf)
+                    ProcessUtilities.executioner(command)
+
+                    ## WWW
+
+                    currentConf = vhostConfs.lswsRediConfMasterWWW
+
+                    currentConf = currentConf.replace('{virtualHostName}', 'www.%s' % (virtualHostName))
+                    currentConf = currentConf.replace('{master}', virtualHostName)
                     currentConf = currentConf.replace('{administratorEmail}', administratorEmail)
                     currentConf = currentConf.replace('{externalApp}', virtualHostUser)
                     currentConf = currentConf.replace('{php}', phpVersion.lstrip('PHP '))
@@ -545,6 +563,9 @@ class vhost:
                 return 1
             else:
                 command = 'redis-cli delete "vhost:%s"' % (virtualHostName)
+                ProcessUtilities.executioner(command)
+
+                command = 'redis-cli delete "vhost:www.%s"' % (virtualHostName)
                 ProcessUtilities.executioner(command)
 
     @staticmethod
@@ -902,9 +923,28 @@ class vhost:
                     confFile.close()
 
                 else:
+
+                    ## Non www
+
                     currentConf = vhostConfs.lswsRediConfChild
 
                     currentConf = currentConf.replace('{virtualHostName}', domain)
+                    currentConf = currentConf.replace('{masterDomain}', masterDomain)
+                    currentConf = currentConf.replace('{administratorEmail}', administratorEmail)
+                    currentConf = currentConf.replace('{path}', path)
+                    currentConf = currentConf.replace('{externalApp}', virtualHostUser)
+                    currentConf = currentConf.replace('{php}', phpVersion.lstrip('PHP '))
+                    currentConf = currentConf.replace('{uid}', str(pwd.getpwnam(virtualHostUser).pw_uid))
+                    currentConf = currentConf.replace('{gid}', str(grp.getgrnam(virtualHostUser).gr_gid))
+
+                    command = 'redis-cli set %s' % (currentConf)
+                    ProcessUtilities.executioner(command)
+
+                    ## www
+
+                    currentConf = vhostConfs.lswsRediConfChildWWW
+
+                    currentConf = currentConf.replace('{virtualHostName}', 'www.%s' % (domain))
                     currentConf = currentConf.replace('{masterDomain}', masterDomain)
                     currentConf = currentConf.replace('{administratorEmail}', administratorEmail)
                     currentConf = currentConf.replace('{path}', path)

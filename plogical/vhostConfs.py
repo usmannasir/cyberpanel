@@ -374,9 +374,23 @@ pm.max_spare_servers = {pmMaxSpareServers}
    "gid": {gid},
    "phpVersion": {php},
    "custom_conf": {
-    ServerAlias www.{virtualHostName}
     ServerAdmin {administratorEmail}
     CustomLog /home/{virtualHostName}/logs/{virtualHostName}.access_log combined
+    <IfModule LiteSpeed>
+        CacheRoot lscache
+    </IfModule>
+   }
+}'"""
+    lswsRediConfMasterWWW = """"vhost:{virtualHostName}" '{
+   "username": "{externalApp}",
+   "documentRoot": "/home/{master}/public_html",
+   "vh_root": "/home/{master}",
+   "uid": {uid},
+   "gid": {gid},
+   "phpVersion": {php},
+   "custom_conf": {
+    ServerAdmin {administratorEmail}
+    CustomLog /home/{master}/logs/{master}.access_log combined
     <IfModule LiteSpeed>
         CacheRoot lscache
     </IfModule>
@@ -391,7 +405,22 @@ pm.max_spare_servers = {pmMaxSpareServers}
     "gid": {gid},
     "phpVersion": {php},
     "custom_conf": {
-    ServerAlias www.{virtualHostName}
+    ServerAdmin {administratorEmail}
+    CustomLog /home/{masterDomain}/logs/{masterDomain}.access_log combined
+    <IfModule LiteSpeed>
+        CacheRoot /home/{masterDomain}/lscache
+    </IfModule>
+    }
+}'"""
+
+    lswsRediConfChildWWW = """"vhost:{virtualHostName}" '{
+    "username": "{externalApp}",
+    "documentRoot": "{path}",
+    "vh_root": "{path}",
+    "uid": {uid},
+    "gid": {gid},
+    "phpVersion": {php},
+    "custom_conf": {
     ServerAdmin {administratorEmail}
     CustomLog /home/{masterDomain}/logs/{masterDomain}.access_log combined
     <IfModule LiteSpeed>
