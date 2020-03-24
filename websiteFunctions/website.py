@@ -3018,10 +3018,21 @@ StrictHostKeyChecking no
                     autoCommitCurrent = gitConf['autoCommit']
                     autoPushCurrent = gitConf['autoPush']
                     emailLogsCurrent = gitConf['emailLogs']
+                    try:
+                        commands = gitConf['commands']
+                    except:
+                        commands = "Add Commands to run after every commit, separate commands using comma."
+
+                    try:
+                        webhookCommandCurrent = gitConf['webhookCommand']
+                    except:
+                        webhookCommandCurrent = "False"
                 else:
                     autoCommitCurrent = 'Never'
                     autoPushCurrent = 'Never'
                     emailLogsCurrent = 'False'
+                    webhookCommandCurrent = 'False'
+                    commands = "Add Commands to run after every commit, separate commands using comma."
 
                 ##
 
@@ -3030,7 +3041,7 @@ StrictHostKeyChecking no
                 data_ret = {'status': 1, 'repo': 1, 'finalBranches': branches, 'deploymentKey': deploymentKey,
                             'remote': remote, 'remoteResult': remoteResult, 'totalCommits': totalCommits, 'home': home,
                             'webHookURL': webHookURL, 'autoCommitCurrent': autoCommitCurrent,
-                            'autoPushCurrent':autoPushCurrent, 'emailLogsCurrent': emailLogsCurrent}
+                            'autoPushCurrent':autoPushCurrent, 'emailLogsCurrent': emailLogsCurrent, 'commands': commands, "webhookCommandCurrent": webhookCommandCurrent}
 
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
@@ -3287,6 +3298,41 @@ StrictHostKeyChecking no
             commandStatus = ProcessUtilities.outputExecutioner(command)
 
             if commandStatus.find('nothing to commit') == -1:
+                gitConfFolder = '/home/cyberpanel/git/%s' % (self.domain)
+                finalFile = '%s/%s' % (gitConfFolder, self.folder.split('/')[-1])
+
+                gitConf = json.loads(open(finalFile, 'r').read())
+                web = Websites.objects.get(domain=self.domain)
+
+                try:
+
+                    if gitConf['commands'] != 'NONE':
+
+                        GitLogs(owner=web, type='INFO', message='Running commands after successful git commit..').save()
+
+                        if gitConf['commands'].find(',') > -1:
+                            commands = gitConf['commands'].split(',')
+
+                            for command in commands:
+                                GitLogs(owner=web, type='INFO',
+                                        message='Running: %s' % (command)).save()
+
+                                result = ProcessUtilities.outputExecutioner(command, web.externalApp)
+                                GitLogs(owner=web, type='INFO',
+                                        message='Result: %s' % (result)).save()
+                        else:
+                            GitLogs(owner=web, type='INFO',
+                                    message='Running: %s' % (gitConf['commands'])).save()
+
+                            result = ProcessUtilities.outputExecutioner(gitConf['commands'], web.externalApp)
+                            GitLogs(owner=web, type='INFO',
+                                    message='Result: %s' % (result)).save()
+
+                        GitLogs(owner=web, type='INFO',
+                                message='Finished running commands.').save()
+                except:
+                    pass
+
                 data_ret = {'status': 1, 'commandStatus': commandStatus}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
@@ -3808,6 +3854,16 @@ StrictHostKeyChecking no
             except:
                 dic['emailLogs'] = False
 
+            try:
+                dic['commands'] = data['commands']
+            except:
+                dic['commands'] = 'NONE'
+
+            try:
+                dic['webhookCommand'] = data['webhookCommand']
+            except:
+                dic['webhookCommand'] = False
+
 
             if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
                 pass
@@ -3924,6 +3980,42 @@ StrictHostKeyChecking no
             if commandStatus.find('Already up to date') == -1:
                 message = '[Webhook Fired] Status: %s.' % (commandStatus)
                 GitLogs(owner=web, type='INFO', message=message).save()
+
+                gitConfFolder = '/home/cyberpanel/git/%s' % (self.domain)
+                finalFile = '%s/%s' % (gitConfFolder, self.folder.split('/')[-1])
+
+                gitConf = json.loads(open(finalFile, 'r').read())
+                web = Websites.objects.get(domain=self.domain)
+
+                try:
+                    if gitConf['webhookCommand']:
+                        if gitConf['commands'] != 'NONE':
+
+                            GitLogs(owner=web, type='INFO', message='Running commands after successful git commit..').save()
+
+                            if gitConf['commands'].find(',') > -1:
+                                commands = gitConf['commands'].split(',')
+
+                                for command in commands:
+                                    GitLogs(owner=web, type='INFO',
+                                            message='Running: %s' % (command)).save()
+
+                                    result = ProcessUtilities.outputExecutioner(command, web.externalApp)
+                                    GitLogs(owner=web, type='INFO',
+                                            message='Result: %s' % (result)).save()
+                            else:
+                                GitLogs(owner=web, type='INFO',
+                                        message='Running: %s' % (gitConf['commands'])).save()
+
+                                result = ProcessUtilities.outputExecutioner(gitConf['commands'], web.externalApp)
+                                GitLogs(owner=web, type='INFO',
+                                        message='Result: %s' % (result)).save()
+
+                            GitLogs(owner=web, type='INFO',
+                                    message='Finished running commands.').save()
+                except:
+                    pass
+
                 data_ret = {'status': 1, 'commandStatus': commandStatus}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)

@@ -227,6 +227,29 @@
                                                 </div>
                                             </div>
 
+                                            <div class="form-group">
+                                                <label class="col-sm-3 control-label">{% trans "Commands" %}</label>
+                                                <div class="col-sm-9">
+                                                    <textarea ng-model="$parent.commands" placeholder="Add Commands to run after every commit, separate commands using comma."
+                                                            rows="4" class="form-control">{$ currentCommands $}</textarea>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label class="col-sm-3 control-label">{% trans "" %}</label>
+                                                <div class="col-sm-6">
+                                                    <div class="checkbox">
+                                                        <label>
+                                                            <input ng-model="$parent.webhookCommand" type="checkbox"
+                                                                   value="">
+                                                            Run Commands when Webhook is fired.
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <div class="current-pack ng-binding">Currently: {$ webhookCommandCurrent $}
+                                                </div>
+                                            </div>
+
                                         </form>
 
                                     </div>
@@ -534,7 +557,8 @@
                                         <button type="button" class="close" data-dismiss="modal">&times;
                                         </button>
                                         <h4 class="modal-title">{% trans "Git Logs" %} <img
-                                                ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}"></h4>
+                                                ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}">
+                                        </h4>
                                     </div>
                                     <div class="modal-body">
 

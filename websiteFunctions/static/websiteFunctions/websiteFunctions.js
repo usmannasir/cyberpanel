@@ -5836,6 +5836,8 @@ app.controller('manageGIT', function ($scope, $http, $timeout, $window) {
                     $scope.autoCommitCurrent = response.data.autoCommitCurrent;
                     $scope.autoPushCurrent = response.data.autoPushCurrent;
                     $scope.emailLogsCurrent = response.data.emailLogsCurrent;
+                    $scope.currentCommands = response.data.commands;
+                    $scope.webhookCommandCurrent = response.data.webhookCommandCurrent;
                 } else {
                     $scope.gitTracking = false;
                     $scope.gitEnable = true;
@@ -6675,6 +6677,8 @@ app.controller('manageGIT', function ($scope, $http, $timeout, $window) {
             autoCommit: $scope.autoCommit,
             autoPush: $scope.autoPush,
             emailLogs: $scope.emailLogs,
+            commands: $scope.commands,
+            webhookCommand: $scope.webhookCommand
         };
 
         var config = {
@@ -6736,7 +6740,6 @@ app.controller('manageGIT', function ($scope, $http, $timeout, $window) {
         dataurl = "/websites/fetchGitLogs";
 
         $http.post(dataurl, data, config).then(ListInitialDatas, cantLoadInitialDatas);
-
 
         function ListInitialDatas(response) {
             $scope.cyberpanelLoading = true;
