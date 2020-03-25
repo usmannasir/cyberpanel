@@ -61,9 +61,11 @@ class CronUtil:
             counter = 0
 
             writeToFile = open(cronPath, 'w')
+
             for items in data:
                 if counter == line:
                     removedLine = items
+                    counter = counter + 1
                     continue
                 else:
                     writeToFile.writelines(items)
