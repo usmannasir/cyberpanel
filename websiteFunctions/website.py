@@ -1604,6 +1604,11 @@ class WebsiteManager:
             execPath = execPath + " addNewCron --externalApp " + website.externalApp + " --finalCron '" + finalCron + "'"
             output = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
 
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+                command = 'chmod 600 %s' % (cronPath)
+                ProcessUtilities.executioner(command)
+
             CronUtil.CronPrem(0)
 
             if output.find("1,") > -1:
