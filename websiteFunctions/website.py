@@ -1609,6 +1609,9 @@ class WebsiteManager:
                 command = 'chmod 600 %s' % (cronPath)
                 ProcessUtilities.executioner(command)
 
+                command = 'systemctl restart cron'
+                ProcessUtilities.executioner(command)
+
             CronUtil.CronPrem(0)
 
             if output.find("1,") > -1:
