@@ -85,6 +85,10 @@ class CronUtil:
             with open(cronPath, "a") as file:
                 file.write(finalCron + "\n")
 
+            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+                command = 'chmod 600 %s' % (cronPath)
+                ProcessUtilities.executioner(command)
+
             print("1,None")
         except BaseException as msg:
             print("0," + str(msg))

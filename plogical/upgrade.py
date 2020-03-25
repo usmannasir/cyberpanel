@@ -2133,6 +2133,10 @@ vmail
             writeToFile.write(content)
             writeToFile.close()
 
+        if not os.path.exists(CentOSPath):
+            command = 'chmod 600 %s' % (cronPath)
+            Upgrade.executioner(command, 0)
+
     @staticmethod
     def upgrade(branch):
 

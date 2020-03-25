@@ -1702,6 +1702,11 @@ imap_folder_list_limit = 0
             cronFile.write(content)
             cronFile.close()
 
+            if not os.path.exists(CentOSPath):
+                command = 'chmod 600 %s' % (cronPath)
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+
             if self.distro == centos or self.distro == cent8:
                 command = 'systemctl restart crond.service'
             else:
