@@ -155,7 +155,7 @@ exit
 
 show_help() {
 echo -e "\nFetching information...\n"
-curl --silent https://cyberpanel.sh/misc/faq.sh | sudo -u nobody bash
+curl --silent https://cyberpanel.sh/misc/faq.sh | sudo -u nobody bash | less -r
 exit
 }
 
