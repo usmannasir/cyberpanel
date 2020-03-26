@@ -2883,7 +2883,7 @@ StrictHostKeyChecking no
 
             website = Websites.objects.get(domain=self.domain)
 
-            folders = ['/home/%s/public_html' % (self.domain), '/home/vmail/%s' % (self.domain)]
+            folders = ['/home/%s/public_html' % (self.domain), '/home/%s' % (self.domain), '/home/vmail/%s' % (self.domain)]
 
             databases = website.databases_set.all()
 
@@ -2898,11 +2898,16 @@ StrictHostKeyChecking no
 
     def folderCheck(self):
         domainPath = '/home/%s/public_html' % (self.domain)
+        vhRoot = '/home/%s' % (self.domain)
         vmailPath = '/home/vmail/%s' % (self.domain)
 
         website = Websites.objects.get(domain=self.domain)
 
         if self.folder == domainPath:
+            self.externalApp = website.externalApp
+            return 1
+
+        if self.folder == vhRoot:
             self.externalApp = website.externalApp
             return 1
 
@@ -3004,7 +3009,7 @@ StrictHostKeyChecking no
                 ## Check if home
 
                 home = 0
-                if self.folder == '/home/%s' % (self.domain):
+                if self.folder == '/home/%s/public_html' % (self.domain):
                     home = 1
 
                 ## Fetch Configurations
