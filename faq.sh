@@ -11,6 +11,7 @@ NC='\033[0m' # No Color
 #${GREEN}  ${BLUE}
 
 echo -e "Use Up/Down Arrow key to navigate\n"
+echo -e "press ${RED}q${NC} to exit\n"
 echo -e "Frequently Asked Question
 
 ${PURPLE}1.${NC} How to reset CyberPanel admin password?
