@@ -428,11 +428,11 @@ if [[ $SERVER_OS == "CentOS" ]] ; then
 	yum install epel-release -y
 
 	if [[ $CENTOS_8 == "False" ]] ; then
-	  yum install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc python-devel libattr-devel xz-devel gpgme-devel mariadb-devel curl-devel python-pip git
+	  yum install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc python-devel libattr-devel xz-devel gpgme-devel mariadb-devel curl-devel python-pip git socat
 		check_return
 	fi
 	if [[ $CENTOS_8 == "True" ]] ; then
-		yum install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-devel curl-devel git platform-python-devel tar
+		yum install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-devel curl-devel git platform-python-devel tar socat
 		check_return
 		dnf --enablerepo=PowerTools install gpgme-devel -y
 		check_return
@@ -466,7 +466,7 @@ fi
 if [[ $SERVER_OS == "Ubuntu" ]] ; then
 	apt update -y
 	DEBIAN_FRONTEND=noninteractive apt upgrade -y
-	DEBIAN_FRONTEND=noninteracitve apt install -y htop telnet python-mysqldb python-dev libcurl4-gnutls-dev libgnutls28-dev libgcrypt20-dev libattr1 libattr1-dev liblzma-dev libgpgme-dev libmariadbclient-dev libcurl4-gnutls-dev libssl-dev nghttp2 libnghttp2-dev idn2 libidn2-dev libidn2-0-dev librtmp-dev libpsl-dev nettle-dev libgnutls28-dev libldap2-dev libgssapi-krb5-2 libk5crypto3 libkrb5-dev libcomerr2 libldap2-dev python-gpg python python-minimal python-setuptools virtualenv python-dev python-pip git
+	DEBIAN_FRONTEND=noninteracitve apt install -y htop telnet python-mysqldb python-dev libcurl4-gnutls-dev libgnutls28-dev libgcrypt20-dev libattr1 libattr1-dev liblzma-dev libgpgme-dev libmariadbclient-dev libcurl4-gnutls-dev libssl-dev nghttp2 libnghttp2-dev idn2 libidn2-dev libidn2-0-dev librtmp-dev libpsl-dev nettle-dev libgnutls28-dev libldap2-dev libgssapi-krb5-2 libk5crypto3 libkrb5-dev libcomerr2 libldap2-dev python-gpg python python-minimal python-setuptools virtualenv python-dev python-pip git socat vim
 	check_return
 	if [[ $DEV == "ON" ]] ; then
 		DEBIAN_FRONTEND=noninteractive apt install -y python3-pip
@@ -680,20 +680,18 @@ fi
 
 show_help() {
 echo -e "\nCyberPanel Installer Script Help\n"
-echo -e "\nUsage: wget https://cyberpanel.sh/cyberpanel.sh"
-echo -e "\nchmod +x cyberpanel.sh"
-echo -e "\n./cyberpanel.sh -v ols/SERIAL_NUMBER -c 1 -a 1"
+echo -e "\nUsage: sh <(curl cyberpanel.sh) --argument"
 echo -e "\n -v or --version: choose to install CyberPanel OpenLiteSpeed or CyberPanel Enterprise, available options are \e[31mols\e[39m and \e[31mSERIAL_NUMBER\e[39m, default ols"
 echo -e "\n Please be aware, this serial number must be obtained from LiteSpeed Store."
 echo -e "\n And if this serial number has been used before, it must be released/migrated in Store first, otherwise it will fail to start."
-echo -e "\n -a or --addons: install addons: memcached, redis, PHP extension for memcached and redis, 1 for install addons, 0 for not to install, default 0, only applicable for CentOS system."
-echo -e "\n -p or --password: set password of new installation, empty for default 1234567, [r] or [random] for randomly generated 16 digital password, any other value besdies [d] and [r(andom)] will be accept as password, default use 1234567."
+echo -e "\n -a or --addons: install addons: memcached, redis, PHP extension for memcached and redis"
+echo -e "\n -p or --password: set password of new installation, empty for default 1234567, [r] or [random] for randomly generated 16 digital password, any other value besides [d] and [r(andom)] will be accept as password, default use 1234567."
 echo -e "\n -m: set to minimal mode which will not install PowerDNS, Pure-FTPd and Postfix"
 echo -e "\n Example:"
-echo -e "\n ./cyberpanel.sh -v ols -p r or ./cyberpanel.sh --version ols --password random"
+echo -e "\n sh <(curl cyberpanel.sh) -v ols -p r or ./cyberpanel.sh --version ols --password random"
 echo -e "\n This will install CyberPanel OpenLiteSpeed and randomly generate the password."
-echo -e "\n ./cyberpanel.sh default"
-echo -e "\n This will install everything default , which is OpenLiteSpeed and nothing more.\n"
+echo -e "\n sh <(curl cyberpanel.sh) -v LICENSE_KEY -a -p my_pass_word"
+echo -e "\n This will install LiteSpeed Enterise , replace LICENSE_KEY to actual license key and set password to my_pass_word\n"
 }
 
 license_input() {
@@ -1480,6 +1478,8 @@ else
 							ADMIN_PASS="1234567"
 						elif [[ "${1}" == 'r' ]] || [[ $1 == 'random' ]] ; then
 							ADMIN_PASS=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 16 ; echo '')
+						elif [[ ${1} == "d" ]] ; then
+							ADMIN_PASS="1234567"
 						else
 							if [ ${#1} -lt 8 ] ; then
 								echo -e "\nPassword lenth less than 8 digital, please choose a more complicated password.\n"
