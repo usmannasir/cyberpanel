@@ -706,7 +706,7 @@ class preFlightsChecks:
             preFlightsChecks.call(command, self.distro, '[download_install_phpmyadmin]',
                                   command, 1, 0, os.EX_OSERR)
 
-            command = 'mv /usr/local/CyberCP/public/phpMyAdmin-5.0.0-all-languages /usr/local/CyberCP/public/phpmyadmin'
+            command = 'mv /usr/local/CyberCP/public/phpMyAdmin-*-all-languages /usr/local/CyberCP/public/phpmyadmin'
             preFlightsChecks.call(command, self.distro, '[download_install_phpmyadmin]',
                                   command, 1, 0, os.EX_OSERR)
 
