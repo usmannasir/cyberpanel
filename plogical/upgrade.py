@@ -203,7 +203,7 @@ class Upgrade:
             Upgrade.executioner(command, 0)
 
             command = 'mv /usr/local/CyberCP/public/phpMyAdmin-*-all-languages /usr/local/CyberCP/public/phpmyadmin'
-            Upgrade.executioner(command, 0)
+            subprocess.call(command, shell=True)
 
             command = 'rm -f /usr/local/CyberCP/public/phpmyadmin.zip'
             Upgrade.executioner(command, 0)
