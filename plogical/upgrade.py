@@ -202,7 +202,7 @@ class Upgrade:
             command = 'unzip /usr/local/CyberCP/public/phpmyadmin.zip -d /usr/local/CyberCP/public/'
             Upgrade.executioner(command, 0)
 
-            command = 'mv /usr/local/CyberCP/public/phpMyAdmin-5.0.0-all-languages /usr/local/CyberCP/public/phpmyadmin'
+            command = 'mv /usr/local/CyberCP/public/phpMyAdmin-*-all-languages /usr/local/CyberCP/public/phpmyadmin'
             Upgrade.executioner(command, 0)
 
             command = 'rm -f /usr/local/CyberCP/public/phpmyadmin.zip'
