@@ -707,8 +707,7 @@ class preFlightsChecks:
                                   command, 1, 0, os.EX_OSERR)
 
             command = 'mv /usr/local/CyberCP/public/phpMyAdmin-*-all-languages /usr/local/CyberCP/public/phpmyadmin'
-            preFlightsChecks.call(command, self.distro, '[download_install_phpmyadmin]',
-                                  command, 1, 0, os.EX_OSERR)
+            subprocess.call(command, shell=True)
 
             command = 'rm -f /usr/local/CyberCP/public/phpmyadmin.zip'
             preFlightsChecks.call(command, self.distro, '[download_install_phpmyadmin]',
