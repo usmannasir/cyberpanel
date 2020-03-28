@@ -1021,3 +1021,54 @@ def saveSpamAssassinConfigurations(request):
         data_ret = {'saveStatus': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
+
+def mailQueue(request):
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
+
+        return render(request, 'emailPremium/mailQueue.html')
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def fetchMailQueue(request):
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
+
+        data = json.loads(request.body)
+
+        json_data = "["
+        checker = 0
+
+        queues = ProcessUtilities.outputExecutioner('postqueue -j').split('\n')
+
+        for queue in queues:
+            if checker == 0:
+                json_data = json_data + queue
+                checker = 1
+            else:
+                json_data = json_data + ',' + queue
+
+        json_data = json_data.rstrip(',') + ']'
+        final_dic = {'status': 1, 'error_message': "None", "data": json_data}
+        final_json = json.dumps(final_dic)
+
+        return HttpResponse(final_json)
+
+
+    except BaseException as msg:
+        dic = {'status': 0, 'error_message': str(msg)}
+        json_data = json.dumps(dic)
+        return HttpResponse(json_data)

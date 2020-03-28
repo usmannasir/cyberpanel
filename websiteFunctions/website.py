@@ -2881,15 +2881,27 @@ StrictHostKeyChecking no
             else:
                 return ACLManager.loadError()
 
-            website = Websites.objects.get(domain=self.domain)
+            try:
+                website = Websites.objects.get(domain=self.domain)
+                folders = ['/home/%s/public_html' % (self.domain), '/home/%s' % (self.domain), '/home/vmail/%s' % (self.domain)]
 
-            folders = ['/home/%s/public_html' % (self.domain), '/home/%s' % (self.domain), '/home/vmail/%s' % (self.domain)]
+                databases = website.databases_set.all()
 
-            databases = website.databases_set.all()
+                for database in databases:
+                    basePath = '/var/lib/mysql/'
+                    folders.append('%s%s' % (basePath, database.dbName))
 
-            for database in databases:
-                basePath = '/var/lib/mysql/'
-                folders.append('%s%s' % (basePath, database.dbName))
+
+            except:
+                self.childWebsite = ChildDomains.objects.get(domain=self.domain)
+                folders = ['/home/%s/public_html' % (self.childWebsite.master.domain), '/home/%s' % (self.childWebsite.master.domain),
+                           '/home/vmail/%s' % (self.childWebsite.master.domain), self.childWebsite.path]
+
+                databases = self.childWebsite.master.databases_set.all()
+
+                for database in databases:
+                    basePath = '/var/lib/mysql/'
+                    folders.append('%s%s' % (basePath, database.dbName))
 
             return render(request, 'websiteFunctions/manageGIT.html',
                           {'domainName': self.domain, 'folders': folders})
@@ -2901,15 +2913,29 @@ StrictHostKeyChecking no
         vhRoot = '/home/%s' % (self.domain)
         vmailPath = '/home/vmail/%s' % (self.domain)
 
-        website = Websites.objects.get(domain=self.domain)
+        try:
+            website = Websites.objects.get(domain=self.domain)
+            externalApp = website.externalApp
+        except:
+            website = ChildDomains.objects.get(domain=self.domain)
+            externalApp = website.master.externalApp
 
         if self.folder == domainPath:
-            self.externalApp = website.externalApp
+            self.externalApp = externalApp
             return 1
 
         if self.folder == vhRoot:
-            self.externalApp = website.externalApp
+            self.externalApp = externalApp
             return 1
+
+        try:
+            childDomain = ChildDomains.objects.get(domain=self.domain)
+
+            if self.folder == childDomain.path:
+                return 1
+
+        except:
+            pass
 
         if self.folder == vmailPath:
             self.externalApp = 'vmail'
@@ -2944,27 +2970,41 @@ StrictHostKeyChecking no
             else:
                 return ACLManager.loadErrorJson()
 
+            try:
+                website = Websites.objects.get(domain=self.domain)
+                self.externalAppLocal = website.externalApp
 
-            website = Websites.objects.get(domain=self.domain)
+                ## Check if home
+
+                home = 0
+                if self.folder == '/home/%s/public_html' % (self.domain):
+                    home = 1
+
+            except:
+                website = ChildDomains.objects.get(domain=self.domain)
+                self.externalAppLocal = website.master.externalApp
+
+                ## Check if home
+
+                home = 0
+                if self.folder == website.path:
+                    home = 1
+
 
             gitPath = '%s/.git' % (self.folder)
             command = 'ls -la %s' % (gitPath)
 
             if ProcessUtilities.outputExecutioner(command).find('No such file or directory') > -1:
 
-                command = 'cat /home/%s/.ssh/%s.pub' % (self.domain, website.externalApp)
+                command = 'cat /home/%s/.ssh/%s.pub' % (self.domain, self.externalAppLocal)
                 deploymentKey = ProcessUtilities.outputExecutioner(command)
 
                 if deploymentKey.find('No such file or directory') > -1:
-                    command = "ssh-keygen -f /home/%s/.ssh/%s -t rsa -N ''" % (self.domain, website.externalApp)
-                    ProcessUtilities.executioner(command, website.externalApp)
+                    command = "ssh-keygen -f /home/%s/.ssh/%s -t rsa -N ''" % (self.domain, self.externalAppLocal)
+                    ProcessUtilities.executioner(command, self.externalAppLocal)
 
-                    command = 'cat /home/%s/.ssh/%s.pub' % (self.domain, website.externalApp)
+                    command = 'cat /home/%s/.ssh/%s.pub' % (self.domain, self.externalAppLocal)
                     deploymentKey = ProcessUtilities.outputExecutioner(command)
-
-                home = 0
-                if self.folder == '/home/%s/public_html' % (self.domain):
-                    home = 1
 
                 data_ret = {'status': 1, 'repo': 0, 'deploymentKey': deploymentKey, 'home': home}
                 json_data = json.dumps(data_ret)
@@ -2978,20 +3018,20 @@ StrictHostKeyChecking no
 
                 ## Fetch key
 
-                command = 'cat /home/%s/.ssh/%s.pub' % (self.domain, website.externalApp)
+                command = 'cat /home/%s/.ssh/%s.pub' % (self.domain, self.externalAppLocal)
                 deploymentKey = ProcessUtilities.outputExecutioner(command)
 
                 if deploymentKey.find('No such file or directory') > -1:
-                    command = "ssh-keygen -f /home/%s/.ssh/%s -t rsa -N ''" % (self.domain, website.externalApp)
-                    ProcessUtilities.executioner(command, website.externalApp)
+                    command = "ssh-keygen -f /home/%s/.ssh/%s -t rsa -N ''" % (self.domain, self.externalAppLocal)
+                    ProcessUtilities.executioner(command, self.externalAppLocal)
 
-                    command = 'cat /home/%s/.ssh/%s.pub' % (self.domain, website.externalApp)
+                    command = 'cat /home/%s/.ssh/%s.pub' % (self.domain, self.externalAppLocal)
                     deploymentKey = ProcessUtilities.outputExecutioner(command)
 
                 ## Find Remote if any
 
                 command = 'git -C %s remote -v' % (self.folder)
-                remoteResult = ProcessUtilities.outputExecutioner(command )
+                remoteResult = ProcessUtilities.outputExecutioner(command)
 
                 remote = 1
                 if remoteResult.find('origin') == -1:
@@ -3001,16 +3041,10 @@ StrictHostKeyChecking no
                 ## Find Total commits on current branch
 
                 command = 'git -C %s rev-list --count HEAD' % (self.folder)
-                totalCommits = ProcessUtilities.outputExecutioner(command )
+                totalCommits = ProcessUtilities.outputExecutioner(command)
 
                 if totalCommits.find('fatal') > -1:
                     totalCommits = '0'
-
-                ## Check if home
-
-                home = 0
-                if self.folder == '/home/%s/public_html' % (self.domain):
-                    home = 1
 
                 ## Fetch Configurations
 
@@ -3083,18 +3117,27 @@ StrictHostKeyChecking no
             else:
                 return ACLManager.loadErrorJson()
 
-            website = Websites.objects.get(domain=self.domain)
+            try:
+                website = Websites.objects.get(domain=self.domain)
+                self.adminEmail = website.adminEmail
+                self.firstName = website.admin.firstName
+                self.lastName = website.admin.lastName
+            except:
+                website = ChildDomains.objects.get(domain=self.domain)
+                self.adminEmail = website.master.adminEmail
+                self.firstName = website.master.admin.firstName
+                self.lastName = website.master.admin.lastName
 
             command = 'git -C %s init' % (self.folder)
             result = ProcessUtilities.outputExecutioner(command)
 
             if result.find('Initialized empty Git repository in') > -1:
 
-                command = 'git -C %s config --local user.email %s' % (self.folder, website.adminEmail)
+                command = 'git -C %s config --local user.email %s' % (self.folder, self.adminEmail)
                 ProcessUtilities.executioner(command)
 
                 command = 'git -C %s config --local user.name "%s %s"' % (
-                self.folder, website.admin.firstName, website.admin.lastName)
+                self.folder, self.firstName, self.lastName)
                 ProcessUtilities.executioner(command)
 
                 data_ret = {'status': 1}
@@ -3141,9 +3184,14 @@ StrictHostKeyChecking no
 
             ### set default ssh key
 
-            externalApp = Websites.objects.get(domain=self.domain).externalApp
+            try:
+                website = Websites.objects.get(domain=self.domain)
+                self.externalAppLocal = website.adminEmail
+            except:
+                website = ChildDomains.objects.get(domain=self.domain)
+                self.externalAppLocal = website.master.adminEmail
 
-            command = 'git -C %s config --local core.sshCommand "ssh -i /home/%s/.ssh/%s -o "StrictHostKeyChecking=no""' % (self.folder, self.domain, externalApp)
+            command = 'git -C %s config --local core.sshCommand "ssh -i /home/%s/.ssh/%s -o "StrictHostKeyChecking=no""' % (self.folder, self.domain, self.externalAppLocal)
             ProcessUtilities.executioner(command)
 
             ## Check if remote exists
@@ -3158,12 +3206,12 @@ StrictHostKeyChecking no
             else:
                 command = 'git -C %s remote set-url origin git@%s:%s/%s.git' % (self.folder, self.gitHost, self.gitUsername, self.gitReponame)
 
-            possibleError = ProcessUtilities.outputExecutioner(command )
+            possibleError = ProcessUtilities.outputExecutioner(command)
 
             ## Check if set correctly.
 
             command = 'git -C %s remote -v' % (self.folder)
-            remoteResult = ProcessUtilities.outputExecutioner(command )
+            remoteResult = ProcessUtilities.outputExecutioner(command)
 
             if remoteResult.find(self.gitUsername) > -1:
                 data_ret = {'status': 1}
@@ -3213,7 +3261,7 @@ StrictHostKeyChecking no
                 return HttpResponse(json_data)
 
             command = 'git -C %s checkout %s' % (self.folder, self.branchName.strip(' '))
-            commandStatus = ProcessUtilities.outputExecutioner(command )
+            commandStatus = ProcessUtilities.outputExecutioner(command)
 
             if commandStatus.find('Switched to branch') > -1:
                 data_ret = {'status': 1, 'commandStatus': commandStatus + 'Refreshing page in 3 seconds..'}

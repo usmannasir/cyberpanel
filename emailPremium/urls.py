@@ -33,6 +33,8 @@ urlpatterns = [
     url(r'^fetchPolicyServerStatus$', views.fetchPolicyServerStatus, name='fetchPolicyServerStatus'),
 
     url(r'^savePolicyServerStatus$', views.savePolicyServerStatus, name='savePolicyServerStatus'),
+    url(r'^mailQueue$', views.mailQueue, name='mailQueue'),
+    url(r'^fetchMailQueue$', views.fetchMailQueue, name='fetchMailQueue'),
 
     url(r'^(?P<domain>(.*))$', views.emailLimits, name='emailLimits'),
 

@@ -1,0 +1,113 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Mail Queue - CyberPanel" %}{% endblock %}
+{% block content %}
+
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
+
+
+    <div class="container">
+
+        <div id="page-title">
+            <h2 id="domainNamePage">{% trans "Mail Queue" %}
+            </h2>
+            <p>{% trans "On this page you manage your server Email Queue." %}</p>
+        </div>
+
+        <div ng-controller="mailQueue" class="panel">
+            <div class="panel-body">
+
+                <h3 class="content-box-header">
+                    {% trans "Mail Queue" %} <img
+                        ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}">
+                </h3>
+
+                <div class="example-box-wrapper">
+
+                    <div class="row">
+                        <div class="col-sm-10">
+                        </div>
+                        <div class="col-sm-2">
+                            <div class="form-group">
+                                <select ng-model="recordsToShow"
+                                        ng-change="fetchGitLogs()"
+                                        class="form-control" id="example-select">
+                                    <option>10</option>
+                                    <option>50</option>
+                                    <option>100</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered"
+                           id="datatable-example">
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Queue Name</th>
+                            <th>Size</th>
+                            <th>Sender</th>
+                            <th>Recipients</th>
+                            <th>Time</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+
+                        <tr ng-repeat="queue in queues track by $index">
+                            <td><code ng-bind="queue.queue_id"></code></td>
+                            <td ng-bind="queue.queue_name"></td>
+                            <td ng-bind="queue.message_size"></td>
+                            <td ng-bind="queue.sender"></td>
+                            <td ng-bind="queue.recipients"></td>
+                            <td ng-bind="queue.arrival_time"></td>
+                            <!--<td>
+                                <img style="margin-right: 4%;" ng-show="web.status==1"
+                                     title="{% trans 'Limits are being Applied!' %}"
+                                     src="{% static 'mailServer/vpsON.png' %}">
+                                <button ng-click="enableDisableEmailLimits(0, web.domain)" ng-show="web.status==1"
+                                        class="btn ra-100 btn-danger">{% trans 'Disable' %}</button>
+                                <img style="margin-right: 4%;" ng-show="web.status==0"
+                                     title="{% trans 'Limits are not being applied!' %}"
+                                     src="{% static 'mailServer/vpsOff.png' %}">
+                                <button ng-click="enableDisableEmailLimits(1, web.domain)" ng-show="web.status==0"
+                                        class="btn ra-100 btn-success">{% trans 'Enable' %}</button>
+                            </td>
+                            <td>
+                                <a href="/emailPremium/{$ web.domain $}">
+                                    <button class="btn ra-100 btn-blue-alt">{% trans 'Manage' %}</button>
+                                </a>
+                            </td>-->
+                        </tr>
+
+                        </tbody>
+                    </table>
+
+                    <div style="margin-top: 2%" class="row">
+                        <div class="col-md-12">
+                            <div class="row">
+                                <div class="col-md-9">
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <select ng-model="currentPage" class="form-control"
+                                                ng-change="fetchGitLogs()">
+                                            <option ng-repeat="page in pagination">{$ $index + 1
+                                                $}
+                                            </option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div> <!-- end row -->
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+
+
+{% endblock %}

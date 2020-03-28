@@ -9,7 +9,11 @@
 
     <div class="container">
         <div id="page-title">
-            <h2>{% trans "Manage GIT" %}</h2>
+            <h2>{% trans "Manage GIT" %} - <a target="_blank"
+                                              href="https://go.cyberpersons.com/ManageGit"
+                                              style="height: 23px;line-height: 21px;"
+                                              class="btn btn-border btn-alt border-red btn-link font-red"
+                                              title=""><span>{% trans "Git Docs" %}</span></a></h2>
             <p>{% trans "Manage and track folders via Git for " %} {{ domainName }}.</p>
         </div>
 
@@ -230,8 +234,10 @@
                                             <div class="form-group">
                                                 <label class="col-sm-3 control-label">{% trans "Commands" %}</label>
                                                 <div class="col-sm-9">
-                                                    <textarea ng-model="$parent.commands" placeholder="Add Commands to run after every commit, separate commands using comma."
-                                                            rows="4" class="form-control">{$ currentCommands $}</textarea>
+                                                    <textarea ng-model="$parent.commands"
+                                                              placeholder="Add Commands to run after every commit, separate commands using comma."
+                                                              rows="4"
+                                                              class="form-control">{$ currentCommands $}</textarea>
                                                 </div>
                                             </div>
 
@@ -246,7 +252,8 @@
                                                         </label>
                                                     </div>
                                                 </div>
-                                                <div class="current-pack ng-binding">Currently: {$ webhookCommandCurrent $}
+                                                <div class="current-pack ng-binding">Currently: {$ webhookCommandCurrent
+                                                    $}
                                                 </div>
                                             </div>
 
