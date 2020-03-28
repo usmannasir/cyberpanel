@@ -109,8 +109,18 @@ class IncScheduler():
                         finalPath = '/home/vmail/%s' % (website)
                         finalPathConf = '%s/%s' % (finalPathInside, file)
                     else:
-                        finalPath = '/var/lib/mysql/%s' % (file)
-                        finalPathConf = '%s/%s' % (finalPathInside, file)
+
+                        sqlCheck = 1
+
+                        for childs in web.childdomains_set.all():
+                            if childs.path.find(file) > -1:
+                                finalPath = childs.path
+                                finalPathConf = '%s/%s' % (finalPathInside, file)
+                                sqlCheck = 0
+
+                        if sqlCheck:
+                            finalPath = '/var/lib/mysql/%s' % (file)
+                            finalPathConf = '%s/%s' % (finalPathInside, file)
 
                     gitConf = json.loads(open(finalPathConf, 'r').read())
                     data = {}
