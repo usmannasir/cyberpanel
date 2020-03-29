@@ -102,7 +102,6 @@ app.controller('listDomains', function($scope,$http) {
 /* Java script code to list accounts ends here */
 
 
-
 /* Java script code for email domain page */
 
 app.controller('emailDomainPage', function($scope,$http, $timeout, $window) {
@@ -311,7 +310,6 @@ app.controller('emailDomainPage', function($scope,$http, $timeout, $window) {
 });
 
 /* Java script code for email domain page */
-
 
 /* Java script code for Email Page */
 
@@ -670,7 +668,6 @@ app.controller('emailPage', function($scope,$http, $timeout, $window) {
 
 /* Java script code for Email Page */
 
-
 /* Java script code for SpamAssassin */
 
 app.controller('SpamAssassin', function($scope, $http, $timeout, $window) {
@@ -956,9 +953,7 @@ app.controller('SpamAssassin', function($scope, $http, $timeout, $window) {
 
 });
 
-
 /* Java script code for SpamAssassin */
-
 
 /* Java script code for Email Policy Server */
 
@@ -1088,5 +1083,67 @@ app.controller('policyServer', function($scope, $http, $timeout, $window) {
 
 });
 
-
 /* Java script code for Email Policy Server */
+
+/* Java script code to manage mail queue */
+
+app.controller('mailQueue', function($scope,$http) {
+
+    $scope.currentPage = 1;
+    $scope.recordsToShow = 10;
+    $scope.cyberpanelLoading = true;
+
+    $scope.fetchMailQueue = function () {
+        $scope.cyberpanelLoading = false;
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        var data = {
+            folder: $scope.folder,
+            page: $scope.currentPage,
+            recordsToShow: $scope.recordsToShow
+        };
+
+        dataurl = "/emailPremium/fetchMailQueue";
+
+        $http.post(dataurl, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success',
+                    text: 'Successfully fetched.',
+                    type: 'success'
+                });
+                $scope.queues = JSON.parse(response.data.data);
+                $scope.pagination = response.data.pagination;
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+
+
+        }
+
+
+    };
+    $scope.fetchMailQueue();
+});
+
+/* Java script code to manage mail queue ends here */

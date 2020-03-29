@@ -6546,12 +6546,18 @@ app.controller('manageGIT', function ($scope, $http, $timeout, $window) {
 
     var currentComit;
     var fetchFileCheck = 0;
+    var initial = 1;
 
     $scope.fetchFiles = function (commit) {
 
         currentComit = commit;
         $scope.cyberpanelLoading = false;
-        fetchFileCheck = 1;
+
+        if (initial === 1){
+            initial = 0;
+        }else {
+            fetchFileCheck = 1;
+        }
 
         url = "/websites/fetchFiles";
 
@@ -6607,6 +6613,7 @@ app.controller('manageGIT', function ($scope, $http, $timeout, $window) {
 
     $scope.fetchChangesInFile = function () {
         $scope.fileStatus = true;
+
         if(fetchFileCheck === 1){
             fetchFileCheck = 0;
             return 0;
