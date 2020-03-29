@@ -521,6 +521,7 @@ class preFlightsChecks:
         preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
         try:
+            path = "/usr/local/CyberCP/version.txt"
             writeToFile = open(path, 'w')
             writeToFile.writelines('%s\n' % (VERSION))
             writeToFile.writelines(str(BUILD))
