@@ -2912,90 +2912,94 @@ StrictHostKeyChecking no
 
     def folderCheck(self):
 
-        domainPath = '/home/%s/public_html' % (self.domain)
-        vhRoot = '/home/%s' % (self.domain)
-        vmailPath = '/home/vmail/%s' % (self.domain)
-
-        ##
-
         try:
 
-            website = Websites.objects.get(domain=self.domain)
+            domainPath = '/home/%s/public_html' % (self.domain)
+            vhRoot = '/home/%s' % (self.domain)
+            vmailPath = '/home/vmail/%s' % (self.domain)
 
-            self.masterWebsite = website
-            self.masterDomain = website.domain
-            externalApp = website.externalApp
-            self.externalAppLocal = website.externalApp
-            self.adminEmail = website.adminEmail
-            self.firstName = website.admin.firstName
-            self.lastName = website.admin.lastName
+            ##
 
-            self.home = 0
-            if self.folder == '/home/%s/public_html' % (self.domain):
-                self.home = 1
+            try:
 
-        except:
+                website = Websites.objects.get(domain=self.domain)
 
-            website = ChildDomains.objects.get(domain=self.domain)
-            self.masterWebsite = website.master
-            self.masterDomain = website.master.domain
-            externalApp = website.master.externalApp
-            self.externalAppLocal = website.master.externalApp
-            self.adminEmail = website.master.adminEmail
-            self.firstName = website.master.admin.firstName
-            self.lastName = website.master.admin.lastName
+                self.masterWebsite = website
+                self.masterDomain = website.domain
+                externalApp = website.externalApp
+                self.externalAppLocal = website.externalApp
+                self.adminEmail = website.adminEmail
+                self.firstName = website.admin.firstName
+                self.lastName = website.admin.lastName
 
-            self.home = 0
-            if self.folder == website.path:
-                self.home = 1
+                self.home = 0
+                if self.folder == '/home/%s/public_html' % (self.domain):
+                    self.home = 1
 
-        ##
+            except:
 
-        if self.folder == domainPath:
-            self.externalApp = externalApp
-            return 1
+                website = ChildDomains.objects.get(domain=self.domain)
+                self.masterWebsite = website.master
+                self.masterDomain = website.master.domain
+                externalApp = website.master.externalApp
+                self.externalAppLocal = website.master.externalApp
+                self.adminEmail = website.master.adminEmail
+                self.firstName = website.master.admin.firstName
+                self.lastName = website.master.admin.lastName
 
-        ##
+                self.home = 0
+                if self.folder == website.path:
+                    self.home = 1
 
-        if self.folder == vhRoot:
-            self.externalApp = externalApp
-            return 1
+            ##
 
-        ##
-
-        try:
-            childDomain = ChildDomains.objects.get(domain=self.domain)
-
-            if self.folder == childDomain.path:
+            if self.folder == domainPath:
                 self.externalApp = externalApp
                 return 1
 
-        except:
-            pass
+            ##
 
-        ##
+            if self.folder == vhRoot:
+                self.externalApp = externalApp
+                return 1
 
-        if self.folder == vmailPath:
-            self.externalApp = 'vmail'
-            return 1
+            ##
 
-        try:
+            try:
+                childDomain = ChildDomains.objects.get(domain=self.domain)
 
-            for database in website.databases_set.all():
-                self.externalApp = 'mysql'
-                basePath = '/var/lib/mysql/'
-                dbPath = '%s%s' % (basePath, database.dbName)
-
-                if self.folder == dbPath:
+                if self.folder == childDomain.path:
+                    self.externalApp = externalApp
                     return 1
-        except:
-            for database in website.master.databases_set.all():
-                self.externalApp = 'mysql'
-                basePath = '/var/lib/mysql/'
-                dbPath = '%s%s' % (basePath, database.dbName)
 
-                if self.folder == dbPath:
-                    return 1
+            except:
+                pass
+
+            ##
+
+            if self.folder == vmailPath:
+                self.externalApp = 'vmail'
+                return 1
+
+            try:
+
+                for database in website.databases_set.all():
+                    self.externalApp = 'mysql'
+                    basePath = '/var/lib/mysql/'
+                    dbPath = '%s%s' % (basePath, database.dbName)
+
+                    if self.folder == dbPath:
+                        return 1
+            except:
+                for database in website.master.databases_set.all():
+                    self.externalApp = 'mysql'
+                    basePath = '/var/lib/mysql/'
+                    dbPath = '%s%s' % (basePath, database.dbName)
+
+                    if self.folder == dbPath:
+                        return 1
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile('%s. [folderCheck:3002]' % (str(msg)))
 
 
         return 0
@@ -3355,12 +3359,13 @@ StrictHostKeyChecking no
             else:
                 return ACLManager.loadErrorJson()
 
+
             # security check
 
             if ACLManager.validateInput(self.commitMessage):
                 pass
             else:
-                return ACLManager.loadErrorJson('status', 'Invalid characters in your input.')
+                return ACLManager.loadErrorJson()
 
             ## Check if remote exists
 
@@ -3371,12 +3376,12 @@ StrictHostKeyChecking no
             commandStatus = ProcessUtilities.outputExecutioner(command)
 
             if commandStatus.find('nothing to commit') == -1:
-                gitConfFolder = '/home/cyberpanel/git/%s' % (self.masterDomain)
-                finalFile = '%s/%s' % (gitConfFolder, self.folder.split('/')[-1])
-
-                gitConf = json.loads(open(finalFile, 'r').read())
 
                 try:
+                    gitConfFolder = '/home/cyberpanel/git/%s' % (self.masterDomain)
+                    finalFile = '%s/%s' % (gitConfFolder, self.folder.split('/')[-1])
+
+                    gitConf = json.loads(open(finalFile, 'r').read())
 
                     if gitConf['commands'] != 'NONE':
 

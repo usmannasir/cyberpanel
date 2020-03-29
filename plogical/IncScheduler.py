@@ -126,14 +126,12 @@ class IncScheduler():
                     data = {}
                     data['domain'] = website
                     data['folder'] = finalPath
-                    data['commitMessage'] = 'Auto commit by CyberPanel %s cron on %s.' % (type, time.strftime('%m.%d.%Y_%H-%M-%S'))
-
+                    data['commitMessage'] = 'Auto commit by CyberPanel %s cron on %s' % (type, time.strftime('%m-%d-%Y_%H-%M-%S'))
 
                     if gitConf['autoCommit'] == type:
 
                         wm = WebsiteManager()
                         resp = wm.commitChanges(1, data)
-                        logging.writeToFile(resp.content)
                         resp = json.loads(resp.content)
 
                         message = 'Folder: %s, Status: %s' % (finalPath, resp['commandStatus'])
