@@ -4,10 +4,8 @@
 from django.shortcuts import render,redirect
 from django.http import HttpResponse
 from plogical.getSystemInformation import SystemInformation
-from loginSystem.models import Administrator, ACL
 import json
 from loginSystem.views import loadLoginPage
-import re
 from .models import version
 import requests
 import subprocess
@@ -20,6 +18,8 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from plogical.processUtilities import ProcessUtilities
 # Create your views here.
 
+VERSION = '2.0'
+BUILD = 0
 
 @ensure_csrf_cookie
 def renderBase(request):
@@ -121,16 +121,8 @@ def versionManagment(request):
 
         ## Get local version
 
-
-        versionFile = '/usr/local/CyberCP/version.txt'
-
-        try:
-            data = open(versionFile, 'r').read().split('\n')
-            currentVersion = data[0]
-            currentBuild = data[1]
-        except:
-            currentVersion = latestVersion
-            currentBuild = str(5) + 'E'
+        currentVersion = VERSION
+        currentBuild = str(BUILD)
 
         return render(request, 'baseTemplate/versionManagment.html', {'build': currentBuild,
                                                                       'currentVersion': currentVersion,

@@ -14,6 +14,9 @@ from os.path import *
 from stat import *
 import stat
 
+VERSION = '2.0'
+BUILD = 0
+
 char_set = {'small': 'abcdefghijklmnopqrstuvwxyz',
             'nums': '0123456789',
             'big': 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
@@ -518,13 +521,9 @@ class preFlightsChecks:
         preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
         try:
-            import requests
-            getVersion = requests.get('https://cyberpanel.net/version.txt')
-            latest = getVersion.json()
-            path = "/usr/local/CyberCP/version.txt"
             writeToFile = open(path, 'w')
-            writeToFile.writelines('%s\n' % (str(latest['version'])))
-            writeToFile.writelines(str(latest['build']))
+            writeToFile.writelines('%s\n' % (VERSION))
+            writeToFile.writelines(str(BUILD))
             writeToFile.close()
         except:
             pass

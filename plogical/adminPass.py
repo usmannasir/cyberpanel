@@ -12,6 +12,9 @@ from plogical.acl import ACLManager
 from packages.models import Package
 from baseTemplate.models import version
 
+VERSION = '2.0'
+BUILD = 0
+
 if not os.geteuid() == 0:
     sys.exit("\nOnly root can run this script\n")
 
@@ -34,7 +37,7 @@ def main():
                               firstName="Cyber", lastName="Panel", acl=acl, token=token)
         admin.save()
 
-        vers = version(currentVersion="1.9", build=5)
+        vers = version(currentVersion=VERSION, build=BUILD)
         vers.save()
 
         package = Package(admin=admin, packageName="Default", diskSpace=1000,

@@ -3864,7 +3864,11 @@ StrictHostKeyChecking no
                 else:
                     initialNumber = initialNumber + 1
 
-            lineNumber = int(fileChangedContent[initialNumber].split('+')[1].split(',')[0])
+            try:
+                lineNumber = int(fileChangedContent[initialNumber].split('+')[1].split(',')[0])
+            except:
+                lineNumber = int(fileChangedContent[initialNumber].split('+')[1].split(' ')[0])
+
             fileLen = len(fileChangedContent)
             finalConent = '<tr><td style="border-top: none;color:blue">%s</td><td style="border-top: none;"><p style="color:blue">%s</p></td></tr>' % ('#', fileChangedContent[initialNumber])
 

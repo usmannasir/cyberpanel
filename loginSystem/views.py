@@ -18,6 +18,9 @@ from django.http import HttpResponse
 from django.utils import translation
 # Create your views here.
 
+VERSION = '2.0'
+BUILD = 0
+
 def verifyLogin(request):
     try:
         userID = request.session['userID']
@@ -193,7 +196,7 @@ def loadLoginPage(request):
                                   firstName="Cyber",lastName="Panel", acl=acl, token=token)
             admin.save()
 
-            vers = version(currentVersion="1.9", build=5)
+            vers = version(currentVersion=VERSION, build=BUILD)
             vers.save()
 
             package = Package(admin=admin, packageName="Default", diskSpace=1000,

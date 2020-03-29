@@ -7,14 +7,14 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 import shlex
 import subprocess
 import shutil
-import requests
-import json
 import time
 import MySQLdb as mysql
 from CyberCP import settings
 import random
 import string
 
+VERSION = '2.0'
+BUILD = 0
 
 class Upgrade:
     logPath = "/usr/local/lscp/logs/upgradeLog"
@@ -391,11 +391,8 @@ class Upgrade:
     @staticmethod
     def downloadLink():
         try:
-            url = "https://cyberpanel.net/version.txt"
-            r = requests.get(url, verify=True)
-            data = json.loads(r.text)
-            version_number = str(data['version'])
-            version_build = str(data['build'])
+            version_number = VERSION
+            version_build = str(BUILD)
 
             try:
                 path = "/usr/local/CyberCP/version.txt"
@@ -467,10 +464,8 @@ class Upgrade:
             from baseTemplate.models import version
 
             vers = version.objects.get(pk=1)
-            getVersion = requests.get('https://cyberpanel.net/version.txt')
-            latest = getVersion.json()
-            vers.currentVersion = latest['version']
-            vers.build = latest['build']
+            vers.currentVersion = VERSION
+            vers.build = str(BUILD)
             vers.save()
         except:
             pass
