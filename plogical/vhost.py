@@ -410,7 +410,12 @@ class vhost:
                 command = 'groupdel %s' % (externalApp)
                 ProcessUtilities.executioner(command)
 
-                ##
+                ## Remove git conf folder if present
+
+                gitPath = '/home/cyberpanel/git/%s' % (virtualHostName)
+
+                if os.path.exists(gitPath):
+                    shutil.rmtree(gitPath)
 
             except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [Not able to remove virtual host configuration from main configuration file.]")

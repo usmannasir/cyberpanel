@@ -2998,6 +2998,10 @@ StrictHostKeyChecking no
 
                     if self.folder == dbPath:
                         return 1
+
+            return 0
+
+
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile('%s. [folderCheck:3002]' % (str(msg)))
 
@@ -3357,15 +3361,17 @@ StrictHostKeyChecking no
             if self.folderCheck():
                 pass
             else:
-                return ACLManager.loadErrorJson()
+                return ACLManager.loadErrorJson('status', 0)
 
 
             # security check
+
 
             if ACLManager.validateInput(self.commitMessage):
                 pass
             else:
                 return ACLManager.loadErrorJson()
+
 
             ## Check if remote exists
 

@@ -102,6 +102,10 @@ class IncScheduler():
                 finalPathInside = '%s/%s' % (IncScheduler.gitFolder, website)
 
                 for file in os.listdir(finalPathInside):
+
+                    if file == website:
+                        continue
+
                     if file.find('public_html') > -1:
                         finalPath = '/home/%s/public_html' % (website)
                         finalPathConf = '%s/%s' % (finalPathInside, file)
@@ -134,12 +138,14 @@ class IncScheduler():
                         resp = wm.commitChanges(1, data)
                         resp = json.loads(resp.content)
 
-                        message = 'Folder: %s, Status: %s' % (finalPath, resp['commandStatus'])
-                        finalText = '%s\n%s' % (finalText, message)
 
                         if resp['status'] == 1:
+                            message = 'Folder: %s, Status: %s' % (finalPath, resp['commandStatus'])
+                            finalText = '%s\n%s' % (finalText, message)
                             GitLogs(owner=web, type='INFO', message=message).save()
                         else:
+                            message = 'Folder: %s, Status: %s' % (finalPath, resp['commandStatus'])
+                            finalText = '%s\n%s' % (finalText, message)
                             GitLogs(owner=web, type='ERROR', message=message).save()
 
                     if gitConf['autoPush'] == type:
