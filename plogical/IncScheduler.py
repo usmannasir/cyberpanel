@@ -103,63 +103,48 @@ class IncScheduler():
 
                 for file in os.listdir(finalPathInside):
 
-                    if file == website:
-                        continue
+                    try:
 
-                    if file.find('public_html') > -1:
-                        finalPath = '/home/%s/public_html' % (website)
+                        ##
                         finalPathConf = '%s/%s' % (finalPathInside, file)
-                    elif file.find('vmail') > -1:
-                        finalPath = '/home/vmail/%s' % (website)
-                        finalPathConf = '%s/%s' % (finalPathInside, file)
-                    else:
 
-                        sqlCheck = 1
+                        gitConf = json.loads(open(finalPathConf, 'r').read())
 
-                        for childs in web.childdomains_set.all():
-                            if childs.path.find(file) > -1:
-                                finalPath = childs.path
-                                finalPathConf = '%s/%s' % (finalPathInside, file)
-                                sqlCheck = 0
+                        data = {}
+                        data['domain'] = gitConf['domain']
+                        data['folder'] = gitConf['folder']
+                        data['commitMessage'] = 'Auto commit by CyberPanel %s cron on %s' % (type, time.strftime('%m-%d-%Y_%H-%M-%S'))
 
-                        if sqlCheck:
-                            finalPath = '/var/lib/mysql/%s' % (file)
-                            finalPathConf = '%s/%s' % (finalPathInside, file)
+                        if gitConf['autoCommit'] == type:
 
-                    gitConf = json.loads(open(finalPathConf, 'r').read())
-                    data = {}
-                    data['domain'] = website
-                    data['folder'] = finalPath
-                    data['commitMessage'] = 'Auto commit by CyberPanel %s cron on %s' % (type, time.strftime('%m-%d-%Y_%H-%M-%S'))
+                            wm = WebsiteManager()
+                            resp = wm.commitChanges(1, data)
+                            resp = json.loads(resp.content)
 
-                    if gitConf['autoCommit'] == type:
+                            if resp['status'] == 1:
+                                message = 'Folder: %s, Status: %s' % (gitConf['folder'], resp['commandStatus'])
+                                finalText = '%s\n%s' % (finalText, message)
+                                GitLogs(owner=web, type='INFO', message=message).save()
+                            else:
+                                message = 'Folder: %s, Status: %s' % (gitConf['folder'], resp['commandStatus'])
+                                finalText = '%s\n%s' % (finalText, message)
+                                GitLogs(owner=web, type='ERROR', message=message).save()
 
-                        wm = WebsiteManager()
-                        resp = wm.commitChanges(1, data)
-                        resp = json.loads(resp.content)
+                        if gitConf['autoPush'] == type:
 
+                            wm = WebsiteManager()
+                            resp = wm.gitPush(1, data)
+                            resp = json.loads(resp.content)
 
-                        if resp['status'] == 1:
-                            message = 'Folder: %s, Status: %s' % (finalPath, resp['commandStatus'])
-                            finalText = '%s\n%s' % (finalText, message)
-                            GitLogs(owner=web, type='INFO', message=message).save()
-                        else:
-                            message = 'Folder: %s, Status: %s' % (finalPath, resp['commandStatus'])
-                            finalText = '%s\n%s' % (finalText, message)
-                            GitLogs(owner=web, type='ERROR', message=message).save()
-
-                    if gitConf['autoPush'] == type:
-
-                        wm = WebsiteManager()
-                        resp = wm.gitPush(1, data)
-                        resp = json.loads(resp.content)
-
-                        if resp['status'] == 1:
-                            GitLogs(owner=web, type='INFO', message=resp['commandStatus']).save()
-                            finalText = '%s\n%s' % (finalText, resp['commandStatus'])
-                        else:
-                            GitLogs(owner=web, type='ERROR', message=resp['commandStatus']).save()
-                            finalText = '%s\n%s' % (finalText, resp['commandStatus'])
+                            if resp['status'] == 1:
+                                GitLogs(owner=web, type='INFO', message=resp['commandStatus']).save()
+                                finalText = '%s\n%s' % (finalText, resp['commandStatus'])
+                            else:
+                                GitLogs(owner=web, type='ERROR', message=resp['commandStatus']).save()
+                                finalText = '%s\n%s' % (finalText, resp['commandStatus'])
+                    except BaseException as msg:
+                        message = 'File: %s, Status: %s' % (file, str(msg))
+                        finalText = '%s\n%s' % (finalText, message)
 
 
                 message = '[%s Cron] Finished checking for %s on %s.' % (type, website, time.strftime("%m.%d.%Y_%H-%M-%S"))

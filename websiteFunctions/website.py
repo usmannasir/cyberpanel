@@ -2914,6 +2914,8 @@ StrictHostKeyChecking no
 
         try:
 
+            ###
+
             domainPath = '/home/%s/public_html' % (self.domain)
             vhRoot = '/home/%s' % (self.domain)
             vmailPath = '/home/vmail/%s' % (self.domain)
@@ -2950,6 +2952,53 @@ StrictHostKeyChecking no
                 self.home = 0
                 if self.folder == website.path:
                     self.home = 1
+
+            ### Fetch git configurations
+
+            self.confCheck = 1
+
+            gitConfFolder = '/home/cyberpanel/git'
+            gitConFile = '%s/%s' % (gitConfFolder, self.masterDomain)
+
+            if not os.path.exists(gitConfFolder):
+                os.mkdir(gitConfFolder)
+
+            if not os.path.exists(gitConFile):
+                os.mkdir(gitConFile)
+
+            if os.path.exists(gitConFile):
+                files = os.listdir(gitConFile)
+
+                if len(files) >= 1:
+                    for file in files:
+                        self.finalFile = '%s/%s' % (gitConFile, file)
+
+                        gitConf = json.loads(open(self.finalFile, 'r').read())
+
+                        if gitConf['folder'] == self.folder:
+
+                            self.autoCommitCurrent = gitConf['autoCommit']
+                            self.autoPushCurrent = gitConf['autoPush']
+                            self.emailLogsCurrent = gitConf['emailLogs']
+                            try:
+                                self.commands = gitConf['commands']
+                            except:
+                                self.commands = "Add Commands to run after every commit, separate commands using comma."
+
+                            try:
+                                self.webhookCommandCurrent = gitConf['webhookCommand']
+                            except:
+                                self.webhookCommandCurrent = "False"
+
+                            self.confCheck = 0
+                            break
+
+            if self.confCheck:
+                self.autoCommitCurrent = 'Never'
+                self.autoPushCurrent = 'Never'
+                self.emailLogsCurrent = 'False'
+                self.webhookCommandCurrent = 'False'
+                self.commands = "Add Commands to run after every commit, separate commands using comma."
 
             ##
 
@@ -3083,49 +3132,14 @@ StrictHostKeyChecking no
                 if totalCommits.find('fatal') > -1:
                     totalCommits = '0'
 
-                ## Fetch Configurations
-
-                gitConfFolder = '/home/cyberpanel/git'
-                gitConFile = '%s/%s' % (gitConfFolder, self.masterDomain)
-
-                if not os.path.exists(gitConfFolder):
-                    os.mkdir(gitConfFolder)
-
-                if not os.path.exists(gitConFile):
-                    os.mkdir(gitConFile)
-
-                finalFile = '%s/%s' % (gitConFile, self.folder.split('/')[-1])
-
-                if os.path.exists(finalFile):
-                    gitConf = json.loads(open(finalFile, 'r').read())
-
-                    autoCommitCurrent = gitConf['autoCommit']
-                    autoPushCurrent = gitConf['autoPush']
-                    emailLogsCurrent = gitConf['emailLogs']
-                    try:
-                        commands = gitConf['commands']
-                    except:
-                        commands = "Add Commands to run after every commit, separate commands using comma."
-
-                    try:
-                        webhookCommandCurrent = gitConf['webhookCommand']
-                    except:
-                        webhookCommandCurrent = "False"
-                else:
-                    autoCommitCurrent = 'Never'
-                    autoPushCurrent = 'Never'
-                    emailLogsCurrent = 'False'
-                    webhookCommandCurrent = 'False'
-                    commands = "Add Commands to run after every commit, separate commands using comma."
-
                 ##
 
                 webHookURL = 'https://%s:8090/websites/%s/webhook' % (ACLManager.fetchIP(), self.domain)
 
                 data_ret = {'status': 1, 'repo': 1, 'finalBranches': branches, 'deploymentKey': deploymentKey,
                             'remote': remote, 'remoteResult': remoteResult, 'totalCommits': totalCommits, 'home': self.home,
-                            'webHookURL': webHookURL, 'autoCommitCurrent': autoCommitCurrent,
-                            'autoPushCurrent':autoPushCurrent, 'emailLogsCurrent': emailLogsCurrent, 'commands': commands, "webhookCommandCurrent": webhookCommandCurrent}
+                            'webHookURL': webHookURL, 'autoCommitCurrent': self.autoCommitCurrent,
+                            'autoPushCurrent':self.autoPushCurrent, 'emailLogsCurrent': self.emailLogsCurrent, 'commands': self.commands, "webhookCommandCurrent": self.webhookCommandCurrent}
 
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
@@ -3384,17 +3398,12 @@ StrictHostKeyChecking no
             if commandStatus.find('nothing to commit') == -1:
 
                 try:
-                    gitConfFolder = '/home/cyberpanel/git/%s' % (self.masterDomain)
-                    finalFile = '%s/%s' % (gitConfFolder, self.folder.split('/')[-1])
-
-                    gitConf = json.loads(open(finalFile, 'r').read())
-
-                    if gitConf['commands'] != 'NONE':
+                    if self.commands != 'NONE':
 
                         GitLogs(owner=self.masterWebsite, type='INFO', message='Running commands after successful git commit..').save()
 
-                        if gitConf['commands'].find(',') > -1:
-                            commands = gitConf['commands'].split(',')
+                        if self.commands.find(',') > -1:
+                            commands = self.commands.split(',')
 
                             for command in commands:
                                 GitLogs(owner=self.masterWebsite, type='INFO',
@@ -3405,9 +3414,9 @@ StrictHostKeyChecking no
                                         message='Result: %s' % (result)).save()
                         else:
                             GitLogs(owner=self.masterWebsite, type='INFO',
-                                    message='Running: %s' % (gitConf['commands'])).save()
+                                    message='Running: %s' % (self.commands)).save()
 
-                            result = ProcessUtilities.outputExecutioner(gitConf['commands'], self.externalAppLocal)
+                            result = ProcessUtilities.outputExecutioner(self.commands, self.externalAppLocal)
                             GitLogs(owner=self.masterWebsite, type='INFO',
                                     message='Result: %s' % (result)).save()
 
@@ -3641,6 +3650,13 @@ StrictHostKeyChecking no
 
             command = 'rm -rf %s/.git' % (self.folder)
             ProcessUtilities.executioner(command)
+
+            gitConfFolder = '/home/cyberpanel/git'
+            gitConFile = '%s/%s' % (gitConfFolder, self.masterDomain)
+            finalFile = '%s/%s' % (gitConFile, self.folder.split('/')[-1])
+
+            command = 'rm -rf %s' % (finalFile)
+            ProcessUtilities.outputExecutioner(command)
 
             data_ret = {'status': 1}
             json_data = json.dumps(data_ret)
@@ -3926,6 +3942,8 @@ StrictHostKeyChecking no
 
             dic = {}
 
+            dic['domain'] = self.domain
+
             dic['autoCommit'] = data['autoCommit']
 
             try:
@@ -3948,6 +3966,7 @@ StrictHostKeyChecking no
             except:
                 dic['webhookCommand'] = False
 
+            dic['folder'] = self.folder
 
             if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
                 pass
@@ -3961,18 +3980,18 @@ StrictHostKeyChecking no
 
             ##
 
-            gitConfFolder = '/home/cyberpanel/git'
-            gitConFile = '%s/%s' % (gitConfFolder, self.masterDomain)
+            if self.confCheck == 1:
+                gitConfFolder = '/home/cyberpanel/git'
+                gitConFile = '%s/%s' % (gitConfFolder, self.masterDomain)
+                self.finalFile = '%s/%s' % (gitConFile, str(randint(1000, 9999)))
 
-            if not os.path.exists(gitConfFolder):
-                os.mkdir(gitConfFolder)
+                if not os.path.exists(gitConfFolder):
+                    os.mkdir(gitConfFolder)
 
-            if not os.path.exists(gitConFile):
-                os.mkdir(gitConFile)
+                if not os.path.exists(gitConFile):
+                    os.mkdir(gitConFile)
 
-            finalFile = '%s/%s' % (gitConFile, self.folder.split('/')[-1])
-
-            writeToFile = open(finalFile, 'w')
+            writeToFile = open(self.finalFile, 'w')
             writeToFile.write(json.dumps(dic))
             writeToFile.close()
 
@@ -4055,10 +4074,12 @@ StrictHostKeyChecking no
                 web = Websites.objects.get(domain=self.domain)
                 externalApp = web.externalApp
                 self.folder = '/home/%s/public_html' % (domain)
+                self.masterDomain = domain
             except:
                 web = ChildDomains.objects.get(domain=self.domain)
                 externalApp = web.master.externalApp
                 self.folder = web.path
+                self.masterDomain = web.master.domain
 
             ## Check if remote exists
 
@@ -4069,49 +4090,58 @@ StrictHostKeyChecking no
                 message = '[Webhook Fired] Status: %s.' % (commandStatus)
                 GitLogs(owner=web, type='INFO', message=message).save()
 
-                try:
-                    web = Websites.objects.get(domain=self.domain)
+                ### Fetch git configurations
 
-                    gitConfFolder = '/home/cyberpanel/git/%s' % (web.domain)
-                    finalFile = '%s/%s' % (gitConfFolder, self.folder.split('/')[-1])
-                    gitConf = json.loads(open(finalFile, 'r').read())
+                found = 0
 
-                except:
-                    child = ChildDomains.objects.get(domain=self.domain)
-                    web = child.master
+                gitConfFolder = '/home/cyberpanel/git'
+                gitConFile = '%s/%s' % (gitConfFolder, self.masterDomain)
 
-                    gitConfFolder = '/home/cyberpanel/git/%s' % (web.domain)
-                    finalFile = '%s/%s' % (gitConfFolder, self.folder.split('/')[-1])
-                    gitConf = json.loads(open(finalFile, 'r').read())
+                if not os.path.exists(gitConfFolder):
+                    os.mkdir(gitConfFolder)
 
-                try:
-                    if gitConf['webhookCommand']:
-                        if gitConf['commands'] != 'NONE':
+                if not os.path.exists(gitConFile):
+                    os.mkdir(gitConFile)
 
-                            GitLogs(owner=web, type='INFO', message='Running commands after successful git commit..').save()
+                if os.path.exists(gitConFile):
+                    files = os.listdir(gitConFile)
 
-                            if gitConf['commands'].find(',') > -1:
-                                commands = gitConf['commands'].split(',')
+                    if len(files) >= 1:
+                        for file in files:
+                            finalFile = '%s/%s' % (gitConFile, file)
+                            gitConf = json.loads(open(finalFile, 'r').read())
+                            if gitConf['folder'] == self.folder:
+                                found = 1
+                                break
+                if found:
+                    try:
+                        if gitConf['webhookCommand']:
+                            if gitConf['commands'] != 'NONE':
 
-                                for command in commands:
+                                GitLogs(owner=web, type='INFO', message='Running commands after successful git commit..').save()
+
+                                if gitConf['commands'].find(',') > -1:
+                                    commands = gitConf['commands'].split(',')
+
+                                    for command in commands:
+                                        GitLogs(owner=web, type='INFO',
+                                                message='Running: %s' % (command)).save()
+
+                                        result = ProcessUtilities.outputExecutioner(command, web.externalApp)
+                                        GitLogs(owner=web, type='INFO',
+                                                message='Result: %s' % (result)).save()
+                                else:
                                     GitLogs(owner=web, type='INFO',
-                                            message='Running: %s' % (command)).save()
+                                            message='Running: %s' % (gitConf['commands'])).save()
 
-                                    result = ProcessUtilities.outputExecutioner(command, web.externalApp)
+                                    result = ProcessUtilities.outputExecutioner(gitConf['commands'], web.externalApp)
                                     GitLogs(owner=web, type='INFO',
                                             message='Result: %s' % (result)).save()
-                            else:
-                                GitLogs(owner=web, type='INFO',
-                                        message='Running: %s' % (gitConf['commands'])).save()
 
-                                result = ProcessUtilities.outputExecutioner(gitConf['commands'], web.externalApp)
                                 GitLogs(owner=web, type='INFO',
-                                        message='Result: %s' % (result)).save()
-
-                            GitLogs(owner=web, type='INFO',
-                                    message='Finished running commands.').save()
-                except:
-                    pass
+                                        message='Finished running commands.').save()
+                    except:
+                        pass
 
                 data_ret = {'status': 1, 'commandStatus': commandStatus}
                 json_data = json.dumps(data_ret)
