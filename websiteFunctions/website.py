@@ -4072,6 +4072,7 @@ StrictHostKeyChecking no
 
             try:
                 web = Websites.objects.get(domain=self.domain)
+                self.web = web
                 externalApp = web.externalApp
                 self.folder = '/home/%s/public_html' % (domain)
                 self.masterDomain = domain
@@ -4080,15 +4081,16 @@ StrictHostKeyChecking no
                 externalApp = web.master.externalApp
                 self.folder = web.path
                 self.masterDomain = web.master.domain
+                self.web = web.master
 
             ## Check if remote exists
 
             command = 'git -C %s pull' % (self.folder)
-            commandStatus = ProcessUtilities.outputExecutioner(command , externalApp)
+            commandStatus = ProcessUtilities.outputExecutioner(command)
 
             if commandStatus.find('Already up to date') == -1:
                 message = '[Webhook Fired] Status: %s.' % (commandStatus)
-                GitLogs(owner=web, type='INFO', message=message).save()
+                GitLogs(owner=self.web, type='INFO', message=message).save()
 
                 ### Fetch git configurations
 
@@ -4118,27 +4120,27 @@ StrictHostKeyChecking no
                         if gitConf['webhookCommand']:
                             if gitConf['commands'] != 'NONE':
 
-                                GitLogs(owner=web, type='INFO', message='Running commands after successful git commit..').save()
+                                GitLogs(owner=self.web, type='INFO', message='Running commands after successful git commit..').save()
 
                                 if gitConf['commands'].find(',') > -1:
                                     commands = gitConf['commands'].split(',')
 
                                     for command in commands:
-                                        GitLogs(owner=web, type='INFO',
+                                        GitLogs(owner=self.web, type='INFO',
                                                 message='Running: %s' % (command)).save()
 
-                                        result = ProcessUtilities.outputExecutioner(command, web.externalApp)
-                                        GitLogs(owner=web, type='INFO',
+                                        result = ProcessUtilities.outputExecutioner(command, self.web.externalApp)
+                                        GitLogs(owner=self.web, type='INFO',
                                                 message='Result: %s' % (result)).save()
                                 else:
-                                    GitLogs(owner=web, type='INFO',
+                                    GitLogs(owner=self.web, type='INFO',
                                             message='Running: %s' % (gitConf['commands'])).save()
 
-                                    result = ProcessUtilities.outputExecutioner(gitConf['commands'], web.externalApp)
-                                    GitLogs(owner=web, type='INFO',
+                                    result = ProcessUtilities.outputExecutioner(gitConf['commands'], self.web.externalApp)
+                                    GitLogs(owner=self.web, type='INFO',
                                             message='Result: %s' % (result)).save()
 
-                                GitLogs(owner=web, type='INFO',
+                                GitLogs(owner=self.web, type='INFO',
                                         message='Finished running commands.').save()
                     except:
                         pass
@@ -4148,7 +4150,7 @@ StrictHostKeyChecking no
                 return HttpResponse(json_data)
             else:
                 message = '[Webhook Fired] Status: %s.' % (commandStatus)
-                GitLogs(owner=web, type='ERROR', message=message).save()
+                GitLogs(owner=self.web, type='ERROR', message=message).save()
                 data_ret = {'status': 0, 'error_message': 'Pull not required.', 'commandStatus': commandStatus}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
