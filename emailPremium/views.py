@@ -1072,3 +1072,98 @@ def fetchMailQueue(request):
         dic = {'status': 0, 'error_message': str(msg)}
         json_data = json.dumps(dic)
         return HttpResponse(json_data)
+
+def fetchMessage(request):
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
+        try:
+
+            data = json.loads(request.body)
+            id = data['id']
+
+            command = 'postcat -vq %s' % (id)
+            emailMessageContent = ProcessUtilities.outputExecutioner(command)
+
+
+            dic = {'status': 1, 'error_message': 'None', 'emailMessageContent': emailMessageContent}
+            json_data = json.dumps(dic)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            dic = {'status': 0, 'error_message': str(msg)}
+            json_data = json.dumps(dic)
+            return HttpResponse(json_data)
+
+    except KeyError as msg:
+        dic = {'status': 0, 'error_message': str(msg)}
+        json_data = json.dumps(dic)
+        return HttpResponse(json_data)
+
+def flushQueue(request):
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
+        try:
+
+            command = 'postqueue -f'
+            ProcessUtilities.executioner(command)
+
+            dic = {'status': 1, 'error_message': 'None'}
+            json_data = json.dumps(dic)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            dic = {'status': 0, 'error_message': str(msg)}
+            json_data = json.dumps(dic)
+            return HttpResponse(json_data)
+
+    except KeyError as msg:
+        dic = {'status': 0, 'error_message': str(msg)}
+        json_data = json.dumps(dic)
+        return HttpResponse(json_data)
+
+def delete(request):
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
+        try:
+
+            data = json.loads(request.body)
+            type = data['type']
+
+            if type == 'all':
+                command = 'postsuper -d ALL'
+            else:
+                command = 'postsuper -d ALL deferred'
+
+            ProcessUtilities.executioner(command)
+
+            dic = {'status': 1, 'error_message': 'None'}
+            json_data = json.dumps(dic)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            dic = {'status': 0, 'error_message': str(msg)}
+            json_data = json.dumps(dic)
+            return HttpResponse(json_data)
+
+    except KeyError as msg:
+        dic = {'status': 0, 'error_message': str(msg)}
+        json_data = json.dumps(dic)
+        return HttpResponse(json_data)

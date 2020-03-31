@@ -4073,12 +4073,10 @@ StrictHostKeyChecking no
             try:
                 web = Websites.objects.get(domain=self.domain)
                 self.web = web
-                externalApp = web.externalApp
                 self.folder = '/home/%s/public_html' % (domain)
                 self.masterDomain = domain
             except:
                 web = ChildDomains.objects.get(domain=self.domain)
-                externalApp = web.master.externalApp
                 self.folder = web.path
                 self.masterDomain = web.master.domain
                 self.web = web.master

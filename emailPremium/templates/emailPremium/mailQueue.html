@@ -26,7 +26,7 @@
 
                 <div class="example-box-wrapper">
 
-                    <div class="row">
+                    <!-- <div class="row">
                         <div class="col-sm-10">
                         </div>
                         <div class="col-sm-2">
@@ -40,9 +40,15 @@
                                 </select>
                             </div>
                         </div>
-                    </div>
+                    </div> -->
 
-                    <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered"
+                    <button ng-click="fetchMailQueue()" class="btn btn-info">{% trans 'Refresh' %}</button>
+                    <button ng-click="flushQueue()" class="btn btn-info">{% trans 'Flush Queue' %}</button>
+                    <button ng-click="delete('all')" class="btn btn-info">{% trans 'Delete All' %}</button>
+                    <button ng-click="delete('deferred')" class="btn btn-info">{% trans 'Delete Deferred' %}</button>
+
+                    <table style="margin: 0px; padding: 0px" cellpadding="0" cellspacing="0" border="0"
+                           class="table table-striped table-bordered"
                            id="datatable-example">
                         <thead>
                         <tr>
@@ -51,7 +57,8 @@
                             <th>Size</th>
                             <th>Sender</th>
                             <th>Recipients</th>
-                            <th>Time</th>
+                            <!--<th>Time</th>-->
+                            <th>Deliver</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -62,51 +69,79 @@
                             <td ng-bind="queue.message_size"></td>
                             <td ng-bind="queue.sender"></td>
                             <td ng-bind="queue.recipients"></td>
-                            <td ng-bind="queue.arrival_time"></td>
-                            <!--<td>
-                                <img style="margin-right: 4%;" ng-show="web.status==1"
-                                     title="{% trans 'Limits are being Applied!' %}"
-                                     src="{% static 'mailServer/vpsON.png' %}">
-                                <button ng-click="enableDisableEmailLimits(0, web.domain)" ng-show="web.status==1"
-                                        class="btn ra-100 btn-danger">{% trans 'Disable' %}</button>
-                                <img style="margin-right: 4%;" ng-show="web.status==0"
-                                     title="{% trans 'Limits are not being applied!' %}"
-                                     src="{% static 'mailServer/vpsOff.png' %}">
-                                <button ng-click="enableDisableEmailLimits(1, web.domain)" ng-show="web.status==0"
-                                        class="btn ra-100 btn-success">{% trans 'Enable' %}</button>
-                            </td>
+                            <!--<td ng-bind="queue.arrival_time"></td>-->
                             <td>
-                                <a href="/emailPremium/{$ web.domain $}">
-                                    <button class="btn ra-100 btn-blue-alt">{% trans 'Manage' %}</button>
-                                </a>
-                            </td>-->
+                                <a data-toggle="modal" data-target="#viewMessage"
+                                   ng-click="fetchMessage(queue.queue_id)"
+                                   class="btn btn-border btn-alt border-green btn-link font-green" href="#"
+                                   title=""><span>View Message</span></a>
+                                <div id="viewMessage" class="modal fade" role="dialog">
+                                    <div class="modal-dialog">
+                                        <!-- Modal content-->
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <button type="button" class="close" data-dismiss="modal">&times;
+                                                </button>
+                                                <h4 class="modal-title">{% trans "Message" %}</h4>
+                                            </div>
+                                            <div class="modal-body">
+
+                                                <form name="containerSettingsForm" action="/" class="form-horizontal">
+
+                                                    <div class="form-group">
+
+                                                        <div class="col-sm-12">
+                                                            <textarea rows="10"
+                                                                      class="form-control">{$ emailMessageContent $}</textarea>
+                                                        </div>
+                                                    </div>
+
+                                                </form>
+
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button"
+                                                        class="btn btn-primary"
+                                                        ng-click="commitChanges()">Commit <img
+                                                        ng-hide="cyberpanelLoading"
+                                                        src="{% static 'images/loading.gif' %}">
+                                                </button>
+                                                <button type="button"
+                                                        class="btn btn-default" data-dismiss="modal">
+                                                    Close
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
                         </tr>
 
                         </tbody>
                     </table>
 
-                    <div style="margin-top: 2%" class="row">
-                        <div class="col-md-12">
-                            <div class="row">
-                                <div class="col-md-9">
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="form-group">
-                                        <select ng-model="currentPage" class="form-control"
-                                                ng-change="fetchGitLogs()">
-                                            <option ng-repeat="page in pagination">{$ $index + 1
-                                                $}
-                                            </option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div> <!-- end row -->
-                        </div>
-                    </div>
-
+                    <!-- <div style="margin-top: 2%" class="row">
+                       <div class="col-md-12">
+                           <div class="row">
+                               <div class="col-md-9">
+                               </div>
+                               <div class="col-md-3">
+                                   <div class="form-group">
+                                       <select ng-model="currentPage" class="form-control"
+                                               ng-change="fetchGitLogs()">
+                                           <option ng-repeat="page in pagination">{$ $index + 1
+                                               $}
+                                           </option>
+                                       </select>
+                                   </div>
+                               </div>
+                           </div>
+                       </div> -->
                 </div>
+
             </div>
         </div>
+    </div>
 
 
 
