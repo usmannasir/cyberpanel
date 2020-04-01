@@ -829,7 +829,7 @@ def installStatusSpamAssassin(request):
 
                     execPath = "export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/root/bin  && /usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
                     execPath = execPath + " configureSpamAssassin"
-                    output = ProcessUtilities.outputExecutioner(execPath)
+                    output = ProcessUtilities.outputExecutioner(execPath, 'root')
 
                     if output.find("1,None") > -1:
                         final_json = json.dumps({
