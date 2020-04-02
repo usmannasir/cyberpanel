@@ -3402,8 +3402,8 @@ StrictHostKeyChecking no
 
                         GitLogs(owner=self.masterWebsite, type='INFO', message='Running commands after successful git commit..').save()
 
-                        if self.commands.find(',') > -1:
-                            commands = self.commands.split(',')
+                        if self.commands.find('\n') > -1:
+                            commands = self.commands.split('\n')
 
                             for command in commands:
                                 GitLogs(owner=self.masterWebsite, type='INFO',
@@ -4120,8 +4120,8 @@ StrictHostKeyChecking no
 
                                 GitLogs(owner=self.web, type='INFO', message='Running commands after successful git commit..').save()
 
-                                if gitConf['commands'].find(',') > -1:
-                                    commands = gitConf['commands'].split(',')
+                                if gitConf['commands'].find('\n') > -1:
+                                    commands = gitConf['commands'].split('\n')
 
                                     for command in commands:
                                         GitLogs(owner=self.web, type='INFO',
