@@ -22,6 +22,18 @@
                 <div class="example-box-wrapper">
                     <div class="row">
                         <div class="col-md-3 btn-min-width">
+                            <a href="{% url 'topProcesses' %}" title="{% trans 'Top Processes' %}"
+                               class="tile-box tile-box-shortcut btn-primary">
+                                <div class="tile-header">
+                                    {% trans "Top Processes" %}
+                                </div>
+                                <div class="tile-content-wrapper">
+                                    <i class="fa fa-heartbeat"></i>
+                                </div>
+                            </a>
+                        </div>
+                        
+                        <div class="col-md-3 btn-min-width">
                             <a href="{% url 'litespeedStatus' %}" title="{% trans 'LiteSpeed Status' %}"
                                class="tile-box tile-box-shortcut btn-primary">
                                 <div class="tile-header">
@@ -39,6 +51,18 @@
                                class="tile-box tile-box-shortcut btn-primary">
                                 <div class="tile-header">
                                     {% trans "CyberPanel Main Log" %}
+                                </div>
+                                <div class="tile-content-wrapper">
+                                    <i class="fa fa-file"></i>
+                                </div>
+                            </a>
+                        </div>
+                        
+                        <div class="col-md-3 btn-min-width">
+                            <a href="{% url 'services' %}" title="{% trans 'Services Status' %}"
+                               class="tile-box tile-box-shortcut btn-primary">
+                                <div class="tile-header">
+                                    {% trans "Services Status" %}
                                 </div>
                                 <div class="tile-content-wrapper">
                                     <i class="fa fa-file"></i>
