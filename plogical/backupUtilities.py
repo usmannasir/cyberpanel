@@ -849,7 +849,12 @@ class backupUtilities:
 
             installUtilities.reStartLiteSpeed()
 
-            command = "chown -R " + externalApp + ":nobody" " " + websiteHome
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                groupName = 'nobody'
+            else:
+                groupName = 'nogroup'
+
+            command = "chown -R " + externalApp + ":%s " % (groupName) + websiteHome
             cmd = shlex.split(command)
             subprocess.call(cmd)
 

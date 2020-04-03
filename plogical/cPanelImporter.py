@@ -717,7 +717,12 @@ class cPanelImporter:
         command = "sudo chown -R " + externalApp + ":" + externalApp + " /home/" + self.mainDomain
         ProcessUtilities.normalExecutioner(command)
 
-        command = "sudo chown -R root:nobody /home/" + self.mainDomain + "/logs"
+        if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+            groupName = 'nobody'
+        else:
+            groupName = 'nogroup'
+
+        command = "sudo chown -R root:%s /home/" % (groupName) + self.mainDomain + "/logs"
         ProcessUtilities.normalExecutioner(command)
 
         command = "sudo find %s -type d -exec chmod 0755 {} \;" % ("/home/" + self.mainDomain + "/public_html")

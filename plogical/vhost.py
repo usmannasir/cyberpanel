@@ -91,7 +91,12 @@ class vhost:
             try:
                 os.makedirs(pathHTML)
 
-                command = "chown " + virtualHostUser + ":nobody " + pathHTML
+                if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                    groupName = 'nobody'
+                else:
+                    groupName = 'nogroup'
+
+                command = "chown " + virtualHostUser + ":%s " % (groupName) + pathHTML
                 cmd = shlex.split(command)
                 subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
@@ -842,7 +847,13 @@ class vhost:
 
         try:
             os.makedirs(path)
-            command = "chown " + virtualHostUser + ":nobody " + path
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                groupName = 'nobody'
+            else:
+                groupName = 'nogroup'
+
+            command = "chown " + virtualHostUser + ":%s " % (groupName) + path
             cmd = shlex.split(command)
             subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 

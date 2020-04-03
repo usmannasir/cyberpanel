@@ -351,8 +351,13 @@ class ApplicationInstaller(multi.Thread):
 
             ##
 
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                groupName = 'nobody'
+            else:
+                groupName = 'nogroup'
+
             if home != '0':
-                command = "chown " + externalApp + ":" + 'nobody' + " " + finalPath
+                command = "chown " + externalApp + ":" + groupName + " " + finalPath
                 ProcessUtilities.executioner(command, externalApp)
 
             command = 'chmod 750 %s' % (self.permPath)
@@ -370,8 +375,13 @@ class ApplicationInstaller(multi.Thread):
 
             homeDir = "/home/" + domainName + "/public_html"
 
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                groupName = 'nobody'
+            else:
+                groupName = 'nogroup'
+
             if not os.path.exists(homeDir):
-                command = "chown " + externalApp + ":" + 'nobody' + " " + homeDir
+                command = "chown " + externalApp + ":" + groupName + " " + homeDir
                 ProcessUtilities.executioner(command, externalApp)
 
             try:
@@ -523,8 +533,13 @@ class ApplicationInstaller(multi.Thread):
 
             ##
 
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                groupName = 'nobody'
+            else:
+                groupName = 'nogroup'
+
             if home == '0':
-                command = "chown -R " + externalApp + ":" + 'nobody' + " " + finalPath
+                command = "chown -R " + externalApp + ":" + groupName + " " + finalPath
                 ProcessUtilities.executioner(command, externalApp)
 
             command = "rm -f prestashop_1.7.4.2.zip"
@@ -544,8 +559,13 @@ class ApplicationInstaller(multi.Thread):
 
             homeDir = "/home/" + domainName + "/public_html"
 
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                groupName = 'nobody'
+            else:
+                groupName = 'nogroup'
+
             if not os.path.exists(homeDir):
-                command = "chown -R " + externalApp + ":" + 'nobody' + " " + homeDir
+                command = "chown -R " + externalApp + ":" + groupName + " " + homeDir
                 ProcessUtilities.executioner(command, externalApp)
 
             try:
@@ -652,7 +672,12 @@ class ApplicationInstaller(multi.Thread):
 
             ##
 
-            command = "chown -R " + externalApp + ":" + 'nobody' + " " + finalPath
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                groupName = 'nobody'
+            else:
+                groupName = 'nogroup'
+
+            command = "chown -R " + externalApp + ":" + groupName + " " + finalPath
             ProcessUtilities.executioner(command, externalApp)
 
             vhost.addRewriteRules(domainName)
@@ -714,10 +739,15 @@ class ApplicationInstaller(multi.Thread):
 
             ##
 
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                groupName = 'nobody'
+            else:
+                groupName = 'nogroup'
+
             website = Websites.objects.get(domain=domain)
             externalApp = website.externalApp
 
-            command = "chown -R " + externalApp + ":" + 'nobody' + " " + finalPath
+            command = "chown -R " + externalApp + ":" + groupName + " " + finalPath
             ProcessUtilities.executioner(command, externalApp)
 
             return 0
@@ -756,7 +786,12 @@ class ApplicationInstaller(multi.Thread):
 
             ##
 
-            command = "chown -R " + externalApp + ":" + 'nobody' + " " + finalPath
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                groupName = 'nobody'
+            else:
+                groupName = 'nogroup'
+
+            command = "chown -R " + externalApp + ":" + groupName + " " + finalPath
             ProcessUtilities.executioner(command, website.externalApp)
 
             gitPath = '/home/cyberpanel/' + domain + '.git'
@@ -906,7 +941,12 @@ class ApplicationInstaller(multi.Thread):
 
             shutil.rmtree(finalPath + "installation")
 
-            command = "chown -R " + virtualHostUser + ":" + 'nobody' + " " + finalPath
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                groupName = 'nobody'
+            else:
+                groupName = 'nogroup'
+
+            command = "chown -R " + virtualHostUser + ":" + groupName + " " + finalPath
             ProcessUtilities.executioner(command)
 
             vhost.addRewriteRules(domainName)
@@ -927,8 +967,13 @@ class ApplicationInstaller(multi.Thread):
 
             homeDir = "/home/" + domainName + "/public_html"
 
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                groupName = 'nobody'
+            else:
+                groupName = 'nogroup'
+
             if not os.path.exists(homeDir):
-                command = "chown -R " + virtualHostUser + ":" + 'nobody' + " " + homeDir
+                command = "chown -R " + virtualHostUser + ":" + groupName + " " + homeDir
                 ProcessUtilities.executioner(command)
 
             try:
@@ -1120,8 +1165,13 @@ class ApplicationInstaller(multi.Thread):
 
             ##
 
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                groupName = 'nobody'
+            else:
+                groupName = 'nogroup'
+
             if home != '0':
-                command = "chown -R " + externalApp + ":" + 'nobody' + " " + finalPath
+                command = "chown -R " + externalApp + ":" + groupName + " " + finalPath
                 ProcessUtilities.executioner(command, externalApp)
 
             installUtilities.reStartLiteSpeed()
@@ -1140,8 +1190,13 @@ class ApplicationInstaller(multi.Thread):
 
             homeDir = "/home/" + domainName + "/public_html"
 
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                groupName = 'nobody'
+            else:
+                groupName = 'nogroup'
+
             if not os.path.exists(homeDir):
-                command = "chown -R " + externalApp + ":" + 'nobody' + " " + homeDir
+                command = "chown -R " + externalApp + ":" + groupName + " " + homeDir
                 ProcessUtilities.executioner(command, externalApp)
 
             try:

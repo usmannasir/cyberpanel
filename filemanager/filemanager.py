@@ -498,13 +498,18 @@ class FileManager:
         website = Websites.objects.get(domain=domainName)
         externalApp = website.externalApp
 
+        if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+            groupName = 'nobody'
+        else:
+            groupName = 'nogroup'
+
         command = 'chown -R %s:%s /home/%s/public_html/*' % (externalApp, externalApp, domainName)
         ProcessUtilities.popenExecutioner(command)
 
         command = 'chown -R %s:%s /home/%s/public_html/.[^.]*' % (externalApp, externalApp, domainName)
         ProcessUtilities.popenExecutioner(command)
 
-        command = "chown root:nobody /home/" + domainName + "/logs"
+        command = "chown root:%s /home/" % (groupName) + domainName + "/logs"
         ProcessUtilities.popenExecutioner(command)
 
         command = "find %s -type d -exec chmod 0755 {} \;" % ("/home/" + domainName + "/public_html")
@@ -513,7 +518,7 @@ class FileManager:
         command = "find %s -type f -exec chmod 0644 {} \;" % ("/home/" + domainName + "/public_html")
         ProcessUtilities.popenExecutioner(command)
 
-        command = 'chown %s:nobody /home/%s/public_html' % (externalApp, domainName)
+        command = 'chown %s:%s /home/%s/public_html' % (externalApp,groupName, domainName)
         ProcessUtilities.executioner(command)
 
         command = 'chmod 750 /home/%s/public_html' % (domainName)
