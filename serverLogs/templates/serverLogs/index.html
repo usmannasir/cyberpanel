@@ -22,6 +22,18 @@
 
                     <div class="row">
                         <div class="col-md-3 btn-min-width">
+                            <a href="{% url 'serverMail' %}" title="{% trans 'Server Mail' %}"
+                               class="tile-box tile-box-shortcut btn-primary">
+                                <div class="tile-header">
+                                    {% trans "Server Mail" %}
+                                </div>
+                                <div class="tile-content-wrapper">
+                                    <i class="fa fa-key"></i>
+                                </div>
+                            </a>
+                        </div>
+                        
+                        <div class="col-md-3 btn-min-width">
                             <a href="{% url 'accessLogs' %}" title="{% trans 'Access Logs' %}"
                                class="tile-box tile-box-shortcut btn-primary">
                                 <div class="tile-header">
@@ -62,6 +74,18 @@
                                class="tile-box tile-box-shortcut btn-primary">
                                 <div class="tile-header">
                                     {% trans "FTP Logs" %}
+                                </div>
+                                <div class="tile-content-wrapper">
+                                    <i class="fa fa-upload"></i>
+                                </div>
+                            </a>
+                        </div>
+                        
+                        <div class="col-md-3 btn-min-width">
+                            <a href="{% url 'modSecAuditLogs' %}" title="{% trans 'ModSecurity Audit Logs' %}"
+                               class="tile-box tile-box-shortcut btn-primary">
+                                <div class="tile-header">
+                                    {% trans "ModSecurity Audit Logs" %}
                                 </div>
                                 <div class="tile-content-wrapper">
                                     <i class="fa fa-upload"></i>
