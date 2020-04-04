@@ -14,7 +14,7 @@ import random
 import string
 
 VERSION = '2.0'
-BUILD = 0
+BUILD = 1
 
 class Upgrade:
     logPath = "/usr/local/lscp/logs/upgradeLog"

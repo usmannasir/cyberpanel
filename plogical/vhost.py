@@ -857,7 +857,7 @@ class vhost:
             cmd = shlex.split(command)
             subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
-            command = "chmod 755 %s" % (path)
+            command = "chmod 750 %s" % (path)
             cmd = shlex.split(command)
             subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 

@@ -285,9 +285,9 @@ class WebsiteManager:
 
             if len(path) > 0:
                 path = path.lstrip("/")
-                path = "/home/" + masterDomain + "/public_html/" + path
+                path = "/home/" + masterDomain + "/" + path
             else:
-                path = "/home/" + masterDomain + "/public_html/" + domain
+                path = "/home/" + masterDomain + "/" + domain
 
             try:
                 apacheBackend = str(data['apacheBackend'])
