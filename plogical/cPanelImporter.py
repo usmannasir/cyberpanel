@@ -707,7 +707,7 @@ class cPanelImporter:
             return 1
 
         except BaseException as msg:
-            message = 'Failed to retore databases from file %s, error message: %s.' % (
+            message = 'Failed to restore databases from file %s, error message: %s.' % (
             self.backupFile, str(msg))
             logging.statusWriter(self.logFile, message, 1)
             return 0
