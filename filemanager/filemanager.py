@@ -5,7 +5,6 @@ from plogical.processUtilities import ProcessUtilities
 from websiteFunctions.models import Websites
 from random import randint
 from django.core.files.storage import FileSystemStorage
-import html.parser
 from plogical.acl import ACLManager
 
 class FileManager:
@@ -523,3 +522,16 @@ class FileManager:
 
         command = 'chmod 750 /home/%s/public_html' % (domainName)
         ProcessUtilities.executioner(command)
+
+        for childs in website.childdomains_set.all():
+            command = 'chown -R %s:%s %s/*' % (externalApp, externalApp, childs.path)
+            ProcessUtilities.popenExecutioner(command)
+
+            command = 'chown -R %s:%s %s/.[^.]*' % (externalApp, externalApp, childs.path)
+            ProcessUtilities.popenExecutioner(command)
+
+            command = 'chmod 750 %s' % (childs.path)
+            ProcessUtilities.popenExecutioner(command)
+
+            command = 'chmod %s:%s %s' % (externalApp, groupName, childs.path)
+            ProcessUtilities.popenExecutioner(command)

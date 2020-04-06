@@ -263,12 +263,17 @@ class ProcessUtilities(multi.Thread):
 
     def customPoen(self):
         try:
+
+
             if type(self.extraArgs['command']) == str or type(self.extraArgs['command']) == bytes:
                 command = self.extraArgs['command']
             else:
                 command = " ".join(self.extraArgs['command'])
 
-            ProcessUtilities.sendCommand(command, self.extraArgs['user'])
+            if getpass.getuser() == 'root':
+                subprocess.call(command, shell=True)
+            else:
+                ProcessUtilities.sendCommand(command, self.extraArgs['user'])
 
             return 1
         except BaseException as msg:

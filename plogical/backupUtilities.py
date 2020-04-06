@@ -886,18 +886,12 @@ class backupUtilities:
 
             installUtilities.reStartLiteSpeed()
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
-                groupName = 'nobody'
-            else:
-                groupName = 'nogroup'
+            ## Fix permissions
 
-            command = "chown -R " + externalApp + ":%s " % (groupName) + websiteHome
-            cmd = shlex.split(command)
-            subprocess.call(cmd)
+            from filemanager.filemanager import FileManager
 
-            command = 'chmod 750 %s' % (websiteHome)
-            cmd = shlex.split(command)
-            subprocess.call(cmd)
+            fm = FileManager(None, None)
+            fm.fixPermissions(masterDomain)
 
         except BaseException as msg:
             status = os.path.join(completPath, 'status')
