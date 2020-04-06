@@ -265,7 +265,7 @@ class ApplicationInstaller(multi.Thread):
                 statusFile.close()
 
                 dbName, dbUser, dbPassword = self.dbCreation(tempStatusPath, website.master)
-                self.permPath = '/home/%s/public_html' % (website.master.domain)
+                self.permPath = website.path
 
             except:
                 website = Websites.objects.get(domain=domainName)
@@ -446,7 +446,7 @@ class ApplicationInstaller(multi.Thread):
                 statusFile.close()
 
                 dbName, dbUser, dbPassword = self.dbCreation(tempStatusPath, website.master)
-                self.permPath = '/home/%s/public_html' % (website.master.domain)
+                self.permPath = website.path
 
             except:
                 website = Websites.objects.get(domain=domainName)
@@ -1068,7 +1068,7 @@ class ApplicationInstaller(multi.Thread):
                 statusFile.close()
 
                 dbName, dbUser, dbPassword = self.dbCreation(tempStatusPath, website.master)
-                self.permPath = '/home/%s/public_html' % (website.master.domain)
+                self.permPath = website.path
 
             except:
                 website = Websites.objects.get(domain=domainName)
