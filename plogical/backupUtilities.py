@@ -28,7 +28,8 @@ from xml.etree.ElementTree import Element, SubElement
 from xml.etree import ElementTree
 from xml.dom import minidom
 import time
-from shutil import copy, copytree
+from shutil import copy
+from distutils.dir_util import copy_tree
 from random import randint
 from plogical.processUtilities import ProcessUtilities
 try:
@@ -42,7 +43,7 @@ except:
     pass
 
 VERSION = '2.0'
-BUILD = '1'
+BUILD = 1
 
 ## I am not the monster that you think I am..
 
@@ -365,7 +366,8 @@ class backupUtilities:
 
             ## Stop making archive of document_root and copy instead
 
-            copytree('/home/%s/public_html' % domainName, tempStoragePath)
+
+            copy_tree('/home/%s/public_html' % domainName, '%s/%s' % (tempStoragePath, 'public_html'))
 
             #make_archive(os.path.join(tempStoragePath,"public_html"), 'gztar', os.path.join("/home",domainName,"public_html"))
 
@@ -451,7 +453,7 @@ class backupUtilities:
                         pass
 
                 if childPath.find('/home/%s/public_html' % domainName) == -1:
-                    copytree(childPath, '%s/%s-docroot' % (tempStoragePath, actualChildDomain))
+                    copy_tree(childPath, '%s/%s-docroot' % (tempStoragePath, actualChildDomain))
 
         except BaseException as msg:
             pass
@@ -649,8 +651,6 @@ class backupUtilities:
                 completPath = "/home/backup/transfer-"+str(dir)+"/"+backupFileName ## without extension
                 originalFile = "/home/backup/transfer-"+str(dir)+"/"+backupName ## with extension
 
-
-
             pathToCompressedHome = os.path.join(completPath,"public_html.tar.gz")
 
             if not os.path.exists(completPath):
@@ -671,7 +671,6 @@ class backupUtilities:
             tar.extractall(completPath)
             tar.close()
 
-
             logging.CyberCPLogFileWriter.statusWriter(status, "Creating Accounts,Databases and DNS records!")
 
             ########### Creating website and its dabases
@@ -680,12 +679,14 @@ class backupUtilities:
             backupMetaData = ElementTree.parse(os.path.join(completPath, "meta.xml"))
             masterDomain = backupMetaData.find('masterDomain').text
 
+
+            twoPointO = 0
             try:
                 version = backupMetaData.find('VERSION').text
                 build = backupMetaData.find('BUILD').text
+                twoPointO = 1
             except:
-                version = '2.0'
-                build = '0'
+                twoPointO = 0
 
             result = backupUtilities.createWebsiteFromBackup(backupName, dir)
 
@@ -713,8 +714,6 @@ class backupUtilities:
                 logging.CyberCPLogFileWriter.statusWriter(status, "Error Message: " + result[1] + ". Not able to create Account, Databases and DNS Records, aborting. [575][5009]")
                 return 0
 
-            if float(version) > 2.0 or float(build) > 0:
-                copytree('%s/public_html' % (completPath), '/home/%s' % masterDomain)
 
             ########### Creating child/sub/addon/parked domains
 
@@ -783,14 +782,13 @@ class backupUtilities:
 
                         if float(version) > 2.0 or float(build) > 0:
                             if path.find('/home/%s/public_html' % masterDomain) == -1:
-                                copytree('%s/%s-docroot' % (completPath, domain), path)
+                                copy_tree('%s/%s-docroot' % (completPath, domain), path)
 
                         continue
                     else:
                         logging.CyberCPLogFileWriter.writeToFile('Error domain %s' % (domain))
                         logging.CyberCPLogFileWriter.statusWriter(status, "Error Message: " + retValues[1] + ". Not able to create child domains, aborting. [635][5009]")
                         return 0
-
             except BaseException as msg:
                 status = open(os.path.join(completPath,'status'), "w")
                 status.write("Error Message: " + str(msg) +". Not able to create child domains, aborting. [638][5009]")
@@ -823,7 +821,6 @@ class backupUtilities:
                     result = mailUtilities.createEmailAccount(masterDomain, username, password, 'restore')
                     if result[0] == 0:
                         raise BaseException(result[1])
-
             except BaseException as msg:
                 logging.CyberCPLogFileWriter.statusWriter(status, "Error Message: " + str(msg) +". Not able to create email accounts, aborting. [671][5009]")
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [startRestore]")
@@ -850,9 +847,13 @@ class backupUtilities:
             # /home/backup/backup-example.com-02.13.2018_10-24-52/public_html.tar.gz
             ## Moving above v2.0.0 extracting webhome data is not required, thus commenting below lines
 
-            # tar = tarfile.open(pathToCompressedHome)
-            # tar.extractall(websiteHome)
-            # tar.close()
+            if not twoPointO:
+                tar = tarfile.open(pathToCompressedHome)
+                tar.extractall(websiteHome)
+                tar.close()
+            else:
+                if float(version) > 2.0 or float(build) > 0:
+                    copy_tree('%s/public_html' % (completPath), websiteHome)
 
             ## extracting email accounts
 
