@@ -482,6 +482,9 @@ class backupUtilities:
                                          1024.0 * 1024.0))) + "MB"
                 items.save()
 
+        command = 'chmod 600 %s' % (os.path.join(backupPath,backupName+".tar.gz"))
+        ProcessUtilities.executioner(command)
+
         logging.CyberCPLogFileWriter.statusWriter(status, "Completed\n")
         os.remove(pidFile)
 
