@@ -123,10 +123,10 @@ class ApplicationInstaller(multi.Thread):
             command = 'mv %s /home/%s/public_html' % (path, domainName)
             ProcessUtilities.executioner(command)
 
-            website = Websites.objects.get(domain=domainName)
+            from filemanager.filemanager import FileManager
 
-            command = 'chown %s:%s /home/%s/public_html' % (website.externalApp, website.externalApp, domainName)
-            ProcessUtilities.executioner(command)
+            fm = FileManager(None, None)
+            fm.fixPermissions(domainName)
 
             statusFile = open(self.tempStatusPath, 'w')
             statusFile.writelines('Successfully converted. [200]')
