@@ -471,11 +471,10 @@ class backupUtilities:
 
         logging.CyberCPLogFileWriter.statusWriter(status, "Backing up email accounts..\n")
 
-        try:
-            make_archive(os.path.join(tempStoragePath, domainName), 'gztar', os.path.join("/home", "vmail", domainName))
-        except BaseException as msg:
-            pass
+        emailPath = '/home/vmail/%s' % (domainName)
 
+        if os.path.exists(emailPath):
+            copy_tree(emailPath, '%s/vmail' % (tempStoragePath))
 
         ## shutil.make_archive. Creating final package.
 
@@ -862,21 +861,32 @@ class backupUtilities:
 
             logging.CyberCPLogFileWriter.statusWriter(status, "Extracting email accounts!")
 
-            try:
-                pathToCompressedEmails = os.path.join(completPath, masterDomain + ".tar.gz")
-                emailHome = os.path.join("/home","vmail",masterDomain)
+            if not twoPointO:
 
-                tar = tarfile.open(pathToCompressedEmails)
-                tar.extractall(emailHome)
-                tar.close()
+                try:
+                    pathToCompressedEmails = os.path.join(completPath, masterDomain + ".tar.gz")
+                    emailHome = os.path.join("/home","vmail",masterDomain)
 
-                ## Change permissions
+                    tar = tarfile.open(pathToCompressedEmails)
+                    tar.extractall(emailHome)
+                    tar.close()
 
-                command = "chmod -r vmail:vmail " + emailHome
-                subprocess.call(shlex.split(command))
+                    ## Change permissions
 
-            except:
-                pass
+                    command = "chown -R vmail:vmail " + emailHome
+                    subprocess.call(shlex.split(command))
+
+                except:
+                    pass
+            else:
+
+                emailsPath = '%s/vmail' % (completPath)
+
+                if os.path.exists(emailsPath):
+                    copy_tree(emailsPath, '/home/vmail/%s' % (masterDomain))
+
+                command = "chown -R vmail:vmail /home/vmail/%s" % (masterDomain)
+                ProcessUtilities.executioner(command)
 
             ## emails extracted
 
