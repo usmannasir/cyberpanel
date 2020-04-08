@@ -4,8 +4,8 @@
 from .cloudManager import CloudManager
 import json
 from loginSystem.models import Administrator
-from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from django.views.decorators.csrf import csrf_exempt
+from django.shortcuts import HttpResponse
 
 @csrf_exempt
 def router(request):
@@ -314,25 +314,21 @@ def router(request):
 @csrf_exempt
 def access(request):
     try:
-        data = json.loads(request.body)
-
         serverUserName = request.GET.get('serverUserName')
         token = request.GET.get('token')
 
         admin = Administrator.objects.get(userName=serverUserName)
 
-        cm = CloudManager(data, admin)
-
         if admin.api == 0:
-            return cm.ajaxPre(0, 'API Access Disabled.')
+            return HttpResponse('API Access Disabled.')
 
-        if token == admin.token.lstrip('Basic '):
+        if token == admin.token.lstrip('Basic ').rstrip('='):
             request.session['userID'] = admin.pk
             from django.shortcuts import redirect
             from baseTemplate.views import renderBase
             return redirect(renderBase)
         else:
-            return cm.ajaxPre(0, 'Unauthorized access.')
+            return HttpResponse('Unauthorized access.')
 
     except BaseException as msg:
         cm = CloudManager(None)
