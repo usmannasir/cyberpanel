@@ -948,6 +948,7 @@ class CloudManager:
 
     def systemStatus(self, request):
         try:
+            request.session['userID'] = self.admin.pk
             return topProcessesStatus(request)
         except BaseException as msg:
             return self.ajaxPre(0, str(msg))
