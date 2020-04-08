@@ -310,3 +310,30 @@ def router(request):
     except BaseException as msg:
         cm = CloudManager(None)
         return cm.ajaxPre(0, str(msg))
+
+@csrf_exempt
+def access(request):
+    try:
+        data = json.loads(request.body)
+
+        serverUserName = request.GET.get('serverUserName')
+        token = request.GET.get('token')
+
+        admin = Administrator.objects.get(userName=serverUserName)
+
+        cm = CloudManager(data, admin)
+
+        if admin.api == 0:
+            return cm.ajaxPre(0, 'API Access Disabled.')
+
+        if token == admin.token:
+            request.session['userID'] = admin.pk
+            from django.shortcuts import redirect
+            from baseTemplate.views import renderBase
+            return redirect(renderBase)
+        else:
+            return cm.ajaxPre(0, 'Unauthorized access.')
+
+    except BaseException as msg:
+        cm = CloudManager(None)
+        return cm.ajaxPre(0, str(msg))
