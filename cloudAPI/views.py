@@ -326,7 +326,7 @@ def access(request):
         if admin.api == 0:
             return cm.ajaxPre(0, 'API Access Disabled.')
 
-        if token == admin.token:
+        if token == admin.token.lstrip('Basic '):
             request.session['userID'] = admin.pk
             from django.shortcuts import redirect
             from baseTemplate.views import renderBase
