@@ -525,13 +525,19 @@ class FileManager:
         ProcessUtilities.executioner(command)
 
         for childs in website.childdomains_set.all():
+            command = "find %s -type d -exec chmod 0755 {} \;" % (childs.path)
+            ProcessUtilities.popenExecutioner(command)
+
+            command = "find %s -type f -exec chmod 0644 {} \;" % (childs.path)
+            ProcessUtilities.popenExecutioner(command)
+
             command = 'chown -R %s:%s %s/*' % (externalApp, externalApp, childs.path)
             ProcessUtilities.popenExecutioner(command)
 
             command = 'chown -R %s:%s %s/.[^.]*' % (externalApp, externalApp, childs.path)
             ProcessUtilities.popenExecutioner(command)
 
-            command = 'chmod 750 %s' % (childs.path)
+            command = 'chmod 755 %s' % (childs.path)
             ProcessUtilities.popenExecutioner(command)
 
             command = 'chmod %s:%s %s' % (externalApp, groupName, childs.path)
