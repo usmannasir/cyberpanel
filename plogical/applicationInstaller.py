@@ -248,6 +248,7 @@ class ApplicationInstaller(multi.Thread):
             try:
                 website = ChildDomains.objects.get(domain=domainName)
                 externalApp = website.master.externalApp
+                self.masterDomain = website.master.domain
 
                 if home == '0':
                     path = self.extraArgs['path']
@@ -270,6 +271,7 @@ class ApplicationInstaller(multi.Thread):
             except:
                 website = Websites.objects.get(domain=domainName)
                 externalApp = website.externalApp
+                self.masterDomain = website.domain
 
                 if home == '0':
                     path = self.extraArgs['path']
@@ -351,17 +353,10 @@ class ApplicationInstaller(multi.Thread):
 
             ##
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
-                groupName = 'nobody'
-            else:
-                groupName = 'nogroup'
+            from filemanager.filemanager import FileManager
 
-            if home != '0':
-                command = "chown " + externalApp + ":" + groupName + " " + finalPath
-                ProcessUtilities.executioner(command, externalApp)
-
-            command = 'chmod 750 %s' % (self.permPath)
-            ProcessUtilities.executioner(command)
+            fm = FileManager(None, None)
+            fm.fixPermissions(self.masterDomain)
 
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines("Successfully Installed. [200]")
@@ -429,6 +424,7 @@ class ApplicationInstaller(multi.Thread):
             try:
                 website = ChildDomains.objects.get(domain=domainName)
                 externalApp = website.master.externalApp
+                self.masterDomain = website.master.domain
 
                 if home == '0':
                     path = self.extraArgs['path']
@@ -451,6 +447,7 @@ class ApplicationInstaller(multi.Thread):
             except:
                 website = Websites.objects.get(domain=domainName)
                 externalApp = website.externalApp
+                self.masterDomain = website.domain
 
                 if home == '0':
                     path = self.extraArgs['path']
@@ -533,20 +530,10 @@ class ApplicationInstaller(multi.Thread):
 
             ##
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
-                groupName = 'nobody'
-            else:
-                groupName = 'nogroup'
+            from filemanager.filemanager import FileManager
 
-            if home == '0':
-                command = "chown -R " + externalApp + ":" + groupName + " " + finalPath
-                ProcessUtilities.executioner(command, externalApp)
-
-            command = "rm -f prestashop_1.7.4.2.zip"
-            ProcessUtilities.executioner(command, externalApp)
-
-            command = 'chmod 750 %s' % (self.permPath)
-            ProcessUtilities.executioner(command)
+            fm = FileManager(None, None)
+            fm.fixPermissions(self.masterDomain)
 
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines("Successfully Installed. [200]")
@@ -581,228 +568,6 @@ class ApplicationInstaller(multi.Thread):
             statusFile = open(self.tempStatusPath, 'w')
             statusFile.writelines(str(msg) + " [404]")
             statusFile.close()
-            return 0
-
-    def setupGit(self):
-        try:
-            admin = self.extraArgs['admin']
-            domainName = self.extraArgs['domainName']
-            username = self.extraArgs['username']
-            reponame = self.extraArgs['reponame']
-            branch = self.extraArgs['branch']
-            tempStatusPath = self.extraArgs['tempStatusPath']
-            defaultProvider = self.extraArgs['defaultProvider']
-            self.tempStatusPath = tempStatusPath
-
-            statusFile = open(tempStatusPath, 'w')
-            statusFile.writelines('Checking if GIT installed..,0')
-            statusFile.close()
-
-            ### Check git
-
-            try:
-                command = 'git --help'
-                output = ProcessUtilities.outputExecutioner(command)
-
-                if output.find('command not found') > -1:
-                    statusFile = open(tempStatusPath, 'w')
-                    statusFile.writelines('Installing GIT..,0')
-                    statusFile.close()
-                    self.installGit()
-                    statusFile = open(tempStatusPath, 'w')
-                    statusFile.writelines('GIT successfully installed,20')
-                    statusFile.close()
-
-            except BaseException as msg:
-                statusFile = open(tempStatusPath, 'w')
-                statusFile.writelines('Installing GIT..,0')
-                statusFile.close()
-                self.installGit()
-                statusFile = open(tempStatusPath, 'w')
-                statusFile.writelines('GIT successfully installed.,20')
-                statusFile.close()
-
-            ## Open Status File
-
-            statusFile = open(tempStatusPath, 'w')
-            statusFile.writelines('Setting up directories..,20')
-            statusFile.close()
-
-            try:
-                website = ChildDomains.objects.get(domain=domainName)
-                externalApp = website.master.externalApp
-                finalPath = website.path
-
-            except:
-                website = Websites.objects.get(domain=domainName)
-                externalApp = website.externalApp
-                finalPath = "/home/" + domainName + "/public_html/"
-
-            ## Security Check
-
-            if finalPath.find("..") > -1:
-                raise BaseException('Specified path must be inside virtual host home.')
-
-            permPath = '/home/%s/public_html' % (domainName)
-            command = 'chmod 755 %s' % (permPath)
-            ProcessUtilities.executioner(command)
-
-            command = 'mkdir -p ' + finalPath
-            ProcessUtilities.executioner(command, externalApp)
-
-            ## checking for directories/files
-
-            if self.dataLossCheck(finalPath, tempStatusPath) == 0:
-                raise BaseException('Directory is not empty.')
-
-            ####
-
-            statusFile = open(tempStatusPath, 'w')
-            statusFile.writelines('Cloning the repo..,40')
-            statusFile.close()
-
-            try:
-                command = 'git clone --depth 1 --no-single-branch git@' + defaultProvider + '.com:' + username + '/' + reponame + '.git -b ' + branch + ' ' + finalPath
-                output = ProcessUtilities.outputExecutioner(command, externalApp)
-                finalPathGit = '%s/.git' % (finalPath.rstrip('/'))
-                if not os.path.exists(finalPathGit):
-                    raise BaseException(output)
-            except BaseException as msg:
-                raise BaseException('Failed to clone repository, make sure you deployed your key to repository. Error: %s' % (str(msg)))
-
-            ##
-
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
-                groupName = 'nobody'
-            else:
-                groupName = 'nogroup'
-
-            command = "chown -R " + externalApp + ":" + groupName + " " + finalPath
-            ProcessUtilities.executioner(command, externalApp)
-
-            vhost.addRewriteRules(domainName)
-            installUtilities.reStartLiteSpeed()
-
-            mailUtilities.checkHome()
-
-            gitPath = '/home/cyberpanel/' + domainName + '.git'
-            writeToFile = open(gitPath, 'w')
-            writeToFile.write(username + ':' + reponame)
-            writeToFile.close()
-
-            permPath = '/home/%s/public_html' % (domainName)
-            command = 'chmod 750 %s' % (permPath)
-            ProcessUtilities.executioner(command)
-
-            statusFile = open(tempStatusPath, 'w')
-            statusFile.writelines("GIT Repository successfully attached. [200]")
-            statusFile.close()
-            return 0
-
-
-        except BaseException as msg:
-            try:
-                os.remove('/home/cyberpanel/' + domainName + '.git')
-            except:
-                pass
-
-            permPath = '/home/%s/public_html' % (domainName)
-            command = 'chmod 750 %s' % (permPath)
-            ProcessUtilities.executioner(command)
-
-            statusFile = open(self.tempStatusPath, 'w')
-            statusFile.writelines(str(msg) + " [404]")
-            statusFile.close()
-            return 0
-
-    def gitPull(self):
-        try:
-            domain = self.extraArgs['domain']
-
-            try:
-                website = Websites.objects.get(domain=domain)
-                finalPath = "/home/" + domain + "/public_html/"
-                externalApp = website.externalApp
-            except:
-                childDomain = ChildDomains.objects.get(domain=domain)
-                finalPath = childDomain.path
-                externalApp = website.externalApp
-
-            path = '/home/cyberpanel/' + domain + '.git'
-
-            if not os.path.exists(path):
-                logging.writeToFile('Git is not setup for this website.')
-                return 0
-
-            command = 'git --git-dir=' + finalPath + '.git --work-tree=' + finalPath + '  pull'
-            ProcessUtilities.executioner(command, externalApp)
-
-            ##
-
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
-                groupName = 'nobody'
-            else:
-                groupName = 'nogroup'
-
-            website = Websites.objects.get(domain=domain)
-            externalApp = website.externalApp
-
-            command = "chown -R " + externalApp + ":" + groupName + " " + finalPath
-            ProcessUtilities.executioner(command, externalApp)
-
-            return 0
-
-
-        except BaseException as msg:
-            logging.writeToFile(str(msg) + " [ApplicationInstaller.gitPull]")
-            return 0
-
-    def detachRepo(self):
-        try:
-            domain = self.extraArgs['domainName']
-            admin = self.extraArgs['admin']
-
-            try:
-                website = ChildDomains.objects.get(domain=domain)
-                externalApp = website.master.externalApp
-
-
-            except:
-                website = Websites.objects.get(domain=domain)
-                externalApp = website.externalApp
-
-            try:
-                website = Websites.objects.get(domain=domain)
-                finalPath = "/home/" + domain + "/public_html/"
-            except:
-                childDomain = ChildDomains.objects.get(domain=domain)
-                finalPath = childDomain.path
-
-            command = 'rm -rf ' + finalPath
-            ProcessUtilities.executioner(command, website.externalApp)
-
-            command = 'mkdir ' + finalPath
-            ProcessUtilities.executioner(command, website.externalApp)
-
-            ##
-
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
-                groupName = 'nobody'
-            else:
-                groupName = 'nogroup'
-
-            command = "chown -R " + externalApp + ":" + groupName + " " + finalPath
-            ProcessUtilities.executioner(command, website.externalApp)
-
-            gitPath = '/home/cyberpanel/' + domain + '.git'
-
-            os.remove(gitPath)
-
-            return 0
-
-
-        except BaseException as msg:
-            logging.writeToFile(str(msg) + " [ApplicationInstaller.gitPull]")
             return 0
 
     def installJoomla(self):
@@ -993,36 +758,6 @@ class ApplicationInstaller(multi.Thread):
             logging.writeToFile(str(msg))
             return 0
 
-    def changeBranch(self):
-        try:
-            domainName = self.extraArgs['domainName']
-            githubBranch = self.extraArgs['githubBranch']
-            admin = self.extraArgs['admin']
-
-            try:
-                website = Websites.objects.get(domain=domainName)
-                finalPath = "/home/" + domainName + "/public_html/"
-                externalApp = website.externalApp
-            except:
-                childDomain = ChildDomains.objects.get(domain=domainName)
-                finalPath = childDomain.path
-                externalApp = childDomain.master.externalApp
-
-            try:
-                command = 'git --git-dir=' + finalPath + '/.git  checkout -b ' + githubBranch
-                ProcessUtilities.executioner(command, externalApp)
-            except:
-                try:
-                    command = 'git --git-dir=' + finalPath + '/.git  checkout ' + githubBranch
-                    ProcessUtilities.executioner(command, externalApp)
-                except subprocess.CalledProcessError as msg:
-                    logging.writeToFile('Failed to change branch: ' + str(msg))
-                    return 0
-            return 0
-        except BaseException as msg:
-            logging.writeToFile('Failed to change branch: ' + str(msg))
-            return 0
-
     def installMagento(self):
         try:
 
@@ -1051,6 +786,7 @@ class ApplicationInstaller(multi.Thread):
             try:
                 website = ChildDomains.objects.get(domain=domainName)
                 externalApp = website.master.externalApp
+                self.masterDomain = website.master.domain
 
                 if home == '0':
                     path = self.extraArgs['path']
@@ -1073,6 +809,7 @@ class ApplicationInstaller(multi.Thread):
             except:
                 website = Websites.objects.get(domain=domainName)
                 externalApp = website.externalApp
+                self.masterDomain = website.domain
 
                 if home == '0':
                     path = self.extraArgs['path']
@@ -1165,19 +902,12 @@ class ApplicationInstaller(multi.Thread):
 
             ##
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
-                groupName = 'nobody'
-            else:
-                groupName = 'nogroup'
+            from filemanager.filemanager import FileManager
 
-            if home != '0':
-                command = "chown -R " + externalApp + ":" + groupName + " " + finalPath
-                ProcessUtilities.executioner(command, externalApp)
+            fm = FileManager(None, None)
+            fm.fixPermissions(self.masterDomain)
 
             installUtilities.reStartLiteSpeed()
-
-            command = 'chmod 750 %s' % (self.permPath)
-            ProcessUtilities.executioner(command)
 
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines("Successfully Installed. [200]")

@@ -517,7 +517,7 @@ class FileManager:
         command = "find %s -type f -exec chmod 0644 {} \;" % ("/home/" + domainName + "/public_html")
         ProcessUtilities.popenExecutioner(command)
 
-        command = 'chown %s:%s /home/%s/public_html' % (externalApp,groupName, domainName)
+        command = 'chown %s:%s /home/%s/public_html' % (externalApp, groupName, domainName)
         ProcessUtilities.executioner(command)
 
         command = 'chmod 750 /home/%s/public_html' % (domainName)
