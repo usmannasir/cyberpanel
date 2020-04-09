@@ -398,7 +398,7 @@ fi
 
 
 install_required() {
-curl https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.0.1/CyberPanel.repo > /etc/yum.repos.d/CyberPanel.repo
+curl https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.0.1/install/CyberPanel.repo > /etc/yum.repos.d/CyberPanel.repo
 if [[ $SERVER_COUNTRY == "CN" ]] ; then
 	mkdir /root/.config
 	mkdir /root/.config/pip
