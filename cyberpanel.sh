@@ -398,6 +398,7 @@ fi
 
 
 install_required() {
+curl https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.0.1/CyberPanel.repo > /etc/yum.repos.d/CyberPanel.repo
 if [[ $SERVER_COUNTRY == "CN" ]] ; then
 	mkdir /root/.config
 	mkdir /root/.config/pip
@@ -425,14 +426,13 @@ if [[ $SERVER_OS == "CentOS" ]] ; then
 	yum autoremove epel-release -y
 	rm -f /etc/yum.repos.d/epel.repo
 	rm -f /etc/yum.repos.d/epel.repo.rpmsave
-	yum install epel-release -y
 
 	if [[ $CENTOS_8 == "False" ]] ; then
-	  yum install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc python-devel libattr-devel xz-devel gpgme-devel mariadb-devel curl-devel python-pip git socat
+	  yum install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel gpgme-devel curl-devel git socat
 		check_return
 	fi
 	if [[ $CENTOS_8 == "True" ]] ; then
-		yum install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-devel curl-devel git platform-python-devel tar socat
+		yum install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel curl-devel git tar socat
 		check_return
 		dnf --enablerepo=PowerTools install gpgme-devel -y
 		check_return
@@ -442,11 +442,6 @@ if [[ $DEV == "ON" ]] ; then
 	  if [[ $CENTOS_8 == "False" ]] ; then
       yum -y install yum-utils
       yum -y groupinstall development
-			if [[ $SERVER_COUNTRY == "CN" ]] ; then
-				wget -O /etc/yum.repos.d/ius.repo https://$DOWNLOAD_SERVER/ius/ius.repo
-			else
-      	yum -y install https://centos7.iuscommunity.org/ius-release.rpm
-			fi
 			yum -y install python36u python36u-pip python36u-devel
 			check_return
     fi

@@ -304,10 +304,6 @@ class preFlightsChecks:
         except BaseException as msg:
             logging.InstallLog.writeToFile("[ERROR] setup_account_cyberpanel. " + str(msg))
 
-    def yum_update(self):
-        command = 'yum update -y'
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
     def installCyberPanelRepo(self):
         self.stdOut("Install Cyberpanel repo")
 
@@ -331,60 +327,6 @@ class preFlightsChecks:
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
         elif self.distro == cent8:
             command = 'rpm -Uvh http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el8.noarch.rpm'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-
-    def enableEPELRepo(self):
-        command = 'yum -y install epel-release'
-        preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-
-    def install_pip(self):
-        self.stdOut("Install pip")
-        if self.distro == ubuntu:
-            command = "apt-get -y install python-pip"
-            preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-        elif self.distro == centos:
-            command = "yum -y install python-pip"
-            preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-
-
-    def install_python_dev(self):
-        self.stdOut("Install python development environment")
-
-        if self.distro == centos:
-            command = "yum -y install python-devel"
-            preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-        elif self.distro == ubuntu:
-            command = "apt-get -y install python-dev"
-            preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-
-
-
-    def install_gcc(self):
-        self.stdOut("Install gcc")
-
-        if self.distro == centos:
-            command = "yum -y install gcc"
-        else:
-            command = "apt-get -y install gcc"
-
-        preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-
-    def install_python_setup_tools(self):
-        command = "yum -y install python-setuptools"
-        preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-
-    def install_python_mysql_library(self):
-        self.stdOut("Install MySQL python library")
-
-        if self.distro == centos:
-            command = "yum install mariadb-devel gcc python36u-devel -y"
-        else:
-            command = "apt-get -y install libmysqlclient-dev"
-
-        preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-
-        if self.distro == ubuntu:
-            command = "pip install MySQL-python"
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
     def fix_selinux_issue(self):
@@ -415,23 +357,10 @@ class preFlightsChecks:
 
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-    def installGit(self):
-        if os.path.exists("/etc/lsb-release"):
-            command = 'apt -y install git'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-        else:
-            command = 'yum -y install http://repo.iotti.biz/CentOS/7/noarch/lux-release-7-1.noarch.rpm'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            command = 'yum install git -y'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-
     def download_install_CyberPanel(self, mysqlPassword, mysql):
         ##
 
         os.chdir(self.path)
-
-        self.installGit()
 
         os.chdir('/usr/local')
 
@@ -2236,9 +2165,6 @@ vmail
         command = 'systemctl enable redis'
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-
-
-
 def main():
     parser = argparse.ArgumentParser(description='CyberPanel Installer')
     parser.add_argument('publicip', help='Please enter public IP for your VPS or dedicated server.')
@@ -2307,10 +2233,6 @@ def main():
     checks.checkPythonVersion()
     checks.setup_account_cyberpanel()
     checks.installCyberPanelRepo()
-    #checks.install_gcc()
-    if distro == centos:
-        checks.install_python_setup_tools()
-    #checks.install_python_mysql_library()
 
     import installCyberPanel
 
@@ -2348,7 +2270,6 @@ def main():
     checks.setup_cron()
     checks.installRestic()
     checks.installAcme()
-    # checks.installdnsPython()
 
     ## Install and Configure OpenDKIM.
 
