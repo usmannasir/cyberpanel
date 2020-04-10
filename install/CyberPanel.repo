@@ -1,5 +1,5 @@
 [CyberPanel]
 name=CyberPanel
-baseurl=https://repo.cyberpanel.net/
-gpgkey=https://repo.cyberpanel.net/RPM-GPG-KEY-cyberpanel
+baseurl=https://cyberpanelrepo.b-cdn.net/
+gpgkey=https://cyberpanelrepo.b-cdn.net/RPM-GPG-KEY-cyberpanel
 gpgcheck=1

@@ -1082,7 +1082,7 @@ if [[ $DEV == "ON" ]] ; then
 	cd /usr/local/
 	virtualenv -p /usr/bin/python3 CyberPanel
   source /usr/local/CyberPanel/bin/activate
-  wget -O /usr/local/cyberpanel-pip.zip https://repo.cyberpanel.net/cyberpanel-pip.zip
+  wget -O /usr/local/cyberpanel-pip.zip https://cyberpanelrepo.b-cdn.net//cyberpanel-pip.zip
 	check_return
   unzip /usr/local/cyberpanel-pip.zip -d /usr/local
 	check_return
