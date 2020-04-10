@@ -677,23 +677,8 @@ class preFlightsChecks:
     def install_postfix_davecot(self):
         self.stdOut("Install dovecot - first remove postfix")
 
-        if self.distro == centos:
-            path = '/etc/yum.repos.d/dovecot.repo'
-            content = """[dovecot-2.3-latest]
-name=Dovecot 2.3 CentOS $releasever - $basearch
-baseurl=http://repo.dovecot.org/ce-2.3-latest/centos/$releasever/RPMS/$basearch
-gpgkey=https://repo.dovecot.org/DOVECOT-REPO-GPG
-gpgcheck=1
-enabled=1"""
-            writeToFile = open(path, 'w')
-            writeToFile.write(content)
-            writeToFile.close()
-
         try:
             if self.distro == centos:
-
-                command = 'yum -y install http://cyberpanel.sh/gf-release-latest.gf.el7.noarch.rpm'
-                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
                 command = 'yum remove postfix -y'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
@@ -706,7 +691,7 @@ enabled=1"""
             self.stdOut("Install dovecot - do the install")
 
             if self.distro == centos:
-                command = 'yum install --enablerepo=gf-plus -y postfix3 postfix3-ldap postfix3-mysql postfix3-pcre'
+                command = 'yum install --enablerepo=CyberPanel -y postfix3 postfix3-ldap postfix3-mysql postfix3-pcre'
             elif self.distro == cent8:
                 command = 'dnf install postfix postfix-mysql -y'
             else:
@@ -735,7 +720,7 @@ enabled=1"""
             ##
 
             if self.distro == centos or self.distro == cent8:
-                command = 'yum -y install dovecot dovecot-mysql'
+                command = 'yum --enablerepo=CyberPanel -y install dovecot dovecot-mysql'
             else:
                 command = 'apt-get -y install dovecot-mysql'
 
@@ -2050,14 +2035,7 @@ milter_default_action = accept
             CentOSPath = '/etc/redhat-release'
 
             if os.path.exists(CentOSPath):
-
-                command = 'yum install yum-utils -y'
-                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-                command = 'yum-config-manager --add-repo https://copr.fedorainfracloud.org/coprs/copart/restic/repo/epel-7/copart-restic-epel-7.repo'
-                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-                command = 'yum install restic -y'
+                command = 'yum --enablerepo=CyberPanel install restic -y'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
             else:
                 command = 'apt-get update -y'
@@ -2065,10 +2043,6 @@ milter_default_action = accept
 
                 command = 'apt-get install restic -y'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            cronTab = '/etc/crontab'
-
-            data = open(cronTab, 'r').read()
 
         except:
             pass

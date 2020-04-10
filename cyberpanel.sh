@@ -1305,7 +1305,7 @@ fi
 		fi
 #fix php.ini &amp; issue
 
-clear
+#clear
 echo "###################################################################"
 echo "                CyberPanel Successfully Installed                  "
 echo "                                                                   "

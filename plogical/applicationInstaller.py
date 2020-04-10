@@ -166,8 +166,6 @@ class ApplicationInstaller(multi.Thread):
                 command = 'apt -y install git'
                 ProcessUtilities.executioner(command)
             else:
-                command = 'yum -y install http://repo.iotti.biz/CentOS/7/noarch/lux-release-7-1.noarch.rpm'
-                ProcessUtilities.executioner(command)
 
                 command = 'yum install git -y'
                 ProcessUtilities.executioner(command)

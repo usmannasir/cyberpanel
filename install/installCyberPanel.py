@@ -207,28 +207,6 @@ class InstallCyberPanel:
 
             install.preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-    def setup_mariadb_repo(self):
-        try:
-
-            if self.distro == ubuntu:
-            # Only needed if the repo is broken or we need the latest version.
-            # command = "apt-get -y install software-properties-common"
-            # command = "apt-key adv --recv-keys --keyserver hkp://keyserver.ubuntu.com:80 0xF1656F24C74CD1D8"
-            # command = "add-apt-repository 'deb [arch=amd64] http://mirror.zol.co.zw/mariadb/repo/10.3/ubuntu bionic main'"
-                return
-
-            InstallCyberPanel.stdOut("Setting up MariaDB Repo..", 1)
-
-            os.chdir(self.cwd)
-            shutil.copy("mysql/MariaDB.repo","/etc/yum.repos.d/MariaDB.repo")
-
-            InstallCyberPanel.stdOut("MariaDB repo set!", 1)
-
-
-        except BaseException as msg:
-            logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [setup_mariadb_repo]")
-            return 0
-
     def installMySQL(self, mysql):
 
         ############## Install mariadb ######################
@@ -236,7 +214,7 @@ class InstallCyberPanel:
         if self.distro == ubuntu:
             command = "apt-get -y install mariadb-server"
         else:
-            command = 'yum -y install mariadb-server'
+            command = 'yum --enablerepo=CyberPanel -y install mariadb-server'
 
         install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
@@ -499,11 +477,6 @@ class InstallCyberPanel:
                 #     InstallCyberPanel.stdOut("[ERROR] Unable to create /etc/resolv.conf: " + str(e) +
                 #                              ".  This may need to be fixed manually as 'echo \"nameserver 8.8.8.8\"> "
                 #                              "/etc/resolv.conf'", 1, 1, os.EX_OSERR)
-
-            if self.distro == centos:
-                command = 'curl -o /etc/yum.repos.d/powerdns-auth-42.repo ' \
-                          'https://repo.powerdns.com/repo-files/centos-auth-42.repo'
-                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
             if self.distro == cent8:
                 command = 'dnf config-manager --set-enabled PowerTools'

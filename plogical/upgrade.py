@@ -1282,8 +1282,6 @@ class Upgrade:
                 command = 'apt -y install git'
                 Upgrade.executioner(command, 'installGit', 0)
             else:
-                command = 'sudo yum -y install http://repo.iotti.biz/CentOS/7/noarch/lux-release-7-1.noarch.rpm'
-                Upgrade.executioner(command, 'installGit', 0)
 
                 command = 'sudo yum install git -y'
                 Upgrade.executioner(command, 'installGit', 0)
