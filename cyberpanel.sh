@@ -1082,9 +1082,11 @@ if [[ $DEV == "ON" ]] ; then
 	cd /usr/local/
 	virtualenv -p /usr/bin/python3 CyberPanel
   source /usr/local/CyberPanel/bin/activate
-  wget -O requirements.txt https://$GIT_CONTENT_URL/${BRANCH_NAME}/requirments.txt
+  wget -O /usr/local/cyberpanel-pip.zip https://repo.cyberpanel.net/cyberpanel-pip.zip
 	check_return
-  pip3.6 install --ignore-installed -r requirements.txt
+  unzip /usr/local/cyberpanel-pip.zip -d /usr/local
+	check_return
+	pip3.6 install /usr/local/pip-packs/*
 	check_return
 	cd -
 fi
@@ -1176,9 +1178,7 @@ EOF
 
 virtualenv -p /usr/bin/python3 /usr/local/CyberCP
 source /usr/local/CyberCP/bin/activate
-wget -O requirements.txt https://$GIT_CONTENT_URL/${BRANCH_NAME}/requirments.txt
-check_return
-pip3.6 install --ignore-installed -r requirements.txt
+pip3.6 install /usr/local/pip-packs/*
 check_return
 systemctl restart lscpd
 fi

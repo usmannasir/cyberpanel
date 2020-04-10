@@ -1987,8 +1987,6 @@ failovermethod=priority
         CentOSPath = '/etc/redhat-release'
 
         if os.path.exists(CentOSPath):
-            command = 'yum-config-manager --add-repo https://copr.fedorainfracloud.org/coprs/copart/restic/repo/epel-7/copart-restic-epel-7.repo'
-            Upgrade.executioner(command, 'Add restic repo.')
 
             command = 'yum install restic -y'
             Upgrade.executioner(command, 'Install Restic')
