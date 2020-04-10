@@ -428,11 +428,11 @@ if [[ $SERVER_OS == "CentOS" ]] ; then
 	rm -f /etc/yum.repos.d/epel.repo.rpmsave
 
 	if [[ $CENTOS_8 == "False" ]] ; then
-	  yum install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel gpgme-devel curl-devel git socat
+	  yum --enablerepo=CyberPanel install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel gpgme-devel curl-devel git socat openssl-devel MariaDB-shared mariadb-devel
 		check_return
 	fi
 	if [[ $CENTOS_8 == "True" ]] ; then
-		yum install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel curl-devel git tar socat
+		yum install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel curl-devel git tar socat mariadb-devel openssl-devel MariaDB-shared mariadb-devel
 		check_return
 		dnf --enablerepo=PowerTools install gpgme-devel -y
 		check_return

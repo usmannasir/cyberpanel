@@ -625,8 +625,6 @@ def Main(cwd, mysql, distro, ent, serial = None, port = "8090", ftp = None, dns 
     if ent == 0:
         installer.fix_ols_configs()
 
-
-    installer.setup_mariadb_repo()
     installer.installMySQL(mysql)
     installer.changeMYSQLRootPassword()
     #installer.changeMYSQLRootPasswordCyberPanel(mysql)
