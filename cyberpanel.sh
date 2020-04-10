@@ -1037,10 +1037,7 @@ if [[ $debug == "0" ]] ; then
 fi
 
 if [[ $debug == "1" ]] ; then
-	wget -O requirements.txt https://$GIT_CONTENT_URL/${BRANCH_NAME}/requirments.txt
-	check_return
-	/usr/local/CyberPanel/bin/pip3 install --ignore-installed -r requirements.txt
-	rm -f requirements.txt
+	/usr/local/CyberPanel/bin/pip3 install /usr/local/pip-packs/*
 
 	if [[ $REDIS_HOSTING == "Yes" ]] ; then
 	  /usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY --postfix $POSTFIX_VARIABLE --powerdns $POWERDNS_VARIABLE --ftp $PUREFTPD_VARIABLE --redis enable
