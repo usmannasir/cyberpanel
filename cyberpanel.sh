@@ -1037,7 +1037,7 @@ if [[ $debug == "0" ]] ; then
 fi
 
 if [[ $debug == "1" ]] ; then
-	/usr/local/CyberPanel/bin/pip3 install /usr/local/pip-packs/*
+	/usr/local/CyberPanel/bin/pip3 install --ignore-installed /usr/local/pip-packs/*
 
 	if [[ $REDIS_HOSTING == "Yes" ]] ; then
 	  /usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY --postfix $POSTFIX_VARIABLE --powerdns $POWERDNS_VARIABLE --ftp $PUREFTPD_VARIABLE --redis enable
@@ -1083,7 +1083,7 @@ if [[ $DEV == "ON" ]] ; then
 	check_return
   unzip /usr/local/cyberpanel-pip.zip -d /usr/local
 	check_return
-	pip3.6 install /usr/local/pip-packs/*
+	pip3.6 install --ignore-installed /usr/local/pip-packs/*
 	check_return
 	cd -
 fi
@@ -1175,7 +1175,7 @@ EOF
 
 virtualenv -p /usr/bin/python3 /usr/local/CyberCP
 source /usr/local/CyberCP/bin/activate
-pip3.6 install /usr/local/pip-packs/*
+pip3.6 install --ignore-installed /usr/local/pip-packs/*
 check_return
 systemctl restart lscpd
 fi
