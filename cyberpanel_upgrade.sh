@@ -215,13 +215,15 @@ fi
 
 
 if [[ -f /usr/local/CyberPanel/bin/python2 ]] ; then
+  echo -e "\nPython 2 dectected, doing resetup...\n"
   rm -rf /usr/local/CyberPanel/bin
   virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberPanel
   check_return
 elif [[ -f /usr/local/CyberPanel/bin/ ]] ; then
   echo -e "\nNo need to resetup virtualenv at /usr/local/CyberPanel...\n"
 else
-   virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberPanel
+  echo -e "\nNothing found, need fresh setup...\n"
+  virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberPanel
   check_return
 fi
 
@@ -259,7 +261,7 @@ wget https://$GIT_CONTENT_URL/${BRANCH_NAME}/plogical/upgrade.py
 if [[ $SERVER_COUNTRY == "CN" ]] ; then
 sed -i 's|wget  https://raw.githubusercontent.com/usmannasir/cyberpanel/v1.9.4/lscpd-0.2.4 -P /usr/local/lscp/bin/|cp -f /usr/local/CyberCP/lscpd-0.2.4 /usr/local/lscp/bin/lscpd-0.2.4|g' upgrade.py
 sed -i 's|wget  https://raw.githubusercontent.com/usmannasir/cyberpanel/%s/lscpd-0.2.4 -P /usr/local/lscp/bin/|cp -f /usr/local/CyberCP/lscpd-0.2.4 /usr/local/lscp/bin/lscpd-0.2.4|g' upgrade.py
-sed -i $'s/0.2.4\' % (branch)/0.2.4\'/' upgrade.py
+#sed -i $'s/0.2.4\' % (branch)/0.2.4\'/' upgrade.py
 sed -i 's|raw.githubusercontent.com/usmannasir/cyberpanel|'${GIT_CONTENT_URL}'|g' upgrade.py
 sed -i 's|git clone https://github.com/usmannasir/cyberpanel|git clone https://'${GIT_URL}'|g' upgrade.py
 fi
