@@ -1291,6 +1291,18 @@ class Upgrade:
                 command = 'git pull'
                 Upgrade.executioner(command, command, 1)
 
+            elif currentBranch.find('not a git repository') > -1:
+
+                os.chdir('/usr/local')
+
+                command = 'git clone https://github.com/usmannasir/cyberpanel'
+                Upgrade.executioner(command, 'Download CyberPanel', 1)
+
+                if os.path.exists('CyberCP'):
+                    shutil.rmtree('CyberCP')
+
+                shutil.move('cyberpanel', 'CyberCP')
+
             else:
                 command = 'git stash'
                 Upgrade.executioner(command, command, 1)
