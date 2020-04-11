@@ -11,6 +11,23 @@ GIT_URL="github.com/usmannasir/cyberpanel"
 GIT_CONTENT_URL="raw.githubusercontent.com/usmannasir/cyberpanel"
 SERVER_COUNTRY="unknow"
 SERVER_COUNTRY=$(curl --silent --max-time 5 https://cyberpanel.sh/?country)
+
+### Update and remove not needed repos
+
+curl https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.0.1/install/CyberPanel.repo > /etc/yum.repos.d/CyberPanel.repo
+rm -f /etc/yum.repos.d/ius-archive.repo
+rm -f /etc/yum.repos.d/copart-restic-epel-7.repo
+rm -f /etc/yum.repos.d/dovecot.repo
+rm -f /etc/yum.repos.d/epel.repo
+rm -f /etc/yum.repos.d/epel-testing.repo
+rm -f /etc/yum.repos.d/frank.repo
+rm -f /etc/yum.repos.d/ius.repo
+rm -f /etc/yum.repos.d/ius-testing.repo
+rm -f /etc/yum.repos.d/MariaDB.repo
+rm -f /etc/yum.repos.d/lux.repo
+
+##
+
 if [[ ${#SERVER_COUNTRY} == "2" ]] || [[ ${#SERVER_COUNTRY} == "6" ]] ; then
 	echo -e "\nChecking server..."
 else

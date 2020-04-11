@@ -19,6 +19,8 @@ BUILD = 1
 class Upgrade:
     logPath = "/usr/local/lscp/logs/upgradeLog"
     cdn = 'cdn.cyberpanel.sh'
+    installedOutput = ''
+    CentOSPath = '/etc/redhat-release'
 
     @staticmethod
     def stdOut(message, do_exit=0):
@@ -122,7 +124,6 @@ class Upgrade:
 
         except BaseException as msg:
             Upgrade.stdOut(str(msg) + " [mountTemp]", 0)
-
 
     @staticmethod
     def dockerUsers():
@@ -407,25 +408,6 @@ class Upgrade:
         except BaseException as msg:
             Upgrade.stdOut(str(msg) + ' [downloadLink]')
             os._exit(0)
-
-    @staticmethod
-    def fileManager():
-        ## Copy File manager files
-
-        command = "rm -rf /usr/local/lsws/Example/html/FileManager"
-        Upgrade.executioner(command, 'Remove old Filemanager', 0)
-
-        if os.path.exists('/usr/local/lsws/bin/openlitespeed'):
-            command = "mv /usr/local/CyberCP/install/FileManager /usr/local/lsws/Example/html"
-            Upgrade.executioner(command, 'Setup new Filemanager', 0)
-        else:
-            command = "mv /usr/local/CyberCP/install/FileManager /usr/local/lsws"
-            Upgrade.executioner(command, 'Setup new Filemanager', 0)
-
-        ##
-
-        command = "chmod -R 777 /usr/local/lsws/Example/html/FileManager"
-        Upgrade.executioner(command, 'Filemanager permissions change', 0)
 
     @staticmethod
     def setupCLI():
@@ -1276,25 +1258,9 @@ class Upgrade:
             pass
 
     @staticmethod
-    def installGit():
-        try:
-            if os.path.exists("/etc/lsb-release"):
-                command = 'apt -y install git'
-                Upgrade.executioner(command, 'installGit', 0)
-            else:
-
-                command = 'sudo yum install git -y'
-                Upgrade.executioner(command, 'installGit', 0)
-
-        except BaseException as msg:
-            pass
-
-    @staticmethod
     def downloadAndUpgrade(versionNumbring, branch):
         try:
             ## Download latest version.
-
-            Upgrade.installGit()
 
             ## Backup settings file.
 
@@ -1722,18 +1688,22 @@ CSRF_COOKIE_SECURE = True
     @staticmethod
     def installPHP73():
         try:
-            command = 'yum install -y lsphp73 lsphp73-json lsphp73-xmlrpc lsphp73-xml lsphp73-tidy lsphp73-soap lsphp73-snmp ' \
-                      'lsphp73-recode lsphp73-pspell lsphp73-process lsphp73-pgsql lsphp73-pear lsphp73-pdo lsphp73-opcache ' \
-                      'lsphp73-odbc lsphp73-mysqlnd lsphp73-mcrypt lsphp73-mbstring lsphp73-ldap lsphp73-intl lsphp73-imap ' \
-                      'lsphp73-gmp lsphp73-gd lsphp73-enchant lsphp73-dba  lsphp73-common  lsphp73-bcmath'
-            Upgrade.executioner(command, 'Install PHP 73, 0')
 
-            command = 'yum install -y lsphp74 lsphp74-json lsphp74-xmlrpc lsphp74-xml lsphp74-tidy lsphp74-soap lsphp74-snmp ' \
-                      'lsphp74-recode lsphp74-pspell lsphp74-process lsphp74-pgsql lsphp74-pear lsphp74-pdo lsphp74-opcache ' \
-                      'lsphp74-odbc lsphp74-mysqlnd lsphp74-mcrypt lsphp74-mbstring lsphp74-ldap lsphp74-intl lsphp74-imap ' \
-                      'lsphp74-gmp lsphp74-gd lsphp74-enchant lsphp74-dba lsphp74-common  lsphp74-bcmath'
+            if Upgrade.installedOutput.find('lsphp73') == -1:
+                command = 'yum install -y lsphp73 lsphp73-json lsphp73-xmlrpc lsphp73-xml lsphp73-tidy lsphp73-soap lsphp73-snmp ' \
+                          'lsphp73-recode lsphp73-pspell lsphp73-process lsphp73-pgsql lsphp73-pear lsphp73-pdo lsphp73-opcache ' \
+                          'lsphp73-odbc lsphp73-mysqlnd lsphp73-mcrypt lsphp73-mbstring lsphp73-ldap lsphp73-intl lsphp73-imap ' \
+                          'lsphp73-gmp lsphp73-gd lsphp73-enchant lsphp73-dba  lsphp73-common  lsphp73-bcmath'
+                Upgrade.executioner(command, 'Install PHP 73, 0')
 
-            Upgrade.executioner(command, 'Install PHP 74, 0')
+            if Upgrade.installedOutput.find('lsphp74') == -1:
+                command = 'yum install -y lsphp74 lsphp74-json lsphp74-xmlrpc lsphp74-xml lsphp74-tidy lsphp74-soap lsphp74-snmp ' \
+                          'lsphp74-recode lsphp74-pspell lsphp74-process lsphp74-pgsql lsphp74-pear lsphp74-pdo lsphp74-opcache ' \
+                          'lsphp74-odbc lsphp74-mysqlnd lsphp74-mcrypt lsphp74-mbstring lsphp74-ldap lsphp74-intl lsphp74-imap ' \
+                          'lsphp74-gmp lsphp74-gd lsphp74-enchant lsphp74-dba lsphp74-common  lsphp74-bcmath'
+
+                Upgrade.executioner(command, 'Install PHP 74, 0')
+
         except:
             command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install ' \
                       'lsphp7? lsphp7?-common lsphp7?-curl lsphp7?-dev lsphp7?-imap lsphp7?-intl lsphp7?-json ' \
@@ -1756,51 +1726,34 @@ CSRF_COOKIE_SECURE = True
         Upgrade.executioner(command, 0)
 
     @staticmethod
-    def upgradePDNS():
-        command = "yum install epel-release && curl -o /etc/yum.repos.d/powerdns-auth-42.repo https://repo.powerdns.com/repo-files/centos-auth-42.repo && yum --enablerepo=epel install pdns"
-        subprocess.call(command, shell=True)
-
-    @staticmethod
     def upgradeDovecot():
         try:
             Upgrade.stdOut("Upgrading Dovecot..")
             CentOSPath = '/etc/redhat-release'
 
             if os.path.exists(CentOSPath):
-                path = '/etc/yum.repos.d/dovecot.repo'
-                content = """[dovecot-2.3-latest]
-name=Dovecot 2.3 CentOS $releasever - $basearch
-baseurl=http://repo.dovecot.org/ce-2.3-latest/centos/$releasever/RPMS/$basearch
-gpgkey=https://repo.dovecot.org/DOVECOT-REPO-GPG
-gpgcheck=1
-enabled=1"""
-                writeToFile = open(path, 'w')
-                writeToFile.write(content)
-                writeToFile.close()
 
-                command = "yum makecache -y"
-                Upgrade.executioner(command, 0)
+                if Upgrade.installedOutput.find('2:2.3.10-2') == -1:
+                    command = "yum makecache -y"
+                    Upgrade.executioner(command, 0)
 
-                command = "yum update -y"
-                Upgrade.executioner(command, 0)
+                    command = "yum update -y"
+                    Upgrade.executioner(command, 0)
 
-                ## Remove Default Password Scheme
+                    ## Remove Default Password Scheme
 
-                path = '/etc/dovecot/dovecot-sql.conf.ext'
+                    path = '/etc/dovecot/dovecot-sql.conf.ext'
 
-                data = open(path, 'r').readlines()
+                    data = open(path, 'r').readlines()
 
-                updatePasswords = 1
+                    writeToFile = open(path, 'w')
+                    for items in data:
+                        if items.find('default_pass_scheme') > -1:
+                            continue
+                        else:
+                            writeToFile.writelines(items)
 
-                writeToFile = open(path, 'w')
-                for items in data:
-                    if items.find('default_pass_scheme') > -1:
-                        updatePasswords = 0
-                        continue
-                    else:
-                        writeToFile.writelines(items)
-
-                writeToFile.close()
+                    writeToFile.close()
 
                 import django
                 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
@@ -1819,68 +1772,44 @@ enabled=1"""
                 Upgrade.executioner(command, 0)
 
 
-
                 ### Postfix Upgrade
 
-                try:
-                    shutil.copy('/etc/postfix/master.cf', '/etc/master.cf')
-                except:
-                    pass
+                if Upgrade.installedOutput.find('2:3.4.7-1.gf.el7') == -1:
+                    try:
+                        shutil.copy('/etc/postfix/master.cf', '/etc/master.cf')
+                    except:
+                        pass
 
-                try:
-                    shutil.copy('/etc/postfix/main.cf', '/etc/main.cf')
-                except:
-                    pass
+                    try:
+                        shutil.copy('/etc/postfix/main.cf', '/etc/main.cf')
+                    except:
+                        pass
 
-                gf = '/etc/yum.repos.d/gf.repo'
 
-                gfContent = """[gf]
-name=Ghettoforge packages that won't overwrite core distro packages.
-mirrorlist=http://mirrorlist.ghettoforge.org/el/7/gf/$basearch/mirrorlist
-enabled=1
-gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-gf.el7
-failovermethod=priority
 
-[gf-plus]
-name=Ghettoforge packages that will overwrite core distro packages.
-mirrorlist=http://mirrorlist.ghettoforge.org/el/7/plus/$basearch/mirrorlist
-# Please read http://ghettoforge.org/index.php/Usage *before* enabling this repository!
-enabled=1
-gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-gf.el7
-failovermethod=priority
-"""
-                writeToFile = open(gf, 'w')
-                writeToFile.write(gfContent)
-                writeToFile.close()
+                    command = 'yum remove postfix -y'
+                    Upgrade.executioner(command, 0)
 
-                command = 'yum remove postfix -y'
-                Upgrade.executioner(command, 0)
+                    command = 'yum clean all'
+                    Upgrade.executioner(command, 0)
 
-                command = 'rpm -Uvh http://mirror.ghettoforge.org/distributions/gf/gf-release-latest.gf.el7.noarch.rpm'
-                Upgrade.executioner(command, 0)
+                    command = 'yum makecache fast'
+                    Upgrade.executioner(command, 0)
 
-                command = 'yum clean all'
-                Upgrade.executioner(command, 0)
+                    command = 'yum install --enablerepo=CyberPanel -y postfix3 postfix3-mysql'
+                    Upgrade.executioner(command, 0)
 
-                command = 'yum makecache fast'
-                Upgrade.executioner(command, 0)
+                    try:
+                        shutil.move('/etc/master.cf', '/etc/postfix/master.cf')
+                    except:
+                        pass
+                    try:
+                        shutil.move('/etc/main.cf', '/etc/postfix/main.cf')
+                    except:
+                        pass
 
-                command = 'yum install -y postfix3 postfix3-mysql'
-                Upgrade.executioner(command, 0)
-
-                try:
-                    shutil.move('/etc/master.cf', '/etc/postfix/master.cf')
-                except:
-                    pass
-                try:
-                    shutil.move('/etc/main.cf', '/etc/postfix/main.cf')
-                except:
-                    pass
-
-                command = 'systemctl restart postfix'
-                Upgrade.executioner(command, 0)
+                    command = 'systemctl restart postfix'
+                    Upgrade.executioner(command, 0)
 
             else:
                 command = 'curl https://repo.dovecot.org/DOVECOT-REPO-GPG | gpg --import'
@@ -1987,16 +1916,15 @@ failovermethod=priority
         CentOSPath = '/etc/redhat-release'
 
         if os.path.exists(CentOSPath):
-
-            command = 'yum install restic -y'
-            Upgrade.executioner(command, 'Install Restic')
+            if Upgrade.installedOutput.find('restic') == -1:
+                command = 'yum install restic -y'
+                Upgrade.executioner(command, 'Install Restic')
         else:
             command = 'apt-get update -y'
             Upgrade.executioner(command, 'Install Restic')
 
             command = 'apt-get install restic -y'
             Upgrade.executioner(command, 'Install Restic')
-
 
     @staticmethod
     def UpdateMaxSSLCons():
@@ -2133,6 +2061,10 @@ vmail
 
         # Upgrade.stdOut("Upgrades are currently disabled")
         # return 0
+
+        if os.path.exists(Upgrade.CentOSPath):
+            command = 'yum list installed'
+            Upgrade.installedOutput = subprocess.call(shlex.split(command))
 
         command = 'systemctl stop cpssh'
         Upgrade.executioner(command, 'fix csf if there', 0)
