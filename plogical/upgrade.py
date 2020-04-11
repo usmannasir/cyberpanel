@@ -2064,7 +2064,7 @@ vmail
 
         if os.path.exists(Upgrade.CentOSPath):
             command = 'yum list installed'
-            Upgrade.installedOutput = subprocess.call(shlex.split(command))
+            Upgrade.installedOutput = subprocess.check_output(shlex.split(command))
 
         command = 'systemctl stop cpssh'
         Upgrade.executioner(command, 'fix csf if there', 0)
