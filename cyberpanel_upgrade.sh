@@ -25,6 +25,11 @@ rm -f /etc/yum.repos.d/ius.repo
 rm -f /etc/yum.repos.d/ius-testing.repo
 rm -f /etc/yum.repos.d/MariaDB.repo
 rm -f /etc/yum.repos.d/lux.repo
+yum clean all
+yum update -y
+yum autoremove epel-release -y
+rm -f /etc/yum.repos.d/epel.repo
+rm -f /etc/yum.repos.d/epel.repo.rpmsave
 
 ##
 
@@ -183,7 +188,6 @@ fi
 if [ $SERVER_OS = "CentOS7" ] ; then
   yum -y install yum-utils
   yum -y groupinstall development
-  yum -y install https://centos7.iuscommunity.org/ius-release.rpm
   yum -y install python36u python36u-pip python36u-devel
 elif [ $SERVER_OS = "CentOS8" ] ; then
   yum install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-devel curl-devel git platform-python-devel tar
@@ -216,8 +220,6 @@ unzip /usr/local/cyberpanel-pip.zip -d /usr/local
 check_return
 . /usr/local/CyberPanel/bin/activate
 check_return
-pip3.6 install --ignore-installed /usr/local/pip-packs/*
-check_return
 
 if [ $SERVER_OS = "Ubuntu" ] ; then
   . /usr/local/CyberPanel/bin/activate
@@ -227,7 +229,7 @@ if [ $SERVER_OS = "Ubuntu" ] ; then
 else
   source /usr/local/CyberPanel/bin/activate
   check_return
-  pip3.6 install --ignore-installed -r requirements.txt
+  pip3.6 install --ignore-installed /usr/local/pip-packs/*
   check_return
 fi
 
