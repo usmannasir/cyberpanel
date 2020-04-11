@@ -210,8 +210,13 @@ rm -rf /usr/local/CyberPanel
 virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberPanel
 check_return
 rm -f requirments.txt
-wget -O requirements.txt https://$GIT_CONTENT_URL/${BRANCH_NAME}/requirments.txt
+wget -O /usr/local/cyberpanel-pip.zip https://rep.cyberpanel.net/cyberpanel-pip.zip
+check_return
+unzip /usr/local/cyberpanel-pip.zip -d /usr/local
+check_return
 . /usr/local/CyberPanel/bin/activate
+check_return
+pip3.6 install --ignore-installed /usr/local/pip-packs/*
 check_return
 
 if [ $SERVER_OS = "Ubuntu" ] ; then
@@ -243,8 +248,6 @@ fi
 check_return
 virtualenv -p /usr/bin/python3 /usr/local/CyberCP
 check_return
-wget -O requirements.txt https://$GIT_CONTENT_URL/${BRANCH_NAME}/requirments.txt
-
 if [ $SERVER_OS = "Ubuntu" ] ; then
   . /usr/local/CyberCP/bin/activate
   check_return
@@ -253,7 +256,7 @@ if [ $SERVER_OS = "Ubuntu" ] ; then
 else
   source /usr/local/CyberCP/bin/activate
   check_return
-  pip3.6 install --ignore-installed -r requirements.txt
+  pip3.6 install --ignore-installed /usr/local/pip-packs/*
   check_return
 fi
 
