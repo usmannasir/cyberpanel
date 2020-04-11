@@ -1272,37 +1272,35 @@ class Upgrade:
 
             ## Extract Latest files
 
-            os.chdir('/usr/local')
+            os.chdir('/usr/local/CyberCP')
 
-            if os.path.exists('cyberpanel'):
-                shutil.rmtree('cyberpanel')
+            command = 'git config --global user.email "support@cyberpanel.met"'
+            Upgrade.executioner(command, command, 1)
 
-            ### check if imunify exists
+            command = 'git config --global user.name "CyberPanel"'
+            Upgrade.executioner(command, command, 1)
 
-            imunifyPublic = '/usr/local/CyberCP/public/imunify'
-            imunifyPublicBackup = '/usr/local'
+            command = 'git status'
+            currentBranch = subprocess.check_output(shlex.split(command)).decode()
 
-            try:
+            if currentBranch.find('On branch %s' % (branch)) > -1:
 
-                if os.path.exists(imunifyPublic):
-                    shutil.move(imunifyPublic, imunifyPublicBackup)
+                command = 'git stash'
+                Upgrade.executioner(command, command, 1)
 
-            except:
-                pass
+                command = 'git pull'
+                Upgrade.executioner(command, command, 1)
 
-            if os.path.exists('CyberCP'):
-                shutil.rmtree('CyberCP')
+            else:
+                command = 'git stash'
+                Upgrade.executioner(command, command, 1)
 
-            command = 'git clone https://github.com/usmannasir/cyberpanel'
-            Upgrade.executioner(command, 'Download CyberPanel', 1)
-
-            shutil.move('cyberpanel', 'CyberCP')
-
-            if branch != 'stable':
-                os.chdir('CyberCP')
                 command = 'git checkout %s' % (branch)
                 Upgrade.executioner(command, command, 1)
-                os.chdir('/usr/local')
+
+                command = 'git pull'
+                Upgrade.executioner(command, command, 1)
+
 
             ## Copy settings file
 
@@ -2148,17 +2146,8 @@ vmail
         time.sleep(3)
 
         ## Upgrade version
+
         Upgrade.fixPermissions()
-
-        ### get back imunify
-
-        imunifyPublicBackup = '/usr/local'
-        imunifyPublicBackup = '%s/imunify' % (imunifyPublicBackup)
-
-        try:
-            shutil.move(imunifyPublicBackup, '/usr/local/CyberCP/public')
-        except:
-            pass
 
         ##
 
