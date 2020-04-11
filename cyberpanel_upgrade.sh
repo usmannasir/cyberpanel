@@ -213,9 +213,13 @@ else
   check_return
 fi
 
-rm -rf /usr/local/CyberPanel
-virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberPanel
-check_return
+
+if [[ -f /usr/local/CyberPanel/bin/python2 ]] ; then
+ rm -rf /usr/local/CyberPanel/bin
+ virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberPanel
+ check_return
+fi
+
 rm -f requirments.txt
 wget -O /usr/local/cyberpanel-pip.zip https://rep.cyberpanel.net/cyberpanel-pip.zip
 check_return
@@ -237,8 +241,12 @@ else
   check_return
 fi
 
-virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberPanel
-check_return
+if [[ -f /usr/local/CyberPanel/bin/python2 ]] ; then
+ rm -rf /usr/local/CyberPanel/bin
+ virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberPanel
+ check_return
+fi
+
 rm -rf upgrade.py
 wget https://$GIT_CONTENT_URL/${BRANCH_NAME}/plogical/upgrade.py
 
@@ -252,7 +260,12 @@ fi
 
 /usr/local/CyberPanel/bin/python upgrade.py $BRANCH_NAME
 check_return
+
+if [[ -f /usr/local/CyberCP/bin/python2 ]] ; then
+rm -rf /usr/local/CyberCP/bin
 virtualenv -p /usr/bin/python3 /usr/local/CyberCP
+fi
+
 check_return
 if [ $SERVER_OS = "Ubuntu" ] ; then
   . /usr/local/CyberCP/bin/activate
