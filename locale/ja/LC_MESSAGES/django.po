@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: CyberPanel\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2019-11-21 19:54+0500\n"
-"PO-Revision-Date: 2020-03-20 22:19+0900\n"
+"PO-Revision-Date: 2020-04-08 00:33+0900\n"
 "Last-Translator: @ kazuo210 <kazu.nito@gmail.com>\n"
 "Language-Team: LANGUAGE <unasir@litespeedtech.com>\n"
 "Language: ja\n"
@@ -1970,7 +1970,7 @@ msgstr "インストール済みプラグイン"
 
 #: baseTemplate/templates/baseTemplate/index.html:898
 msgid "Installed"
-msgstr "インストールされました"
+msgstr "インストール済み"
 
 #: baseTemplate/templates/baseTemplate/versionManagment.html:3
 msgid "Version Management - CyberPanel"
@@ -6553,7 +6553,7 @@ msgstr "SSH ユーザー "
 
 #: websiteFunctions/templates/websiteFunctions/sshAccess.html:29
 msgid " is "
-msgstr " は "
+msgstr " : "
 
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:3
 msgid "Suspend/Unsuspend Website - CyberPanel"
