@@ -214,10 +214,15 @@ else
 fi
 
 
-if [[ -f /usr/local/CyberPanel/bin/python2 ]] || [[ ! -f /usr/local/CyberPanel/bin ]] ; then
- rm -rf /usr/local/CyberPanel/bin
- virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberPanel
- check_return
+if [[ -f /usr/local/CyberPanel/bin/python2 ]] ; then
+  rm -rf /usr/local/CyberPanel/bin
+  virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberPanel
+  check_return
+elif [[ -f /usr/local/CyberPanel/bin/ ]] ; then
+  echo -e "\nNo need to resetup virtualenv at /usr/local/CyberPanel...\n"
+else
+   virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberPanel
+  check_return
 fi
 
 rm -f requirments.txt
@@ -262,9 +267,14 @@ fi
 /usr/local/CyberPanel/bin/python upgrade.py $BRANCH_NAME
 check_return
 
-if [[ -f /usr/local/CyberCP/bin/python2 ]] || [[ ! -f /usr/local/CyberCP/bin ]] ; then
-rm -rf /usr/local/CyberCP/bin
-virtualenv -p /usr/bin/python3 /usr/local/CyberCP
+if [[ -f /usr/local/CyberCP/bin/python2 ]] ; then
+ rm -rf /usr/local/CyberCP/bin
+ virtualenv -p /usr/bin/python3 /usr/local/CyberCP
+elif [[ -f /usr/local/CyberCP/bin/ ]] ; then
+  echo -e "\nNo need to resetup virtualenv at /usr/local/CyberCP...\n"
+else
+  virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberCP
+  check_return
 fi
 
 check_return
