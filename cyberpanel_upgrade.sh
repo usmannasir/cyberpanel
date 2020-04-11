@@ -241,11 +241,12 @@ else
   check_return
 fi
 
-if [[ -f /usr/local/CyberPanel/bin/python2 ]] ; then
- rm -rf /usr/local/CyberPanel/bin
- virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberPanel
- check_return
-fi
+## Doing again to prevent an error - dont confuse later
+
+virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberPanel
+check_return
+
+##
 
 rm -rf upgrade.py
 wget https://$GIT_CONTENT_URL/${BRANCH_NAME}/plogical/upgrade.py
