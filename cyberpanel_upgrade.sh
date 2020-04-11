@@ -216,6 +216,7 @@ check_return
 rm -f requirments.txt
 wget -O /usr/local/cyberpanel-pip.zip https://rep.cyberpanel.net/cyberpanel-pip.zip
 check_return
+rm -rf /usr/local/pip-packs/
 unzip /usr/local/cyberpanel-pip.zip -d /usr/local
 check_return
 . /usr/local/CyberPanel/bin/activate
