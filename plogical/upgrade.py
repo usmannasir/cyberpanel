@@ -1266,11 +1266,45 @@ class Upgrade:
 
             Upgrade.stdOut("Backing up settings file.")
 
-            shutil.copy("/usr/local/CyberCP/CyberCP/settings.py", "/usr/local/settings.py")
+            ## CyberPanel DB Creds
+            dbName = settings.DATABASES['default']['NAME']
+            dbUser = settings.DATABASES['default']['USER']
+            password = settings.DATABASES['default']['PASSWORD']
+
+            ## Root DB Creds
+
+            rootdbName = settings.DATABASES['rootdb']['NAME']
+            rootdbdbUser = settings.DATABASES['rootdb']['USER']
+            rootdbpassword = settings.DATABASES['rootdb']['PASSWORD']
+
+            ## Complete db string
+
+            completDBString = """\nDATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': '%s',
+        'USER': '%s',
+        'PASSWORD': '%s',
+        'HOST': 'localhost',
+        'PORT':''
+    },
+    'rootdb': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': '%s',
+        'USER': '%s',
+        'PASSWORD': '%s',
+        'HOST': 'localhost',
+        'PORT': '',
+    },
+}\n""" % (dbName, dbUser, password, rootdbName, rootdbdbUser, rootdbpassword)
+
+            settingsFile = '/usr/local/CyberCP/CyberCP/settings.py'
+
+            settingsData = open(settingsFile, 'r').readlines()
 
             Upgrade.stdOut("Settings file backed up.")
 
-            ## Extract Latest files
+            ## Check git branch status
 
             os.chdir('/usr/local/CyberCP')
 
@@ -1320,162 +1354,22 @@ class Upgrade:
 
             ## Copy settings file
 
-            data = open("/usr/local/settings.py", 'r').readlines()
+            DATABASESCHECK = 0
+            writeToFile = open(settingsFile, 'w')
 
-            csrfCheck = 1
-            for items in data:
-                if items.find('CsrfViewMiddleware') > -1:
-                    csrfCheck = 0
+            for items in settingsData:
+                if items.find('DATABASES = {') > -1:
+                    DATABASESCHECK = 1
 
-            pluginCheck = 1
-            for items in data:
-                if items.find('pluginHolder') > -1:
-                    pluginCheck = 0
+                if DATABASESCHECK == 0:
+                    writeToFile.write(items)
 
-            emailMarketing = 1
-            for items in data:
-                if items.find('emailMarketing') > -1:
-                    emailMarketing = 0
-
-            emailPremium = 1
-            for items in data:
-                if items.find('emailPremium') > -1:
-                    emailPremium = 0
-
-            s3Backups = 1
-            for items in data:
-                if items.find('s3Backups') > -1:
-                    s3Backups = 0
-
-            dockerManager = 1
-            for items in data:
-                if items.find('dockerManager') > -1:
-                    dockerManager = 0
-
-            containerization = 1
-            for items in data:
-                if items.find('containerization') > -1:
-                    containerization = 0
-
-            manageServices = 1
-            for items in data:
-                if items.find('manageServices') > -1:
-                    manageServices = 0
-
-            CLManager = 1
-            for items in data:
-                if items.find('CLManager') > -1:
-                    CLManager = 0
-
-            IncBackups = 1
-            for items in data:
-                if items.find('IncBackups') > -1:
-                    IncBackups = 0
-
-            WebTerminal = 1
-            for items in data:
-                if items.find('WebTerminal') > -1:
-                    WebTerminal = 0
-
-            SESSION_COOKIE_SECURE = 0
-
-            for items in data:
-                if items.find('SESSION_COOKIE_SECURE') > -1:
-                    SESSION_COOKIE_SECURE = 0
-
-            DATABASE_ROUTERS = 1
-
-            for items in data:
-                if items.find('DATABASE_ROUTERS') > -1:
-                    DATABASE_ROUTERS = 0
-
-            Upgrade.stdOut('Restoring settings file!')
-
-            writeToFile = open("/usr/local/settings.py", 'w')
-
-            for items in data:
-                if items.find('csf') > -1 or items.find('SESSION_COOKIE_SECURE') > -1 or items.find('CSRF_COOKIE_SECURE') > -1:
-                    continue
-                if items.find("CommonMiddleware") > -1:
-                    if csrfCheck == 1:
-                        writeToFile.writelines("    'django.middleware.csrf.CsrfViewMiddleware',\n")
-
-                if items.find('DATABASE_ROUTERS') > -1:
-                    writeToFile.writelines(items)
-                    if SESSION_COOKIE_SECURE == 1:
-                        con = """SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
-"""
-                        writeToFile.writelines(con)
-
-                elif items.find("'filemanager',") > -1:
-                    writeToFile.writelines(items)
-                    if pluginCheck == 1:
-                        writeToFile.writelines("    'pluginHolder',\n")
-                    if emailMarketing == 1:
-                        writeToFile.writelines("    'emailMarketing',\n")
-                    if emailPremium == 1:
-                        writeToFile.writelines("    'emailPremium',\n")
-                    if s3Backups == 1:
-                        writeToFile.writelines("    's3Backups',\n")
-                    if dockerManager == 1:
-                        writeToFile.writelines("    'dockerManager',\n")
-
-                    if containerization == 1:
-                        writeToFile.writelines("    'containerization',\n")
-
-                    if manageServices == 1:
-                        writeToFile.writelines("    'manageServices',\n")
-
-
-                    if CLManager == 1:
-                        writeToFile.writelines("    'CLManager',\n")
-
-                    if IncBackups == 1:
-                        writeToFile.writelines("    'IncBackups',\n")
-
-                    if WebTerminal == 1:
-                        writeToFile.writelines("    'WebTerminal',\n")
-
-                else:
-                    writeToFile.writelines(items)
-
-            ##
-
-            DATA_UPLOAD_MAX_MEMORY_SIZE = 1
-            for items in data:
-                if items.find('DATA_UPLOAD_MAX_MEMORY_SIZE') > -1:
-                    DATA_UPLOAD_MAX_MEMORY_SIZE = 0
-                    writeToFile.writelines("\nDATA_UPLOAD_MAX_MEMORY_SIZE = 52428800\n")
-
-            if DATA_UPLOAD_MAX_MEMORY_SIZE == 1:
-                writeToFile.writelines("\nDATA_UPLOAD_MAX_MEMORY_SIZE = 52428800\n")
-
-            ##
-
-            MEDIA_URL = 1
-            for items in data:
-                if items.find('MEDIA_URL') > -1:
-                    MEDIA_URL = 0
-
-            if MEDIA_URL == 1:
-                writeToFile.writelines("MEDIA_URL = '/home/cyberpanel/media/'\n")
-                writeToFile.writelines('MEDIA_ROOT = MEDIA_URL\n')
-
-            if items.find('MEDIA_ROOT = MEDIA_URLDATA_UPLOAD_MAX_MEMORY_SIZE') > -1:
-                writeToFile.writelines('MEDIA_ROOT = MEDIA_URL\n')
-
-            ##
-
-            if DATABASE_ROUTERS == 1:
-                writeToFile.writelines("\nDATABASE_ROUTERS = ['backup.backupRouter.backupRouter']\n")
+                if items.find('DATABASE_ROUTERS = [') > -1:
+                    DATABASESCHECK = 0
+                    writeToFile.write(completDBString)
+                    writeToFile.write(items)
 
             writeToFile.close()
-
-            if os.path.exists("/usr/local/CyberCP/CyberCP/settings.py"):
-                os.remove("/usr/local/CyberCP/CyberCP/settings.py")
-
-            shutil.move("/usr/local/settings.py", "/usr/local/CyberCP/CyberCP/settings.py")
 
             Upgrade.stdOut('Settings file restored!')
 
