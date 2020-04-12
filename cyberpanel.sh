@@ -398,7 +398,13 @@ fi
 
 
 install_required() {
-curl https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.0.1/install/CyberPanel.repo > /etc/yum.repos.d/CyberPanel.repo
+
+if [[ $CENTOS_8 == "True" ]] ; then
+  curl https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.0.1/install/CyberPanel8.repo > /etc/yum.repos.d/CyberPanel.repo
+elif [[ $CENTOS_8 == "False" ]] ; then
+  curl https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.0.1/install/CyberPanel.repo > /etc/yum.repos.d/CyberPanel.repo
+fi
+
 if [[ $SERVER_COUNTRY == "CN" ]] ; then
 	mkdir /root/.config
 	mkdir /root/.config/pip
@@ -421,6 +427,8 @@ if [[ $SERVER_OS == "CentOS" ]] ; then
 	timeout 10 rpm --import https://$DOWNLOAD_SERVER/ius/RPM-GPG-KEY-IUS-7
 	timeout 10 rpm --import https://repo.dovecot.org/DOVECOT-REPO-GPG
 	timeout 10 rpm --import https://copr-be.cloud.fedoraproject.org/results/copart/restic/pubkey.gpg
+	timeout 10 rpm --import https://rep8.cyberpanel.net/RPM-GPG-KEY-CP-EP-8
+	timeout 10 rpm --import https://rep8.cyberpanel.net/RPM-GPG-KEY-CP-GF-8
 	yum clean all
 	yum update -y
 	yum autoremove epel-release -y
@@ -432,7 +440,7 @@ if [[ $SERVER_OS == "CentOS" ]] ; then
 		check_return
 	fi
 	if [[ $CENTOS_8 == "True" ]] ; then
-		yum install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel curl-devel git tar socat mariadb-devel openssl-devel MariaDB-shared mariadb-devel
+		yum install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel curl-devel git tar socat mariadb-devel openssl-devel mariadb-devel
 		check_return
 		dnf --enablerepo=PowerTools install gpgme-devel -y
 		check_return

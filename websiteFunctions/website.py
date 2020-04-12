@@ -2760,13 +2760,10 @@ StrictHostKeyChecking no
             writeToFile.write(message)
             writeToFile.close()
 
-
             extraArgs['tempStatusPath'] = tempStatusPath
 
             st = StagingSetup('startCloning', extraArgs)
             st.start()
-
-
 
             data_ret = {'status': 1, 'error_message': 'None', 'tempStatusPath': tempStatusPath}
             json_data = json.dumps(data_ret)

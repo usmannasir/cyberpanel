@@ -679,7 +679,6 @@ class preFlightsChecks:
 
         try:
             if self.distro == centos:
-
                 command = 'yum remove postfix -y'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
             elif self.distro == ubuntu:
@@ -693,7 +692,7 @@ class preFlightsChecks:
             if self.distro == centos:
                 command = 'yum install --enablerepo=CyberPanel -y postfix3 postfix3-ldap postfix3-mysql postfix3-pcre'
             elif self.distro == cent8:
-                command = 'dnf install postfix postfix-mysql -y'
+                command = 'dnf --enablerepo=CyberPanel install postfix postfix-mysql-y '
             else:
                 command = 'apt-get -y debconf-utils'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
@@ -721,6 +720,8 @@ class preFlightsChecks:
 
             if self.distro == centos or self.distro == cent8:
                 command = 'yum --enablerepo=CyberPanel -y install dovecot dovecot-mysql'
+            elif self.distro == cent8:
+                command = 'dnf --enablerepe=CyberPanel install dovecot23 dovecot23-mysql -y'
             else:
                 command = 'apt-get -y install dovecot-mysql'
 
@@ -1703,8 +1704,10 @@ imap_folder_list_limit = 0
 
     def installOpenDKIM(self):
         try:
-            if self.distro == centos or self.distro == cent8:
+            if self.distro == centos:
                 command = 'yum -y install opendkim'
+            elif self.distro == cent8:
+                command = 'dnf --enablerepe=CyberPanel opendkim -y'
             else:
                 command = 'apt-get -y install opendkim'
 
@@ -1833,60 +1836,6 @@ milter_default_action = accept
 
         return res  # Though probably not used
 
-    def setupVirtualEnv(self, distro):
-        try:
-
-            ##
-
-            count = 0
-            if distro == ubuntu:
-                # You can't install all at once!  So install one at a time.
-                preFlightsChecks.stdOut("Installing python prerequisites", 1)
-                preFlightsChecks.installOne('libcurl4-gnutls-dev')
-                preFlightsChecks.installOne('libgnutls-dev')
-                preFlightsChecks.installOne('libgcrypt20-dev')
-                preFlightsChecks.installOne('libattr1')
-                preFlightsChecks.installOne('libattr1-dev')
-                preFlightsChecks.installOne('liblzma-dev')
-                preFlightsChecks.installOne('libgpgme-dev')
-                preFlightsChecks.installOne('libmariadbclient-dev')
-                preFlightsChecks.installOne('libcurl4-gnutls-dev')
-                preFlightsChecks.installOne('libssl-dev')
-                preFlightsChecks.installOne('nghttp2')
-                preFlightsChecks.installOne('libnghttp2-dev')
-                preFlightsChecks.installOne('idn2')
-                preFlightsChecks.installOne('libidn2-dev')
-                preFlightsChecks.installOne('libidn2-0-dev')
-                preFlightsChecks.installOne('librtmp-dev')
-                preFlightsChecks.installOne('libpsl-dev')
-                preFlightsChecks.installOne('nettle-dev')
-                preFlightsChecks.installOne('libgnutls28-dev')
-                preFlightsChecks.installOne('libldap2-dev')
-                preFlightsChecks.installOne('libgssapi-krb5-2')
-                preFlightsChecks.installOne('libk5crypto3')
-                preFlightsChecks.installOne('libkrb5-dev')
-                preFlightsChecks.installOne('libcomerr2')
-                preFlightsChecks.installOne('libldap2-dev')
-                preFlightsChecks.installOne('python-gpg')
-                preFlightsChecks.installOne('python-gpgme')
-            else:
-                command = "yum install -y libattr-devel xz-devel gpgme-devel mariadb-devel curl-devel"
-                preFlightsChecks.call(command, distro, command, command, 1, 1, os.EX_OSERR)
-
-            ##
-
-            os.chdir(self.cwd)
-
-            command = "chmod +x venvsetup.sh"
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            command = "./venvsetup.sh"
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-        except OSError as msg:
-            logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [setupVirtualEnv]")
-            return 0
-
     @staticmethod
     def enableDisableDNS(state):
         try:
@@ -1973,69 +1922,18 @@ milter_default_action = accept
         except:
             pass
 
-    @staticmethod
-    def p3(distro):
-        ### Virtual Env 3
-
-        if distro == centos:
-            command = 'yum -y install python36 -y'
-            preFlightsChecks.call(command, distro, '[install python36]',
-                                  'install python36',
-                                  1, 0, os.EX_OSERR)
-
-            command = 'virtualenv -p python3 /usr/local/CyberPanel/p3'
-            preFlightsChecks.call(command, distro, '[install python36]',
-                                  'install python36',
-                                  1, 0, os.EX_OSERR)
-
-            env_path = '/usr/local/CyberPanel/p3'
-            subprocess.call(['virtualenv', env_path])
-            activate_this = os.path.join(env_path, 'bin', 'activate_this.py')
-            exec(compile(open(activate_this, "rb").read(), activate_this, 'exec'), dict(__file__=activate_this))
-
-            command = "pip3 install --ignore-installed -r %s" % ('/usr/local/CyberCP/WebTerminal/requirments.txt')
-            preFlightsChecks.call(command, distro, '[install python36]',
-                                  'install python36',
-                                  1, 0, os.EX_OSERR)
-
-        else:
-            command = 'apt install -y python3-pip'
-            preFlightsChecks.call(command, distro, '[install python36]',
-                                  'install python36',
-                                  1, 0, os.EX_OSERR)
-
-            command = 'apt install build-essential libssl-dev libffi-dev python3-dev -y'
-            preFlightsChecks.call(command, distro, '[install python36]',
-                                  'install python36',
-                                  1, 0, os.EX_OSERR)
-
-            command = 'apt install -y python3-venv'
-            preFlightsChecks.call(command, distro, '[install python36]',
-                                  'install python36',
-                                  1, 0, os.EX_OSERR)
-
-            command = 'virtualenv -p python3 /usr/local/CyberPanel/p3'
-            preFlightsChecks.call(command, distro, '[install python36]',
-                                  'install python36',
-                                  1, 0, os.EX_OSERR)
-
-            env_path = '/usr/local/CyberPanel/p3'
-            subprocess.call(['virtualenv', env_path])
-            activate_this = os.path.join(env_path, 'bin', 'activate_this.py')
-            exec(compile(open(activate_this, "rb").read(), activate_this, 'exec'), dict(__file__=activate_this))
-
-            command = "pip3 install --ignore-installed -r %s" % ('/usr/local/CyberCP/WebTerminal/requirments.txt')
-            preFlightsChecks.call(command, distro, '[install python36]',
-                                  'install python36',
-                                  1, 0, os.EX_OSERR)
-
     def installRestic(self):
         try:
 
             CentOSPath = '/etc/redhat-release'
 
             if os.path.exists(CentOSPath):
-                command = 'yum --enablerepo=CyberPanel install restic -y'
+
+                if self.distro == centos:
+                    command = 'yum --enablerepo=CyberPanel install restic -y'
+                else:
+                    command = 'dnf --enablerepe=CyberPanel restic -y'
+
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
             else:
                 command = 'apt-get update -y'

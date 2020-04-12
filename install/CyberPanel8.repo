@@ -1,0 +1,4 @@
+[CyberPanel]
+name=CyberPanel
+baseurl=https://rep8.cyberpanel.net/
+gpgcheck=1

@@ -66,7 +66,7 @@ class StagingSetup(multi.Thread):
 
             masterPath = '/home/%s/public_html' % (masterDomain)
 
-            command = 'rsync -avzh --exclude "%s" --exclude "wp-content/backups" --exclude "wp-content/updraft" --exclude "wp-content/cache" --exclude "wp-content/plugins/litespeed-cache" %s/ %s' % (
+            command = 'rsync -avzh --exclude "%s" --exclude ".git" --exclude "wp-content/backups" --exclude "wp-content/updraft" --exclude "wp-content/cache" --exclude "wp-content/plugins/litespeed-cache" %s/ %s' % (
             domain, masterPath, path)
             ProcessUtilities.executioner(command, website.externalApp)
 

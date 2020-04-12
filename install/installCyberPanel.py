@@ -213,8 +213,10 @@ class InstallCyberPanel:
 
         if self.distro == ubuntu:
             command = "apt-get -y install mariadb-server"
-        else:
+        elif self.distro == centos:
             command = 'yum --enablerepo=CyberPanel -y install mariadb-server'
+        elif self.distro == cent8:
+            command = 'dnf -y install mariadb-server'
 
         install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
@@ -327,8 +329,10 @@ class InstallCyberPanel:
     def installPureFTPD(self):
         if self.distro == ubuntu:
             command = 'apt-get -y install ' + install.preFlightsChecks.pureFTPDServiceName(self.distro)
-        else:
+        elif self.distro == centos:
             command = "yum install -y pure-ftpd"
+        elif self.distro == cent8:
+            command = 'dnf --enablerepe=CyberPanel install pure-ftpd -y'
 
         install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
