@@ -401,6 +401,7 @@ install_required() {
 
 if [[ $CENTOS_8 == "True" ]] ; then
   curl https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.0.1/install/CyberPanel8.repo > /etc/yum.repos.d/CyberPanel.repo
+  dnf install zip -y
 elif [[ $CENTOS_8 == "False" ]] ; then
   curl https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.0.1/install/CyberPanel.repo > /etc/yum.repos.d/CyberPanel.repo
 fi
