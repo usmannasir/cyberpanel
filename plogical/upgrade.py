@@ -1300,8 +1300,6 @@ class Upgrade:
 
             settingsFile = '/usr/local/CyberCP/CyberCP/settings.py'
 
-            settingsData = open(settingsFile, 'r').readlines()
-
             Upgrade.stdOut("Settings file backed up.")
 
             ## Check git branch status
@@ -1353,6 +1351,8 @@ class Upgrade:
 
 
             ## Copy settings file
+
+            settingsData = open(settingsFile, 'r').readlines()
 
             DATABASESCHECK = 0
             writeToFile = open(settingsFile, 'w')
