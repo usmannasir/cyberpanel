@@ -219,7 +219,7 @@ if [[ -f /usr/local/CyberPanel/bin/python2 ]] ; then
   rm -rf /usr/local/CyberPanel/bin
   virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberPanel
   check_return
-elif [[ -f /usr/local/CyberPanel/bin/ ]] ; then
+elif [[ -d /usr/local/CyberPanel/bin/ ]] ; then
   echo -e "\nNo need to resetup virtualenv at /usr/local/CyberPanel...\n"
 else
   echo -e "\nNothing found, need fresh setup...\n"
@@ -272,7 +272,7 @@ check_return
 if [[ -f /usr/local/CyberCP/bin/python2 ]] ; then
  rm -rf /usr/local/CyberCP/bin
  virtualenv -p /usr/bin/python3 /usr/local/CyberCP
-elif [[ -f /usr/local/CyberCP/bin/ ]] ; then
+elif [[ -d /usr/local/CyberCP/bin/ ]] ; then
   echo -e "\nNo need to resetup virtualenv at /usr/local/CyberCP...\n"
 else
   virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberCP
