@@ -1391,7 +1391,7 @@ class Upgrade:
 
             Upgrade.stdOut('Restoring settings file!')
 
-            writeToFile = open("/usr/local/CyberCP/CyberCP/settings.py", 'w')
+            writeToFile = open("/usr/local/settings.py", 'w')
 
             for items in data:
                 if items.find('csf') > -1 or items.find('SESSION_COOKIE_SECURE') > -1 or items.find('CSRF_COOKIE_SECURE') > -1:
@@ -1462,11 +1462,8 @@ CSRF_COOKIE_SECURE = True
                 writeToFile.writelines("MEDIA_URL = '/home/cyberpanel/media/'\n")
                 writeToFile.writelines('MEDIA_ROOT = MEDIA_URL\n')
 
-
             if items.find('MEDIA_ROOT = MEDIA_URLDATA_UPLOAD_MAX_MEMORY_SIZE') > -1:
                 writeToFile.writelines('MEDIA_ROOT = MEDIA_URL\n')
-
-
 
             ##
 
@@ -1474,6 +1471,11 @@ CSRF_COOKIE_SECURE = True
                 writeToFile.writelines("\nDATABASE_ROUTERS = ['backup.backupRouter.backupRouter']\n")
 
             writeToFile.close()
+
+            if os.path.exists("/usr/local/CyberCP/CyberCP/settings.py"):
+                os.remove("/usr/local/CyberCP/CyberCP/settings.py")
+
+            shutil.move("/usr/local/settings.py", "/usr/local/CyberCP/CyberCP/settings.py")
 
             Upgrade.stdOut('Settings file restored!')
 
