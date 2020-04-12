@@ -1304,6 +1304,10 @@ class Upgrade:
                 shutil.move('cyberpanel', 'CyberCP')
 
             else:
+
+                command = 'git fetch'
+                Upgrade.executioner(command, command, 1)
+
                 command = 'git stash'
                 Upgrade.executioner(command, command, 1)
 
