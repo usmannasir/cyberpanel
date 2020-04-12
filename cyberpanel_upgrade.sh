@@ -27,6 +27,8 @@ rm -f /etc/yum.repos.d/MariaDB.repo
 rm -f /etc/yum.repos.d/lux.repo
 rm -f /etc/yum.repos.d/gf.repo
 rm -f /etc/yum.repos.d/powerdns-auth-42.repo
+rm -rf /etc/yum.repos.d/powerdns-auth-master.repo
+rm -rf /etc/yum.repos.d/gf.repo.rpmnew
 yum clean all
 yum update -y
 yum autoremove epel-release -y
