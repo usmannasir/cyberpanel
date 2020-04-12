@@ -441,7 +441,7 @@ if [[ $SERVER_OS == "CentOS" ]] ; then
 		check_return
 	fi
 	if [[ $CENTOS_8 == "True" ]] ; then
-		yum install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel curl-devel git tar socat mariadb-devel openssl-devel mariadb-devel
+		dnf install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-devel curl-devel git platform-python-devel tar socat
 		check_return
 		dnf --enablerepo=PowerTools install gpgme-devel -y
 		check_return
