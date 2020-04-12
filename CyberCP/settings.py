@@ -186,7 +186,6 @@ LANGUAGES = (
     ('pl', _('Polish')),
     ('vi', _('Vietnamese')),
     ('it', _('Italian')),
-    ('it', _('Italian')),
     ('de', _('Deutsch')),
 )
 
