@@ -692,7 +692,7 @@ class preFlightsChecks:
             if self.distro == centos:
                 command = 'yum install --enablerepo=CyberPanel -y postfix3 postfix3-ldap postfix3-mysql postfix3-pcre'
             elif self.distro == cent8:
-                command = 'dnf --enablerepo=CyberPanel install postfix postfix-mysql -y '
+                command = 'dnf --enablerepo=CyberPanel install postfix3 postfix3-mysql -y '
             else:
                 command = 'apt-get -y debconf-utils'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
@@ -721,7 +721,7 @@ class preFlightsChecks:
             if self.distro == centos or self.distro == cent8:
                 command = 'yum --enablerepo=CyberPanel -y install dovecot dovecot-mysql'
             elif self.distro == cent8:
-                command = 'dnf --enablerepe=CyberPanel install dovecot23 dovecot23-mysql -y'
+                command = 'dnf --enablerepo=CyberPanel install dovecot23 dovecot23-mysql -y'
             else:
                 command = 'apt-get -y install dovecot-mysql'
 

@@ -28,7 +28,7 @@ rm -f /etc/yum.repos.d/gf.repo
 rm -f /etc/yum.repos.d/powerdns-auth-42.repo
 rm -rf /etc/yum.repos.d/powerdns-auth-master.repo
 rm -rf /etc/yum.repos.d/gf.repo.rpmnew
-sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-AppStream.repo
+#sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-AppStream.repo
 yum clean all
 yum update -y
 yum autoremove epel-release -y
