@@ -718,7 +718,7 @@ class preFlightsChecks:
 
             ##
 
-            if self.distro == centos or self.distro == cent8:
+            if self.distro == centos:
                 command = 'yum --enablerepo=CyberPanel -y install dovecot dovecot-mysql'
             elif self.distro == cent8:
                 command = 'dnf --enablerepo=CyberPanel install dovecot23 dovecot23-mysql -y'
