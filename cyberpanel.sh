@@ -406,19 +406,9 @@ elif [[ $CENTOS_8 == "False" ]] ; then
   curl https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.0.1/install/CyberPanel.repo > /etc/yum.repos.d/CyberPanel.repo
 fi
 
-if [[ $SERVER_COUNTRY == "CN" ]] ; then
-	mkdir /root/.config
-	mkdir /root/.config/pip
-	cat << EOF > /root/.config/pip/pip.conf
-[global]
-index-url = https://pypi.tuna.tsinghua.edu.cn/simple
-[install]
-trusted-host=pypi.tuna.tsinghua.edu.cn
-EOF
-fi
-
 echo -e "\nInstalling necessary components..."
 if [[ $SERVER_OS == "CentOS" ]] ; then
+
 	timeout 10 rpm --import https://$DOWNLOAD_SERVER/mariadb/RPM-GPG-KEY-MariaDB
 	timeout 10 rpm --import https://$DOWNLOAD_SERVER/litespeed/RPM-GPG-KEY-litespeed
 	timeout 10 rpm --import https://$DOWNLOAD_SERVER/powerdns/FD380FBB-pub.asc
@@ -430,7 +420,9 @@ if [[ $SERVER_OS == "CentOS" ]] ; then
 	timeout 10 rpm --import https://copr-be.cloud.fedoraproject.org/results/copart/restic/pubkey.gpg
 	timeout 10 rpm --import https://rep8.cyberpanel.net/RPM-GPG-KEY-CP-EP-8
 	timeout 10 rpm --import https://rep8.cyberpanel.net/RPM-GPG-KEY-CP-GF-8
+	timeout 10 rpm --import https://rep8.cyberpanel.net/RPM-GPG-KEY-centosofficialcp
 	curl https://getfedora.org/static/fedora.gpg | gpg --import
+
 	yum clean all
 	yum update -y
 	yum autoremove epel-release -y
@@ -438,35 +430,25 @@ if [[ $SERVER_OS == "CentOS" ]] ; then
 	rm -f /etc/yum.repos.d/epel.repo.rpmsave
 
 	if [[ $CENTOS_8 == "False" ]] ; then
-	  yum --enablerepo=CyberPanel install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel gpgme-devel curl-devel git socat openssl-devel MariaDB-shared mariadb-devel
+	  yum --enablerepo=CyberPanel install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel gpgme-devel curl-devel git socat openssl-devel MariaDB-shared mariadb-devel yum-utils python36u python36u-pip python36u-devel
+		check_return
+		yum -y groupinstall development
 		check_return
 	fi
 	if [[ $CENTOS_8 == "True" ]] ; then
-		dnf install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-devel curl-devel git platform-python-devel tar socat
+		dnf install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-devel curl-devel git platform-python-devel tar socat python3
 		check_return
 		dnf --enablerepo=PowerTools install gpgme-devel -y
 		check_return
 	fi
 
-if [[ $DEV == "ON" ]] ; then
-	  if [[ $CENTOS_8 == "False" ]] ; then
-      yum -y install yum-utils
-      yum -y groupinstall development
-			yum -y install python36u python36u-pip python36u-devel
-			check_return
-    fi
-    if [[ $CENTOS_8 == "True" ]] ; then
-      dnf install python3 -y
-			check_return
-    fi
-    if [[ $SERVER_OS == "CentOS" ]] ; then
-      pip3.6 install virtualenv==16.7.9
-    else
-      pip3.6 install virtualenv
-    fi
+  if [[ $SERVER_OS == "CentOS" ]] ; then
+    pip3.6 install virtualenv==16.7.9
+  else
+    pip3.6 install virtualenv
+  fi
 		check_return
 	fi
-fi
 
 if [[ $SERVER_OS == "Ubuntu" ]] ; then
 	apt update -y

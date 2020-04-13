@@ -1932,7 +1932,7 @@ milter_default_action = accept
                 if self.distro == centos:
                     command = 'yum --enablerepo=CyberPanel install restic -y'
                 else:
-                    command = 'dnf --enablerepo=CyberPanel install restic -y'
+                    command = 'dnf --enablerepo=CyberPanel install restic -y --nogpgcheck'
 
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
             else:

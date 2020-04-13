@@ -14,7 +14,6 @@ SERVER_COUNTRY=$(curl --silent --max-time 5 https://cyberpanel.sh/?country)
 
 ### Update and remove not needed repos
 
-curl https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.0.1/install/CyberPanel.repo > /etc/yum.repos.d/CyberPanel.repo
 rm -f /etc/yum.repos.d/ius-archive.repo
 rm -f /etc/yum.repos.d/copart-restic-epel-7.repo
 rm -f /etc/yum.repos.d/dovecot.repo
@@ -29,6 +28,7 @@ rm -f /etc/yum.repos.d/gf.repo
 rm -f /etc/yum.repos.d/powerdns-auth-42.repo
 rm -rf /etc/yum.repos.d/powerdns-auth-master.repo
 rm -rf /etc/yum.repos.d/gf.repo.rpmnew
+rm -rf /etc/yum.repos.d/CentOS-AppStream.repo
 yum clean all
 yum update -y
 yum autoremove epel-release -y
@@ -168,14 +168,17 @@ OUTPUT=$(cat /etc/*release)
 if  echo $OUTPUT | grep -q "CentOS Linux 7" ; then
 	echo -e "\nDetecting CentOS 7.X...\n"
 	SERVER_OS="CentOS7"
+  curl https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.0.1/install/CyberPanel.repo > /etc/yum.repos.d/CyberPanel.repo
 	yum clean all
   yum update -y
 elif echo $OUTPUT | grep -q "CloudLinux 7" ; then
 	echo -e "\nDetecting CloudLinux 7.X...\n"
 	SERVER_OS="CentOS7"
+	curl https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.0.1/install/CyberPanel.repo > /etc/yum.repos.d/CyberPanel.repo
 	yum clean all
   yum update -y
 elif  echo $OUTPUT | grep -q "CentOS Linux 8" ; then
+  curl https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.0.1/install/CyberPanel8.repo > /etc/yum.repos.d/CyberPanel.repo
 	echo -e "\nDetecting CentOS 8.X...\n"
 	SERVER_OS="CentOS8"
 	yum clean all
@@ -193,9 +196,9 @@ fi
 if [ $SERVER_OS = "CentOS7" ] ; then
   yum -y install yum-utils
   yum -y groupinstall development
-  yum -y install python36u python36u-pip python36u-devel openssl-devel MariaDB-shared mariadb-devel
+  yum --enablerepo=CyberPanel install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel gpgme-devel curl-devel git socat openssl-devel MariaDB-shared mariadb-devel
 elif [ $SERVER_OS = "CentOS8" ] ; then
-  yum install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-devel curl-devel git platform-python-devel tar
+  dnf install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-devel curl-devel git platform-python-devel tar socat
 	dnf --enablerepo=PowerTools install gpgme-devel -y
 	dnf install python3 -y
 else
