@@ -400,7 +400,7 @@ fi
 install_required() {
 
 if [[ $CENTOS_8 == "True" ]] ; then
-  rm -rf /etc/yum.repos.d/CentOS-AppStream.repo
+  echo 'enabled=0' >> /etc/yum.repos.d/CentOS-AppStream.repo
   curl https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.0.1/install/CyberPanel8.repo > /etc/yum.repos.d/CyberPanel.repo
   dnf install zip -y
 elif [[ $CENTOS_8 == "False" ]] ; then
