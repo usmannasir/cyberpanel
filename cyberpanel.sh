@@ -430,6 +430,7 @@ if [[ $SERVER_OS == "CentOS" ]] ; then
 	timeout 10 rpm --import https://copr-be.cloud.fedoraproject.org/results/copart/restic/pubkey.gpg
 	timeout 10 rpm --import https://rep8.cyberpanel.net/RPM-GPG-KEY-CP-EP-8
 	timeout 10 rpm --import https://rep8.cyberpanel.net/RPM-GPG-KEY-CP-GF-8
+	curl https://getfedora.org/static/fedora.gpg | gpg --import
 	yum clean all
 	yum update -y
 	yum autoremove epel-release -y

@@ -1707,7 +1707,7 @@ imap_folder_list_limit = 0
             if self.distro == centos:
                 command = 'yum -y install opendkim'
             elif self.distro == cent8:
-                command = 'dnf --enablerepe=CyberPanel opendkim -y'
+                command = 'dnf --enablerepo=CyberPanel install opendkim -y'
             else:
                 command = 'apt-get -y install opendkim'
 
@@ -1932,7 +1932,7 @@ milter_default_action = accept
                 if self.distro == centos:
                     command = 'yum --enablerepo=CyberPanel install restic -y'
                 else:
-                    command = 'dnf --enablerepe=CyberPanel restic -y'
+                    command = 'dnf --enablerepo=CyberPanel install restic -y'
 
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
             else:
