@@ -165,16 +165,14 @@ class InstallCyberPanel:
             if res != 0:
                 InstallCyberPanel.stdOut("Failed to install PHP on Ubuntu.", 1, 1)
 
-        elif self.distro == cent8 or self.distro == centos:
+        elif self.distro == centos:
             command = 'yum -y groupinstall lsphp-all'
             install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-
-
 
         InstallCyberPanel.stdOut("LiteSpeed PHPs successfully installed!", 1)
 
         ## only php 71
-        if self.distro == centos or self.distro == cent8:
+        if self.distro == centos:
 
             command = 'yum install lsphp71 lsphp71-json lsphp71-xmlrpc lsphp71-xml lsphp71-soap lsphp71-snmp ' \
                       'lsphp71-recode lsphp71-pspell lsphp71-process lsphp71-pgsql lsphp71-pear lsphp71-pdo lsphp71-opcache ' \
@@ -206,6 +204,10 @@ class InstallCyberPanel:
                       'lsphp74-gmp lsphp74-gd lsphp74-enchant lsphp74-dba lsphp74-common  lsphp74-bcmath'
 
             install.preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+        if self.distro == cent8:
+            command = 'dnf install lsphp71* lsphp72* lsphp73* lsphp74* --exclude lsphp73-pecl-zip -y'
+            subprocess.call(command, shell=True)
 
     def installMySQL(self, mysql):
 
@@ -332,7 +334,7 @@ class InstallCyberPanel:
         elif self.distro == centos:
             command = "yum install -y pure-ftpd"
         elif self.distro == cent8:
-            command = 'dnf --enablerepe=CyberPanel install pure-ftpd -y'
+            command = 'dnf --enablerepo=CyberPanel install pure-ftpd -y'
 
         install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
@@ -482,12 +484,12 @@ class InstallCyberPanel:
                 #                              ".  This may need to be fixed manually as 'echo \"nameserver 8.8.8.8\"> "
                 #                              "/etc/resolv.conf'", 1, 1, os.EX_OSERR)
 
-            if self.distro == cent8:
-                command = 'dnf config-manager --set-enabled PowerTools'
-                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-
-                command = 'curl -o /etc/yum.repos.d/powerdns-auth-master.repo https://repo.powerdns.com/repo-files/centos-auth-master.repo'
-                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+            # if self.distro == cent8:
+            #     command = 'dnf config-manager --set-enabled PowerTools'
+            #     install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+            #
+            #     command = 'curl -o /etc/yum.repos.d/powerdns-auth-master.repo https://repo.powerdns.com/repo-files/centos-auth-master.repo'
+            #     install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
             if self.distro == ubuntu:
                 command = "DEBIAN_FRONTEND=noninteractive apt-get -y install pdns-server pdns-backend-mysql"
