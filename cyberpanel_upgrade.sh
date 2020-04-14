@@ -196,7 +196,7 @@ fi
 if [ $SERVER_OS = "CentOS7" ] ; then
   yum -y install yum-utils
   yum -y groupinstall development
-  yum --enablerepo=CyberPanel install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel gpgme-devel curl-devel git socat openssl-devel MariaDB-shared mariadb-devel
+  yum --enablerepo=CyberPanel install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel gpgme-devel curl-devel git socat openssl-devel MariaDB-shared mariadb-devel python36u python36u-pip python36u-devel
 elif [ $SERVER_OS = "CentOS8" ] ; then
   dnf install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-devel curl-devel git platform-python-devel tar socat
 	dnf --enablerepo=PowerTools install gpgme-devel -y
