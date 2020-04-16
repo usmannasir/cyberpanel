@@ -190,10 +190,15 @@ class ProcessUtilities(multi.Thread):
             sock = ret[0]
 
             if user == None:
-                if command.find('sudo') == -1:
+
+                if command.find('export') > -1 and ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+                    pass
+                elif command.find('sudo') == -1:
                     command = 'sudo %s' % (command)
+
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.writeToFile(ProcessUtilities.token + command)
+
                 sock.sendall((ProcessUtilities.token + command).encode('utf-8'))
             else:
                 command = '%s-u %s %s' % (ProcessUtilities.token, user, command)
