@@ -539,5 +539,5 @@ class FileManager:
             command = 'chmod 755 %s' % (childs.path)
             ProcessUtilities.popenExecutioner(command)
 
-            command = 'chmod %s:%s %s' % (externalApp, groupName, childs.path)
+            command = 'chown %s:%s %s' % (externalApp, groupName, childs.path)
             ProcessUtilities.popenExecutioner(command)
