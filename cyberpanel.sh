@@ -454,17 +454,17 @@ if [[ $SERVER_OS == "CentOS" ]] ; then
 if [[ $SERVER_OS == "Ubuntu" ]] ; then
 	apt update -y
 	DEBIAN_FRONTEND=noninteractive apt upgrade -y
-	DEBIAN_FRONTEND=noninteracitve apt install -y htop telnet python-mysqldb python-dev libcurl4-gnutls-dev libgnutls28-dev libgcrypt20-dev libattr1 libattr1-dev liblzma-dev libgpgme-dev libmariadbclient-dev libcurl4-gnutls-dev libssl-dev nghttp2 libnghttp2-dev idn2 libidn2-dev libidn2-0-dev librtmp-dev libpsl-dev nettle-dev libgnutls28-dev libldap2-dev libgssapi-krb5-2 libk5crypto3 libkrb5-dev libcomerr2 libldap2-dev python-gpg python python-minimal python-setuptools virtualenv python-dev python-pip git socat vim
+	DEBIAN_FRONTEND=noninteracitve apt install -y htop telnet libcurl4-gnutls-dev libgnutls28-dev libgcrypt20-dev libattr1 libattr1-dev liblzma-dev libgpgme-dev libmariadbclient-dev libcurl4-gnutls-dev libssl-dev nghttp2 libnghttp2-dev idn2 libidn2-dev libidn2-0-dev librtmp-dev libpsl-dev nettle-dev libgnutls28-dev libldap2-dev libgssapi-krb5-2 libk5crypto3 libkrb5-dev libcomerr2 libldap2-dev virtualenv git socat vim
 	check_return
-	if [[ $DEV == "ON" ]] ; then
-		DEBIAN_FRONTEND=noninteractive apt install -y python3-pip
-		check_return
-		ln -s /usr/bin/pip3 /usr/bin/pip3.6
-		DEBIAN_FRONTEND=noninteractive apt install -y build-essential libssl-dev libffi-dev python3-dev
-		check_return
-		DEBIAN_FRONTEND=noninteractive apt install -y python3-venv
-		check_return
-	fi
+
+	DEBIAN_FRONTEND=noninteractive apt install -y python3-pip
+	check_return
+	ln -s /usr/bin/pip3 /usr/bin/pip3.6
+	DEBIAN_FRONTEND=noninteractive apt install -y build-essential libssl-dev libffi-dev python3-dev
+	check_return
+	DEBIAN_FRONTEND=noninteractive apt install -y python3-venv
+	check_return
+
 fi
 }
 
