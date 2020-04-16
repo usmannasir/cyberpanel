@@ -3178,6 +3178,13 @@ StrictHostKeyChecking no
                 self.folder, self.firstName, self.lastName)
                 ProcessUtilities.executioner(command)
 
+                ## Fix permissions
+
+                from filemanager.filemanager import FileManager
+
+                fm = FileManager(None, None)
+                fm.fixPermissions(self.masterDomain)
+
                 data_ret = {'status': 1}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
@@ -3245,6 +3252,14 @@ StrictHostKeyChecking no
             remoteResult = ProcessUtilities.outputExecutioner(command)
 
             if remoteResult.find(self.gitUsername) > -1:
+
+                ## Fix permissions
+
+                from filemanager.filemanager import FileManager
+
+                fm = FileManager(None, None)
+                fm.fixPermissions(self.masterDomain)
+
                 data_ret = {'status': 1}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
@@ -3295,6 +3310,14 @@ StrictHostKeyChecking no
             commandStatus = ProcessUtilities.outputExecutioner(command)
 
             if commandStatus.find('Switched to branch') > -1:
+
+                ## Fix permissions
+
+                from filemanager.filemanager import FileManager
+
+                fm = FileManager(None, None)
+                fm.fixPermissions(self.masterDomain)
+
                 data_ret = {'status': 1, 'commandStatus': commandStatus + 'Refreshing page in 3 seconds..'}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
@@ -3341,6 +3364,15 @@ StrictHostKeyChecking no
             commandStatus = ProcessUtilities.outputExecutioner(command)
 
             if commandStatus.find(self.newBranchName) > -1:
+
+                ## Fix permissions
+
+                from filemanager.filemanager import FileManager
+
+                fm = FileManager(None, None)
+                fm.fixPermissions(self.masterDomain)
+
+
                 data_ret = {'status': 1, 'commandStatus': commandStatus}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
@@ -3422,6 +3454,13 @@ StrictHostKeyChecking no
                 except:
                     pass
 
+                ## Fix permissions
+
+                from filemanager.filemanager import FileManager
+
+                fm = FileManager(None, None)
+                fm.fixPermissions(self.masterDomain)
+
                 data_ret = {'status': 1, 'commandStatus': commandStatus}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
@@ -3468,6 +3507,14 @@ StrictHostKeyChecking no
             commandStatus = ProcessUtilities.outputExecutioner(command)
 
             if commandStatus.find('Already up to date') == -1:
+
+                ## Fix permissions
+
+                from filemanager.filemanager import FileManager
+
+                fm = FileManager(None, None)
+                fm.fixPermissions(self.masterDomain)
+
                 data_ret = {'status': 1, 'commandStatus': commandStatus}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
@@ -3654,6 +3701,13 @@ StrictHostKeyChecking no
 
             command = 'rm -rf %s' % (finalFile)
             ProcessUtilities.outputExecutioner(command)
+
+            ## Fix permissions
+
+            from filemanager.filemanager import FileManager
+
+            fm = FileManager(None, None)
+            fm.fixPermissions(self.masterDomain)
 
             data_ret = {'status': 1}
             json_data = json.dumps(data_ret)
@@ -4139,6 +4193,13 @@ StrictHostKeyChecking no
                                         message='Finished running commands.').save()
                     except:
                         pass
+
+                ## Fix permissions
+
+                from filemanager.filemanager import FileManager
+
+                fm = FileManager(None, None)
+                fm.fixPermissions(self.masterDomain)
 
                 data_ret = {'status': 1, 'commandStatus': commandStatus}
                 json_data = json.dumps(data_ret)
