@@ -452,10 +452,10 @@ class InstallCyberPanel:
                 command = 'wget http://mirrors.kernel.org/ubuntu/pool/universe/p/pure-ftpd/pure-ftpd-mysql_1.0.47-3build1_amd64.deb'
                 install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
-                command = 'dpkg --install --force-confold pure-ftpd-common_1.0.47-3_all.deb'
+                command = 'dpkg --install --force-confold pure-ftpd-common_1.0.47-3build1_all.deb'
                 install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
-                command = 'dpkg --install --force-confold pure-ftpd-mysql_1.0.47-3_amd64.deb'
+                command = 'dpkg --install --force-confold pure-ftpd-mysql_1.0.47-3build1_amd64.deb'
                 install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
                 command = 'systemctl restart pure-ftpd-mysql.service'
