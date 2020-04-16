@@ -428,7 +428,7 @@ class InstallCyberPanel:
             writeDataToFile.close()
 
             if self.distro == ubuntu:
-                command = 'apt install pure-ftpd-mysql -y'
+                command = 'apt install pure-ftpd-mysql libmariadb3 -y'
                 install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
                 if os.path.exists('/etc/pure-ftpd/db/mysql.conf'):
