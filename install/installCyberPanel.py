@@ -431,6 +431,18 @@ class InstallCyberPanel:
                 command = 'echo "40110 40210" > /etc/pure-ftpd/conf/PassivePortRange'
                 subprocess.call(command, shell=True)
 
+                command = 'echo "no" > /etc/pure-ftpd/conf/UnixAuthentication'
+                subprocess.call(command, shell=True)
+
+                command = 'echo "/etc/pure-ftpd/db/mysql.conf" > /etc/pure-ftpd/conf/MySQLConfigFile'
+                subprocess.call(command, shell=True)
+
+                command = 'ln -s /etc/pure-ftpd/conf/MySQLConfigFile /etc/pure-ftpd/auth/30mysql'
+                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+
+                command = 'ln -s /etc/pure-ftpd/conf/UnixAuthentication /etc/pure-ftpd/auth/65unix'
+                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+
                 command = 'systemctl restart pure-ftpd-mysql.service'
                 install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
