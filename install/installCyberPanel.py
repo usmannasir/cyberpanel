@@ -348,11 +348,11 @@ class InstallCyberPanel:
 
     def installPureFTPD(self):
         if self.distro == ubuntu:
-            command = 'apt-get -y install ' + install.preFlightsChecks.pureFTPDServiceName(self.distro)
+            command = 'DEBIAN_FRONTEND=noninteractive apt install pure-ftpd-mysql -y'
+            os.system(command)
         else:
             command = "yum install -y pure-ftpd"
-
-        install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+            install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
         ####### Install pureftpd to system startup
 
@@ -428,8 +428,6 @@ class InstallCyberPanel:
             writeDataToFile.close()
 
             if self.distro == ubuntu:
-                command = 'apt install pure-ftpd-mysql libmariadb3 -y'
-                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
                 if os.path.exists('/etc/pure-ftpd/db/mysql.conf'):
                     os.remove('/etc/pure-ftpd/db/mysql.conf')
@@ -446,16 +444,16 @@ class InstallCyberPanel:
                 command = 'echo "40110 40210" > /etc/pure-ftpd/conf/PassivePortRange'
                 subprocess.call(command, shell=True)
 
-                command = 'wget https://ubuntu.cyberpanel.net/pool/main/p/pure-ftpd/pure-ftpd-common_1.0.47-3_all.deb'
+                command = 'echo "no" > /etc/pure-ftpd/conf/UnixAuthentication'
+                subprocess.call(command, shell=True)
+
+                command = 'echo "/etc/pure-ftpd/db/mysql.conf" > /etc/pure-ftpd/conf/MySQLConfigFile'
+                subprocess.call(command, shell=True)
+
+                command = 'ln -s /etc/pure-ftpd/conf/MySQLConfigFile /etc/pure-ftpd/auth/30mysql'
                 install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
-                command = 'wget https://ubuntu.cyberpanel.net/pool/main/p/pure-ftpd/pure-ftpd-mysql_1.0.47-3_amd64.deb'
-                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-
-                command = 'dpkg --install --force-confold pure-ftpd-common_1.0.47-3_all.deb'
-                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-
-                command = 'dpkg --install --force-confold pure-ftpd-mysql_1.0.47-3_amd64.deb'
+                command = 'ln -s /etc/pure-ftpd/conf/UnixAuthentication /etc/pure-ftpd/auth/65unix'
                 install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
                 command = 'systemctl restart pure-ftpd-mysql.service'
