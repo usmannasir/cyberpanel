@@ -330,7 +330,7 @@ class InstallCyberPanel:
 
     def installPureFTPD(self):
         if self.distro == ubuntu:
-            command = 'apt-get -y install ' + install.preFlightsChecks.pureFTPDServiceName(self.distro)
+            command = 'apt install pure-ftpd-mysql -y'
         elif self.distro == centos:
             command = "yum install -y pure-ftpd"
         elif self.distro == cent8:
@@ -413,9 +413,6 @@ class InstallCyberPanel:
 
             if self.distro == ubuntu:
 
-                command = 'apt install pure-ftpd-mysql -y'
-                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-
                 if os.path.exists('/etc/pure-ftpd/db/mysql.conf'):
                     os.remove('/etc/pure-ftpd/db/mysql.conf')
                     shutil.copy(ftpdPath+"/pureftpd-mysql.conf", '/etc/pure-ftpd/db/mysql.conf')
@@ -430,18 +427,6 @@ class InstallCyberPanel:
 
                 command = 'echo "40110 40210" > /etc/pure-ftpd/conf/PassivePortRange'
                 subprocess.call(command, shell=True)
-
-                command = 'wget http://mirrors.kernel.org/ubuntu/pool/universe/p/pure-ftpd/pure-ftpd-common_1.0.47-3_all.deb'
-                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-
-                command = 'wget http://mirrors.kernel.org/ubuntu/pool/universe/p/pure-ftpd/pure-ftpd-mysql_1.0.47-3_amd64.deb'
-                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-
-                command = 'dpkg --install --force-confold pure-ftpd-common_1.0.47-3_all.deb'
-                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-
-                command = 'dpkg --install --force-confold pure-ftpd-mysql_1.0.47-3_amd64.deb'
-                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
                 command = 'systemctl restart pure-ftpd-mysql.service'
                 install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
