@@ -73,7 +73,7 @@ msgstr "Nama Paket"
 #: CLManager/templates/CLManager/createPackage.html:47
 #: CLManager/templates/CLManager/listPackages.html:87
 msgid "SPEED"
-msgstr ""
+msgstr "KECEPATAN"
 
 #: CLManager/templates/CLManager/createPackage.html:56
 #: CLManager/templates/CLManager/listPackages.html:98
@@ -123,7 +123,7 @@ msgstr ""
 #, fuzzy
 #| msgid "Modify Package - CyberPanel"
 msgid "Manage CloudLinux Packages - CyberPanel"
-msgstr "Edit Paket - CyberPanel"
+msgstr "Ubah Paket - CyberPanel"
 
 #: CLManager/templates/CLManager/listPackages.html:14
 #, fuzzy
@@ -133,7 +133,7 @@ msgstr "Kelola Citra Docker"
 
 #: CLManager/templates/CLManager/listPackages.html:15
 msgid "Manage/Delete CloudLinux Packages."
-msgstr ""
+msgstr "Kelola/Hapus Paket CloudLinux"
 
 #: CLManager/templates/CLManager/listPackages.html:76
 #: dns/templates/dns/addDeleteDNSRecords.html:74
@@ -192,13 +192,13 @@ msgstr ""
 
 #: CLManager/templates/CLManager/listWebsites.html:28
 msgid "Default: "
-msgstr ""
+msgstr "Bawaan"
 
 #: CLManager/templates/CLManager/monitorUsage.html:3
 #, fuzzy
 #| msgid "Modify User - CyberPanel"
 msgid "Monitor Usage - CyberPanel"
-msgstr "Edit User - CyberPanel"
+msgstr "Ubah User - CyberPanel"
 
 #: CLManager/templates/CLManager/monitorUsage.html:15
 #, fuzzy
@@ -228,11 +228,11 @@ msgstr "Tak tersedia"
 
 #: CLManager/templates/CLManager/notAvailable.html:14
 msgid "Either CageFS is not installed or you are not on CloudLinux OS."
-msgstr ""
+msgstr "CageFS tidak diinstal atau Anda tidak menggunakan CloudLinux OS."
 
 #: CLManager/templates/CLManager/notAvailable.html:22
 msgid "CageFS is only available with CloudLinux OS. "
-msgstr ""
+msgstr "CageFS hanya tersedia dengan CloudLinux OS."
 
 #: CLManager/templates/CLManager/notAvailable.html:24
 #: containerization/templates/containerization/notAvailable.html:24
@@ -351,7 +351,7 @@ msgstr ""
 #: IncBackups/templates/IncBackups/backupSchedule.html:3
 #: backup/templates/backup/backupSchedule.html:3
 msgid "Schedule Back up - CyberPanel"
-msgstr "Jadwal Backup - CyberPanel"
+msgstr "Jadwal Cadangan - CyberPanel"
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:13
 #: IncBackups/templates/IncBackups/backupSchedule.html:23
@@ -362,7 +362,7 @@ msgstr "Jadwal Backup - CyberPanel"
 #: userManagment/templates/userManagment/createACL.html:381
 #: userManagment/templates/userManagment/modifyACL.html:385
 msgid "Schedule Back up"
-msgstr "Jadwal Backup"
+msgstr "Jadwal Cadangan"
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:16
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:18
@@ -371,7 +371,7 @@ msgstr "Jadwal Backup"
 #: backup/templates/backup/remoteBackups.html:14
 #: backup/templates/backup/remoteBackups.html:21
 msgid "Remote Backups"
-msgstr "Backup Jauh"
+msgstr "Cadangan Jauh"
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:17
 #: backup/templates/backup/backupSchedule.html:17
@@ -379,7 +379,7 @@ msgid ""
 "On this page you can schedule Back ups to localhost or remote server (If you "
 "have added one)."
 msgstr ""
-"Pada halaman ini anda bisa membuat jadwal backup ke server ini atau yang "
+"Pada halaman ini anda bisa membuat jadwal cadangan ke server ini atau yang "
 "lain (jika ada)."
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:33
@@ -397,7 +397,7 @@ msgstr "Pilih Frekuensi"
 #, fuzzy
 #| msgid "Backup Management"
 msgid "Backup Content"
-msgstr "Pengelolaan Backup"
+msgstr "Pengelolaan Cadangan"
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:98
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:72
@@ -415,7 +415,7 @@ msgstr "Cari Akun.."
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:124
 msgid "Select sites to be included in this job"
-msgstr ""
+msgstr "Pilih situs untuk dimasukkan dalam pekerjaan ini"
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:150
 #: IncBackups/templates/IncBackups/createBackup.html:127
@@ -481,7 +481,7 @@ msgstr "Hapus"
 #, fuzzy
 #| msgid "Cancel Backup"
 msgid "Create Incremental Backup"
-msgstr "Batalkan Backup"
+msgstr "Batalkan Cadangan"
 
 #: IncBackups/templates/IncBackups/createBackup.html:13
 #: IncBackups/templates/IncBackups/createBackup.html:23
@@ -489,20 +489,20 @@ msgstr "Batalkan Backup"
 #: backup/templates/backup/backup.html:4 backup/templates/backup/backup.html:14
 #: backup/templates/backup/backup.html:21
 msgid "Back up Website"
-msgstr "Backup Situs"
+msgstr "Cadangan Situs"
 
 #: IncBackups/templates/IncBackups/createBackup.html:15
 #: IncBackups/templates/IncBackups/restoreRemoteBackups.html:17
 #: backup/templates/backup/backup.html:14
 #: backup/templates/backup/restore.html:14
 msgid "Backup Docs"
-msgstr "Panduan Backup"
+msgstr "Panduan Cadangan"
 
 #: IncBackups/templates/IncBackups/createBackup.html:17
 #, fuzzy
 #| msgid "This page can be used to Back up your websites"
 msgid "This page can be used to create incremental backups for your websites."
-msgstr "Halaman ini bisa digunakan untuk membuat backup situs anda"
+msgstr "Halaman ini bisa digunakan untuk membuat cadangan situs anda"
 
 #: IncBackups/templates/IncBackups/createBackup.html:33
 #: IncBackups/templates/IncBackups/restoreRemoteBackups.html:35
@@ -533,7 +533,7 @@ msgstr "Pilih Situs"
 #: userManagment/templates/userManagment/createACL.html:352
 #: userManagment/templates/userManagment/modifyACL.html:356
 msgid "Create Back up"
-msgstr "Buat Backup"
+msgstr "Buat Cadangan"
 
 #: IncBackups/templates/IncBackups/createBackup.html:128
 #: IncBackups/templates/IncBackups/restoreRemoteBackups.html:98
@@ -546,7 +546,7 @@ msgstr "Tanggal"
 #: backup/templates/backup/index.html:46
 #: backup/templates/backup/restore.html:45
 msgid "Restore"
-msgstr "Restore"
+msgstr "Mengembalikan"
 
 #: IncBackups/templates/IncBackups/createBackup.html:161
 #: emailMarketing/templates/emailMarketing/sendEmails.html:151
@@ -573,25 +573,25 @@ msgstr "Aksi"
 #: backup/templates/backup/backupDestinations.html:3
 #: backup/templates/backup/backupDestinations.html:14
 msgid "Set up Back up Destinations"
-msgstr "Pengaturan  Tujuan Backup"
+msgstr "Pengaturan  Tujuan Cadangan"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:14
 #, fuzzy
 #| msgid "Set up Back up Destinations"
 msgid "Set up Incremental Back up Destinations"
-msgstr "Pengaturan  Tujuan Backup"
+msgstr "Pengaturan  Tujuan Cadangan"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:20
 #, fuzzy
 #| msgid "On this page you can set up your Back up destinations. (SFTP)"
 msgid "On this page you can set up your Back up destinations. (SFTP and AWS)"
-msgstr "Pada halaman ini, anda bisa mengatur tujuan backup (SFTP)"
+msgstr "Pada halaman ini, anda bisa mengatur tujuan Cadangan (SFTP)"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:26
 #, fuzzy
 #| msgid "Set up Back up Destinations"
 msgid "Set up Back up Destinations."
-msgstr "Pengaturan  Tujuan Backup"
+msgstr "Pengaturan  Tujuan Cadangan"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:35
 #, fuzzy
@@ -626,7 +626,7 @@ msgstr "Alamat IP"
 #: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:56
 #: websiteFunctions/templates/websiteFunctions/sshAccess.html:33
 msgid "Password"
-msgstr "Password"
+msgstr "Kata Sandi"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:61
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:92
@@ -662,7 +662,7 @@ msgstr ""
 #, fuzzy
 #| msgid "Cancel Backup"
 msgid "Restore Remote Incremental Backups"
-msgstr "Batalkan Backup"
+msgstr "Batalkan Cadangan"
 
 #: IncBackups/templates/IncBackups/restoreRemoteBackups.html:19
 #, fuzzy
@@ -670,7 +670,7 @@ msgstr "Batalkan Backup"
 msgid ""
 "This page can be used to restore remote incremental backups for your "
 "websites."
-msgstr "Halaman ini bisa digunakan untuk membuat backup situs anda"
+msgstr "Halaman ini bisa digunakan untuk membuat Cadangan situs anda"
 
 #: IncBackups/templates/IncBackups/restoreRemoteBackups.html:69
 msgid "Fetch Restore Points"
@@ -721,30 +721,30 @@ msgstr ""
 
 #: WebTerminal/templates/WebTerminal/WebTerminal.html:18
 msgid "Web Terminal Docs"
-msgstr ""
+msgstr "Dokumen Web Terminal"
 
 #: WebTerminal/templates/WebTerminal/WebTerminal.html:19
 msgid "Execute your terminal commands."
-msgstr ""
+msgstr "Jalankan perintah terminal Anda."
 
 #: WebTerminal/templates/WebTerminal/WebTerminal.html:26
 #: baseTemplate/templates/baseTemplate/index.html:643
 msgid "Web Terminal"
-msgstr ""
+msgstr "Web Terminal"
 
 #: WebTerminal/templates/WebTerminal/WebTerminal.html:28
 msgid "Reboot SSH Server"
-msgstr ""
+msgstr "Mulai ulang Server SSH"
 
 #: backup/templates/backup/backup.html:15
 msgid "This page can be used to Back up your websites"
-msgstr "Halaman ini bisa digunakan untuk membuat backup situs anda"
+msgstr "Halaman ini bisa digunakan untuk membuat cadangan situs anda"
 
 #: backup/templates/backup/backup.html:44
 #: baseTemplate/templates/baseTemplate/homePage.html:12
 #: filemanager/templates/filemanager/index.html:135
 msgid "Home"
-msgstr "Depan"
+msgstr "Beranda"
 
 #: backup/templates/backup/backup.html:60
 #: backup/templates/backup/restore.html:62
@@ -772,7 +772,7 @@ msgstr "Berjalan"
 
 #: backup/templates/backup/backup.html:88
 msgid "Cancel Backup"
-msgstr "Batalkan Backup"
+msgstr "Batalkan Cadangan"
 
 #: backup/templates/backup/backup.html:103
 msgid "File"
@@ -794,11 +794,11 @@ msgstr "Berhasil Dihapus"
 
 #: backup/templates/backup/backupDestinations.html:15
 msgid "On this page you can set up your Back up destinations. (SFTP)"
-msgstr "Pada halaman ini, anda bisa mengatur tujuan backup (SFTP)"
+msgstr "Pada halaman ini, anda bisa mengatur tujuan Cadangan (SFTP)"
 
 #: backup/templates/backup/backupDestinations.html:21
 msgid "Set up Back up Destinations (SSH port should be 22 on backup server)"
-msgstr "Tentukan Tujuan Backup (port SSH harus 22 pada server backup)"
+msgstr "Tentukan Tujuan Backup (port SSH harus 22 pada server Cadangan)"
 
 #: backup/templates/backup/backupDestinations.html:68
 #: backup/templates/backup/backupDestinations.html:72
@@ -888,7 +888,7 @@ msgstr ""
 
 #: backup/templates/backup/backupSchedule.html:57
 msgid "Local directory where backups will be moved after creation."
-msgstr ""
+msgstr "Direktori lokal tempat cadangan akan dipindahkan setelah pembuatan."
 
 #: backup/templates/backup/backupSchedule.html:82
 msgid "Cannot add schedule. Error message:"
@@ -900,7 +900,7 @@ msgstr "Jadwal Sudah Ditambahkan"
 
 #: backup/templates/backup/index.html:3
 msgid "Back up Home - CyberPanel"
-msgstr "Backup - CyberPanel"
+msgstr "Cadangan - CyberPanel"
 
 #: backup/templates/backup/index.html:13 backup/templates/backup/index.html:30
 #: baseTemplate/templates/baseTemplate/homePage.html:95
@@ -909,11 +909,11 @@ msgstr "Backup - CyberPanel"
 #: baseTemplate/templates/baseTemplate/index.html:563
 #: baseTemplate/templates/baseTemplate/index.html:616
 msgid "Back up"
-msgstr "Backup"
+msgstr "Cadangankan"
 
 #: backup/templates/backup/index.html:14
 msgid "Back up and restore sites."
-msgstr "Backup dan restore situs."
+msgstr "Cadangkan dan pulihkan situs."
 
 #: backup/templates/backup/index.html:19
 #: baseTemplate/templates/baseTemplate/homePage.html:23
@@ -934,7 +934,7 @@ msgstr "Fungsi Tersedia"
 
 #: backup/templates/backup/index.html:28
 msgid "Back up Site"
-msgstr "Backup Situs"
+msgstr "Cadangakan Situs"
 
 #: backup/templates/backup/index.html:44
 #: baseTemplate/templates/baseTemplate/index.html:572
@@ -942,7 +942,7 @@ msgstr "Backup Situs"
 #: userManagment/templates/userManagment/createACL.html:361
 #: userManagment/templates/userManagment/modifyACL.html:365
 msgid "Restore Back up"
-msgstr "Restore Backup"
+msgstr "Mengembalikan Cadangan"
 
 #: backup/templates/backup/index.html:60 backup/templates/backup/index.html:62
 msgid "Add/Delete Destinations"
@@ -953,7 +953,7 @@ msgstr "Tambah/Hapus Tujuan"
 #: userManagment/templates/userManagment/createACL.html:391
 #: userManagment/templates/userManagment/modifyACL.html:395
 msgid "Remote Back ups"
-msgstr "Backup Jarak jauh"
+msgstr "Cadangan Jarak jauh"
 
 #: backup/templates/backup/remoteBackups.html:3
 msgid "Transfer Websites from Remote Server - CyberPanel"
@@ -1001,16 +1001,16 @@ msgstr "Akun berhasil diambil dari server jarak jauh."
 
 #: backup/templates/backup/remoteBackups.html:80
 msgid "Backup Process successfully started."
-msgstr "Proses backup berhasil dimulai."
+msgstr "Proses Cadangan berhasil dimulai."
 
 #: backup/templates/backup/remoteBackups.html:84
 msgid "Backup successfully cancelled."
-msgstr "Backup berhasil dibatalkan."
+msgstr "Cadangan berhasil dibatalkan."
 
 #: backup/templates/backup/remoteBackups.html:107
 #: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:65
 msgid "Website"
-msgstr "Website"
+msgstr "Situs Web"
 
 #: backup/templates/backup/remoteBackups.html:108
 #: baseTemplate/templates/baseTemplate/homePage.html:143
@@ -1045,12 +1045,12 @@ msgstr "Email"
 
 #: backup/templates/backup/restore.html:3
 msgid "Restore Website - CyberPanel"
-msgstr "Restore Situs - CyberPanel"
+msgstr "Mengembalikan Situs - CyberPanel"
 
 #: backup/templates/backup/restore.html:14
 #: backup/templates/backup/restore.html:21
 msgid "Restore Website"
-msgstr "Restore Situs"
+msgstr "Mengembalikan Situs"
 
 #: backup/templates/backup/restore.html:15
 msgid ""
@@ -1058,13 +1058,13 @@ msgid ""
 "from CyberPanel Back up generation tool, it will detect all Back ups under "
 "<strong>/home/backup</strong>."
 msgstr ""
-"Halaman ini bisa digunakan untuk mengembalikan situs anda dari backup "
-"(restore). Backup dibuat dari fasilitas pembuatan backup CyberPanel, yang "
-"memeriksa backup yang ada di <strong>/home/backup</strong>."
+"Halaman ini bisa digunakan untuk mengembalikan situs anda dari cadangan "
+"(restore). Cadangan dibuat dari fasilitas pembuatan cadangan CyberPanel, yang "
+"memeriksa cadangan yang ada di <strong>/home/backup</strong>."
 
 #: backup/templates/backup/restore.html:30
 msgid "Select Back up"
-msgstr "Pilih Backup"
+msgstr "Pilih Cadangan"
 
 #: backup/templates/backup/restore.html:61
 msgid "Condition"
@@ -1091,7 +1091,7 @@ msgstr "Pesan kesalahan:"
 
 #: backup/templates/backup/restore.html:90
 msgid "Site related to this Back up already exists."
-msgstr "Situs yang terkait dengan backup ini sudah ada."
+msgstr "Situs yang terkait dengan Cadangan ini sudah ada."
 
 #: baseTemplate/templates/baseTemplate/homePage.html:3
 msgid "Home - CyberPanel"
@@ -1224,7 +1224,7 @@ msgstr "Keamanan"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:188
 msgid "Resources"
-msgstr "Sumberdaya"
+msgstr "Sumber daya"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:197
 #: baseTemplate/templates/baseTemplate/index.html:139
@@ -1305,7 +1305,7 @@ msgstr "Tuning"
 
 #: baseTemplate/templates/baseTemplate/index.html:332
 msgid "Overview"
-msgstr "Ikhtisar"
+msgstr "Gambaran"
 
 #: baseTemplate/templates/baseTemplate/index.html:334
 #: baseTemplate/templates/baseTemplate/index.html:335
@@ -1315,7 +1315,7 @@ msgstr "Alamat IP Server"
 #: baseTemplate/templates/baseTemplate/index.html:339
 #: baseTemplate/templates/baseTemplate/index.html:341
 msgid "Dashboard"
-msgstr "Dashboard"
+msgstr "Dasbor"
 
 #: baseTemplate/templates/baseTemplate/index.html:344
 #: baseTemplate/templates/baseTemplate/index.html:346
@@ -1363,7 +1363,7 @@ msgstr "Nama User"
 #: userManagment/templates/userManagment/modifyUser.html:12
 #: userManagment/templates/userManagment/modifyUser.html:102
 msgid "Modify User"
-msgstr "Edit User"
+msgstr "Ubah User"
 
 #: baseTemplate/templates/baseTemplate/index.html:380
 #: userManagment/templates/userManagment/createACL.html:82
@@ -1386,7 +1386,7 @@ msgstr "Hapus ACL"
 
 #: baseTemplate/templates/baseTemplate/index.html:389
 msgid "Modify ACL"
-msgstr "Edit ACL"
+msgstr "Ubah ACL"
 
 #: baseTemplate/templates/baseTemplate/index.html:392
 #: userManagment/templates/userManagment/apiAccess.html:13
@@ -1466,7 +1466,7 @@ msgstr "Hapus Paket"
 #: userManagment/templates/userManagment/createACL.html:179
 #: userManagment/templates/userManagment/modifyACL.html:183
 msgid "Modify Package"
-msgstr "Edit Paket"
+msgstr "Ubah Paket"
 
 #: baseTemplate/templates/baseTemplate/index.html:460
 #: databases/templates/databases/createDatabase.html:12
@@ -1673,13 +1673,13 @@ msgstr ""
 #, fuzzy
 #| msgid "Cancel Backup"
 msgid "Incremental Back up"
-msgstr "Batalkan Backup"
+msgstr "Batalkan Cadangan"
 
 #: baseTemplate/templates/baseTemplate/index.html:598
 #, fuzzy
 #| msgid "Restore Back up"
 msgid "Create/Restore Back up"
-msgstr "Restore Backup"
+msgstr "Mengembalikan Cadangan"
 
 #: baseTemplate/templates/baseTemplate/index.html:601
 #, fuzzy
@@ -1703,7 +1703,7 @@ msgstr "Transfer Situs dan Server Lain  - CyberPanel"
 #, fuzzy
 #| msgid "Restore Website"
 msgid "Restore from Remote"
-msgstr "Restore Situs"
+msgstr "Mengembalikan Situs"
 
 #: baseTemplate/templates/baseTemplate/index.html:624
 #: manageSSL/templates/manageSSL/index.html:29
@@ -1750,7 +1750,7 @@ msgstr ""
 #: baseTemplate/templates/baseTemplate/index.html:657
 #: baseTemplate/templates/baseTemplate/index.html:659
 msgid "CloudLinux"
-msgstr ""
+msgstr "CloudLinux"
 
 #: baseTemplate/templates/baseTemplate/index.html:666
 #, fuzzy
@@ -1760,7 +1760,7 @@ msgstr "Buat Paket"
 
 #: baseTemplate/templates/baseTemplate/index.html:671
 msgid "List Cloud Linux Package"
-msgstr ""
+msgstr "Daftar Paket Cloud Linux"
 
 #: baseTemplate/templates/baseTemplate/index.html:676
 #, fuzzy
@@ -1874,7 +1874,7 @@ msgstr "Pasang Ekstensi"
 #: managePHP/templates/managePHP/index.html:35
 #: managePHP/templates/managePHP/index.html:37
 msgid "Edit PHP Configs"
-msgstr "Edit Konfig PHP"
+msgstr "Ubah Konfig PHP"
 
 #: baseTemplate/templates/baseTemplate/index.html:795
 msgid "Access Log"
@@ -1935,7 +1935,7 @@ msgstr "Firewall"
 #: firewall/templates/firewall/secureSSH.html:13
 #: firewall/templates/firewall/secureSSH.html:20
 msgid "Secure SSH"
-msgstr "Secure SSH"
+msgstr "Amankan SSH"
 
 #: baseTemplate/templates/baseTemplate/index.html:823
 #: firewall/templates/firewall/index.html:58
@@ -1981,7 +1981,7 @@ msgstr "Konfigurasi"
 
 #: baseTemplate/templates/baseTemplate/index.html:835
 msgid "CageFS"
-msgstr ""
+msgstr "CageFS"
 
 #: baseTemplate/templates/baseTemplate/index.html:843
 #: baseTemplate/templates/baseTemplate/index.html:845
@@ -2067,7 +2067,7 @@ msgstr "Versi Saat Ini"
 
 #: baseTemplate/templates/baseTemplate/versionManagment.html:33
 msgid "Build"
-msgstr "Build"
+msgstr "Membangun"
 
 #: baseTemplate/templates/baseTemplate/versionManagment.html:42
 msgid "Latest Version"
@@ -2412,7 +2412,7 @@ msgstr "Nilai SOA"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:253
 msgid "Name server"
-msgstr "Nameserver"
+msgstr "Nama server"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:276
 msgid "Prioirty"
@@ -2479,7 +2479,7 @@ msgstr "Nameserver Primer"
 #, fuzzy
 #| msgid "Second Nameserver (Back up)"
 msgid "Second Nameserver"
-msgstr "Nameserver Sekunder (Backup)"
+msgstr "Nameserver Sekunder (Cadangan)"
 
 #: dns/templates/dns/configureDefaultNameServers.html:52
 #, fuzzy
@@ -2733,7 +2733,7 @@ msgstr "Citra Resmi"
 
 #: dockerManager/templates/dockerManager/manageImages.html:104
 msgid "Pull"
-msgstr "Pull"
+msgstr "Tarik"
 
 #: dockerManager/templates/dockerManager/runContainer.html:3
 msgid "Run new container - CyberPanel"
@@ -3155,7 +3155,7 @@ msgstr "Penggunaan Sumberdaya"
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:42
 #: websiteFunctions/templates/websiteFunctions/website.html:42
 msgid "Resource"
-msgstr "Sumberdaya"
+msgstr "Sumber daya"
 
 #: emailMarketing/templates/emailMarketing/website.html:41
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:44
@@ -3520,7 +3520,7 @@ msgstr "PHP berhasil diganti untuk: "
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:541
 #: websiteFunctions/templates/websiteFunctions/website.html:795
 msgid "Files"
-msgstr "Files"
+msgstr "File"
 
 #: emailMarketing/templates/emailMarketing/website.html:863
 #: emailMarketing/templates/emailMarketing/website.html:866
@@ -5497,7 +5497,7 @@ msgstr "Ganti"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:162
 msgid "Get 15 Days Trial"
-msgstr ""
+msgstr "Dapatkan 15 Hari Percobaan"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:175
 msgid ""
@@ -6122,7 +6122,7 @@ msgstr "Pilih Akun"
 
 #: userManagment/templates/userManagment/modifyUser.html:113
 msgid " is successfully modified."
-msgstr " berhasil diedit."
+msgstr " berhasil diubah."
 
 #: userManagment/templates/userManagment/modifyUser.html:117
 msgid "Cannot modify user. Error message:"
@@ -6715,7 +6715,7 @@ msgstr ""
 
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:3
 msgid "Suspend/Unsuspend Website - CyberPanel"
-msgstr "Suspen/Unsuspen Situs - CyberPanel"
+msgstr "Tangguhkan/Tidak Ditangguhkan Situs - CyberPanel"
 
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:14
 msgid "This page can be used to suspend/unsuspend website."
@@ -6723,19 +6723,19 @@ msgstr "Halaman ini bisa digunakan untuk melakukan suspen/unsuspen situs."
 
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:44
 msgid "Suspend"
-msgstr "Suspend"
+msgstr "Menangguhkan"
 
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:45
 msgid "Un-Suspend"
-msgstr "Un-Suspend"
+msgstr "Batalkan Penangguhan"
 
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:65
 msgid "Cannot suspend website, Error message: "
-msgstr "Tidak bisa mensuspen situs. Pesan kesalahan: "
+msgstr "Tidak bisa menangguhkan situs. Pesan kesalahan: "
 
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:69
 msgid "Cannot unsuspend website. Error message:"
-msgstr "Tidak bisa meng-unsuspen situs. Pesan kesalahan:"
+msgstr "Tidak bisa batalkan penangguhan situs. Pesan kesalahan:"
 
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:73
 msgid "Website "
@@ -6753,11 +6753,11 @@ msgstr "Fungsi  DNS - CyberPanel"
 
 #: websiteFunctions/templates/websiteFunctions/syncMaster.html:12
 msgid "Sync your site to Master"
-msgstr ""
+msgstr "Sinkronkan situs Anda ke Master"
 
 #: websiteFunctions/templates/websiteFunctions/syncMaster.html:13
 msgid "Right now you can only sync your child domains to master domains."
-msgstr ""
+msgstr "Saat ini Anda hanya dapat menyinkronkan domain anak Anda ke domain master."
 
 #: websiteFunctions/templates/websiteFunctions/syncMaster.html:13
 msgid " will be synced to "
@@ -6857,7 +6857,7 @@ msgstr ""
 #~ msgstr " foi Criado com Sucesso"
 
 #~ msgid "Installation successful. To complete the setup visit:"
-#~ msgstr "Instalação com sucesso. Para completar:"
+#~ msgstr "Instalasi berhasil. Untuk menyelesaikan kunjungan pengaturan:"
 
 #, fuzzy
 #~| msgid "Password"
@@ -6888,15 +6888,15 @@ msgstr ""
 #~ msgstr "Processamento de Pedidos"
 
 #~ msgid "Total Requests"
-#~ msgstr "Pedidos Totais"
+#~ msgstr "Total Permintaan"
 
 #~ msgid "Normal User"
-#~ msgstr "Utilizador Normal"
+#~ msgstr "Pengguna Normal"
 
 #, fuzzy
 #~| msgid "Edit vHost Main Configurations"
 #~ msgid "Edit Virtual Host Main Configurations"
-#~ msgstr "Alterar as Configurações do vHost Principal"
+#~ msgstr "Edit Konfigurasi Utama Host Virtual"
 
 #~ msgid "Configuration saved. Restart LiteSpeed put them in effect."
 #~ msgstr ""
