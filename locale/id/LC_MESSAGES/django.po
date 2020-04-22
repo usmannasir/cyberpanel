@@ -17,7 +17,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2019-11-21 19:54+0500\n"
 "PO-Revision-Date: 2019-04-16 17:52+0700\n"
-"Last-Translator: TAP <tap@tuta.io>\n"
+"Last-Translator: mr614ck <fsteamcyber@gmail.com>\n"
 "Language-Team: LANGUAGE <unasir@litespeedtech.com>\n"
 "Language: id\n"
 "MIME-Version: 1.0\n"
@@ -6761,11 +6761,11 @@ msgstr "Saat ini Anda hanya dapat menyinkronkan domain anak Anda ke domain maste
 
 #: websiteFunctions/templates/websiteFunctions/syncMaster.html:13
 msgid " will be synced to "
-msgstr ""
+msgstr " akan disinkronkan ke "
 
 #: websiteFunctions/templates/websiteFunctions/syncMaster.html:20
 msgid "Sync "
-msgstr ""
+msgstr "Sikronkan"
 
 #: websiteFunctions/templates/websiteFunctions/syncMaster.html:20
 #, fuzzy
@@ -6775,23 +6775,23 @@ msgstr "ke"
 
 #: websiteFunctions/templates/websiteFunctions/syncMaster.html:30
 msgid "What to Sync"
-msgstr ""
+msgstr "Yang Harus Disinkronkan"
 
 #: websiteFunctions/templates/websiteFunctions/syncMaster.html:63
 msgid "Start Syncing"
-msgstr ""
+msgstr "Mulai Sinkronisasi"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:29
 msgid "Clone/Staging"
-msgstr ""
+msgstr "Klon / Pementasan"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:30
 msgid "Set up SSH Access"
-msgstr ""
+msgstr "Siapkan Akses SSH"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:665
 msgid "It is not required to modify rules if you are using OpenLiteSpeed."
-msgstr ""
+msgstr "Tidak perlu mengubah aturan jika Anda menggunakan OpenLiteSpeed."
 
 #~ msgid "List"
 #~ msgstr "Lihat"
@@ -6813,48 +6813,48 @@ msgstr ""
 #~ msgstr "Ubah"
 
 #~ msgid "Start"
-#~ msgstr "Iniciar"
+#~ msgstr "Mulai"
 
 #~ msgid "Reload"
-#~ msgstr "Recarregar"
+#~ msgstr "Muat Ulang"
 
 #~ msgid "CPU Status"
-#~ msgstr "Estado do CPU"
+#~ msgstr "Status CPU"
 
 #, fuzzy
 #~| msgid "Server Status"
 #~ msgid "System Status"
-#~ msgstr "Estado do Servidor"
+#~ msgstr "Status Sistem"
 
 #~ msgid "Update started..."
-#~ msgstr "Atualização iniciada..."
+#~ msgstr "Pembaruan dimulai..."
 
 #~ msgid "Update finished..."
-#~ msgstr "Atualização conclída..."
+#~ msgstr "Pembaharuan Selesai..."
 
 #~ msgid "Account Type"
-#~ msgstr "Tipo de Conta"
+#~ msgstr "Tipe Akun"
 
 #~ msgid "User Accounts Limit"
-#~ msgstr "Limite de Contas de Utilizador"
+#~ msgstr "Batas Akun Pengguna"
 
 #~ msgid "Only Numbers"
-#~ msgstr "Apenas Números"
+#~ msgstr "Hanya Angka"
 
 #~ msgid "Username should be lowercase alphanumeric."
-#~ msgstr "O Nome de Utilizador deve ser em letras minúsculas e alfanumérico."
+#~ msgstr "Nama pengguna harus berupa alfanumerik huruf kecil."
 
 #~ msgid "Must contain one number and one special character."
-#~ msgstr "Deverá conter um número e um caracter especial."
+#~ msgstr "Harus mengandung satu angka dan satu karakter khusus."
 
 #~ msgid "Cannot create website. Error message:"
-#~ msgstr "Impossível criar website. Mensage de erro:"
+#~ msgstr "Tidak dapat membuat situs web. Pesan eror:"
 
 #~ msgid "Website with domain"
-#~ msgstr "Website com o domínio"
+#~ msgstr "Situs web dengan domain"
 
 #~ msgid " is Successfully Created"
-#~ msgstr " foi Criado com Sucesso"
+#~ msgstr " berhasil dibuat"
 
 #~ msgid "Installation successful. To complete the setup visit:"
 #~ msgstr "Instalasi berhasil. Untuk menyelesaikan kunjungan pengaturan:"
@@ -6862,30 +6862,30 @@ msgstr ""
 #, fuzzy
 #~| msgid "Password"
 #~ msgid "Admin Password"
-#~ msgstr "Palavra-Chave"
+#~ msgstr "Kata Sandi Admin"
 
 #, fuzzy
 #~| msgid "Database Name"
 #~ msgid "Database prefix"
-#~ msgstr "Nome da Base de Dados"
+#~ msgstr "Database prefix"
 
 #~ msgid "Daily"
-#~ msgstr "Diariamente"
+#~ msgstr "Setiap hari"
 
 #~ msgid "Weekly"
-#~ msgstr "Semanalmente"
+#~ msgstr "Setiap minggu"
 
 #~ msgid "HTTP Statistics"
-#~ msgstr "Estatísticas HTTP"
+#~ msgstr "Statistik HTTP"
 
 #~ msgid "Available/Max Connections"
-#~ msgstr "Disponíveis/Máximo Ligações"
+#~ msgstr "Koneksi Tersedia/Maksimum"
 
 #~ msgid "Available/Max SSL Connections"
-#~ msgstr "Disponíveis/Máximo Ligações SSL"
+#~ msgstr "Koneksi SSL Tersedia/Maksimum"
 
 #~ msgid "Requests Processing"
-#~ msgstr "Processamento de Pedidos"
+#~ msgstr "Pemrosesan pesanan"
 
 #~ msgid "Total Requests"
 #~ msgstr "Total Permintaan"
@@ -6899,5 +6899,5 @@ msgstr ""
 #~ msgstr "Edit Konfigurasi Utama Host Virtual"
 
 #~ msgid "Configuration saved. Restart LiteSpeed put them in effect."
-#~ msgstr ""
+#~ msgstr "Konfigurasi disimpan. Restart LiteSpeed ​​menerapkannya."
 #~ "Configuração guardada. Reinicie o LiteSpeed para coloca-las em efeito."
