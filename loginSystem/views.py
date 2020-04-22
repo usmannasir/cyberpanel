@@ -69,6 +69,8 @@ def verifyLogin(request):
                         user_Language = "it"
                     elif data['languageSelection'] == "German":
                         user_Language = "de"
+                    elif data['languageSelection'] == "Indonesian":
+                        user_Language = "id"
 
                     translation.activate(user_Language)
                     response = HttpResponse()
