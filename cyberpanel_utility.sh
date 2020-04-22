@@ -360,7 +360,7 @@ sudo_check() {
 	echo -e "\nChecking root privileges..."
 	if echo $SUDO_TEST | grep SUDO > /dev/null ; then
 		echo -e "\nYou are using SUDO , please run as root user..."
-		echo -e "If you don't have direct access to root user, please run \e[31msudo su -\e[39m command and then run installation command again."
+		echo -e "\nIf you don't have direct access to root user, please run \e[31msudo su -\e[39m command (do NOT miss the \e[31m-\e[39m at end or it will fail) and then run utility command again."
 		exit
 	fi
 
