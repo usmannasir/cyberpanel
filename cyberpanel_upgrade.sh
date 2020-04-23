@@ -244,7 +244,7 @@ check_return
 if [ $SERVER_OS = "Ubuntu" ] ; then
   . /usr/local/CyberPanel/bin/activate
   check_return
-  pip3 install --ignore-installed -r /usr/local/pip-packs/*
+  pip3 install --ignore-installed /usr/local/pip-packs/*
   check_return
 else
   source /usr/local/CyberPanel/bin/activate
@@ -288,7 +288,7 @@ check_return
 if [ $SERVER_OS = "Ubuntu" ] ; then
   . /usr/local/CyberCP/bin/activate
   check_return
-  pip3 install --ignore-installed -r /usr/local/pip-packs/*
+  pip3 install --ignore-installed /usr/local/pip-packs/*
   check_return
 else
   source /usr/local/CyberCP/bin/activate
