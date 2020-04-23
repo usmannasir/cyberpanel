@@ -2054,6 +2054,19 @@ vmail
         command = 'systemctl enable redis'
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
+    def disablePackegeUpdates(self):
+        if self.distro == centos:
+
+            mainConfFile = '/etc/yum.conf'
+            content = 'exclude=MariaDB-client MariaDB-common MariaDB-devel MariaDB-server MariaDB-shared ' \
+                      'pdns pdns-backend-mysql dovecot dovecot-mysql postfix3 postfix3-ldap postfix3-mysql ' \
+                      'postfix3-pcre restic opendkim libopendkim pure-ftpd ftp\n'
+
+            writeToFile = open(mainConfFile, 'a')
+            writeToFile.write(content)
+            writeToFile.close()
+
+
 def main():
     parser = argparse.ArgumentParser(description='CyberPanel Installer')
     parser.add_argument('publicip', help='Please enter public IP for your VPS or dedicated server.')
@@ -2200,6 +2213,7 @@ def main():
         checks.enableDisableFTP('on', distro)
 
     checks.installCLScripts()
+    checks.disablePackegeUpdates()
     logging.InstallLog.writeToFile("CyberPanel installation successfully completed!")
 
 
