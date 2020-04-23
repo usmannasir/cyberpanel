@@ -1722,37 +1722,40 @@ class Upgrade:
                     Upgrade.executioner(command, 0)
 
             else:
-                command = 'curl https://repo.dovecot.org/DOVECOT-REPO-GPG | gpg --import'
-                subprocess.call(command, shell=True)
 
-                command = 'gpg --export ED409DA1 > /etc/apt/trusted.gpg.d/dovecot.gpg'
-                subprocess.call(command, shell=True)
+                if Upgrade.installedOutput.find('dovecot-mysql/bionic,now 2:2.3.10-2') == -1:
 
-                debPath = '/etc/apt/sources.list.d/dovecot.list'
-                writeToFile = open(debPath, 'w')
-                writeToFile.write('deb https://repo.dovecot.org/ce-2.3-latest/ubuntu/bionic bionic main\n')
-                writeToFile.close()
-
-                try:
-                    command = 'apt update -y'
-                    Upgrade.executioner(command, 0)
-                except:
-                    pass
-
-                try:
-                    command = 'DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical sudo apt-get -q -y -o "Dpkg::Options::=--force-confdef" -o "Dpkg::Options::=--force-confold" --only-upgrade install dovecot-mysql -y'
+                    command = 'curl https://repo.dovecot.org/DOVECOT-REPO-GPG | gpg --import'
                     subprocess.call(command, shell=True)
 
-                    command = 'dpkg --configure -a'
-                    Upgrade.executioner(command, 0)
-
-                    command = 'apt --fix-broken install -y'
-                    Upgrade.executioner(command, 0)
-
-                    command = 'DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical sudo apt-get -q -y -o "Dpkg::Options::=--force-confdef" -o "Dpkg::Options::=--force-confold" --only-upgrade install dovecot-mysql -y'
+                    command = 'gpg --export ED409DA1 > /etc/apt/trusted.gpg.d/dovecot.gpg'
                     subprocess.call(command, shell=True)
-                except:
-                    pass
+
+                    debPath = '/etc/apt/sources.list.d/dovecot.list'
+                    writeToFile = open(debPath, 'w')
+                    writeToFile.write('deb https://repo.dovecot.org/ce-2.3-latest/ubuntu/bionic bionic main\n')
+                    writeToFile.close()
+
+                    try:
+                        command = 'apt update -y'
+                        Upgrade.executioner(command, 0)
+                    except:
+                        pass
+
+                    try:
+                        command = 'DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical sudo apt-get -q -y -o "Dpkg::Options::=--force-confdef" -o "Dpkg::Options::=--force-confold" --only-upgrade install dovecot-mysql -y'
+                        subprocess.call(command, shell=True)
+
+                        command = 'dpkg --configure -a'
+                        Upgrade.executioner(command, 0)
+
+                        command = 'apt --fix-broken install -y'
+                        Upgrade.executioner(command, 0)
+
+                        command = 'DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical sudo apt-get -q -y -o "Dpkg::Options::=--force-confdef" -o "Dpkg::Options::=--force-confold" --only-upgrade install dovecot-mysql -y'
+                        subprocess.call(command, shell=True)
+                    except:
+                        pass
 
                 ## Remove Default Password Scheme
 
@@ -1830,11 +1833,13 @@ class Upgrade:
                 command = 'yum install restic -y'
                 Upgrade.executioner(command, 'Install Restic')
         else:
-            command = 'apt-get update -y'
-            Upgrade.executioner(command, 'Install Restic')
 
-            command = 'apt-get install restic -y'
-            Upgrade.executioner(command, 'Install Restic')
+            if Upgrade.installedOutput.find('restic/bionic,now 0.8') == -1:
+                command = 'apt-get update -y'
+                Upgrade.executioner(command, 'Install Restic')
+
+                command = 'apt-get install restic -y'
+                Upgrade.executioner(command, 'Install Restic')
 
     @staticmethod
     def UpdateMaxSSLCons():
@@ -1975,6 +1980,10 @@ vmail
         if os.path.exists(Upgrade.CentOSPath):
             command = 'yum list installed'
             Upgrade.installedOutput = subprocess.check_output(shlex.split(command)).decode()
+        else:
+            command = 'apt list'
+            Upgrade.installedOutput = subprocess.check_output(shlex.split(command)).decode()
+
 
         command = 'systemctl stop cpssh'
         Upgrade.executioner(command, 'fix csf if there', 0)
@@ -1983,6 +1992,10 @@ vmail
         ## Add LSPHP7.4 TO LSWS Ent configs
 
         if not os.path.exists('/usr/local/lsws/bin/openlitespeed'):
+
+            if os.path.exists('httpd_config.xml'):
+                os.remove('httpd_config.xml')
+
             command = 'wget https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/install/litespeed/httpd_config.xml'
             Upgrade.executioner(command, command, 0)
             #os.remove('/usr/local/lsws/conf/httpd_config.xml')
