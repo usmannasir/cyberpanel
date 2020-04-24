@@ -398,6 +398,25 @@ rm -f /usr/local/composer.sh
 
 # clean up
 
+### Disable Centos Default Repos
+
+
+disable_repos() {
+
+if [[ $SERVER_OS == "CentOS" ]] ; then
+	sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-Base.repo
+	sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-Debuginfo.repo
+	sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-Media.repo
+	sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-Vault.repo
+	sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-CR.repo
+	sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-fasttrack.repo
+	sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-Sources.repo
+fi
+
+}
+
+disable_repos
+
 echo "###################################################################"
 echo "                CyberPanel Upgraded                                "
 echo "###################################################################"

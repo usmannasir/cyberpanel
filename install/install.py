@@ -2066,31 +2066,6 @@ vmail
             writeToFile.write(content)
             writeToFile.close()
 
-    def enableDisableRepos(self):
-
-        if self.distro == centos:
-            command = "sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-Base.repo"
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            command = "sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-Debuginfo.repo"
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            command = "sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-Media.repo"
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            command = "sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-Vault.repo"
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            command = "sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-CR.repo"
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            command = "sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-fasttrack.repo"
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            command = "sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-Sources.repo"
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-
 def main():
     parser = argparse.ArgumentParser(description='CyberPanel Installer')
     parser.add_argument('publicip', help='Please enter public IP for your VPS or dedicated server.')
@@ -2238,7 +2213,6 @@ def main():
 
     checks.installCLScripts()
     #checks.disablePackegeUpdates()
-    checks.enableDisableRepos()
     logging.InstallLog.writeToFile("CyberPanel installation successfully completed!")
 
 
