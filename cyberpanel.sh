@@ -47,21 +47,6 @@ wget -q -O /usr/bin/cyberpanel_utility https://cyberpanel.sh/misc/cyberpanel_uti
 chmod 700 /usr/bin/cyberpanel_utility
 fi
 
-#BASH_PATH="/root/.bashrc"
-#if ! cat $BASH_PATH | grep -q cyberpanel_utility ; then
-#echo -e "\n\ncyberpanel() {
-#if [[ \$1 == \"utility\" ]] ; then
-#/usr/bin/cyberpanel_utility \${@:2:99}
-#elif [[ \$1 == \"help\" ]] ; then
-#/usr/bin/cyberpanel_utility --help
-#elif [[ \$1 == \"upgrade\" ]] || [[ \$1 == \"update\" ]] ; then
-#/usr/bin/cyberpanel_utility --upgrade
-#else
-#/usr/bin/cyberpanel \"\$@\"
-#fi
-#}" >> $BASH_PATH
-#fi
-
 }
 
 watchdog_setup() {
@@ -193,6 +178,7 @@ special_change(){
 sed -i 's|cyberpanel.sh|'$DOWNLOAD_SERVER'|g' install.py
 sed -i 's|mirror.cyberpanel.net|'$DOWNLOAD_SERVER'|g' install.py
 sed -i 's|git clone https://github.com/usmannasir/cyberpanel|echo downloaded|g' install.py
+
 #change to CDN first, regardless country
 #sed -i 's|http://|https://|g' install.py
 
@@ -257,44 +243,17 @@ if [[ $SERVER_COUNTRY == "CN" ]] ; then
 	sed -i 's|wget -O -  https://get.acme.sh \| sh|git clone https://gitee.com/qtwrk/acme.sh.git ; cd acme.sh ; ./acme.sh --install ; cd - ; rm -rf acme.sh|g' install.py
 	sed -i 's|composer.sh|composer_cn.sh|g' install.py
 	sed -i 's|yum -y install http://repo.iotti.biz/CentOS/7/noarch/lux-release-7-1.noarch.rpm|wget -O /etc/yum.repos.d/lux.repo https://'$DOWNLOAD_SERVER'/lux/lux.repo|g' install.py
+
 # global change for CN , regardless provider and system
 
 	if [[ $SERVER_OS == "CentOS" ]] ; then
-		DIR=$(pwd)
-		cd $DIR/mysql
-		echo "[mariadb-tsinghua]
-name = MariaDB
-baseurl = https://mirrors.tuna.tsinghua.edu.cn/mariadb/yum/10.1/centos7-amd64
-gpgkey = https://mirrors.tuna.tsinghua.edu.cn/mariadb/yum//RPM-GPG-KEY-MariaDB
-gpgcheck = 1" > MariaDB.repo
-#above to set mariadb db to Tsinghua repo
-		cd $DIR
 		sed -i 's|https://www.litespeedtech.com/packages/5.0/lsws-5.3.5-ent-x86_64-linux.tar.gz|https://cyberpanel.sh/packages/5.0/lsws-5.3.5-ent-x86_64-linux.tar.gz|g' installCyberPanel.py
-		mkdir /root/.config
-		mkdir /root/.config/pip
-		cat << EOF > /root/.config/pip/pip.conf
-[global]
-index-url = https://pypi.tuna.tsinghua.edu.cn/simple
-[install]
-trusted-host=pypi.tuna.tsinghua.edu.cn
-EOF
-		echo -e "\nSet to Aliyun pip repo..."
 	fi
 
 
 	if [[ $SERVER_OS == "Ubuntu" ]] ; then
 		echo $'\n89.208.248.38 rpms.litespeedtech.com\n' >> /etc/hosts
 		echo -e "Mirror server set..."
-		pip config set global.index-url https://pypi.python.org/simple/
-		mkdir /root/.config
-		mkdir /root/.config/pip
-		cat << EOF > /root/.config/pip/pip.conf
-[global]
-index-url = https://pypi.python.org/simple/
-[install]
-trusted-host=pypi.python.org
-EOF
-	echo -e "\nSet to Aliyun pip repo..."
 		if [[ $PROVIDER == "Tencent Cloud" ]] ; then
 		#tencent cloud and ubuntu system
 		echo -e "\n Tencent Cloud detected ... bypass default repository"
@@ -313,7 +272,6 @@ deb-src http://mirrors.aliyun.com/ubuntu/ bionic-proposed main restricted univer
 deb-src http://mirrors.aliyun.com/ubuntu/ bionic-backports main restricted universe multiverse
 EOF
 		DEBIAN_FRONTEND=noninteractive apt update -y
-		pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/
 		fi
 	fi
 fi
@@ -400,7 +358,6 @@ fi
 install_required() {
 
 if [[ $CENTOS_8 == "True" ]] ; then
-  #sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-AppStream.repo
   curl https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.0.1/install/CyberPanel8.repo > /etc/yum.repos.d/CyberPanel.repo
   dnf install zip -y
 elif [[ $CENTOS_8 == "False" ]] ; then
