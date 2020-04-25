@@ -978,7 +978,7 @@ class backupUtilities:
             expectation.append("Permission denied")
             expectation.append("File exists")
 
-            command = "ssh -o StrictHostKeyChecking=no -p " + port + user + "@" + IPAddress + ' "mkdir ~/.ssh || rm -f ~/.ssh/temp && rm -f ~/.ssh/authorized_temp && cp ~/.ssh/authorized_keys ~/.ssh/temp"'
+            command = "ssh -o StrictHostKeyChecking=no -p " + port + ' ' + user + "@" + IPAddress + ' "mkdir ~/.ssh || rm -f ~/.ssh/temp && rm -f ~/.ssh/authorized_temp && cp ~/.ssh/authorized_keys ~/.ssh/temp"'
             setupKeys = pexpect.spawn(command, timeout=3)
 
             index = setupKeys.expect(expectation)
@@ -1043,6 +1043,7 @@ class backupUtilities:
                 destinations = backupUtilities.destinationsPath
                 data = open(destinations, 'r').readlines()
                 port = data[1].strip("\n")
+                user = data[2].strip("\n")
             except:
                 port = "22"
 
@@ -1054,7 +1055,7 @@ class backupUtilities:
             expectation.append(pexpect.TIMEOUT)
 
             checkConn = pexpect.spawn(
-                "sudo ssh -i /root/.ssh/cyberpanel -o StrictHostKeyChecking=no -p " + port + user + "@" + IPAddress,
+                "sudo ssh -i /root/.ssh/cyberpanel -o StrictHostKeyChecking=no -p " + port + ' ' + user + "@" + IPAddress,
                 timeout=3)
             index = checkConn.expect(expectation)
 
@@ -1158,7 +1159,7 @@ class backupUtilities:
     def createBackupDir(IPAddress, port='22', user='root'):
 
         try:
-            command = "sudo ssh -o StrictHostKeyChecking=no -p " + port + " -i /root/.ssh/cyberpanel " + user + "@" + IPAddress + " mkdir /home/backup"
+            command = "sudo ssh -o StrictHostKeyChecking=no -p " + port + " -i /root/.ssh/cyberpanel " + user + "@" + IPAddress + " mkdir ~/backup"
             subprocess.call(shlex.split(command))
 
             command = "sudo ssh -o StrictHostKeyChecking=no -p " + port + " -i /root/.ssh/cyberpanel " + user + "@" + IPAddress + ' "cat ~/.ssh/authorized_keys ~/.ssh/temp > ~/.ssh/authorized_temp"'
