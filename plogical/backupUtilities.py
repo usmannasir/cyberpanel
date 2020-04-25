@@ -1090,7 +1090,7 @@ class backupUtilities:
             return [0, "377 Remote Server is not able to authenticate for transfer to initiate. [checkConnection]"]
 
     @staticmethod
-    def verifyHostKey(IPAddress):
+    def verifyHostKey(IPAddress, port='22', user='root'):
         try:
             backupUtilities.host_key_verification(IPAddress)
 
@@ -1101,7 +1101,7 @@ class backupUtilities:
             expectation.append("continue connecting (yes/no)?")
             expectation.append("password:")
 
-            setupSSHKeys = pexpect.spawn("ssh cyberpanel@" + IPAddress, timeout=3)
+            setupSSHKeys = pexpect.spawn("ssh -p " + port + user + "@" + IPAddress, timeout=3)
 
             index = setupSSHKeys.expect(expectation)
 
