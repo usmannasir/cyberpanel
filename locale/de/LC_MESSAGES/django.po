@@ -3,20 +3,12 @@
 # This file is distributed under the same license as the CyberPanel package.
 # FIRST AUTHOR <unasir@litespeedtech.com>, 2017.
 #
-#: baseTemplate/templates/baseTemplate/index.html:219
-#: baseTemplate/templates/baseTemplate/index.html:272
-#: baseTemplate/templates/baseTemplate/index.html:279
-#: baseTemplate/templates/baseTemplate/index.html:286
-#: baseTemplate/templates/baseTemplate/index.html:293
-#: baseTemplate/templates/baseTemplate/index.html:300
-#: baseTemplate/templates/baseTemplate/index.html:307
-#: emailMarketing/templates/emailMarketing/sendEmails.html:93
 msgid ""
 msgstr ""
 "Project-Id-Version: CyberPanel\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2019-11-21 19:54+0500\n"
-"PO-Revision-Date: 2019-08-14 18:39+0200\n"
+"PO-Revision-Date: 2020-04-26 22:47+0200\n"
 "Last-Translator: \n"
 "Language-Team: GERMAN <german@cyberpanel.ch>\n"
 "Language: de\n"
@@ -24,7 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 2.2.3\n"
+"X-Generator: Poedit 2.3\n"
 
 #: CLManager/templates/CLManager/createPackage.html:3
 msgid "Create Cloud Linux Package - CyberPanel"
@@ -328,7 +320,7 @@ msgstr "Italienisch"
 
 #: CyberCP/settings.py:189
 msgid "Deutsch"
-msgstr ""
+msgstr "Deutsch"
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:3
 #: backup/templates/backup/backupSchedule.html:3
@@ -376,10 +368,8 @@ msgstr "Frequenz bestimmen"
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:54
 #: IncBackups/templates/IncBackups/createBackup.html:56
-#, fuzzy
-#| msgid "Backup Management"
 msgid "Backup Content"
-msgstr "Sicherungsverwaltung"
+msgstr "Backup-Inhalt"
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:98
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:72
@@ -398,6 +388,7 @@ msgstr "Suche Konten..."
 #: IncBackups/templates/IncBackups/backupSchedule.html:124
 msgid "Select sites to be included in this job"
 msgstr ""
+"Wähle die Webseiten aus, die in diesen Auftrag einbezogen werden sollen"
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:150
 #: IncBackups/templates/IncBackups/createBackup.html:127
@@ -460,10 +451,8 @@ msgid "Delete"
 msgstr "Löschen"
 
 #: IncBackups/templates/IncBackups/createBackup.html:3
-#, fuzzy
-#| msgid "Cancel Backup"
 msgid "Create Incremental Backup"
-msgstr "Sicherung abbrechen"
+msgstr "Erstellen einer inkrementellen Sicherung"
 
 #: IncBackups/templates/IncBackups/createBackup.html:13
 #: IncBackups/templates/IncBackups/createBackup.html:23
@@ -481,10 +470,10 @@ msgid "Backup Docs"
 msgstr "Sicherung Docs"
 
 #: IncBackups/templates/IncBackups/createBackup.html:17
-#, fuzzy
-#| msgid "This page can be used to Back up your websites"
 msgid "This page can be used to create incremental backups for your websites."
-msgstr "Diese Seite kann zum sichern der Webseite benutzt werden"
+msgstr ""
+"Diese Seite kann verwendet werden, um inkrementelle Sicherungen für deine "
+"Webseiten zu erstellen."
 
 #: IncBackups/templates/IncBackups/createBackup.html:33
 #: IncBackups/templates/IncBackups/restoreRemoteBackups.html:35
@@ -538,7 +527,7 @@ msgstr "Job ID"
 #: IncBackups/templates/IncBackups/createBackup.html:162
 #: IncBackups/templates/IncBackups/restoreRemoteBackups.html:97
 msgid "Snapshot ID"
-msgstr ""
+msgstr "Snapshot ID"
 
 #: IncBackups/templates/IncBackups/createBackup.html:163
 #: dns/templates/dns/addDeleteDNSRecords.html:327
@@ -558,30 +547,22 @@ msgid "Set up Back up Destinations"
 msgstr "Zielort der Sicherung"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:14
-#, fuzzy
-#| msgid "Set up Back up Destinations"
 msgid "Set up Incremental Back up Destinations"
-msgstr "Zielort der Sicherung"
+msgstr "Zielort der inkrementellen Sicherung"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:20
-#, fuzzy
-#| msgid "On this page you can set up your Back up destinations. (SFTP)"
 msgid "On this page you can set up your Back up destinations. (SFTP and AWS)"
 msgstr ""
 "Auf dieser Seite kannst du die Zielorte für deine Sicherungen definieren.  "
-"(SFTP)"
+"(SFTP und AWS)"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:26
-#, fuzzy
-#| msgid "Set up Back up Destinations"
 msgid "Set up Back up Destinations."
-msgstr "Zielort der Sicherung"
+msgstr "Zielort der Sicherung definieren."
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:35
-#, fuzzy
-#| msgid "Select Template"
 msgid "Select Type"
-msgstr "Template auswählen"
+msgstr "Typ auswählen"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:47
 #: backup/templates/backup/backupDestinations.html:30
@@ -635,30 +616,28 @@ msgstr "IP"
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:117
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:153
 msgid "AWS_ACCESS_KEY_ID"
-msgstr ""
+msgstr "AWS_ACCESS_KEY_ID"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:124
 msgid "AWS_SECRET_ACCESS_KEY"
-msgstr ""
+msgstr "AWS_SECRET_ACCESS_KEY"
 
 #: IncBackups/templates/IncBackups/restoreRemoteBackups.html:3
 #: IncBackups/templates/IncBackups/restoreRemoteBackups.html:13
-#, fuzzy
-#| msgid "Cancel Backup"
 msgid "Restore Remote Incremental Backups"
-msgstr "Sicherung abbrechen"
+msgstr "Wiederherstellen von inkrementellen Remotesicherungen"
 
 #: IncBackups/templates/IncBackups/restoreRemoteBackups.html:19
-#, fuzzy
-#| msgid "This page can be used to Back up your websites"
 msgid ""
 "This page can be used to restore remote incremental backups for your "
 "websites."
-msgstr "Diese Seite kann zum sichern der Webseite benutzt werden"
+msgstr ""
+"Diese Seite kann verwendet werden, um inkrementelle Remotesicherungen für "
+"deine Webseiten wiederherzustellen."
 
 #: IncBackups/templates/IncBackups/restoreRemoteBackups.html:69
 msgid "Fetch Restore Points"
-msgstr ""
+msgstr "Abrufen von Wiederherstellungspunkten"
 
 #: IncBackups/templates/IncBackups/restoreRemoteBackups.html:99
 #: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:76
@@ -692,33 +671,31 @@ msgid "Actions"
 msgstr "Aktionen"
 
 #: WebTerminal/templates/WebTerminal/WebTerminal.html:3
-#, fuzzy
-#| msgid "Domains - CyberPanel"
 msgid "Terminal - CyberPanel"
-msgstr "Domains - CyberPanel"
+msgstr "Terminal - CyberPanel"
 
 #: WebTerminal/templates/WebTerminal/WebTerminal.html:16
 #: baseTemplate/templates/baseTemplate/index.html:641
 #: baseTemplate/templates/baseTemplate/index.html:650
 msgid "Terminal"
-msgstr ""
+msgstr "Terminal"
 
 #: WebTerminal/templates/WebTerminal/WebTerminal.html:18
 msgid "Web Terminal Docs"
-msgstr ""
+msgstr "Web Terminal Docs"
 
 #: WebTerminal/templates/WebTerminal/WebTerminal.html:19
 msgid "Execute your terminal commands."
-msgstr ""
+msgstr "Führen deine Terminalbefehle aus."
 
 #: WebTerminal/templates/WebTerminal/WebTerminal.html:26
 #: baseTemplate/templates/baseTemplate/index.html:643
 msgid "Web Terminal"
-msgstr ""
+msgstr "Web Terminal"
 
 #: WebTerminal/templates/WebTerminal/WebTerminal.html:28
 msgid "Reboot SSH Server"
-msgstr ""
+msgstr "SSH Server neu starten"
 
 #: backup/templates/backup/backup.html:15
 msgid "This page can be used to Back up your websites"
@@ -872,11 +849,13 @@ msgstr "Verbindung überprüfen"
 
 #: backup/templates/backup/backupSchedule.html:54
 msgid "Local Path"
-msgstr ""
+msgstr "Lokaler Pfad"
 
 #: backup/templates/backup/backupSchedule.html:57
 msgid "Local directory where backups will be moved after creation."
 msgstr ""
+"Lokales Verzeichnis, in dem Sicherungen nach der Erstellung verschoben "
+"werden."
 
 #: backup/templates/backup/backupSchedule.html:82
 msgid "Cannot add schedule. Error message:"
@@ -1501,16 +1480,12 @@ msgid "Create Nameserver"
 msgstr "Nameserver erstellen"
 
 #: baseTemplate/templates/baseTemplate/index.html:488
-#, fuzzy
-#| msgid "Create Nameserver"
 msgid "Configure Default Nameservers"
-msgstr "Nameserver erstellen"
+msgstr "Konfigurieren von Standardnameservern"
 
 #: baseTemplate/templates/baseTemplate/index.html:488
-#, fuzzy
-#| msgid "Create Nameserver"
 msgid "Config Default Nameservers"
-msgstr "Nameserver erstellen"
+msgstr "Konfiguriere Standardnameserver"
 
 #: baseTemplate/templates/baseTemplate/index.html:491
 #: dns/templates/dns/createDNSZone.html:12
@@ -1647,43 +1622,31 @@ msgstr "Zielorte hinzufügen/löschen"
 
 #: baseTemplate/templates/baseTemplate/index.html:590
 msgid "Incremental Back up - Beta"
-msgstr ""
+msgstr "Inkrementelles Sichern - Beta"
 
 #: baseTemplate/templates/baseTemplate/index.html:592
-#, fuzzy
-#| msgid "Cancel Backup"
 msgid "Incremental Back up"
-msgstr "Sicherung abbrechen"
+msgstr "Inkrementelles Sichern"
 
 #: baseTemplate/templates/baseTemplate/index.html:598
-#, fuzzy
-#| msgid "Restore Back up"
 msgid "Create/Restore Back up"
-msgstr "Sicherung wiederherstellen"
+msgstr "Sicherung erstellen/wiederherstellen"
 
 #: baseTemplate/templates/baseTemplate/index.html:601
-#, fuzzy
-#| msgid "Add/Delete Destinations"
 msgid "Add/Remove Destinations"
 msgstr "Hinzufügen/Löschen von Zielorten"
 
 #: baseTemplate/templates/baseTemplate/index.html:604
-#, fuzzy
-#| msgid "Schedule Back up"
 msgid "Schedule Back ups"
 msgstr "Sicherung planen"
 
 #: baseTemplate/templates/baseTemplate/index.html:607
-#, fuzzy
-#| msgid "Transfer Websites from Remote Server - CyberPanel"
 msgid "Restore from Remote Server"
-msgstr "Webseiten vom Remote-Server übertragen - CybaerPanel"
+msgstr "Wiederherstellen vom Remote-Server"
 
 #: baseTemplate/templates/baseTemplate/index.html:607
-#, fuzzy
-#| msgid "Restore Website"
 msgid "Restore from Remote"
-msgstr "Webseite wiederherstellen"
+msgstr "Wiederherstellen von Remote"
 
 #: baseTemplate/templates/baseTemplate/index.html:624
 #: manageSSL/templates/manageSSL/index.html:29
@@ -1725,7 +1688,7 @@ msgstr "NEU"
 
 #: baseTemplate/templates/baseTemplate/index.html:650
 msgid "Web Based Terminal"
-msgstr ""
+msgstr "Web Basiertes Terminal"
 
 #: baseTemplate/templates/baseTemplate/index.html:657
 #: baseTemplate/templates/baseTemplate/index.html:659
@@ -2408,16 +2371,12 @@ msgid "Record Successfully Added."
 msgstr "Record erfolgreich hinzugefügt."
 
 #: dns/templates/dns/configureDefaultNameServers.html:3
-#, fuzzy
-#| msgid "Create Nameserver - CyberPanel"
 msgid "Configure Default Nameserver - CyberPanel"
-msgstr "Nameserver erstellen - CyberPanel"
+msgstr "Konfigurieren von Standardnameserver - CyberPanel"
 
 #: dns/templates/dns/configureDefaultNameServers.html:12
-#, fuzzy
-#| msgid "Create Nameserver"
 msgid "Configure Default Nameserver"
-msgstr "Nameserver erstellen"
+msgstr "Konfigurieren von Standardnameserver"
 
 #: dns/templates/dns/configureDefaultNameServers.html:13
 #: dns/templates/dns/createNameServer.html:13
@@ -2439,22 +2398,16 @@ msgid "First Nameserver"
 msgstr "Erster Nameserver"
 
 #: dns/templates/dns/configureDefaultNameServers.html:45
-#, fuzzy
-#| msgid "Second Nameserver (Back up)"
 msgid "Second Nameserver"
-msgstr "Zweiter Nameserver (ersatz)"
+msgstr "Zweiter Nameserver"
 
 #: dns/templates/dns/configureDefaultNameServers.html:52
-#, fuzzy
-#| msgid "First Nameserver"
 msgid "Third Nameserver"
-msgstr "Erster Nameserver"
+msgstr "Dritter Nameserver"
 
 #: dns/templates/dns/configureDefaultNameServers.html:59
-#, fuzzy
-#| msgid "First Nameserver"
 msgid "Forth Nameserver"
-msgstr "Erster Nameserver"
+msgstr "Vierter Nameserver"
 
 #: dns/templates/dns/configureDefaultNameServers.html:68
 #: emailMarketing/templates/emailMarketing/website.html:656
@@ -3759,10 +3712,8 @@ msgstr "SpamAssassin Konfigurationen erfolgreich gespeichert."
 #: emailPremium/templates/emailPremium/emailLimits.html:13
 #: emailPremium/templates/emailPremium/listDomains.html:14
 #: emailPremium/templates/emailPremium/policyServer.html:13
-#, fuzzy
-#| msgid "Emai Limits Docs"
 msgid "Email Limits Docs"
-msgstr "E-Mai Limits Docs"
+msgstr "E-Mail Limits Docs"
 
 #: emailPremium/templates/emailPremium/emailLimits.html:14
 msgid "View and change email limits for a domain name."
@@ -3832,7 +3783,7 @@ msgstr "Verwalten"
 
 #: emailPremium/templates/emailPremium/emailPage.html:13
 msgid "Emai Limits Docs"
-msgstr "E-Mai Limits Docs"
+msgstr "E-Mai Grenzwerte Docs"
 
 #: emailPremium/templates/emailPremium/emailPage.html:14
 msgid "View and change limits for an Email Address."
@@ -4789,10 +4740,8 @@ msgstr ""
 "Mails."
 
 #: mailServer/templates/mailServer/emailForwarding.html:61
-#, fuzzy
-#| msgid "Forwarding Docs"
 msgid "Forwarding Options"
-msgstr "Weiterleitung Docs"
+msgstr "Weiterleitungsoptionen"
 
 #: mailServer/templates/mailServer/emailForwarding.html:97
 #: mailServer/templates/mailServer/emailForwarding.html:118
@@ -4801,7 +4750,7 @@ msgstr "Quelle"
 
 #: mailServer/templates/mailServer/emailForwarding.html:101
 msgid "or path to the program"
-msgstr ""
+msgstr "oder Pfad zum Programm"
 
 #: mailServer/templates/mailServer/emailForwarding.html:106
 msgid "Forward Email"
@@ -5442,10 +5391,8 @@ msgid "Switch to LiteSpeed Enterprise Web Server"
 msgstr "Wechseln zu LiteSpeed Enterprise Web Server"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:149
-#, fuzzy
-#| msgid "LiteSpeed Processes"
 msgid "LiteSpeed Serial No. (License Key)"
-msgstr "LiteSpeed Prozesse"
+msgstr "LiteSpeed Seriennummer (Lizenzschlüssel)"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:160
 msgid "Switch"
@@ -5453,7 +5400,7 @@ msgstr "Wechseln"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:162
 msgid "Get 15 Days Trial"
-msgstr ""
+msgstr "Erhalte eine 15 Tage Testversion"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:175
 msgid ""
@@ -5461,6 +5408,9 @@ msgid ""
 "CyberPanel will auto fetch 15 days trial key for you. Make sure this server "
 "have not used trial already."
 msgstr ""
+"Hinweis: Wenn die 15 Tage Testversion ausgewählt wird, muss der Serial key "
+"nicht eingegeben werden, CyberPanel ruft automatisch den 15-Tage-Testkey ab. "
+"Stelle sicher, dass dieser Server noch keine Testversion verwendet hat."
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:193
 msgid "With great wisdom comes great responsibility."
@@ -5970,10 +5920,8 @@ msgstr "Webseiten Grenzwerte"
 
 #: userManagment/templates/userManagment/createUser.html:107
 #: userManagment/templates/userManagment/modifyUser.html:85
-#, fuzzy
-#| msgid "Security"
 msgid "Security Level"
-msgstr "Sicherheit"
+msgstr "Sicherheitsstufe"
 
 #: userManagment/templates/userManagment/createUser.html:120
 #: userManagment/templates/userManagment/index.html:49
@@ -6309,38 +6257,32 @@ msgid "Installation successful. Visit:"
 msgstr "Installation erfolgreich. Besuche:"
 
 #: websiteFunctions/templates/websiteFunctions/installMagento.html:3
-#, fuzzy
-#| msgid "Install PrestaShop - CyberPanel"
 msgid "Install Magento - CyberPanel"
-msgstr "PrestaShop installieren - CyberPanel"
+msgstr "Magento installieren - CyberPanel"
 
 #: websiteFunctions/templates/websiteFunctions/installMagento.html:12
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:724
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:728
 #: websiteFunctions/templates/websiteFunctions/website.html:1029
 #: websiteFunctions/templates/websiteFunctions/website.html:1033
-#, fuzzy
-#| msgid "Install Packages"
 msgid "Install Magento"
-msgstr "Pakete installieren"
+msgstr "Magento installieren"
 
 #: websiteFunctions/templates/websiteFunctions/installMagento.html:13
-#, fuzzy
-#| msgid "One-click PrestaShop Install!"
 msgid "One-click Magento Install!"
-msgstr "1-Klick PrestaShop Installation!"
+msgstr "1-Klick Magento Installation!"
 
 #: websiteFunctions/templates/websiteFunctions/installMagento.html:51
-#, fuzzy
-#| msgid "Username"
 msgid "Admin Username"
-msgstr "用户名"
+msgstr "Admin Benutzername"
 
 #: websiteFunctions/templates/websiteFunctions/installMagento.html:93
 msgid ""
 "does not work on OpenLiteSpeed. It is highly recommended to use this "
 "installer with LiteSpeed Enterprise only."
 msgstr ""
+"funktioniert nicht mit OpenLiteSpeed. Es wird dringend empfohlen, dieses "
+"Installationsprogramm nur mit LiteSpeed Enterprise zu verwenden."
 
 #: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:3
 msgid "Install PrestaShop - CyberPanel"
@@ -6387,7 +6329,7 @@ msgstr "WP + LSCache"
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:729
 #: websiteFunctions/templates/websiteFunctions/website.html:1034
 msgid "Magento"
-msgstr ""
+msgstr "Magento"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:3
 msgid "Cron Management - CyberPanel"
