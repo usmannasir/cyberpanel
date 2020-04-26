@@ -1373,14 +1373,6 @@ class Upgrade:
 
             Upgrade.stdOut('Settings file restored!')
 
-            ## Move static files
-
-            imunifyPath = '/usr/local/CyberCP/public/imunify'
-
-            if os.path.exists(imunifyPath):
-                command = "yum reinstall imunify360-firewall-generic -y"
-                Upgrade.executioner(command, command, 1)
-
             Upgrade.staticContent()
 
         except:
@@ -2112,6 +2104,14 @@ vmail
         Upgrade.AutoUpgradeAcme()
         Upgrade.installCLScripts()
         Upgrade.runSomeImportantBash()
+
+        ## Move static files
+
+        imunifyPath = '/usr/local/CyberCP/public/imunify'
+
+        if os.path.exists(imunifyPath):
+            command = "yum reinstall imunify360-firewall-generic -y"
+            Upgrade.executioner(command, command, 1)
 
         Upgrade.stdOut("Upgrade Completed.")
 
