@@ -1375,6 +1375,12 @@ class Upgrade:
 
             ## Move static files
 
+            imunifyPath = '/usr/local/CyberCP/public/imunify'
+
+            if os.path.exists(imunifyPath):
+                command = "yum reinstall imunify360-firewall-generic -y"
+                Upgrade.executioner(command, command, 1)
+
             Upgrade.staticContent()
 
         except:
