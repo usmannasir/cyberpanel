@@ -338,7 +338,7 @@ class InstallCyberPanel:
             install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
             command = 'wget https://rep.cyberpanel.net/pure-ftpd-mysql_1.0.47-3_amd64.deb'
-            install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+            install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR).org
 
             command = 'dpkg --install --force-confold pure-ftpd-common_1.0.47-3_all.deb'
             install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
