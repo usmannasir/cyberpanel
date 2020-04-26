@@ -1,4 +1,5 @@
 #!/bin/bash
+
 #CyberPanel Upgrade script
 
 export LC_CTYPE=en_US.UTF-8
@@ -28,13 +29,6 @@ rm -f /etc/yum.repos.d/gf.repo
 rm -f /etc/yum.repos.d/powerdns-auth-42.repo
 rm -rf /etc/yum.repos.d/powerdns-auth-master.repo
 rm -rf /etc/yum.repos.d/gf.repo.rpmnew
-#sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-AppStream.repo
-yum clean all
-yum update -y
-yum autoremove epel-release -y
-rm -f /etc/yum.repos.d/epel.repo
-rm -f /etc/yum.repos.d/epel.repo.rpmsave
-
 
 ##
 
@@ -171,18 +165,27 @@ if  echo $OUTPUT | grep -q "CentOS Linux 7" ; then
   curl https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.0.1/install/CyberPanel.repo > /etc/yum.repos.d/CyberPanel.repo
 	yum clean all
   yum update -y
+  yum autoremove epel-release -y
+  rm -f /etc/yum.repos.d/epel.repo
+  rm -f /etc/yum.repos.d/epel.repo.rpmsave
 elif echo $OUTPUT | grep -q "CloudLinux 7" ; then
 	echo -e "\nDetecting CloudLinux 7.X...\n"
 	SERVER_OS="CentOS7"
 	curl https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.0.1/install/CyberPanel.repo > /etc/yum.repos.d/CyberPanel.repo
 	yum clean all
   yum update -y
+  yum autoremove epel-release -y
+  rm -f /etc/yum.repos.d/epel.repo
+  rm -f /etc/yum.repos.d/epel.repo.rpmsave
 elif  echo $OUTPUT | grep -q "CentOS Linux 8" ; then
   curl https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.0.1/install/CyberPanel8.repo > /etc/yum.repos.d/CyberPanel.repo
 	echo -e "\nDetecting CentOS 8.X...\n"
 	SERVER_OS="CentOS8"
 	yum clean all
   yum update -y
+  yum autoremove epel-release -y
+  rm -f /etc/yum.repos.d/epel.repo
+  rm -f /etc/yum.repos.d/epel.repo.rpmsave
 elif echo $OUTPUT | grep -q "Ubuntu 18.04" ; then
 	echo -e "\nDetecting Ubuntu 18.04...\n"
 	SERVER_OS="Ubuntu"
@@ -285,6 +288,7 @@ else
 fi
 
 check_return
+
 if [ $SERVER_OS = "Ubuntu" ] ; then
   . /usr/local/CyberCP/bin/activate
   check_return
