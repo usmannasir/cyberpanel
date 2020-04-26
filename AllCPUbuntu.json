@@ -1,0 +1,2984 @@
+[
+ {
+   "Package": "aspell/bionic-updates,bionic-security,now",
+   "Version": "0.60.7~20110707-4ubuntu0.1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "aspell-en/bionic,bionic,now",
+   "Version": "2017.08.24-0-0.1",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "autoconf/bionic,bionic,now",
+   "Version": "2.69-11",
+   "Arch": "all",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "automake/bionic,bionic,now",
+   "Version": "1:1.15.1-3ubuntu2",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "autopoint/bionic-updates,bionic-updates,bionic-security,bionic-security,now",
+   "Version": "0.19.8.1-6ubuntu0.3",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "autotools-dev/bionic,bionic,now",
+   "Version": "20180224.1",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "binutils/bionic-updates,bionic-security,now",
+   "Version": "2.30-21ubuntu1~18.04.3",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "binutils-common/bionic-updates,bionic-security,now",
+   "Version": "2.30-21ubuntu1~18.04.3",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "binutils-x86-64-linux-gnu/bionic-updates,bionic-security,now",
+   "Version": "2.30-21ubuntu1~18.04.3",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "build-essential/bionic,now",
+   "Version": "12.4ubuntu1",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "bzip2-doc/bionic-updates,bionic-updates,bionic-security,bionic-security,now",
+   "Version": "1.0.6-8.1ubuntu0.2",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "comerr-dev/bionic-updates,bionic-security,now",
+   "Version": "2.1-1.44.1-1ubuntu1.3",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "cpp/bionic-updates,bionic-security,now",
+   "Version": "4:7.4.0-1ubuntu2.3",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "cpp-7/bionic-updates,bionic-security,now",
+   "Version": "7.5.0-3ubuntu1~18.04",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "curl/bionic-updates,bionic-security,now",
+   "Version": "7.58.0-2ubuntu3.8",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "dbconfig-common/bionic,bionic,now",
+   "Version": "2.0.9",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "dbconfig-mysql/bionic,bionic,now",
+   "Version": "2.0.9",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "debhelper/bionic-updates,bionic-updates,now",
+   "Version": "11.1.6ubuntu2",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "dh-autoreconf/bionic,bionic,now",
+   "Version": "17",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "dh-python/bionic,bionic,now",
+   "Version": "3.20180325ubuntu2",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "dh-strip-nondeterminism/bionic,bionic,now",
+   "Version": "0.040-1.1~build1",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "dns-root-data/bionic,bionic,now",
+   "Version": "2018013001",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "dovecot-core/bionic,now",
+   "Version": "2:2.3.10-2+ubuntu18.04",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "dovecot-imapd/bionic,now",
+   "Version": "2:2.3.10-2+ubuntu18.04",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "dovecot-mysql/bionic,now",
+   "Version": "2:2.3.10-2+ubuntu18.04",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "dovecot-pop3d/bionic,now",
+   "Version": "2:2.3.10-2+ubuntu18.04",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "dpkg-dev/bionic-updates,bionic-updates,now",
+   "Version": "1.19.0.5ubuntu2.3",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "ebtables/bionic-updates,now",
+   "Version": "2.0.10.4-3.5ubuntu2.18.04.3",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "enchant/bionic,now",
+   "Version": "1.6.0-11.1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "fakeroot/bionic,now",
+   "Version": "1.22-2ubuntu1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "firewalld/bionic,bionic,now",
+   "Version": "0.4.4.6-1",
+   "Arch": "all",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "fontconfig/bionic,now",
+   "Version": "2.12.6-0ubuntu2",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "fontconfig-config/bionic,bionic,now",
+   "Version": "2.12.6-0ubuntu2",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "fonts-dejavu-core/bionic,bionic,now",
+   "Version": "2.37-1",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "fonts-droid-fallback/bionic,bionic,now",
+   "Version": "1:6.0.1r16-1.1",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "fonts-noto-mono/bionic,bionic,now",
+   "Version": "20171026-2",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "g++/bionic-updates,bionic-security,now",
+   "Version": "4:7.4.0-1ubuntu2.3",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "g++-7/bionic-updates,bionic-security,now",
+   "Version": "7.5.0-3ubuntu1~18.04",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "galera-3/bionic,now",
+   "Version": "25.3.20-1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "gawk/bionic,now",
+   "Version": "1:4.1.4+dfsg-1build1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "gcc/bionic-updates,bionic-security,now",
+   "Version": "4:7.4.0-1ubuntu2.3",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "gcc-7/bionic-updates,bionic-security,now",
+   "Version": "7.5.0-3ubuntu1~18.04",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "gcc-7-base/bionic-updates,bionic-security,now",
+   "Version": "7.5.0-3ubuntu1~18.04",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "geoip-bin/bionic,now",
+   "Version": "1.6.12-1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "gettext/bionic-updates,bionic-security,now",
+   "Version": "0.19.8.1-6ubuntu0.3",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "ghostscript/bionic-updates,bionic-security,now",
+   "Version": "9.26~dfsg+0-0ubuntu0.18.04.12",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "gir1.2-freedesktop/bionic,now",
+   "Version": "1.56.1-1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "gir1.2-gdkpixbuf-2.0/bionic,now",
+   "Version": "2.36.11-2",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "gir1.2-harfbuzz-0.0/bionic,now",
+   "Version": "1.7.2-1ubuntu1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "gir1.2-rsvg-2.0/bionic,now",
+   "Version": "2.40.20-2",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "git/bionic-updates,bionic-security,now",
+   "Version": "1:2.17.1-1ubuntu0.7",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "git-man/bionic-updates,bionic-updates,bionic-security,bionic-security,now",
+   "Version": "1:2.17.1-1ubuntu0.7",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "gsfonts/bionic,bionic,now",
+   "Version": "1:8.11+urwcyr1.0.7~pre44-4.4",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "htop/bionic,now",
+   "Version": "2.1.0-3",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "hunspell-en-us/bionic,bionic,now",
+   "Version": "1:2017.08.24",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "icu-devtools/bionic-updates,bionic-security,now",
+   "Version": "60.2-3ubuntu3.1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "idn2/bionic-updates,bionic-security,now",
+   "Version": "2.0.4-1.1ubuntu0.2",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "imagemagick-6-common/bionic-updates,bionic-updates,bionic-security,bionic-security,now",
+   "Version": "8:6.9.7.4+dfsg-16ubuntu6.8",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "intltool-debian/bionic,bionic,now",
+   "Version": "0.35.0+20060710.4",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "ipset/bionic,now",
+   "Version": "6.34-1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "javascript-common/bionic,bionic,now",
+   "Version": "11",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "krb5-multidev/bionic-updates,bionic-security,now",
+   "Version": "1.16-2ubuntu0.1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libaio1/bionic-updates,now",
+   "Version": "0.3.110-5ubuntu0.1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libalgorithm-diff-perl/bionic,bionic,now",
+   "Version": "1.19.03-1",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libalgorithm-diff-xs-perl/bionic,now",
+   "Version": "0.04-5",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libalgorithm-merge-perl/bionic,bionic,now",
+   "Version": "0.08-3",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libarchive-cpio-perl/bionic,bionic,now",
+   "Version": "0.10-1",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libarchive-zip-perl/bionic-updates,bionic-updates,bionic-security,bionic-security,now",
+   "Version": "1.60-1ubuntu0.1",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libasan4/bionic-updates,bionic-security,now",
+   "Version": "7.5.0-3ubuntu1~18.04",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libaspell15/bionic-updates,bionic-security,now",
+   "Version": "0.60.7~20110707-4ubuntu0.1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libassuan-dev/bionic,now",
+   "Version": "2.5.1-2",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libatomic1/bionic-updates,bionic-security,now",
+   "Version": "8.4.0-1ubuntu1~18.04",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libattr1-dev/bionic,now",
+   "Version": "1:2.4.47-2build1",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "libavahi-client3/bionic-updates,bionic-security,now",
+   "Version": "0.7-3.1ubuntu1.2",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libavahi-common-data/bionic-updates,bionic-security,now",
+   "Version": "0.7-3.1ubuntu1.2",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libavahi-common3/bionic-updates,bionic-security,now",
+   "Version": "0.7-3.1ubuntu1.2",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libbinutils/bionic-updates,bionic-security,now",
+   "Version": "2.30-21ubuntu1~18.04.3",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libboost-program-options1.65.1/bionic,now",
+   "Version": "1.65.1+dfsg-0ubuntu5",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libbz2-dev/bionic-updates,bionic-security,now",
+   "Version": "1.0.6-8.1ubuntu0.2",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libc-ares2/bionic,now",
+   "Version": "1.14.0-1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libc-client2007e/bionic-updates,bionic-security,now",
+   "Version": "8:2007f~dfsg-5ubuntu0.18.04.2",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libc-dev-bin/bionic,now",
+   "Version": "2.27-3ubuntu1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libc6-dev/bionic,now",
+   "Version": "2.27-3ubuntu1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libcairo-gobject2/bionic-updates,now",
+   "Version": "1.15.10-2ubuntu0.1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libcairo-script-interpreter2/bionic-updates,now",
+   "Version": "1.15.10-2ubuntu0.1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libcairo2/bionic-updates,now",
+   "Version": "1.15.10-2ubuntu0.1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libcairo2-dev/bionic-updates,now",
+   "Version": "1.15.10-2ubuntu0.1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libcc1-0/bionic-updates,bionic-security,now",
+   "Version": "8.4.0-1ubuntu1~18.04",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libcgi-fast-perl/bionic,bionic,now",
+   "Version": "1:2.13-1",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libcgi-pm-perl/bionic,bionic,now",
+   "Version": "4.38-1",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libcilkrts5/bionic-updates,bionic-security,now",
+   "Version": "7.5.0-3ubuntu1~18.04",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libcomerr2/bionic-updates,bionic-security,now",
+   "Version": "1.44.1-1ubuntu1.3",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "libconfig-inifiles-perl/bionic,bionic,now",
+   "Version": "2.94-1",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libcroco3/bionic,now",
+   "Version": "0.6.12-2",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libcups2/bionic-updates,bionic-security,now",
+   "Version": "2.2.7-1ubuntu2.7",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libcupsfilters1/bionic-updates,bionic-security,now",
+   "Version": "1.20.2-0ubuntu3.1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libcupsimage2/bionic-updates,bionic-security,now",
+   "Version": "2.2.7-1ubuntu2.7",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libcurl3-gnutls/bionic-updates,bionic-security,now",
+   "Version": "7.58.0-2ubuntu3.8",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libcurl4/bionic-updates,bionic-security,now",
+   "Version": "7.58.0-2ubuntu3.8",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libcurl4-gnutls-dev/bionic-updates,bionic-security,now",
+   "Version": "7.58.0-2ubuntu3.8",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "libdatrie1/bionic,now",
+   "Version": "0.2.10-7",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libdbd-mysql-perl/bionic,now",
+   "Version": "4.046-1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libdbi-perl/bionic,now",
+   "Version": "1.640-1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libdjvulibre-dev/bionic-updates,bionic-security,now",
+   "Version": "3.5.27.1-8ubuntu0.1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libdjvulibre-text/bionic-updates,bionic-updates,bionic-security,bionic-security,now",
+   "Version": "3.5.27.1-8ubuntu0.1",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libdjvulibre21/bionic-updates,bionic-security,now",
+   "Version": "3.5.27.1-8ubuntu0.1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libdpkg-perl/bionic-updates,bionic-updates,now",
+   "Version": "1.19.0.5ubuntu2.3",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libenchant1c2a/bionic,now",
+   "Version": "1.6.0-11.1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libencode-locale-perl/bionic,bionic,now",
+   "Version": "1.05-1",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "liberror-perl/bionic,bionic,now",
+   "Version": "0.17025-1",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libev4/bionic,now",
+   "Version": "1:4.22-1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libevent-2.1-6/bionic,now",
+   "Version": "2.1.8-stable-4build1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libexif-dev/bionic-updates,bionic-security,now",
+   "Version": "0.6.21-4ubuntu0.1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libexif-doc/bionic-updates,bionic-updates,bionic-security,bionic-security,now",
+   "Version": "0.6.21-4ubuntu0.1",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libexif12/bionic-updates,bionic-security,now",
+   "Version": "0.6.21-4ubuntu0.1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libexpat1-dev/bionic-updates,bionic-security,now",
+   "Version": "2.2.5-3ubuntu0.2",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "libexttextcat-2.0-0/bionic,now",
+   "Version": "3.4.5-1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libexttextcat-data/bionic,bionic,now",
+   "Version": "3.4.5-1",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libfakeroot/bionic,now",
+   "Version": "1.22-2ubuntu1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libfcgi-perl/bionic,now",
+   "Version": "0.78-2build1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libffi-dev/bionic,now",
+   "Version": "3.2.1-8",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "libfftw3-double3/bionic,now",
+   "Version": "3.3.7-1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libfile-copy-recursive-perl/bionic,bionic,now",
+   "Version": "0.40-1",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libfile-fcntllock-perl/bionic,now",
+   "Version": "0.22-3build2",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libfile-stripnondeterminism-perl/bionic,bionic,now",
+   "Version": "0.040-1.1~build1",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libfontconfig1/bionic,now",
+   "Version": "2.12.6-0ubuntu2",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libfontconfig1-dev/bionic,now",
+   "Version": "2.12.6-0ubuntu2",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libfreetype6-dev/bionic,now",
+   "Version": "2.8.1-2ubuntu2",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libgcc-7-dev/bionic-updates,bionic-security,now",
+   "Version": "7.5.0-3ubuntu1~18.04",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libgcrypt20-dev/bionic-updates,bionic-security,now",
+   "Version": "1.8.1-4ubuntu1.2",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "libgdbm-compat4/bionic,now",
+   "Version": "1.14.1-6",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libgdk-pixbuf2.0-0/bionic,now",
+   "Version": "2.36.11-2",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libgdk-pixbuf2.0-bin/bionic,now",
+   "Version": "2.36.11-2",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libgdk-pixbuf2.0-common/bionic,bionic,now",
+   "Version": "2.36.11-2",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libgdk-pixbuf2.0-dev/bionic,now",
+   "Version": "2.36.11-2",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libgeoip-dev/bionic,now",
+   "Version": "1.6.12-1",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "libglib2.0-bin/bionic-updates,bionic-security,now",
+   "Version": "2.56.4-0ubuntu0.18.04.6",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libglib2.0-dev/bionic-updates,bionic-security,now",
+   "Version": "2.56.4-0ubuntu0.18.04.6",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libglib2.0-dev-bin/bionic-updates,bionic-security,now",
+   "Version": "2.56.4-0ubuntu0.18.04.6",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libgmp-dev/bionic,now",
+   "Version": "2:6.1.2+dfsg-2",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libgmpxx4ldbl/bionic,now",
+   "Version": "2:6.1.2+dfsg-2",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libgnutls-dane0/bionic-updates,bionic-security,now",
+   "Version": "3.5.18-1ubuntu1.3",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libgnutls-openssl27/bionic-updates,bionic-security,now",
+   "Version": "3.5.18-1ubuntu1.3",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libgnutls28-dev/bionic-updates,bionic-security,now",
+   "Version": "3.5.18-1ubuntu1.3",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "libgnutlsxx28/bionic-updates,bionic-security,now",
+   "Version": "3.5.18-1ubuntu1.3",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libgomp1/bionic-updates,bionic-security,now",
+   "Version": "8.4.0-1ubuntu1~18.04",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libgpg-error-dev/bionic,now",
+   "Version": "1.27-6",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libgpgme-dev/bionic-updates,now",
+   "Version": "1.10.0-1ubuntu2",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "libgpgme11/bionic-updates,now",
+   "Version": "1.10.0-1ubuntu2",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libgpm2/bionic,now",
+   "Version": "1.20.7-5",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libgraphite2-3/bionic,now",
+   "Version": "1.3.11-2",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libgraphite2-dev/bionic,now",
+   "Version": "1.3.11-2",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libgs9/bionic-updates,bionic-security,now",
+   "Version": "9.26~dfsg+0-0ubuntu0.18.04.12",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libgs9-common/bionic-updates,bionic-updates,bionic-security,bionic-security,now",
+   "Version": "9.26~dfsg+0-0ubuntu0.18.04.12",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libgssrpc4/bionic-updates,bionic-security,now",
+   "Version": "1.16-2ubuntu0.1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libharfbuzz-dev/bionic,now",
+   "Version": "1.7.2-1ubuntu1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libharfbuzz-gobject0/bionic,now",
+   "Version": "1.7.2-1ubuntu1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libharfbuzz-icu0/bionic,now",
+   "Version": "1.7.2-1ubuntu1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libharfbuzz0b/bionic,now",
+   "Version": "1.7.2-1ubuntu1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libhtml-parser-perl/bionic,now",
+   "Version": "3.72-3build1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libhtml-tagset-perl/bionic,bionic,now",
+   "Version": "3.20-3",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libhtml-template-perl/bionic,bionic,now",
+   "Version": "2.97-1",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libhttp-date-perl/bionic,bionic,now",
+   "Version": "6.02-1",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libhttp-message-perl/bionic,bionic,now",
+   "Version": "6.14-1",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libhunspell-1.6-0/bionic,now",
+   "Version": "1.6.2-1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libice-dev/bionic,now",
+   "Version": "2:1.0.9-2",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libice6/bionic,now",
+   "Version": "2:1.0.9-2",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libicu-dev/bionic-updates,bionic-security,now",
+   "Version": "60.2-3ubuntu3.1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libicu-le-hb-dev/bionic,now",
+   "Version": "1.0.3+git161113-4",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libicu-le-hb0/bionic,now",
+   "Version": "1.0.3+git161113-4",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libiculx60/bionic-updates,bionic-security,now",
+   "Version": "60.2-3ubuntu3.1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libidn2-0-dev/bionic-updates,bionic-security,now",
+   "Version": "2.0.4-1.1ubuntu0.2",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "libidn2-dev/bionic-updates,bionic-security,now",
+   "Version": "2.0.4-1.1ubuntu0.2",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "libijs-0.35/bionic,now",
+   "Version": "0.35-13",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libilmbase-dev/bionic,now",
+   "Version": "2.2.0-11ubuntu2",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libilmbase12/bionic,now",
+   "Version": "2.2.0-11ubuntu2",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libio-html-perl/bionic,bionic,now",
+   "Version": "1.001-1",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libipset3/bionic,now",
+   "Version": "6.34-1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libisl19/bionic,now",
+   "Version": "0.19-1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libitm1/bionic-updates,bionic-security,now",
+   "Version": "8.4.0-1ubuntu1~18.04",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libjansson4/bionic,now",
+   "Version": "2.11-1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libjbig-dev/bionic,now",
+   "Version": "2.1-3.1build1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libjbig0/bionic,now",
+   "Version": "2.1-3.1build1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libjbig2dec0/bionic,now",
+   "Version": "0.13-6",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libjemalloc1/bionic,now",
+   "Version": "3.6.0-11",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libjpeg-dev/bionic,now",
+   "Version": "8c-2ubuntu8",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libjpeg-turbo8/bionic-updates,bionic-security,now",
+   "Version": "1.5.2-0ubuntu5.18.04.3",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libjpeg-turbo8-dev/bionic-updates,bionic-security,now",
+   "Version": "1.5.2-0ubuntu5.18.04.3",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libjpeg8/bionic,now",
+   "Version": "8c-2ubuntu8",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libjpeg8-dev/bionic,now",
+   "Version": "8c-2ubuntu8",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libjs-jquery/bionic,bionic,now",
+   "Version": "3.2.1-1",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libkadm5clnt-mit11/bionic-updates,bionic-security,now",
+   "Version": "1.16-2ubuntu0.1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libkadm5srv-mit11/bionic-updates,bionic-security,now",
+   "Version": "1.16-2ubuntu0.1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libkdb5-9/bionic-updates,bionic-security,now",
+   "Version": "1.16-2ubuntu0.1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libkrb5-dev/bionic-updates,bionic-security,now",
+   "Version": "1.16-2ubuntu0.1",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "liblcms2-2/bionic-updates,bionic-security,now",
+   "Version": "2.9-1ubuntu0.1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "liblcms2-dev/bionic-updates,bionic-security,now",
+   "Version": "2.9-1ubuntu0.1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libldap2-dev/bionic-updates,now",
+   "Version": "2.4.45+dfsg-1ubuntu1.4",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "liblqr-1-0/bionic,now",
+   "Version": "0.4.2-2.1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "liblqr-1-0-dev/bionic,now",
+   "Version": "0.4.2-2.1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "liblsan0/bionic-updates,bionic-security,now",
+   "Version": "8.4.0-1ubuntu1~18.04",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libltdl-dev/bionic,now",
+   "Version": "2.4.6-2",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libltdl7/bionic,now",
+   "Version": "2.4.6-2",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "liblua5.1-0/bionic,now",
+   "Version": "5.1.5-8.1build2",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "liblua5.2-0/bionic,now",
+   "Version": "5.2.4-1.1build1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "liblua5.3-0/bionic-updates,bionic-security,now",
+   "Version": "5.3.3-1ubuntu0.18.04.1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "liblwp-mediatypes-perl/bionic,bionic,now",
+   "Version": "6.02-1",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "liblzma-dev/bionic,now",
+   "Version": "5.2.2-1.3",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "liblzo2-2/bionic,now",
+   "Version": "2.08-1.2",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libmagickcore-6-arch-config/bionic-updates,bionic-security,now",
+   "Version": "8:6.9.7.4+dfsg-16ubuntu6.8",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libmagickcore-6-headers/bionic-updates,bionic-updates,bionic-security,bionic-security,now",
+   "Version": "8:6.9.7.4+dfsg-16ubuntu6.8",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libmagickcore-6.q16-3/bionic-updates,bionic-security,now",
+   "Version": "8:6.9.7.4+dfsg-16ubuntu6.8",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libmagickcore-6.q16-3-extra/bionic-updates,bionic-security,now",
+   "Version": "8:6.9.7.4+dfsg-16ubuntu6.8",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libmagickcore-6.q16-dev/bionic-updates,bionic-security,now",
+   "Version": "8:6.9.7.4+dfsg-16ubuntu6.8",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libmagickwand-6-headers/bionic-updates,bionic-updates,bionic-security,bionic-security,now",
+   "Version": "8:6.9.7.4+dfsg-16ubuntu6.8",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libmagickwand-6.q16-3/bionic-updates,bionic-security,now",
+   "Version": "8:6.9.7.4+dfsg-16ubuntu6.8",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libmagickwand-6.q16-dev/bionic-updates,bionic-security,now",
+   "Version": "8:6.9.7.4+dfsg-16ubuntu6.8",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libmagickwand-dev/bionic-updates,bionic-updates,bionic-security,bionic-security,now",
+   "Version": "8:6.9.7.4+dfsg-16ubuntu6.8",
+   "Arch": "all",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "libmail-sendmail-perl/bionic,bionic,now",
+   "Version": "0.80-1",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libmariadbclient-dev/bionic-updates,bionic-security,now",
+   "Version": "1:10.1.44-0ubuntu0.18.04.1",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "libmariadbclient18/bionic-updates,bionic-security,now",
+   "Version": "1:10.1.44-0ubuntu0.18.04.1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libmcrypt4/bionic,now",
+   "Version": "2.5.8-3.3",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libmemcached11/bionic-updates,now",
+   "Version": "1.0.18-4.2ubuntu0.18.04.1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libmilter1.0.1/bionic,now",
+   "Version": "8.15.2-10",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libmpc3/bionic,now",
+   "Version": "1.1.0-1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libmpfr6/bionic,now",
+   "Version": "4.0.1-1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libmpx2/bionic-updates,bionic-security,now",
+   "Version": "8.4.0-1ubuntu1~18.04",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libmysqlclient20/bionic-updates,bionic-security,now",
+   "Version": "5.7.29-0ubuntu0.18.04.1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libnghttp2-14/bionic,now",
+   "Version": "1.30.0-1ubuntu1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libnghttp2-dev/bionic,now",
+   "Version": "1.30.0-1ubuntu1",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "libonig4/bionic,now",
+   "Version": "6.7.0-1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libopendbx1/bionic,now",
+   "Version": "1.4.6-11",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libopendbx1-sqlite3/bionic,now",
+   "Version": "1.4.6-11",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libopendkim11/bionic,now",
+   "Version": "2.11.0~alpha-11build1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libopenexr-dev/bionic-updates,bionic-security,now",
+   "Version": "2.2.0-11.1ubuntu1.1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libopenexr22/bionic-updates,bionic-security,now",
+   "Version": "2.2.0-11.1ubuntu1.1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libp11-kit-dev/bionic,now",
+   "Version": "0.23.9-2",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libpango-1.0-0/bionic-updates,bionic-security,now",
+   "Version": "1.40.14-1ubuntu0.1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libpangocairo-1.0-0/bionic-updates,bionic-security,now",
+   "Version": "1.40.14-1ubuntu0.1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libpangoft2-1.0-0/bionic-updates,bionic-security,now",
+   "Version": "1.40.14-1ubuntu0.1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libpaper-utils/bionic,now",
+   "Version": "1.1.24+nmu5ubuntu1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libpaper1/bionic,now",
+   "Version": "1.1.24+nmu5ubuntu1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libpcre16-3/bionic,now",
+   "Version": "2:8.39-9",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libpcre3-dev/bionic,now",
+   "Version": "2:8.39-9",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "libpcre32-3/bionic,now",
+   "Version": "2:8.39-9",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libpcrecpp0v5/bionic,now",
+   "Version": "2:8.39-9",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libperl5.26/bionic-updates,bionic-security,now",
+   "Version": "5.26.1-6ubuntu0.3",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libpixman-1-0/bionic,now",
+   "Version": "0.34.0-2",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libpixman-1-dev/bionic,now",
+   "Version": "0.34.0-2",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libpng-dev/bionic-updates,bionic-security,now",
+   "Version": "1.6.34-1ubuntu0.18.04.2",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libpng-tools/bionic-updates,bionic-security,now",
+   "Version": "1.6.34-1ubuntu0.18.04.2",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libpolkit-agent-1-0/bionic-updates,bionic-security,now",
+   "Version": "0.105-20ubuntu0.18.04.5",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libpolkit-backend-1-0/bionic-updates,bionic-security,now",
+   "Version": "0.105-20ubuntu0.18.04.5",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libpsl-dev/bionic,now",
+   "Version": "0.19.1-5build1",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "libpthread-stubs0-dev/bionic,now",
+   "Version": "0.3-4",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libpython3-dev/bionic-updates,now",
+   "Version": "3.6.7-1~18.04",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libpython3.6/bionic-updates,bionic-security,now",
+   "Version": "3.6.9-1~18.04ubuntu1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libpython3.6-dev/bionic-updates,bionic-security,now",
+   "Version": "3.6.9-1~18.04ubuntu1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libquadmath0/bionic-updates,bionic-security,now",
+   "Version": "8.4.0-1ubuntu1~18.04",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "librbl1/bionic,now",
+   "Version": "2.11.0~alpha-11build1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libreadline5/bionic,now",
+   "Version": "5.2+dfsg-3build1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "librecode0/bionic,now",
+   "Version": "3.6-23",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "librsvg2-2/bionic,now",
+   "Version": "2.40.20-2",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "librsvg2-common/bionic,now",
+   "Version": "2.40.20-2",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "librsvg2-dev/bionic,now",
+   "Version": "2.40.20-2",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "librtmp-dev/bionic,now",
+   "Version": "2.4+20151223.gitfa8646d.1-1",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "librtmp1/bionic,now",
+   "Version": "2.4+20151223.gitfa8646d.1-1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libsigsegv2/bionic,now",
+   "Version": "2.12-1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libsm-dev/bionic,now",
+   "Version": "2:1.2.2-1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libsm6/bionic,now",
+   "Version": "2:1.2.2-1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libsodium23/bionic,now",
+   "Version": "1.0.16-2",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libssl-dev/bionic-updates,bionic-security,now",
+   "Version": "1.1.1-1ubuntu2.1~18.04.5",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "libstdc++-7-dev/bionic-updates,bionic-security,now",
+   "Version": "7.5.0-3ubuntu1~18.04",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libstemmer0d/bionic,now",
+   "Version": "0+svn585-1build1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libsys-hostname-long-perl/bionic,bionic,now",
+   "Version": "1.5-1",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libtasn1-6-dev/bionic,now",
+   "Version": "4.13-2",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libtasn1-doc/bionic,bionic,now",
+   "Version": "4.13-2",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libterm-readkey-perl/bionic,now",
+   "Version": "2.37-1build1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libthai-data/bionic,bionic,now",
+   "Version": "0.1.27-2",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libthai0/bionic,now",
+   "Version": "0.1.27-2",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libtidy5/bionic,now",
+   "Version": "1:5.2.0-2",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libtiff-dev/bionic-updates,bionic-security,now",
+   "Version": "4.0.9-5ubuntu0.3",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libtiff5/bionic-updates,bionic-security,now",
+   "Version": "4.0.9-5ubuntu0.3",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libtiff5-dev/bionic-updates,bionic-security,now",
+   "Version": "4.0.9-5ubuntu0.3",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libtiffxx5/bionic-updates,bionic-security,now",
+   "Version": "4.0.9-5ubuntu0.3",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libtimedate-perl/bionic,bionic,now",
+   "Version": "2.3000-2",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libtool/bionic,bionic,now",
+   "Version": "2.4.6-2",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libtsan0/bionic-updates,bionic-security,now",
+   "Version": "8.4.0-1ubuntu1~18.04",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libubsan0/bionic-updates,bionic-security,now",
+   "Version": "7.5.0-3ubuntu1~18.04",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libudns-dev/bionic,now",
+   "Version": "0.4-1build1",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "libudns0/bionic,now",
+   "Version": "0.4-1build1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libunbound2/bionic-updates,now",
+   "Version": "1.6.7-1ubuntu2.2",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "liburi-perl/bionic,bionic,now",
+   "Version": "1.73-1",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libvbr2/bionic,now",
+   "Version": "2.11.0~alpha-11build1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libwebp6/bionic,now",
+   "Version": "0.6.1-2",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libwmf-dev/bionic,now",
+   "Version": "0.2.8.4-12",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libwmf0.2-7/bionic,now",
+   "Version": "0.2.8.4-12",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libx11-dev/bionic-updates,now",
+   "Version": "2:1.6.4-3ubuntu0.2",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libx11-doc/bionic-updates,bionic-updates,now",
+   "Version": "2:1.6.4-3ubuntu0.2",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libxau-dev/bionic,now",
+   "Version": "1:1.0.8-1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libxcb-render0/bionic-updates,now",
+   "Version": "1.13-2~ubuntu18.04",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libxcb-render0-dev/bionic-updates,now",
+   "Version": "1.13-2~ubuntu18.04",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libxcb-shm0/bionic-updates,now",
+   "Version": "1.13-2~ubuntu18.04",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libxcb-shm0-dev/bionic-updates,now",
+   "Version": "1.13-2~ubuntu18.04",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libxcb1-dev/bionic-updates,now",
+   "Version": "1.13-2~ubuntu18.04",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libxdmcp-dev/bionic,now",
+   "Version": "1:1.1.2-3",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libxext-dev/bionic,now",
+   "Version": "2:1.3.3-1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libxml2-dev/bionic-updates,bionic-security,now",
+   "Version": "2.9.4+dfsg1-6.1ubuntu1.3",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libxpm4/bionic,now",
+   "Version": "1:3.5.12-1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libxrender-dev/bionic,now",
+   "Version": "1:0.9.10-1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libxrender1/bionic,now",
+   "Version": "1:0.9.10-1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libxslt1.1/bionic-updates,bionic-security,now",
+   "Version": "1.1.29-5ubuntu0.2",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libxt-dev/bionic,now",
+   "Version": "1:1.1.5-1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libxt6/bionic,now",
+   "Version": "1:1.1.5-1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "libzip4/bionic,now",
+   "Version": "1.1.2-1.1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "linux-libc-dev/bionic-updates,bionic-security,now",
+   "Version": "4.15.0-96.97",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "lsphp70/bionic,now",
+   "Version": "7.0.33-13+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp70-common/bionic,bionic,now",
+   "Version": "7.0.33-13+bionic",
+   "Arch": "all",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp70-curl/bionic,now",
+   "Version": "7.0.33-13+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp70-dev/bionic,now",
+   "Version": "7.0.33-13+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp70-igbinary/bionic,now",
+   "Version": "3.0.1-1+bionic",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "lsphp70-imap/bionic,now",
+   "Version": "7.0.33-13+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp70-intl/bionic,now",
+   "Version": "7.0.33-13+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp70-json/bionic,now",
+   "Version": "7.0.33-13+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp70-ldap/bionic,now",
+   "Version": "7.0.33-13+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp70-memcached/bionic,now",
+   "Version": "3.1.5-1+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp70-msgpack/bionic,now",
+   "Version": "2.0.3-1+bionic",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "lsphp70-mysql/bionic,now",
+   "Version": "7.0.33-13+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp70-opcache/bionic,now",
+   "Version": "7.0.33-13+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp70-pspell/bionic,now",
+   "Version": "7.0.33-13+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp70-recode/bionic,now",
+   "Version": "7.0.33-13+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp70-redis/bionic,now",
+   "Version": "5.1.1-1+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp70-sqlite3/bionic,now",
+   "Version": "7.0.33-13+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp70-tidy/bionic,now",
+   "Version": "7.0.33-13+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp71/bionic,now",
+   "Version": "7.1.33-3+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp71-common/bionic,bionic,now",
+   "Version": "7.1.33-3+bionic",
+   "Arch": "all",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp71-curl/bionic,now",
+   "Version": "7.1.33-3+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp71-dev/bionic,now",
+   "Version": "7.1.33-3+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp71-igbinary/bionic,now",
+   "Version": "3.0.1-1+bionic",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "lsphp71-imap/bionic,now",
+   "Version": "7.1.33-3+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp71-intl/bionic,now",
+   "Version": "7.1.33-3+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp71-json/bionic,now",
+   "Version": "7.1.33-3+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp71-ldap/bionic,now",
+   "Version": "7.1.33-3+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp71-memcached/bionic,now",
+   "Version": "3.1.5-1+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp71-msgpack/bionic,now",
+   "Version": "2.0.3-1+bionic",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "lsphp71-mysql/bionic,now",
+   "Version": "7.1.33-3+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp71-opcache/bionic,now",
+   "Version": "7.1.33-3+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp71-pspell/bionic,now",
+   "Version": "7.1.33-3+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp71-recode/bionic,now",
+   "Version": "7.1.33-3+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp71-redis/bionic,now",
+   "Version": "5.1.1-1+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp71-sqlite3/bionic,now",
+   "Version": "7.1.33-3+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp71-tidy/bionic,now",
+   "Version": "7.1.33-3+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp72/bionic,now",
+   "Version": "7.2.29-1+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp72-common/bionic,bionic,now",
+   "Version": "7.2.29-1+bionic",
+   "Arch": "all",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp72-curl/bionic,now",
+   "Version": "7.2.29-1+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp72-dev/bionic,now",
+   "Version": "7.2.29-1+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp72-igbinary/bionic,now",
+   "Version": "3.0.1-1+bionic",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "lsphp72-imap/bionic,now",
+   "Version": "7.2.29-1+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp72-intl/bionic,now",
+   "Version": "7.2.29-1+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp72-json/bionic,now",
+   "Version": "7.2.29-1+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp72-ldap/bionic,now",
+   "Version": "7.2.29-1+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp72-memcached/bionic,now",
+   "Version": "3.1.5-1+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp72-msgpack/bionic,now",
+   "Version": "2.0.3-1+bionic",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "lsphp72-mysql/bionic,now",
+   "Version": "7.2.29-1+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp72-opcache/bionic,now",
+   "Version": "7.2.29-1+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp72-pspell/bionic,now",
+   "Version": "7.2.29-1+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp72-recode/bionic,now",
+   "Version": "7.2.29-1+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp72-redis/bionic,now",
+   "Version": "5.1.1-1+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp72-sqlite3/bionic,now",
+   "Version": "7.2.29-1+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp72-tidy/bionic,now",
+   "Version": "7.2.29-1+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp73/bionic,now",
+   "Version": "7.3.16-1+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp73-common/bionic,bionic,now",
+   "Version": "7.3.16-1+bionic",
+   "Arch": "all",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp73-curl/bionic,now",
+   "Version": "7.3.16-1+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp73-dev/bionic,now",
+   "Version": "7.3.16-1+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp73-igbinary/bionic,now",
+   "Version": "3.0.1-1+bionic",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "lsphp73-imap/bionic,now",
+   "Version": "7.3.16-1+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp73-intl/bionic,now",
+   "Version": "7.3.16-1+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp73-json/bionic,now",
+   "Version": "7.3.16-1+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp73-ldap/bionic,now",
+   "Version": "7.3.16-1+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp73-memcached/bionic,now",
+   "Version": "3.1.5-1+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp73-msgpack/bionic,now",
+   "Version": "2.0.3-1+bionic",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "lsphp73-mysql/bionic,now",
+   "Version": "7.3.16-1+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp73-opcache/bionic,now",
+   "Version": "7.3.16-1+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp73-pspell/bionic,now",
+   "Version": "7.3.16-1+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp73-recode/bionic,now",
+   "Version": "7.3.16-1+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp73-redis/bionic,now",
+   "Version": "5.1.1-1+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp73-sqlite3/bionic,now",
+   "Version": "7.3.16-1+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp73-tidy/bionic,now",
+   "Version": "7.3.16-1+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp74/bionic,now",
+   "Version": "7.4.4-1+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp74-common/bionic,bionic,now",
+   "Version": "7.4.4-1+bionic",
+   "Arch": "all",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp74-curl/bionic,now",
+   "Version": "7.4.4-1+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp74-dev/bionic,now",
+   "Version": "7.4.4-1+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp74-igbinary/bionic,now",
+   "Version": "3.0.1-2+bionic",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "lsphp74-imap/bionic,now",
+   "Version": "7.4.4-1+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp74-intl/bionic,now",
+   "Version": "7.4.4-1+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp74-json/bionic,now",
+   "Version": "7.4.4-1+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp74-ldap/bionic,now",
+   "Version": "7.4.4-1+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp74-memcached/bionic,now",
+   "Version": "3.1.5-2+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp74-msgpack/bionic,now",
+   "Version": "2.0.3-2+bionic",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "lsphp74-mysql/bionic,now",
+   "Version": "7.4.4-1+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp74-opcache/bionic,now",
+   "Version": "7.4.4-1+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp74-pspell/bionic,now",
+   "Version": "7.4.4-1+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp74-redis/bionic,now",
+   "Version": "5.1.1-2+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp74-sqlite3/bionic,now",
+   "Version": "7.4.4-1+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "lsphp74-tidy/bionic,now",
+   "Version": "7.4.4-1+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "m4/bionic,now",
+   "Version": "1.4.18-1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "make/bionic,now",
+   "Version": "4.1-9.1ubuntu1",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "manpages-dev/bionic,bionic,now",
+   "Version": "4.15-1",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "mariadb-client-10.1/bionic-updates,bionic-security,now",
+   "Version": "1:10.1.44-0ubuntu0.18.04.1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "mariadb-client-core-10.1/bionic-updates,bionic-security,now",
+   "Version": "1:10.1.44-0ubuntu0.18.04.1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "mariadb-common/bionic-updates,bionic-updates,bionic-security,bionic-security,now",
+   "Version": "1:10.1.44-0ubuntu0.18.04.1",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "mariadb-server/bionic-updates,bionic-updates,bionic-security,bionic-security,now",
+   "Version": "1:10.1.44-0ubuntu0.18.04.1",
+   "Arch": "all",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "mariadb-server-10.1/bionic-updates,bionic-security,now",
+   "Version": "1:10.1.44-0ubuntu0.18.04.1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "mariadb-server-core-10.1/bionic-updates,bionic-security,now",
+   "Version": "1:10.1.44-0ubuntu0.18.04.1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "memcached/bionic-updates,bionic-security,now",
+   "Version": "1.5.6-0ubuntu1.2",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "mlock/bionic-updates,bionic-security,now",
+   "Version": "8:2007f~dfsg-5ubuntu0.18.04.2",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "mysql-common/bionic,bionic,now",
+   "Version": "5.8+1.0.4",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "nettle-dev/bionic,now",
+   "Version": "3.4-1",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "nghttp2/bionic,bionic,now",
+   "Version": "1.30.0-1ubuntu1",
+   "Arch": "all",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "nghttp2-client/bionic,now",
+   "Version": "1.30.0-1ubuntu1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "nghttp2-proxy/bionic,now",
+   "Version": "1.30.0-1ubuntu1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "nghttp2-server/bionic,now",
+   "Version": "1.30.0-1ubuntu1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "openbsd-inetd/bionic,now",
+   "Version": "0.20160825-3",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "opendkim/bionic,now",
+   "Version": "2.11.0~alpha-11build1",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "opendkim-tools/bionic,now",
+   "Version": "2.11.0~alpha-11build1",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "openlitespeed/bionic,now",
+   "Version": "1.6.12-1+bionic",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "patch/bionic-updates,bionic-security,now",
+   "Version": "2.7.6-2ubuntu1.1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "pdns-backend-bind/bionic,now",
+   "Version": "4.1.1-1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "pdns-backend-mysql/bionic,now",
+   "Version": "4.1.1-1",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "pdns-server/bionic,now",
+   "Version": "4.1.1-1",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "perl/bionic-updates,bionic-security,now",
+   "Version": "5.26.1-6ubuntu0.3",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "perl-modules-5.26/bionic-updates,bionic-updates,bionic-security,bionic-security,now",
+   "Version": "5.26.1-6ubuntu0.3",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "php-cli/bionic,bionic,now",
+   "Version": "1:7.2+60ubuntu1",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "php-common/bionic,bionic,now",
+   "Version": "1:60ubuntu1",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "php-pear/bionic-updates,bionic-updates,bionic-security,bionic-security,now",
+   "Version": "1:1.10.5+submodules+notgz-1ubuntu1.18.04.1",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "php-readline/bionic,bionic,now",
+   "Version": "1:7.2+60ubuntu1",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "php-xml/bionic,bionic,now",
+   "Version": "1:7.2+60ubuntu1",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "php7.2-cli/bionic-updates,bionic-security,now",
+   "Version": "7.2.24-0ubuntu0.18.04.4",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "php7.2-common/bionic-updates,bionic-security,now",
+   "Version": "7.2.24-0ubuntu0.18.04.4",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "php7.2-json/bionic-updates,bionic-security,now",
+   "Version": "7.2.24-0ubuntu0.18.04.4",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "php7.2-opcache/bionic-updates,bionic-security,now",
+   "Version": "7.2.24-0ubuntu0.18.04.4",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "php7.2-readline/bionic-updates,bionic-security,now",
+   "Version": "7.2.24-0ubuntu0.18.04.4",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "php7.2-xml/bionic-updates,bionic-security,now",
+   "Version": "7.2.24-0ubuntu0.18.04.4",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "pkg-config/bionic,now",
+   "Version": "0.29.1-0ubuntu2",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "pkg-php-tools/bionic,bionic,now",
+   "Version": "1.35ubuntu1",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "po-debconf/bionic,bionic,now",
+   "Version": "1.0.20",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "policykit-1/bionic-updates,bionic-security,now",
+   "Version": "0.105-20ubuntu0.18.04.5",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "poppler-data/bionic,bionic,now",
+   "Version": "0.4.8-2",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "postfix/bionic-updates,now",
+   "Version": "3.3.0-1ubuntu0.2",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "postfix-mysql/bionic-updates,now",
+   "Version": "3.3.0-1ubuntu0.2",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "pure-ftpd-common/now",
+   "Version": "1.0.47-3",
+   "Arch": "all",
+   "Status": "[installed,local]"
+ },
+ {
+   "Package": "pure-ftpd-mysql/now",
+   "Version": "1.0.47-3",
+   "Arch": "amd64",
+   "Status": "[installed,local]"
+ },
+ {
+   "Package": "python-pip-whl/bionic-updates,bionic-updates,now",
+   "Version": "9.0.1-2.3~ubuntu1.18.04.1",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "python3-asn1crypto/bionic,bionic,now",
+   "Version": "0.24.0-1",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "python3-cffi-backend/bionic,now",
+   "Version": "1.11.5-1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "python3-crypto/bionic,now",
+   "Version": "2.6.1-8ubuntu2",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "python3-cryptography/bionic-updates,bionic-security,now",
+   "Version": "2.1.4-1ubuntu1.3",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "python3-decorator/bionic,bionic,now",
+   "Version": "4.1.2-1",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "python3-dev/bionic-updates,now",
+   "Version": "3.6.7-1~18.04",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "python3-distutils/bionic-updates,bionic-updates,now",
+   "Version": "3.6.9-1~18.04",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "python3-keyring/bionic,bionic,now",
+   "Version": "10.6.0-1",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "python3-keyrings.alt/bionic,bionic,now",
+   "Version": "3.0-1",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "python3-lib2to3/bionic-updates,bionic-updates,now",
+   "Version": "3.6.9-1~18.04",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "python3-pip/bionic-updates,bionic-updates,now",
+   "Version": "9.0.1-2.3~ubuntu1.18.04.1",
+   "Arch": "all",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "python3-secretstorage/bionic,bionic,now",
+   "Version": "2.3.1-2",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "python3-selinux/bionic,now",
+   "Version": "2.7-2build2",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "python3-setuptools/bionic,bionic,now",
+   "Version": "39.0.1-2",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "python3-slip/bionic,bionic,now",
+   "Version": "0.6.5-2",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "python3-slip-dbus/bionic,bionic,now",
+   "Version": "0.6.5-2",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "python3-venv/bionic-updates,now",
+   "Version": "3.6.7-1~18.04",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "python3-virtualenv/bionic,bionic,now",
+   "Version": "15.1.0+ds-1.1",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "python3-wheel/bionic,bionic,now",
+   "Version": "0.30.0-0.2",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "python3-xdg/bionic,bionic,now",
+   "Version": "0.25-4ubuntu1",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "python3.6-dev/bionic-updates,bionic-security,now",
+   "Version": "3.6.9-1~18.04ubuntu1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "python3.6-venv/bionic-updates,bionic-security,now",
+   "Version": "3.6.9-1~18.04ubuntu1",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "rcs/bionic,now",
+   "Version": "5.9.4-4",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "redis/bionic-updates,bionic-updates,bionic-security,bionic-security,now",
+   "Version": "5:4.0.9-1ubuntu0.2",
+   "Arch": "all",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "redis-server/bionic-updates,bionic-security,now",
+   "Version": "5:4.0.9-1ubuntu0.2",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "redis-tools/bionic-updates,bionic-security,now",
+   "Version": "5:4.0.9-1ubuntu0.2",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "restic/bionic,now",
+   "Version": "0.8.3+ds-1",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "shtool/bionic,bionic,now",
+   "Version": "2.0.8-9",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "socat/bionic,now",
+   "Version": "1.7.3.2-2ubuntu2",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "ssl-cert/bionic,bionic,now",
+   "Version": "1.0.39",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "tcpd/bionic,now",
+   "Version": "7.6.q-27",
+   "Arch": "amd64",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "update-inetd/bionic,bionic,now",
+   "Version": "4.44",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "vim/bionic-updates,bionic-security,now",
+   "Version": "2:8.0.1453-1ubuntu1.3",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "vim-runtime/bionic-updates,bionic-updates,bionic-security,bionic-security,now",
+   "Version": "2:8.0.1453-1ubuntu1.3",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "virtualenv/bionic,bionic,now",
+   "Version": "15.1.0+ds-1.1",
+   "Arch": "all",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "whichman/bionic,now",
+   "Version": "2.4-8build1",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "x11-common/bionic-updates,bionic-updates,now",
+   "Version": "1:7.7+19ubuntu7.1",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "x11proto-core-dev/bionic,bionic,now",
+   "Version": "2018.4-4",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "x11proto-dev/bionic,bionic,now",
+   "Version": "2018.4-4",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "x11proto-xext-dev/bionic,bionic,now",
+   "Version": "2018.4-4",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "xorg-sgml-doctools/bionic,bionic,now",
+   "Version": "1:1.11-1",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "xtrans-dev/bionic,bionic,now",
+   "Version": "1.3.5-1",
+   "Arch": "all",
+   "Status": "[installed,automatic]"
+ },
+ {
+   "Package": "zip/bionic,now",
+   "Version": "3.0-11build1",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ },
+ {
+   "Package": "zlib1g-dev/bionic,now",
+   "Version": "1:1.2.11.dfsg-0ubuntu2",
+   "Arch": "amd64",
+   "Status": "[installed]"
+ }
+]
