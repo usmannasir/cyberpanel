@@ -33,6 +33,13 @@
                     </div>
                 </div>
 
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "User" %}</label>
+                    <div class="col-sm-6">
+                        <input placeholder="{% trans "Backup server SSH User, leave empty for root." %}" type="text" class="form-control" ng-model="user" required>
+                    </div>
+                </div>
+
 
                 <div class="form-group">
                     <label class="col-sm-3 control-label">{% trans "Password" %}</label>
@@ -45,13 +52,6 @@
                     <label class="col-sm-3 control-label">{% trans "Port" %}</label>
                     <div class="col-sm-6">
                         <input placeholder="{% trans "Backup server SSH Port, leave empty for 22." %}" type="text" class="form-control" ng-model="backupSSHPort" required>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "User" %}</label>
-                    <div class="col-sm-6">
-                        <input placeholder="{% trans "Backup server SSH User, leave empty for root." %}" type="text" class="form-control" ng-model="user" required>
                     </div>
                 </div>
 

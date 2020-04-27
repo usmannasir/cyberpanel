@@ -928,6 +928,9 @@ class backupUtilities:
             command = "scp -o StrictHostKeyChecking=no -P " + port + " /root/.ssh/cyberpanel.pub " + user + "@" + IPAddress + ":~/.ssh/authorized_keys"
             setupKeys = pexpect.spawn(command, timeout=3)
 
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.CyberCPLogFileWriter.writeToFile(command)
+
             index = setupKeys.expect(expectation)
 
             ## on first login attempt send password
@@ -980,6 +983,9 @@ class backupUtilities:
 
             command = "ssh -o StrictHostKeyChecking=no -p " + port + ' ' + user + "@" + IPAddress + ' "mkdir ~/.ssh || rm -f ~/.ssh/temp && rm -f ~/.ssh/authorized_temp && cp ~/.ssh/authorized_keys ~/.ssh/temp"'
             setupKeys = pexpect.spawn(command, timeout=3)
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.CyberCPLogFileWriter.writeToFile(command)
 
             index = setupKeys.expect(expectation)
 
@@ -1040,10 +1046,11 @@ class backupUtilities:
         try:
 
             try:
+                import json
                 destinations = backupUtilities.destinationsPath
-                data = open(destinations, 'r').readlines()
-                port = data[1].strip("\n")
-                user = data[2].strip("\n")
+                data = json.loads(open(destinations, 'r').read())
+                port = data['port']
+                user = data['user']
             except:
                 port = "22"
 
@@ -1160,12 +1167,24 @@ class backupUtilities:
 
         try:
             command = "sudo ssh -o StrictHostKeyChecking=no -p " + port + " -i /root/.ssh/cyberpanel " + user + "@" + IPAddress + " mkdir ~/backup"
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.CyberCPLogFileWriter.writeToFile(command)
+
             subprocess.call(shlex.split(command))
 
             command = "sudo ssh -o StrictHostKeyChecking=no -p " + port + " -i /root/.ssh/cyberpanel " + user + "@" + IPAddress + ' "cat ~/.ssh/authorized_keys ~/.ssh/temp > ~/.ssh/authorized_temp"'
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.CyberCPLogFileWriter.writeToFile(command)
+
             subprocess.call(shlex.split(command))
 
             command = "sudo ssh -o StrictHostKeyChecking=no -p " + port + " -i /root/.ssh/cyberpanel " + user + "@" + IPAddress + ' "cat ~/.ssh/authorized_temp > ~/.ssh/authorized_keys"'
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.CyberCPLogFileWriter.writeToFile(command)
+
             subprocess.call(shlex.split(command))
 
         except BaseException as msg:
