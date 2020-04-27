@@ -386,10 +386,10 @@ class FileManager:
             domainName = self.data['domainName']
             website = Websites.objects.get(domain=domainName)
 
-            command = 'chown %s:%s %s' % (website.externalApp, website.externalApp, self.data['completePath'] + '/' + myfile.name)
+            command = 'chown %s:%s %s' % (website.externalApp, website.externalApp, self.returnPathEnclosed(self.data['completePath'] + '/' + myfile.name))
             ProcessUtilities.executioner(command)
 
-            self.changeOwner(self.data['completePath'] + '/' + myfile.name)
+            self.changeOwner(self.returnPathEnclosed(self.data['completePath'] + '/' + myfile.name))
 
             json_data = json.dumps(finalData)
             return HttpResponse(json_data)
@@ -421,7 +421,7 @@ class FileManager:
 
             ProcessUtilities.executioner(command, website.externalApp)
 
-            self.changeOwner(self.data['extractionLocation'])
+            self.fixPermissions(domainName)
 
             json_data = json.dumps(finalData)
             return HttpResponse(json_data)
