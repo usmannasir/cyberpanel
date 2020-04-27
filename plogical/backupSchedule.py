@@ -219,13 +219,16 @@ class backupSchedule:
 
             ## IP of Remote server.
 
-            data = open(destinations,'r').readlines()
-            ipAddress = data[0].strip("\n")
-            port = data[1].strip("\n")
-            user = data[2].strip("\n")
+            destinations = backupUtilities.destinationsPath
+            data = json.loads(open(destinations, 'r').read())
+            port = data['port']
 
-            # Set the user to root if not specified aka empty
-            user = user if bool(user) is not False else 'root'
+            try:
+                user = data['user']
+            except:
+                user = 'root'
+
+            ipAddress = data['ipAddress']
 
             ## IPAddress of local server
 

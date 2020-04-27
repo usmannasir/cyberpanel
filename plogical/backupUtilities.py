@@ -1042,7 +1042,7 @@ class backupUtilities:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[checkIfHostIsUp]")
 
     @staticmethod
-    def checkConnection(IPAddress, password, port='22', user='root'):
+    def checkConnection(IPAddress, port='22', user='root'):
         try:
 
             try:
@@ -1061,9 +1061,12 @@ class backupUtilities:
             expectation.append(pexpect.EOF)
             expectation.append(pexpect.TIMEOUT)
 
-            checkConn = pexpect.spawn(
-                "sudo ssh -i /root/.ssh/cyberpanel -o StrictHostKeyChecking=no -p " + port + ' ' + user + "@" + IPAddress,
-                timeout=3)
+            command = "sudo ssh -i /root/.ssh/cyberpanel -o StrictHostKeyChecking=no -p " + port + ' ' + user + "@" + IPAddress
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.CyberCPLogFileWriter.writeToFile(command)
+
+            checkConn = pexpect.spawn(command,timeout=3)
             index = checkConn.expect(expectation)
 
             if index == 0:
