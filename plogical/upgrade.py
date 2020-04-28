@@ -579,6 +579,11 @@ class Upgrade:
             except:
                 pass
 
+            try:
+                cursor.execute("ALTER TABLE websiteFunctions_backups MODIFY fileName varchar(200)")
+            except:
+                pass
+
 
             try:
                 cursor.execute("ALTER TABLE loginSystem_acl ADD COLUMN listUsers INT DEFAULT 0;")

@@ -480,25 +480,25 @@ class backupUtilities:
         rmtree(tempStoragePath)
 
         ###
-        backupFileNamePath = os.path.join(backupPath, "backupFileName")
-        fileName = open(backupFileNamePath, 'r').read()
 
-        backupObs = Backups.objects.filter(fileName=fileName)
+        backupObs = Backups.objects.filter(fileName=backupName)
 
         ## adding backup data to database.
+
+        filePath = '%s/%s.tar.gz' % (backupPath, backupName)
+        totalSize = '%sMB' % (str(int(os.path.getsize(filePath) / 1048576)))
+
         try:
             for items in backupObs:
                 items.status = 1
-                items.size = str(int(float(
-                    os.path.getsize(os.path.join(backupPath, backupName + ".tar.gz"))) / (
-                                             1024.0 * 1024.0))) + "MB"
+                items.size = totalSize
                 items.save()
-        except:
+                logging.CyberCPLogFileWriter.writeToFile(' again size: %s' % (totalSize))
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile('%s. [backupRoot:499]' % str(msg))
             for items in backupObs:
                 items.status = 1
-                items.size = str(int(float(
-                    os.path.getsize(os.path.join(backupPath, backupName + ".tar.gz"))) / (
-                                             1024.0 * 1024.0))) + "MB"
+                items.size = totalSize
                 items.save()
 
         command = 'chmod 600 %s' % (os.path.join(backupPath, backupName + ".tar.gz"))

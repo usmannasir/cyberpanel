@@ -29,7 +29,7 @@ class ChildDomains(models.Model):
 
 class Backups(models.Model):
     website = models.ForeignKey(Websites,on_delete=models.CASCADE)
-    fileName = models.CharField(max_length=50)
+    fileName = models.CharField(max_length=200)
     date = models.CharField(max_length=50)
     size = models.CharField(max_length=50)
     status = models.IntegerField(default=0)
