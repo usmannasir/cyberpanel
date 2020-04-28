@@ -493,7 +493,6 @@ class backupUtilities:
                 items.status = 1
                 items.size = totalSize
                 items.save()
-                logging.CyberCPLogFileWriter.writeToFile(' again size: %s' % (totalSize))
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile('%s. [backupRoot:499]' % str(msg))
             for items in backupObs:

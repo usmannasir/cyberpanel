@@ -416,7 +416,7 @@ app.controller('restoreWebsiteControl', function ($scope, $http, $timeout) {
 });
 
 
-//*** Resotre site ends here ***///
+//*** Restore site ends here ***///
 
 
 ///** Backup Destination ***//
@@ -448,6 +448,7 @@ app.controller('backupDestinations', function ($scope, $http, $timeout) {
         var data = {
             IPAddress: $scope.IPAddress,
             password: $scope.password,
+            user: $scope.user,
             backupSSHPort: $scope.backupSSHPort,
         };
 

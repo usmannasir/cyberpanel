@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# -*- coding: utaddDestinationf-8 -*-
 
 from django.shortcuts import render
 from plogical.acl import ACLManager
@@ -102,7 +102,13 @@ def addDestination(request):
             execPath = execPath + " submitDestinationCreation --ipAddress " + ipAddress + " --password " \
                        + password + " --port " + port
 
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.writeToFile(execPath)
+
             output = ProcessUtilities.outputExecutioner(execPath)
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.writeToFile(output)
 
             if output.find('1,') > -1:
 

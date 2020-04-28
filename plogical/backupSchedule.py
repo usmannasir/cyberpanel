@@ -196,6 +196,9 @@ class backupSchedule:
             command = "sudo scp -o StrictHostKeyChecking=no -P "+port+" -i /root/.ssh/cyberpanel " + backupPath + " " + user + "@" + IPAddress+":~/backup/" + ipAddressLocal + "/" + time.strftime("%a-%b") + "/"
             subprocess.call(shlex.split(command), stdout=writeToFile)
 
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.CyberCPLogFileWriter.writeToFile(command)
+
             ## Remove backups already sent to remote destinations
 
             os.remove(backupPath)

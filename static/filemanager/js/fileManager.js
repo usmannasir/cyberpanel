@@ -1479,7 +1479,6 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
     // Download files
 
     $scope.downloadFile = function () {
-
         url = "/filemanager/downloadFile";
         var downloadURL = $scope.currentPath + "/" + allFilesAndFolders[0];
         window.location.href = url + '?domainName=' + domainName + '&fileToDownload=' + downloadURL;

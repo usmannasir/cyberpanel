@@ -159,6 +159,7 @@ check_root
 
 echo -e "\nChecking OS..."
 OUTPUT=$(cat /etc/*release)
+
 if  echo $OUTPUT | grep -q "CentOS Linux 7" ; then
 	echo -e "\nDetecting CentOS 7.X...\n"
 	SERVER_OS="CentOS7"
