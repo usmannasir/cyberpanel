@@ -79,48 +79,51 @@ class CloudLinuxUsers(CLMain):
     def fetchJson(self, websites):
         users = []
         for webs in websites:
-            itemPackage = webs.package
-            package = {'name': itemPackage.packageName, 'owner': webs.externalApp}
+            try:
+                itemPackage = webs.package
+                package = {'name': itemPackage.packageName, 'owner': webs.externalApp}
 
-            user = {}
+                user = {}
 
-            if self.id:
-                user['id'] = pwd.getpwnam(webs.externalApp).pw_uid
-
-            if self.un:
-                user['username'] = webs.externalApp
-
-            if self.ow:
-                user['owner'] = webs.externalApp
-
-            if self.domain:
-                user['domain'] = webs.domain
-
-            if self.package:
-                user['package'] = package
-
-            if self.email:
-                user['email'] = webs.adminEmail
-
-            if self.localecode:
-                user['locale_code'] = "EN_us"
-
-
-            if self.packageName != None:
-                if self.package:
-                    if self.packageName == user['package']['name'] and self.packageOwner == user['package']['owner']:
-                        pass
-                    else:
-                        continue
-
-            if self.uid !=None:
                 if self.id:
-                    if self.uid == user['id']:
+                    user['id'] = pwd.getpwnam(webs.externalApp).pw_uid
+
+                if self.un:
+                    user['username'] = webs.externalApp
+
+                if self.ow:
+                    user['owner'] = webs.externalApp
+
+                if self.domain:
+                    user['domain'] = webs.domain
+
+                if self.package:
+                    user['package'] = package
+
+                if self.email:
+                    user['email'] = webs.adminEmail
+
+                if self.localecode:
+                    user['locale_code'] = "EN_us"
+
+
+                if self.packageName != None:
+                    if self.package:
+                        if self.packageName == user['package']['name'] and self.packageOwner == user['package']['owner']:
+                            pass
+                        else:
+                            continue
+
+                if self.uid !=None:
+                    if self.id:
+                        if self.uid == user['id']:
+                            users.append(user)
+                    else:
                         users.append(user)
                 else:
                     users.append(user)
-            else:
-                users.append(user)
+            except BaseException as msg:
+                pass
 
         final = {'data': users, 'metadata': self.initialMeta}
         print(json.dumps(final))

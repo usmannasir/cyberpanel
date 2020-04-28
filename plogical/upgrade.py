@@ -579,6 +579,11 @@ class Upgrade:
             except:
                 pass
 
+            try:
+                cursor.execute("ALTER TABLE websiteFunctions_backups MODIFY fileName varchar(200)")
+            except:
+                pass
+
 
             try:
                 cursor.execute("ALTER TABLE loginSystem_acl ADD COLUMN listUsers INT DEFAULT 0;")
@@ -1373,8 +1378,6 @@ class Upgrade:
 
             Upgrade.stdOut('Settings file restored!')
 
-            ## Move static files
-
             Upgrade.staticContent()
 
         except:
@@ -2106,6 +2109,14 @@ vmail
         Upgrade.AutoUpgradeAcme()
         Upgrade.installCLScripts()
         Upgrade.runSomeImportantBash()
+
+        ## Move static files
+
+        imunifyPath = '/usr/local/CyberCP/public/imunify'
+
+        if os.path.exists(imunifyPath):
+            command = "yum reinstall imunify360-firewall-generic -y"
+            Upgrade.executioner(command, command, 1)
 
         Upgrade.stdOut("Upgrade Completed.")
 

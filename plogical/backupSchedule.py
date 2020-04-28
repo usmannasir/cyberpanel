@@ -135,7 +135,7 @@ class backupSchedule:
             return 0, str(msg)
 
     @staticmethod
-    def createBackup(virtualHost, ipAddress, backupLogPath , port):
+    def createBackup(virtualHost, ipAddress, backupLogPath , port='22', user='root'):
         try:
 
             backupSchedule.remoteBackupLogging(backupLogPath, "Preparing to create backup for: " + virtualHost)
@@ -152,7 +152,7 @@ class backupSchedule:
 
                 backupSchedule.remoteBackupLogging(backupLogPath, "Preparing to send backup for: " + virtualHost +" to " + ipAddress)
 
-                backupSchedule.sendBackup(backupPath+".tar.gz", ipAddress, backupLogPath, port)
+                backupSchedule.sendBackup(backupPath+".tar.gz", ipAddress, backupLogPath, port, user)
 
                 backupSchedule.remoteBackupLogging(backupLogPath, "Backup for: " + virtualHost + " is sent to " + ipAddress)
 
@@ -180,7 +180,7 @@ class backupSchedule:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [backupSchedule.createBackup]")
 
     @staticmethod
-    def sendBackup(backupPath, IPAddress, backupLogPath , port):
+    def sendBackup(backupPath, IPAddress, backupLogPath , port='22', user='root'):
         try:
 
             ## IPAddress of local server
@@ -193,7 +193,7 @@ class backupSchedule:
             ##
 
             writeToFile = open(backupLogPath, "a")
-            command = "sudo scp -o StrictHostKeyChecking=no -P "+port+" -i /root/.ssh/cyberpanel " + backupPath + " root@"+IPAddress+":/home/backup/" + ipAddressLocal + "/" + time.strftime("%a-%b") + "/"
+            command = "sudo scp -o StrictHostKeyChecking=no -P "+port+" -i /root/.ssh/cyberpanel " + backupPath + " " + user + "@" + IPAddress+":~/backup/" + ipAddressLocal + "/" + time.strftime("%a-%b") + "/"
             subprocess.call(shlex.split(command), stdout=writeToFile)
 
             ## Remove backups already sent to remote destinations
@@ -219,9 +219,16 @@ class backupSchedule:
 
             ## IP of Remote server.
 
-            data = open(destinations,'r').readlines()
-            ipAddress = data[0].strip("\n")
-            port = data[1].strip("\n")
+            destinations = backupUtilities.destinationsPath
+            data = json.loads(open(destinations, 'r').read())
+            port = data['port']
+
+            try:
+                user = data['user']
+            except:
+                user = 'root'
+
+            ipAddress = data['ipAddress']
 
             ## IPAddress of local server
 
@@ -241,16 +248,16 @@ class backupSchedule:
                                                    "Connection to: " + ipAddress + " Failed, please resetup this destination from CyberPanel, aborting.")
                 return 0
             else:
-                ## Create backup dir on remote server
+                ## Create backup dir on remote server in ~/backup
 
-                command = "sudo ssh -o StrictHostKeyChecking=no -p " + port + " -i /root/.ssh/cyberpanel root@" + ipAddress + " mkdir -p /home/backup/" + ipAddressLocal + "/" + time.strftime(
+                command = "sudo ssh -o StrictHostKeyChecking=no -p " + port + " -i /root/.ssh/cyberpanel " + user + "@" + ipAddress + " mkdir -p ~/backup/" + ipAddressLocal + "/" + time.strftime(
                     "%a-%b")
                 subprocess.call(shlex.split(command))
                 pass
 
             for virtualHost in os.listdir("/home"):
                 if match(r'^[a-zA-Z0-9-]*[a-zA-Z0-9-]{0,61}[a-zA-Z0-9-](?:\.[a-zA-Z0-9-]{2,})+$', virtualHost, M | I):
-                    backupSchedule.createBackup(virtualHost, ipAddress, backupLogPath, port)
+                    backupSchedule.createBackup(virtualHost, ipAddress, backupLogPath, port, user)
 
 
             backupSchedule.remoteBackupLogging(backupLogPath, "Remote backup job completed.\n")

@@ -66,7 +66,9 @@ def downloadFile(request):
         admin = Administrator.objects.get(pk=userID)
         import urllib.parse
 
-        fileToDownload = urllib.parse.unquote(request.GET.get('fileToDownload'))
+        fileToDownload = request.build_absolute_uri().split('fileToDownload')[1][1:]
+        fileToDownload = urllib.parse.unquote(fileToDownload)
+
         domainName = request.GET.get('domainName')
 
         currentACL = ACLManager.loadedACL(userID)

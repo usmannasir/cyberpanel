@@ -407,46 +407,65 @@ class BackupManager:
 
             destinations = backupUtil.backupUtilities.destinationsPath
 
-            ipAddress = data['IPAddress']
-            password = data['password']
+            finalDic = {}
+
+            finalDic['ipAddress'] = data['IPAddress']
+            finalDic['password'] = data['password']
+
+            try:
+                finalDic['port'] = data['backupSSHPort']
+            except:
+                finalDic['port'] = "22"
+
+            try:
+                finalDic['user'] = data['user']
+            except:
+                finalDic['user'] = "root"
 
             if dest.objects.all().count() == 2:
+
                 final_dic = {'destStatus': 0,
                              'error_message': "Currently only one remote destination is allowed."}
                 final_json = json.dumps(final_dic)
                 return HttpResponse(final_json)
+
             try:
-                d = dest.objects.get(destLoc=ipAddress)
+                d = dest.objects.get(destLoc=finalDic['password'])
                 final_dic = {'destStatus': 0, 'error_message': "This destination already exists."}
                 final_json = json.dumps(final_dic)
                 return HttpResponse(final_json)
             except:
 
-                try:
-                    port = data['backupSSHPort']
-                except:
-                    port = "22"
-
                 execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
-                execPath = execPath + " submitDestinationCreation --ipAddress " + ipAddress + " --password " \
-                           + password + " --port " + port
+                execPath = execPath + " submitDestinationCreation --ipAddress " + finalDic['ipAddress'] + " --password " \
+                           + finalDic['password'] + " --port " + finalDic['port'] + ' --user %s' % (finalDic['user'])
+
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.CyberCPLogFileWriter.writeToFile(execPath)
 
                 output = ProcessUtilities.outputExecutioner(execPath)
+
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.CyberCPLogFileWriter.writeToFile(output)
+
 
                 if output.find('1,') > -1:
                     try:
                         writeToFile = open(destinations, "w")
-                        writeToFile.writelines(ipAddress + "\n")
-                        writeToFile.writelines(data['backupSSHPort'] + "\n")
+                        writeToFile.write(json.dumps(finalDic))
                         writeToFile.close()
-                        newDest = dest(destLoc=ipAddress)
+                        newDest = dest(destLoc=finalDic['ipAddress'])
                         newDest.save()
+
+                        final_dic = {'destStatus': 1, 'error_message': "None"}
+                        final_json = json.dumps(final_dic)
+                        return HttpResponse(final_json)
                     except:
                         writeToFile = open(destinations, "w")
-                        writeToFile.writelines(ipAddress + "\n")
-                        writeToFile.writelines("22" + "\n")
+                        writeToFile.write(json.dumps(finalDic))
                         writeToFile.close()
-                        newDest = dest(destLoc=ipAddress)
+
+                        newDest = dest(destLoc=finalDic['ipAddress'])
                         newDest.save()
 
                         final_dic = {'destStatus': 1, 'error_message': "None"}

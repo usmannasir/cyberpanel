@@ -330,14 +330,13 @@ class InstallCyberPanel:
 
     def installPureFTPD(self):
         if self.distro == ubuntu:
-
             command = 'DEBIAN_FRONTEND=noninteractive apt install pure-ftpd-mysql -y'
             os.system(command)
 
-            command = 'wget https://ubuntu.cyberpanel.net/pool/main/p/pure-ftpd/pure-ftpd-common_1.0.47-3_all.deb'
+            command = 'wget https://rep.cyberpanel.net/pure-ftpd-common_1.0.47-3_all.deb'
             install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
-            command = 'wget https://ubuntu.cyberpanel.net/pool/main/p/pure-ftpd/pure-ftpd-mysql_1.0.47-3_amd64.deb'
+            command = 'wget https://rep.cyberpanel.net/pure-ftpd-mysql_1.0.47-3_amd64.deb'
             install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
             command = 'dpkg --install --force-confold pure-ftpd-common_1.0.47-3_all.deb'
@@ -352,7 +351,6 @@ class InstallCyberPanel:
         elif self.distro == cent8:
             command = 'dnf --enablerepo=CyberPanel install pure-ftpd -y'
             install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-
 
 
         ####### Install pureftpd to system startup
