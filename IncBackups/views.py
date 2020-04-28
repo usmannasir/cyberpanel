@@ -1,4 +1,4 @@
-# -*- coding: utaddDestinationf-8 -*-
+# -*- coding: utf-8 -*-
 
 from django.shortcuts import render
 from plogical.acl import ACLManager
@@ -100,7 +100,7 @@ def addDestination(request):
 
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
             execPath = execPath + " submitDestinationCreation --ipAddress " + ipAddress + " --password " \
-                       + password + " --port " + port
+                       + password + " --port " + port + ' --user %s' % ('root')
 
             if os.path.exists(ProcessUtilities.debugPath):
                 logging.writeToFile(execPath)
