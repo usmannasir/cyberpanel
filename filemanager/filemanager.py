@@ -420,7 +420,7 @@ class FileManager:
 
             ProcessUtilities.executioner(command, website.externalApp)
 
-            self.changeOwner(self.data['extractionLocation'])
+            self.fixPermissions(domainName)
 
             json_data = json.dumps(finalData)
             return HttpResponse(json_data)

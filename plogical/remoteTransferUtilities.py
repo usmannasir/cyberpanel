@@ -193,6 +193,9 @@ class remoteTransferUtilities:
             command = "sudo scp -o StrictHostKeyChecking=no -i /root/.ssh/cyberpanel " + completedPathToSend + " root@" + IPAddress + ":/home/backup/transfer-" + folderNumber + "/"
             subprocess.call(shlex.split(command), stdout=writeToFile)
 
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.CyberCPLogFileWriter.writeToFile(command)
+
             os.remove(completedPathToSend)
 
         except BaseException as msg:
