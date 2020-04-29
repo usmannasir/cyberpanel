@@ -505,7 +505,6 @@ def topProcesses(request):
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[litespeedStatus]")
         return redirect(loadLoginPage)
 
-
 def topProcessesStatus(request):
     try:
         userID = request.session['userID']
@@ -628,7 +627,6 @@ def topProcessesStatus(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
-
 def killProcess(request):
     try:
         userID = request.session['userID']
@@ -657,3 +655,21 @@ def killProcess(request):
         final_dic = {'status': 0, 'erroMessage': str(msg)}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
+
+def packageManager(request):
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
+
+        templateName = "serverStatus/packageManager.html"
+        proc = httpProc(request, templateName)
+        return proc.renderPre()
+
+    except KeyError as msg:
+        logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[packageManager]")
+        return redirect(loadLoginPage)

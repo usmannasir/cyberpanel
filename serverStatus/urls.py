@@ -18,5 +18,6 @@ urlpatterns = [
     url(r'^topProcesses$', views.topProcesses, name='topProcesses'),
     url(r'^topProcessesStatus$', views.topProcessesStatus, name='topProcessesStatus'),
     url(r'^killProcess$', views.killProcess, name='killProcess'),
+    url(r'^packageManager$', views.packageManager, name='packageManager'),
 
 ]

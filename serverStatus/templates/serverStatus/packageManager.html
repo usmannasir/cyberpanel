@@ -1,0 +1,81 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Package Manager - CyberPanel" %}{% endblock %}
+{% block content %}
+
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
+
+
+    <div ng-controller="litespeedStatus" class="container">
+
+        <div id="page-title">
+            <h2>{% trans "Package Manager" %}</h2>
+            <p>{% trans "On this page you can manage your system packages. On backend system available package manager is used (apt/yum)." %}</p>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="panel">
+                    <div class="panel-body">
+
+                        <div class="example-box-wrapper">
+                            <ul class="nav-responsive nav nav-tabs">
+                                <li class="dropdown pull-right tabdrop"><a class="dropdown-toggle"
+                                                                           data-toggle="dropdown" href="#"
+                                                                           aria-expanded="false"><i
+                                        class="glyph-icon icon-align-justify"></i> <b class="caret"></b></a>
+                                    <ul class="dropdown-menu" style="display: none;">
+                                        <li><a href="#tab5" data-toggle="tab">Section 5</a></li>
+                                        <li><a href="#tab6" data-toggle="tab">Section 6</a></li>
+                                        <li><a href="#tab7" data-toggle="tab">Section 7</a></li>
+                                        <li><a href="#tab8" data-toggle="tab">Section 8</a></li>
+                                        <li><a href="#tab9" data-toggle="tab">Section 9</a></li>
+                                    </ul>
+                                </li>
+                                <li class=""><a href="#tab1" data-toggle="tab">Section 1</a></li>
+                                <li class=""><a href="#tab2" data-toggle="tab">Section 2</a></li>
+                                <li class=""><a href="#tab3" data-toggle="tab">Section 3</a></li>
+                                <li class="active"><a href="#tab4" data-toggle="tab">Section 4</a></li>
+
+
+                            </ul>
+                            <div class="tab-content">
+                                <div class="tab-pane" id="tab1">
+                                    <p>I'm in Section 1.</p>
+                                </div>
+                                <div class="tab-pane" id="tab2">
+                                    <p>Howdy, I'm in Section 2.</p>
+                                </div>
+                                <div class="tab-pane" id="tab3">
+                                    <p>Howdy, I'm in Section 3.</p>
+                                </div>
+                                <div class="tab-pane active" id="tab4">
+                                    <p>Howdy, I'm in Section 4.</p>
+                                </div>
+                                <div class="tab-pane" id="tab5">
+                                    <p>Howdy, I'm in Section 5.</p>
+                                </div>
+                                <div class="tab-pane" id="tab6">
+                                    <p>Howdy, I'm in Section 6.</p>
+                                </div>
+                                <div class="tab-pane" id="tab7">
+                                    <p>Howdy, I'm in Section 7.</p>
+                                </div>
+                                <div class="tab-pane" id="tab8">
+                                    <p>Howdy, I'm in Section 8.</p>
+                                </div>
+                                <div class="tab-pane" id="tab9">
+                                    <p>Howdy, I'm in Section 9.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+{% endblock %}
