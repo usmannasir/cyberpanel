@@ -6,7 +6,7 @@ from django.http import HttpResponse
 import plogical.CyberCPLogFileWriter as logging
 from loginSystem.views import loadLoginPage
 import json
-import subprocess
+import subprocess, shlex
 import psutil
 import socket
 from plogical.acl import ACLManager
@@ -673,3 +673,64 @@ def packageManager(request):
     except KeyError as msg:
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[packageManager]")
         return redirect(loadLoginPage)
+
+def fetchPackages(request):
+    try:
+
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
+
+        data = json.loads(request.body)
+        page = int(data['page'])
+        recordsToShow = int(data['recordsToShow'])
+
+        packageInformation = '/home/cyberpanel/OSPackages'
+        f = open(packageInformation, "w")
+
+        if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+            command = 'dpkg-query -f  \'{"status":"${db:Status-Abbrev}","package":"${binary:Package}","version":"${Version}","description":"${binary:Summary}"}\n\' -W'
+            subprocess.call(shlex.split(command), stdout=f)
+
+        packages = ProcessUtilities.outputExecutioner('cat %s' % (packageInformation)).split('\n')
+
+        if os.path.exists(ProcessUtilities.debugPath):
+            logging.CyberCPLogFileWriter.writeToFile('All packages: %s' % (str(packages)))
+
+        from s3Backups.s3Backups import S3Backups
+
+        pagination = S3Backups.getPagination(len(packages), recordsToShow)
+        endPageNumber, finalPageNumber = S3Backups.recordsPointer(page, recordsToShow)
+        finalPackages = packages[finalPageNumber:endPageNumber]
+
+        json_data = "["
+        checker = 0
+
+        if os.path.exists(ProcessUtilities.debugPath):
+            logging.CyberCPLogFileWriter.writeToFile('Final packages: %s' % (str(finalPackages)))
+
+        for items in finalPackages:
+            logging.CyberCPLogFileWriter.writeToFile(items)
+            try:
+                if checker == 0:
+                    json_data = json_data + items
+                    checker = 1
+                else:
+                    json_data = json_data + ',' + items
+            except:
+                logging.CyberCPLogFileWriter.writeToFile(items)
+
+        json_data = json_data + ']'
+
+        data_ret = {'status': 1, 'packages': json_data, 'pagination': pagination}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+    except BaseException as msg:
+        data_ret = {'status': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)

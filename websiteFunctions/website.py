@@ -3613,7 +3613,6 @@ StrictHostKeyChecking no
             else:
                 return ACLManager.loadErrorJson()
 
-            logging.CyberCPLogFileWriter.writeToFile('hello world 2')
 
             ## Security check
 

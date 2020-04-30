@@ -3,7 +3,6 @@
  */
 
 
-
 /* Java script code to start/stop litespeed */
 app.controller('litespeedStatus', function ($scope, $http) {
 
@@ -49,8 +48,7 @@ app.controller('litespeedStatus', function ($scope, $http) {
                 $scope.actionResultBad = true;
                 $scope.serverStatusCouldNotConnect = true;
 
-            }
-            else {
+            } else {
 
                 $scope.restartorStopLoading = true;
                 $scope.actionResult = true;
@@ -109,8 +107,7 @@ app.controller('litespeedStatus', function ($scope, $http) {
                 $scope.actionResultBad = true;
                 $scope.serverStatusCouldNotConnect = true;
 
-            }
-            else {
+            } else {
 
                 $scope.restartorStopLoading = true;
                 $scope.actionResult = true;
@@ -174,8 +171,7 @@ app.controller('litespeedStatus', function ($scope, $http) {
                 });
                 $scope.lsSerial = response.data.lsSerial;
                 $scope.lsexpiration = response.data.lsexpiration;
-            }
-            else {
+            } else {
                 $scope.cpLoading = true;
                 new PNotify({
                     title: 'Operation Failed!',
@@ -229,8 +225,7 @@ app.controller('litespeedStatus', function ($scope, $http) {
                     text: 'License successfully Updated',
                     type: 'success'
                 });
-            }
-            else {
+            } else {
                 $scope.cpLoading = true;
                 new PNotify({
                     title: 'Operation Failed!',
@@ -292,8 +287,7 @@ app.controller('readCyberCPLogFile', function ($scope, $http) {
             $scope.logsData = response.data.logsdata;
 
 
-        }
-        else {
+        } else {
 
             $scope.logFileLoading = true;
             $scope.logsFeteched = true;
@@ -347,8 +341,7 @@ app.controller('readCyberCPLogFile', function ($scope, $http) {
                 $scope.logsData = response.data.logsdata;
 
 
-            }
-            else {
+            } else {
 
                 $scope.logFileLoading = true;
                 $scope.logsFeteched = true;
@@ -409,8 +402,7 @@ app.controller('servicesManager', function ($scope, $http) {
                 $scope.olsStart = false;
                 $scope.olsStop = true;
                 $scope.olsMem = Math.round(parseInt(response.data.memUsage.litespeed) / 1048576) + " MB";
-            }
-            else {
+            } else {
                 $scope.olsStatus = "Stopped";
                 $scope.olsStats = false;
                 $scope.olsStart = true;
@@ -421,8 +413,7 @@ app.controller('servicesManager', function ($scope, $http) {
                 $scope.dockerStatus = "Running";
                 $scope.dockerStart = false;
                 $scope.dockerStop = true;
-            }
-            else {
+            } else {
                 $scope.dockerStatus = "Stopped";
                 $scope.dockerStart = true;
                 $scope.dockerStop = false;
@@ -435,8 +426,7 @@ app.controller('servicesManager', function ($scope, $http) {
                 $scope.sqlStart = false;
                 $scope.sqlStop = true;
                 $scope.sqlMem = Math.round(parseInt(response.data.memUsage.mysql) / 1048576) + " MB";
-            }
-            else {
+            } else {
                 $scope.sqlStatus = "Stopped";
                 $scope.sqlStats = false;
                 $scope.sqlStart = true;
@@ -451,8 +441,7 @@ app.controller('servicesManager', function ($scope, $http) {
                 $scope.dnsStart = false;
                 $scope.dnsStop = true;
                 $scope.dnsMem = Math.round(parseInt(response.data.memUsage.powerdns) / 1048576) + " MB";
-            }
-            else {
+            } else {
                 $scope.dnsStatus = "Stopped";
                 $scope.dnsStats = false;
                 $scope.dnsStart = true;
@@ -467,8 +456,7 @@ app.controller('servicesManager', function ($scope, $http) {
                 $scope.ftpStart = false;
                 $scope.ftpStop = true;
                 $scope.ftpMem = Math.round(parseInt(response.data.memUsage.pureftp) / 1048576) + " MB";
-            }
-            else {
+            } else {
                 $scope.ftpStatus = "Stopped";
                 $scope.ftpStats = false;
                 $scope.ftpStart = true;
@@ -487,6 +475,7 @@ app.controller('servicesManager', function ($scope, $http) {
         }
 
     }
+
     getServiceStatus();
 
     $scope.serviceAction = function (serviceName, action) {
@@ -524,8 +513,7 @@ app.controller('servicesManager', function ($scope, $http) {
                     $scope.actionLoader = false;
                     $scope.btnDisable = false;
                 }, 3000);
-            }
-            else {
+            } else {
                 setTimeout(function () {
                     getServiceStatus();
                     $scope.ActionSuccessfull = false;
@@ -583,8 +571,7 @@ app.controller('lswsSwitch', function ($scope, $http, $timeout, $window) {
             if (response.data.status === 1) {
                 $scope.installBoxGen = false;
                 getRequestStatus();
-            }
-            else {
+            } else {
                 new PNotify({
                     title: 'Operation Failed!',
                     text: response.data.error_message,
@@ -626,8 +613,7 @@ app.controller('lswsSwitch', function ($scope, $http, $timeout, $window) {
             if (response.data.abort === 0) {
                 $scope.requestData = response.data.requestStatus;
                 $timeout(getRequestStatus, 1000);
-            }
-            else {
+            } else {
                 // Notifications
                 $scope.cyberPanelLoading = true;
                 $timeout.cancel();
@@ -720,8 +706,7 @@ app.controller('topProcesses', function ($scope, $http, $timeout) {
                 $scope.zombieProcesses = response.data.zombieProcesses;
 
                 $timeout($scope.topProcessesStatus, 3000);
-            }
-            else {
+            } else {
                 new PNotify({
                     title: 'Operation Failed!',
                     text: response.data.error_message,
@@ -771,8 +756,111 @@ app.controller('topProcesses', function ($scope, $http, $timeout) {
                     text: 'Process successfully killed.',
                     type: 'success'
                 });
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
             }
-            else {
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberPanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+        }
+
+    };
+
+});
+
+///
+
+
+app.controller('listOSPackages', function ($scope, $http, $timeout) {
+
+    $scope.cyberpanelLoading = true;
+
+    $scope.currentPage = 1;
+    $scope.recordsToShow = 10;
+
+    $scope.fetchPackages = function () {
+        $scope.cyberpanelLoading = false;
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        var data = {
+            page: $scope.currentPage,
+            recordsToShow: $scope.recordsToShow
+        };
+
+        dataurl = "/serverstatus/fetchPackages";
+
+        $http.post(dataurl, data, config).then(ListInitialData, cantLoadInitialData);
+
+        function ListInitialData(response) {
+            $scope.cyberpanelLoading = true;
+            if (response.data.status === 1) {
+                $scope.allPackages = JSON.parse(response.data.packages);
+                $scope.pagination = response.data.pagination;
+            } else {
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+        }
+        function cantLoadInitialData(response) {
+            $scope.cyberpanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+        }
+
+
+    };
+
+    $scope.killProcess = function (pid) {
+
+        $scope.cyberPanelLoading = false;
+
+        url = "/serverstatus/killProcess";
+
+        var data = {
+            pid: pid
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.cyberPanelLoading = true;
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success',
+                    text: 'Process successfully killed.',
+                    type: 'success'
+                });
+            } else {
                 new PNotify({
                     title: 'Operation Failed!',
                     text: response.data.error_message,
