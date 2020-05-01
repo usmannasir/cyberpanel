@@ -686,7 +686,7 @@ def fetchPackages(request):
             return ACLManager.loadError()
 
         data = json.loads(request.body)
-        page = int(data['page'])
+        page = int(data['page'].rstrip('\n'))
         recordsToShow = int(data['recordsToShow'])
 
         packageInformation = '/home/cyberpanel/OSPackages'
@@ -698,23 +698,24 @@ def fetchPackages(request):
 
         packages = ProcessUtilities.outputExecutioner('cat %s' % (packageInformation)).split('\n')
 
-        if os.path.exists(ProcessUtilities.debugPath):
-            logging.CyberCPLogFileWriter.writeToFile('All packages: %s' % (str(packages)))
+        # if os.path.exists(ProcessUtilities.debugPath):
+        #     logging.CyberCPLogFileWriter.writeToFile('All packages: %s' % (str(packages)))
 
         from s3Backups.s3Backups import S3Backups
 
         pagination = S3Backups.getPagination(len(packages), recordsToShow)
+        logging.CyberCPLogFileWriter.writeToFile(str(pagination))
         endPageNumber, finalPageNumber = S3Backups.recordsPointer(page, recordsToShow)
         finalPackages = packages[finalPageNumber:endPageNumber]
 
         json_data = "["
         checker = 0
 
-        if os.path.exists(ProcessUtilities.debugPath):
-            logging.CyberCPLogFileWriter.writeToFile('Final packages: %s' % (str(finalPackages)))
-
+        # if os.path.exists(ProcessUtilities.debugPath):
+        #     logging.CyberCPLogFileWriter.writeToFile('Final packages: %s' % (str(finalPackages)))
+        import re
         for items in finalPackages:
-            logging.CyberCPLogFileWriter.writeToFile(items)
+            items = re.sub(r'("[\s\w]*)"([\s\w])*"([\s\w]*)',r"\1\2\3", items)
             try:
                 if checker == 0:
                     json_data = json_data + items
