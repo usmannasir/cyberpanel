@@ -106,7 +106,7 @@ app.controller('createDatabase', function ($scope, $http) {
 
     $scope.generatePassword = function () {
         $scope.generatedPasswordView = false;
-        $scope.dbPassword = randomPassword(12);
+        $scope.dbPassword = randomPassword(16);
     };
 
     $scope.usePassword = function () {
@@ -447,7 +447,7 @@ app.controller('listDBs', function ($scope, $http) {
 
     $scope.generatePassword = function () {
         $scope.generatedPasswordView = false;
-        $scope.dbPassword = randomPassword(12);
+        $scope.dbPassword = randomPassword(16);
     };
 
     $scope.usePassword = function () {
