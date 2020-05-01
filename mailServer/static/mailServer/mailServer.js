@@ -110,7 +110,7 @@ app.controller('createEmailAccount', function ($scope, $http) {
 
     $scope.generatePassword = function () {
         $scope.generatedPasswordView = false;
-        $scope.emailPassword = randomPassword(12);
+        $scope.emailPassword = randomPassword(16);
     };
 
     $scope.usePassword = function () {
@@ -465,7 +465,7 @@ app.controller('changeEmailPassword', function ($scope, $http) {
 
     $scope.generatePassword = function () {
         $scope.generatedPasswordView = false;
-        $scope.emailPassword = randomPassword(12);
+        $scope.emailPassword = randomPassword(16);
     };
 
     $scope.usePassword = function () {

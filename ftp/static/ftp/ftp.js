@@ -113,7 +113,7 @@ app.controller('createFTPAccount', function ($scope, $http) {
 
     $scope.generatePassword = function () {
         $scope.generatedPasswordView = false;
-        $scope.ftpPassword = randomPassword(12);
+        $scope.ftpPassword = randomPassword(16);
     };
 
     $scope.usePassword = function () {
@@ -451,7 +451,7 @@ app.controller('listFTPAccounts', function ($scope, $http) {
 
     $scope.generatePassword = function () {
         $scope.generatedPasswordView = false;
-        $scope.ftpPassword = randomPassword(12);
+        $scope.ftpPassword = randomPassword(16);
     };
 
     $scope.usePassword = function () {

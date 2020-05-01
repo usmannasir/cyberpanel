@@ -113,7 +113,7 @@ app.controller('createUserCtr', function ($scope, $http) {
 
     $scope.generatePassword = function () {
         $scope.generatedPasswordView = false;
-        $scope.password = randomPassword(12);
+        $scope.password = randomPassword(16);
     };
 
     $scope.usePassword = function () {
@@ -342,7 +342,7 @@ app.controller('modifyUser', function ($scope, $http) {
 
     $scope.generatePassword = function () {
         $scope.generatedPasswordView = false;
-        $scope.password = randomPassword(12);
+        $scope.password = randomPassword(16);
     };
 
     $scope.usePassword = function () {
