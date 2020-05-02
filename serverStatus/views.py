@@ -579,17 +579,45 @@ def topProcessesStatus(request):
         data['Softirqs'] = loadNow[13] + '%'
 
         ## Memory
-        data['totalMemory'] = str(int(float(memory[3]) / 1024)) + 'MB'
-        data['freeMemory'] = str(int(float(memory[5]) / 1024)) + 'MB'
-        data['usedMemory'] = str(int(float(memory[7]) / 1024)) + 'MB'
-        data['buffCache'] = str(int(float(memory[9]) / 1024)) + 'MB'
+
+        if memory[3].find('+') > -1:
+            memoryFinal = memory[3].split('+')[0]
+        else:
+            memoryFinal = memory[3]
+
+        data['totalMemory'] = str(int(float(memoryFinal) / 1024)) + 'MB'
+
+        ##
+
+        if memory[5].find('free') > -1:
+            data['freeMemory'] = str(int(float(memory[4]) / 1024)) + 'MB'
+        else:
+            data['freeMemory'] = str(int(float(memory[5]) / 1024)) + 'MB'
+
+        ##
+
+        if memory[7].find('used') > -1:
+            data['usedMemory'] = str(int(float(memory[6]) / 1024)) + 'MB'
+        else:
+            data['usedMemory'] = str(int(float(memory[7]) / 1024)) + 'MB'
+
+        if memory[9].find('buff') > -1:
+            data['buffCache'] = str(int(float(memory[8]) / 1024)) + 'MB'
+        else:
+            data['buffCache'] = str(int(float(memory[9]) / 1024)) + 'MB'
 
         ## Swap
+
 
         data['swapTotalMemory'] = str(int(float(swap[2]) / 1024)) + 'MB'
         data['swapFreeMemory'] = str(int(float(swap[4]) / 1024)) + 'MB'
         data['swapUsedMemory'] = str(int(float(swap[6]) / 1024)) + 'MB'
-        data['swapBuffCache'] = str(int(float(swap[8]) / 1024)) + 'MB'
+
+        if swap[8].find('+') > -1:
+            finalBuffCache = swap[8].split('+')[0]
+            data['swapBuffCache'] = str(int(float(finalBuffCache) / 1024)) + 'MB'
+        else:
+            data['swapBuffCache'] = str(int(float(swap[8]) / 1024)) + 'MB'
 
         ## Processes
 
@@ -686,7 +714,7 @@ def fetchPackages(request):
             return ACLManager.loadError()
 
         data = json.loads(request.body)
-        page = int(data['page'].rstrip('\n'))
+        page = int(str(data['page']).rstrip('\n'))
         recordsToShow = int(data['recordsToShow'])
 
         packageInformation = '/home/cyberpanel/OSPackages'
@@ -704,12 +732,12 @@ def fetchPackages(request):
         from s3Backups.s3Backups import S3Backups
 
         pagination = S3Backups.getPagination(len(packages), recordsToShow)
-        logging.CyberCPLogFileWriter.writeToFile(str(pagination))
         endPageNumber, finalPageNumber = S3Backups.recordsPointer(page, recordsToShow)
         finalPackages = packages[finalPageNumber:endPageNumber]
 
         json_data = "["
         checker = 0
+        counter = 0
 
         # if os.path.exists(ProcessUtilities.debugPath):
         #     logging.CyberCPLogFileWriter.writeToFile('Final packages: %s' % (str(finalPackages)))
@@ -717,6 +745,7 @@ def fetchPackages(request):
         for items in finalPackages:
             items = re.sub(r'("[\s\w]*)"([\s\w])*"([\s\w]*)',r"\1\2\3", items)
             try:
+                counter = counter + 1
                 if checker == 0:
                     json_data = json_data + items
                     checker = 1
@@ -727,7 +756,7 @@ def fetchPackages(request):
 
         json_data = json_data + ']'
 
-        data_ret = {'status': 1, 'packages': json_data, 'pagination': pagination}
+        data_ret = {'status': 1, 'packages': json_data, 'pagination': pagination, 'fetchedPackages': counter, 'totalPackages': len(packages)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 

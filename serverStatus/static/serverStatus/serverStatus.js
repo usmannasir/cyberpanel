@@ -812,6 +812,8 @@ app.controller('listOSPackages', function ($scope, $http, $timeout) {
             if (response.data.status === 1) {
                 $scope.allPackages = JSON.parse(response.data.packages);
                 $scope.pagination = response.data.pagination;
+                $scope.fetchedPackages = response.data.fetchedPackages;
+                $scope.totalPackages = response.data.totalPackages;
             } else {
                 new PNotify({
                     title: 'Error!',
