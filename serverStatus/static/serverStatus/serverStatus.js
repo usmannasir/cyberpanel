@@ -836,15 +836,9 @@ app.controller('listOSPackages', function ($scope, $http, $timeout) {
     };
     $scope.fetchPackages('upgrade');
 
-    $scope.killProcess = function (pid) {
-
-        $scope.cyberPanelLoading = false;
-
-        url = "/serverstatus/killProcess";
-
-        var data = {
-            pid: pid
-        };
+    $scope.fetchPackageDetails = function (package) {
+        $scope.cyberpanelLoading = false;
+        $scope.package = package;
 
         var config = {
             headers: {
@@ -852,36 +846,35 @@ app.controller('listOSPackages', function ($scope, $http, $timeout) {
             }
         };
 
+        var data = {
+            package: package
+        };
 
-        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+        dataurl = "/serverstatus/fetchPackageDetails";
 
+        $http.post(dataurl, data, config).then(ListInitialData, cantLoadInitialData);
 
-        function ListInitialDatas(response) {
-            $scope.cyberPanelLoading = true;
+        function ListInitialData(response) {
+            $scope.cyberpanelLoading = true;
             if (response.data.status === 1) {
-                new PNotify({
-                    title: 'Success',
-                    text: 'Process successfully killed.',
-                    type: 'success'
-                });
+                $scope.packageDetails = response.data.packageDetails;
             } else {
                 new PNotify({
-                    title: 'Operation Failed!',
+                    title: 'Error!',
                     text: response.data.error_message,
                     type: 'error'
                 });
             }
-
         }
-
-        function cantLoadInitialDatas(response) {
-            $scope.cyberPanelLoading = true;
+        function cantLoadInitialData(response) {
+            $scope.cyberpanelLoading = true;
             new PNotify({
                 title: 'Operation Failed!',
                 text: 'Could not connect to server, please refresh this page',
                 type: 'error'
             });
         }
+
 
     };
 

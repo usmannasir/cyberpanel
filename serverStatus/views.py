@@ -794,3 +794,30 @@ def fetchPackages(request):
         data_ret = {'status': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
+
+def fetchPackageDetails(request):
+    try:
+
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
+
+        data = json.loads(request.body)
+        package = data['package']
+
+        if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+            command = 'apt-cache show %s' % (package)
+            packageDetails = ProcessUtilities.outputExecutioner(command)
+
+        data_ret = {'status': 1, 'packageDetails': packageDetails}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+    except BaseException as msg:
+        data_ret = {'status': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
