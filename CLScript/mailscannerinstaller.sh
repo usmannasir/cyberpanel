@@ -12,11 +12,10 @@ exit
 fi
 
 if [ -f /etc/os-release ];then
-   ./etc/os-release
-OS=$NAME
+OS=$(head -1 /etc/os-release)
 fi
 
-if [ "$OS" == "CentOS Linux" ];then
+if [ "$OS" = "NAME=\"CentOS Linux\"" ];then
 
 setenforce 0
 
@@ -46,7 +45,7 @@ echo "Please install spamassassin through the CyberPanel interface before procee
 exit
 fi
 
-else
+elif [ "$OS" = "NAME=\"Ubuntu\"" ];then
 
 apt-get install -y libmysqlclient-dev
 
@@ -74,8 +73,8 @@ else
 echo "Please install spamassassin through the CyberPanel interface before proceeding"
 exit
 fi
-fi
 
+fi
 
 echo "header_checks = regexp:/etc/postfix/header_checks" >> /etc/postfix/main.cf
 echo "/^Received:/ HOLD" >> /etc/postfix/header_checks
@@ -87,11 +86,9 @@ unzip master.zip
 
 cd /root/v5-master/builds
 
-if [ "$OS" == "CentOS Linux" ];then
-rpm -Uvh *.rhel.noarch.rpm
-else
-dpkg -i *.noarch.deb
+if [ "$OS" = "NAME=\"Ubuntu\"" ];then
 
+dpkg -i *.noarch.deb
 
 mkdir /var/run/MailScanner
 mkdir /var/lock/subsys
@@ -99,7 +96,13 @@ mkdir /var/lock/subsys/MailScanner
 chown -R postfix:postfix /var/run/MailScanner
 chown -R postfix:postfix /var/lock/subsys/MailScanner
 chown -R postfix:postfix /var/spool/MailScanner
+
+elif [ "$OS" = "NAME=\"CentOS Linux\"" ];then
+
+rpm -Uvh *.rhel.noarch.rpm
+
 fi
+
 mkdir /var/spool/MailScanner/spamassassin
 
 chown postfix.mtagroup /var/spool/MailScanner/spamassassin
