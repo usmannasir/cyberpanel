@@ -167,7 +167,7 @@ ln -s /usr/local/CyberCP/public/mailwatch/MailScanner_perl_scripts/SQLBlackWhite
 ln -s /usr/local/CyberCP/public/mailwatch/MailScanner_perl_scripts/SQLSpamSettings.pm /usr/share/MailScanner/perl/custom
 sed -i "s/^\$pathToFunctions =.*/\$pathToFunctions = '\/usr\/local\/CyberCP\/public\/mailwatch\/mailscanner\/functions.php';/" /usr/local/CyberCP/public/mailwatch/upgrade.php
 
-/usr/bin/php /usr/local/CyberCP/public/mailwatch/upgrade.php
+/usr/local/lsws/lsphp72/bin/php /usr/local/CyberCP/public/mailwatch/upgrade.php
 systemctl enable mailscanner
 systemctl restart mailscanner
 
