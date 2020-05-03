@@ -580,12 +580,15 @@ def topProcessesStatus(request):
 
         ## Memory
 
+        logging.CyberCPLogFileWriter.writeToFile(str(memory))
+
         if memory[3].find('+') > -1:
             memoryFinal = memory[3].split('+')[0]
         else:
             memoryFinal = memory[3]
 
         data['totalMemory'] = str(int(float(memoryFinal) / 1024)) + 'MB'
+
 
         ##
 
@@ -594,6 +597,7 @@ def topProcessesStatus(request):
         else:
             data['freeMemory'] = str(int(float(memory[5]) / 1024)) + 'MB'
 
+
         ##
 
         if memory[7].find('used') > -1:
@@ -601,12 +605,20 @@ def topProcessesStatus(request):
         else:
             data['usedMemory'] = str(int(float(memory[7]) / 1024)) + 'MB'
 
-        if memory[9].find('buff') > -1:
-            data['buffCache'] = str(int(float(memory[8]) / 1024)) + 'MB'
-        else:
-            data['buffCache'] = str(int(float(memory[9]) / 1024)) + 'MB'
+
+        try:
+            if memory[9].find('buff') > -1:
+                data['buffCache'] = str(int(float(memory[8]) / 1024)) + 'MB'
+            else:
+                data['buffCache'] = str(int(float(memory[9]) / 1024)) + 'MB'
+        except:
+            logging.CyberCPLogFileWriter.writeToFile(memory[8])
+            data['buffCache'] = str(int(float(memory[8].split('+')[0]) / 1024)) + 'MB'
+
 
         ## Swap
+
+        logging.CyberCPLogFileWriter.writeToFile(str(swap))
 
 
         data['swapTotalMemory'] = str(int(float(swap[2]) / 1024)) + 'MB'
