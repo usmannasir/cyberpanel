@@ -789,7 +789,7 @@ app.controller('listOSPackages', function ($scope, $http, $timeout) {
     $scope.currentPage = 1;
     $scope.recordsToShow = 10;
 
-    $scope.fetchPackages = function () {
+    $scope.fetchPackages = function (type = 'installed') {
         $scope.cyberpanelLoading = false;
 
         var config = {
@@ -800,7 +800,8 @@ app.controller('listOSPackages', function ($scope, $http, $timeout) {
 
         var data = {
             page: $scope.currentPage,
-            recordsToShow: $scope.recordsToShow
+            recordsToShow: $scope.recordsToShow,
+            type: type
         };
 
         dataurl = "/serverstatus/fetchPackages";
@@ -833,6 +834,7 @@ app.controller('listOSPackages', function ($scope, $http, $timeout) {
 
 
     };
+    $scope.fetchPackages('upgrade');
 
     $scope.killProcess = function (pid) {
 

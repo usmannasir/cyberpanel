@@ -22,7 +22,7 @@
 
                         <div class="example-box-wrapper">
                             <ul class="nav-responsive nav nav-tabs">
-                                <li class="active"><a href="#tab4" data-toggle="tab">Updates</a></li>
+                                <li class="active"><a ng-click="fetchPackages('upgrade')" href="#tab4" data-toggle="tab">Updates</a></li>
                                 <li><a ng-click="fetchPackages()" href="#tab6" data-toggle="tab">All Packages</a></li>
                                 <li><a href="#tab7" data-toggle="tab">Settings</a></li>
                                 <img ng-hide="cyberpanelLoading"
@@ -30,7 +30,72 @@
                             </ul>
                             <div class="tab-content">
                                 <div class="tab-pane active" id="tab4">
-                                    <p>Howdy, I'm in Section 4.</p>
+                                    <a style="float: left ; margin-bottom: 2%"
+                                       class="btn btn-border btn-alt border-azure btn-link font-azure" href="#"
+                                       title=""><span>Total Upgradeable Packages: {$ totalPackages $}</span></a>
+                                    <a style="float: left; margin-bottom: 2%; margin-left: 2%"
+                                       class="btn btn-border btn-alt border-blue-alt btn-link font-blue-alt" href="#"
+                                       title=""><span>Fetched Packages: {$ fetchedPackages $}</span></a>
+                                    <div class="col-sm-10"
+                                         style="padding: 0px; box-shadow: 0px 0px 1px 0px #888888; margin-bottom: 2%">
+                                        <input placeholder="Search..."
+                                               ng-model="packSearch" name="packSearch" type="text"
+                                               class="form-control" required>
+                                    </div>
+                                    <div class="col-sm-2">
+                                        <div class="form-group">
+                                            <select ng-model="recordsToShow" ng-change="fetchPackages('upgrade')"
+                                                    class="form-control" id="example-select">
+                                                <option>10</option>
+                                                <option>50</option>
+                                                <option>100</option>
+                                                <option>500</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <div class="col-sm-12">
+
+                                            <table class="table" style="margin: 0px; padding: 0px">
+                                                <thead>
+                                                <tr>
+                                                    <th>{% trans "Package" %}</th>
+                                                    <th>{% trans "Version" %}</th>
+                                                    <th>{% trans "Upgrade" %}</th>
+                                                    <th>{% trans "Actions" %}</th>
+                                                </tr>
+                                                </thead>
+                                                <tbody>
+                                                <tr ng-repeat="record in allPackages | filter:packSearch">
+                                                    <td ng-bind="record.package"></td>
+                                                    <td ng-bind="record.version"></td>
+                                                    <td ng-bind="record.upgrade"></td>
+                                                    <td><a style="float: left ; margin-bottom: 2%"
+                                                           class="btn btn-border btn-alt border-azure btn-link font-azure"
+                                                           href="#"
+                                                           title=""><span>Upgrade</span></a></td>
+                                                </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    <div style="margin-top: 2%" class="row">
+                                        <div style="margin-top: 2%" class="col-md-12">
+                                            <div class="row">
+                                                <div class="col-md-9">
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <div class="form-group">
+                                                        <select ng-model="currentPage" class="form-control"
+                                                                ng-change="fetchPackages('upgrade')">
+                                                            <option ng-repeat="page in pagination">{$ $index + 1 $}
+                                                            </option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div> <!-- end row -->
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="tab-pane" id="tab6">
                                     <a style="float: left ; margin-bottom: 2%"
@@ -63,17 +128,20 @@
                                                 <thead>
                                                 <tr>
                                                     <th>{% trans "Package" %}</th>
-                                                    <th>{% trans "Description" %}</th>
-                                                    <th>{% trans "Status" %}</th>
                                                     <th>{% trans "Version" %}</th>
+                                                    <th>{% trans "Upgrade" %}</th>
+                                                    <th>{% trans "Actions" %}</th>
                                                 </tr>
                                                 </thead>
                                                 <tbody>
                                                 <tr ng-repeat="record in allPackages | filter:packSearch">
                                                     <td ng-bind="record.package"></td>
-                                                    <td ng-bind="record.description"></td>
-                                                    <td ng-bind="record.status"></td>
                                                     <td ng-bind="record.version"></td>
+                                                    <td ng-bind="record.upgrade"></td>
+                                                    <td><a style="float: left ; margin-bottom: 2%"
+                                                           class="btn btn-border btn-alt border-azure btn-link font-azure"
+                                                           href="#"
+                                                           title=""><span>Upgrade</span></a></td>
                                                 </tr>
                                                 </tbody>
                                             </table>

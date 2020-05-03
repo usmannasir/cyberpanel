@@ -728,18 +728,25 @@ def fetchPackages(request):
         data = json.loads(request.body)
         page = int(str(data['page']).rstrip('\n'))
         recordsToShow = int(data['recordsToShow'])
-
-        packageInformation = '/home/cyberpanel/OSPackages'
-        f = open(packageInformation, "w")
+        type = data['type']
 
         if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
-            command = 'dpkg-query -f  \'{"status":"${db:Status-Abbrev}","package":"${binary:Package}","version":"${Version}","description":"${binary:Summary}"}\n\' -W'
-            subprocess.call(shlex.split(command), stdout=f)
+            command = 'apt list --installed'
+            packages = ProcessUtilities.outputExecutioner(command).split('\n')
+            packages = packages[4:]
 
-        packages = ProcessUtilities.outputExecutioner('cat %s' % (packageInformation)).split('\n')
+            upgradePackages = []
 
-        # if os.path.exists(ProcessUtilities.debugPath):
-        #     logging.CyberCPLogFileWriter.writeToFile('All packages: %s' % (str(packages)))
+            if type == 'upgrade':
+                for pack in packages:
+                    if pack.find('upgradable') > -1:
+                        upgradePackages.append(pack)
+
+                packages = upgradePackages
+
+
+        #if os.path.exists(ProcessUtilities.debugPath):
+        #    logging.CyberCPLogFileWriter.writeToFile('All packages: %s' % (str(packages)))
 
         from s3Backups.s3Backups import S3Backups
 
@@ -751,20 +758,30 @@ def fetchPackages(request):
         checker = 0
         counter = 0
 
-        # if os.path.exists(ProcessUtilities.debugPath):
-        #     logging.CyberCPLogFileWriter.writeToFile('Final packages: %s' % (str(finalPackages)))
+        if os.path.exists(ProcessUtilities.debugPath):
+             logging.CyberCPLogFileWriter.writeToFile('Final packages: %s' % (str(finalPackages)))
+
         import re
         for items in finalPackages:
-            items = re.sub(r'("[\s\w]*)"([\s\w])*"([\s\w]*)',r"\1\2\3", items)
             try:
+                nowSplitted = items.split('now')
+
+                upgrade = 'Not Needed'
+
+                if nowSplitted[1].split(' ')[3].find('upgradable') > -1:
+                    upgrade = nowSplitted[1].split(' ')[3]
+
+                dic = {'package': nowSplitted[0].split('/')[0], 'version': '%s %s' % (nowSplitted[1].split(' ')[1], nowSplitted[1].split(' ')[2]), 'upgrade': upgrade}
+
                 counter = counter + 1
                 if checker == 0:
-                    json_data = json_data + items
+                    json_data = json_data + json.dumps(dic)
                     checker = 1
                 else:
-                    json_data = json_data + ',' + items
-            except:
-                logging.CyberCPLogFileWriter.writeToFile(items)
+                    json_data = json_data + ',' + json.dumps(dic)
+
+            except BaseException as msg:
+                logging.CyberCPLogFileWriter.writeToFile('[ERROR] %s. [fetchPackages:773]' % (str(msg)))
 
         json_data = json_data + ']'
 
