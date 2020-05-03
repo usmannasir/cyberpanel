@@ -1,4 +1,5 @@
-[cyberpanel]
-name=Cyber Panel
-baseurl=http://repo.cyberpersons.com
-gpgcheck=0
+[CyberPanel]
+name=CyberPanel
+baseurl=https://rep.cyberpanel.net/
+gpgkey=https://rep.cyberpanel.net/RPM-GPG-KEY-cyberpanel
+gpgcheck=1
