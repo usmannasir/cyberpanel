@@ -769,7 +769,8 @@ def fetchPackages(request):
                 upgrade = 'Not Needed'
 
                 if nowSplitted[1].split(' ')[3].find('upgradable') > -1:
-                    upgrade = nowSplitted[1].split(' ')[3]
+                    current = nowSplitted[1].split(' ')
+                    upgrade = '%s %s %s' % (current[3], current[4], current[5])
 
                 dic = {'package': nowSplitted[0].split('/')[0], 'version': '%s %s' % (nowSplitted[1].split(' ')[1], nowSplitted[1].split(' ')[2]), 'upgrade': upgrade}
 
