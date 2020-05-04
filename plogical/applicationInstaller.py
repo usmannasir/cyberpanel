@@ -33,6 +33,7 @@ class ApplicationInstaller(multi.Thread):
 
     def run(self):
         try:
+
             if self.installApp == 'wordpress':
                 self.installWordPress()
             elif self.installApp == 'joomla':
@@ -51,9 +52,43 @@ class ApplicationInstaller(multi.Thread):
                 self.installMagento()
             elif self.installApp == 'convertDomainToSite':
                 self.convertDomainToSite()
+            elif self.installApp == 'updatePackage':
+                self.updatePackage()
 
         except BaseException as msg:
             logging.writeToFile(str(msg) + ' [ApplicationInstaller.run]')
+
+    def updatePackage(self):
+        try:
+
+            package = self.extraArgs['package']
+
+            from serverStatus.serverStatusUtil import ServerStatusUtil
+
+            f = open(ServerStatusUtil.lswsInstallStatusPath, 'a')
+
+            if package == 'all':
+                command = 'apt-get update -y'
+                f.write(ProcessUtilities.outputExecutioner(command))
+
+                f.flush()
+
+                command = 'apt-get upgrade -y'
+                f.write(ProcessUtilities.outputExecutioner(command))
+            else:
+                command = 'apt-get install --only-upgrade %s -y' % (package)
+                f.write(ProcessUtilities.outputExecutioner(command))
+
+            f.close()
+
+            logging.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
+                                                      'Package(s) upgraded successfully. [200]',
+                                                      1)
+
+        except BaseException as msg:
+            from serverStatus.serverStatusUtil import ServerStatusUtil
+            logging.statusWriter(ServerStatusUtil.lswsInstallStatusPath, 'Failed. Error: %s. [404]' % (str(msg)), 1)
+            return 0
 
     def convertDomainToSite(self):
         try:

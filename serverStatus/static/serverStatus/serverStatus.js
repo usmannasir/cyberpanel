@@ -836,9 +836,9 @@ app.controller('listOSPackages', function ($scope, $http, $timeout) {
     };
     $scope.fetchPackages('upgrade');
 
-    $scope.fetchPackageDetails = function (package) {
+    $scope.fetchPackageDetails = function (packageFetch) {
         $scope.cyberpanelLoading = false;
-        $scope.package = package;
+        $scope.package = packageFetch;
 
         var config = {
             headers: {
@@ -847,7 +847,7 @@ app.controller('listOSPackages', function ($scope, $http, $timeout) {
         };
 
         var data = {
-            package: package
+            package: packageFetch
         };
 
         dataurl = "/serverstatus/fetchPackageDetails";
@@ -877,5 +877,88 @@ app.controller('listOSPackages', function ($scope, $http, $timeout) {
 
 
     };
+
+    $scope.updatePackage = function (packageToUpgrade = 'all') {
+        $scope.cyberpanelLoading = false;
+        $scope.package = packageToUpgrade;
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        var data = {
+            package: packageToUpgrade
+        };
+
+        dataurl = "/serverstatus/updatePackage";
+
+        $http.post(dataurl, data, config).then(ListInitialData, cantLoadInitialData);
+
+        function ListInitialData(response) {
+            $scope.cyberpanelLoading = true;
+            if (response.data.status === 1) {
+                getRequestStatus();
+            } else {
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+        }
+        function cantLoadInitialData(response) {
+            $scope.cyberpanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+        }
+
+
+    };
+
+    function getRequestStatus() {
+
+        $scope.cyberpanelLoading = false;
+
+        url = "/serverstatus/switchTOLSWSStatus";
+
+        var data = {};
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            if (response.data.abort === 0) {
+                $scope.requestData = response.data.requestStatus;
+                $timeout(getRequestStatus, 1000);
+            } else {
+                // Notifications
+                $timeout.cancel();
+                $scope.cyberpanelLoading = true;
+                $scope.requestData = response.data.requestStatus;
+            }
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+        }
+
+    }
 
 });

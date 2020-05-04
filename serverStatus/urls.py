@@ -21,5 +21,6 @@ urlpatterns = [
     url(r'^packageManager$', views.packageManager, name='packageManager'),
     url(r'^fetchPackages$', views.fetchPackages, name='fetchPackages'),
     url(r'^fetchPackageDetails$', views.fetchPackageDetails, name='fetchPackageDetails'),
+    url(r'^updatePackage$', views.updatePackage, name='updatePackage'),
 
 ]

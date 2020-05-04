@@ -37,6 +37,57 @@
                                     <a style="float: left; margin-bottom: 2%; margin-left: 2%"
                                        class="btn btn-border btn-alt border-blue-alt btn-link font-blue-alt" href="#"
                                        title=""><span>Fetched Packages: {$ fetchedPackages $}</span></a>
+
+                                    <a ng-click="updatePackage('all')" data-toggle="modal"
+                                       data-target="#updatePackage" style="margin-left: 1%"
+                                       class="btn btn-border btn-alt border-azure btn-link font-azure"
+                                       href="#"
+                                       title=""><span>Update All</span></a>
+
+                                    <div id="updatePackage" class="modal fade" role="dialog">
+                                        <div class="modal-dialog modal-lg">
+
+                                            <!-- Modal content-->
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <button type="button" class="close"
+                                                            data-dismiss="modal">
+                                                        &times;
+                                                    </button>
+                                                    <h4 class="modal-title">Upgrading {$ package $}
+                                                        package(s).
+                                                        <img ng-hide="cyberpanelLoading"
+                                                             src="{% static 'images/loading.gif' %}">
+                                                    </h4>
+                                                </div>
+                                                <div class="modal-body">
+
+                                                    <div class="form-group">
+                                                        <div class="col-sm-12">
+                                                            <div class="col-sm-12">
+                                                                        <textarea ng-model="requestData"
+                                                                                  class="form-control"
+                                                                                  rows="12"></textarea>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <table class="table">
+                                                    </table>
+
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button"
+                                                            ng-disabled="savingSettings"
+                                                            class="btn btn-default"
+                                                            data-dismiss="modal">
+                                                        Close
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <div class="col-sm-10"
                                          style="padding: 0px; box-shadow: 0px 0px 1px 0px #888888; margin-bottom: 2%">
                                         <input placeholder="Search..."
@@ -120,10 +171,56 @@
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                        <a style="margin-left: 1%"
+                                                        <a ng-click="updatePackage(record.package)" data-toggle="modal"
+                                                           data-target="#updatePackage" style="margin-left: 1%"
                                                            class="btn btn-border btn-alt border-azure btn-link font-azure"
                                                            href="#"
-                                                           title=""><span>Upgrade</span></a></td>
+                                                           title=""><span>Update</span></a>
+
+                                                        <div id="updatePackage" class="modal fade" role="dialog">
+                                                            <div class="modal-dialog modal-lg">
+
+                                                                <!-- Modal content-->
+                                                                <div class="modal-content">
+                                                                    <div class="modal-header">
+                                                                        <button type="button" class="close"
+                                                                                data-dismiss="modal">
+                                                                            &times;
+                                                                        </button>
+                                                                        <h4 class="modal-title">Upgrading {$ package $}
+                                                                            package(s).
+                                                                            <img ng-hide="cyberpanelLoading"
+                                                                                 src="{% static 'images/loading.gif' %}">
+                                                                        </h4>
+                                                                    </div>
+                                                                    <div class="modal-body">
+
+                                                                        <div class="form-group">
+                                                                            <div class="col-sm-12">
+                                                                                <div class="col-sm-12">
+                                                                        <textarea ng-model="requestData"
+                                                                                  class="form-control"
+                                                                                  rows="12"></textarea>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        <table class="table">
+                                                                        </table>
+
+                                                                    </div>
+                                                                    <div class="modal-footer">
+                                                                        <button type="button"
+                                                                                ng-disabled="savingSettings"
+                                                                                class="btn btn-default"
+                                                                                data-dismiss="modal">
+                                                                            Close
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
                                                 </tr>
                                                 </tbody>
                                             </table>

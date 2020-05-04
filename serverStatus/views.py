@@ -821,3 +821,42 @@ def fetchPackageDetails(request):
         data_ret = {'status': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
+
+def updatePackage(request):
+    try:
+
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
+
+        data = json.loads(request.body)
+        package = data['package']
+
+        from serverStatus.serverStatusUtil import ServerStatusUtil
+
+        logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
+                                                  'Starting package(s) upgrade..',
+                                                  1)
+
+        extraArgs = {}
+        extraArgs['package'] = package
+
+        from plogical.applicationInstaller import  ApplicationInstaller
+
+        background = ApplicationInstaller('updatePackage', extraArgs)
+        background.start()
+
+        time.sleep(2)
+
+        data_ret = {'status': 1}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+    except BaseException as msg:
+        data_ret = {'status': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
