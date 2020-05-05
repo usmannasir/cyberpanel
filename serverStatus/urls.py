@@ -22,5 +22,6 @@ urlpatterns = [
     url(r'^fetchPackages$', views.fetchPackages, name='fetchPackages'),
     url(r'^fetchPackageDetails$', views.fetchPackageDetails, name='fetchPackageDetails'),
     url(r'^updatePackage$', views.updatePackage, name='updatePackage'),
+    url(r'^lockStatus$', views.lockStatus, name='lockStatus'),
 
 ]

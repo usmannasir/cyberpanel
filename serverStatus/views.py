@@ -731,6 +731,10 @@ def fetchPackages(request):
         type = data['type']
 
         if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+
+            command = 'apt-mark showhold'
+            locked = ProcessUtilities.outputExecutioner(command).split('\n')
+
             command = 'apt list --installed'
             packages = ProcessUtilities.outputExecutioner(command).split('\n')
             packages = packages[4:]
@@ -772,7 +776,12 @@ def fetchPackages(request):
                     current = nowSplitted[1].split(' ')
                     upgrade = '%s %s %s' % (current[3], current[4], current[5])
 
-                dic = {'package': nowSplitted[0].split('/')[0], 'version': '%s %s' % (nowSplitted[1].split(' ')[1], nowSplitted[1].split(' ')[2]), 'upgrade': upgrade}
+                if nowSplitted[0].split('/')[0] in locked:
+                    lock = 1
+                else:
+                    lock = 0
+
+                dic = {'package': nowSplitted[0].split('/')[0], 'version': '%s %s' % (nowSplitted[1].split(' ')[1], nowSplitted[1].split(' ')[2]), 'upgrade': upgrade, 'lock': lock}
 
                 counter = counter + 1
                 if checker == 0:
@@ -851,6 +860,39 @@ def updatePackage(request):
         background.start()
 
         time.sleep(2)
+
+        data_ret = {'status': 1}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+    except BaseException as msg:
+        data_ret = {'status': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+def lockStatus(request):
+    try:
+
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
+
+        data = json.loads(request.body)
+        package = data['package']
+        type = data['type']
+
+        if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+
+            if type == 0:
+                command = 'apt-mark unhold %s' % (package)
+                ProcessUtilities.executioner(command)
+            else:
+                command = 'apt-mark hold %s' % (package)
+                ProcessUtilities.executioner(command)
 
         data_ret = {'status': 1}
         json_data = json.dumps(data_ret)

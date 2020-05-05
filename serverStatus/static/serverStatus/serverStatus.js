@@ -788,10 +788,11 @@ app.controller('listOSPackages', function ($scope, $http, $timeout) {
 
     $scope.currentPage = 1;
     $scope.recordsToShow = 10;
+    var globalType;
 
     $scope.fetchPackages = function (type = 'installed') {
         $scope.cyberpanelLoading = false;
-
+        globalType = type;
         var config = {
             headers: {
                 'X-CSRFToken': getCookie('csrftoken')
@@ -960,5 +961,52 @@ app.controller('listOSPackages', function ($scope, $http, $timeout) {
         }
 
     }
+
+    $scope.lockStatus = function (lockPackage, type) {
+        $scope.cyberpanelLoading = false;
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        var data = {
+            package: lockPackage,
+            type: type,
+        };
+
+        dataurl = "/serverstatus/lockStatus";
+
+        $http.post(dataurl, data, config).then(ListInitialData, cantLoadInitialData);
+
+        function ListInitialData(response) {
+            $scope.cyberpanelLoading = true;
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success!',
+                    text: 'Status updated.',
+                    type: 'success'
+                });
+                $scope.fetchPackages(globalType);
+            } else {
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+        }
+        function cantLoadInitialData(response) {
+            $scope.cyberpanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+        }
+
+
+    };
 
 });

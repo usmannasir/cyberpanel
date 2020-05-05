@@ -114,6 +114,7 @@
                                                     <th>{% trans "Package" %}</th>
                                                     <th>{% trans "Version" %}</th>
                                                     <th>{% trans "Upgrade" %}</th>
+                                                    <th>{% trans "Lock" %}</th>
                                                     <th>{% trans "Actions" %}</th>
                                                 </tr>
                                                 </thead>
@@ -122,6 +123,10 @@
                                                     <td ng-bind="record.package"></td>
                                                     <td ng-bind="record.version"></td>
                                                     <td ng-bind="record.upgrade"></td>
+                                                    <td>
+                                                        <a ng-click="lockStatus(record.package, 0)" href="#"><i ng-show="record.lock==1" class="glyph-icon tooltip-button demo-icon icon-lock" title="Packed is locked for upgrade."></i></a>
+                                                        <a ng-click="lockStatus(record.package, 1)" href="#"><i ng-show="record.lock==0" class="glyph-icon tooltip-button demo-icon icon-unlock" title="Package is unlocked"></i></a>
+                                                    </td>
                                                     <td>
                                                         <a data-toggle="modal" data-target="#packageDetails"
                                                            ng-click="fetchPackageDetails(record.package)"
@@ -176,7 +181,6 @@
                                                            class="btn btn-border btn-alt border-azure btn-link font-azure"
                                                            href="#"
                                                            title=""><span>Update</span></a>
-
                                                         <div id="updatePackage" class="modal fade" role="dialog">
                                                             <div class="modal-dialog modal-lg">
 
@@ -277,6 +281,7 @@
                                                     <th>{% trans "Package" %}</th>
                                                     <th>{% trans "Version" %}</th>
                                                     <th>{% trans "Upgrade" %}</th>
+                                                    <th>{% trans "Lock" %}</th>
                                                     <th>{% trans "Actions" %}</th>
                                                 </tr>
                                                 </thead>
@@ -285,10 +290,60 @@
                                                     <td ng-bind="record.package"></td>
                                                     <td ng-bind="record.version"></td>
                                                     <td ng-bind="record.upgrade"></td>
-                                                    <td><a style="float: left ; margin-bottom: 2%"
-                                                           class="btn btn-border btn-alt border-azure btn-link font-azure"
+                                                    <td>
+                                                        <a ng-click="lockStatus(record.package, 0)" href="#"><i ng-show="record.lock==1" class="glyph-icon tooltip-button demo-icon icon-lock" title="Packed is locked for upgrade."></i></a>
+                                                        <a ng-click="lockStatus(record.package, 1)" href="#"><i ng-show="record.lock==0" class="glyph-icon tooltip-button demo-icon icon-unlock" title="Package is unlocked"></i></a>
+                                                    </td>
+                                                    <td>
+                                                        <a data-toggle="modal" data-target="#packageDetailsInstalled"
+                                                           ng-click="fetchPackageDetails(record.package)"
+                                                           class="btn btn-border btn-alt border-blue-alt btn-link font-blue-alt"
                                                            href="#"
-                                                           title=""><span>Upgrade</span></a></td>
+                                                           title=""><span>Details</span></a>
+                                                        <div id="packageDetailsInstalled" class="modal fade" role="dialog">
+                                                            <div class="modal-dialog modal-lg">
+
+                                                                <!-- Modal content-->
+                                                                <div class="modal-content">
+                                                                    <div class="modal-header">
+                                                                        <button type="button" class="close"
+                                                                                data-dismiss="modal">
+                                                                            &times;
+                                                                        </button>
+                                                                        <h4 class="modal-title">Package {$ package $}
+                                                                            details.
+                                                                            <img ng-hide="cyberpanelLoading"
+                                                                                 src="{% static 'images/loading.gif' %}">
+                                                                        </h4>
+                                                                    </div>
+                                                                    <div class="modal-body">
+
+                                                                        <div class="form-group">
+                                                                            <div class="col-sm-12">
+                                                                                <div class="col-sm-12">
+                                                                        <textarea ng-model="packageDetails"
+                                                                                  class="form-control"
+                                                                                  rows="12"></textarea>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        <table class="table">
+                                                                        </table>
+
+                                                                    </div>
+                                                                    <div class="modal-footer">
+                                                                        <button type="button"
+                                                                                ng-disabled="savingSettings"
+                                                                                class="btn btn-default"
+                                                                                data-dismiss="modal">
+                                                                            Close
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
                                                 </tr>
                                                 </tbody>
                                             </table>
