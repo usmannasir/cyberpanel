@@ -6724,11 +6724,7 @@ msgstr "Instale o WordPress com LSCache."
 
 #: websiteFunctions/templates/websiteFunctions/installWordPress.html:28
 msgid "Blog Title"
-msgstr "Título do Blog"
-
-#: websiteFunctions/templates/websiteFunctions/installWordPress.html:58
-msgid "Leave empty to install in website home directory. (Without preceding slash)"
-msgstr "Deixe em branco para instalar no diretório inicial do site. (Sem barra anterior)"
+msgstr ""
 
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:32
 msgid "Copy/Sync to Master"
