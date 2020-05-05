@@ -735,18 +735,24 @@ def fetchPackages(request):
             command = 'apt-mark showhold'
             locked = ProcessUtilities.outputExecutioner(command).split('\n')
 
-            command = 'apt list --installed'
-            packages = ProcessUtilities.outputExecutioner(command).split('\n')
-            packages = packages[4:]
+            if type == 'CyberPanel':
 
-            upgradePackages = []
+                command = 'cat /usr/local/CyberCP/AllCPUbuntu.json'
+                packages = json.loads(ProcessUtilities.outputExecutioner(command))
 
-            if type == 'upgrade':
-                for pack in packages:
-                    if pack.find('upgradable') > -1:
-                        upgradePackages.append(pack)
+            else:
+                command = 'apt list --installed'
+                packages = ProcessUtilities.outputExecutioner(command).split('\n')
+                packages = packages[4:]
 
-                packages = upgradePackages
+                upgradePackages = []
+
+                if type == 'upgrade':
+                    for pack in packages:
+                        if pack.find('upgradable') > -1:
+                            upgradePackages.append(pack)
+
+                    packages = upgradePackages
 
 
         #if os.path.exists(ProcessUtilities.debugPath):
@@ -768,27 +774,47 @@ def fetchPackages(request):
         import re
         for items in finalPackages:
             try:
-                nowSplitted = items.split('now')
+                if type == 'CyberPanel':
 
-                upgrade = 'Not Needed'
+                    packageName = items['Package'].split('/')[0]
 
-                if nowSplitted[1].split(' ')[3].find('upgradable') > -1:
-                    current = nowSplitted[1].split(' ')
-                    upgrade = '%s %s %s' % (current[3], current[4], current[5])
+                    if packageName in locked:
+                        lock = 1
+                    else:
+                        lock = 0
 
-                if nowSplitted[0].split('/')[0] in locked:
-                    lock = 1
+                    dic = {'package': packageName,
+                           'version': items['Version'], 'lock': lock}
+
+                    counter = counter + 1
+                    if checker == 0:
+                        json_data = json_data + json.dumps(dic)
+                        checker = 1
+                    else:
+                        json_data = json_data + ',' + json.dumps(dic)
+
                 else:
-                    lock = 0
+                    nowSplitted = items.split('now')
 
-                dic = {'package': nowSplitted[0].split('/')[0], 'version': '%s %s' % (nowSplitted[1].split(' ')[1], nowSplitted[1].split(' ')[2]), 'upgrade': upgrade, 'lock': lock}
+                    upgrade = 'Not Needed'
 
-                counter = counter + 1
-                if checker == 0:
-                    json_data = json_data + json.dumps(dic)
-                    checker = 1
-                else:
-                    json_data = json_data + ',' + json.dumps(dic)
+                    if nowSplitted[1].split(' ')[3].find('upgradable') > -1:
+                        current = nowSplitted[1].split(' ')
+                        upgrade = '%s %s %s' % (current[3], current[4], current[5])
+
+                    if nowSplitted[0].split('/')[0] in locked:
+                        lock = 1
+                    else:
+                        lock = 0
+
+                    dic = {'package': nowSplitted[0].split('/')[0], 'version': '%s %s' % (nowSplitted[1].split(' ')[1], nowSplitted[1].split(' ')[2]), 'upgrade': upgrade, 'lock': lock}
+
+                    counter = counter + 1
+                    if checker == 0:
+                        json_data = json_data + json.dumps(dic)
+                        checker = 1
+                    else:
+                        json_data = json_data + ',' + json.dumps(dic)
 
             except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile('[ERROR] %s. [fetchPackages:773]' % (str(msg)))

@@ -788,10 +788,11 @@ app.controller('listOSPackages', function ($scope, $http, $timeout) {
 
     $scope.currentPage = 1;
     $scope.recordsToShow = 10;
+    var globalType;
 
     $scope.fetchPackages = function (type = 'installed') {
         $scope.cyberpanelLoading = false;
-
+        globalType = type;
         var config = {
             headers: {
                 'X-CSRFToken': getCookie('csrftoken')
@@ -836,15 +837,97 @@ app.controller('listOSPackages', function ($scope, $http, $timeout) {
     };
     $scope.fetchPackages('upgrade');
 
-    $scope.killProcess = function (pid) {
+    $scope.fetchPackageDetails = function (packageFetch) {
+        $scope.cyberpanelLoading = false;
+        $scope.package = packageFetch;
 
-        $scope.cyberPanelLoading = false;
-
-        url = "/serverstatus/killProcess";
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
 
         var data = {
-            pid: pid
+            package: packageFetch
         };
+
+        dataurl = "/serverstatus/fetchPackageDetails";
+
+        $http.post(dataurl, data, config).then(ListInitialData, cantLoadInitialData);
+
+        function ListInitialData(response) {
+            $scope.cyberpanelLoading = true;
+            if (response.data.status === 1) {
+                $scope.packageDetails = response.data.packageDetails;
+            } else {
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+        }
+        function cantLoadInitialData(response) {
+            $scope.cyberpanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+        }
+
+
+    };
+
+    $scope.updatePackage = function (packageToUpgrade = 'all') {
+        $scope.cyberpanelLoading = false;
+        $scope.package = packageToUpgrade;
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        var data = {
+            package: packageToUpgrade
+        };
+
+        dataurl = "/serverstatus/updatePackage";
+
+        $http.post(dataurl, data, config).then(ListInitialData, cantLoadInitialData);
+
+        function ListInitialData(response) {
+            $scope.cyberpanelLoading = true;
+            if (response.data.status === 1) {
+                getRequestStatus();
+            } else {
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+        }
+        function cantLoadInitialData(response) {
+            $scope.cyberpanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+        }
+
+
+    };
+
+    function getRequestStatus() {
+
+        $scope.cyberpanelLoading = false;
+
+        url = "/serverstatus/switchTOLSWSStatus";
+
+        var data = {};
 
         var config = {
             headers: {
@@ -857,31 +940,72 @@ app.controller('listOSPackages', function ($scope, $http, $timeout) {
 
 
         function ListInitialDatas(response) {
-            $scope.cyberPanelLoading = true;
-            if (response.data.status === 1) {
-                new PNotify({
-                    title: 'Success',
-                    text: 'Process successfully killed.',
-                    type: 'success'
-                });
+            if (response.data.abort === 0) {
+                $scope.requestData = response.data.requestStatus;
+                $timeout(getRequestStatus, 1000);
             } else {
-                new PNotify({
-                    title: 'Operation Failed!',
-                    text: response.data.error_message,
-                    type: 'error'
-                });
+                // Notifications
+                $timeout.cancel();
+                $scope.cyberpanelLoading = true;
+                $scope.requestData = response.data.requestStatus;
             }
-
         }
 
         function cantLoadInitialDatas(response) {
-            $scope.cyberPanelLoading = true;
+            $scope.cyberpanelLoading = true;
             new PNotify({
                 title: 'Operation Failed!',
                 text: 'Could not connect to server, please refresh this page',
                 type: 'error'
             });
         }
+
+    }
+
+    $scope.lockStatus = function (lockPackage, type) {
+        $scope.cyberpanelLoading = false;
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        var data = {
+            package: lockPackage,
+            type: type,
+        };
+
+        dataurl = "/serverstatus/lockStatus";
+
+        $http.post(dataurl, data, config).then(ListInitialData, cantLoadInitialData);
+
+        function ListInitialData(response) {
+            $scope.cyberpanelLoading = true;
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success!',
+                    text: 'Status updated.',
+                    type: 'success'
+                });
+                $scope.fetchPackages(globalType);
+            } else {
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+        }
+        function cantLoadInitialData(response) {
+            $scope.cyberpanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+        }
+
 
     };
 
