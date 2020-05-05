@@ -753,6 +753,59 @@ def fetchPackages(request):
                             upgradePackages.append(pack)
 
                     packages = upgradePackages
+        elif ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+
+            if type == 'installed':
+
+                #### Cater for packages that need updates.
+
+                startForUpdate = 1
+
+                command = 'yum check-update'
+                updates = ProcessUtilities.outputExecutioner(command).split('\n')
+
+                for items in updates:
+                    if items == '':
+                        updates = updates[startForUpdate:]
+                        break
+                    else:
+                        startForUpdate = startForUpdate + 1
+
+                ## make list of packages that need update
+
+                updateNeeded = []
+                for items in updates:
+                    updateNeeded.append(items.split(' ')[0])
+
+                ###
+
+                command = 'yum list installed'
+                packages = ProcessUtilities.outputExecutioner(command).split('\n')
+
+                startFrom = 1
+
+                for items in packages:
+                    if items.find('Installed Packages') > -1:
+                        packages = packages[startFrom:]
+                        break
+                    else:
+                        startFrom = startFrom + 1
+            elif type == 'upgrade':
+                #### Cater for packages that need updates.
+
+                startForUpdate = 1
+
+                command = 'yum check-update'
+                packages = ProcessUtilities.outputExecutioner(command).split('\n')
+
+                for items in packages:
+                    if items == '':
+                        packages = packages[startForUpdate:-1]
+                        break
+                    else:
+                        startForUpdate = startForUpdate + 1
+
+        ## make list of packages that need update
 
 
         #if os.path.exists(ProcessUtilities.debugPath):
@@ -773,51 +826,80 @@ def fetchPackages(request):
 
         import re
         for items in finalPackages:
-            try:
-                if type == 'CyberPanel':
+            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+                try:
+                    if type == 'CyberPanel':
 
-                    packageName = items['Package'].split('/')[0]
+                        packageName = items['Package'].split('/')[0]
 
-                    if packageName in locked:
-                        lock = 1
+                        if packageName in locked:
+                            lock = 1
+                        else:
+                            lock = 0
+
+                        dic = {'package': packageName,
+                               'version': items['Version'], 'lock': lock}
+
+                        counter = counter + 1
+                        if checker == 0:
+                            json_data = json_data + json.dumps(dic)
+                            checker = 1
+                        else:
+                            json_data = json_data + ',' + json.dumps(dic)
+
                     else:
-                        lock = 0
+                        nowSplitted = items.split('now')
 
-                    dic = {'package': packageName,
-                           'version': items['Version'], 'lock': lock}
+                        upgrade = 'Not Needed'
 
-                    counter = counter + 1
-                    if checker == 0:
-                        json_data = json_data + json.dumps(dic)
-                        checker = 1
-                    else:
-                        json_data = json_data + ',' + json.dumps(dic)
+                        if nowSplitted[1].split(' ')[3].find('upgradable') > -1:
+                            current = nowSplitted[1].split(' ')
+                            upgrade = '%s %s %s' % (current[3], current[4], current[5])
 
-                else:
-                    nowSplitted = items.split('now')
+                        if nowSplitted[0].split('/')[0] in locked:
+                            lock = 1
+                        else:
+                            lock = 0
 
-                    upgrade = 'Not Needed'
+                        dic = {'package': nowSplitted[0].split('/')[0], 'version': '%s %s' % (nowSplitted[1].split(' ')[1], nowSplitted[1].split(' ')[2]), 'upgrade': upgrade, 'lock': lock}
 
-                    if nowSplitted[1].split(' ')[3].find('upgradable') > -1:
-                        current = nowSplitted[1].split(' ')
-                        upgrade = '%s %s %s' % (current[3], current[4], current[5])
+                        counter = counter + 1
+                        if checker == 0:
+                            json_data = json_data + json.dumps(dic)
+                            checker = 1
+                        else:
+                            json_data = json_data + ',' + json.dumps(dic)
+                except BaseException as msg:
+                    logging.CyberCPLogFileWriter.writeToFile('[ERROR] %s. [fetchPackages:773]' % (str(msg)))
+            elif ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                try:
+                    if type == 'installed' or type == 'upgrade':
 
-                    if nowSplitted[0].split('/')[0] in locked:
-                        lock = 1
-                    else:
-                        lock = 0
+                        details = items.split(' ')
+                        details = [a for a in details if a != '']
 
-                    dic = {'package': nowSplitted[0].split('/')[0], 'version': '%s %s' % (nowSplitted[1].split(' ')[1], nowSplitted[1].split(' ')[2]), 'upgrade': upgrade, 'lock': lock}
+                        if type == 'installed':
+                            if details[0] in updateNeeded:
+                                upgrade = 'Upgrade available'
+                            else:
+                                upgrade = 'Not needed.'
+                        else:
+                            upgrade = 'Upgrade available'
 
-                    counter = counter + 1
-                    if checker == 0:
-                        json_data = json_data + json.dumps(dic)
-                        checker = 1
-                    else:
-                        json_data = json_data + ',' + json.dumps(dic)
+                        dic = {'package': details[0],
+                               'version': details[1],
+                               'upgrade': upgrade, 'lock': 1}
 
-            except BaseException as msg:
-                logging.CyberCPLogFileWriter.writeToFile('[ERROR] %s. [fetchPackages:773]' % (str(msg)))
+                        counter = counter + 1
+                        if checker == 0:
+                            json_data = json_data + json.dumps(dic)
+                            checker = 1
+                        else:
+                            json_data = json_data + ',' + json.dumps(dic)
+
+
+                except BaseException as msg:
+                    logging.CyberCPLogFileWriter.writeToFile('[ERROR] %s. [fetchPackages:839]' % (str(msg)))
 
         json_data = json_data + ']'
 
@@ -846,6 +928,9 @@ def fetchPackageDetails(request):
 
         if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
             command = 'apt-cache show %s' % (package)
+            packageDetails = ProcessUtilities.outputExecutioner(command)
+        elif ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+            command = 'yum info %s' % (package)
             packageDetails = ProcessUtilities.outputExecutioner(command)
 
         data_ret = {'status': 1, 'packageDetails': packageDetails}

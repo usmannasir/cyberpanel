@@ -67,16 +67,23 @@ class ApplicationInstaller(multi.Thread):
 
             f = open(ServerStatusUtil.lswsInstallStatusPath, 'a')
 
-            if package == 'all':
-                command = 'apt-get update -y'
-                f.write(ProcessUtilities.outputExecutioner(command))
+            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
 
-                f.flush()
+                if package == 'all':
+                    command = 'apt-get update -y'
+                    f.write(ProcessUtilities.outputExecutioner(command))
 
-                command = 'apt-get upgrade -y'
-                f.write(ProcessUtilities.outputExecutioner(command))
-            else:
-                command = 'apt-get install --only-upgrade %s -y' % (package)
+                    f.flush()
+
+                    command = 'apt-get upgrade -y'
+                    f.write(ProcessUtilities.outputExecutioner(command))
+                else:
+                    command = 'apt-get install --only-upgrade %s -y' % (package)
+                    f.write(ProcessUtilities.outputExecutioner(command))
+
+                f.close()
+            elif ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                command = 'yum update %s -y' % (package)
                 f.write(ProcessUtilities.outputExecutioner(command))
 
             f.close()
