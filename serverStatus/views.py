@@ -753,6 +753,8 @@ def fetchPackages(request):
                             upgradePackages.append(pack)
 
                     packages = upgradePackages
+
+
         elif ProcessUtilities.decideDistro() == ProcessUtilities.centos:
 
             ### Check Package Lock status
@@ -823,6 +825,9 @@ def fetchPackages(request):
                         break
                     else:
                         startForUpdate = startForUpdate + 1
+            elif type == 'CyberPanel':
+                command = 'cat /usr/local/CyberCP/CPCent7repo.json'
+                packages = json.loads(ProcessUtilities.outputExecutioner(command))
 
         ## make list of packages that need update
 
@@ -916,6 +921,24 @@ def fetchPackages(request):
                         dic = {'package': details[0],
                                'version': details[1],
                                'upgrade': upgrade, 'lock': lock}
+
+                        counter = counter + 1
+                        if checker == 0:
+                            json_data = json_data + json.dumps(dic)
+                            checker = 1
+                        else:
+                            json_data = json_data + ',' + json.dumps(dic)
+                    elif type == 'CyberPanel':
+
+                        packageName = items['Package']
+
+                        if packageName.split('.')[0] in locked:
+                            lock = 1
+                        else:
+                            lock = 0
+
+                        dic = {'package': packageName,
+                               'version': items['Version'], 'lock': lock}
 
                         counter = counter + 1
                         if checker == 0:
