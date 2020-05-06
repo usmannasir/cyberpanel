@@ -755,6 +755,25 @@ def fetchPackages(request):
                     packages = upgradePackages
         elif ProcessUtilities.decideDistro() == ProcessUtilities.centos:
 
+            ### Check Package Lock status
+
+            if os.path.exists('/etc/yum.conf'):
+                yumConf = '/etc/yum.conf'
+            elif os.path.exists('/etc/yum/yum.conf'):
+                yumConf = '/etc/yum/yum.conf'
+
+            yumConfData = open(yumConf, 'r').read()
+            locked = []
+
+            if yumConfData.find('exclude') > -1:
+
+                data = open(yumConf, 'r').readlines()
+
+                for items in data:
+                    if items.find('exclude') > -1:
+                        locked = items.split('=')[1].rstrip('\n').split(' ')
+                        break
+
             if type == 'installed':
 
                 #### Cater for packages that need updates.
@@ -875,6 +894,8 @@ def fetchPackages(request):
                 try:
                     if type == 'installed' or type == 'upgrade':
 
+                        ###
+
                         details = items.split(' ')
                         details = [a for a in details if a != '']
 
@@ -886,9 +907,15 @@ def fetchPackages(request):
                         else:
                             upgrade = 'Upgrade available'
 
+
+                        if details[0].split('.')[0] in locked:
+                            lock = 1
+                        else:
+                            lock = 0
+
                         dic = {'package': details[0],
                                'version': details[1],
-                               'upgrade': upgrade, 'lock': 1}
+                               'upgrade': upgrade, 'lock': lock}
 
                         counter = counter + 1
                         if checker == 0:
@@ -899,6 +926,7 @@ def fetchPackages(request):
 
 
                 except BaseException as msg:
+                    print(str(msg))
                     logging.CyberCPLogFileWriter.writeToFile('[ERROR] %s. [fetchPackages:839]' % (str(msg)))
 
         json_data = json_data + ']'
@@ -1004,6 +1032,49 @@ def lockStatus(request):
             else:
                 command = 'apt-mark hold %s' % (package)
                 ProcessUtilities.executioner(command)
+
+        elif ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+
+            package = package.split('.')[0]
+
+            if os.path.exists('/etc/yum.conf'):
+                yumConf = '/etc/yum.conf'
+            elif os.path.exists('/etc/yum/yum.conf'):
+                yumConf = '/etc/yum/yum.conf'
+
+            yumConfData = open(yumConf, 'r').read()
+            data = open(yumConf, 'r').readlines()
+
+
+            if type == 0:
+                writeToFile = open(yumConf, 'w')
+
+                for items in data:
+                    if items.find('exclude') > -1:
+                        writeToFile.writelines(items.replace(package, ''))
+                    else:
+                        writeToFile.writelines(items)
+
+                writeToFile.close()
+            else:
+
+                if yumConfData.find('exclude') == -1:
+
+                    writeToFile = open(yumConf, 'a')
+                    writeToFile.writelines('exclude=%s\n' % (package))
+                    writeToFile.close()
+
+                else:
+                    writeToFile = open(yumConf, 'w')
+
+                    for items in data:
+                        if items.find('exclude') > -1:
+                            excludeLine = items.strip('\n')
+                            writeToFile.writelines('%s %s\n' % (excludeLine, package))
+                        else:
+                            writeToFile.writelines(items)
+
+                    writeToFile.close()
 
         data_ret = {'status': 1}
         json_data = json.dumps(data_ret)
