@@ -83,8 +83,12 @@ class ApplicationInstaller(multi.Thread):
 
                 f.close()
             elif ProcessUtilities.decideDistro() == ProcessUtilities.centos:
-                command = 'yum update %s -y' % (package)
-                f.write(ProcessUtilities.outputExecutioner(command))
+                if package == 'all':
+                    command = 'yum update -y'
+                    f.write(ProcessUtilities.outputExecutioner(command))
+                else:
+                    command = 'yum update %s -y' % (package)
+                    f.write(ProcessUtilities.outputExecutioner(command))
 
             f.close()
 
