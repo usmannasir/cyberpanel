@@ -190,8 +190,7 @@ class ProcessUtilities(multi.Thread):
             sock = ret[0]
 
             if user == None:
-
-                if command.find('export') > -1 and ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+                if command.find('export') > -1:
                     pass
                 elif command.find('sudo') == -1:
                     command = 'sudo %s' % (command)
