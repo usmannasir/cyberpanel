@@ -1347,6 +1347,7 @@ app.controller('remoteBackupControl', function ($scope, $http, $timeout) {
         $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
         function ListInitialDatas(response) {
+            $scope.backupProcessStarted = true;
 
             if (response.data.remoteTransferStatus === 1) {
 

@@ -1115,32 +1115,27 @@ class BackupManager:
 
             time.sleep(3)
 
-            if os.path.isfile(backupLogPath):
-                command = "sudo cat " + backupLogPath
-                status = ProcessUtilities.outputExecutioner(command)
+            command = "sudo cat " + backupLogPath
+            status = ProcessUtilities.outputExecutioner(command)
 
-                if status.find("completed[success]") > -1:
-                    command = "rm -rf " + removalPath
-                    ProcessUtilities.executioner(command)
-                    data_ret = {'remoteTransferStatus': 1, 'error_message': "None", "status": status, "complete": 1}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
-                elif status.find("[5010]") > -1:
-                    command = "sudo rm -rf " + removalPath
-                    ProcessUtilities.executioner(command)
-                    data = {'remoteTransferStatus': 0, 'error_message': status,
-                            "status": "None", "complete": 0}
-                    json_data = json.dumps(data)
-                    return HttpResponse(json_data)
-                else:
-                    data_ret = {'remoteTransferStatus': 1, 'error_message': "None", "status": status, "complete": 0}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
-            else:
-                data_ret = {'remoteTransferStatus': 0, 'error_message': "No such log found", "status": "None",
-                            "complete": 0}
+            if status.find("completed[success]") > -1:
+                command = "rm -rf " + removalPath
+                ProcessUtilities.executioner(command)
+                data_ret = {'remoteTransferStatus': 1, 'error_message': "None", "status": status, "complete": 1}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
+            elif status.find("[5010]") > -1:
+                command = "sudo rm -rf " + removalPath
+                ProcessUtilities.executioner(command)
+                data = {'remoteTransferStatus': 0, 'error_message': status,
+                        "status": "None", "complete": 0}
+                json_data = json.dumps(data)
+                return HttpResponse(json_data)
+            else:
+                data_ret = {'remoteTransferStatus': 1, 'error_message': "None", "status": status, "complete": 0}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
         except BaseException as msg:
             data = {'remoteTransferStatus': 0, 'error_message': str(msg), "status": "None", "complete": 0}
             json_data = json.dumps(data)
