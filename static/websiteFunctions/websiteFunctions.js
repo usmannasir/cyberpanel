@@ -5836,7 +5836,7 @@ app.controller('manageGIT', function ($scope, $http, $timeout, $window) {
                     $scope.autoCommitCurrent = response.data.autoCommitCurrent;
                     $scope.autoPushCurrent = response.data.autoPushCurrent;
                     $scope.emailLogsCurrent = response.data.emailLogsCurrent;
-                    $scope.currentCommands = response.data.commands;
+                    document.getElementById("currentCommands").value = response.data.commands;
                     $scope.webhookCommandCurrent = response.data.webhookCommandCurrent;
                 } else {
                     $scope.gitTracking = false;
@@ -6677,16 +6677,39 @@ app.controller('manageGIT', function ($scope, $http, $timeout, $window) {
 
         url = "/websites/saveGitConfigurations";
 
-
         var data = {
             domain: $("#domain").text(),
             folder: $scope.folder,
             autoCommit: $scope.autoCommit,
             autoPush: $scope.autoPush,
             emailLogs: $scope.emailLogs,
-            commands: $scope.commands,
+            commands: document.getElementById("currentCommands").value,
             webhookCommand: $scope.webhookCommand
         };
+
+        if ($scope.autoCommit === undefined){
+            $scope.autoCommitCurrent = 'Never';
+        }else{
+            $scope.autoCommitCurrent = $scope.autoCommit;
+        }
+
+        if ($scope.autoPush === undefined){
+            $scope.autoPushCurrent = 'Never';
+        }else{
+            $scope.autoPushCurrent = $scope.autoPush;
+        }
+
+        if ($scope.emailLogs === undefined){
+            $scope.emailLogsCurrent = false;
+        }else{
+            $scope.emailLogsCurrent = $scope.emailLogs;
+        }
+
+        if ($scope.webhookCommand === undefined){
+            $scope.webhookCommandCurrent = false;
+        }else{
+            $scope.webhookCommandCurrent = $scope.webhookCommand;
+        }
 
         var config = {
             headers: {
