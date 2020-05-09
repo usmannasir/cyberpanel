@@ -6805,4 +6805,5 @@ app.controller('manageGIT', function ($scope, $http, $timeout, $window) {
     };
 
 });
+
 /* Java script code to git tracking ends here */

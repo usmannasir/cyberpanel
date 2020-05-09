@@ -474,16 +474,22 @@ class DNS:
             leftIndex = output.index('(') + 2
             rightIndex = output.rindex(')') - 1
 
-            record = Records(domainOwner=zone,
-                             domain_id=zone.id,
-                             name="default._domainkey." + topLevelDomain,
-                             type="TXT",
-                             content=output[leftIndex:rightIndex],
-                             ttl=3600,
-                             prio=0,
-                             disabled=0,
-                             auth=1)
-            record.save()
+            if Records.objects.filter(domainOwner=zone, name="default._domainkey." + topLevelDomain).count() == 0:
+
+                record = Records(domainOwner=zone,
+                                 domain_id=zone.id,
+                                 name="default._domainkey." + topLevelDomain,
+                                 type="TXT",
+                                 content=output[leftIndex:rightIndex],
+                                 ttl=3600,
+                                 prio=0,
+                                 disabled=0,
+                                 auth=1)
+                record.save()
+
+                if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+                    command = ' systemctl restart pdns'
+                    ProcessUtilities.executioner(command)
 
             if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
                 command = ' systemctl restart pdns'

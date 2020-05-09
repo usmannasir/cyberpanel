@@ -617,6 +617,8 @@ class MailServerManager:
                 command = "sudo cat " + path
                 privateKey = ProcessUtilities.outputExecutioner(command, 'opendkim')
 
+                DNS.createDKIMRecords(domainName)
+
                 data_ret = {'status': 1, 'fetchStatus': 1, 'keysAvailable': 1, 'publicKey': output[leftIndex:rightIndex],
                             'privateKey': privateKey, 'dkimSuccessMessage': 'Keys successfully fetched!',
                             'error_message': "None"}
