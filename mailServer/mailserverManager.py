@@ -226,6 +226,38 @@ class MailServerManager:
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
+    def fixMailSSL(self):
+        try:
+
+            userID = self.request.session['userID']
+            currentACL = ACLManager.loadedACL(userID)
+
+            data = json.loads(self.request.body)
+            selectedDomain = data['selectedDomain']
+
+            admin = Administrator.objects.get(pk=userID)
+
+            if ACLManager.checkOwnership(selectedDomain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson('status', 0)
+
+            website = Websites.objects.get(domain=selectedDomain)
+
+            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+            execPath = '%s setupAutoDiscover --virtualHostName %s --websiteOwner %s' % (execPath, selectedDomain, website.admin.userName)
+
+            ProcessUtilities.executioner(execPath)
+
+            data_ret = {'status': 1,  'error_message': "None"}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
     def emailForwarding(self):
         try:
             userID = self.request.session['userID']
@@ -476,6 +508,19 @@ class MailServerManager:
             except:
                 raise BaseException('No emails exist for this domain.')
 
+            postfixMapPath = '/etc/postfix/vmail_ssl.map'
+
+            if os.path.exists(postfixMapPath):
+
+                postfixMapData = open(postfixMapPath, 'r').read()
+
+                if postfixMapData.find(selectedDomain) == -1:
+                    mailConfigured = 0
+                else:
+                    mailConfigured = 1
+            else:
+                mailConfigured = 0
+
             records = emailDomain.eusers_set.all()
 
             json_data = "["
@@ -492,7 +537,7 @@ class MailServerManager:
                     json_data = json_data + ',' + json.dumps(dic)
 
             json_data = json_data + ']'
-            final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": json_data})
+            final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'mailConfigured': mailConfigured, 'error_message': "None", "data": json_data})
             return HttpResponse(final_json)
 
         except BaseException as msg:
