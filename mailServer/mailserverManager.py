@@ -537,7 +537,7 @@ class MailServerManager:
                     json_data = json_data + ',' + json.dumps(dic)
 
             json_data = json_data + ']'
-            final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'mailConfigured': mailConfigured, 'error_message': "None", "data": json_data})
+            final_json = json.dumps({'status': 1, 'fetchStatus': 1,'serverHostname': 'mail.%s' % (selectedDomain), 'mailConfigured': mailConfigured, 'error_message': "None", "data": json_data})
             return HttpResponse(final_json)
 
         except BaseException as msg:

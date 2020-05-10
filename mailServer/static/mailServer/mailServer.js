@@ -1153,6 +1153,7 @@ app.controller('listEmails', function ($scope, $http) {
                 $scope.emailsAccounts = false;
                 $scope.records = JSON.parse(response.data.data);
                 $scope.mailConfigured = response.data.mailConfigured;
+                $scope.serverHostname = response.data.serverHostname;
 
                 new PNotify({
                     title: 'Success!',

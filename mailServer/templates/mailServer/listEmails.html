@@ -65,7 +65,81 @@
                                     </a>
                                 </div>
 
-                                <div class="col-sm-12">
+                                <div class="col-sm-4">
+
+                                    <h4>{% trans "Details To Configure Mail Clients" %}</h4>
+
+                                    <table class="table">
+                                        <thead>
+                                        <tr>
+                                            <th>{% trans "POP3" %}</th>
+                                            <th>{% trans "Details" %}</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr>
+                                            <td>{% trans "Server Hostname" %}</td>
+                                            <td>{$ serverHostname $}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>{% trans "Port" %}</td>
+                                            <td>110</td>
+                                        </tr>
+                                        <tr>
+                                            <td>{% trans "SSL" %}</td>
+                                            <td>STARTTLS</td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+
+                                    <table class="table">
+                                        <thead>
+                                        <tr>
+                                            <th>{% trans "IMAP" %}</th>
+                                            <th>{% trans "Details" %}</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr>
+                                            <td>{% trans "Server Hostname" %}</td>
+                                            <td>{$ serverHostname $}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>{% trans "Port" %}</td>
+                                            <td>143</td>
+                                        </tr>
+                                        <tr>
+                                            <td>{% trans "SSL" %}</td>
+                                            <td>STARTTLS</td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+
+                                    <table class="table">
+                                        <thead>
+                                        <tr>
+                                            <th>{% trans "SMTP" %}</th>
+                                            <th>{% trans "Details" %}</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr>
+                                            <td>{% trans "Server Hostname" %}</td>
+                                            <td>{$ serverHostname $}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>{% trans "Port" %}</td>
+                                            <td>587</td>
+                                        </tr>
+                                        <tr>
+                                            <td>{% trans "SSL" %}</td>
+                                            <td>STARTTLS</td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div class="col-sm-8">
 
                                     <table class="table">
                                         <thead>
