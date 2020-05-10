@@ -7,11 +7,31 @@ import randomPassword
 import errno
 import MySQLdb as mariadb
 import install
+from os.path import exists
 
 #distros
 centos=0
 ubuntu=1
 cent8=2
+
+def get_Ubuntu_release():
+    release = -1
+    if exists("/etc/lsb-release"):
+        distro_file = "/etc/lsb-release"
+        with open(distro_file) as f:
+            for line in f:
+                if line[:16] == "DISTRIB_RELEASE=":
+                    release = float(line[16:])
+
+        if release == -1:
+            print("Can't find distro release name in " + distro_file + " - fatal error")
+
+    else:
+        logging.InstallLog.writeToFile("Can't find linux release file - fatal error")
+        print("Can't find linux release file - fatal error")
+        os._exit(os.EX_UNAVAILABLE)
+
+    return release
 
 class InstallCyberPanel:
 
@@ -333,17 +353,18 @@ class InstallCyberPanel:
             command = 'DEBIAN_FRONTEND=noninteractive apt install pure-ftpd-mysql -y'
             os.system(command)
 
-            command = 'wget https://rep.cyberpanel.net/pure-ftpd-common_1.0.47-3_all.deb'
-            install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+            if get_Ubuntu_release() == 18.10:
+                command = 'wget https://rep.cyberpanel.net/pure-ftpd-common_1.0.47-3_all.deb'
+                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
-            command = 'wget https://rep.cyberpanel.net/pure-ftpd-mysql_1.0.47-3_amd64.deb'
-            install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+                command = 'wget https://rep.cyberpanel.net/pure-ftpd-mysql_1.0.47-3_amd64.deb'
+                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
-            command = 'dpkg --install --force-confold pure-ftpd-common_1.0.47-3_all.deb'
-            install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+                command = 'dpkg --install --force-confold pure-ftpd-common_1.0.47-3_all.deb'
+                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
-            command = 'dpkg --install --force-confold pure-ftpd-mysql_1.0.47-3_amd64.deb'
-            install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+                command = 'dpkg --install --force-confold pure-ftpd-mysql_1.0.47-3_amd64.deb'
+                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
         elif self.distro == centos:
             command = "yum install -y pure-ftpd"
