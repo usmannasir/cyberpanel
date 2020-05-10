@@ -107,10 +107,7 @@ class virtualHostUtilities:
                 writeToFile.write(mapContent)
                 writeToFile.close()
 
-                if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
-                    command = 'postmap -F hash:/etc/postfix/vmail_ssl.map'
-                else:
-                    command = 'postmap -f hash:/etc/postfix/vmail_ssl.map'
+                command = 'postmap -F hash:/etc/postfix/vmail_ssl.map'
 
                 ProcessUtilities.executioner(command)
 
