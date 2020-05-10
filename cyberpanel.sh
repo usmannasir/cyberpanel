@@ -554,7 +554,7 @@ elif  echo $OUTPUT | grep -q "CentOS Linux 8" ; then
 	echo -e "\nDetecting CentOS 8.X...\n"
 	SERVER_OS="CentOS"
 	CENTOS_8="True"
-elif echo $OUTPUT | grep -q "Ubuntu 18.04" ; then
+elif echo $OUTPUT | grep -q "Ubuntu" ; then
 	if uname -m | grep -q 64 ; then
 	echo -e "\nDetecting Ubuntu 18.04...\n"
 	SERVER_OS="Ubuntu"
