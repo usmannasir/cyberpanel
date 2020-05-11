@@ -1060,7 +1060,7 @@ if [[ $DEV == "ON" ]] ; then
     check_return
   else
     wget https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
-    pip3.6 install --ignore-installed -r requirments.txt
+    pip3 install --ignore-installed -r requirments.txt
   fi
 fi
 
@@ -1169,7 +1169,7 @@ if [[ $UBUNTU_20 == "False" ]] ; then
 else
   . /usr/local/CyberCP/bin/activate
   wget https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
-  /usr/local/CyberPanel/bin/pip3 install --ignore-installed -r requirments.txt
+  pip3 install --ignore-installed -r requirments.txt
   check_return
 fi
 
