@@ -1015,6 +1015,7 @@ if [[ $debug == "1" ]] ; then
    /usr/local/CyberPanel/bin/pip3 install --ignore-installed /usr/local/pip-packs/*
    check_return
 else
+  . /usr/local/CyberCP/bin/activate
   wget https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
   /usr/local/CyberPanel/bin/pip3 install --ignore-installed -r requirments.txt
   check_return
@@ -1073,6 +1074,8 @@ if [[ $DEV == "ON" ]] ; then
 fi
 
 if [ -f requirements.txt ] && [ -d cyberpanel ] ; then
+  echo $PWD
+  sleep 20
 	rm -rf cyberpanel
 	rm -f requirements.txt
 fi
@@ -1171,6 +1174,7 @@ if [[ $UBUNTU_20 == "False" ]] ; then
    pip3.6 install --ignore-installed /usr/local/pip-packs/*
    check_return
 else
+  . /usr/local/CyberCP/bin/activate
   wget https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
   pip3.6 install --ignore-installed -r requirments.txt
   check_return

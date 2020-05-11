@@ -1312,6 +1312,10 @@ imap_folder_list_limit = 0
 
             logging.InstallLog.writeToFile("Starting LSCPD installation..")
 
+            print(os.getcwd())
+
+            time.sleep(30)
+
             os.chdir(self.cwd)
 
             if self.distro == ubuntu:
