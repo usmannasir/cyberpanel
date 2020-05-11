@@ -41,7 +41,7 @@ class Comments(models.Model):
     type = models.CharField(max_length=10)
     modified_at = models.IntegerField()
     account = models.CharField(max_length=40)
-    comment = models.CharField(max_length=64000)
+    comment = models.TextField()
 
     class Meta:
         db_table = 'comments'
