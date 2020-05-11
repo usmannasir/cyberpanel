@@ -328,8 +328,11 @@ class InstallCyberPanel:
         conn = mariadb.connect(user='root', passwd=self.mysql_Root_password)
         cursor = conn.cursor()
         cursor.execute('set global innodb_file_per_table = on;')
-        cursor.execute('set global innodb_file_format = Barracuda;')
-        cursor.execute('set global innodb_large_prefix = on;')
+        try:
+            cursor.execute('set global innodb_file_format = Barracuda;')
+            cursor.execute('set global innodb_large_prefix = on;')
+        except BaseException as msg:
+            self.stdOut('%s. [ERROR:335]' % (str(msg)))
         cursor.close()
         conn.close()
 
