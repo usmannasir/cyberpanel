@@ -1010,6 +1010,7 @@ if [[ $debug == "0" ]] ; then
 	exit
 fi
 
+virtualenv -p /usr/bin/python3 /usr/local/CyberCP
 if [[ $debug == "1" ]] ; then
   if [[ $UBUNTU_20 == "False" ]] ; then
    /usr/local/CyberPanel/bin/pip3 install --ignore-installed /usr/local/pip-packs/*
