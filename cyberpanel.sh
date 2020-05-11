@@ -1010,18 +1010,8 @@ if [[ $debug == "0" ]] ; then
 	exit
 fi
 
-virtualenv -p /usr/bin/python3 /usr/local/CyberCP
-if [[ $debug == "1" ]] ; then
-  if [[ $UBUNTU_20 == "False" ]] ; then
-   /usr/local/CyberPanel/bin/pip3 install --ignore-installed /usr/local/pip-packs/*
-   check_return
-else
-  . /usr/local/CyberCP/bin/activate
-  wget https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
-  /usr/local/CyberPanel/bin/pip3 install --ignore-installed -r requirments.txt
-  check_return
-fi
 
+if [[ $debug == "1" ]] ; then
 	if [[ $REDIS_HOSTING == "Yes" ]] ; then
 	  /usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY --postfix $POSTFIX_VARIABLE --powerdns $POWERDNS_VARIABLE --ftp $PUREFTPD_VARIABLE --redis enable
   else
@@ -1168,21 +1158,22 @@ trusted-host=pypi.python.org
 EOF
 	fi
 
+fi
+
 virtualenv -p /usr/bin/python3 /usr/local/CyberCP
-source /usr/local/CyberCP/bin/activate
 
 if [[ $UBUNTU_20 == "False" ]] ; then
-   pip3.6 install --ignore-installed /usr/local/pip-packs/*
+   source /usr/local/CyberCP/bin/activate
+   /usr/local/CyberPanel/bin/pip3 install --ignore-installed /usr/local/pip-packs/*
    check_return
 else
   . /usr/local/CyberCP/bin/activate
   wget https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
-  pip3.6 install --ignore-installed -r requirments.txt
+  /usr/local/CyberPanel/bin/pip3 install --ignore-installed -r requirments.txt
   check_return
 fi
 
 systemctl restart lscpd
-fi
 
 for version in $(ls /usr/local/lsws | grep lsphp);
 	do
