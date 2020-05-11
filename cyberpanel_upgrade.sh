@@ -305,11 +305,15 @@ fi
 
 ##
 
+rm -f wsgi-lsapi-1.4.tgz
 rm -f wsgi-lsapi-1.5.tgz
+rm -f wsgi-lsapi-1.6.tgz
 rm -rf wsgi-lsapi-1.4
-wget http://www.litespeedtech.com/packages/lsapi/wsgi-lsapi-1.5.tgz
-tar xf wsgi-lsapi-1.5.tgz
-cd wsgi-lsapi-1.5
+rm -rf wsgi-lsapi-1.5
+rm -rf wsgi-lsapi-1.6
+wget http://www.litespeedtech.com/packages/lsapi/wsgi-lsapi-1.6.tgz
+tar xf wsgi-lsapi-1.6.tgz
+cd wsgi-lsapi-1.6
 /usr/local/CyberPanel/bin/python ./configure.py
 make
 
