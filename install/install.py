@@ -2217,4 +2217,6 @@ def main():
 
 
 if __name__ == "__main__":
+    print(os.getcwd())
+    time.sleep(20)
     main()
