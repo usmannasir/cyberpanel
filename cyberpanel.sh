@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#CyberPanel installer script for CentOS 7.X, CentOS 8.X, CloudLinux 7.X and Ubuntu 18.04
+#CyberPanel installer script for CentOS 7.X, CentOS 8.X, CloudLinux 7.X, Ubuntu 18.04 and Ubuntu 20.04
 
 SUDO_TEST=$(set)
 
@@ -23,6 +23,7 @@ MEMCACHED="ON"
 REDIS="ON"
 TOTAL_RAM=$(free -m | awk '/Mem\:/ { print $2 }')
 CENTOS_8="False"
+UBUNTU_20="False"
 WATCHDOG="OFF"
 BRANCH_NAME="v${TEMP:12:3}.${TEMP:25:1}"
 VIRT_TYPE=""
@@ -562,10 +563,11 @@ elif echo $OUTPUT | grep -q "Ubuntu 18.04" ; then
 		echo -e "\nUbuntu 18.04 x32 detected...ths only works on x64 system."
 		exit
 	fi
-elif echo $OUTPUT | grep -q "Ubuntu 20" ; then
+elif echo $OUTPUT | grep -q "Ubuntu 20.04" ; then
 	if uname -m | grep -q 64 ; then
-	echo -e "\nDetecting Ubuntu 20...\n"
+	echo -e "\nDetecting Ubuntu 20.04 ...\n"
 	SERVER_OS="Ubuntu"
+	UBUNTU_20="True"
 	else
 		echo -e "\nUbuntu 20 x32 detected...ths only works on x64 system."
 		exit
@@ -573,7 +575,7 @@ elif echo $OUTPUT | grep -q "Ubuntu 20" ; then
 else
 	cat /etc/*release
 	echo -e "\nUnable to detect your OS...\n"
-	echo -e "\nCyberPanel is supported on Ubuntu 18.04 x86_64, CentOS 7.x, CentOS 8.x and CloudLinux 7.x...\n"
+	echo -e "\nCyberPanel is supported on Ubuntu 18.04 x86_64, Ubuntu 20.04 x86_64, CentOS 7.x, CentOS 8.x and CloudLinux 7.x...\n"
 	exit 1
 fi
 }
@@ -994,7 +996,14 @@ if [[ $debug == "0" ]] ; then
 fi
 
 if [[ $debug == "1" ]] ; then
-	/usr/local/CyberPanel/bin/pip3 install --ignore-installed /usr/local/pip-packs/*
+  if [[ $UBUNTU_20 == "False" ]] ; then
+   /usr/local/CyberPanel/bin/pip3 install --ignore-installed /usr/local/pip-packs/*
+   check_return
+else
+  wget https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
+  /usr/local/CyberPanel/bin/pip3 install --ignore-installed -r requirments.txt
+  check_return
+fi
 
 	if [[ $REDIS_HOSTING == "Yes" ]] ; then
 	  /usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY --postfix $POSTFIX_VARIABLE --powerdns $POWERDNS_VARIABLE --ftp $PUREFTPD_VARIABLE --redis enable
@@ -1034,15 +1043,20 @@ if [[ $DEV == "ON" ]] ; then
 	#install dev branch
 	#wget https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
 	cd /usr/local/
-	virtualenv -p /usr/bin/python3 CyberPanel
+  virtualenv -p /usr/bin/python3 CyberPanel
   source /usr/local/CyberPanel/bin/activate
-  wget -O /usr/local/cyberpanel-pip.zip https://rep.cyberpanel.net/cyberpanel-pip.zip
-	check_return
-  unzip /usr/local/cyberpanel-pip.zip -d /usr/local
-	check_return
-	pip3.6 install --ignore-installed /usr/local/pip-packs/*
-	check_return
-	cd -
+	if [[ $UBUNTU_20 == "False" ]] ; then
+    wget -O /usr/local/cyberpanel-pip.zip https://rep.cyberpanel.net/cyberpanel-pip.zip
+    check_return
+    unzip /usr/local/cyberpanel-pip.zip -d /usr/local
+    check_return
+    pip3.6 install --ignore-installed /usr/local/pip-packs/*
+    check_return
+    cd -
+  else
+    wget https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
+    pip3.6 install --ignore-installed -r requirments.txt
+  fi
 fi
 
 if [ -f requirements.txt ] && [ -d cyberpanel ] ; then
@@ -1132,8 +1146,16 @@ EOF
 
 virtualenv -p /usr/bin/python3 /usr/local/CyberCP
 source /usr/local/CyberCP/bin/activate
-pip3.6 install --ignore-installed /usr/local/pip-packs/*
-check_return
+
+if [[ $UBUNTU_20 == "False" ]] ; then
+   pip3.6 install --ignore-installed /usr/local/pip-packs/*
+   check_return
+else
+  wget https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
+  pip3.6 install --ignore-installed -r requirments.txt
+  check_return
+fi
+
 systemctl restart lscpd
 fi
 
