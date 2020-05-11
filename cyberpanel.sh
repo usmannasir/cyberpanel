@@ -30,6 +30,19 @@ VIRT_TYPE=""
 GIT_URL="github.com/usmannasir/cyberpanel"
 GIT_CONTENT_URL="raw.githubusercontent.com/usmannasir/cyberpanel"
 
+disable_repos() {
+
+if [[ $SERVER_OS == "CentOS" ]] ; then
+	sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-Base.repo
+	sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-Debuginfo.repo
+	sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-Media.repo
+	sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-Vault.repo
+	sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-CR.repo
+	sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-fasttrack.repo
+	sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-Sources.repo
+fi
+
+}
 
 check_return() {
 #check previous command result , 0 = ok ,  non-0 = something wrong.
@@ -46,7 +59,6 @@ if [[ ! -f /usr/bin/cyberpanel_utility ]] ; then
 wget -q -O /usr/bin/cyberpanel_utility https://cyberpanel.sh/misc/cyberpanel_utility.sh
 chmod 700 /usr/bin/cyberpanel_utility
 fi
-
 }
 
 watchdog_setup() {
@@ -545,6 +557,7 @@ fi
 check_OS() {
 echo -e "\nChecking OS..."
 OUTPUT=$(cat /etc/*release)
+
 if  echo $OUTPUT | grep -q "CentOS Linux 7" ; then
 	echo -e "\nDetecting CentOS 7.X...\n"
 	SERVER_OS="CentOS"
@@ -578,6 +591,8 @@ else
 	echo -e "\nCyberPanel is supported on Ubuntu 18.04 x86_64, Ubuntu 20.04 x86_64, CentOS 7.x, CentOS 8.x and CloudLinux 7.x...\n"
 	exit 1
 fi
+
+
 }
 
 check_root() {
@@ -1042,8 +1057,7 @@ export LC_ALL=en_US.UTF-8
 if [[ $DEV == "ON" ]] ; then
 	#install dev branch
 	#wget https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
-	cd /usr/local/
-  virtualenv -p /usr/bin/python3 CyberPanel
+  virtualenv -p /usr/bin/python3 /usr/local/CyberPanel
   source /usr/local/CyberPanel/bin/activate
 	if [[ $UBUNTU_20 == "False" ]] ; then
     wget -O /usr/local/cyberpanel-pip.zip https://rep.cyberpanel.net/cyberpanel-pip.zip
@@ -1052,7 +1066,6 @@ if [[ $DEV == "ON" ]] ; then
     check_return
     pip3.6 install --ignore-installed /usr/local/pip-packs/*
     check_return
-    cd -
   else
     wget https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
     pip3.6 install --ignore-installed -r requirments.txt
@@ -1064,6 +1077,10 @@ if [ -f requirements.txt ] && [ -d cyberpanel ] ; then
 	rm -f requirements.txt
 fi
 
+echo $PWD
+
+sleep 20
+
 git clone https://${GIT_URL}
 cd cyberpanel
 git checkout $BRANCH_NAME
@@ -1072,6 +1089,9 @@ cd -
 cp -r cyberpanel /usr/local/cyberpanel
 cd cyberpanel/install
 
+echo $PWD
+
+sleep 20
 
 curl https://cyberpanel.sh/?version
 }
@@ -1412,6 +1432,8 @@ else
 fi
 }
 
+##START
+
 if [ $# -eq 0 ] ; then
 	echo -e "\nInitializing...\n"
 else
@@ -1510,15 +1532,14 @@ else
 DOWNLOAD_SERVER="cdn.cyberpanel.sh"
 fi
 
+##END
+
 check_OS
 check_virtualization
 check_root
 check_panel
 check_process
 check_provider
-
-
-
 
 
 if [[ $SILENT = "ON" ]] ; then
@@ -1540,19 +1561,5 @@ main_install
 
 
 ### Disable Centos Default Repos
-
-disable_repos() {
-
-if [[ $SERVER_OS == "CentOS" ]] ; then
-	sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-Base.repo
-	sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-Debuginfo.repo
-	sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-Media.repo
-	sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-Vault.repo
-	sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-CR.repo
-	sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-fasttrack.repo
-	sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-Sources.repo
-fi
-
-}
 
 disable_repos
