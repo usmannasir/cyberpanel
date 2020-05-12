@@ -1050,7 +1050,7 @@ if [[ $DEV == "ON" ]] ; then
 	#install dev branch
 	#wget https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
   virtualenv -p /usr/bin/python3 /usr/local/CyberPanel
-  source /usr/local/CyberPanel/bin/activate
+  . /usr/local/CyberPanel/bin/activate
 	if [[ $UBUNTU_20 == "False" ]] ; then
     wget -O /usr/local/cyberpanel-pip.zip https://rep.cyberpanel.net/cyberpanel-pip.zip
     check_return
@@ -1158,7 +1158,7 @@ fi
 virtualenv -p /usr/bin/python3 /usr/local/CyberCP
 
 if [[ $UBUNTU_20 == "False" ]] ; then
-   source /usr/local/CyberCP/bin/activate
+   . /usr/local/CyberCP/bin/activate
    /usr/local/CyberPanel/bin/pip3 install --ignore-installed /usr/local/pip-packs/*
    check_return
 else
