@@ -327,7 +327,7 @@ class preFlightsChecks:
                 os._exit(os.EX_SOFTWARE)
 
         elif self.distro == centos:
-            command = 'rpm -ivh http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el7.noarch.rpm'
+            command = 'rpm -ivh http://rpms.litespeedtech.com/centos/litespeed-repo-1.2-1.el7.noarch.rpm'
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
         elif self.distro == cent8:
             command = 'rpm -Uvh http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el8.noarch.rpm'
