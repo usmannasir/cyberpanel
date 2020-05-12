@@ -1059,8 +1059,12 @@ if [[ $DEV == "ON" ]] ; then
     pip3.6 install --ignore-installed /usr/local/pip-packs/*
     check_return
   else
-    wget https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
-    pip3 install --ignore-installed -r requirments.txt
+    wget -O /usr/local/cyberpanel-pip.zip https://rep.cyberpanel.net/ubuntu-pip.zip
+    check_return
+    unzip /usr/local/cyberpanel-pip.zip -d /usr/local
+    check_return
+    pip3 install --ignore-installed /usr/local/packages/*
+    check_return
   fi
 fi
 
@@ -1168,8 +1172,7 @@ if [[ $UBUNTU_20 == "False" ]] ; then
    check_return
 else
   . /usr/local/CyberCP/bin/activate
-  wget https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
-  pip3 install --ignore-installed -r requirments.txt
+  pip3 install --ignore-installed /usr/local/packages/*
   check_return
 fi
 
