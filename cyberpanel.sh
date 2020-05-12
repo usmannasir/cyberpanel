@@ -1069,15 +1069,9 @@ if [[ $DEV == "ON" ]] ; then
 fi
 
 if [ -f requirements.txt ] && [ -d cyberpanel ] ; then
-  echo $PWD
-  sleep 20
 	rm -rf cyberpanel
 	rm -f requirements.txt
 fi
-
-echo $PWD
-
-sleep 20
 
 git clone https://${GIT_URL}
 cd cyberpanel
@@ -1087,9 +1081,6 @@ cd -
 cp -r cyberpanel /usr/local/cyberpanel
 cd cyberpanel/install
 
-echo $PWD
-
-sleep 20
 
 curl https://cyberpanel.sh/?version
 }

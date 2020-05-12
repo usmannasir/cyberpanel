@@ -1312,15 +1312,7 @@ imap_folder_list_limit = 0
 
             logging.InstallLog.writeToFile("Starting LSCPD installation..")
 
-            print(os.getcwd())
-
-            time.sleep(30)
-
             os.chdir(self.cwd)
-
-            print(os.getcwd())
-
-            time.sleep(30)
 
             if self.distro == ubuntu:
                 command = "apt-get -y install gcc g++ make autoconf rcs"
@@ -2225,6 +2217,4 @@ def main():
 
 
 if __name__ == "__main__":
-    print(os.getcwd())
-    time.sleep(20)
     main()
