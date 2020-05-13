@@ -1040,6 +1040,11 @@ if [[ $REDIS == "ON" ]] ; then
 fi
 	after_install
 fi
+
+if [[ $UBUNTU_20 == "True" ]] ; then
+    cp /usr/local/lsws/lsphp73/bin/php /usr/bin
+fi
+
 }
 
 pip_virtualenv() {

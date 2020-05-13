@@ -70,7 +70,7 @@ class ApplicationInstaller(multi.Thread):
             if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
 
                 if package == 'all':
-                    command = 'apt-get update -y'
+                    command = 'DEBIAN_FRONTEND=noninteractive apt-get update -y'
                     f.write(ProcessUtilities.outputExecutioner(command))
 
                     f.flush()
