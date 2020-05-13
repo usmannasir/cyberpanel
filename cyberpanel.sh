@@ -414,6 +414,8 @@ if [[ $SERVER_OS == "CentOS" ]] ; then
 
   if [[ $SERVER_OS == "CentOS" ]] ; then
     pip3.6 install virtualenv==16.7.9
+  elif [[ $UBUNTU_20 == "True" ]] ; then
+    pip3.6 install virtualenv==16.7.9
   else
     pip3.6 install virtualenv
   fi
