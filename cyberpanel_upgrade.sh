@@ -12,6 +12,7 @@ GIT_URL="github.com/usmannasir/cyberpanel"
 GIT_CONTENT_URL="raw.githubusercontent.com/usmannasir/cyberpanel"
 SERVER_COUNTRY="unknow"
 SERVER_COUNTRY=$(curl --silent --max-time 5 https://cyberpanel.sh/?country)
+UBUNTU_20="False"
 
 ### Update and remove not needed repos
 
@@ -190,6 +191,10 @@ elif  echo $OUTPUT | grep -q "CentOS Linux 8" ; then
 elif echo $OUTPUT | grep -q "Ubuntu 18.04" ; then
 	echo -e "\nDetecting Ubuntu 18.04...\n"
 	SERVER_OS="Ubuntu"
+elif echo $OUTPUT | grep -q "Ubuntu 20.04" ; then
+	echo -e "\nDetecting Ubuntu 18.04...\n"
+	SERVER_OS="Ubuntu"
+	UBUNTU_20="True"
 else
 	cat /etc/*release
 	echo -e "\nUnable to detect your OS...\n"
@@ -237,9 +242,17 @@ else
 fi
 
 rm -f requirments.txt
-wget -O /usr/local/cyberpanel-pip.zip https://rep.cyberpanel.net/cyberpanel-pip.zip
+
+if [[ $UBUNTU_20 == "False" ]] ; then
+  wget -O /usr/local/cyberpanel-pip.zip https://rep.cyberpanel.net/cyberpanel-pip.zip
+else
+  wget -O /usr/local/cyberpanel-pip.zip https://rep.cyberpanel.net/ubuntu-pip.zip
+fi
+
 check_return
 rm -rf /usr/local/pip-packs/
+rm -rf /usr/local/packages
+
 unzip /usr/local/cyberpanel-pip.zip -d /usr/local
 check_return
 . /usr/local/CyberPanel/bin/activate
@@ -248,7 +261,11 @@ check_return
 if [ $SERVER_OS = "Ubuntu" ] ; then
   . /usr/local/CyberPanel/bin/activate
   check_return
-  pip3 install --ignore-installed /usr/local/pip-packs/*
+  if [[ $UBUNTU_20 == "False" ]] ; then
+    pip3 install --ignore-installed /usr/local/pip-packs/*
+  else
+    pip3 install --ignore-installed /usr/local/packages/*
+  fi
   check_return
 else
   source /usr/local/CyberPanel/bin/activate
@@ -293,7 +310,11 @@ check_return
 if [ $SERVER_OS = "Ubuntu" ] ; then
   . /usr/local/CyberCP/bin/activate
   check_return
-  pip3 install --ignore-installed /usr/local/pip-packs/*
+  if [[ $UBUNTU_20 == "False" ]] ; then
+    pip3 install --ignore-installed /usr/local/pip-packs/*
+  else
+    pip3 install --ignore-installed /usr/local/packages/*
+  fi
   check_return
 else
   source /usr/local/CyberCP/bin/activate
