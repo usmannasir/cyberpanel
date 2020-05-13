@@ -409,8 +409,11 @@ class InstallCyberPanel:
             except:
                 logging.InstallLog.writeToFile("[ERROR] Could not create directory for FTP SSL")
 
+            if (self.distro == centos or self.distro == cent8) or (self.distro == ubuntu and get_Ubuntu_release() == 18.14):
+                command = 'openssl req -newkey rsa:1024 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout /etc/ssl/private/pure-ftpd.pem -out /etc/ssl/private/pure-ftpd.pem'
+            else:
+                command = 'openssl req -x509 -nodes -days 7300 -newkey rsa:2048 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout /etc/ssl/private/pure-ftpd.pem -out /etc/ssl/private/pure-ftpd.pem'
 
-            command = 'openssl req -newkey rsa:1024 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout /etc/ssl/private/pure-ftpd.pem -out /etc/ssl/private/pure-ftpd.pem'
             install.preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             os.chdir(self.cwd)

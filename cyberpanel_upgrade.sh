@@ -192,7 +192,7 @@ elif echo $OUTPUT | grep -q "Ubuntu 18.04" ; then
 	echo -e "\nDetecting Ubuntu 18.04...\n"
 	SERVER_OS="Ubuntu"
 elif echo $OUTPUT | grep -q "Ubuntu 20.04" ; then
-	echo -e "\nDetecting Ubuntu 18.04...\n"
+	echo -e "\nDetecting Ubuntu 20.04...\n"
 	SERVER_OS="Ubuntu"
 	UBUNTU_20="True"
 else
