@@ -1019,6 +1019,7 @@ fi
 
 
 if [[ $debug == "1" ]] ; then
+  pip3.6 install --ignore-installed /usr/local/pip-packs/*
 	if [[ $REDIS_HOSTING == "Yes" ]] ; then
 	  /usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY --postfix $POSTFIX_VARIABLE --powerdns $POWERDNS_VARIABLE --ftp $PUREFTPD_VARIABLE --redis enable
   else
@@ -1173,10 +1174,12 @@ virtualenv -p /usr/bin/python3 /usr/local/CyberCP
 
 if [[ $UBUNTU_20 == "False" ]] ; then
    source /usr/local/CyberCP/bin/activate
-   /usr/local/CyberPanel/bin/pip3 install --ignore-installed /usr/local/pip-packs/*
+   check_return
+   pip3.6 install --ignore-installed /usr/local/pip-packs/*
    check_return
 else
   . /usr/local/CyberCP/bin/activate
+  check_return
   pip3 install --ignore-installed /usr/local/packages/*
   check_return
 fi
