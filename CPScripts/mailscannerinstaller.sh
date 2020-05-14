@@ -1,5 +1,19 @@
 #!/bin/bash
+#systemctl stop firewalld
+
+echo 'backup configs';
+cp /etc/dovecot/dovecot.conf /etc/dovecot/dovecot.conf-bak_$(date '+%Y-%m-%d_%H_%M:%S');
+cp /etc/postfix/master.cf /etc/postfix/master.cf-bak_$(date '+%Y-%m-%d_%H_%M:%S');
+cp /etc/postfix/main.cf /etc/postfix/main.cf-bak_$(date '+%Y-%m-%d_%H_%M:%S');
+cp /etc/dovecot/dovecot-sql.conf.ext /etc/dovecot/dovecot-sql.conf.ext-bak_$(date '+%Y-%m-%d_%H_%M:%S')
+
+
+ZONE=$(firewall-cmd --get-default-zone)
+firewall-cmd --zone=$ZONE --add-port=4190/tcp --permanent
 systemctl stop firewalld
+
+echo 'Stop CSF'
+csf -x
 
 MAILSCANNER=/etc/MailScanner
 
@@ -173,13 +187,115 @@ systemctl restart mailscanner
 
 IPADDRESS=$(cat /etc/cyberpanel/machineIP)
 
+
+echo 'Setting up spamassassin and sieve to deliver spam to Junk folder by default'
+#echo "If you wish mailscanner/spamassassin to send spam email to a spam folder please follow the tutorial on the Cyberpanel Website"
+echo 'Fix protocols'
+sed -i 's/^protocols =.*/protocols = imap pop3 sieve/g' /etc/dovecot/dovecot.conf
+
+
+sed -i "s|^user_query.*|user_query = SELECT '5000' as uid, '5000' as gid, '/home/vmail/%d/%n' as home,mail FROM e_users WHERE email='%u';|g" /etc/dovecot/dovecot-sql.conf.ext
+
+if [ "$OS" = "NAME=\"Ubuntu\"" ];then
+
+	apt-get install -y dovecot-managesieved dovecot-sieve net-tools pflogsumm
+
+elif [ "$OS" = "NAME=\"CentOS Linux\"" ];then
+
+	yum install -y nano net-tools dovecot-pigeonhole postfix-perl-scripts
+
+fi
+
+
+# Create Sieve files
+mkdir -p /etc/dovecot/sieve/global
+touch /var/log/{dovecot-lda-errors.log,dovecot-lda.log}
+touch /var/log/{dovecot-sieve-errors.log,dovecot-sieve.log}
+touch /var/log/{dovecot-lmtp-errors.log,dovecot-lmtp.log}
+touch /etc/dovecot/sieve/default.sieve
+chown vmail: -R /etc/dovecot/sieve
+chown vmail:mail /var/log/dovecot-*
+
+echo 'Create Sieve Default spam to Junk rule'
+cat >> /etc/dovecot/sieve/default.sieve <<EOL
+require "fileinto";
+if header :contains "X-Spam-Flag" "YES" {
+  fileinto "INBOX.Junk E-mail";
+}
+EOL
+
+
+echo "Adding Sieve to /etc/dovecot/dovecot.conf"
+cat >> /etc/dovecot/dovecot.conf <<EOL
+service managesieve-login {
+  inet_listener sieve {
+    port = 4190
+  }
+}
+service managesieve {
+}
+protocol sieve {
+    managesieve_max_line_length = 65536
+    managesieve_implementation_string = dovecot
+    log_path = /var/log/dovecot-sieve-errors.log
+    info_log_path = /var/log/dovecot-sieve.log
+}
+plugin {
+sieve = /home/vmail/%d/%n/dovecot.sieve
+sieve_global_path = /etc/dovecot/sieve/default.sieve
+sieve_dir = /home/vmail/%d/%n/sieve
+sieve_global_dir = /etc/dovecot/sieve/global/
+}
+protocol lda {
+    mail_plugins = $mail_plugins sieve quota
+    postmaster_address = postmaster@example.com
+    hostname = server.example.com
+    auth_socket_path = /var/run/dovecot/auth-master
+    log_path = /var/log/dovecot-lda-errors.log
+    info_log_path = /var/log/dovecot-lda.log
+}
+protocol lmtp {
+    mail_plugins = $mail_plugins sieve quota
+    log_path = /var/log/dovecot-lmtp-errors.log
+    info_log_path = /var/log/dovecot-lmtp.log
+}
+EOL
+
+hostname=$(hostname);
+
+echo 'Fix postmaster email in sieve'
+postmaster_address=$(grep postmaster_address /etc/dovecot/dovecot.conf |  sed 's/.*=//' |sed -e 's/^[ \t]*//'| sort -u)
+
+sed -i "s|postmaster@example.com|$postmaster_address|g" /etc/dovecot/dovecot.conf
+sed -i "s|server.example.com|$hostname|g" /etc/dovecot/dovecot.conf
+
+#Sieve the global spam filter
+sievec /etc/dovecot/sieve/default.sieve
+
+#Sieve the global spam filter
+sievec /etc/dovecot/sieve/default.sieve
+
+if [ "$OS" = "NAME=\"Ubuntu\"" ];then
+	sed -i 's|^spamassassin.*|spamassassin unix -     n   n   -   -   pipe flags=DROhu user=vmail:vmail argv=/usr/bin/spamc -f -e  /usr/lib/dovecot/deliver -f ${sender} -d ${user}@${nexthop}|g' /etc/postfix/master.cf
+
+elif [ "$OS" = "NAME=\"CentOS Linux\"" ];then
+	sed -i 's|^spamassassin.*|spamassassin unix -     n   n   -   -   pipe flags=DROhu user=vmail:vmail argv=/usr/bin/spamc -f -e  /usr/libexec/dovecot/deliver -f ${sender} -d ${user}@${nexthop}|g' /etc/postfix/master.cf
+
+fi
+
+
+echo 'Restart and check services are up'
+service dovecot restart && service postfix restart && service spamassassin restart;
+service dovecot status && service postfix status && service spamassassin status;
+
+csf -e
+
 echo "MailScanner successfully installed. MailWatch successfully installed."
 echo "Visit https://${IPADDRESS}:8090/mailwatch/mailscanner"
 echo "Username: admin"
 echo "Password: ${ADMINPASS}"
-echo "If you wish mailscanner/spamassassin to send spam email to a spam folder please follow the tutorial on the Cyberpanel Website"
+#echo "If you wish mailscanner/spamassassin to send spam email to a spam folder please follow the tutorial on the Cyberpanel Website"
 echo "Firewalld is stopped. Either enable, install CSF or use an alternative!"
 echo "Optional cpan/cpanm modules are available for MailScanner. Cronjobs and further postfix tools are available for MailWatch"
 echo "See https://www.mailwatch.org and https://docs.mailwatch.org/install/optional-setup.html"
 exit
-
