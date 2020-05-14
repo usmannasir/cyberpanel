@@ -446,7 +446,7 @@ class DNS:
 
                 DNS.createDNSRecord(zone, cNameValue, "CNAME", actualSubDomain, 0, 3600)
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
                 command = 'sudo systemctl restart pdns'
                 ProcessUtilities.executioner(command)
 
@@ -487,11 +487,11 @@ class DNS:
                                  auth=1)
                 record.save()
 
-                if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+                if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
                     command = ' systemctl restart pdns'
                     ProcessUtilities.executioner(command)
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
                 command = ' systemctl restart pdns'
                 ProcessUtilities.executioner(command)
 
@@ -572,7 +572,7 @@ class DNS:
                                      auth=1)
                     record.save()
 
-                    if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+                    if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
                         command = 'sudo systemctl restart pdns'
                         ProcessUtilities.executioner(command)
 
@@ -591,7 +591,7 @@ class DNS:
                                      auth=1)
                     record.save()
 
-                    if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+                    if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
                         command = 'sudo systemctl restart pdns'
                         ProcessUtilities.executioner(command)
                 return
@@ -608,7 +608,7 @@ class DNS:
                                  auth=1)
                 record.save()
 
-                if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+                if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
                     command = 'sudo systemctl restart pdns'
                     ProcessUtilities.executioner(command)
                 return
@@ -624,7 +624,7 @@ class DNS:
                                  disabled=0,
                                  auth=1)
                 record.save()
-                if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+                if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
                     command = 'sudo systemctl restart pdns'
                     ProcessUtilities.executioner(command)
 

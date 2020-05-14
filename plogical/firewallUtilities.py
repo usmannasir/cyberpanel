@@ -15,7 +15,7 @@ class FirewallUtilities:
 
     @staticmethod
     def resFailed(res):
-        if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu and res != 0:
+        if (ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20) and res != 0:
             return True
         elif ProcessUtilities.decideDistro() == ProcessUtilities.centos and res == 1:
             return True

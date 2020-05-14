@@ -1605,7 +1605,7 @@ class WebsiteManager:
             output = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
 
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
                 command = 'chmod 600 %s' % (cronPath)
                 ProcessUtilities.executioner(command)
 

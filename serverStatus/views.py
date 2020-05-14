@@ -730,7 +730,7 @@ def fetchPackages(request):
         recordsToShow = int(data['recordsToShow'])
         type = data['type']
 
-        if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+        if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
 
             command = 'apt-mark showhold'
             locked = ProcessUtilities.outputExecutioner(command).split('\n')
@@ -850,7 +850,7 @@ def fetchPackages(request):
 
         import re
         for items in finalPackages:
-            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
                 try:
                     if type == 'CyberPanel':
 
@@ -977,7 +977,7 @@ def fetchPackageDetails(request):
         data = json.loads(request.body)
         package = data['package']
 
-        if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+        if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
             command = 'apt-cache show %s' % (package)
             packageDetails = ProcessUtilities.outputExecutioner(command)
         elif ProcessUtilities.decideDistro() == ProcessUtilities.centos:
@@ -1047,7 +1047,7 @@ def lockStatus(request):
         package = data['package']
         type = data['type']
 
-        if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+        if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
 
             if type == 0:
                 command = 'apt-mark unhold %s' % (package)

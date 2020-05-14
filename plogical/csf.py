@@ -73,7 +73,7 @@ class CSF(multi.Thread):
             if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
                 command = 'yum install bind-utils net-tools perl-libwww-perl.noarch perl-LWP-Protocol-https.noarch perl-GDGraph ipset -y'
                 ProcessUtilities.normalExecutioner(command)
-            elif ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+            elif ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
                 command = 'apt-get install dnsutils libwww-perl liblwp-protocol-https-perl libgd-graph-perl net-tools ipset -y'
                 ProcessUtilities.normalExecutioner(command)
                 command = 'ln -s /bin/systemctl /usr/bin/systemctl'
@@ -309,7 +309,7 @@ class CSF(multi.Thread):
             ##
 
             # Some Ubuntu initial configurations
-            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
                 data = open('/etc/csf/csf.conf', 'r').readlines()
                 writeToConf = open('/etc/csf/csf.conf', 'w')
 

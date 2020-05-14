@@ -67,7 +67,7 @@ class ApplicationInstaller(multi.Thread):
 
             f = open(ServerStatusUtil.lswsInstallStatusPath, 'a')
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
 
                 if package == 'all':
                     command = 'DEBIAN_FRONTEND=noninteractive apt-get update -y'

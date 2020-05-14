@@ -502,7 +502,7 @@ milter_default_action = accept
     def configureSpamAssassin():
         try:
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
                 confFile = "/etc/mail/spamassassin/local.cf"
                 confData = open(confFile).readlines()
 
