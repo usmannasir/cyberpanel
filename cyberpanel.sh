@@ -1042,10 +1042,6 @@ fi
 	after_install
 fi
 
-if [[ $UBUNTU_20 == "True" ]] ; then
-    cp /usr/local/lsws/lsphp73/bin/php /usr/bin
-fi
-
 }
 
 pip_virtualenv() {
@@ -1307,6 +1303,10 @@ fi
 			sed -i 's|error_reporting = E_ALL \&amp; ~E_DEPRECATED \&amp; ~E_STRICT|error_reporting = E_ALL \& ~E_DEPRECATED \& ~E_STRICT|g' /usr/local/lsws/{lsphp72,lsphp73}/etc/php.ini
 		fi
 #fix php.ini &amp; issue
+
+if [[ $UBUNTU_20 == "True" ]] ; then
+    cp /usr/local/lsws/lsphp73/bin/php /usr/bin
+fi
 
 #clear
 echo "###################################################################"
