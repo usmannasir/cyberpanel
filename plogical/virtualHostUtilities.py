@@ -308,10 +308,7 @@ class virtualHostUtilities:
                 print("0, %s file is symlinked." % (fileName))
                 return 0
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
-                groupName = 'nobody'
-            else:
-                groupName = 'nogroup'
+            groupName = 'nobody'
 
             numberOfTotalLines = int(ProcessUtilities.outputExecutioner('wc -l %s' % (fileName), groupName).split(" ")[0])
 
