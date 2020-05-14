@@ -16,6 +16,7 @@ class ProcessUtilities(multi.Thread):
     centos = 1
     cent8 = 2
     ubuntu = 0
+    ubuntu20 = 3
     server_address = '/usr/local/lscpd/admin/comm.sock'
     token = "unset"
 
@@ -139,6 +140,8 @@ class ProcessUtilities(multi.Thread):
         distroPath = '/etc/lsb-release'
 
         if os.path.exists(distroPath):
+            if open(distroPath, 'r').read().find('20.04') > -1:
+                return ProcessUtilities.ubuntu20
             return ProcessUtilities.ubuntu
         else:
             if open('/etc/redhat-release', 'r').read().find('CentOS Linux release 8') > -1:

@@ -1175,7 +1175,7 @@ virtualenv -p /usr/bin/python3 /usr/local/CyberCP
 if [[ $UBUNTU_20 == "False" ]] ; then
    source /usr/local/CyberCP/bin/activate
    check_return
-   pip3.6 install --ignore-installed /usr/local/pip-packs/*
+   pip3 install --ignore-installed /usr/local/pip-packs/*
    check_return
 else
   . /usr/local/CyberCP/bin/activate
