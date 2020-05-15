@@ -36,6 +36,11 @@ class StagingSetup(multi.Thread):
 
             website = Websites.objects.get(domain=masterDomain)
 
+            masterPath = '/home/%s/public_html' % (masterDomain)
+
+            command = 'chmod 755 %s' % (masterPath)
+            ProcessUtilities.executioner(command)
+
             ## Creating Child Domain
 
             path = "/home/" + masterDomain + "/public_html/" + domain
@@ -57,18 +62,37 @@ class StagingSetup(multi.Thread):
             if data.find('[200]') > -1:
                 pass
             else:
-                logging.statusWriter(tempStatusPath, 'Failed to create child-domain for staging enviroment. [404]')
+                logging.statusWriter(tempStatusPath, 'Failed to create child-domain for staging environment. [404]')
                 return 0
 
             logging.statusWriter(tempStatusPath, 'Domain successfully created..,15')
 
             ## Copying Data
 
-            masterPath = '/home/%s/public_html' % (masterDomain)
+            ## Fetch child domain path
 
-            command = 'rsync -avzh --exclude "%s" --exclude ".git" --exclude "wp-content/backups" --exclude "wp-content/updraft" --exclude "wp-content/cache" --exclude "wp-content/plugins/litespeed-cache" %s/ %s' % (
-            domain, masterPath, path)
-            ProcessUtilities.executioner(command, website.externalApp)
+            childDomainPaths = []
+
+            for childs in website.childdomains_set.all():
+                childDomainPaths.append(childs.path)
+
+            filesAndFolder = os.listdir(masterPath)
+
+            for items in filesAndFolder:
+                completePath = '%s/%s' % (masterPath, items)
+
+                if completePath in childDomainPaths:
+                    continue
+                else:
+                    command = 'cp -r %s %s/' % (completePath, path)
+                    ProcessUtilities.executioner(command, website.externalApp)
+
+            foldersToBeRemoved = ['%s/.git' % (path), '%s/wp-content/backups' % (path), '%s/wp-content/updraft' % (path), '%s/wp-content/cache' % (path), '%s/wp-content/plugins/litespeed-cache' % (path)]
+
+            for rmv in foldersToBeRemoved:
+                command = 'rm -rf %s' % (rmv)
+                ProcessUtilities.executioner(command, website.externalApp)
+
 
             logging.statusWriter(tempStatusPath, 'Data copied..,50')
 
@@ -82,11 +106,15 @@ class StagingSetup(multi.Thread):
 
             configPath = '%s/wp-config.php' % (masterPath)
 
-            if not os.path.exists(configPath):
+            command = 'ls -la %s' % (configPath)
+            output = ProcessUtilities.outputExecutioner(command)
+
+            if output.find('No such file or') > -1:
                 logging.statusWriter(tempStatusPath, 'WordPress is not detected. [404]')
                 return 0
 
-            data = open(configPath, 'r').readlines()
+            command = 'cat %s' % (configPath)
+            data =  ProcessUtilities.outputExecutioner(command).split('\n')
 
             for items in data:
                 if items.find('DB_NAME') > -1:
@@ -105,11 +133,6 @@ class StagingSetup(multi.Thread):
 
             databasePath = '%s/%s.sql' % ('/home/cyberpanel', dbName)
 
-            command = "sed -i 's/%s/%s/g' %s" % (masterDomain, domain, databasePath)
-            ProcessUtilities.executioner(command, 'cyberpanel')
-            command = "sed -i 's/%s/%s/g' %s" % ('https', 'http', databasePath)
-            ProcessUtilities.executioner(command, 'cyberpanel')
-
             if not mysqlUtilities.restoreDatabaseBackup(dbNameRestore, '/home/cyberpanel', None, 1, dbName):
                 try:
                     os.remove(databasePath)
@@ -125,22 +148,31 @@ class StagingSetup(multi.Thread):
             ## Update final config file
 
             pathFinalConfig = '%s/wp-config.php' % (path)
-            data = open(pathFinalConfig, 'r').readlines()
+
+            command = 'cat %s' % (configPath)
+            data = ProcessUtilities.outputExecutioner(command).split('\n')
 
             tmp = "/tmp/" + str(randint(1000, 9999))
             writeToFile = open(tmp, 'w')
 
             for items in data:
                 if items.find('DB_NAME') > -1:
-                    writeToFile.write("define( 'DB_NAME', '%s' );\n" % (dbNameRestore))
+                    writeToFile.write("\ndefine( 'DB_NAME', '%s' );\n" % (dbNameRestore))
                 elif items.find('DB_USER') > -1:
-                    writeToFile.write("define( 'DB_USER', '%s' );\n" % (dbUser))
+                    writeToFile.write("\ndefine( 'DB_USER', '%s' );\n" % (dbUser))
                 elif items.find('DB_PASSWORD') > -1:
-                    writeToFile.write("define( 'DB_PASSWORD', '%s' );\n" % (dbPassword))
+                    writeToFile.write("\ndefine( 'DB_PASSWORD', '%s' );\n" % (dbPassword))
                 elif items.find('WP_SITEURL') > -1:
                     continue
+                elif items.find("That's all, stop editing! Happy publishing.") > -1:
+                    content = """
+define('WP_HOME','http://%s');
+define('WP_SITEURL','http://%s');
+""" % (domain, domain)
+                    writeToFile.write(content)
+                    writeToFile.writelines(items)
                 else:
-                    writeToFile.write(items)
+                    writeToFile.write(items + '\n')
 
             writeToFile.close()
 
@@ -156,6 +188,11 @@ class StagingSetup(multi.Thread):
                 os.remove(databasePath)
             except:
                 pass
+
+            from filemanager.filemanager import FileManager
+
+            fm = FileManager(None, None)
+            fm.fixPermissions(masterDomain)
 
             logging.statusWriter(tempStatusPath, 'Data copied..,[200]')
 
