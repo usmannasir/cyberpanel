@@ -46,7 +46,7 @@ class StagingSetup(multi.Thread):
             path = "/home/" + masterDomain + "/public_html/" + domain
 
             logging.statusWriter(tempStatusPath, 'Creating domain for staging environment..,5')
-            phpSelection = 'PHP 7.1'
+            phpSelection = 'PHP 7.2'
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
 
             execPath = execPath + " createDomain --masterDomain " + masterDomain + " --virtualHostName " + domain + \
@@ -194,6 +194,9 @@ define('WP_SITEURL','http://%s');
             fm = FileManager(None, None)
             fm.fixPermissions(masterDomain)
 
+            from plogical.installUtilities import installUtilities
+            installUtilities.reStartLiteSpeed()
+
             logging.statusWriter(tempStatusPath, 'Data copied..,[200]')
 
             return 0
@@ -211,7 +214,11 @@ define('WP_SITEURL','http://%s');
 
             child = ChildDomains.objects.get(domain=childDomain)
 
+            command = 'chmod 755 /home/%s/public_html' % (child.master.domain)
+            ProcessUtilities.executioner(command)
+
             configPath = '%s/wp-config.php' % (child.path)
+
             if not os.path.exists(configPath):
                 logging.statusWriter(tempStatusPath, 'WordPress is not detected. [404]')
                 return 0
@@ -234,8 +241,6 @@ define('WP_SITEURL','http://%s');
                             raise BaseException('Failed to create database backup.')
 
                 databasePath = '%s/%s.sql' % ('/home/cyberpanel', dbName)
-                command = "sed -i 's/%s/%s/g' %s" % (child.domain, child.master.domain, databasePath)
-                ProcessUtilities.executioner(command, 'cyberpanel')
 
                 ## Restore to master domain
 
@@ -272,6 +277,16 @@ define('WP_SITEURL','http://%s');
 
                 command = 'rsync -avzh --exclude "wp-config.php" %s/ %s' % (sourcePath, destinationPath)
                 ProcessUtilities.executioner(command, child.master.externalApp)
+
+            from filemanager.filemanager import FileManager
+
+            fm = FileManager(None, None)
+            fm.fixPermissions(child.master.domain)
+
+            from plogical.installUtilities import installUtilities
+            installUtilities.reStartLiteSpeed()
+
+            logging.statusWriter(tempStatusPath, 'Data copied..,[200]')
 
             logging.statusWriter(tempStatusPath, 'Data copied..,[200]')
 
