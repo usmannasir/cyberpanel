@@ -963,21 +963,21 @@ class backupUtilities:
 
         except pexpect.TIMEOUT as msg:
 
-            command = 'chmod 644 %s' % ('/root/.ssh/cyberpanel')
+            command = 'chmod 644 %s' % ('/root/.ssh/cyberpanel.pub')
             ProcessUtilities.executioner(command)
 
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [sendKey]")
             return [0, "TIMEOUT [sendKey]"]
         except pexpect.EOF as msg:
 
-            command = 'chmod 644 %s' % ('/root/.ssh/cyberpanel')
+            command = 'chmod 644 %s' % ('/root/.ssh/cyberpanel.pub')
             ProcessUtilities.executioner(command)
 
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [sendKey]")
             return [0, "EOF [sendKey]"]
         except BaseException as msg:
 
-            command = 'chmod 644 %s' % ('/root/.ssh/cyberpanel')
+            command = 'chmod 644 %s' % ('/root/.ssh/cyberpanel.pub')
             ProcessUtilities.executioner(command)
 
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [sendKey]")
