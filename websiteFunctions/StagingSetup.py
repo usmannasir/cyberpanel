@@ -117,7 +117,7 @@ class StagingSetup(multi.Thread):
             data =  ProcessUtilities.outputExecutioner(command).split('\n')
 
             for items in data:
-                if items.find('DB_NAME') > -1:
+                if items.find('DB_NAME') > -1 and items[0] != '/':
                     try:
                         dbName = items.split("'")[3]
                         if mysqlUtilities.createDatabaseBackup(dbName, '/home/cyberpanel'):
@@ -164,13 +164,13 @@ class StagingSetup(multi.Thread):
                     writeToFile.write("\ndefine( 'DB_PASSWORD', '%s' );\n" % (dbPassword))
                 elif items.find('WP_SITEURL') > -1:
                     continue
-                elif items.find("That's all, stop editing! Happy publishing.") > -1:
+                elif items.find("table_prefix") > -1:
+                    writeToFile.writelines(items)
                     content = """
 define('WP_HOME','http://%s');
 define('WP_SITEURL','http://%s');
 """ % (domain, domain)
                     writeToFile.write(content)
-                    writeToFile.writelines(items)
                 else:
                     writeToFile.write(items + '\n')
 
@@ -233,7 +233,7 @@ define('WP_SITEURL','http://%s');
                 data = open(configPath, 'r').readlines()
 
                 for items in data:
-                    if items.find('DB_NAME') > -1:
+                    if items.find('DB_NAME') > -1 and items[0] != '/':
                         dbName = items.split("'")[3]
                         if mysqlUtilities.createDatabaseBackup(dbName, '/home/cyberpanel'):
                             break
