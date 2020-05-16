@@ -264,7 +264,6 @@ define('WP_SITEURL','http://%s');
                     os.remove(databasePath)
                 except:
                     pass
-
             if eraseCheck:
                 sourcePath = child.path
                 destinationPath = '/home/%s/public_html' % (child.master.domain)
@@ -285,8 +284,6 @@ define('WP_SITEURL','http://%s');
 
             from plogical.installUtilities import installUtilities
             installUtilities.reStartLiteSpeed()
-
-            logging.statusWriter(tempStatusPath, 'Data copied..,[200]')
 
             logging.statusWriter(tempStatusPath, 'Data copied..,[200]')
 
