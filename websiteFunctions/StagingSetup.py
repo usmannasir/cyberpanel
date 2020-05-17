@@ -251,7 +251,7 @@ define('WP_SITEURL','http://%s');
                 data = open(configPath, 'r').readlines()
 
                 for items in data:
-                    if items.find('DB_NAME') > -1:
+                    if items.find('DB_NAME') > -1 and items[0] != '/':
                         dbNameRestore = items.split("'")[3]
                         if not mysqlUtilities.restoreDatabaseBackup(dbNameRestore, '/home/cyberpanel', None, 1, dbName):
                             try:
