@@ -652,6 +652,12 @@ class MailServerManager:
                 return ACLManager.loadError()
 
             try:
+
+                import tldextract
+
+                extractDomain = tldextract.extract(domainName)
+                domainName = extractDomain.domain + '.' + extractDomain.suffix
+
                 path = "/etc/opendkim/keys/" + domainName + "/default.txt"
                 command = "sudo cat " + path
                 output = ProcessUtilities.outputExecutioner(command, 'opendkim')

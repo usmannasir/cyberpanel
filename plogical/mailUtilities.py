@@ -214,41 +214,39 @@ class mailUtilities:
 
             import tldextract
 
-            #extractDomain = tldextract.extract(virtualHostName)
-            #virtualHostName = extractDomain.domain + '.' + extractDomain.suffix
+            actualDomain = virtualHostName
+            extractDomain = tldextract.extract(virtualHostName)
+            virtualHostName = extractDomain.domain + '.' + extractDomain.suffix
 
-            if os.path.exists("/etc/opendkim/keys/" + virtualHostName + "/default.txt"):
-                return 1, "None"
+            if not os.path.exists("/etc/opendkim/keys/" + virtualHostName + "/default.txt"):
+                path = '/etc/opendkim/keys/%s' % (virtualHostName)
+                command = 'mkdir %s' % (path)
+                ProcessUtilities.normalExecutioner(command)
 
+                ## Generate keys
 
-            path = '/etc/opendkim/keys/%s' % (virtualHostName)
-            command = 'mkdir %s' % (path)
-            ProcessUtilities.normalExecutioner(command)
+                if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                    command = "/usr/sbin/opendkim-genkey -D /etc/opendkim/keys/%s -d %s -s default" % (virtualHostName, virtualHostName)
+                else:
+                    command = "opendkim-genkey -D /etc/opendkim/keys/%s -d %s -s default" % (
+                    virtualHostName, virtualHostName)
+                ProcessUtilities.normalExecutioner(command)
+                ## Fix permissions
 
-            ## Generate keys
+                command = "chown -R root:opendkim /etc/opendkim/keys/" + virtualHostName
+                ProcessUtilities.normalExecutioner(command)
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
-                command = "/usr/sbin/opendkim-genkey -D /etc/opendkim/keys/%s -d %s -s default" % (virtualHostName, virtualHostName)
-            else:
-                command = "opendkim-genkey -D /etc/opendkim/keys/%s -d %s -s default" % (
-                virtualHostName, virtualHostName)
-            ProcessUtilities.normalExecutioner(command)
-            ## Fix permissions
+                command = "chmod 640 /etc/opendkim/keys/" + virtualHostName + "/default.private"
+                ProcessUtilities.normalExecutioner(command)
 
-            command = "chown -R root:opendkim /etc/opendkim/keys/" + virtualHostName
-            ProcessUtilities.normalExecutioner(command)
-
-            command = "chmod 640 /etc/opendkim/keys/" + virtualHostName + "/default.private"
-            ProcessUtilities.normalExecutioner(command)
-
-            command = "chmod 644 /etc/opendkim/keys/" + virtualHostName + "/default.txt"
-            ProcessUtilities.normalExecutioner(command)
+                command = "chmod 644 /etc/opendkim/keys/" + virtualHostName + "/default.txt"
+                ProcessUtilities.normalExecutioner(command)
 
             ## Edit key file
 
 
             keyTable = "/etc/opendkim/KeyTable"
-            configToWrite = "default._domainkey." + virtualHostName + " " + virtualHostName + ":default:/etc/opendkim/keys/" + virtualHostName + "/default.private\n"
+            configToWrite = "default._domainkey." + actualDomain + " " + actualDomain + ":default:/etc/opendkim/keys/" + virtualHostName + "/default.private\n"
 
             writeToFile = open(keyTable, 'a')
             writeToFile.write(configToWrite)
@@ -257,7 +255,7 @@ class mailUtilities:
             ## Edit signing table
 
             signingTable = "/etc/opendkim/SigningTable"
-            configToWrite = "*@" + virtualHostName + " default._domainkey." + virtualHostName + "\n"
+            configToWrite = "*@" + actualDomain + " default._domainkey." + actualDomain + "\n"
 
             writeToFile = open(signingTable, 'a')
             writeToFile.write(configToWrite)
@@ -266,7 +264,7 @@ class mailUtilities:
             ## Trusted hosts
 
             trustedHosts = "/etc/opendkim/TrustedHosts"
-            configToWrite = virtualHostName + "\n"
+            configToWrite = actualDomain + "\n"
 
             writeToFile = open(trustedHosts, 'a')
             writeToFile.write(configToWrite)

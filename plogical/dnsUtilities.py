@@ -121,7 +121,6 @@ class DNS:
             subDomain = extractDomain.subdomain
 
             if len(subDomain) == 0:
-
                 if Domains.objects.filter(name=topLevelDomain).count() == 0:
                     try:
                         pdns = PDNSStatus.objects.get(pk=1)
@@ -440,11 +439,65 @@ class DNS:
 
                 DNS.createDNSRecord(zone, actualSubDomain, "A", ipAddress, 0, 3600)
 
+                ## Mail Record
+
+                DNS.createDNSRecord(zone, 'mail.' + actualSubDomain, "A", ipAddress, 0, 3600)
+
                 # CNAME Records.
 
                 cNameValue = "www." + actualSubDomain
 
                 DNS.createDNSRecord(zone, cNameValue, "CNAME", actualSubDomain, 0, 3600)
+
+                ## MX Records
+
+                mxValue = "mail." + actualSubDomain
+
+                record = Records(domainOwner=zone,
+                                 domain_id=zone.id,
+                                 name=actualSubDomain,
+                                 type="MX",
+                                 content=mxValue,
+                                 ttl=3600,
+                                 prio="10",
+                                 disabled=0,
+                                 auth=1)
+                record.save()
+
+                ## TXT Records
+
+                record = Records(domainOwner=zone,
+                                 domain_id=zone.id,
+                                 name=actualSubDomain,
+                                 type="TXT",
+                                 content="v=spf1 a mx ip4:" + ipAddress + " ~all",
+                                 ttl=3600,
+                                 prio=0,
+                                 disabled=0,
+                                 auth=1)
+                record.save()
+
+                record = Records(domainOwner=zone,
+                                 domain_id=zone.id,
+                                 name="_dmarc." + actualSubDomain,
+                                 type="TXT",
+                                 content="v=DMARC1; p=none",
+                                 ttl=3600,
+                                 prio=0,
+                                 disabled=0,
+                                 auth=1)
+                record.save()
+
+                record = Records(domainOwner=zone,
+                                 domain_id=zone.id,
+                                 name="_domainkey." + actualSubDomain,
+                                 type="TXT",
+                                 content="t=y; o=~;",
+                                 ttl=3600,
+                                 prio=0,
+                                 disabled=0,
+                                 auth=1)
+                record.save()
 
             if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
                 command = 'sudo systemctl restart pdns'
@@ -465,6 +518,7 @@ class DNS:
 
             extractDomain = tldextract.extract(domain)
             topLevelDomain = extractDomain.domain + '.' + extractDomain.suffix
+            subDomain = extractDomain.subdomain
 
             zone = Domains.objects.get(name=topLevelDomain)
 
@@ -487,9 +541,18 @@ class DNS:
                                  auth=1)
                 record.save()
 
-                if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
-                    command = ' systemctl restart pdns'
-                    ProcessUtilities.executioner(command)
+            if len(subDomain) > 0:
+                if Records.objects.filter(domainOwner=zone, name="default._domainkey." + domain).count() == 0:
+                    record = Records(domainOwner=zone,
+                                     domain_id=zone.id,
+                                     name="default._domainkey." + domain,
+                                     type="TXT",
+                                     content=output[leftIndex:rightIndex],
+                                     ttl=3600,
+                                     prio=0,
+                                     disabled=0,
+                                     auth=1)
+                    record.save()
 
             if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
                 command = ' systemctl restart pdns'
