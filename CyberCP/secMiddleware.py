@@ -73,7 +73,7 @@ class secMiddleware:
                             or key == 'imageByPass' or key == 'passwordByPass' or key == 'cronCommand' \
                             or key == 'emailMessage' or key == 'configData' or key == 'rewriteRules' \
                             or key == 'modSecRules' or key == 'recordContentTXT' or key == 'SecAuditLogRelevantStatus' \
-                            or key == 'fileContent' or key == 'commands':
+                            or key == 'fileContent' or key == 'commands' or key == 'gitHost':
                         continue
                     if value.find(';') > -1 or value.find('&&') > -1 or value.find('|') > -1 or value.find('...') > -1 \
                             or value.find("`") > -1 or value.find("$") > -1 or value.find("(") > -1 or value.find(")") > -1 \
