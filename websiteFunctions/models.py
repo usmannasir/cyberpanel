@@ -53,7 +53,10 @@ class BackupJob(models.Model):
     logFile = models.CharField(max_length=1000)
     ipAddress = models.CharField(max_length=50)
     port = models.CharField(max_length=15)
+    jobSuccessSites = models.IntegerField()
+    jobFailedSites = models.IntegerField()
 
 class BackupJobLogs(models.Model):
     owner = models.ForeignKey(BackupJob, on_delete=models.CASCADE)
+    status = models.IntegerField()
     message = models.TextField()

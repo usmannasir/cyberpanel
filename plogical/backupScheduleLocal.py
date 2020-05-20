@@ -17,11 +17,11 @@ from plogical.processUtilities import ProcessUtilities
 from re import match,I,M
 import signal
 from datetime import datetime
+from websiteFunctions.models import BackupJob, BackupJobLogs
 
 class backupScheduleLocal:
     localBackupPath = '/home/cyberpanel/localBackupPath'
     now = datetime.now()
-
 
     @staticmethod
     def prepare():
