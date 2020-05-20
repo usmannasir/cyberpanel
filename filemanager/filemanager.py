@@ -386,10 +386,10 @@ class FileManager:
             domainName = self.data['domainName']
             website = Websites.objects.get(domain=domainName)
 
-            command = 'chown %s:%s %s' % (website.externalApp, website.externalApp, self.data['completePath'] + '/' + myfile.name)
+            command = 'chown %s:%s %s' % (website.externalApp, website.externalApp, self.returnPathEnclosed(self.data['completePath'] + '/' + myfile.name))
             ProcessUtilities.executioner(command)
 
-            self.changeOwner(self.data['completePath'] + '/' + myfile.name)
+            self.changeOwner(self.returnPathEnclosed(self.data['completePath'] + '/' + myfile.name))
 
             json_data = json.dumps(finalData)
             return HttpResponse(json_data)
@@ -421,7 +421,7 @@ class FileManager:
 
             ProcessUtilities.executioner(command, website.externalApp)
 
-            self.changeOwner(self.data['extractionLocation'])
+            self.fixPermissions(domainName)
 
             json_data = json.dumps(finalData)
             return HttpResponse(json_data)
@@ -518,8 +518,27 @@ class FileManager:
         command = "find %s -type f -exec chmod 0644 {} \;" % ("/home/" + domainName + "/public_html")
         ProcessUtilities.popenExecutioner(command)
 
-        command = 'chown %s:%s /home/%s/public_html' % (externalApp,groupName, domainName)
+        command = 'chown %s:%s /home/%s/public_html' % (externalApp, groupName, domainName)
         ProcessUtilities.executioner(command)
 
         command = 'chmod 750 /home/%s/public_html' % (domainName)
         ProcessUtilities.executioner(command)
+
+        for childs in website.childdomains_set.all():
+            command = "find %s -type d -exec chmod 0755 {} \;" % (childs.path)
+            ProcessUtilities.popenExecutioner(command)
+
+            command = "find %s -type f -exec chmod 0644 {} \;" % (childs.path)
+            ProcessUtilities.popenExecutioner(command)
+
+            command = 'chown -R %s:%s %s/*' % (externalApp, externalApp, childs.path)
+            ProcessUtilities.popenExecutioner(command)
+
+            command = 'chown -R %s:%s %s/.[^.]*' % (externalApp, externalApp, childs.path)
+            ProcessUtilities.popenExecutioner(command)
+
+            command = 'chmod 755 %s' % (childs.path)
+            ProcessUtilities.popenExecutioner(command)
+
+            command = 'chmod %s:%s %s' % (externalApp, groupName, childs.path)
+            ProcessUtilities.popenExecutioner(command)
