@@ -8,7 +8,6 @@ from datetime import datetime
 
 # Create your models here.
 
-
 class Websites(models.Model):
     admin = models.ForeignKey(Administrator, on_delete=models.PROTECT)
     package = models.ForeignKey(Package, on_delete=models.PROTECT)
@@ -26,7 +25,6 @@ class ChildDomains(models.Model):
     ssl = models.IntegerField()
     phpSelection = models.CharField(max_length=10,default=None)
 
-
 class Backups(models.Model):
     website = models.ForeignKey(Websites,on_delete=models.CASCADE)
     fileName = models.CharField(max_length=200)
@@ -34,15 +32,12 @@ class Backups(models.Model):
     size = models.CharField(max_length=50)
     status = models.IntegerField(default=0)
 
-
 class dest(models.Model):
     destLoc = models.CharField(unique=True,max_length=18)
-
 
 class backupSchedules(models.Model):
     dest = models.ForeignKey(dest, on_delete=models.CASCADE)
     frequency = models.CharField(max_length=15)
-
 
 class aliasDomains(models.Model):
     master = models.ForeignKey(Websites, on_delete=models.CASCADE)
@@ -54,4 +49,11 @@ class GitLogs(models.Model):
     type = models.CharField(max_length=5)
     message = models.TextField(max_length=65532)
 
+class BackupJob(models.Model):
+    logFile = models.CharField(max_length=1000)
+    ipAddress = models.CharField(max_length=50)
+    port = models.CharField(max_length=15)
 
+class BackupJobLogs(models.Model):
+    owner = models.ForeignKey(BackupJob, on_delete=models.CASCADE)
+    message = models.TextField()
