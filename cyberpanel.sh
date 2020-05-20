@@ -445,7 +445,7 @@ if [[ $DEV == "ON" ]] ; then
 			if [[ $SERVER_COUNTRY == "CN" ]] ; then
 				wget -O /etc/yum.repos.d/ius.repo https://$DOWNLOAD_SERVER/ius/ius.repo
 			else
-      	yum -y install https://centos7.iuscommunity.org/ius-release.rpm
+      	yum -y install https://repo.ius.io/ius-release-el7.rpm
 			fi
 			yum -y install python36u python36u-pip python36u-devel
 			check_return
