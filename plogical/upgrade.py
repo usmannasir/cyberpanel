@@ -1245,6 +1245,7 @@ class Upgrade:
   `port` varchar(15) NOT NULL,
   `jobFailedSites` int(11) NOT NULL,
   `jobSuccessSites` int(11) NOT NULL,
+  `location` int(11) NOT NULL,
   PRIMARY KEY (`id`)
 )"""
             try:

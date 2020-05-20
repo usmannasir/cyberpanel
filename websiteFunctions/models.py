@@ -55,6 +55,7 @@ class BackupJob(models.Model):
     port = models.CharField(max_length=15)
     jobSuccessSites = models.IntegerField()
     jobFailedSites = models.IntegerField()
+    location = models.IntegerField()
 
 class BackupJobLogs(models.Model):
     owner = models.ForeignKey(BackupJob, on_delete=models.CASCADE)
