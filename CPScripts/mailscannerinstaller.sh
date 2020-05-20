@@ -63,7 +63,7 @@ elif [ "$OS" = "NAME=\"Ubuntu\"" ];then
 
 apt-get install -y libmysqlclient-dev
 
-apt-get install -y cpanminus gcc perl bzip2 zip make patch automake rpm libarchive-zip-perl libfilesys-df-perl libole-storage-lite-perl libsys-hostname-long-perl libsys-sigaction-perl libregexp-common-net-cidr-perl libmime-tools-perl libdbd-sqlite3-perl binutils build-essential libfilesys-df-perl zlib1g unzip mlocate clamav libdbd-mysql-perl unrar libclamav-dev libclamav-client-perl libclamunrar7
+apt-get install -y cpanminus gcc perl bzip2 zip make patch automake rpm libarchive-zip-perl libfilesys-df-perl libole-storage-lite-perl libsys-hostname-long-perl libsys-sigaction-perl libregexp-common-net-cidr-perl libmime-tools-perl libdbd-sqlite3-perl binutils build-essential libfilesys-df-perl zlib1g unzip mlocate clamav libdbd-mysql-perl unrar libclamav-dev libclamav-client-perl libclamunrar9
 
 cpanm Encoding::FixLatin
 cpanm Digest::SHA1
@@ -98,7 +98,7 @@ systemctl restart postfix
 wget https://github.com/MailScanner/v5/archive/master.zip
 unzip master.zip
 
-cd /root/v5-master/builds
+cd /usr/local/CyberCP/CPScripts/v5-master/builds
 
 if [ "$OS" = "NAME=\"Ubuntu\"" ];then
 
@@ -171,7 +171,14 @@ cp /usr/local/CyberCP/public/mailwatch/mailscanner/conf.php.example /usr/local/C
 sed -i "s/^define('DB_USER',.*/define('DB_USER','root');/" /usr/local/CyberCP/public/mailwatch/mailscanner/conf.php
 sed -i "s/^define('DB_PASS',.*/define('DB_PASS','${PASSWORD}');/" /usr/local/CyberCP/public/mailwatch/mailscanner/conf.php
 sed -i "s/^define('MAILWATCH_HOME',.*/define(\'MAILWATCH_HOME\', \'\/usr\/local\/CyberCP\/public\/mailwatch\/mailscanner');/" /usr/local/CyberCP/public/mailwatch/mailscanner/conf.php
+
+MSDEFAULT=/etc/MailScanner/defaults
+if [ -f "$MSDEFAULT" ];then
 sed -i 's/^run_mailscanner=.*/run_mailscanner=1/' /etc/MailScanner/defaults
+elif [ ! -f "$MSDEFAULT" ];then
+touch /etc/MailScanner/defaults
+echo "run_mailscanner=1" >> /etc/MailScanner/defaults
+fi
 
 cp /usr/local/CyberCP/public/mailwatch/MailScanner_perl_scripts/MailWatchConf.pm /usr/share/MailScanner/perl/custom/
 sed -i 's/^my (\$db_user) = .*/my (\$db_user) = \x27'${USER}'\x27;/' /usr/share/MailScanner/perl/custom/MailWatchConf.pm
@@ -227,6 +234,7 @@ EOL
 
 echo "Adding Sieve to /etc/dovecot/dovecot.conf"
 cat >> /etc/dovecot/dovecot.conf <<EOL
+
 service managesieve-login {
   inet_listener sieve {
     port = 4190
@@ -285,8 +293,7 @@ fi
 
 
 echo 'Restart and check services are up'
-service dovecot restart && service postfix restart && service spamassassin restart;
-service dovecot status && service postfix status && service spamassassin status;
+systemctl restart dovecot && systemctl restart postfix && systemctl restart spamassassin;
 
 csf -e
 
