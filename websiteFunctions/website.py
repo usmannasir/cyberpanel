@@ -3222,7 +3222,23 @@ StrictHostKeyChecking no
             else:
                 return ACLManager.loadErrorJson()
 
-            if validators.domain(self.gitHost) and ACLManager.validateInput(self.gitUsername) and ACLManager.validateInput(self.gitReponame):
+            if self.gitHost.find(':') > -1:
+                gitHostDomain = self.gitHost.split(':')[0]
+                gitHostPort = self.gitHost.split(':')[1]
+
+                if not validators.domain(gitHostDomain):
+                    return ACLManager.loadErrorJson('status', 'Invalid characters in your input.')
+
+                try:
+                    gitHostPort = int(gitHostPort)
+                except:
+                    return ACLManager.loadErrorJson('status', 'Invalid characters in your input.')
+
+            else:
+                if not validators.domain(self.gitHost):
+                    return ACLManager.loadErrorJson('status', 'Invalid characters in your input.')
+
+            if ACLManager.validateInput(self.gitUsername) and ACLManager.validateInput(self.gitReponame):
                 pass
             else:
                 return ACLManager.loadErrorJson('status', 'Invalid characters in your input.')
@@ -3613,10 +3629,25 @@ StrictHostKeyChecking no
             else:
                 return ACLManager.loadErrorJson()
 
+            if self.gitHost.find(':') > -1:
+                gitHostDomain = self.gitHost.split(':')[0]
+                gitHostPort = self.gitHost.split(':')[1]
+
+                if not validators.domain(gitHostDomain):
+                    return ACLManager.loadErrorJson('status', 'Invalid characters in your input.')
+
+                try:
+                    gitHostPort = int(gitHostPort)
+                except:
+                    return ACLManager.loadErrorJson('status', 'Invalid characters in your input.')
+            else:
+                if not validators.domain(self.gitHost):
+                    return ACLManager.loadErrorJson('status', 'Invalid characters in your input.')
+
 
             ## Security check
 
-            if validators.domain(self.gitHost) and ACLManager.validateInput(self.gitUsername) and ACLManager.validateInput(self.gitReponame):
+            if ACLManager.validateInput(self.gitUsername) and ACLManager.validateInput(self.gitReponame):
                 pass
             else:
                 return ACLManager.loadErrorJson('status', 'Invalid characters in your input.')
