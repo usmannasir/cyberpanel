@@ -1542,3 +1542,67 @@ app.controller('remoteBackupControl', function ($scope, $http, $timeout) {
 });
 
 ///** Backup site ends **///
+
+
+//*** Remote Backup site ****//
+app.controller('backupLogsScheduled', function ($scope, $http, $timeout) {
+
+    $scope.cyberpanelLoading = true;
+    $scope.logDetails = true;
+
+    $scope.currentPage = 1;
+    $scope.recordsToShow = 10;
+
+    $scope.fetchLogs = function () {
+
+        $scope.cyberpanelLoading = false;
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        var data = {
+            logFile: $scope.logFile,
+            recordsToShow: $scope.recordsToShow,
+            page: $scope.currentPage
+        };
+
+        dataurl = "/backup/fetchLogs";
+
+        $http.post(dataurl, data, config).then(ListInitialData, cantLoadInitialData);
+
+        function ListInitialData(response) {
+            $scope.cyberpanelLoading = true;
+            if (response.data.status === 1) {
+                $scope.logDetails = false;
+                $scope.logs = JSON.parse(response.data.logs);
+                $scope.pagination = response.data.pagination;
+                $scope.jobSuccessSites = response.data.jobSuccessSites;
+                $scope.jobFailedSites = response.data.jobFailedSites;
+                $scope.location = response.data.location;
+            } else {
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+        }
+        function cantLoadInitialData(response) {
+            $scope.cyberpanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+        }
+
+
+    };
+
+
+});
+
+///** Backup site ends **///

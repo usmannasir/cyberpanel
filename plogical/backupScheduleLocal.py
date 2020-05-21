@@ -29,6 +29,12 @@ class backupScheduleLocal:
             backupRunTime = time.strftime("%m.%d.%Y_%H-%M-%S")
             backupLogPath = "/usr/local/lscp/logs/local_backup_log." + backupRunTime
 
+            jobSuccessSites = 0
+            jobFailedSites = 0
+
+            backupSchedule.backupLog = BackupJob(logFile=backupLogPath, location=backupSchedule.LOCAL, jobSuccessSites=jobSuccessSites, jobFailedSites=jobFailedSites)
+            backupSchedule.backupLog.save()
+
             writeToFile = open(backupLogPath, "a")
 
             backupSchedule.remoteBackupLogging(backupLogPath, "#################################################")
@@ -43,6 +49,9 @@ class backupScheduleLocal:
                     try:
                         retValues = backupSchedule.createLocalBackup(virtualHost, backupLogPath)
 
+                        if retValues[0] == 0:
+                            continue
+
                         if os.path.exists(backupScheduleLocal.localBackupPath):
                             backupPath = retValues[1] + ".tar.gz"
                             localBackupPath = '%s/%s' % (open(backupScheduleLocal.localBackupPath, 'r').read().rstrip('/'), backupRunTime)
@@ -52,10 +61,14 @@ class backupScheduleLocal:
 
                             command = 'mv %s %s' % (backupPath, localBackupPath)
                             ProcessUtilities.normalExecutioner(command)
-                    except BaseException as msg:
-                        backupSchedule.remoteBackupLogging(backupLogPath,
-                                                           '[ERROR] Backup failed for %s, error: %s moving on..' % (virtualHost, str(msg)))
 
+                        jobSuccessSites = jobSuccessSites + 1
+                    except BaseException as msg:
+
+                        jobFailedSites = jobFailedSites + 1
+
+                        backupSchedule.remoteBackupLogging(backupLogPath,
+                                                           '[ERROR] Backup failed for %s, error: %s moving on..' % (virtualHost, str(msg)), backupSchedule.ERROR)
 
 
 
@@ -70,6 +83,11 @@ class backupScheduleLocal:
             backupSchedule.remoteBackupLogging(backupLogPath, "Local backup job completed.\n")
 
             writeToFile.close()
+
+            job = BackupJob.objects.get(logFile=backupLogPath)
+            job.jobFailedSites = jobFailedSites
+            job.jobSuccessSites = jobSuccessSites
+            job.save()
 
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [214:startBackup]")

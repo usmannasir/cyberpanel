@@ -12,7 +12,7 @@ import os
 import time
 from plogical.backupUtilities import backupUtilities
 from re import match,I,M
-from websiteFunctions.models import Backups
+from websiteFunctions.models import Backups, BackupJob, BackupJobLogs
 from plogical.processUtilities import ProcessUtilities
 from random import randint
 import json, requests
@@ -22,14 +22,22 @@ import signal
 
 class backupSchedule:
     now = datetime.now()
+    LOCAL = 0
+    REMOTE = 1
+    INFO = 0
+    ERROR = 1
+    backupLog = ''
 
     @staticmethod
-    def remoteBackupLogging(fileName, message):
+    def remoteBackupLogging(fileName, message, status = 0):
         try:
             file = open(fileName,'a')
             file.writelines("[" + time.strftime("%m.%d.%Y_%H-%M-%S") + "] "+ message + "\n")
             print(("[" + time.strftime("%m.%d.%Y_%H-%M-%S") + "] "+ message + "\n"))
             file.close()
+
+            BackupJobLogs(owner=backupSchedule.backupLog, status=status, message="[" + time.strftime("%m.%d.%Y_%H-%M-%S") + "] "+ message).save()
+
         except IOError as msg:
             return "Can not write to error file."
 
@@ -120,18 +128,25 @@ class backupSchedule:
                         except:
                             pass
 
-                        backupSchedule.remoteBackupLogging(backupLogPath, "An error occurred, Error message: " + status)
+                        backupSchedule.remoteBackupLogging(backupLogPath, "Local backup creating failed for %s, Error message: %s" % (virtualHost, status), backupSchedule.ERROR)
+
                         try:
                             os.remove(pathToFile)
                         except:
                             pass
                         return 0, tempStoragePath
+
                     elif os.path.exists(schedulerPath):
+                        backupSchedule.remoteBackupLogging(backupLogPath, 'Backup process killed without reporting any error.',
+                                                           backupSchedule.ERROR)
                         os.remove(schedulerPath)
                         return 0, 'Backup process killed without reporting any error.'
 
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [119:startBackup]")
+            backupSchedule.remoteBackupLogging(backupLogPath,
+                                               "Local backup creating failed for %s, Error message: %s" % (
+                                               virtualHost, str(msg)), backupSchedule.ERROR)
             return 0, str(msg)
 
     @staticmethod

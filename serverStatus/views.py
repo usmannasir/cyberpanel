@@ -93,7 +93,6 @@ def litespeedStatus(request):
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[litespeedStatus]")
         return redirect(loadLoginPage)
 
-
 def stopOrRestartLitespeed(request):
     try:
         userID = request.session['userID']
@@ -127,7 +126,6 @@ def stopOrRestartLitespeed(request):
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[stopOrRestartLitespeed]")
         return HttpResponse("Not Logged in as admin")
 
-
 def cyberCPMainLogFile(request):
     try:
         userID = request.session['userID']
@@ -144,7 +142,6 @@ def cyberCPMainLogFile(request):
     except KeyError as msg:
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[cyberCPMainLogFile]")
         return redirect(loadLoginPage)
-
 
 def getFurtherDataFromLogFile(request):
     try:
@@ -195,7 +192,6 @@ def services(request):
         return render(request, 'serverStatus/services.html', data)
     except KeyError:
         return redirect(loadLoginPage)
-
 
 def servicesStatus(request):
     try:
@@ -291,7 +287,6 @@ def servicesStatus(request):
     except KeyError:
         return redirect(loadLoginPage)
 
-
 def servicesAction(request):
     try:
         userID = request.session['userID']
@@ -344,7 +339,6 @@ def servicesAction(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
-
 def switchTOLSWS(request):
     try:
         userID = request.session['userID']
@@ -377,7 +371,6 @@ def switchTOLSWS(request):
         data_ret = {'status': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
-
 
 def switchTOLSWSStatus(request):
     try:
