@@ -100,27 +100,28 @@ class ServiceManager:
                 for items in data:
                     writeToFile.writelines(items  + '\n')
 
-                slaveData = """slave=yes
-    daemon=yes
-    disable-axfr=yes
-    guardian=yes
-    local-address=0.0.0.0
-    local-port=53
-    master=no
-    slave-cycle-interval=60
-    setgid=pdns
-    setuid=pdns
-    superslave=yes        
-    """
+                slaveData = """
+slave=yes
+daemon=yes
+disable-axfr=yes
+guardian=yes
+local-address=0.0.0.0
+local-port=53
+master=no
+slave-cycle-interval=60
+setgid=pdns
+setuid=pdns
+superslave=yes        
+"""
 
                 writeToFile.writelines(slaveData)
                 writeToFile.close()
+
+                command = 'sudo mv ' + tempPath + ' ' + path
+                ProcessUtilities.executioner(command)
 
             for items in Supermasters.objects.all():
                 items.delete()
 
             Supermasters(ip=self.extraArgs['masterServerIP'], nameserver=self.extraArgs['slaveServerNS'], account='').save()
-
-        command = 'sudo mv ' + tempPath + ' ' + path
-        ProcessUtilities.executioner(command)
 
