@@ -30,8 +30,8 @@ class ServiceManager:
             ipsString = ipsString.rstrip(' ')
             ipStringNoSubnet = ipStringNoSubnet.rstrip(' ')
 
-
-
+            tempPath = "/home/cyberpanel/" + str(randint(1000, 9999))
+            writeToFile = open(tempPath, 'w')
 
             for items in data:
                 if items.find('allow-axfr-ips') > -1:
@@ -49,13 +49,13 @@ class ServiceManager:
                 if items.find('slave') > -1:
                     continue
 
+                if items.find('master') > -1:
+                    continue
+
                 counter = counter + 1
 
-            tempPath = "/home/cyberpanel/" + str(randint(1000, 9999))
-            writeToFile = open(tempPath, 'w')
-
-            for items in data:
                 writeToFile.writelines(items + '\n')
+
 
             writeToFile.writelines('allow-axfr-ips=' + ipsString + '\n')
             writeToFile.writelines('also-notify=' + ipStringNoSubnet + '\n')
@@ -81,6 +81,9 @@ class ServiceManager:
 
                 if items.find('slave') > -1:
                     continue
+
+                if items.find('slave=yes') > 1:
+                    return 0
 
                 counter = counter + 1
 
@@ -112,6 +115,5 @@ superslave=yes
             Supermasters(ip=self.extraArgs['masterServerIP'], nameserver=self.extraArgs['slaveServerNS'], account='').save()
 
         command = 'sudo mv ' + tempPath + ' ' + path
-        #subprocess.call(shlex.split(command))
         ProcessUtilities.executioner(command)
 
