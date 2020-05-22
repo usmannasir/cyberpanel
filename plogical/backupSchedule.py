@@ -228,6 +228,13 @@ class backupSchedule:
 
             backupLogPath = "/usr/local/lscp/logs/backup_log."+time.strftime("%m.%d.%Y_%H-%M-%S")
 
+            jobSuccessSites = 0
+            jobFailedSites = 0
+
+            backupSchedule.backupLog = BackupJob(logFile=backupLogPath, location=backupSchedule.REMOTE,
+                                                 jobSuccessSites=jobSuccessSites, jobFailedSites=jobFailedSites)
+            backupSchedule.backupLog.save()
+
             backupSchedule.remoteBackupLogging(backupLogPath,"#################################################")
             backupSchedule.remoteBackupLogging(backupLogPath,"      Backup log for: " +time.strftime("%m.%d.%Y_%H-%M-%S"))
             backupSchedule.remoteBackupLogging(backupLogPath,"#################################################\n")

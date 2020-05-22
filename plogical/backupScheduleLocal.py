@@ -21,11 +21,22 @@ from websiteFunctions.models import BackupJob, BackupJobLogs
 
 class backupScheduleLocal:
     localBackupPath = '/home/cyberpanel/localBackupPath'
+    runningPath = '/home/cyberpanel/localBackupPID'
     now = datetime.now()
 
     @staticmethod
     def prepare():
         try:
+
+            if os.path.exists(backupScheduleLocal.runningPath):
+                pid = open(backupScheduleLocal.runningPath, 'r').read()
+                print('Local backup is already running with PID: %s. If you want to run againly kindly kill the backup process: \n\n kill -9 %s.\n\n' % (pid, pid))
+                return 0
+
+            writeToFile = open(backupScheduleLocal.runningPath, 'w')
+            writeToFile.write(str(os.getpid()))
+            writeToFile.close()
+
             backupRunTime = time.strftime("%m.%d.%Y_%H-%M-%S")
             backupLogPath = "/usr/local/lscp/logs/local_backup_log." + backupRunTime
 
@@ -70,8 +81,6 @@ class backupScheduleLocal:
                         backupSchedule.remoteBackupLogging(backupLogPath,
                                                            '[ERROR] Backup failed for %s, error: %s moving on..' % (virtualHost, str(msg)), backupSchedule.ERROR)
 
-
-
                 backupSchedule.remoteBackupLogging(backupLogPath, "")
                 backupSchedule.remoteBackupLogging(backupLogPath, "")
 
@@ -88,6 +97,9 @@ class backupScheduleLocal:
             job.jobFailedSites = jobFailedSites
             job.jobSuccessSites = jobSuccessSites
             job.save()
+
+            if os.path.exists(backupScheduleLocal.runningPath):
+                os.remove(backupScheduleLocal.runningPath)
 
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [214:startBackup]")
