@@ -230,25 +230,12 @@ class backupSchedule:
 
             if os.path.exists(backupSchedule.runningPath):
                 pid = open(backupSchedule.runningPath, 'r').read()
-                print('Remote backup is already running with PID: %s. If you want to run againly kindly kill the backup process: \n\n kill -9 %s.\n\n' % (pid, pid))
+                print('\n\nRemote backup is already running with PID: %s. If you want to run again kindly kill the backup process: \n\n kill -9 %s.\n\n' % (pid, pid))
                 return 0
 
             writeToFile = open(backupSchedule.runningPath, 'w')
             writeToFile.write(str(os.getpid()))
             writeToFile.close()
-
-
-            destinations = backupUtilities.destinationsPath
-
-            backupLogPath = "/usr/local/lscp/logs/backup_log."+time.strftime("%m.%d.%Y_%H-%M-%S")
-
-
-            backupSchedule.remoteBackupLogging(backupLogPath,"#################################################")
-            backupSchedule.remoteBackupLogging(backupLogPath,"      Backup log for: " +time.strftime("%m.%d.%Y_%H-%M-%S"))
-            backupSchedule.remoteBackupLogging(backupLogPath,"#################################################\n")
-
-            backupSchedule.remoteBackupLogging(backupLogPath, "")
-            backupSchedule.remoteBackupLogging(backupLogPath, "")
 
             ## IP of Remote server.
 
@@ -266,9 +253,23 @@ class backupSchedule:
             jobSuccessSites = 0
             jobFailedSites = 0
 
+            backupLogPath = "/usr/local/lscp/logs/backup_log." + time.strftime("%m.%d.%Y_%H-%M-%S")
+
             backupSchedule.backupLog = BackupJob(logFile=backupLogPath, location=backupSchedule.REMOTE,
-                                                 jobSuccessSites=jobSuccessSites, jobFailedSites=jobFailedSites, ipAddress=ipAddress, port=port)
+                                                 jobSuccessSites=jobSuccessSites, jobFailedSites=jobFailedSites,
+                                                 ipAddress=ipAddress, port=port)
             backupSchedule.backupLog.save()
+
+
+            destinations = backupUtilities.destinationsPath
+
+
+            backupSchedule.remoteBackupLogging(backupLogPath,"#################################################")
+            backupSchedule.remoteBackupLogging(backupLogPath,"      Backup log for: " +time.strftime("%m.%d.%Y_%H-%M-%S"))
+            backupSchedule.remoteBackupLogging(backupLogPath,"#################################################\n")
+
+            backupSchedule.remoteBackupLogging(backupLogPath, "")
+            backupSchedule.remoteBackupLogging(backupLogPath, "")
 
             ## IPAddress of local server
 

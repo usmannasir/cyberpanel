@@ -30,7 +30,7 @@ class backupScheduleLocal:
 
             if os.path.exists(backupScheduleLocal.runningPath):
                 pid = open(backupScheduleLocal.runningPath, 'r').read()
-                print('Local backup is already running with PID: %s. If you want to run againly kindly kill the backup process: \n\n kill -9 %s.\n\n' % (pid, pid))
+                print('\n\nLocal backup is already running with PID: %s. If you want to run again kindly kill the backup process: \n\n kill -9 %s.\n\n' % (pid, pid))
                 return 0
 
             writeToFile = open(backupScheduleLocal.runningPath, 'w')
