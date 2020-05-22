@@ -27,6 +27,7 @@ class backupSchedule:
     INFO = 0
     ERROR = 1
     backupLog = ''
+    runningPath = '/home/cyberpanel/remoteBackupPID'
 
     @staticmethod
     def remoteBackupLogging(fileName, message, status = 0):
@@ -183,6 +184,8 @@ class backupSchedule:
                 backupSchedule.remoteBackupLogging(backupLogPath, "")
             else:
 
+                backupSchedule.remoteBackupLogging(backupLogPath, 'Remote backup creation failed for %s.' % (virtualHost) )
+
                 backupSchedule.remoteBackupLogging(backupLogPath, "")
                 backupSchedule.remoteBackupLogging(backupLogPath, "")
 
@@ -224,16 +227,21 @@ class backupSchedule:
     @staticmethod
     def prepare():
         try:
+
+            if os.path.exists(backupSchedule.runningPath):
+                pid = open(backupSchedule.runningPath, 'r').read()
+                print('Remote backup is already running with PID: %s. If you want to run againly kindly kill the backup process: \n\n kill -9 %s.\n\n' % (pid, pid))
+                return 0
+
+            writeToFile = open(backupSchedule.runningPath, 'w')
+            writeToFile.write(str(os.getpid()))
+            writeToFile.close()
+
+
             destinations = backupUtilities.destinationsPath
 
             backupLogPath = "/usr/local/lscp/logs/backup_log."+time.strftime("%m.%d.%Y_%H-%M-%S")
 
-            jobSuccessSites = 0
-            jobFailedSites = 0
-
-            backupSchedule.backupLog = BackupJob(logFile=backupLogPath, location=backupSchedule.REMOTE,
-                                                 jobSuccessSites=jobSuccessSites, jobFailedSites=jobFailedSites)
-            backupSchedule.backupLog.save()
 
             backupSchedule.remoteBackupLogging(backupLogPath,"#################################################")
             backupSchedule.remoteBackupLogging(backupLogPath,"      Backup log for: " +time.strftime("%m.%d.%Y_%H-%M-%S"))
@@ -254,6 +262,13 @@ class backupSchedule:
                 user = 'root'
 
             ipAddress = data['ipAddress']
+
+            jobSuccessSites = 0
+            jobFailedSites = 0
+
+            backupSchedule.backupLog = BackupJob(logFile=backupLogPath, location=backupSchedule.REMOTE,
+                                                 jobSuccessSites=jobSuccessSites, jobFailedSites=jobFailedSites, ipAddress=ipAddress, port=port)
+            backupSchedule.backupLog.save()
 
             ## IPAddress of local server
 
@@ -287,7 +302,8 @@ class backupSchedule:
 
             backupSchedule.remoteBackupLogging(backupLogPath, "Remote backup job completed.\n")
 
-
+            if os.path.exists(backupSchedule.runningPath):
+                os.remove(backupSchedule.runningPath)
 
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [prepare]")
