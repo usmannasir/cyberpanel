@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-
 from django.shortcuts import render
 from django.shortcuts import HttpResponse, redirect
 import plogical.CyberCPLogFileWriter as logging
@@ -14,19 +13,41 @@ from .serviceManager import ServiceManager
 from plogical.processUtilities import ProcessUtilities
 # Create your views here.
 
-
 def managePowerDNS(request):
     try:
         userID = request.session['userID']
         currentACL = ACLManager.loadedACL(userID)
+
 
         if currentACL['admin'] == 1:
             pass
         else:
             return ACLManager.loadError()
         try:
-            return render(request, 'manageServices/managePowerDNS.html', {"status": 1})
 
+            data = {}
+            data['status'] = 1
+
+            pdnsStatus = PDNSStatus.objects.get(pk=1)
+
+            if pdnsStatus.type == 'MASTER':
+                counter = 1
+
+                for items in SlaveServers.objects.all():
+
+                    if counter == 1:
+                        data['slaveServer'] = items.slaveServer
+                        data['slaveServerIP'] = items.slaveServerIP
+                    else:
+                        data['slaveServer%s' % (str(counter))] = items.slaveServer
+                        data['slaveServerIP%s' % (str(counter))] = items.slaveServerIP
+
+                    counter = counter + 1
+            else:
+                data['slaveServerNS'] = pdnsStatus.masterServer
+                data['masterServerIP'] = pdnsStatus.masterIP
+
+            return render(request, 'manageServices/managePowerDNS.html', data)
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return HttpResponse("See CyberCP main log file.")
