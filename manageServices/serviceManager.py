@@ -26,11 +26,11 @@ class ServiceManager:
             ipStringNoSubnet = ''
 
             for items in SlaveServers.objects.all():
-                ipsString = ipsString + '%s/32 ' % (items.slaveServerIP)
-                ipStringNoSubnet = ipStringNoSubnet + '%s ' % (items.slaveServerIP)
+                ipsString = ipsString + '%s/32, ' % (items.slaveServerIP)
+                ipStringNoSubnet = ipStringNoSubnet + '%s, ' % (items.slaveServerIP)
 
-            ipsString = ipsString.rstrip(' ')
-            ipStringNoSubnet = ipStringNoSubnet.rstrip(' ')
+            ipsString = ipsString.rstrip(', ')
+            ipStringNoSubnet = ipStringNoSubnet.rstrip(', ')
 
             tempPath = "/home/cyberpanel/" + str(randint(1000, 9999))
             writeToFile = open(tempPath, 'w')
