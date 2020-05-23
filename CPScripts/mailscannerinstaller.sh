@@ -27,6 +27,7 @@ fi
 
 if [ -f /etc/os-release ];then
 OS=$(head -1 /etc/os-release)
+VERSION=$(sed '6q;d' /etc/os-release)
 fi
 
 if [ "$OS" = "NAME=\"CentOS Linux\"" ];then
@@ -61,9 +62,9 @@ fi
 
 elif [ "$OS" = "NAME=\"Ubuntu\"" ];then
 
-apt-get install -y libmysqlclient-dev
+       apt-get install -y libmysqlclient-dev
 
-apt-get install -y cpanminus gcc perl bzip2 zip make patch automake rpm libarchive-zip-perl libfilesys-df-perl libole-storage-lite-perl libsys-hostname-long-perl libsys-sigaction-perl libregexp-common-net-cidr-perl libmime-tools-perl libdbd-sqlite3-perl binutils build-essential libfilesys-df-perl zlib1g unzip mlocate clamav libdbd-mysql-perl unrar libclamav-dev libclamav-client-perl libclamunrar9
+       apt-get install -y cpanminus gcc perl bzip2 zip make patch automake rpm libarchive-zip-perl libfilesys-df-perl libole-storage-lite-perl libsys-hostname-long-perl libsys-sigaction-perl libregexp-common-net-cidr-perl libmime-tools-perl libdbd-sqlite3-perl binutils build-essential libfilesys-df-perl zlib1g unzip mlocate clamav libdbd-mysql-perl unrar libclamav-dev libclamav-client-perl libclamunrar9
 
 cpanm Encoding::FixLatin
 cpanm Digest::SHA1
@@ -198,19 +199,23 @@ IPADDRESS=$(cat /etc/cyberpanel/machineIP)
 echo 'Setting up spamassassin and sieve to deliver spam to Junk folder by default'
 #echo "If you wish mailscanner/spamassassin to send spam email to a spam folder please follow the tutorial on the Cyberpanel Website"
 echo 'Fix protocols'
-sed -i 's/^protocols =.*/protocols = imap pop3 sieve/g' /etc/dovecot/dovecot.conf
+sed -i 's/^protocols =.*/protocols = imap pop3 lmtp sieve/g' /etc/dovecot/dovecot.conf
 
 
 sed -i "s|^user_query.*|user_query = SELECT '5000' as uid, '5000' as gid, '/home/vmail/%d/%n' as home,mail FROM e_users WHERE email='%u';|g" /etc/dovecot/dovecot-sql.conf.ext
 
 if [ "$OS" = "NAME=\"Ubuntu\"" ];then
-
-	apt-get install -y dovecot-managesieved dovecot-sieve net-tools pflogsumm
+if [ "$VERSION" = "VERSION_ID=\"18.04\"" ];then
+       apt-get install -y dovecot-managesieved dovecot-sieve dovecot-lmtpd net-tools pflogsumm
+elif [ "$VERSION" = "VERSION_ID=\"20.04\"" ];then
+           apt-get install -y libmysqlclient-dev
+           sed -e '/deb/ s/^#*/#/' -i /etc/apt/sources.list.d/dovecot.list           
+		   apt install -y dovecot-lmtpd dovecot-managesieved dovecot-sieve net-tools pflogsumm
+fi
 
 elif [ "$OS" = "NAME=\"CentOS Linux\"" ];then
 
-	yum install -y nano net-tools dovecot-pigeonhole postfix-perl-scripts
-
+        yum install -y nano net-tools dovecot-pigeonhole postfix-perl-scripts
 fi
 
 
@@ -276,6 +281,7 @@ postmaster_address=$(grep postmaster_address /etc/dovecot/dovecot.conf |  sed 's
 
 sed -i "s|postmaster@example.com|$postmaster_address|g" /etc/dovecot/dovecot.conf
 sed -i "s|server.example.com|$hostname|g" /etc/dovecot/dovecot.conf
+sed -i "s|postmaster@example.com|$postmaster_address|g" /etc/dovecot/dovecot.conf
 
 #Sieve the global spam filter
 sievec /etc/dovecot/sieve/default.sieve
