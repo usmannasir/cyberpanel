@@ -88,7 +88,35 @@ class backupSchedule:
                 if (ifRunning.find('startBackup') > -1 or ifRunning.find('BackupRoot') > -1) and ifRunning.find('/%s/' % (backupDomain)):
                     pass
                 else:
-                    return 0, 'Backup process killed without reporting any error.'
+                    if os.path.exists(status):
+
+                        status = open(status, 'r').read()
+                        time.sleep(2)
+
+                        if status.find("Completed") > -1:
+
+                            ### Removing Files
+
+                            command = 'sudo rm -f ' + status
+                            ProcessUtilities.normalExecutioner(command)
+
+                            command = 'sudo rm -f ' + backupFileNamePath
+                            ProcessUtilities.normalExecutioner(command)
+
+                            command = 'sudo rm -f ' + pid
+                            ProcessUtilities.normalExecutioner(command)
+
+                            backupSchedule.remoteBackupLogging(backupLogPath, "Backup Completed for: " + virtualHost)
+                            try:
+                                os.remove(pathToFile)
+                            except:
+                                pass
+                            return 1, tempStoragePath
+                        else:
+                            return 0, 'Backup process killed without reporting any error.'
+                    else:
+
+                        return 0, 'Backup process killed without reporting any error.'
 
                 ## file name read ends
 
