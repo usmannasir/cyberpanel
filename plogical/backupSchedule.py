@@ -83,6 +83,13 @@ class backupSchedule:
                 except:
                     fileName = "Fetching.."
 
+                ifRunning = ProcessUtilities.outputExecutioner('ps aux')
+
+                if (ifRunning.find('startBackup') > -1 or ifRunning.find('BackupRoot') > -1) and ifRunning.find('/%s/' % (backupDomain)):
+                    pass
+                else:
+                    return 0, 'Backup process killed without reporting any error.'
+
                 ## file name read ends
 
                 if os.path.exists(status):
