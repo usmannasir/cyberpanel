@@ -1080,7 +1080,7 @@ class CloudManager:
             finalData['ramInGB'] = inGB
 
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 finalData['conf'] = ProcessUtilities.outputExecutioner('sudo cat /etc/my.cnf')
             else:
                 finalData['conf'] = ProcessUtilities.outputExecutioner('sudo cat /etc/mysql/my.cnf')
