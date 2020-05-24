@@ -225,7 +225,7 @@ class mailUtilities:
 
                 ## Generate keys
 
-                if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                     command = "/usr/sbin/opendkim-genkey -D /etc/opendkim/keys/%s -d %s -s default" % (virtualHostName, virtualHostName)
                 else:
                     command = "opendkim-genkey -D /etc/opendkim/keys/%s -d %s -s default" % (
@@ -449,7 +449,7 @@ milter_default_action = accept
     def installSpamAssassin(install, SpamAssassin):
         try:
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 command = 'sudo yum install spamassassin -y'
             else:
                 command = 'sudo apt-get install spamassassin spamc -y'
