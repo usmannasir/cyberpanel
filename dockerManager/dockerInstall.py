@@ -18,7 +18,9 @@ class DockerInstall:
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
                                                       "Starting Docker Installation..\n", 1)
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                command = 'sudo dnf install -y docker-ce --nobest'
+            elif ProcessUtilities.decideDistro() == ProcessUtilities.centos:
                 command = 'sudo yum install -y docker'
             else:
                 command = 'sudo DEBIAN_FRONTEND=noninteractive apt-get install -y docker.io'
