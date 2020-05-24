@@ -27,17 +27,17 @@ fi
 
 if [ -f /etc/os-release ];then
 OS=$(head -1 /etc/os-release)
-VERSION=$(sed '6q;d' /etc/os-release)
+UBUNTUVERSION=$(sed '6q;d' /etc/os-release)
+CENTOSVERSION=$(sed '5q;d' /etc/os-release)
 fi
 
-if [ "$OS" = "NAME=\"CentOS Linux\"" ];then
+if [ "$CENTOSVERSION" = "VERSION_ID=\"7\"" ];then
 
 setenforce 0
-
-yum install -y yum-utils perl-CPAN gcc cpp perl bzip2 zip make patch automake rpm-build perl-Archive-Zip perl-Filesys-Df perl-OLE-Storage_Lite perl-Sys-Hostname-Long perl-Sys-SigAction perl-Net-CIDR perl-DBI perl-MIME-tools perl-DBD-SQLite binutils glibc-devel perl-Filesys-Df zlib unzip zlib-devel wget mlocate clamav "perl(DBD::mysql)"
+yum install -y perl yum-utils perl-CPAN
+yum install -y gcc cpp perl bzip2 zip make patch automake rpm-build perl-Archive-Zip perl-Filesys-Df perl-OLE-Storage_Lite perl-Sys-Hostname-Long perl-Sys-SigAction perl-Net-CIDR perl-DBI perl-MIME-tools perl-DBD-SQLite binutils glibc-devel perl-Filesys-Df zlib unzip zlib-devel wget mlocate clamav "perl(DBD::mysql)"
 
 rpm -Uvh https://forensics.cert.org/centos/cert/7/x86_64/unrar-5.4.0-1.el7.x86_64.rpm
-
 export PERL_MM_USE_DEFAULT=1
 curl -L https://cpanmin.us | perl - App::cpanminus
 cpanm Encoding::FixLatin
@@ -45,6 +45,37 @@ cpanm Digest::SHA1
 cpanm Geo::IP
 cpanm Razor2::Client::Agent
 cpanm Net::Patricia
+
+freshclam -v
+DIR=/etc/mail/spamassassin
+
+if [ -d "$DIR" ];  then
+sa-update
+
+else
+
+echo "Please install spamassassin through the CyberPanel interface before proceeding"
+
+exit
+fi
+
+elif [ "$CENTOSVERSION" = "VERSION_ID=\"8\"" ];then
+
+setenforce 0
+yum install -y perl yum-utils perl-CPAN 
+dnf --enablerepo=PowerTools install -y perl-IO-stringy
+yum install -y gcc cpp perl bzip2 zip make patch automake rpm-build perl-Archive-Zip perl-Filesys-Df perl-OLE-Storage_Lite perl-Net-CIDR perl-DBI perl-MIME-tools perl-DBD-SQLite binutils glibc-devel perl-Filesys-Df zlib unzip zlib-devel wget mlocate clamav clamav-update "perl(DBD::mysql)"
+
+rpm -Uvh https://forensics.cert.org/centos/cert/8/x86_64/unrar-5.4.0-1.el8.x86_64.rpm
+
+export PERL_MM_USE_DEFAULT=1
+curl -L https://cpanmin.us | perl - App::cpanminus
+cpanm Encoding::FixLatin
+cpanm Digest::SHA1
+cpanm Geo::IP
+cpanm Razor2::Client::Agent
+cpanm Sys::Hostname::Long
+cpanm Sys::SigAction
 
 freshclam -v
 
@@ -205,17 +236,25 @@ sed -i 's/^protocols =.*/protocols = imap pop3 lmtp sieve/g' /etc/dovecot/doveco
 sed -i "s|^user_query.*|user_query = SELECT '5000' as uid, '5000' as gid, '/home/vmail/%d/%n' as home,mail FROM e_users WHERE email='%u';|g" /etc/dovecot/dovecot-sql.conf.ext
 
 if [ "$OS" = "NAME=\"Ubuntu\"" ];then
-if [ "$VERSION" = "VERSION_ID=\"18.04\"" ];then
+if [ "$UBUNTUVERSION" = "VERSION_ID=\"18.04\"" ];then
        apt-get install -y dovecot-managesieved dovecot-sieve dovecot-lmtpd net-tools pflogsumm
-elif [ "$VERSION" = "VERSION_ID=\"20.04\"" ];then
+elif [ "$UBUNTUVERSION" = "VERSION_ID=\"20.04\"" ];then
            apt-get install -y libmysqlclient-dev
            sed -e '/deb/ s/^#*/#/' -i /etc/apt/sources.list.d/dovecot.list           
 		   apt install -y dovecot-lmtpd dovecot-managesieved dovecot-sieve net-tools pflogsumm
 fi
 
-elif [ "$OS" = "NAME=\"CentOS Linux\"" ];then
+elif [ "$CENTOSVERSION" = "VERSION_ID=\"7\"" ];then
 
         yum install -y nano net-tools dovecot-pigeonhole postfix-perl-scripts
+		
+elif [ "$CENTOSVERSION" = "VERSION_ID=\"8\"" ];then
+
+        rpm -Uvh http://mirror.ghettoforge.org/distributions/gf/el/8/gf/x86_64/gf-release-8-11.gf.el8.noarch.rpm
+		dnf --enablerepo=gf-plus upgrade -y dovecot23*
+		dnf --enablerepo=gf-plus install -y dovecot23-pigeonhole
+		dnf install -y net-tools postfix-perl-scripts
+        
 fi
 
 
