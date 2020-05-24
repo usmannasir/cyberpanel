@@ -82,7 +82,7 @@ class ApplicationInstaller(multi.Thread):
                     f.write(ProcessUtilities.outputExecutioner(command))
 
                 f.close()
-            elif ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+            elif ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 if package == 'all':
                     command = 'yum update -y'
                     f.write(ProcessUtilities.outputExecutioner(command))
@@ -414,7 +414,7 @@ class ApplicationInstaller(multi.Thread):
 
             homeDir = "/home/" + domainName + "/public_html"
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 groupName = 'nobody'
             else:
                 groupName = 'nogroup'
@@ -590,7 +590,7 @@ class ApplicationInstaller(multi.Thread):
 
             homeDir = "/home/" + domainName + "/public_html"
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 groupName = 'nobody'
             else:
                 groupName = 'nogroup'
@@ -750,7 +750,7 @@ class ApplicationInstaller(multi.Thread):
 
             shutil.rmtree(finalPath + "installation")
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 groupName = 'nobody'
             else:
                 groupName = 'nogroup'
@@ -776,7 +776,7 @@ class ApplicationInstaller(multi.Thread):
 
             homeDir = "/home/" + domainName + "/public_html"
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 groupName = 'nobody'
             else:
                 groupName = 'nogroup'
@@ -964,7 +964,7 @@ class ApplicationInstaller(multi.Thread):
 
             homeDir = "/home/" + domainName + "/public_html"
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 groupName = 'nobody'
             else:
                 groupName = 'nogroup'
