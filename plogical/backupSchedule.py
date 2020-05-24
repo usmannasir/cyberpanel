@@ -87,7 +87,6 @@ class backupSchedule:
 
                 if os.path.exists(status):
                     status = open(status, 'r').read()
-                    print(status)
                     time.sleep(2)
 
                     if status.find("Completed") > -1:
