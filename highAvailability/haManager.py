@@ -36,7 +36,7 @@ class HAManager(multi.Thread):
     def setupNode(self):
         try:
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 mesg = 'Clusters are only supported on Ubuntu 18.04. [404]'
                 logging.statusWriter(self.data['tempStatusPath'], mesg)
                 return 0
