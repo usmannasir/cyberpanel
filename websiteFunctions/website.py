@@ -1367,7 +1367,7 @@ class WebsiteManager:
 
             CronUtil.CronPrem(0)
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 cronPath = "/var/spool/cron/" + website.externalApp
             else:
                 cronPath = "/var/spool/cron/crontabs/" + website.externalApp
@@ -1586,7 +1586,7 @@ class WebsiteManager:
 
             website = Websites.objects.get(domain=self.domain)
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 cronPath = "/var/spool/cron/" + website.externalApp
             else:
                 cronPath = "/var/spool/cron/crontabs/" + website.externalApp
