@@ -91,7 +91,7 @@ class vhost:
             try:
                 os.makedirs(pathHTML)
 
-                if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                if ProcessUtilities.decideDistro() == ProcessUtilities. or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                     groupName = 'nobody'
                 else:
                     groupName = 'nogroup'
@@ -112,7 +112,7 @@ class vhost:
             try:
                 os.makedirs(pathLogs)
 
-                if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                     groupName = 'nobody'
                 else:
                     groupName = 'nogroup'
@@ -403,7 +403,7 @@ class vhost:
 
                 ##
 
-                if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                     command = 'userdel -r -f %s' % (externalApp)
                 else:
                     command = 'deluser %s' % (externalApp)
@@ -468,7 +468,7 @@ class vhost:
 
                 ##
 
-                if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                     command = 'userdel -r -f %s' % (externalApp)
                 else:
                     command = 'deluser %s' % (externalApp)
@@ -848,7 +848,7 @@ class vhost:
         try:
             os.makedirs(path)
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 groupName = 'nobody'
             else:
                 groupName = 'nogroup'
