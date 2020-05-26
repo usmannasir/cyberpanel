@@ -56,7 +56,106 @@
 
                             <div ng-hide="emailsAccounts" class="form-group">
 
-                                <div class="col-sm-12">
+                                <div ng-hide="mailConfigured==1" class="col-sm-12">
+                                    <div class="alert alert-danger">
+                                        <p>{% trans "SSL for email is not configured properly, you may get Self-Signed error on mail clients such as Outlook and Thunderbird. More details " %}<a href="https://cyberpanel.net/docs/6-self-signed-ssl-error-on-outlook-thunderbird/">here</a>. </p>
+                                    </div>
+                                    <a target="_blank" href="">
+                                        <button style="margin-bottom: 2%"  ng-click='fixMailSSL()' class="btn btn-primary">Fix Now</button>
+                                    </a>
+                                </div>
+
+                                <div class="col-sm-4">
+
+                                    <h4>{% trans "Details To Configure Mail Clients" %}</h4>
+
+                                    <table class="table">
+                                        <thead>
+                                        <tr>
+                                            <th>{% trans "POP3" %}</th>
+                                            <th>{% trans "Details" %}</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr>
+                                            <td>{% trans "Server Hostname" %}</td>
+                                            <td>{$ serverHostname $}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>{% trans "Port" %}</td>
+                                            <td>110</td>
+                                        </tr>
+                                        <tr>
+                                            <td>{% trans "Port" %}</td>
+                                            <td>995 (SSL)</td>
+                                        </tr>
+                                        <tr>
+                                            <td>{% trans "SSL" %}</td>
+                                            <td>STARTTLS</td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+
+                                    <table class="table">
+                                        <thead>
+                                        <tr>
+                                            <th>{% trans "IMAP" %}</th>
+                                            <th>{% trans "Details" %}</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr>
+                                            <td>{% trans "Server Hostname" %}</td>
+                                            <td>{$ serverHostname $}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>{% trans "Port" %}</td>
+                                            <td>143</td>
+                                        </tr>
+                                        <tr>
+                                            <td>{% trans "Port" %}</td>
+                                            <td>993 (SSL)</td>
+                                        </tr>
+                                        <tr>
+                                            <td>{% trans "SSL" %}</td>
+                                            <td>STARTTLS</td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+
+                                    <table class="table">
+                                        <thead>
+                                        <tr>
+                                            <th>{% trans "SMTP" %}</th>
+                                            <th>{% trans "Details" %}</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr>
+                                            <td>{% trans "Server Hostname" %}</td>
+                                            <td>{$ serverHostname $}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>{% trans "Port" %}</td>
+                                            <td>25</td>
+                                        </tr>
+                                        <tr>
+                                            <td>{% trans "Port" %}</td>
+                                            <td>587 (SSL)</td>
+                                        </tr>
+                                        <tr>
+                                            <td>{% trans "Port" %}</td>
+                                            <td>465 (SSL)</td>
+                                        </tr>
+                                        <tr>
+                                            <td>{% trans "SSL" %}</td>
+                                            <td>STARTTLS</td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div class="col-sm-8">
 
                                     <table class="table">
                                         <thead>
@@ -74,7 +173,8 @@
                                                    class="btn btn-border btn-alt border-purple btn-link font-purple"
                                                    href="#"
                                                    title=""><span>{% trans 'Change Password' %}</span></a>
-                                                <a ng-click="deleteEmailAccountFinal(record.email)" class="btn btn-border btn-alt border-red btn-link font-red" href="#"
+                                                <a ng-click="deleteEmailAccountFinal(record.email)"
+                                                   class="btn btn-border btn-alt border-red btn-link font-red" href="#"
                                                    title=""><span>{% trans 'Delete' %}</span></a>
 
                                                 <!--- Modal --->

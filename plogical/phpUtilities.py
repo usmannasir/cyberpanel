@@ -20,7 +20,7 @@ class phpUtilities:
 
             mailUtilities.checkHome()
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 command = 'sudo yum install ' + extension + ' -y'
             else:
                 command = 'sudo apt-get install ' + extension + ' -y'
@@ -54,7 +54,7 @@ class phpUtilities:
 
             mailUtilities.checkHome()
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 command = 'sudo rpm --nodeps -e  ' + extension + ' -v'
             else:
                 command = 'sudo apt-get remove -y  ' + extension
@@ -103,7 +103,7 @@ class phpUtilities:
             command = 'touch %s' % (serverLevelPHPRestart)
             ProcessUtilities.executioner(command)
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 path = "/usr/local/lsws/ls" + phpVers + "/etc/php.ini"
             else:
                 initial = phpVers[3]

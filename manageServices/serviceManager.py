@@ -6,6 +6,8 @@ from manageServices.models import SlaveServers
 
 class ServiceManager:
 
+    slaveConfPath = '/home/cyberpanel/slaveConf'
+
     def __init__(self, extraArgs):
         self.extraArgs = extraArgs
 
@@ -24,14 +26,14 @@ class ServiceManager:
             ipStringNoSubnet = ''
 
             for items in SlaveServers.objects.all():
-                ipsString = ipsString + '%s/32 ' % (items.slaveServerIP)
-                ipStringNoSubnet = ipStringNoSubnet + '%s ' % (items.slaveServerIP)
+                ipsString = ipsString + '%s/32, ' % (items.slaveServerIP)
+                ipStringNoSubnet = ipStringNoSubnet + '%s, ' % (items.slaveServerIP)
 
-            ipsString = ipsString.rstrip(' ')
-            ipStringNoSubnet = ipStringNoSubnet.rstrip(' ')
+            ipsString = ipsString.rstrip(', ')
+            ipStringNoSubnet = ipStringNoSubnet.rstrip(', ')
 
-
-
+            tempPath = "/home/cyberpanel/" + str(randint(1000, 9999))
+            writeToFile = open(tempPath, 'w')
 
             for items in data:
                 if items.find('allow-axfr-ips') > -1:
@@ -49,13 +51,13 @@ class ServiceManager:
                 if items.find('slave') > -1:
                     continue
 
+                if items.find('master') > -1:
+                    continue
+
                 counter = counter + 1
 
-            tempPath = "/home/cyberpanel/" + str(randint(1000, 9999))
-            writeToFile = open(tempPath, 'w')
-
-            for items in data:
                 writeToFile.writelines(items + '\n')
+
 
             writeToFile.writelines('allow-axfr-ips=' + ipsString + '\n')
             writeToFile.writelines('also-notify=' + ipStringNoSubnet + '\n')
@@ -64,33 +66,42 @@ class ServiceManager:
             writeToFile.writelines('master=yes\n')
             writeToFile.close()
         else:
-            counter = 0
+            import os
 
-            for items in data:
-                if items.find('allow-axfr-ips') > -1:
-                    continue
+            if not os.path.exists(ServiceManager.slaveConfPath):
 
-                if items.find('also-notify') > -1:
-                    continue
+                writeToFile = open(ServiceManager.slaveConfPath, 'w')
+                writeToFile.write('configured')
+                writeToFile.close()
 
-                if items.find('daemon=') > -1:
-                    continue
+                counter = 0
 
-                if items.find('disable-axfr') > -1:
-                    continue
+                for items in data:
+                    if items.find('allow-axfr-ips') > -1:
+                        continue
 
-                if items.find('slave') > -1:
-                    continue
+                    if items.find('also-notify') > -1:
+                        continue
 
-                counter = counter + 1
+                    if items.find('daemon=') > -1:
+                        continue
 
-            tempPath = "/home/cyberpanel/" + str(randint(1000, 9999))
-            writeToFile = open(tempPath, 'w')
+                    if items.find('disable-axfr') > -1:
+                        continue
 
-            for items in data:
-                writeToFile.writelines(items  + '\n')
+                    if items.find('slave') > -1:
+                        continue
 
-            slaveData = """slave=yes
+                    counter = counter + 1
+
+                tempPath = "/home/cyberpanel/" + str(randint(1000, 9999))
+                writeToFile = open(tempPath, 'w')
+
+                for items in data:
+                    writeToFile.writelines(items  + '\n')
+
+                slaveData = """
+slave=yes
 daemon=yes
 disable-axfr=yes
 guardian=yes
@@ -103,15 +114,14 @@ setuid=pdns
 superslave=yes        
 """
 
-            writeToFile.writelines(slaveData)
-            writeToFile.close()
+                writeToFile.writelines(slaveData)
+                writeToFile.close()
+
+                command = 'sudo mv ' + tempPath + ' ' + path
+                ProcessUtilities.executioner(command)
 
             for items in Supermasters.objects.all():
                 items.delete()
 
             Supermasters(ip=self.extraArgs['masterServerIP'], nameserver=self.extraArgs['slaveServerNS'], account='').save()
-
-        command = 'sudo mv ' + tempPath + ' ' + path
-        #subprocess.call(shlex.split(command))
-        ProcessUtilities.executioner(command)
 

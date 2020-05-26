@@ -323,7 +323,7 @@ class preFlightsChecks:
                 os._exit(os.EX_SOFTWARE)
 
         elif self.distro == centos:
-            command = 'rpm -ivh http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el7.noarch.rpm'
+            command = 'rpm -ivh http://rpms.litespeedtech.com/centos/litespeed-repo-1.2-1.el7.noarch.rpm'
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
         elif self.distro == cent8:
             command = 'rpm -Uvh http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el8.noarch.rpm'
@@ -1494,13 +1494,13 @@ imap_folder_list_limit = 0
     def setupPythonWSGI(self):
         try:
 
-            command = "wget http://www.litespeedtech.com/packages/lsapi/wsgi-lsapi-1.4.tgz"
+            command = "wget http://www.litespeedtech.com/packages/lsapi/wsgi-lsapi-1.6.tgz"
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-            command = "tar xf wsgi-lsapi-1.4.tgz"
+            command = "tar xf wsgi-lsapi-1.6.tgz"
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-            os.chdir("wsgi-lsapi-1.4")
+            os.chdir("wsgi-lsapi-1.6")
 
             command = "/usr/local/CyberPanel/bin/python ./configure.py"
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)

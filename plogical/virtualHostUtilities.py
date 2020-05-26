@@ -56,6 +56,65 @@ class virtualHostUtilities:
     redisConf = '/usr/local/lsws/conf/dvhost_redis.conf'
 
     @staticmethod
+    def setupAutoDiscover(mailDomain, tempStatusPath, virtualHostName, admin):
+
+        if mailDomain:
+
+            logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Creating mail child domain..,80')
+            childDomain = 'mail.%s' % (virtualHostName)
+            childPath = '/home/%s/public_html/%s' % (virtualHostName, childDomain)
+
+            virtualHostUtilities.createDomain(virtualHostName, childDomain, 'PHP 7.2', childPath, 1, 0, 0,
+                                              admin.userName, 0, "/home/cyberpanel/" + str(randint(1000, 9999)))
+
+            ## update dovecot conf to enable auto-discover
+
+            dovecotPath = '/etc/dovecot/dovecot.conf'
+
+            if os.path.exists(dovecotPath):
+                dovecotContent = open(dovecotPath, 'r').read()
+
+                if dovecotContent.find(childDomain) == -1:
+                    content = """\nlocal_name %s {
+                      ssl_cert = </etc/letsencrypt/live/%s/fullchain.pem
+                      ssl_key = </etc/letsencrypt/live/%s/privkey.pem
+}\n""" % (childDomain, childDomain, childDomain)
+
+                    writeToFile = open(dovecotPath, 'a')
+                    writeToFile.write(content)
+                    writeToFile.close()
+
+                    command = 'systemctl restart dovecot'
+                    ProcessUtilities.executioner(command)
+
+                ### Update postfix configurations
+
+                postFixPath = '/etc/postfix/main.cf'
+
+                postFixContent = open(postFixPath, 'r').read()
+
+                if postFixContent.find('tls_server_sni_maps') == -1:
+                    writeToFile = open(postFixPath, 'a')
+                    writeToFile.write('\ntls_server_sni_maps = hash:/etc/postfix/vmail_ssl.map\n')
+                    writeToFile.close()
+
+                postfixMapFile = '/etc/postfix/vmail_ssl.map'
+
+                mapContent = '%s /etc/letsencrypt/live/%s/privkey.pem /etc/letsencrypt/live/%s/fullchain.pem\n' % (
+                    childDomain, childDomain, childDomain)
+
+                writeToFile = open(postfixMapFile, 'a')
+                writeToFile.write(mapContent)
+                writeToFile.close()
+
+                command = 'postmap -F hash:/etc/postfix/vmail_ssl.map'
+
+                ProcessUtilities.executioner(command)
+
+                command = 'systemctl restart postfix'
+                ProcessUtilities.executioner(command)
+
+    @staticmethod
     def createVirtualHost(virtualHostName, administratorEmail, phpVersion, virtualHostUser, ssl,
                           dkimCheck, openBasedir, websiteOwner, packageName, apache,
                           tempStatusPath='/home/cyberpanel/fakePath', mailDomain = None):
@@ -206,57 +265,7 @@ class virtualHostUtilities:
 
             ### For autodiscover of mail clients.
 
-            if mailDomain:
-                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Creating mail child domain..,80')
-                childDomain = 'mail.%s' % (virtualHostName)
-                childPath = '/home/%s/public_html/%s' % (virtualHostName, childDomain)
-
-                virtualHostUtilities.createDomain(virtualHostName, childDomain, 'PHP 7.2', childPath, 1, 0, 0, admin.userName, 0, "/home/cyberpanel/" + str(randint(1000, 9999)))
-
-                ## update dovecot conf to enable auto-discover
-
-                dovecotPath = '/etc/dovecot/dovecot.conf'
-
-                if os.path.exists(dovecotPath):
-                    dovecotContent = open(dovecotPath, 'r').read()
-
-                    if dovecotContent.find(childDomain) == -1:
-                        content = """\nlocal_name %s {
-          ssl_cert = </etc/letsencrypt/live/%s/fullchain.pem
-          ssl_key = </etc/letsencrypt/live/%s/privkey.pem
-        }\n""" % (childDomain, childDomain, childDomain)
-
-                        writeToFile = open(dovecotPath, 'a')
-                        writeToFile.write(content)
-                        writeToFile.close()
-
-                        command = 'systemctl restart dovecot'
-                        ProcessUtilities.executioner(command)
-
-                    ### Update postfix configurations
-
-                    postFixPath = '/etc/postfix/main.cf'
-
-                    postFixContent = open(postFixPath, 'r').read()
-
-                    if postFixContent.find('tls_server_sni_maps') == -1:
-                        writeToFile = open(postFixPath, 'a')
-                        writeToFile.write('\ntls_server_sni_maps = hash:/etc/postfix/vmail_ssl.map\n')
-                        writeToFile.close()
-
-                    postfixMapFile = '/etc/postfix/vmail_ssl.map'
-
-                    mapContent = '%s /etc/letsencrypt/live/%s/privkey.pem /etc/letsencrypt/live/%s/fullchain.pem\n' % (childDomain, childDomain, childDomain)
-
-                    writeToFile = open(postfixMapFile, 'a')
-                    writeToFile.write(mapContent)
-                    writeToFile.close()
-
-                    command = 'postmap -F hash:/etc/postfix/vmail_ssl.map'
-                    ProcessUtilities.executioner(command)
-
-                    command = 'systemctl restart postfix'
-                    ProcessUtilities.executioner(command)
+            virtualHostUtilities.setupAutoDiscover(mailDomain, tempStatusPath, virtualHostName, admin)
 
             ###
 
@@ -299,10 +308,7 @@ class virtualHostUtilities:
                 print("0, %s file is symlinked." % (fileName))
                 return 0
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
-                groupName = 'nobody'
-            else:
-                groupName = 'nogroup'
+            groupName = 'nobody'
 
             numberOfTotalLines = int(ProcessUtilities.outputExecutioner('wc -l %s' % (fileName), groupName).split(" ")[0])
 
@@ -1429,6 +1435,9 @@ def main():
         virtualHostUtilities.createVirtualHost(args.virtualHostName, args.administratorEmail, args.phpVersion,
                                                args.virtualHostUser, int(args.ssl), dkimCheck, openBasedir,
                                                args.websiteOwner, args.package, apache, tempStatusPath, int(args.mailDomain))
+    elif args.function == "setupAutoDiscover":
+        admin = Administrator.objects.get(userName=args.websiteOwner)
+        virtualHostUtilities.setupAutoDiscover(1, '/home/cyberpanel/templogs', args.virtualHostName, admin)
     elif args.function == "deleteVirtualHostConfigurations":
         vhost.deleteVirtualHostConfigurations(args.virtualHostName)
     elif args.function == "createDomain":

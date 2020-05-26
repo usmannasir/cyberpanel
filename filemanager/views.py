@@ -64,10 +64,11 @@ def downloadFile(request):
     try:
         userID = request.session['userID']
         admin = Administrator.objects.get(pk=userID)
-        import urllib.parse
+        from urllib.parse import quote
+        from django.utils.encoding import iri_to_uri
 
         fileToDownload = request.build_absolute_uri().split('fileToDownload')[1][1:]
-        fileToDownload = urllib.parse.unquote(fileToDownload)
+        fileToDownload = iri_to_uri(fileToDownload)
 
         domainName = request.GET.get('domainName')
 

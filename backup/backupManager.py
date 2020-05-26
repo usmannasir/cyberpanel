@@ -9,7 +9,7 @@ django.setup()
 import json
 from plogical.acl import ACLManager
 import plogical.CyberCPLogFileWriter as logging
-from websiteFunctions.models import Websites, Backups, dest, backupSchedules
+from websiteFunctions.models import Websites, Backups, dest, backupSchedules, BackupJob, BackupJobLogs
 from plogical.virtualHostUtilities import virtualHostUtilities
 import subprocess
 import shlex
@@ -1115,32 +1115,27 @@ class BackupManager:
 
             time.sleep(3)
 
-            if os.path.isfile(backupLogPath):
-                command = "sudo cat " + backupLogPath
-                status = ProcessUtilities.outputExecutioner(command)
+            command = "sudo cat " + backupLogPath
+            status = ProcessUtilities.outputExecutioner(command)
 
-                if status.find("completed[success]") > -1:
-                    command = "rm -rf " + removalPath
-                    ProcessUtilities.executioner(command)
-                    data_ret = {'remoteTransferStatus': 1, 'error_message': "None", "status": status, "complete": 1}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
-                elif status.find("[5010]") > -1:
-                    command = "sudo rm -rf " + removalPath
-                    ProcessUtilities.executioner(command)
-                    data = {'remoteTransferStatus': 0, 'error_message': status,
-                            "status": "None", "complete": 0}
-                    json_data = json.dumps(data)
-                    return HttpResponse(json_data)
-                else:
-                    data_ret = {'remoteTransferStatus': 1, 'error_message': "None", "status": status, "complete": 0}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
-            else:
-                data_ret = {'remoteTransferStatus': 0, 'error_message': "No such log found", "status": "None",
-                            "complete": 0}
+            if status.find("completed[success]") > -1:
+                command = "rm -rf " + removalPath
+                ProcessUtilities.executioner(command)
+                data_ret = {'remoteTransferStatus': 1, 'error_message': "None", "status": status, "complete": 1}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
+            elif status.find("[5010]") > -1:
+                command = "sudo rm -rf " + removalPath
+                ProcessUtilities.executioner(command)
+                data = {'remoteTransferStatus': 0, 'error_message': status,
+                        "status": "None", "complete": 0}
+                json_data = json.dumps(data)
+                return HttpResponse(json_data)
+            else:
+                data_ret = {'remoteTransferStatus': 1, 'error_message': "None", "status": status, "complete": 0}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
         except BaseException as msg:
             data = {'remoteTransferStatus': 0, 'error_message': str(msg), "status": "None", "complete": 0}
             json_data = json.dumps(data)
@@ -1189,5 +1184,98 @@ class BackupManager:
 
         except BaseException as msg:
             data = {'cancelStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data)
+            return HttpResponse(json_data)
+
+    def backupLogs(self, request = None, userID = None, data = None):
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+
+            if currentACL['admin'] == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
+            all_files = []
+
+            logFiles = BackupJob.objects.all().order_by('-id')
+
+            for logFile in logFiles:
+                    all_files.append(logFile.logFile)
+
+            return render(request, 'backup/backupLogs.html', {'backups': all_files})
+
+        except BaseException as msg:
+            return HttpResponse(str(msg))
+
+    def fetchLogs(self, userID = None, data = None):
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+
+            if currentACL['admin'] == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
+            page = int(str(data['page']).rstrip('\n'))
+            recordsToShow = int(data['recordsToShow'])
+            logFile = data['logFile']
+
+            logJob = BackupJob.objects.get(logFile=logFile)
+
+            logs = logJob.backupjoblogs_set.all()
+
+            from s3Backups.s3Backups import S3Backups
+            from plogical.backupSchedule import backupSchedule
+
+            pagination = S3Backups.getPagination(len(logs), recordsToShow)
+            endPageNumber, finalPageNumber = S3Backups.recordsPointer(page, recordsToShow)
+            finalLogs = logs[finalPageNumber:endPageNumber]
+
+            json_data = "["
+            checker = 0
+            counter = 0
+
+            for log in finalLogs:
+
+                if log.status == backupSchedule.INFO:
+                    status = 'INFO'
+                else:
+                    status = 'ERROR'
+
+                dic = {
+                    'LEVEL': status, "Message": log.message
+                }
+                if checker == 0:
+                    json_data = json_data + json.dumps(dic)
+                    checker = 1
+                else:
+                    json_data = json_data + ',' + json.dumps(dic)
+                counter = counter + 1
+
+            json_data = json_data + ']'
+
+            if logJob.location == backupSchedule.LOCAL:
+                location = 'local'
+            else:
+                location = 'remote'
+
+
+            data = {
+                    'status': 1,
+                    'error_message': 'None',
+                    'logs': json_data,
+                    'pagination': pagination,
+                    'jobSuccessSites': logJob.jobSuccessSites,
+                    'jobFailedSites': logJob.jobFailedSites,
+                    'location': location
+                    }
+
+
+            json_data = json.dumps(data)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data = {'remoteRestoreStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data)
             return HttpResponse(json_data)

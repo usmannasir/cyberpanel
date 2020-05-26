@@ -2171,8 +2171,6 @@ app.controller('installImunify', function ($scope, $http, $timeout, $window) {
                 text: 'Could not connect to server, please refresh this page',
                 type: 'error'
             });
-
-
         }
 
     }

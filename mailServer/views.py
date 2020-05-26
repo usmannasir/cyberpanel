@@ -91,6 +91,18 @@ def submitEmailDeletion(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
+def fixMailSSL(request):
+    try:
+
+        msM = MailServerManager(request)
+        coreResult = msM.fixMailSSL()
+
+        return coreResult
+    except KeyError as msg:
+        data_ret = {'deleteEmailStatus': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
 def emailForwarding(request):
     try:
         msM = MailServerManager(request)

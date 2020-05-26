@@ -405,13 +405,19 @@ class ACLManager:
             return admin.package_set.all()
 
     @staticmethod
-    def findAllSites(currentACL, userID):
+    def findAllSites(currentACL, userID, fetchChilds = 0):
         websiteNames = []
 
         if currentACL['admin'] == 1:
             allWebsites = Websites.objects.all()
+
             for items in allWebsites:
                 websiteNames.append(items.domain)
+
+                if fetchChilds:
+                    for child in items.childdomains_set.all():
+                        websiteNames.append(child.domain)
+
         else:
             admin = Administrator.objects.get(pk=userID)
 
@@ -421,10 +427,18 @@ class ACLManager:
             for items in websites:
                 websiteNames.append(items.domain)
 
+                if fetchChilds:
+                    for child in items.childdomains_set.all():
+                        websiteNames.append(child.domain)
+
             for items in admins:
                 webs = items.websites_set.all()
                 for web in webs:
                     websiteNames.append(web.domain)
+
+                    if fetchChilds:
+                        for child in web.childdomains_set.all():
+                            websiteNames.append(child.domain)
 
 
         return websiteNames

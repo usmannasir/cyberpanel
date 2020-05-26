@@ -20,6 +20,7 @@ urlpatterns = [
     url(r'^deleteEmailAccount', views.deleteEmailAccount, name='deleteEmailAccount'),
     url(r'^getEmailsForDomain$', views.getEmailsForDomain, name='getEmailsForDomain'),
     url(r'^submitEmailDeletion', views.submitEmailDeletion, name='submitEmailDeletion'),
+    url(r'^fixMailSSL', views.fixMailSSL, name='fixMailSSL'),
 
 
     ## Change email password

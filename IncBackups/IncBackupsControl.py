@@ -122,7 +122,8 @@ class IncJobs(multi.Thread):
 
     def findRestorePath(self):
 
-        if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+        if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8 \
+                or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
             self.restoreTarget = '/'
             return 1
         else:

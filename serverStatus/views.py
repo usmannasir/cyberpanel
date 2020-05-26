@@ -6,7 +6,7 @@ from django.http import HttpResponse
 import plogical.CyberCPLogFileWriter as logging
 from loginSystem.views import loadLoginPage
 import json
-import subprocess
+import subprocess, shlex
 import psutil
 import socket
 from plogical.acl import ACLManager
@@ -93,7 +93,6 @@ def litespeedStatus(request):
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[litespeedStatus]")
         return redirect(loadLoginPage)
 
-
 def stopOrRestartLitespeed(request):
     try:
         userID = request.session['userID']
@@ -127,7 +126,6 @@ def stopOrRestartLitespeed(request):
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[stopOrRestartLitespeed]")
         return HttpResponse("Not Logged in as admin")
 
-
 def cyberCPMainLogFile(request):
     try:
         userID = request.session['userID']
@@ -144,7 +142,6 @@ def cyberCPMainLogFile(request):
     except KeyError as msg:
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[cyberCPMainLogFile]")
         return redirect(loadLoginPage)
-
 
 def getFurtherDataFromLogFile(request):
     try:
@@ -195,7 +192,6 @@ def services(request):
         return render(request, 'serverStatus/services.html', data)
     except KeyError:
         return redirect(loadLoginPage)
-
 
 def servicesStatus(request):
     try:
@@ -291,7 +287,6 @@ def servicesStatus(request):
     except KeyError:
         return redirect(loadLoginPage)
 
-
 def servicesAction(request):
     try:
         userID = request.session['userID']
@@ -344,7 +339,6 @@ def servicesAction(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
-
 def switchTOLSWS(request):
     try:
         userID = request.session['userID']
@@ -377,7 +371,6 @@ def switchTOLSWS(request):
         data_ret = {'status': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
-
 
 def switchTOLSWSStatus(request):
     try:
@@ -505,7 +498,6 @@ def topProcesses(request):
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[litespeedStatus]")
         return redirect(loadLoginPage)
 
-
 def topProcessesStatus(request):
     try:
         userID = request.session['userID']
@@ -580,17 +572,57 @@ def topProcessesStatus(request):
         data['Softirqs'] = loadNow[13] + '%'
 
         ## Memory
-        data['totalMemory'] = str(int(float(memory[3]) / 1024)) + 'MB'
-        data['freeMemory'] = str(int(float(memory[5]) / 1024)) + 'MB'
-        data['usedMemory'] = str(int(float(memory[7]) / 1024)) + 'MB'
-        data['buffCache'] = str(int(float(memory[9]) / 1024)) + 'MB'
+
+        logging.CyberCPLogFileWriter.writeToFile(str(memory))
+
+        if memory[3].find('+') > -1:
+            memoryFinal = memory[3].split('+')[0]
+        else:
+            memoryFinal = memory[3]
+
+        data['totalMemory'] = str(int(float(memoryFinal) / 1024)) + 'MB'
+
+
+        ##
+
+        if memory[5].find('free') > -1:
+            data['freeMemory'] = str(int(float(memory[4]) / 1024)) + 'MB'
+        else:
+            data['freeMemory'] = str(int(float(memory[5]) / 1024)) + 'MB'
+
+
+        ##
+
+        if memory[7].find('used') > -1:
+            data['usedMemory'] = str(int(float(memory[6]) / 1024)) + 'MB'
+        else:
+            data['usedMemory'] = str(int(float(memory[7]) / 1024)) + 'MB'
+
+
+        try:
+            if memory[9].find('buff') > -1:
+                data['buffCache'] = str(int(float(memory[8]) / 1024)) + 'MB'
+            else:
+                data['buffCache'] = str(int(float(memory[9]) / 1024)) + 'MB'
+        except:
+            logging.CyberCPLogFileWriter.writeToFile(memory[8])
+            data['buffCache'] = str(int(float(memory[8].split('+')[0]) / 1024)) + 'MB'
+
 
         ## Swap
+
+        logging.CyberCPLogFileWriter.writeToFile(str(swap))
+
 
         data['swapTotalMemory'] = str(int(float(swap[2]) / 1024)) + 'MB'
         data['swapFreeMemory'] = str(int(float(swap[4]) / 1024)) + 'MB'
         data['swapUsedMemory'] = str(int(float(swap[6]) / 1024)) + 'MB'
-        data['swapBuffCache'] = str(int(float(swap[8]) / 1024)) + 'MB'
+
+        if swap[8].find('+') > -1:
+            finalBuffCache = swap[8].split('+')[0]
+            data['swapBuffCache'] = str(int(float(finalBuffCache) / 1024)) + 'MB'
+        else:
+            data['swapBuffCache'] = str(int(float(swap[8]) / 1024)) + 'MB'
 
         ## Processes
 
@@ -628,7 +660,6 @@ def topProcessesStatus(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
-
 def killProcess(request):
     try:
         userID = request.session['userID']
@@ -657,3 +688,415 @@ def killProcess(request):
         final_dic = {'status': 0, 'erroMessage': str(msg)}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
+
+def packageManager(request):
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
+
+        templateName = "serverStatus/packageManager.html"
+        proc = httpProc(request, templateName)
+        return proc.renderPre()
+
+    except KeyError as msg:
+        logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[packageManager]")
+        return redirect(loadLoginPage)
+
+def fetchPackages(request):
+    try:
+
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
+
+        data = json.loads(request.body)
+        page = int(str(data['page']).rstrip('\n'))
+        recordsToShow = int(data['recordsToShow'])
+        type = data['type']
+
+        if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
+
+            command = 'apt-mark showhold'
+            locked = ProcessUtilities.outputExecutioner(command).split('\n')
+
+            if type == 'CyberPanel':
+
+                command = 'cat /usr/local/CyberCP/AllCPUbuntu.json'
+                packages = json.loads(ProcessUtilities.outputExecutioner(command))
+
+            else:
+                command = 'apt list --installed'
+                packages = ProcessUtilities.outputExecutioner(command).split('\n')
+                packages = packages[4:]
+
+                upgradePackages = []
+
+                if type == 'upgrade':
+                    for pack in packages:
+                        if pack.find('upgradable') > -1:
+                            upgradePackages.append(pack)
+
+                    packages = upgradePackages
+
+
+        elif ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+
+            ### Check Package Lock status
+
+            if os.path.exists('/etc/yum.conf'):
+                yumConf = '/etc/yum.conf'
+            elif os.path.exists('/etc/yum/yum.conf'):
+                yumConf = '/etc/yum/yum.conf'
+
+            yumConfData = open(yumConf, 'r').read()
+            locked = []
+
+            if yumConfData.find('exclude') > -1:
+
+                data = open(yumConf, 'r').readlines()
+
+                for items in data:
+                    if items.find('exclude') > -1:
+                        locked = items.split('=')[1].rstrip('\n').split(' ')
+                        break
+
+            if type == 'installed':
+
+                #### Cater for packages that need updates.
+
+                startForUpdate = 1
+
+                command = 'yum check-update'
+                updates = ProcessUtilities.outputExecutioner(command).split('\n')
+
+                for items in updates:
+                    if items == '':
+                        updates = updates[startForUpdate:]
+                        break
+                    else:
+                        startForUpdate = startForUpdate + 1
+
+                ## make list of packages that need update
+
+                updateNeeded = []
+                for items in updates:
+                    updateNeeded.append(items.split(' ')[0])
+
+                ###
+
+                command = 'yum list installed'
+                packages = ProcessUtilities.outputExecutioner(command).split('\n')
+
+                startFrom = 1
+
+                for items in packages:
+                    if items.find('Installed Packages') > -1:
+                        packages = packages[startFrom:]
+                        break
+                    else:
+                        startFrom = startFrom + 1
+            elif type == 'upgrade':
+                #### Cater for packages that need updates.
+
+                startForUpdate = 1
+
+                command = 'yum check-update'
+                packages = ProcessUtilities.outputExecutioner(command).split('\n')
+
+                for items in packages:
+                    if items == '':
+                        packages = packages[startForUpdate:-1]
+                        break
+                    else:
+                        startForUpdate = startForUpdate + 1
+            elif type == 'CyberPanel':
+                command = 'cat /usr/local/CyberCP/CPCent7repo.json'
+                packages = json.loads(ProcessUtilities.outputExecutioner(command))
+
+        ## make list of packages that need update
+
+
+        #if os.path.exists(ProcessUtilities.debugPath):
+        #    logging.CyberCPLogFileWriter.writeToFile('All packages: %s' % (str(packages)))
+
+        from s3Backups.s3Backups import S3Backups
+
+        pagination = S3Backups.getPagination(len(packages), recordsToShow)
+        endPageNumber, finalPageNumber = S3Backups.recordsPointer(page, recordsToShow)
+        finalPackages = packages[finalPageNumber:endPageNumber]
+
+        json_data = "["
+        checker = 0
+        counter = 0
+
+        if os.path.exists(ProcessUtilities.debugPath):
+             logging.CyberCPLogFileWriter.writeToFile('Final packages: %s' % (str(finalPackages)))
+
+        import re
+        for items in finalPackages:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
+                try:
+                    if type == 'CyberPanel':
+
+                        packageName = items['Package'].split('/')[0]
+
+                        if packageName in locked:
+                            lock = 1
+                        else:
+                            lock = 0
+
+                        dic = {'package': packageName,
+                               'version': items['Version'], 'lock': lock}
+
+                        counter = counter + 1
+                        if checker == 0:
+                            json_data = json_data + json.dumps(dic)
+                            checker = 1
+                        else:
+                            json_data = json_data + ',' + json.dumps(dic)
+
+                    else:
+                        nowSplitted = items.split('now')
+
+                        upgrade = 'Not Needed'
+
+                        if nowSplitted[1].split(' ')[3].find('upgradable') > -1:
+                            current = nowSplitted[1].split(' ')
+                            upgrade = '%s %s %s' % (current[3], current[4], current[5])
+
+                        if nowSplitted[0].split('/')[0] in locked:
+                            lock = 1
+                        else:
+                            lock = 0
+
+                        dic = {'package': nowSplitted[0].split('/')[0], 'version': '%s %s' % (nowSplitted[1].split(' ')[1], nowSplitted[1].split(' ')[2]), 'upgrade': upgrade, 'lock': lock}
+
+                        counter = counter + 1
+                        if checker == 0:
+                            json_data = json_data + json.dumps(dic)
+                            checker = 1
+                        else:
+                            json_data = json_data + ',' + json.dumps(dic)
+                except BaseException as msg:
+                    logging.CyberCPLogFileWriter.writeToFile('[ERROR] %s. [fetchPackages:773]' % (str(msg)))
+            elif ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                try:
+                    if type == 'installed' or type == 'upgrade':
+
+                        ###
+
+                        details = items.split(' ')
+                        details = [a for a in details if a != '']
+
+                        if type == 'installed':
+                            if details[0] in updateNeeded:
+                                upgrade = 'Upgrade available'
+                            else:
+                                upgrade = 'Not needed.'
+                        else:
+                            upgrade = 'Upgrade available'
+
+
+                        if details[0].split('.')[0] in locked:
+                            lock = 1
+                        else:
+                            lock = 0
+
+                        dic = {'package': details[0],
+                               'version': details[1],
+                               'upgrade': upgrade, 'lock': lock}
+
+                        counter = counter + 1
+                        if checker == 0:
+                            json_data = json_data + json.dumps(dic)
+                            checker = 1
+                        else:
+                            json_data = json_data + ',' + json.dumps(dic)
+                    elif type == 'CyberPanel':
+
+                        packageName = items['Package']
+
+                        if packageName.split('.')[0] in locked:
+                            lock = 1
+                        else:
+                            lock = 0
+
+                        dic = {'package': packageName,
+                               'version': items['Version'], 'lock': lock}
+
+                        counter = counter + 1
+                        if checker == 0:
+                            json_data = json_data + json.dumps(dic)
+                            checker = 1
+                        else:
+                            json_data = json_data + ',' + json.dumps(dic)
+
+
+                except BaseException as msg:
+                    print(str(msg))
+                    logging.CyberCPLogFileWriter.writeToFile('[ERROR] %s. [fetchPackages:839]' % (str(msg)))
+
+        json_data = json_data + ']'
+
+        data_ret = {'status': 1, 'packages': json_data, 'pagination': pagination, 'fetchedPackages': counter, 'totalPackages': len(packages)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+    except BaseException as msg:
+        data_ret = {'status': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+def fetchPackageDetails(request):
+    try:
+
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
+
+        data = json.loads(request.body)
+        package = data['package']
+
+        if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
+            command = 'apt-cache show %s' % (package)
+            packageDetails = ProcessUtilities.outputExecutioner(command)
+        elif ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+            command = 'yum info %s' % (package)
+            packageDetails = ProcessUtilities.outputExecutioner(command)
+
+        data_ret = {'status': 1, 'packageDetails': packageDetails}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+    except BaseException as msg:
+        data_ret = {'status': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+def updatePackage(request):
+    try:
+
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
+
+        data = json.loads(request.body)
+        package = data['package']
+
+        from serverStatus.serverStatusUtil import ServerStatusUtil
+
+        logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
+                                                  'Starting package(s) upgrade..',
+                                                  1)
+
+        extraArgs = {}
+        extraArgs['package'] = package
+
+        from plogical.applicationInstaller import  ApplicationInstaller
+
+        background = ApplicationInstaller('updatePackage', extraArgs)
+        background.start()
+
+        time.sleep(2)
+
+        data_ret = {'status': 1}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+    except BaseException as msg:
+        data_ret = {'status': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+def lockStatus(request):
+    try:
+
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
+
+        data = json.loads(request.body)
+        package = data['package']
+        type = data['type']
+
+        if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
+
+            if type == 0:
+                command = 'apt-mark unhold %s' % (package)
+                ProcessUtilities.executioner(command)
+            else:
+                command = 'apt-mark hold %s' % (package)
+                ProcessUtilities.executioner(command)
+
+        elif ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+
+            package = package.split('.')[0]
+
+            if os.path.exists('/etc/yum.conf'):
+                yumConf = '/etc/yum.conf'
+            elif os.path.exists('/etc/yum/yum.conf'):
+                yumConf = '/etc/yum/yum.conf'
+
+            yumConfData = open(yumConf, 'r').read()
+            data = open(yumConf, 'r').readlines()
+
+
+            if type == 0:
+                writeToFile = open(yumConf, 'w')
+
+                for items in data:
+                    if items.find('exclude') > -1:
+                        writeToFile.writelines(items.replace(package, ''))
+                    else:
+                        writeToFile.writelines(items)
+
+                writeToFile.close()
+            else:
+
+                if yumConfData.find('exclude') == -1:
+
+                    writeToFile = open(yumConf, 'a')
+                    writeToFile.writelines('exclude=%s\n' % (package))
+                    writeToFile.close()
+
+                else:
+                    writeToFile = open(yumConf, 'w')
+
+                    for items in data:
+                        if items.find('exclude') > -1:
+                            excludeLine = items.strip('\n')
+                            writeToFile.writelines('%s %s\n' % (excludeLine, package))
+                        else:
+                            writeToFile.writelines(items)
+
+                    writeToFile.close()
+
+        data_ret = {'status': 1}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+    except BaseException as msg:
+        data_ret = {'status': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)

@@ -59,7 +59,7 @@ def getAdminStatus(request):
             pdns = PDNSStatus.objects.get(pk=1)
             currentACL['dnsAsWhole'] = pdns.serverStatus
         except:
-            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
                 pdnsPath = '/etc/powerdns'
             else:
                 pdnsPath = '/etc/pdns'

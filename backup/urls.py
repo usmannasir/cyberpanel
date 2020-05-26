@@ -48,7 +48,7 @@ urlpatterns = [
 
     url(r'^localInitiate$', views.localInitiate, name='localInitiate'),
 
-
-
+    url(r'^backupLogs$', views.backupLogs, name='backupLogs'),
+    url(r'^fetchLogs$', views.fetchLogs, name='fetchLogs'),
 
 ]

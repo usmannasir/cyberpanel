@@ -1238,6 +1238,37 @@ class Upgrade:
             except:
                 pass
 
+            qeury = """CREATE TABLE `websiteFunctions_backupjob` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `logFile` varchar(1000) NOT NULL,
+  `ipAddress` varchar(50) NOT NULL,
+  `port` varchar(15) NOT NULL,
+  `jobFailedSites` int(11) NOT NULL,
+  `jobSuccessSites` int(11) NOT NULL,
+  `location` int(11) NOT NULL,
+  PRIMARY KEY (`id`)
+)"""
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+
+            query = """CREATE TABLE `websiteFunctions_backupjoblogs` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `message` longtext NOT NULL,
+  `owner_id` int(11) NOT NULL,
+  `status` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `websiteFunctions_bac_owner_id_af3d15f9_fk_websiteFu` (`owner_id`),
+  CONSTRAINT `websiteFunctions_bac_owner_id_af3d15f9_fk_websiteFu` FOREIGN KEY (`owner_id`) REFERENCES `websiteFunctions_backupjob` (`id`)
+)"""
+
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
             try:
                 connection.close()
             except:

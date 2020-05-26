@@ -12,7 +12,7 @@ import os
 import time
 from plogical.backupUtilities import backupUtilities
 from re import match,I,M
-from websiteFunctions.models import Backups
+from websiteFunctions.models import Backups, BackupJob, BackupJobLogs
 from plogical.processUtilities import ProcessUtilities
 from random import randint
 import json, requests
@@ -22,14 +22,23 @@ import signal
 
 class backupSchedule:
     now = datetime.now()
+    LOCAL = 0
+    REMOTE = 1
+    INFO = 0
+    ERROR = 1
+    backupLog = ''
+    runningPath = '/home/cyberpanel/remoteBackupPID'
 
     @staticmethod
-    def remoteBackupLogging(fileName, message):
+    def remoteBackupLogging(fileName, message, status = 0):
         try:
             file = open(fileName,'a')
             file.writelines("[" + time.strftime("%m.%d.%Y_%H-%M-%S") + "] "+ message + "\n")
             print(("[" + time.strftime("%m.%d.%Y_%H-%M-%S") + "] "+ message + "\n"))
             file.close()
+
+            BackupJobLogs(owner=backupSchedule.backupLog, status=status, message="[" + time.strftime("%m.%d.%Y_%H-%M-%S") + "] "+ message).save()
+
         except IOError as msg:
             return "Can not write to error file."
 
@@ -74,11 +83,45 @@ class backupSchedule:
                 except:
                     fileName = "Fetching.."
 
+                ifRunning = ProcessUtilities.outputExecutioner('ps aux')
+
+                if (ifRunning.find('startBackup') > -1 or ifRunning.find('BackupRoot') > -1) and ifRunning.find('/%s/' % (backupDomain)):
+                    pass
+                else:
+                    if os.path.exists(status):
+
+                        status = open(status, 'r').read()
+                        time.sleep(2)
+
+                        if status.find("Completed") > -1:
+
+                            ### Removing Files
+
+                            command = 'sudo rm -f ' + status
+                            ProcessUtilities.normalExecutioner(command)
+
+                            command = 'sudo rm -f ' + backupFileNamePath
+                            ProcessUtilities.normalExecutioner(command)
+
+                            command = 'sudo rm -f ' + pid
+                            ProcessUtilities.normalExecutioner(command)
+
+                            backupSchedule.remoteBackupLogging(backupLogPath, "Backup Completed for: " + virtualHost)
+                            try:
+                                os.remove(pathToFile)
+                            except:
+                                pass
+                            return 1, tempStoragePath
+                        else:
+                            return 0, 'Backup process killed without reporting any error.'
+                    else:
+
+                        return 0, 'Backup process killed without reporting any error.'
+
                 ## file name read ends
 
                 if os.path.exists(status):
                     status = open(status, 'r').read()
-                    print(status)
                     time.sleep(2)
 
                     if status.find("Completed") > -1:
@@ -120,18 +163,25 @@ class backupSchedule:
                         except:
                             pass
 
-                        backupSchedule.remoteBackupLogging(backupLogPath, "An error occurred, Error message: " + status)
+                        backupSchedule.remoteBackupLogging(backupLogPath, "Local backup creating failed for %s, Error message: %s" % (virtualHost, status), backupSchedule.ERROR)
+
                         try:
                             os.remove(pathToFile)
                         except:
                             pass
                         return 0, tempStoragePath
+
                     elif os.path.exists(schedulerPath):
+                        backupSchedule.remoteBackupLogging(backupLogPath, 'Backup process killed without reporting any error.',
+                                                           backupSchedule.ERROR)
                         os.remove(schedulerPath)
                         return 0, 'Backup process killed without reporting any error.'
 
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [119:startBackup]")
+            backupSchedule.remoteBackupLogging(backupLogPath,
+                                               "Local backup creating failed for %s, Error message: %s" % (
+                                               virtualHost, str(msg)), backupSchedule.ERROR)
             return 0, str(msg)
 
     @staticmethod
@@ -168,6 +218,8 @@ class backupSchedule:
                 backupSchedule.remoteBackupLogging(backupLogPath, "")
             else:
 
+                backupSchedule.remoteBackupLogging(backupLogPath, 'Remote backup creation failed for %s.' % (virtualHost) )
+
                 backupSchedule.remoteBackupLogging(backupLogPath, "")
                 backupSchedule.remoteBackupLogging(backupLogPath, "")
 
@@ -196,6 +248,9 @@ class backupSchedule:
             command = "sudo scp -o StrictHostKeyChecking=no -P "+port+" -i /root/.ssh/cyberpanel " + backupPath + " " + user + "@" + IPAddress+":~/backup/" + ipAddressLocal + "/" + time.strftime("%a-%b") + "/"
             subprocess.call(shlex.split(command), stdout=writeToFile)
 
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.CyberCPLogFileWriter.writeToFile(command)
+
             ## Remove backups already sent to remote destinations
 
             os.remove(backupPath)
@@ -206,16 +261,15 @@ class backupSchedule:
     @staticmethod
     def prepare():
         try:
-            destinations = backupUtilities.destinationsPath
 
-            backupLogPath = "/usr/local/lscp/logs/backup_log."+time.strftime("%m.%d.%Y_%H-%M-%S")
+            if os.path.exists(backupSchedule.runningPath):
+                pid = open(backupSchedule.runningPath, 'r').read()
+                print('\n\nRemote backup is already running with PID: %s. If you want to run again kindly kill the backup process: \n\n kill -9 %s.\n\n' % (pid, pid))
+                return 0
 
-            backupSchedule.remoteBackupLogging(backupLogPath,"#################################################")
-            backupSchedule.remoteBackupLogging(backupLogPath,"      Backup log for: " +time.strftime("%m.%d.%Y_%H-%M-%S"))
-            backupSchedule.remoteBackupLogging(backupLogPath,"#################################################\n")
-
-            backupSchedule.remoteBackupLogging(backupLogPath, "")
-            backupSchedule.remoteBackupLogging(backupLogPath, "")
+            writeToFile = open(backupSchedule.runningPath, 'w')
+            writeToFile.write(str(os.getpid()))
+            writeToFile.close()
 
             ## IP of Remote server.
 
@@ -229,6 +283,27 @@ class backupSchedule:
                 user = 'root'
 
             ipAddress = data['ipAddress']
+
+            jobSuccessSites = 0
+            jobFailedSites = 0
+
+            backupLogPath = "/usr/local/lscp/logs/backup_log." + time.strftime("%m.%d.%Y_%H-%M-%S")
+
+            backupSchedule.backupLog = BackupJob(logFile=backupLogPath, location=backupSchedule.REMOTE,
+                                                 jobSuccessSites=jobSuccessSites, jobFailedSites=jobFailedSites,
+                                                 ipAddress=ipAddress, port=port)
+            backupSchedule.backupLog.save()
+
+
+            destinations = backupUtilities.destinationsPath
+
+
+            backupSchedule.remoteBackupLogging(backupLogPath,"#################################################")
+            backupSchedule.remoteBackupLogging(backupLogPath,"      Backup log for: " +time.strftime("%m.%d.%Y_%H-%M-%S"))
+            backupSchedule.remoteBackupLogging(backupLogPath,"#################################################\n")
+
+            backupSchedule.remoteBackupLogging(backupLogPath, "")
+            backupSchedule.remoteBackupLogging(backupLogPath, "")
 
             ## IPAddress of local server
 
@@ -262,7 +337,8 @@ class backupSchedule:
 
             backupSchedule.remoteBackupLogging(backupLogPath, "Remote backup job completed.\n")
 
-
+            if os.path.exists(backupSchedule.runningPath):
+                os.remove(backupSchedule.runningPath)
 
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [prepare]")

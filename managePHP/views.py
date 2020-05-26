@@ -1085,7 +1085,7 @@ def installExtensions(request):
 
             phpPath = ''
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 phpPath = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'php70.xml')
             else:
                 phpPath = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'ubuntuphp70.xml')
@@ -1116,7 +1116,7 @@ def installExtensions(request):
 
             phpPath = ''
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 phpPath = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'php71.xml')
             else:
                 phpPath = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'ubuntuphp71.xml')
@@ -1144,7 +1144,7 @@ def installExtensions(request):
 
             php72Path = ''
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 php72Path = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'php72.xml')
             else:
                 php72Path = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'ubuntuphp72.xml')
@@ -1172,7 +1172,7 @@ def installExtensions(request):
 
             php73Path = ''
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 php73Path = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'php73.xml')
             else:
                 php73Path = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'ubuntuphp73.xml')
@@ -1200,7 +1200,7 @@ def installExtensions(request):
 
             php74Path = ''
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 php74Path = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'php74.xml')
             else:
                 php74Path = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'ubuntuphp74.xml')
@@ -1344,7 +1344,7 @@ def getRequestStatus(request):
 
                 checkCommand = ''
 
-                if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                     checkCommand = 'yum list installed'
                     checkCommand = shlex.split(checkCommand)
                 else:
@@ -1469,7 +1469,7 @@ def getRequestStatusApache(request):
 
                 checkCommand = ''
 
-                if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                     checkCommand = 'yum list installed'
                     checkCommand = shlex.split(checkCommand)
                 else:
@@ -1607,7 +1607,7 @@ def getCurrentPHPConfig(request):
 
                 phpVers = "php" + PHPManager.getPHPString(phpVers)
 
-                if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                     path = "/usr/local/lsws/ls" + phpVers + "/etc/php.ini"
                 else:
                     initial = phpVers[3]
@@ -1767,7 +1767,7 @@ def getCurrentAdvancedPHPConfig(request):
 
                 phpVers = "php" + PHPManager.getPHPString(phpVers)
 
-                if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                     path = "/usr/local/lsws/ls" + phpVers + "/etc/php.ini"
                 else:
                     initial = phpVers[3]
@@ -1809,7 +1809,7 @@ def savePHPConfigAdvance(request):
 
                 phpVers = "php" + PHPManager.getPHPString(phpVers)
 
-                if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                     path = "/usr/local/lsws/ls" + phpVers + "/etc/php.ini"
                 else:
                     initial = phpVers[3]

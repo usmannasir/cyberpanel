@@ -11,7 +11,7 @@
     <div class="container">
         <div id="page-title">
             <h2>{% trans "Schedule Back up" %} - <a target="_blank" href="http://go.cyberpanel.net/remote-backup"
-                                                    style="height: 23px;line-height: 21px;"
+                                                    style="height: 23px;line-height: 21px; text-decoration: underline"
                                                     class="btn btn-border btn-alt border-red btn-link font-red"
                                                     title=""><span>{% trans "Remote Backups" %}</span></a></h2>
             <p>{% trans "On this page you can schedule Back ups to localhost or remote server (If you have added one)." %}</p>
@@ -20,8 +20,11 @@
         <div ng-controller="scheduleBackup" class="panel">
             <div class="panel-body">
                 <h3 class="title-hero">
-                    {% trans "Schedule Back up" %} <img ng-hide="scheduleBackupLoading"
-                                                        src="{% static 'images/loading.gif' %}">
+                    {% trans "Schedule Back up" %} - <img ng-hide="scheduleBackupLoading"
+                                                          src="{% static 'images/loading.gif' %}"> <a target="_blank"
+                                                                                                      href="{% url 'backupLogs' %}"
+                                                                                                      style="height: 23px;line-height: 21px;"
+                                                                                                      title="">{% trans "Backup Logs" %}</a>
                 </h3>
                 <div class="example-box-wrapper">
 

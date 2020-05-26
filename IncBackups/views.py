@@ -100,9 +100,15 @@ def addDestination(request):
 
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
             execPath = execPath + " submitDestinationCreation --ipAddress " + ipAddress + " --password " \
-                       + password + " --port " + port
+                       + password + " --port " + port + ' --user %s' % ('root')
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.writeToFile(execPath)
 
             output = ProcessUtilities.outputExecutioner(execPath)
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.writeToFile(output)
 
             if output.find('1,') > -1:
 

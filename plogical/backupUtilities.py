@@ -493,7 +493,6 @@ class backupUtilities:
                 items.status = 1
                 items.size = totalSize
                 items.save()
-                logging.CyberCPLogFileWriter.writeToFile(' again size: %s' % (totalSize))
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile('%s. [backupRoot:499]' % str(msg))
             for items in backupObs:
@@ -925,6 +924,11 @@ class backupUtilities:
             expectation.append("Permission denied")
             expectation.append("100%")
 
+            ## Temp changes
+
+            command = 'chmod 600 %s' % ('/root/.ssh/cyberpanel.pub')
+            ProcessUtilities.executioner(command)
+
             command = "scp -o StrictHostKeyChecking=no -P " + port + " /root/.ssh/cyberpanel.pub " + user + "@" + IPAddress + ":~/.ssh/authorized_keys"
             setupKeys = pexpect.spawn(command, timeout=3)
 
@@ -950,15 +954,32 @@ class backupUtilities:
             else:
                 raise BaseException
 
+            ## Temp changes
+
+            command = 'chmod 644 %s' % ('/root/.ssh/cyberpanel.pub')
+            ProcessUtilities.executioner(command)
+
             return [1, "None"]
 
         except pexpect.TIMEOUT as msg:
+
+            command = 'chmod 644 %s' % ('/root/.ssh/cyberpanel.pub')
+            ProcessUtilities.executioner(command)
+
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [sendKey]")
             return [0, "TIMEOUT [sendKey]"]
         except pexpect.EOF as msg:
+
+            command = 'chmod 644 %s' % ('/root/.ssh/cyberpanel.pub')
+            ProcessUtilities.executioner(command)
+
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [sendKey]")
             return [0, "EOF [sendKey]"]
         except BaseException as msg:
+
+            command = 'chmod 644 %s' % ('/root/.ssh/cyberpanel.pub')
+            ProcessUtilities.executioner(command)
+
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [sendKey]")
             return [0, str(msg) + " [sendKey]"]
 
@@ -981,7 +1002,7 @@ class backupUtilities:
             expectation.append("Permission denied")
             expectation.append("File exists")
 
-            command = "ssh -o StrictHostKeyChecking=no -p " + port + ' ' + user + "@" + IPAddress + ' "mkdir ~/.ssh || rm -f ~/.ssh/temp && rm -f ~/.ssh/authorized_temp && cp ~/.ssh/authorized_keys ~/.ssh/temp"'
+            command = "ssh -o StrictHostKeyChecking=no -p " + port + ' ' + user + "@" + IPAddress + ' "mkdir ~/.ssh || rm -f ~/.ssh/temp && rm -f ~/.ssh/authorized_temp && cp ~/.ssh/authorized_keys ~/.ssh/temp || chmod 700 ~/.ssh || chmod g-w ~"'
             setupKeys = pexpect.spawn(command, timeout=3)
 
             if os.path.exists(ProcessUtilities.debugPath):
@@ -1182,6 +1203,7 @@ class backupUtilities:
                 logging.CyberCPLogFileWriter.writeToFile(command)
 
             subprocess.call(shlex.split(command))
+
 
             command = "sudo ssh -o StrictHostKeyChecking=no -p " + port + " -i /root/.ssh/cyberpanel " + user + "@" + IPAddress + ' "cat ~/.ssh/authorized_temp > ~/.ssh/authorized_keys"'
 

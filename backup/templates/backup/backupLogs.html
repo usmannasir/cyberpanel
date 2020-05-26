@@ -1,0 +1,125 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Backup Logs - CyberPanel" %}{% endblock %}
+{% block content %}
+
+    {% load static %}
+
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
+
+
+    <div class="container">
+        <div id="page-title">
+            <h2>{% trans "Backup Logs" %}</h2>
+            <p>{% trans "On this page you can view detailed logs of your local and remote scheduled backups." %}</p>
+        </div>
+
+        <div ng-controller="backupLogsScheduled" class="panel">
+            <div class="panel-body">
+                <h3 class="title-hero">
+                    {% trans "Backup Logs" %} <img ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}">
+                </h3>
+                <div class="example-box-wrapper">
+
+                    <form action="/" class="form-horizontal bordered-row">
+
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Select Log File" %}</label>
+                            <div class="col-sm-6">
+                                <select ng-change="fetchLogs()" ng-model="logFile" class="form-control">
+                                    {% for items in backups %}
+                                        <option>{{ items }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                    </form>
+
+                    <div ng-hide="logDetails" class="form-group">
+                        <div style="margin-bottom: 2%" class="col-sm-12">
+
+                            <table class="table" style="margin: 0px; padding: 0px">
+                                <thead>
+                                <tr>
+                                    <th>{% trans "Successful Sites" %}</th>
+                                    <th>{% trans "Failed Sites" %}</th>
+                                    <th>{% trans "Location" %}</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr>
+                                    <td>{$ jobSuccessSites $}</td>
+                                    <td>{$ jobFailedSites $}</td>
+                                    <td>{$ location $}</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div ng-hide="logDetails" class="col-sm-10"
+                         style="padding: 0px; box-shadow: 0px 0px 1px 0px #888888; margin-bottom: 2%">
+                        <input placeholder="Search..."
+                               ng-model="packSearch" name="packSearch" type="text"
+                               class="form-control" required>
+                    </div>
+                    <div ng-hide="logDetails" class="col-sm-2">
+                        <div class="form-group">
+                            <select ng-model="recordsToShow" ng-change="fetchLogs()"
+                                    class="form-control" id="example-select">
+                                <option>10</option>
+                                <option>50</option>
+                                <option>100</option>
+                                <option>500</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div ng-hide="logDetails" class="form-group">
+                        <div class="col-sm-12">
+
+                            <table class="table" style="margin: 0px; padding: 0px">
+                                <thead>
+                                <tr>
+                                    <th>{% trans "LEVEL" %}</th>
+                                    <th>{% trans "Message" %}</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr ng-repeat="log in logs | filter:packSearch">
+                                    <td ng-bind="log.LEVEL"></td>
+                                    <td ng-bind="log.Message"></td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div ng-hide="logDetails" style="margin-top: 2%" class="row">
+                        <div style="margin-top: 2%" class="col-md-12">
+                            <div class="row">
+                                <div class="col-md-9">
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="form-group">
+                                        <select ng-model="currentPage" class="form-control"
+                                                ng-change="fetchLogs()">
+                                            <option ng-repeat="page in pagination">{$ $index + 1 $}
+                                            </option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div> <!-- end row -->
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+
+
+{% endblock %}

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#CyberPanel installer script for CentOS 7.X, CentOS 8.X, CloudLinux 7.X and Ubuntu 18.04
+#CyberPanel installer script for CentOS 7.X, CentOS 8.X, CloudLinux 7.X, Ubuntu 18.04 and Ubuntu 20.04
 
 SUDO_TEST=$(set)
 
@@ -21,14 +21,28 @@ KEY_SIZE=""
 ADMIN_PASS="1234567"
 MEMCACHED="ON"
 REDIS="ON"
-TOTAL_RAM=$(free -m | awk '/Mem\:/ { print $2 }')
+TOTAL_RAM=$(free -m | awk '/Mem:/ { print $2 }')
 CENTOS_8="False"
+UBUNTU_20="False"
 WATCHDOG="OFF"
 BRANCH_NAME="v${TEMP:12:3}.${TEMP:25:1}"
 VIRT_TYPE=""
 GIT_URL="github.com/usmannasir/cyberpanel"
 GIT_CONTENT_URL="raw.githubusercontent.com/usmannasir/cyberpanel"
 
+disable_repos() {
+
+if [[ $SERVER_OS == "CentOS" ]] ; then
+	sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-Base.repo
+	sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-Debuginfo.repo
+	sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-Media.repo
+	sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-Vault.repo
+	sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-CR.repo
+	sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-fasttrack.repo
+	sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-Sources.repo
+fi
+
+}
 
 check_return() {
 #check previous command result , 0 = ok ,  non-0 = something wrong.
@@ -45,7 +59,6 @@ if [[ ! -f /usr/bin/cyberpanel_utility ]] ; then
 wget -q -O /usr/bin/cyberpanel_utility https://cyberpanel.sh/misc/cyberpanel_utility.sh
 chmod 700 /usr/bin/cyberpanel_utility
 fi
-
 }
 
 watchdog_setup() {
@@ -404,13 +417,15 @@ if [[ $SERVER_OS == "CentOS" ]] ; then
   else
     pip3.6 install virtualenv
   fi
-		check_return
-	fi
+	check_return
+
+fi
 
 if [[ $SERVER_OS == "Ubuntu" ]] ; then
+
 	apt update -y
 	DEBIAN_FRONTEND=noninteractive apt upgrade -y
-	DEBIAN_FRONTEND=noninteracitve apt install -y htop telnet libcurl4-gnutls-dev libgnutls28-dev libgcrypt20-dev libattr1 libattr1-dev liblzma-dev libgpgme-dev libmariadbclient-dev libcurl4-gnutls-dev libssl-dev nghttp2 libnghttp2-dev idn2 libidn2-dev libidn2-0-dev librtmp-dev libpsl-dev nettle-dev libgnutls28-dev libldap2-dev libgssapi-krb5-2 libk5crypto3 libkrb5-dev libcomerr2 libldap2-dev virtualenv git socat vim
+	DEBIAN_FRONTEND=noninteracitve apt install -y htop telnet libcurl4-gnutls-dev libgnutls28-dev libgcrypt20-dev libattr1 libattr1-dev liblzma-dev libgpgme-dev libmariadbclient-dev libcurl4-gnutls-dev libssl-dev nghttp2 libnghttp2-dev idn2 libidn2-dev libidn2-0-dev librtmp-dev libpsl-dev nettle-dev libgnutls28-dev libldap2-dev libgssapi-krb5-2 libk5crypto3 libkrb5-dev libcomerr2 libldap2-dev virtualenv git socat vim unzip zip
 	check_return
 
 	DEBIAN_FRONTEND=noninteractive apt install -y python3-pip
@@ -419,6 +434,11 @@ if [[ $SERVER_OS == "Ubuntu" ]] ; then
 	DEBIAN_FRONTEND=noninteractive apt install -y build-essential libssl-dev libffi-dev python3-dev
 	check_return
 	DEBIAN_FRONTEND=noninteractive apt install -y python3-venv
+	check_return
+
+	if [[ $UBUNTU_20 == "True" ]] ; then
+    pip3 install virtualenv==16.7.9
+  fi
 	check_return
 
 fi
@@ -544,6 +564,7 @@ fi
 check_OS() {
 echo -e "\nChecking OS..."
 OUTPUT=$(cat /etc/*release)
+
 if  echo $OUTPUT | grep -q "CentOS Linux 7" ; then
 	echo -e "\nDetecting CentOS 7.X...\n"
 	SERVER_OS="CentOS"
@@ -562,12 +583,23 @@ elif echo $OUTPUT | grep -q "Ubuntu 18.04" ; then
 		echo -e "\nUbuntu 18.04 x32 detected...ths only works on x64 system."
 		exit
 	fi
+elif echo $OUTPUT | grep -q "Ubuntu 20.04" ; then
+	if uname -m | grep -q 64 ; then
+	echo -e "\nDetecting Ubuntu 20.04 ...\n"
+	SERVER_OS="Ubuntu"
+	UBUNTU_20="True"
+	else
+		echo -e "\nUbuntu 20 x32 detected...ths only works on x64 system."
+		exit
+	fi
 else
 	cat /etc/*release
 	echo -e "\nUnable to detect your OS...\n"
-	echo -e "\nCyberPanel is supported on Ubuntu 18.04 x86_64, CentOS 7.x, CentOS 8.x and CloudLinux 7.x...\n"
+	echo -e "\nCyberPanel is supported on Ubuntu 18.04 x86_64, Ubuntu 20.04 x86_64, CentOS 7.x, CentOS 8.x and CloudLinux 7.x...\n"
 	exit 1
 fi
+
+
 }
 
 check_root() {
@@ -985,9 +1017,9 @@ if [[ $debug == "0" ]] ; then
 	exit
 fi
 
-if [[ $debug == "1" ]] ; then
-	/usr/local/CyberPanel/bin/pip3 install --ignore-installed /usr/local/pip-packs/*
 
+if [[ $debug == "1" ]] ; then
+  pip3.6 install --ignore-installed /usr/local/pip-packs/*
 	if [[ $REDIS_HOSTING == "Yes" ]] ; then
 	  /usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY --postfix $POSTFIX_VARIABLE --powerdns $POWERDNS_VARIABLE --ftp $PUREFTPD_VARIABLE --redis enable
   else
@@ -1009,6 +1041,7 @@ if [[ $REDIS == "ON" ]] ; then
 fi
 	after_install
 fi
+
 }
 
 pip_virtualenv() {
@@ -1025,16 +1058,25 @@ export LC_ALL=en_US.UTF-8
 if [[ $DEV == "ON" ]] ; then
 	#install dev branch
 	#wget https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
-	cd /usr/local/
-	virtualenv -p /usr/bin/python3 CyberPanel
-  source /usr/local/CyberPanel/bin/activate
-  wget -O /usr/local/cyberpanel-pip.zip https://rep.cyberpanel.net/cyberpanel-pip.zip
-	check_return
-  unzip /usr/local/cyberpanel-pip.zip -d /usr/local
-	check_return
-	pip3.6 install --ignore-installed /usr/local/pip-packs/*
-	check_return
-	cd -
+  virtualenv -p /usr/bin/python3 /usr/local/CyberPanel
+
+	if [[ $UBUNTU_20 == "False" ]] ; then
+	  source /usr/local/CyberPanel/bin/activate
+    wget -O /usr/local/cyberpanel-pip.zip https://rep.cyberpanel.net/cyberpanel-pip.zip
+    check_return
+    unzip /usr/local/cyberpanel-pip.zip -d /usr/local
+    check_return
+    pip3.6 install --ignore-installed /usr/local/pip-packs/*
+    check_return
+  else
+    . /usr/local/CyberPanel/bin/activate
+    wget -O /usr/local/cyberpanel-pip.zip https://rep.cyberpanel.net/ubuntu-pip.zip
+    check_return
+    unzip /usr/local/cyberpanel-pip.zip -d /usr/local
+    check_return
+    pip3 install --ignore-installed /usr/local/packages/*
+    check_return
+  fi
 fi
 
 if [ -f requirements.txt ] && [ -d cyberpanel ] ; then
@@ -1122,12 +1164,23 @@ trusted-host=pypi.python.org
 EOF
 	fi
 
-virtualenv -p /usr/bin/python3 /usr/local/CyberCP
-source /usr/local/CyberCP/bin/activate
-pip3.6 install --ignore-installed /usr/local/pip-packs/*
-check_return
-systemctl restart lscpd
 fi
+
+virtualenv -p /usr/bin/python3 /usr/local/CyberCP
+
+if [[ $UBUNTU_20 == "False" ]] ; then
+   source /usr/local/CyberCP/bin/activate
+   check_return
+   pip3 install --ignore-installed /usr/local/pip-packs/*
+   check_return
+else
+  . /usr/local/CyberCP/bin/activate
+  check_return
+  pip3 install --ignore-installed /usr/local/packages/*
+  check_return
+fi
+
+systemctl restart lscpd
 
 for version in $(ls /usr/local/lsws | grep lsphp);
 	do
@@ -1250,6 +1303,10 @@ fi
 			sed -i 's|error_reporting = E_ALL \&amp; ~E_DEPRECATED \&amp; ~E_STRICT|error_reporting = E_ALL \& ~E_DEPRECATED \& ~E_STRICT|g' /usr/local/lsws/{lsphp72,lsphp73}/etc/php.ini
 		fi
 #fix php.ini &amp; issue
+
+if [[ $UBUNTU_20 == "True" ]] ; then
+    cp /usr/local/lsws/lsphp73/bin/php /usr/bin
+fi
 
 #clear
 echo "###################################################################"
@@ -1382,6 +1439,8 @@ else
 fi
 }
 
+##START
+
 if [ $# -eq 0 ] ; then
 	echo -e "\nInitializing...\n"
 else
@@ -1480,15 +1539,14 @@ else
 DOWNLOAD_SERVER="cdn.cyberpanel.sh"
 fi
 
+##END
+
 check_OS
 check_virtualization
 check_root
 check_panel
 check_process
 check_provider
-
-
-
 
 
 if [[ $SILENT = "ON" ]] ; then
@@ -1510,19 +1568,5 @@ main_install
 
 
 ### Disable Centos Default Repos
-
-disable_repos() {
-
-if [[ $SERVER_OS == "CentOS" ]] ; then
-	sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-Base.repo
-	sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-Debuginfo.repo
-	sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-Media.repo
-	sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-Vault.repo
-	sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-CR.repo
-	sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-fasttrack.repo
-	sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-Sources.repo
-fi
-
-}
 
 disable_repos
