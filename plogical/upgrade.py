@@ -1238,7 +1238,7 @@ class Upgrade:
             except:
                 pass
 
-            qeury = """CREATE TABLE `websiteFunctions_backupjob` (
+            query = """CREATE TABLE `websiteFunctions_backupjob` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `logFile` varchar(1000) NOT NULL,
   `ipAddress` varchar(50) NOT NULL,
