@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: CyberPanel\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2019-11-21 19:54+0500\n"
-"PO-Revision-Date: 2020-04-28 21:19+0200\n"
+"PO-Revision-Date: 2020-05-26 08:47+0200\n"
 "Last-Translator: Linunaut <linunaut@protonmail.com>\n"
 "Language-Team: Linunaut <linunaut@protonmail.com>\n"
 "Language: de\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 2.3\n"
+"X-Generator: Poedit 2.3.1\n"
 
 #: CLManager/templates/CLManager/createPackage.html:3
 msgid "Create Cloud Linux Package - CyberPanel"
@@ -102,12 +102,12 @@ msgstr "NPROC"
 #: CLManager/templates/CLManager/createPackage.html:105
 #: CLManager/templates/CLManager/listPackages.html:164
 msgid "INODES soft"
-msgstr "INODES weich"
+msgstr "INODES soft"
 
 #: CLManager/templates/CLManager/createPackage.html:113
 #: CLManager/templates/CLManager/listPackages.html:175
 msgid "INODES hard"
-msgstr "INODES hart"
+msgstr "INODES hard"
 
 #: CLManager/templates/CLManager/listPackages.html:3
 msgid "Manage CloudLinux Packages - CyberPanel"
@@ -533,7 +533,7 @@ msgstr "Snapshot ID"
 #: dns/templates/dns/addDeleteDNSRecords.html:327
 #: pluginHolder/templates/pluginHolder/plugins.html:29
 msgid "Type"
-msgstr "Art"
+msgstr "Typ"
 
 #: IncBackups/templates/IncBackups/createBackup.html:165
 #: websiteFunctions/templates/websiteFunctions/listCron.html:52
