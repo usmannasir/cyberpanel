@@ -61,6 +61,7 @@ class backupScheduleLocal:
                         retValues = backupSchedule.createLocalBackup(virtualHost, backupLogPath)
 
                         if retValues[0] == 0:
+                            backupSchedule.remoteBackupLogging(backupLogPath, '[ERROR] Backup failed for %s, error: %s moving on..' % (virtualHost, retValues[1]), backupSchedule.ERROR)
                             continue
 
                         if os.path.exists(backupScheduleLocal.localBackupPath):

@@ -91,7 +91,7 @@ class vhost:
             try:
                 os.makedirs(pathHTML)
 
-                if ProcessUtilities.decideDistro() == ProcessUtilities. or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                     groupName = 'nobody'
                 else:
                     groupName = 'nogroup'

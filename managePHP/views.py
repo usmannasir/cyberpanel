@@ -1085,7 +1085,7 @@ def installExtensions(request):
 
             phpPath = ''
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 phpPath = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'php70.xml')
             else:
                 phpPath = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'ubuntuphp70.xml')

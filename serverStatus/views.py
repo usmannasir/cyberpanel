@@ -1058,12 +1058,13 @@ def lockStatus(request):
             elif os.path.exists('/etc/yum/yum.conf'):
                 yumConf = '/etc/yum/yum.conf'
 
-            yumConfData = open(yumConf, 'r').read()
-            data = open(yumConf, 'r').readlines()
+            yumConfData = ProcessUtilities.outputExecutioner('cat %s' % (yumConf))
+            data = yumConfData.splitlines()
 
+            yumConfTmp = '/home/cyberpanel/yumTemp'
 
             if type == 0:
-                writeToFile = open(yumConf, 'w')
+                writeToFile = open(yumConfTmp, 'w')
 
                 for items in data:
                     if items.find('exclude') > -1:
@@ -1076,12 +1077,12 @@ def lockStatus(request):
 
                 if yumConfData.find('exclude') == -1:
 
-                    writeToFile = open(yumConf, 'a')
+                    writeToFile = open(yumConfTmp, 'a')
                     writeToFile.writelines('exclude=%s\n' % (package))
                     writeToFile.close()
 
                 else:
-                    writeToFile = open(yumConf, 'w')
+                    writeToFile = open(yumConfTmp, 'w')
 
                     for items in data:
                         if items.find('exclude') > -1:
@@ -1091,6 +1092,9 @@ def lockStatus(request):
                             writeToFile.writelines(items)
 
                     writeToFile.close()
+
+            command = 'mv %s %s' % (yumConfTmp, yumConf)
+            ProcessUtilities.executioner(command)
 
         data_ret = {'status': 1}
         json_data = json.dumps(data_ret)
