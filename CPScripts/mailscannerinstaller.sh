@@ -127,13 +127,8 @@ echo "/^Received:/ HOLD" >> /etc/postfix/header_checks
 
 systemctl restart postfix
 
-wget https://github.com/MailScanner/v5/archive/master.zip
-unzip master.zip
-
-cd /usr/local/CyberCP/CPScripts/v5-master/builds
-
 if [ "$OS" = "NAME=\"Ubuntu\"" ];then
-
+wget https://github.com/MailScanner/v5/releases/download/5.3.3-1/MailScanner-5.3.3-1.noarch.deb
 dpkg -i *.noarch.deb
 
 mkdir /var/run/MailScanner
@@ -144,7 +139,7 @@ chown -R postfix:postfix /var/lock/subsys/MailScanner
 chown -R postfix:postfix /var/spool/MailScanner
 
 elif [ "$OS" = "NAME=\"CentOS Linux\"" ];then
-
+https://github.com/MailScanner/v5/releases/download/5.3.3-1/MailScanner-5.3.3-1.rhel.noarch.rpm
 rpm -Uvh *.rhel.noarch.rpm
 
 fi
