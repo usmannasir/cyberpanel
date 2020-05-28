@@ -39,6 +39,7 @@ urlpatterns = [
     url(r'^flushQueue$', views.flushQueue, name='flushQueue'),
     url(r'^delete$', views.delete, name='delete'),
     url(r'^MailScanner$', views.MailScanner, name='MailScanner'),
+    url(r'^installMailScanner$', views.installMailScanner, name='installMailScanner'),
 
     url(r'^(?P<domain>(.*))$', views.emailLimits, name='emailLimits'),
 

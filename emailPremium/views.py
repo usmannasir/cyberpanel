@@ -1182,10 +1182,42 @@ def MailScanner(request):
 
         checkIfMailScannerInstalled = 0
 
+        ipFile = "/etc/cyberpanel/machineIP"
+        f = open(ipFile)
+        ipData = f.read()
+        ipAddress = ipData.split('\n', 1)[0]
+
         if mailUtilities.checkIfMailScannerInstalled() == 1:
             checkIfMailScannerInstalled = 1
 
-        return render(request, 'emailPremium/MailScanner.html',{'checkIfMailScannerInstalled': checkIfMailScannerInstalled})
+
+        return render(request, 'emailPremium/MailScanner.html',{'checkIfMailScannerInstalled': checkIfMailScannerInstalled, 'ipAddress': ipAddress})
 
     except KeyError:
         return redirect(loadLoginPage)
+
+def installMailScanner(request):
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
+        try:
+
+            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
+            execPath = execPath + " installMailScanner"
+            ProcessUtilities.popenExecutioner(execPath)
+
+            final_json = json.dumps({'status': 1, 'error_message': "None"})
+            return HttpResponse(final_json)
+        except BaseException as msg:
+            final_dic = {'status': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+    except KeyError:
+        final_dic = {'status': 0, 'error_message': "Not Logged In, please refresh the page or login again."}
+        final_json = json.dumps(final_dic)
+        return HttpResponse(final_json)
