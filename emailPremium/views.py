@@ -1190,7 +1190,7 @@ def MailScanner(request):
         if mailUtilities.checkIfMailScannerInstalled() == 1:
             checkIfMailScannerInstalled = 1
 
-        return render(request, 'emailPremium/MailScanner.html',{'checkIfMailScannerInstalled': 0, 'ipAddress': ipAddress})
+        return render(request, 'emailPremium/MailScanner.html',{'checkIfMailScannerInstalled': checkIfMailScannerInstalled, 'ipAddress': ipAddress})
 
     except KeyError:
         return redirect(loadLoginPage)
