@@ -666,6 +666,22 @@ milter_default_action = accept
                 str(msg) + "  [savePolicyServerStatus]")
             print("0," + str(msg))
 
+    @staticmethod
+    def checkIfMailScannerInstalled():
+        try:
+
+            path = "/usr/local/CyberCP/public/mailscanner"
+
+            if os .path.exists(path):
+                return 1
+            else:
+                return 0
+
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile(
+                str(msg) + "  [checkIfMailScannerInstalled]")
+            return 0
+
 
 def main():
 

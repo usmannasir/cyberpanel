@@ -1167,3 +1167,25 @@ def delete(request):
         dic = {'status': 0, 'error_message': str(msg)}
         json_data = json.dumps(dic)
         return HttpResponse(json_data)
+
+## MailScanner
+
+def MailScanner(request):
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
+
+        checkIfMailScannerInstalled = 0
+
+        if mailUtilities.checkIfMailScannerInstalled() == 1:
+            checkIfMailScannerInstalled = 1
+
+        return render(request, 'emailPremium/MailScanner.html',{'checkIfMailScannerInstalled': checkIfMailScannerInstalled})
+
+    except KeyError:
+        return redirect(loadLoginPage)
