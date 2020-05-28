@@ -449,6 +449,9 @@ milter_default_action = accept
     def installSpamAssassin(install, SpamAssassin):
         try:
 
+            if os.path.exists(mailUtilities.spamassassinInstallLogPath):
+                os.remove(mailUtilities.spamassassinInstallLogPath)
+
             if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 command = 'sudo yum install spamassassin -y'
             else:
@@ -471,6 +474,51 @@ milter_default_action = accept
                 writeToFile.close()
 
             return 1
+        except BaseException as msg:
+            writeToFile = open(mailUtilities.spamassassinInstallLogPath, 'a')
+            writeToFile.writelines("Can not be installed.[404]\n")
+            writeToFile.close()
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[installSpamAssassin]")
+
+    @staticmethod
+    def installMailScanner(install, SpamAssassin):
+        try:
+
+            if os.path.exists(mailUtilities.spamassassinInstallLogPath):
+                os.remove(mailUtilities.spamassassinInstallLogPath)
+
+            if mailUtilities.checkIfSpamAssassinInstalled():
+
+                command = 'chmod +x /usr/local/CyberCP/CPScripts/mailscannerinstaller.sh'
+                ProcessUtilities.executioner(command)
+
+
+                command = '/usr/local/CyberCP/CPScripts/mailscannerinstaller.sh'
+
+                cmd = shlex.split(command)
+
+                with open(mailUtilities.spamassassinInstallLogPath, 'w') as f:
+                    res = subprocess.call(cmd, stdout=f)
+
+                if res == 1:
+                    writeToFile = open(mailUtilities.spamassassinInstallLogPath, 'a')
+                    writeToFile.writelines("Can not be installed.[404]\n")
+                    writeToFile.close()
+                    logging.CyberCPLogFileWriter.writeToFile("[Could not Install MailScanner.]")
+                    return 0
+                else:
+                    writeToFile = open(mailUtilities.spamassassinInstallLogPath, 'a')
+                    writeToFile.writelines("MailScanner Installed.[200]\n")
+                    writeToFile.close()
+
+                return 1
+            else:
+                writeToFile = open(mailUtilities.spamassassinInstallLogPath, 'a')
+                writeToFile.writelines("Please install SpamAssassin from CyberPanel before installing MailScanner.[404]\n")
+                writeToFile.close()
+
+
+
         except BaseException as msg:
             writeToFile = open(mailUtilities.spamassassinInstallLogPath, 'a')
             writeToFile.writelines("Can not be installed.[404]\n")
@@ -666,6 +714,22 @@ milter_default_action = accept
                 str(msg) + "  [savePolicyServerStatus]")
             print("0," + str(msg))
 
+    @staticmethod
+    def checkIfMailScannerInstalled():
+        try:
+
+            path = "/usr/local/CyberCP/public/mailwatch"
+
+            if os .path.exists(path):
+                return 1
+            else:
+                return 0
+
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile(
+                str(msg) + "  [checkIfMailScannerInstalled]")
+            return 0
+
 
 def main():
 
@@ -695,6 +759,8 @@ def main():
         mailUtilities.savePolicyServerStatus(args.install)
     elif args.function == 'installSpamAssassin':
         mailUtilities.installSpamAssassin("install", "SpamAssassin")
+    elif args.function == 'installMailScanner':
+        mailUtilities.installMailScanner("install", "installMailScanner")
     elif args.function == 'AfterEffects':
         mailUtilities.AfterEffects(args.domain)
 

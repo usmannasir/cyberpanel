@@ -13,6 +13,4 @@ urlpatterns = [
     url(r'^UpgradeStatus',views.upgradeStatus, name='UpgradeStatus'),
     url(r'^upgradeVersion',views.upgradeVersion, name='upgradeVersion'),
 
-
-
 ]
