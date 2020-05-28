@@ -1190,7 +1190,7 @@ def MailScanner(request):
         if mailUtilities.checkIfMailScannerInstalled() == 1:
             checkIfMailScannerInstalled = 1
 
-        return render(request, 'emailPremium/MailScanner.html',{'checkIfMailScannerInstalled': checkIfMailScannerInstalled, 'ipAddress': ipAddress})
+        return render(request, 'emailPremium/MailScanner.html',{'checkIfMailScannerInstalled': 0, 'ipAddress': ipAddress})
 
     except KeyError:
         return redirect(loadLoginPage)
@@ -1234,7 +1234,7 @@ def installStatusMailScanner(request):
         try:
             if request.method == 'POST':
 
-                command = "sudo cat " + mailUtilities.spamassassinInstallLogPath
+                command = "sudo cat " + mailUtilities.mailScannerInstallLogPath
                 installStatus = ProcessUtilities.outputExecutioner(command)
 
                 if installStatus.find("[200]")>-1:

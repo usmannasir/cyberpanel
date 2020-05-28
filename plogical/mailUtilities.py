@@ -30,6 +30,7 @@ class mailUtilities:
     installLogPath = "/home/cyberpanel/openDKIMInstallLog"
     spamassassinInstallLogPath = "/home/cyberpanel/spamassassinInstallLogPath"
     cyberPanelHome = "/home/cyberpanel"
+    mailScannerInstallLogPath = "/home/cyberpanel/mailScannerInstallLogPath"
 
     @staticmethod
     def SendEmail(sender, receivers, message):
@@ -484,8 +485,8 @@ milter_default_action = accept
     def installMailScanner(install, SpamAssassin):
         try:
 
-            if os.path.exists(mailUtilities.spamassassinInstallLogPath):
-                os.remove(mailUtilities.spamassassinInstallLogPath)
+            if os.path.exists(mailUtilities.mailScannerInstallLogPath):
+                os.remove(mailUtilities.mailScannerInstallLogPath)
 
             if mailUtilities.checkIfSpamAssassinInstalled():
 
@@ -497,30 +498,30 @@ milter_default_action = accept
 
                 cmd = shlex.split(command)
 
-                with open(mailUtilities.spamassassinInstallLogPath, 'w') as f:
+                with open(mailUtilities.mailScannerInstallLogPath, 'w') as f:
                     res = subprocess.call(cmd, stdout=f)
 
                 if res == 1:
-                    writeToFile = open(mailUtilities.spamassassinInstallLogPath, 'a')
+                    writeToFile = open(mailUtilities.mailScannerInstallLogPath, 'a')
                     writeToFile.writelines("Can not be installed.[404]\n")
                     writeToFile.close()
                     logging.CyberCPLogFileWriter.writeToFile("[Could not Install MailScanner.]")
                     return 0
                 else:
-                    writeToFile = open(mailUtilities.spamassassinInstallLogPath, 'a')
+                    writeToFile = open(mailUtilities.mailScannerInstallLogPath, 'a')
                     writeToFile.writelines("MailScanner Installed.[200]\n")
                     writeToFile.close()
 
                 return 1
             else:
-                writeToFile = open(mailUtilities.spamassassinInstallLogPath, 'a')
+                writeToFile = open(mailUtilities.mailScannerInstallLogPath, 'a')
                 writeToFile.writelines("Please install SpamAssassin from CyberPanel before installing MailScanner.[404]\n")
                 writeToFile.close()
 
 
 
         except BaseException as msg:
-            writeToFile = open(mailUtilities.spamassassinInstallLogPath, 'a')
+            writeToFile = open(mailUtilities.mailScannerInstallLogPath, 'a')
             writeToFile.writelines("Can not be installed.[404]\n")
             writeToFile.close()
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[installSpamAssassin]")
