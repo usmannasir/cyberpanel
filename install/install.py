@@ -1244,8 +1244,6 @@ imap_folder_list_limit = 0
 
     def installFirewalld(self):
 
-        if self.distro == cent8:
-            return 0
         if self.distro == ubuntu:
             self.removeUfw()
 
@@ -1260,7 +1258,7 @@ imap_folder_list_limit = 0
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             ######
-            if self.distro == centos or self.distro == cent8:
+            if self.distro == centos:
                 # Not available in ubuntu
                 command = 'systemctl restart dbus'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
