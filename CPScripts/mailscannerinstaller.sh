@@ -1,6 +1,16 @@
 #!/bin/bash
 #systemctl stop firewalld
 
+check_return() {
+#check previous command result , 0 = ok ,  non-0 = something wrong.
+if [[ $? -eq "0" ]] ; then
+	:
+else
+	echo -e "\ncommand failed, exiting..."
+	exit
+fi
+}
+
 echo 'backup configs';
 cp /etc/dovecot/dovecot.conf /etc/dovecot/dovecot.conf-bak_$(date '+%Y-%m-%d_%H_%M:%S');
 cp /etc/postfix/master.cf /etc/postfix/master.cf-bak_$(date '+%Y-%m-%d_%H_%M:%S');
@@ -69,13 +79,21 @@ yum install -y gcc cpp perl bzip2 zip make patch automake rpm-build perl-Archive
 rpm -Uvh https://forensics.cert.org/centos/cert/8/x86_64/unrar-5.4.0-1.el8.x86_64.rpm
 
 export PERL_MM_USE_DEFAULT=1
+check_return
 curl -L https://cpanmin.us | perl - App::cpanminus
+check_return
 cpanm Encoding::FixLatin
+check_return
 cpanm Digest::SHA1
+check_return
 cpanm Geo::IP
+check_return
 cpanm Razor2::Client::Agent
+check_return
 cpanm Sys::Hostname::Long
+check_return
 cpanm Sys::SigAction
+check_return
 
 freshclam -v
 
