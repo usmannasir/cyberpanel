@@ -25,6 +25,9 @@ class FirewallUtilities:
 
     @staticmethod
     def addRule(proto,port):
+
+        print('Adding port: %s' % (port))
+
         if port == "21":
             command = "sudo firewall-cmd --add-service=ftp --permanent"
         else:
@@ -56,7 +59,6 @@ class FirewallUtilities:
 
     @staticmethod
     def deleteRule(proto, port):
-        print('Adding port: %s' % (port))
 
         if port=="21":
             command = "sudo firewall-cmd --remove-service=ftp --permanent"

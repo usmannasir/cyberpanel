@@ -216,6 +216,7 @@ class backupSchedule:
 
                 backupSchedule.remoteBackupLogging(backupLogPath, "")
                 backupSchedule.remoteBackupLogging(backupLogPath, "")
+                return 1
             else:
 
                 backupSchedule.remoteBackupLogging(backupLogPath, 'Remote backup creation failed for %s.' % (virtualHost) )
@@ -227,6 +228,7 @@ class backupSchedule:
 
                 backupSchedule.remoteBackupLogging(backupLogPath, "")
                 backupSchedule.remoteBackupLogging(backupLogPath, "")
+                return 0
 
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [backupSchedule.createBackup]")
@@ -332,8 +334,14 @@ class backupSchedule:
 
             for virtualHost in os.listdir("/home"):
                 if match(r'^[a-zA-Z0-9-]*[a-zA-Z0-9-]{0,61}[a-zA-Z0-9-](?:\.[a-zA-Z0-9-]{2,})+$', virtualHost, M | I):
-                    backupSchedule.createBackup(virtualHost, ipAddress, backupLogPath, port, user)
+                    if backupSchedule.createBackup(virtualHost, ipAddress, backupLogPath, port, user):
+                        jobSuccessSites = jobSuccessSites + 1
+                    else:
+                        jobFailedSites = jobFailedSites + 1
 
+            backupSchedule.backupLog.jobFailedSites = jobFailedSites
+            backupSchedule.backupLog.jobSuccessSites = jobSuccessSites
+            backupSchedule.backupLog.save()
 
             backupSchedule.remoteBackupLogging(backupLogPath, "Remote backup job completed.\n")
 
