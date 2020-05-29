@@ -499,7 +499,7 @@ milter_default_action = accept
                 cmd = shlex.split(command)
 
                 with open(mailUtilities.mailScannerInstallLogPath, 'w') as f:
-                    res = subprocess.call(cmd, stdout=f)
+                    res = subprocess.call(cmd, stdout=f, shell=True)
 
                 if res == 1:
                     writeToFile = open(mailUtilities.mailScannerInstallLogPath, 'a')
