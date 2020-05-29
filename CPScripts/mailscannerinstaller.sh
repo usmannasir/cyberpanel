@@ -50,11 +50,11 @@ yum install -y gcc cpp perl bzip2 zip make patch automake rpm-build perl-Archive
 rpm -Uvh https://forensics.cert.org/centos/cert/7/x86_64/unrar-5.4.0-1.el7.x86_64.rpm
 export PERL_MM_USE_DEFAULT=1
 curl -L https://cpanmin.us | perl - App::cpanminus
-cpanm Encoding::FixLatin
-cpanm Digest::SHA1
-cpanm Geo::IP
-cpanm Razor2::Client::Agent
-cpanm Net::Patricia
+perl -MCPAN -e 'install Encoding::FixLatin'
+perl -MCPAN -e 'install Digest::SHA1'
+perl -MCPAN -e 'install Geo::IP'
+perl -MCPAN -e 'install Razor2::Client::Agent'
+perl -MCPAN -e 'install Net::Patricia'
 
 freshclam -v
 DIR=/etc/mail/spamassassin
@@ -79,21 +79,16 @@ yum install -y gcc cpp perl bzip2 zip make patch automake rpm-build perl-Archive
 rpm -Uvh https://forensics.cert.org/centos/cert/8/x86_64/unrar-5.4.0-1.el8.x86_64.rpm
 
 export PERL_MM_USE_DEFAULT=1
-check_return
 curl -L https://cpanmin.us | perl - App::cpanminus
-check_return
-cpanm Encoding::FixLatin
-check_return
-cpanm Digest::SHA1
-check_return
-cpanm Geo::IP
-check_return
-cpanm Razor2::Client::Agent
-check_return
-cpanm Sys::Hostname::Long
-check_return
-cpanm Sys::SigAction
-check_return
+
+perl -MCPAN -e 'install Encoding::FixLatin'
+perl -MCPAN -e 'install Digest::SHA1'
+perl -MCPAN -e 'install Geo::IP'
+perl -MCPAN -e 'install Razor2::Client::Agent'
+perl -MCPAN -e 'install Sys::Hostname::Long'
+perl -MCPAN -e 'install Sys::SigAction'
+
+
 
 freshclam -v
 
@@ -159,7 +154,6 @@ chown -R postfix:postfix /var/spool/MailScanner
 elif [ "$OS" = "NAME=\"CentOS Linux\"" ];then
 wget https://github.com/MailScanner/v5/releases/download/5.3.3-1/MailScanner-5.3.3-1.rhel.noarch.rpm
 rpm -Uvh *.rhel.noarch.rpm
-
 fi
 
 mkdir /var/spool/MailScanner/spamassassin
@@ -351,7 +345,7 @@ fi
 
 
 echo 'Restart and check services are up'
-systemctl restart dovecot && systemctl restart postfix && systemctl restart spamassassin;
+systemctl restart dovecot && systemctl restart postfix && systemctl restart spamassassin && systemctl restart mailscanner;
 
 csf -e
 
