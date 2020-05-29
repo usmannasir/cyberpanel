@@ -832,6 +832,11 @@ def installStatusSpamAssassin(request):
                     output = ProcessUtilities.outputExecutioner(execPath, 'root')
 
                     if output.find("1,None") > -1:
+
+                        import os
+                        if os.path.exists(mailUtilities.mailScannerInstallLogPath):
+                            os.remove(mailUtilities.mailScannerInstallLogPath)
+
                         final_json = json.dumps({
                             'error_message': "None",
                             'requestStatus': installStatus,
