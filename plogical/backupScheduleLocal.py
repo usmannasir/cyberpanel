@@ -30,9 +30,9 @@ class backupScheduleLocal:
 
             if os.path.exists(backupScheduleLocal.runningPath):
                 output = ProcessUtilities.outputExecutioner('ps aux')
+                pid = open(backupScheduleLocal.runningPath, 'r').read()
 
-                if output.find('/usr/local/CyberCP/plogical/backupScheduleLocal.py') > -1:
-                    pid = open(backupScheduleLocal.runningPath, 'r').read()
+                if output.find('/usr/local/CyberCP/plogical/backupScheduleLocal.py') > -1 and output.find(pid) > -1:
                     print('\n\nLocal backup is already running with PID: %s. If you want to run again kindly kill the backup process: \n\n kill -9 %s.\n\n' % (pid, pid))
                     return 0
                 else:
