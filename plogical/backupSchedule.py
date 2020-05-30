@@ -265,9 +265,18 @@ class backupSchedule:
         try:
 
             if os.path.exists(backupSchedule.runningPath):
-                pid = open(backupSchedule.runningPath, 'r').read()
-                print('\n\nRemote backup is already running with PID: %s. If you want to run again kindly kill the backup process: \n\n kill -9 %s.\n\n' % (pid, pid))
-                return 0
+
+                output = ProcessUtilities.outputExecutioner('ps aux')
+
+                if output.find('/usr/local/CyberCP/plogical/backupSchedule.py') > -1:
+                    pid = open(backupSchedule.runningPath, 'r').read()
+                    print(
+                        '\n\nRemote backup is already running with PID: %s. If you want to run again kindly kill the backup process: \n\n kill -9 %s.\n\n' % (
+                        pid, pid))
+                    return 0
+                else:
+                    os.remove(backupSchedule.runningPath)
+
 
             writeToFile = open(backupSchedule.runningPath, 'w')
             writeToFile.write(str(os.getpid()))
