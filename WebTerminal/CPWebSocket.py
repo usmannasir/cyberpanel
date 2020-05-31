@@ -1,7 +1,6 @@
 #!/usr/local/CyberCP/bin/python
 import sys
 import os
-import django
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
@@ -34,7 +33,7 @@ class SSHServer(multi.Thread):
                     else:
                         SSHServer.DEFAULT_PORT = int(items.split(' ')[1])
         except BaseException as msg:
-            logging.writeToFile(str(msg))
+            logging.writeToFile('%s. [SSHServer.findSSHPort]' % (str(msg)))
 
     def loadPublicKey(self):
         pubkey = '/root/.ssh/cyberpanel.pub'
@@ -91,20 +90,23 @@ class SSHServer(multi.Thread):
                 else:
                     return 0
             except BaseException as msg:
+                print(str(msg))
                 time.sleep(0.1)
 
     def run(self):
         try:
             self.recvData()
         except BaseException as msg:
-            print((str(msg)))
+            print('%s. [SSHServer.run]' % (str(msg)))
 
 
 class WebTerminalServer(WebSocket):
 
    def handleMessage(self):
        try:
+           print('handle message')
            data = json.loads(self.data)
+           print(str(data))
            if str(self.data).find('"tp":"init"') > -1:
                self.verifyPath = str(data['data']['verifyPath'])
                self.password = str(data['data']['password'])
@@ -113,20 +115,26 @@ class WebTerminalServer(WebSocket):
                if os.path.exists(self.verifyPath):
                    if self.filePassword == self.password:
                     self.shell.send(str(data['data']))
-       except:
-           pass
+       except BaseException as msg:
+          print('%s. [WebTerminalServer.handleMessage]' % (str(msg)))
 
    def handleConnected(self):
+      print('connected')
       self.running = 1
       self.sh = SSHServer(self)
       self.shell = self.sh.shell
       self.sh.start()
+      print('connect ok')
 
    def handleClose(self):
       try:
-          os.remove(self.verifyPath)
+          try:
+            os.remove(self.verifyPath)
+          except:
+              pass
           self.running = 0
-      except:
+      except BaseException as msg:
+          print('%s. [WebTerminalServer.handleClose]' % (str(msg)))
           pass
 
 
@@ -146,6 +154,8 @@ if __name__ == "__main__":
    def close_sig_handler(signal, frame):
       server.close()
       sys.exit()
+
+   print('server started')
 
    signal.signal(signal.SIGINT, close_sig_handler)
    server.serveforever()
