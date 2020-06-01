@@ -255,7 +255,6 @@ def modifyUsers(request):
     except KeyError:
         return redirect(loadLoginPage)
 
-
 def fetchUserDetails(request):
     try:
         val = request.session['userID']
@@ -315,7 +314,6 @@ def fetchUserDetails(request):
         data_ret = {'fetchStatus': 0, 'error_message': "Not logged in as admin", }
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
-
 
 def saveModifications(request):
     try:
@@ -386,7 +384,6 @@ def saveModifications(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
-
 def deleteUser(request):
     try:
         userID = request.session['userID']
@@ -405,38 +402,45 @@ def deleteUser(request):
     except KeyError:
         return redirect(loadLoginPage)
 
-
 def submitUserDeletion(request):
+
     try:
-        userID = request.session['userID']
+        try:
+            userID = request.session['userID']
+        except:
+            userID = request['userID']
         try:
 
-            if request.method == 'POST':
+            try:
                 data = json.loads(request.body)
-                accountUsername = data['accountUsername']
+            except:
+                data = request
 
-                currentACL = ACLManager.loadedACL(userID)
+            accountUsername = data['accountUsername']
 
-                currentUser = Administrator.objects.get(pk=userID)
-                userInQuestion = Administrator.objects.get(userName=accountUsername)
+            currentACL = ACLManager.loadedACL(userID)
 
-                if ACLManager.checkUserOwnerShip(currentACL, currentUser, userInQuestion):
-                    user = Administrator.objects.get(userName=accountUsername)
+            currentUser = Administrator.objects.get(pk=userID)
+            userInQuestion = Administrator.objects.get(userName=accountUsername)
 
-                    childUsers = Administrator.objects.filter(owner=user.pk)
+            if ACLManager.checkUserOwnerShip(currentACL, currentUser, userInQuestion):
+                user = Administrator.objects.get(userName=accountUsername)
 
-                    for items in childUsers:
-                        items.delete()
+                childUsers = Administrator.objects.filter(owner=user.pk)
 
-                    user.delete()
+                for items in childUsers:
+                    items.delete()
 
-                    data_ret = {'status': 1, 'deleteStatus': 1, 'error_message': 'None'}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
-                else:
-                    data_ret = {'status': 0, 'deleteStatus': 0, 'error_message': 'Not enough privileges.'}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
+                user.delete()
+
+                data_ret = {'status': 1, 'deleteStatus': 1, 'error_message': 'None'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            else:
+                data_ret = {'status': 0, 'deleteStatus': 0, 'error_message': 'Not enough privileges.'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
 
         except BaseException as msg:
             data_ret = {'status': 0, 'deleteStatus': 0, 'error_message': str(msg)}

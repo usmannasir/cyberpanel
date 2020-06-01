@@ -24,7 +24,6 @@ from plogical.ftpUtilities import FTPUtilities
 from plogical.sslUtilities import sslUtilities
 from plogical.processUtilities import ProcessUtilities
 from plogical.backupSchedule import backupSchedule
-from django.http import HttpRequest
 
 # All that we see or seem is but a dream within a dream.
 
@@ -1376,6 +1375,24 @@ def main():
         data['userID'] = 1
 
         response = submitUserCreation(data)
+
+        print(response.content.decode())
+
+    elif args.function == "deleteUser":
+
+        completeCommandExample = 'cyberpanel deleteUser --userName cyberpanel'
+
+        if not args.userName:
+            print("\n\nPlease enter User Name. For example:\n\n" + completeCommandExample + "\n\n")
+            return
+
+        from userManagment.views import submitUserDeletion
+
+        data = {}
+        data['accountUsername'] = args.userName
+        data['userID'] = 1
+
+        response = submitUserDeletion(data)
 
         print(response.content.decode())
 
