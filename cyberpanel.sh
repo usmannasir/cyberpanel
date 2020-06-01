@@ -1019,7 +1019,13 @@ fi
 
 
 if [[ $debug == "1" ]] ; then
-  pip3.6 install --ignore-installed /usr/local/pip-packs/*
+
+  if [[ $UBUNTU_20 == "False" ]] ; then
+    pip3.6 install --ignore-installed /usr/local/pip-packs/*
+  else
+    pip3.6 install --ignore-installed /usr/local/packages/*
+  fi
+
 	if [[ $REDIS_HOSTING == "Yes" ]] ; then
 	  /usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY --postfix $POSTFIX_VARIABLE --powerdns $POWERDNS_VARIABLE --ftp $PUREFTPD_VARIABLE --redis enable
   else
