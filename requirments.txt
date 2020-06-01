@@ -31,7 +31,7 @@ jsonpointer==1.9
 MarkupSafe==0.19
 mock==2.0.0
 mysqlclient==1.4.6
-paramiko==2.6.0
+paramiko==2.7.1
 parsedatetime==2.4
 pbr==4.0.4
 pexpect==4.4.0
