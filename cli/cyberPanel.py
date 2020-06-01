@@ -24,6 +24,7 @@ from plogical.ftpUtilities import FTPUtilities
 from plogical.sslUtilities import sslUtilities
 from plogical.processUtilities import ProcessUtilities
 from plogical.backupSchedule import backupSchedule
+from django.http import HttpRequest
 
 # All that we see or seem is but a dream within a dream.
 
@@ -1322,6 +1323,61 @@ def main():
             build = build[0:1]
             currentversion = version + '.' + build
             print (currentversion)
+
+    ### User Functions
+
+    elif args.function == "createUser":
+
+        completeCommandExample = 'cyberpanel createUser --firstName Cyber --lastName Panel --email email@cyberpanel.net --userName cyberpanel --password securepassword --websitesLimit 10 --selectedACL user --securityLevel HIGH'
+
+        if not args.firstName:
+            print("\n\nPlease enter First Name. For example:\n\n" + completeCommandExample + "\n\n")
+            return
+
+        if not args.lastName:
+            print("\n\nPlease enter Last Name. For example:\n\n" + completeCommandExample + "\n\n")
+            return
+
+        if not args.email:
+            print("\n\nPlease enter Email. For example:\n\n" + completeCommandExample + "\n\n")
+            return
+
+        if not args.userName:
+            print("\n\nPlease enter User name. For example:\n\n" + completeCommandExample + "\n\n")
+            return
+
+        if not args.password:
+            print("\n\nPlease enter password. For example:\n\n" + completeCommandExample + "\n\n")
+            return
+
+        if not args.websitesLimit:
+            print("\n\nPlease enter website limit. For example:\n\n" + completeCommandExample + "\n\n")
+            return
+
+        if not args.selectedACL:
+            print("\n\nPlease enter select acl. For example:\n\n" + completeCommandExample + "\n\n")
+            return
+
+        if not args.securityLevel:
+            print("\n\nPlease set security level. For example:\n\n" + completeCommandExample + "\n\n")
+            return
+
+        from userManagment.views import submitUserCreation
+
+        data = {}
+        data['firstName'] = args.firstName
+        data['lastName'] = args.lastName
+        data['email'] = args.email
+        data['userName'] = args.userName
+        data['password'] = args.password
+        data['websitesLimit'] = args.websitesLimit
+        data['selectedACL'] = args.selectedACL
+        data['securityLevel'] = args.securityLevel
+        data['userID'] = 1
+
+        response = submitUserCreation(data)
+
+        print(response.content.decode())
 
 
 

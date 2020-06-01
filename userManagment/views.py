@@ -126,10 +126,16 @@ def submitUserCreation(request):
     try:
 
         try:
-            userID = request.session['userID']
-            currentACL = ACLManager.loadedACL(userID)
+            try:
+                userID = request.session['userID']
+                currentACL = ACLManager.loadedACL(userID)
+                data = json.loads(request.body)
+            except:
+                userID = request['userID']
+                data = request
+                currentACL = ACLManager.loadedACL(userID)
 
-            data = json.loads(request.body)
+
             firstName = data['firstName']
             lastName = data['lastName']
             email = data['email']
@@ -137,6 +143,7 @@ def submitUserCreation(request):
             password = data['password']
             websitesLimit = data['websitesLimit']
             selectedACL = data['selectedACL']
+
             try:
                 securityLevel = data['securityLevel']
             except:

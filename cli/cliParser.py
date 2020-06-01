@@ -54,4 +54,12 @@ class cliParser:
         parser.add_argument('--userName', help='Email Username.')
         parser.add_argument('--password', help='Email password.')
 
+        ### Additional Arguments for user manager
+
+        parser.add_argument('--firstName', help='First name while creating user.')
+        parser.add_argument('--lastName', help='First name while creating user.')
+        parser.add_argument('--websitesLimit', help='Website limit while creating user.')
+        parser.add_argument('--selectedACL', help='Select ACL while creating user.')
+        parser.add_argument('--securityLevel', help='Set security level while creating user.')
+
         return parser.parse_args()
