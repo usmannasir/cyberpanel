@@ -1,18 +1,18 @@
-#!/usr/local/CyberCP/bin/python
+import tornado.httpserver
+import tornado.websocket
+import tornado.ioloop
+import tornado.web
 import sys
 import os
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
-import signal
-import sys
-import ssl
-from SimpleWebSocketServer import WebSocket, SimpleSSLWebSocketServer
 import paramiko
 import os
 import json
 import threading as multi
 import time
+import asyncio
 
 
 class SSHServer(multi.Thread):
@@ -72,26 +72,22 @@ class SSHServer(multi.Thread):
         self.color = 0
 
     def recvData(self):
+        asyncio.set_event_loop(asyncio.new_event_loop())
         while True:
             try:
                 if self.websocket.running:
-                    if os.path.exists(self.websocket.verifyPath):
-                        if self.websocket.filePassword == self.websocket.password:
-                            if self.shell.recv_ready():
-                                if self.color == 0:
-                                    text = '%sEnjoy your accelerated Internet by CyberPanel and LiteSpeed%s' % (SSHServer.OKGREEN, SSHServer.ENDC)
-                                    nText = 'Enjoy your accelerated Internet by CyberPanel'
-                                    self.websocket.sendMessage(self.shell.recv(9000).decode("utf-8").replace(nText, text))
-                                    self.color = 1
-                                else:
-                                    self.websocket.sendMessage(self.shell.recv(9000).decode("utf-8"))
-                            else:
-                                time.sleep(0.01)
+                    if os.path.exists(self.verifyPath) and self.filePassword == self.password:
+                        if self.shell.recv_ready():
+                            self.websocket.write_message(self.shell.recv(9000).decode("utf-8"))
+                        else:
+                            time.sleep(0.001)
+                    else:
+                        return 0
                 else:
                     return 0
             except BaseException as msg:
-                print(str(msg))
-                time.sleep(0.1)
+                print('%s. [recvData]' % str(msg))
+                time.sleep(0.001)
 
     def run(self):
         try:
@@ -99,63 +95,67 @@ class SSHServer(multi.Thread):
         except BaseException as msg:
             print('%s. [SSHServer.run]' % (str(msg)))
 
+class WSHandler(tornado.websocket.WebSocketHandler):
 
-class WebTerminalServer(WebSocket):
+    def open(self):
+        print('connected')
+        self.running = 1
+        self.sh = SSHServer(self)
+        self.shell = self.sh.shell
+        self.sh.start()
+        self.init = 1
+        print('connect ok')
 
-   def handleMessage(self):
-       try:
-           print('handle message')
-           data = json.loads(self.data)
-           print(str(data))
-           if str(self.data).find('"tp":"init"') > -1:
-               self.verifyPath = str(data['data']['verifyPath'])
-               self.password = str(data['data']['password'])
-               self.filePassword = open(self.verifyPath, 'r').read()
-           else:
-               if os.path.exists(self.verifyPath):
-                   if self.filePassword == self.password:
-                    self.shell.send(str(data['data']))
-       except BaseException as msg:
-          print('%s. [WebTerminalServer.handleMessage]' % (str(msg)))
+    def on_message(self, message):
+        try:
+            print('handle message')
+            data = json.loads(message)
 
-   def handleConnected(self):
-      print('connected')
-      self.running = 1
-      self.sh = SSHServer(self)
-      self.shell = self.sh.shell
-      self.sh.start()
-      print('connect ok')
+            if self.init:
+                self.sh.verifyPath = str(data['data']['verifyPath'])
+                self.sh.password = str(data['data']['password'])
+                self.sh.filePassword = open(self.sh.verifyPath, 'r').read()
+                self.init = 0
+            else:
+                if os.path.exists(self.sh.verifyPath):
+                    if self.sh.filePassword == self.sh.password:
+                        self.shell.send(str(data['data']))
 
-   def handleClose(self):
-      try:
-          try:
-            os.remove(self.verifyPath)
-          except:
-              pass
-          self.running = 0
-      except BaseException as msg:
-          print('%s. [WebTerminalServer.handleClose]' % (str(msg)))
-          pass
+        except BaseException as msg:
+            print('%s. [WebTerminalServer.handleMessage]' % (str(msg)))
 
+    def on_close(self):
+        print('connection closed')
+
+    def check_origin(self, origin):
+        return True
+
+application = tornado.web.Application([
+    (r'/', WSHandler),
+])
 
 if __name__ == "__main__":
-   pidfile = '/usr/local/CyberCP/WebTerminal/pid'
 
-   writeToFile = open(pidfile, 'w')
-   writeToFile.write(str(os.getpid()))
-   writeToFile.close()
+    pidfile = '/usr/local/CyberCP/WebTerminal/pid'
 
-   SSHServer.findSSHPort()
+    writeToFile = open(pidfile, 'w')
+    writeToFile.write(str(os.getpid()))
+    writeToFile.close()
 
-   print ('SSH Port is set to: %s' % (str(SSHServer.DEFAULT_PORT)))
+    http_server = tornado.httpserver.HTTPServer(application, ssl_options={
+        "certfile": "/usr/local/lscp/conf/cert.pem",
+        "keyfile": "/usr/local/lscp/conf/key.pem",
+    }, )
 
-   server = SimpleSSLWebSocketServer('0.0.0.0', '5678', WebTerminalServer,  '/usr/local/lscp/conf/cert.pem', '/usr/local/lscp/conf/key.pem', version=ssl.PROTOCOL_TLSv1)
+    ADDR = '0.0.0.0'
+    http_server.listen(5678, ADDR)
+    print('*** Websocket Server Started at %s***' % ADDR)
 
-   def close_sig_handler(signal, frame):
-      server.close()
-      sys.exit()
+    import signal
+    def close_sig_handler(signal, frame):
+        http_server.stop()
+        sys.exit()
 
-   print('server started')
+    signal.signal(signal.SIGINT, close_sig_handler)
 
-   signal.signal(signal.SIGINT, close_sig_handler)
-   server.serveforever()
+    tornado.ioloop.IOLoop.instance().start()

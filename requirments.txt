@@ -52,7 +52,7 @@ PyYAML==3.10
 requests==2.18.4
 requests-file==1.4.3
 s3transfer==0.1.13
-SimpleWebSocketServer==0.1.1
+tornado==6.0.4
 six==1.13.0
 sqlparse==0.3.0
 tldextract==2.2.0
