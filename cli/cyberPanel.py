@@ -1396,6 +1396,17 @@ def main():
 
         print(response.content.decode())
 
+    elif args.function == "listUsers":
+
+        from userManagment.views import fetchTableUsers
+
+        data = {}
+        data['userID'] = 1
+
+        response = fetchTableUsers(data)
+
+        print(response.content.decode())
+
 
 
 if __name__ == "__main__":

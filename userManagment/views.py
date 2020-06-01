@@ -452,7 +452,6 @@ def submitUserDeletion(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
-
 def createNewACL(request):
     try:
         userID = request.session['userID']
@@ -464,7 +463,6 @@ def createNewACL(request):
             return ACLManager.loadError()
     except KeyError:
         return redirect(loadLoginPage)
-
 
 def createACLFunc(request):
     try:
@@ -558,7 +556,6 @@ def createACLFunc(request):
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
 
-
 def deleteACL(request):
     try:
         userID = request.session['userID']
@@ -571,7 +568,6 @@ def deleteACL(request):
             return ACLManager.loadError()
     except KeyError:
         return redirect(loadLoginPage)
-
 
 def deleteACLFunc(request):
     try:
@@ -599,7 +595,6 @@ def deleteACLFunc(request):
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
 
-
 def modifyACL(request):
     try:
         userID = request.session['userID']
@@ -612,7 +607,6 @@ def modifyACL(request):
             return ACLManager.loadError()
     except KeyError:
         return redirect(loadLoginPage)
-
 
 def fetchACLDetails(request):
     try:
@@ -704,7 +698,6 @@ def fetchACLDetails(request):
         finalResponse = {'status': 0, 'errorMessage': str(msg)}
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
-
 
 def submitACLModifications(request):
     try:
@@ -811,7 +804,6 @@ def submitACLModifications(request):
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
 
-
 def changeUserACL(request):
     try:
         userID = request.session['userID']
@@ -832,7 +824,6 @@ def changeUserACL(request):
 
     except KeyError:
         return redirect(loadLoginPage)
-
 
 def changeACLFunc(request):
     try:
@@ -874,7 +865,6 @@ def changeACLFunc(request):
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
 
-
 def resellerCenter(request):
     try:
         userID = request.session['userID']
@@ -896,7 +886,6 @@ def resellerCenter(request):
 
     except KeyError:
         return redirect(loadLoginPage)
-
 
 def saveResellerChanges(request):
     try:
@@ -954,7 +943,6 @@ def saveResellerChanges(request):
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
 
-
 def listUsers(request):
     try:
         userID = request.session['userID']
@@ -987,10 +975,12 @@ def listUsers(request):
     except KeyError:
         return redirect(loadLoginPage)
 
-
 def fetchTableUsers(request):
     try:
-        userID = request.session['userID']
+        try:
+            userID = request.session['userID']
+        except:
+            userID = request['userID']
 
         currentACL = ACLManager.loadedACL(userID)
 
