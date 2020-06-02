@@ -36,12 +36,17 @@ class StagingSetup(multi.Thread):
 
             website = Websites.objects.get(domain=masterDomain)
 
+            masterPath = '/home/%s/public_html' % (masterDomain)
+
+            command = 'chmod 755 %s' % (masterPath)
+            ProcessUtilities.executioner(command)
+
             ## Creating Child Domain
 
             path = "/home/" + masterDomain + "/public_html/" + domain
 
             logging.statusWriter(tempStatusPath, 'Creating domain for staging environment..,5')
-            phpSelection = 'PHP 7.1'
+            phpSelection = 'PHP 7.2'
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
 
             execPath = execPath + " createDomain --masterDomain " + masterDomain + " --virtualHostName " + domain + \
@@ -57,18 +62,37 @@ class StagingSetup(multi.Thread):
             if data.find('[200]') > -1:
                 pass
             else:
-                logging.statusWriter(tempStatusPath, 'Failed to create child-domain for staging enviroment. [404]')
+                logging.statusWriter(tempStatusPath, 'Failed to create child-domain for staging environment. [404]')
                 return 0
 
             logging.statusWriter(tempStatusPath, 'Domain successfully created..,15')
 
             ## Copying Data
 
-            masterPath = '/home/%s/public_html' % (masterDomain)
+            ## Fetch child domain path
 
-            command = 'rsync -avzh --exclude "%s" --exclude "wp-content/backups" --exclude "wp-content/updraft" --exclude "wp-content/cache" --exclude "wp-content/plugins/litespeed-cache" %s/ %s' % (
-            domain, masterPath, path)
-            ProcessUtilities.executioner(command, website.externalApp)
+            childDomainPaths = []
+
+            for childs in website.childdomains_set.all():
+                childDomainPaths.append(childs.path)
+
+            filesAndFolder = os.listdir(masterPath)
+
+            for items in filesAndFolder:
+                completePath = '%s/%s' % (masterPath, items)
+
+                if completePath in childDomainPaths:
+                    continue
+                else:
+                    command = 'cp -r %s %s/' % (completePath, path)
+                    ProcessUtilities.executioner(command, website.externalApp)
+
+            foldersToBeRemoved = ['%s/.git' % (path), '%s/wp-content/backups' % (path), '%s/wp-content/updraft' % (path), '%s/wp-content/cache' % (path), '%s/wp-content/plugins/litespeed-cache' % (path)]
+
+            for rmv in foldersToBeRemoved:
+                command = 'rm -rf %s' % (rmv)
+                ProcessUtilities.executioner(command, website.externalApp)
+
 
             logging.statusWriter(tempStatusPath, 'Data copied..,50')
 
@@ -82,14 +106,18 @@ class StagingSetup(multi.Thread):
 
             configPath = '%s/wp-config.php' % (masterPath)
 
-            if not os.path.exists(configPath):
+            command = 'ls -la %s' % (configPath)
+            output = ProcessUtilities.outputExecutioner(command)
+
+            if output.find('No such file or') > -1:
                 logging.statusWriter(tempStatusPath, 'WordPress is not detected. [404]')
                 return 0
 
-            data = open(configPath, 'r').readlines()
+            command = 'cat %s' % (configPath)
+            data =  ProcessUtilities.outputExecutioner(command).split('\n')
 
             for items in data:
-                if items.find('DB_NAME') > -1:
+                if items.find('DB_NAME') > -1 and items[0] != '/':
                     try:
                         dbName = items.split("'")[3]
                         if mysqlUtilities.createDatabaseBackup(dbName, '/home/cyberpanel'):
@@ -104,11 +132,6 @@ class StagingSetup(multi.Thread):
                             raise BaseException('Failed to create database backup.')
 
             databasePath = '%s/%s.sql' % ('/home/cyberpanel', dbName)
-
-            command = "sed -i 's/%s/%s/g' %s" % (masterDomain, domain, databasePath)
-            ProcessUtilities.executioner(command, 'cyberpanel')
-            command = "sed -i 's/%s/%s/g' %s" % ('https', 'http', databasePath)
-            ProcessUtilities.executioner(command, 'cyberpanel')
 
             if not mysqlUtilities.restoreDatabaseBackup(dbNameRestore, '/home/cyberpanel', None, 1, dbName):
                 try:
@@ -125,22 +148,31 @@ class StagingSetup(multi.Thread):
             ## Update final config file
 
             pathFinalConfig = '%s/wp-config.php' % (path)
-            data = open(pathFinalConfig, 'r').readlines()
+
+            command = 'cat %s' % (configPath)
+            data = ProcessUtilities.outputExecutioner(command).split('\n')
 
             tmp = "/tmp/" + str(randint(1000, 9999))
             writeToFile = open(tmp, 'w')
 
             for items in data:
                 if items.find('DB_NAME') > -1:
-                    writeToFile.write("define( 'DB_NAME', '%s' );\n" % (dbNameRestore))
+                    writeToFile.write("\ndefine( 'DB_NAME', '%s' );\n" % (dbNameRestore))
                 elif items.find('DB_USER') > -1:
-                    writeToFile.write("define( 'DB_USER', '%s' );\n" % (dbUser))
+                    writeToFile.write("\ndefine( 'DB_USER', '%s' );\n" % (dbUser))
                 elif items.find('DB_PASSWORD') > -1:
-                    writeToFile.write("define( 'DB_PASSWORD', '%s' );\n" % (dbPassword))
+                    writeToFile.write("\ndefine( 'DB_PASSWORD', '%s' );\n" % (dbPassword))
                 elif items.find('WP_SITEURL') > -1:
                     continue
+                elif items.find("table_prefix") > -1:
+                    writeToFile.writelines(items)
+                    content = """
+define('WP_HOME','http://%s');
+define('WP_SITEURL','http://%s');
+""" % (domain, domain)
+                    writeToFile.write(content)
                 else:
-                    writeToFile.write(items)
+                    writeToFile.write(items + '\n')
 
             writeToFile.close()
 
@@ -156,6 +188,14 @@ class StagingSetup(multi.Thread):
                 os.remove(databasePath)
             except:
                 pass
+
+            from filemanager.filemanager import FileManager
+
+            fm = FileManager(None, None)
+            fm.fixPermissions(masterDomain)
+
+            from plogical.installUtilities import installUtilities
+            installUtilities.reStartLiteSpeed()
 
             logging.statusWriter(tempStatusPath, 'Data copied..,[200]')
 
@@ -174,7 +214,11 @@ class StagingSetup(multi.Thread):
 
             child = ChildDomains.objects.get(domain=childDomain)
 
+            command = 'chmod 755 /home/%s/public_html' % (child.master.domain)
+            ProcessUtilities.executioner(command)
+
             configPath = '%s/wp-config.php' % (child.path)
+
             if not os.path.exists(configPath):
                 logging.statusWriter(tempStatusPath, 'WordPress is not detected. [404]')
                 return 0
@@ -189,7 +233,7 @@ class StagingSetup(multi.Thread):
                 data = open(configPath, 'r').readlines()
 
                 for items in data:
-                    if items.find('DB_NAME') > -1:
+                    if items.find('DB_NAME') > -1 and items[0] != '/':
                         dbName = items.split("'")[3]
                         if mysqlUtilities.createDatabaseBackup(dbName, '/home/cyberpanel'):
                             break
@@ -197,8 +241,6 @@ class StagingSetup(multi.Thread):
                             raise BaseException('Failed to create database backup.')
 
                 databasePath = '%s/%s.sql' % ('/home/cyberpanel', dbName)
-                command = "sed -i 's/%s/%s/g' %s" % (child.domain, child.master.domain, databasePath)
-                ProcessUtilities.executioner(command, 'cyberpanel')
 
                 ## Restore to master domain
 
@@ -209,7 +251,7 @@ class StagingSetup(multi.Thread):
                 data = open(configPath, 'r').readlines()
 
                 for items in data:
-                    if items.find('DB_NAME') > -1:
+                    if items.find('DB_NAME') > -1 and items[0] != '/':
                         dbNameRestore = items.split("'")[3]
                         if not mysqlUtilities.restoreDatabaseBackup(dbNameRestore, '/home/cyberpanel', None, 1, dbName):
                             try:
@@ -222,7 +264,6 @@ class StagingSetup(multi.Thread):
                     os.remove(databasePath)
                 except:
                     pass
-
             if eraseCheck:
                 sourcePath = child.path
                 destinationPath = '/home/%s/public_html' % (child.master.domain)
@@ -235,6 +276,14 @@ class StagingSetup(multi.Thread):
 
                 command = 'rsync -avzh --exclude "wp-config.php" %s/ %s' % (sourcePath, destinationPath)
                 ProcessUtilities.executioner(command, child.master.externalApp)
+
+            from filemanager.filemanager import FileManager
+
+            fm = FileManager(None, None)
+            fm.fixPermissions(child.master.domain)
+
+            from plogical.installUtilities import installUtilities
+            installUtilities.reStartLiteSpeed()
 
             logging.statusWriter(tempStatusPath, 'Data copied..,[200]')
 

@@ -1,0 +1,589 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Package Manager - CyberPanel" %}{% endblock %}
+{% block content %}
+
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
+
+
+    <div ng-controller="listOSPackages" class="container">
+
+        <div id="page-title">
+            <h2>{% trans "Package Manager" %}</h2>
+            <p>{% trans "On this page you can manage your system packages. On backend system available package manager is used (apt/yum)." %}</p>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="panel">
+                    <div class="panel-body">
+
+                        <div class="example-box-wrapper">
+                            <ul class="nav-responsive nav nav-tabs">
+                                <li class="active"><a ng-click="fetchPackages('upgrade')" href="#tab4"
+                                                      data-toggle="tab">Updates</a></li>
+                                <li><a ng-click="fetchPackages()" href="#tab6" data-toggle="tab">All Packages</a></li>
+                                <li><a ng-click="fetchPackages('CyberPanel')" href="#tab7" data-toggle="tab">CyberPanel Packages</a></li>
+                                <img ng-hide="cyberpanelLoading"
+                                     src="{% static 'images/loading.gif' %}">
+                            </ul>
+                            <div class="tab-content">
+                                <div class="tab-pane active" id="tab4">
+                                    <a style="float: left ; margin-bottom: 2%"
+                                       class="btn btn-border btn-alt border-azure btn-link font-azure" href="#"
+                                       title=""><span>Total Upgradeable Packages: {$ totalPackages $}</span></a>
+                                    <a style="float: left; margin-bottom: 2%; margin-left: 2%"
+                                       class="btn btn-border btn-alt border-blue-alt btn-link font-blue-alt" href="#"
+                                       title=""><span>Fetched Packages: {$ fetchedPackages $}</span></a>
+
+                                    <a ng-click="updatePackage('all')" data-toggle="modal"
+                                       data-target="#updatePackage" style="margin-left: 1%"
+                                       class="btn btn-border btn-alt border-azure btn-link font-azure"
+                                       href="#"
+                                       title=""><span>Update All</span></a>
+
+                                    <div id="updatePackage" class="modal fade" role="dialog">
+                                        <div class="modal-dialog modal-lg">
+
+                                            <!-- Modal content-->
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <button type="button" class="close"
+                                                            data-dismiss="modal">
+                                                        &times;
+                                                    </button>
+                                                    <h4 class="modal-title">Upgrading {$ package $}
+                                                        package(s).
+                                                        <img ng-hide="cyberpanelLoading"
+                                                             src="{% static 'images/loading.gif' %}">
+                                                    </h4>
+                                                </div>
+                                                <div class="modal-body">
+
+                                                    <div class="form-group">
+                                                        <div class="col-sm-12">
+                                                            <div class="col-sm-12">
+                                                                        <textarea ng-model="requestData"
+                                                                                  class="form-control"
+                                                                                  rows="12"></textarea>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <table class="table">
+                                                    </table>
+
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button"
+                                                            ng-disabled="savingSettings"
+                                                            class="btn btn-default"
+                                                            data-dismiss="modal">
+                                                        Close
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-sm-10"
+                                         style="padding: 0px; box-shadow: 0px 0px 1px 0px #888888; margin-bottom: 2%">
+                                        <input placeholder="Search..."
+                                               ng-model="packSearch" name="packSearch" type="text"
+                                               class="form-control" required>
+                                    </div>
+                                    <div class="col-sm-2">
+                                        <div class="form-group">
+                                            <select ng-model="recordsToShow" ng-change="fetchPackages('upgrade')"
+                                                    class="form-control" id="example-select">
+                                                <option>10</option>
+                                                <option>50</option>
+                                                <option>100</option>
+                                                <option>500</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <div class="col-sm-12">
+
+                                            <table class="table" style="margin: 0px; padding: 0px">
+                                                <thead>
+                                                <tr>
+                                                    <th>{% trans "Package" %}</th>
+                                                    <th>{% trans "Version" %}</th>
+                                                    <th>{% trans "Upgrade" %}</th>
+                                                    <th>{% trans "Lock" %}</th>
+                                                    <th>{% trans "Actions" %}</th>
+                                                </tr>
+                                                </thead>
+                                                <tbody>
+                                                <tr ng-repeat="record in allPackages | filter:packSearch">
+                                                    <td ng-bind="record.package"></td>
+                                                    <td ng-bind="record.version"></td>
+                                                    <td ng-bind="record.upgrade"></td>
+                                                    <td>
+                                                        <a ng-click="lockStatus(record.package, 0)" href=""><i ng-show="record.lock==1" class="glyph-icon tooltip-button demo-icon icon-lock" title="Packed is locked for upgrade."></i></a>
+                                                        <a ng-click="lockStatus(record.package, 1)" href=""><i ng-show="record.lock==0" class="glyph-icon tooltip-button demo-icon icon-unlock" title="Package is unlocked"></i></a>
+                                                    </td>
+                                                    <td>
+                                                        <a data-toggle="modal" data-target="#packageDetails"
+                                                           ng-click="fetchPackageDetails(record.package)"
+                                                           class="btn btn-border btn-alt border-blue-alt btn-link font-blue-alt"
+                                                           href="#"
+                                                           title=""><span>Details</span></a>
+                                                        <div id="packageDetails" class="modal fade" role="dialog">
+                                                            <div class="modal-dialog modal-lg">
+
+                                                                <!-- Modal content-->
+                                                                <div class="modal-content">
+                                                                    <div class="modal-header">
+                                                                        <button type="button" class="close"
+                                                                                data-dismiss="modal">
+                                                                            &times;
+                                                                        </button>
+                                                                        <h4 class="modal-title">Package {$ package $}
+                                                                            details.
+                                                                            <img ng-hide="cyberpanelLoading"
+                                                                                 src="{% static 'images/loading.gif' %}">
+                                                                        </h4>
+                                                                    </div>
+                                                                    <div class="modal-body">
+
+                                                                        <div class="form-group">
+                                                                            <div class="col-sm-12">
+                                                                                <div class="col-sm-12">
+                                                                        <textarea ng-model="packageDetails"
+                                                                                  class="form-control"
+                                                                                  rows="12"></textarea>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        <table class="table">
+                                                                        </table>
+
+                                                                    </div>
+                                                                    <div class="modal-footer">
+                                                                        <button type="button"
+                                                                                ng-disabled="savingSettings"
+                                                                                class="btn btn-default"
+                                                                                data-dismiss="modal">
+                                                                            Close
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <a ng-click="updatePackage(record.package)" data-toggle="modal"
+                                                           data-target="#updatePackage" style="margin-left: 1%"
+                                                           class="btn btn-border btn-alt border-azure btn-link font-azure"
+                                                           href="#"
+                                                           title=""><span>Update</span></a>
+                                                        <div id="updatePackage" class="modal fade" role="dialog">
+                                                            <div class="modal-dialog modal-lg">
+
+                                                                <!-- Modal content-->
+                                                                <div class="modal-content">
+                                                                    <div class="modal-header">
+                                                                        <button type="button" class="close"
+                                                                                data-dismiss="modal">
+                                                                            &times;
+                                                                        </button>
+                                                                        <h4 class="modal-title">Upgrading {$ package $}
+                                                                            package(s).
+                                                                            <img ng-hide="cyberpanelLoading"
+                                                                                 src="{% static 'images/loading.gif' %}">
+                                                                        </h4>
+                                                                    </div>
+                                                                    <div class="modal-body">
+
+                                                                        <div class="form-group">
+                                                                            <div class="col-sm-12">
+                                                                                <div class="col-sm-12">
+                                                                        <textarea ng-model="requestData"
+                                                                                  class="form-control"
+                                                                                  rows="12"></textarea>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        <table class="table">
+                                                                        </table>
+
+                                                                    </div>
+                                                                    <div class="modal-footer">
+                                                                        <button type="button"
+                                                                                ng-disabled="savingSettings"
+                                                                                class="btn btn-default"
+                                                                                data-dismiss="modal">
+                                                                            Close
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    <div style="margin-top: 2%" class="row">
+                                        <div style="margin-top: 2%" class="col-md-12">
+                                            <div class="row">
+                                                <div class="col-md-9">
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <div class="form-group">
+                                                        <select ng-model="currentPage" class="form-control"
+                                                                ng-change="fetchPackages('upgrade')">
+                                                            <option ng-repeat="page in pagination">{$ $index + 1 $}
+                                                            </option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div> <!-- end row -->
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-pane" id="tab6">
+                                    <a style="float: left ; margin-bottom: 2%"
+                                       class="btn btn-border btn-alt border-azure btn-link font-azure" href="#"
+                                       title=""><span>Total Packages: {$ totalPackages $}</span></a>
+                                    <a style="float: left; margin-bottom: 2%; margin-left: 2%"
+                                       class="btn btn-border btn-alt border-blue-alt btn-link font-blue-alt" href="#"
+                                       title=""><span>Fetched Packages: {$ fetchedPackages $}</span></a>
+                                    <div class="col-sm-10"
+                                         style="padding: 0px; box-shadow: 0px 0px 1px 0px #888888; margin-bottom: 2%">
+                                        <input placeholder="Search..."
+                                               ng-model="packSearch" name="packSearch" type="text"
+                                               class="form-control" required>
+                                    </div>
+                                    <div class="col-sm-2">
+                                        <div class="form-group">
+                                            <select ng-model="recordsToShow" ng-change="fetchPackages()"
+                                                    class="form-control" id="example-select">
+                                                <option>10</option>
+                                                <option>50</option>
+                                                <option>100</option>
+                                                <option>500</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <div class="col-sm-12">
+
+                                            <table class="table" style="margin: 0px; padding: 0px">
+                                                <thead>
+                                                <tr>
+                                                    <th>{% trans "Package" %}</th>
+                                                    <th>{% trans "Version" %}</th>
+                                                    <th>{% trans "Upgrade" %}</th>
+                                                    <th>{% trans "Lock" %}</th>
+                                                    <th>{% trans "Actions" %}</th>
+                                                </tr>
+                                                </thead>
+                                                <tbody>
+                                                <tr ng-repeat="record in allPackages | filter:packSearch">
+                                                    <td ng-bind="record.package"></td>
+                                                    <td ng-bind="record.version"></td>
+                                                    <td ng-bind="record.upgrade"></td>
+                                                    <td>
+                                                        <a ng-click="lockStatus(record.package, 0)" href=""><i ng-show="record.lock==1" class="glyph-icon tooltip-button demo-icon icon-lock" title="Packed is locked for upgrade."></i></a>
+                                                        <a ng-click="lockStatus(record.package, 1)" href=""><i ng-show="record.lock==0" class="glyph-icon tooltip-button demo-icon icon-unlock" title="Package is unlocked"></i></a>
+                                                    </td>
+                                                    <td>
+                                                        <a data-toggle="modal" data-target="#packageDetailsInstalled"
+                                                           ng-click="fetchPackageDetails(record.package)"
+                                                           class="btn btn-border btn-alt border-blue-alt btn-link font-blue-alt"
+                                                           href="#"
+                                                           title=""><span>Details</span></a>
+                                                        <div id="packageDetailsInstalled" class="modal fade" role="dialog">
+                                                            <div class="modal-dialog modal-lg">
+
+                                                                <!-- Modal content-->
+                                                                <div class="modal-content">
+                                                                    <div class="modal-header">
+                                                                        <button type="button" class="close"
+                                                                                data-dismiss="modal">
+                                                                            &times;
+                                                                        </button>
+                                                                        <h4 class="modal-title">Package {$ package $}
+                                                                            details.
+                                                                            <img ng-hide="cyberpanelLoading"
+                                                                                 src="{% static 'images/loading.gif' %}">
+                                                                        </h4>
+                                                                    </div>
+                                                                    <div class="modal-body">
+
+                                                                        <div class="form-group">
+                                                                            <div class="col-sm-12">
+                                                                                <div class="col-sm-12">
+                                                                        <textarea ng-model="packageDetails"
+                                                                                  class="form-control"
+                                                                                  rows="12"></textarea>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        <table class="table">
+                                                                        </table>
+
+                                                                    </div>
+                                                                    <div class="modal-footer">
+                                                                        <button type="button"
+                                                                                ng-disabled="savingSettings"
+                                                                                class="btn btn-default"
+                                                                                data-dismiss="modal">
+                                                                            Close
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    <div style="margin-top: 2%" class="row">
+                                        <div class="col-md-12">
+                                            <div class="row">
+                                                <div class="col-md-9">
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <div class="form-group">
+                                                        <select ng-model="currentPage" class="form-control"
+                                                                ng-change="fetchPackages()">
+                                                            <option ng-repeat="page in pagination">{$ $index + 1 $}
+                                                            </option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div> <!-- end row -->
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-pane" id="tab7">
+                                    <a style="float: left ; margin-bottom: 2%"
+                                       class="btn btn-border btn-alt border-azure btn-link font-azure" href="#"
+                                       title=""><span>Total Packages: {$ totalPackages $}</span></a>
+                                    <a style="float: left; margin-bottom: 2%; margin-left: 2%"
+                                       class="btn btn-border btn-alt border-blue-alt btn-link font-blue-alt" href="#"
+                                       title=""><span>Fetched Packages: {$ fetchedPackages $}</span></a>
+
+                                    <div id="updatePackage" class="modal fade" role="dialog">
+                                        <div class="modal-dialog modal-lg">
+
+                                            <!-- Modal content-->
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <button type="button" class="close"
+                                                            data-dismiss="modal">
+                                                        &times;
+                                                    </button>
+                                                    <h4 class="modal-title">Upgrading {$ package $}
+                                                        package(s).
+                                                        <img ng-hide="cyberpanelLoading"
+                                                             src="{% static 'images/loading.gif' %}">
+                                                    </h4>
+                                                </div>
+                                                <div class="modal-body">
+
+                                                    <div class="form-group">
+                                                        <div class="col-sm-12">
+                                                            <div class="col-sm-12">
+                                                                        <textarea ng-model="requestData"
+                                                                                  class="form-control"
+                                                                                  rows="12"></textarea>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <table class="table">
+                                                    </table>
+
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button"
+                                                            ng-disabled="savingSettings"
+                                                            class="btn btn-default"
+                                                            data-dismiss="modal">
+                                                        Close
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-sm-10"
+                                         style="padding: 0px; box-shadow: 0px 0px 1px 0px #888888; margin-bottom: 2%">
+                                        <input placeholder="Search..."
+                                               ng-model="packSearch" name="packSearch" type="text"
+                                               class="form-control" required>
+                                    </div>
+                                    <div class="col-sm-2">
+                                        <div class="form-group">
+                                            <select ng-model="recordsToShow" ng-change="fetchPackages('CyberPanel')"
+                                                    class="form-control" id="example-select">
+                                                <option>10</option>
+                                                <option>50</option>
+                                                <option>100</option>
+                                                <option>500</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <div class="col-sm-12">
+
+                                            <table class="table" style="margin: 0px; padding: 0px">
+                                                <thead>
+                                                <tr>
+                                                    <th>{% trans "Package" %}</th>
+                                                    <th>{% trans "Version" %}</th>
+                                                    <th>{% trans "Lock" %}</th>
+                                                    <th>{% trans "Actions" %}</th>
+                                                </tr>
+                                                </thead>
+                                                <tbody>
+                                                <tr ng-repeat="record in allPackages | filter:packSearch">
+                                                    <td ng-bind="record.package"></td>
+                                                    <td ng-bind="record.version"></td>
+                                                    <td>
+                                                        <a ng-click="lockStatus(record.package, 0)" href=""><i ng-show="record.lock==1" class="glyph-icon tooltip-button demo-icon icon-lock" title="Packed is locked for upgrade."></i></a>
+                                                        <a ng-click="lockStatus(record.package, 1)" href=""><i ng-show="record.lock==0" class="glyph-icon tooltip-button demo-icon icon-unlock" title="Package is unlocked"></i></a>
+                                                    </td>
+                                                    <td>
+                                                        <a data-toggle="modal" data-target="#packageDetailsCyberPanel"
+                                                           ng-click="fetchPackageDetails(record.package)"
+                                                           class="btn btn-border btn-alt border-blue-alt btn-link font-blue-alt"
+                                                           href="#"
+                                                           title=""><span>Details</span></a>
+                                                        <div id="packageDetailsCyberPanel" class="modal fade" role="dialog">
+                                                            <div class="modal-dialog modal-lg">
+
+                                                                <!-- Modal content-->
+                                                                <div class="modal-content">
+                                                                    <div class="modal-header">
+                                                                        <button type="button" class="close"
+                                                                                data-dismiss="modal">
+                                                                            &times;
+                                                                        </button>
+                                                                        <h4 class="modal-title">Package {$ package $}
+                                                                            details.
+                                                                            <img ng-hide="cyberpanelLoading"
+                                                                                 src="{% static 'images/loading.gif' %}">
+                                                                        </h4>
+                                                                    </div>
+                                                                    <div class="modal-body">
+
+                                                                        <div class="form-group">
+                                                                            <div class="col-sm-12">
+                                                                                <div class="col-sm-12">
+                                                                        <textarea ng-model="packageDetails"
+                                                                                  class="form-control"
+                                                                                  rows="12"></textarea>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        <table class="table">
+                                                                        </table>
+
+                                                                    </div>
+                                                                    <div class="modal-footer">
+                                                                        <button type="button"
+                                                                                ng-disabled="savingSettings"
+                                                                                class="btn btn-default"
+                                                                                data-dismiss="modal">
+                                                                            Close
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <a ng-click="updatePackage(record.package)" data-toggle="modal"
+                                                           data-target="#updatePackageCyberPanel" style="margin-left: 1%"
+                                                           class="btn btn-border btn-alt border-azure btn-link font-azure"
+                                                           href="#"
+                                                           title=""><span>Update</span></a>
+                                                        <div id="updatePackageCyberPanel" class="modal fade" role="dialog">
+                                                            <div class="modal-dialog modal-lg">
+
+                                                                <!-- Modal content-->
+                                                                <div class="modal-content">
+                                                                    <div class="modal-header">
+                                                                        <button type="button" class="close"
+                                                                                data-dismiss="modal">
+                                                                            &times;
+                                                                        </button>
+                                                                        <h4 class="modal-title">Upgrading {$ package $}
+                                                                            package(s).
+                                                                            <img ng-hide="cyberpanelLoading"
+                                                                                 src="{% static 'images/loading.gif' %}">
+                                                                        </h4>
+                                                                    </div>
+                                                                    <div class="modal-body">
+
+                                                                        <div class="form-group">
+                                                                            <div class="col-sm-12">
+                                                                                <div class="col-sm-12">
+                                                                        <textarea ng-model="requestData"
+                                                                                  class="form-control"
+                                                                                  rows="12"></textarea>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        <table class="table">
+                                                                        </table>
+
+                                                                    </div>
+                                                                    <div class="modal-footer">
+                                                                        <button type="button"
+                                                                                ng-disabled="savingSettings"
+                                                                                class="btn btn-default"
+                                                                                data-dismiss="modal">
+                                                                            Close
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    <div style="margin-top: 2%" class="row">
+                                        <div style="margin-top: 2%" class="col-md-12">
+                                            <div class="row">
+                                                <div class="col-md-9">
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <div class="form-group">
+                                                        <select ng-model="currentPage" class="form-control"
+                                                                ng-change="fetchPackages('CyberPanel')">
+                                                            <option ng-repeat="page in pagination">{$ $index + 1 $}
+                                                            </option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div> <!-- end row -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+{% endblock %}

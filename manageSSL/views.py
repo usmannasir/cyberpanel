@@ -126,7 +126,7 @@ def sslForHostName(request):
         else:
             return ACLManager.loadError()
 
-        websitesName = ACLManager.findAllSites(currentACL, userID)
+        websitesName = ACLManager.findAllSites(currentACL, userID, 1)
 
         return render(request, 'manageSSL/sslForHostName.html', {'websiteList': websitesName})
     except KeyError:
@@ -151,11 +151,15 @@ def obtainHostNameSSL(request):
                 data = json.loads(request.body)
                 virtualHost = data['virtualHost']
 
-                path = "/home/" + virtualHost + "/public_html"
+                try:
+                    website = Websites.objects.get(domain=virtualHost)
+                    path = "/home/" + virtualHost + "/public_html"
+                except:
+                    website = ChildDomains.objects.get(domain=virtualHost)
+                    path = website.path
 
-                data = json.loads(request.body)
-                virtualHost = data['virtualHost']
                 admin = Administrator.objects.get(pk=userID)
+
                 if ACLManager.checkOwnership(virtualHost, admin, currentACL) == 1:
                     pass
                 else:

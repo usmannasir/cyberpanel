@@ -9,7 +9,7 @@ class CronUtil:
     def getWebsiteCron(externalApp):
         try:
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 cronPath = "/var/spool/cron/" + externalApp
             else:
                 cronPath = "/var/spool/cron/crontabs/" + externalApp
@@ -29,7 +29,7 @@ class CronUtil:
         try:
 
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 cronPath = "/var/spool/cron/" + externalApp
             else:
                 cronPath = "/var/spool/cron/crontabs/" + externalApp
@@ -51,7 +51,7 @@ class CronUtil:
         try:
             line -= 1
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 cronPath = "/var/spool/cron/" + externalApp
             else:
                 cronPath = "/var/spool/cron/crontabs/" + externalApp
@@ -81,7 +81,7 @@ class CronUtil:
     @staticmethod
     def addNewCron(externalApp, finalCron):
         try:
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 cronPath = "/var/spool/cron/" + externalApp
             else:
                 cronPath = "/var/spool/cron/crontabs/" + externalApp
@@ -100,7 +100,7 @@ class CronUtil:
             commandT = 'chmod 755 %s' % (cronParent)
             ProcessUtilities.executioner(commandT, 'root')
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
                 command = 'chmod 755 /var/spool/cron/crontabs'
                 ProcessUtilities.outputExecutioner(command)
 
@@ -109,7 +109,7 @@ class CronUtil:
             commandT = 'chmod 700 %s' % (cronParent)
             ProcessUtilities.executioner(commandT, 'root')
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
                 command = 'chmod 1730 /var/spool/cron/crontabs'
                 ProcessUtilities.outputExecutioner(command)
 

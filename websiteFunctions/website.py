@@ -285,9 +285,9 @@ class WebsiteManager:
 
             if len(path) > 0:
                 path = path.lstrip("/")
-                path = "/home/" + masterDomain + "/public_html/" + path
+                path = "/home/" + masterDomain + "/" + path
             else:
-                path = "/home/" + masterDomain + "/public_html/" + domain
+                path = "/home/" + masterDomain + "/" + domain
 
             try:
                 apacheBackend = str(data['apacheBackend'])
@@ -1367,7 +1367,7 @@ class WebsiteManager:
 
             CronUtil.CronPrem(0)
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 cronPath = "/var/spool/cron/" + website.externalApp
             else:
                 cronPath = "/var/spool/cron/crontabs/" + website.externalApp
@@ -1586,7 +1586,7 @@ class WebsiteManager:
 
             website = Websites.objects.get(domain=self.domain)
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 cronPath = "/var/spool/cron/" + website.externalApp
             else:
                 cronPath = "/var/spool/cron/crontabs/" + website.externalApp
@@ -1605,7 +1605,7 @@ class WebsiteManager:
             output = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
 
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
                 command = 'chmod 600 %s' % (cronPath)
                 ProcessUtilities.executioner(command)
 
@@ -2760,13 +2760,10 @@ StrictHostKeyChecking no
             writeToFile.write(message)
             writeToFile.close()
 
-
             extraArgs['tempStatusPath'] = tempStatusPath
 
             st = StagingSetup('startCloning', extraArgs)
             st.start()
-
-
 
             data_ret = {'status': 1, 'error_message': 'None', 'tempStatusPath': tempStatusPath}
             json_data = json.dumps(data_ret)
@@ -3181,6 +3178,13 @@ StrictHostKeyChecking no
                 self.folder, self.firstName, self.lastName)
                 ProcessUtilities.executioner(command)
 
+                ## Fix permissions
+
+                from filemanager.filemanager import FileManager
+
+                fm = FileManager(None, None)
+                fm.fixPermissions(self.masterDomain)
+
                 data_ret = {'status': 1}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
@@ -3218,7 +3222,23 @@ StrictHostKeyChecking no
             else:
                 return ACLManager.loadErrorJson()
 
-            if validators.domain(self.gitHost) and ACLManager.validateInput(self.gitUsername) and ACLManager.validateInput(self.gitReponame):
+            if self.gitHost.find(':') > -1:
+                gitHostDomain = self.gitHost.split(':')[0]
+                gitHostPort = self.gitHost.split(':')[1]
+
+                if not validators.domain(gitHostDomain):
+                    return ACLManager.loadErrorJson('status', 'Invalid characters in your input.')
+
+                try:
+                    gitHostPort = int(gitHostPort)
+                except:
+                    return ACLManager.loadErrorJson('status', 'Invalid characters in your input.')
+
+            else:
+                if not validators.domain(self.gitHost):
+                    return ACLManager.loadErrorJson('status', 'Invalid characters in your input.')
+
+            if ACLManager.validateInput(self.gitUsername) and ACLManager.validateInput(self.gitReponame):
                 pass
             else:
                 return ACLManager.loadErrorJson('status', 'Invalid characters in your input.')
@@ -3248,6 +3268,14 @@ StrictHostKeyChecking no
             remoteResult = ProcessUtilities.outputExecutioner(command)
 
             if remoteResult.find(self.gitUsername) > -1:
+
+                ## Fix permissions
+
+                from filemanager.filemanager import FileManager
+
+                fm = FileManager(None, None)
+                fm.fixPermissions(self.masterDomain)
+
                 data_ret = {'status': 1}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
@@ -3298,6 +3326,14 @@ StrictHostKeyChecking no
             commandStatus = ProcessUtilities.outputExecutioner(command)
 
             if commandStatus.find('Switched to branch') > -1:
+
+                ## Fix permissions
+
+                from filemanager.filemanager import FileManager
+
+                fm = FileManager(None, None)
+                fm.fixPermissions(self.masterDomain)
+
                 data_ret = {'status': 1, 'commandStatus': commandStatus + 'Refreshing page in 3 seconds..'}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
@@ -3344,6 +3380,15 @@ StrictHostKeyChecking no
             commandStatus = ProcessUtilities.outputExecutioner(command)
 
             if commandStatus.find(self.newBranchName) > -1:
+
+                ## Fix permissions
+
+                from filemanager.filemanager import FileManager
+
+                fm = FileManager(None, None)
+                fm.fixPermissions(self.masterDomain)
+
+
                 data_ret = {'status': 1, 'commandStatus': commandStatus}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
@@ -3425,6 +3470,13 @@ StrictHostKeyChecking no
                 except:
                     pass
 
+                ## Fix permissions
+
+                from filemanager.filemanager import FileManager
+
+                fm = FileManager(None, None)
+                fm.fixPermissions(self.masterDomain)
+
                 data_ret = {'status': 1, 'commandStatus': commandStatus}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
@@ -3471,6 +3523,14 @@ StrictHostKeyChecking no
             commandStatus = ProcessUtilities.outputExecutioner(command)
 
             if commandStatus.find('Already up to date') == -1:
+
+                ## Fix permissions
+
+                from filemanager.filemanager import FileManager
+
+                fm = FileManager(None, None)
+                fm.fixPermissions(self.masterDomain)
+
                 data_ret = {'status': 1, 'commandStatus': commandStatus}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
@@ -3569,11 +3629,25 @@ StrictHostKeyChecking no
             else:
                 return ACLManager.loadErrorJson()
 
-            logging.CyberCPLogFileWriter.writeToFile('hello world 2')
+            if self.gitHost.find(':') > -1:
+                gitHostDomain = self.gitHost.split(':')[0]
+                gitHostPort = self.gitHost.split(':')[1]
+
+                if not validators.domain(gitHostDomain):
+                    return ACLManager.loadErrorJson('status', 'Invalid characters in your input.')
+
+                try:
+                    gitHostPort = int(gitHostPort)
+                except:
+                    return ACLManager.loadErrorJson('status', 'Invalid characters in your input.')
+            else:
+                if not validators.domain(self.gitHost):
+                    return ACLManager.loadErrorJson('status', 'Invalid characters in your input.')
+
 
             ## Security check
 
-            if validators.domain(self.gitHost) and ACLManager.validateInput(self.gitUsername) and ACLManager.validateInput(self.gitReponame):
+            if ACLManager.validateInput(self.gitUsername) and ACLManager.validateInput(self.gitReponame):
                 pass
             else:
                 return ACLManager.loadErrorJson('status', 'Invalid characters in your input.')
@@ -3657,6 +3731,13 @@ StrictHostKeyChecking no
 
             command = 'rm -rf %s' % (finalFile)
             ProcessUtilities.outputExecutioner(command)
+
+            ## Fix permissions
+
+            from filemanager.filemanager import FileManager
+
+            fm = FileManager(None, None)
+            fm.fixPermissions(self.masterDomain)
 
             data_ret = {'status': 1}
             json_data = json.dumps(data_ret)
@@ -4142,6 +4223,13 @@ StrictHostKeyChecking no
                                         message='Finished running commands.').save()
                     except:
                         pass
+
+                ## Fix permissions
+
+                from filemanager.filemanager import FileManager
+
+                fm = FileManager(None, None)
+                fm.fixPermissions(self.masterDomain)
 
                 data_ret = {'status': 1, 'commandStatus': commandStatus}
                 json_data = json.dumps(data_ret)

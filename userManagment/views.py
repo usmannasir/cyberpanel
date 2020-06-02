@@ -32,7 +32,6 @@ def loadUserHome(request):
     except KeyError:
         return redirect(loadLoginPage)
 
-
 def viewProfile(request):
     try:
         userID = request.session['userID']
@@ -51,7 +50,6 @@ def viewProfile(request):
         return render(request, 'userManagment/userProfile.html', AdminData)
     except KeyError:
         return redirect(loadLoginPage)
-
 
 def createUser(request):
     try:
@@ -73,7 +71,6 @@ def createUser(request):
     except BaseException as msg:
         logging.CyberCPLogFileWriter.writeToFile(str(msg))
         return redirect(loadLoginPage)
-
 
 def apiAccess(request):
     try:
@@ -126,10 +123,16 @@ def submitUserCreation(request):
     try:
 
         try:
-            userID = request.session['userID']
-            currentACL = ACLManager.loadedACL(userID)
+            try:
+                userID = request.session['userID']
+                currentACL = ACLManager.loadedACL(userID)
+                data = json.loads(request.body)
+            except:
+                userID = request['userID']
+                data = request
+                currentACL = ACLManager.loadedACL(userID)
 
-            data = json.loads(request.body)
+
             firstName = data['firstName']
             lastName = data['lastName']
             email = data['email']
@@ -137,6 +140,7 @@ def submitUserCreation(request):
             password = data['password']
             websitesLimit = data['websitesLimit']
             selectedACL = data['selectedACL']
+
             try:
                 securityLevel = data['securityLevel']
             except:
@@ -248,7 +252,6 @@ def modifyUsers(request):
     except KeyError:
         return redirect(loadLoginPage)
 
-
 def fetchUserDetails(request):
     try:
         val = request.session['userID']
@@ -309,65 +312,71 @@ def fetchUserDetails(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
-
 def saveModifications(request):
     try:
-        val = request.session['userID']
         try:
-            if request.method == 'POST':
+            val = request.session['userID']
+        except:
+            val = request['userID']
+        try:
+            try:
                 data = json.loads(request.body)
-                accountUsername = data['accountUsername']
-                firstName = data['firstName']
-                lastName = data['lastName']
-                email = data['email']
-                try:
-                    securityLevel = data['securityLevel']
-                except:
-                    securityLevel = 'HIGH'
+            except:
+                data = request
 
-                user = Administrator.objects.get(userName=accountUsername)
+            accountUsername = data['accountUsername']
+            firstName = data['firstName']
+            lastName = data['lastName']
+            email = data['email']
+            try:
+                securityLevel = data['securityLevel']
+            except:
+                securityLevel = 'HIGH'
 
-                currentACL = ACLManager.loadedACL(val)
-                loggedUser = Administrator.objects.get(pk=val)
+            user = Administrator.objects.get(userName=accountUsername)
 
-                if currentACL['admin'] == 1:
-                    pass
-                elif user.owner == loggedUser.pk:
-                    pass
-                elif user.pk == loggedUser.pk:
-                    pass
-                else:
-                    data_ret = {'fetchStatus': 0, 'error_message': 'Un-authorized access.'}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
+            currentACL = ACLManager.loadedACL(val)
+            loggedUser = Administrator.objects.get(pk=val)
 
-                token = hashPassword.generateToken(accountUsername, data['passwordByPass'])
-                password = hashPassword.hash_password(data['passwordByPass'])
-
-                user.firstName = firstName
-                user.lastName = lastName
-                user.email = email
-                user.password = password
-                user.token = token
-                user.type = 0
-
-                if securityLevel == 'LOW':
-                    user.securityLevel = secMiddleware.LOW
-                else:
-                    user.securityLevel = secMiddleware.HIGH
-
-                user.save()
-
-                adminEmailPath = '/home/cyberpanel/adminEmail'
-
-                if accountUsername == 'admin':
-                    writeToFile = open(adminEmailPath, 'w')
-                    writeToFile.write(email)
-                    writeToFile.close()
-
-                data_ret = {'status': 1, 'saveStatus': 1, 'error_message': 'None'}
+            if currentACL['admin'] == 1:
+                pass
+            elif user.owner == loggedUser.pk:
+                pass
+            elif user.pk == loggedUser.pk:
+                pass
+            else:
+                data_ret = {'fetchStatus': 0, 'error_message': 'Un-authorized access.'}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
+
+            token = hashPassword.generateToken(accountUsername, data['passwordByPass'])
+            password = hashPassword.hash_password(data['passwordByPass'])
+
+            user.firstName = firstName
+            user.lastName = lastName
+            user.email = email
+            user.password = password
+            user.token = token
+            user.type = 0
+
+            if securityLevel == 'LOW':
+                user.securityLevel = secMiddleware.LOW
+            else:
+                user.securityLevel = secMiddleware.HIGH
+
+            user.save()
+
+            adminEmailPath = '/home/cyberpanel/adminEmail'
+
+            if accountUsername == 'admin':
+                writeToFile = open(adminEmailPath, 'w')
+                writeToFile.write(email)
+                writeToFile.close()
+
+            data_ret = {'status': 1, 'saveStatus': 1, 'error_message': 'None'}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
 
         except BaseException as msg:
             data_ret = {'status': 0, 'saveStatus': 0, 'error_message': str(msg)}
@@ -378,7 +387,6 @@ def saveModifications(request):
         data_ret = {'status': 0, 'saveStatus': 0, 'error_message': "Not logged in as admin", }
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
-
 
 def deleteUser(request):
     try:
@@ -398,38 +406,45 @@ def deleteUser(request):
     except KeyError:
         return redirect(loadLoginPage)
 
-
 def submitUserDeletion(request):
+
     try:
-        userID = request.session['userID']
+        try:
+            userID = request.session['userID']
+        except:
+            userID = request['userID']
         try:
 
-            if request.method == 'POST':
+            try:
                 data = json.loads(request.body)
-                accountUsername = data['accountUsername']
+            except:
+                data = request
 
-                currentACL = ACLManager.loadedACL(userID)
+            accountUsername = data['accountUsername']
 
-                currentUser = Administrator.objects.get(pk=userID)
-                userInQuestion = Administrator.objects.get(userName=accountUsername)
+            currentACL = ACLManager.loadedACL(userID)
 
-                if ACLManager.checkUserOwnerShip(currentACL, currentUser, userInQuestion):
-                    user = Administrator.objects.get(userName=accountUsername)
+            currentUser = Administrator.objects.get(pk=userID)
+            userInQuestion = Administrator.objects.get(userName=accountUsername)
 
-                    childUsers = Administrator.objects.filter(owner=user.pk)
+            if ACLManager.checkUserOwnerShip(currentACL, currentUser, userInQuestion):
+                user = Administrator.objects.get(userName=accountUsername)
 
-                    for items in childUsers:
-                        items.delete()
+                childUsers = Administrator.objects.filter(owner=user.pk)
 
-                    user.delete()
+                for items in childUsers:
+                    items.delete()
 
-                    data_ret = {'status': 1, 'deleteStatus': 1, 'error_message': 'None'}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
-                else:
-                    data_ret = {'status': 0, 'deleteStatus': 0, 'error_message': 'Not enough privileges.'}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
+                user.delete()
+
+                data_ret = {'status': 1, 'deleteStatus': 1, 'error_message': 'None'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            else:
+                data_ret = {'status': 0, 'deleteStatus': 0, 'error_message': 'Not enough privileges.'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
 
         except BaseException as msg:
             data_ret = {'status': 0, 'deleteStatus': 0, 'error_message': str(msg)}
@@ -440,7 +455,6 @@ def submitUserDeletion(request):
         data_ret = {'deleteStatus': 0, 'error_message': "Not logged in as admin", }
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
-
 
 def createNewACL(request):
     try:
@@ -453,7 +467,6 @@ def createNewACL(request):
             return ACLManager.loadError()
     except KeyError:
         return redirect(loadLoginPage)
-
 
 def createACLFunc(request):
     try:
@@ -547,7 +560,6 @@ def createACLFunc(request):
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
 
-
 def deleteACL(request):
     try:
         userID = request.session['userID']
@@ -560,7 +572,6 @@ def deleteACL(request):
             return ACLManager.loadError()
     except KeyError:
         return redirect(loadLoginPage)
-
 
 def deleteACLFunc(request):
     try:
@@ -588,7 +599,6 @@ def deleteACLFunc(request):
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
 
-
 def modifyACL(request):
     try:
         userID = request.session['userID']
@@ -601,7 +611,6 @@ def modifyACL(request):
             return ACLManager.loadError()
     except KeyError:
         return redirect(loadLoginPage)
-
 
 def fetchACLDetails(request):
     try:
@@ -693,7 +702,6 @@ def fetchACLDetails(request):
         finalResponse = {'status': 0, 'errorMessage': str(msg)}
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
-
 
 def submitACLModifications(request):
     try:
@@ -800,7 +808,6 @@ def submitACLModifications(request):
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
 
-
 def changeUserACL(request):
     try:
         userID = request.session['userID']
@@ -821,7 +828,6 @@ def changeUserACL(request):
 
     except KeyError:
         return redirect(loadLoginPage)
-
 
 def changeACLFunc(request):
     try:
@@ -863,7 +869,6 @@ def changeACLFunc(request):
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
 
-
 def resellerCenter(request):
     try:
         userID = request.session['userID']
@@ -885,7 +890,6 @@ def resellerCenter(request):
 
     except KeyError:
         return redirect(loadLoginPage)
-
 
 def saveResellerChanges(request):
     try:
@@ -943,7 +947,6 @@ def saveResellerChanges(request):
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
 
-
 def listUsers(request):
     try:
         userID = request.session['userID']
@@ -976,10 +979,12 @@ def listUsers(request):
     except KeyError:
         return redirect(loadLoginPage)
 
-
 def fetchTableUsers(request):
     try:
-        userID = request.session['userID']
+        try:
+            userID = request.session['userID']
+        except:
+            userID = request['userID']
 
         currentACL = ACLManager.loadedACL(userID)
 
@@ -1028,49 +1033,56 @@ def fetchTableUsers(request):
 
 def controlUserState(request):
     try:
-        val = request.session['userID']
         try:
-            if request.method == 'POST':
+            val = request.session['userID']
+        except:
+            val = request['userID']
+        try:
+            try:
                 data = json.loads(request.body)
-                accountUsername = data['accountUsername']
-                state = data['state']
+            except:
+                data = request
 
-                user = Administrator.objects.get(userName=accountUsername)
+            accountUsername = data['accountUsername']
+            state = data['state']
 
-                currentACL = ACLManager.loadedACL(val)
-                loggedUser = Administrator.objects.get(pk=val)
+            user = Administrator.objects.get(userName=accountUsername)
 
-                if currentACL['admin'] == 1:
-                    pass
-                elif user.owner == loggedUser.pk:
-                    pass
-                elif user.pk == loggedUser.pk:
-                    pass
-                else:
-                    data_ret = {'fetchStatus': 0, 'error_message': 'Un-authorized access.'}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
+            currentACL = ACLManager.loadedACL(val)
+            loggedUser = Administrator.objects.get(pk=val)
 
-                if state == 'SUSPEND':
-                    user.state = 'SUSPENDED'
-                else:
-                    user.state = 'ACTIVE'
-
-                user.save()
-
-                extraArgs = {}
-                extraArgs['user'] = user
-                extraArgs['currentACL'] = ACLManager.loadedACL(user.pk)
-                extraArgs['state'] = state
-
-                from userManagment.userManager import UserManager
-
-                um = UserManager('controlUserState', extraArgs)
-                um.start()
-
-                data_ret = {'status': 1}
+            if currentACL['admin'] == 1:
+                pass
+            elif user.owner == loggedUser.pk:
+                pass
+            elif user.pk == loggedUser.pk:
+                pass
+            else:
+                data_ret = {'fetchStatus': 0, 'error_message': 'Un-authorized access.'}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
+
+            if state == 'SUSPEND':
+                user.state = 'SUSPENDED'
+            else:
+                user.state = 'ACTIVE'
+
+            user.save()
+
+            extraArgs = {}
+            extraArgs['user'] = user
+            extraArgs['currentACL'] = ACLManager.loadedACL(user.pk)
+            extraArgs['state'] = state
+
+            from userManagment.userManager import UserManager
+
+            um = UserManager('controlUserState', extraArgs)
+            um.start()
+
+            data_ret = {'status': 1}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
 
         except BaseException as msg:
             data_ret = {'status': 0, 'saveStatus': 0, 'error_message': str(msg)}

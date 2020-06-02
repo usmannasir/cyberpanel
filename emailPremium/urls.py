@@ -38,6 +38,9 @@ urlpatterns = [
     url(r'^fetchMessage$', views.fetchMessage, name='fetchMessage'),
     url(r'^flushQueue$', views.flushQueue, name='flushQueue'),
     url(r'^delete$', views.delete, name='delete'),
+    url(r'^MailScanner$', views.MailScanner, name='MailScanner'),
+    url(r'^installMailScanner$', views.installMailScanner, name='installMailScanner'),
+    url(r'^installStatusMailScanner$', views.installStatusMailScanner, name='installStatusMailScanner'),
 
     url(r'^(?P<domain>(.*))$', views.emailLimits, name='emailLimits'),
 

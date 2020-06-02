@@ -51,57 +51,57 @@
 
                                     <div ng-hide="masterServerHD" class="form-group">
                                         <label class="col-sm-3 control-label">{% trans "Slave Server" %}</label>
-                                        <div class="col-sm-6">
+                                        <div ng-init="slaveServerNS='{{ slaveServerNS }}'" class="col-sm-6">
                                             <input type="text" class="form-control" ng-model="slaveServerNS" required>
                                         </div>
                                     </div>
 
                                     <div ng-hide="masterServerHD" class="form-group">
                                         <label class="col-sm-3 control-label">{% trans "Master Server IP" %}</label>
-                                        <div class="col-sm-6">
+                                        <div ng-init="masterServerIP='{{ masterServerIP }}'" class="col-sm-6">
                                             <input type="text" class="form-control" ng-model="masterServerIP" required>
                                         </div>
                                     </div>
 
                                     <div ng-hide="slaveIPs" class="form-group">
                                         <label class="col-sm-3 control-label">{% trans "Slave Server 1" %}</label>
-                                        <div class="col-sm-6">
+                                        <div ng-init="slaveServer='{{ slaveServer }}'" class="col-sm-6">
                                             <input type="text" class="form-control" ng-model="slaveServer" required>
                                         </div>
                                     </div>
 
                                     <div ng-hide="slaveIPs" class="form-group">
                                         <label class="col-sm-3 control-label">{% trans "Slave Server IP" %}</label>
-                                        <div class="col-sm-6">
+                                        <div ng-init="slaveServerIP='{{ slaveServerIP }}'" class="col-sm-6">
                                             <input type="text" class="form-control" ng-model="slaveServerIP" required>
                                         </div>
                                     </div>
 
                                     <div ng-hide="slaveIPs" class="form-group">
                                         <label class="col-sm-3 control-label">{% trans "Slave Server 2 (Optional)" %}</label>
-                                        <div class="col-sm-6">
+                                        <div ng-init="slaveServer2='{{ slaveServer2 }}'" class="col-sm-6">
                                             <input type="text" class="form-control" ng-model="slaveServer2" required>
                                         </div>
                                     </div>
 
                                     <div ng-hide="slaveIPs" class="form-group">
                                         <label class="col-sm-3 control-label">{% trans "Slave Server IP 2 (Optional)" %}</label>
-                                        <div class="col-sm-6">
+                                        <div ng-init="slaveServerIP2='{{ slaveServerIP2 }}'" class="col-sm-6">
                                             <input type="text" class="form-control" ng-model="slaveServerIP2" required>
                                         </div>
                                     </div>
 
                                     <div ng-hide="slaveIPs" class="form-group">
                                         <label class="col-sm-3 control-label">{% trans "Slave Server 3 (Optional)" %}</label>
-                                        <div class="col-sm-6">
+                                        <div ng-init="slaveServer3='{{ slaveServer3 }}'" class="col-sm-6">
                                             <input type="text" class="form-control" ng-model="slaveServer3" required>
                                         </div>
                                     </div>
 
                                     <div ng-hide="slaveIPs" class="form-group">
                                         <label class="col-sm-3 control-label">{% trans "Slave Server IP 3 (Optional)" %}</label>
-                                        <div class="col-sm-6">
-                                            <input type="text" class="form-control" ng-model="slaveIPData" required>
+                                        <div ng-init="slaveServerIP3='{{ slaveServerIP3 }}'" class="col-sm-6">
+                                            <input type="text" class="form-control" ng-model="slaveServerIP3" required>
                                         </div>
                                     </div>
 

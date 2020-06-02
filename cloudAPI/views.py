@@ -4,8 +4,8 @@
 from .cloudManager import CloudManager
 import json
 from loginSystem.models import Administrator
-from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from django.views.decorators.csrf import csrf_exempt
+from django.shortcuts import HttpResponse
 
 @csrf_exempt
 def router(request):
@@ -306,6 +306,29 @@ def router(request):
             return cm.getUsageData(request)
         else:
             return cm.ajaxPre(0, 'This function is not available in your version of CyberPanel.')
+
+    except BaseException as msg:
+        cm = CloudManager(None)
+        return cm.ajaxPre(0, str(msg))
+
+@csrf_exempt
+def access(request):
+    try:
+        serverUserName = request.GET.get('serverUserName')
+        token = request.GET.get('token')
+
+        admin = Administrator.objects.get(userName=serverUserName)
+
+        if admin.api == 0:
+            return HttpResponse('API Access Disabled.')
+
+        if token == admin.token.lstrip('Basic ').rstrip('='):
+            request.session['userID'] = admin.pk
+            from django.shortcuts import redirect
+            from baseTemplate.views import renderBase
+            return redirect(renderBase)
+        else:
+            return HttpResponse('Unauthorized access.')
 
     except BaseException as msg:
         cm = CloudManager(None)

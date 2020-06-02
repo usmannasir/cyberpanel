@@ -16,6 +16,7 @@ class ProcessUtilities(multi.Thread):
     centos = 1
     cent8 = 2
     ubuntu = 0
+    ubuntu20 = 3
     server_address = '/usr/local/lscpd/admin/comm.sock'
     token = "unset"
 
@@ -139,6 +140,8 @@ class ProcessUtilities(multi.Thread):
         distroPath = '/etc/lsb-release'
 
         if os.path.exists(distroPath):
+            if open(distroPath, 'r').read().find('20.04') > -1:
+                return ProcessUtilities.ubuntu20
             return ProcessUtilities.ubuntu
         else:
             if open('/etc/redhat-release', 'r').read().find('CentOS Linux release 8') > -1:
@@ -190,7 +193,6 @@ class ProcessUtilities(multi.Thread):
             sock = ret[0]
 
             if user == None:
-
                 if command.find('export') > -1:
                     pass
                 elif command.find('sudo') == -1:
@@ -268,12 +270,17 @@ class ProcessUtilities(multi.Thread):
 
     def customPoen(self):
         try:
+
+
             if type(self.extraArgs['command']) == str or type(self.extraArgs['command']) == bytes:
                 command = self.extraArgs['command']
             else:
                 command = " ".join(self.extraArgs['command'])
 
-            ProcessUtilities.sendCommand(command, self.extraArgs['user'])
+            if getpass.getuser() == 'root':
+                subprocess.call(command, shell=True)
+            else:
+                ProcessUtilities.sendCommand(command, self.extraArgs['user'])
 
             return 1
         except BaseException as msg:

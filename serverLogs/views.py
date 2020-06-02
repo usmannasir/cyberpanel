@@ -131,12 +131,12 @@ def getLogsFromFile(request):
         elif type == "error":
             fileName = installUtilities.Server_root_path + "/logs/error.log"
         elif type == "email":
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 fileName = "/var/log/maillog"
             else:
                 fileName = "/var/log/mail.log"
         elif type == "ftp":
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 fileName = "/var/log/messages"
             else:
                 fileName = "/var/log/syslog"

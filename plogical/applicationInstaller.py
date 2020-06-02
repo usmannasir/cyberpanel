@@ -33,6 +33,7 @@ class ApplicationInstaller(multi.Thread):
 
     def run(self):
         try:
+
             if self.installApp == 'wordpress':
                 self.installWordPress()
             elif self.installApp == 'joomla':
@@ -51,9 +52,54 @@ class ApplicationInstaller(multi.Thread):
                 self.installMagento()
             elif self.installApp == 'convertDomainToSite':
                 self.convertDomainToSite()
+            elif self.installApp == 'updatePackage':
+                self.updatePackage()
 
         except BaseException as msg:
             logging.writeToFile(str(msg) + ' [ApplicationInstaller.run]')
+
+    def updatePackage(self):
+        try:
+
+            package = self.extraArgs['package']
+
+            from serverStatus.serverStatusUtil import ServerStatusUtil
+
+            f = open(ServerStatusUtil.lswsInstallStatusPath, 'a')
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
+
+                if package == 'all':
+                    command = 'DEBIAN_FRONTEND=noninteractive apt-get update -y'
+                    f.write(ProcessUtilities.outputExecutioner(command))
+
+                    f.flush()
+
+                    command = 'apt-get upgrade -y'
+                    f.write(ProcessUtilities.outputExecutioner(command))
+                else:
+                    command = 'apt-get install --only-upgrade %s -y' % (package)
+                    f.write(ProcessUtilities.outputExecutioner(command))
+
+                f.close()
+            elif ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                if package == 'all':
+                    command = 'yum update -y'
+                    f.write(ProcessUtilities.outputExecutioner(command))
+                else:
+                    command = 'yum update %s -y' % (package)
+                    f.write(ProcessUtilities.outputExecutioner(command))
+
+            f.close()
+
+            logging.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
+                                                      'Package(s) upgraded successfully. [200]',
+                                                      1)
+
+        except BaseException as msg:
+            from serverStatus.serverStatusUtil import ServerStatusUtil
+            logging.statusWriter(ServerStatusUtil.lswsInstallStatusPath, 'Failed. Error: %s. [404]' % (str(msg)), 1)
+            return 0
 
     def convertDomainToSite(self):
         try:
@@ -123,10 +169,10 @@ class ApplicationInstaller(multi.Thread):
             command = 'mv %s /home/%s/public_html' % (path, domainName)
             ProcessUtilities.executioner(command)
 
-            website = Websites.objects.get(domain=domainName)
+            from filemanager.filemanager import FileManager
 
-            command = 'chown %s:%s /home/%s/public_html' % (website.externalApp, website.externalApp, domainName)
-            ProcessUtilities.executioner(command)
+            fm = FileManager(None, None)
+            fm.fixPermissions(domainName)
 
             statusFile = open(self.tempStatusPath, 'w')
             statusFile.writelines('Successfully converted. [200]')
@@ -166,8 +212,6 @@ class ApplicationInstaller(multi.Thread):
                 command = 'apt -y install git'
                 ProcessUtilities.executioner(command)
             else:
-                command = 'yum -y install http://repo.iotti.biz/CentOS/7/noarch/lux-release-7-1.noarch.rpm'
-                ProcessUtilities.executioner(command)
 
                 command = 'yum install git -y'
                 ProcessUtilities.executioner(command)
@@ -266,7 +310,7 @@ class ApplicationInstaller(multi.Thread):
                 statusFile.close()
 
                 dbName, dbUser, dbPassword = self.dbCreation(tempStatusPath, website.master)
-                self.permPath = '/home/%s/public_html' % (website.master.domain)
+                self.permPath = website.path
 
             except:
                 website = Websites.objects.get(domain=domainName)
@@ -370,7 +414,7 @@ class ApplicationInstaller(multi.Thread):
 
             homeDir = "/home/" + domainName + "/public_html"
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 groupName = 'nobody'
             else:
                 groupName = 'nogroup'
@@ -442,7 +486,7 @@ class ApplicationInstaller(multi.Thread):
                 statusFile.close()
 
                 dbName, dbUser, dbPassword = self.dbCreation(tempStatusPath, website.master)
-                self.permPath = '/home/%s/public_html' % (website.master.domain)
+                self.permPath = website.path
 
             except:
                 website = Websites.objects.get(domain=domainName)
@@ -546,7 +590,7 @@ class ApplicationInstaller(multi.Thread):
 
             homeDir = "/home/" + domainName + "/public_html"
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 groupName = 'nobody'
             else:
                 groupName = 'nogroup'
@@ -706,7 +750,7 @@ class ApplicationInstaller(multi.Thread):
 
             shutil.rmtree(finalPath + "installation")
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 groupName = 'nobody'
             else:
                 groupName = 'nogroup'
@@ -732,7 +776,7 @@ class ApplicationInstaller(multi.Thread):
 
             homeDir = "/home/" + domainName + "/public_html"
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 groupName = 'nobody'
             else:
                 groupName = 'nogroup'
@@ -804,7 +848,7 @@ class ApplicationInstaller(multi.Thread):
                 statusFile.close()
 
                 dbName, dbUser, dbPassword = self.dbCreation(tempStatusPath, website.master)
-                self.permPath = '/home/%s/public_html' % (website.master.domain)
+                self.permPath = website.path
 
             except:
                 website = Websites.objects.get(domain=domainName)
@@ -920,7 +964,7 @@ class ApplicationInstaller(multi.Thread):
 
             homeDir = "/home/" + domainName + "/public_html"
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 groupName = 'nobody'
             else:
                 groupName = 'nogroup'

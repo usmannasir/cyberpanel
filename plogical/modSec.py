@@ -24,7 +24,7 @@ class modSec:
 
             mailUtilities.checkHome()
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 command = 'sudo yum install ols-modsecurity -y'
             else:
                 command = 'sudo DEBIAN_FRONTEND=noninteractive apt-get install ols-modsecurity -y'

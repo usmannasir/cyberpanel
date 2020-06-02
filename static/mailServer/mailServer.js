@@ -110,7 +110,7 @@ app.controller('createEmailAccount', function ($scope, $http) {
 
     $scope.generatePassword = function () {
         $scope.generatedPasswordView = false;
-        $scope.emailPassword = randomPassword(12);
+        $scope.emailPassword = randomPassword(16);
     };
 
     $scope.usePassword = function () {
@@ -465,7 +465,7 @@ app.controller('changeEmailPassword', function ($scope, $http) {
 
     $scope.generatePassword = function () {
         $scope.generatedPasswordView = false;
-        $scope.emailPassword = randomPassword(12);
+        $scope.emailPassword = randomPassword(16);
     };
 
     $scope.usePassword = function () {
@@ -1124,6 +1124,7 @@ app.controller('listEmails', function ($scope, $http) {
 
     $scope.cyberpanelLoading = true;
     $scope.emailsAccounts = true;
+    $scope.mailConfigured = 1;
 
     $scope.populateCurrentRecords = function () {
         $scope.cyberpanelLoading = false;
@@ -1151,6 +1152,9 @@ app.controller('listEmails', function ($scope, $http) {
             if (response.data.status === 1) {
                 $scope.emailsAccounts = false;
                 $scope.records = JSON.parse(response.data.data);
+                $scope.mailConfigured = response.data.mailConfigured;
+                $scope.serverHostname = response.data.serverHostname;
+
                 new PNotify({
                     title: 'Success!',
                     text: 'Emails Successfully Fetched.',
@@ -1206,6 +1210,55 @@ app.controller('listEmails', function ($scope, $http) {
                 new PNotify({
                     title: 'Success!',
                     text: 'Email Successfully deleted.',
+                    type: 'success'
+                });
+
+            } else {
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            new PNotify({
+                title: 'Error!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+        }
+
+
+    };
+
+    $scope.fixMailSSL = function (email) {
+
+        $scope.cyberpanelLoading = false;
+
+        var url = "/email/fixMailSSL";
+
+        var data = {
+            selectedDomain: $scope.selectedDomain,
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+            if (response.data.status === 1) {
+                $scope.populateCurrentRecords();
+                new PNotify({
+                    title: 'Success!',
+                    text: 'Configurations applied successfully.',
                     type: 'success'
                 });
 

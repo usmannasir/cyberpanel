@@ -715,23 +715,9 @@ class cPanelImporter:
             return 0
 
     def FixPermissions(self):
-        externalApp = self.externalApp
-        command = "sudo chown -R " + externalApp + ":" + externalApp + " /home/" + self.mainDomain
-        ProcessUtilities.normalExecutioner(command)
-
-        if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
-            groupName = 'nobody'
-        else:
-            groupName = 'nogroup'
-
-        command = "sudo chown -R root:%s /home/" % (groupName) + self.mainDomain + "/logs"
-        ProcessUtilities.normalExecutioner(command)
-
-        command = "sudo find %s -type d -exec chmod 0755 {} \;" % ("/home/" + self.mainDomain + "/public_html")
-        ProcessUtilities.normalExecutioner(command)
-
-        command = "sudo find %s -type f -exec chmod 0644 {} \;" % ("/home/" + self.mainDomain + "/public_html")
-        ProcessUtilities.normalExecutioner(command)
+        from filemanager.filemanager import FileManager
+        fm = FileManager(None, None)
+        fm.fixPermissions(self.mainDomain)
 
     def MainController(self):
 

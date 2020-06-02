@@ -19,7 +19,7 @@ from django.utils import translation
 # Create your views here.
 
 VERSION = '2.0'
-BUILD = 0
+BUILD = 1
 
 def verifyLogin(request):
     try:
@@ -69,6 +69,8 @@ def verifyLogin(request):
                         user_Language = "it"
                     elif data['languageSelection'] == "German":
                         user_Language = "de"
+                    elif data['languageSelection'] == "Indonesian":
+                        user_Language = "id"
 
                     translation.activate(user_Language)
                     response = HttpResponse()

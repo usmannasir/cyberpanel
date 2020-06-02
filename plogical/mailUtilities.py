@@ -30,6 +30,7 @@ class mailUtilities:
     installLogPath = "/home/cyberpanel/openDKIMInstallLog"
     spamassassinInstallLogPath = "/home/cyberpanel/spamassassinInstallLogPath"
     cyberPanelHome = "/home/cyberpanel"
+    mailScannerInstallLogPath = "/home/cyberpanel/mailScannerInstallLogPath"
 
     @staticmethod
     def SendEmail(sender, receivers, message):
@@ -214,41 +215,39 @@ class mailUtilities:
 
             import tldextract
 
-            #extractDomain = tldextract.extract(virtualHostName)
-            #virtualHostName = extractDomain.domain + '.' + extractDomain.suffix
+            actualDomain = virtualHostName
+            extractDomain = tldextract.extract(virtualHostName)
+            virtualHostName = extractDomain.domain + '.' + extractDomain.suffix
 
-            if os.path.exists("/etc/opendkim/keys/" + virtualHostName + "/default.txt"):
-                return 1, "None"
+            if not os.path.exists("/etc/opendkim/keys/" + virtualHostName + "/default.txt"):
+                path = '/etc/opendkim/keys/%s' % (virtualHostName)
+                command = 'mkdir %s' % (path)
+                ProcessUtilities.normalExecutioner(command)
 
+                ## Generate keys
 
-            path = '/etc/opendkim/keys/%s' % (virtualHostName)
-            command = 'mkdir %s' % (path)
-            ProcessUtilities.normalExecutioner(command)
+                if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                    command = "/usr/sbin/opendkim-genkey -D /etc/opendkim/keys/%s -d %s -s default" % (virtualHostName, virtualHostName)
+                else:
+                    command = "opendkim-genkey -D /etc/opendkim/keys/%s -d %s -s default" % (
+                    virtualHostName, virtualHostName)
+                ProcessUtilities.normalExecutioner(command)
+                ## Fix permissions
 
-            ## Generate keys
+                command = "chown -R root:opendkim /etc/opendkim/keys/" + virtualHostName
+                ProcessUtilities.normalExecutioner(command)
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
-                command = "/usr/sbin/opendkim-genkey -D /etc/opendkim/keys/%s -d %s -s default" % (virtualHostName, virtualHostName)
-            else:
-                command = "opendkim-genkey -D /etc/opendkim/keys/%s -d %s -s default" % (
-                virtualHostName, virtualHostName)
-            ProcessUtilities.normalExecutioner(command)
-            ## Fix permissions
+                command = "chmod 640 /etc/opendkim/keys/" + virtualHostName + "/default.private"
+                ProcessUtilities.normalExecutioner(command)
 
-            command = "chown -R root:opendkim /etc/opendkim/keys/" + virtualHostName
-            ProcessUtilities.normalExecutioner(command)
-
-            command = "chmod 640 /etc/opendkim/keys/" + virtualHostName + "/default.private"
-            ProcessUtilities.normalExecutioner(command)
-
-            command = "chmod 644 /etc/opendkim/keys/" + virtualHostName + "/default.txt"
-            ProcessUtilities.normalExecutioner(command)
+                command = "chmod 644 /etc/opendkim/keys/" + virtualHostName + "/default.txt"
+                ProcessUtilities.normalExecutioner(command)
 
             ## Edit key file
 
 
             keyTable = "/etc/opendkim/KeyTable"
-            configToWrite = "default._domainkey." + virtualHostName + " " + virtualHostName + ":default:/etc/opendkim/keys/" + virtualHostName + "/default.private\n"
+            configToWrite = "default._domainkey." + actualDomain + " " + actualDomain + ":default:/etc/opendkim/keys/" + virtualHostName + "/default.private\n"
 
             writeToFile = open(keyTable, 'a')
             writeToFile.write(configToWrite)
@@ -257,7 +256,7 @@ class mailUtilities:
             ## Edit signing table
 
             signingTable = "/etc/opendkim/SigningTable"
-            configToWrite = "*@" + virtualHostName + " default._domainkey." + virtualHostName + "\n"
+            configToWrite = "*@" + actualDomain + " default._domainkey." + actualDomain + "\n"
 
             writeToFile = open(signingTable, 'a')
             writeToFile.write(configToWrite)
@@ -266,7 +265,7 @@ class mailUtilities:
             ## Trusted hosts
 
             trustedHosts = "/etc/opendkim/TrustedHosts"
-            configToWrite = virtualHostName + "\n"
+            configToWrite = actualDomain + "\n"
 
             writeToFile = open(trustedHosts, 'a')
             writeToFile.write(configToWrite)
@@ -451,7 +450,10 @@ milter_default_action = accept
     def installSpamAssassin(install, SpamAssassin):
         try:
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+            if os.path.exists(mailUtilities.spamassassinInstallLogPath):
+                os.remove(mailUtilities.spamassassinInstallLogPath)
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 command = 'sudo yum install spamassassin -y'
             else:
                 command = 'sudo apt-get install spamassassin spamc -y'
@@ -480,6 +482,51 @@ milter_default_action = accept
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[installSpamAssassin]")
 
     @staticmethod
+    def installMailScanner(install, SpamAssassin):
+        try:
+
+            if os.path.exists(mailUtilities.mailScannerInstallLogPath):
+                os.remove(mailUtilities.mailScannerInstallLogPath)
+
+            if mailUtilities.checkIfSpamAssassinInstalled():
+
+                command = 'chmod +x /usr/local/CyberCP/CPScripts/mailscannerinstaller.sh'
+                ProcessUtilities.executioner(command)
+
+
+                command = '/usr/local/CyberCP/CPScripts/mailscannerinstaller.sh'
+
+                cmd = shlex.split(command)
+
+                with open(mailUtilities.mailScannerInstallLogPath, 'w') as f:
+                    res = subprocess.call(cmd, stdout=f, shell=True)
+
+                if res == 1:
+                    writeToFile = open(mailUtilities.mailScannerInstallLogPath, 'a')
+                    writeToFile.writelines("Can not be installed.[404]\n")
+                    writeToFile.close()
+                    logging.CyberCPLogFileWriter.writeToFile("[Could not Install MailScanner.]")
+                    return 0
+                else:
+                    writeToFile = open(mailUtilities.mailScannerInstallLogPath, 'a')
+                    writeToFile.writelines("MailScanner Installed.[200]\n")
+                    writeToFile.close()
+
+                return 1
+            else:
+                writeToFile = open(mailUtilities.mailScannerInstallLogPath, 'a')
+                writeToFile.writelines("Please install SpamAssassin from CyberPanel before installing MailScanner.[404]\n")
+                writeToFile.close()
+
+
+
+        except BaseException as msg:
+            writeToFile = open(mailUtilities.mailScannerInstallLogPath, 'a')
+            writeToFile.writelines("Can not be installed.[404]\n")
+            writeToFile.close()
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[installSpamAssassin]")
+
+    @staticmethod
     def checkIfSpamAssassinInstalled():
         try:
 
@@ -502,7 +549,7 @@ milter_default_action = accept
     def configureSpamAssassin():
         try:
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
                 confFile = "/etc/mail/spamassassin/local.cf"
                 confData = open(confFile).readlines()
 
@@ -668,6 +715,22 @@ milter_default_action = accept
                 str(msg) + "  [savePolicyServerStatus]")
             print("0," + str(msg))
 
+    @staticmethod
+    def checkIfMailScannerInstalled():
+        try:
+
+            path = "/usr/local/CyberCP/public/mailwatch"
+
+            if os .path.exists(path):
+                return 1
+            else:
+                return 0
+
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile(
+                str(msg) + "  [checkIfMailScannerInstalled]")
+            return 0
+
 
 def main():
 
@@ -697,6 +760,8 @@ def main():
         mailUtilities.savePolicyServerStatus(args.install)
     elif args.function == 'installSpamAssassin':
         mailUtilities.installSpamAssassin("install", "SpamAssassin")
+    elif args.function == 'installMailScanner':
+        mailUtilities.installMailScanner("install", "installMailScanner")
     elif args.function == 'AfterEffects':
         mailUtilities.AfterEffects(args.domain)
 

@@ -1,4 +1,5 @@
 #!/bin/bash
+
 #CyberPanel Upgrade script
 
 export LC_CTYPE=en_US.UTF-8
@@ -11,6 +12,27 @@ GIT_URL="github.com/usmannasir/cyberpanel"
 GIT_CONTENT_URL="raw.githubusercontent.com/usmannasir/cyberpanel"
 SERVER_COUNTRY="unknow"
 SERVER_COUNTRY=$(curl --silent --max-time 5 https://cyberpanel.sh/?country)
+UBUNTU_20="False"
+
+### Update and remove not needed repos
+
+rm -f /etc/yum.repos.d/ius-archive.repo
+rm -f /etc/yum.repos.d/copart-restic-epel-7.repo
+rm -f /etc/yum.repos.d/dovecot.repo
+rm -f /etc/yum.repos.d/epel.repo
+rm -f /etc/yum.repos.d/epel-testing.repo
+rm -f /etc/yum.repos.d/frank.repo
+rm -f /etc/yum.repos.d/ius.repo
+rm -f /etc/yum.repos.d/ius-testing.repo
+rm -f /etc/yum.repos.d/MariaDB.repo
+rm -f /etc/yum.repos.d/lux.repo
+rm -f /etc/yum.repos.d/gf.repo
+rm -f /etc/yum.repos.d/powerdns-auth-42.repo
+rm -rf /etc/yum.repos.d/powerdns-auth-master.repo
+rm -rf /etc/yum.repos.d/gf.repo.rpmnew
+
+##
+
 if [[ ${#SERVER_COUNTRY} == "2" ]] || [[ ${#SERVER_COUNTRY} == "6" ]] ; then
 	echo -e "\nChecking server..."
 else
@@ -138,24 +160,41 @@ check_root
 
 echo -e "\nChecking OS..."
 OUTPUT=$(cat /etc/*release)
+
 if  echo $OUTPUT | grep -q "CentOS Linux 7" ; then
 	echo -e "\nDetecting CentOS 7.X...\n"
 	SERVER_OS="CentOS7"
+  curl https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.0.1/install/CyberPanel.repo > /etc/yum.repos.d/CyberPanel.repo
 	yum clean all
   yum update -y
+  yum autoremove epel-release -y
+  rm -f /etc/yum.repos.d/epel.repo
+  rm -f /etc/yum.repos.d/epel.repo.rpmsave
 elif echo $OUTPUT | grep -q "CloudLinux 7" ; then
 	echo -e "\nDetecting CloudLinux 7.X...\n"
 	SERVER_OS="CentOS7"
+	curl https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.0.1/install/CyberPanel.repo > /etc/yum.repos.d/CyberPanel.repo
 	yum clean all
   yum update -y
+  yum autoremove epel-release -y
+  rm -f /etc/yum.repos.d/epel.repo
+  rm -f /etc/yum.repos.d/epel.repo.rpmsave
 elif  echo $OUTPUT | grep -q "CentOS Linux 8" ; then
+  curl https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.0.1/install/CyberPanel8.repo > /etc/yum.repos.d/CyberPanel.repo
 	echo -e "\nDetecting CentOS 8.X...\n"
 	SERVER_OS="CentOS8"
 	yum clean all
   yum update -y
+  yum autoremove epel-release -y
+  rm -f /etc/yum.repos.d/epel.repo
+  rm -f /etc/yum.repos.d/epel.repo.rpmsave
 elif echo $OUTPUT | grep -q "Ubuntu 18.04" ; then
 	echo -e "\nDetecting Ubuntu 18.04...\n"
 	SERVER_OS="Ubuntu"
+elif echo $OUTPUT | grep -q "Ubuntu 20.04" ; then
+	echo -e "\nDetecting Ubuntu 20.04...\n"
+	SERVER_OS="Ubuntu"
+	UBUNTU_20="True"
 else
 	cat /etc/*release
 	echo -e "\nUnable to detect your OS...\n"
@@ -166,16 +205,15 @@ fi
 if [ $SERVER_OS = "CentOS7" ] ; then
   yum -y install yum-utils
   yum -y groupinstall development
-  yum -y install https://centos7.iuscommunity.org/ius-release.rpm
-  yum -y install python36u python36u-pip python36u-devel
+  yum --enablerepo=CyberPanel install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel gpgme-devel curl-devel git socat openssl-devel MariaDB-shared mariadb-devel python36u python36u-pip python36u-devel
 elif [ $SERVER_OS = "CentOS8" ] ; then
-  yum install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-devel curl-devel git platform-python-devel tar
+  dnf install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-devel curl-devel git platform-python-devel tar socat
 	dnf --enablerepo=PowerTools install gpgme-devel -y
 	dnf install python3 -y
 else
   apt update -y
 	DEBIAN_FRONTEND=noninteractive apt upgrade -y
-	DEBIAN_FRONTEND=noninteracitve apt install -y htop telnet python-mysqldb python-dev libcurl4-gnutls-dev libgnutls28-dev libgcrypt20-dev libattr1 libattr1-dev liblzma-dev libgpgme-dev libmariadbclient-dev libcurl4-gnutls-dev libssl-dev nghttp2 libnghttp2-dev idn2 libidn2-dev libidn2-0-dev librtmp-dev libpsl-dev nettle-dev libgnutls28-dev libldap2-dev libgssapi-krb5-2 libk5crypto3 libkrb5-dev libcomerr2 libldap2-dev python-gpg python python-minimal python-setuptools virtualenv python-dev python-pip git
+	DEBIAN_FRONTEND=noninteracitve apt install -y htop telnet libcurl4-gnutls-dev libgnutls28-dev libgcrypt20-dev libattr1 libattr1-dev liblzma-dev libgpgme-dev libmariadbclient-dev libcurl4-gnutls-dev libssl-dev nghttp2 libnghttp2-dev idn2 libidn2-dev libidn2-0-dev librtmp-dev libpsl-dev nettle-dev libgnutls28-dev libldap2-dev libgssapi-krb5-2 libk5crypto3 libkrb5-dev libcomerr2 libldap2-dev virtualenv git
   DEBIAN_FRONTEND=noninteractive apt install -y python3-pip
 	DEBIAN_FRONTEND=noninteractive apt install -y build-essential libssl-dev libffi-dev python3-dev
 	DEBIAN_FRONTEND=noninteractive apt install -y python3-venv
@@ -189,65 +227,114 @@ else
   check_return
 fi
 
-rm -rf /usr/local/CyberPanel
-virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberPanel
-check_return
+
+if [[ -f /usr/local/CyberPanel/bin/python2 ]] ; then
+  echo -e "\nPython 2 dectected, doing resetup...\n"
+  rm -rf /usr/local/CyberPanel/bin
+  virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberPanel
+  check_return
+elif [[ -d /usr/local/CyberPanel/bin/ ]] ; then
+  echo -e "\nNo need to resetup virtualenv at /usr/local/CyberPanel...\n"
+else
+  echo -e "\nNothing found, need fresh setup...\n"
+  virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberPanel
+  check_return
+fi
+
 rm -f requirments.txt
-wget -O requirements.txt https://$GIT_CONTENT_URL/${BRANCH_NAME}/requirments.txt
+
+if [[ $UBUNTU_20 == "False" ]] ; then
+  wget -O /usr/local/cyberpanel-pip.zip https://rep.cyberpanel.net/cyberpanel-pip.zip
+else
+  wget -O /usr/local/cyberpanel-pip.zip https://rep.cyberpanel.net/ubuntu-pip.zip
+fi
+
+check_return
+rm -rf /usr/local/pip-packs/
+rm -rf /usr/local/packages
+
+unzip /usr/local/cyberpanel-pip.zip -d /usr/local
+check_return
 . /usr/local/CyberPanel/bin/activate
 check_return
 
 if [ $SERVER_OS = "Ubuntu" ] ; then
   . /usr/local/CyberPanel/bin/activate
   check_return
-  pip3 install --ignore-installed -r requirements.txt
+  if [[ $UBUNTU_20 == "False" ]] ; then
+    pip3 install --ignore-installed /usr/local/pip-packs/*
+  else
+    pip3 install --ignore-installed /usr/local/packages/*
+  fi
   check_return
 else
   source /usr/local/CyberPanel/bin/activate
   check_return
-  pip3.6 install --ignore-installed -r requirements.txt
+  pip3.6 install --ignore-installed /usr/local/pip-packs/*
   check_return
 fi
 
+## Doing again to prevent an error - dont confuse later
+
 virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberPanel
 check_return
+
+##
+
 rm -rf upgrade.py
 wget https://$GIT_CONTENT_URL/${BRANCH_NAME}/plogical/upgrade.py
 
 if [[ $SERVER_COUNTRY == "CN" ]] ; then
 sed -i 's|wget  https://raw.githubusercontent.com/usmannasir/cyberpanel/v1.9.4/lscpd-0.2.4 -P /usr/local/lscp/bin/|cp -f /usr/local/CyberCP/lscpd-0.2.4 /usr/local/lscp/bin/lscpd-0.2.4|g' upgrade.py
 sed -i 's|wget  https://raw.githubusercontent.com/usmannasir/cyberpanel/%s/lscpd-0.2.4 -P /usr/local/lscp/bin/|cp -f /usr/local/CyberCP/lscpd-0.2.4 /usr/local/lscp/bin/lscpd-0.2.4|g' upgrade.py
-sed -i $'s/0.2.4\' % (branch)/0.2.4\'/' upgrade.py
+#sed -i $'s/0.2.4\' % (branch)/0.2.4\'/' upgrade.py
 sed -i 's|raw.githubusercontent.com/usmannasir/cyberpanel|'${GIT_CONTENT_URL}'|g' upgrade.py
 sed -i 's|git clone https://github.com/usmannasir/cyberpanel|git clone https://'${GIT_URL}'|g' upgrade.py
 fi
 
 /usr/local/CyberPanel/bin/python upgrade.py $BRANCH_NAME
 check_return
-virtualenv -p /usr/bin/python3 /usr/local/CyberCP
+
+if [[ -f /usr/local/CyberCP/bin/python2 ]] ; then
+ rm -rf /usr/local/CyberCP/bin
+ virtualenv -p /usr/bin/python3 /usr/local/CyberCP
+elif [[ -d /usr/local/CyberCP/bin/ ]] ; then
+  echo -e "\nNo need to resetup virtualenv at /usr/local/CyberCP...\n"
+else
+  virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberCP
+  check_return
+fi
+
 check_return
-wget -O requirements.txt https://$GIT_CONTENT_URL/${BRANCH_NAME}/requirments.txt
 
 if [ $SERVER_OS = "Ubuntu" ] ; then
   . /usr/local/CyberCP/bin/activate
   check_return
-  pip3 install --ignore-installed -r requirements.txt
+  if [[ $UBUNTU_20 == "False" ]] ; then
+    pip3 install --ignore-installed /usr/local/pip-packs/*
+  else
+    pip3 install --ignore-installed /usr/local/packages/*
+  fi
   check_return
 else
   source /usr/local/CyberCP/bin/activate
   check_return
-  pip3.6 install --ignore-installed -r requirements.txt
+  pip3.6 install --ignore-installed /usr/local/pip-packs/*
   check_return
 fi
 
 
 ##
 
+rm -f wsgi-lsapi-1.4.tgz
 rm -f wsgi-lsapi-1.5.tgz
+rm -f wsgi-lsapi-1.6.tgz
 rm -rf wsgi-lsapi-1.4
-wget http://www.litespeedtech.com/packages/lsapi/wsgi-lsapi-1.5.tgz
-tar xf wsgi-lsapi-1.5.tgz
-cd wsgi-lsapi-1.5
+rm -rf wsgi-lsapi-1.5
+rm -rf wsgi-lsapi-1.6
+wget http://www.litespeedtech.com/packages/lsapi/wsgi-lsapi-1.6.tgz
+tar xf wsgi-lsapi-1.6.tgz
+cd wsgi-lsapi-1.6
 /usr/local/CyberPanel/bin/python ./configure.py
 make
 
@@ -340,6 +427,25 @@ rm -f wsgi-lsapi-1.5.tgz
 rm -f /usr/local/composer.sh
 
 # clean up
+
+### Disable Centos Default Repos
+
+
+disable_repos() {
+
+if [[ $SERVER_OS == "CentOS" ]] ; then
+	sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-Base.repo
+	sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-Debuginfo.repo
+	sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-Media.repo
+	sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-Vault.repo
+	sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-CR.repo
+	sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-fasttrack.repo
+	sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-Sources.repo
+fi
+
+}
+
+disable_repos
 
 echo "###################################################################"
 echo "                CyberPanel Upgraded                                "

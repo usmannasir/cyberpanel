@@ -7,11 +7,31 @@ import randomPassword
 import errno
 import MySQLdb as mariadb
 import install
+from os.path import exists
 
 #distros
 centos=0
 ubuntu=1
 cent8=2
+
+def get_Ubuntu_release():
+    release = -1
+    if exists("/etc/lsb-release"):
+        distro_file = "/etc/lsb-release"
+        with open(distro_file) as f:
+            for line in f:
+                if line[:16] == "DISTRIB_RELEASE=":
+                    release = float(line[16:])
+
+        if release == -1:
+            print("Can't find distro release name in " + distro_file + " - fatal error")
+
+    else:
+        logging.InstallLog.writeToFile("Can't find linux release file - fatal error")
+        print("Can't find linux release file - fatal error")
+        os._exit(os.EX_UNAVAILABLE)
+
+    return release
 
 class InstallCyberPanel:
 
@@ -165,16 +185,14 @@ class InstallCyberPanel:
             if res != 0:
                 InstallCyberPanel.stdOut("Failed to install PHP on Ubuntu.", 1, 1)
 
-        elif self.distro == cent8 or self.distro == centos:
+        elif self.distro == centos:
             command = 'yum -y groupinstall lsphp-all'
             install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-
-
 
         InstallCyberPanel.stdOut("LiteSpeed PHPs successfully installed!", 1)
 
         ## only php 71
-        if self.distro == centos or self.distro == cent8:
+        if self.distro == centos:
 
             command = 'yum install lsphp71 lsphp71-json lsphp71-xmlrpc lsphp71-xml lsphp71-soap lsphp71-snmp ' \
                       'lsphp71-recode lsphp71-pspell lsphp71-process lsphp71-pgsql lsphp71-pear lsphp71-pdo lsphp71-opcache ' \
@@ -207,27 +225,9 @@ class InstallCyberPanel:
 
             install.preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-    def setup_mariadb_repo(self):
-        try:
-
-            if self.distro == ubuntu:
-            # Only needed if the repo is broken or we need the latest version.
-            # command = "apt-get -y install software-properties-common"
-            # command = "apt-key adv --recv-keys --keyserver hkp://keyserver.ubuntu.com:80 0xF1656F24C74CD1D8"
-            # command = "add-apt-repository 'deb [arch=amd64] http://mirror.zol.co.zw/mariadb/repo/10.3/ubuntu bionic main'"
-                return
-
-            InstallCyberPanel.stdOut("Setting up MariaDB Repo..", 1)
-
-            os.chdir(self.cwd)
-            shutil.copy("mysql/MariaDB.repo","/etc/yum.repos.d/MariaDB.repo")
-
-            InstallCyberPanel.stdOut("MariaDB repo set!", 1)
-
-
-        except BaseException as msg:
-            logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [setup_mariadb_repo]")
-            return 0
+        if self.distro == cent8:
+            command = 'dnf install lsphp71* lsphp72* lsphp73* lsphp74* --exclude lsphp73-pecl-zip -y'
+            subprocess.call(command, shell=True)
 
     def installMySQL(self, mysql):
 
@@ -235,8 +235,10 @@ class InstallCyberPanel:
 
         if self.distro == ubuntu:
             command = "apt-get -y install mariadb-server"
-        else:
-            command = 'yum -y install mariadb-server'
+        elif self.distro == centos:
+            command = 'yum --enablerepo=CyberPanel -y install mariadb-server'
+        elif self.distro == cent8:
+            command = 'dnf --enablerepo=CyberPanel -y install mariadb-server'
 
         install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
@@ -326,8 +328,11 @@ class InstallCyberPanel:
         conn = mariadb.connect(user='root', passwd=self.mysql_Root_password)
         cursor = conn.cursor()
         cursor.execute('set global innodb_file_per_table = on;')
-        cursor.execute('set global innodb_file_format = Barracuda;')
-        cursor.execute('set global innodb_large_prefix = on;')
+        try:
+            cursor.execute('set global innodb_file_format = Barracuda;')
+            cursor.execute('set global innodb_large_prefix = on;')
+        except BaseException as msg:
+            self.stdOut('%s. [ERROR:335]' % (str(msg)))
         cursor.close()
         conn.close()
 
@@ -351,21 +356,26 @@ class InstallCyberPanel:
             command = 'DEBIAN_FRONTEND=noninteractive apt install pure-ftpd-mysql -y'
             os.system(command)
 
-            command = 'wget https://rep.cyberpanel.net/pure-ftpd-common_1.0.47-3_all.deb'
-            install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+            if get_Ubuntu_release() == 18.10:
+                command = 'wget https://rep.cyberpanel.net/pure-ftpd-common_1.0.47-3_all.deb'
+                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
-            command = 'wget https://rep.cyberpanel.net/pure-ftpd-mysql_1.0.47-3_amd64.deb'
-            install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+                command = 'wget https://rep.cyberpanel.net/pure-ftpd-mysql_1.0.47-3_amd64.deb'
+                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
-            command = 'dpkg --install --force-confold pure-ftpd-common_1.0.47-3_all.deb'
-            install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+                command = 'dpkg --install --force-confold pure-ftpd-common_1.0.47-3_all.deb'
+                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
-            command = 'dpkg --install --force-confold pure-ftpd-mysql_1.0.47-3_amd64.deb'
-            install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+                command = 'dpkg --install --force-confold pure-ftpd-mysql_1.0.47-3_amd64.deb'
+                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
-        else:
+        elif self.distro == centos:
             command = "yum install -y pure-ftpd"
             install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+        elif self.distro == cent8:
+            command = 'dnf --enablerepo=CyberPanel install pure-ftpd -y'
+            install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+
 
         ####### Install pureftpd to system startup
 
@@ -399,8 +409,11 @@ class InstallCyberPanel:
             except:
                 logging.InstallLog.writeToFile("[ERROR] Could not create directory for FTP SSL")
 
+            if (self.distro == centos or self.distro == cent8) or (self.distro == ubuntu and get_Ubuntu_release() == 18.14):
+                command = 'openssl req -newkey rsa:1024 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout /etc/ssl/private/pure-ftpd.pem -out /etc/ssl/private/pure-ftpd.pem'
+            else:
+                command = 'openssl req -x509 -nodes -days 7300 -newkey rsa:2048 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout /etc/ssl/private/pure-ftpd.pem -out /etc/ssl/private/pure-ftpd.pem'
 
-            command = 'openssl req -newkey rsa:1024 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout /etc/ssl/private/pure-ftpd.pem -out /etc/ssl/private/pure-ftpd.pem'
             install.preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             os.chdir(self.cwd)
@@ -463,6 +476,7 @@ class InstallCyberPanel:
                 command = 'echo "/etc/pure-ftpd/db/mysql.conf" > /etc/pure-ftpd/conf/MySQLConfigFile'
                 subprocess.call(command, shell=True)
 
+
                 command = 'ln -s /etc/pure-ftpd/conf/MySQLConfigFile /etc/pure-ftpd/auth/30mysql'
                 install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
@@ -511,17 +525,12 @@ class InstallCyberPanel:
                 #                              ".  This may need to be fixed manually as 'echo \"nameserver 8.8.8.8\"> "
                 #                              "/etc/resolv.conf'", 1, 1, os.EX_OSERR)
 
-            if self.distro == centos:
-                command = 'curl -o /etc/yum.repos.d/powerdns-auth-42.repo ' \
-                          'https://repo.powerdns.com/repo-files/centos-auth-42.repo'
-                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-
-            if self.distro == cent8:
-                command = 'dnf config-manager --set-enabled PowerTools'
-                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-
-                command = 'curl -o /etc/yum.repos.d/powerdns-auth-master.repo https://repo.powerdns.com/repo-files/centos-auth-master.repo'
-                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+            # if self.distro == cent8:
+            #     command = 'dnf config-manager --set-enabled PowerTools'
+            #     install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+            #
+            #     command = 'curl -o /etc/yum.repos.d/powerdns-auth-master.repo https://repo.powerdns.com/repo-files/centos-auth-master.repo'
+            #     install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
             if self.distro == ubuntu:
                 command = "DEBIAN_FRONTEND=noninteractive apt-get -y install pdns-server pdns-backend-mysql"
@@ -636,8 +645,6 @@ def Main(cwd, mysql, distro, ent, serial = None, port = "8090", ftp = None, dns 
     if ent == 0:
         installer.fix_ols_configs()
 
-
-    installer.setup_mariadb_repo()
     installer.installMySQL(mysql)
     installer.changeMYSQLRootPassword()
     #installer.changeMYSQLRootPasswordCyberPanel(mysql)

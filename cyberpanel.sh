@@ -1,11 +1,10 @@
 #!/bin/bash
 
-#CyberPanel installer script for CentOS 7.X, CentOS 8.X, CloudLinux 7.X and Ubuntu 18.04
+#CyberPanel installer script for CentOS 7.X, CentOS 8.X, CloudLinux 7.X, Ubuntu 18.04 and Ubuntu 20.04
 
 SUDO_TEST=$(set)
 
 DEV="OFF"
-BRANCH="stable"
 POSTFIX_VARIABLE="ON"
 POWERDNS_VARIABLE="ON"
 PUREFTPD_VARIABLE="ON"
@@ -22,14 +21,28 @@ KEY_SIZE=""
 ADMIN_PASS="1234567"
 MEMCACHED="ON"
 REDIS="ON"
-TOTAL_RAM=$(free -m | awk '/Mem\:/ { print $2 }')
+TOTAL_RAM=$(free -m | awk '/Mem:/ { print $2 }')
 CENTOS_8="False"
+UBUNTU_20="False"
 WATCHDOG="OFF"
 BRANCH_NAME="v${TEMP:12:3}.${TEMP:25:1}"
 VIRT_TYPE=""
 GIT_URL="github.com/usmannasir/cyberpanel"
 GIT_CONTENT_URL="raw.githubusercontent.com/usmannasir/cyberpanel"
 
+disable_repos() {
+
+if [[ $SERVER_OS == "CentOS" ]] ; then
+	sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-Base.repo
+	sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-Debuginfo.repo
+	sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-Media.repo
+	sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-Vault.repo
+	sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-CR.repo
+	sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-fasttrack.repo
+	sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-Sources.repo
+fi
+
+}
 
 check_return() {
 #check previous command result , 0 = ok ,  non-0 = something wrong.
@@ -46,22 +59,6 @@ if [[ ! -f /usr/bin/cyberpanel_utility ]] ; then
 wget -q -O /usr/bin/cyberpanel_utility https://cyberpanel.sh/misc/cyberpanel_utility.sh
 chmod 700 /usr/bin/cyberpanel_utility
 fi
-
-#BASH_PATH="/root/.bashrc"
-#if ! cat $BASH_PATH | grep -q cyberpanel_utility ; then
-#echo -e "\n\ncyberpanel() {
-#if [[ \$1 == \"utility\" ]] ; then
-#/usr/bin/cyberpanel_utility \${@:2:99}
-#elif [[ \$1 == \"help\" ]] ; then
-#/usr/bin/cyberpanel_utility --help
-#elif [[ \$1 == \"upgrade\" ]] || [[ \$1 == \"update\" ]] ; then
-#/usr/bin/cyberpanel_utility --upgrade
-#else
-#/usr/bin/cyberpanel \"\$@\"
-#fi
-#}" >> $BASH_PATH
-#fi
-
 }
 
 watchdog_setup() {
@@ -193,6 +190,7 @@ special_change(){
 sed -i 's|cyberpanel.sh|'$DOWNLOAD_SERVER'|g' install.py
 sed -i 's|mirror.cyberpanel.net|'$DOWNLOAD_SERVER'|g' install.py
 sed -i 's|git clone https://github.com/usmannasir/cyberpanel|echo downloaded|g' install.py
+
 #change to CDN first, regardless country
 #sed -i 's|http://|https://|g' install.py
 
@@ -257,44 +255,17 @@ if [[ $SERVER_COUNTRY == "CN" ]] ; then
 	sed -i 's|wget -O -  https://get.acme.sh \| sh|git clone https://gitee.com/qtwrk/acme.sh.git ; cd acme.sh ; ./acme.sh --install ; cd - ; rm -rf acme.sh|g' install.py
 	sed -i 's|composer.sh|composer_cn.sh|g' install.py
 	sed -i 's|yum -y install http://repo.iotti.biz/CentOS/7/noarch/lux-release-7-1.noarch.rpm|wget -O /etc/yum.repos.d/lux.repo https://'$DOWNLOAD_SERVER'/lux/lux.repo|g' install.py
+
 # global change for CN , regardless provider and system
 
 	if [[ $SERVER_OS == "CentOS" ]] ; then
-		DIR=$(pwd)
-		cd $DIR/mysql
-		echo "[mariadb-tsinghua]
-name = MariaDB
-baseurl = https://mirrors.tuna.tsinghua.edu.cn/mariadb/yum/10.1/centos7-amd64
-gpgkey = https://mirrors.tuna.tsinghua.edu.cn/mariadb/yum//RPM-GPG-KEY-MariaDB
-gpgcheck = 1" > MariaDB.repo
-#above to set mariadb db to Tsinghua repo
-		cd $DIR
 		sed -i 's|https://www.litespeedtech.com/packages/5.0/lsws-5.3.5-ent-x86_64-linux.tar.gz|https://cyberpanel.sh/packages/5.0/lsws-5.3.5-ent-x86_64-linux.tar.gz|g' installCyberPanel.py
-		mkdir /root/.config
-		mkdir /root/.config/pip
-		cat << EOF > /root/.config/pip/pip.conf
-[global]
-index-url = https://pypi.tuna.tsinghua.edu.cn/simple
-[install]
-trusted-host=pypi.tuna.tsinghua.edu.cn
-EOF
-		echo -e "\nSet to Aliyun pip repo..."
 	fi
 
 
 	if [[ $SERVER_OS == "Ubuntu" ]] ; then
 		echo $'\n89.208.248.38 rpms.litespeedtech.com\n' >> /etc/hosts
 		echo -e "Mirror server set..."
-		pip config set global.index-url https://pypi.python.org/simple/
-		mkdir /root/.config
-		mkdir /root/.config/pip
-		cat << EOF > /root/.config/pip/pip.conf
-[global]
-index-url = https://pypi.python.org/simple/
-[install]
-trusted-host=pypi.python.org
-EOF
-	echo -e "\nSet to Aliyun pip repo..."
 		if [[ $PROVIDER == "Tencent Cloud" ]] ; then
 		#tencent cloud and ubuntu system
 		echo -e "\n Tencent Cloud detected ... bypass default repository"
@@ -313,7 +284,6 @@ deb-src http://mirrors.aliyun.com/ubuntu/ bionic-proposed main restricted univer
 deb-src http://mirrors.aliyun.com/ubuntu/ bionic-backports main restricted universe multiverse
 EOF
 		DEBIAN_FRONTEND=noninteractive apt update -y
-		pip config set global.index-url https://mirrors.aliyun.com/pypi/simple/
 		fi
 	fi
 fi
@@ -398,19 +368,17 @@ fi
 
 
 install_required() {
-if [[ $SERVER_COUNTRY == "CN" ]] ; then
-	mkdir /root/.config
-	mkdir /root/.config/pip
-	cat << EOF > /root/.config/pip/pip.conf
-[global]
-index-url = https://pypi.tuna.tsinghua.edu.cn/simple
-[install]
-trusted-host=pypi.tuna.tsinghua.edu.cn
-EOF
+
+if [[ $CENTOS_8 == "True" ]] ; then
+  curl https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.0.1/install/CyberPanel8.repo > /etc/yum.repos.d/CyberPanel.repo
+  dnf install zip -y
+elif [[ $CENTOS_8 == "False" ]] ; then
+  curl https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.0.1/install/CyberPanel.repo > /etc/yum.repos.d/CyberPanel.repo
 fi
 
 echo -e "\nInstalling necessary components..."
 if [[ $SERVER_OS == "CentOS" ]] ; then
+
 	timeout 10 rpm --import https://$DOWNLOAD_SERVER/mariadb/RPM-GPG-KEY-MariaDB
 	timeout 10 rpm --import https://$DOWNLOAD_SERVER/litespeed/RPM-GPG-KEY-litespeed
 	timeout 10 rpm --import https://$DOWNLOAD_SERVER/powerdns/FD380FBB-pub.asc
@@ -420,63 +388,60 @@ if [[ $SERVER_OS == "CentOS" ]] ; then
 	timeout 10 rpm --import https://$DOWNLOAD_SERVER/ius/RPM-GPG-KEY-IUS-7
 	timeout 10 rpm --import https://repo.dovecot.org/DOVECOT-REPO-GPG
 	timeout 10 rpm --import https://copr-be.cloud.fedoraproject.org/results/copart/restic/pubkey.gpg
+	timeout 10 rpm --import https://rep8.cyberpanel.net/RPM-GPG-KEY-CP-EP-8
+	timeout 10 rpm --import https://rep8.cyberpanel.net/RPM-GPG-KEY-CP-GF-8
+	timeout 10 rpm --import https://rep8.cyberpanel.net/RPM-GPG-KEY-centosofficialcp
+	curl https://getfedora.org/static/fedora.gpg | gpg --import
+
 	yum clean all
 	yum update -y
 	yum autoremove epel-release -y
 	rm -f /etc/yum.repos.d/epel.repo
 	rm -f /etc/yum.repos.d/epel.repo.rpmsave
-	yum install epel-release -y
 
 	if [[ $CENTOS_8 == "False" ]] ; then
-	  yum install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc python-devel libattr-devel xz-devel gpgme-devel mariadb-devel curl-devel python-pip git socat
+	  yum --enablerepo=CyberPanel install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel gpgme-devel curl-devel git socat openssl-devel MariaDB-shared mariadb-devel yum-utils python36u python36u-pip python36u-devel
+		check_return
+		yum -y groupinstall development
 		check_return
 	fi
 	if [[ $CENTOS_8 == "True" ]] ; then
-		yum install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-devel curl-devel git platform-python-devel tar socat
+		dnf install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-devel curl-devel git platform-python-devel tar socat python3
 		check_return
 		dnf --enablerepo=PowerTools install gpgme-devel -y
 		check_return
 	fi
 
-if [[ $DEV == "ON" ]] ; then
-	  if [[ $CENTOS_8 == "False" ]] ; then
-      yum -y install yum-utils
-      yum -y groupinstall development
-			if [[ $SERVER_COUNTRY == "CN" ]] ; then
-				wget -O /etc/yum.repos.d/ius.repo https://$DOWNLOAD_SERVER/ius/ius.repo
-			else
-      	yum -y install https://repo.ius.io/ius-release-el7.rpm
-			fi
-			yum -y install python36u python36u-pip python36u-devel
-			check_return
-    fi
-    if [[ $CENTOS_8 == "True" ]] ; then
-      dnf install python3 -y
-			check_return
-    fi
-    if [[ $SERVER_OS == "CentOS" ]] ; then
-      pip3.6 install virtualenv==16.7.9
-    else
-      pip3.6 install virtualenv
-    fi
-		check_return
-	fi
+
+  if [[ $SERVER_OS == "CentOS" ]] ; then
+    pip3.6 install virtualenv==16.7.9
+  else
+    pip3.6 install virtualenv
+  fi
+	check_return
+
 fi
 
 if [[ $SERVER_OS == "Ubuntu" ]] ; then
+
 	apt update -y
 	DEBIAN_FRONTEND=noninteractive apt upgrade -y
-	DEBIAN_FRONTEND=noninteracitve apt install -y htop telnet python-mysqldb python-dev libcurl4-gnutls-dev libgnutls28-dev libgcrypt20-dev libattr1 libattr1-dev liblzma-dev libgpgme-dev libmariadbclient-dev libcurl4-gnutls-dev libssl-dev nghttp2 libnghttp2-dev idn2 libidn2-dev libidn2-0-dev librtmp-dev libpsl-dev nettle-dev libgnutls28-dev libldap2-dev libgssapi-krb5-2 libk5crypto3 libkrb5-dev libcomerr2 libldap2-dev python-gpg python python-minimal python-setuptools virtualenv python-dev python-pip git socat vim
+	DEBIAN_FRONTEND=noninteracitve apt install -y htop telnet libcurl4-gnutls-dev libgnutls28-dev libgcrypt20-dev libattr1 libattr1-dev liblzma-dev libgpgme-dev libmariadbclient-dev libcurl4-gnutls-dev libssl-dev nghttp2 libnghttp2-dev idn2 libidn2-dev libidn2-0-dev librtmp-dev libpsl-dev nettle-dev libgnutls28-dev libldap2-dev libgssapi-krb5-2 libk5crypto3 libkrb5-dev libcomerr2 libldap2-dev virtualenv git socat vim unzip zip
 	check_return
-	if [[ $DEV == "ON" ]] ; then
-		DEBIAN_FRONTEND=noninteractive apt install -y python3-pip
-		check_return
-		ln -s /usr/bin/pip3 /usr/bin/pip3.6
-		DEBIAN_FRONTEND=noninteractive apt install -y build-essential libssl-dev libffi-dev python3-dev
-		check_return
-		DEBIAN_FRONTEND=noninteractive apt install -y python3-venv
-		check_return
-	fi
+
+	DEBIAN_FRONTEND=noninteractive apt install -y python3-pip
+	check_return
+	ln -s /usr/bin/pip3 /usr/bin/pip3.6
+	DEBIAN_FRONTEND=noninteractive apt install -y build-essential libssl-dev libffi-dev python3-dev
+	check_return
+	DEBIAN_FRONTEND=noninteractive apt install -y python3-venv
+	check_return
+
+	if [[ $UBUNTU_20 == "True" ]] ; then
+    pip3 install virtualenv==16.7.9
+  fi
+	check_return
+
 fi
 }
 
@@ -600,6 +565,7 @@ fi
 check_OS() {
 echo -e "\nChecking OS..."
 OUTPUT=$(cat /etc/*release)
+
 if  echo $OUTPUT | grep -q "CentOS Linux 7" ; then
 	echo -e "\nDetecting CentOS 7.X...\n"
 	SERVER_OS="CentOS"
@@ -618,12 +584,23 @@ elif echo $OUTPUT | grep -q "Ubuntu 18.04" ; then
 		echo -e "\nUbuntu 18.04 x32 detected...ths only works on x64 system."
 		exit
 	fi
+elif echo $OUTPUT | grep -q "Ubuntu 20.04" ; then
+	if uname -m | grep -q 64 ; then
+	echo -e "\nDetecting Ubuntu 20.04 ...\n"
+	SERVER_OS="Ubuntu"
+	UBUNTU_20="True"
+	else
+		echo -e "\nUbuntu 20 x32 detected...ths only works on x64 system."
+		exit
+	fi
 else
 	cat /etc/*release
 	echo -e "\nUnable to detect your OS...\n"
-	echo -e "\nCyberPanel is supported on Ubuntu 18.04 x86_64, CentOS 7.x, CentOS 8.x and CloudLinux 7.x...\n"
+	echo -e "\nCyberPanel is supported on Ubuntu 18.04 x86_64, Ubuntu 20.04 x86_64, CentOS 7.x, CentOS 8.x and CloudLinux 7.x...\n"
 	exit 1
 fi
+
+
 }
 
 check_root() {
@@ -1041,11 +1018,14 @@ if [[ $debug == "0" ]] ; then
 	exit
 fi
 
+
 if [[ $debug == "1" ]] ; then
-	wget -O requirements.txt https://$GIT_CONTENT_URL/${BRANCH_NAME}/requirments.txt
-	check_return
-	/usr/local/CyberPanel/bin/pip3 install --ignore-installed -r requirements.txt
-	rm -f requirements.txt
+
+  if [[ $UBUNTU_20 == "False" ]] ; then
+    pip3.6 install --ignore-installed /usr/local/pip-packs/*
+  else
+    pip3.6 install --ignore-installed /usr/local/packages/*
+  fi
 
 	if [[ $REDIS_HOSTING == "Yes" ]] ; then
 	  /usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY --postfix $POSTFIX_VARIABLE --powerdns $POWERDNS_VARIABLE --ftp $PUREFTPD_VARIABLE --redis enable
@@ -1068,6 +1048,7 @@ if [[ $REDIS == "ON" ]] ; then
 fi
 	after_install
 fi
+
 }
 
 pip_virtualenv() {
@@ -1084,14 +1065,25 @@ export LC_ALL=en_US.UTF-8
 if [[ $DEV == "ON" ]] ; then
 	#install dev branch
 	#wget https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
-	cd /usr/local/
-	virtualenv -p /usr/bin/python3 CyberPanel
-  source /usr/local/CyberPanel/bin/activate
-  wget -O requirements.txt https://$GIT_CONTENT_URL/${BRANCH_NAME}/requirments.txt
-	check_return
-  pip3.6 install --ignore-installed -r requirements.txt
-	check_return
-	cd -
+  virtualenv -p /usr/bin/python3 /usr/local/CyberPanel
+
+	if [[ $UBUNTU_20 == "False" ]] ; then
+	  source /usr/local/CyberPanel/bin/activate
+    wget -O /usr/local/cyberpanel-pip.zip https://rep.cyberpanel.net/cyberpanel-pip.zip
+    check_return
+    unzip /usr/local/cyberpanel-pip.zip -d /usr/local
+    check_return
+    pip3.6 install --ignore-installed /usr/local/pip-packs/*
+    check_return
+  else
+    . /usr/local/CyberPanel/bin/activate
+    wget -O /usr/local/cyberpanel-pip.zip https://rep.cyberpanel.net/ubuntu-pip.zip
+    check_return
+    unzip /usr/local/cyberpanel-pip.zip -d /usr/local
+    check_return
+    pip3 install --ignore-installed /usr/local/packages/*
+    check_return
+  fi
 fi
 
 if [ -f requirements.txt ] && [ -d cyberpanel ] ; then
@@ -1179,14 +1171,23 @@ trusted-host=pypi.python.org
 EOF
 	fi
 
-virtualenv -p /usr/bin/python3 /usr/local/CyberCP
-source /usr/local/CyberCP/bin/activate
-wget -O requirements.txt https://$GIT_CONTENT_URL/${BRANCH_NAME}/requirments.txt
-check_return
-pip3.6 install --ignore-installed -r requirements.txt
-check_return
-systemctl restart lscpd
 fi
+
+virtualenv -p /usr/bin/python3 /usr/local/CyberCP
+
+if [[ $UBUNTU_20 == "False" ]] ; then
+   source /usr/local/CyberCP/bin/activate
+   check_return
+   pip3 install --ignore-installed /usr/local/pip-packs/*
+   check_return
+else
+  . /usr/local/CyberCP/bin/activate
+  check_return
+  pip3 install --ignore-installed /usr/local/packages/*
+  check_return
+fi
+
+systemctl restart lscpd
 
 for version in $(ls /usr/local/lsws | grep lsphp);
 	do
@@ -1310,7 +1311,11 @@ fi
 		fi
 #fix php.ini &amp; issue
 
-clear
+if [[ $UBUNTU_20 == "True" ]] ; then
+    cp /usr/local/lsws/lsphp73/bin/php /usr/bin
+fi
+
+#clear
 echo "###################################################################"
 echo "                CyberPanel Successfully Installed                  "
 echo "                                                                   "
@@ -1441,6 +1446,8 @@ else
 fi
 }
 
+##START
+
 if [ $# -eq 0 ] ; then
 	echo -e "\nInitializing...\n"
 else
@@ -1539,15 +1546,14 @@ else
 DOWNLOAD_SERVER="cdn.cyberpanel.sh"
 fi
 
+##END
+
 check_OS
 check_virtualization
 check_root
 check_panel
 check_process
 check_provider
-
-
-
 
 
 if [[ $SILENT = "ON" ]] ; then
@@ -1566,3 +1572,8 @@ pip_virtualenv
 system_tweak
 
 main_install
+
+
+### Disable Centos Default Repos
+
+disable_repos

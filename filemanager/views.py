@@ -64,8 +64,12 @@ def downloadFile(request):
     try:
         userID = request.session['userID']
         admin = Administrator.objects.get(pk=userID)
+        from urllib.parse import quote
+        from django.utils.encoding import iri_to_uri
 
-        fileToDownload = request.GET.get('fileToDownload')
+        fileToDownload = request.build_absolute_uri().split('fileToDownload')[1][1:]
+        fileToDownload = iri_to_uri(fileToDownload)
+
         domainName = request.GET.get('domainName')
 
         currentACL = ACLManager.loadedACL(userID)

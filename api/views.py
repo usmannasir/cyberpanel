@@ -622,7 +622,6 @@ def runAWSBackups(request):
     except BaseException as msg:
         logging.writeToFile(str(msg) + ' [API.runAWSBackups]')
 
-
 @csrf_exempt
 def submitUserCreation(request):
     try:

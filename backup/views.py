@@ -327,6 +327,23 @@ def cancelRemoteBackup(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+def backupLogs(request):
+    try:
+        userID = request.session['userID']
+        bm = BackupManager()
+        return bm.backupLogs(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def fetchLogs(request):
+    try:
+        userID = request.session['userID']
+
+        wm = BackupManager()
+        return wm.fetchLogs(userID, json.loads(request.body))
+
+    except KeyError:
+        return redirect(loadLoginPage)
 
 @csrf_exempt
 def localInitiate(request):

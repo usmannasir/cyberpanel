@@ -73,16 +73,6 @@ function connect() {
     if (remember) {
         store(options)
     }
-    // if (check()) {
-    //     openTerminal(options)
-    // } else {
-    //     for (var key in validResult) {
-    //         if (!validResult[key]) {
-    //             alert(errorMsg[key]);
-    //             break;
-    //         }
-    //     }
-    // }
     openTerminal(options)
 }
 

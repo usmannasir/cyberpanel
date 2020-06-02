@@ -14,11 +14,13 @@ import random
 import string
 
 VERSION = '2.0'
-BUILD = 0
+BUILD = 1
 
 class Upgrade:
     logPath = "/usr/local/lscp/logs/upgradeLog"
     cdn = 'cdn.cyberpanel.sh'
+    installedOutput = ''
+    CentOSPath = '/etc/redhat-release'
 
     @staticmethod
     def stdOut(message, do_exit=0):
@@ -122,7 +124,6 @@ class Upgrade:
 
         except BaseException as msg:
             Upgrade.stdOut(str(msg) + " [mountTemp]", 0)
-
 
     @staticmethod
     def dockerUsers():
@@ -409,25 +410,6 @@ class Upgrade:
             os._exit(0)
 
     @staticmethod
-    def fileManager():
-        ## Copy File manager files
-
-        command = "rm -rf /usr/local/lsws/Example/html/FileManager"
-        Upgrade.executioner(command, 'Remove old Filemanager', 0)
-
-        if os.path.exists('/usr/local/lsws/bin/openlitespeed'):
-            command = "mv /usr/local/CyberCP/install/FileManager /usr/local/lsws/Example/html"
-            Upgrade.executioner(command, 'Setup new Filemanager', 0)
-        else:
-            command = "mv /usr/local/CyberCP/install/FileManager /usr/local/lsws"
-            Upgrade.executioner(command, 'Setup new Filemanager', 0)
-
-        ##
-
-        command = "chmod -R 777 /usr/local/lsws/Example/html/FileManager"
-        Upgrade.executioner(command, 'Filemanager permissions change', 0)
-
-    @staticmethod
     def setupCLI():
         try:
 
@@ -594,6 +576,11 @@ class Upgrade:
 
             try:
                 cursor.execute("ALTER TABLE websiteFunctions_websites MODIFY externalApp varchar(30)")
+            except:
+                pass
+
+            try:
+                cursor.execute("ALTER TABLE websiteFunctions_backups MODIFY fileName varchar(200)")
             except:
                 pass
 
@@ -1251,6 +1238,37 @@ class Upgrade:
             except:
                 pass
 
+            query = """CREATE TABLE `websiteFunctions_backupjob` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `logFile` varchar(1000) NOT NULL,
+  `ipAddress` varchar(50) NOT NULL,
+  `port` varchar(15) NOT NULL,
+  `jobFailedSites` int(11) NOT NULL,
+  `jobSuccessSites` int(11) NOT NULL,
+  `location` int(11) NOT NULL,
+  PRIMARY KEY (`id`)
+)"""
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+
+            query = """CREATE TABLE `websiteFunctions_backupjoblogs` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `message` longtext NOT NULL,
+  `owner_id` int(11) NOT NULL,
+  `status` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `websiteFunctions_bac_owner_id_af3d15f9_fk_websiteFu` (`owner_id`),
+  CONSTRAINT `websiteFunctions_bac_owner_id_af3d15f9_fk_websiteFu` FOREIGN KEY (`owner_id`) REFERENCES `websiteFunctions_backupjob` (`id`)
+)"""
+
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
             try:
                 connection.close()
             except:
@@ -1276,230 +1294,120 @@ class Upgrade:
             pass
 
     @staticmethod
-    def installGit():
-        try:
-            if os.path.exists("/etc/lsb-release"):
-                command = 'apt -y install git'
-                Upgrade.executioner(command, 'installGit', 0)
-            else:
-                command = 'sudo yum -y install http://repo.iotti.biz/CentOS/7/noarch/lux-release-7-1.noarch.rpm'
-                Upgrade.executioner(command, 'installGit', 0)
-
-                command = 'sudo yum install git -y'
-                Upgrade.executioner(command, 'installGit', 0)
-
-        except BaseException as msg:
-            pass
-
-    @staticmethod
     def downloadAndUpgrade(versionNumbring, branch):
         try:
             ## Download latest version.
-
-            Upgrade.installGit()
 
             ## Backup settings file.
 
             Upgrade.stdOut("Backing up settings file.")
 
-            shutil.copy("/usr/local/CyberCP/CyberCP/settings.py", "/usr/local/settings.py")
+            ## CyberPanel DB Creds
+            dbName = settings.DATABASES['default']['NAME']
+            dbUser = settings.DATABASES['default']['USER']
+            password = settings.DATABASES['default']['PASSWORD']
+
+            ## Root DB Creds
+
+            rootdbName = settings.DATABASES['rootdb']['NAME']
+            rootdbdbUser = settings.DATABASES['rootdb']['USER']
+            rootdbpassword = settings.DATABASES['rootdb']['PASSWORD']
+
+            ## Complete db string
+
+            completDBString = """\nDATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': '%s',
+        'USER': '%s',
+        'PASSWORD': '%s',
+        'HOST': 'localhost',
+        'PORT':''
+    },
+    'rootdb': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': '%s',
+        'USER': '%s',
+        'PASSWORD': '%s',
+        'HOST': 'localhost',
+        'PORT': '',
+    },
+}\n""" % (dbName, dbUser, password, rootdbName, rootdbdbUser, rootdbpassword)
+
+            settingsFile = '/usr/local/CyberCP/CyberCP/settings.py'
 
             Upgrade.stdOut("Settings file backed up.")
 
-            ## Extract Latest files
+            ## Check git branch status
 
-            os.chdir('/usr/local')
+            os.chdir('/usr/local/CyberCP')
 
-            if os.path.exists('cyberpanel'):
-                shutil.rmtree('cyberpanel')
+            command = 'git config --global user.email "support@cyberpanel.met"'
+            Upgrade.executioner(command, command, 1)
 
-            ### check if imunify exists
+            command = 'git config --global user.name "CyberPanel"'
+            Upgrade.executioner(command, command, 1)
 
-            imunifyPublic = '/usr/local/CyberCP/public/imunify'
-            imunifyPublicBackup = '/usr/local'
+            command = 'git status'
+            currentBranch = subprocess.check_output(shlex.split(command)).decode()
 
-            try:
+            if currentBranch.find('On branch %s' % (branch)) > -1:
 
-                if os.path.exists(imunifyPublic):
-                    shutil.move(imunifyPublic, imunifyPublicBackup)
+                command = 'git stash'
+                Upgrade.executioner(command, command, 1)
 
-            except:
-                pass
+                command = 'git pull'
+                Upgrade.executioner(command, command, 1)
 
-            if os.path.exists('CyberCP'):
-                shutil.rmtree('CyberCP')
+            elif currentBranch.find('not a git repository') > -1:
 
-            command = 'git clone https://github.com/usmannasir/cyberpanel'
-            Upgrade.executioner(command, 'Download CyberPanel', 1)
+                os.chdir('/usr/local')
 
-            shutil.move('cyberpanel', 'CyberCP')
+                command = 'git clone https://github.com/usmannasir/cyberpanel'
+                Upgrade.executioner(command, 'Download CyberPanel', 1)
 
-            if branch != 'stable':
-                os.chdir('CyberCP')
+                if os.path.exists('CyberCP'):
+                    shutil.rmtree('CyberCP')
+
+                shutil.move('cyberpanel', 'CyberCP')
+
+            else:
+
+                command = 'git fetch'
+                Upgrade.executioner(command, command, 1)
+
+                command = 'git stash'
+                Upgrade.executioner(command, command, 1)
+
                 command = 'git checkout %s' % (branch)
                 Upgrade.executioner(command, command, 1)
-                os.chdir('/usr/local')
+
+                command = 'git pull'
+                Upgrade.executioner(command, command, 1)
+
 
             ## Copy settings file
 
-            data = open("/usr/local/settings.py", 'r').readlines()
+            settingsData = open(settingsFile, 'r').readlines()
 
-            csrfCheck = 1
-            for items in data:
-                if items.find('CsrfViewMiddleware') > -1:
-                    csrfCheck = 0
+            DATABASESCHECK = 0
+            writeToFile = open(settingsFile, 'w')
 
-            pluginCheck = 1
-            for items in data:
-                if items.find('pluginHolder') > -1:
-                    pluginCheck = 0
+            for items in settingsData:
+                if items.find('DATABASES = {') > -1:
+                    DATABASESCHECK = 1
 
-            emailMarketing = 1
-            for items in data:
-                if items.find('emailMarketing') > -1:
-                    emailMarketing = 0
+                if DATABASESCHECK == 0:
+                    writeToFile.write(items)
 
-            emailPremium = 1
-            for items in data:
-                if items.find('emailPremium') > -1:
-                    emailPremium = 0
-
-            s3Backups = 1
-            for items in data:
-                if items.find('s3Backups') > -1:
-                    s3Backups = 0
-
-            dockerManager = 1
-            for items in data:
-                if items.find('dockerManager') > -1:
-                    dockerManager = 0
-
-            containerization = 1
-            for items in data:
-                if items.find('containerization') > -1:
-                    containerization = 0
-
-            manageServices = 1
-            for items in data:
-                if items.find('manageServices') > -1:
-                    manageServices = 0
-
-            CLManager = 1
-            for items in data:
-                if items.find('CLManager') > -1:
-                    CLManager = 0
-
-            IncBackups = 1
-            for items in data:
-                if items.find('IncBackups') > -1:
-                    IncBackups = 0
-
-            WebTerminal = 1
-            for items in data:
-                if items.find('WebTerminal') > -1:
-                    WebTerminal = 0
-
-            SESSION_COOKIE_SECURE = 0
-
-            for items in data:
-                if items.find('SESSION_COOKIE_SECURE') > -1:
-                    SESSION_COOKIE_SECURE = 0
-
-            DATABASE_ROUTERS = 1
-
-            for items in data:
-                if items.find('DATABASE_ROUTERS') > -1:
-                    DATABASE_ROUTERS = 0
-
-            Upgrade.stdOut('Restoring settings file!')
-
-            writeToFile = open("/usr/local/CyberCP/CyberCP/settings.py", 'w')
-
-            for items in data:
-                if items.find('csf') > -1 or items.find('SESSION_COOKIE_SECURE') > -1 or items.find('CSRF_COOKIE_SECURE') > -1:
-                    continue
-                if items.find("CommonMiddleware") > -1:
-                    if csrfCheck == 1:
-                        writeToFile.writelines("    'django.middleware.csrf.CsrfViewMiddleware',\n")
-
-                if items.find('DATABASE_ROUTERS') > -1:
-                    writeToFile.writelines(items)
-                    if SESSION_COOKIE_SECURE == 1:
-                        con = """SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
-"""
-                        writeToFile.writelines(con)
-
-                elif items.find("'filemanager',") > -1:
-                    writeToFile.writelines(items)
-                    if pluginCheck == 1:
-                        writeToFile.writelines("    'pluginHolder',\n")
-                    if emailMarketing == 1:
-                        writeToFile.writelines("    'emailMarketing',\n")
-                    if emailPremium == 1:
-                        writeToFile.writelines("    'emailPremium',\n")
-                    if s3Backups == 1:
-                        writeToFile.writelines("    's3Backups',\n")
-                    if dockerManager == 1:
-                        writeToFile.writelines("    'dockerManager',\n")
-
-                    if containerization == 1:
-                        writeToFile.writelines("    'containerization',\n")
-
-                    if manageServices == 1:
-                        writeToFile.writelines("    'manageServices',\n")
-
-
-                    if CLManager == 1:
-                        writeToFile.writelines("    'CLManager',\n")
-
-                    if IncBackups == 1:
-                        writeToFile.writelines("    'IncBackups',\n")
-
-                    if WebTerminal == 1:
-                        writeToFile.writelines("    'WebTerminal',\n")
-
-                else:
-                    writeToFile.writelines(items)
-
-            ##
-
-            DATA_UPLOAD_MAX_MEMORY_SIZE = 1
-            for items in data:
-                if items.find('DATA_UPLOAD_MAX_MEMORY_SIZE') > -1:
-                    DATA_UPLOAD_MAX_MEMORY_SIZE = 0
-                    writeToFile.writelines("\nDATA_UPLOAD_MAX_MEMORY_SIZE = 52428800\n")
-
-            if DATA_UPLOAD_MAX_MEMORY_SIZE == 1:
-                writeToFile.writelines("\nDATA_UPLOAD_MAX_MEMORY_SIZE = 52428800\n")
-
-            ##
-
-            MEDIA_URL = 1
-            for items in data:
-                if items.find('MEDIA_URL') > -1:
-                    MEDIA_URL = 0
-
-            if MEDIA_URL == 1:
-                writeToFile.writelines("MEDIA_URL = '/home/cyberpanel/media/'\n")
-                writeToFile.writelines('MEDIA_ROOT = MEDIA_URL\n')
-
-
-            if items.find('MEDIA_ROOT = MEDIA_URLDATA_UPLOAD_MAX_MEMORY_SIZE') > -1:
-                writeToFile.writelines('MEDIA_ROOT = MEDIA_URL\n')
-
-
-
-            ##
-
-            if DATABASE_ROUTERS == 1:
-                writeToFile.writelines("\nDATABASE_ROUTERS = ['backup.backupRouter.backupRouter']\n")
+                if items.find('DATABASE_ROUTERS = [') > -1:
+                    DATABASESCHECK = 0
+                    writeToFile.write(completDBString)
+                    writeToFile.write(items)
 
             writeToFile.close()
 
             Upgrade.stdOut('Settings file restored!')
-
-            ## Move static files
 
             Upgrade.staticContent()
 
@@ -1526,13 +1434,13 @@ CSRF_COOKIE_SECURE = True
             if os.path.exists(lscpdPath):
                 os.remove(lscpdPath)
 
-            command = 'cp -f /usr/local/CyberCP/lscpd-0.2.4 /usr/local/lscp/bin/lscpd-0.2.4'
+            command = 'cp -f /usr/local/CyberCP/lscpd-0.2.5 /usr/local/lscp/bin/lscpd-0.2.5'
             Upgrade.executioner(command, command, 0)
 
             command = 'rm -f /usr/local/lscp/bin/lscpd'
             Upgrade.executioner(command, command, 0)
 
-            command = 'mv /usr/local/lscp/bin/lscpd-0.2.4 /usr/local/lscp/bin/lscpd'
+            command = 'mv /usr/local/lscp/bin/lscpd-0.2.5 /usr/local/lscp/bin/lscpd'
             Upgrade.executioner(command, command, 0)
 
             command = 'chmod 755 %s' % (lscpdPath)
@@ -1724,18 +1632,22 @@ CSRF_COOKIE_SECURE = True
     @staticmethod
     def installPHP73():
         try:
-            command = 'yum install -y lsphp73 lsphp73-json lsphp73-xmlrpc lsphp73-xml lsphp73-tidy lsphp73-soap lsphp73-snmp ' \
-                      'lsphp73-recode lsphp73-pspell lsphp73-process lsphp73-pgsql lsphp73-pear lsphp73-pdo lsphp73-opcache ' \
-                      'lsphp73-odbc lsphp73-mysqlnd lsphp73-mcrypt lsphp73-mbstring lsphp73-ldap lsphp73-intl lsphp73-imap ' \
-                      'lsphp73-gmp lsphp73-gd lsphp73-enchant lsphp73-dba  lsphp73-common  lsphp73-bcmath'
-            Upgrade.executioner(command, 'Install PHP 73, 0')
 
-            command = 'yum install -y lsphp74 lsphp74-json lsphp74-xmlrpc lsphp74-xml lsphp74-tidy lsphp74-soap lsphp74-snmp ' \
-                      'lsphp74-recode lsphp74-pspell lsphp74-process lsphp74-pgsql lsphp74-pear lsphp74-pdo lsphp74-opcache ' \
-                      'lsphp74-odbc lsphp74-mysqlnd lsphp74-mcrypt lsphp74-mbstring lsphp74-ldap lsphp74-intl lsphp74-imap ' \
-                      'lsphp74-gmp lsphp74-gd lsphp74-enchant lsphp74-dba lsphp74-common  lsphp74-bcmath'
+            if Upgrade.installedOutput.find('lsphp73') == -1:
+                command = 'yum install -y lsphp73 lsphp73-json lsphp73-xmlrpc lsphp73-xml lsphp73-tidy lsphp73-soap lsphp73-snmp ' \
+                          'lsphp73-recode lsphp73-pspell lsphp73-process lsphp73-pgsql lsphp73-pear lsphp73-pdo lsphp73-opcache ' \
+                          'lsphp73-odbc lsphp73-mysqlnd lsphp73-mcrypt lsphp73-mbstring lsphp73-ldap lsphp73-intl lsphp73-imap ' \
+                          'lsphp73-gmp lsphp73-gd lsphp73-enchant lsphp73-dba  lsphp73-common  lsphp73-bcmath'
+                Upgrade.executioner(command, 'Install PHP 73, 0')
 
-            Upgrade.executioner(command, 'Install PHP 74, 0')
+            if Upgrade.installedOutput.find('lsphp74') == -1:
+                command = 'yum install -y lsphp74 lsphp74-json lsphp74-xmlrpc lsphp74-xml lsphp74-tidy lsphp74-soap lsphp74-snmp ' \
+                          'lsphp74-recode lsphp74-pspell lsphp74-process lsphp74-pgsql lsphp74-pear lsphp74-pdo lsphp74-opcache ' \
+                          'lsphp74-odbc lsphp74-mysqlnd lsphp74-mcrypt lsphp74-mbstring lsphp74-ldap lsphp74-intl lsphp74-imap ' \
+                          'lsphp74-gmp lsphp74-gd lsphp74-enchant lsphp74-dba lsphp74-common  lsphp74-bcmath'
+
+                Upgrade.executioner(command, 'Install PHP 74, 0')
+
         except:
             command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install ' \
                       'lsphp7? lsphp7?-common lsphp7?-curl lsphp7?-dev lsphp7?-imap lsphp7?-intl lsphp7?-json ' \
@@ -1758,51 +1670,34 @@ CSRF_COOKIE_SECURE = True
         Upgrade.executioner(command, 0)
 
     @staticmethod
-    def upgradePDNS():
-        command = "yum install epel-release && curl -o /etc/yum.repos.d/powerdns-auth-42.repo https://repo.powerdns.com/repo-files/centos-auth-42.repo && yum --enablerepo=epel install pdns"
-        subprocess.call(command, shell=True)
-
-    @staticmethod
     def upgradeDovecot():
         try:
             Upgrade.stdOut("Upgrading Dovecot..")
             CentOSPath = '/etc/redhat-release'
 
             if os.path.exists(CentOSPath):
-                path = '/etc/yum.repos.d/dovecot.repo'
-                content = """[dovecot-2.3-latest]
-name=Dovecot 2.3 CentOS $releasever - $basearch
-baseurl=http://repo.dovecot.org/ce-2.3-latest/centos/$releasever/RPMS/$basearch
-gpgkey=https://repo.dovecot.org/DOVECOT-REPO-GPG
-gpgcheck=1
-enabled=1"""
-                writeToFile = open(path, 'w')
-                writeToFile.write(content)
-                writeToFile.close()
 
-                command = "yum makecache -y"
-                Upgrade.executioner(command, 0)
+                if Upgrade.installedOutput.find('2:2.3.10-2') == -1:
+                    command = "yum makecache -y"
+                    Upgrade.executioner(command, 0)
 
-                command = "yum update -y"
-                Upgrade.executioner(command, 0)
+                    command = "yum update -y"
+                    Upgrade.executioner(command, 0)
 
-                ## Remove Default Password Scheme
+                    ## Remove Default Password Scheme
 
-                path = '/etc/dovecot/dovecot-sql.conf.ext'
+                    path = '/etc/dovecot/dovecot-sql.conf.ext'
 
-                data = open(path, 'r').readlines()
+                    data = open(path, 'r').readlines()
 
-                updatePasswords = 1
+                    writeToFile = open(path, 'w')
+                    for items in data:
+                        if items.find('default_pass_scheme') > -1:
+                            continue
+                        else:
+                            writeToFile.writelines(items)
 
-                writeToFile = open(path, 'w')
-                for items in data:
-                    if items.find('default_pass_scheme') > -1:
-                        updatePasswords = 0
-                        continue
-                    else:
-                        writeToFile.writelines(items)
-
-                writeToFile.close()
+                    writeToFile.close()
 
                 import django
                 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
@@ -1821,101 +1716,80 @@ enabled=1"""
                 Upgrade.executioner(command, 0)
 
 
-
                 ### Postfix Upgrade
 
-                try:
-                    shutil.copy('/etc/postfix/master.cf', '/etc/master.cf')
-                except:
-                    pass
+                if Upgrade.installedOutput.find('2:3.4.7-1.gf.el7') == -1:
+                    try:
+                        shutil.copy('/etc/postfix/master.cf', '/etc/master.cf')
+                    except:
+                        pass
 
-                try:
-                    shutil.copy('/etc/postfix/main.cf', '/etc/main.cf')
-                except:
-                    pass
+                    try:
+                        shutil.copy('/etc/postfix/main.cf', '/etc/main.cf')
+                    except:
+                        pass
 
-                gf = '/etc/yum.repos.d/gf.repo'
 
-                gfContent = """[gf]
-name=Ghettoforge packages that won't overwrite core distro packages.
-mirrorlist=http://mirrorlist.ghettoforge.org/el/7/gf/$basearch/mirrorlist
-enabled=1
-gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-gf.el7
-failovermethod=priority
 
-[gf-plus]
-name=Ghettoforge packages that will overwrite core distro packages.
-mirrorlist=http://mirrorlist.ghettoforge.org/el/7/plus/$basearch/mirrorlist
-# Please read http://ghettoforge.org/index.php/Usage *before* enabling this repository!
-enabled=1
-gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-gf.el7
-failovermethod=priority
-"""
-                writeToFile = open(gf, 'w')
-                writeToFile.write(gfContent)
-                writeToFile.close()
+                    command = 'yum remove postfix -y'
+                    Upgrade.executioner(command, 0)
 
-                command = 'yum remove postfix -y'
-                Upgrade.executioner(command, 0)
+                    command = 'yum clean all'
+                    Upgrade.executioner(command, 0)
 
-                command = 'rpm -Uvh http://mirror.ghettoforge.org/distributions/gf/gf-release-latest.gf.el7.noarch.rpm'
-                Upgrade.executioner(command, 0)
+                    command = 'yum makecache fast'
+                    Upgrade.executioner(command, 0)
 
-                command = 'yum clean all'
-                Upgrade.executioner(command, 0)
+                    command = 'yum install --enablerepo=CyberPanel -y postfix3 postfix3-mysql'
+                    Upgrade.executioner(command, 0)
 
-                command = 'yum makecache fast'
-                Upgrade.executioner(command, 0)
+                    try:
+                        shutil.move('/etc/master.cf', '/etc/postfix/master.cf')
+                    except:
+                        pass
+                    try:
+                        shutil.move('/etc/main.cf', '/etc/postfix/main.cf')
+                    except:
+                        pass
 
-                command = 'yum install -y postfix3 postfix3-mysql'
-                Upgrade.executioner(command, 0)
-
-                try:
-                    shutil.move('/etc/master.cf', '/etc/postfix/master.cf')
-                except:
-                    pass
-                try:
-                    shutil.move('/etc/main.cf', '/etc/postfix/main.cf')
-                except:
-                    pass
-
-                command = 'systemctl restart postfix'
-                Upgrade.executioner(command, 0)
+                    command = 'systemctl restart postfix'
+                    Upgrade.executioner(command, 0)
 
             else:
-                command = 'curl https://repo.dovecot.org/DOVECOT-REPO-GPG | gpg --import'
-                subprocess.call(command, shell=True)
 
-                command = 'gpg --export ED409DA1 > /etc/apt/trusted.gpg.d/dovecot.gpg'
-                subprocess.call(command, shell=True)
+                if Upgrade.installedOutput.find('dovecot-mysql/bionic,now 2:2.3.10-2') == -1:
 
-                debPath = '/etc/apt/sources.list.d/dovecot.list'
-                writeToFile = open(debPath, 'w')
-                writeToFile.write('deb https://repo.dovecot.org/ce-2.3-latest/ubuntu/bionic bionic main\n')
-                writeToFile.close()
-
-                try:
-                    command = 'apt update -y'
-                    Upgrade.executioner(command, 0)
-                except:
-                    pass
-
-                try:
-                    command = 'DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical sudo apt-get -q -y -o "Dpkg::Options::=--force-confdef" -o "Dpkg::Options::=--force-confold" --only-upgrade install dovecot-mysql -y'
+                    command = 'curl https://repo.dovecot.org/DOVECOT-REPO-GPG | gpg --import'
                     subprocess.call(command, shell=True)
 
-                    command = 'dpkg --configure -a'
-                    Upgrade.executioner(command, 0)
-
-                    command = 'apt --fix-broken install -y'
-                    Upgrade.executioner(command, 0)
-
-                    command = 'DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical sudo apt-get -q -y -o "Dpkg::Options::=--force-confdef" -o "Dpkg::Options::=--force-confold" --only-upgrade install dovecot-mysql -y'
+                    command = 'gpg --export ED409DA1 > /etc/apt/trusted.gpg.d/dovecot.gpg'
                     subprocess.call(command, shell=True)
-                except:
-                    pass
+
+                    debPath = '/etc/apt/sources.list.d/dovecot.list'
+                    writeToFile = open(debPath, 'w')
+                    writeToFile.write('deb https://repo.dovecot.org/ce-2.3-latest/ubuntu/bionic bionic main\n')
+                    writeToFile.close()
+
+                    try:
+                        command = 'apt update -y'
+                        Upgrade.executioner(command, 0)
+                    except:
+                        pass
+
+                    try:
+                        command = 'DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical sudo apt-get -q -y -o "Dpkg::Options::=--force-confdef" -o "Dpkg::Options::=--force-confold" --only-upgrade install dovecot-mysql -y'
+                        subprocess.call(command, shell=True)
+
+                        command = 'dpkg --configure -a'
+                        Upgrade.executioner(command, 0)
+
+                        command = 'apt --fix-broken install -y'
+                        Upgrade.executioner(command, 0)
+
+                        command = 'DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical sudo apt-get -q -y -o "Dpkg::Options::=--force-confdef" -o "Dpkg::Options::=--force-confold" --only-upgrade install dovecot-mysql -y'
+                        subprocess.call(command, shell=True)
+                    except:
+                        pass
 
                 ## Remove Default Password Scheme
 
@@ -1989,18 +1863,17 @@ failovermethod=priority
         CentOSPath = '/etc/redhat-release'
 
         if os.path.exists(CentOSPath):
-            command = 'yum-config-manager --add-repo https://copr.fedorainfracloud.org/coprs/copart/restic/repo/epel-7/copart-restic-epel-7.repo'
-            Upgrade.executioner(command, 'Add restic repo.')
-
-            command = 'yum install restic -y'
-            Upgrade.executioner(command, 'Install Restic')
+            if Upgrade.installedOutput.find('restic') == -1:
+                command = 'yum install restic -y'
+                Upgrade.executioner(command, 'Install Restic')
         else:
-            command = 'apt-get update -y'
-            Upgrade.executioner(command, 'Install Restic')
 
-            command = 'apt-get install restic -y'
-            Upgrade.executioner(command, 'Install Restic')
+            if Upgrade.installedOutput.find('restic/bionic,now 0.8') == -1:
+                command = 'apt-get update -y'
+                Upgrade.executioner(command, 'Install Restic')
 
+                command = 'apt-get install restic -y'
+                Upgrade.executioner(command, 'Install Restic')
 
     @staticmethod
     def UpdateMaxSSLCons():
@@ -2138,6 +2011,14 @@ vmail
         # Upgrade.stdOut("Upgrades are currently disabled")
         # return 0
 
+        if os.path.exists(Upgrade.CentOSPath):
+            command = 'yum list installed'
+            Upgrade.installedOutput = subprocess.check_output(shlex.split(command)).decode()
+        else:
+            command = 'apt list'
+            Upgrade.installedOutput = subprocess.check_output(shlex.split(command)).decode()
+
+
         command = 'systemctl stop cpssh'
         Upgrade.executioner(command, 'fix csf if there', 0)
 
@@ -2145,6 +2026,10 @@ vmail
         ## Add LSPHP7.4 TO LSWS Ent configs
 
         if not os.path.exists('/usr/local/lsws/bin/openlitespeed'):
+
+            if os.path.exists('httpd_config.xml'):
+                os.remove('httpd_config.xml')
+
             command = 'wget https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/install/litespeed/httpd_config.xml'
             Upgrade.executioner(command, command, 0)
             #os.remove('/usr/local/lsws/conf/httpd_config.xml')
@@ -2220,17 +2105,8 @@ vmail
         time.sleep(3)
 
         ## Upgrade version
+
         Upgrade.fixPermissions()
-
-        ### get back imunify
-
-        imunifyPublicBackup = '/usr/local'
-        imunifyPublicBackup = '%s/imunify' % (imunifyPublicBackup)
-
-        try:
-            shutil.move(imunifyPublicBackup, '/usr/local/CyberCP/public')
-        except:
-            pass
 
         ##
 
@@ -2264,6 +2140,14 @@ vmail
         Upgrade.AutoUpgradeAcme()
         Upgrade.installCLScripts()
         Upgrade.runSomeImportantBash()
+
+        ## Move static files
+
+        imunifyPath = '/usr/local/CyberCP/public/imunify'
+
+        if os.path.exists(imunifyPath):
+            command = "yum reinstall imunify360-firewall-generic -y"
+            Upgrade.executioner(command, command, 1)
 
         Upgrade.stdOut("Upgrade Completed.")
 

@@ -832,6 +832,11 @@ def installStatusSpamAssassin(request):
                     output = ProcessUtilities.outputExecutioner(execPath, 'root')
 
                     if output.find("1,None") > -1:
+
+                        import os
+                        if os.path.exists(mailUtilities.mailScannerInstallLogPath):
+                            os.remove(mailUtilities.mailScannerInstallLogPath)
+
                         final_json = json.dumps({
                             'error_message': "None",
                             'requestStatus': installStatus,
@@ -1167,3 +1172,110 @@ def delete(request):
         dic = {'status': 0, 'error_message': str(msg)}
         json_data = json.dumps(dic)
         return HttpResponse(json_data)
+
+## MailScanner
+
+def MailScanner(request):
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
+
+        checkIfMailScannerInstalled = 0
+
+        ipFile = "/etc/cyberpanel/machineIP"
+        f = open(ipFile)
+        ipData = f.read()
+        ipAddress = ipData.split('\n', 1)[0]
+
+        if mailUtilities.checkIfMailScannerInstalled() == 1:
+            checkIfMailScannerInstalled = 1
+
+        return render(request, 'emailPremium/MailScanner.html',{'checkIfMailScannerInstalled': checkIfMailScannerInstalled, 'ipAddress': ipAddress})
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def installMailScanner(request):
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
+        try:
+
+            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
+            execPath = execPath + " installMailScanner"
+            ProcessUtilities.popenExecutioner(execPath)
+
+            final_json = json.dumps({'status': 1, 'error_message': "None"})
+            return HttpResponse(final_json)
+        except BaseException as msg:
+            final_dic = {'status': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+    except KeyError:
+        final_dic = {'status': 0, 'error_message': "Not Logged In, please refresh the page or login again."}
+        final_json = json.dumps(final_dic)
+        return HttpResponse(final_json)
+
+def installStatusMailScanner(request):
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
+
+        try:
+            if request.method == 'POST':
+
+                command = "sudo cat " + mailUtilities.mailScannerInstallLogPath
+                installStatus = ProcessUtilities.outputExecutioner(command)
+
+                if installStatus.find("[200]")>-1:
+
+                    final_json = json.dumps({
+                        'error_message': "None",
+                        'requestStatus': installStatus,
+                        'abort': 1,
+                        'installed': 1,
+                    })
+                    return HttpResponse(final_json)
+
+                elif installStatus.find("[404]") > -1:
+
+                    final_json = json.dumps({
+                                             'abort':1,
+                                             'installed':0,
+                                             'error_message': "None",
+                                             'requestStatus': installStatus,
+                                             })
+                    return HttpResponse(final_json)
+
+                else:
+                    final_json = json.dumps({
+                                             'abort':0,
+                                             'error_message': "None",
+                                             'requestStatus': installStatus,
+                                             })
+                    return HttpResponse(final_json)
+
+
+        except BaseException as msg:
+            final_dic = {'abort':1,'installed':0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+    except KeyError:
+        final_dic = {'abort':1,'installed':0, 'error_message': "Not Logged In, please refresh the page or login again."}
+        final_json = json.dumps(final_dic)
+        return HttpResponse(final_json)

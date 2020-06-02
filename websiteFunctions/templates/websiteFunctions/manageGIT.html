@@ -189,8 +189,7 @@
                                                         <option>Weekly</option>
                                                     </select>
                                                 </div>
-                                                <div class="current-pack ng-binding">Currently: {$ autoCommitCurrent
-                                                    $}
+                                                <div class="current-pack ng-binding">Currently: {$ autoCommitCurrent $}
                                                 </div>
                                             </div>
 
@@ -234,10 +233,9 @@
                                             <div class="form-group">
                                                 <label class="col-sm-3 control-label">{% trans "Commands" %}</label>
                                                 <div class="col-sm-9">
-                                                    <textarea ng-model="$parent.commands"
-                                                              placeholder="Add Commands to run after every commit, each line must contain one command only."
+                                                    <textarea id="currentCommands"
                                                               rows="4"
-                                                              class="form-control">{$ currentCommands $}</textarea>
+                                                              class="form-control"></textarea>
                                                 </div>
                                             </div>
 

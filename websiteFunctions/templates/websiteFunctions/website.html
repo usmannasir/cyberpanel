@@ -303,7 +303,7 @@
                                     </div>
 
                                     <div ng-hide="installationDetailsForm" class="form-group">
-                                        <label class="col-sm-3 control-label">{% trans "Path" %}</label>
+                                        <label class="col-sm-3 control-label">{% trans "Path" %}: /home/{{ domain }}/ </label>
                                         <div class="col-sm-6">
                                             <input placeholder="{% trans 'This path is relative to: ' %}{$ masterDomain $}. {% trans 'Leave empty to set default.' %}"
                                                    type="text" class="form-control" ng-model="docRootPath" required>

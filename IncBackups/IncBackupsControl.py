@@ -118,6 +118,24 @@ class IncJobs(multi.Thread):
         except BaseException as msg:
             logging.writeToFile(str(msg))
 
+    ## Find restore path
+
+    def findRestorePath(self):
+
+        if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8 \
+                or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
+            self.restoreTarget = '/'
+            return 1
+        else:
+            if self.jobid.type[:8] == 'database':
+                self.restoreTarget = '/home/cyberpanel/'
+            elif self.jobid.type[:4] == 'data':
+                self.restoreTarget = '/home/'
+            elif self.jobid.type[:5] == 'email':
+                self.restoreTarget = '/home/vmail/'
+            elif self.jobid.type[:4] == 'meta':
+                self.restoreTarget = '/home/%s/' % (self.website)
+
     ####
 
     def getAWSData(self):
@@ -159,9 +177,9 @@ class IncJobs(multi.Thread):
 
                     key, secret = self.getAWSData()
 
-                    command = 'export RESTIC_PASSWORD=%s AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s  && restic -r s3:s3.amazonaws.com/%s restore %s --target /' % (
+                    command = 'export RESTIC_PASSWORD=%s AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s  && restic -r s3:s3.amazonaws.com/%s restore %s --target %s' % (
                         self.passwordFile,
-                        key, secret, self.website, snapshotID)
+                        key, secret, self.website, snapshotID, self.restoreTarget)
 
                     result = ProcessUtilities.outputExecutioner(command)
 
@@ -173,8 +191,8 @@ class IncJobs(multi.Thread):
 
                     key, secret = self.getAWSData()
 
-                    command = 'export AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s  && restic -r s3:s3.amazonaws.com/%s restore %s --password-file %s --target /' % (
-                        key, secret, self.website, snapshotID, self.passwordFile)
+                    command = 'export AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s  && restic -r s3:s3.amazonaws.com/%s restore %s --password-file %s --target %s' % (
+                        key, secret, self.website, snapshotID, self.passwordFile, self.restoreTarget)
 
                     result = ProcessUtilities.outputExecutioner(command)
 
@@ -213,8 +231,8 @@ class IncJobs(multi.Thread):
             return 1
         else:
             repoLocation = '/home/%s/incbackup' % (self.website)
-            command = 'restic -r %s restore %s --target / --password-file %s' % (
-                repoLocation, self.jobid.snapshotid, self.passwordFile)
+            command = 'restic -r %s restore %s --target %s --password-file %s' % (
+                repoLocation, self.jobid.snapshotid, self.restoreTarget, self.passwordFile)
 
             result = ProcessUtilities.outputExecutioner(command)
 
@@ -250,17 +268,17 @@ class IncJobs(multi.Thread):
         else:
             if self.reconstruct == 'remote':
                 repoLocation = '/home/backup/%s' % (self.website)
-                command = 'export RESTIC_PASSWORD=%s PATH=${PATH}:/usr/bin && restic -r %s:%s restore %s --target /' % (
+                command = 'export RESTIC_PASSWORD=%s PATH=${PATH}:/usr/bin && restic -r %s:%s restore %s --target %s' % (
                     self.passwordFile,
-                    self.backupDestinations, repoLocation, self.jobid)
+                    self.backupDestinations, repoLocation, self.jobid, self.restoreTarget)
                 result = ProcessUtilities.outputExecutioner(command)
                 if result.find('restoring') == -1:
                     logging.statusWriter(self.statusPath, 'Failed: %s. [5009]' % (result), 1)
                     return 0
             else:
                 repoLocation = '/home/backup/%s' % (self.website)
-                command = 'export PATH=${PATH}:/usr/bin && restic -r %s:%s restore %s --target / --password-file %s' % (
-                    self.jobid.destination, repoLocation, self.jobid.snapshotid, self.passwordFile)
+                command = 'export PATH=${PATH}:/usr/bin && restic -r %s:%s restore %s --target %s --password-file %s' % (
+                    self.jobid.destination, repoLocation, self.jobid.snapshotid, self.restoreTarget, self.passwordFile)
                 result = ProcessUtilities.outputExecutioner(command)
                 if result.find('restoring') == -1:
                     logging.statusWriter(self.statusPath, 'Failed: %s. [5009]' % (result), 1)
@@ -448,7 +466,10 @@ class IncJobs(multi.Thread):
                     message = 'Reconstructed'
                     logging.statusWriter(self.statusPath, message, 1)
             else:
+
                 self.jobid = JobSnapshots.objects.get(pk=jobid)
+
+                self.findRestorePath()
 
                 message = 'Starting restore of %s for %s.' % (self.jobid.snapshotid, self.website)
                 logging.statusWriter(self.statusPath, message, 1)

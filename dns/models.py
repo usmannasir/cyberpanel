@@ -23,7 +23,7 @@ class Records(models.Model):
     domain_id = models.IntegerField(blank=True, null=True)
     name = models.CharField(max_length=255, blank=True, null=True)
     type = models.CharField(max_length=10, blank=True, null=True)
-    content = models.CharField(max_length=64000, blank=True, null=True)
+    content = models.CharField(max_length=1000, blank=True, null=True)
     ttl = models.IntegerField(blank=True, null=True)
     prio = models.IntegerField(blank=True, null=True)
     change_date = models.IntegerField(blank=True, null=True)
@@ -41,7 +41,7 @@ class Comments(models.Model):
     type = models.CharField(max_length=10)
     modified_at = models.IntegerField()
     account = models.CharField(max_length=40)
-    comment = models.CharField(max_length=64000)
+    comment = models.TextField()
 
     class Meta:
         db_table = 'comments'
