@@ -61,5 +61,6 @@ class cliParser:
         parser.add_argument('--websitesLimit', help='Website limit while creating user.')
         parser.add_argument('--selectedACL', help='Select ACL while creating user.')
         parser.add_argument('--securityLevel', help='Set security level while creating user.')
+        parser.add_argument('--state', help='State value used in user suspension.')
 
         return parser.parse_args()

@@ -1029,49 +1029,56 @@ def fetchTableUsers(request):
 
 def controlUserState(request):
     try:
-        val = request.session['userID']
         try:
-            if request.method == 'POST':
+            val = request.session['userID']
+        except:
+            val = request['userID']
+        try:
+            try:
                 data = json.loads(request.body)
-                accountUsername = data['accountUsername']
-                state = data['state']
+            except:
+                data = request
 
-                user = Administrator.objects.get(userName=accountUsername)
+            accountUsername = data['accountUsername']
+            state = data['state']
 
-                currentACL = ACLManager.loadedACL(val)
-                loggedUser = Administrator.objects.get(pk=val)
+            user = Administrator.objects.get(userName=accountUsername)
 
-                if currentACL['admin'] == 1:
-                    pass
-                elif user.owner == loggedUser.pk:
-                    pass
-                elif user.pk == loggedUser.pk:
-                    pass
-                else:
-                    data_ret = {'fetchStatus': 0, 'error_message': 'Un-authorized access.'}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
+            currentACL = ACLManager.loadedACL(val)
+            loggedUser = Administrator.objects.get(pk=val)
 
-                if state == 'SUSPEND':
-                    user.state = 'SUSPENDED'
-                else:
-                    user.state = 'ACTIVE'
-
-                user.save()
-
-                extraArgs = {}
-                extraArgs['user'] = user
-                extraArgs['currentACL'] = ACLManager.loadedACL(user.pk)
-                extraArgs['state'] = state
-
-                from userManagment.userManager import UserManager
-
-                um = UserManager('controlUserState', extraArgs)
-                um.start()
-
-                data_ret = {'status': 1}
+            if currentACL['admin'] == 1:
+                pass
+            elif user.owner == loggedUser.pk:
+                pass
+            elif user.pk == loggedUser.pk:
+                pass
+            else:
+                data_ret = {'fetchStatus': 0, 'error_message': 'Un-authorized access.'}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
+
+            if state == 'SUSPEND':
+                user.state = 'SUSPENDED'
+            else:
+                user.state = 'ACTIVE'
+
+            user.save()
+
+            extraArgs = {}
+            extraArgs['user'] = user
+            extraArgs['currentACL'] = ACLManager.loadedACL(user.pk)
+            extraArgs['state'] = state
+
+            from userManagment.userManager import UserManager
+
+            um = UserManager('controlUserState', extraArgs)
+            um.start()
+
+            data_ret = {'status': 1}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
 
         except BaseException as msg:
             data_ret = {'status': 0, 'saveStatus': 0, 'error_message': str(msg)}

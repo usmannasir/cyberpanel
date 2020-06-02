@@ -1399,13 +1399,35 @@ def main():
     elif args.function == "listUsers":
 
         from userManagment.views import fetchTableUsers
-
         data = {}
         data['userID'] = 1
-
         response = fetchTableUsers(data)
 
         print(response.content.decode())
+
+    elif args.function == "suspendUser":
+
+        completeCommandExample = 'cyberpanel suspendUser --userName cyberpanel --state SUSPEND'
+
+        if not args.userName:
+            print("\n\nPlease enter User Name. For example:\n\n" + completeCommandExample + "\n\n")
+            return
+
+        if not args.state:
+            print("\n\nPlease enter state value i.e SUSPEND/UnSuspend. For example:\n\n" + completeCommandExample + "\n\n")
+            return
+
+        from userManagment.views import controlUserState
+
+        data = {}
+        data['accountUsername'] = args.userName
+        data['state'] = args.state
+        data['userID'] = 1
+
+        response = controlUserState(data)
+
+        print(response.content.decode())
+
 
 
 
