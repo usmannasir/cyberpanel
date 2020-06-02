@@ -32,7 +32,6 @@ def loadUserHome(request):
     except KeyError:
         return redirect(loadLoginPage)
 
-
 def viewProfile(request):
     try:
         userID = request.session['userID']
@@ -51,7 +50,6 @@ def viewProfile(request):
         return render(request, 'userManagment/userProfile.html', AdminData)
     except KeyError:
         return redirect(loadLoginPage)
-
 
 def createUser(request):
     try:
@@ -73,7 +71,6 @@ def createUser(request):
     except BaseException as msg:
         logging.CyberCPLogFileWriter.writeToFile(str(msg))
         return redirect(loadLoginPage)
-
 
 def apiAccess(request):
     try:
@@ -317,62 +314,69 @@ def fetchUserDetails(request):
 
 def saveModifications(request):
     try:
-        val = request.session['userID']
         try:
-            if request.method == 'POST':
+            val = request.session['userID']
+        except:
+            val = request['userID']
+        try:
+            try:
                 data = json.loads(request.body)
-                accountUsername = data['accountUsername']
-                firstName = data['firstName']
-                lastName = data['lastName']
-                email = data['email']
-                try:
-                    securityLevel = data['securityLevel']
-                except:
-                    securityLevel = 'HIGH'
+            except:
+                data = request
 
-                user = Administrator.objects.get(userName=accountUsername)
+            accountUsername = data['accountUsername']
+            firstName = data['firstName']
+            lastName = data['lastName']
+            email = data['email']
+            try:
+                securityLevel = data['securityLevel']
+            except:
+                securityLevel = 'HIGH'
 
-                currentACL = ACLManager.loadedACL(val)
-                loggedUser = Administrator.objects.get(pk=val)
+            user = Administrator.objects.get(userName=accountUsername)
 
-                if currentACL['admin'] == 1:
-                    pass
-                elif user.owner == loggedUser.pk:
-                    pass
-                elif user.pk == loggedUser.pk:
-                    pass
-                else:
-                    data_ret = {'fetchStatus': 0, 'error_message': 'Un-authorized access.'}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
+            currentACL = ACLManager.loadedACL(val)
+            loggedUser = Administrator.objects.get(pk=val)
 
-                token = hashPassword.generateToken(accountUsername, data['passwordByPass'])
-                password = hashPassword.hash_password(data['passwordByPass'])
-
-                user.firstName = firstName
-                user.lastName = lastName
-                user.email = email
-                user.password = password
-                user.token = token
-                user.type = 0
-
-                if securityLevel == 'LOW':
-                    user.securityLevel = secMiddleware.LOW
-                else:
-                    user.securityLevel = secMiddleware.HIGH
-
-                user.save()
-
-                adminEmailPath = '/home/cyberpanel/adminEmail'
-
-                if accountUsername == 'admin':
-                    writeToFile = open(adminEmailPath, 'w')
-                    writeToFile.write(email)
-                    writeToFile.close()
-
-                data_ret = {'status': 1, 'saveStatus': 1, 'error_message': 'None'}
+            if currentACL['admin'] == 1:
+                pass
+            elif user.owner == loggedUser.pk:
+                pass
+            elif user.pk == loggedUser.pk:
+                pass
+            else:
+                data_ret = {'fetchStatus': 0, 'error_message': 'Un-authorized access.'}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
+
+            token = hashPassword.generateToken(accountUsername, data['passwordByPass'])
+            password = hashPassword.hash_password(data['passwordByPass'])
+
+            user.firstName = firstName
+            user.lastName = lastName
+            user.email = email
+            user.password = password
+            user.token = token
+            user.type = 0
+
+            if securityLevel == 'LOW':
+                user.securityLevel = secMiddleware.LOW
+            else:
+                user.securityLevel = secMiddleware.HIGH
+
+            user.save()
+
+            adminEmailPath = '/home/cyberpanel/adminEmail'
+
+            if accountUsername == 'admin':
+                writeToFile = open(adminEmailPath, 'w')
+                writeToFile.write(email)
+                writeToFile.close()
+
+            data_ret = {'status': 1, 'saveStatus': 1, 'error_message': 'None'}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
 
         except BaseException as msg:
             data_ret = {'status': 0, 'saveStatus': 0, 'error_message': str(msg)}

@@ -1428,6 +1428,49 @@ def main():
 
         print(response.content.decode())
 
+    elif args.function == "editUser":
+
+        completeCommandExample = 'cyberpanel editUser --userName cyberpanel --firstName Cyber --lastName Panel --email email@cyberpanel.net --password securepassword --securityLevel HIGH'
+
+        if not args.firstName:
+            print("\n\nPlease enter First Name. For example:\n\n" + completeCommandExample + "\n\n")
+            return
+
+        if not args.lastName:
+            print("\n\nPlease enter Last Name. For example:\n\n" + completeCommandExample + "\n\n")
+            return
+
+        if not args.email:
+            print("\n\nPlease enter Email. For example:\n\n" + completeCommandExample + "\n\n")
+            return
+
+        if not args.userName:
+            print("\n\nPlease enter User name. For example:\n\n" + completeCommandExample + "\n\n")
+            return
+
+        if not args.password:
+            print("\n\nPlease enter password. For example:\n\n" + completeCommandExample + "\n\n")
+            return
+
+        if not args.securityLevel:
+            print("\n\nPlease set security level. For example:\n\n" + completeCommandExample + "\n\n")
+            return
+
+        from userManagment.views import saveModifications
+
+        data = {}
+        data['accountUsername'] = args.userName
+        data['firstName'] = args.firstName
+        data['lastName'] = args.lastName
+        data['email'] = args.email
+        data['passwordByPass'] = args.password
+        data['securityLevel'] = args.securityLevel
+        data['userID'] = 1
+
+        response = saveModifications(data)
+
+        print(response.content.decode())
+
 
 
 
