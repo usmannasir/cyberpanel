@@ -14,7 +14,7 @@ class PHPManager:
         distro = ProcessUtilities.decideDistro()
         if distro == ProcessUtilities.centos:
             if distro == ProcessUtilities.cent8:
-                return ['PHP 7.1', 'PHP 7.2', 'PHP 7.3', 'PHP 7.4']
+                return ['PHP 7.2', 'PHP 7.3', 'PHP 7.4']
             return ['PHP 5.3', 'PHP 5.4', 'PHP 5.5', 'PHP 5.6', 'PHP 7.0', 'PHP 7.1', 'PHP 7.2', 'PHP 7.3', 'PHP 7.4']
         else:
             return ['PHP 7.0', 'PHP 7.1', 'PHP 7.2', 'PHP 7.3', 'PHP 7.4']
