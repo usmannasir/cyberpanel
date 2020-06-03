@@ -17,7 +17,7 @@ from plogical.processUtilities import ProcessUtilities
 from re import match,I,M
 import signal
 from datetime import datetime
-from websiteFunctions.models import BackupJob, BackupJobLogs
+from websiteFunctions.models import BackupJob
 
 class backupScheduleLocal:
     localBackupPath = '/home/cyberpanel/localBackupPath'

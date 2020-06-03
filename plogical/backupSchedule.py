@@ -37,7 +37,10 @@ class backupSchedule:
             print(("[" + time.strftime("%m.%d.%Y_%H-%M-%S") + "] "+ message + "\n"))
             file.close()
 
-            BackupJobLogs(owner=backupSchedule.backupLog, status=status, message="[" + time.strftime("%m.%d.%Y_%H-%M-%S") + "] "+ message).save()
+            if backupSchedule.backupLog == '':
+                pass
+            else:
+                BackupJobLogs(owner=backupSchedule.backupLog, status=status, message="[" + time.strftime("%m.%d.%Y_%H-%M-%S") + "] "+ message).save()
 
         except IOError as msg:
             return "Can not write to error file."
