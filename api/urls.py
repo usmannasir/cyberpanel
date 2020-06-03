@@ -12,6 +12,7 @@ urlpatterns = [
 
     url(r'^getUserInfo$', views.getUserInfo, name='getUserInfo'),
     url(r'^changeUserPassAPI', views.changeUserPassAPI, name='changeUserPassAPI'),
+    url(r'^submitUserDeletion$', views.submitUserDeletion, name='submitUserDeletion'),
 
     url(r'^changePackageAPI', views.changePackageAPI, name='changePackageAPI'),
     url(r'^fetchSSHkey', views.fetchSSHkey, name='fetchSSHkey'),

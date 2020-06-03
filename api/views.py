@@ -19,6 +19,7 @@ from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from plogical.processUtilities import ProcessUtilities
 from django.views.decorators.csrf import csrf_exempt
 from userManagment.views import submitUserCreation as suc
+from userManagment.views import submitUserDeletion as duc
 # Create your views here.
 
 @csrf_exempt
@@ -119,7 +120,6 @@ def changeUserPassAPI(request):
 
             data = json.loads(request.body)
 
-
             websiteOwner = data['websiteOwner']
             ownerPassword = data['ownerPassword']
 
@@ -156,6 +156,37 @@ def changeUserPassAPI(request):
         return HttpResponse(json_data)
 
 @csrf_exempt
+def submitUserDeletion(request):
+    try:
+        if request.method == 'POST':
+
+            data = json.loads(request.body)
+
+            adminUser = data['adminUser']
+            adminPass = data['adminPass']
+
+            admin = Administrator.objects.get(userName=adminUser)
+
+            if admin.api == 0:
+                data_ret = {"status": 0, 'error_message': "API Access Disabled."}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+            if hashPassword.check_password(admin.password, adminPass):
+                request.session['userID'] = admin.pk
+                return duc(request)
+            else:
+                data_ret = {"status": 0,
+                            'error_message': "Could not authorize access to API"}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+    except BaseException as msg:
+        data_ret = {'submitUserDeletion': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+@csrf_exempt
 def changePackageAPI(request):
     try:
         if request.method == 'POST':
@@ -188,8 +219,6 @@ def changePackageAPI(request):
 
             website.package = pack
             website.save()
-
-
 
             data_ret = {'changePackage': 1, 'error_message': "None"}
             json_data = json.dumps(data_ret)
