@@ -191,23 +191,24 @@ class emailMarketing(multi.Thread):
             for items in allEmails:
                 message = MIMEMultipart('alternative')
                 message['Subject'] = emailMessage.subject
-                message['From'] = emailMessage.fromName + ' ' + emailMessage.fromEmail
+                message['From'] = emailMessage.fromEmail
                 message['reply-to'] = emailMessage.replyTo
                 if (items.verificationStatus == 'Verified' or self.extraArgs['verificationCheck']) and not items.verificationStatus == 'REMOVED':
                     try:
 
                         removalLink = "https:\/\/" + ipAddress + ":8090\/emailMarketing\/remove\/" + self.extraArgs[
                             'listName'] + "\/" + items.email
-                        messageText = str(emailMessage.emailMessage)
+                        messageText = emailMessage.emailMessage.encode('utf-8', 'replace')
                         message['To'] = items.email
 
-                        if re.search('<html', messageText, re.IGNORECASE) and re.search('<body', messageText,
+                        if re.search(b'<html', messageText, re.IGNORECASE) and re.search(b'<body', messageText,
                                                                                         re.IGNORECASE):
-                            finalMessage = messageText
+                            finalMessage = messageText.decode()
 
+                            self.extraArgs['unsubscribeCheck'] = 0
                             if self.extraArgs['unsubscribeCheck']:
                                 messageFile = open(tempPath, 'w')
-                                messageFile.write(messageText)
+                                messageFile.write(finalMessage)
                                 messageFile.close()
 
                                 command = "sudo sed -i 's/{{ unsubscribeCheck }}/" + removalLink + "/g' " + tempPath
