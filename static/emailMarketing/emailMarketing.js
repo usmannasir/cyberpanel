@@ -495,6 +495,7 @@ app.controller('manageEmailLists', function ($scope, $http, $timeout) {
                 $scope.currentRecords = false;
                 $scope.records = JSON.parse(response.data.data);
                 $scope.pagination = response.data.pagination;
+                $scope.verificationButton = false;
             } else {
                 new PNotify({
                     title: 'Operation Failed!',
