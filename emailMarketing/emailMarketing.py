@@ -188,68 +188,91 @@ class emailMarketing(multi.Thread):
 
             tempPath = "/home/cyberpanel/" + str(randint(1000, 9999))
 
+            emailJob = EmailJobs(owner=emailMessage, date=time.strftime("%I-%M-%S-%a-%b-%Y"),
+                                 host=self.extraArgs['host'], totalEmails=totalEmails,
+                                 sent=sent, failed=failed
+                                 )
+            emailJob.save()
+
             for items in allEmails:
-                message = MIMEMultipart('alternative')
-                message['Subject'] = emailMessage.subject
-                message['From'] = emailMessage.fromEmail
-                message['reply-to'] = emailMessage.replyTo
-                if (items.verificationStatus == 'Verified' or self.extraArgs['verificationCheck']) and not items.verificationStatus == 'REMOVED':
-                    try:
+                try:
+                    message = MIMEMultipart('alternative')
+                    message['Subject'] = emailMessage.subject
+                    message['From'] = emailMessage.fromEmail
+                    message['reply-to'] = emailMessage.replyTo
 
-                        removalLink = "https:\/\/" + ipAddress + ":8090\/emailMarketing\/remove\/" + self.extraArgs[
-                            'listName'] + "\/" + items.email
-                        messageText = emailMessage.emailMessage.encode('utf-8', 'replace')
-                        message['To'] = items.email
+                    if (items.verificationStatus == 'Verified' or self.extraArgs[
+                        'verificationCheck']) and not items.verificationStatus == 'REMOVED':
+                        try:
 
-                        if re.search(b'<html', messageText, re.IGNORECASE) and re.search(b'<body', messageText,
-                                                                                        re.IGNORECASE):
-                            finalMessage = messageText.decode()
+                            removalLink = "https:\/\/" + ipAddress + ":8090\/emailMarketing\/remove\/" + self.extraArgs[
+                                'listName'] + "\/" + items.email
+                            messageText = emailMessage.emailMessage.encode('utf-8', 'replace')
+                            message['To'] = items.email
 
-                            self.extraArgs['unsubscribeCheck'] = 0
-                            if self.extraArgs['unsubscribeCheck']:
-                                messageFile = open(tempPath, 'w')
-                                messageFile.write(finalMessage)
-                                messageFile.close()
+                            if re.search(b'<html', messageText, re.IGNORECASE) and re.search(b'<body', messageText,
+                                                                                             re.IGNORECASE):
+                                finalMessage = messageText.decode()
 
-                                command = "sudo sed -i 's/{{ unsubscribeCheck }}/" + removalLink + "/g' " + tempPath
-                                ProcessUtilities.executioner(command, 'cyberpanel')
+                                self.extraArgs['unsubscribeCheck'] = 0
+                                if self.extraArgs['unsubscribeCheck']:
+                                    messageFile = open(tempPath, 'w')
+                                    messageFile.write(finalMessage)
+                                    messageFile.close()
 
-                                messageFile = open(tempPath, 'r')
-                                finalMessage = messageFile.read()
-                                messageFile.close()
+                                    command = "sudo sed -i 's/{{ unsubscribeCheck }}/" + removalLink + "/g' " + tempPath
+                                    ProcessUtilities.executioner(command, 'cyberpanel')
 
-                            html = MIMEText(finalMessage, 'html')
-                            message.attach(html)
+                                    messageFile = open(tempPath, 'r')
+                                    finalMessage = messageFile.read()
+                                    messageFile.close()
 
-                        else:
-                            finalMessage = messageText
+                                html = MIMEText(finalMessage, 'html')
+                                message.attach(html)
 
-                            if self.extraArgs['unsubscribeCheck']:
-                                finalMessage = finalMessage.replace('{{ unsubscribeCheck }}', removalLink)
+                            else:
+                                finalMessage = messageText
 
-                            html = MIMEText(finalMessage, 'plain')
-                            message.attach(html)
+                                if self.extraArgs['unsubscribeCheck']:
+                                    finalMessage = finalMessage.replace('{{ unsubscribeCheck }}', removalLink)
 
-                        smtpServer.sendmail(message['From'], items.email, message.as_string())
-                        sent = sent + 1
-                        logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
-                                                                  'Successfully sent: ' + str(sent) + ' Failed: ' + str(
-                                                                      failed))
-                    except BaseException as msg:
-                        failed = failed + 1
-                        logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
-                                                                  'Successfully sent: ' + str(
-                                                                      sent) + ', Failed: ' + str(failed))
-                        logging.CyberCPLogFileWriter.writeToFile(str(msg))
+                                html = MIMEText(finalMessage, 'plain')
+                                message.attach(html)
 
-                    emailJob = EmailJobs(owner=emailMessage, date=time.strftime("%I-%M-%S-%a-%b-%Y"),
-                                         host=self.extraArgs['host'], totalEmails=totalEmails,
-                                         sent=sent, failed=failed
-                                         )
-                    emailJob.save()
+                            smtpServer.sendmail(message['From'], items.email, message.as_string())
+                            sent = sent + 1
+                            emailJob.sent = sent
+                            emailJob.save()
+                            logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
+                                                                      'Successfully sent: ' + str(
+                                                                          sent) + ' Failed: ' + str(
+                                                                          failed))
+                        except BaseException as msg:
+                            failed = failed + 1
+                            emailJob.failed = failed
+                            emailJob.save()
+                            logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
+                                                                      'Successfully sent: ' + str(
+                                                                          sent) + ', Failed: ' + str(failed))
+                            logging.CyberCPLogFileWriter.writeToFile(str(msg))
+                except BaseException as msg:
+                            failed = failed + 1
+                            emailJob.failed = failed
+                            emailJob.save()
+                            logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
+                                                                      'Successfully sent: ' + str(
+                                                                          sent) + ', Failed: ' + str(failed))
+                            logging.CyberCPLogFileWriter.writeToFile(str(msg))
 
-                    logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
-                                                              'Email job completed. [200]')
+
+            emailJob = EmailJobs(owner=emailMessage, date=time.strftime("%I-%M-%S-%a-%b-%Y"),
+                                 host=self.extraArgs['host'], totalEmails=totalEmails,
+                                 sent=sent, failed=failed
+                                 )
+            emailJob.save()
+
+            logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
+                                                      'Email job completed. [200]')
         except BaseException as msg:
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], str(msg) + '. [404]')
             return 0

@@ -684,7 +684,7 @@ class EmailMarketingManager:
             em = EM('startEmailJob', extraArgs)
             em.start()
 
-            time.sleep(2)
+            time.sleep(5)
 
             data_ret = {"status": 1, 'tempStatusPath': extraArgs['tempStatusPath']}
             json_data = json.dumps(data_ret)
