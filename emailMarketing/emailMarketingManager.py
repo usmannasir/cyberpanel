@@ -181,6 +181,58 @@ class EmailMarketingManager:
         except KeyError as msg:
             return redirect(loadLoginPage)
 
+    def configureVerify(self):
+        try:
+            userID = self.request.session['userID']
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
+            if emACL.checkIfEMEnabled(admin.userName) == 0:
+                return ACLManager.loadError()
+
+            return render(self.request, 'emailMarketing/configureVerify.html', {'domain': self.domain})
+        except KeyError as msg:
+            return redirect(loadLoginPage)
+
+    def saveConfigureVerify(self):
+        try:
+
+            userID = self.request.session['userID']
+            admin = Administrator.objects.get(pk=userID)
+
+            if emACL.checkIfEMEnabled(admin.userName) == 0:
+                return ACLManager.loadErrorJson()
+
+            data = json.loads(self.request.body)
+
+            domain = data['domain']
+
+            configureVerifyPath = '/home/cyberpanel/configureVerify'
+
+            import os
+
+            if not os.path.exists(configureVerifyPath):
+                os.mkdir(configureVerifyPath)
+
+            finalPath = '%s/%s' % (configureVerifyPath, domain)
+
+            writeToFile = open(finalPath, 'w')
+            writeToFile.write(self.request.body.decode())
+            writeToFile.close()
+
+            data_ret = {"status": 1}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+        except BaseException as msg:
+            final_dic = {'status': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
     def fetchEmails(self):
         try:
 

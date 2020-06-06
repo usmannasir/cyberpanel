@@ -1330,4 +1330,87 @@ app.controller('sendEmailsCTRL', function ($scope, $http, $timeout) {
     };
 });
 
+app.controller('configureVerify', function ($scope, $http) {
+
+    $scope.cyberPanelLoading = true;
+    $scope.ipv4Hidden = true;
+    $scope.ipv6Hidden = true;
+    $scope.delayHidden = true;
+
+    $scope.delayInitial = function () {
+        if ($scope.delay === 'Disable') {
+            $scope.delayHidden = true;
+        } else {
+            $scope.delayHidden = false;
+        }
+    };
+    $scope.rotateInitial = function () {
+        if ($scope.rotation === 'Disable') {
+            $scope.rotationHidden = true;
+        } else if ($scope.rotation === 'IPv4') {
+            $scope.ipv4Hidden = false;
+            $scope.ipv6Hidden = true;
+        } else {
+            $scope.ipv4Hidden = true;
+            $scope.ipv6Hidden = false;
+        }
+    };
+
+    $scope.saveChanges = function () {
+
+        $scope.cyberPanelLoading = false;
+
+        url = "/emailMarketing/saveConfigureVerify";
+
+        var data = {
+            domain: $("#domainName").text(),
+            rotation: $scope.rotation,
+            delay: $scope.delay,
+            delayAfter: $scope.delayAfter,
+            delayTime: $scope.delayTime,
+            ipv4: $scope.ipv4,
+            ipv6: $scope.ipv6
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.cyberPanelLoading = true;
+
+            if (response.data.status === 1) {
+
+                new PNotify({
+                    title: 'Success!',
+                    text: 'Successfully saved verification settings.',
+                    type: 'success'
+                });
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberPanelLoading = false;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+
+        }
+
+    };
+});
+
 

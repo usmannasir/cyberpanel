@@ -54,6 +54,22 @@ def manageLists(request, domain):
     except KeyError:
         return redirect(loadLoginPage)
 
+def configureVerify(request, domain):
+    try:
+        userID = request.session['userID']
+        emm = EmailMarketingManager(request, domain)
+        return emm.configureVerify()
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def saveConfigureVerify(request):
+    try:
+        userID = request.session['userID']
+        emm = EmailMarketingManager(request)
+        return emm.saveConfigureVerify()
+    except KeyError:
+        return redirect(loadLoginPage)
+
 def fetchEmails(request):
     try:
         userID = request.session['userID']

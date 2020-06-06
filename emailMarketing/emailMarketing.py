@@ -81,6 +81,49 @@ class emailMarketing(multi.Thread):
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], str(msg) +'. [404]')
             return 0
 
+    def findNextIP(self):
+        try:
+            if self.delayData['rotation'] == 'Disable':
+                return None
+            elif self.delayData['rotation'] == 'IPv4':
+                if self.delayData['ipv4'].find(',') == -1:
+                    return self.delayData['ipv4']
+                else:
+                    ipv4s = self.delayData['ipv4'].split(',')
+
+                    if self.currentIP == '':
+                        return ipv4s[0]
+                    else:
+                        returnCheck = 0
+
+                        for items in ipv4s:
+                            if returnCheck == 1:
+                                return items
+                            if items == self.currentIP:
+                                returnCheck = 1
+
+                        return ipv4s[0]
+            else:
+                if self.delayData['ipv6'].find(',') == -1:
+                    return self.delayData['ipv6']
+                else:
+                    ipv6 = self.delayData['ipv6'].split(',')
+
+                    if self.currentIP == '':
+                        return ipv6[0]
+                    else:
+                        returnCheck = 0
+
+                        for items in ipv6:
+                            if returnCheck == 1:
+                                return items
+                            if items == self.currentIP:
+                                returnCheck = 1
+                    return ipv6[0]
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg))
+            return None
+
     def verificationJob(self):
         try:
 
@@ -97,6 +140,16 @@ class emailMarketing(multi.Thread):
             counter = 1
             allEmailsInList = verificationList.emailsinlist_set.all()
 
+            configureVerifyPath = '/home/cyberpanel/configureVerify'
+            finalPath = '%s/%s' % (configureVerifyPath, domain)
+
+            counterGlobal = 0
+
+            import json
+            if os.path.exists(finalPath):
+                self.delayData = json.loads(open(finalPath, 'r').read())
+
+            self.currentIP = ''
 
             for items in allEmailsInList:
                 if items.verificationStatus != 'Verified':
@@ -109,7 +162,53 @@ class emailMarketing(multi.Thread):
                             # Get local server hostname
                             host = socket.gethostname()
 
-                            server = smtplib.SMTP()
+                            if os.path.exists(finalPath):
+                                try:
+                                    logging.CyberCPLogFileWriter.writeToFile('Checking if delay is enabled for verification..')
+                                    delay = self.delayData['delay']
+                                    if delay == 'Enable':
+                                        logging.CyberCPLogFileWriter.writeToFile(
+                                            'It seems delay is enabled...')
+                                        if counterGlobal == int(self.delayData['delayAfter']):
+                                            logging.CyberCPLogFileWriter.writeToFile(
+                                                'Sleeping for %s seconds...' % (self.delayData['delayTime']))
+                                            time.sleep(int(self.delayData['delayTime']))
+                                            counterGlobal = 0
+                                            self.currentIP = self.findNextIP()
+
+                                            logging.CyberCPLogFileWriter.writeToFile(
+                                                'IP in use: %s.' % (str(self.currentIP)))
+
+                                            if self.currentIP == None:
+                                                server = smtplib.SMTP()
+                                            else:
+                                                server = smtplib.SMTP(self.currentIP)
+                                        else:
+
+                                            if self.currentIP == '':
+                                                self.currentIP = self.findNextIP()
+
+                                            logging.CyberCPLogFileWriter.writeToFile(
+                                                'IP in use: %s.' % (str(self.currentIP)))
+
+                                            if self.currentIP == None:
+                                                server = smtplib.SMTP()
+                                            else:
+                                                server = smtplib.SMTP(self.currentIP)
+                                    else:
+                                        logging.CyberCPLogFileWriter.writeToFile(
+                                            'Delay not configured..')
+                                        server = smtplib.SMTP()
+                                except BaseException as msg:
+                                    logging.CyberCPLogFileWriter.writeToFile(
+                                        'Delay not configured.. Error: %s' % (str(msg)))
+                                    server = smtplib.SMTP()
+                            else:
+                                logging.CyberCPLogFileWriter.writeToFile(
+                                    'Delay not configured..')
+                                server = smtplib.SMTP()
+
+
                             server.set_debuglevel(0)
 
                             # SMTP Conversation
@@ -126,7 +225,7 @@ class emailMarketing(multi.Thread):
                                 break
                             else:
                                 items.verificationStatus = 'Verification Failed'
-                                logging.CyberCPLogFileWriter.writeToFile(email + " verification failed with error: " + message)
+                                logging.CyberCPLogFileWriter.writeToFile(email + " verification failed with error: " + message.decode())
                                 items.save()
 
                         logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, str(counter) + ' emails verified so far..')
@@ -136,6 +235,9 @@ class emailMarketing(multi.Thread):
                         items.save()
                         counter = counter + 1
                         logging.CyberCPLogFileWriter.writeToFile(str(msg))
+
+
+                    counterGlobal = counterGlobal + 1
 
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, str(counter) + ' emails successfully verified. [200]')
         except BaseException as msg:
