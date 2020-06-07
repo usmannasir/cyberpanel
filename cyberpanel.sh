@@ -372,7 +372,6 @@ install_required() {
 if [[ -d /etc/yum.repos.d ]] ; then
 	if [[ $CENTOS_8 == "True" ]] ; then
   		dnf install zip -y
-  		dnf install epel-release -y
 	elif [[ $CENTOS_8 == "False" ]] ; then
   		curl https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.0.1/install/CyberPanel.repo > /etc/yum.repos.d/CyberPanel.repo
 	fi
@@ -407,6 +406,7 @@ if [[ $SERVER_OS == "CentOS" ]] ; then
 		check_return
 	fi
 	if [[ $CENTOS_8 == "True" ]] ; then
+	  dnf install epel-release -y
 		dnf install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-devel curl-devel git platform-python-devel tar socat python3
 		check_return
 		dnf --enablerepo=PowerTools install gpgme-devel -y
