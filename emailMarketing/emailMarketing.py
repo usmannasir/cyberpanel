@@ -268,6 +268,8 @@ class emailMarketing(multi.Thread):
                 verificationList.verified = verificationList.emailsinlist_set.filter(verificationStatus='Verified').count()
                 verificationList.save()
 
+            ValidationLog(owner=verificationList, status=backupSchedule.ERROR, message=str(counter) + ' emails successfully verified. [200]').save()
+
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, str(counter) + ' emails successfully verified. [200]')
         except BaseException as msg:
             verificationList = EmailLists.objects.get(listName=self.extraArgs['listName'])

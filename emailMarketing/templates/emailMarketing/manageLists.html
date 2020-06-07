@@ -38,9 +38,9 @@
 
                         <div ng-hide="currentRecords" class="form-group">
                             <div class="row">
-                                <div class="col-sm-2">
+                                <div class="col-sm-1">
                                     <button data-toggle="modal" data-target="#deleteList"
-                                            class="btn ra-100 btn-danger">{% trans 'Delete This List' %}</button>
+                                            class="btn ra-100 btn-danger">{% trans 'Delete' %}</button>
                                     <!--- Delete Pool --->
                                     <div class="modal fade" id="deleteList" tabindex="-1" role="dialog"
                                          aria-labelledby="myModalLabel" aria-hidden="true">
@@ -68,16 +68,16 @@
                                     </div>
                                     <!--- Delete Pool --->
                                 </div>
-                                <div class="col-sm-2">
+                                <div class="col-sm-1">
                                     <button ng-disabled="verificationButton" ng-click="startVerification()"
-                                            class="btn ra-100 btn-blue-alt">{% trans 'Verify This List' %}</button>
+                                            class="btn ra-100 btn-blue-alt">{% trans 'Verify' %}</button>
                                 </div>
-                                <div class="col-sm-2">
+                                <div class="col-sm-3">
                                     <a target="_blank" href="/emailMarketing/{{ domain }}/configureVerify">
                                         <button class="btn ra-100 btn-blue-alt">{% trans 'Configure Verification' %}</button>
                                     </a>
                                 </div>
-                                <div class="col-sm-2">
+                                <div class="col-sm-3">
                                     <button ng-click="fetchLogs()" data-toggle="modal" data-target="#verificationLogs"
                                             class="btn ra-100 btn-blue-alt">{% trans 'Verfications Logs' %}</button>
                                     <!--- Delete Pool --->
