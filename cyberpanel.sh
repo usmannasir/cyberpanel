@@ -400,7 +400,7 @@ if [[ $SERVER_OS == "CentOS" ]] ; then
 	rm -f /etc/yum.repos.d/epel.repo.rpmsave
 
 	if [[ $CENTOS_8 == "False" ]] ; then
-	  yum install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel gpgme-devel curl-devel git socat openssl-devel MariaDB-shared mariadb-devel yum-utils python36u python36u-pip python36u-devel
+	  yum --enablerepo=CyberPanel install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel gpgme-devel curl-devel git socat openssl-devel MariaDB-shared mariadb-devel yum-utils python36u python36u-pip python36u-devel
 		check_return
 		yum -y groupinstall development
 		check_return
