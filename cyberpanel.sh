@@ -372,6 +372,7 @@ install_required() {
 if [[ -d /etc/yum.repos.d ]] ; then
 	if [[ $CENTOS_8 == "True" ]] ; then
   		dnf install zip -y
+  		dnf install epel-release -y
 	elif [[ $CENTOS_8 == "False" ]] ; then
   		curl https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.0.1/install/CyberPanel.repo > /etc/yum.repos.d/CyberPanel.repo
 	fi
