@@ -12,6 +12,7 @@ import smtplib
 from .models import SMTPHosts, EmailTemplate
 from loginSystem.models import Administrator
 from .emACL import emACL
+from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 
 class EmailMarketingManager:
 
@@ -198,6 +199,74 @@ class EmailMarketingManager:
             return render(self.request, 'emailMarketing/configureVerify.html', {'domain': self.domain})
         except KeyError as msg:
             return redirect(loadLoginPage)
+
+    def fetchVerifyLogs(self):
+        try:
+
+            userID = self.request.session['userID']
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            data = json.loads(self.request.body)
+
+            self.listName = data['listName']
+            recordsToShow = int(data['recordsToShow'])
+            page = int(str(data['page']).strip('\n'))
+
+            emailList = EmailLists.objects.get(listName=self.listName)
+
+            if ACLManager.checkOwnership(emailList.owner.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson('status', 0)
+
+            logs = emailList.validationlog_set.all()
+
+            from s3Backups.s3Backups import S3Backups
+
+            pagination = S3Backups.getPagination(len(logs), recordsToShow)
+            endPageNumber, finalPageNumber = S3Backups.recordsPointer(page, recordsToShow)
+            finalLogs = logs[finalPageNumber:endPageNumber]
+
+            json_data = "["
+            checker = 0
+            counter = 0
+
+            from plogical.backupSchedule import backupSchedule
+
+            for log in finalLogs:
+                if log.status == backupSchedule.INFO:
+                    status = 'INFO'
+                else:
+                    status = 'ERROR'
+
+                dic = {
+                    'status': status, "message": log.message
+                }
+
+                if checker == 0:
+                    json_data = json_data + json.dumps(dic)
+                    checker = 1
+                else:
+                    json_data = json_data + ',' + json.dumps(dic)
+
+                counter = counter + 1
+
+            json_data = json_data + ']'
+
+            totalEmail = emailList.emailsinlist_set.all().count()
+            verified = emailList.verified
+            notVerified = emailList.notVerified
+
+            data_ret = {'status': 1, 'logs': json_data, 'pagination': pagination, 'totalEmails': totalEmail, 'verified': verified, 'notVerified': notVerified}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
 
     def saveConfigureVerify(self):
         try:
@@ -790,7 +859,6 @@ class EmailMarketingManager:
             final_dic = {'status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
-
 
     def remove(self, listName, emailAddress):
         try:

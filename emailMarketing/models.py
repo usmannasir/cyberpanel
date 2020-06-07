@@ -14,7 +14,8 @@ class EmailLists(models.Model):
     owner = models.ForeignKey(Websites, on_delete=models.PROTECT)
     listName = models.CharField(max_length=50, unique=True)
     dateCreated = models.CharField(max_length=200)
-
+    verified = models.IntegerField(default=0)
+    notVerified = models.IntegerField(default=0)
 
 class EmailsInList(models.Model):
     owner = models.ForeignKey(EmailLists, on_delete=models.CASCADE)
@@ -30,7 +31,6 @@ class SMTPHosts(models.Model):
     port = models.CharField(max_length=10)
     userName = models.CharField(max_length=50)
     password = models.CharField(max_length=50)
-
 
 class EmailTemplate(models.Model):
     owner = models.ForeignKey(Administrator, on_delete=models.CASCADE)
@@ -48,4 +48,9 @@ class EmailJobs(models.Model):
     totalEmails = models.IntegerField()
     sent = models.IntegerField()
     failed = models.IntegerField()
+
+class ValidationLog(models.Model):
+    owner = models.ForeignKey(EmailLists, on_delete=models.CASCADE)
+    status = models.IntegerField()
+    message = models.TextField()
 

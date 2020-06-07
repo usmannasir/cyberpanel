@@ -237,9 +237,7 @@ app.controller('backupWebsiteControl', function ($scope, $http, $timeout) {
 
 ///** Backup site ends **///
 
-
 ///** Restore site ***//
-
 
 app.controller('restoreWebsiteControl', function ($scope, $http, $timeout) {
 
@@ -415,12 +413,9 @@ app.controller('restoreWebsiteControl', function ($scope, $http, $timeout) {
 
 });
 
-
 //*** Restore site ends here ***///
 
-
 ///** Backup Destination ***//
-
 
 app.controller('backupDestinations', function ($scope, $http, $timeout) {
 
@@ -666,12 +661,9 @@ app.controller('backupDestinations', function ($scope, $http, $timeout) {
 
 });
 
-
 //*** Backup destination ***///
 
-
 ///** Schedule Backup ***//
-
 
 app.controller('scheduleBackup', function ($scope, $http, $timeout) {
 
@@ -951,9 +943,7 @@ app.controller('scheduleBackup', function ($scope, $http, $timeout) {
 
 });
 
-
 //*** Schedule Backup ***///
-
 
 //*** Remote Backup site ****//
 app.controller('remoteBackupControl', function ($scope, $http, $timeout) {
@@ -1542,7 +1532,6 @@ app.controller('remoteBackupControl', function ($scope, $http, $timeout) {
 });
 
 ///** Backup site ends **///
-
 
 //*** Remote Backup site ****//
 app.controller('backupLogsScheduled', function ($scope, $http, $timeout) {

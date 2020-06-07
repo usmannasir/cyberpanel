@@ -5,7 +5,8 @@ import time
 import csv
 import re
 import plogical.CyberCPLogFileWriter as logging
-from .models import EmailMarketing, EmailLists, EmailsInList, EmailTemplate, EmailJobs, SMTPHosts
+from .models import EmailMarketing, EmailLists, EmailsInList, EmailTemplate, EmailJobs, SMTPHosts, ValidationLog
+from plogical.backupSchedule import backupSchedule
 from websiteFunctions.models import Websites
 import threading as multi
 import socket, smtplib
@@ -130,7 +131,6 @@ class emailMarketing(multi.Thread):
             verificationList = EmailLists.objects.get(listName=self.extraArgs['listName'])
             domain = verificationList.owner.domain
 
-
             if not os.path.exists('/home/cyberpanel/' + domain):
                 os.mkdir('/home/cyberpanel/' + domain)
 
@@ -138,12 +138,13 @@ class emailMarketing(multi.Thread):
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Starting verification job..')
 
             counter = 1
+            counterGlobal = 0
+
             allEmailsInList = verificationList.emailsinlist_set.all()
 
             configureVerifyPath = '/home/cyberpanel/configureVerify'
             finalPath = '%s/%s' % (configureVerifyPath, domain)
 
-            counterGlobal = 0
 
             import json
             if os.path.exists(finalPath):
@@ -151,33 +152,43 @@ class emailMarketing(multi.Thread):
 
             self.currentIP = ''
 
+            ValidationLog(owner=verificationList, status=backupSchedule.INFO, message='Starting email verification..').save()
+
             for items in allEmailsInList:
                 if items.verificationStatus != 'Verified':
                     try:
                         email = items.email
+                        self.currentEmail = email
                         domainName = email.split('@')[1]
                         records = DNS.dnslookup(domainName, 'MX')
+
+                        ValidationLog(owner=verificationList, status=backupSchedule.INFO,
+                                      message='Trying to verify %s ..' % (email)).save()
 
                         for mxRecord in records:
                             # Get local server hostname
                             host = socket.gethostname()
 
+                            ## Only fetching smtp object
+
                             if os.path.exists(finalPath):
                                 try:
-                                    logging.CyberCPLogFileWriter.writeToFile('Checking if delay is enabled for verification..')
+                                    ValidationLog(owner=verificationList, status=backupSchedule.INFO,
+                                                  message='Checking if delay is enabled for verification..').save()
                                     delay = self.delayData['delay']
                                     if delay == 'Enable':
-                                        logging.CyberCPLogFileWriter.writeToFile(
-                                            'It seems delay is enabled...')
+                                        ValidationLog(owner=verificationList, status=backupSchedule.INFO,
+                                                      message='It seems delay is enabled...').save()
                                         if counterGlobal == int(self.delayData['delayAfter']):
-                                            logging.CyberCPLogFileWriter.writeToFile(
-                                                'Sleeping for %s seconds...' % (self.delayData['delayTime']))
+                                            ValidationLog(owner=verificationList, status=backupSchedule.INFO,
+                                                          message='Sleeping for %s seconds...' % (self.delayData['delayTime'])).save()
+
                                             time.sleep(int(self.delayData['delayTime']))
                                             counterGlobal = 0
                                             self.currentIP = self.findNextIP()
 
-                                            logging.CyberCPLogFileWriter.writeToFile(
-                                                'IP in use: %s.' % (str(self.currentIP)))
+                                            ValidationLog(owner=verificationList, status=backupSchedule.INFO,
+                                                          message='IP being used for validation until next sleep: %s.' % (str(self.currentIP))).save()
 
                                             if self.currentIP == None:
                                                 server = smtplib.SMTP()
@@ -188,8 +199,9 @@ class emailMarketing(multi.Thread):
                                             if self.currentIP == '':
                                                 self.currentIP = self.findNextIP()
 
-                                            logging.CyberCPLogFileWriter.writeToFile(
-                                                'IP in use: %s.' % (str(self.currentIP)))
+                                            ValidationLog(owner=verificationList, status=backupSchedule.INFO,
+                                                          message='IP being used for validation until next sleep: %s.' % (
+                                                              str(self.currentIP))).save()
 
                                             if self.currentIP == None:
                                                 server = smtplib.SMTP()
@@ -198,16 +210,23 @@ class emailMarketing(multi.Thread):
                                     else:
                                         logging.CyberCPLogFileWriter.writeToFile(
                                             'Delay not configured..')
+
+                                        ValidationLog(owner=verificationList, status=backupSchedule.INFO,
+                                                      message='Delay not configured..').save()
+
                                         server = smtplib.SMTP()
                                 except BaseException as msg:
-                                    logging.CyberCPLogFileWriter.writeToFile(
-                                        'Delay not configured.. Error: %s' % (str(msg)))
+
+                                    ValidationLog(owner=verificationList, status=backupSchedule.ERROR,
+                                                  message='Delay not configured. Error message: %s' % (str(msg))).save()
+
                                     server = smtplib.SMTP()
                             else:
-                                logging.CyberCPLogFileWriter.writeToFile(
-                                    'Delay not configured..')
+                                ValidationLog(owner=verificationList, status=backupSchedule.INFO,
+                                              message='Delay not configured..').save()
                                 server = smtplib.SMTP()
 
+                            ###
 
                             server.set_debuglevel(0)
 
@@ -220,12 +239,15 @@ class emailMarketing(multi.Thread):
 
                             # Assume 250 as Success
                             if code == 250:
+                                ValidationLog(owner=verificationList, status=backupSchedule.INFO,
+                                              message='Verified %s  successfully.' % (email)).save()
                                 items.verificationStatus = 'Verified'
                                 items.save()
                                 break
                             else:
+                                ValidationLog(owner=verificationList, status=backupSchedule.ERROR,
+                                              message='Failed to verify %s. Error message %s' % (email, message.decode())).save()
                                 items.verificationStatus = 'Verification Failed'
-                                logging.CyberCPLogFileWriter.writeToFile(email + " verification failed with error: " + message.decode())
                                 items.save()
 
                         logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, str(counter) + ' emails verified so far..')
@@ -235,9 +257,16 @@ class emailMarketing(multi.Thread):
                         items.save()
                         counter = counter + 1
                         logging.CyberCPLogFileWriter.writeToFile(str(msg))
+                        ValidationLog(owner=verificationList, status=backupSchedule.ERROR,
+                                      message='Failed to verify %s. Error message %s' % (
+                                      self.currentEmail , str(msg))).save()
 
 
                     counterGlobal = counterGlobal + 1
+
+                verificationList.notVerified = verificationList.emailsinlist_set.filter(verificationStatus='Verification Failed').count()
+                verificationList.verified = verificationList.emailsinlist_set.filter(verificationStatus='Verified').count()
+                verificationList.save()
 
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, str(counter) + ' emails successfully verified. [200]')
         except BaseException as msg:
@@ -245,7 +274,7 @@ class emailMarketing(multi.Thread):
             domain = verificationList.owner.domain
             tempStatusPath = '/home/cyberpanel/' + domain + "/" + self.extraArgs['listName']
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, str(msg) +'. [404]')
-            logging.CyberCPLogFileWriter.writeToFile('your error')
+            logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return 0
 
     def startEmailJob(self):

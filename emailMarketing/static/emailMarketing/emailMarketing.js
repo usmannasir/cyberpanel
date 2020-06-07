@@ -774,6 +774,58 @@ app.controller('manageEmailLists', function ($scope, $http, $timeout) {
     };
 
 
+    $scope.currentPageLogs = 1;
+    $scope.recordsToShowLogs = 10;
+
+    $scope.fetchLogs = function () {
+
+        $scope.cyberPanelLoading = false;
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        var data = {
+            listName: $scope.listName,
+            page: $scope.currentPageLogs,
+            recordsToShow: $scope.recordsToShowLogs
+        };
+
+        url = "/emailMarketing/fetchVerifyLogs";
+
+        $http.post(url, data, config).then(ListInitialData, cantLoadInitialData);
+
+        function ListInitialData(response) {
+            $scope.cyberPanelLoading = true;
+            if (response.data.status === 1) {
+                $scope.recordsLogs = JSON.parse(response.data.logs);
+                $scope.paginationLogs = response.data.pagination;
+                $scope.totalEmails = response.data.totalEmails;
+                $scope.verified = response.data.verified;
+                $scope.notVerified = response.data.notVerified;
+            } else {
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+        }
+        function cantLoadInitialData(response) {
+            $scope.cyberPanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+        }
+
+
+    };
+
+
 });
 
 app.controller('manageSMTPHostsCTRL', function ($scope, $http) {

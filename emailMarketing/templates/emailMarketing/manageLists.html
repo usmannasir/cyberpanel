@@ -37,48 +37,155 @@
                         </div>
 
                         <div ng-hide="currentRecords" class="form-group">
-                            <div class="col-sm-3">
-                                <button data-toggle="modal" data-target="#deleteList"
-                                        class="btn ra-100 btn-danger">{% trans 'Delete This List' %}</button>
-                                <!--- Delete Pool --->
-                                <div class="modal fade" id="deleteList" tabindex="-1" role="dialog"
-                                     aria-labelledby="myModalLabel" aria-hidden="true">
-                                    <div class="modal-dialog">
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <button type="button" class="close" data-dismiss="modal"
-                                                        aria-hidden="true">&times;
-                                                </button>
-                                                <h4 class="modal-title">{% trans "You are doing to delete this list.." %}
-                                                    <img ng-hide="cyberPanelLoading"
-                                                         src="{% static 'images/loading.gif' %}"></h4>
-                                            </div>
-                                            <div class="modal-body">
-                                                <p>{% trans 'Are you sure?' %}</p>
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-default"
-                                                        data-dismiss="modal">{% trans 'Close' %}</button>
-                                                <button data-dismiss="modal" ng-click="deleteList()" type="button"
-                                                        class="btn btn-primary">{% trans 'Confirm' %}</button>
+                            <div class="row">
+                                <div class="col-sm-2">
+                                    <button data-toggle="modal" data-target="#deleteList"
+                                            class="btn ra-100 btn-danger">{% trans 'Delete This List' %}</button>
+                                    <!--- Delete Pool --->
+                                    <div class="modal fade" id="deleteList" tabindex="-1" role="dialog"
+                                         aria-labelledby="myModalLabel" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <button type="button" class="close" data-dismiss="modal"
+                                                            aria-hidden="true">&times;
+                                                    </button>
+                                                    <h4 class="modal-title">{% trans "You are doing to delete this list.." %}
+                                                        <img ng-hide="cyberPanelLoading"
+                                                             src="{% static 'images/loading.gif' %}"></h4>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <p>{% trans 'Are you sure?' %}</p>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-default"
+                                                            data-dismiss="modal">{% trans 'Close' %}</button>
+                                                    <button data-dismiss="modal" ng-click="deleteList()" type="button"
+                                                            class="btn btn-primary">{% trans 'Confirm' %}</button>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
+                                    <!--- Delete Pool --->
                                 </div>
-                                <!--- Delete Pool --->
-                            </div>
-                            <div class="col-sm-3">
-                                <button ng-disabled="verificationButton" ng-click="startVerification()"
-                                        class="btn ra-100 btn-blue-alt">{% trans 'Verify This List' %}</button>
-                            </div>
-                            <a target="_blank" href="/emailMarketing/{{ domain }}/configureVerify">
-                                <div class="col-sm-3">
-                                    <button class="btn ra-100 btn-blue-alt">{% trans 'Configure Verification Settings' %}</button>
+                                <div class="col-sm-2">
+                                    <button ng-disabled="verificationButton" ng-click="startVerification()"
+                                            class="btn ra-100 btn-blue-alt">{% trans 'Verify This List' %}</button>
                                 </div>
-                            </a>
-                            <div class="col-sm-3">
-                                <button ng-click="showAddEmails()"
-                                        class="btn ra-100 btn-blue-alt">{% trans 'Add More Emails' %}</button>
+                                <div class="col-sm-2">
+                                    <a target="_blank" href="/emailMarketing/{{ domain }}/configureVerify">
+                                        <button class="btn ra-100 btn-blue-alt">{% trans 'Configure Verification' %}</button>
+                                    </a>
+                                </div>
+                                <div class="col-sm-2">
+                                    <button ng-click="fetchLogs()" data-toggle="modal" data-target="#verificationLogs"
+                                            class="btn ra-100 btn-blue-alt">{% trans 'Verfications Logs' %}</button>
+                                    <!--- Delete Pool --->
+                                    <div class="modal fade" id="verificationLogs" tabindex="-1" role="dialog"
+                                         aria-labelledby="myModalLabel" aria-hidden="true">
+                                        <div class="modal-dialog modal-lg">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <button type="button" class="close" data-dismiss="modal"
+                                                            aria-hidden="true">&times;
+                                                    </button>
+                                                    <h4 class="modal-title">{% trans "Verification Logs" %}
+                                                        <img ng-hide="cyberPanelLoading"
+                                                             src="{% static 'images/loading.gif' %}"></h4>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <!------ List of records --------------->
+
+                                                    <div ng-hide="currentRecords" class="form-group">
+
+                                                        <table style="margin: 0px; padding-bottom: 2%" class="table">
+                                                                <thead>
+                                                                <tr>
+                                                                    <th>{% trans "Total Emails" %}</th>
+                                                                    <th>{% trans "Verified" %}</th>
+                                                                    <th>{% trans "Not-Verified" %}</th>
+                                                                </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                <tr>
+                                                                    <td>{$ totalEmails $}</td>
+                                                                    <td>{$ verified $}</td>
+                                                                    <td>{$ notVerified $}</td>
+                                                                </tr>
+                                                                </tbody>
+                                                            </table>
+
+                                                        <div class="col-sm-10">
+                                                            <input placeholder="Search Logs..." name="dom" type="text"
+                                                                   class="form-control" ng-model="searchLogs"
+                                                                   required>
+                                                        </div>
+
+                                                        <div style="margin-bottom: 1%;" class="col-sm-2">
+                                                            <select ng-change="fetchLogs()" ng-model="recordsToShowLogs"
+                                                                    class="form-control">
+                                                                <option>10</option>
+                                                                <option>50</option>
+                                                                <option>100</option>
+                                                                <option>500</option>
+                                                            </select>
+                                                        </div>
+
+                                                        <div class="col-sm-12">
+
+                                                            <table style="margin: 0px" class="table">
+                                                                <thead>
+                                                                <tr>
+                                                                    <th>{% trans "Status" %}</th>
+                                                                    <th>{% trans "Message" %}</th>
+                                                                </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                <tr ng-repeat="record in recordsLogs | filter:searchLogs">
+                                                                    <td ng-bind="record.status"></td>
+                                                                    <td ng-bind="record.message"></td>
+                                                                </tr>
+                                                                </tbody>
+                                                            </table>
+
+                                                            <div style="margin-top: 2%" class="row">
+                                                                <div class="col-md-12">
+                                                                    <div class="row">
+                                                                        <div class="col-md-8">
+                                                                        </div>
+                                                                        <div class="col-md-3">
+                                                                            <div class="form-group">
+                                                                                <select ng-model="currentPageLogs"
+                                                                                        class="form-control"
+                                                                                        ng-change="fetchLogs()">
+                                                                                    <option ng-repeat="page in paginationLogs">
+                                                                                        {$ $index + 1
+                                                                                        $}
+                                                                                    </option>
+                                                                                </select>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div> <!-- end row -->
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <!------ List of records --------------->
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-default"
+                                                            data-dismiss="modal">{% trans 'Close' %}</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!--- Delete Pool --->
+                                </div>
+                                <div class="col-sm-2">
+                                    <button ng-click="showAddEmails()"
+                                            class="btn ra-100 btn-blue-alt">{% trans 'Add More Emails' %}</button>
+                                </div>
                             </div>
                         </div>
 

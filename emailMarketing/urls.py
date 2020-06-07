@@ -5,6 +5,7 @@ urlpatterns = [
     url(r'^fetchUsers$', views.fetchUsers, name='fetchUsers'),
     url(r'^enableDisableMarketing$', views.enableDisableMarketing, name='enableDisableMarketing'),
     url(r'^saveConfigureVerify$', views.saveConfigureVerify, name='saveConfigureVerify'),
+    url(r'^fetchVerifyLogs$', views.fetchVerifyLogs, name='fetchVerifyLogs'),
     url(r'^(?P<domain>(.*))/emailLists$', views.createEmailList, name='createEmailList'),
     url(r'^submitEmailList$', views.submitEmailList, name='submitEmailList'),
     url(r'^(?P<domain>(.*))/manageLists$', views.manageLists, name='manageLists'),

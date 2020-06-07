@@ -70,6 +70,14 @@ def saveConfigureVerify(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+def fetchVerifyLogs(request):
+    try:
+        userID = request.session['userID']
+        emm = EmailMarketingManager(request)
+        return emm.fetchVerifyLogs()
+    except KeyError:
+        return redirect(loadLoginPage)
+
 def fetchEmails(request):
     try:
         userID = request.session['userID']
