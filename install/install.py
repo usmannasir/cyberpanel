@@ -691,7 +691,7 @@ class preFlightsChecks:
             if self.distro == centos:
                 command = 'yum install --enablerepo=CyberPanel -y postfix3 postfix3-ldap postfix3-mysql postfix3-pcre'
             elif self.distro == cent8:
-                command = 'dnf --enablerepo=CyberPanel install postfix3 postfix3-mysql -y '
+                command = 'dnf install postfix3 postfix3-mysql -y '
             else:
                 command = 'apt-get -y debconf-utils'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
@@ -720,7 +720,7 @@ class preFlightsChecks:
             if self.distro == centos:
                 command = 'yum --enablerepo=CyberPanel -y install dovecot dovecot-mysql'
             elif self.distro == cent8:
-                command = 'dnf --enablerepo=CyberPanel install dovecot23 dovecot23-mysql -y'
+                command = 'dnf install dovecot23 dovecot23-mysql -y'
             else:
                 command = 'apt-get -y install dovecot-mysql'
 
@@ -1722,7 +1722,7 @@ imap_folder_list_limit = 0
             if self.distro == centos:
                 command = 'yum -y install opendkim'
             elif self.distro == cent8:
-                command = 'dnf --enablerepo=CyberPanel install opendkim -y'
+                command = 'dnf install opendkim -y'
             else:
                 command = 'apt-get -y install opendkim'
 
@@ -1947,7 +1947,7 @@ milter_default_action = accept
                 if self.distro == centos:
                     command = 'yum --enablerepo=CyberPanel install restic -y'
                 else:
-                    command = 'dnf --enablerepo=CyberPanel install restic -y --nogpgcheck'
+                    command = 'dnf install restic -y --nogpgcheck'
 
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
             else:
