@@ -220,13 +220,13 @@ class EmailMarketingManager:
             else:
                 return ACLManager.loadErrorJson('status', 0)
 
-            logs = emailList.validationlog_set.all()
+            logsLen = emailList.validationlog_set.all().count()
 
             from s3Backups.s3Backups import S3Backups
 
-            pagination = S3Backups.getPagination(len(logs), recordsToShow)
+            pagination = S3Backups.getPagination(logsLen, recordsToShow)
             endPageNumber, finalPageNumber = S3Backups.recordsPointer(page, recordsToShow)
-            finalLogs = logs[finalPageNumber:endPageNumber]
+            finalLogs = emailList.validationlog_set.all()[finalPageNumber:endPageNumber]
 
             json_data = "["
             checker = 0
@@ -234,7 +234,7 @@ class EmailMarketingManager:
 
             from plogical.backupSchedule import backupSchedule
 
-            for log in finalLogs:
+            for log in emailList.validationlog_set.all()[finalPageNumber:endPageNumber]:
                 if log.status == backupSchedule.INFO:
                     status = 'INFO'
                 else:
