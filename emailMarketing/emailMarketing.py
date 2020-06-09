@@ -52,14 +52,17 @@ class emailMarketing(multi.Thread):
                                     try:
                                         getEmail = EmailsInList.objects.get(owner=newList, email=value)
                                     except:
-                                        newEmail = EmailsInList(owner=newList, email=value,
-                                                                verificationStatus='NOT CHECKED',
-                                                                dateCreated=time.strftime("%I-%M-%S-%a-%b-%Y"))
-                                        newEmail.save()
+                                        try:
+                                            newEmail = EmailsInList(owner=newList, email=value,
+                                                                    verificationStatus='NOT CHECKED',
+                                                                    dateCreated=time.strftime("%I-%M-%S-%a-%b-%Y"))
+                                            newEmail.save()
+                                        except:
+                                            pass
                                     logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], str(counter) + ' emails read.')
                                     counter = counter + 1
                         except BaseException as msg:
-                            logging.CyberCPLogFileWriter.writeToFile(str(msg))
+                            logging.CyberCPLogFileWriter.writeToFile('%s. [createEmailList]' % (str(msg)))
                             continue
             elif self.extraArgs['path'].endswith('.txt'):
                 with open(self.extraArgs['path'], 'r') as emailsList:
@@ -155,6 +158,7 @@ class emailMarketing(multi.Thread):
             ValidationLog(owner=verificationList, status=backupSchedule.INFO, message='Starting email verification..').save()
 
             for items in allEmailsInList:
+
                 if items.verificationStatus != 'Verified':
                     try:
                         email = items.email
@@ -162,10 +166,10 @@ class emailMarketing(multi.Thread):
                         domainName = email.split('@')[1]
                         records = DNS.dnslookup(domainName, 'MX')
 
-                        ValidationLog(owner=verificationList, status=backupSchedule.INFO,
-                                      message='Trying to verify %s ..' % (email)).save()
+                        counterGlobal = counterGlobal + 1
 
                         for mxRecord in records:
+
                             # Get local server hostname
                             host = socket.gethostname()
 
@@ -173,12 +177,8 @@ class emailMarketing(multi.Thread):
 
                             if os.path.exists(finalPath):
                                 try:
-                                    ValidationLog(owner=verificationList, status=backupSchedule.INFO,
-                                                  message='Checking if delay is enabled for verification..').save()
                                     delay = self.delayData['delay']
                                     if delay == 'Enable':
-                                        ValidationLog(owner=verificationList, status=backupSchedule.INFO,
-                                                      message='It seems delay is enabled...').save()
                                         if counterGlobal == int(self.delayData['delayAfter']):
                                             ValidationLog(owner=verificationList, status=backupSchedule.INFO,
                                                           message='Sleeping for %s seconds...' % (self.delayData['delayTime'])).save()
@@ -198,10 +198,9 @@ class emailMarketing(multi.Thread):
 
                                             if self.currentIP == '':
                                                 self.currentIP = self.findNextIP()
-
-                                            ValidationLog(owner=verificationList, status=backupSchedule.INFO,
-                                                          message='IP being used for validation until next sleep: %s.' % (
-                                                              str(self.currentIP))).save()
+                                                ValidationLog(owner=verificationList, status=backupSchedule.INFO,
+                                                              message='IP being used for validation until next sleep: %s.' % (
+                                                                  str(self.currentIP))).save()
 
                                             if self.currentIP == None:
                                                 server = smtplib.SMTP()
@@ -222,8 +221,6 @@ class emailMarketing(multi.Thread):
 
                                     server = smtplib.SMTP()
                             else:
-                                ValidationLog(owner=verificationList, status=backupSchedule.INFO,
-                                              message='Delay not configured..').save()
                                 server = smtplib.SMTP()
 
                             ###
@@ -239,8 +236,6 @@ class emailMarketing(multi.Thread):
 
                             # Assume 250 as Success
                             if code == 250:
-                                ValidationLog(owner=verificationList, status=backupSchedule.INFO,
-                                              message='Verified %s  successfully.' % (email)).save()
                                 items.verificationStatus = 'Verified'
                                 items.save()
                                 break
@@ -250,19 +245,17 @@ class emailMarketing(multi.Thread):
                                 items.verificationStatus = 'Verification Failed'
                                 items.save()
 
+
                         logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, str(counter) + ' emails verified so far..')
                         counter = counter + 1
                     except BaseException as msg:
                         items.verificationStatus = 'Verification Failed'
                         items.save()
                         counter = counter + 1
-                        logging.CyberCPLogFileWriter.writeToFile(str(msg))
                         ValidationLog(owner=verificationList, status=backupSchedule.ERROR,
                                       message='Failed to verify %s. Error message %s' % (
                                       self.currentEmail , str(msg))).save()
 
-
-                    counterGlobal = counterGlobal + 1
 
                 verificationList.notVerified = verificationList.emailsinlist_set.filter(verificationStatus='Verification Failed').count()
                 verificationList.verified = verificationList.emailsinlist_set.filter(verificationStatus='Verified').count()

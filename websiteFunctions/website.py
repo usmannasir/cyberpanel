@@ -1882,7 +1882,7 @@ class WebsiteManager:
                 return HttpResponse(json_data)
 
         except BaseException as msg:
-            data_ret = {'abort': 1, 'installStatus': 0, 'installationProgress': "0", 'error_message': str(msg)}
+            data_ret = {'abort': 0, 'installStatus': 0, 'installationProgress': "0", 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
