@@ -16,11 +16,22 @@ import string
 VERSION = '2.0'
 BUILD = 1
 
+CENTOS7 = 0
+CENTOS8 = 1
+
 class Upgrade:
     logPath = "/usr/local/lscp/logs/upgradeLog"
     cdn = 'cdn.cyberpanel.sh'
     installedOutput = ''
     CentOSPath = '/etc/redhat-release'
+
+    @staticmethod
+    def decideCentosVersion():
+
+        if open(Upgrade.CentOSPath, 'r').read().find('CentOS Linux release 8') > -1:
+            return CENTOS8
+        else:
+            return CENTOS7
 
     @staticmethod
     def stdOut(message, do_exit=0):
@@ -1706,7 +1717,12 @@ class Upgrade:
 
             if os.path.exists(CentOSPath):
 
-                if Upgrade.installedOutput.find('2:2.3.10-2') == -1:
+                if Upgrade.decideCentosVersion() == CENTOS7:
+                    findText = '2:2.3.10-2'
+                else:
+                    findText = '2.3.10.1-1.gf.el8'
+
+                if Upgrade.installedOutput.find(findText) == -1:
                     command = "yum makecache -y"
                     Upgrade.executioner(command, 0)
 
@@ -1747,7 +1763,12 @@ class Upgrade:
 
                 ### Postfix Upgrade
 
-                if Upgrade.installedOutput.find('2:3.4.7-1.gf.el7') == -1:
+                if Upgrade.decideCentosVersion() == CENTOS7:
+                    findText = '2:3.4.7-1.gf.el7'
+                else:
+                    findText = '3.5.2-1.gf.el8'
+
+                if Upgrade.installedOutput.find(findText) == -1:
                     try:
                         shutil.copy('/etc/postfix/master.cf', '/etc/master.cf')
                     except:
@@ -1766,10 +1787,17 @@ class Upgrade:
                     command = 'yum clean all'
                     Upgrade.executioner(command, 0)
 
-                    command = 'yum makecache fast'
-                    Upgrade.executioner(command, 0)
+                    if Upgrade.decideCentosVersion() == CENTOS7:
+                        command = 'yum makecache fast'
+                    else:
+                        command = 'yum makecache -y'
 
-                    command = 'yum install --enablerepo=CyberPanel -y postfix3 postfix3-mysql'
+                    Upgrade.executioner(command, 0)
+                    if Upgrade.decideCentosVersion() == CENTOS7:
+                        command = 'yum install --enablerepo=CyberPanel -y postfix3 postfix3-mysql'
+                    else:
+                        command = 'dnf install --enablerepo=gf-plus postfix3 postfix3-mysql -y'
+
                     Upgrade.executioner(command, 0)
 
                     try:
