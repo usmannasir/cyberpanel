@@ -180,7 +180,6 @@ elif echo $OUTPUT | grep -q "CloudLinux 7" ; then
   rm -f /etc/yum.repos.d/epel.repo
   rm -f /etc/yum.repos.d/epel.repo.rpmsave
 elif  echo $OUTPUT | grep -q "CentOS Linux 8" ; then
-  curl https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.0.1/install/CyberPanel8.repo > /etc/yum.repos.d/CyberPanel.repo
 	echo -e "\nDetecting CentOS 8.X...\n"
 	SERVER_OS="CentOS8"
 	yum clean all
@@ -188,6 +187,8 @@ elif  echo $OUTPUT | grep -q "CentOS Linux 8" ; then
   yum autoremove epel-release -y
   rm -f /etc/yum.repos.d/epel.repo
   rm -f /etc/yum.repos.d/epel.repo.rpmsave
+  yum autoremove epel-release -y
+  dnf install epel-release -y
 elif echo $OUTPUT | grep -q "Ubuntu 18.04" ; then
 	echo -e "\nDetecting Ubuntu 18.04...\n"
 	SERVER_OS="Ubuntu"

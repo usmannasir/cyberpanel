@@ -158,9 +158,9 @@ class emailMarketing(multi.Thread):
             ValidationLog(owner=verificationList, status=backupSchedule.INFO, message='Starting email verification..').save()
 
             for items in allEmailsInList:
-
                 if items.verificationStatus != 'Verified':
                     try:
+
                         email = items.email
                         self.currentEmail = email
                         domainName = email.split('@')[1]
@@ -244,7 +244,6 @@ class emailMarketing(multi.Thread):
                                               message='Failed to verify %s. Error message %s' % (email, message.decode())).save()
                                 items.verificationStatus = 'Verification Failed'
                                 items.save()
-
 
                         logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, str(counter) + ' emails verified so far..')
                         counter = counter + 1

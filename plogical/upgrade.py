@@ -908,6 +908,20 @@ class Upgrade:
             except:
                 pass
 
+            query = 'ALTER TABLE emailMarketing_emaillists ADD COLUMN verified INT DEFAULT 0'
+
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+            query = 'ALTER TABLE emailMarketing_emaillists ADD COLUMN notVerified INT DEFAULT 0'
+
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
             query = """CREATE TABLE `emailMarketing_emailsinlist` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `email` varchar(50) NOT NULL,
@@ -987,6 +1001,21 @@ class Upgrade:
   `source` varchar(80) NOT NULL,
   `destination` longtext NOT NULL,
   PRIMARY KEY (`id`)
+)"""
+
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+            query = """CREATE TABLE `emailMarketing_validationlog` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `status` int(11) NOT NULL,
+  `message` longtext NOT NULL,
+  `owner_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `emailMarketing_valid_owner_id_240ad36e_fk_emailMark` (`owner_id`),
+  CONSTRAINT `emailMarketing_valid_owner_id_240ad36e_fk_emailMark` FOREIGN KEY (`owner_id`) REFERENCES `emailMarketing_emaillists` (`id`)
 )"""
 
             try:
