@@ -72,6 +72,8 @@ class backupSchedule:
             time.sleep(5)
             schedulerPath = '/home/cyberpanel/%s-backup.txt' % (virtualHost)
 
+            killCounter = 0
+
             while (1):
                 diff = datetime.now() - startingTime
 
@@ -118,8 +120,11 @@ class backupSchedule:
                         else:
                             return 0, 'Backup process killed without reporting any error.'
                     else:
-
-                        return 0, 'Backup process killed without reporting any error.'
+                        if killCounter == 1:
+                            return 0, 'Backup process killed without reporting any error.'
+                        else:
+                            time.sleep(10)
+                            killCounter = 1
 
                 ## file name read ends
 
