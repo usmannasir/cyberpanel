@@ -469,42 +469,46 @@ class backupUtilities:
 
         logging.CyberCPLogFileWriter.statusWriter(status, "Backing up email accounts..\n")
 
-        emailPath = '/home/vmail/%s' % (domainName)
-
-        if os.path.exists(emailPath):
-            copy_tree(emailPath, '%s/vmail' % (tempStoragePath))
-
-        ## shutil.make_archive. Creating final package.
-
-        make_archive(os.path.join(backupPath, backupName), 'gztar', tempStoragePath)
-        rmtree(tempStoragePath)
-
-        ###
-
-        backupObs = Backups.objects.filter(fileName=backupName)
-
-        ## adding backup data to database.
-
-        filePath = '%s/%s.tar.gz' % (backupPath, backupName)
-        totalSize = '%sMB' % (str(int(os.path.getsize(filePath) / 1048576)))
-
         try:
-            for items in backupObs:
-                items.status = 1
-                items.size = totalSize
-                items.save()
+
+            emailPath = '/home/vmail/%s' % (domainName)
+
+            if os.path.exists(emailPath):
+                copy_tree(emailPath, '%s/vmail' % (tempStoragePath), preserve_symlinks=True)
+
+            ## shutil.make_archive. Creating final package.
+
+            make_archive(os.path.join(backupPath, backupName), 'gztar', tempStoragePath)
+            rmtree(tempStoragePath)
+
+            ###
+
+            backupObs = Backups.objects.filter(fileName=backupName)
+
+            ## adding backup data to database.
+
+            filePath = '%s/%s.tar.gz' % (backupPath, backupName)
+            totalSize = '%sMB' % (str(int(os.path.getsize(filePath) / 1048576)))
+
+            try:
+                for items in backupObs:
+                    items.status = 1
+                    items.size = totalSize
+                    items.save()
+            except BaseException as msg:
+                logging.CyberCPLogFileWriter.writeToFile('%s. [backupRoot:499]' % str(msg))
+                for items in backupObs:
+                    items.status = 1
+                    items.size = totalSize
+                    items.save()
+
+            command = 'chmod 600 %s' % (os.path.join(backupPath, backupName + ".tar.gz"))
+            ProcessUtilities.executioner(command)
+
+            logging.CyberCPLogFileWriter.statusWriter(status, "Completed\n")
+            os.remove(pidFile)
         except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile('%s. [backupRoot:499]' % str(msg))
-            for items in backupObs:
-                items.status = 1
-                items.size = totalSize
-                items.save()
-
-        command = 'chmod 600 %s' % (os.path.join(backupPath, backupName + ".tar.gz"))
-        ProcessUtilities.executioner(command)
-
-        logging.CyberCPLogFileWriter.statusWriter(status, "Completed\n")
-        os.remove(pidFile)
+            logging.CyberCPLogFileWriter.statusWriter(status, '%s. [511:BackupRoot][[5009]]\n' % str(msg))
 
     @staticmethod
     def initiateBackup(tempStoragePath, backupName, backupPath):
