@@ -1736,6 +1736,11 @@ class Upgrade:
                         command = 'dnf install --enablerepo=gf-plus dovecot23 dovecot23-mysql -y'
                         Upgrade.executioner(command, 0)
 
+                        if os.path.exists('/etc/dovecot/dovecot.conf.rpmsave'):
+                            if os.path.exists('/etc/dovecot/dovecot.conf'):
+                                shutil.move('/etc/dovecot/dovecot.conf', '/etc/dovecot/dovecot.conf.bkcp')
+                                shutil.move('/etc/dovecot/dovecot.conf.rpmsave', '/etc/dovecot/dovecot.conf')
+
                     ## Remove Default Password Scheme
 
                     path = '/etc/dovecot/dovecot-sql.conf.ext'
