@@ -1729,6 +1729,13 @@ class Upgrade:
                     command = "yum update -y"
                     Upgrade.executioner(command, 0)
 
+                    if Upgrade.decideCentosVersion() == CENTOS8:
+                        command = 'dnf remove dovecot23 dovecot23-mysql -y'
+                        Upgrade.executioner(command, 0)
+
+                        command = 'dnf install --enablerepo=gf-plus dovecot23 dovecot23-mysql -y'
+                        Upgrade.executioner(command, 0)
+
                     ## Remove Default Password Scheme
 
                     path = '/etc/dovecot/dovecot-sql.conf.ext'
