@@ -73,9 +73,8 @@
                                             class="btn ra-100 btn-blue-alt">{% trans 'Verify' %}</button>
                                 </div>
                                 <div class="col-sm-3">
-                                    <a target="_blank" href="/emailMarketing/{{ domain }}/configureVerify">
-                                        <button class="btn ra-100 btn-blue-alt">{% trans 'Configure Verification' %}</button>
-                                    </a>
+                                    <button onclick="location.href='/emailMarketing/{{ domain }}/configureVerify'"
+                                            class="btn ra-100 btn-blue-alt">{% trans 'Configure Verification' %}</button>
                                 </div>
                                 <div class="col-sm-3">
                                     <button ng-click="fetchLogs()" data-toggle="modal" data-target="#verificationLogs"
@@ -99,21 +98,21 @@
                                                     <div ng-hide="currentRecords" class="form-group">
 
                                                         <table style="margin: 0px; padding-bottom: 2%" class="table">
-                                                                <thead>
-                                                                <tr>
-                                                                    <th>{% trans "Total Emails" %}</th>
-                                                                    <th>{% trans "Verified" %}</th>
-                                                                    <th>{% trans "Not-Verified" %}</th>
-                                                                </tr>
-                                                                </thead>
-                                                                <tbody>
-                                                                <tr>
-                                                                    <td>{$ totalEmails $}</td>
-                                                                    <td>{$ verified $}</td>
-                                                                    <td>{$ notVerified $}</td>
-                                                                </tr>
-                                                                </tbody>
-                                                            </table>
+                                                            <thead>
+                                                            <tr>
+                                                                <th>{% trans "Total Emails" %}</th>
+                                                                <th>{% trans "Verified" %}</th>
+                                                                <th>{% trans "Not-Verified" %}</th>
+                                                            </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                            <tr>
+                                                                <td>{$ totalEmails $}</td>
+                                                                <td>{$ verified $}</td>
+                                                                <td>{$ notVerified $}</td>
+                                                            </tr>
+                                                            </tbody>
+                                                        </table>
 
                                                         <div class="col-sm-10">
                                                             <input placeholder="Search Logs..." name="dom" type="text"

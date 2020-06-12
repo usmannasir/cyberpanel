@@ -1950,10 +1950,24 @@ milter_default_action = accept
 
                 if self.distro == centos:
                     command = 'yum --enablerepo=CyberPanel install restic -y'
-                else:
-                    command = 'dnf install restic -y --nogpgcheck'
+                    preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                elif self.distro == cent8:
 
-                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                    command = 'cat /proc/cpuinfo'
+
+                    result = subprocess.check_output(shlex.split(command)).decode("utf-8")
+
+                    if result.find('ARM') > -1 or result.find('arm') > -1:
+                        command = 'wget -O /usr/bin/restic https://rep.cyberpanel.net/restic_0.9.6_linux_arm64'
+                        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+                    else:
+                        command = 'wget -O /usr/bin/restic https://rep.cyberpanel.net/restic_0.9.6_linux_amd64'
+                        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+                    command = 'chmod +x /usr/bin/restic'
+                    preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
             else:
                 command = 'apt-get update -y'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
