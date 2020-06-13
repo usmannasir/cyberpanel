@@ -1,0 +1,136 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Set up Back up Destinations" %}{% endblock %}
+{% block content %}
+
+{% load static %}
+
+
+{% get_current_language as LANGUAGE_CODE %}
+<!-- Current language: {{ LANGUAGE_CODE }} -->
+
+<div class="container">
+<div id="page-title">
+   <h2>{% trans "Set up Back up Destinations" %} - <a  target="_blank" href="http://go.cyberpanel.net/remote-backup" style="height: 23px;line-height: 21px;" class="btn btn-border btn-alt border-red btn-link font-red" title=""><span>{% trans "Remote Backups" %}</span></a></h2>
+   <p>{% trans "On this page you can set up your Back up destinations. (SFTP)" %}</p>
+</div>
+
+<div ng-controller="backupDestinations" class="panel">
+    <div class="panel-body">
+        <h3 class="title-hero">
+            {% trans "Set up Back up Destinations (SSH port should be 22 on backup server)" %} <img ng-hide="destinationLoading" src="{% static 'images/loading.gif' %}">
+        </h3>
+        <div  class="example-box-wrapper">
+
+
+            <form  action="/" class="form-horizontal bordered-row">
+
+
+                 <div class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "IP Address" %}</label>
+                    <div class="col-sm-6">
+                        <input  type="text" class="form-control" ng-model="IPAddress" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "User" %}</label>
+                    <div class="col-sm-6">
+                        <input placeholder="{% trans "Backup server SSH User, leave empty for root." %}" type="text" class="form-control" ng-model="user" required>
+                    </div>
+                </div>
+
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Password" %}</label>
+                    <div class="col-sm-6">
+                        <input placeholder="" type="password" class="form-control" ng-model="password" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">{% trans "Port" %}</label>
+                    <div class="col-sm-6">
+                        <input placeholder="{% trans "Backup server SSH Port, leave empty for 22." %}" type="text" class="form-control" ng-model="backupSSHPort" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-4">
+                         <button type="button" ng-click="addDestination()" class="btn btn-primary btn-lg btn-block">{% trans "Add Destination" %}</button>
+
+                    </div>
+                </div>
+
+
+             <!------ List of Destinations --------------->
+
+
+                <div class="form-group">
+
+                    <div class="col-sm-12">
+                            <div ng-hide="connectionFailed" class="alert alert-danger">
+                                        <p>{% trans "Connection to" %} {$ IPAddress $} {% trans "failed. Please delete and re-add. " %} {$ errorMessage $}  </p>
+                            </div>
+
+                            <div ng-hide="connectionSuccess" class="alert alert-success">
+                                <p>{% trans "Connection to" %} {$ IPAddress $} {% trans "successful." %}</p>
+                            </div>
+
+                            <div ng-hide="canNotAddDestination" class="alert alert-danger">
+                                <p>{% trans "Cannot add destination. Error message:" %} {$ errorMessage $} </p>
+                            </div>
+
+                            <div ng-hide="destinationAdded" class="alert alert-success">
+                                <p>{% trans "Destination Added." %}</p>
+                            </div>
+
+                            <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                            </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+
+                    <div  class="col-sm-12">
+
+                        <table class="table">
+                            <thead>
+                            <tr>
+                                <th>{% trans "ID" %}</th>
+                                <th>{% trans "IP" %}</th>
+                                <th>{% trans "Check Connection" %}</th>
+                                <th>{% trans "Delete" %}</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr ng-repeat="record in records track by $index">
+                                <td ng-bind="record.id"></td>
+                                <td ng-bind="record.ip"></td>
+                                <td><button type="button" ng-click="checkConn(record.ip)" class="btn ra-100 btn-purple">{% trans "Check Connection" %}</button></td>
+                                <td ng-click="delDest(record.ip)"><img src="{% static 'images/delete.png' %}"></td>
+
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            <!------ List of records --------------->
+
+
+            </form>
+
+
+
+        </div>
+    </div>
+</div>
+
+
+</div>
+
+
+{% endblock %}

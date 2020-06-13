@@ -30,6 +30,13 @@ def backupSite(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+def gDrive(request):
+    try:
+        userID = request.session['userID']
+        bm = BackupManager()
+        return bm.gDrive(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
 
 def restoreSite(request):
     try:

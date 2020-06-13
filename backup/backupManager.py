@@ -48,6 +48,18 @@ class BackupManager:
         except BaseException as msg:
             return HttpResponse(str(msg))
 
+    def gDrive(self, request = None, userID = None, data = None):
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+
+            if ACLManager.currentContextPermission(currentACL, 'addDeleteDestinations') == 0:
+                return ACLManager.loadError()
+
+            websitesName = ACLManager.findAllSites(currentACL, userID)
+            return render(request, 'backup/googleDrive.html', {'websiteList': websitesName})
+        except BaseException as msg:
+            return HttpResponse(str(msg))
+
     def restoreSite(self, request = None, userID = None, data = None):
         try:
             currentACL = ACLManager.loadedACL(userID)

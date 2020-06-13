@@ -6,6 +6,7 @@ urlpatterns = [
     url(r'^getCurrentBackups', views.getCurrentBackups, name='getCurrentBackups'),
     url(r'^backupSite', views.backupSite, name='backupSite'),
     url(r'^restoreSite', views.restoreSite, name='restoreSite'),
+    url(r'^gDrive', views.gDrive, name='gDrive'),
 
 
     url(r'^submitBackupCreation', views.submitBackupCreation, name='submitBackupCreation'),
