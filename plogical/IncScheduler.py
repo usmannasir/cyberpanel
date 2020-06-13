@@ -10,16 +10,20 @@ from IncBackups.models import BackupJob
 from random import randint
 import argparse
 import json
-from websiteFunctions.models import GitLogs, Websites
+from websiteFunctions.models import GitLogs, Websites, GDrive, GDriveJobLogs
 from websiteFunctions.website import WebsiteManager
 import time
-
+import google.oauth2.credentials
+import googleapiclient.discovery
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaFileUpload
 try:
     from plogical.virtualHostUtilities import virtualHostUtilities
     from plogical.mailUtilities import mailUtilities
     from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 except:
     pass
+from plogical.backupSchedule import backupSchedule
 
 class IncScheduler():
     logPath = '/home/cyberpanel/incbackuplogs'
@@ -192,6 +196,59 @@ class IncScheduler():
         except BaseException as msg:
             logging.writeToFile('[IncScheduler:193:checkDiskUsage] %s.' % str(msg))
 
+    @staticmethod
+    def runGoogleDriveBackups(type):
+
+        backupRunTime = time.strftime("%m.%d.%Y_%H-%M-%S")
+        backupLogPath = "/usr/local/lscp/logs/local_backup_log." + backupRunTime
+
+        for items in GDrive.objects.all():
+            try:
+                if items.runTime == type:
+                    gDriveData = json.loads(items.auth)
+                    try:
+                        credentials = google.oauth2.credentials.Credentials(gDriveData['token'], gDriveData['refresh_token'],
+                                                                    gDriveData['token_uri'], gDriveData['client_id'],
+                                                                    gDriveData['client_secret'], gDriveData['scopes'])
+                        drive = build('drive', 'v3', credentials=credentials)
+                    except BaseException as msg:
+                        GDriveJobLogs(owner=items, status=backupSchedule.ERROR, message='Connection to this account failed. Delete and re-setup this account. Error: %s' % (str(msg))).save()
+                        continue
+
+                    GDriveJobLogs(owner=items, status=backupSchedule.INFO, message='Starting backup job..').save()
+
+                    for website in items.gdrivesites_set.all():
+                        try:
+                            GDriveJobLogs(owner=items, status=backupSchedule.INFO, message='Local backup creation started for %s..' % (website.domain)).save()
+
+                            retValues = backupSchedule.createLocalBackup(website.domain, backupLogPath)
+
+                            if retValues[0] == 0:
+                                GDriveJobLogs(owner=items, status=backupSchedule.ERROR,
+                                              message='[ERROR] Backup failed for %s, error: %s moving on..' % (website.domain, retValues[1])).save()
+                                continue
+
+                            completeFileToSend = retValues[1] + ".tar.gz"
+                            fileName = completeFileToSend.split('/')[-1]
+
+                            file_metadata = {'name': '%s' % (fileName)}
+                            media = MediaFileUpload(completeFileToSend, mimetype='application/gzip', resumable=True)
+                            drive.files().create(body=file_metadata, media_body=media, fields='id').execute()
+
+                            GDriveJobLogs(owner=items, status=backupSchedule.INFO,
+                                          message='Backup for %s successfully sent to Googe Drive.' % (website.domain)).save()
+
+                        except BaseException as msg:
+                            GDriveJobLogs(owner=items, status=backupSchedule.ERROR,
+                                          message='[Site] Site backup failed, Error message: %s.' % (str(msg))).save()
+
+
+                    GDriveJobLogs(owner=items, status=backupSchedule.INFO,
+                                  message='Job Completed').save()
+            except BaseException as msg:
+                GDriveJobLogs(owner=items, status=backupSchedule.ERROR,
+                              message='[Completely] Job failed, Error message: %s.' % (str(msg))).save()
+
 
 def main():
 
@@ -200,6 +257,7 @@ def main():
     args = parser.parse_args()
 
     IncScheduler.startBackup(args.function)
+    IncScheduler.runGoogleDriveBackups(args.function)
     IncScheduler.git(args.function)
     IncScheduler.checkDiskUsage()
 

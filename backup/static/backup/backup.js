@@ -1611,7 +1611,7 @@ app.controller('googleDrive', function ($scope, $http) {
 
     $scope.fetchWebsites = function () {
 
-        $scope.cyberpanelLoading = false;
+        $scope.cyberPanelLoading = false;
 
         var config = {
             headers: {
@@ -1631,7 +1631,7 @@ app.controller('googleDrive', function ($scope, $http) {
         $http.post(dataurl, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
         function ListInitialDatas(response) {
-            $scope.cyberpanelLoading = true;
+            $scope.cyberPanelLoading = true;
             if (response.data.status === 1) {
                 $scope.driveHidden = false;
                 new PNotify({
@@ -1652,7 +1652,7 @@ app.controller('googleDrive', function ($scope, $http) {
         }
 
         function cantLoadInitialDatas(response) {
-            $scope.cyberpanelLoading = true;
+            $scope.cyberPanelLoading = true;
             new PNotify({
                 title: 'Operation Failed!',
                 text: 'Could not connect to server, please refresh this page.',
@@ -1859,7 +1859,7 @@ app.controller('googleDrive', function ($scope, $http) {
 
     $scope.fetchLogs = function () {
 
-        $scope.cyberpanelLoading = false;
+        $scope.cyberPanelLoading = false;
 
         var config = {
             headers: {
@@ -1879,7 +1879,7 @@ app.controller('googleDrive', function ($scope, $http) {
         $http.post(dataurl, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
         function ListInitialDatas(response) {
-            $scope.cyberpanelLoading = true;
+            $scope.cyberPanelLoading = true;
             if (response.data.status === 1) {
                 $scope.driveHidden = false;
                 new PNotify({
@@ -1899,13 +1899,12 @@ app.controller('googleDrive', function ($scope, $http) {
         }
 
         function cantLoadInitialDatas(response) {
-            $scope.cyberpanelLoading = true;
+            $scope.cyberPanelLoading = true;
             new PNotify({
                 title: 'Operation Failed!',
                 text: 'Could not connect to server, please refresh this page.',
                 type: 'error'
             });
-
 
         }
 

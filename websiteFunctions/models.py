@@ -70,7 +70,7 @@ class GDrive(models.Model):
 
 class GDriveSites(models.Model):
     owner = models.ForeignKey(GDrive, on_delete=models.CASCADE)
-    domain = models.CharField(max_length=200, unique=True)
+    domain = models.CharField(max_length=200)
 
 class GDriveJobLogs(models.Model):
     owner = models.ForeignKey(GDrive, on_delete=models.CASCADE)

@@ -10,8 +10,7 @@ django.setup()
 import json
 from plogical.acl import ACLManager
 import plogical.CyberCPLogFileWriter as logging
-from websiteFunctions.models import Websites, Backups, dest, backupSchedules, BackupJob, BackupJobLogs, GDrive, \
-    GDriveSites, GDriveJobLogs
+from websiteFunctions.models import Websites, Backups, dest, backupSchedules, BackupJob, BackupJobLogs, GDrive, GDriveSites, GDriveJobLogs
 from plogical.virtualHostUtilities import virtualHostUtilities
 import subprocess
 import shlex
@@ -93,18 +92,10 @@ class BackupManager:
             gDriveData['client_secret'] = request.GET.get('cl')
             gDriveData['scopes'] = request.GET.get('s')
 
-            credentials = google.oauth2.credentials.Credentials(gDriveData['token'], gDriveData['refresh_token'],
-                                                                gDriveData['token_uri'], gDriveData['client_id'],
-                                                                gDriveData['client_secret'], gDriveData['scopes'])
-
-            drive = build('drive', 'v3', credentials=credentials)
-
             gD = GDrive(owner=admin, name=request.GET.get('n'), auth=json.dumps(gDriveData))
             gD.save()
 
-            final_json = json.dumps({'status': 1, 'message': 'Successfully saved.',
-                                     'data': str(drive.files().list(pageSize=10, fields="files(id, name)").execute())})
-            return HttpResponse(final_json)
+            return self.gDrive(request, userID)
         except BaseException as msg:
             final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
@@ -318,8 +309,10 @@ class BackupManager:
             website = data['website']
 
             gD = GDrive.objects.get(name=selectedAccount)
-            gDSite = GDriveSites.objects.get(owner=gD, domain=website)
-            gDSite.delete()
+            sites = GDriveSites.objects.filter(owner=gD, domain=website)
+
+            for items in sites:
+                items.delete()
 
             data_ret = {'status': 1}
             json_data = json.dumps(data_ret)

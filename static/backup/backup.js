@@ -1534,6 +1534,7 @@ app.controller('remoteBackupControl', function ($scope, $http, $timeout) {
 ///** Backup site ends **///
 
 //*** Remote Backup site ****//
+
 app.controller('backupLogsScheduled', function ($scope, $http, $timeout) {
 
     $scope.cyberpanelLoading = true;
@@ -1595,3 +1596,318 @@ app.controller('backupLogsScheduled', function ($scope, $http, $timeout) {
 });
 
 ///** Backup site ends **///
+
+app.controller('googleDrive', function ($scope, $http) {
+
+    $scope.cyberPanelLoading = true;
+    $scope.driveHidden = true;
+
+    $scope.setupAccount = function(){
+        window.open("https://platform.cyberpanel.net/gDrive?name=" + $scope.accountName + '&server=' + window.location.href + 'Setup');
+    };
+
+    $scope.currentPage = 1;
+    $scope.recordsToShow = 10;
+
+    $scope.fetchWebsites = function () {
+
+        $scope.cyberPanelLoading = false;
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        var data = {
+            selectedAccount: $scope.selectedAccount,
+            page: $scope.currentPage,
+            recordsToShow: $scope.recordsToShow
+        };
+
+
+        dataurl = "/backup/fetchgDriveSites";
+
+        $http.post(dataurl, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+            $scope.cyberPanelLoading = true;
+            if (response.data.status === 1) {
+                $scope.driveHidden = false;
+                new PNotify({
+                    title: 'Success',
+                    text: 'Successfully fetched.',
+                    type: 'success'
+                });
+                $scope.websites = JSON.parse(response.data.websites);
+                $scope.pagination = response.data.pagination;
+                $scope.currently = response.data.currently;
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberPanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+
+
+        }
+
+    };
+
+    $scope.addSite = function () {
+        $scope.cyberPanelLoading = false;
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+        var data = {
+            selectedWebsite: $scope.selectedWebsite,
+            selectedAccount: $scope.selectedAccount
+        };
+
+        dataurl = "/backup/addSitegDrive";
+
+        $http.post(dataurl, data, config).then(ListInitialData, cantLoadInitialData);
+
+
+        function ListInitialData(response) {
+            $scope.cyberPanelLoading = true;
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success',
+                    text: 'Site successfully added.',
+                    type: 'success'
+                });
+                $scope.fetchWebsites();
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+        }
+
+        function cantLoadInitialData(response) {
+            $scope.cyberPanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+        }
+
+
+    };
+
+    $scope.deleteAccount = function () {
+        $scope.cyberPanelLoading = false;
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+        var data = {
+            selectedAccount: $scope.selectedAccount
+        };
+
+        dataurl = "/backup/deleteAccountgDrive";
+
+        $http.post(dataurl, data, config).then(ListInitialData, cantLoadInitialData);
+
+
+        function ListInitialData(response) {
+            $scope.cyberPanelLoading = true;
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success',
+                    text: 'Account successfully deleted.',
+                    type: 'success'
+                });
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+        }
+
+        function cantLoadInitialData(response) {
+            $scope.cyberPanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+        }
+
+
+    };
+
+    $scope.changeFrequency = function () {
+        $scope.cyberPanelLoading = false;
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+        var data = {
+            selectedAccount: $scope.selectedAccount,
+            backupFrequency: $scope.backupFrequency
+        };
+
+        dataurl = "/backup/changeAccountFrequencygDrive";
+
+        $http.post(dataurl, data, config).then(ListInitialData, cantLoadInitialData);
+
+
+        function ListInitialData(response) {
+            $scope.cyberPanelLoading = true;
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success',
+                    text: 'Changes successfully applied',
+                    type: 'success'
+                });
+                $scope.fetchWebsites();
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+        }
+
+        function cantLoadInitialData(response) {
+            $scope.cyberPanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+        }
+
+
+    };
+
+    $scope.deleteSite = function (website) {
+        $scope.cyberPanelLoading = false;
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+        var data = {
+            selectedAccount: $scope.selectedAccount,
+            website: website
+        };
+
+        dataurl = "/backup/deleteSitegDrive";
+
+        $http.post(dataurl, data, config).then(ListInitialData, cantLoadInitialData);
+
+
+        function ListInitialData(response) {
+            $scope.cyberPanelLoading = true;
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success',
+                    text: 'Website Deleted.',
+                    type: 'success'
+                });
+                $scope.fetchWebsites();
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+        }
+
+        function cantLoadInitialData(response) {
+            $scope.cyberPanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+        }
+
+
+    };
+
+    $scope.currentPageLogs = 1;
+    $scope.recordsToShowLogs = 10;
+
+    $scope.fetchLogs = function () {
+
+        $scope.cyberPanelLoading = false;
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        var data = {
+            selectedAccount: $scope.selectedAccount,
+            page: $scope.currentPageLogs,
+            recordsToShow: $scope.recordsToShowLogs
+        };
+
+
+        dataurl = "/backup/fetchDriveLogs";
+
+        $http.post(dataurl, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+            $scope.cyberPanelLoading = true;
+            if (response.data.status === 1) {
+                $scope.driveHidden = false;
+                new PNotify({
+                    title: 'Success',
+                    text: 'Successfully fetched.',
+                    type: 'success'
+                });
+                $scope.logs = JSON.parse(response.data.logs);
+                $scope.paginationLogs = response.data.pagination;
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberPanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+
+        }
+
+    };
+
+});
