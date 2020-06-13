@@ -1534,6 +1534,7 @@ app.controller('remoteBackupControl', function ($scope, $http, $timeout) {
 ///** Backup site ends **///
 
 //*** Remote Backup site ****//
+
 app.controller('backupLogsScheduled', function ($scope, $http, $timeout) {
 
     $scope.cyberpanelLoading = true;
@@ -1595,3 +1596,56 @@ app.controller('backupLogsScheduled', function ($scope, $http, $timeout) {
 });
 
 ///** Backup site ends **///
+
+app.controller('googleDrive', function ($scope, $http) {
+
+    $scope.cyberPanelLoading = true;
+
+    $scope.setupAccount = function(){
+        window.open("https://platform.cyberpanel.net/gDrive?name=" + $scope.accountName + '&server=' + window.location.href + 'Setup');
+    };
+
+    $scope.fetchPackageas = function () {
+        $scope.cyberPanelLoading = false;
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        var data = {};
+
+
+        dataurl = "/CloudLinux/fetchPackages";
+
+        $http.post(dataurl, data, config).then(ListInitialData, cantLoadInitialData);
+
+
+        function ListInitialData(response) {
+            $scope.cyberPanelLoading = true;
+            if (response.data.status === 1) {
+                $scope.packages = JSON.parse(response.data.data);
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+        }
+
+        function cantLoadInitialData(response) {
+            $scope.cyberPanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+        }
+
+
+    };
+
+
+});

@@ -38,6 +38,14 @@ def gDrive(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+def gDriveSetup(request):
+    try:
+        userID = request.session['userID']
+        wm = BackupManager()
+        return wm.gDriveSetup(userID, request)
+    except KeyError:
+        return redirect(loadLoginPage)
+
 def restoreSite(request):
     try:
         userID = request.session['userID']

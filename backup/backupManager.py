@@ -9,7 +9,7 @@ django.setup()
 import json
 from plogical.acl import ACLManager
 import plogical.CyberCPLogFileWriter as logging
-from websiteFunctions.models import Websites, Backups, dest, backupSchedules, BackupJob, BackupJobLogs
+from websiteFunctions.models import Websites, Backups, dest, backupSchedules, BackupJob, BackupJobLogs, GDrive, GDriveSites, GDriveJobLogs
 from plogical.virtualHostUtilities import virtualHostUtilities
 import subprocess
 import shlex
@@ -52,13 +52,48 @@ class BackupManager:
         try:
             currentACL = ACLManager.loadedACL(userID)
 
+            admin = Administrator.objects.get(pk=userID)
+
             if ACLManager.currentContextPermission(currentACL, 'addDeleteDestinations') == 0:
                 return ACLManager.loadError()
 
-            websitesName = ACLManager.findAllSites(currentACL, userID)
-            return render(request, 'backup/googleDrive.html', {'websiteList': websitesName})
+            gDriveAcctsList = []
+
+            gDriveAccts = admin.gdrive_set.all()
+
+            for items in gDriveAccts:
+                gDriveAcctsList.append(items.name)
+
+            return render(request, 'backup/googleDrive.html', {'accounts': gDriveAcctsList})
         except BaseException as msg:
             return HttpResponse(str(msg))
+
+    def gDriveSetup(self, userID = None, request = None):
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            if ACLManager.currentContextPermission(currentACL, 'addDeleteDestinations') == 0:
+                return ACLManager.loadError()
+
+            gDriveData = {}
+            gDriveData['name'] = request.GET.get('n')
+            gDriveData['token'] = request.GET.get('t')
+            gDriveData['refresh_token'] = request.GET.get('r')
+            gDriveData['token_uri'] = request.GET.get('to')
+            gDriveData['client_id'] = request.GET.get('c')
+            gDriveData['client_secret'] = request.GET.get('cl')
+            gDriveData['scopes'] = request.GET.get('s')
+
+            gD = GDrive(owner=admin, name=gDriveData['name'],auth=json.dumps(gDriveData))
+            gD.save()
+
+            final_json = json.dumps({'status': 1, 'message': 'Successfully saved.'})
+            return HttpResponse(final_json)
+        except BaseException as msg:
+            final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
 
     def restoreSite(self, request = None, userID = None, data = None):
         try:
