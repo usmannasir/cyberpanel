@@ -86,6 +86,14 @@ def deleteSitegDrive(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+def fetchDriveLogs(request):
+    try:
+        userID = request.session['userID']
+        wm = BackupManager()
+        return wm.fetchDriveLogs(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
 def restoreSite(request):
     try:
         userID = request.session['userID']
