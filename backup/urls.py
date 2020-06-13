@@ -8,6 +8,11 @@ urlpatterns = [
     url(r'^restoreSite', views.restoreSite, name='restoreSite'),
     url(r'^gDrive$', views.gDrive, name='gDrive'),
     url(r'^gDriveSetup$', views.gDriveSetup, name='gDriveSetup'),
+    url(r'^fetchgDriveSites$', views.fetchgDriveSites, name='fetchgDriveSites'),
+    url(r'^addSitegDrive$', views.addSitegDrive, name='addSitegDrive'),
+    url(r'^deleteAccountgDrive$', views.deleteAccountgDrive, name='deleteAccountgDrive'),
+    url(r'^changeAccountFrequencygDrive$', views.changeAccountFrequencygDrive, name='changeAccountFrequencygDrive'),
+    url(r'^deleteSitegDrive$', views.deleteSitegDrive, name='deleteSitegDrive'),
 
 
     url(r'^submitBackupCreation', views.submitBackupCreation, name='submitBackupCreation'),

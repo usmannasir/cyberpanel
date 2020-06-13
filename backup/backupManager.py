@@ -64,7 +64,9 @@ class BackupManager:
             for items in gDriveAccts:
                 gDriveAcctsList.append(items.name)
 
-            return render(request, 'backup/googleDrive.html', {'accounts': gDriveAcctsList})
+            websitesName = ACLManager.findAllSites(currentACL, userID)
+
+            return render(request, 'backup/googleDrive.html', {'accounts': gDriveAcctsList, 'websites': websitesName})
         except BaseException as msg:
             return HttpResponse(str(msg))
 
@@ -88,12 +90,171 @@ class BackupManager:
             gD = GDrive(owner=admin, name=gDriveData['name'],auth=json.dumps(gDriveData))
             gD.save()
 
+
             final_json = json.dumps({'status': 1, 'message': 'Successfully saved.'})
             return HttpResponse(final_json)
         except BaseException as msg:
             final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
+
+    def fetchgDriveSites(self, request = None, userID = None, data = None):
+        try:
+
+            userID = request.session['userID']
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            data = json.loads(request.body)
+
+            selectedAccount = data['selectedAccount']
+            recordsToShow = int(data['recordsToShow'])
+            page = int(str(data['page']).strip('\n'))
+
+            gD = GDrive.objects.get(name=selectedAccount)
+
+            websites = gD.gdrivesites_set.all()
+
+            from s3Backups.s3Backups import S3Backups
+
+            pagination = S3Backups.getPagination(len(websites), recordsToShow)
+            endPageNumber, finalPageNumber = S3Backups.recordsPointer(page, recordsToShow)
+            finalWebsites = websites[finalPageNumber:endPageNumber]
+
+            json_data = "["
+            checker = 0
+            counter = 0
+
+            from plogical.backupSchedule import backupSchedule
+
+            for website in finalWebsites:
+
+                dic = {
+                    'name': website.domain
+                }
+
+                if checker == 0:
+                    json_data = json_data + json.dumps(dic)
+                    checker = 1
+                else:
+                    json_data = json_data + ',' + json.dumps(dic)
+
+                counter = counter + 1
+
+            json_data = json_data + ']'
+
+            currently = gD.runTime
+
+            data_ret = {'status': 1, 'websites': json_data, 'pagination': pagination, 'currently': currently}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def addSitegDrive(self, request = None, userID = None, data = None):
+        try:
+
+            userID = request.session['userID']
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            data = json.loads(request.body)
+
+            selectedAccount = data['selectedAccount']
+            selectedWebsite = data['selectedWebsite']
+
+            gD = GDrive.objects.get(name=selectedAccount)
+
+            gdSite = GDriveSites(owner=gD, domain=selectedWebsite)
+            gdSite.save()
+
+            data_ret = {'status': 1}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def deleteAccountgDrive(self, request = None, userID = None, data = None):
+        try:
+
+            userID = request.session['userID']
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            data = json.loads(request.body)
+
+            selectedAccount = data['selectedAccount']
+
+            gD = GDrive.objects.get(name=selectedAccount)
+
+            gD.delete()
+
+            data_ret = {'status': 1}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def changeAccountFrequencygDrive(self, request = None, userID = None, data = None):
+        try:
+
+            userID = request.session['userID']
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            data = json.loads(request.body)
+
+            selectedAccount = data['selectedAccount']
+            backupFrequency = data['backupFrequency']
+
+            gD = GDrive.objects.get(name=selectedAccount)
+            gD.runTime = backupFrequency
+
+            gD.save()
+
+            data_ret = {'status': 1}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def deleteSitegDrive(self, request = None, userID = None, data = None):
+        try:
+
+            userID = request.session['userID']
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            data = json.loads(request.body)
+
+            selectedAccount = data['selectedAccount']
+            website = data['website']
+
+            gD = GDrive.objects.get(name=selectedAccount)
+            gDSite = GDriveSites.objects.get(owner=gD, domain=website)
+            gDSite.delete()
+
+            data_ret = {'status': 1}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
 
     def restoreSite(self, request = None, userID = None, data = None):
         try:

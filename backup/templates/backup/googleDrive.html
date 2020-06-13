@@ -37,7 +37,7 @@
                                 <div class="modal-header">
                                     <button type="button" class="close" data-dismiss="modal">&times;
                                     </button>
-                                    <h4 class="modal-title">{% trans "Repo Settings" %}</h4>
+                                    <h4 class="modal-title">{% trans "Set up account" %}</h4>
                                 </div>
                                 <div class="modal-body">
 
@@ -82,6 +82,86 @@
                                         <option>{{ items }}</option>
                                     {% endfor %}
                                 </select>
+                            </div>
+                        <button ng-hide="driveHidden" type="button" ng-click="deleteAccount()"
+                                    class="btn btn-danger">{% trans "Delete" %}</button>
+                        </div>
+
+                        <div ng-hide="driveHidden" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Select Backup Frequency" %}</label>
+                            <div class="col-sm-6">
+                                <select ng-change="changeFrequency()" ng-model="backupFrequency" class="form-control">
+                                    <option>Never</option>
+                                    <option>Daily</option>
+                                    <option>Weekly</option>
+                                </select>
+                            </div>
+                            Currently: {$ currently $}
+                        </div>
+
+                        <div ng-hide="driveHidden" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Add Sites for Backup" %}</label>
+                            <div class="col-sm-6">
+                                <select ng-change="fetchWebsites()" ng-model="selectedWebsite" class="form-control">
+                                    {% for items in websites %}
+                                        <option>{{ items }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <button type="button" ng-click="addSite()"
+                                    class="btn btn-primary">{% trans "Add Site" %}</button>
+                        </div>
+
+                        <div ng-hide="driveHidden" class="form-group">
+                            <div class="row">
+                                <div class="col-sm-9">
+                                </div>
+                                <div class="col-sm-2">
+                                    <div class="form-group">
+                                        <select ng-model="recordsToShow"
+                                                ng-change="fetchWebsites()"
+                                                class="form-control" id="example-select">
+                                            <option>10</option>
+                                            <option>50</option>
+                                            <option>100</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <table style="margin-top: 2%" class="table">
+                                <thead>
+                                <tr>
+                                    <th>Sites</th>
+                                    <th>Action</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr ng-repeat="website in websites track by $index">
+                                    <td ng-bind="website.name"></td>
+                                    <td ><button type="button" ng-click="deleteSite(website.name)"
+                                    class="btn btn-danger">{% trans "Delete" %}</button></td>
+                                </tr>
+                                </tbody>
+                            </table>
+
+                            <div style="margin-top: 2%" class="row">
+                                <div class="col-md-12">
+                                    <div class="row">
+                                        <div class="col-md-8">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <select ng-model="currentPage" class="form-control"
+                                                        ng-change="fetchWebsites()">
+                                                    <option ng-repeat="page in pagination">{$ $index + 1
+                                                        $}
+                                                    </option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div> <!-- end row -->
+                                </div>
                             </div>
                         </div>
 

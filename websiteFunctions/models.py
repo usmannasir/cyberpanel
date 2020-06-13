@@ -64,12 +64,13 @@ class BackupJobLogs(models.Model):
 
 class GDrive(models.Model):
     owner = models.ForeignKey(Administrator, on_delete=models.CASCADE)
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=50, unique=True)
     auth = models.TextField(max_length=65532, default='Inactive')
+    runTime = models.CharField(max_length=20, default='NEVER')
 
 class GDriveSites(models.Model):
     owner = models.ForeignKey(GDrive, on_delete=models.CASCADE)
-    domain = models.CharField(max_length=200)
+    domain = models.CharField(max_length=200, unique=True)
 
 class GDriveJobLogs(models.Model):
     owner = models.ForeignKey(GDrive, on_delete=models.CASCADE)

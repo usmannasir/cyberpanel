@@ -46,6 +46,46 @@ def gDriveSetup(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+def fetchgDriveSites(request):
+    try:
+        userID = request.session['userID']
+        wm = BackupManager()
+        return wm.fetchgDriveSites(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def addSitegDrive(request):
+    try:
+        userID = request.session['userID']
+        wm = BackupManager()
+        return wm.addSitegDrive(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def deleteAccountgDrive(request):
+    try:
+        userID = request.session['userID']
+        wm = BackupManager()
+        return wm.deleteAccountgDrive(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def changeAccountFrequencygDrive(request):
+    try:
+        userID = request.session['userID']
+        wm = BackupManager()
+        return wm.changeAccountFrequencygDrive(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def deleteSitegDrive(request):
+    try:
+        userID = request.session['userID']
+        wm = BackupManager()
+        return wm.deleteSitegDrive(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
 def restoreSite(request):
     try:
         userID = request.session['userID']

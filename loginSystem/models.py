@@ -87,8 +87,6 @@ class Administrator(models.Model):
    api = models.IntegerField(default=0)
    securityLevel = models.IntegerField(default=0)
    state = models.CharField(max_length=10, default='ACTIVE')
-   #gDrive = models.TextField(max_length=65532, default='Inactive')
-
 
    initWebsitesLimit = models.IntegerField(default=0)
    acl = models.ForeignKey(ACL, default=1, on_delete=models.PROTECT)
