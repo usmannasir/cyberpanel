@@ -247,9 +247,9 @@ fi
 rm -f requirments.txt
 
 if [[ $UBUNTU_20 == "False" ]]; then
-  wget -O /usr/local/cyberpanel-pip.zip https://rep.cyberpanel.net/cyberpanel-pip.zip
+  wget -O /usr/local/cyberpanel-pip.zip https://rep.cyberpanel.net/cyberpanel-pip-2.zip
 else
-  wget -O /usr/local/cyberpanel-pip.zip https://rep.cyberpanel.net/ubuntu-pip.zip
+  wget -O /usr/local/cyberpanel-pip.zip https://rep.cyberpanel.net/ubuntu-pip-2.zip
 fi
 
 check_return
