@@ -20,6 +20,9 @@ docutils==0.14
 enum34==1.1.6
 funcsigs==1.0.2
 future==0.18.2
+google-api-python-client==1.9.3
+google-auth-httplib2==0.0.3
+google-auth-oauthlib==0.4.1
 idna==2.6
 ipaddress==1.0.16
 IPy==0.75
