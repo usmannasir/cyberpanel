@@ -210,6 +210,9 @@ class IncScheduler():
                         credentials = google.oauth2.credentials.Credentials(gDriveData['token'], gDriveData['refresh_token'],
                                                                     gDriveData['token_uri'], gDriveData['client_id'],
                                                                     gDriveData['client_secret'], gDriveData['scopes'])
+                        items.auth = json.dumps(credentials)
+                        items.save()
+
                         drive = build('drive', 'v3', credentials=credentials)
                     except BaseException as msg:
                         GDriveJobLogs(owner=items, status=backupSchedule.ERROR, message='Connection to this account failed. Delete and re-setup this account. Error: %s' % (str(msg))).save()
