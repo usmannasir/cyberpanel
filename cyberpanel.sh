@@ -1070,7 +1070,7 @@ if [[ $DEV == "ON" ]] ; then
 
 	if [[ $UBUNTU_20 == "False" ]] ; then
 	  source /usr/local/CyberPanel/bin/activate
-    wget -O /usr/local/cyberpanel-pip.zip https://rep.cyberpanel.net/cyberpanel-pip.zip
+    wget -O /usr/local/cyberpanel-pip.zip https://rep.cyberpanel.net/cyberpanel-pip-2.zip
     check_return
     unzip /usr/local/cyberpanel-pip.zip -d /usr/local
     check_return
