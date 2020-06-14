@@ -249,7 +249,9 @@ class IncScheduler():
                             drive.files().create(body=file_metadata, media_body=media, fields='id').execute()
 
                             GDriveJobLogs(owner=items, status=backupSchedule.INFO,
-                                          message='Backup for %s successfully sent to Googe Drive.' % (website.domain)).save()
+                                          message='Backup for %s successfully sent to Google Drive.' % (website.domain)).save()
+
+                            os.remove(completeFileToSend)
 
                         except BaseException as msg:
                             GDriveJobLogs(owner=items, status=backupSchedule.ERROR,
