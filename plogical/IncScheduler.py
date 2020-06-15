@@ -14,10 +14,10 @@ from websiteFunctions.models import GitLogs, Websites, GDrive, GDriveJobLogs
 from websiteFunctions.website import WebsiteManager
 import time
 import google.oauth2.credentials
-import googleapiclient.discovery
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 from plogical.backupSchedule import backupSchedule
+import requests
 try:
     from plogical.virtualHostUtilities import virtualHostUtilities
     from plogical.mailUtilities import mailUtilities
@@ -212,21 +212,73 @@ class IncScheduler():
                                                                     gDriveData['client_secret'], gDriveData['scopes'])
 
 
-                        gDriveData = {}
-                        gDriveData['token'] = credentials.token
-                        gDriveData['refresh_token'] = credentials.refresh_token
-                        gDriveData['token_uri'] = credentials.token_uri
-                        gDriveData['client_id'] = credentials.client_id
-                        gDriveData['client_secret'] = credentials.client_secret
-                        gDriveData['scopes'] = credentials.scopes
+                        drive = build('drive', 'v3', credentials=credentials)
+                        drive.files().list(pageSize=10, fields="files(id, name)").execute()
+                    except BaseException as msg:
+                        try:
+
+                            payload = {
+                                'client_id': '779009826203-pjnuf433m918foaif4iu5dhjqhjbadog.apps.googleusercontent.com',
+                                'client_secret': 'hyyYse42eK1AzaWtuCyOjrN6',
+                                'refresh_token': gDriveData['refresh_token'],
+                                'grant_type': 'refresh_token'}
+
+                            session = requests.Session()
+                            req = session.post('https://oauth2.googleapis.com/token', data=payload)
+                            gDriveData['token'] = req.json()['access_token']
+
+                            credentials = google.oauth2.credentials.Credentials(gDriveData['token'],
+                                                                                gDriveData['refresh_token'],
+                                                                                gDriveData['token_uri'],
+                                                                                gDriveData['client_id'],
+                                                                                gDriveData['client_secret'],
+                                                                                gDriveData['scopes'])
+
+                            drive = build('drive', 'v3', credentials=credentials)
+                            drive.files().list(pageSize=5, fields="files(id, name)").execute()
+
+                            items.auth = json.dumps(gDriveData)
+                            items.save()
+                        except BaseException as msg:
+                            GDriveJobLogs(owner=items, status=backupSchedule.ERROR, message='Connection to this account failed. Delete and re-setup this account. Error: %s' % (str(msg))).save()
+                            continue
+
+                    try:
+                        folderIDIP = gDriveData['folderIDIP']
+                    except:
+
+                        ipFile = "/etc/cyberpanel/machineIP"
+                        f = open(ipFile)
+                        ipData = f.read()
+                        ipAddress = ipData.split('\n', 1)[0]
+
+                        ## Create CyberPanel Folder
+
+                        file_metadata = {
+                            'name': 'CyberPanel-%s' % (ipAddress),
+                            'mimeType': 'application/vnd.google-apps.folder'
+                        }
+                        file = drive.files().create(body=file_metadata,
+                                                            fields='id').execute()
+                        folderIDIP = file.get('id')
+
+                        gDriveData['folderIDIP'] = folderIDIP
 
                         items.auth = json.dumps(gDriveData)
                         items.save()
 
-                        drive = build('drive', 'v3', credentials=credentials)
-                    except BaseException as msg:
-                        GDriveJobLogs(owner=items, status=backupSchedule.ERROR, message='Connection to this account failed. Delete and re-setup this account. Error: %s' % (str(msg))).save()
-                        continue
+                    ### Current folder to store files
+
+                    file_metadata = {
+                        'name': time.strftime("%m.%d.%Y_%H-%M-%S"),
+                        'mimeType': 'application/vnd.google-apps.folder',
+                        'parents': [folderIDIP]
+                    }
+                    file = drive.files().create(body=file_metadata,
+                                                fields='id').execute()
+                    folderID = file.get('id')
+
+                    ###
 
                     GDriveJobLogs(owner=items, status=backupSchedule.INFO, message='Starting backup job..').save()
 
@@ -244,7 +296,10 @@ class IncScheduler():
                             completeFileToSend = retValues[1] + ".tar.gz"
                             fileName = completeFileToSend.split('/')[-1]
 
-                            file_metadata = {'name': '%s' % (fileName)}
+                            file_metadata = {
+                                'name': '%s' % (fileName),
+                                'parents': [folderID]
+                            }
                             media = MediaFileUpload(completeFileToSend, mimetype='application/gzip', resumable=True)
                             drive.files().create(body=file_metadata, media_body=media, fields='id').execute()
 
