@@ -220,7 +220,7 @@ class IncScheduler():
                             finalData = json.dumps({'refresh_token': gDriveData['refresh_token']})
                             r = requests.post("https://platform.cyberpanel.net/refreshToken", data=finalData
                                               )
-                            gDriveData['refresh_token'] = json.loads(r.text)['access_token']
+                            gDriveData['token'] = json.loads(r.text)['access_token']
 
                             credentials = google.oauth2.credentials.Credentials(gDriveData['token'],
                                                                                 gDriveData['refresh_token'],
