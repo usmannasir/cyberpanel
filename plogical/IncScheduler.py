@@ -217,15 +217,10 @@ class IncScheduler():
                     except BaseException as msg:
                         try:
 
-                            payload = {
-                                'client_id': '779009826203-pjnuf433m918foaif4iu5dhjqhjbadog.apps.googleusercontent.com',
-                                'client_secret': 'hyyYse42eK1AzaWtuCyOjrN6',
-                                'refresh_token': gDriveData['refresh_token'],
-                                'grant_type': 'refresh_token'}
-
-                            session = requests.Session()
-                            req = session.post('https://oauth2.googleapis.com/token', data=payload)
-                            gDriveData['token'] = req.json()['access_token']
+                            finalData = json.dumps({'refresh_token': gDriveData['refresh_token']})
+                            r = requests.post("https://platform.cyberpanel.net/refreshToken", data=finalData
+                                              )
+                            gDriveData['refresh_token'] = json.loads(r.text)['access_token']
 
                             credentials = google.oauth2.credentials.Credentials(gDriveData['token'],
                                                                                 gDriveData['refresh_token'],
