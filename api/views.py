@@ -14,6 +14,7 @@ import os
 from baseTemplate.models import version
 from plogical.mailUtilities import mailUtilities
 from websiteFunctions.website import WebsiteManager
+from packages.packagesManager import PackagesManager
 from s3Backups.s3Backups import S3Backups
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from plogical.processUtilities import ProcessUtilities
@@ -66,6 +67,19 @@ def createWebsite(request):
 
     wm = WebsiteManager()
     return wm.createWebsiteAPI(json.loads(request.body))
+
+@csrf_exempt
+def getPackagesListAPI(request):
+    data = json.loads(request.body)
+    adminUser = data['adminUser']
+    admin = Administrator.objects.get(userName=adminUser)
+    if admin.api == 0:
+        data_ret = {"existsStatus": 0, 'listPackages': [],
+                    'error_message': "API Access Disabled."}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+    pm = PackagesManager()
+    return pm.listPackagesAPI(data)
 
 @csrf_exempt
 def getUserInfo(request):
