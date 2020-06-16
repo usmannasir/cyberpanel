@@ -14,6 +14,7 @@ urlpatterns = [
     url(r'^changeUserPassAPI', views.changeUserPassAPI, name='changeUserPassAPI'),
     url(r'^submitUserDeletion$', views.submitUserDeletion, name='submitUserDeletion'),
 
+    url(r'^listPackage',views.getPackagesListAPI,name='getPackagesListAPI'),
     url(r'^changePackageAPI', views.changePackageAPI, name='changePackageAPI'),
     url(r'^fetchSSHkey', views.fetchSSHkey, name='fetchSSHkey'),
     url(r'^remoteTransfer', views.remoteTransfer, name='remoteTransfer'),
