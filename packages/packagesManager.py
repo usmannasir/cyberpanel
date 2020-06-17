@@ -2,6 +2,9 @@
 import os.path
 import sys
 import django
+
+from plogical import hashPassword
+
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
@@ -234,6 +237,23 @@ class PackagesManager:
 
         except BaseException as msg:
             return redirect(loadLoginPage)
+
+    def listPackagesAPI(self,data=None):
+        """
+            List of packages for API
+        :param data:
+        :return HttpResponse:
+        """
+        try:
+            adminUser = data['adminUser']
+            admin = Administrator.objects.get(userName=adminUser)
+            currentACL = ACLManager.loadedACL(admin.id)
+            packageList = ACLManager.loadPackages(admin.id, currentACL)
+            return HttpResponse(json.dumps(packageList);
+        except BaseException as msg:
+            data_ret = {'status': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
 
     def fetchPackagesTable(self):
         try:
