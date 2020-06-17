@@ -249,7 +249,7 @@ class PackagesManager:
             admin = Administrator.objects.get(userName=adminUser)
             currentACL = ACLManager.loadedACL(admin.id)
             packageList = ACLManager.loadPackages(admin.id, currentACL)
-            return HttpResponse(json.dumps(packageList);
+            return HttpResponse(json.dumps(packageList))
         except BaseException as msg:
             data_ret = {'status': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
