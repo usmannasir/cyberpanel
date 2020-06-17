@@ -72,14 +72,20 @@ def createWebsite(request):
 def getPackagesListAPI(request):
     data = json.loads(request.body)
     adminUser = data['adminUser']
+    adminPass = data['adminPass']
     admin = Administrator.objects.get(userName=adminUser)
     if admin.api == 0:
         data_ret = {"existsStatus": 0, 'listPackages': [],
                     'error_message': "API Access Disabled."}
+        return HttpResponse(json.dumps(data_ret))
+    if hashPassword.check_password(admin.password, adminPass):
+        pm = PackagesManager()
+        return pm.listPackagesAPI(data)
+    else:
+        data_ret = {"status": 0,'error_message': "Could not authorize access to API"}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
-    pm = PackagesManager()
-    return pm.listPackagesAPI(data)
+    
 
 @csrf_exempt
 def getUserInfo(request):
