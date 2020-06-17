@@ -246,17 +246,10 @@ class PackagesManager:
         """
         try:
             adminUser = data['adminUser']
-            adminPass = data['adminPass']
             admin = Administrator.objects.get(userName=adminUser)
-            if hashPassword.check_password(admin.password, adminPass):
-                currentACL = ACLManager.loadedACL(admin.id)
-                packageList = ACLManager.loadPackages(admin.id, currentACL)
-                return HttpResponse(json.dumps(packageList))
-            else:
-                data_ret = {"status": 0,
-                            'error_message': "Could not authorize access to API"}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
+            currentACL = ACLManager.loadedACL(admin.id)
+            packageList = ACLManager.loadPackages(admin.id, currentACL)
+            return HttpResponse(json.dumps(packageList);
         except BaseException as msg:
             data_ret = {'status': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
