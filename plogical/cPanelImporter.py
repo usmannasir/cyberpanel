@@ -718,6 +718,55 @@ class cPanelImporter:
         from filemanager.filemanager import FileManager
         fm = FileManager(None, None)
         fm.fixPermissions(self.mainDomain)
+        
+    def createCronJobs(self):
+        try:
+            
+            message = 'Restoring cron jobs from %s.' % (self.backupFile)
+            logging.statusWriter(self.logFile, message, 1)
+            
+            CompletPathToExtractedArchive = cPanelImporter.mainBackupPath + self.fileName            
+            cronPath = '%s/cron' % (CompletPathToExtractedArchive)
+            
+            
+            if len(os.listdir(cronPath)) == 0:
+                message = 'No Cron Job file found.'
+                logging.statusWriter(self.logFile, message, 1)
+                return 1
+            
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                localCronPath = "/var/spool/cron/" + self.externalApp
+            else:
+                localCronPath = "/var/spool/cron/crontabs/" + self.externalApp
+                
+            localCronFile = open(localCronPath, "r+")
+                
+            commandT = 'touch %s' % (localCronPath)
+            ProcessUtilities.executioner(commandT, 'root')
+            commandT = 'chown %s:%s %s' % (self.externalApp, self.externalApp, localCronPath)
+            ProcessUtilities.executioner(commandT, 'root')
+
+            # There's only single file usually but running for all found
+            for item in os.listdir(cronPath):
+                cronFile = open('%s/%s' % (cronPath, item), 'r')
+                cronJobs = cronFile.readlines()
+                
+                # Filter actual jobs and remove variables and last new line character
+                for job in cronJobs:
+                    if len(job.split(' ')) > 1:
+                        # Valid enough, add it to user
+                        localCronFile.write(job)
+                    
+            message = 'Cron Jobs successfully restored.'
+            logging.statusWriter(self.logFile, message, 1)
+
+            return 1
+        
+        except BaseException as msg:
+            message = 'Failed to restore Cron Jobs from file %s, error message: %s.' % (
+            self.backupFile, str(msg))
+            logging.statusWriter(self.logFile, message, 1)
+            return 0
 
     def MainController(self):
 
@@ -743,6 +792,11 @@ class cPanelImporter:
 
 
         if self.RestoreDatabases():
+            pass
+        else:
+            return 0
+        
+        if self.createCronJobs():
             pass
         else:
             return 0
