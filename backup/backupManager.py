@@ -60,7 +60,7 @@ class BackupManager:
 
             admin = Administrator.objects.get(pk=userID)
 
-            if ACLManager.currentContextPermission(currentACL, 'addDeleteDestinations') == 0:
+            if ACLManager.currentContextPermission(currentACL, 'createBackup') == 0:
                 return ACLManager.loadError()
 
             gDriveAcctsList = []
@@ -81,7 +81,7 @@ class BackupManager:
             currentACL = ACLManager.loadedACL(userID)
             admin = Administrator.objects.get(pk=userID)
 
-            if ACLManager.currentContextPermission(currentACL, 'addDeleteDestinations') == 0:
+            if ACLManager.currentContextPermission(currentACL, 'createBackup') == 0:
                 return ACLManager.loadError()
 
             gDriveData = {}
@@ -113,6 +113,11 @@ class BackupManager:
             page = int(str(data['page']).strip('\n'))
 
             gD = GDrive.objects.get(name=selectedAccount)
+
+            if ACLManager.checkGDriveOwnership(gD, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson('status', 0)
 
             logs = gD.gdrivejoblogs_set.all().order_by('-id')
 
@@ -150,7 +155,6 @@ class BackupManager:
 
             json_data = json_data + ']'
 
-
             data_ret = {'status': 1, 'logs': json_data, 'pagination': pagination}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -175,6 +179,11 @@ class BackupManager:
             page = int(str(data['page']).strip('\n'))
 
             gD = GDrive.objects.get(name=selectedAccount)
+
+            if ACLManager.checkGDriveOwnership(gD, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson('status', 0)
 
             websites = gD.gdrivesites_set.all()
 
@@ -232,6 +241,11 @@ class BackupManager:
 
             gD = GDrive.objects.get(name=selectedAccount)
 
+            if ACLManager.checkGDriveOwnership(gD, admin, currentACL) == 1 and ACLManager.checkOwnership(selectedWebsite, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson('status', 0)
+
             gdSite = GDriveSites(owner=gD, domain=selectedWebsite)
             gdSite.save()
 
@@ -257,6 +271,11 @@ class BackupManager:
 
             gD = GDrive.objects.get(name=selectedAccount)
 
+            if ACLManager.checkGDriveOwnership(gD, admin, currentACL):
+                pass
+            else:
+                return ACLManager.loadErrorJson('status', 0)
+
             gD.delete()
 
             data_ret = {'status': 1}
@@ -281,6 +300,12 @@ class BackupManager:
             backupFrequency = data['backupFrequency']
 
             gD = GDrive.objects.get(name=selectedAccount)
+
+            if ACLManager.checkGDriveOwnership(gD, admin, currentACL):
+                pass
+            else:
+                return ACLManager.loadErrorJson('status', 0)
+
             gD.runTime = backupFrequency
 
             gD.save()
@@ -307,6 +332,12 @@ class BackupManager:
             website = data['website']
 
             gD = GDrive.objects.get(name=selectedAccount)
+
+            if ACLManager.checkGDriveOwnership(gD, admin, currentACL) == 1 and ACLManager.checkOwnership(website, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson('status', 0)
+
             sites = GDriveSites.objects.filter(owner=gD, domain=website)
 
             for items in sites:
