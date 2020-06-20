@@ -739,7 +739,7 @@ class cPanelImporter:
             else:
                 localCronPath = "/var/spool/cron/crontabs/" + self.externalApp
                 
-            localCronFile = open(localCronPath, "r+")
+            localCronFile = open(localCronPath, "a+")
                 
             commandT = 'touch %s' % (localCronPath)
             ProcessUtilities.executioner(commandT, 'root')
