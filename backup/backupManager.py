@@ -88,8 +88,6 @@ class BackupManager:
             gDriveData['token'] = request.GET.get('t')
             gDriveData['refresh_token'] = request.GET.get('r')
             gDriveData['token_uri'] = request.GET.get('to')
-            gDriveData['client_id'] = request.GET.get('c')
-            gDriveData['client_secret'] = request.GET.get('cl')
             gDriveData['scopes'] = request.GET.get('s')
 
             gD = GDrive(owner=admin, name=request.GET.get('n'), auth=json.dumps(gDriveData))

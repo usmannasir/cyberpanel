@@ -208,8 +208,7 @@ class IncScheduler():
                     gDriveData = json.loads(items.auth)
                     try:
                         credentials = google.oauth2.credentials.Credentials(gDriveData['token'], gDriveData['refresh_token'],
-                                                                    gDriveData['token_uri'], gDriveData['client_id'],
-                                                                    gDriveData['client_secret'], gDriveData['scopes'])
+                                                                gDriveData['token_uri'], None, None, gDriveData['scopes'])
 
 
                         drive = build('drive', 'v3', credentials=credentials)
@@ -225,8 +224,8 @@ class IncScheduler():
                             credentials = google.oauth2.credentials.Credentials(gDriveData['token'],
                                                                                 gDriveData['refresh_token'],
                                                                                 gDriveData['token_uri'],
-                                                                                gDriveData['client_id'],
-                                                                                gDriveData['client_secret'],
+                                                                                None,
+                                                                                None,
                                                                                 gDriveData['scopes'])
 
                             drive = build('drive', 'v3', credentials=credentials)
