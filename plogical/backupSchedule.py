@@ -49,8 +49,6 @@ class backupSchedule:
     def createLocalBackup(virtualHost, backupLogPath):
         try:
 
-            startingTime = datetime.now()
-
             backupSchedule.remoteBackupLogging(backupLogPath, "Starting local backup for: " + virtualHost)
 
             ###
@@ -75,7 +73,6 @@ class backupSchedule:
             killCounter = 0
 
             while (1):
-                diff = datetime.now() - startingTime
 
                 backupDomain = virtualHost
                 status = os.path.join("/home", backupDomain, "backup/status")
@@ -91,10 +88,7 @@ class backupSchedule:
                 ifRunning = ProcessUtilities.outputExecutioner('ps aux')
 
                 if (ifRunning.find('startBackup') > -1 or ifRunning.find('BackupRoot') > -1) and ifRunning.find('/%s/' % (backupDomain)):
-                    pass
-                else:
                     if os.path.exists(status):
-
                         status = open(status, 'r').read()
                         time.sleep(2)
 
@@ -117,44 +111,51 @@ class backupSchedule:
                             except:
                                 pass
                             return 1, tempStoragePath
-                        else:
-                            return 0, 'Backup process killed without reporting any error.'
-                    else:
-                        if killCounter == 1:
-                            return 0, 'Backup process killed without reporting any error.'
-                        else:
-                            time.sleep(10)
-                            killCounter = 1
 
-                ## file name read ends
+                        elif status.find("[5009]") > -1:
+                            ## removing status file, so that backup can re-run
+                            try:
+                                command = 'sudo rm -f ' + status
+                                ProcessUtilities.normalExecutioner(command)
 
-                if os.path.exists(status):
-                    status = open(status, 'r').read()
-                    time.sleep(2)
+                                command = 'sudo rm -f ' + backupFileNamePath
+                                ProcessUtilities.normalExecutioner(command)
 
-                    if status.find("Completed") > -1:
+                                command = 'sudo rm -f ' + pid
+                                ProcessUtilities.normalExecutioner(command)
 
-                        ### Removing Files
+                                backupObs = Backups.objects.filter(fileName=fileName)
+                                for items in backupObs:
+                                    items.delete()
 
-                        command = 'sudo rm -f ' + status
-                        ProcessUtilities.normalExecutioner(command)
+                            except:
+                                pass
 
-                        command = 'sudo rm -f ' + backupFileNamePath
-                        ProcessUtilities.normalExecutioner(command)
+                            backupSchedule.remoteBackupLogging(backupLogPath,
+                                                               "Local backup creating failed for %s, Error message: %s" % (
+                                                               virtualHost, status), backupSchedule.ERROR)
 
-                        command = 'sudo rm -f ' + pid
-                        ProcessUtilities.normalExecutioner(command)
+                            try:
+                                os.remove(pathToFile)
+                            except:
+                                pass
+                            return 0, tempStoragePath
 
-                        backupSchedule.remoteBackupLogging(backupLogPath, "Backup Completed for: " + virtualHost)
-                        try:
-                            os.remove(pathToFile)
-                        except:
-                            pass
-                        return 1, tempStoragePath
+                        elif os.path.exists(schedulerPath):
+                            backupSchedule.remoteBackupLogging(backupLogPath, 'Backup process killed. Error: %s' % (
+                                open(schedulerPath, 'r').read()),
+                                                               backupSchedule.ERROR)
+                            os.remove(schedulerPath)
+                            return 0, 'Backup process killed.'
+                else:
+                    if os.path.exists(status):
+                        status = open(status, 'r').read()
+                        time.sleep(2)
 
-                    elif status.find("[5009]") > -1:
-                        ## removing status file, so that backup can re-run
-                        try:
+                        if status.find("Completed") > -1:
+
+                            ### Removing Files
+
                             command = 'sudo rm -f ' + status
                             ProcessUtilities.normalExecutioner(command)
 
@@ -164,26 +165,29 @@ class backupSchedule:
                             command = 'sudo rm -f ' + pid
                             ProcessUtilities.normalExecutioner(command)
 
-                            backupObs = Backups.objects.filter(fileName=fileName)
-                            for items in backupObs:
-                                items.delete()
-
-                        except:
-                            pass
-
-                        backupSchedule.remoteBackupLogging(backupLogPath, "Local backup creating failed for %s, Error message: %s" % (virtualHost, status), backupSchedule.ERROR)
-
-                        try:
-                            os.remove(pathToFile)
-                        except:
-                            pass
-                        return 0, tempStoragePath
-
-                    elif os.path.exists(schedulerPath):
-                        backupSchedule.remoteBackupLogging(backupLogPath, 'Backup process killed without reporting any error.',
+                            backupSchedule.remoteBackupLogging(backupLogPath, "Backup Completed for: " + virtualHost)
+                            try:
+                                os.remove(pathToFile)
+                            except:
+                                pass
+                            return 1, tempStoragePath
+                        elif os.path.exists(schedulerPath):
+                            backupSchedule.remoteBackupLogging(backupLogPath, 'Backup process killed. Error: %s' % (open(schedulerPath, 'r').read()),
                                                            backupSchedule.ERROR)
-                        os.remove(schedulerPath)
-                        return 0, 'Backup process killed without reporting any error.'
+                            os.remove(schedulerPath)
+                            return 0, 'Backup process killed.'
+                    else:
+                        if killCounter == 1:
+                            return 0, 'Backup process killed without reporting any error. [184]'
+                        elif os.path.exists(schedulerPath):
+                            backupSchedule.remoteBackupLogging(backupLogPath, 'Backup process killed. Error: %s' % (
+                                open(schedulerPath, 'r').read()),
+                                                               backupSchedule.ERROR)
+                            os.remove(schedulerPath)
+                            return 0, 'Backup process killed.'
+                        else:
+                            time.sleep(10)
+                            killCounter = 1
 
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [119:startBackup]")
