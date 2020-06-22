@@ -164,7 +164,7 @@ class emailMarketing(multi.Thread):
                         email = items.email
                         self.currentEmail = email
                         domainName = email.split('@')[1]
-                        records = DNS.dnslookup(domainName, 'MX')
+                        records = DNS.dnslookup(domainName, 'MX', 15)
 
                         counterGlobal = counterGlobal + 1
 
@@ -191,9 +191,9 @@ class emailMarketing(multi.Thread):
                                                           message='IP being used for validation until next sleep: %s.' % (str(self.currentIP))).save()
 
                                             if self.currentIP == None:
-                                                server = smtplib.SMTP()
+                                                server = smtplib.SMTP(timeout=10)
                                             else:
-                                                server = smtplib.SMTP(self.currentIP)
+                                                server = smtplib.SMTP(self.currentIP, timeout=10)
                                         else:
 
                                             if self.currentIP == '':
@@ -203,9 +203,9 @@ class emailMarketing(multi.Thread):
                                                                   str(self.currentIP))).save()
 
                                             if self.currentIP == None:
-                                                server = smtplib.SMTP()
+                                                server = smtplib.SMTP(timeout=10)
                                             else:
-                                                server = smtplib.SMTP(self.currentIP)
+                                                server = smtplib.SMTP(self.currentIP, timeout=10)
                                     else:
                                         logging.CyberCPLogFileWriter.writeToFile(
                                             'Delay not configured..')
@@ -213,15 +213,15 @@ class emailMarketing(multi.Thread):
                                         ValidationLog(owner=verificationList, status=backupSchedule.INFO,
                                                       message='Delay not configured..').save()
 
-                                        server = smtplib.SMTP()
+                                        server = smtplib.SMTP(timeout=10)
                                 except BaseException as msg:
 
                                     ValidationLog(owner=verificationList, status=backupSchedule.ERROR,
                                                   message='Delay not configured. Error message: %s' % (str(msg))).save()
 
-                                    server = smtplib.SMTP()
+                                    server = smtplib.SMTP(timeout=10)
                             else:
-                                server = smtplib.SMTP()
+                                server = smtplib.SMTP(timeout=10)
 
                             ###
 
