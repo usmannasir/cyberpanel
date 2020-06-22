@@ -4208,14 +4208,14 @@ StrictHostKeyChecking no
                                         GitLogs(owner=self.web, type='INFO',
                                                 message='Running: %s' % (command)).save()
 
-                                        result = ProcessUtilities.outputExecutioner(command, self.web.externalApp)
+                                        result = ProcessUtilities.outputExecutioner(command, self.web.externalApp, None, self.folder)
                                         GitLogs(owner=self.web, type='INFO',
                                                 message='Result: %s' % (result)).save()
                                 else:
                                     GitLogs(owner=self.web, type='INFO',
                                             message='Running: %s' % (gitConf['commands'])).save()
 
-                                    result = ProcessUtilities.outputExecutioner(gitConf['commands'], self.web.externalApp)
+                                    result = ProcessUtilities.outputExecutioner(gitConf['commands'], self.web.externalApp, None, self.folder)
                                     GitLogs(owner=self.web, type='INFO',
                                             message='Result: %s' % (result)).save()
 
