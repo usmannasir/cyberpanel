@@ -670,7 +670,7 @@ class cPanelImporter:
                             cDBName = inItems.split('`')[1].replace('\\', '')
                             logging.statusWriter(self.logFile, inItems, 1)
                             if cDBName == items.replace('.sql', ''):
-                                cDBUser = inItems.split("'")[1]
+                                cDBUser = inItems.replace("`","'").replace("\\","").split("'")[1]
                                 message = 'Database user for %s is %s.' % (cDBName, cDBUser)
                                 logging.statusWriter(self.logFile, message, 1)
                                 if Databases.objects.filter(dbUser=cDBUser).count() > 0:
