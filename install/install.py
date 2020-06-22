@@ -596,6 +596,13 @@ class preFlightsChecks:
         command = "find /usr/local/CyberCP/ -name '*.pyc' -delete"
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
+        if self.distro == cent8:
+            command = 'chown root:pdns /etc/pdns/pdns.conf'
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+            command = 'chmod 640 /etc/pdns/pdns.conf'
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
     def install_unzip(self):
         self.stdOut("Install unzip")
         try:
