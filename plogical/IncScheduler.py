@@ -295,7 +295,26 @@ class IncScheduler():
                                 'parents': [folderID]
                             }
                             media = MediaFileUpload(completeFileToSend, mimetype='application/gzip', resumable=True)
-                            drive.files().create(body=file_metadata, media_body=media, fields='id').execute()
+                            try:
+                                drive.files().create(body=file_metadata, media_body=media, fields='id').execute()
+                            except:
+                                finalData = json.dumps({'refresh_token': gDriveData['refresh_token']})
+                                r = requests.post("https://platform.cyberpanel.net/refreshToken", data=finalData
+                                                  )
+                                gDriveData['token'] = json.loads(r.text)['access_token']
+
+                                credentials = google.oauth2.credentials.Credentials(gDriveData['token'],
+                                                                                    gDriveData['refresh_token'],
+                                                                                    gDriveData['token_uri'],
+                                                                                    None,
+                                                                                    None,
+                                                                                    gDriveData['scopes'])
+
+                                drive = build('drive', 'v3', credentials=credentials)
+                                drive.files().create(body=file_metadata, media_body=media, fields='id').execute()
+
+                                items.auth = json.dumps(gDriveData)
+                                items.save()
 
                             GDriveJobLogs(owner=items, status=backupSchedule.INFO,
                                           message='Backup for %s successfully sent to Google Drive.' % (website.domain)).save()
