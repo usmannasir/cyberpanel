@@ -1705,6 +1705,14 @@ class Upgrade:
             command = "find /usr/local/CyberCP/ -name '*.pyc' -delete"
             Upgrade.executioner(command, 0)
 
+            if os.path.exists(Upgrade.CentOSPath):
+                if Upgrade.decideCentosVersion() == CENTOS8:
+                    command = 'chown root:pdns /etc/pdns/pdns.conf'
+                    Upgrade.executioner(command, 0)
+
+                    command = 'chmod 640 /etc/pdns/pdns.conf'
+                    Upgrade.executioner(command, 0)
+
             Upgrade.stdOut("Permissions updated.")
 
         except BaseException as msg:
