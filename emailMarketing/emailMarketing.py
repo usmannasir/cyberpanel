@@ -5,7 +5,7 @@ import time
 import csv
 import re
 import plogical.CyberCPLogFileWriter as logging
-from .models import EmailMarketing, EmailLists, EmailsInList, EmailTemplate, EmailJobs, SMTPHosts, ValidationLog
+from .models import EmailLists, EmailsInList, EmailTemplate, EmailJobs, SMTPHosts, ValidationLog
 from plogical.backupSchedule import backupSchedule
 from websiteFunctions.models import Websites
 import threading as multi
@@ -271,27 +271,35 @@ class emailMarketing(multi.Thread):
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return 0
 
+    def setupSMTPConnection(self):
+        try:
+            if self.extraArgs['host'] == 'localhost':
+                self.smtpServer = smtplib.SMTP('127.0.0.1')
+                return 1
+            else:
+                self.verifyHost = SMTPHosts.objects.get(host=self.extraArgs['host'])
+                self.smtpServer = smtplib.SMTP(str(self.verifyHost.host), int(self.verifyHost.port))
+                self.smtpServer.login(str(self.verifyHost.userName), str(self.verifyHost.password))
+                return 1
+        except smtplib.SMTPHeloError:
+            logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
+                                                      'The server didnt reply properly to the HELO greeting.')
+            return 0
+        except smtplib.SMTPAuthenticationError:
+            logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
+                                                      'Username and password combination not accepted.')
+            return 0
+        except smtplib.SMTPException:
+            logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
+                                                      'No suitable authentication method was found.')
+            return 0
+
     def startEmailJob(self):
         try:
-            try:
-                if self.extraArgs['host'] == 'localhost':
-                    smtpServer = smtplib.SMTP('127.0.0.1')
-                else:
-                    verifyHost = SMTPHosts.objects.get(host=self.extraArgs['host'])
-                    smtpServer = smtplib.SMTP(str(verifyHost.host), int(verifyHost.port))
-                    smtpServer.login(str(verifyHost.userName), str(verifyHost.password))
-            except smtplib.SMTPHeloError:
-                logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
-                                                          'The server didnt reply properly to the HELO greeting.')
-                return
-            except smtplib.SMTPAuthenticationError:
-                logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
-                                                          'Username and password combination not accepted.')
-                return
-            except smtplib.SMTPException:
-                logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
-                                                          'No suitable authentication method was found.')
-                return
+
+            if self.setupSMTPConnection() == 0:
+                logging.CyberCPLogFileWriter.writeToFile('SMTP Connection failed. [301]')
+                return 0
 
             emailList = EmailLists.objects.get(listName=self.extraArgs['listName'])
             allEmails = emailList.emailsinlist_set.all()
@@ -364,7 +372,16 @@ class emailMarketing(multi.Thread):
                                 html = MIMEText(finalMessage, 'plain')
                                 message.attach(html)
 
-                            smtpServer.sendmail(message['From'], items.email, message.as_string())
+                            try:
+                                status = self.smtpServer.noop()[0]
+                                self.smtpServer.sendmail(message['From'], items.email, message.as_string())
+                            except:  # smtplib.SMTPServerDisconnected
+                                if self.setupSMTPConnection() == 0:
+                                    logging.CyberCPLogFileWriter.writeToFile('SMTP Connection failed. [301]')
+                                    return 0
+                                self.smtpServer.sendmail(message['From'], items.email, message.as_string())
+
+
                             sent = sent + 1
                             emailJob.sent = sent
                             emailJob.save()
@@ -379,7 +396,10 @@ class emailMarketing(multi.Thread):
                             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
                                                                       'Successfully sent: ' + str(
                                                                           sent) + ', Failed: ' + str(failed))
-                            logging.CyberCPLogFileWriter.writeToFile(str(msg))
+                            if self.setupSMTPConnection() == 0:
+                                logging.CyberCPLogFileWriter.writeToFile(
+                                    'SMTP Connection failed. Error: %s. [392]' % (str(msg)))
+                                return 0
                 except BaseException as msg:
                             failed = failed + 1
                             emailJob.failed = failed
@@ -387,13 +407,13 @@ class emailMarketing(multi.Thread):
                             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
                                                                       'Successfully sent: ' + str(
                                                                           sent) + ', Failed: ' + str(failed))
-                            logging.CyberCPLogFileWriter.writeToFile(str(msg))
+                            if self.setupSMTPConnection() == 0:
+                                logging.CyberCPLogFileWriter.writeToFile('SMTP Connection failed. Error: %s. [399]' % (str(msg)))
+                                return 0
 
 
-            emailJob = EmailJobs(owner=emailMessage, date=time.strftime("%I-%M-%S-%a-%b-%Y"),
-                                 host=self.extraArgs['host'], totalEmails=totalEmails,
-                                 sent=sent, failed=failed
-                                 )
+            emailJob.sent = sent
+            emailJob.failed = failed
             emailJob.save()
 
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
