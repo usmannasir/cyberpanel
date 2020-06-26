@@ -95,13 +95,18 @@ class preFlightsChecks:
     cyberPanelMirror = "mirror.cyberpanel.net/pip"
     cdn = 'cyberpanel.sh'
 
-    def __init__(self, rootPath, ip, path, cwd, cyberPanelPath, distro):
+    def __init__(self, rootPath, ip, path, cwd, cyberPanelPath, distro, remotemysql = None , mysqlhost = None, mysqluser = None, mysqlpassword = None, mysqlport = None):
         self.ipAddr = ip
         self.path = path
         self.cwd = cwd
         self.server_root_path = rootPath
         self.cyberPanelPath = cyberPanelPath
         self.distro = distro
+        self.remotemysql = remotemysql
+        self.mysqlhost = mysqlhost
+        self.mysqluser = mysqluser
+        self.mysqlpassword = mysqlpassword
+        self.mysqlport = mysqlport
 
     @staticmethod
     def stdOut(message, log=0, do_exit=0, code=os.EX_OK):
@@ -373,11 +378,15 @@ class preFlightsChecks:
 
         ### update password:
 
-        passFile = "/etc/cyberpanel/mysqlPassword"
+        if self.remotemysql == 'OFF':
 
-        f = open(passFile)
-        data = f.read()
-        password = data.split('\n', 1)[0]
+            passFile = "/etc/cyberpanel/mysqlPassword"
+
+            f = open(passFile)
+            data = f.read()
+            password = data.split('\n', 1)[0]
+        else:
+            password = self.mysqlpassword
 
         ### Put correct mysql passwords in settings file!
 
@@ -396,6 +405,7 @@ class preFlightsChecks:
                 SK = "SECRET_KEY = '%s'\n" % (generate_pass(50))
                 writeDataToFile.writelines(SK)
                 continue
+
             if mysql == 'Two':
                 if items.find("'PASSWORD':") > -1:
                     if counter == 0:
@@ -411,7 +421,6 @@ class preFlightsChecks:
                     if counter == 0:
                         writeDataToFile.writelines("        'PASSWORD': '" + mysqlPassword + "'," + "\n")
                         counter = counter + 1
-
                     else:
                         writeDataToFile.writelines("        'PASSWORD': '" + password + "'," + "\n")
                 elif items.find('127.0.0.1') > -1:
@@ -420,6 +429,17 @@ class preFlightsChecks:
                     writeDataToFile.writelines("        'PORT': '',\n")
                 else:
                     writeDataToFile.writelines(items)
+
+
+            if self.remotemysql == 'ON':
+                command = "sed -i 's|'HOST': 'localhost',|'HOST': '%s',|g' %s" % (self.mysqlhost, path)
+                preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+
+                command = "sed -i 's|'USER': 'root',|'USER': '%s',|g' %s" % (self.mysqluser, path)
+                preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+
+                command = "sed -i 's|'PORT':''|'PORT':'%s'|g' %s" % (self.mysqlport, path)
+                preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
         if self.distro == ubuntu:
             os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
@@ -2100,6 +2120,11 @@ def main():
     parser.add_argument('--serial', help='Install LS Ent or OpenLiteSpeed')
     parser.add_argument('--port', help='LSCPD Port')
     parser.add_argument('--redis', help='vHosts on Redis - Requires LiteSpeed Enterprise')
+    parser.add_argument('--remotemysql', help='Opt to choose local or remote MySQL')
+    parser.add_argument('--mysqlhost', help='MySQL host if remote is chosen.')
+    parser.add_argument('--mysqluser', help='MySQL user if remote is chosen.')
+    parser.add_argument('--mysqlpassword', help='MySQL password if remote is chosen.')
+    parser.add_argument('--mysqlport', help='MySQL port if remote is chosen.')
     args = parser.parse_args()
 
     logging.InstallLog.writeToFile("Starting CyberPanel installation..")
@@ -2135,12 +2160,22 @@ def main():
 
     cwd = os.getcwd()
 
-    distro = get_distro()
-    checks = preFlightsChecks("/usr/local/lsws/", args.publicip, "/usr/local", cwd, "/usr/local/CyberCP", distro)
-    checks.mountTemp()
+    if args.remotemsql == 'ON':
+        remotemysql = args.remotemysql
+        mysqlhost = args.mysqlhost
+        mysqluser = args.mysqluser
+        mysqlpassword = args.mysqlpassword
+        mysqlport = args.mysqlport
+    else:
+        remotemysql = args.remotemysql
+        mysqlhost = ''
+        mysqluser = ''
+        mysqlpassword = ''
+        mysqlport = ''
 
-#    if distro == ubuntu:
-#        os.chdir("/etc/cyberpanel")
+    distro = get_distro()
+    checks = preFlightsChecks("/usr/local/lsws/", args.publicip, "/usr/local", cwd, "/usr/local/CyberCP", distro, remotemysql, mysqlhost, mysqluser, mysqlpassword, mysqlport)
+    checks.mountTemp()
 
     if args.port == None:
         port = "8090"
@@ -2160,10 +2195,11 @@ def main():
 
     import installCyberPanel
 
+
     if ent == 0:
-        installCyberPanel.Main(cwd, mysql, distro, ent, None, port, args.ftp, args.powerdns, args.publicip)
+        installCyberPanel.Main(cwd, mysql, distro, ent, None, port, args.ftp, args.powerdns, args.publicip, remotemysql, mysqlhost, mysqluser, mysqlpassword, mysqlport)
     else:
-        installCyberPanel.Main(cwd, mysql, distro, ent, serial, port, args.ftp, args.powerdns, args.publicip)
+        installCyberPanel.Main(cwd, mysql, distro, ent, serial, port, args.ftp, args.powerdns, args.publicip, remotemysql, mysqlhost, mysqluser, mysqlpassword, mysqlport)
 
     checks.setupPHPAndComposer()
     checks.fix_selinux_issue()

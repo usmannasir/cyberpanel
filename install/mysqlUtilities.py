@@ -7,15 +7,25 @@ class mysqlUtilities:
 
         try:
 
-            passFile = "/etc/cyberpanel/mysqlPassword"
+            try:
+                from json import loads
+                mysqlData = loads(open("/etc/cyberpanel/mysqlPassword", 'r').read())
 
-            f = open(passFile)
-            data = f.read()
-            password = data.split('\n', 1)[0]
+                createDB = "CREATE DATABASE " + dbname
+                initCommand = 'mysql -h %s --port %s -u %s -p%s -e "' % (mysqlData['mysqlhost'], mysqlData['mysqlport'], mysqlData['mysqluser'], mysqlData['mysqlpassword'])
 
-            createDB = "CREATE DATABASE " + dbname
+            except:
+                passFile = "/etc/cyberpanel/mysqlPassword"
 
-            command = 'mysql -u root -p' + password + ' -e "' + createDB + '"'
+                f = open(passFile)
+                data = f.read()
+                password = data.split('\n', 1)[0]
+
+                createDB = "CREATE DATABASE " + dbname
+                initCommand = 'mysql -u root -p' + password + ' -e "'
+
+            command = initCommand + createDB + '"'
+
             cmd = shlex.split(command)
             res = subprocess.call(cmd)
 
@@ -24,7 +34,7 @@ class mysqlUtilities:
 
             createUser = "CREATE USER '" + dbuser + "'@'localhost' IDENTIFIED BY '" + dbpassword + "'"
 
-            command = 'mysql -u root -p' + password + ' -e "' + createUser + '"'
+            command = initCommand + createUser + '"'
 
             cmd = shlex.split(command)
             res = subprocess.call(cmd)
@@ -33,7 +43,7 @@ class mysqlUtilities:
                 return 0
             else:
                 dropDB = "GRANT ALL PRIVILEGES ON " + dbname + ".* TO '" + dbuser + "'@'localhost'"
-                command = 'mysql -u root -p' + password + ' -e "' + dropDB + '"'
+                command = initCommand + dropDB + '"'
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 
