@@ -8,6 +8,15 @@ DEV="OFF"
 POSTFIX_VARIABLE="ON"
 POWERDNS_VARIABLE="ON"
 PUREFTPD_VARIABLE="ON"
+
+### Remote MySQL Variables
+
+REMOTE_MYSQL='OFF'
+MYSQL_HOST=''
+MYSQL_USER=''
+MYSQL_PASSWORD=''
+MYSQL_PORT=''
+
 PROVIDER="undefined"
 SERIAL_NO=""
 DIR=$(pwd)
@@ -856,6 +865,42 @@ else
 		fi
 fi
 
+### Ask if you want to set up this CyberPanel with remote MySQL
+
+echo -e "\nDo you want to setup Remote MySQL? (This will skip installation of local MySQL)"
+echo -e ""
+printf "%s" "Remote MySQL [Y/n]: "
+read TMP_YN
+if [[ `expr "x$TMP_YN" : 'x[Yy]'` -gt 1 ]] || [[ $TMP_YN == "" ]] ; then
+		echo -e "\nRemote MySQL selected..."
+		REMOTE_MYSQL='ON'
+
+		echo -e ""
+		printf "%s" "Remote MySQL Hostname: "
+		read MYSQL_HOST
+
+		echo -e ""
+		printf "%s" "Remote MySQL Username:  "
+		read MYSQL_USER
+
+		echo -e ""
+		printf "%s" "Remote MySQL Password:  "
+		read MYSQL_PASSWORD
+
+		echo -e ""
+		printf "%s" "Remote MySQL Port:  "
+		read MYSQL_PORT
+
+else
+
+  echo -e ""
+	printf "%s" "Local MySQL selected.."
+	echo -e ""
+
+fi
+
+###
+
 #above comment for future use
 
 #if [[ $DEV_ARG == "ON" ]] ; then
@@ -1029,9 +1074,17 @@ if [[ $debug == "1" ]] ; then
   fi
 
 	if [[ $REDIS_HOSTING == "Yes" ]] ; then
-	  /usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY --postfix $POSTFIX_VARIABLE --powerdns $POWERDNS_VARIABLE --ftp $PUREFTPD_VARIABLE --redis enable
+	    if [[ $REMOTE_MYSQL == "Yes" ]] ; then
+	      /usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY --postfix $POSTFIX_VARIABLE --powerdns $POWERDNS_VARIABLE --ftp $PUREFTPD_VARIABLE --redis enable --remotemysql $REMOTE_MYSQL --mysqlhost $MYSQL_HOST --mysqluser $MYSQL_USER --mysqlpassword $MYSQL_PASSWORD --mysqlport $MYSQL_PORT
+      else
+        /usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY --postfix $POSTFIX_VARIABLE --powerdns $POWERDNS_VARIABLE --ftp $PUREFTPD_VARIABLE --redis enable
+      fi
   else
-    /usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY --postfix $POSTFIX_VARIABLE --powerdns $POWERDNS_VARIABLE --ftp $PUREFTPD_VARIABLE
+    if [[ $REMOTE_MYSQL == "Yes" ]] ; then
+        /usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY --postfix $POSTFIX_VARIABLE --powerdns $POWERDNS_VARIABLE --ftp $PUREFTPD_VARIABLE --remotemysql $REMOTE_MYSQL --mysqlhost $MYSQL_HOST --mysqluser $MYSQL_USER --mysqlpassword $MYSQL_PASSWORD --mysqlport $MYSQL_PORT
+    else
+        /usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY --postfix $POSTFIX_VARIABLE --powerdns $POWERDNS_VARIABLE --ftp $PUREFTPD_VARIABLE
+    fi
   fi
 
 	if grep "CyberPanel installation successfully completed" /var/log/installLogs.txt > /dev/null; then

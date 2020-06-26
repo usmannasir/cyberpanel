@@ -284,7 +284,6 @@ class InstallCyberPanel:
             install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
 
-
         ############## Start mariadb ######################
 
         self.startMariaDB()
@@ -648,6 +647,7 @@ def Main(cwd, mysql, distro, ent, serial = None, port = "8090", ftp = None, dns 
     installer.installMySQL(mysql)
     installer.changeMYSQLRootPassword()
     #installer.changeMYSQLRootPasswordCyberPanel(mysql)
+
     installer.startMariaDB()
     if distro == ubuntu:
         installer.fixMariaDB()
