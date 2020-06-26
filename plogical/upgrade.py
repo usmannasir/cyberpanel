@@ -1428,7 +1428,7 @@ class Upgrade:
 
             os.chdir('/usr/local/CyberCP')
 
-            command = 'git config --global user.email "support@cyberpanel.met"'
+            command = 'git config --global user.email "support@cyberpanel.net"'
             Upgrade.executioner(command, command, 1)
 
             command = 'git config --global user.name "CyberPanel"'
