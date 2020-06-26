@@ -2160,7 +2160,7 @@ def main():
 
     cwd = os.getcwd()
 
-    if args.remotemsql == 'ON':
+    if args.remotemysql == 'ON':
         remotemysql = args.remotemysql
         mysqlhost = args.mysqlhost
         mysqluser = args.mysqluser

@@ -869,7 +869,7 @@ fi
 
 echo -e "\nDo you want to setup Remote MySQL? (This will skip installation of local MySQL)"
 echo -e ""
-printf "%s" "Remote MySQL [Y/n]: "
+printf "%s" "(Default = No) Remote MySQL [Y/n]: "
 read TMP_YN
 if [[ `expr "x$TMP_YN" : 'x[Yy]'` -gt 1 ]] || [[ $TMP_YN == "" ]] ; then
 		echo -e "\nRemote MySQL selected..."
