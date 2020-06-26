@@ -379,7 +379,6 @@ class preFlightsChecks:
         ### update password:
 
         if self.remotemysql == 'OFF':
-
             passFile = "/etc/cyberpanel/mysqlPassword"
 
             f = open(passFile)
@@ -430,16 +429,15 @@ class preFlightsChecks:
                 else:
                     writeDataToFile.writelines(items)
 
+        if self.remotemysql == 'ON':
+            command = "sed -i 's|'HOST': 'localhost',|'HOST': '%s',|g' %s" % (self.mysqlhost, path)
+            preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
-            if self.remotemysql == 'ON':
-                command = "sed -i 's|'HOST': 'localhost',|'HOST': '%s',|g' %s" % (self.mysqlhost, path)
-                preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+            command = "sed -i 's|'USER': 'root',|'USER': '%s',|g' %s" % (self.mysqluser, path)
+            preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
-                command = "sed -i 's|'USER': 'root',|'USER': '%s',|g' %s" % (self.mysqluser, path)
-                preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-
-                command = "sed -i 's|'PORT':''|'PORT':'%s'|g' %s" % (self.mysqlport, path)
-                preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+            command = "sed -i 's|'PORT':''|'PORT':'%s'|g' %s" % (self.mysqlport, path)
+            preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
         if self.distro == ubuntu:
             os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
