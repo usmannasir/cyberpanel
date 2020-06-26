@@ -1077,13 +1077,13 @@ if [[ $debug == "1" ]] ; then
 	    if [[ $REMOTE_MYSQL == "ON" ]] ; then
 	      /usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY --postfix $POSTFIX_VARIABLE --powerdns $POWERDNS_VARIABLE --ftp $PUREFTPD_VARIABLE --redis enable --remotemysql $REMOTE_MYSQL --mysqlhost $MYSQL_HOST --mysqluser $MYSQL_USER --mysqlpassword $MYSQL_PASSWORD --mysqlport $MYSQL_PORT
       else
-        /usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY --postfix $POSTFIX_VARIABLE --powerdns $POWERDNS_VARIABLE --ftp $PUREFTPD_VARIABLE --redis enable -remotemysql $REMOTE_MYSQL
+        /usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY --postfix $POSTFIX_VARIABLE --powerdns $POWERDNS_VARIABLE --ftp $PUREFTPD_VARIABLE --redis enable --remotemysql $REMOTE_MYSQL
       fi
   else
     if [[ $REMOTE_MYSQL == "ON" ]] ; then
         /usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY --postfix $POSTFIX_VARIABLE --powerdns $POWERDNS_VARIABLE --ftp $PUREFTPD_VARIABLE --remotemysql $REMOTE_MYSQL --mysqlhost $MYSQL_HOST --mysqluser $MYSQL_USER --mysqlpassword $MYSQL_PASSWORD --mysqlport $MYSQL_PORT
     else
-        /usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY --postfix $POSTFIX_VARIABLE --powerdns $POWERDNS_VARIABLE --ftp $PUREFTPD_VARIABLE -remotemysql $REMOTE_MYSQL
+        /usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY --postfix $POSTFIX_VARIABLE --powerdns $POWERDNS_VARIABLE --ftp $PUREFTPD_VARIABLE --remotemysql $REMOTE_MYSQL
     fi
   fi
 
