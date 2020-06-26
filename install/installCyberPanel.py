@@ -668,6 +668,9 @@ def Main(cwd, mysql, distro, ent, serial = None, port = "8090", ftp = None, dns 
 
     mysqlUtilities.createDatabase("cyberpanel","cyberpanel",InstallCyberPanel.mysqlPassword)
 
+    import time
+    time.sleep(10)
+
     if ftp == None:
         installer.installPureFTPD()
         installer.installPureFTPDConfigurations(mysql)
