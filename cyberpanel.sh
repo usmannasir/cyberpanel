@@ -379,19 +379,18 @@ fi
 
 echo -e "\nInstalling necessary components..."
 if [[ $SERVER_OS == "CentOS" ]] ; then
-	timeout 10 rpm --import https://$DOWNLOAD_SERVER/mariadb/RPM-GPG-KEY-MariaDB
-	timeout 10 rpm --import https://$DOWNLOAD_SERVER/litespeed/RPM-GPG-KEY-litespeed
-	timeout 10 rpm --import https://$DOWNLOAD_SERVER/powerdns/FD380FBB-pub.asc
-	timeout 10 rpm --import http://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-7
-	timeout 10 rpm --import https://$DOWNLOAD_SERVER/gf-plus/RPM-GPG-KEY-gf.el7
-	timeout 10 rpm --import https://$DOWNLOAD_SERVER/lux/RPM-GPG-KEY-LUX
-	timeout 10 rpm --import https://$DOWNLOAD_SERVER/ius/RPM-GPG-KEY-IUS-7
-	timeout 10 rpm --import https://repo.dovecot.org/DOVECOT-REPO-GPG
-	timeout 10 rpm --import https://copr-be.cloud.fedoraproject.org/results/copart/restic/pubkey.gpg
-	timeout 10 rpm --import https://rep8.cyberpanel.net/RPM-GPG-KEY-CP-EP-8
-	timeout 10 rpm --import https://rep8.cyberpanel.net/RPM-GPG-KEY-CP-GF-8
-	timeout 10 rpm --import https://rep8.cyberpanel.net/RPM-GPG-KEY-centosofficialcp
-	curl https://getfedora.org/static/fedora.gpg | gpg --import
+  if [[ $CENTOS_8 == "False" ]] ; then
+    timeout 10 rpm --import https://$DOWNLOAD_SERVER/mariadb/RPM-GPG-KEY-MariaDB
+    timeout 10 rpm --import https://$DOWNLOAD_SERVER/litespeed/RPM-GPG-KEY-litespeed
+    timeout 10 rpm --import https://$DOWNLOAD_SERVER/powerdns/FD380FBB-pub.asc
+    timeout 10 rpm --import http://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-7
+    timeout 10 rpm --import https://$DOWNLOAD_SERVER/gf-plus/RPM-GPG-KEY-gf.el7
+    timeout 10 rpm --import https://$DOWNLOAD_SERVER/lux/RPM-GPG-KEY-LUX
+    timeout 10 rpm --import https://$DOWNLOAD_SERVER/ius/RPM-GPG-KEY-IUS-7
+    timeout 10 rpm --import https://repo.dovecot.org/DOVECOT-REPO-GPG
+    timeout 10 rpm --import https://copr-be.cloud.fedoraproject.org/results/copart/restic/pubkey.gpg
+    curl https://getfedora.org/static/fedora.gpg | gpg --import
+	fi
 
 	yum clean all
 	yum update -y
