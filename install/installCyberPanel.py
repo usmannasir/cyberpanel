@@ -237,63 +237,22 @@ class InstallCyberPanel:
             subprocess.call(command, shell=True)
 
     def installMySQL(self, mysql):
-        if self.remotemysql == 'OFF':
-            ############## Install mariadb ######################
 
-            if self.distro == ubuntu:
-                command = "apt-get -y install mariadb-server"
-            elif self.distro == centos:
-                command = 'yum --enablerepo=CyberPanel -y install mariadb-server'
-            elif self.distro == cent8:
-                command = 'dnf -y install mariadb-server'
+        ############## Install mariadb ######################
 
-            install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+        if self.distro == ubuntu:
+            command = "apt-get -y install mariadb-server"
+        elif self.distro == centos:
+            command = 'yum --enablerepo=CyberPanel -y install mariadb-server'
+        elif self.distro == cent8:
+            command = 'dnf -y install mariadb-server'
 
-            ## Fix configurations if two MYSQL are used
+        install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
-            if mysql == 'Two':
-                logging.InstallLog.writeToFile("Setting up MariaDB configurations!")
-                InstallCyberPanel.stdOut("Setting up MariaDB configurations!")
+        ############## Start mariadb ######################
 
-                pathConf = "/etc/my.cnf"
-                pathServiceFile = "/etc/systemd/system/mysqld@.service"
+        self.startMariaDB()
 
-                if os.path.exists(pathConf):
-                    os.remove(pathConf)
-
-                if os.path.exists(pathServiceFile):
-                    os.remove(pathServiceFile)
-
-                os.chdir(self.cwd)
-
-                shutil.copy("mysql/my.cnf", pathConf)
-                shutil.copy("mysql/mysqld@.service", pathServiceFile)
-
-                logging.InstallLog.writeToFile("MariaDB configurations set!")
-                InstallCyberPanel.stdOut("MariaDB configurations set!")
-
-                ##
-
-                command = "mysql_install_db --user=mysql --datadir=/var/lib/mysql1"
-                install.preFlightsChecks.call(command, self.distro, '[installMySQL]',
-                                              'Install MySQL',
-                                              1, 1, os.EX_OSERR)
-
-
-                ##
-
-                command = "systemctl start mysqld@1"
-                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-
-                ##
-
-                command = "systemctl enable mysqld@1"
-                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-
-
-            ############## Start mariadb ######################
-
-            self.startMariaDB()
 
     def changeMYSQLRootPassword(self):
         if self.remotemysql == 'OFF':
