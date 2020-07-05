@@ -308,26 +308,27 @@ class InstallCyberPanel:
 
     def startMariaDB(self):
 
-        ############## Start mariadb ######################
-        if self.distro == cent8 or self.distro == ubuntu:
-            command = 'systemctl start mariadb'
-        else:
-            command = "systemctl start mysql"
-        install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+        if self.remotemysql == 'OFF':
+            ############## Start mariadb ######################
+            if self.distro == cent8 or self.distro == ubuntu:
+                command = 'systemctl start mariadb'
+            else:
+                command = "systemctl start mysql"
+            install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
-        ############## Enable mariadb at system startup ######################
+            ############## Enable mariadb at system startup ######################
 
-        if os.path.exists('/etc/systemd/system/mysqld.service'):
-            os.remove('/etc/systemd/system/mysqld.service')
-        if os.path.exists('/etc/systemd/system/mariadb.service'):
-            os.remove('/etc/systemd/system/mariadb.service')
+            if os.path.exists('/etc/systemd/system/mysqld.service'):
+                os.remove('/etc/systemd/system/mysqld.service')
+            if os.path.exists('/etc/systemd/system/mariadb.service'):
+                os.remove('/etc/systemd/system/mariadb.service')
 
-        if self.distro == ubuntu:
-            command = "systemctl enable mariadb"
-        else:
-            command = "systemctl enable mariadb"
+            if self.distro == ubuntu:
+                command = "systemctl enable mariadb"
+            else:
+                command = "systemctl enable mariadb"
 
-        install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+            install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
     def fixMariaDB(self):
         self.stdOut("Setup MariaDB so it can support Cyberpanel's needs")
