@@ -633,7 +633,7 @@ def Main(cwd, mysql, distro, ent, serial = None, port = "8090", ftp = None, dns 
         if distro == ubuntu:
             installer.fixMariaDB()
 
-    mysqlUtilities.createDatabase("cyberpanel","cyberpanel", InstallCyberPanel.mysqlPassword)
+    mysqlUtilities.createDatabase("cyberpanel","cyberpanel", InstallCyberPanel.mysqlPassword, publicip)
 
     if ftp == None:
         installer.installPureFTPD()

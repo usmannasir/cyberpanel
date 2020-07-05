@@ -5,7 +5,7 @@ import time
 class mysqlUtilities:
 
     @staticmethod
-    def createDatabase(dbname, dbuser, dbpassword):
+    def createDatabase(dbname, dbuser, dbpassword, publicip):
 
         try:
             createDB = "CREATE DATABASE " + dbname
@@ -16,8 +16,7 @@ class mysqlUtilities:
 
 
                 initCommand = 'mysql -h %s --port %s -u %s -p%s -e "' % (mysqlData['mysqlhost'], mysqlData['mysqlport'], mysqlData['mysqluser'], mysqlData['mysqlpassword'])
-
-
+                remote = 1
             except:
                 passFile = "/etc/cyberpanel/mysqlPassword"
 
@@ -26,6 +25,7 @@ class mysqlUtilities:
                 password = data.split('\n', 1)[0]
 
                 initCommand = 'mysql -u root -p' + password + ' -e "'
+                remote = 0
 
             command = initCommand + createDB + '"'
 
@@ -39,7 +39,10 @@ class mysqlUtilities:
             if res == 1:
                 return 0
 
-            createUser = "CREATE USER '" + dbuser + "'@'localhost' IDENTIFIED BY '" + dbpassword + "'"
+            if remote:
+                createUser = "CREATE USER '" + dbuser + "'@'%s' IDENTIFIED BY '" % (publicip) + dbpassword + "'"
+            else:
+                createUser = "CREATE USER '" + dbuser + "'@'localhost' IDENTIFIED BY '" + dbpassword + "'"
 
             command = initCommand + createUser + '"'
 
@@ -53,7 +56,10 @@ class mysqlUtilities:
             if res == 1:
                 return 0
             else:
-                dropDB = "GRANT ALL PRIVILEGES ON " + dbname + ".* TO '" + dbuser + "'@'localhost'"
+                if remote:
+                    dropDB = "GRANT ALL PRIVILEGES ON " + dbname + ".* TO '" + dbuser + "'@'%s'" % (publicip)
+                else:
+                    dropDB = "GRANT ALL PRIVILEGES ON " + dbname + ".* TO '" + dbuser + "'@'localhost'"
                 command = initCommand + dropDB + '"'
 
                 if install.preFlightsChecks.debug:
