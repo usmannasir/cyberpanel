@@ -478,14 +478,14 @@ class backupUtilities:
 
             ## shutil.make_archive. Creating final package.
 
+            logging.CyberCPLogFileWriter.statusWriter(status, "Preparing final compressed package..\n")
+
             make_archive(os.path.join(backupPath, backupName), 'gztar', tempStoragePath)
             rmtree(tempStoragePath)
 
             ###
 
             backupObs = Backups.objects.filter(fileName=backupName)
-
-            ## adding backup data to database.
 
             filePath = '%s/%s.tar.gz' % (backupPath, backupName)
             totalSize = '%sMB' % (str(int(os.path.getsize(filePath) / 1048576)))
