@@ -92,6 +92,7 @@ def get_Ubuntu_release():
 
 
 class preFlightsChecks:
+    debug = 1
     cyberPanelMirror = "mirror.cyberpanel.net/pip"
     cdn = 'cyberpanel.sh'
 
@@ -429,6 +430,11 @@ class preFlightsChecks:
                 else:
                     writeDataToFile.writelines(items)
 
+        if self.distro == ubuntu:
+            os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
+
+        writeDataToFile.close()
+
         if self.remotemysql == 'ON':
             command = "sed -i 's|'HOST': 'localhost',|'HOST': '%s',|g' %s" % (self.mysqlhost, path)
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
@@ -438,11 +444,6 @@ class preFlightsChecks:
 
             command = "sed -i 's|'PORT':''|'PORT':'%s'|g' %s" % (self.mysqlport, path)
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-
-        if self.distro == ubuntu:
-            os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
-
-        writeDataToFile.close()
 
         logging.InstallLog.writeToFile("settings.py updated!")
 
@@ -2164,6 +2165,11 @@ def main():
         mysqluser = args.mysqluser
         mysqlpassword = args.mysqlpassword
         mysqlport = args.mysqlport
+
+        if preFlightsChecks.debug:
+            print('mysqlhost: %s, mysqluser: %s, mysqlpassword: %s, mysqlport: %s' % (mysqlhost, mysqluser, mysqlpassword, mysqlport))
+            time.sleep(10)
+
     else:
         remotemysql = args.remotemysql
         mysqlhost = ''

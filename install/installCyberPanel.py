@@ -8,6 +8,7 @@ import errno
 import MySQLdb as mariadb
 import install
 from os.path import exists
+import time
 
 #distros
 centos=0
@@ -630,6 +631,11 @@ def Main(cwd, mysql, distro, ent, serial = None, port = "8090", ftp = None, dns 
         writeToFile.write(dumps(mysqlData))
         writeToFile.close()
 
+        if install.preFlightsChecks.debug:
+            print(open(file_name, 'r').read())
+            time.sleep(10)
+
+
 
     try:
         command = 'chmod 640 %s' % (file_name)
@@ -667,9 +673,6 @@ def Main(cwd, mysql, distro, ent, serial = None, port = "8090", ftp = None, dns 
             installer.fixMariaDB()
 
     mysqlUtilities.createDatabase("cyberpanel","cyberpanel", InstallCyberPanel.mysqlPassword)
-
-    import time
-    time.sleep(10)
 
     if ftp == None:
         installer.installPureFTPD()
