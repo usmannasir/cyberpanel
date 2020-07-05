@@ -436,7 +436,7 @@ class preFlightsChecks:
         writeDataToFile.close()
 
         if self.remotemysql == 'ON':
-            command = "sed -i 's|'HOST': 'localhost',|'HOST': '%s',|g' %s" % (self.mysqlhost, path)
+            command = "sed -i 's|localhost|%s|g' %s" % (self.mysqlhost, path)
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
             command = "sed -i 's|'USER': 'root',|'USER': '%s',|g' %s" % (self.mysqluser, path)
