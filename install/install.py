@@ -96,7 +96,7 @@ class preFlightsChecks:
     cyberPanelMirror = "mirror.cyberpanel.net/pip"
     cdn = 'cyberpanel.sh'
 
-    def __init__(self, rootPath, ip, path, cwd, cyberPanelPath, distro, remotemysql = None , mysqlhost = None, mysqluser = None, mysqlpassword = None, mysqlport = None):
+    def __init__(self, rootPath, ip, path, cwd, cyberPanelPath, distro, remotemysql = None , mysqlhost = None, mysqldb = None, mysqluser = None, mysqlpassword = None, mysqlport = None):
         self.ipAddr = ip
         self.path = path
         self.cwd = cwd
@@ -108,6 +108,7 @@ class preFlightsChecks:
         self.mysqluser = mysqluser
         self.mysqlpassword = mysqlpassword
         self.mysqlport = mysqlport
+        self.mysqldb = mysqldb
 
     @staticmethod
     def stdOut(message, log=0, do_exit=0, code=os.EX_OK):
@@ -437,6 +438,9 @@ class preFlightsChecks:
 
         if self.remotemysql == 'ON':
             command = "sed -i 's|localhost|%s|g' %s" % (self.mysqlhost, path)
+            preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+
+            command = "sed -i 's|mysql|%s|g' %s" % (self.mysqldb, path)
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
             command = "sed -i 's|'USER': 'root',|'USER': '%s',|g' %s" % (self.mysqluser, path)
@@ -2121,6 +2125,7 @@ def main():
     parser.add_argument('--redis', help='vHosts on Redis - Requires LiteSpeed Enterprise')
     parser.add_argument('--remotemysql', help='Opt to choose local or remote MySQL')
     parser.add_argument('--mysqlhost', help='MySQL host if remote is chosen.')
+    parser.add_argument('--mysqldb', help='MySQL DB if remote is chosen.')
     parser.add_argument('--mysqluser', help='MySQL user if remote is chosen.')
     parser.add_argument('--mysqlpassword', help='MySQL password if remote is chosen.')
     parser.add_argument('--mysqlport', help='MySQL port if remote is chosen.')
@@ -2165,9 +2170,10 @@ def main():
         mysqluser = args.mysqluser
         mysqlpassword = args.mysqlpassword
         mysqlport = args.mysqlport
+        mysqldb = args.mysqldb
 
         if preFlightsChecks.debug:
-            print('mysqlhost: %s, mysqluser: %s, mysqlpassword: %s, mysqlport: %s' % (mysqlhost, mysqluser, mysqlpassword, mysqlport))
+            print('mysqlhost: %s, mysqldb: %s,  mysqluser: %s, mysqlpassword: %s, mysqlport: %s' % (mysqlhost, mysqldb, mysqluser, mysqlpassword, mysqlport))
             time.sleep(10)
 
     else:
@@ -2176,9 +2182,10 @@ def main():
         mysqluser = ''
         mysqlpassword = ''
         mysqlport = ''
+        mysqldb = ''
 
     distro = get_distro()
-    checks = preFlightsChecks("/usr/local/lsws/", args.publicip, "/usr/local", cwd, "/usr/local/CyberCP", distro, remotemysql, mysqlhost, mysqluser, mysqlpassword, mysqlport)
+    checks = preFlightsChecks("/usr/local/lsws/", args.publicip, "/usr/local", cwd, "/usr/local/CyberCP", distro, remotemysql, mysqlhost, mysqldb, mysqluser, mysqlpassword, mysqlport)
     checks.mountTemp()
 
     if args.port == None:
@@ -2201,9 +2208,9 @@ def main():
 
 
     if ent == 0:
-        installCyberPanel.Main(cwd, mysql, distro, ent, None, port, args.ftp, args.powerdns, args.publicip, remotemysql, mysqlhost, mysqluser, mysqlpassword, mysqlport)
+        installCyberPanel.Main(cwd, mysql, distro, ent, None, port, args.ftp, args.powerdns, args.publicip, remotemysql, mysqlhost, mysqldb, mysqluser, mysqlpassword, mysqlport)
     else:
-        installCyberPanel.Main(cwd, mysql, distro, ent, serial, port, args.ftp, args.powerdns, args.publicip, remotemysql, mysqlhost, mysqluser, mysqlpassword, mysqlport)
+        installCyberPanel.Main(cwd, mysql, distro, ent, serial, port, args.ftp, args.powerdns, args.publicip, remotemysql, mysqlhost, mysqldb, mysqluser, mysqlpassword, mysqlport)
 
     checks.setupPHPAndComposer()
     checks.fix_selinux_issue()

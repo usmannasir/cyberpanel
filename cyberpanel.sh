@@ -13,6 +13,7 @@ PUREFTPD_VARIABLE="ON"
 
 REMOTE_MYSQL='OFF'
 MYSQL_HOST=''
+MYSQL_DB=''
 MYSQL_USER=''
 MYSQL_PASSWORD=''
 MYSQL_PORT=''
@@ -879,6 +880,10 @@ if [[ `expr "x$TMP_YN" : 'x[Yy]'` -gt 1 ]] || [[ $TMP_YN == "" ]] ; then
 		read MYSQL_HOST
 
 		echo -e ""
+		printf "%s" "Remote MySQL Database that contains meta information regarding MYSQL. (usually mysql): "
+		read MYSQL_DB
+
+		echo -e ""
 		printf "%s" "Remote MySQL Username:  "
 		read MYSQL_USER
 
@@ -1074,14 +1079,14 @@ if [[ $debug == "1" ]] ; then
 
 	if [[ $REDIS_HOSTING == "Yes" ]] ; then
 	    if [[ $REMOTE_MYSQL == "ON" ]] ; then
-	      /usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY --postfix $POSTFIX_VARIABLE --powerdns $POWERDNS_VARIABLE --ftp $PUREFTPD_VARIABLE --redis enable --remotemysql $REMOTE_MYSQL --mysqlhost $MYSQL_HOST --mysqluser $MYSQL_USER --mysqlpassword $MYSQL_PASSWORD --mysqlport $MYSQL_PORT
+	      /usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY --postfix $POSTFIX_VARIABLE --powerdns $POWERDNS_VARIABLE --ftp $PUREFTPD_VARIABLE --redis enable --remotemysql $REMOTE_MYSQL --mysqlhost $MYSQL_HOST --mysqldb $MYSQL_DB --mysqluser $MYSQL_USER --mysqlpassword $MYSQL_PASSWORD --mysqlport $MYSQL_PORT
       else
         /usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY --postfix $POSTFIX_VARIABLE --powerdns $POWERDNS_VARIABLE --ftp $PUREFTPD_VARIABLE --redis enable --remotemysql $REMOTE_MYSQL
       fi
   else
     if [[ $REMOTE_MYSQL == "ON" ]] ; then
       echo "/usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY --postfix $POSTFIX_VARIABLE --powerdns $POWERDNS_VARIABLE --ftp $PUREFTPD_VARIABLE --remotemysql $REMOTE_MYSQL --mysqlhost $MYSQL_HOST --mysqluser $MYSQL_USER --mysqlpassword $MYSQL_PASSWORD --mysqlport $MYSQL_PORT"
-        /usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY --postfix $POSTFIX_VARIABLE --powerdns $POWERDNS_VARIABLE --ftp $PUREFTPD_VARIABLE --remotemysql $REMOTE_MYSQL --mysqlhost $MYSQL_HOST --mysqluser $MYSQL_USER --mysqlpassword $MYSQL_PASSWORD --mysqlport $MYSQL_PORT
+        /usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY --postfix $POSTFIX_VARIABLE --powerdns $POWERDNS_VARIABLE --ftp $PUREFTPD_VARIABLE --remotemysql $REMOTE_MYSQL --mysqlhost $MYSQL_HOST --mysqldb $MYSQL_DB --mysqluser $MYSQL_USER --mysqlpassword $MYSQL_PASSWORD --mysqlport $MYSQL_PORT
     else
         /usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY --postfix $POSTFIX_VARIABLE --powerdns $POWERDNS_VARIABLE --ftp $PUREFTPD_VARIABLE --remotemysql $REMOTE_MYSQL
     fi

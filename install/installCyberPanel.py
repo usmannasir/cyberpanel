@@ -39,7 +39,7 @@ class InstallCyberPanel:
     mysql_Root_password = ""
     mysqlPassword = ""
 
-    def __init__(self, rootPath, cwd, distro, ent, serial = None, port = None, ftp = None, dns = None, publicip = None, remotemysql = None , mysqlhost = None, mysqluser = None, mysqlpassword = None, mysqlport = None):
+    def __init__(self, rootPath, cwd, distro, ent, serial = None, port = None, ftp = None, dns = None, publicip = None, remotemysql = None , mysqlhost = None, mysqldb = None, mysqluser = None, mysqlpassword = None, mysqlport = None):
         self.server_root_path = rootPath
         self.cwd = cwd
         self.distro = distro
@@ -54,6 +54,7 @@ class InstallCyberPanel:
         self.mysqluser = mysqluser
         self.mysqlpassword = mysqlpassword
         self.mysqlport = mysqlport
+        self.mysqldb = mysqldb
 
     @staticmethod
     def stdOut(message, log=0, exit=0, code=os.EX_OK):
@@ -608,7 +609,7 @@ class InstallCyberPanel:
         install.preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
 
-def Main(cwd, mysql, distro, ent, serial = None, port = "8090", ftp = None, dns = None, publicip = None, remotemysql = None , mysqlhost = None, mysqluser = None, mysqlpassword = None, mysqlport = None):
+def Main(cwd, mysql, distro, ent, serial = None, port = "8090", ftp = None, dns = None, publicip = None, remotemysql = None , mysqlhost = None, mysqldb = None, mysqluser = None, mysqlpassword = None, mysqlport = None):
 
     InstallCyberPanel.mysqlPassword = randomPassword.generate_pass()
     InstallCyberPanel.mysql_Root_password = randomPassword.generate_pass()
@@ -625,7 +626,7 @@ def Main(cwd, mysql, distro, ent, serial = None, port = "8090", ftp = None, dns 
             password.writelines(InstallCyberPanel.mysql_Root_password)
             password.close()
     else:
-        mysqlData = {'remotemysql': remotemysql, 'mysqlhost': mysqlhost, 'mysqluser': mysqluser, 'mysqlpassword': mysqlpassword, 'mysqlport': mysqlport}
+        mysqlData = {'remotemysql': remotemysql, 'mysqlhost': mysqlhost, 'mysqldb':mysqldb, 'mysqluser': mysqluser, 'mysqlpassword': mysqlpassword, 'mysqlport': mysqlport}
         from json import dumps
         writeToFile = open(file_name, 'w')
         writeToFile.write(dumps(mysqlData))
@@ -654,7 +655,7 @@ def Main(cwd, mysql, distro, ent, serial = None, port = "8090", ftp = None, dns 
     else:
         InstallCyberPanel.mysqlPassword = InstallCyberPanel.mysql_Root_password
 
-    installer = InstallCyberPanel("/usr/local/lsws/",cwd, distro, ent, serial, port, ftp, dns, publicip, remotemysql, mysqlhost, mysqluser, mysqlpassword, mysqlport)
+    installer = InstallCyberPanel("/usr/local/lsws/",cwd, distro, ent, serial, port, ftp, dns, publicip, remotemysql, mysqlhost, mysqldb, mysqluser, mysqlpassword, mysqlport)
 
     installer.installLiteSpeed()
     if ent == 0:
