@@ -440,7 +440,7 @@ class preFlightsChecks:
             command = "sed -i 's|localhost|%s|g' %s" % (self.mysqlhost, path)
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
-            command = "sed -i 's|mysql|%s|g' %s" % (self.mysqldb, path)
+            command = "sed -i 's|'mysql'|'%s'|g' %s" % (self.mysqldb, path)
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
             command = "sed -i 's|'USER': 'root',|'USER': '%s',|g' %s" % (self.mysqluser, path)
