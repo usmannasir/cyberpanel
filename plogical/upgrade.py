@@ -1392,6 +1392,8 @@ class Upgrade:
             dbName = settings.DATABASES['default']['NAME']
             dbUser = settings.DATABASES['default']['USER']
             password = settings.DATABASES['default']['PASSWORD']
+            host = settings.DATABASES['default']['HOST']
+            port = settings.DATABASES['default']['PORT']
 
             ## Root DB Creds
 
@@ -1407,18 +1409,18 @@ class Upgrade:
         'NAME': '%s',
         'USER': '%s',
         'PASSWORD': '%s',
-        'HOST': 'localhost',
-        'PORT':''
+        'HOST': '%s',
+        'PORT':'%s'
     },
     'rootdb': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': '%s',
         'USER': '%s',
         'PASSWORD': '%s',
-        'HOST': 'localhost',
-        'PORT': '',
+        'HOST': '%s',
+        'PORT': '%s',
     },
-}\n""" % (dbName, dbUser, password, rootdbName, rootdbdbUser, rootdbpassword)
+}\n""" % (dbName, dbUser, password, host, port, rootdbName, rootdbdbUser, rootdbpassword, host, port)
 
             settingsFile = '/usr/local/CyberCP/CyberCP/settings.py'
 

@@ -565,7 +565,7 @@ class InstallCyberPanel:
 
 
             if self.remotemysql == 'ON':
-                command = "sed -i 's|gmysql-host=127.0.0.1|gmysql-host=%s|g' %s" % (self.mysqlhost, dnsPath)
+                command = "sed -i 's|gmysql-host=localhost|gmysql-host=%s|g' %s" % (self.mysqlhost, dnsPath)
                 install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
                 command = "sed -i 's|gmysql-port=3306|gmysql-port=%s|g' %s" % (self.mysqlport, dnsPath)

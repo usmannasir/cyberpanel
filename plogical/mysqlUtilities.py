@@ -53,17 +53,32 @@ class mysqlUtilities:
     @staticmethod
     def setupConnection():
         try:
+
             passFile = "/etc/cyberpanel/mysqlPassword"
 
-            f = open(passFile)
-            data = f.read()
-            password = data.split('\n', 1)[0]
-            password = password.strip('\n').strip('\r')
+            try:
+                jsonData = json.loads(open(passFile, 'r').read())
 
-            conn = mysql.connect(user='root', passwd=password, cursorclass=cursors.SSCursor)
-            cursor = conn.cursor()
+                mysqluser = jsonData['mysqluser']
+                mysqlpassword = jsonData['mysqlpassword']
+                mysqlport = jsonData['mysqlport']
+                mysqlhost = jsonData['mysqlhost']
 
-            return conn, cursor
+                conn = mysql.connect(host=mysqlhost ,user=mysqluser, passwd=mysqlpassword, port=mysqlport, cursorclass=cursors.SSCursor)
+                cursor = conn.cursor()
+
+                return conn, cursor
+
+            except:
+                f = open(passFile)
+                data = f.read()
+                password = data.split('\n', 1)[0]
+                password = password.strip('\n').strip('\r')
+
+                conn = mysql.connect(user='root', passwd=password, cursorclass=cursors.SSCursor)
+                cursor = conn.cursor()
+
+                return conn, cursor
 
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
@@ -158,9 +173,24 @@ class mysqlUtilities:
     def createDatabaseBackup(databaseName, tempStoragePath):
         try:
             passFile = "/etc/cyberpanel/mysqlPassword"
-            f = open(passFile)
-            data = f.read()
-            password = data.split('\n', 1)[0]
+
+            try:
+                jsonData = json.loads(open(passFile, 'r').read())
+
+                mysqluser = jsonData['mysqluser']
+                mysqlpassword = jsonData['mysqlpassword']
+                mysqlport = jsonData['mysqlport']
+                mysqlhost = jsonData['mysqlhost']
+                password = mysqlpassword
+            except:
+                passFile = "/etc/cyberpanel/mysqlPassword"
+                f = open(passFile)
+                data = f.read()
+                password = data.split('\n', 1)[0]
+                mysqlhost = 'localhost'
+                mysqlport = '3306'
+                mysqluser = 'root'
+
 
             cnfPath = '/home/cyberpanel/.my.cnf'
 
@@ -178,7 +208,7 @@ password=%s
 
                 os.chmod(cnfPath, 0o600)
 
-            command = 'mysqldump --defaults-extra-file=/home/cyberpanel/.my.cnf --host=localhost ' + databaseName
+            command = 'mysqldump --defaults-extra-file=/home/cyberpanel/.my.cnf -u %s --host=%s --port %s %s' % (mysqluser, mysqlhost, mysqlport, databaseName)
             cmd = shlex.split(command)
 
             try:
@@ -205,9 +235,22 @@ password=%s
         try:
             passFile = "/etc/cyberpanel/mysqlPassword"
 
-            f = open(passFile)
-            data = f.read()
-            password = data.split('\n', 1)[0]
+            try:
+                jsonData = json.loads(open(passFile, 'r').read())
+
+                mysqluser = jsonData['mysqluser']
+                mysqlpassword = jsonData['mysqlpassword']
+                mysqlport = jsonData['mysqlport']
+                mysqlhost = jsonData['mysqlhost']
+                password = mysqlpassword
+            except:
+                passFile = "/etc/cyberpanel/mysqlPassword"
+                f = open(passFile)
+                data = f.read()
+                password = data.split('\n', 1)[0]
+                mysqlhost = 'localhost'
+                mysqlport = '3306'
+                mysqluser = 'root'
 
             cnfPath = '/home/cyberpanel/.my.cnf'
 
@@ -227,7 +270,7 @@ password=%s
                 command = 'chown cyberpanel:cyberpanel %s' % (cnfPath)
                 subprocess.call(shlex.split(command))
 
-            command = 'mysql --defaults-extra-file=/home/cyberpanel/.my.cnf --host=localhost ' + databaseName
+            command = 'mysql --defaults-extra-file=/home/cyberpanel/.my.cnf -u %s --host=%s --port %s' % (mysqluser, mysqlhost, mysqlport, databaseName)
             cmd = shlex.split(command)
 
             if additionalName == None:
