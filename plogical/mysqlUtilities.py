@@ -64,12 +64,16 @@ class mysqlUtilities:
                 mysqlport = jsonData['mysqlport']
                 mysqlhost = jsonData['mysqlhost']
 
-                conn = mysql.connect(host=mysqlhost ,user=mysqluser, passwd=mysqlpassword, port=mysqlport, cursorclass=cursors.SSCursor)
+                conn = mysql.connect(host=mysqlhost ,user=mysqluser, passwd=mysqlpassword, port=int(mysqlport), cursorclass=cursors.SSCursor)
                 cursor = conn.cursor()
 
                 return conn, cursor
 
-            except:
+            except BaseException as msg:
+
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.CyberCPLogFileWriter.writeToFile('%s. [setupConnection:75]' % (str(msg)))
+
                 f = open(passFile)
                 data = f.read()
                 password = data.split('\n', 1)[0]
@@ -270,7 +274,7 @@ password=%s
                 command = 'chown cyberpanel:cyberpanel %s' % (cnfPath)
                 subprocess.call(shlex.split(command))
 
-            command = 'mysql --defaults-extra-file=/home/cyberpanel/.my.cnf -u %s --host=%s --port %s' % (mysqluser, mysqlhost, mysqlport, databaseName)
+            command = 'mysql --defaults-extra-file=/home/cyberpanel/.my.cnf -u %s --host=%s --port %s %s' % (mysqluser, mysqlhost, mysqlport, databaseName)
             cmd = shlex.split(command)
 
             if additionalName == None:
