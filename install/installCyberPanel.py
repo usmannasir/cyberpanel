@@ -420,6 +420,18 @@ class InstallCyberPanel:
 
             writeDataToFile.close()
 
+            ftpConfPath = '/etc/pure-ftpd/pureftpd-mysql.conf'
+
+            if self.remotemysql == 'ON':
+                command = "sed -i 's|localhost|%s|g' %s" % (self.mysqlhost, ftpConfPath)
+                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+
+                command = "sed -i 's|3306|%s|g' %s" % (self.mysqlport, ftpConfPath)
+                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+
+                command = "sed -i 's|MYSQLSocket /var/lib/mysql/mysql.sock||g' %s" % (ftpConfPath)
+                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+
             if self.distro == ubuntu:
 
                 if os.path.exists('/etc/pure-ftpd/db/mysql.conf'):
@@ -550,6 +562,14 @@ class InstallCyberPanel:
             #    os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
 
             writeDataToFile.close()
+
+
+            if self.remotemysql == 'ON':
+                command = "sed -i 's|gmysql-host=127.0.0.1|gmysql-host=%s|g' %s" % (self.mysqlhost, dnsPath)
+                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+
+                command = "sed -i 's|gmysql-port=3306|gmysql-port=%s|g' %s" % (self.mysqlport, dnsPath)
+                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
             InstallCyberPanel.stdOut("PowerDNS configured!", 1)
 

@@ -60,6 +60,7 @@ class mysqlUtilities:
                     dropDB = "GRANT ALL PRIVILEGES ON " + dbname + ".* TO '" + dbuser + "'@'%s'" % (publicip)
                 else:
                     dropDB = "GRANT ALL PRIVILEGES ON " + dbname + ".* TO '" + dbuser + "'@'localhost'"
+
                 command = initCommand + dropDB + '"'
 
                 if install.preFlightsChecks.debug:

@@ -917,6 +917,32 @@ class preFlightsChecks:
 
             writeDataToFile.close()
 
+
+
+            if self.remotemysql == 'ON':
+                command = "sed -i 's|host=localhost|host=%s|g' %s" % (self.mysqlhost, davecotmysql)
+                preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+
+                command = "sed -i 's|port=3306|port=%s|g' %s" % (self.mysqlport, davecotmysql)
+                preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+
+                ##
+
+                command = "sed -i 's|localhost|%s:%s|g' %s" % (self.mysqlhost, self.mysqlport, mysql_virtual_domains)
+                preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+
+                command = "sed -i 's|localhost|%s:%s|g' %s" % (
+                self.mysqlhost, self.mysqlport, mysql_virtual_forwardings)
+                preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+
+                command = "sed -i 's|localhost|%s:%s|g' %s" % (
+                    self.mysqlhost, self.mysqlport, mysql_virtual_mailboxes)
+                preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+
+                command = "sed -i 's|localhost|%s:%s|g' %s" % (
+                    self.mysqlhost, self.mysqlport, mysql_virtual_email2email)
+                preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+
             logging.InstallLog.writeToFile("Authentication for Postfix and Dovecot set.")
 
         except BaseException as msg:
