@@ -506,7 +506,12 @@ if [[ $SERVER_OS == "CentOS" ]] ; then
 	yum install -y lsphp74-redis lsphp73-redis lsphp72-redis lsphp71-redis lsphp70-redis lsphp56-redis lsphp55-redis lsphp54-redis redis
 fi
 if [[ $SERVER_OS == "Ubuntu" ]] ; then
-	DEBIAN_FRONTEND=noninteractive apt install -y lsphp74-redis lsphp73-redis lsphp72-redis lsphp71-redis lsphp70-redis redis
+	DEBIAN_FRONTEND=noninteractive apt install -y lsphp74-redis
+	DEBIAN_FRONTEND=noninteractive apt install -y lsphp73-redis
+	DEBIAN_FRONTEND=noninteractive apt install -y lsphp72-redis
+	DEBIAN_FRONTEND=noninteractive apt install -y lsphp71-redis
+	DEBIAN_FRONTEND=noninteractive apt install -y lsphp70-redis
+	DEBIAN_FRONTEND=noninteractive apt install -y redis
 fi
 
 if ifconfig -a | grep inet6 ; then
