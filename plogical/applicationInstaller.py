@@ -16,10 +16,11 @@ from plogical.mysqlUtilities import mysqlUtilities
 from databases.models import Databases
 from plogical.installUtilities import installUtilities
 import shutil
-from plogical.mailUtilities import mailUtilities
 from plogical.processUtilities import ProcessUtilities
 
 class ApplicationInstaller(multi.Thread):
+
+    LOCALHOST = 'localhost'
 
     def __init__(self, installApp, extraArgs):
         multi.Thread.__init__(self)
@@ -220,6 +221,17 @@ class ApplicationInstaller(multi.Thread):
             logging.writeToFile(str(msg) + ' [ApplicationInstaller.installGit]')
 
     def dbCreation(self, tempStatusPath, website):
+        passFile = "/etc/cyberpanel/mysqlPassword"
+
+        try:
+            import json
+            jsonData = json.loads(open(passFile, 'r').read())
+
+            mysqlhost = jsonData['mysqlhost']
+            ApplicationInstaller.LOCALHOST = mysqlhost
+        except:
+            pass
+
         try:
             dbName = randomPassword.generate_pass()
             dbUser = dbName
@@ -367,7 +379,7 @@ class ApplicationInstaller(multi.Thread):
             statusFile.writelines('Configuring the installation,40')
             statusFile.close()
 
-            command = "wp core config --dbname=" + dbName + " --dbuser=" + dbUser + " --dbpass=" + dbPassword + " --dbhost=localhost --dbprefix=wp_ --allow-root --path=" + finalPath
+            command = "wp core config --dbname=" + dbName + " --dbuser=" + dbUser + " --dbpass=" + dbPassword + " --dbhost=%s --dbprefix=wp_ --allow-root --path=" % (ApplicationInstaller.LOCALHOST) + finalPath
             ProcessUtilities.executioner(command, externalApp)
 
             if home == '0':
