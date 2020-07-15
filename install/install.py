@@ -698,6 +698,10 @@ class preFlightsChecks:
             preFlightsChecks.call(command, self.distro, '[chown -R lscpd:lscpd /usr/local/CyberCP/public/phpmyadmin]',
                                   'chown -R lscpd:lscpd /usr/local/CyberCP/public/phpmyadmin', 1, 0, os.EX_OSERR)
 
+            if self.remotemysql == 'ON':
+                command = "sed -i 's|'localhost'|'%s'|g' %s" % (self.mysqlhost, '/usr/local/CyberCP/public/phpmyadmin/config.inc.php')
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
         except BaseException as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [download_install_phpmyadmin]")
             return 0
