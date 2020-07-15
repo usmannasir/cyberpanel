@@ -24,6 +24,8 @@ from math import ceil
 
 class mysqlUtilities:
 
+    LOCALHOST = 'localhost'
+
     @staticmethod
     def getPagination(records, toShow):
         pages = float(records) / float(toShow)
@@ -64,6 +66,15 @@ class mysqlUtilities:
                 mysqlport = jsonData['mysqlport']
                 mysqlhost = jsonData['mysqlhost']
 
+                ## Also set localhost to this server
+
+                ipFile = "/etc/cyberpanel/machineIP"
+                f = open(ipFile)
+                ipData = f.read()
+                ipAddressLocal = ipData.split('\n', 1)[0]
+
+                mysqlUtilities.LOCALHOST = ipAddressLocal
+
                 conn = mysql.connect(host=mysqlhost ,user=mysqluser, passwd=mysqlpassword, port=int(mysqlport), cursorclass=cursors.SSCursor)
                 cursor = conn.cursor()
 
@@ -98,8 +109,8 @@ class mysqlUtilities:
                 return 0
 
             cursor.execute("CREATE DATABASE " + dbname)
-            cursor.execute("CREATE USER '" + dbuser + "'@'localhost' IDENTIFIED BY '"+dbpassword+"'")
-            cursor.execute("GRANT ALL PRIVILEGES ON " + dbname + ".* TO '" + dbuser + "'@'localhost'")
+            cursor.execute("CREATE USER '" + dbuser + "'@'%s' IDENTIFIED BY '" % (mysqlUtilities.LOCALHOST) +dbpassword+"'")
+            cursor.execute("GRANT ALL PRIVILEGES ON " + dbname + ".* TO '" + dbuser + "'@'%s'" % (mysqlUtilities.LOCALHOST))
             connection.close()
 
             return 1
@@ -119,7 +130,7 @@ class mysqlUtilities:
                 return 0
 
             cursor.execute("CREATE DATABASE " + dbuser)
-            cursor.execute("CREATE USER '" + dbuser + "'@'localhost' IDENTIFIED BY '" + dbpassword + "'")
+            cursor.execute("CREATE USER '" + dbuser + "'@'%s' IDENTIFIED BY '" % (mysqlUtilities.LOCALHOST) + dbpassword + "'")
 
             return 1
 
@@ -136,7 +147,7 @@ class mysqlUtilities:
             if connection == 0:
                 return 0
 
-            cursor.execute("GRANT ALL PRIVILEGES ON " + dbName + ".* TO '" + globalUser + "'@'localhost'")
+            cursor.execute("GRANT ALL PRIVILEGES ON " + dbName + ".* TO '" + globalUser + "'@'%s'" % (mysqlUtilities.LOCALHOST))
             connection.close()
 
             return 1
@@ -164,7 +175,7 @@ class mysqlUtilities:
                 return 0
 
             cursor.execute("DROP DATABASE `%s`" % (dbname))
-            cursor.execute("DROP USER '"+dbuser+"'@'localhost'")
+            cursor.execute("DROP USER '"+dbuser+"'@'%s'" % (mysqlUtilities.LOCALHOST))
             connection.close()
 
             return 1
@@ -297,7 +308,7 @@ password=%s
                 if connection == 0:
                     return 0
 
-                passwordCMD = "use mysql;SET PASSWORD FOR '" + databaseName + "'@'localhost' = '" + dbPassword + "';FLUSH PRIVILEGES;"
+                passwordCMD = "use mysql;SET PASSWORD FOR '" + databaseName + "'@'%s' = '" % (mysqlUtilities.LOCALHOST) + dbPassword + "';FLUSH PRIVILEGES;"
 
                 cursor.execute(passwordCMD)
                 connection.close()
@@ -767,12 +778,12 @@ password=%s
             if encrypt == None:
                 try:
                     dbuser = DBUsers.objects.get(user=userName)
-                    cursor.execute("SET PASSWORD FOR '" + userName + "'@'localhost' = PASSWORD('" + dbPassword + "')")
+                    cursor.execute("SET PASSWORD FOR '" + userName + "'@'%s' = PASSWORD('" % (mysqlUtilities.LOCALHOST) + dbPassword + "')")
                 except:
                     userName = mysqlUtilities.fetchuser(userName)
-                    cursor.execute("SET PASSWORD FOR '" + userName + "'@'localhost' = PASSWORD('" + dbPassword + "')")
+                    cursor.execute("SET PASSWORD FOR '" + userName + "'@'%s' = PASSWORD('" % (mysqlUtilities.LOCALHOST) + dbPassword + "')")
             else:
-                cursor.execute("SET PASSWORD FOR '" + userName + "'@'localhost' = '" + dbPassword + "'")
+                cursor.execute("SET PASSWORD FOR '" + userName + "'@'%s' = '" % (mysqlUtilities.LOCALHOST) + dbPassword + "'")
 
             connection.close()
 
