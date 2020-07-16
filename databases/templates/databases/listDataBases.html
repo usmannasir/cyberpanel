@@ -137,10 +137,33 @@
                                                         </div>
                                                         <div class="modal-body">
 
-                                                            <div class="form-group">
-                                                                <label class="col-sm-12 control-label"
-                                                                       style="text-align: center;">{% trans "Contents of .gitignore, use the box below to Add/Edit content of .gitingore file." %}</label>
-                                                            </div>
+                                                            <form name="containerSettingsForm" action="/"
+                                                                  class="form-horizontal">
+                                                                <div ng-hide="installationDetailsForm"
+                                                                     class="form-group">
+                                                                    <label class="col-sm-5 control-label">{% trans "Allow Remote Access on following IP" %}</label>
+                                                                    <div class="col-sm-6">
+                                                                        <input placeholder="IP Address"
+                                                                               name="remoteIP" type="text"
+                                                                               class="form-control"
+                                                                               ng-model="$parent.remoteIP"
+                                                                               required>
+                                                                    </div>
+                                                                </div>
+
+                                                                <hr>
+
+                                                                <div class="form-group">
+
+                                                                    <label class="col-sm-5 control-label"></label>
+                                                                    <div class="col-sm-4">
+                                                                        <button type="button" ng-click="allowRemoteIP()"
+                                                                                class="btn btn-primary btn-lg">{% trans "Save Changes" %}</button>
+
+                                                                    </div>
+                                                                </div>
+
+                                                            </form>
 
                                                             <hr>
 
@@ -154,7 +177,7 @@
                                                                 <tbody>
                                                                 <tr>
                                                                     <td>{$ dbUsername $}</td>
-                                                                    <td></td>
+                                                                    <td>{$ dbHost $}</td>
                                                                 </tr>
                                                                 </tbody>
                                                             </table>

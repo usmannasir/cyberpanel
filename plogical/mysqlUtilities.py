@@ -794,6 +794,27 @@ password=%s
             return 0
 
     @staticmethod
+    def allowRemoteAccess(dbName, userName, remoteIP):
+        try:
+
+            connection, cursor = mysqlUtilities.setupConnection()
+
+            if connection == 0:
+                return 0
+            cursor.execute("use mysql")
+
+            cursor.execute("update db set Host='%s' where Db='%s'" % (remoteIP, dbName))
+            cursor.execute("update user set Host='%s' where user='%s'" % (remoteIP, userName))
+
+            connection.close()
+
+            return 1
+
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[mysqlUtilities.changePassword]")
+            return 0
+
+    @staticmethod
     def fetchuser(databaseName):
         try:
             connection, cursor = mysqlUtilities.setupConnection()

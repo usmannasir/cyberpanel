@@ -457,18 +457,13 @@ app.controller('listDBs', function ($scope, $http) {
     $scope.remoteAccess = function (userName) {
 
         $scope.dbUsername = userName;
-        alert($scope.dbUsername);
-        return 0;
-
         $scope.dbLoading = false;
-        $scope.passwordChanged = true;
 
 
-        url = "/dataBases/changePassword";
+        url = "/dataBases/remoteAccess";
 
         var data = {
-            dbUserName: globalDBUsername,
-            dbPassword: $scope.dbPassword,
+            dbUserName: $scope.dbUsername
         };
 
         var config = {
@@ -477,33 +472,89 @@ app.controller('listDBs', function ($scope, $http) {
             }
         };
 
-
         $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
-
         function ListInitialDatas(response) {
+            $scope.dbLoading = true;
 
+            if (response.data.status === 1) {
 
-            if (response.data.changePasswordStatus == 1) {
-                $scope.notificationsBox = false;
-                $scope.passwordChanged = false;
-                $scope.dbLoading = true;
-                $scope.domainFeteched = $scope.selectedDomain;
+                $scope.dbHost = response.data.dbHost;
 
             }
             else {
-                $scope.notificationsBox = false;
-                $scope.canNotChangePassword = false;
-                $scope.dbLoading = true;
-                $scope.canNotChangePassword = false;
-                $scope.errorMessage = response.data.error_message;
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+
             }
 
         }
 
         function cantLoadInitialDatas(response) {
-            $scope.notificationsBox = false;
-            $scope.couldNotConnect = false;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+            $scope.dbLoading = true;
+
+        }
+
+    };
+
+    $scope.allowRemoteIP = function () {
+
+        $scope.dbLoading = false;
+
+        url = "/dataBases/allowRemoteIP";
+
+        var data = {
+            dbUserName: $scope.dbUsername,
+            remoteIP: $scope.remoteIP
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+            $scope.dbLoading = true;
+
+            if (response.data.status === 1) {
+
+                $scope.remoteAccess($scope.dbUsername);
+
+                new PNotify({
+                    title: 'Success',
+                    text: 'Changes applied.',
+                    type: 'success'
+                });
+
+            }
+            else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
             $scope.dbLoading = true;
 
         }
