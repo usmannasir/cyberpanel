@@ -215,6 +215,41 @@ class DatabaseManager:
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
+    def remoteAccess(self, userID = None, data = None):
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+
+            if ACLManager.currentContextPermission(currentACL, 'listDatabases') == 0:
+                return ACLManager.loadErrorJson('changePasswordStatus', 0)
+
+            userName = data['dbUserName']
+            dbPassword = data['dbPassword']
+
+            db = Databases.objects.filter(dbUser=userName)
+
+            admin = Administrator.objects.get(pk=userID)
+            if ACLManager.checkOwnership(db[0].website.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson()
+
+
+            res = mysqlUtilities.changePassword(userName, dbPassword)
+
+            if res == 0:
+                data_ret = {'status': 0, 'changePasswordStatus': 0,'error_message': "Please see CyberPanel main log file."}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+            data_ret = {'status': 1, 'changePasswordStatus': 1, 'error_message': "None"}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'changePasswordStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
     @staticmethod
     def generatePHPMYAdminData(userID):
         try:

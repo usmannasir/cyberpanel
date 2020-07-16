@@ -119,7 +119,7 @@
                                                     class="btn ra-100 btn-purple">{% trans "Change" %}</button>
                                         </td>
                                         <td>
-                                            <button ng-click="remoteAccess()" data-toggle="modal"
+                                            <button ng-click="remoteAccess(record.dbUser)" data-toggle="modal"
                                                     data-target="#remoteAccess" type="button"
                                                     class="btn ra-100 btn-purple">{% trans "Manage" %}</button>
                                             <div id="remoteAccess" class="modal fade" role="dialog">
@@ -137,19 +137,24 @@
                                                         </div>
                                                         <div class="modal-body">
 
+                                                            <div class="form-group">
+                                                                <label class="col-sm-12 control-label"
+                                                                       style="text-align: center;">{% trans "Contents of .gitignore, use the box below to Add/Edit content of .gitingore file." %}</label>
+                                                            </div>
+
+                                                            <hr>
+
                                                             <table style="margin-top: 2%" class="table">
                                                                 <thead>
                                                                 <tr>
-                                                                    <th>Type</th>
-                                                                    <th>Date</th>
-                                                                    <th>Message</th>
+                                                                    <th>Username</th>
+                                                                    <th>Host</th>
                                                                 </tr>
                                                                 </thead>
                                                                 <tbody>
-                                                                <tr ng-repeat="log in logs track by $index">
-                                                                    <td ng-bind="log.type"></td>
-                                                                    <td ng-bind="log.date"></td>
-                                                                    <td ng-bind="log.message"></td>
+                                                                <tr>
+                                                                    <td>{$ dbUsername $}</td>
+                                                                    <td></td>
                                                                 </tr>
                                                                 </tbody>
                                                             </table>

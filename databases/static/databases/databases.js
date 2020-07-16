@@ -454,7 +454,11 @@ app.controller('listDBs', function ($scope, $http) {
         $scope.generatedPasswordView = true;
     };
 
-    $scope.remoteAccess = function () {
+    $scope.remoteAccess = function (userName) {
+
+        $scope.dbUsername = userName;
+        alert($scope.dbUsername);
+        return 0;
 
         $scope.dbLoading = false;
         $scope.passwordChanged = true;
