@@ -470,7 +470,12 @@ if [[ $SERVER_OS == "CentOS" ]] ; then
 		fi
 fi
 if [[ $SERVER_OS == "Ubuntu" ]] ; then
-	DEBIAN_FRONTEND=noninteractive apt install -y lsphp74-memcached lsphp73-memcached lsphp72-memcached lsphp71-memcached lsphp70-memcached
+	DEBIAN_FRONTEND=noninteractive apt install -y lsphp74-memcached
+	DEBIAN_FRONTEND=noninteractive apt install -y lsphp73-memcached
+	DEBIAN_FRONTEND=noninteractive apt install -y lsphp72-memcached
+	DEBIAN_FRONTEND=noninteractive apt install -y lsphp71-memcached
+	DEBIAN_FRONTEND=noninteractive apt install -y lsphp70-memcached
+	
 		if [[ $TOTAL_RAM -eq "2048" ]] || [[ $TOTAL_RAM -gt "2048" ]] ; then
 			DEBIAN_FRONTEND=noninteractive apt install build-essential zlib1g-dev libexpat1-dev openssl libssl-dev libsasl2-dev libpcre3-dev git -y
 			wget https://$DOWNLOAD/litespeed/lsmcd.tar.gz
