@@ -130,29 +130,12 @@
                                                             <button type="button" class="close" data-dismiss="modal">
                                                                 &times;
                                                             </button>
-                                                            <h4 class="modal-title">{% trans "Git Logs" %} <img
-                                                                    ng-hide="cyberpanelLoading"
+                                                            <h4 class="modal-title">{% trans "Remote Access" %} <img
+                                                                    ng-hide="dbLoading"
                                                                     src="{% static 'images/loading.gif' %}">
                                                             </h4>
                                                         </div>
                                                         <div class="modal-body">
-
-                                                            <div class="row">
-                                                                <div class="col-sm-10">
-                                                                </div>
-                                                                <div class="col-sm-2">
-                                                                    <div class="form-group">
-                                                                        <select ng-model="recordsToShow"
-                                                                                ng-change="fetchGitLogs()"
-                                                                                class="form-control"
-                                                                                id="example-select">
-                                                                            <option>10</option>
-                                                                            <option>50</option>
-                                                                            <option>100</option>
-                                                                        </select>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
 
                                                             <table style="margin-top: 2%" class="table">
                                                                 <thead>
@@ -170,27 +153,6 @@
                                                                 </tr>
                                                                 </tbody>
                                                             </table>
-
-                                                            <div style="margin-top: 2%" class="row">
-                                                                <div class="col-md-12">
-                                                                    <div class="row">
-                                                                        <div class="col-md-9">
-                                                                        </div>
-                                                                        <div class="col-md-3">
-                                                                            <div class="form-group">
-                                                                                <select ng-model="currentPage"
-                                                                                        class="form-control"
-                                                                                        ng-change="fetchGitLogs()">
-                                                                                    <option ng-repeat="page in pagination">
-                                                                                        {$ $index + 1
-                                                                                        $}
-                                                                                    </option>
-                                                                                </select>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div> <!-- end row -->
-                                                                </div>
-                                                            </div>
 
                                                         </div>
                                                     </div>

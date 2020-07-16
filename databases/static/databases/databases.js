@@ -454,6 +454,58 @@ app.controller('listDBs', function ($scope, $http) {
         $scope.generatedPasswordView = true;
     };
 
+    $scope.remoteAccess = function () {
+
+        $scope.dbLoading = false;
+        $scope.passwordChanged = true;
+
+
+        url = "/dataBases/changePassword";
+
+        var data = {
+            dbUserName: globalDBUsername,
+            dbPassword: $scope.dbPassword,
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+
+            if (response.data.changePasswordStatus == 1) {
+                $scope.notificationsBox = false;
+                $scope.passwordChanged = false;
+                $scope.dbLoading = true;
+                $scope.domainFeteched = $scope.selectedDomain;
+
+            }
+            else {
+                $scope.notificationsBox = false;
+                $scope.canNotChangePassword = false;
+                $scope.dbLoading = true;
+                $scope.canNotChangePassword = false;
+                $scope.errorMessage = response.data.error_message;
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.notificationsBox = false;
+            $scope.couldNotConnect = false;
+            $scope.dbLoading = true;
+
+        }
+
+    };
+
 });
 
 
