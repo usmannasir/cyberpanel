@@ -805,6 +805,7 @@ password=%s
 
             cursor.execute("update db set Host='%s' where Db='%s'" % (remoteIP, dbName))
             cursor.execute("update user set Host='%s' where user='%s'" % (remoteIP, userName))
+            cursor.execute("FLUSH PRIVILIGES")
 
             connection.close()
 
