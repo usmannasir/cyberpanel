@@ -70,18 +70,19 @@
                             </div>
 
                             <div class="col-sm-3">
-                                    <button type="button" ng-click="generatePassword()"
-                                            class="btn btn-primary">{% trans "Generate" %}</button>
+                                <button type="button" ng-click="generatePassword()"
+                                        class="btn btn-primary">{% trans "Generate" %}</button>
                             </div>
 
-                            <label ng-hide="generatedPasswordView" style="margin-top: 1%" class="col-sm-3 control-label">{% trans "Generated Password" %}</label>
+                            <label ng-hide="generatedPasswordView" style="margin-top: 1%"
+                                   class="col-sm-3 control-label">{% trans "Generated Password" %}</label>
                             <div ng-hide="generatedPasswordView" style="margin-top: 1%" class="col-sm-6">
                                 <input name="dom" type="text" class="form-control" ng-model="dbPassword" required>
                             </div>
 
                             <div ng-hide="generatedPasswordView" style="margin-top: 1%" class="col-sm-3">
-                                    <button type="button" ng-click="usePassword()"
-                                            class="btn btn-primary">{% trans "Use" %}</button>
+                                <button type="button" ng-click="usePassword()"
+                                        class="btn btn-primary">{% trans "Use" %}</button>
                             </div>
 
 
@@ -105,6 +106,7 @@
                                         <th>{% trans "Database Name" %}</th>
                                         <th>{% trans "Database User" %}</th>
                                         <th>{% trans "Password" %}</th>
+                                        <th>{% trans "Remote Access" %}</th>
                                     </tr>
                                     </thead>
                                     <tbody>
@@ -115,6 +117,85 @@
                                         <td>
                                             <button type="button" ng-click="changePassword(record.dbUser)"
                                                     class="btn ra-100 btn-purple">{% trans "Change" %}</button>
+                                        </td>
+                                        <td>
+                                            <button ng-click="remoteAccess()" data-toggle="modal"
+                                                    data-target="#remoteAccess" type="button"
+                                                    class="btn ra-100 btn-purple">{% trans "Manage" %}</button>
+                                            <div id="remoteAccess" class="modal fade" role="dialog">
+                                                <div class="modal-dialog modal-lg">
+                                                    <!-- Modal content-->
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <button type="button" class="close" data-dismiss="modal">
+                                                                &times;
+                                                            </button>
+                                                            <h4 class="modal-title">{% trans "Git Logs" %} <img
+                                                                    ng-hide="cyberpanelLoading"
+                                                                    src="{% static 'images/loading.gif' %}">
+                                                            </h4>
+                                                        </div>
+                                                        <div class="modal-body">
+
+                                                            <div class="row">
+                                                                <div class="col-sm-10">
+                                                                </div>
+                                                                <div class="col-sm-2">
+                                                                    <div class="form-group">
+                                                                        <select ng-model="recordsToShow"
+                                                                                ng-change="fetchGitLogs()"
+                                                                                class="form-control"
+                                                                                id="example-select">
+                                                                            <option>10</option>
+                                                                            <option>50</option>
+                                                                            <option>100</option>
+                                                                        </select>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            <table style="margin-top: 2%" class="table">
+                                                                <thead>
+                                                                <tr>
+                                                                    <th>Type</th>
+                                                                    <th>Date</th>
+                                                                    <th>Message</th>
+                                                                </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                <tr ng-repeat="log in logs track by $index">
+                                                                    <td ng-bind="log.type"></td>
+                                                                    <td ng-bind="log.date"></td>
+                                                                    <td ng-bind="log.message"></td>
+                                                                </tr>
+                                                                </tbody>
+                                                            </table>
+
+                                                            <div style="margin-top: 2%" class="row">
+                                                                <div class="col-md-12">
+                                                                    <div class="row">
+                                                                        <div class="col-md-9">
+                                                                        </div>
+                                                                        <div class="col-md-3">
+                                                                            <div class="form-group">
+                                                                                <select ng-model="currentPage"
+                                                                                        class="form-control"
+                                                                                        ng-change="fetchGitLogs()">
+                                                                                    <option ng-repeat="page in pagination">
+                                                                                        {$ $index + 1
+                                                                                        $}
+                                                                                    </option>
+                                                                                </select>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div> <!-- end row -->
+                                                                </div>
+                                                            </div>
+
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </td>
                                     </tr>
                                     </tbody>
