@@ -62,7 +62,6 @@ class findBWUsage:
 
         return 1
 
-
     @staticmethod
     def startCalculations():
         try:

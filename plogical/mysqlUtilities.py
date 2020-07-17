@@ -21,6 +21,7 @@ from random import randint
 from plogical.processUtilities import ProcessUtilities
 import MySQLdb.cursors as cursors
 from math import ceil
+import argparse
 
 class mysqlUtilities:
 
@@ -794,28 +795,6 @@ password=%s
             return 0
 
     @staticmethod
-    def allowRemoteAccess(dbName, userName, remoteIP):
-        try:
-
-            connection, cursor = mysqlUtilities.setupConnection()
-
-            if connection == 0:
-                return 0
-            cursor.execute("use mysql")
-
-            cursor.execute("update db set Host='%s' where Db='%s'" % (remoteIP, dbName))
-            cursor.execute("update user set Host='%s' where user='%s'" % (remoteIP, userName))
-            cursor.execute("FLUSH PRIVILIGES")
-
-            connection.close()
-
-            return 1
-
-        except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[mysqlUtilities.changePassword]")
-            return 0
-
-    @staticmethod
     def fetchuser(databaseName):
         try:
             connection, cursor = mysqlUtilities.setupConnection()
@@ -853,3 +832,81 @@ password=%s
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[mysqlUtilities.fetchuser]")
             return 0
+
+    @staticmethod
+    def allowRemoteAccess(dbName, userName, remoteIP):
+        try:
+
+            execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/mysqlUtilities.py enableRemoteMYSQL"
+            ProcessUtilities.executioner(execPath)
+
+            connection, cursor = mysqlUtilities.setupConnection()
+
+            if connection == 0:
+                return 0
+            cursor.execute("use mysql")
+
+            cursor.execute("update db set Host='%s' where Db='%s'" % (remoteIP, dbName))
+            cursor.execute("update user set Host='%s' where user='%s'" % (remoteIP, userName))
+            cursor.execute("FLUSH PRIVILIGES")
+
+            connection.close()
+
+            return 1
+
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[mysqlUtilities.allowRemoteAccess]")
+            return 0
+
+    @staticmethod
+    def enableRemoteMYSQL():
+        try:
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20 or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+                cnfPath = '/etc/mysql/my.cnf'
+            else:
+                cnfPath = '/etc/my.cnf'
+
+            data = open(cnfPath, 'r').read()
+
+            if data.find('bind-address') > -1 and data.find('skip-name-resolve') > -1:
+                print('1,None')
+                return 1
+            else:
+                ipFile = "/etc/cyberpanel/machineIP"
+                f = open(ipFile)
+                ipData = f.read()
+                ipAddressLocal = ipData.split('\n', 1)[0]
+
+                mysqldContent = '''
+[mysqld] 
+bind-address=%s
+skip-name-resolve
+''' % (ipAddressLocal)
+
+                writeToFile = open(cnfPath, 'a')
+                writeToFile.write(mysqldContent)
+                writeToFile.close()
+
+                print('1,None')
+
+                from time import sleep
+                sleep(5)
+                ProcessUtilities.popenExecutioner('systemctl restart mariadb')
+                return 1
+
+        except BaseException as msg:
+            print('0,%s "[mysqlUtilities.enableRemoteMYSQL]' % (str(msg)))
+            return 0
+
+def main():
+    parser = argparse.ArgumentParser(description='CyberPanel')
+    parser.add_argument('function', help='Specific a function to call!')
+
+    args = parser.parse_args()
+
+    if args.function == "enableRemoteMYSQL":
+        mysqlUtilities.enableRemoteMYSQL()
+
+if __name__ == "__main__":
+    main()
