@@ -8,6 +8,16 @@ DEV="OFF"
 POSTFIX_VARIABLE="ON"
 POWERDNS_VARIABLE="ON"
 PUREFTPD_VARIABLE="ON"
+
+### Remote MySQL Variables
+
+REMOTE_MYSQL='OFF'
+MYSQL_HOST=''
+MYSQL_DB=''
+MYSQL_USER=''
+MYSQL_PASSWORD=''
+MYSQL_PORT=''
+
 PROVIDER="undefined"
 SERIAL_NO=""
 DIR=$(pwd)
@@ -379,19 +389,18 @@ fi
 
 echo -e "\nInstalling necessary components..."
 if [[ $SERVER_OS == "CentOS" ]] ; then
-	timeout 10 rpm --import https://$DOWNLOAD_SERVER/mariadb/RPM-GPG-KEY-MariaDB
-	timeout 10 rpm --import https://$DOWNLOAD_SERVER/litespeed/RPM-GPG-KEY-litespeed
-	timeout 10 rpm --import https://$DOWNLOAD_SERVER/powerdns/FD380FBB-pub.asc
-	timeout 10 rpm --import http://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-7
-	timeout 10 rpm --import https://$DOWNLOAD_SERVER/gf-plus/RPM-GPG-KEY-gf.el7
-	timeout 10 rpm --import https://$DOWNLOAD_SERVER/lux/RPM-GPG-KEY-LUX
-	timeout 10 rpm --import https://$DOWNLOAD_SERVER/ius/RPM-GPG-KEY-IUS-7
-	timeout 10 rpm --import https://repo.dovecot.org/DOVECOT-REPO-GPG
-	timeout 10 rpm --import https://copr-be.cloud.fedoraproject.org/results/copart/restic/pubkey.gpg
-	timeout 10 rpm --import https://rep8.cyberpanel.net/RPM-GPG-KEY-CP-EP-8
-	timeout 10 rpm --import https://rep8.cyberpanel.net/RPM-GPG-KEY-CP-GF-8
-	timeout 10 rpm --import https://rep8.cyberpanel.net/RPM-GPG-KEY-centosofficialcp
-	curl https://getfedora.org/static/fedora.gpg | gpg --import
+  if [[ $CENTOS_8 == "False" ]] ; then
+    timeout 10 rpm --import https://$DOWNLOAD_SERVER/mariadb/RPM-GPG-KEY-MariaDB
+    timeout 10 rpm --import https://$DOWNLOAD_SERVER/litespeed/RPM-GPG-KEY-litespeed
+    timeout 10 rpm --import https://$DOWNLOAD_SERVER/powerdns/FD380FBB-pub.asc
+    timeout 10 rpm --import http://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-7
+    timeout 10 rpm --import https://$DOWNLOAD_SERVER/gf-plus/RPM-GPG-KEY-gf.el7
+    timeout 10 rpm --import https://$DOWNLOAD_SERVER/lux/RPM-GPG-KEY-LUX
+    timeout 10 rpm --import https://$DOWNLOAD_SERVER/ius/RPM-GPG-KEY-IUS-7
+    timeout 10 rpm --import https://repo.dovecot.org/DOVECOT-REPO-GPG
+    timeout 10 rpm --import https://copr-be.cloud.fedoraproject.org/results/copart/restic/pubkey.gpg
+    curl https://getfedora.org/static/fedora.gpg | gpg --import
+	fi
 
 	yum clean all
 	yum update -y
@@ -471,7 +480,12 @@ if [[ $SERVER_OS == "CentOS" ]] ; then
 		fi
 fi
 if [[ $SERVER_OS == "Ubuntu" ]] ; then
-	DEBIAN_FRONTEND=noninteractive apt install -y lsphp74-memcached lsphp73-memcached lsphp72-memcached lsphp71-memcached lsphp70-memcached
+	DEBIAN_FRONTEND=noninteractive apt install -y lsphp74-memcached
+	DEBIAN_FRONTEND=noninteractive apt install -y lsphp73-memcached
+	DEBIAN_FRONTEND=noninteractive apt install -y lsphp72-memcached
+	DEBIAN_FRONTEND=noninteractive apt install -y lsphp71-memcached
+	DEBIAN_FRONTEND=noninteractive apt install -y lsphp70-memcached
+	
 		if [[ $TOTAL_RAM -eq "2048" ]] || [[ $TOTAL_RAM -gt "2048" ]] ; then
 			DEBIAN_FRONTEND=noninteractive apt install build-essential zlib1g-dev libexpat1-dev openssl libssl-dev libsasl2-dev libpcre3-dev git -y
 			wget https://$DOWNLOAD/litespeed/lsmcd.tar.gz
@@ -507,7 +521,12 @@ if [[ $SERVER_OS == "CentOS" ]] ; then
 	yum install -y lsphp74-redis lsphp73-redis lsphp72-redis lsphp71-redis lsphp70-redis lsphp56-redis lsphp55-redis lsphp54-redis redis
 fi
 if [[ $SERVER_OS == "Ubuntu" ]] ; then
-	DEBIAN_FRONTEND=noninteractive apt install -y lsphp74-redis lsphp73-redis lsphp72-redis lsphp71-redis lsphp70-redis redis
+	DEBIAN_FRONTEND=noninteractive apt install -y lsphp74-redis
+	DEBIAN_FRONTEND=noninteractive apt install -y lsphp73-redis
+	DEBIAN_FRONTEND=noninteractive apt install -y lsphp72-redis
+	DEBIAN_FRONTEND=noninteractive apt install -y lsphp71-redis
+	DEBIAN_FRONTEND=noninteractive apt install -y lsphp70-redis
+	DEBIAN_FRONTEND=noninteractive apt install -y redis
 fi
 
 if ifconfig -a | grep inet6 ; then
@@ -856,6 +875,46 @@ else
 		fi
 fi
 
+### Ask if you want to set up this CyberPanel with remote MySQL
+
+echo -e "\nDo you want to setup Remote MySQL? (This will skip installation of local MySQL)"
+echo -e ""
+printf "%s" "(Default = No) Remote MySQL [Y/n]: "
+read TMP_YN
+if [[ `expr "x$TMP_YN" : 'x[Yy]'` -gt 1 ]] || [[ $TMP_YN == "" ]] ; then
+		echo -e "\nRemote MySQL selected..."
+		REMOTE_MYSQL='ON'
+
+		echo -e ""
+		printf "%s" "Remote MySQL Hostname: "
+		read MYSQL_HOST
+
+		echo -e ""
+		printf "%s" "Remote MySQL Database that contains meta information regarding MYSQL. (usually mysql): "
+		read MYSQL_DB
+
+		echo -e ""
+		printf "%s" "Remote MySQL Username:  "
+		read MYSQL_USER
+
+		echo -e ""
+		printf "%s" "Remote MySQL Password:  "
+		read MYSQL_PASSWORD
+
+		echo -e ""
+		printf "%s" "Remote MySQL Port:  "
+		read MYSQL_PORT
+
+else
+
+  echo -e ""
+	printf "%s" "Local MySQL selected.."
+	echo -e ""
+
+fi
+
+###
+
 #above comment for future use
 
 #if [[ $DEV_ARG == "ON" ]] ; then
@@ -1029,9 +1088,18 @@ if [[ $debug == "1" ]] ; then
   fi
 
 	if [[ $REDIS_HOSTING == "Yes" ]] ; then
-	  /usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY --postfix $POSTFIX_VARIABLE --powerdns $POWERDNS_VARIABLE --ftp $PUREFTPD_VARIABLE --redis enable
+	    if [[ $REMOTE_MYSQL == "ON" ]] ; then
+	      /usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY --postfix $POSTFIX_VARIABLE --powerdns $POWERDNS_VARIABLE --ftp $PUREFTPD_VARIABLE --redis enable --remotemysql $REMOTE_MYSQL --mysqlhost $MYSQL_HOST --mysqldb $MYSQL_DB --mysqluser $MYSQL_USER --mysqlpassword $MYSQL_PASSWORD --mysqlport $MYSQL_PORT
+      else
+        /usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY --postfix $POSTFIX_VARIABLE --powerdns $POWERDNS_VARIABLE --ftp $PUREFTPD_VARIABLE --redis enable --remotemysql $REMOTE_MYSQL
+      fi
   else
-    /usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY --postfix $POSTFIX_VARIABLE --powerdns $POWERDNS_VARIABLE --ftp $PUREFTPD_VARIABLE
+    if [[ $REMOTE_MYSQL == "ON" ]] ; then
+      echo "/usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY --postfix $POSTFIX_VARIABLE --powerdns $POWERDNS_VARIABLE --ftp $PUREFTPD_VARIABLE --remotemysql $REMOTE_MYSQL --mysqlhost $MYSQL_HOST --mysqluser $MYSQL_USER --mysqlpassword $MYSQL_PASSWORD --mysqlport $MYSQL_PORT"
+        /usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY --postfix $POSTFIX_VARIABLE --powerdns $POWERDNS_VARIABLE --ftp $PUREFTPD_VARIABLE --remotemysql $REMOTE_MYSQL --mysqlhost $MYSQL_HOST --mysqldb $MYSQL_DB --mysqluser $MYSQL_USER --mysqlpassword $MYSQL_PASSWORD --mysqlport $MYSQL_PORT
+    else
+        /usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY --postfix $POSTFIX_VARIABLE --powerdns $POWERDNS_VARIABLE --ftp $PUREFTPD_VARIABLE --remotemysql $REMOTE_MYSQL
+    fi
   fi
 
 	if grep "CyberPanel installation successfully completed" /var/log/installLogs.txt > /dev/null; then
@@ -1070,7 +1138,7 @@ if [[ $DEV == "ON" ]] ; then
 
 	if [[ $UBUNTU_20 == "False" ]] ; then
 	  source /usr/local/CyberPanel/bin/activate
-    wget -O /usr/local/cyberpanel-pip.zip https://rep.cyberpanel.net/cyberpanel-pip.zip
+    wget -O /usr/local/cyberpanel-pip.zip https://rep.cyberpanel.net/cyberpanel-pip-2.zip
     check_return
     unzip /usr/local/cyberpanel-pip.zip -d /usr/local
     check_return
@@ -1078,7 +1146,7 @@ if [[ $DEV == "ON" ]] ; then
     check_return
   else
     . /usr/local/CyberPanel/bin/activate
-    wget -O /usr/local/cyberpanel-pip.zip https://rep.cyberpanel.net/ubuntu-pip.zip
+    wget -O /usr/local/cyberpanel-pip.zip https://rep.cyberpanel.net/ubuntu-pip-2.zip
     check_return
     unzip /usr/local/cyberpanel-pip.zip -d /usr/local
     check_return

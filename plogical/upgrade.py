@@ -14,7 +14,7 @@ import random
 import string
 
 VERSION = '2.0'
-BUILD = 1
+BUILD = 2
 
 CENTOS7 = 0
 CENTOS8 = 1
@@ -1309,6 +1309,52 @@ class Upgrade:
             except:
                 pass
 
+            query = """CREATE TABLE `websiteFunctions_gdrive` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(50) NOT NULL,
+  `auth` longtext NOT NULL,
+  `runTime` varchar(20) NOT NULL,
+  `owner_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`),
+  KEY `websiteFunctions_gdr_owner_id_b5b1e86f_fk_loginSyst` (`owner_id`),
+  CONSTRAINT `websiteFunctions_gdr_owner_id_b5b1e86f_fk_loginSyst` FOREIGN KEY (`owner_id`) REFERENCES `loginSystem_administrator` (`id`)
+)"""
+
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+            query = """CREATE TABLE `websiteFunctions_gdrivesites` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `domain` varchar(200) NOT NULL,
+  `owner_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `websiteFunctions_gdr_owner_id_ff78b305_fk_websiteFu` (`owner_id`),
+  CONSTRAINT `websiteFunctions_gdr_owner_id_ff78b305_fk_websiteFu` FOREIGN KEY (`owner_id`) REFERENCES `websiteFunctions_gdrive` (`id`)
+)"""
+
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+            query = """CREATE TABLE `websiteFunctions_gdrivejoblogs` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `status` int(11) NOT NULL,
+  `message` longtext NOT NULL,
+  `owner_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `websiteFunctions_gdr_owner_id_4cf7983e_fk_websiteFu` (`owner_id`),
+  CONSTRAINT `websiteFunctions_gdr_owner_id_4cf7983e_fk_websiteFu` FOREIGN KEY (`owner_id`) REFERENCES `websiteFunctions_gdrive` (`id`)
+)"""
+
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
             try:
                 connection.close()
             except:
@@ -1346,6 +1392,8 @@ class Upgrade:
             dbName = settings.DATABASES['default']['NAME']
             dbUser = settings.DATABASES['default']['USER']
             password = settings.DATABASES['default']['PASSWORD']
+            host = settings.DATABASES['default']['HOST']
+            port = settings.DATABASES['default']['PORT']
 
             ## Root DB Creds
 
@@ -1361,18 +1409,18 @@ class Upgrade:
         'NAME': '%s',
         'USER': '%s',
         'PASSWORD': '%s',
-        'HOST': 'localhost',
-        'PORT':''
+        'HOST': '%s',
+        'PORT':'%s'
     },
     'rootdb': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': '%s',
         'USER': '%s',
         'PASSWORD': '%s',
-        'HOST': 'localhost',
-        'PORT': '',
+        'HOST': '%s',
+        'PORT': '%s',
     },
-}\n""" % (dbName, dbUser, password, rootdbName, rootdbdbUser, rootdbpassword)
+}\n""" % (dbName, dbUser, password, host, port, rootdbName, rootdbdbUser, rootdbpassword, host, port)
 
             settingsFile = '/usr/local/CyberCP/CyberCP/settings.py'
 
@@ -1382,7 +1430,7 @@ class Upgrade:
 
             os.chdir('/usr/local/CyberCP')
 
-            command = 'git config --global user.email "support@cyberpanel.met"'
+            command = 'git config --global user.email "support@cyberpanel.net"'
             Upgrade.executioner(command, command, 1)
 
             command = 'git config --global user.name "CyberPanel"'
@@ -1474,13 +1522,13 @@ class Upgrade:
             if os.path.exists(lscpdPath):
                 os.remove(lscpdPath)
 
-            command = 'cp -f /usr/local/CyberCP/lscpd-0.2.5 /usr/local/lscp/bin/lscpd-0.2.5'
+            command = 'cp -f /usr/local/CyberCP/lscpd-0.2.7 /usr/local/lscp/bin/lscpd-0.2.7'
             Upgrade.executioner(command, command, 0)
 
             command = 'rm -f /usr/local/lscp/bin/lscpd'
             Upgrade.executioner(command, command, 0)
 
-            command = 'mv /usr/local/lscp/bin/lscpd-0.2.5 /usr/local/lscp/bin/lscpd'
+            command = 'mv /usr/local/lscp/bin/lscpd-0.2.7 /usr/local/lscp/bin/lscpd'
             Upgrade.executioner(command, command, 0)
 
             command = 'chmod 755 %s' % (lscpdPath)
@@ -1658,6 +1706,14 @@ class Upgrade:
 
             command = "find /usr/local/CyberCP/ -name '*.pyc' -delete"
             Upgrade.executioner(command, 0)
+
+            if os.path.exists(Upgrade.CentOSPath):
+                if Upgrade.decideCentosVersion() == CENTOS8:
+                    command = 'chown root:pdns /etc/pdns/pdns.conf'
+                    Upgrade.executioner(command, 0)
+
+                    command = 'chmod 640 /etc/pdns/pdns.conf'
+                    Upgrade.executioner(command, 0)
 
             Upgrade.stdOut("Permissions updated.")
 

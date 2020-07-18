@@ -47,7 +47,7 @@ except:
     pass
 
 VERSION = '2.0'
-BUILD = 1
+BUILD = 2
 
 
 ## I am not the monster that you think I am..
@@ -478,14 +478,14 @@ class backupUtilities:
 
             ## shutil.make_archive. Creating final package.
 
+            logging.CyberCPLogFileWriter.statusWriter(status, "Preparing final compressed package..\n")
+
             make_archive(os.path.join(backupPath, backupName), 'gztar', tempStoragePath)
             rmtree(tempStoragePath)
 
             ###
 
             backupObs = Backups.objects.filter(fileName=backupName)
-
-            ## adding backup data to database.
 
             filePath = '%s/%s.tar.gz' % (backupPath, backupName)
             totalSize = '%sMB' % (str(int(os.path.getsize(filePath) / 1048576)))
@@ -1266,7 +1266,7 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
             ProcessUtilities.executioner(command)
         else:
             writeToFile = open(schedulerPath, 'w')
-            writeToFile.writelines('error')
+            writeToFile.writelines('1269')
             writeToFile.close()
             return 0
 
@@ -1275,7 +1275,7 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
             ProcessUtilities.executioner(command)
         else:
             writeToFile = open(schedulerPath, 'w')
-            writeToFile.writelines('error')
+            writeToFile.writelines('1278')
             writeToFile.close()
             return 0
 
@@ -1286,7 +1286,7 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
             ProcessUtilities.executioner(command)
         else:
             writeToFile = open(schedulerPath, 'w')
-            writeToFile.writelines('error')
+            writeToFile.writelines('1289')
             writeToFile.close()
             return 0
 
@@ -1295,7 +1295,7 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
             ProcessUtilities.executioner(command)
         else:
             writeToFile = open(schedulerPath, 'w')
-            writeToFile.writelines('error')
+            writeToFile.writelines('1298')
             writeToFile.close()
             return 0
 
@@ -1305,7 +1305,7 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
             ProcessUtilities.executioner(command)
         else:
             writeToFile = open(schedulerPath, 'w')
-            writeToFile.writelines('error')
+            writeToFile.writelines('1308')
             writeToFile.close()
             return 0
 
@@ -1314,7 +1314,7 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
             ProcessUtilities.executioner(command)
         else:
             writeToFile = open(schedulerPath, 'w')
-            writeToFile.writelines('error')
+            writeToFile.writelines('1317')
             writeToFile.close()
             return 0
 
@@ -1322,7 +1322,7 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
 
         if result[0] == 0:
             writeToFile = open(schedulerPath, 'w')
-            writeToFile.writelines('error')
+            writeToFile.writelines('1325')
             writeToFile.close()
             logging.CyberCPLogFileWriter.statusWriter(status, str(result[1]) + ' [1084][5009]')
             return 0
@@ -1339,7 +1339,7 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
         if output.find('[5009') > -1:
             logging.CyberCPLogFileWriter.writeToFile(output)
             writeToFile = open(schedulerPath, 'w')
-            writeToFile.writelines('error')
+            writeToFile.writelines(output)
             writeToFile.close()
             return 0
 
@@ -1355,7 +1355,7 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
 
             if mysqlUtilities.mysqlUtilities.createDatabaseBackup(dbName, '/home/cyberpanel') == 0:
                 writeToFile = open(schedulerPath, 'w')
-                writeToFile.writelines('error')
+                writeToFile.writelines('1358')
                 writeToFile.close()
                 return 0
 

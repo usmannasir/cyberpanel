@@ -21,8 +21,11 @@ from random import randint
 from plogical.processUtilities import ProcessUtilities
 import MySQLdb.cursors as cursors
 from math import ceil
+import argparse
 
 class mysqlUtilities:
+
+    LOCALHOST = 'localhost'
 
     @staticmethod
     def getPagination(records, toShow):
@@ -53,17 +56,45 @@ class mysqlUtilities:
     @staticmethod
     def setupConnection():
         try:
+
             passFile = "/etc/cyberpanel/mysqlPassword"
 
-            f = open(passFile)
-            data = f.read()
-            password = data.split('\n', 1)[0]
-            password = password.strip('\n').strip('\r')
+            try:
+                jsonData = json.loads(open(passFile, 'r').read())
 
-            conn = mysql.connect(user='root', passwd=password, cursorclass=cursors.SSCursor)
-            cursor = conn.cursor()
+                mysqluser = jsonData['mysqluser']
+                mysqlpassword = jsonData['mysqlpassword']
+                mysqlport = jsonData['mysqlport']
+                mysqlhost = jsonData['mysqlhost']
 
-            return conn, cursor
+                ## Also set localhost to this server
+
+                ipFile = "/etc/cyberpanel/machineIP"
+                f = open(ipFile)
+                ipData = f.read()
+                ipAddressLocal = ipData.split('\n', 1)[0]
+
+                mysqlUtilities.LOCALHOST = ipAddressLocal
+
+                conn = mysql.connect(host=mysqlhost ,user=mysqluser, passwd=mysqlpassword, port=int(mysqlport), cursorclass=cursors.SSCursor)
+                cursor = conn.cursor()
+
+                return conn, cursor
+
+            except BaseException as msg:
+
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.CyberCPLogFileWriter.writeToFile('%s. [setupConnection:75]' % (str(msg)))
+
+                f = open(passFile)
+                data = f.read()
+                password = data.split('\n', 1)[0]
+                password = password.strip('\n').strip('\r')
+
+                conn = mysql.connect(user='root', passwd=password, cursorclass=cursors.SSCursor)
+                cursor = conn.cursor()
+
+                return conn, cursor
 
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
@@ -79,8 +110,8 @@ class mysqlUtilities:
                 return 0
 
             cursor.execute("CREATE DATABASE " + dbname)
-            cursor.execute("CREATE USER '" + dbuser + "'@'localhost' IDENTIFIED BY '"+dbpassword+"'")
-            cursor.execute("GRANT ALL PRIVILEGES ON " + dbname + ".* TO '" + dbuser + "'@'localhost'")
+            cursor.execute("CREATE USER '" + dbuser + "'@'%s' IDENTIFIED BY '" % (mysqlUtilities.LOCALHOST) +dbpassword+"'")
+            cursor.execute("GRANT ALL PRIVILEGES ON " + dbname + ".* TO '" + dbuser + "'@'%s'" % (mysqlUtilities.LOCALHOST))
             connection.close()
 
             return 1
@@ -100,7 +131,7 @@ class mysqlUtilities:
                 return 0
 
             cursor.execute("CREATE DATABASE " + dbuser)
-            cursor.execute("CREATE USER '" + dbuser + "'@'localhost' IDENTIFIED BY '" + dbpassword + "'")
+            cursor.execute("CREATE USER '" + dbuser + "'@'%s' IDENTIFIED BY '" % (mysqlUtilities.LOCALHOST) + dbpassword + "'")
 
             return 1
 
@@ -117,7 +148,7 @@ class mysqlUtilities:
             if connection == 0:
                 return 0
 
-            cursor.execute("GRANT ALL PRIVILEGES ON " + dbName + ".* TO '" + globalUser + "'@'localhost'")
+            cursor.execute("GRANT ALL PRIVILEGES ON " + dbName + ".* TO '" + globalUser + "'@'%s'" % (mysqlUtilities.LOCALHOST))
             connection.close()
 
             return 1
@@ -145,7 +176,7 @@ class mysqlUtilities:
                 return 0
 
             cursor.execute("DROP DATABASE `%s`" % (dbname))
-            cursor.execute("DROP USER '"+dbuser+"'@'localhost'")
+            cursor.execute("DROP USER '"+dbuser+"'@'%s'" % (mysqlUtilities.LOCALHOST))
             connection.close()
 
             return 1
@@ -158,9 +189,24 @@ class mysqlUtilities:
     def createDatabaseBackup(databaseName, tempStoragePath):
         try:
             passFile = "/etc/cyberpanel/mysqlPassword"
-            f = open(passFile)
-            data = f.read()
-            password = data.split('\n', 1)[0]
+
+            try:
+                jsonData = json.loads(open(passFile, 'r').read())
+
+                mysqluser = jsonData['mysqluser']
+                mysqlpassword = jsonData['mysqlpassword']
+                mysqlport = jsonData['mysqlport']
+                mysqlhost = jsonData['mysqlhost']
+                password = mysqlpassword
+            except:
+                passFile = "/etc/cyberpanel/mysqlPassword"
+                f = open(passFile)
+                data = f.read()
+                password = data.split('\n', 1)[0]
+                mysqlhost = 'localhost'
+                mysqlport = '3306'
+                mysqluser = 'root'
+
 
             cnfPath = '/home/cyberpanel/.my.cnf'
 
@@ -178,7 +224,7 @@ password=%s
 
                 os.chmod(cnfPath, 0o600)
 
-            command = 'mysqldump --defaults-extra-file=/home/cyberpanel/.my.cnf --host=localhost ' + databaseName
+            command = 'mysqldump --defaults-extra-file=/home/cyberpanel/.my.cnf -u %s --host=%s --port %s %s' % (mysqluser, mysqlhost, mysqlport, databaseName)
             cmd = shlex.split(command)
 
             try:
@@ -205,9 +251,22 @@ password=%s
         try:
             passFile = "/etc/cyberpanel/mysqlPassword"
 
-            f = open(passFile)
-            data = f.read()
-            password = data.split('\n', 1)[0]
+            try:
+                jsonData = json.loads(open(passFile, 'r').read())
+
+                mysqluser = jsonData['mysqluser']
+                mysqlpassword = jsonData['mysqlpassword']
+                mysqlport = jsonData['mysqlport']
+                mysqlhost = jsonData['mysqlhost']
+                password = mysqlpassword
+            except:
+                passFile = "/etc/cyberpanel/mysqlPassword"
+                f = open(passFile)
+                data = f.read()
+                password = data.split('\n', 1)[0]
+                mysqlhost = 'localhost'
+                mysqlport = '3306'
+                mysqluser = 'root'
 
             cnfPath = '/home/cyberpanel/.my.cnf'
 
@@ -227,7 +286,7 @@ password=%s
                 command = 'chown cyberpanel:cyberpanel %s' % (cnfPath)
                 subprocess.call(shlex.split(command))
 
-            command = 'mysql --defaults-extra-file=/home/cyberpanel/.my.cnf --host=localhost ' + databaseName
+            command = 'mysql --defaults-extra-file=/home/cyberpanel/.my.cnf -u %s --host=%s --port %s %s' % (mysqluser, mysqlhost, mysqlport, databaseName)
             cmd = shlex.split(command)
 
             if additionalName == None:
@@ -250,7 +309,7 @@ password=%s
                 if connection == 0:
                     return 0
 
-                passwordCMD = "use mysql;SET PASSWORD FOR '" + databaseName + "'@'localhost' = '" + dbPassword + "';FLUSH PRIVILEGES;"
+                passwordCMD = "use mysql;SET PASSWORD FOR '" + databaseName + "'@'%s' = '" % (mysqlUtilities.LOCALHOST) + dbPassword + "';FLUSH PRIVILEGES;"
 
                 cursor.execute(passwordCMD)
                 connection.close()
@@ -720,12 +779,12 @@ password=%s
             if encrypt == None:
                 try:
                     dbuser = DBUsers.objects.get(user=userName)
-                    cursor.execute("SET PASSWORD FOR '" + userName + "'@'localhost' = PASSWORD('" + dbPassword + "')")
+                    cursor.execute("SET PASSWORD FOR '" + userName + "'@'%s' = PASSWORD('" % (mysqlUtilities.LOCALHOST) + dbPassword + "')")
                 except:
                     userName = mysqlUtilities.fetchuser(userName)
-                    cursor.execute("SET PASSWORD FOR '" + userName + "'@'localhost' = PASSWORD('" + dbPassword + "')")
+                    cursor.execute("SET PASSWORD FOR '" + userName + "'@'%s' = PASSWORD('" % (mysqlUtilities.LOCALHOST) + dbPassword + "')")
             else:
-                cursor.execute("SET PASSWORD FOR '" + userName + "'@'localhost' = '" + dbPassword + "'")
+                cursor.execute("SET PASSWORD FOR '" + userName + "'@'%s' = '" % (mysqlUtilities.LOCALHOST) + dbPassword + "'")
 
             connection.close()
 
@@ -773,3 +832,81 @@ password=%s
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[mysqlUtilities.fetchuser]")
             return 0
+
+    @staticmethod
+    def allowRemoteAccess(dbName, userName, remoteIP):
+        try:
+
+            execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/mysqlUtilities.py enableRemoteMYSQL"
+            ProcessUtilities.executioner(execPath)
+
+            connection, cursor = mysqlUtilities.setupConnection()
+
+            if connection == 0:
+                return 0
+            cursor.execute("use mysql")
+
+            cursor.execute("update db set Host='%s' where Db='%s'" % (remoteIP, dbName))
+            cursor.execute("update user set Host='%s' where user='%s'" % (remoteIP, userName))
+            cursor.execute("FLUSH PRIVILEGES")
+
+            connection.close()
+
+            return 1
+
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[mysqlUtilities.allowRemoteAccess]")
+            return 0
+
+    @staticmethod
+    def enableRemoteMYSQL():
+        try:
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20 or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+                cnfPath = '/etc/mysql/my.cnf'
+            else:
+                cnfPath = '/etc/my.cnf'
+
+            data = open(cnfPath, 'r').read()
+
+            if data.find('bind-address') > -1 and data.find('skip-name-resolve') > -1:
+                print('1,None')
+                return 1
+            else:
+                ipFile = "/etc/cyberpanel/machineIP"
+                f = open(ipFile)
+                ipData = f.read()
+                ipAddressLocal = ipData.split('\n', 1)[0]
+
+                mysqldContent = '''
+[mysqld] 
+bind-address=%s
+skip-name-resolve
+''' % (ipAddressLocal)
+
+                writeToFile = open(cnfPath, 'a')
+                writeToFile.write(mysqldContent)
+                writeToFile.close()
+
+                print('1,None')
+
+                from time import sleep
+                sleep(5)
+                ProcessUtilities.popenExecutioner('systemctl restart mariadb')
+                return 1
+
+        except BaseException as msg:
+            print('0,%s "[mysqlUtilities.enableRemoteMYSQL]' % (str(msg)))
+            return 0
+
+def main():
+    parser = argparse.ArgumentParser(description='CyberPanel')
+    parser.add_argument('function', help='Specific a function to call!')
+
+    args = parser.parse_args()
+
+    if args.function == "enableRemoteMYSQL":
+        mysqlUtilities.enableRemoteMYSQL()
+
+if __name__ == "__main__":
+    main()

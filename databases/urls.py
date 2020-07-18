@@ -13,7 +13,9 @@ urlpatterns = [
 
     url(r'^listDBs', views.listDBs, name='listDBs'),
 
-    url(r'^changePassword', views.changePassword, name='changePassword'),
+    url(r'^changePassword$', views.changePassword, name='changePassword'),
+    url(r'^remoteAccess$', views.remoteAccess, name='remoteAccess'),
+    url(r'^allowRemoteIP$', views.allowRemoteIP, name='allowRemoteIP'),
     url(r'^phpMyAdmin$', views.phpMyAdmin, name='phpMyAdmin'),
     url(r'^setupPHPMYAdminSession$', views.setupPHPMYAdminSession, name='setupPHPMYAdminSession'),
 ]

@@ -523,12 +523,6 @@ def topProcessesStatus(request):
         loadNow = data[2].split(' ')
         loadNow = [a for a in loadNow if a != '']
 
-        memory = data[3].split(' ')
-        memory = [a for a in memory if a != '']
-
-        swap = data[4].split(' ')
-        swap = [a for a in swap if a != '']
-
         processes = data[1].split(' ')
         processes = [a for a in processes if a != '']
 
@@ -573,56 +567,55 @@ def topProcessesStatus(request):
 
         ## Memory
 
-        logging.CyberCPLogFileWriter.writeToFile(str(memory))
+        memoryInf0 = ProcessUtilities.outputExecutioner('free -m').splitlines()
 
-        if memory[3].find('+') > -1:
-            memoryFinal = memory[3].split('+')[0]
-        else:
-            memoryFinal = memory[3]
-
-        data['totalMemory'] = str(int(float(memoryFinal) / 1024)) + 'MB'
-
-
-        ##
-
-        if memory[5].find('free') > -1:
-            data['freeMemory'] = str(int(float(memory[4]) / 1024)) + 'MB'
-        else:
-            data['freeMemory'] = str(int(float(memory[5]) / 1024)) + 'MB'
-
-
-        ##
-
-        if memory[7].find('used') > -1:
-            data['usedMemory'] = str(int(float(memory[6]) / 1024)) + 'MB'
-        else:
-            data['usedMemory'] = str(int(float(memory[7]) / 1024)) + 'MB'
+        memoryInf0[1] = list(filter(None, memoryInf0[1].split(' ')))
+        memoryInf0[2] = list(filter(None, memoryInf0[2].split(' ')))
 
 
         try:
-            if memory[9].find('buff') > -1:
-                data['buffCache'] = str(int(float(memory[8]) / 1024)) + 'MB'
-            else:
-                data['buffCache'] = str(int(float(memory[9]) / 1024)) + 'MB'
+            data['totalMemory'] = '%sMB' % (memoryInf0[1][1])
         except:
-            logging.CyberCPLogFileWriter.writeToFile(memory[8])
-            data['buffCache'] = str(int(float(memory[8].split('+')[0]) / 1024)) + 'MB'
+            data['totalMemory'] = '%sMB' % ('0')
+        try:
+            data['usedMemory'] = '%sMB' % (memoryInf0[1][2])
+        except:
+            data['usedMemory'] = '%sMB' % ('0')
+
+        try:
+            data['freeMemory'] = '%sMB' % (memoryInf0[1][3])
+        except:
+            data['freeMemory'] = '%sMB' % ('0')
+
+        try:
+            data['buffCache'] = '%sMB' % (memoryInf0[1][5])
+        except:
+            data['buffCache'] = '%sMB' % ('0')
+
 
 
         ## Swap
 
-        logging.CyberCPLogFileWriter.writeToFile(str(swap))
+        try:
+            data['swapTotalMemory'] = '%sMB' % (memoryInf0[2][1])
+        except:
+            data['swapTotalMemory'] = '%sMB' % ('0')
 
+        try:
+            data['swapUsedMemory'] = '%sMB' % (memoryInf0[2][2])
+        except:
+            data['swapUsedMemory'] = '%sMB' % ('0')
 
-        data['swapTotalMemory'] = str(int(float(swap[2]) / 1024)) + 'MB'
-        data['swapFreeMemory'] = str(int(float(swap[4]) / 1024)) + 'MB'
-        data['swapUsedMemory'] = str(int(float(swap[6]) / 1024)) + 'MB'
+        try:
+            data['swapFreeMemory'] = '%sMB' % (memoryInf0[2][3])
+        except:
+            data['swapFreeMemory'] = '%sMB' % ('0')
 
-        if swap[8].find('+') > -1:
-            finalBuffCache = swap[8].split('+')[0]
-            data['swapBuffCache'] = str(int(float(finalBuffCache) / 1024)) + 'MB'
-        else:
-            data['swapBuffCache'] = str(int(float(swap[8]) / 1024)) + 'MB'
+        try:
+            data['swapBuffCache'] = '%sMB' % (memoryInf0[2][5])
+        except:
+            data['swapBuffCache'] = '%sMB' % ('0')
+
 
         ## Processes
 

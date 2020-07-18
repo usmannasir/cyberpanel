@@ -1611,7 +1611,7 @@ app.controller('googleDrive', function ($scope, $http) {
 
     $scope.fetchWebsites = function () {
 
-        $scope.cyberpanelLoading = false;
+        $scope.cyberPanelLoading = false;
 
         var config = {
             headers: {
@@ -1631,7 +1631,7 @@ app.controller('googleDrive', function ($scope, $http) {
         $http.post(dataurl, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
         function ListInitialDatas(response) {
-            $scope.cyberpanelLoading = true;
+            $scope.cyberPanelLoading = true;
             if (response.data.status === 1) {
                 $scope.driveHidden = false;
                 new PNotify({
@@ -1652,7 +1652,7 @@ app.controller('googleDrive', function ($scope, $http) {
         }
 
         function cantLoadInitialDatas(response) {
-            $scope.cyberpanelLoading = true;
+            $scope.cyberPanelLoading = true;
             new PNotify({
                 title: 'Operation Failed!',
                 text: 'Could not connect to server, please refresh this page.',
@@ -1851,6 +1851,62 @@ app.controller('googleDrive', function ($scope, $http) {
             });
         }
 
+
+    };
+
+    $scope.currentPageLogs = 1;
+    $scope.recordsToShowLogs = 10;
+
+    $scope.fetchLogs = function () {
+
+        $scope.cyberPanelLoading = false;
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        var data = {
+            selectedAccount: $scope.selectedAccount,
+            page: $scope.currentPageLogs,
+            recordsToShow: $scope.recordsToShowLogs
+        };
+
+
+        dataurl = "/backup/fetchDriveLogs";
+
+        $http.post(dataurl, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+            $scope.cyberPanelLoading = true;
+            if (response.data.status === 1) {
+                $scope.driveHidden = false;
+                new PNotify({
+                    title: 'Success',
+                    text: 'Successfully fetched.',
+                    type: 'success'
+                });
+                $scope.logs = JSON.parse(response.data.logs);
+                $scope.paginationLogs = response.data.pagination;
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberPanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+
+        }
 
     };
 

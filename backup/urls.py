@@ -13,6 +13,7 @@ urlpatterns = [
     url(r'^deleteAccountgDrive$', views.deleteAccountgDrive, name='deleteAccountgDrive'),
     url(r'^changeAccountFrequencygDrive$', views.changeAccountFrequencygDrive, name='changeAccountFrequencygDrive'),
     url(r'^deleteSitegDrive$', views.deleteSitegDrive, name='deleteSitegDrive'),
+    url(r'^fetchDriveLogs$', views.fetchDriveLogs, name='fetchDriveLogs'),
 
 
     url(r'^submitBackupCreation', views.submitBackupCreation, name='submitBackupCreation'),

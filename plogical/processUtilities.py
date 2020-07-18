@@ -179,7 +179,7 @@ class ProcessUtilities(multi.Thread):
                 time.sleep(2)
 
     @staticmethod
-    def sendCommand(command, user=None):
+    def sendCommand(command, user=None, dir=None):
         try:
             ret = ProcessUtilities.setupUDSConnection()
 
@@ -201,12 +201,20 @@ class ProcessUtilities(multi.Thread):
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.writeToFile(ProcessUtilities.token + command)
 
-                sock.sendall((ProcessUtilities.token + command).encode('utf-8'))
+                if dir == None:
+                    sock.sendall((ProcessUtilities.token + command).encode('utf-8'))
+                else:
+                    command = '%s-d %s %s' % (ProcessUtilities.token, dir, command)
+                    sock.sendall(command.encode('utf-8'))
             else:
-                command = '%s-u %s %s' % (ProcessUtilities.token, user, command)
+                if dir == None:
+                    command = '%s-u %s %s' % (ProcessUtilities.token, user, command)
+                else:
+                    command = '%s-u %s -d %s %s' % (ProcessUtilities.token, user, dir, command)
                 command = command.replace('sudo', '')
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.writeToFile(command)
+
                 sock.sendall(command.encode('utf-8'))
 
             data = ""
@@ -250,7 +258,7 @@ class ProcessUtilities(multi.Thread):
             return 0
 
     @staticmethod
-    def outputExecutioner(command, user=None, shell = None):
+    def outputExecutioner(command, user=None, shell = None, dir = None):
         try:
             if getpass.getuser() == 'root':
                 if os.path.exists(ProcessUtilities.debugPath):
@@ -264,7 +272,7 @@ class ProcessUtilities(multi.Thread):
             if type(command) == list:
                 command = " ".join(command)
 
-            return ProcessUtilities.sendCommand(command, user)[:-1]
+            return ProcessUtilities.sendCommand(command, user, dir)[:-1]
         except BaseException as msg:
             logging.writeToFile(str(msg) + "[outputExecutioner:188]")
 

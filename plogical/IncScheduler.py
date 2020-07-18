@@ -10,10 +10,14 @@ from IncBackups.models import BackupJob
 from random import randint
 import argparse
 import json
-from websiteFunctions.models import GitLogs, Websites
+from websiteFunctions.models import GitLogs, Websites, GDrive, GDriveJobLogs
 from websiteFunctions.website import WebsiteManager
 import time
-
+import google.oauth2.credentials
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaFileUpload
+from plogical.backupSchedule import backupSchedule
+import requests
 try:
     from plogical.virtualHostUtilities import virtualHostUtilities
     from plogical.mailUtilities import mailUtilities
@@ -192,6 +196,142 @@ class IncScheduler():
         except BaseException as msg:
             logging.writeToFile('[IncScheduler:193:checkDiskUsage] %s.' % str(msg))
 
+    @staticmethod
+    def runGoogleDriveBackups(type):
+
+        backupRunTime = time.strftime("%m.%d.%Y_%H-%M-%S")
+        backupLogPath = "/usr/local/lscp/logs/local_backup_log." + backupRunTime
+
+        for items in GDrive.objects.all():
+            try:
+                if items.runTime == type:
+                    gDriveData = json.loads(items.auth)
+                    try:
+                        credentials = google.oauth2.credentials.Credentials(gDriveData['token'], gDriveData['refresh_token'],
+                                                                gDriveData['token_uri'], None, None, gDriveData['scopes'])
+
+
+                        drive = build('drive', 'v3', credentials=credentials)
+                        drive.files().list(pageSize=10, fields="files(id, name)").execute()
+                    except BaseException as msg:
+                        try:
+
+                            finalData = json.dumps({'refresh_token': gDriveData['refresh_token']})
+                            r = requests.post("https://platform.cyberpanel.net/refreshToken", data=finalData
+                                              )
+                            gDriveData['token'] = json.loads(r.text)['access_token']
+
+                            credentials = google.oauth2.credentials.Credentials(gDriveData['token'],
+                                                                                gDriveData['refresh_token'],
+                                                                                gDriveData['token_uri'],
+                                                                                None,
+                                                                                None,
+                                                                                gDriveData['scopes'])
+
+                            drive = build('drive', 'v3', credentials=credentials)
+                            drive.files().list(pageSize=5, fields="files(id, name)").execute()
+
+                            items.auth = json.dumps(gDriveData)
+                            items.save()
+                        except BaseException as msg:
+                            GDriveJobLogs(owner=items, status=backupSchedule.ERROR, message='Connection to this account failed. Delete and re-setup this account. Error: %s' % (str(msg))).save()
+                            continue
+
+                    try:
+                        folderIDIP = gDriveData['folderIDIP']
+                    except:
+
+                        ipFile = "/etc/cyberpanel/machineIP"
+                        f = open(ipFile)
+                        ipData = f.read()
+                        ipAddress = ipData.split('\n', 1)[0]
+
+                        ## Create CyberPanel Folder
+
+                        file_metadata = {
+                            'name': 'CyberPanel-%s' % (ipAddress),
+                            'mimeType': 'application/vnd.google-apps.folder'
+                        }
+                        file = drive.files().create(body=file_metadata,
+                                                            fields='id').execute()
+                        folderIDIP = file.get('id')
+
+                        gDriveData['folderIDIP'] = folderIDIP
+
+                        items.auth = json.dumps(gDriveData)
+                        items.save()
+
+                    ### Current folder to store files
+
+                    file_metadata = {
+                        'name': time.strftime("%m.%d.%Y_%H-%M-%S"),
+                        'mimeType': 'application/vnd.google-apps.folder',
+                        'parents': [folderIDIP]
+                    }
+                    file = drive.files().create(body=file_metadata,
+                                                fields='id').execute()
+                    folderID = file.get('id')
+
+                    ###
+
+                    GDriveJobLogs(owner=items, status=backupSchedule.INFO, message='Starting backup job..').save()
+
+                    for website in items.gdrivesites_set.all():
+                        try:
+                            GDriveJobLogs(owner=items, status=backupSchedule.INFO, message='Local backup creation started for %s..' % (website.domain)).save()
+
+                            retValues = backupSchedule.createLocalBackup(website.domain, backupLogPath)
+
+                            if retValues[0] == 0:
+                                GDriveJobLogs(owner=items, status=backupSchedule.ERROR,
+                                              message='[ERROR] Backup failed for %s, error: %s moving on..' % (website.domain, retValues[1])).save()
+                                continue
+
+                            completeFileToSend = retValues[1] + ".tar.gz"
+                            fileName = completeFileToSend.split('/')[-1]
+
+                            file_metadata = {
+                                'name': '%s' % (fileName),
+                                'parents': [folderID]
+                            }
+                            media = MediaFileUpload(completeFileToSend, mimetype='application/gzip', resumable=True)
+                            try:
+                                drive.files().create(body=file_metadata, media_body=media, fields='id').execute()
+                            except:
+                                finalData = json.dumps({'refresh_token': gDriveData['refresh_token']})
+                                r = requests.post("https://platform.cyberpanel.net/refreshToken", data=finalData
+                                                  )
+                                gDriveData['token'] = json.loads(r.text)['access_token']
+
+                                credentials = google.oauth2.credentials.Credentials(gDriveData['token'],
+                                                                                    gDriveData['refresh_token'],
+                                                                                    gDriveData['token_uri'],
+                                                                                    None,
+                                                                                    None,
+                                                                                    gDriveData['scopes'])
+
+                                drive = build('drive', 'v3', credentials=credentials)
+                                drive.files().create(body=file_metadata, media_body=media, fields='id').execute()
+
+                                items.auth = json.dumps(gDriveData)
+                                items.save()
+
+                            GDriveJobLogs(owner=items, status=backupSchedule.INFO,
+                                          message='Backup for %s successfully sent to Google Drive.' % (website.domain)).save()
+
+                            os.remove(completeFileToSend)
+
+                        except BaseException as msg:
+                            GDriveJobLogs(owner=items, status=backupSchedule.ERROR,
+                                          message='[Site] Site backup failed, Error message: %s.' % (str(msg))).save()
+
+
+                    GDriveJobLogs(owner=items, status=backupSchedule.INFO,
+                                  message='Job Completed').save()
+            except BaseException as msg:
+                GDriveJobLogs(owner=items, status=backupSchedule.ERROR,
+                              message='[Completely] Job failed, Error message: %s.' % (str(msg))).save()
+
 
 def main():
 
@@ -200,6 +340,7 @@ def main():
     args = parser.parse_args()
 
     IncScheduler.startBackup(args.function)
+    IncScheduler.runGoogleDriveBackups(args.function)
     IncScheduler.git(args.function)
     IncScheduler.checkDiskUsage()
 

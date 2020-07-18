@@ -12,12 +12,14 @@ from plogical.acl import ACLManager
 import plogical.CyberCPLogFileWriter as logging
 from plogical.mysqlUtilities import mysqlUtilities
 from websiteFunctions.models import Websites
-from databases.models import Databases
+from databases.models import Databases, DBMeta
 import argparse
 from loginSystem.models import Administrator
 import plogical.randomPassword as randomPassword
 
 class DatabaseManager:
+
+    REMOTE_ACCESS = 'remote_access'
 
     def loadDatabaseHome(self, request = None, userID = None):
         try:
@@ -212,6 +214,77 @@ class DatabaseManager:
 
         except BaseException as msg:
             data_ret = {'status': 0, 'changePasswordStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def remoteAccess(self, userID = None, data = None):
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+
+            if ACLManager.currentContextPermission(currentACL, 'listDatabases') == 0:
+                return ACLManager.loadErrorJson('changePasswordStatus', 0)
+
+            userName = data['dbUserName']
+
+            db = Databases.objects.filter(dbUser=userName)
+
+            admin = Administrator.objects.get(pk=userID)
+            if ACLManager.checkOwnership(db[0].website.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson()
+
+            try:
+                meta = DBMeta.objects.get(database=db[0], key=DatabaseManager.REMOTE_ACCESS)
+                data_ret = {'status': 1, 'dbHost': json.loads(meta.value)['remoteIP']}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+            except BaseException as msg:
+                data_ret = {'status': 1, 'dbHost': 'localhost'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0,'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def allowRemoteIP(self, userID = None, data = None):
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+
+            if ACLManager.currentContextPermission(currentACL, 'listDatabases') == 0:
+                return ACLManager.loadErrorJson('changePasswordStatus', 0)
+
+            userName = data['dbUserName']
+            remoteIP = data['remoteIP']
+
+            db = Databases.objects.filter(dbUser=userName)
+
+            admin = Administrator.objects.get(pk=userID)
+            if ACLManager.checkOwnership(db[0].website.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson()
+
+            mysqlUtilities.allowRemoteAccess(db[0].dbName, userName, remoteIP)
+
+            metaData = {'remoteIP': remoteIP}
+
+            try:
+                meta = DBMeta.objects.get(database=db[0], key=DatabaseManager.REMOTE_ACCESS)
+                meta.value = json.dumps(metaData)
+                meta.save()
+            except:
+                DBMeta(database=db[0], value = json.dumps(metaData), key=DatabaseManager.REMOTE_ACCESS).save()
+
+            data_ret = {'status': 1}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0,'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 

@@ -120,6 +120,28 @@ def changePassword(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+def remoteAccess(request):
+    try:
+        userID = request.session['userID']
+
+        dm = DatabaseManager()
+        coreResult = dm.remoteAccess(userID, json.loads(request.body))
+
+        return coreResult
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def allowRemoteIP(request):
+    try:
+        userID = request.session['userID']
+
+        dm = DatabaseManager()
+        coreResult = dm.allowRemoteIP(userID, json.loads(request.body))
+
+        return coreResult
+    except KeyError:
+        return redirect(loadLoginPage)
+
 def phpMyAdmin(request):
     try:
         userID = request.session['userID']

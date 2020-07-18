@@ -1,30 +1,54 @@
 import subprocess, shlex
+import install
+import time
 
 class mysqlUtilities:
 
     @staticmethod
-    def createDatabase(dbname, dbuser, dbpassword):
+    def createDatabase(dbname, dbuser, dbpassword, publicip):
 
         try:
-
-            passFile = "/etc/cyberpanel/mysqlPassword"
-
-            f = open(passFile)
-            data = f.read()
-            password = data.split('\n', 1)[0]
-
             createDB = "CREATE DATABASE " + dbname
 
-            command = 'mysql -u root -p' + password + ' -e "' + createDB + '"'
+            try:
+                from json import loads
+                mysqlData = loads(open("/etc/cyberpanel/mysqlPassword", 'r').read())
+
+
+                initCommand = 'mysql -h %s --port %s -u %s -p%s -e "' % (mysqlData['mysqlhost'], mysqlData['mysqlport'], mysqlData['mysqluser'], mysqlData['mysqlpassword'])
+                remote = 1
+            except:
+                passFile = "/etc/cyberpanel/mysqlPassword"
+
+                f = open(passFile)
+                data = f.read()
+                password = data.split('\n', 1)[0]
+
+                initCommand = 'mysql -u root -p' + password + ' -e "'
+                remote = 0
+
+            command = initCommand + createDB + '"'
+
+            if install.preFlightsChecks.debug:
+                print(command)
+                time.sleep(10)
+
             cmd = shlex.split(command)
             res = subprocess.call(cmd)
 
             if res == 1:
                 return 0
 
-            createUser = "CREATE USER '" + dbuser + "'@'localhost' IDENTIFIED BY '" + dbpassword + "'"
+            if remote:
+                createUser = "CREATE USER '" + dbuser + "'@'%s' IDENTIFIED BY '" % (publicip) + dbpassword + "'"
+            else:
+                createUser = "CREATE USER '" + dbuser + "'@'localhost' IDENTIFIED BY '" + dbpassword + "'"
 
-            command = 'mysql -u root -p' + password + ' -e "' + createUser + '"'
+            command = initCommand + createUser + '"'
+
+            if install.preFlightsChecks.debug:
+                print(command)
+                time.sleep(10)
 
             cmd = shlex.split(command)
             res = subprocess.call(cmd)
@@ -32,8 +56,17 @@ class mysqlUtilities:
             if res == 1:
                 return 0
             else:
-                dropDB = "GRANT ALL PRIVILEGES ON " + dbname + ".* TO '" + dbuser + "'@'localhost'"
-                command = 'mysql -u root -p' + password + ' -e "' + dropDB + '"'
+                if remote:
+                    dropDB = "GRANT ALL PRIVILEGES ON " + dbname + ".* TO '" + dbuser + "'@'%s'" % (publicip)
+                else:
+                    dropDB = "GRANT ALL PRIVILEGES ON " + dbname + ".* TO '" + dbuser + "'@'localhost'"
+
+                command = initCommand + dropDB + '"'
+
+                if install.preFlightsChecks.debug:
+                    print(command)
+                    time.sleep(10)
+
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
 

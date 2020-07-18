@@ -563,6 +563,22 @@ class ACLManager:
                     return 0
 
     @staticmethod
+    def checkGDriveOwnership(gD, admin, currentACL):
+
+        try:
+            if currentACL['admin'] == 1:
+                return 1
+            elif gD.owner == admin:
+                return 1
+            elif gD.owner.owner == admin.pk:
+                    return 1
+
+            return 0
+        except:
+            return 0
+
+
+    @staticmethod
     def checkOwnershipZone(domain, admin, currentACL):
         domain = Websites.objects.get(domain=domain)
 

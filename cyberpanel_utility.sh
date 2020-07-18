@@ -23,10 +23,13 @@ elif  echo $OUTPUT | grep -q "CentOS Linux 8" ; then
 elif echo $OUTPUT | grep -q "Ubuntu 18.04" ; then
 	echo -e "\nDetecting Ubuntu 18.04...\n"
 	SERVER_OS="Ubuntu"
+elif echo $OUTPUT | grep -q "Ubuntu 20.04" ; then
+	echo -e "\nDetecting Ubuntu 20.04...\n"
+	SERVER_OS="Ubuntu"
 else
 	cat /etc/*release
 	echo -e "\nUnable to detect your OS...\n"
-	echo -e "\nCyberPanel is supported on Ubuntu 18.04, CentOS 7.x, CentOS 8.x and CloudLinux 7.x...\n"
+	echo -e "\nCyberPanel is supported on Ubuntu 18.04, Ubuntu 20.04, CentOS 7.x, CentOS 8.x and CloudLinux 7.x...\n"
 	exit 1
 fi
 }
@@ -141,9 +144,9 @@ if [[ $SERVER_COUNTRY == "CN" ]] ; then
 	GIT_CONTENT_URL="gitee.com/qtwrk/cyberpanel/raw"
 fi
 
-echo -e "CyberPanel Upgrade will start in 10 seconds"
-echo -e "If you want to cancel, please press CTRL + C to cancel it"
-sleep 10
+#echo -e "CyberPanel Upgrade will start in 10 seconds"
+#echo -e "If you want to cancel, please press CTRL + C to cancel it"
+#sleep 10
 echo -e "CyberPanel upgrading..."
 rm -f /usr/local/cyberpanel_upgrade.sh
 wget -O /usr/local/cyberpanel_upgrade.sh -q https://$GIT_CONTENT_URL/${BRANCH_NAME}/cyberpanel_upgrade.sh

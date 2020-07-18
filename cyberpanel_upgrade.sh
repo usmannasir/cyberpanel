@@ -192,6 +192,18 @@ elif echo $OUTPUT | grep -q "CentOS Linux 8"; then
   rm -f /etc/yum.repos.d/epel.repo.rpmsave
   yum autoremove epel-release -y
   dnf install epel-release -y
+elif echo $OUTPUT | grep -q "CloudLinux 8"; then
+  rm -f /etc/yum.repos.d/CyberPanel.repo
+  dnf --nogpg install -y https://mirror.ghettoforge.org/distributions/gf/el/8/gf/x86_64/gf-release-8-11.gf.el8.noarch.rpm
+  echo -e "\nDetecting Cloudlinux 8.X...\n"
+  SERVER_OS="CentOS8"
+  yum clean all
+  yum update -y
+  yum autoremove epel-release -y
+  rm -f /etc/yum.repos.d/epel.repo
+  rm -f /etc/yum.repos.d/epel.repo.rpmsave
+  yum autoremove epel-release -y
+  dnf install epel-release -y
 elif echo $OUTPUT | grep -q "Ubuntu 18.04"; then
   echo -e "\nDetecting Ubuntu 18.04...\n"
   SERVER_OS="Ubuntu"
@@ -247,9 +259,9 @@ fi
 rm -f requirments.txt
 
 if [[ $UBUNTU_20 == "False" ]]; then
-  wget -O /usr/local/cyberpanel-pip.zip https://rep.cyberpanel.net/cyberpanel-pip.zip
+  wget -O /usr/local/cyberpanel-pip.zip https://rep.cyberpanel.net/cyberpanel-pip-2.zip
 else
-  wget -O /usr/local/cyberpanel-pip.zip https://rep.cyberpanel.net/ubuntu-pip.zip
+  wget -O /usr/local/cyberpanel-pip.zip https://rep.cyberpanel.net/ubuntu-pip-2.zip
 fi
 
 check_return

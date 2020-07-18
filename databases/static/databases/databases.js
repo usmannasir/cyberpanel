@@ -454,6 +454,113 @@ app.controller('listDBs', function ($scope, $http) {
         $scope.generatedPasswordView = true;
     };
 
+    $scope.remoteAccess = function (userName) {
+
+        $scope.dbUsername = userName;
+        $scope.dbLoading = false;
+
+
+        url = "/dataBases/remoteAccess";
+
+        var data = {
+            dbUserName: $scope.dbUsername
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+            $scope.dbLoading = true;
+
+            if (response.data.status === 1) {
+
+                $scope.dbHost = response.data.dbHost;
+
+            }
+            else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+            $scope.dbLoading = true;
+
+        }
+
+    };
+
+    $scope.allowRemoteIP = function () {
+
+        $scope.dbLoading = false;
+
+        url = "/dataBases/allowRemoteIP";
+
+        var data = {
+            dbUserName: $scope.dbUsername,
+            remoteIP: $scope.remoteIP
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+            $scope.dbLoading = true;
+
+            if (response.data.status === 1) {
+
+                $scope.remoteAccess($scope.dbUsername);
+
+                new PNotify({
+                    title: 'Success',
+                    text: 'Changes applied.',
+                    type: 'success'
+                });
+
+            }
+            else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+            $scope.dbLoading = true;
+
+        }
+
+    };
+
 });
 
 
