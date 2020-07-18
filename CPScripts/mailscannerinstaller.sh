@@ -39,6 +39,7 @@ if [ -f /etc/os-release ];then
 OS=$(head -1 /etc/os-release)
 UBUNTUVERSION=$(sed '6q;d' /etc/os-release)
 CENTOSVERSION=$(sed '5q;d' /etc/os-release)
+CLNVERSION=$(sed '3q;d' /etc/os-release)
 fi
 
 if [ "$CENTOSVERSION" = "VERSION_ID=\"7\"" ];then
@@ -104,6 +105,34 @@ echo "Please install spamassassin through the CyberPanel interface before procee
 exit
 fi
 
+elif [ "$CLNVERSION" = "ID=\"cloudlinux\"" ];then
+
+setenforce 0
+yum install -y perl yum-utils perl-CPAN
+yum install -y gcc cpp perl bzip2 zip make patch automake rpm-build perl-Archive-Zip perl-Filesys-Df perl-OLE-Storage_Lite perl-Sys-Hostname-Long perl-Sys-SigAction perl-Net-CIDR perl-DBI perl-MIME-tools perl-DBD-SQLite binutils glibc-devel perl-Filesys-Df zlib unzip zlib-devel wget mlocate clamav "perl(DBD::mysql)"
+
+rpm -Uvh https://forensics.cert.org/centos/cert/7/x86_64/unrar-5.4.0-1.el7.x86_64.rpm
+export PERL_MM_USE_DEFAULT=1
+curl -L https://cpanmin.us | perl - App::cpanminus
+perl -MCPAN -e 'install Encoding::FixLatin'
+perl -MCPAN -e 'install Digest::SHA1'
+perl -MCPAN -e 'install Geo::IP'
+perl -MCPAN -e 'install Razor2::Client::Agent'
+perl -MCPAN -e 'install Net::Patricia'
+
+freshclam -v
+DIR=/etc/mail/spamassassin
+
+if [ -d "$DIR" ];  then
+sa-update
+
+else
+
+echo "Please install spamassassin through the CyberPanel interface before proceeding"
+
+exit
+fi
+
 elif [ "$OS" = "NAME=\"Ubuntu\"" ];then
 
        apt-get install -y libmysqlclient-dev
@@ -152,6 +181,10 @@ chown -R postfix:postfix /var/lock/subsys/MailScanner
 chown -R postfix:postfix /var/spool/MailScanner
 
 elif [ "$OS" = "NAME=\"CentOS Linux\"" ];then
+wget https://github.com/MailScanner/v5/releases/download/5.3.3-1/MailScanner-5.3.3-1.rhel.noarch.rpm
+rpm -Uvh *.rhel.noarch.rpm
+
+elif [ "$OS" = "NAME=\"CloudLinux\"" ];then
 wget https://github.com/MailScanner/v5/releases/download/5.3.3-1/MailScanner-5.3.3-1.rhel.noarch.rpm
 rpm -Uvh *.rhel.noarch.rpm
 fi
@@ -262,6 +295,9 @@ elif [ "$CENTOSVERSION" = "VERSION_ID=\"8\"" ];then
 		dnf --enablerepo=gf-plus install -y dovecot23-pigeonhole
 		dnf install -y net-tools postfix-perl-scripts
         
+elif [ "$CLNVERSION" = "ID=\"cloudlinux\"" ];then
+
+        yum install -y nano net-tools dovecot-pigeonhole postfix-perl-scripts
 fi
 
 
@@ -340,6 +376,9 @@ if [ "$OS" = "NAME=\"Ubuntu\"" ];then
 
 elif [ "$OS" = "NAME=\"CentOS Linux\"" ];then
 	sed -i 's|^spamassassin.*|spamassassin unix -     n   n   -   -   pipe flags=DROhu user=vmail:vmail argv=/usr/bin/spamc -f -e  /usr/libexec/dovecot/deliver -f ${sender} -d ${user}@${nexthop}|g' /etc/postfix/master.cf
+
+elif [ "$OS" = "NAME=\"CloudLinux\"" ];then
+        sed -i 's|^spamassassin.*|spamassassin unix -     n   n   -   -   pipe flags=DROhu user=vmail:vmail argv=/usr/bin/spamc -f -e  /usr/libexec/dovecot/deliver -f ${sender} -d ${user}@${nexthop}|g' /etc/postfix/master.cf
 
 fi
 
