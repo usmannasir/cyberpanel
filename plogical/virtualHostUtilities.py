@@ -250,13 +250,6 @@ class virtualHostUtilities:
                 if dkimCheck == 1:
                     DNS.createDKIMRecords(virtualHostName)
 
-            # cageFSPath = '/home/cyberpanel/cagefs'
-            #
-            # if os.path.exists(cageFSPath):
-            #     command = '/usr/sbin/cagefsctl --enable %s' % (virtualHostUser)
-            #     ProcessUtilities.normalExecutioner(command)
-
-
             CLPath = '/etc/sysconfig/cloudlinux'
 
             if os.path.exists(CLPath):

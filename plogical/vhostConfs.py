@@ -325,7 +325,8 @@ accesslog $VH_ROOT/logs/$VH_NAME.access_log {
   logFormat               "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\""
   logHeaders              5
   rollingSize             10M
-  keepDays                10  compressArchive         1
+  keepDays                10  
+  compressArchive         1
 }
 
 rewrite  {
