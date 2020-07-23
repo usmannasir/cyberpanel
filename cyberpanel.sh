@@ -881,7 +881,7 @@ echo -e "\nDo you want to setup Remote MySQL? (This will skip installation of lo
 echo -e ""
 printf "%s" "(Default = No) Remote MySQL [Y/n]: "
 read TMP_YN
-if [[ `expr "x$TMP_YN" : 'x[Yy]'` -gt 1 ]] || [[ $TMP_YN == "" ]] ; then
+if [[ `expr "x$TMP_YN" : 'x[Yy]'` -gt 1 ]] ; then
 		echo -e "\nRemote MySQL selected..."
 		REMOTE_MYSQL='ON'
 
