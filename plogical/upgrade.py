@@ -1439,7 +1439,7 @@ class Upgrade:
             command = 'git status'
             currentBranch = subprocess.check_output(shlex.split(command)).decode()
 
-            if currentBranch.find('On branch %s' % (branch)) > -1:
+            if currentBranch.find('On branch %s' % (branch)) > -1 and currentBranch.find('On branch %s-dev' % (branch)) == -1:
 
                 command = 'git stash'
                 Upgrade.executioner(command, command, 1)
