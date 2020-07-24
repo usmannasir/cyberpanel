@@ -279,6 +279,10 @@ class emailMarketing(multi.Thread):
             else:
                 self.verifyHost = SMTPHosts.objects.get(host=self.extraArgs['host'])
                 self.smtpServer = smtplib.SMTP(str(self.verifyHost.host), int(self.verifyHost.port))
+
+                if int(self.verifyHost.port) == 587:
+                    self.smtpServer.starttls()
+
                 self.smtpServer.login(str(self.verifyHost.userName), str(self.verifyHost.password))
                 return 1
         except smtplib.SMTPHeloError:
