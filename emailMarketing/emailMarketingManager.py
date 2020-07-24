@@ -517,6 +517,10 @@ class EmailMarketingManager:
 
             try:
                 verifyLogin = smtplib.SMTP(str(smtpHost), int(smtpPort))
+
+                if int(smtpPort) == 587:
+                    verifyLogin.starttls()
+
                 verifyLogin.login(str(smtpUserName), str(smtpPassword))
 
                 admin = Administrator.objects.get(pk=userID)
@@ -618,6 +622,10 @@ class EmailMarketingManager:
                 try:
                     verifyHost = SMTPHosts.objects.get(id=id)
                     verifyLogin = smtplib.SMTP(str(verifyHost.host), int(verifyHost.port))
+
+                    if int(verifyHost.port) == 587:
+                        verifyLogin.starttls()
+
                     verifyLogin.login(str(verifyHost.userName), str(verifyHost.password))
 
                     data_ret = {"status": 1, 'message': 'Login successful.'}

@@ -258,6 +258,8 @@ class FileManager:
 
             self.changeOwner(self.data['newPath'])
 
+            self.fixPermissions(domainName)
+
             json_data = json.dumps(finalData)
             return HttpResponse(json_data)
 
