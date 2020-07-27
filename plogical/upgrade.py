@@ -1177,6 +1177,21 @@ class Upgrade:
             except:
                 pass
 
+            query = '''CREATE TABLE `databases_dbmeta` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `key` varchar(200) NOT NULL,
+  `value` longtext NOT NULL,
+  `database_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `databases_dbmeta_database_id_777997bc_fk_databases_databases_id` (`database_id`),
+  CONSTRAINT `databases_dbmeta_database_id_777997bc_fk_databases_databases_id` FOREIGN KEY (`database_id`) REFERENCES `databases_databases` (`id`)
+)'''
+
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
             try:
                 connection.close()
             except:
