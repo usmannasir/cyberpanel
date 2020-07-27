@@ -439,9 +439,9 @@ class DNS:
 
                 DNS.createDNSRecord(zone, actualSubDomain, "A", ipAddress, 0, 3600)
 
-                ## Mail Record
+                ## Mail A Record
 
-                DNS.createDNSRecord(zone, 'mail.' + actualSubDomain, "A", ipAddress, 0, 3600)
+                DNS.createDNSRecord(zone, 'mail.' + topLevelDomain, "A", ipAddress, 0, 3600)
 
                 # CNAME Records.
 
@@ -451,7 +451,7 @@ class DNS:
 
                 ## MX Records
 
-                mxValue = "mail." + actualSubDomain
+                mxValue = "mail." + topLevelDomain
 
                 record = Records(domainOwner=zone,
                                  domain_id=zone.id,
