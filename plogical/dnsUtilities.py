@@ -441,7 +441,8 @@ class DNS:
 
                 ## Mail Record
 
-                DNS.createDNSRecord(zone, 'mail.' + actualSubDomain, "A", ipAddress, 0, 3600)
+                if ('mail.%s' % (actualSubDomain)).find('mail.mail') == -1:
+                    DNS.createDNSRecord(zone, 'mail.' + actualSubDomain, "A", ipAddress, 0, 3600)
 
                 # CNAME Records.
 
