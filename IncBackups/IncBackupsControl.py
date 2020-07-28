@@ -432,6 +432,11 @@ class IncJobs(multi.Thread):
             self.reconstruct = self.extraArgs['reconstruct']
 
             if self.reconstruct == 'remote':
+
+                self.jobid = JobSnapshots.objects.get(pk=jobid)
+
+                self.findRestorePath()
+
                 self.jobid = self.extraArgs['jobid']
                 self.backupDestinations = self.extraArgs['backupDestinations']
                 self.passwordFile = self.extraArgs['password']
