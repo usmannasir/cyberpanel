@@ -433,8 +433,6 @@ class IncJobs(multi.Thread):
 
             if self.reconstruct == 'remote':
 
-                self.jobid = JobSnapshots.objects.get(pk=jobid)
-
                 self.findRestorePath()
 
                 self.jobid = self.extraArgs['jobid']
