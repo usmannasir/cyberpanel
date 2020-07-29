@@ -767,7 +767,7 @@ password=%s
             return 0
 
     @staticmethod
-    def changePassword(userName, dbPassword, encrypt = None):
+    def changePassword(userName, dbPassword, encrypt = None, host = None):
         try:
 
             connection, cursor = mysqlUtilities.setupConnection()
@@ -775,6 +775,9 @@ password=%s
             if connection == 0:
                 return 0
             cursor.execute("use mysql")
+
+            if host != None:
+                mysqlUtilities.LOCALHOST = host
 
             if encrypt == None:
                 try:

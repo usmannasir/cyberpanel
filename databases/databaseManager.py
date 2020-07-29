@@ -195,13 +195,19 @@ class DatabaseManager:
             db = Databases.objects.filter(dbUser=userName)
 
             admin = Administrator.objects.get(pk=userID)
+
             if ACLManager.checkOwnership(db[0].website.domain, admin, currentACL) == 1:
                 pass
             else:
                 return ACLManager.loadErrorJson()
 
+            try:
+                meta = DBMeta.objects.get(database=db[0], key=DatabaseManager.REMOTE_ACCESS)
+                host = json.loads(meta.value)['remoteIP']
+            except:
+                host = None
 
-            res = mysqlUtilities.changePassword(userName, dbPassword)
+            res = mysqlUtilities.changePassword(userName, dbPassword, None, host)
 
             if res == 0:
                 data_ret = {'status': 0, 'changePasswordStatus': 0,'error_message': "Please see CyberPanel main log file."}
