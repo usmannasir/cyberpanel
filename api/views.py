@@ -85,7 +85,6 @@ def getPackagesListAPI(request):
         data_ret = {"status": 0,'error_message': "Could not authorize access to API"}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
-    
 
 @csrf_exempt
 def getUserInfo(request):
@@ -670,5 +669,71 @@ def submitUserCreation(request):
 
     except BaseException as msg:
         data_ret = {'changeStatus': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+@csrf_exempt
+def addFirewallRule(request):
+    try:
+        if request.method == 'POST':
+
+            data = json.loads(request.body)
+
+            adminUser = data['adminUser']
+            adminPass = data['adminPass']
+
+            admin = Administrator.objects.get(userName=adminUser)
+
+            if admin.api == 0:
+                data_ret = {"status": 0, 'error_message': "API Access Disabled."}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+            if hashPassword.check_password(admin.password, adminPass):
+                from firewall.firewallManager import FirewallManager
+
+                fm = FirewallManager()
+                return fm.addRule(admin.pk, json.loads(request.body))
+            else:
+                data_ret = {"status": 0,
+                            'error_message': "Could not authorize access to API"}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+    except BaseException as msg:
+        data_ret = {'submitUserDeletion': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+@csrf_exempt
+def deleteFirewallRule(request):
+    try:
+        if request.method == 'POST':
+
+            data = json.loads(request.body)
+
+            adminUser = data['adminUser']
+            adminPass = data['adminPass']
+
+            admin = Administrator.objects.get(userName=adminUser)
+
+            if admin.api == 0:
+                data_ret = {"status": 0, 'error_message': "API Access Disabled."}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+            if hashPassword.check_password(admin.password, adminPass):
+                from firewall.firewallManager import FirewallManager
+
+                fm = FirewallManager()
+                return fm.deleteRule(admin.pk, json.loads(request.body))
+            else:
+                data_ret = {"status": 0,
+                            'error_message': "Could not authorize access to API"}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+    except BaseException as msg:
+        data_ret = {'submitUserDeletion': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)

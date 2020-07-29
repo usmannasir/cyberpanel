@@ -5,6 +5,8 @@ urlpatterns = [
     url(r'^createWebsite', views.createWebsite, name='createWebsiteAPI'),
     url(r'^deleteWebsite', views.deleteWebsite, name='deleteWebsiteAPI'),
     url(r'^submitWebsiteStatus', views.submitWebsiteStatus, name='submitWebsiteStatusAPI'),
+    url(r'^deleteFirewallRule$', views.deleteFirewallRule, name='deleteFirewallRule'),
+    url(r'^addFirewallRule$', views.addFirewallRule, name='addFirewallRule'),
 
     url(r'^verifyConn', views.verifyConn, name='verifyConnAPI'),
 
