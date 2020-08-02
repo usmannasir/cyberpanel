@@ -1424,7 +1424,6 @@ fi
 	echo -e "\033[0;32mTCP: 25\033[39m, \033[0;32mTCP: 587\033[39m, \033[0;32mTCP: 465\033[39m, \033[0;32mTCP: 110\033[39m, \033[0;32mTCP: 143\033[39m and \033[0;32mTCP: 993\033[39m for mail service"
 	echo -e "\033[0;32mTCP: 53\033[39m and \033[0;32mUDP: 53\033[39m for DNS service"
 	
-	mail_test=$(timeout 3 telnet mx.zoho.com 25)
 	if ! timeout 3 telnet mx.zoho.com 25 | grep "Escape"  > /dev/null 2>&1 ; then
 	echo -e "Your provider seems \e[31mblocked\033[39m port 25 , E-mail sending may \e[31mnot\033[39m work properly."
 	fi
