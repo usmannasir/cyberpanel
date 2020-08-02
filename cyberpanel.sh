@@ -409,14 +409,14 @@ if [[ $SERVER_OS == "CentOS" ]] ; then
 	rm -f /etc/yum.repos.d/epel.repo.rpmsave
 
 	if [[ $CENTOS_8 == "False" ]] ; then
-	  yum --enablerepo=CyberPanel install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel gpgme-devel curl-devel git socat openssl-devel MariaDB-shared mariadb-devel yum-utils python36u python36u-pip python36u-devel
+	  yum --enablerepo=CyberPanel install -y wget strace net-tools curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel gpgme-devel curl-devel git socat openssl-devel MariaDB-shared mariadb-devel yum-utils python36u python36u-pip python36u-devel
 		check_return
 		yum -y groupinstall development
 		check_return
 	fi
 	if [[ $CENTOS_8 == "True" ]] ; then
 	  dnf install epel-release -y
-		dnf install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-devel curl-devel git platform-python-devel tar socat python3
+		dnf install -y wget strace net-tools curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-devel curl-devel git platform-python-devel tar socat python3
 		check_return
 		dnf --enablerepo=PowerTools install gpgme-devel -y
 		check_return
@@ -1423,6 +1423,12 @@ fi
 	echo -e "\033[0;32mTCP: 21\033[39m and \033[0;32mTCP: 40110-40210\033[39m for FTP"
 	echo -e "\033[0;32mTCP: 25\033[39m, \033[0;32mTCP: 587\033[39m, \033[0;32mTCP: 465\033[39m, \033[0;32mTCP: 110\033[39m, \033[0;32mTCP: 143\033[39m and \033[0;32mTCP: 993\033[39m for mail service"
 	echo -e "\033[0;32mTCP: 53\033[39m and \033[0;32mUDP: 53\033[39m for DNS service"
+	
+	mail_test=$(timeout 3 telnet mx.zoho.com 25)
+	if ! timeout 3 telnet mx.zoho.com 25 | grep "Escape"  > /dev/null 2>&1 ; then
+	echo -e "Your provider seems \e[31mblocked\033[39m port 25 , E-mail sending may \e[31mnot\033[39m work properly."
+	fi
+	
 if [[ $SERVER_COUNTRY = CN ]] ; then
 	if [[ $PROVIDER == "Tencent Cloud" ]] ; then
 		if [[ $SERVER_OS == "Ubuntu" ]] ; then
