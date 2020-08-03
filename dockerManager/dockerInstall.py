@@ -19,6 +19,10 @@ class DockerInstall:
                                                       "Starting Docker Installation..\n", 1)
 
             if ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+
+                command = 'dnf config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo'
+                ServerStatusUtil.executioner(command, statusFile)
+
                 command = 'sudo dnf install -y docker-ce --nobest'
             elif ProcessUtilities.decideDistro() == ProcessUtilities.centos:
                 command = 'sudo yum install -y docker'
