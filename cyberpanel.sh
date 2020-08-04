@@ -73,7 +73,7 @@ fi
 
 watchdog_setup() {
 if [[ $WATCHDOG == "ON" ]] ; then
-wget -O /etc/cyberpanel/watchdog.sh https://$DOWNLOAD_SERVER/misc/watchdog.sh
+wget -O /etc/cyberpanel/watchdog.sh https://$GIT_CONTENT_URL/$BRANCH_NAME/CPScripts/watchdog.sh
 chmod 700 /etc/cyberpanel/watchdog.sh
 ln -s /etc/cyberpanel/watchdog.sh /usr/local/bin/watchdog
 pid=$(ps aux | grep "watchdog lsws"  | grep -v grep | awk '{print $2}')
@@ -383,7 +383,7 @@ if [[ -d /etc/yum.repos.d ]] ; then
 	if [[ $CENTOS_8 == "True" ]] ; then
   		dnf install zip -y
 	elif [[ $CENTOS_8 == "False" ]] ; then
-  		curl https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.0.1/install/CyberPanel.repo > /etc/yum.repos.d/CyberPanel.repo
+  		curl https://$GIT_CONTENT_URL/v2.0.1/install/CyberPanel.repo > /etc/yum.repos.d/CyberPanel.repo
 	fi
 fi
 
@@ -485,7 +485,7 @@ if [[ $SERVER_OS == "Ubuntu" ]] ; then
 	DEBIAN_FRONTEND=noninteractive apt install -y lsphp72-memcached
 	DEBIAN_FRONTEND=noninteractive apt install -y lsphp71-memcached
 	DEBIAN_FRONTEND=noninteractive apt install -y lsphp70-memcached
-	
+
 		if [[ $TOTAL_RAM -eq "2048" ]] || [[ $TOTAL_RAM -gt "2048" ]] ; then
 			DEBIAN_FRONTEND=noninteractive apt install build-essential zlib1g-dev libexpat1-dev openssl libssl-dev libsasl2-dev libpcre3-dev git -y
 			wget https://$DOWNLOAD/litespeed/lsmcd.tar.gz
@@ -656,21 +656,25 @@ check_process() {
 if systemctl is-active --quiet httpd; then
 	systemctl disable httpd
 	systemctl stop httpd
+	systemctl mask httpd
 	echo -e "\nhttpd process detected, disabling...\n"
 fi
 if systemctl is-active --quiet apache2; then
 	systemctl disable apache2
 	systemctl stop apache2
+	systemctl mask apache2
 	echo -e "\napache2 process detected, disabling...\n"
 fi
 if systemctl is-active --quiet named; then
   systemctl stop named
   systemctl disable named
+	systemctl mask named
 	echo -e "\nnamed process detected, disabling...\n"
 fi
 if systemctl is-active --quiet exim; then
 	systemctl stop exim
 	systemctl disable exim
+	systemctl mask exim
 	echo -e "\nexim process detected, disabling...\n"
 fi
 }
@@ -1423,11 +1427,11 @@ fi
 	echo -e "\033[0;32mTCP: 21\033[39m and \033[0;32mTCP: 40110-40210\033[39m for FTP"
 	echo -e "\033[0;32mTCP: 25\033[39m, \033[0;32mTCP: 587\033[39m, \033[0;32mTCP: 465\033[39m, \033[0;32mTCP: 110\033[39m, \033[0;32mTCP: 143\033[39m and \033[0;32mTCP: 993\033[39m for mail service"
 	echo -e "\033[0;32mTCP: 53\033[39m and \033[0;32mUDP: 53\033[39m for DNS service"
-	
+
 	if ! timeout 3 telnet mx.zoho.com 25 | grep "Escape"  > /dev/null 2>&1 ; then
 	echo -e "Your provider seems \e[31mblocked\033[39m port 25 , E-mail sending may \e[31mnot\033[39m work properly."
 	fi
-	
+
 if [[ $SERVER_COUNTRY = CN ]] ; then
 	if [[ $PROVIDER == "Tencent Cloud" ]] ; then
 		if [[ $SERVER_OS == "Ubuntu" ]] ; then
