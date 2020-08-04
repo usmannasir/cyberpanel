@@ -4,7 +4,7 @@
 
 
 /* Java script code to issue SSL */
-app.controller('sslIssueCtrl', function($scope,$http) {
+app.controller('sslIssueCtrl', function ($scope, $http) {
 
     $scope.sslIssueCtrl = true;
     $scope.manageSSLLoading = true;
@@ -14,72 +14,66 @@ app.controller('sslIssueCtrl', function($scope,$http) {
     $scope.couldNotConnect = true;
 
     $scope.showbtn = function () {
-      $scope.issueSSLBtn = false;
+        $scope.issueSSLBtn = false;
     };
 
-    $scope.issueSSL = function(){
-                $scope.manageSSLLoading = false;
+    $scope.issueSSL = function () {
+        $scope.manageSSLLoading = false;
 
-                var url = "/manageSSL/issueSSL";
-
-
-                var data = {
-                    virtualHost:$scope.virtualHost,
-                };
-
-                var config = {
-                    headers : {
-                        'X-CSRFToken': getCookie('csrftoken')
-                    }
-                };
-
-                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+        var url = "/manageSSL/issueSSL";
 
 
-                function ListInitialDatas(response) {
+        var data = {
+            virtualHost: $scope.virtualHost,
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
 
-                    if(response.data.SSL == 1){
-
-                        $scope.sslIssueCtrl = true;
-                        $scope.manageSSLLoading = true;
-                        $scope.issueSSLBtn = false;
-                        $scope.canNotIssue = true;
-                        $scope.sslIssued = false;
-                        $scope.couldNotConnect = true;
-
-                        $scope.sslDomain = $scope.virtualHost;
+        function ListInitialDatas(response) {
 
 
-                    }
+            if (response.data.SSL == 1) {
 
-                    else
-                    {
-                        $scope.sslIssueCtrl = true;
-                        $scope.manageSSLLoading = true;
-                        $scope.issueSSLBtn = false;
-                        $scope.canNotIssue = false;
-                        $scope.sslIssued = true;
-                        $scope.couldNotConnect = true;
-                        $scope.errorMessage = response.data.error_message;
+                $scope.sslIssueCtrl = true;
+                $scope.manageSSLLoading = true;
+                $scope.issueSSLBtn = false;
+                $scope.canNotIssue = true;
+                $scope.sslIssued = false;
+                $scope.couldNotConnect = true;
 
-                    }
+                $scope.sslDomain = $scope.virtualHost;
 
 
+            } else {
+                $scope.sslIssueCtrl = true;
+                $scope.manageSSLLoading = true;
+                $scope.issueSSLBtn = false;
+                $scope.canNotIssue = false;
+                $scope.sslIssued = true;
+                $scope.couldNotConnect = true;
+                $scope.errorMessage = response.data.error_message;
 
-                }
-                function cantLoadInitialDatas(response) {
-                    $scope.sslIssueCtrl = true;
-                    $scope.manageSSLLoading = true;
-                    $scope.issueSSLBtn = false;
-                    $scope.canNotIssue = true;
-                    $scope.sslIssued = true;
-                    $scope.couldNotConnect = false;
-
-                }
-
+            }
 
 
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.sslIssueCtrl = true;
+            $scope.manageSSLLoading = true;
+            $scope.issueSSLBtn = false;
+            $scope.canNotIssue = true;
+            $scope.sslIssued = true;
+            $scope.couldNotConnect = false;
+
+        }
 
 
     };
@@ -89,7 +83,7 @@ app.controller('sslIssueCtrl', function($scope,$http) {
 
 
 /* Java script code to issue SSL for hostname */
-app.controller('sslIssueForHostNameCtrl', function($scope,$http) {
+app.controller('sslIssueForHostNameCtrl', function ($scope, $http) {
 
     $scope.sslIssueCtrl = true;
     $scope.manageSSLLoading = true;
@@ -99,74 +93,67 @@ app.controller('sslIssueForHostNameCtrl', function($scope,$http) {
     $scope.couldNotConnect = true;
 
     $scope.showbtn = function () {
-      $scope.issueSSLBtn = false;
+        $scope.issueSSLBtn = false;
     };
 
 
+    $scope.issueSSL = function () {
+        $scope.manageSSLLoading = false;
 
-    $scope.issueSSL = function(){
-                $scope.manageSSLLoading = false;
-
-                var url = "/manageSSL/obtainHostNameSSL";
-
-
-                var data = {
-                    virtualHost:$scope.virtualHost,
-                };
-
-                var config = {
-                    headers : {
-                        'X-CSRFToken': getCookie('csrftoken')
-                    }
-                };
-
-                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+        var url = "/manageSSL/obtainHostNameSSL";
 
 
-                function ListInitialDatas(response) {
+        var data = {
+            virtualHost: $scope.virtualHost,
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
 
-                    if(response.data.SSL == 1){
-
-                        $scope.sslIssueCtrl = true;
-                        $scope.manageSSLLoading = true;
-                        $scope.issueSSLBtn = false;
-                        $scope.canNotIssue = true;
-                        $scope.sslIssued = false;
-                        $scope.couldNotConnect = true;
-
-                        $scope.sslDomain = $scope.virtualHost;
+        function ListInitialDatas(response) {
 
 
-                    }
+            if (response.data.SSL == 1) {
 
-                    else
-                    {
-                        $scope.sslIssueCtrl = true;
-                        $scope.manageSSLLoading = true;
-                        $scope.issueSSLBtn = false;
-                        $scope.canNotIssue = false;
-                        $scope.sslIssued = true;
-                        $scope.couldNotConnect = true;
-                        $scope.errorMessage = response.data.error_message;
+                $scope.sslIssueCtrl = true;
+                $scope.manageSSLLoading = true;
+                $scope.issueSSLBtn = false;
+                $scope.canNotIssue = true;
+                $scope.sslIssued = false;
+                $scope.couldNotConnect = true;
 
-                    }
+                $scope.sslDomain = $scope.virtualHost;
 
 
+            } else {
+                $scope.sslIssueCtrl = true;
+                $scope.manageSSLLoading = true;
+                $scope.issueSSLBtn = false;
+                $scope.canNotIssue = false;
+                $scope.sslIssued = true;
+                $scope.couldNotConnect = true;
+                $scope.errorMessage = response.data.error_message;
 
-                }
-                function cantLoadInitialDatas(response) {
-                    $scope.sslIssueCtrl = true;
-                    $scope.manageSSLLoading = true;
-                    $scope.issueSSLBtn = false;
-                    $scope.canNotIssue = true;
-                    $scope.sslIssued = true;
-                    $scope.couldNotConnect = false;
-
-                }
-
+            }
 
 
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.sslIssueCtrl = true;
+            $scope.manageSSLLoading = true;
+            $scope.issueSSLBtn = false;
+            $scope.canNotIssue = true;
+            $scope.sslIssued = true;
+            $scope.couldNotConnect = false;
+
+        }
 
 
     };
@@ -176,7 +163,7 @@ app.controller('sslIssueForHostNameCtrl', function($scope,$http) {
 
 
 /* Java script code to issue SSL for MailServer */
-app.controller('sslIssueForMailServer', function($scope,$http) {
+app.controller('sslIssueForMailServer', function ($scope, $http) {
 
     $scope.sslIssueCtrl = true;
     $scope.manageSSLLoading = true;
@@ -186,74 +173,68 @@ app.controller('sslIssueForMailServer', function($scope,$http) {
     $scope.couldNotConnect = true;
 
     $scope.showbtn = function () {
-      $scope.issueSSLBtn = false;
+        $scope.issueSSLBtn = false;
     };
 
 
-    $scope.issueSSL = function(){
+    $scope.issueSSL = function () {
 
-                $scope.manageSSLLoading = false;
+        $scope.manageSSLLoading = false;
 
-                var url = "/manageSSL/obtainMailServerSSL";
-
-
-                var data = {
-                    virtualHost:$scope.virtualHost,
-                };
-
-                var config = {
-                    headers : {
-                        'X-CSRFToken': getCookie('csrftoken')
-                    }
-                };
-
-                $http.post(url, data,config).then(ListInitialDatas, cantLoadInitialDatas);
+        var url = "/manageSSL/obtainMailServerSSL";
 
 
-                function ListInitialDatas(response) {
+        var data = {
+            virtualHost: $scope.virtualHost,
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
 
-                    if(response.data.SSL === 1){
-
-                        $scope.sslIssueCtrl = true;
-                        $scope.manageSSLLoading = true;
-                        $scope.issueSSLBtn = false;
-                        $scope.canNotIssue = true;
-                        $scope.sslIssued = false;
-                        $scope.couldNotConnect = true;
-
-                        $scope.sslDomain = $scope.virtualHost;
+        function ListInitialDatas(response) {
 
 
-                    }
+            if (response.data.SSL === 1) {
 
-                    else
-                    {
-                        $scope.sslIssueCtrl = true;
-                        $scope.manageSSLLoading = true;
-                        $scope.issueSSLBtn = false;
-                        $scope.canNotIssue = false;
-                        $scope.sslIssued = true;
-                        $scope.couldNotConnect = true;
-                        $scope.errorMessage = response.data.error_message;
+                $scope.sslIssueCtrl = true;
+                $scope.manageSSLLoading = true;
+                $scope.issueSSLBtn = false;
+                $scope.canNotIssue = true;
+                $scope.sslIssued = false;
+                $scope.couldNotConnect = true;
 
-                    }
+                $scope.sslDomain = $scope.virtualHost;
 
 
+            } else {
+                $scope.sslIssueCtrl = true;
+                $scope.manageSSLLoading = true;
+                $scope.issueSSLBtn = false;
+                $scope.canNotIssue = false;
+                $scope.sslIssued = true;
+                $scope.couldNotConnect = true;
+                $scope.errorMessage = response.data.error_message;
 
-                }
-                function cantLoadInitialDatas(response) {
-                    $scope.sslIssueCtrl = true;
-                    $scope.manageSSLLoading = true;
-                    $scope.issueSSLBtn = false;
-                    $scope.canNotIssue = true;
-                    $scope.sslIssued = true;
-                    $scope.couldNotConnect = false;
-
-                }
-
+            }
 
 
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.sslIssueCtrl = true;
+            $scope.manageSSLLoading = true;
+            $scope.issueSSLBtn = false;
+            $scope.canNotIssue = true;
+            $scope.sslIssued = true;
+            $scope.couldNotConnect = false;
+
+        }
 
 
     };
