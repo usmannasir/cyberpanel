@@ -1007,7 +1007,8 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
             method: "deleteFolderOrFile",
             fileAndFolders: allFilesAndFolders,
             domainRandomSeed: domainRandomSeed,
-            domainName: domainName
+            domainName: domainName,
+            skipTrash: $scope.skipTrash
         };
 
 
