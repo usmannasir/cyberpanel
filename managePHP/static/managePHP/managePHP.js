@@ -261,6 +261,7 @@ app.controller('installExtensions', function ($scope, $http, $timeout) {
 app.controller('editPHPConfig', function ($scope, $http, $timeout) {
 
     $scope.loadingPHP = true;
+    $scope.cyberPanelLoading = true;
     $scope.canNotFetch = true;
     $scope.phpDetailsBox = true;
     $scope.couldNotConnect = true;
@@ -377,7 +378,6 @@ app.controller('editPHPConfig', function ($scope, $http, $timeout) {
 
     };
 
-
     $scope.saveChanges = function () {
 
         $scope.loadingPHP = false;
@@ -438,7 +438,6 @@ app.controller('editPHPConfig', function ($scope, $http, $timeout) {
 
 
     };
-
 
     $scope.fetchAdvancePHPDetails = function () {
         $scope.loadingPHP = false;
@@ -501,7 +500,6 @@ app.controller('editPHPConfig', function ($scope, $http, $timeout) {
 
     };
 
-
     $scope.saveChangesAdvance = function () {
 
         $scope.loadingPHP = false;
@@ -552,6 +550,16 @@ app.controller('editPHPConfig', function ($scope, $http, $timeout) {
 
         }
 
+
+    };
+
+    $scope.restartPHP = function () {
+
+        globalScope = $scope;
+        $scope.cyberPanelLoading = false;
+        url = "/managephp/restartPHP";
+        var data = {};
+        GLobalAjaxCall($http, url, data, GlobalRespSuccess, GlobalRespFailed);
 
     };
 

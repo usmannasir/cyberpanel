@@ -136,6 +136,8 @@
                                         <div class="col-sm-4">
                                             <button type="button" ng-click="saveChanges()"
                                                     class="btn btn-primary btn-lg btn-block">{% trans "Save Changes" %}</button>
+                                            <button type="button" ng-click="restartPHP()"
+                                                    class="btn btn-primary btn-lg btn-block">{% trans "Restart PHP" %} <img ng-hide="cyberPanelLoading" src="{% static 'images/loading.gif' %}"></button>
 
                                         </div>
                                     </div>

@@ -12,6 +12,7 @@ urlpatterns = [
     url(r'^savePHPConfigBasic', views.savePHPConfigBasic, name='savePHPConfigBasic'),
     url(r'^getCurrentAdvancedPHPConfig', views.getCurrentAdvancedPHPConfig, name='getCurrentAdvancedPHPConfig'),
     url(r'^savePHPConfigAdvance', views.savePHPConfigAdvance, name='savePHPConfigAdvance'),
+    url(r'^restartPHP', views.restartPHP, name='restartPHP'),
 
 
 ]

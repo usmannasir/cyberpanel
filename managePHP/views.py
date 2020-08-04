@@ -24,7 +24,6 @@ from .phpManager import PHPManager
 
 # Create your views here.
 
-
 def loadPHPHome(request):
     try:
         userID = request.session['userID']
@@ -38,7 +37,6 @@ def loadPHPHome(request):
         return render(request, 'managePHP/index.html')
     except KeyError:
         return redirect(loadLoginPage)
-
 
 def installExtensions(request):
     try:
@@ -1225,7 +1223,6 @@ def installExtensions(request):
     except KeyError:
         return redirect(loadLoginPage)
 
-
 def getExtensionsInformation(request):
     try:
         userID = request.session['userID']
@@ -1285,7 +1282,6 @@ def getExtensionsInformation(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
-
 def submitExtensionRequest(request):
     try:
         userID = request.session['userID']
@@ -1324,7 +1320,6 @@ def submitExtensionRequest(request):
                      'error_message': "Not Logged In, please refresh the page or login again."}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
-
 
 def getRequestStatus(request):
     try:
@@ -1589,7 +1584,6 @@ def editPHPConfigs(request):
     except KeyError:
         return redirect(loadLoginPage)
 
-
 def getCurrentPHPConfig(request):
     try:
         userID = request.session['userID']
@@ -1846,3 +1840,27 @@ def savePHPConfigAdvance(request):
     except KeyError as msg:
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[saveConfigsToFile]")
         return HttpResponse("Not Logged in as admin")
+
+## Restart PHP
+
+def restartPHP(request):
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('status', 0)
+
+        command = 'killall lsphp'
+        ProcessUtilities.executioner(command)
+
+        status = {"status": 1}
+        final_json = json.dumps(status)
+        return HttpResponse(final_json)
+
+    except BaseException as msg:
+        final_dic = {'status': 0, 'error_message': str(msg)}
+        final_json = json.dumps(final_dic)
+        return HttpResponse(final_json)
