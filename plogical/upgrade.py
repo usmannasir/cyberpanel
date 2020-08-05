@@ -1192,6 +1192,21 @@ class Upgrade:
             except:
                 pass
 
+            query = """CREATE TABLE `filemanager_trash` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `originalPath` varchar(500) NOT NULL,
+  `fileName` varchar(200) NOT NULL,
+  `website_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `filemanager_trash_website_id_e2762f3c_fk_websiteFu` (`website_id`),
+  CONSTRAINT `filemanager_trash_website_id_e2762f3c_fk_websiteFu` FOREIGN KEY (`website_id`) REFERENCES `websiteFunctions_websites` (`id`)
+)"""
+
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
             try:
                 connection.close()
             except:
