@@ -120,6 +120,8 @@ def controller(request):
             return fm.createNewFolder()
         elif method == 'deleteFolderOrFile':
             return fm.deleteFolderOrFile()
+        elif method == 'restore':
+            return fm.restore()
         elif method == 'copy':
             return fm.copy()
         elif method == 'move':

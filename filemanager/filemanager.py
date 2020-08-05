@@ -6,6 +6,7 @@ from websiteFunctions.models import Websites
 from random import randint
 from django.core.files.storage import FileSystemStorage
 from plogical.acl import ACLManager
+from filemanager.models import Trash
 
 class FileManager:
     def __init__(self, request, data):
@@ -172,6 +173,12 @@ class FileManager:
             finalData['status'] = 1
 
             domainName = self.data['domainName']
+
+            try:
+                skipTrash = self.data['skipTrash']
+            except:
+                skipTrash = False
+
             website = Websites.objects.get(domain=domainName)
             self.homePath = '/home/%s' % (domainName)
 
@@ -180,8 +187,55 @@ class FileManager:
                 if (self.data['path'] + '/' + item).find('..') > -1 or (self.data['path'] + '/' + item).find(self.homePath) == -1:
                     return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
-                command = 'rm -rf ' + self.returnPathEnclosed(self.data['path'] + '/' + item)
+                if skipTrash:
+                    command = 'rm -rf ' + self.returnPathEnclosed(self.data['path'] + '/' + item)
+                    ProcessUtilities.executioner(command, website.externalApp)
+                else:
+                    trashPath = '%s/.trash' % (self.homePath)
+
+                    command = 'mkdir %s' % (trashPath)
+                    ProcessUtilities.executioner(command, website.externalApp)
+
+                    Trash(website=website, originalPath=self.returnPathEnclosed(self.data['path']), fileName=self.returnPathEnclosed(item)).save()
+
+                    command = 'mv %s %s' % (self.returnPathEnclosed(self.data['path'] + '/' + item), trashPath)
+                    ProcessUtilities.executioner(command, website.externalApp)
+
+            json_data = json.dumps(finalData)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            return self.ajaxPre(0, str(msg))
+
+    def restore(self):
+        try:
+            finalData = {}
+            finalData['status'] = 1
+
+            domainName = self.data['domainName']
+
+            try:
+                skipTrash = self.data['skipTrash']
+            except:
+                skipTrash = False
+
+            website = Websites.objects.get(domain=domainName)
+            self.homePath = '/home/%s' % (domainName)
+
+            for item in self.data['fileAndFolders']:
+
+                if (self.data['path'] + '/' + item).find('..') > -1 or (self.data['path'] + '/' + item).find(self.homePath) == -1:
+                    return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
+
+                trashPath = '%s/.trash' % (self.homePath)
+
+                tItem = Trash.objects.get(website=website, fileName=self.returnPathEnclosed(item))
+
+                command = 'mv %s %s' % (self.returnPathEnclosed(trashPath + '/' + item), tItem.originalPath)
                 ProcessUtilities.executioner(command, website.externalApp)
+
+                tItem.delete()
+
 
             json_data = json.dumps(finalData)
             return HttpResponse(json_data)

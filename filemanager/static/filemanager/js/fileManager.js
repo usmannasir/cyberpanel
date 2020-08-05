@@ -42,6 +42,7 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
     $scope.currentPath = "/home/" + domainName;
     $scope.startingPath = domainName;
     $scope.completeStartingPath = "/home/" + domainName;
+    var trashPath = homePathBack + '/.trash'
 
     $scope.editDisable = true;
     // disable loading image on tree loading
@@ -218,7 +219,6 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
         }
     }
 
-
     function prepareChildNodeUL() {
 
         // text nodes are created
@@ -305,7 +305,7 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
 
         var tableBody = document.getElementById("tableBodyFiles");
         var getFileName = tableBody.firstChild.firstChild.innerHTML;
-        allFilesAndFolders = []
+        allFilesAndFolders = [];
 
         var collectionOfA = tableBody.getElementsByTagName("tr");
 
@@ -340,7 +340,7 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
         var check = 1;
         var getFileName = nodeName.getElementsByTagName('td')[0].innerHTML;
 
-        if (nodeName.style.backgroundColor == "aliceblue") {
+        if (nodeName.style.backgroundColor === "aliceblue") {
 
             var tempArray = [];
             nodeName.style.background = "None";
@@ -375,19 +375,6 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
 
     }
 
-    /*
-
-     <tr>
-     <th scope="row"><i class="fa fa-folder" aria-hidden="true"></i></th>
-     <td>public_html</td>
-     <td>26KB</td>
-     <td>26 Oct</td>
-     <td>775</td>
-     <td>Folder/File</td>
-     </tr>
-
-     */
-
     function createTR(fileName, fileSize, lastModified, permissions, dirCheck) {
 
         // text nodes are created
@@ -396,9 +383,7 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
         var lastModifiedNode = document.createTextNode(lastModified);
         var permissionsNode = document.createTextNode(permissions);
 
-
         //
-
 
         var iNodeFolder = document.createElement('i');
         iNodeFolder.setAttribute('class', 'fa fa-folder');
@@ -454,7 +439,8 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
 
             var fileOrFolderNode = document.createTextNode("Folder");
             fifthTDNode.appendChild(fileOrFolderNode)
-        } else {
+        }
+        else {
             thNode.appendChild(iNodeFile);
             trNode.appendChild(thNode);
             trNode.addEventListener("click", function () {
@@ -485,6 +471,14 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
 
     $scope.buttonActivator = function () {
 
+        // for restore button
+        if($scope.currentPath === trashPath) {
+            var restoreBTN = document.getElementById("restoreRight");
+            restoreBTN.style.display = "block";
+        }else{
+            var restoreBTN = document.getElementById("restoreRight");
+            restoreBTN.style.display = "none";
+        }
         // for edit button
         if (allFilesAndFolders.length === 1) {
             var editNode = document.getElementById("editFile");
@@ -507,7 +501,12 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
                 } else if (result[0] === "php") {
                     aceEditorMode = "ace/mode/php";
                     editNotRight.style.display = "Block";
-                } else if (result[0] === "txt") {
+                }
+                else if (result[0] === "py") {
+                    aceEditorMode = "ace/mode/python";
+                    editNotRight.style.display = "Block";
+                }
+                else if (result[0] === "txt") {
                     aceEditorMode = "";
                     editNotRight.style.display = "Block";
                 } else if (result[0] === "htaccess") {
@@ -523,7 +522,8 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
                 editNode.style.pointerEvents = "none";
                 editNotRight.style.display = "None";
             }
-        } else {
+        }
+        else {
             var editNode = document.getElementById("editFile");
             editNode.style.pointerEvents = "none";
         }
@@ -1385,7 +1385,6 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
         }
     };
 
-
     $scope.renameFile = function () {
 
         $scope.renameLoading = false;
@@ -1494,12 +1493,10 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
     $scope.groupPermissions = 0;
     $scope.wordlPermissions = 0;
 
-
     $scope.showPermissionsModal = function () {
         $('#showPermissions').modal('show');
         $scope.permissionsPath = allFilesAndFolders[0];
     };
-
 
     $scope.updateReadPermissions = function (value) {
 
@@ -1618,7 +1615,6 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
         }
     };
 
-
     $scope.changePermissionsRecursively = function () {
         $scope.changePermissions(1);
     };
@@ -1670,5 +1666,53 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
 
     };
 
+    ///
+
+    //
+    $scope.cyberPanelLoading = true;
+    $scope.showRestoreModal = function () {
+        $scope.createSuccess = true;
+        $scope.errorMessageFolder = true;
+        $scope.newFolderName = "";
+        $('#showRestore').modal('show');
+    };
+
+    $scope.restoreFinal = function () {
+        $scope.cyberPanelLoading = false;
+        var data = {
+            path: $scope.currentPath,
+            method: "restore",
+            fileAndFolders: allFilesAndFolders,
+            domainRandomSeed: domainRandomSeed,
+            domainName: domainName,
+        };
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+            $scope.cyberPanelLoading = true;
+            if (response.data.status === 1) {
+                $('#showRestore').modal('hide');
+                var notification = alertify.notify('Successfully restored to its original location!', 'success', 5, function () {
+                });
+                $scope.fetchForTableSecondary(null, 'refresh');
+            } else {
+                var notification = alertify.notify('Files/Folders can not be restored', 'error', 5, function () {
+                    console.log('dismissed');
+                });
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+        }
+
+    };
 
 });
