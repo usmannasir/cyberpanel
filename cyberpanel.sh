@@ -73,7 +73,7 @@ fi
 
 watchdog_setup() {
 if [[ $WATCHDOG == "ON" ]] ; then
-wget -O /etc/cyberpanel/watchdog.sh https://$GIT_CONTENT_URL/$BRANCH_NAME/CPScripts/watchdog.sh
+wget -O /etc/cyberpanel/watchdog.sh https://$GIT_CONTENT_URL/stable/CPScripts/watchdog.sh
 chmod 700 /etc/cyberpanel/watchdog.sh
 ln -s /etc/cyberpanel/watchdog.sh /usr/local/bin/watchdog
 pid=$(ps aux | grep "watchdog lsws"  | grep -v grep | awk '{print $2}')
