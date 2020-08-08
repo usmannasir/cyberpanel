@@ -17,5 +17,5 @@ urlpatterns = [
     url(r'^remoteAccess$', views.remoteAccess, name='remoteAccess'),
     url(r'^allowRemoteIP$', views.allowRemoteIP, name='allowRemoteIP'),
     url(r'^phpMyAdmin$', views.phpMyAdmin, name='phpMyAdmin'),
-    url(r'^setupPHPMYAdminSession$', views.setupPHPMYAdminSession, name='setupPHPMYAdminSession'),
+    url(r'^generateAccess$', views.generateAccess, name='generateAccess'),
 ]

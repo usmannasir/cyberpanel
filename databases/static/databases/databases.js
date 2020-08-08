@@ -569,9 +569,9 @@ app.controller('listDBs', function ($scope, $http) {
 
 app.controller('phpMyAdmin', function ($scope, $http, $window) {
 
-    function setupPHPMYAdminSession() {
+    $scope.generateAccess = function() {
 
-        url = "/dataBases/setupPHPMYAdminSession";
+        url = "/dataBases/generateAccess";
 
         var data = {};
 
@@ -587,7 +587,6 @@ app.controller('phpMyAdmin', function ($scope, $http, $window) {
 
         function ListInitialDatas(response) {
 
-
             if (response.data.status === 1) {
                 $window.location.href = '/phpmyadmin';
             }
@@ -598,6 +597,5 @@ app.controller('phpMyAdmin', function ($scope, $http, $window) {
         function cantLoadInitialDatas(response) {}
 
     }
-    setupPHPMYAdminSession();
 
 });

@@ -445,6 +445,7 @@ class ACLManager:
 
     @staticmethod
     def searchWebsiteObjects(currentACL, userID, searchTerm):
+
         if currentACL['admin'] == 1:
             return Websites.objects.filter(domain__istartswith=searchTerm)
         else:

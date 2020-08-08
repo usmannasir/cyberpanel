@@ -902,6 +902,29 @@ skip-name-resolve
             print('0,%s "[mysqlUtilities.enableRemoteMYSQL]' % (str(msg)))
             return 0
 
+    @staticmethod
+    def addUserToDB(database, user, password, createUser = 0):
+        try:
+
+            connection, cursor = mysqlUtilities.setupConnection()
+
+            if connection == 0:
+                return 0
+
+            if createUser:
+                cursor.execute(
+                    "CREATE USER '" + user + "'@'%s' IDENTIFIED BY '" % (mysqlUtilities.LOCALHOST) + password + "'")
+
+            cursor.execute(
+                "GRANT ALL PRIVILEGES ON " + database + ".* TO '" + user + "'@'%s'" % (mysqlUtilities.LOCALHOST))
+            connection.close()
+
+            return 1
+
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[addUserToDB]")
+            return 0
+
 def main():
     parser = argparse.ArgumentParser(description='CyberPanel')
     parser.add_argument('function', help='Specific a function to call!')

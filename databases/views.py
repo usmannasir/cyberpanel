@@ -8,7 +8,11 @@ from .pluginManager import pluginManager
 import json
 from plogical.processUtilities import ProcessUtilities
 from loginSystem.models import Administrator
-import CyberCP.settings as settings
+from plogical.acl import ACLManager
+from databases.models import GlobalUserDB
+from plogical import randomPassword
+from cryptography.fernet import Fernet
+from plogical.mysqlUtilities import mysqlUtilities
 # Create your views here.
 
 def loadDatabaseHome(request):
@@ -150,27 +154,63 @@ def phpMyAdmin(request):
     except KeyError:
         return redirect(loadLoginPage)
 
-def setupPHPMYAdminSession(request):
+def generateAccess(request):
     try:
 
         userID = request.session['userID']
         admin = Administrator.objects.get(id = userID)
+        currentACL = ACLManager.loadedACL(userID)
 
-        execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/databases/databaseManager.py"
-        execPath = execPath + " generatePHPMYAdminData --userID " + str(userID)
+        try:
+            GlobalUserDB.objects.get(username=admin.userName)
+        except:
 
-        output = ProcessUtilities.outputExecutioner(execPath)
+            ## Key generation
 
-        if output.find("1,") > -1:
-            request.session['PMA_single_signon_user'] = admin.userName
-            request.session['PMA_single_signon_password'] = output.split(',')[1]
-            data_ret = {'status': 1}
-            json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
-        else:
-            data_ret = {'status': 1}
-            json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
+            keySavePath = '/home/cyberpanel/phpmyadmin_%s' % (admin.userName)
+            key = Fernet.generate_key()
+
+            writeToFile = open(keySavePath, 'w')
+            writeToFile.write(key.decode())
+            writeToFile.close()
+
+            command = 'chown root:root %s' % (keySavePath)
+            ProcessUtilities.executioner(command)
+
+            command = 'chmod 600 %s' % (keySavePath)
+            ProcessUtilities.executioner(command)
+
+            ##
+
+            password = randomPassword.generate_pass()
+            f = Fernet(key)
+            GlobalUserDB(username=admin, password=f.encrypt(password.encode('utf-8'))).save()
+
+            sites = ACLManager.findWebsiteObjects(currentACL, userID)
+
+            createUser = 1
+
+            for site in sites:
+                for db in site.databases_set.all():
+                    mysqlUtilities.addUserToDB(db.dbName, admin.userName, password, createUser)
+                    createUser = 0
+
+        # execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/databases/databaseManager.py"
+        # execPath = execPath + " generatePHPMYAdminData --userID " + str(userID)
+        #
+        # output = ProcessUtilities.outputExecutioner(execPath)
+        #
+        # if output.find("1,") > -1:
+        #     request.session['PMA_single_signon_user'] = admin.userName
+        #     request.session['PMA_single_signon_password'] = output.split(',')[1]
+        #     data_ret = {'status': 1}
+        #     json_data = json.dumps(data_ret)
+        #     return HttpResponse(json_data)
+        # else:
+
+        data_ret = {'status': 1}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
 
 
     except BaseException as msg:
