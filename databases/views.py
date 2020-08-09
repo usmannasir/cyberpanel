@@ -162,9 +162,12 @@ def generateAccess(request):
         currentACL = ACLManager.loadedACL(userID)
 
         try:
-            GlobalUserDB.objects.get(username=admin.userName)
-        except:
+            gdb = GlobalUserDB.objects.get(username=admin.userName)
+            token = randomPassword.generate_pass()
+            gdb.token = token
+            gdb.save()
 
+        except:
             ## Key generation
 
             keySavePath = '/home/cyberpanel/phpmyadmin_%s' % (admin.userName)
@@ -183,8 +186,9 @@ def generateAccess(request):
             ##
 
             password = randomPassword.generate_pass()
+            token = randomPassword.generate_pass()
             f = Fernet(key)
-            GlobalUserDB(username=admin, password=f.encrypt(password.encode('utf-8'))).save()
+            GlobalUserDB(username=admin.userName, password=f.encrypt(password.encode('utf-8')).decode(), token=token).save()
 
             sites = ACLManager.findWebsiteObjects(currentACL, userID)
 
@@ -195,22 +199,53 @@ def generateAccess(request):
                     mysqlUtilities.addUserToDB(db.dbName, admin.userName, password, createUser)
                     createUser = 0
 
-        # execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/databases/databaseManager.py"
-        # execPath = execPath + " generatePHPMYAdminData --userID " + str(userID)
-        #
-        # output = ProcessUtilities.outputExecutioner(execPath)
-        #
-        # if output.find("1,") > -1:
-        #     request.session['PMA_single_signon_user'] = admin.userName
-        #     request.session['PMA_single_signon_password'] = output.split(',')[1]
-        #     data_ret = {'status': 1}
-        #     json_data = json.dumps(data_ret)
-        #     return HttpResponse(json_data)
-        # else:
-
-        data_ret = {'status': 1}
+        data_ret = {'status': 1, 'token': token, 'username': admin.userName}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
+
+
+    except BaseException as msg:
+        data_ret = {'status': 0, 'createDBStatus': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+def fetchDetailsPHPMYAdmin(request):
+    try:
+
+
+        userID = request.session['userID']
+        admin = Administrator.objects.get(id = userID)
+        currentACL = ACLManager.loadedACL(userID)
+
+        username = request.GET.get('username')
+        token = request.GET.get('token')
+
+        if username != admin.userName:
+            return redirect(loadLoginPage)
+
+        ## Key generation
+
+        gdb = GlobalUserDB.objects.get(username=admin.userName)
+
+        if gdb.token == token:
+            keySavePath = '/home/cyberpanel/phpmyadmin_%s' % (admin.userName)
+            key = ProcessUtilities.outputExecutioner('cat %s' % (keySavePath)).strip('\n').encode()
+            f = Fernet(key)
+            password = f.decrypt(gdb.password.encode('utf-8'))
+
+            sites = ACLManager.findWebsiteObjects(currentACL, userID)
+
+            createUser = 0
+
+            for site in sites:
+                for db in site.databases_set.all():
+                    mysqlUtilities.addUserToDB(db.dbName, admin.userName, password.decode(), createUser)
+                    createUser = 0
+
+            returnURL = '/phpmyadmin/signin.php?username=%s&password=%s' % (admin.userName, password.decode())
+            return redirect(returnURL)
+        else:
+            return redirect(loadLoginPage)
 
 
     except BaseException as msg:

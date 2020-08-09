@@ -241,6 +241,9 @@ class Upgrade:
 
             os.mkdir('/usr/local/CyberCP/public/phpmyadmin/tmp')
 
+            command = 'cp /usr/local/CyberCP/plogical/phpmyadminsignin.php /usr/local/CyberCP/public/phpmyadmin/phpmyadminsignin.php'
+            Upgrade.executioner(command, 0)
+
             os.chdir(cwd)
 
         except BaseException as msg:
@@ -1200,6 +1203,19 @@ class Upgrade:
   PRIMARY KEY (`id`),
   KEY `filemanager_trash_website_id_e2762f3c_fk_websiteFu` (`website_id`),
   CONSTRAINT `filemanager_trash_website_id_e2762f3c_fk_websiteFu` FOREIGN KEY (`website_id`) REFERENCES `websiteFunctions_websites` (`id`)
+)"""
+
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+            query = """CREATE TABLE `databases_globaluserdb` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `username` varchar(200) NOT NULL,
+  `password` varchar(500) NOT NULL,
+  `token` varchar(20) NOT NULL,
+  PRIMARY KEY (`id`)
 )"""
 
             try:

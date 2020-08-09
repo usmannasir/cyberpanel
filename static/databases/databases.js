@@ -568,10 +568,13 @@ app.controller('listDBs', function ($scope, $http) {
 
 
 app.controller('phpMyAdmin', function ($scope, $http, $window) {
+    $scope.cyberPanelLoading = true;
 
-    function setupPHPMYAdminSession() {
+    $scope.generateAccess = function() {
 
-        url = "/dataBases/setupPHPMYAdminSession";
+        $scope.cyberPanelLoading = false;
+
+        url = "/dataBases/generateAccess";
 
         var data = {};
 
@@ -586,18 +589,17 @@ app.controller('phpMyAdmin', function ($scope, $http, $window) {
 
 
         function ListInitialDatas(response) {
-
-
+            $scope.cyberPanelLoading = true;
             if (response.data.status === 1) {
-                $window.location.href = '/phpmyadmin';
+                var rUrl = '/phpmyadmin/signin.php?username=' + response.data.username + '&token=' + response.data.token;
+                $window.location.href = rUrl;
             }
             else {}
 
         }
 
-        function cantLoadInitialDatas(response) {}
+        function cantLoadInitialDatas(response) {$scope.cyberPanelLoading = true;}
 
     }
-    setupPHPMYAdminSession();
 
 });

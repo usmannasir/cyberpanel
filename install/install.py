@@ -702,6 +702,10 @@ class preFlightsChecks:
                 command = "sed -i 's|'localhost'|'%s'|g' %s" % (self.mysqlhost, '/usr/local/CyberCP/public/phpmyadmin/config.inc.php')
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
+
+            command = 'cp /usr/local/CyberCP/plogical/phpmyadminsignin.php /usr/local/CyberCP/public/phpmyadmin/phpmyadminsignin.php'
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
         except BaseException as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [download_install_phpmyadmin]")
             return 0
