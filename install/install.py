@@ -681,12 +681,28 @@ class preFlightsChecks:
 
             writeToFile = open('/usr/local/CyberCP/public/phpmyadmin/config.inc.php', 'w')
 
+            writeE = 1
+
+            phpMyAdminContent = """
+$cfg['Servers'][$i]['AllowNoPassword'] = false;
+$cfg['Servers'][$i]['auth_type'] = 'signon';
+$cfg['Servers'][$i]['SignonSession'] = 'SignonSession';
+$cfg['Servers'][$i]['SignonURL'] = 'phpmyadminsignin.php';
+"""
+
             for items in data:
                 if items.find('blowfish_secret') > -1:
                     writeToFile.writelines(
                         "$cfg['blowfish_secret'] = '" + rString + "'; /* YOU MUST FILL IN THIS FOR COOKIE AUTH! */\n")
-                else:
+                if items.find('/* Authentication type */') > -1:
                     writeToFile.writelines(items)
+                    writeToFile.write(phpMyAdminContent)
+                    writeE = 0
+                if items.find("$cfg['Servers'][$i]['AllowNoPassword']") > -1:
+                    writeE = 1
+                else:
+                    if writeE:
+                        writeToFile.writelines(items)
 
             writeToFile.writelines("$cfg['TempDir'] = '/usr/local/CyberCP/public/phpmyadmin/tmp';\n")
 

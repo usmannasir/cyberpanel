@@ -166,7 +166,6 @@ def generateAccess(request):
             token = randomPassword.generate_pass()
             gdb.token = token
             gdb.save()
-
         except:
             ## Key generation
 
@@ -242,7 +241,7 @@ def fetchDetailsPHPMYAdmin(request):
                     mysqlUtilities.addUserToDB(db.dbName, admin.userName, password.decode(), createUser)
                     createUser = 0
 
-            returnURL = '/phpmyadmin/signin.php?username=%s&password=%s' % (admin.userName, password.decode())
+            returnURL = '/phpmyadmin/phpmyadminsignin.php?username=%s&password=%s' % (admin.userName, password.decode())
             return redirect(returnURL)
         else:
             return redirect(loadLoginPage)
