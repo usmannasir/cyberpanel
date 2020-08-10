@@ -168,8 +168,9 @@ addons() {
 	echo -e "\n2. Install Memcached server."
 	echo -e "\n3. Install Redis extension for PHP."
 	echo -e "\n4. Install Redis server."
-	echo -e "\n5. Back to Main Menu.\n"
-	printf "%s" "Please enter number [1-5]: "
+	echo -e "\n5. Raise phpMyAdmin upload limits."
+	echo -e "\n6. Back to Main Menu.\n"
+	printf "%s" "Please enter number [1-6]: "
 	read TMP_YN
 
 	if [[ $TMP_YN == "1" ]] ; then
@@ -185,7 +186,7 @@ addons() {
 	elif [[ $TMP_YN == "6" ]] ; then
 	main_page
 	else
-	echo -e "  Please enter the right number [1-5]\n"
+	echo -e "  Please enter the right number [1-6]\n"
 	exit
 	fi
 }
