@@ -47,13 +47,13 @@ read TMP_YN
 if [[ $TMP_YN == "1" ]] ; then
 	if [[ ! -f /etc/cyberpanel/watchdog.sh ]] ; then
 		echo -e "\nWatchDog no found..."
-		wget -O /etc/cyberpanel/watchdog.sh https://cyberpanel.sh/misc/watchdog.sh
+		wget -O /etc/cyberpanel/watchdog.sh https://$GIT_CONTENT_URL/$BRANCH_NAME/CPScripts/watchdog.sh
 		chmod 700 /etc/cyberpanel/watchdog.sh
 		ln -s /etc/cyberpanel/watchdog.sh /usr/local/bin/watchdog
-		echo -e "\nWatchDos has been installed..."
+		echo -e "\nWatchDog has been installed..."
 		set_watchdog
 	else
-		echo -e "\nWatchDos is already installed..."
+		echo -e "\nWatchDog is already installed..."
 		set_watchdog
 	fi
 elif [[ $TMP_YN == "2" ]] ; then
