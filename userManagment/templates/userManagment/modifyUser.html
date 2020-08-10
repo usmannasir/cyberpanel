@@ -80,6 +80,23 @@
                             </div>
                         </div>
 
+                        <div ng-hide="acctDetailsFetched" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Additional Features" %}</label>
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
+                                        <input ng-change="decideQRShow()" ng-model="twofa" type="checkbox" value="">
+                                        2FA
+                                    </label>
+                                </div>
+                            </div>
+                            <label ng-hide="qrHidden" class="col-sm-3 control-label"></label>
+                            <div ng-hide="qrHidden" class="col-sm-9">
+                                <canvas id="qr"></canvas>
+                            </div>
+                        </div>
+
 
                         <div ng-hide="acctDetailsFetched" class="form-group">
                             <label class="col-sm-3 control-label">{% trans "Security Level" %}</label>
@@ -143,9 +160,6 @@
                 </div>
             </div>
         </div>
-
-
     </div>
-
 
 {% endblock %}

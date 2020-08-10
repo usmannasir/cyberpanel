@@ -288,6 +288,14 @@ def fetchUserDetails(request):
                 else:
                     securityLevel = 'High'
 
+                import pyotp
+
+                if user.secretKey == 'None':
+                    user.secretKey = pyotp.random_base32()
+                    user.save()
+
+                otpauth = pyotp.totp.TOTP(user.secretKey).provisioning_uri(email, issuer_name="CyberPanel")
+
                 userDetails = {
                     "id": user.id,
                     "firstName": firstName,
@@ -295,7 +303,9 @@ def fetchUserDetails(request):
                     "email": email,
                     "acl": user.acl.name,
                     "websitesLimit": websitesLimit,
-                    "securityLevel": securityLevel
+                    "securityLevel": securityLevel,
+                    "otpauth": otpauth,
+                    'twofa': user.twoFA
                 }
 
                 data_ret = {'fetchStatus': 1, 'error_message': 'None', "userDetails": userDetails}
@@ -333,6 +343,11 @@ def saveModifications(request):
             except:
                 securityLevel = 'HIGH'
 
+            try:
+                twofa = int(data['twofa'])
+            except:
+                twofa = 0
+
             user = Administrator.objects.get(userName=accountUsername)
 
             currentACL = ACLManager.loadedACL(val)
@@ -358,6 +373,7 @@ def saveModifications(request):
             user.password = password
             user.token = token
             user.type = 0
+            user.twoFA = twofa
 
             if securityLevel == 'LOW':
                 user.securityLevel = secMiddleware.LOW

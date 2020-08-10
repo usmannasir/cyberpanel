@@ -91,7 +91,31 @@ def verifyLogin(request):
                 json_data = json.dumps(data)
                 return HttpResponse(json_data)
 
+            if admin.twoFA:
+                try:
+                    twoinit = request.session['twofa']
+                except:
+                    request.session['twofa'] = 0
+                    data = {'userID': admin.pk, 'loginStatus': 2, 'error_message': "None"}
+                    json_data = json.dumps(data)
+                    response.write(json_data)
+                    return response
+
+
+
             if hashPassword.check_password(admin.password, password):
+
+                if admin.twoFA:
+                    if request.session['twofa'] == 0:
+                        import pyotp
+                        totp = pyotp.TOTP(admin.secretKey)
+                        del request.session['twofa']
+                        logging.writeToFile(str(totp.now()))
+                        if totp.verify(data['twofa']):
+                            data = {'userID': 0, 'loginStatus': 0, 'error_message': "Invalid verification code."}
+                            json_data = json.dumps(data)
+                            response.write(json_data)
+                            return response
 
                 request.session['userID'] = admin.pk
 

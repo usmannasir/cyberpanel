@@ -534,7 +534,7 @@ $cfg['Servers'][$i]['SignonURL'] = 'phpmyadminsignin.php';
                 pass
 
             try:
-                cursor.execute("ALTER TABLE loginSystem_administrator ADD secretKey varchar(50) DEFAULT 'ACTIVE'")
+                cursor.execute("ALTER TABLE loginSystem_administrator ADD secretKey varchar(50) DEFAULT 'None'")
             except:
                 pass
 

@@ -33,73 +33,75 @@ var application = angular.module('loginSystem', []);
 
 application.config(['$interpolateProvider',
 
-    function($interpolateProvider) {
+    function ($interpolateProvider) {
         $interpolateProvider.startSymbol('{$');
         $interpolateProvider.endSymbol('$}');
     }
 ]);
 
-application.controller('loginSystem', function($scope,$http,$window) {
+application.controller('loginSystem', function ($scope, $http, $window) {
+
+    $scope.verifyCode = true;
+
+    $scope.verifyLoginCredentials = function () {
+
+        $("#verifyingLogin").show();
 
 
-    $scope.verifyLoginCredentials = function() {
-
-                $("#verifyingLogin").show();
-
-
-                var username = $scope.username;
-                var password=  $scope.password;
-                var languageSelection=  $scope.languageSelection;
+        var username = $scope.username;
+        var password = $scope.password;
+        var languageSelection = $scope.languageSelection;
 
 
-                url = "/verifyLogin";
+        url = "/verifyLogin";
 
-                var data = {
-                    username: username,
-                    password: password,
-                    languageSelection:languageSelection,
-                };
-
-                var config = {
-                    headers : {
-                        'X-CSRFToken': getCookie('csrftoken')
-                    }
-                };
-
-                $http.post(url, data,config).then(ListInitialData, cantLoadInitialData);
-
-
-                function ListInitialData(response) {
-
-                    if (response.data.loginStatus === 0)
-                    {
-                        $scope.errorMessage = response.data.error_message;
-                        $("#loginFailed").fadeIn();
-                    }
-                    else{
-                        $("#loginFailed").hide();
-                        $window.location.href = '/base/';
-                    }
-
-
-
-                    $("#verifyingLogin").hide();
-                }
-                function cantLoadInitialData(response) {}
-
-
-
-
+        var data = {
+            username: username,
+            password: password,
+            languageSelection: languageSelection,
+            twofa: $scope.twofa
         };
 
-    $scope.initiateLogin = function($event){
-    var keyCode = $event.which || $event.keyCode;
-    if (keyCode === 13) {
-        $scope.verifyLoginCredentials();
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
 
-    }
+        $http.post(url, data, config).then(ListInitialData, cantLoadInitialData);
 
-  };
+
+        function ListInitialData(response) {
+
+            if (response.data.loginStatus === 0) {
+                $scope.errorMessage = response.data.error_message;
+                $("#loginFailed").fadeIn();
+            }else if(response.data.loginStatus === 2){
+                $scope.verifyCode = false;
+            }
+            else {
+                $("#loginFailed").hide();
+                $window.location.href = '/base/';
+            }
+
+
+            $("#verifyingLogin").hide();
+        }
+
+        function cantLoadInitialData(response) {
+        }
+
+
+    };
+
+    $scope.initiateLogin = function ($event) {
+        var keyCode = $event.which || $event.keyCode;
+        if (keyCode === 13) {
+            $scope.verifyLoginCredentials();
+
+        }
+
+    };
 
 
 });

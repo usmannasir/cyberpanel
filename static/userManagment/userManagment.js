@@ -127,6 +127,13 @@ app.controller('createUserCtr', function ($scope, $http) {
 /* Java script code to modify user account */
 app.controller('modifyUser', function ($scope, $http) {
 
+    var qrCode = window.qr = new QRious({
+        element: document.getElementById('qr'),
+        size: 200,
+        value: 'QRious'
+    });
+
+
     $scope.userModificationLoading = true;
     $scope.acctDetailsFetched = true;
     $scope.userAccountsLimit = true;
@@ -137,6 +144,15 @@ app.controller('modifyUser', function ($scope, $http) {
     $scope.detailsFetched = true;
     $scope.accountTypeView = true;
     $scope.websitesLimit = true;
+    $scope.qrHidden = true;
+
+    $scope.decideQRShow = function(){
+        if($scope.twofa === true){
+            $scope.qrHidden = false;
+        }else{
+            $scope.qrHidden = true;
+        }
+    };
 
 
     $scope.fetchUserDetails = function () {
@@ -173,6 +189,12 @@ app.controller('modifyUser', function ($scope, $http) {
                 $scope.lastName = userDetails.lastName;
                 $scope.email = userDetails.email;
                 $scope.secLevel = userDetails.securityLevel;
+                $scope.twofa = Boolean(userDetails.twofa);
+
+                qrCode.set({
+                    value: userDetails.otpauth
+                });
+
 
                 $scope.userModificationLoading = true;
                 $scope.acctDetailsFetched = false;
@@ -220,7 +242,6 @@ app.controller('modifyUser', function ($scope, $http) {
 
     };
 
-
     $scope.modifyUser = function () {
 
 
@@ -252,7 +273,8 @@ app.controller('modifyUser', function ($scope, $http) {
             lastName: lastName,
             email: email,
             passwordByPass: password,
-            securityLevel: $scope.securityLevel
+            securityLevel: $scope.securityLevel,
+            twofa: $scope.twofa
         };
 
         var config = {
@@ -1685,7 +1707,7 @@ app.controller('listTableUsers', function ($scope, $http) {
 
 
     };
-    
+
     $scope.controlUserState = function (userName, state) {
         $scope.cyberpanelLoading = false;
 
@@ -1693,7 +1715,7 @@ app.controller('listTableUsers', function ($scope, $http) {
 
         var data = {
             accountUsername: userName,
-            state : state
+            state: state
         };
 
         var config = {
