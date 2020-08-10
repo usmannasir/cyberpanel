@@ -181,11 +181,43 @@ addons() {
 	elif [[ $TMP_YN == "4" ]] ; then
 	install_redis
 	elif [[ $TMP_YN == "5" ]] ; then
+	phpmyadmin_limits
+	elif [[ $TMP_YN == "6" ]] ; then
 	main_page
 	else
 	echo -e "  Please enter the right number [1-5]\n"
 	exit
 	fi
+}
+
+phpmyadmin_limits() {
+	echo -e "This will change following parameters for PHP 7.3:"
+	echo -e "Post Max Size from default 8M to 500M"
+	echo -e "Upload Max Filesize from default 2M to 500M"
+	echo -e "Memory Limit from default 128M to 768M"
+	echo -e "Max Execution Time from default 30 to 600"
+	echo -e "\nPlease note this will also apply to all sites use PHP 7.3"
+	printf "%s" "Please confirm to proceed: [Y/n]: "
+	read TMP_YN
+	if [[ $TMP_YN == "Y" ]] || [[ $TMP_YN == "y" ]] ; then 
+	
+		if [[ "$SERVER_OS" == "CentOS" ]] ; then 
+			php_ini_path="/usr/local/lsws/lsphp73/etc/php.ini"
+		fi 
+
+		if [[ "$SERVER_OS" == "Ubuntu" ]] ; then 
+			php_ini_path="/usr/local/lsws/lsphp73/etc/php/7.3/litespeed/php.ini"
+		fi 
+			sed -i 's|post_max_size = 8M|post_max_size = 500M|g' $php_ini_path
+			sed -i 's|upload_max_filesize = 2M|upload_max_filesize = 500M |g' $php_ini_path
+			sed -i 's|memory_limit = 128M|memory_limit = 768M|g' $php_ini_path
+			sed -i 's|max_execution_time = 30|max_execution_time = 600|g' $php_ini_path
+			systemctl restart lscpd
+			echo "Change applied..."
+  else 
+		echo -e "Please enter Y or n."
+		exit 
+	fi 
 }
 
 install_php_redis() {
