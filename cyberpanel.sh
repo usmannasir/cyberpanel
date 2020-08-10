@@ -29,6 +29,7 @@ VERSION="OLS"
 LICENSE_KEY=""
 KEY_SIZE=""
 ADMIN_PASS="1234567"
+CUSTOM_PASS="False"
 MEMCACHED="ON"
 REDIS="ON"
 TOTAL_RAM=$(free -m | awk '/Mem:/ { print $2 }')
@@ -899,7 +900,7 @@ if [[ `expr "x$TMP_YN" : 'x[Yy]'` -gt 1 ]] ; then
 
 		echo -e ""
 		printf "%s" "Remote MySQL Password:  "
-		read MYSQL_PASSWORD
+		read -r -s -p "Password: " MYSQL_PASSWORD
 
 		echo -e ""
 		printf "%s" "Remote MySQL Port:  "
@@ -985,9 +986,10 @@ elif [[ $TMP_YN =~ ^(r|R) ]] ; then
 	ADMIN_PASS=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 16 ; echo '')
 	echo -e "\nAdmin password will be provided once installation is completed...\n"
 elif [[ $TMP_YN =~ ^(s|S) ]] ; then
+  CUSTOM_PASS="True"
 	echo -e "\nPlease enter your password:"
 	printf "%s" ""
-	read TMP_YN
+	read -r -s -p "Password: " TMP_YN
 		if [ -z "$TMP_YN" ] ; then
   		echo -e "\nPlease do not use empty string...\n"
 			exit
@@ -997,9 +999,8 @@ elif [[ $TMP_YN =~ ^(s|S) ]] ; then
 			exit
 		fi
 	TMP_YN1=$TMP_YN
-	echo -e "\nPlease confirm  your password:\n"
-	printf "%s" ""
-	read TMP_YN
+	printf "%s\n" ""
+	read -r -s -p "Confirm Password:" TMP_YN
 	if [ -z "$TMP_YN" ] ; then
   	echo -e "\nPlease do not use empty string...\n"
 		exit
@@ -1396,7 +1397,11 @@ echo "                Installation time  : $ELAPSED                      "
 echo "                                                                   "
 echo "                Visit: https://$SERVER_IP:8090                     "
 echo "                Panel username: admin                              "
-echo "                Panel password: $ADMIN_PASS                        "
+if [[ $CUSTOM_PASS == "True" ]] ; then
+  echo "                Panel password: *****                              "
+elif [[ $CUSTOM_PASS == "False" ]] ; then
+  echo "                Panel password: $ADMIN_PASS                        "
+fi
 echo "                WebAdmin console username: admin                         "
 echo "                WebAdmin console password: $WEBADMIN_PASS                "
 echo "                                                                   "
