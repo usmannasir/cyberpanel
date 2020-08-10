@@ -534,6 +534,11 @@ $cfg['Servers'][$i]['SignonURL'] = 'phpmyadminsignin.php';
                 pass
 
             try:
+                cursor.execute("ALTER TABLE loginSystem_administrator ADD secretKey varchar(50) DEFAULT 'ACTIVE'")
+            except:
+                pass
+
+            try:
                 cursor.execute('alter table databases_databases drop index dbUser;')
             except:
                 pass
@@ -545,6 +550,11 @@ $cfg['Servers'][$i]['SignonURL'] = 'phpmyadminsignin.php';
 
             try:
                 cursor.execute('ALTER TABLE loginSystem_administrator ADD securityLevel integer DEFAULT 1')
+            except:
+                pass
+
+            try:
+                cursor.execute('ALTER TABLE loginSystem_administrator ADD twoFA integer DEFAULT 0')
             except:
                 pass
 
