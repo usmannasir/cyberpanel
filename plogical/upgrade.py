@@ -228,18 +228,37 @@ class Upgrade:
 
             writeToFile = open('/usr/local/CyberCP/public/phpmyadmin/config.inc.php', 'w')
 
+            writeE = 1
+
+            phpMyAdminContent = """
+$cfg['Servers'][$i]['AllowNoPassword'] = false;
+$cfg['Servers'][$i]['auth_type'] = 'signon';
+$cfg['Servers'][$i]['SignonSession'] = 'SignonSession';
+$cfg['Servers'][$i]['SignonURL'] = 'phpmyadminsignin.php';
+"""
+
             for items in data:
                 if items.find('blowfish_secret') > -1:
                     writeToFile.writelines(
                         "$cfg['blowfish_secret'] = '" + rString + "'; /* YOU MUST FILL IN THIS FOR COOKIE AUTH! */\n")
-                else:
+                if items.find('/* Authentication type */') > -1:
                     writeToFile.writelines(items)
+                    writeToFile.write(phpMyAdminContent)
+                    writeE = 0
+                if items.find("$cfg['Servers'][$i]['AllowNoPassword']") > -1:
+                    writeE = 1
+                else:
+                    if writeE:
+                        writeToFile.writelines(items)
 
             writeToFile.writelines("$cfg['TempDir'] = '/usr/local/CyberCP/public/phpmyadmin/tmp';\n")
 
             writeToFile.close()
 
             os.mkdir('/usr/local/CyberCP/public/phpmyadmin/tmp')
+
+            command = 'cp /usr/local/CyberCP/plogical/phpmyadminsignin.php /usr/local/CyberCP/public/phpmyadmin/phpmyadminsignin.php'
+            Upgrade.executioner(command, 0)
 
             os.chdir(cwd)
 
@@ -1200,6 +1219,19 @@ class Upgrade:
   PRIMARY KEY (`id`),
   KEY `filemanager_trash_website_id_e2762f3c_fk_websiteFu` (`website_id`),
   CONSTRAINT `filemanager_trash_website_id_e2762f3c_fk_websiteFu` FOREIGN KEY (`website_id`) REFERENCES `websiteFunctions_websites` (`id`)
+)"""
+
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+            query = """CREATE TABLE `databases_globaluserdb` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `username` varchar(200) NOT NULL,
+  `password` varchar(500) NOT NULL,
+  `token` varchar(20) NOT NULL,
+  PRIMARY KEY (`id`)
 )"""
 
             try:

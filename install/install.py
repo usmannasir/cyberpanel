@@ -681,12 +681,28 @@ class preFlightsChecks:
 
             writeToFile = open('/usr/local/CyberCP/public/phpmyadmin/config.inc.php', 'w')
 
+            writeE = 1
+
+            phpMyAdminContent = """
+$cfg['Servers'][$i]['AllowNoPassword'] = false;
+$cfg['Servers'][$i]['auth_type'] = 'signon';
+$cfg['Servers'][$i]['SignonSession'] = 'SignonSession';
+$cfg['Servers'][$i]['SignonURL'] = 'phpmyadminsignin.php';
+"""
+
             for items in data:
                 if items.find('blowfish_secret') > -1:
                     writeToFile.writelines(
                         "$cfg['blowfish_secret'] = '" + rString + "'; /* YOU MUST FILL IN THIS FOR COOKIE AUTH! */\n")
-                else:
+                if items.find('/* Authentication type */') > -1:
                     writeToFile.writelines(items)
+                    writeToFile.write(phpMyAdminContent)
+                    writeE = 0
+                if items.find("$cfg['Servers'][$i]['AllowNoPassword']") > -1:
+                    writeE = 1
+                else:
+                    if writeE:
+                        writeToFile.writelines(items)
 
             writeToFile.writelines("$cfg['TempDir'] = '/usr/local/CyberCP/public/phpmyadmin/tmp';\n")
 
@@ -701,6 +717,10 @@ class preFlightsChecks:
             if self.remotemysql == 'ON':
                 command = "sed -i 's|'localhost'|'%s'|g' %s" % (self.mysqlhost, '/usr/local/CyberCP/public/phpmyadmin/config.inc.php')
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+
+            command = 'cp /usr/local/CyberCP/plogical/phpmyadminsignin.php /usr/local/CyberCP/public/phpmyadmin/phpmyadminsignin.php'
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
         except BaseException as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [download_install_phpmyadmin]")
