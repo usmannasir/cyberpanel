@@ -591,7 +591,7 @@ app.controller('phpMyAdmin', function ($scope, $http, $window) {
         function ListInitialDatas(response) {
             $scope.cyberPanelLoading = true;
             if (response.data.status === 1) {
-                var rUrl = '/phpmyadmin/signin.php?username=' + response.data.username + '&token=' + response.data.token;
+                var rUrl = '/phpmyadmin/phpmyadminsignin.php?username=' + response.data.username + '&token=' + response.data.token;
                 $window.location.href = rUrl;
             }
             else {}
