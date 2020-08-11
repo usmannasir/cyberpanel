@@ -1143,7 +1143,7 @@ if [[ $DEV == "ON" ]] ; then
 
 	if [[ $UBUNTU_20 == "False" ]] ; then
 	  source /usr/local/CyberPanel/bin/activate
-    wget -O /usr/local/cyberpanel-pip.zip https://rep.cyberpanel.net/cyberpanel-pip-2.zip
+    wget -O /usr/local/cyberpanel-pip.zip https://rep.cyberpanel.net/cyberpanel-pip-3.zip
     check_return
     unzip /usr/local/cyberpanel-pip.zip -d /usr/local
     check_return
@@ -1151,7 +1151,7 @@ if [[ $DEV == "ON" ]] ; then
     check_return
   else
     . /usr/local/CyberPanel/bin/activate
-    wget -O /usr/local/cyberpanel-pip.zip https://rep.cyberpanel.net/ubuntu-pip-2.zip
+    wget -O /usr/local/cyberpanel-pip.zip https://rep.cyberpanel.net/ubuntu-pip-3.zip
     check_return
     unzip /usr/local/cyberpanel-pip.zip -d /usr/local
     check_return
