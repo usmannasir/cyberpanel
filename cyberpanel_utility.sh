@@ -47,13 +47,13 @@ read TMP_YN
 if [[ $TMP_YN == "1" ]] ; then
 	if [[ ! -f /etc/cyberpanel/watchdog.sh ]] ; then
 		echo -e "\nWatchDog no found..."
-		wget -O /etc/cyberpanel/watchdog.sh https://cyberpanel.sh/misc/watchdog.sh
+		wget -O /etc/cyberpanel/watchdog.sh https://$GIT_CONTENT_URL/$BRANCH_NAME/CPScripts/watchdog.sh
 		chmod 700 /etc/cyberpanel/watchdog.sh
 		ln -s /etc/cyberpanel/watchdog.sh /usr/local/bin/watchdog
-		echo -e "\nWatchDos has been installed..."
+		echo -e "\nWatchDog has been installed..."
 		set_watchdog
 	else
-		echo -e "\nWatchDos is already installed..."
+		echo -e "\nWatchDog is already installed..."
 		set_watchdog
 	fi
 elif [[ $TMP_YN == "2" ]] ; then
@@ -168,8 +168,9 @@ addons() {
 	echo -e "\n2. Install Memcached server."
 	echo -e "\n3. Install Redis extension for PHP."
 	echo -e "\n4. Install Redis server."
-	echo -e "\n5. Back to Main Menu.\n"
-	printf "%s" "Please enter number [1-5]: "
+	echo -e "\n5. Raise phpMyAdmin upload limits."
+	echo -e "\n6. Back to Main Menu.\n"
+	printf "%s" "Please enter number [1-6]: "
 	read TMP_YN
 
 	if [[ $TMP_YN == "1" ]] ; then
@@ -181,11 +182,43 @@ addons() {
 	elif [[ $TMP_YN == "4" ]] ; then
 	install_redis
 	elif [[ $TMP_YN == "5" ]] ; then
+	phpmyadmin_limits
+	elif [[ $TMP_YN == "6" ]] ; then
 	main_page
 	else
-	echo -e "  Please enter the right number [1-5]\n"
+	echo -e "  Please enter the right number [1-6]\n"
 	exit
 	fi
+}
+
+phpmyadmin_limits() {
+	echo -e "This will change following parameters for PHP 7.3:"
+	echo -e "Post Max Size from default 8M to 500M"
+	echo -e "Upload Max Filesize from default 2M to 500M"
+	echo -e "Memory Limit from default 128M to 768M"
+	echo -e "Max Execution Time from default 30 to 600"
+	echo -e "\nPlease note this will also apply to all sites use PHP 7.3"
+	printf "%s" "Please confirm to proceed: [Y/n]: "
+	read TMP_YN
+	if [[ $TMP_YN == "Y" ]] || [[ $TMP_YN == "y" ]] ; then 
+	
+		if [[ "$SERVER_OS" == "CentOS" ]] ; then 
+			php_ini_path="/usr/local/lsws/lsphp73/etc/php.ini"
+		fi 
+
+		if [[ "$SERVER_OS" == "Ubuntu" ]] ; then 
+			php_ini_path="/usr/local/lsws/lsphp73/etc/php/7.3/litespeed/php.ini"
+		fi 
+			sed -i 's|post_max_size = 8M|post_max_size = 500M|g' $php_ini_path
+			sed -i 's|upload_max_filesize = 2M|upload_max_filesize = 500M |g' $php_ini_path
+			sed -i 's|memory_limit = 128M|memory_limit = 768M|g' $php_ini_path
+			sed -i 's|max_execution_time = 30|max_execution_time = 600|g' $php_ini_path
+			systemctl restart lscpd
+			echo "Change applied..."
+  else 
+		echo -e "Please enter Y or n."
+		exit 
+	fi 
 }
 
 install_php_redis() {
