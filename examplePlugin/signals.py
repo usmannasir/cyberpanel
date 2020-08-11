@@ -3,6 +3,7 @@ from django.http import HttpResponse
 from websiteFunctions.signals import postWebsiteDeletion
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 
+
 # This plugin respond to an event after CyberPanel core finished deleting a website.
 # Original request object is passed, body can be accessed with request.body.
 
