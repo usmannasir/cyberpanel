@@ -4724,7 +4724,7 @@ msgid "Block IP Address"
 msgstr "IP Адрес"
 
 #: firewall/templates/firewall/csf.html:203
-msgid "Comming Soon."
+msgid "Coming Soon."
 msgstr ""
 
 #: firewall/templates/firewall/firewall.html:3

@@ -4233,7 +4233,7 @@ msgid "Block IP Address"
 msgstr "IP アドレスをブロックする"
 
 #: firewall/templates/firewall/csf.html:203
-msgid "Comming Soon."
+msgid "Coming Soon."
 msgstr "近日公開。"
 
 #: firewall/templates/firewall/firewall.html:3

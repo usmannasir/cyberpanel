@@ -4489,8 +4489,8 @@ msgid "Block IP Address"
 msgstr "Chặn địa chỉ IP"
 
 #: firewall/templates/firewall/csf.html:203
-msgid "Comming Soon."
-msgstr "Comming Soon."
+msgid "Coming Soon."
+msgstr "Coming Soon."
 
 #: firewall/templates/firewall/firewall.html:3
 msgid "Firewall - CyberPanel"

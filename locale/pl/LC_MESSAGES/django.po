@@ -4297,7 +4297,7 @@ msgid "Block IP Address"
 msgstr "Blokowane adresy IP"
 
 #: firewall/templates/firewall/csf.html:203
-msgid "Comming Soon."
+msgid "Coming Soon."
 msgstr "Wkrótce."
 
 #: firewall/templates/firewall/firewall.html:3

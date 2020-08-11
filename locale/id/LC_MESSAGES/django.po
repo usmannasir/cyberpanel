@@ -4336,7 +4336,7 @@ msgid "Block IP Address"
 msgstr "Blokir Alamat IP"
 
 #: firewall/templates/firewall/csf.html:203
-msgid "Comming Soon."
+msgid "Coming Soon."
 msgstr "Akan Datang."
 
 #: firewall/templates/firewall/firewall.html:3

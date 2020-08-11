@@ -4459,7 +4459,7 @@ msgid "Block IP Address"
 msgstr "Endereço de IP"
 
 #: firewall/templates/firewall/csf.html:203
-msgid "Comming Soon."
+msgid "Coming Soon."
 msgstr ""
 
 #: firewall/templates/firewall/firewall.html:3
