@@ -75,10 +75,11 @@ class pluginInstaller:
         writeToFile = open("/usr/local/CyberCP/baseTemplate/templates/baseTemplate/index.html", 'w')
 
         for items in data:
-            if items.find("{% url 'installed' %}") > -1:
+            if items.find("{# pluginsList #}") > -1:
                 writeToFile.writelines(items)
+                writeToFile.writelines("                                ")
                 writeToFile.writelines(
-                    '<li><a href="{% url \'' + pluginName + '\' %}" title="{% trans \'' + pluginName + '\' %}"><span>{% trans "' + pluginName + '" %}</span></a></li>')
+                    '<li><a href="{% url \'' + pluginName + '\' %}" title="{% trans \'' + pluginName + '\' %}"><span>{% trans "' + pluginName + '" %}</span></a></li>\n')
             else:
                 writeToFile.writelines(items)
 
