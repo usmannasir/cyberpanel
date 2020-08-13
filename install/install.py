@@ -695,11 +695,11 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                 if items.find('blowfish_secret') > -1:
                     writeToFile.writelines(
                         "$cfg['blowfish_secret'] = '" + rString + "'; /* YOU MUST FILL IN THIS FOR COOKIE AUTH! */\n")
-                if items.find('/* Authentication type */') > -1:
+                elif items.find('/* Authentication type */') > -1:
                     writeToFile.writelines(items)
                     writeToFile.write(phpMyAdminContent)
                     writeE = 0
-                if items.find("$cfg['Servers'][$i]['AllowNoPassword']") > -1:
+                elif items.find("$cfg['Servers'][$i]['AllowNoPassword']") > -1:
                     writeE = 1
                 else:
                     if writeE:
