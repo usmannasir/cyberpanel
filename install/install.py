@@ -688,6 +688,7 @@ $cfg['Servers'][$i]['AllowNoPassword'] = false;
 $cfg['Servers'][$i]['auth_type'] = 'signon';
 $cfg['Servers'][$i]['SignonSession'] = 'SignonSession';
 $cfg['Servers'][$i]['SignonURL'] = 'phpmyadminsignin.php';
+$cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 """
 
             for items in data:

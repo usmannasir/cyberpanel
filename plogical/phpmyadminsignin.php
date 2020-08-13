@@ -19,6 +19,13 @@ if(isset($_GET['token'])){
     header('Location: ' . $url);
 
 }
+else if(isset($_GET['logout'])){
+   $params = session_get_cookie_params();
+   setcookie(session_name(), '', time() - 86400, $params["path"], $params["domain"], $params["secure"], $params["httponly"] );
+   session_destroy();
+   header('Location: /dataBases/phpMyAdmin');
+   return;
+}
 else if(isset($_GET['password'])){
 
     session_name(PMA_SIGNON_SESSIONNAME);
