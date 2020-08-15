@@ -11,6 +11,7 @@ from plogical import CyberCPLogFileWriter as logging
 from plogical.acl import ACLManager
 from plogical.virtualHostUtilities import virtualHostUtilities
 from CyberCP.secMiddleware import secMiddleware
+from CyberCP.SecurityLevel import SecurityLevel
 
 # Create your views here.
 
@@ -58,13 +59,16 @@ def createUser(request):
 
         if currentACL['admin'] == 1:
             aclNames = ACLManager.unFileteredACLs()
-            return render(request, 'userManagment/createUser.html', {'aclNames': aclNames})
+            return render(request, 'userManagment/createUser.html',
+                          {'aclNames': aclNames, 'securityLevels': SecurityLevel.list()})
         elif currentACL['changeUserACL'] == 1:
             aclNames = ACLManager.unFileteredACLs()
-            return render(request, 'userManagment/createUser.html', {'aclNames': aclNames})
+            return render(request, 'userManagment/createUser.html',
+                          {'aclNames': aclNames, 'securityLevels': SecurityLevel.list()})
         elif currentACL['createNewUser'] == 1:
             aclNames = ['user']
-            return render(request, 'userManagment/createUser.html', {'aclNames': aclNames})
+            return render(request, 'userManagment/createUser.html',
+                          {'aclNames': aclNames, 'securityLevels': SecurityLevel.list()})
         else:
             return ACLManager.loadError()
 
@@ -244,11 +248,13 @@ def submitUserCreation(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
+
 def modifyUsers(request):
     try:
         userID = request.session['userID']
-        adminNames = ACLManager.loadAllUsers(userID)
-        return render(request, 'userManagment/modifyUser.html', {"acctNames": adminNames})
+        userNames = ACLManager.loadAllUsers(userID)
+        return render(request, 'userManagment/modifyUser.html',
+                      {"acctNames": userNames, 'securityLevels': SecurityLevel.list()})
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -281,12 +287,6 @@ def fetchUserDetails(request):
                 email = user.email
 
                 websitesLimit = user.initWebsitesLimit
-                securityLevel = ''
-
-                if user.securityLevel == secMiddleware.LOW:
-                    securityLevel = 'Low'
-                else:
-                    securityLevel = 'High'
 
                 import pyotp
 
@@ -303,7 +303,7 @@ def fetchUserDetails(request):
                     "email": email,
                     "acl": user.acl.name,
                     "websitesLimit": websitesLimit,
-                    "securityLevel": securityLevel,
+                    "securityLevel": SecurityLevel(user.securityLevel).name,
                     "otpauth": otpauth,
                     'twofa': user.twoFA
                 }

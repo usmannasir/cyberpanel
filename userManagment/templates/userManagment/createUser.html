@@ -106,9 +106,9 @@
                         <div ng-hide="acctDetailsFetched" class="form-group">
                             <label class="col-sm-3 control-label">{% trans "Security Level" %}</label>
                             <div class="col-sm-6">
-                                <select ng-change="fetchUserDetails()" ng-model="securityLevel" class="form-control">
-                                    <option>HIGH</option>
-                                    <option>LOW</option>
+                                <select ng-init="securityLevels={{ securityLevels }};securityLevel='HIGH'"
+                                        ng-model="securityLevel" ng-options="s for s in securityLevels track by s"
+                                        class="form-control">
                                 </select>
                             </div>
                         </div>
