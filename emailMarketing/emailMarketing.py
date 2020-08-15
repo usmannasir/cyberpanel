@@ -341,8 +341,8 @@ class emailMarketing(multi.Thread):
                     if (items.verificationStatus == 'Verified' or self.extraArgs[
                         'verificationCheck']) and not items.verificationStatus == 'REMOVED':
                         try:
-
-                            removalLink = "https:\/\/" + ipAddress + ":8090\/emailMarketing\/remove\/" + self.extraArgs[
+                            port = ProcessUtilities.fetchCurrentPort()
+                            removalLink = "https:\/\/" + ipAddress + ":%s\/emailMarketing\/remove\/" % (port) + self.extraArgs[
                                 'listName'] + "\/" + items.email
                             messageText = emailMessage.emailMessage.encode('utf-8', 'replace')
                             message['To'] = items.email

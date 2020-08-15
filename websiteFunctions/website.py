@@ -2054,7 +2054,9 @@ class WebsiteManager:
                 ipData = f.read()
                 ipAddress = ipData.split('\n', 1)[0]
 
-                webhookURL = 'https://' + ipAddress + ':8090/websites/' + self.domain + '/gitNotify'
+                port = ProcessUtilities.fetchCurrentPort()
+
+                webhookURL = 'https://' + ipAddress + ':%s/websites/' % (port) + self.domain + '/gitNotify'
 
                 return render(request, 'websiteFunctions/setupGit.html',
                               {'domainName': self.domain, 'installed': 1, 'webhookURL': webhookURL})
@@ -3131,7 +3133,9 @@ StrictHostKeyChecking no
 
                 ##
 
-                webHookURL = 'https://%s:8090/websites/%s/webhook' % (ACLManager.fetchIP(), self.domain)
+                port = ProcessUtilities.fetchCurrentPort()
+
+                webHookURL = 'https://%s:%s/websites/%s/webhook' % (ACLManager.fetchIP(), port, self.domain)
 
                 data_ret = {'status': 1, 'repo': 1, 'finalBranches': branches, 'deploymentKey': deploymentKey,
                             'remote': remote, 'remoteResult': remoteResult, 'totalCommits': totalCommits, 'home': self.home,

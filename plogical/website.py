@@ -1763,7 +1763,9 @@ class WebsiteManager:
                 ipData = f.read()
                 ipAddress = ipData.split('\n', 1)[0]
 
-                webhookURL = 'https://' + ipAddress + ':8090/websites/' + self.domain + '/gitNotify'
+                port = ProcessUtilities.fetchCurrentPort()
+
+                webhookURL = 'https://' + ipAddress + ':%s/websites/' % (port) + self.domain + '/gitNotify'
 
                 return render(request, 'websiteFunctions/setupGit.html',
                               {'domainName': self.domain, 'installed': 1, 'webhookURL': webhookURL})

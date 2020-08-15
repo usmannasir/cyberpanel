@@ -57,8 +57,10 @@ class backupSchedule:
             file = open(pathToFile, "w+")
             file.close()
 
+            port = ProcessUtilities.fetchCurrentPort()
+
             finalData = json.dumps({'randomFile': pathToFile, 'websiteToBeBacked': virtualHost})
-            r = requests.post("https://localhost:8090/backup/localInitiate", data=finalData, verify=False)
+            r = requests.post("https://localhost:%s/backup/localInitiate" % (port), data=finalData, verify=False)
 
             if os.path.exists(ProcessUtilities.debugPath):
                 logging.CyberCPLogFileWriter.writeToFile(r.text)
