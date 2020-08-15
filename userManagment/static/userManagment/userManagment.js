@@ -188,7 +188,8 @@ app.controller('modifyUser', function ($scope, $http) {
                 $scope.firstName = userDetails.firstName;
                 $scope.lastName = userDetails.lastName;
                 $scope.email = userDetails.email;
-                $scope.secLevel = userDetails.securityLevel;
+                $scope.securityLevel = userDetails.securityLevel;
+                $scope.currentSecurityLevel = userDetails.securityLevel;
                 $scope.twofa = Boolean(userDetails.twofa);
 
                 qrCode.set({

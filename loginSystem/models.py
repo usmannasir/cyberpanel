@@ -1,10 +1,8 @@
-# -*- coding: utf-8 -*-
-
-
 from django.db import models
+from CyberCP.SecurityLevel import SecurityLevel
+
 
 # Create your models here.
-
 class ACL(models.Model):
    name = models.CharField(unique=True,max_length = 50)
    adminStatus = models.IntegerField(default=0)
@@ -85,7 +83,10 @@ class Administrator(models.Model):
    owner = models.IntegerField(default=1)
    token = models.CharField(max_length=500, default='None')
    api = models.IntegerField(default=0)
-   securityLevel = models.IntegerField(default=0)
+   securityLevel = models.IntegerField(
+      default=0,
+      choices=[(tag, tag.value) for tag in SecurityLevel]
+   )
    state = models.CharField(max_length=10, default='ACTIVE')
 
    initWebsitesLimit = models.IntegerField(default=0)
