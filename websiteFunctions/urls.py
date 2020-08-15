@@ -52,7 +52,7 @@ urlpatterns = [
     url(r'^fetchDomains$', views.fetchDomains, name='submitDomainCreation'),
     url(r'^changePHP$', views.changePHP, name='changePHP'),
     url(r'^submitDomainDeletion$', views.submitDomainDeletion, name='submitDomainDeletion'),
-
+    url(r'^searchChilds$', views.searchChilds, name='searchChilds'),
     # crons
 
     url(r'^listCron$',views.listCron,name="listCron"),

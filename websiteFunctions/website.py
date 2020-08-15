@@ -358,6 +358,27 @@ class WebsiteManager:
             json_data = json.dumps(dic)
             return HttpResponse(json_data)
 
+    def searchChilds(self, userID=None, data=None):
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+
+            websites = ACLManager.findWebsiteObjects(currentACL, userID)
+            childDomains = []
+
+            for web in websites:
+                for child in web.childdomains_set.filter(domain__istartswith=data['patternAdded']):
+                    childDomains.append(child)
+
+            json_data = self.findChildsListJson(childDomains)
+
+            final_dic = {'status': 1, 'listWebSiteStatus': 1, 'error_message': "None", "data": json_data}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+        except BaseException as msg:
+            dic = {'status': 1, 'listWebSiteStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(dic)
+            return HttpResponse(json_data)
+
     def getFurtherAccounts(self, userID=None, data=None):
         try:
             currentACL = ACLManager.loadedACL(userID)
@@ -372,7 +393,6 @@ class WebsiteManager:
             dic = {'status': 1, 'listWebSiteStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(dic)
             return HttpResponse(json_data)
-
 
     def fetchWebsitesList(self, userID=None, data=None):
         try:

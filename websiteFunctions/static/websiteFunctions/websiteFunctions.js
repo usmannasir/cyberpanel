@@ -499,7 +499,7 @@ app.controller('listChildDomainsMain', function ($scope, $http, $timeout) {
             patternAdded: $scope.patternAdded
         };
 
-        dataurl = "/websites/searchWebsites";
+        dataurl = "/websites/searchChilds";
 
         $http.post(dataurl, data, config).then(ListInitialData, cantLoadInitialData);
 

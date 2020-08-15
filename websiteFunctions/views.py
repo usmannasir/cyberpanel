@@ -125,6 +125,14 @@ def searchWebsites(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+def searchChilds(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.searchChilds(userID, json.loads(request.body))
+    except KeyError:
+        return redirect(loadLoginPage)
+
 def getFurtherAccounts(request):
     try:
         userID = request.session['userID']
