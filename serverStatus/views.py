@@ -1097,3 +1097,82 @@ def lockStatus(request):
         data_ret = {'status': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
+
+
+def CyberPanelPort(request):
+    try:
+        userID = request.session['userID']
+
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
+
+        port = ProcessUtilities.fetchCurrentPort()
+
+        return render(request, 'serverStatus/changeCyberPanelPort.html', {'port': port})
+
+    except KeyError as msg:
+        logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[CyberPanelPort]")
+        return redirect(loadLoginPage)
+
+
+def submitPortChange(request):
+    try:
+
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
+
+        data = json.loads(request.body)
+        port = data['port']
+
+        ## First Add Port to available firewall
+        from plogical.firewallUtilities import FirewallUtilities
+        from firewall.firewallManager import FirewallManager
+        from firewall.models import FirewallRules
+
+        csfPath = '/etc/csf'
+
+        if os.path.exists(csfPath):
+            fm = FirewallManager(request)
+            dataIn = {'protocol': 'TCP_IN', 'ports': port}
+            fm.modifyPorts(dataIn)
+            dataIn = {'protocol': 'TCP_OUT', 'ports': port}
+            fm.modifyPorts(dataIn)
+        else:
+            try:
+                updateFW = FirewallRules.objects.get(name="CPCustomPort")
+                FirewallUtilities.deleteRule("tcp", updateFW.port, "0.0.0.0/0")
+                updateFW.port = port
+                updateFW.save()
+                FirewallUtilities.addRule('tcp', port, "0.0.0.0/0")
+            except:
+                try:
+                    newFireWallRule = FirewallRules(name="SSHCustom", port=port, proto="tcp")
+                    newFireWallRule.save()
+                    FirewallUtilities.addRule('tcp', port, "0.0.0.0/0")
+                    command = 'firewall-cmd --permanent --remove-service=ssh'
+                    ProcessUtilities.executioner(command)
+                except BaseException as msg:
+                    logging.CyberCPLogFileWriter.writeToFile(str(msg))
+
+        command = "echo '*:%s' > /usr/local/lscp/conf/bind.conf" % (port)
+        ProcessUtilities.executioner(command)
+
+        ProcessUtilities.executioner('systemctl restart lscpd')
+
+        data_ret = {'status': 1,}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+    except BaseException as msg:
+        data_ret = {'status': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)

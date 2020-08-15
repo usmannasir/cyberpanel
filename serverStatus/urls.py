@@ -23,5 +23,7 @@ urlpatterns = [
     url(r'^fetchPackageDetails$', views.fetchPackageDetails, name='fetchPackageDetails'),
     url(r'^updatePackage$', views.updatePackage, name='updatePackage'),
     url(r'^lockStatus$', views.lockStatus, name='lockStatus'),
+    url(r'^CyberPanelPort$', views.CyberPanelPort, name='CyberPanelPort'),
+    url(r'^submitPortChange$', views.submitPortChange, name='submitPortChange'),
 
 ]

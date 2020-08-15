@@ -19,6 +19,7 @@ class ProcessUtilities(multi.Thread):
     ubuntu20 = 3
     server_address = '/usr/local/lscpd/admin/comm.sock'
     token = "unset"
+    portPath = '/usr/local/lscp/conf/bind.conf'
 
     def __init__(self, function, extraArgs):
         multi.Thread.__init__(self)
@@ -31,6 +32,16 @@ class ProcessUtilities(multi.Thread):
                 self.customPoen()
         except BaseException as msg:
             logging.writeToFile( str(msg) + ' [ApplicationInstaller.run]')
+
+    @staticmethod
+    def fetchCurrentPort():
+        command = 'cat %s' % (ProcessUtilities.portPath)
+        port = ProcessUtilities.outputExecutioner(command)
+
+        if port.find('*') > -1:
+            return port.split(':')[1].rstrip('\n')
+        else:
+            return '8090'
 
     @staticmethod
     def getLitespeedProcessNumber():

@@ -824,6 +824,7 @@ app.controller('listOSPackages', function ($scope, $http, $timeout) {
                 });
             }
         }
+
         function cantLoadInitialData(response) {
             $scope.cyberpanelLoading = true;
             new PNotify({
@@ -867,6 +868,7 @@ app.controller('listOSPackages', function ($scope, $http, $timeout) {
                 });
             }
         }
+
         function cantLoadInitialData(response) {
             $scope.cyberpanelLoading = true;
             new PNotify({
@@ -909,6 +911,7 @@ app.controller('listOSPackages', function ($scope, $http, $timeout) {
                 });
             }
         }
+
         function cantLoadInitialData(response) {
             $scope.cyberpanelLoading = true;
             new PNotify({
@@ -997,12 +1000,65 @@ app.controller('listOSPackages', function ($scope, $http, $timeout) {
                 });
             }
         }
+
         function cantLoadInitialData(response) {
             $scope.cyberpanelLoading = true;
             new PNotify({
                 title: 'Operation Failed!',
                 text: 'Could not connect to server, please refresh this page',
                 type: 'error'
+            });
+        }
+
+
+    };
+
+});
+
+app.controller('changePort', function ($scope, $http, $timeout) {
+
+    $scope.cyberpanelLoading = true;
+
+    $scope.changeCPPort = function () {
+        $scope.cyberpanelLoading = false;
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        var data = {
+            port: $scope.port
+        };
+
+        dataurl = "/serverstatus/submitPortChange";
+
+        $http.post(dataurl, data, config).then(ListInitialData, cantLoadInitialData);
+
+        function ListInitialData(response) {
+            $scope.cyberpanelLoading = true;
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success!',
+                    text: 'Port changed, open CyberPanel on new port.',
+                    type: 'success'
+                });
+            } else {
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+        }
+
+        function cantLoadInitialData(response) {
+            $scope.cyberpanelLoading = true;
+            new PNotify({
+                title: 'Success!',
+                text: 'Port changed, open CyberPanel on new port.',
+                type: 'success'
             });
         }
 
