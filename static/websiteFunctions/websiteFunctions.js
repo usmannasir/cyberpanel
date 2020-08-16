@@ -485,7 +485,7 @@ app.controller('listChildDomainsMain', function ($scope, $http, $timeout) {
 
     $scope.cyberPanelLoading = true;
 
-    $scope.searchWebsites = function () {
+    $scope.searchChilds = function () {
 
         $scope.cyberPanelLoading = false;
 
