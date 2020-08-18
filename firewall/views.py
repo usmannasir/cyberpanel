@@ -568,3 +568,23 @@ def submitinstallImunify(request):
 
     except KeyError:
         return redirect(loadLoginPage)
+
+## ImunifyAV
+
+def imunifyAV(request):
+    try:
+
+        fm = FirewallManager(request)
+        return fm.imunifyAV()
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def submitinstallImunifyAV(request):
+    try:
+
+        fm = FirewallManager(request)
+        return fm.submitinstallImunifyAV()
+
+    except KeyError:
+        return redirect(loadLoginPage)

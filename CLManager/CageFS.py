@@ -180,6 +180,53 @@ pattern_to_watch = ^/home/.+?/(public_html|public_ftp|private_html)(/.*)?$
         except BaseException as msg:
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath, str(msg) + ' [404].', 1)
 
+    @staticmethod
+    def submitinstallImunifyAV():
+        try:
+
+
+            mailUtilities.checkHome()
+
+            statusFile = open(ServerStatusUtil.lswsInstallStatusPath, 'w')
+
+            logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
+                                                      "Starting ImunifyAV Installation..\n", 1)
+
+            ##
+
+            command = 'mkdir -p /etc/sysconfig/imunify360'
+            ServerStatusUtil.executioner(command, statusFile)
+
+
+            integrationFile = '/etc/sysconfig/imunify360/integration.conf'
+
+            content = """[paths]
+ui_path = /usr/local/CyberCP/public/imunifyav
+ui_path_owner = lscpd:lscpd
+"""
+
+            writeToFile = open(integrationFile, 'w')
+            writeToFile.write(content)
+            writeToFile.close()
+
+            ##
+
+            if not os.path.exists('imav-deploy.sh'):
+                command = 'wget https://repo.imunify360.cloudlinux.com/defence360/imav-deploy.sh'
+                ServerStatusUtil.executioner(command, statusFile)
+
+            command = 'bash imav-deploy.sh'
+            ServerStatusUtil.executioner(command, statusFile)
+
+            logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
+                                                      "ImunifyAV reinstalled..\n", 1)
+
+            logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
+                                                      "Packages successfully installed.[200]\n", 1)
+
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath, str(msg) + ' [404].', 1)
+
 def main():
 
     parser = argparse.ArgumentParser(description='CyberPanel CageFS Manager')
@@ -193,6 +240,8 @@ def main():
         CageFS.submitCageFSInstall()
     elif args["function"] == "submitinstallImunify":
         CageFS.submitinstallImunify(args["key"])
+    elif args["function"] == "submitinstallImunifyAV":
+        CageFS.submitinstallImunifyAV()
 
 
 

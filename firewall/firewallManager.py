@@ -25,6 +25,7 @@ class FirewallManager:
 
     imunifyPath = '/usr/bin/imunify360-agent'
     CLPath = '/etc/sysconfig/cloudlinux'
+    imunifyAVPath = '/etc/sysconfig/imunify360/integration.conf'
 
     def __init__(self, request = None):
         self.request = request
@@ -1561,8 +1562,10 @@ class FirewallManager:
             ipData = f.read()
             ipAddress = ipData.split('\n', 1)[0]
 
+            fullAddress = '%s:%s' % (ipAddress, ProcessUtilities.fetchCurrentPort())
+
             data = {}
-            data['ipAddress'] = ipAddress
+            data['ipAddress'] = fullAddress
 
             if os.path.exists(FirewallManager.CLPath):
                 data['CL'] = 1
@@ -1602,6 +1605,66 @@ class FirewallManager:
 
             execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/CLManager/CageFS.py"
             execPath = execPath + " --function submitinstallImunify --key %s" % (data['key'])
+            ProcessUtilities.popenExecutioner(execPath)
+
+            data_ret = {'status': 1, 'error_message': 'None'}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath, str(msg) + ' [404].', 1)
+
+    def imunifyAV(self):
+        try:
+            userID = self.request.session['userID']
+            currentACL = ACLManager.loadedACL(userID)
+
+            if currentACL['admin'] == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
+            ipFile = "/etc/cyberpanel/machineIP"
+            f = open(ipFile)
+            ipData = f.read()
+            ipAddress = ipData.split('\n', 1)[0]
+
+            fullAddress = '%s:%s' % (ipAddress, ProcessUtilities.fetchCurrentPort())
+
+            data = {}
+            data['ipAddress'] = fullAddress
+
+
+
+            if os.path.exists(FirewallManager.imunifyAVPath):
+                data['imunify'] = 1
+            else:
+                data['imunify'] = 0
+
+            if data['imunify'] == 0:
+                return render(self.request, 'firewall/notAvailableAV.html', data)
+            else:
+                return render(self.request, 'firewall/imunifyAV.html', data)
+
+
+        except BaseException as msg:
+            return HttpResponse(str(msg))
+
+    def submitinstallImunifyAV(self):
+        try:
+            userID = self.request.session['userID']
+            currentACL = ACLManager.loadedACL(userID)
+
+            if currentACL['admin'] == 1:
+                pass
+            else:
+                logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
+                                                          'Not authorized to install container packages. [404].',
+                                                          1)
+                return 0
+
+            execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/CLManager/CageFS.py"
+            execPath = execPath + " --function submitinstallImunifyAV"
             ProcessUtilities.popenExecutioner(execPath)
 
             data_ret = {'status': 1, 'error_message': 'None'}

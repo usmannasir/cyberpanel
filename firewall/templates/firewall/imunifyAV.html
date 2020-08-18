@@ -1,0 +1,41 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "ImunifyAV - CyberPanel" %}{% endblock %}
+{% block content %}
+
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
+
+
+    <div class="container">
+        <div id="page-title">
+            <h2>{% trans "ImunifyAV" %} - <a target="_blank"
+                                              href="https://go.cyberpanel.net/imunify"
+                                              style="height: 23px;line-height: 21px;"
+                                              class="btn btn-border btn-alt border-red btn-link font-red"
+                                              title=""><span>{% trans "Imunify Docs" %}</span></a></h2>
+            <p>{% trans "Access ImunifyAV" %}</p>
+        </div>
+
+        <div class="panel">
+            <div class="panel-body">
+                <h3 class="title-hero">
+                    {% trans "ImunifyAV" %}
+                </h3>
+                <div class="example-box-wrapper">
+
+                    <p>{% trans "ImunifyAV is now integrated via their new API. You can manage Imunify by clicking below. You can use your server root credentials to access Imunify." %}</p>
+                    <br>
+                    <a target="_blank" href="http://{{ ipAddress }}/imunifyav">
+                        <button class="btn btn-primary">Access Now
+                        </button>
+                    </a>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+{% endblock %}
+

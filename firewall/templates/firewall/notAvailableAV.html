@@ -1,0 +1,69 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Not available - CyberPanel" %}{% endblock %}
+{% block content %}
+
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
+
+
+    <div class="container">
+        <div id="page-title">
+            <h2>{% trans "Not available" %} - <a target="_blank"
+                                                 href="https://go.cyberpanel.net/imunify"
+                                                 style="height: 23px;line-height: 21px;"
+                                                 class="btn btn-border btn-alt border-red btn-link font-red"
+                                                 title=""><span>{% trans "ImunifyAV Docs" %}</span></a></h2>
+            <p>{% trans "ImunifyAV is not installed" %}</p>
+        </div>
+
+        <div ng-controller="installImunifyAV" class="panel">
+            <div class="panel-body">
+                <h3 class="title-hero">
+                    {% trans "Activate Now" %} <img ng-hide="installDockerStatus"
+                                                    src="{% static 'images/loading.gif' %}">
+                </h3>
+                <div class="example-box-wrapper">
+
+                    <p>{% trans "Imunify is not installed, click to install now." %}</p>
+                    <!------ LSWS Switch box ----------------->
+
+                    <div style="margin-top: 2%" ng-hide="installBoxGen" class="col-md-12">
+
+                        <form action="/" id="" class="form-horizontal bordered-row">
+
+                            <div class="form-group">
+                                <div style="margin-top: 2%;" class="col-sm-12">
+                                            <textarea ng-model="requestData" rows="15"
+                                                      class="form-control">{{ requestData }}</textarea>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+
+                    <!----- LSWS Switch box ----------------->
+                    <br>
+
+                    <form action="/" id="" class="form-horizontal bordered-row">
+
+                        <div ng-hide="dockerInstallBTN" ng-hide="installationDetailsForm" class="form-group">
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-6">
+                                <button type="button" class="btn btn-primary"
+                                        ng-click="submitinstallImunify()">
+                                    Install Now
+                                </button>
+                            </div>
+                        </div>
+
+                    </form>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+{% endblock %}
+

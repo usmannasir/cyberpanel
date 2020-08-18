@@ -56,6 +56,11 @@ urlpatterns = [
     url(r'^imunify$', views.imunify, name='imunify'),
     url(r'^submitinstallImunify$', views.submitinstallImunify, name='submitinstallImunify'),
 
+    ## ImunifyAV
+
+    url(r'^imunifyAV$', views.imunifyAV, name='imunifyAV'),
+    url(r'^submitinstallImunifyAV$', views.submitinstallImunifyAV, name='submitinstallImunifyAV'),
+
 
 
 
