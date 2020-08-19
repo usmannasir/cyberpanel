@@ -332,3 +332,32 @@ def manageApplications(request):
 
     except KeyError:
         return redirect(loadLoginPage)
+
+def removeInstall(request):
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
+        try:
+            data = json.loads(request.body)
+
+            status = data['status']
+            service = data['service']
+
+            command = '/usr/local/CyberCP/manageServices/serviceManager.py --function InstallElasticSearch'
+
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    except KeyError as msg:
+        logging.CyberCPLogFileWriter.writeToFile(str(msg))
+        data_ret = {'status': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)

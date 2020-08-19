@@ -11,4 +11,5 @@ urlpatterns = [
     url(r'^saveStatus$', views.saveStatus, name='saveStatus'),
 
     url(r'^manageApplications$', views.manageApplications, name='manageApplications'),
+    url(r'^removeInstall$', views.removeInstall, name='removeInstall'),
 ]

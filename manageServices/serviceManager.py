@@ -1,8 +1,9 @@
-import subprocess, shlex
 from random import randint
 from plogical.processUtilities import ProcessUtilities
 from dns.models import Supermasters
 from manageServices.models import SlaveServers
+import argparse
+from serverStatus.serverStatusUtil import ServerStatusUtil
 
 class ServiceManager:
 
@@ -124,4 +125,28 @@ superslave=yes
                 items.delete()
 
             Supermasters(ip=self.extraArgs['masterServerIP'], nameserver=self.extraArgs['slaveServerNS'], account='').save()
+
+    @staticmethod
+    def installElasticSearch():
+        logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
+                                                  "Packages successfully installed.[200]\n", 1)
+        return 0
+
+def main():
+
+    parser = argparse.ArgumentParser(description='CyberPanel Application Manager')
+    parser.add_argument('--function', help='Function')
+
+
+    args = vars(parser.parse_args())
+
+    if args["function"] == "InstallElasticSearch":
+        ServiceManager.InstallElasticSearch()
+
+
+
+
+
+if __name__ == "__main__":
+    main()
 
