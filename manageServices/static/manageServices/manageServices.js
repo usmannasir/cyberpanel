@@ -483,6 +483,12 @@ app.controller('manageApplications', function ($scope, $http, $timeout, $window)
 
     };
 
+    $scope.removeInstall = function (appName, status) {
+        $scope.status = status;
+        $scope.appName = appName;
+
+    };
+
 });
 
 /* Java script code */

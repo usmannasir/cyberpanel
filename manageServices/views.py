@@ -309,8 +309,23 @@ def manageApplications(request):
             pass
         else:
             return ACLManager.loadError()
+
+        services = []
+
+        ## ElasticSearch
+
+        esPath = '/home/cyberpanel/elasticsearch'
+
+        if os.path.exists(esPath):
+            installed = 'Installed'
+        else:
+            installed = 'Not-Installed'
+
+        elasticSearch = {'image': '/static/manageServices/images/elastic-search.png', 'name': 'Elastic Search', 'installed': installed}
+        services.append(elasticSearch)
+
         try:
-            return render(request, 'manageServices/applications.html', {})
+            return render(request, 'manageServices/applications.html', {'services': services})
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return HttpResponse("See CyberCP main log file.")

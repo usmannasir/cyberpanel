@@ -26,106 +26,69 @@
 
                         <div class="col-sm-12">
 
-                            <table class="table">
+                            <table class="table" style="margin: 0px; padding: 0px">
                                 <thead>
                                 <tr>
-                                    <th>{% trans "Username" %}</th>
-                                    <th>{% trans "Websites Limit" %}</th>
-                                    <th>{% trans "Disk Usage" %}</th>
-                                    <th>{% trans "ACL" %}</th>
-                                    <th>{% trans "Owner" %}</th>
-                                    <th>{% trans "State" %}</th>
+                                    <th>{% trans "Application" %}</th>
+                                    <th>{% trans "Status" %}</th>
                                     <th>{% trans "Actions" %}</th>
                                 </tr>
                                 </thead>
-                                <tbody>
-                                <tr ng-repeat="record in records track by $index">
-                                    <td ng-bind="record.name"></td>
-                                    <td ng-bind="record.websites"></td>
-                                    <td ng-bind="record.diskUsage"></td>
-                                    <td ng-bind="record.acl"></td>
-                                    <td ng-bind="record.owner"></td>
-                                    <td ng-bind="record.state"></td>
-                                    <td>
-                                        <a ng-show="record.state=='ACTIVE'"
-                                           class="btn btn-border btn-alt border-red btn-link font-red" href="#"
-                                           ng-click="controlUserState(record.name, 'SUSPEND')" title=""><span>{% trans 'Suspend' %}</span></a>
-                                        <a ng-show="record.state=='SUSPENDED'"
-                                           class="btn btn-border btn-alt border-green btn-link font-green" href="#"
-                                           ng-click="controlUserState(record.name, 'ACTIVATE')" title=""><span>{% trans 'Activate' %}</span></a>
-                                        <a data-toggle="modal" data-target="#settings"
-                                           ng-click="editInitial(record.name)"
-                                           class="btn btn-border btn-alt border-purple btn-link font-purple" href="#"
-                                           title=""><span>{% trans 'Edit' %}</span></a>
-                                        <a ng-click="deleteUserFinal(record.name)"
-                                           class="btn btn-border btn-alt border-red btn-link font-red" href="#"
-                                           title=""><span>{% trans 'Delete' %}</span></a>
+                                <tbody style="text-align: center">
+                                {% for service in services %}
+                                    <tr>
+                                        <td><img src="{{ service.image }}">
+                                            <h3>{{ service.name }}</h3></td>
+                                        <td>{{ service.installed }}</td>
+                                        <td>
+                                            {% if service.installed == 'Installed' %}
+                                                <a data-toggle="modal" data-target="#settings" class="btn btn-border btn-alt border-red btn-link font-red" href="#"
+                                                   ng-click="removeInstall('{{ service.name }}', 'Removing')"
+                                                   title=""><span>{% trans 'Remove' %}</span></a>
+                                            {% else %}
+                                                <a data-toggle="modal" data-target="#settings" class="btn btn-border btn-alt border-green btn-link font-green"
+                                                   href="#"
+                                                   ng-click="removeInstall('{{ service.name }}', 'Installing')"
+                                                   title=""><span>{% trans 'Install' %}</span></a>
+                                            {% endif %}
 
-                                        <!--- Modal --->
-                                        <div id="settings" class="modal fade" role="dialog">
-                                            <div class="modal-dialog">
+                                            <!--- Modal --->
+                                            <div data-toggle="modal" data-target="#settings" id="settings" class="modal fade" role="dialog">
+                                                <div class="modal-dialog">
 
-                                                <!-- Modal content-->
-                                                <div class="modal-content">
-                                                    <div class="modal-header">
-                                                        <button type="button" class="close" data-dismiss="modal">&times;
-                                                        </button>
-                                                        <h4 class="modal-title">Edit User
-                                                            <img ng-hide="cyberpanelLoading"
-                                                                 src="{% static 'images/loading.gif' %}">
-                                                        </h4>
-                                                    </div>
-                                                    <div class="modal-body">
+                                                    <!-- Modal content-->
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <button type="button" class="close" data-dismiss="modal">
+                                                                &times;
+                                                            </button>
+                                                            <h4 class="modal-title">{$ status $} {$ appName $} ...
+                                                                <img ng-hide="cyberpanelLoading"
+                                                                     src="{% static 'images/loading.gif' %}">
+                                                            </h4>
+                                                        </div>
+                                                        <div class="modal-body">
 
-                                                        <form name="containerSettingsForm" action="/"
-                                                              class="form-horizontal">
-                                                            <div ng-hide="installationDetailsForm" class="form-group">
-                                                                <label class="col-sm-3 control-label">{% trans "Name" %}</label>
-                                                                <div class="col-sm-6">
-                                                                    <input name="name" type="text" class="form-control"
-                                                                           ng-model="name" readonly>
+                                                            <form name="containerSettingsForm" action="/"
+                                                                  class="form-horizontal">
+
+                                                                <div class="form-group">
+                                                                    <div class="col-sm-12">
+                                                                        <textarea ng-model="requestData" rows="15" class="form-control"></textarea>
+                                                                    </div>
                                                                 </div>
-                                                            </div>
-
-                                                            <hr>
-                                                            <div class="form-group">
-                                                                <label class="col-sm-3 control-label">{% trans "New Owner" %} </label>
-                                                                <div class="col-sm-6">
-                                                                    <select ng-change="saveResellerChanges()"
-                                                                            ng-model="$parent.newOwner"
-                                                                            class="form-control">
-                                                                        {% for items in resellerPrivUsers %}
-                                                                            <option>{{ items }}</option>
-                                                                        {% endfor %}
-                                                                    </select>
-                                                                </div>
-                                                            </div>
-
-                                                            <hr>
-
-                                                            <div class="form-group">
-                                                                <label class="col-sm-3 control-label">{% trans "Select ACL" %} </label>
-                                                                <div class="col-sm-6">
-                                                                    <select ng-change="changeACLFunc()"
-                                                                            ng-model="$parent.selectedACL"
-                                                                            class="form-control">
-                                                                        {% for items in aclNames %}
-                                                                            <option>{{ items }}</option>
-                                                                        {% endfor %}
-                                                                    </select>
-                                                                </div>
-                                                            </div>
 
 
-                                                        </form>
+                                                            </form>
 
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                        <!--- Modal End--->
-                                    </td>
-                                </tr>
+                                            <!--- Modal End--->
+                                        </td>
+                                    </tr>
+                                {% endfor %}
                                 </tbody>
                             </table>
                         </div>
