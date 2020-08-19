@@ -2347,6 +2347,12 @@ vmail
             command = "yum reinstall imunify360-firewall-generic -y"
             Upgrade.executioner(command, command, 1)
 
+        imunifyAVPath = '/etc/sysconfig/imunify360/integration.conf'
+
+        if os.path.exists(imunifyAVPath):
+            command = "yum reinstall imunify-antivirus-generic -y"
+            Upgrade.executioner(command, command, 1)
+
         Upgrade.stdOut("Upgrade Completed.")
 
 
