@@ -1703,7 +1703,7 @@ msgstr "添加/删除远程目录"
 
 #: baseTemplate/templates/baseTemplate/index.html:590
 msgid "Incremental Back up - Beta"
-msgstr ""
+msgstr "增量备份 - Beta"
 
 #: baseTemplate/templates/baseTemplate/index.html:592
 #, fuzzy
@@ -1783,7 +1783,7 @@ msgstr "新功能"
 
 #: baseTemplate/templates/baseTemplate/index.html:650
 msgid "Web Based Terminal"
-msgstr ""
+msgstr "网络终端"
 
 #: baseTemplate/templates/baseTemplate/index.html:657
 #: baseTemplate/templates/baseTemplate/index.html:659
@@ -1798,11 +1798,11 @@ msgstr "创建套餐"
 
 #: baseTemplate/templates/baseTemplate/index.html:671
 msgid "List Cloud Linux Package"
-msgstr ""
+msgstr "列出套餐"
 
 #: baseTemplate/templates/baseTemplate/index.html:676
 msgid "Monitor Usage of your Websites"
-msgstr ""
+msgstr "监控您的网站使用情况"
 
 #: baseTemplate/templates/baseTemplate/index.html:676
 #, fuzzy
@@ -1831,7 +1831,7 @@ msgstr "创建Email"
 
 #: baseTemplate/templates/baseTemplate/index.html:702
 msgid "Docker"
-msgstr ""
+msgstr "Docker"
 
 #: baseTemplate/templates/baseTemplate/index.html:704
 #, fuzzy
@@ -2060,7 +2060,7 @@ msgstr "邮件功能"
 
 #: baseTemplate/templates/baseTemplate/index.html:852
 #: emailPremium/templates/emailPremium/policyServer.html:20
-msgid "Email Policy Server"
+msgid "电子邮件策略服务器"
 msgstr ""
 
 #: baseTemplate/templates/baseTemplate/index.html:855
@@ -2079,7 +2079,7 @@ msgstr "配置"
 #: emailPremium/templates/emailPremium/SpamAssassin.html:25
 #: firewall/templates/firewall/spamassassin.html:20
 msgid "SpamAssassin"
-msgstr ""
+msgstr "SpamAssassin垃圾邮件过滤"
 
 #: baseTemplate/templates/baseTemplate/index.html:861
 #: emailMarketing/templates/emailMarketing/emailMarketing.html:14
@@ -2108,7 +2108,7 @@ msgstr "管理SSL"
 #: baseTemplate/templates/baseTemplate/index.html:880
 #: manageServices/templates/manageServices/managePostfix.html:22
 msgid "Manage Postfix"
-msgstr ""
+msgstr "管理Postfix"
 
 #: baseTemplate/templates/baseTemplate/index.html:883
 #, fuzzy
@@ -2121,7 +2121,7 @@ msgstr "管理SSL"
 #: pluginHolder/templates/pluginHolder/plugins.html:14
 #: pluginHolder/templates/pluginHolder/plugins.html:21
 msgid "Plugins"
-msgstr ""
+msgstr "扩展"
 
 #: baseTemplate/templates/baseTemplate/index.html:898
 #, fuzzy
@@ -2169,15 +2169,15 @@ msgstr "主页 - Cyberpanel"
 
 #: containerization/templates/containerization/listWebsites.html:15
 msgid "Launch and set limits for the websites."
-msgstr ""
+msgstr "启动并设置网站限制"
 
 #: containerization/templates/containerization/notAvailable.html:14
 msgid "CyberPanel Ent is required for Containerization."
-msgstr ""
+msgstr "容器化需要CyberPanel Ent。"
 
 #: containerization/templates/containerization/notAvailable.html:22
 msgid "Containerization is only available on CyberPanel Ent. "
-msgstr ""
+msgstr "容器化仅在CyberPanel Ent上可用。"
 
 #: containerization/templates/containerization/notAvailable.html:39
 msgid ""
@@ -2208,7 +2208,7 @@ msgstr ""
 
 #: containerization/templates/containerization/websiteContainerLimit.html:33
 msgid "Limit"
-msgstr ""
+msgstr "限制"
 
 #: containerization/templates/containerization/websiteContainerLimit.html:34
 #: dns/templates/dns/addDeleteDNSRecords.html:330
@@ -2225,7 +2225,7 @@ msgstr "CPU使用量"
 #: containerization/templates/containerization/websiteContainerLimit.html:44
 #: serverStatus/templates/serverStatus/topProcesses.html:131
 msgid "Memory"
-msgstr ""
+msgstr "内存"
 
 #: containerization/templates/containerization/websiteContainerLimit.html:48
 #: containerization/templates/containerization/websiteContainerLimit.html:91
@@ -2274,7 +2274,7 @@ msgstr "用户名"
 #: userManagment/templates/userManagment/createUser.html:90
 #: userManagment/templates/userManagment/modifyUser.html:68
 msgid "Generate"
-msgstr ""
+msgstr "生成"
 
 #: databases/templates/databases/createDatabase.html:66
 #: databases/templates/databases/listDataBases.html:77
@@ -2402,7 +2402,7 @@ msgstr "添加/修改DNS区域"
 #: dns/templates/dns/createNameServer.html:12
 #: dns/templates/dns/deleteDNSZone.html:12
 msgid "DNS Docs"
-msgstr ""
+msgstr "DNS文档"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:14
 msgid ""
@@ -2420,7 +2420,7 @@ msgstr "添加记录"
 #: dns/templates/dns/createNameServer.html:24
 #: dns/templates/dns/deleteDNSZone.html:25
 msgid "PowerDNS is disabled."
-msgstr ""
+msgstr "PowerDNS已被禁用"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:29
 #: dns/templates/dns/configureDefaultNameServers.html:26
@@ -2517,7 +2517,7 @@ msgstr "优先级"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:281
 msgid "Content"
-msgstr ""
+msgstr "内容"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:359
 msgid "Cannot fetch records. Error message:"
@@ -2715,11 +2715,11 @@ msgstr "创建新用户"
 
 #: dockerManager/templates/dockerManager/images.html:15
 msgid "Search new images and manage existing ones"
-msgstr ""
+msgstr "搜索并管理镜像"
 
 #: dockerManager/templates/dockerManager/images.html:22
 msgid "Locally Available Images"
-msgstr ""
+msgstr "可用的本地镜像"
 
 #: dockerManager/templates/dockerManager/images.html:48
 #, fuzzy
@@ -2762,23 +2762,23 @@ msgstr "安装"
 msgid ""
 "Unable to connect to docker daemon, please try restarting docker from "
 "service page"
-msgstr ""
+msgstr "无法连接到Docker守护程序,请尝试在服务页面重启Docker"
 
 #: dockerManager/templates/dockerManager/install.html:28
 msgid "You do not have sufficient permissions to access this page"
-msgstr ""
+msgstr "您没有足够的权限访问此页面"
 
 #: dockerManager/templates/dockerManager/install.html:32
 msgid ""
 "Docker is currently not installed on this server. To manage containers, you "
 "must first install it."
-msgstr ""
+msgstr "该服务器当前未安装Docker,你必须先安装Docker"
 
 #: dockerManager/templates/dockerManager/install.html:53
 msgid ""
 "You do not have permissions to install Docker. Please contact your system "
 "administrator"
-msgstr ""
+msgstr "您没有安装Docker的权限。 请与您的系统管理员联系"
 
 #: dockerManager/templates/dockerManager/listContainers.html:3
 #, fuzzy
@@ -2793,22 +2793,22 @@ msgid "List Containers"
 msgstr "查看域名"
 
 #: dockerManager/templates/dockerManager/listContainers.html:17
-msgid "Manage containers on server"
+msgid "管理服务器上的容器"
 msgstr ""
 
 #: dockerManager/templates/dockerManager/listContainers.html:23
 msgid "Containers"
-msgstr ""
+msgstr "容器"
 
 #: dockerManager/templates/dockerManager/listContainers.html:85
 msgid "Unlisted Containers"
-msgstr ""
+msgstr "卸载容器"
 
 #: dockerManager/templates/dockerManager/listContainers.html:85
 msgid ""
 "Containers listed below were either not created through panel or were not "
 "saved to database properly"
-msgstr ""
+msgstr "下面列出的容器不是通过面板创建的，或者没有正确保存到数据库中"
 
 #: dockerManager/templates/dockerManager/listContainers.html:148
 #: dockerManager/templates/dockerManager/runContainer.html:52
@@ -2826,7 +2826,7 @@ msgstr "这里是远程备份页面(SFTP)"
 #: dockerManager/templates/dockerManager/manageImages.html:65
 #: dockerManager/templates/dockerManager/manageImages.html:66
 msgid "Images"
-msgstr ""
+msgstr "镜像"
 
 #: dockerManager/templates/dockerManager/manageImages.html:67
 #, fuzzy
@@ -2836,11 +2836,11 @@ msgstr "删除网站"
 
 #: dockerManager/templates/dockerManager/manageImages.html:95
 msgid "Official image"
-msgstr ""
+msgstr "官方镜像"
 
 #: dockerManager/templates/dockerManager/manageImages.html:104
 msgid "Pull"
-msgstr ""
+msgstr "拉取"
 
 #: dockerManager/templates/dockerManager/runContainer.html:3
 #, fuzzy
@@ -2850,11 +2850,11 @@ msgstr "管理SSL - CyberPanel"
 
 #: dockerManager/templates/dockerManager/runContainer.html:12
 msgid "Run Container"
-msgstr ""
+msgstr "运行容器"
 
 #: dockerManager/templates/dockerManager/runContainer.html:13
 msgid "Modify parameters for your new container"
-msgstr ""
+msgstr "修改新容器的参数"
 
 #: dockerManager/templates/dockerManager/runContainer.html:20
 #, fuzzy
@@ -2865,7 +2865,7 @@ msgstr "设置详情"
 #: dockerManager/templates/dockerManager/runContainer.html:36
 #: dockerManager/templates/dockerManager/viewContainer.html:70
 msgid "Image"
-msgstr ""
+msgstr "镜像"
 
 #: dockerManager/templates/dockerManager/runContainer.html:44
 msgid "Tag"
@@ -2945,7 +2945,7 @@ msgstr "当前:"
 
 #: dockerManager/templates/dockerManager/viewContainer.html:24
 msgid "Container Information"
-msgstr ""
+msgstr "容器信息"
 
 #: dockerManager/templates/dockerManager/viewContainer.html:37
 #, fuzzy
@@ -2986,7 +2986,7 @@ msgstr "修改Email密码 - CyberPanel"
 #: emailMarketing/templates/emailMarketing/composeMessages.html:13
 #: emailMarketing/templates/emailMarketing/composeMessages.html:19
 msgid "Compose Email Message"
-msgstr ""
+msgstr "撰写电子邮件"
 
 #: emailMarketing/templates/emailMarketing/composeMessages.html:14
 #, fuzzy
@@ -3002,7 +3002,7 @@ msgstr "文件名"
 
 #: emailMarketing/templates/emailMarketing/composeMessages.html:36
 msgid "Email Subject"
-msgstr ""
+msgstr "电子邮件主题"
 
 #: emailMarketing/templates/emailMarketing/composeMessages.html:43
 #, fuzzy
@@ -3043,7 +3043,7 @@ msgstr "创建Email"
 
 #: emailMarketing/templates/emailMarketing/createEmailList.html:14
 msgid "Create email list, to send out news letters and marketing emails."
-msgstr ""
+msgstr "创建电子邮件列表，以发送市场营销电子邮件。"
 
 #: emailMarketing/templates/emailMarketing/createEmailList.html:26
 #, fuzzy
@@ -3065,12 +3065,12 @@ msgstr "创建Email用户 - CyberPanel"
 
 #: emailMarketing/templates/emailMarketing/emailMarketing.html:15
 msgid "Select users to Enable/Disable Email Marketing feature!"
-msgstr ""
+msgstr "选择用户以启用/禁用电子邮件营销功能"
 
 #: emailMarketing/templates/emailMarketing/emailMarketing.html:29
 #: emailPremium/templates/emailPremium/listDomains.html:29
 msgid "Email Policy Server is not enabled "
-msgstr ""
+msgstr "电子邮件策略服务器未启用"
 
 #: emailMarketing/templates/emailMarketing/emailMarketing.html:32
 #: emailPremium/templates/emailPremium/listDomains.html:33
@@ -3091,7 +3091,7 @@ msgstr "用户名"
 
 #: emailMarketing/templates/emailMarketing/emailMarketing.html:54
 msgid "Email Marketing Enabled."
-msgstr ""
+msgstr "电子邮件营销已启用。"
 
 #: emailMarketing/templates/emailMarketing/emailMarketing.html:55
 #: emailPremium/templates/emailPremium/emailLimits.html:53
@@ -3106,7 +3106,7 @@ msgstr "关闭"
 
 #: emailMarketing/templates/emailMarketing/emailMarketing.html:56
 msgid "Email Marketing Disabled."
-msgstr ""
+msgstr "电子邮件营销已禁用"
 
 #: emailMarketing/templates/emailMarketing/emailMarketing.html:57
 #: emailPremium/templates/emailPremium/emailLimits.html:55
@@ -3153,7 +3153,7 @@ msgstr "删除网站"
 
 #: emailMarketing/templates/emailMarketing/manageLists.html:48
 msgid "You are doing to delete this list.."
-msgstr ""
+msgstr "您正在删除此列表。"
 
 #: emailMarketing/templates/emailMarketing/manageLists.html:54
 #: emailMarketing/templates/emailMarketing/sendEmails.html:54
@@ -3172,11 +3172,11 @@ msgstr "关闭"
 #: emailMarketing/templates/emailMarketing/sendEmails.html:55
 #: filemanager/templates/filemanager/index.html:416
 msgid "Confirm"
-msgstr ""
+msgstr "确定"
 
 #: emailMarketing/templates/emailMarketing/manageLists.html:63
 msgid "Verify This List"
-msgstr ""
+msgstr "检查此列表"
 
 #: emailMarketing/templates/emailMarketing/manageLists.html:66
 #, fuzzy
@@ -3204,7 +3204,7 @@ msgstr "服务器状态"
 
 #: emailMarketing/templates/emailMarketing/manageLists.html:144
 msgid "Date Created"
-msgstr ""
+msgstr "创建日期"
 
 #: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:3
 #, fuzzy
@@ -3231,7 +3231,7 @@ msgstr "此页面可以查看并更新至CyberPanel最新版本 "
 #: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:29
 #: emailMarketing/templates/emailMarketing/sendEmails.html:153
 msgid "SMTP Host"
-msgstr ""
+msgstr "SMTP服务器"
 
 #: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:59
 #, fuzzy
@@ -3284,11 +3284,11 @@ msgstr "选择网站"
 
 #: emailMarketing/templates/emailMarketing/sendEmails.html:41
 msgid "Delete This Template"
-msgstr ""
+msgstr "删除此模板"
 
 #: emailMarketing/templates/emailMarketing/sendEmails.html:48
 msgid "You are doing to delete this template.."
-msgstr ""
+msgstr "你正在删除此模板"
 
 #: emailMarketing/templates/emailMarketing/sendEmails.html:63
 #, fuzzy
@@ -3304,11 +3304,11 @@ msgstr "选择FTP用户"
 
 #: emailMarketing/templates/emailMarketing/sendEmails.html:98
 msgid "Send to un-verified email addresses."
-msgstr ""
+msgstr "发送到未经验证的电子邮件地址。"
 
 #: emailMarketing/templates/emailMarketing/sendEmails.html:107
 msgid "Include unsubscribe link."
-msgstr ""
+msgstr "包含退订链接。"
 
 #: emailMarketing/templates/emailMarketing/sendEmails.html:116
 #, fuzzy
@@ -3324,11 +3324,11 @@ msgstr "Emails"
 
 #: emailMarketing/templates/emailMarketing/sendEmails.html:155
 msgid "Sent"
-msgstr ""
+msgstr "发送成功"
 
 #: emailMarketing/templates/emailMarketing/sendEmails.html:156
 msgid "Failed"
-msgstr ""
+msgstr "发送失败"
 
 #: emailMarketing/templates/emailMarketing/website.html:16
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:17
@@ -3487,12 +3487,12 @@ msgstr "域名"
 #: websiteFunctions/templates/websiteFunctions/website.html:262
 #: websiteFunctions/templates/websiteFunctions/website.html:267
 msgid "Add new Cron Job"
-msgstr ""
+msgstr "添加新的定时任务"
 
 #: emailMarketing/templates/emailMarketing/website.html:305
 #: websiteFunctions/templates/websiteFunctions/website.html:268
 msgid "Cron Jobs"
-msgstr ""
+msgstr "定时任务"
 
 #: emailMarketing/templates/emailMarketing/website.html:332
 #: websiteFunctions/templates/websiteFunctions/website.html:295
@@ -3594,7 +3594,7 @@ msgstr "编辑vHost主配置"
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:264
 #: websiteFunctions/templates/websiteFunctions/website.html:531
 msgid "vHost Conf"
-msgstr ""
+msgstr "虚拟主机配置"
 
 #: emailMarketing/templates/emailMarketing/website.html:582
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:272
@@ -3766,7 +3766,7 @@ msgstr ""
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:564
 #: websiteFunctions/templates/websiteFunctions/website.html:813
 msgid "open_basedir"
-msgstr ""
+msgstr "防跨站"
 
 #: emailMarketing/templates/emailMarketing/website.html:890
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:577
@@ -3829,19 +3829,19 @@ msgstr "管理SSL"
 #: websiteFunctions/templates/websiteFunctions/website.html:939
 #: websiteFunctions/templates/websiteFunctions/website.html:940
 msgid "SMTP Hosts"
-msgstr ""
+msgstr "SMTP主机"
 
 #: emailMarketing/templates/emailMarketing/website.html:1019
 #: emailMarketing/templates/emailMarketing/website.html:1022
 #: websiteFunctions/templates/websiteFunctions/website.html:945
 #: websiteFunctions/templates/websiteFunctions/website.html:950
 msgid "Compose Message"
-msgstr ""
+msgstr "撰写信息"
 
 #: emailMarketing/templates/emailMarketing/website.html:1023
 #: websiteFunctions/templates/websiteFunctions/website.html:951
 msgid "Compose"
-msgstr ""
+msgstr "撰写"
 
 #: emailMarketing/templates/emailMarketing/website.html:1050
 #: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:14
@@ -3894,7 +3894,7 @@ msgstr ""
 #: websiteFunctions/templates/websiteFunctions/website.html:1007
 #: websiteFunctions/templates/websiteFunctions/website.html:1011
 msgid "Attach Git with this website!"
-msgstr ""
+msgstr "为此网站填加git"
 
 #: emailMarketing/templates/emailMarketing/website.html:1094
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:702
@@ -3935,7 +3935,7 @@ msgstr "配置"
 
 #: emailPremium/templates/emailPremium/SpamAssassin.html:17
 msgid "SpamAssassin Docs"
-msgstr ""
+msgstr "SpamAssassin文档"
 
 #: emailPremium/templates/emailPremium/SpamAssassin.html:19
 #: firewall/templates/firewall/spamassassin.html:14
@@ -3946,7 +3946,7 @@ msgstr "这里是远程备份页面(SFTP)"
 
 #: emailPremium/templates/emailPremium/SpamAssassin.html:34
 msgid "SpamAssassin is not installed "
-msgstr ""
+msgstr "未安装SpamAssassin"
 
 #: emailPremium/templates/emailPremium/SpamAssassin.html:37
 #: firewall/templates/firewall/csf.html:31
@@ -4006,7 +4006,7 @@ msgstr "安装失败, 错误信息:"
 
 #: emailPremium/templates/emailPremium/SpamAssassin.html:62
 msgid "SpamAssassin successfully installed, refreshing page in 3 seconds.."
-msgstr ""
+msgstr "SpamAssassin成功安装，在3秒内刷新页面。"
 
 #: emailPremium/templates/emailPremium/SpamAssassin.html:74
 msgid "Winter is coming, but so is SpamAssassin."
@@ -4056,14 +4056,14 @@ msgstr "资源使用量"
 #: emailPremium/templates/emailPremium/emailPage.html:54
 #: emailPremium/templates/emailPremium/listDomains.html:61
 msgid "Limits are being Applied!"
-msgstr ""
+msgstr "限制已被应用"
 
 #: emailPremium/templates/emailPremium/emailLimits.html:54
 #: emailPremium/templates/emailPremium/emailLimits.html:160
 #: emailPremium/templates/emailPremium/emailPage.html:56
 #: emailPremium/templates/emailPremium/listDomains.html:63
 msgid "Limits are not being applied!"
-msgstr ""
+msgstr "限制未被应用"
 
 #: emailPremium/templates/emailPremium/emailLimits.html:58
 #: emailPremium/templates/emailPremium/emailPage.html:66
@@ -4073,7 +4073,7 @@ msgstr ""
 #: userManagment/templates/userManagment/listUsers.html:51
 #: websiteFunctions/templates/websiteFunctions/listCron.html:66
 msgid "Edit"
-msgstr ""
+msgstr "编辑"
 
 #: emailPremium/templates/emailPremium/emailLimits.html:70
 #: emailPremium/templates/emailPremium/emailPage.html:78
@@ -4131,7 +4131,7 @@ msgstr "Email日志"
 
 #: emailPremium/templates/emailPremium/emailPage.html:14
 msgid "View and change limits for an Email Address."
-msgstr ""
+msgstr "查看和更改电子邮件地址的限制。"
 
 #: emailPremium/templates/emailPremium/emailPage.html:60
 msgid "Logging in ON!"
@@ -4173,7 +4173,7 @@ msgstr "主页 - Cyberpanel"
 
 #: emailPremium/templates/emailPremium/listDomains.html:15
 msgid "On this page you manage emails limits for Domains/Email Addresses"
-msgstr ""
+msgstr "在此页面上，您可以管理域/电子邮件地址的电子邮件的限制"
 
 #: emailPremium/templates/emailPremium/policyServer.html:3
 #, fuzzy
@@ -4247,19 +4247,19 @@ msgstr "文件"
 
 #: filemanager/templates/filemanager/index.html:64
 msgid "New Folder"
-msgstr ""
+msgstr "新文件夹"
 
 #: filemanager/templates/filemanager/index.html:70
 #: filemanager/templates/filemanager/index.html:557
 #: filemanager/templates/filemanager/index.html:693
 msgid "Copy"
-msgstr ""
+msgstr "复制"
 
 #: filemanager/templates/filemanager/index.html:73
 #: filemanager/templates/filemanager/index.html:522
 #: filemanager/templates/filemanager/index.html:691
 msgid "Move"
-msgstr ""
+msgstr "移动"
 
 #: filemanager/templates/filemanager/index.html:76
 #: filemanager/templates/filemanager/index.html:587
@@ -4274,13 +4274,13 @@ msgstr "用户名"
 #: filemanager/templates/filemanager/index.html:459
 #: filemanager/templates/filemanager/index.html:697
 msgid "Compress"
-msgstr ""
+msgstr "压缩"
 
 #: filemanager/templates/filemanager/index.html:85
 #: filemanager/templates/filemanager/index.html:487
 #: filemanager/templates/filemanager/index.html:698
 msgid "Extract"
-msgstr ""
+msgstr "解压"
 
 #: filemanager/templates/filemanager/index.html:88
 #, fuzzy
@@ -4331,7 +4331,7 @@ msgstr "大小"
 
 #: filemanager/templates/filemanager/index.html:160
 msgid "Last Modified"
-msgstr ""
+msgstr "最后修改时间"
 
 #: filemanager/templates/filemanager/index.html:161
 #, fuzzy
@@ -4341,7 +4341,7 @@ msgstr "PHP版本 "
 
 #: filemanager/templates/filemanager/index.html:181
 msgid "Upload File"
-msgstr ""
+msgstr "上传文件"
 
 #: filemanager/templates/filemanager/index.html:181
 #, fuzzy
@@ -4351,11 +4351,11 @@ msgstr "重载"
 
 #: filemanager/templates/filemanager/index.html:187
 msgid "Upload queue"
-msgstr ""
+msgstr "上传队列"
 
 #: filemanager/templates/filemanager/index.html:188
 msgid "Queue length:"
-msgstr ""
+msgstr "队列进度:"
 
 #: filemanager/templates/filemanager/index.html:192
 msgid "Drop"
@@ -4363,19 +4363,19 @@ msgstr ""
 
 #: filemanager/templates/filemanager/index.html:193
 msgid "Drop Files here to upload them."
-msgstr ""
+msgstr "拖到文件到这里来上传它们"
 
 #: filemanager/templates/filemanager/index.html:205
 msgid "Progress"
-msgstr ""
+msgstr "进度"
 
 #: filemanager/templates/filemanager/index.html:233
 msgid "Remove"
-msgstr ""
+msgstr "移除"
 
 #: filemanager/templates/filemanager/index.html:243
 msgid "Queue progress:"
-msgstr ""
+msgstr "队列进度:"
 
 #: filemanager/templates/filemanager/index.html:252
 #, fuzzy
@@ -4385,7 +4385,7 @@ msgstr "无法保存设置, 错误信息:"
 
 #: filemanager/templates/filemanager/index.html:256
 msgid "Upload all"
-msgstr ""
+msgstr "全部上传"
 
 #: filemanager/templates/filemanager/index.html:259
 #, fuzzy
@@ -4395,7 +4395,7 @@ msgstr "取消"
 
 #: filemanager/templates/filemanager/index.html:262
 msgid "Remove all"
-msgstr ""
+msgstr "移除所有"
 
 #: filemanager/templates/filemanager/index.html:298
 #, fuzzy
@@ -4428,7 +4428,7 @@ msgstr "文件名"
 
 #: filemanager/templates/filemanager/index.html:332
 msgid "Folder will be created in your current directory"
-msgstr ""
+msgstr "文件夹将在当前目录中创建"
 
 #: filemanager/templates/filemanager/index.html:334
 #, fuzzy
@@ -4458,7 +4458,7 @@ msgstr "文件名"
 msgid ""
 "File will be created in your current directory, if it already exists it will "
 "not overwirte."
-msgstr ""
+msgstr "文件将在当前目录中创建,如果它已存在将不会被覆写"
 
 #: filemanager/templates/filemanager/index.html:378
 #, fuzzy
@@ -4480,7 +4480,7 @@ msgstr "配置"
 
 #: filemanager/templates/filemanager/index.html:440
 msgid "List of files/folder!"
-msgstr ""
+msgstr "文件/文件夹列表！"
 
 #: filemanager/templates/filemanager/index.html:444
 #, fuzzy
@@ -4496,19 +4496,19 @@ msgstr "扩展名称"
 
 #: filemanager/templates/filemanager/index.html:450
 msgid "Compression Type"
-msgstr ""
+msgstr "压缩类型"
 
 #: filemanager/templates/filemanager/index.html:475
 msgid "Extracting"
-msgstr ""
+msgstr "解压中"
 
 #: filemanager/templates/filemanager/index.html:483
 msgid "Extract in"
-msgstr ""
+msgstr "提取至"
 
 #: filemanager/templates/filemanager/index.html:485
 msgid "You can enter . to extract in current directory!"
-msgstr ""
+msgstr "您可以输入 . 提取至当前目录"
 
 #: filemanager/templates/filemanager/index.html:503
 #, fuzzy
@@ -4519,15 +4519,15 @@ msgstr "文件"
 #: filemanager/templates/filemanager/index.html:511
 #: filemanager/templates/filemanager/index.html:546
 msgid "List of files/folders!"
-msgstr ""
+msgstr "文件(夹)列表！"
 
 #: filemanager/templates/filemanager/index.html:515
 msgid "Move to"
-msgstr ""
+msgstr "移动到"
 
 #: filemanager/templates/filemanager/index.html:517
 msgid "Enter a path to move your files!"
-msgstr ""
+msgstr "输入新文件夹的路径！"
 
 #: filemanager/templates/filemanager/index.html:538
 #, fuzzy
@@ -4537,15 +4537,15 @@ msgstr "文件"
 
 #: filemanager/templates/filemanager/index.html:550
 msgid "Copy to"
-msgstr ""
+msgstr "复制到"
 
 #: filemanager/templates/filemanager/index.html:552
 msgid "Enter a path to copy your files to!"
-msgstr ""
+msgstr "输入复制到的文件夹的路径"
 
 #: filemanager/templates/filemanager/index.html:572
 msgid "Renaming"
-msgstr ""
+msgstr "重命名"
 
 #: filemanager/templates/filemanager/index.html:580
 #, fuzzy
@@ -4609,7 +4609,7 @@ msgstr "选择PHP版本"
 
 #: filemanager/templates/filemanager/index.html:692
 msgid "Download"
-msgstr ""
+msgstr "下载"
 
 #: firewall/templates/firewall/csf.html:3
 msgid "CSF (ConfigServer Security and Firewall) - CyberPanel"
@@ -4629,7 +4629,7 @@ msgstr "这里是远程备份页面(SFTP)"
 
 #: firewall/templates/firewall/csf.html:28
 msgid "CSF is not installed "
-msgstr ""
+msgstr "CSF未被安装"
 
 #: firewall/templates/firewall/csf.html:55
 #, fuzzy
@@ -4781,13 +4781,13 @@ msgstr "安全"
 #: firewall/templates/firewall/modSecurityRulesPacks.html:28
 #: firewall/templates/firewall/spamassassin.html:29
 msgid "ModSecurity is not installed "
-msgstr ""
+msgstr "ModSecurity未被安装"
 
 #: firewall/templates/firewall/modSecurity.html:61
 #: firewall/templates/firewall/modSecurity.html:257
 #: firewall/templates/firewall/spamassassin.html:55
 msgid "ModSecurity successfully installed, refreshing page in 3 seconds.."
-msgstr ""
+msgstr "ModSecurity安装成功,将在3秒内刷新页面"
 
 #: firewall/templates/firewall/modSecurity.html:73
 #: firewall/templates/firewall/modSecurity.html:269
@@ -4961,7 +4961,7 @@ msgstr "在列表中选择一个网站, 它的根目录将会设为FTP的根目�
 #: ftp/templates/ftp/deleteFTPAccount.html:25
 #: ftp/templates/ftp/listFTPAccounts.html:26
 msgid "PureFTPD is disabled."
-msgstr ""
+msgstr "PureFTPD已被禁用"
 
 #: ftp/templates/ftp/createFTPAccount.html:67
 msgid "FTP Password"
@@ -5070,7 +5070,7 @@ msgstr "在列表中选择并修改密码"
 #: mailServer/templates/mailServer/emailForwarding.html:26
 #: mailServer/templates/mailServer/listEmails.html:27
 msgid "Postfix is disabled."
-msgstr ""
+msgstr "Postfix已被禁用"
 
 #: mailServer/templates/mailServer/changeEmailPassword.html:58
 #: mailServer/templates/mailServer/deleteEmailAccount.html:58
@@ -5132,7 +5132,7 @@ msgstr "管理SSL - CyberPanel"
 
 #: mailServer/templates/mailServer/dkimManager.html:13
 msgid "DKIM Docs"
-msgstr ""
+msgstr "DKIM文档"
 
 #: mailServer/templates/mailServer/dkimManager.html:14
 #, fuzzy
@@ -5142,7 +5142,7 @@ msgstr "这里是网站备份界面"
 
 #: mailServer/templates/mailServer/dkimManager.html:27
 msgid "OpenDKIM is not installed. "
-msgstr ""
+msgstr "OpenDKIM未安装"
 
 #: mailServer/templates/mailServer/dkimManager.html:28
 #: websiteFunctions/templates/websiteFunctions/installJoomla.html:67
@@ -5156,7 +5156,7 @@ msgstr "安装"
 
 #: mailServer/templates/mailServer/dkimManager.html:48
 msgid "OpenDKIM successfully installed, refreshing page in 3 seconds.."
-msgstr ""
+msgstr "OpenDKIM成功安装,页面将在3秒内刷新"
 
 #: mailServer/templates/mailServer/dkimManager.html:97
 #, fuzzy
@@ -5177,11 +5177,11 @@ msgstr "域名"
 
 #: mailServer/templates/mailServer/dkimManager.html:111
 msgid "Private Key"
-msgstr ""
+msgstr "私匙"
 
 #: mailServer/templates/mailServer/dkimManager.html:112
 msgid "Public Key"
-msgstr ""
+msgstr "公匙"
 
 #: mailServer/templates/mailServer/emailForwarding.html:3
 #, fuzzy
@@ -5192,19 +5192,19 @@ msgstr "创建Email用户 - CyberPanel"
 #: mailServer/templates/mailServer/emailForwarding.html:12
 #: mailServer/templates/mailServer/emailForwarding.html:19
 msgid "Setup Email Forwarding"
-msgstr ""
+msgstr "设置邮件转发"
 
 #: mailServer/templates/mailServer/emailForwarding.html:12
 msgid "Forwarding Docs"
-msgstr ""
+msgstr "转发文档"
 
 #: mailServer/templates/mailServer/emailForwarding.html:13
 msgid "This page help you setup email forwarding for your emails."
-msgstr ""
+msgstr "此页面可帮助您设置电子邮件转发。"
 
 #: mailServer/templates/mailServer/emailForwarding.html:61
 msgid "Forwarding Options"
-msgstr ""
+msgstr "转发设置"
 
 #: mailServer/templates/mailServer/emailForwarding.html:97
 #: mailServer/templates/mailServer/emailForwarding.html:118
@@ -5457,7 +5457,7 @@ msgstr "为网站以及主机申请签发Let's Encrypt证书"
 
 #: manageSSL/templates/manageSSL/sslForMailServer.html:54
 msgid "SSL Issued, your mail server now uses Lets Encrypt!"
-msgstr ""
+msgstr "SSL成功签发，您的邮件服务器现在使用Lets Encrypt！"
 
 #: manageSSL/templates/manageSSL/sslForMailServer.html:58
 #, fuzzy
@@ -5473,7 +5473,7 @@ msgstr "修改Email密码 - CyberPanel"
 
 #: manageServices/templates/manageServices/managePostfix.html:13
 msgid "Manage Email Server (Postfix)!"
-msgstr ""
+msgstr "管理邮件服务器(Postfix)"
 
 #: manageServices/templates/manageServices/managePostfix.html:13
 #: manageServices/templates/manageServices/managePowerDNS.html:16
@@ -5485,13 +5485,13 @@ msgstr "服务器状态"
 
 #: manageServices/templates/manageServices/managePostfix.html:14
 msgid "Enable or disable Email services. "
-msgstr ""
+msgstr "启用或禁用邮件服务"
 
 #: manageServices/templates/manageServices/managePostfix.html:79
 #: manageServices/templates/manageServices/managePowerDNS.html:149
 #: manageServices/templates/manageServices/managePureFtpd.html:79
 msgid "Only administrator can manage services."
-msgstr ""
+msgstr "只有管理员可以管理服务。"
 
 #: manageServices/templates/manageServices/managePowerDNS.html:3
 #, fuzzy
@@ -5507,7 +5507,7 @@ msgstr "管理SSL"
 
 #: manageServices/templates/manageServices/managePowerDNS.html:17
 msgid "Enable or disable DNS services. "
-msgstr ""
+msgstr "启用或禁用DNS服务"
 
 #: manageServices/templates/manageServices/managePowerDNS.html:42
 #, fuzzy
@@ -5563,15 +5563,15 @@ msgstr "管理SSL - CyberPanel"
 
 #: manageServices/templates/manageServices/managePureFtpd.html:13
 msgid "Manage FTP Server (Pure FTPD)!"
-msgstr ""
+msgstr "管理FTP服务(Pure FTPD)"
 
 #: manageServices/templates/manageServices/managePureFtpd.html:14
 msgid "Enable or disable FTP services. "
-msgstr ""
+msgstr "启用或禁用FTP服务"
 
 #: manageServices/templates/manageServices/managePureFtpd.html:22
 msgid "Manage PureFTPD"
-msgstr ""
+msgstr "管理PureFTPD"
 
 #: packages/templates/packages/createPackage.html:3
 msgid "Create Package - CyberPanel"
@@ -5659,7 +5659,7 @@ msgstr "套餐 - CyberPanel"
 
 #: packages/templates/packages/listPackages.html:14
 msgid "List Packages and delete or edit them."
-msgstr ""
+msgstr "列出软件包并删除或编辑它们。"
 
 #: packages/templates/packages/listPackages.html:34
 #, fuzzy
@@ -6952,11 +6952,11 @@ msgstr "安装Wordpress和LS Cache"
 
 #: websiteFunctions/templates/websiteFunctions/installWordPress.html:28
 msgid "Blog Title"
-msgstr ""
+msgstr "博客标题"
 
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:32
 msgid "Copy/Sync to Master"
-msgstr ""
+msgstr "复制/同步到Master"
 
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:673
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:678
@@ -7001,69 +7001,69 @@ msgstr "添加域名"
 #: websiteFunctions/templates/websiteFunctions/listCron.html:46
 #: websiteFunctions/templates/websiteFunctions/listCron.html:95
 msgid "Minute"
-msgstr ""
+msgstr "分钟"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:47
 #: websiteFunctions/templates/websiteFunctions/listCron.html:101
 msgid "Hour"
-msgstr ""
+msgstr "小时"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:48
 msgid "Day of Month"
-msgstr ""
+msgstr "天"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:49
 #: websiteFunctions/templates/websiteFunctions/listCron.html:113
 msgid "Month"
-msgstr ""
+msgstr "月"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:50
 msgid "Day of Week"
-msgstr ""
+msgstr "星期"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:79
 msgid "Pre defined"
-msgstr ""
+msgstr "预定义"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:82
 msgid "Every minute"
-msgstr ""
+msgstr "每分钟"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:83
 msgid "Every 5 minutes"
-msgstr ""
+msgstr "每5分钟"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:84
 msgid "Every 30 minutes"
-msgstr ""
+msgstr "每30分钟"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:85
 msgid "Every hour"
-msgstr ""
+msgstr "每小时"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:86
 msgid "Every day"
-msgstr ""
+msgstr "每天"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:87
 msgid "Every week"
-msgstr ""
+msgstr "每周"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:88
 msgid "Every month"
-msgstr ""
+msgstr "每月"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:89
 msgid "Every year"
-msgstr ""
+msgstr "每年"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:107
 msgid "Day of month"
-msgstr ""
+msgstr "天"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:119
 msgid "Day of week"
-msgstr ""
+msgstr "星期"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:135
 #, fuzzy
@@ -7090,7 +7090,7 @@ msgstr "无法保存SSL证书, 错误信息:"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:159
 msgid "Cron job saved"
-msgstr ""
+msgstr "定时任务以保存"
 
 #: websiteFunctions/templates/websiteFunctions/listWebsites.html:3
 msgid "Websites Hosted - CyberPanel"
@@ -7130,20 +7130,20 @@ msgstr "版本管理"
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:13
 msgid "Attach git to your websites."
-msgstr ""
+msgstr "将Git附加到您的网站"
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:21
 msgid "Attach Git"
-msgstr ""
+msgstr "附加Git"
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:29
 msgid "Providers"
-msgstr ""
+msgstr "提供者"
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:36
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:161
 msgid "Deployment Key"
-msgstr ""
+msgstr "部署密钥"
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:65
 msgid ""
@@ -7160,7 +7160,7 @@ msgstr "扩展名称"
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:86
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:262
 msgid "Branch"
-msgstr ""
+msgstr "分支"
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:97
 msgid "Attach Now"
@@ -7228,7 +7228,7 @@ msgstr ""
 
 #: websiteFunctions/templates/websiteFunctions/setupStaging.html:31
 msgid "Domain that you will enter below will be created as child-domain to "
-msgstr ""
+msgstr "您将在下面输入的域将被创建为子域"
 
 #: websiteFunctions/templates/websiteFunctions/setupStaging.html:33
 msgid "."
@@ -7262,7 +7262,7 @@ msgstr ""
 
 #: websiteFunctions/templates/websiteFunctions/sshAccess.html:20
 msgid "Set up SSH access for "
-msgstr ""
+msgstr "设置SSH访问"
 
 #: websiteFunctions/templates/websiteFunctions/sshAccess.html:29
 #, fuzzy
@@ -7314,19 +7314,19 @@ msgstr "DNS功能"
 
 #: websiteFunctions/templates/websiteFunctions/syncMaster.html:12
 msgid "Sync your site to Master"
-msgstr ""
+msgstr "将您的网站同步到Master"
 
 #: websiteFunctions/templates/websiteFunctions/syncMaster.html:13
 msgid "Right now you can only sync your child domains to master domains."
-msgstr ""
+msgstr "目前，您只能将您的子域同步到主域。"
 
 #: websiteFunctions/templates/websiteFunctions/syncMaster.html:13
 msgid " will be synced to "
-msgstr ""
+msgstr "将被同步到"
 
 #: websiteFunctions/templates/websiteFunctions/syncMaster.html:20
 msgid "Sync "
-msgstr ""
+msgstr "同步"
 
 #: websiteFunctions/templates/websiteFunctions/syncMaster.html:20
 #, fuzzy
@@ -7336,23 +7336,23 @@ msgstr "停止"
 
 #: websiteFunctions/templates/websiteFunctions/syncMaster.html:30
 msgid "What to Sync"
-msgstr ""
+msgstr "等待同步"
 
 #: websiteFunctions/templates/websiteFunctions/syncMaster.html:63
 msgid "Start Syncing"
-msgstr ""
+msgstr "开始同步"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:29
 msgid "Clone/Staging"
-msgstr ""
+msgstr "克隆/Staging"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:30
 msgid "Set up SSH Access"
-msgstr ""
+msgstr "设置SSH访问"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:665
 msgid "It is not required to modify rules if you are using OpenLiteSpeed."
-msgstr ""
+msgstr "如果您使用的是OpenLiteSpeed，则无需修改。"
 
 #, fuzzy
 #~| msgid "Last Name"
