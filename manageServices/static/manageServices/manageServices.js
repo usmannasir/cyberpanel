@@ -2,7 +2,6 @@
  * Created by usman on 6/22/18.
  */
 
-
 /* Java script code */
 
 app.controller('powerDNS', function ($scope, $http, $timeout, $window) {
@@ -163,10 +162,7 @@ app.controller('powerDNS', function ($scope, $http, $timeout, $window) {
 
 });
 
-
 /* Java script code */
-
-
 
 /* Java script code */
 
@@ -298,7 +294,6 @@ app.controller('postfix', function ($scope, $http, $timeout, $window) {
 
 /* Java script code */
 
-
 /* Java script code */
 
 app.controller('pureFTPD', function ($scope, $http, $timeout, $window) {
@@ -397,6 +392,69 @@ app.controller('pureFTPD', function ($scope, $http, $timeout, $window) {
 
         function ListInitialDatas(response) {
             $scope.serviceLoading = true;
+
+            if (response.data.status === 1) {
+
+                $scope.failedToFetch = true;
+                $scope.couldNotConnect = true;
+                $scope.changesApplied = false;
+
+            }
+            else {
+                $scope.errorMessage = response.data.error_message;
+
+                $scope.failedToFetch = false;
+                $scope.couldNotConnect = true;
+                $scope.changesApplied = true;
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.serviceLoading = true;
+            $scope.failedToFetch = true;
+            $scope.couldNotConnect = false;
+            $scope.changesApplied = true;
+        }
+
+
+    };
+
+});
+
+/* Java script code */
+
+/* Java script code */
+
+app.controller('manageApplications', function ($scope, $http, $timeout, $window) {
+
+
+    $scope.cyberpanelLoading = true;
+
+    $scope.saveStatus = function (service) {
+
+        $scope.cyberpanelLoading = false;
+
+
+        url = "/manageservices/saveStatus";
+
+        var data = {
+            status: serviceStatus,
+            service: service
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
 
             if (response.data.status === 1) {
 

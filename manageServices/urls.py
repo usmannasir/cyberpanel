@@ -9,4 +9,6 @@ urlpatterns = [
 
     url(r'^fetchStatus$', views.fetchStatus, name='fetchStatus'),
     url(r'^saveStatus$', views.saveStatus, name='saveStatus'),
+
+    url(r'^manageApplications$', views.manageApplications, name='manageApplications'),
 ]

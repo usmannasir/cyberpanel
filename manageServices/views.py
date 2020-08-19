@@ -299,3 +299,21 @@ def saveStatus(request):
         data_ret = {'status': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
+
+def manageApplications(request):
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
+        try:
+            return render(request, 'manageServices/applications.html', {})
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg))
+            return HttpResponse("See CyberCP main log file.")
+
+    except KeyError:
+        return redirect(loadLoginPage)
