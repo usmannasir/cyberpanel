@@ -104,7 +104,7 @@ class pluginInstaller:
         os.chdir(currentDir)
 
     @staticmethod
-    def preScript(pluginName):
+    def preInstallScript(pluginName):
         pluginHome = '/usr/local/CyberCP/' + pluginName
 
         if os.path.exists(pluginHome + '/pre_install'):
@@ -115,7 +115,7 @@ class pluginInstaller:
             subprocess.call(shlex.split(command))
 
     @staticmethod
-    def postScript(pluginName):
+    def postInstallScript(pluginName):
         pluginHome = '/usr/local/CyberCP/' + pluginName
 
         if os.path.exists(pluginHome + '/post_install'):
@@ -123,6 +123,17 @@ class pluginInstaller:
             subprocess.call(shlex.split(command))
 
             command = pluginHome + '/post_install'
+            subprocess.call(shlex.split(command))
+
+    @staticmethod
+    def preRemoveScript(pluginName):
+        pluginHome = '/usr/local/CyberCP/' + pluginName
+
+        if os.path.exists(pluginHome + '/pre_remove'):
+            command = 'chmod +x ' + pluginHome + '/pre_remove'
+            subprocess.call(shlex.split(command))
+
+            command = pluginHome + '/pre_remove'
             subprocess.call(shlex.split(command))
 
 
@@ -138,14 +149,8 @@ class pluginInstaller:
             ##
 
             pluginInstaller.stdOut('Executing pre_install script..')
-            pluginInstaller.preScript(pluginName)
+            pluginInstaller.preInstallScript(pluginName)
             pluginInstaller.stdOut('pre_install executed.')
-
-            ##
-
-            pluginInstaller.stdOut('Executing post_install script..')
-            pluginInstaller.postScript(pluginName)
-            pluginInstaller.stdOut('post_install executed.')
 
             ##
 
@@ -153,7 +158,7 @@ class pluginInstaller:
             pluginInstaller.upgradingSettingsFile(pluginName)
             pluginInstaller.stdOut('Settings file restored.')
 
-            ###
+            ##
 
             pluginInstaller.stdOut('Upgrading URLs')
             pluginInstaller.upgradingURLs(pluginName)
@@ -167,13 +172,9 @@ class pluginInstaller:
 
             ##
 
-            ##
-
             pluginInstaller.stdOut('Adding interface link..')
             pluginInstaller.addInterfaceLink(pluginName)
             pluginInstaller.stdOut('Interface link added.')
-
-            ##
 
             ##
 
@@ -184,6 +185,14 @@ class pluginInstaller:
             ##
 
             pluginInstaller.restartGunicorn()
+
+            ##
+
+            pluginInstaller.stdOut('Executing post_install script..')
+            pluginInstaller.postInstallScript(pluginName)
+            pluginInstaller.stdOut('post_install executed.')
+
+            ##
 
             pluginInstaller.stdOut('Plugin successfully installed.')
 
@@ -245,6 +254,12 @@ class pluginInstaller:
     @staticmethod
     def removePlugin(pluginName):
         try:
+            ##
+
+            pluginInstaller.stdOut('Executing pre_remove script..')
+            pluginInstaller.preRemoveScript(pluginName)
+            pluginInstaller.stdOut('pre_remove executed.')
+
             ##
 
             pluginInstaller.stdOut('Removing files..')
