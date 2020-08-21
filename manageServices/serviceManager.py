@@ -206,6 +206,51 @@ type=rpm-md
                                                       "Packages successfully installed.[200]\n", 1)
         return 0
 
+    @staticmethod
+    def RemoveElasticSearch():
+
+        statusFile = open(ServerStatusUtil.lswsInstallStatusPath, 'w')
+
+        if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+            command = 'rpm --import https://artifacts.elastic.co/GPG-KEY-elasticsearch'
+            ServerStatusUtil.executioner(command, statusFile)
+
+            repoPath = '/etc/yum.repos.d/elasticsearch.repo'
+
+            try:
+                os.remove(repoPath)
+            except:
+                pass
+
+            command = 'yum erase elasticsearch -y'
+            ServerStatusUtil.executioner(command, statusFile)
+        else:
+
+            try:
+                os.remove('/etc/apt/sources.list.d/elastic-7.x.list')
+            except:
+                pass
+
+
+            command = 'apt-get remove elasticsearch -y'
+            ServerStatusUtil.executioner(command, statusFile)
+
+        ### Tmp folder configurations
+
+        command = 'rm -rf /home/elasticsearch/tmp'
+        ServerStatusUtil.executioner(command, statusFile)
+
+
+        jvmOptions = '/etc/elasticsearch/jvm.options'
+
+
+        command = 'rm -f /home/cyberpanel/elasticsearch'
+        ServerStatusUtil.executioner(command, statusFile)
+
+        logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
+                                                  "ElasticSearch successfully removed.[200]\n", 1)
+        return 0
+
 def main():
 
     parser = argparse.ArgumentParser(description='CyberPanel Application Manager')
@@ -216,6 +261,8 @@ def main():
 
     if args["function"] == "InstallElasticSearch":
         ServiceManager.InstallElasticSearch()
+    elif args["function"] == "RemoveElasticSearch":
+        ServiceManager.RemoveElasticSearch()
 
 
 

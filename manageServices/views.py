@@ -351,6 +351,8 @@ def removeInstall(request):
             if appName == 'Elastic Search':
                 if status == 'Installing':
                     command = '/usr/local/CyberCP/bin/python /usr/local/CyberCP/manageServices/serviceManager.py --function InstallElasticSearch'
+                else:
+                    command = '/usr/local/CyberCP/bin/python /usr/local/CyberCP/manageServices/serviceManager.py --function RemoveElasticSearch'
 
             ProcessUtilities.popenExecutioner(command)
             data_ret = {'status': 1}
