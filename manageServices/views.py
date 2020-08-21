@@ -346,9 +346,16 @@ def removeInstall(request):
             data = json.loads(request.body)
 
             status = data['status']
-            service = data['service']
+            appName = data['appName']
 
-            command = '/usr/local/CyberCP/manageServices/serviceManager.py --function InstallElasticSearch'
+            if appName == 'Elastic Search':
+                if status == 'Installing':
+                    command = '/usr/local/CyberCP/bin/python /usr/local/CyberCP/manageServices/serviceManager.py --function InstallElasticSearch'
+
+            ProcessUtilities.popenExecutioner(command)
+            data_ret = {'status': 1}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
 
 
         except BaseException as msg:

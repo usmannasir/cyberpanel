@@ -1,9 +1,17 @@
+import os
+import os.path
+import sys
+import django
+sys.path.append('/usr/local/CyberCP')
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
+django.setup()
 from random import randint
 from plogical.processUtilities import ProcessUtilities
 from dns.models import Supermasters
 from manageServices.models import SlaveServers
 import argparse
 from serverStatus.serverStatusUtil import ServerStatusUtil
+from plogical import CyberCPLogFileWriter as logging
 
 class ServiceManager:
 
@@ -127,9 +135,58 @@ superslave=yes
             Supermasters(ip=self.extraArgs['masterServerIP'], nameserver=self.extraArgs['slaveServerNS'], account='').save()
 
     @staticmethod
-    def installElasticSearch():
-        logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
-                                                  "Packages successfully installed.[200]\n", 1)
+    def InstallElasticSearch():
+
+        statusFile = open(ServerStatusUtil.lswsInstallStatusPath, 'w')
+
+        if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+            command = 'rpm --import https://artifacts.elastic.co/GPG-KEY-elasticsearch'
+            ServerStatusUtil.executioner(command, statusFile)
+
+            repoPath = '/etc/yum.repos.d/elasticsearch.repo'
+
+            content = '''[elasticsearch]
+name=Elasticsearch repository for 7.x packages
+baseurl=https://artifacts.elastic.co/packages/7.x/yum
+gpgcheck=1
+gpgkey=https://artifacts.elastic.co/GPG-KEY-elasticsearch
+enabled=0
+autorefresh=1
+type=rpm-md
+'''
+
+            writeToFile = open(repoPath, 'w')
+            writeToFile.write(content)
+            writeToFile.close()
+
+            command = 'yum install --enablerepo=elasticsearch elasticsearch -y'
+            ServerStatusUtil.executioner(command, statusFile)
+
+            command = 'mkdir -p /home/elasticsearch/tmp'
+            ServerStatusUtil.executioner(command, statusFile)
+
+            command = 'chown elasticsearch:elasticsearch /home/elasticsearch/tmp'
+            ServerStatusUtil.executioner(command, statusFile)
+
+
+            jvmOptions = '/etc/elasticsearch/jvm.options'
+
+            writeToFile = open(jvmOptions, 'a')
+            writeToFile.write('-Djava.io.tmpdir=/home/elasticsearch/tmp\n')
+            writeToFile.close()
+
+            command = 'systemctl enable elasticsearch'
+            ServerStatusUtil.executioner(command, statusFile)
+
+            command = 'systemctl start elasticsearch'
+            ServerStatusUtil.executioner(command, statusFile)
+
+            command = 'touch /home/cyberpanel/elasticsearch'
+            ServerStatusUtil.executioner(command, statusFile)
+
+
+            logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
+                                                      "Packages successfully installed.[200]\n", 1)
         return 0
 
 def main():
@@ -142,8 +199,6 @@ def main():
 
     if args["function"] == "InstallElasticSearch":
         ServiceManager.InstallElasticSearch()
-
-
 
 
 
