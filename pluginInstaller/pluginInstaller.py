@@ -22,6 +22,11 @@ class pluginInstaller:
         print(("[" + time.strftime(
             "%m.%d.%Y_%H-%M-%S") + "] #########################################################################\n"))
 
+    @staticmethod
+    def migrationsEnabled(pluginName: str) -> bool:
+        pluginHome = '/usr/local/CyberCP/' + pluginName
+        return os.path.exists(pluginHome + '/enable_migrations')
+
     ### Functions Related to plugin installation.
 
     @staticmethod
@@ -104,6 +109,17 @@ class pluginInstaller:
         os.chdir(currentDir)
 
     @staticmethod
+    def installMigrations(pluginName):
+        currentDir = os.getcwd()
+        os.chdir('/usr/local/CyberCP')
+        command = "/usr/local/CyberCP/bin/python manage.py makemigrations %s" % pluginName
+        subprocess.call(shlex.split(command))
+        command = "/usr/local/CyberCP/bin/python manage.py migrate %s" % pluginName
+        subprocess.call(shlex.split(command))
+        os.chdir(currentDir)
+
+
+    @staticmethod
     def preInstallScript(pluginName):
         pluginHome = '/usr/local/CyberCP/' + pluginName
 
@@ -184,6 +200,15 @@ class pluginInstaller:
 
             ##
 
+            if pluginInstaller.migrationsEnabled(pluginName):
+                pluginInstaller.stdOut('Running Migrations..')
+                pluginInstaller.installMigrations(pluginName)
+                pluginInstaller.stdOut('Migrations Completed..')
+            else:
+                pluginInstaller.stdOut('Migrations not enabled, add file \'enable_migrations\' to plugin to enable')
+
+            ##
+
             pluginInstaller.restartGunicorn()
 
             ##
@@ -252,6 +277,14 @@ class pluginInstaller:
         writeToFile.close()
 
     @staticmethod
+    def removeMigrations(pluginName):
+        currentDir = os.getcwd()
+        os.chdir('/usr/local/CyberCP')
+        command = "/usr/local/CyberCP/bin/python manage.py migrate %s zero" % pluginName
+        subprocess.call(shlex.split(command))
+        os.chdir(currentDir)
+
+    @staticmethod
     def removePlugin(pluginName):
         try:
             ##
@@ -259,6 +292,15 @@ class pluginInstaller:
             pluginInstaller.stdOut('Executing pre_remove script..')
             pluginInstaller.preRemoveScript(pluginName)
             pluginInstaller.stdOut('pre_remove executed.')
+
+            ##
+
+            if pluginInstaller.migrationsEnabled(pluginName):
+                pluginInstaller.stdOut('Removing migrations..')
+                pluginInstaller.removeMigrations(pluginName)
+                pluginInstaller.stdOut('Migrations removed..')
+            else:
+                pluginInstaller.stdOut('Migrations not enabled, add file \'enable_migrations\' to plugin to enable')
 
             ##
 
