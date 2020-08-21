@@ -497,8 +497,9 @@ app.controller('manageApplications', function ($scope, $http, $timeout, $window)
 
 
         function ListInitialDatas(response) {
-            $scope.cyberpanelLoading = true;
+
             if (response.data.abort === 0) {
+                $scope.cyberpanelLoading = true;
                 $scope.requestData = response.data.requestStatus;
                 $timeout(getRequestStatus, 1000);
             } else {
