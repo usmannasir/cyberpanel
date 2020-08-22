@@ -98,6 +98,9 @@
     <link rel="stylesheet" type="text/css" href="{% static 'websiteFunctions/websiteFunctions.css' %}">
     <link rel="stylesheet" type="text/css" href="https://www.jsdelivr.com/package/npm/fontawesome">
 
+    {% block styles %}
+    {% endblock %}
+
     <script type="text/javascript" src="{% static 'baseTemplate/assets/js-core/jquery-core.min.js' %}"></script>
     <script type="text/javascript">
         $(window).load(function () {
@@ -108,6 +111,9 @@
     </script>
     <script src="https://cdn.jsdelivr.net/npm/flot-charts@0.8.3/jquery.flot.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jquery.flot@0.8.3/jquery.flot.time.js"></script>
+
+    {% block header_scripts %}
+    {% endblock %}
 
     <!-- JS Ends -->
 
@@ -987,6 +993,8 @@
     <script src="{% static 'WebTerminal/main.js' %}"></script>
 
 </div>
+{% block footer_scripts %}
+{% endblock %}
 </body>
 </html>
 
