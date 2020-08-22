@@ -905,24 +905,14 @@ class ApplicationInstaller(multi.Thread):
             ####
 
             statusFile = open(tempStatusPath, 'w')
-            statusFile.writelines('Downloading and extracting Magento Core..,30')
+            statusFile.writelines('Downloading Magento Community Core via composer to document root ..,30')
             statusFile.close()
 
-            if sampleData:
-                command = "wget http://cyberpanelsh.b-cdn.net/latest-sample.tar.gz -P %s" % (finalPath)
-            else:
-                command = "wget http://cyberpanelsh.b-cdn.net/latest.tar.gz -P %s" % (finalPath)
+            command = 'composer create-project --repository-url=https://repo.magento.com/ magento/project-community-edition %s' % (finalPath)
 
             ProcessUtilities.executioner(command, externalApp)
 
-            if sampleData:
-                command = 'tar -xf %slatest-sample.tar.gz --directory %s' % (finalPath, finalPath)
-            else:
-                command = 'tar -xf %slatest.tar.gz --directory %s' % (finalPath, finalPath)
-
-            ProcessUtilities.executioner(command, externalApp)
-
-            ##
+            ###
 
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines('Configuring the installation,40')
@@ -939,20 +929,16 @@ class ApplicationInstaller(multi.Thread):
             statusFile.writelines('Installing and configuring Magento..,60')
             statusFile.close()
 
-            command = '/usr/local/lsws/lsphp72/bin/php -d memory_limit=512M %sbin/magento setup:install --backend-frontname="admin" ' \
-                      '--db-host="localhost" --db-name="%s" --db-user="%s" --db-password="%s" ' \
-                      '--base-url="http://%s" --base-url-secure="https://%s/" --admin-user="%s" ' \
-                      '--admin-password="%s" --admin-email="%s" --admin-firstname="%s" --admin-lastname="%s"' \
-                      % (finalPath, dbName, dbUser, dbPassword, finalURL, finalURL, username, password, email, firstName, lastName)
-            result = ProcessUtilities.outputExecutioner(command, externalApp)
-            logging.writeToFile(result)
+            command = '/usr/local/lsws/lsphp73/bin/php -d memory_limit=512M %sbin/magento setup:install --base-url="http://%s" ' \
+                      ' --db-host="localhost" --db-name="%s" --db-user="%s" --db-password="%s" --admin-firstname="%s" ' \
+                      ' --admin-lastname="%s" --admin-email="%s" --admin-user="%s" --admin-password="%s" --language="%s" --timezone="%s" ' \
+                      ' --use-rewrites=1 --search-engine="elasticsearch7" --elasticsearch-host="localhost" --elasticsearch-port="9200" ' \
+                      ' --elasticsearch-index-prefix="%s"' \ 
+                      % (finalPath, finalURL, dbName, dbUser, dbPassword, firstName, lastName, email, username, password, language, timezone, dbName )
+	        result = ProcessUtilities.outputExecutioner(command, externalApp)
+            logging.writeToFile(result)	
 
             ##
-
-            if sampleData:
-                command = 'rm -rf %slatest-sample.tar.gz' % (finalPath)
-            else:
-                command = 'rm -rf %slatest.tar.gz' % (finalPath)
 
             ProcessUtilities.executioner(command, externalApp)
 
