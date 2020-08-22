@@ -315,14 +315,23 @@ def manageApplications(request):
         ## ElasticSearch
 
         esPath = '/home/cyberpanel/elasticsearch'
+        rPath = '/home/cyberpanel/redis'
 
         if os.path.exists(esPath):
             installed = 'Installed'
         else:
             installed = 'Not-Installed'
 
+        if os.path.exists(rPath):
+            rInstalled = 'Installed'
+        else:
+            rInstalled = 'Not-Installed'
+
         elasticSearch = {'image': '/static/manageServices/images/elastic-search.png', 'name': 'Elastic Search', 'installed': installed}
+        redis = {'image': '/static/manageServices/images/redis.png', 'name': 'Redis',
+                         'installed': rInstalled}
         services.append(elasticSearch)
+        services.append(redis)
 
         try:
             return render(request, 'manageServices/applications.html', {'services': services})
@@ -353,6 +362,11 @@ def removeInstall(request):
                     command = '/usr/local/CyberCP/bin/python /usr/local/CyberCP/manageServices/serviceManager.py --function InstallElasticSearch'
                 else:
                     command = '/usr/local/CyberCP/bin/python /usr/local/CyberCP/manageServices/serviceManager.py --function RemoveElasticSearch'
+            elif appName == 'Redis':
+                if status == 'Installing':
+                    command = '/usr/local/CyberCP/bin/python /usr/local/CyberCP/manageServices/serviceManager.py --function InstallRedis'
+                else:
+                    command = '/usr/local/CyberCP/bin/python /usr/local/CyberCP/manageServices/serviceManager.py --function RemoveRedis'
 
             ProcessUtilities.popenExecutioner(command)
             data_ret = {'status': 1}

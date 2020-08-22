@@ -241,14 +241,59 @@ type=rpm-md
         ServerStatusUtil.executioner(command, statusFile)
 
 
-        jvmOptions = '/etc/elasticsearch/jvm.options'
-
-
         command = 'rm -f /home/cyberpanel/elasticsearch'
         ServerStatusUtil.executioner(command, statusFile)
 
         logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
                                                   "ElasticSearch successfully removed.[200]\n", 1)
+        return 0
+
+    @staticmethod
+    def InstallRedis():
+
+        statusFile = open(ServerStatusUtil.lswsInstallStatusPath, 'w')
+
+        if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+            command = 'yum install redis -y'
+            ServerStatusUtil.executioner(command, statusFile)
+        else:
+
+            command = 'apt-get install redis-server -y'
+            ServerStatusUtil.executioner(command, statusFile)
+
+
+        command = 'systemctl enable redis'
+        ServerStatusUtil.executioner(command, statusFile)
+
+        command = 'systemctl start redis'
+        ServerStatusUtil.executioner(command, statusFile)
+
+        command = 'touch /home/cyberpanel/redis'
+        ServerStatusUtil.executioner(command, statusFile)
+
+        logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
+                                                  "Redis successfully installed.[200]\n", 1)
+        return 0
+
+    @staticmethod
+    def RemoveRedis():
+
+        statusFile = open(ServerStatusUtil.lswsInstallStatusPath, 'w')
+
+        if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+            command = 'yum erase redis -y'
+            ServerStatusUtil.executioner(command, statusFile)
+        else:
+
+            command = 'apt-get remove redis-server -y'
+            ServerStatusUtil.executioner(command, statusFile)
+
+
+        command = 'rm -f /home/cyberpanel/redis'
+        ServerStatusUtil.executioner(command, statusFile)
+
+        logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
+                                                  "Redis successfully removed.[200]\n", 1)
         return 0
 
 def main():
@@ -263,6 +308,10 @@ def main():
         ServiceManager.InstallElasticSearch()
     elif args["function"] == "RemoveElasticSearch":
         ServiceManager.RemoveElasticSearch()
+    elif args["function"] == "InstallRedis":
+        ServiceManager.InstallRedis()
+    elif args["function"] == "RemoveRedis":
+        ServiceManager.RemoveRedis()
 
 
 
