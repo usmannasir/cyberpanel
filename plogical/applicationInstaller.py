@@ -933,9 +933,9 @@ class ApplicationInstaller(multi.Thread):
                       ' --db-host="localhost" --db-name="%s" --db-user="%s" --db-password="%s" --admin-firstname="%s" ' \
                       ' --admin-lastname="%s" --admin-email="%s" --admin-user="%s" --admin-password="%s" --language="%s" --timezone="%s" ' \
                       ' --use-rewrites=1 --search-engine="elasticsearch7" --elasticsearch-host="localhost" --elasticsearch-port="9200" ' \
-                      ' --elasticsearch-index-prefix="%s"' \ 
-                      % (finalPath, finalURL, dbName, dbUser, dbPassword, firstName, lastName, email, username, password, language, timezone, dbName )
-	        result = ProcessUtilities.outputExecutioner(command, externalApp)
+                      ' --elasticsearch-index-prefix="%s"' \
+                      % (finalPath, finalURL, dbName, dbUser, dbPassword, firstName, lastName, email, username, password, language, timezone, dbName)
+            result = ProcessUtilities.outputExecutioner(command, externalApp)
             logging.writeToFile(result)	
 
             ##
