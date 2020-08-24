@@ -78,6 +78,14 @@ def addDeleteDNSRecords(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+def updateRecord(request):
+    try:
+        userID = request.session['userID']
+        dm = DNSManager()
+        return dm.updateRecord(userID, json.loads(request.body))
+    except KeyError:
+        return redirect(loadLoginPage)
+
 def getCurrentRecordsForDomain(request):
     try:
         userID = request.session['userID']

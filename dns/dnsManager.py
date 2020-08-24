@@ -418,6 +418,47 @@ class DNSManager:
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
+    def updateRecord(self, userID = None, data = None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+
+            if ACLManager.currentContextPermission(currentACL, 'addDeleteRecords') == 0:
+                return ACLManager.loadErrorJson('add_status', 0)
+
+            zoneDomain = data['selectedZone']
+
+            admin = Administrator.objects.get(pk=userID)
+            if ACLManager.checkOwnershipZone(zoneDomain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson()
+
+            record = Records.objects.get(pk=data['id'])
+
+            if data['nameNow'] != None:
+                record.name = data['nameNow']
+
+            if data['ttlNow'] != None:
+                record.ttl = int(data['ttlNow'])
+
+            if data['priorityNow'] != None:
+                record.prio = int(data['priorityNow'])
+
+            if data['contentNow'] != None:
+                record.content = data['contentNow']
+
+            record.save()
+
+            final_dic = {'status': 1, 'error_message': "None"}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+        except BaseException as msg:
+            final_dic = {'status': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
     def deleteDNSRecord(self, userID = None, data = None):
         try:
             currentACL = ACLManager.loadedACL(userID)

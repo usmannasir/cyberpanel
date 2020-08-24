@@ -19,6 +19,7 @@ urlpatterns = [
     url(r'^submitZoneDeletion',views.submitZoneDeletion,name='submitZoneDeletion'),
     url(r'^saveNSConfigurations$', views.saveNSConfigurations, name='saveNSConfigurations'),
     url(r'^saveCFConfigs$', views.saveCFConfigs, name='saveCFConfigs'),
+    url(r'^updateRecord$', views.updateRecord, name='updateRecord'),
 
     url(r'^getCurrentRecordsForDomainCloudFlare$', views.getCurrentRecordsForDomainCloudFlare, name='getCurrentRecordsForDomainCloudFlare'),
     url(r'^deleteDNSRecordCloudFlare$', views.deleteDNSRecordCloudFlare, name='deleteDNSRecordCloudFlare'),

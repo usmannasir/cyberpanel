@@ -814,175 +814,176 @@ class ApplicationInstaller(multi.Thread):
             logging.writeToFile(str(msg))
             return 0
 
-    def installMagento(self):
-        try:
-
-            username = self.extraArgs['username']
-            domainName = self.extraArgs['domainName']
-            home = self.extraArgs['home']
-            firstName = self.extraArgs['firstName']
-            lastName = self.extraArgs['lastName']
-            email = self.extraArgs['email']
-            password = self.extraArgs['password']
-            tempStatusPath = self.extraArgs['tempStatusPath']
-            sampleData = self.extraArgs['sampleData']
-            self.tempStatusPath = tempStatusPath
-
-            FNULL = open(os.devnull, 'w')
-
-            ## Open Status File
-
-            statusFile = open(tempStatusPath, 'w')
-            statusFile.writelines('Setting up paths,0')
-            statusFile.close()
-
-            finalPath = ''
-            self.premPath = ''
-
-            try:
-                website = ChildDomains.objects.get(domain=domainName)
-                externalApp = website.master.externalApp
-                self.masterDomain = website.master.domain
-
-                if home == '0':
-                    path = self.extraArgs['path']
-                    finalPath = website.path.rstrip('/') + "/" + path + "/"
-                else:
-                    finalPath = website.path + "/"
-
-                if website.master.package.dataBases > website.master.databases_set.all().count():
-                    pass
-                else:
-                    raise BaseException( "Maximum database limit reached for this website.")
-
-                statusFile = open(tempStatusPath, 'w')
-                statusFile.writelines('Setting up Database,20')
-                statusFile.close()
-
-                dbName, dbUser, dbPassword = self.dbCreation(tempStatusPath, website.master)
-                self.permPath = website.path
-
-            except:
-                website = Websites.objects.get(domain=domainName)
-                externalApp = website.externalApp
-                self.masterDomain = website.domain
-
-                if home == '0':
-                    path = self.extraArgs['path']
-                    finalPath = "/home/" + domainName + "/public_html/" + path + "/"
-                else:
-                    finalPath = "/home/" + domainName + "/public_html/"
-
-                if website.package.dataBases > website.databases_set.all().count():
-                    pass
-                else:
-                    raise BaseException( "Maximum database limit reached for this website.")
-
-                statusFile = open(tempStatusPath, 'w')
-                statusFile.writelines('Setting up Database,20')
-                statusFile.close()
-
-                dbName, dbUser, dbPassword = self.dbCreation(tempStatusPath, website)
-                self.permPath = '/home/%s/public_html' % (website.domain)
-
-            ## Security Check
-
-            if finalPath.find("..") > -1:
-                raise BaseException( "Specified path must be inside virtual host home.")
-
-            command = 'chmod 755 %s' % (self.permPath)
-            ProcessUtilities.executioner(command)
-
-            if not os.path.exists(finalPath):
-                command = 'mkdir -p ' + finalPath
-                ProcessUtilities.executioner(command, externalApp)
-
-            ## checking for directories/files
-
-            if self.dataLossCheck(finalPath, tempStatusPath) == 0:
-                raise BaseException('Directory not empty.')
-
-            ####
-
-            statusFile = open(tempStatusPath, 'w')
-            statusFile.writelines('Downloading Magento Community Core via composer to document root ..,30')
-            statusFile.close()
-
-            command = 'composer create-project --repository-url=https://repo.magento.com/ magento/project-community-edition %s' % (finalPath)
-
-            ProcessUtilities.executioner(command, externalApp)
-
-            ###
-
-            statusFile = open(tempStatusPath, 'w')
-            statusFile.writelines('Configuring the installation,40')
-            statusFile.close()
-
-            if home == '0':
-                path = self.extraArgs['path']
-                # finalURL = domainName + '/' + path
-                finalURL = domainName
-            else:
-                finalURL = domainName
-
-            statusFile = open(tempStatusPath, 'w')
-            statusFile.writelines('Installing and configuring Magento..,60')
-            statusFile.close()
-
-            command = '/usr/local/lsws/lsphp73/bin/php -d memory_limit=512M %sbin/magento setup:install --base-url="http://%s" ' \
-                      ' --db-host="localhost" --db-name="%s" --db-user="%s" --db-password="%s" --admin-firstname="%s" ' \
-                      ' --admin-lastname="%s" --admin-email="%s" --admin-user="%s" --admin-password="%s" --language="%s" --timezone="%s" ' \
-                      ' --use-rewrites=1 --search-engine="elasticsearch7" --elasticsearch-host="localhost" --elasticsearch-port="9200" ' \
-                      ' --elasticsearch-index-prefix="%s"' \ 
-                      % (finalPath, finalURL, dbName, dbUser, dbPassword, firstName, lastName, email, username, password, language, timezone, dbName )
-	        result = ProcessUtilities.outputExecutioner(command, externalApp)
-            logging.writeToFile(result)	
-
-            ##
-
-            ProcessUtilities.executioner(command, externalApp)
-
-            ##
-
-            from filemanager.filemanager import FileManager
-
-            fm = FileManager(None, None)
-            fm.fixPermissions(self.masterDomain)
-
-            installUtilities.reStartLiteSpeed()
-
-            statusFile = open(tempStatusPath, 'w')
-            statusFile.writelines("Successfully Installed. [200]")
-            statusFile.close()
-            return 0
-
-
-        except BaseException as msg:
-            # remove the downloaded files
-
-            homeDir = "/home/" + domainName + "/public_html"
-
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
-                groupName = 'nobody'
-            else:
-                groupName = 'nogroup'
-
-            if not os.path.exists(homeDir):
-                command = "chown -R " + externalApp + ":" + groupName + " " + homeDir
-                ProcessUtilities.executioner(command, externalApp)
-
-            try:
-                mysqlUtilities.deleteDatabase(dbName, dbUser)
-                db = Databases.objects.get(dbName=dbName)
-                db.delete()
-            except:
-                pass
-
-            permPath = '/home/%s/public_html' % (domainName)
-            command = 'chmod 750 %s' % (permPath)
-            ProcessUtilities.executioner(command)
-
-            statusFile = open(self.tempStatusPath, 'w')
-            statusFile.writelines(str(msg) + " [404]")
-            statusFile.close()
-            return 0
+    # def installMagento(self):
+    #     try:
+    #
+    #         username = self.extraArgs['username']
+    #         domainName = self.extraArgs['domainName']
+    #         home = self.extraArgs['home']
+    #         firstName = self.extraArgs['firstName']
+    #         lastName = self.extraArgs['lastName']
+    #         email = self.extraArgs['email']
+    #         password = self.extraArgs['password']
+    #         tempStatusPath = self.extraArgs['tempStatusPath']
+    #         sampleData = self.extraArgs['sampleData']
+    #         self.tempStatusPath = tempStatusPath
+    #
+    #         FNULL = open(os.devnull, 'w')
+    #
+    #         ## Open Status File
+    #
+    #         statusFile = open(tempStatusPath, 'w')
+    #         statusFile.writelines('Setting up paths,0')
+    #         statusFile.close()
+    #
+    #         finalPath = ''
+    #         self.premPath = ''
+    #
+    #         try:
+    #             website = ChildDomains.objects.get(domain=domainName)
+    #             externalApp = website.master.externalApp
+    #             self.masterDomain = website.master.domain
+    #
+    #             if home == '0':
+    #                 path = self.extraArgs['path']
+    #                 finalPath = website.path.rstrip('/') + "/" + path + "/"
+    #             else:
+    #                 finalPath = website.path + "/"
+    #
+    #             if website.master.package.dataBases > website.master.databases_set.all().count():
+    #                 pass
+    #             else:
+    #                 raise BaseException( "Maximum database limit reached for this website.")
+    #
+    #             statusFile = open(tempStatusPath, 'w')
+    #             statusFile.writelines('Setting up Database,20')
+    #             statusFile.close()
+    #
+    #             dbName, dbUser, dbPassword = self.dbCreation(tempStatusPath, website.master)
+    #             self.permPath = website.path
+    #
+    #         except:
+    #             website = Websites.objects.get(domain=domainName)
+    #             externalApp = website.externalApp
+    #             self.masterDomain = website.domain
+    #
+    #             if home == '0':
+    #                 path = self.extraArgs['path']
+    #                 finalPath = "/home/" + domainName + "/public_html/" + path + "/"
+    #             else:
+    #                 finalPath = "/home/" + domainName + "/public_html/"
+    #
+    #             if website.package.dataBases > website.databases_set.all().count():
+    #                 pass
+    #             else:
+    #                 raise BaseException( "Maximum database limit reached for this website.")
+    #
+    #             statusFile = open(tempStatusPath, 'w')
+    #             statusFile.writelines('Setting up Database,20')
+    #             statusFile.close()
+    #
+    #             dbName, dbUser, dbPassword = self.dbCreation(tempStatusPath, website)
+    #             self.permPath = '/home/%s/public_html' % (website.domain)
+    #
+    #         ## Security Check
+    #
+    #         if finalPath.find("..") > -1:
+    #             raise BaseException( "Specified path must be inside virtual host home.")
+    #
+    #         command = 'chmod 755 %s' % (self.permPath)
+    #         ProcessUtilities.executioner(command)
+    #
+    #         if not os.path.exists(finalPath):
+    #             command = 'mkdir -p ' + finalPath
+    #             ProcessUtilities.executioner(command, externalApp)
+    #
+    #         ## checking for directories/files
+    #
+    #         if self.dataLossCheck(finalPath, tempStatusPath) == 0:
+    #             raise BaseException('Directory not empty.')
+    #
+    #         ####
+    #
+    #         statusFile = open(tempStatusPath, 'w')
+    #         statusFile.writelines('Downloading Magento Community Core via composer to document root ..,30')
+    #         statusFile.close()
+    #
+    #         command = 'composer create-project --repository-url=https://repo.magento.com/ magento/project-community-edition %s' % (finalPath)
+    #
+    #         ProcessUtilities.executioner(command, externalApp)
+    #
+    #         ###
+    #
+    #         statusFile = open(tempStatusPath, 'w')
+    #         statusFile.writelines('Configuring the installation,40')
+    #         statusFile.close()
+    #
+    #         if home == '0':
+    #             path = self.extraArgs['path']
+    #             # finalURL = domainName + '/' + path
+    #             finalURL = domainName
+    #         else:
+    #             finalURL = domainName
+    #
+    #         statusFile = open(tempStatusPath, 'w')
+    #         statusFile.writelines('Installing and configuring Magento..,60')
+    #         statusFile.close()
+    #
+    #         command = '/usr/local/lsws/lsphp73/bin/php -d memory_limit=512M %sbin/magento setup:install --base-url="http://%s" ' \
+    #                   ' --db-host="localhost" --db-name="%s" --db-user="%s" --db-password="%s" --admin-firstname="%s" ' \
+    #                   ' --admin-lastname="%s" --admin-email="%s" --admin-user="%s" --admin-password="%s" --language="%s" --timezone="%s" ' \
+    #                   ' --use-rewrites=1 --search-engine="elasticsearch7" --elasticsearch-host="localhost" --elasticsearch-port="9200" ' \
+    #                   ' --elasticsearch-index-prefix="%s"' \
+    #                   % (finalPath, finalURL, dbName, dbUser, dbPassword, firstName, lastName, email, username, password, 'language', 'timezone', dbName )
+    #
+    #         result = ProcessUtilities.outputExecutioner(command, externalApp)
+    #         logging.writeToFile(result)
+    #
+    #         ##
+    #
+    #         ProcessUtilities.executioner(command, externalApp)
+    #
+    #         ##
+    #
+    #         from filemanager.filemanager import FileManager
+    #
+    #         fm = FileManager(None, None)
+    #         fm.fixPermissions(self.masterDomain)
+    #
+    #         installUtilities.reStartLiteSpeed()
+    #
+    #         statusFile = open(tempStatusPath, 'w')
+    #         statusFile.writelines("Successfully Installed. [200]")
+    #         statusFile.close()
+    #         return 0
+    #
+    #
+    #     except BaseException as msg:
+    #         # remove the downloaded files
+    #
+    #         homeDir = "/home/" + domainName + "/public_html"
+    #
+    #         if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+    #             groupName = 'nobody'
+    #         else:
+    #             groupName = 'nogroup'
+    #
+    #         if not os.path.exists(homeDir):
+    #             command = "chown -R " + externalApp + ":" + groupName + " " + homeDir
+    #             ProcessUtilities.executioner(command, externalApp)
+    #
+    #         try:
+    #             mysqlUtilities.deleteDatabase(dbName, dbUser)
+    #             db = Databases.objects.get(dbName=dbName)
+    #             db.delete()
+    #         except:
+    #             pass
+    #
+    #         permPath = '/home/%s/public_html' % (domainName)
+    #         command = 'chmod 750 %s' % (permPath)
+    #         ProcessUtilities.executioner(command)
+    #
+    #         statusFile = open(self.tempStatusPath, 'w')
+    #         statusFile.writelines(str(msg) + " [404]")
+    #         statusFile.close()
+    #         return 0

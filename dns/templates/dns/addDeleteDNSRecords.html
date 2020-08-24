@@ -3,405 +3,458 @@
 {% block title %}{% trans "Add/Modify DNS Records - CyberPanel" %}{% endblock %}
 {% block content %}
 
-{% load static %}
-{% get_current_language as LANGUAGE_CODE %}
-<!-- Current language: {{ LANGUAGE_CODE }} -->
-
-
-<div class="container">
-<div id="page-title">
-   <h2>{% trans "Add/Modify DNS Zone" %} - <a  target="_blank" href="http://go.cyberpanel.net/dns-records" style="height: 23px;line-height: 21px;" class="btn btn-border btn-alt border-red btn-link font-red" title=""><span>{% trans "DNS Docs" %}</span></a></h2>
-   <p>{% trans "On this page you can add/modify dns records for domains whose dns zone is already created." %}</p>
-</div>
-<div ng-controller="addModifyDNSRecords" class="panel">
-    <div class="panel-body">
-        <h3 class="content-box-header">
-            {% trans "Add Records" %} <img ng-hide="recordsLoading" src="{% static 'images/loading.gif' %}">
-        </h3>
-        <div  class="example-box-wrapper">
-
-
-        {% if not status %}
-
-            <div class="col-md-12 text-center" style="margin-bottom: 2%;">
-                <h3>{% trans "PowerDNS is disabled." %}
-                    <a href="{% url 'managePowerDNS' %}"><button class="btn btn-alt btn-hover btn-blue-alt">
-                        <span>{% trans "Enable Now" %}</span>
-                        <i class="glyph-icon icon-arrow-right"></i>
-                    </button></a></h3>
-            </div>
-
-
-        {% else %}
-
-
-            <form action="/" class="form-horizontal bordered-row panel-body">
-
-
-                 <div class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "Select Domain" %} </label>
-                    <div class="col-sm-6">
-                        <select ng-change="fetchRecords()" ng-model="selectedZone" class="form-control">
-                            {% for items in domainsList %}
-                                <option>{{ items }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </div>
-
-
-                <div ng-hide="addRecordsBox" class="form-group">
-
-                    <div class="example-box-wrapper">
-                                <ul class="nav nav-tabs">
-                                    <li ng-click="fetchRecordsTabs('aRecord')" id="aRecord" ><a href="">A</a></li>
-                                    <li ng-click="fetchRecordsTabs('aaaaRecord')" id="aaaaRecord" ><a href="">AAAA</a></li>
-                                    <li ng-click="fetchRecordsTabs('cNameRecord')" id="cNameRecord"><a href="">CNAME</a></li>
-                                    <li ng-click="fetchRecordsTabs('mxRecord')" id="mxRecord"><a href="">MX</a></li>
-                                    <li ng-click="fetchRecordsTabs('txtRecord')" id="txtRecord"><a href="">TXT</a></li>
-                                    <li ng-click="fetchRecordsTabs('spfRecord')" id="spfRecord"><a href="">SPF</a></li>
-                                    <li ng-click="fetchRecordsTabs('nsRecord')" id="nsRecord"><a href="">NS</a></li>
-                                    <li ng-click="fetchRecordsTabs('soaRecord')" id="soaRecord" ><a href="">SOA</a></li>
-                                    <li ng-click="fetchRecordsTabs('srvRecord')" id="srvRecord" ><a href="">SRV</a></li>
-                                    <li ng-click="fetchRecordsTabs('caaRecord')" id="caaRecord" ><a href="">CAA</a></li>
-                                </ul>
-                    </div>
-
-                    <!------------- A Record box ------------->
-
-
-                    <div class="col-sm-3 aRecord">
-                        <input placeholder="{% trans 'Name' %}" name="dom"  type="text" class="form-control" ng-model="recordName" required>
-                    </div>
-
-                    <div class="col-sm-3 aRecord">
-                        <input placeholder="{% trans 'TTL' %}"   type="number" class="form-control" ng-model="ttl" required>
-                    </div>
-
-                    <div class="col-sm-3 aRecord">
-                        <input placeholder="{% trans 'IP Address' %}" name="dom"  type="text" class="form-control" ng-model="recordContentA" required>
-                    </div>
-
-
-
-                    <div class="col-sm-3 aRecord">
-                        <button style="width: 100%;"  type="button" ng-click="addDNSRecord('A')" class="btn btn-primary">{% trans "Add" %}</button>
-                    </div>
-
-                    <!------------- A Record box ------------->
-
-                    <!------------- AAAA Record box ------------->
-
-
-                    <div class="col-sm-3 aaaaRecord">
-                        <input placeholder="{% trans 'Name' %}" name="dom"  type="text" class="form-control" ng-model="recordName" required>
-                    </div>
-
-                    <div class="col-sm-3 aaaaRecord">
-                        <input placeholder="{% trans 'TTL' %}"   type="number" class="form-control" ng-model="ttl" required>
-                    </div>
-
-                    <div class="col-sm-3 aaaaRecord">
-                        <input placeholder="{% trans 'IPV6 Address' %}" name="dom"  type="text" class="form-control" ng-model="recordContentAAAA" required>
-                    </div>
-
-
-
-                    <div class="col-sm-3 aaaaRecord">
-                        <button style="width: 100%;"  type="button" ng-click="addDNSRecord('AAAA')" class="btn btn-primary">{% trans "Add" %}</button>
-                    </div>
-
-                    <!------------- AAAA Record box ------------->
-
-
-                    <!------------- CNAME Record box ------------->
-
-
-                    <div class="col-sm-3 cNameRecord">
-                        <input placeholder="{% trans 'Name' %}"  type="text" class="form-control" ng-model="recordName" required>
-                    </div>
-
-                    <div class="col-sm-3 cNameRecord">
-                        <input placeholder="{% trans 'TTL' %}"   type="number" class="form-control" ng-model="ttl" required>
-                    </div>
-
-                    <div class="col-sm-3 cNameRecord">
-                        <input placeholder="{% trans 'Domain Name' %}"   type="text" class="form-control" ng-model="recordContentCNAME" required>
-                    </div>
-
-
-
-                    <div class="col-sm-3 cNameRecord">
-                        <button style="width: 100%;"  type="button" ng-click="addDNSRecord('CNAME')" class="btn btn-primary">{% trans "Add" %}</button>
-                    </div>
-
-                    <!------------- CNAME Record box ------------->
-
-                    <!------------- MX Record box ------------->
-
-
-                    <div class="col-sm-3 mxRecord">
-                        <input placeholder="{% trans 'Name' %}"  type="text" class="form-control" ng-model="recordName" required>
-                    </div>
-
-                    <div class="col-sm-2 mxRecord">
-                        <input placeholder="{% trans 'TTL' %}"   type="number" class="form-control" ng-model="ttl" required>
-                    </div>
-
-                    <div class="col-sm-2 mxRecord">
-                        <input placeholder="{% trans 'Priority' %}"   type="number" class="form-control" ng-model="priority" required>
-                    </div>
-
-                    <div class="col-sm-3 mxRecord">
-                        <input placeholder="{% trans 'Domain Name' %}"   type="text" class="form-control" ng-model="recordContentMX" required>
-                    </div>
-
-
-
-                    <div class="col-sm-2 mxRecord">
-                        <button style="width: 100%;"  type="button" ng-click="addDNSRecord('MX')" class="btn btn-primary">{% trans "Add" %}</button>
-                    </div>
-
-                    <!------------- CNAME Record box ------------->
-
-
-                    <!------------- SPF Record box ------------->
-
-
-                    <div class="col-sm-3 spfRecord">
-                        <input placeholder="{% trans 'Name' %}"  type="text" class="form-control" ng-model="recordName" required>
-                    </div>
-
-                    <div class="col-sm-3 spfRecord">
-                        <input placeholder="{% trans 'TTL' %}"   type="number" class="form-control" ng-model="ttl" required>
-                    </div>
-
-
-                    <div class="col-sm-3 spfRecord">
-                        <input placeholder="{% trans 'Policy' %}"   type="text" class="form-control" ng-model="recordContentSPF" required>
-                    </div>
-
-
-
-                    <div class="col-sm-3 spfRecord">
-                        <button style="width: 100%;"  type="button" ng-click="addDNSRecord('SPF')" class="btn btn-primary">{% trans "Add" %}</button>
-                    </div>
-
-                    <!------------- SPF Record box ------------->
-
-                    <!------------- TXT Record box ------------->
-
-
-                    <div class="col-sm-3 txtRecord">
-                        <input placeholder="{% trans 'Name' %}"  type="text" class="form-control" ng-model="recordName" required>
-                    </div>
-
-                    <div class="col-sm-3 txtRecord">
-                        <input placeholder="{% trans 'TTL' %}"   type="number" class="form-control" ng-model="ttl" required>
-                    </div>
-
-
-                    <div class="col-sm-3 txtRecord">
-                        <input placeholder="{% trans 'Text' %}"   type="text" class="form-control" ng-model="recordContentTXT" required>
-                    </div>
-
-
-
-                    <div class="col-sm-3 txtRecord">
-                        <button style="width: 100%;"  type="button" ng-click="addDNSRecord('TXT')" class="btn btn-primary">{% trans "Add" %}</button>
-                    </div>
-
-                    <!------------- TXT Record box ------------->
-
-                    <!------------- SOA Record box ------------->
-
-
-                    <div class="col-sm-3 soaRecord">
-                        <input placeholder="{% trans 'Name' %}"  type="text" class="form-control" ng-model="selectedZone" disabled>
-                    </div>
-
-                    <div class="col-sm-3 soaRecord">
-                        <input placeholder="{% trans 'TTL' %}"   type="number" class="form-control" ng-model="ttl" required>
-                    </div>
-
-
-                    <div class="col-sm-3 soaRecord">
-                        <input placeholder="{% trans 'SOA Value' %}"   type="text" class="form-control" ng-model="recordContentSOA" required>
-                    </div>
-
-
-
-                    <div class="col-sm-3 soaRecord">
-                        <button style="width: 100%;"  type="button" ng-click="addDNSRecord('SOA')" class="btn btn-primary">{% trans "Add" %}</button>
-                    </div>
-
-                    <!------------- SOA Record box ------------->
-
-                    <!------------- NS Record box ------------->
-
-
-                    <div class="col-sm-3 nsRecord">
-                        <input placeholder="{% trans 'Name' %}"  type="text" class="form-control" ng-model="selectedZone" disabled>
-                    </div>
-
-                    <div class="col-sm-3 nsRecord">
-                        <input placeholder="{% trans 'TTL' %}"   type="number" class="form-control" ng-model="ttl" required>
-                    </div>
-
-
-                    <div class="col-sm-3 nsRecord">
-                        <input placeholder="{% trans 'Name server' %}"   type="text" class="form-control" ng-model="recordContentNS" required>
-                    </div>
-
-
-
-                    <div class="col-sm-3 nsRecord">
-                        <button style="width: 100%;"  type="button" ng-click="addDNSRecord('NS')" class="btn btn-primary">{% trans "Add" %}</button>
-                    </div>
-
-                    <!------------- NS Record box ------------->
-
-                    <!------------- SRV Record box ------------->
-
-
-                    <div class="col-sm-3 srvRecord">
-                        <input placeholder="{% trans 'Name' %}"  type="text" class="form-control" ng-model="recordName">
-                    </div>
-
-                    <div class="col-sm-2 srvRecord">
-                        <input placeholder="{% trans 'TTL' %}"   type="number" class="form-control" ng-model="ttl" required>
-                    </div>
-
-                    <div class="col-sm-2 srvRecord">
-                        <input placeholder="{% trans 'Prioirty' %}"   type="number" class="form-control" ng-model="priority" required>
-                    </div>
-
-
-                    <div class="col-sm-3 srvRecord">
-                        <input placeholder="{% trans 'Content' %}"   type="text" class="form-control" ng-model="recordContentSRV" required>
-                    </div>
-
-
-
-                    <div class="col-sm-2 srvRecord">
-                        <button style="width: 100%;"  type="button" ng-click="addDNSRecord('SRV')" class="btn btn-primary">{% trans "Add" %}</button>
-                    </div>
-
-                    <!------------- SRV Record box ------------->
-
-                    <!------------- CAA Record box ------------->
-
-                    <div class="col-sm-3 caaRecord">
-                        <input placeholder="{% trans 'Name' %}"  type="text" class="form-control" ng-model="recordName">
-                    </div>
-                    <div class="col-sm-3 caaRecord">
-                        <input placeholder="{% trans 'TTL' %}"   type="number" class="form-control" ng-model="ttl" required>
-                    </div>
-                    <div class="col-sm-3 caaRecord">
-                        <input placeholder='Value e.g: 0 issue "letsencrypt.org"'   type="text" class="form-control" ng-model="recordContentCAA" required>
-                    </div>
-                    <div class="col-sm-3 caaRecord">
-                        <button style="width: 100%;"  type="button" ng-click="addDNSRecord('CAA')" class="btn btn-primary">{% trans "Add" %}</button>
-                    </div>
-
-                    <!------------- CAA Record box ------------->
-
-
-
-                </div>
-
-
-
-
-
-            <!------ List of records --------------->
-
-                <div ng-hide="currentRecords" class="form-group">
-
-                    <div  class="col-sm-12">
-
-                        <table class="table">
-                            <thead>
-                            <tr>
-                                <th>{% trans "ID" %}</th>
-                                <th>{% trans "Type" %}</th>
-                                <th>{% trans "Name" %}</th>
-                                <th>{% trans "TTL" %}</th>
-                                <th>{% trans "Value" %}</th>
-                                <th>{% trans "Priority" %}</th>
-                                <th>{% trans "Delete" %}</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            <tr ng-repeat="record in records track by $index">
-                                <td ng-bind="record.id"></td>
-                                <td ng-bind="record.type"></td>
-                                <td ng-bind="record.name"></td>
-                                <td ng-bind="record.ttl"></td>
-                                <td ng-bind="record.content"></td>
-                                <td ng-bind="record.priority"></td>
-                                <td ng-click="deleteRecord(record.id)"><img src="{% static 'images/delete.png' %}"></td>
-                            </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-            <!------ List of records --------------->
-
-
-                <div class="form-group">
-
-
-                    <label class="col-sm-3 control-label"></label>
-                    <div class="col-sm-4">
-                            <div ng-hide="canNotFetchRecords" class="alert alert-danger">
-                                <p>{% trans "Cannot fetch records. Error message:" %}{$ errorMessage $}</p>
-                            </div>
-
-                            <div ng-hide="couldNotAddRecord" class="alert alert-danger">
-                                <p>{% trans "Cannot add record. Error message: " %}{$ errorMessage $}</p>
-                            </div>
-
-                            <div ng-hide="recordsFetched" class="alert alert-success">
-                                <p>{% trans "Records successfully fetched for" %} <strong>{$ domainFeteched $}</strong></p>
-                            </div>
-
-                            <div ng-hide="recordDeleted" class="alert alert-success">
-                                <p>{% trans "Record Successfully Deleted" %}</p>
-                            </div>
-
-                            <div ng-hide="couldNotDeleteRecords" class="alert alert-danger">
-                                <p>{% trans "Cannot delete record. Error message:" %} {$ errorMessage $}</p>
-                            </div>
-
-                            <div ng-hide="recordAdded" class="alert alert-success">
-                                <p>{% trans "Record Successfully Added." %}</p>
-                            </div>
-
-
-                            <div ng-hide="couldNotConnect" class="alert alert-success">
-                                <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
-                            </div>
-
-                    </div>
-                </div>
-
-
-
-            </form>
-
-        {% endif %}
-
-
-
-
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
+
+
+    <div class="container">
+        <div id="page-title">
+            <h2>{% trans "Add/Modify DNS Zone" %} - <a target="_blank" href="http://go.cyberpanel.net/dns-records"
+                                                       style="height: 23px;line-height: 21px;"
+                                                       class="btn btn-border btn-alt border-red btn-link font-red"
+                                                       title=""><span>{% trans "DNS Docs" %}</span></a></h2>
+            <p>{% trans "On this page you can add/modify dns records for domains whose dns zone is already created." %}</p>
         </div>
+        <div ng-controller="addModifyDNSRecords" class="panel">
+            <div class="panel-body">
+                <h3 class="content-box-header">
+                    {% trans "Add Records" %} <img ng-hide="recordsLoading" src="{% static 'images/loading.gif' %}">
+                </h3>
+                <div class="example-box-wrapper">
+
+
+                    {% if not status %}
+
+                        <div class="col-md-12 text-center" style="margin-bottom: 2%;">
+                            <h3>{% trans "PowerDNS is disabled." %}
+                                <a href="{% url 'managePowerDNS' %}">
+                                    <button class="btn btn-alt btn-hover btn-blue-alt">
+                                        <span>{% trans "Enable Now" %}</span>
+                                        <i class="glyph-icon icon-arrow-right"></i>
+                                    </button>
+                                </a></h3>
+                        </div>
+
+
+                    {% else %}
+
+
+                        <form action="/" class="form-horizontal bordered-row panel-body">
+
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">{% trans "Select Domain" %} </label>
+                                <div class="col-sm-6">
+                                    <select ng-change="fetchRecords()" ng-model="selectedZone" class="form-control">
+                                        {% for items in domainsList %}
+                                            <option>{{ items }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+
+
+                            <div ng-hide="addRecordsBox" class="form-group">
+
+                                <div class="example-box-wrapper">
+                                    <ul class="nav nav-tabs">
+                                        <li ng-click="fetchRecordsTabs('aRecord')" id="aRecord"><a href="">A</a></li>
+                                        <li ng-click="fetchRecordsTabs('aaaaRecord')" id="aaaaRecord"><a
+                                                href="">AAAA</a></li>
+                                        <li ng-click="fetchRecordsTabs('cNameRecord')" id="cNameRecord"><a
+                                                href="">CNAME</a></li>
+                                        <li ng-click="fetchRecordsTabs('mxRecord')" id="mxRecord"><a href="">MX</a></li>
+                                        <li ng-click="fetchRecordsTabs('txtRecord')" id="txtRecord"><a href="">TXT</a>
+                                        </li>
+                                        <li ng-click="fetchRecordsTabs('spfRecord')" id="spfRecord"><a href="">SPF</a>
+                                        </li>
+                                        <li ng-click="fetchRecordsTabs('nsRecord')" id="nsRecord"><a href="">NS</a></li>
+                                        <li ng-click="fetchRecordsTabs('soaRecord')" id="soaRecord"><a href="">SOA</a>
+                                        </li>
+                                        <li ng-click="fetchRecordsTabs('srvRecord')" id="srvRecord"><a href="">SRV</a>
+                                        </li>
+                                        <li ng-click="fetchRecordsTabs('caaRecord')" id="caaRecord"><a href="">CAA</a>
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                <!------------- A Record box ------------->
+
+
+                                <div class="col-sm-3 aRecord">
+                                    <input placeholder="{% trans 'Name' %}" name="dom" type="text" class="form-control"
+                                           ng-model="recordName" required>
+                                </div>
+
+                                <div class="col-sm-3 aRecord">
+                                    <input placeholder="{% trans 'TTL' %}" type="number" class="form-control"
+                                           ng-model="ttl" required>
+                                </div>
+
+                                <div class="col-sm-3 aRecord">
+                                    <input placeholder="{% trans 'IP Address' %}" name="dom" type="text"
+                                           class="form-control" ng-model="recordContentA" required>
+                                </div>
+
+
+                                <div class="col-sm-3 aRecord">
+                                    <button style="width: 100%;" type="button" ng-click="addDNSRecord('A')"
+                                            class="btn btn-primary">{% trans "Add" %}</button>
+                                </div>
+
+                                <!------------- A Record box ------------->
+
+                                <!------------- AAAA Record box ------------->
+
+
+                                <div class="col-sm-3 aaaaRecord">
+                                    <input placeholder="{% trans 'Name' %}" name="dom" type="text" class="form-control"
+                                           ng-model="recordName" required>
+                                </div>
+
+                                <div class="col-sm-3 aaaaRecord">
+                                    <input placeholder="{% trans 'TTL' %}" type="number" class="form-control"
+                                           ng-model="ttl" required>
+                                </div>
+
+                                <div class="col-sm-3 aaaaRecord">
+                                    <input placeholder="{% trans 'IPV6 Address' %}" name="dom" type="text"
+                                           class="form-control" ng-model="recordContentAAAA" required>
+                                </div>
+
+
+                                <div class="col-sm-3 aaaaRecord">
+                                    <button style="width: 100%;" type="button" ng-click="addDNSRecord('AAAA')"
+                                            class="btn btn-primary">{% trans "Add" %}</button>
+                                </div>
+
+                                <!------------- AAAA Record box ------------->
+
+
+                                <!------------- CNAME Record box ------------->
+
+
+                                <div class="col-sm-3 cNameRecord">
+                                    <input placeholder="{% trans 'Name' %}" type="text" class="form-control"
+                                           ng-model="recordName" required>
+                                </div>
+
+                                <div class="col-sm-3 cNameRecord">
+                                    <input placeholder="{% trans 'TTL' %}" type="number" class="form-control"
+                                           ng-model="ttl" required>
+                                </div>
+
+                                <div class="col-sm-3 cNameRecord">
+                                    <input placeholder="{% trans 'Domain Name' %}" type="text" class="form-control"
+                                           ng-model="recordContentCNAME" required>
+                                </div>
+
+
+                                <div class="col-sm-3 cNameRecord">
+                                    <button style="width: 100%;" type="button" ng-click="addDNSRecord('CNAME')"
+                                            class="btn btn-primary">{% trans "Add" %}</button>
+                                </div>
+
+                                <!------------- CNAME Record box ------------->
+
+                                <!------------- MX Record box ------------->
+
+
+                                <div class="col-sm-3 mxRecord">
+                                    <input placeholder="{% trans 'Name' %}" type="text" class="form-control"
+                                           ng-model="recordName" required>
+                                </div>
+
+                                <div class="col-sm-2 mxRecord">
+                                    <input placeholder="{% trans 'TTL' %}" type="number" class="form-control"
+                                           ng-model="ttl" required>
+                                </div>
+
+                                <div class="col-sm-2 mxRecord">
+                                    <input placeholder="{% trans 'Priority' %}" type="number" class="form-control"
+                                           ng-model="priority" required>
+                                </div>
+
+                                <div class="col-sm-3 mxRecord">
+                                    <input placeholder="{% trans 'Domain Name' %}" type="text" class="form-control"
+                                           ng-model="recordContentMX" required>
+                                </div>
+
+
+                                <div class="col-sm-2 mxRecord">
+                                    <button style="width: 100%;" type="button" ng-click="addDNSRecord('MX')"
+                                            class="btn btn-primary">{% trans "Add" %}</button>
+                                </div>
+
+                                <!------------- CNAME Record box ------------->
+
+
+                                <!------------- SPF Record box ------------->
+
+
+                                <div class="col-sm-3 spfRecord">
+                                    <input placeholder="{% trans 'Name' %}" type="text" class="form-control"
+                                           ng-model="recordName" required>
+                                </div>
+
+                                <div class="col-sm-3 spfRecord">
+                                    <input placeholder="{% trans 'TTL' %}" type="number" class="form-control"
+                                           ng-model="ttl" required>
+                                </div>
+
+
+                                <div class="col-sm-3 spfRecord">
+                                    <input placeholder="{% trans 'Policy' %}" type="text" class="form-control"
+                                           ng-model="recordContentSPF" required>
+                                </div>
+
+
+                                <div class="col-sm-3 spfRecord">
+                                    <button style="width: 100%;" type="button" ng-click="addDNSRecord('SPF')"
+                                            class="btn btn-primary">{% trans "Add" %}</button>
+                                </div>
+
+                                <!------------- SPF Record box ------------->
+
+                                <!------------- TXT Record box ------------->
+
+
+                                <div class="col-sm-3 txtRecord">
+                                    <input placeholder="{% trans 'Name' %}" type="text" class="form-control"
+                                           ng-model="recordName" required>
+                                </div>
+
+                                <div class="col-sm-3 txtRecord">
+                                    <input placeholder="{% trans 'TTL' %}" type="number" class="form-control"
+                                           ng-model="ttl" required>
+                                </div>
+
+
+                                <div class="col-sm-3 txtRecord">
+                                    <input placeholder="{% trans 'Text' %}" type="text" class="form-control"
+                                           ng-model="recordContentTXT" required>
+                                </div>
+
+
+                                <div class="col-sm-3 txtRecord">
+                                    <button style="width: 100%;" type="button" ng-click="addDNSRecord('TXT')"
+                                            class="btn btn-primary">{% trans "Add" %}</button>
+                                </div>
+
+                                <!------------- TXT Record box ------------->
+
+                                <!------------- SOA Record box ------------->
+
+
+                                <div class="col-sm-3 soaRecord">
+                                    <input placeholder="{% trans 'Name' %}" type="text" class="form-control"
+                                           ng-model="selectedZone" disabled>
+                                </div>
+
+                                <div class="col-sm-3 soaRecord">
+                                    <input placeholder="{% trans 'TTL' %}" type="number" class="form-control"
+                                           ng-model="ttl" required>
+                                </div>
+
+
+                                <div class="col-sm-3 soaRecord">
+                                    <input placeholder="{% trans 'SOA Value' %}" type="text" class="form-control"
+                                           ng-model="recordContentSOA" required>
+                                </div>
+
+
+                                <div class="col-sm-3 soaRecord">
+                                    <button style="width: 100%;" type="button" ng-click="addDNSRecord('SOA')"
+                                            class="btn btn-primary">{% trans "Add" %}</button>
+                                </div>
+
+                                <!------------- SOA Record box ------------->
+
+                                <!------------- NS Record box ------------->
+
+
+                                <div class="col-sm-3 nsRecord">
+                                    <input placeholder="{% trans 'Name' %}" type="text" class="form-control"
+                                           ng-model="selectedZone" disabled>
+                                </div>
+
+                                <div class="col-sm-3 nsRecord">
+                                    <input placeholder="{% trans 'TTL' %}" type="number" class="form-control"
+                                           ng-model="ttl" required>
+                                </div>
+
+
+                                <div class="col-sm-3 nsRecord">
+                                    <input placeholder="{% trans 'Name server' %}" type="text" class="form-control"
+                                           ng-model="recordContentNS" required>
+                                </div>
+
+
+                                <div class="col-sm-3 nsRecord">
+                                    <button style="width: 100%;" type="button" ng-click="addDNSRecord('NS')"
+                                            class="btn btn-primary">{% trans "Add" %}</button>
+                                </div>
+
+                                <!------------- NS Record box ------------->
+
+                                <!------------- SRV Record box ------------->
+
+
+                                <div class="col-sm-3 srvRecord">
+                                    <input placeholder="{% trans 'Name' %}" type="text" class="form-control"
+                                           ng-model="recordName">
+                                </div>
+
+                                <div class="col-sm-2 srvRecord">
+                                    <input placeholder="{% trans 'TTL' %}" type="number" class="form-control"
+                                           ng-model="ttl" required>
+                                </div>
+
+                                <div class="col-sm-2 srvRecord">
+                                    <input placeholder="{% trans 'Prioirty' %}" type="number" class="form-control"
+                                           ng-model="priority" required>
+                                </div>
+
+
+                                <div class="col-sm-3 srvRecord">
+                                    <input placeholder="{% trans 'Content' %}" type="text" class="form-control"
+                                           ng-model="recordContentSRV" required>
+                                </div>
+
+
+                                <div class="col-sm-2 srvRecord">
+                                    <button style="width: 100%;" type="button" ng-click="addDNSRecord('SRV')"
+                                            class="btn btn-primary">{% trans "Add" %}</button>
+                                </div>
+
+                                <!------------- SRV Record box ------------->
+
+                                <!------------- CAA Record box ------------->
+
+                                <div class="col-sm-3 caaRecord">
+                                    <input placeholder="{% trans 'Name' %}" type="text" class="form-control"
+                                           ng-model="recordName">
+                                </div>
+                                <div class="col-sm-3 caaRecord">
+                                    <input placeholder="{% trans 'TTL' %}" type="number" class="form-control"
+                                           ng-model="ttl" required>
+                                </div>
+                                <div class="col-sm-3 caaRecord">
+                                    <input placeholder='Value e.g: 0 issue "letsencrypt.org"' type="text"
+                                           class="form-control" ng-model="recordContentCAA" required>
+                                </div>
+                                <div class="col-sm-3 caaRecord">
+                                    <button style="width: 100%;" type="button" ng-click="addDNSRecord('CAA')"
+                                            class="btn btn-primary">{% trans "Add" %}</button>
+                                </div>
+
+                                <!------------- CAA Record box ------------->
+
+
+                            </div>
+
+
+                            <!------ List of records --------------->
+
+                            <div ng-hide="currentRecords" class="form-group">
+
+                                <div class="col-sm-12">
+
+                                    <table style="margin: 0px; padding: 0px" class="table">
+                                        <thead>
+                                        <tr>
+                                            <th>{% trans "Type" %}</th>
+                                            <th>{% trans "Name" %}</th>
+                                            <th style="width: 100px;">{% trans "TTL" %}</th>
+                                            <th>{% trans "Value" %}</th>
+                                            <th style="width: 87px;">{% trans "Priority" %}</th>
+                                            <th>{% trans "Delete" %}</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr ng-repeat="record in records track by $index">
+                                            <td ng-bind="record.type"></td>
+                                            <td><input ng-change="setupContent(record.id, 'name', nameNow)"
+                                                       ng-model="nameNow" type="text" class="form-control"
+                                                       ng-value="record.name">
+                                            </td>
+                                            <td><input ng-change="setupContent(record.id, 'ttl', ttlNow)"
+                                                       ng-model="ttlNow" type="number" class="form-control"
+                                                       ng-value="record.ttl"></td>
+                                            <td><input ng-change="setupContent(record.id, 'content', contentNow)"
+                                                       ng-model="contentNow" type="text" class="form-control"
+                                                       ng-value="record.content"></td>
+                                            <td><input ng-change="setupContent(record.id, 'priority', priorityNow)"
+                                                       type="number" class="form-control" ng-model="priorityNow"
+                                                       ng-value="record.priority"></td>
+                                            <td>
+                                                <button type="button" ng-click="saveNow(record.id)"
+                                                        class="btn btn-round btn-blue-alt">
+                                                    <i class="glyph-icon icon-save"></i>
+                                                </button>
+                                                <img ng-click="deleteRecord(record.id)"
+                                                     src="{% static 'images/delete.png' %}">
+                                            </td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!------ List of records --------------->
+
+
+                            <div class="form-group">
+
+
+                                <label class="col-sm-3 control-label"></label>
+                                <div class="col-sm-4">
+                                    <div ng-hide="canNotFetchRecords" class="alert alert-danger">
+                                        <p>{% trans "Cannot fetch records. Error message:" %}{$ errorMessage $}</p>
+                                    </div>
+
+                                    <div ng-hide="couldNotAddRecord" class="alert alert-danger">
+                                        <p>{% trans "Cannot add record. Error message: " %}{$ errorMessage $}</p>
+                                    </div>
+
+                                    <div ng-hide="recordsFetched" class="alert alert-success">
+                                        <p>{% trans "Records successfully fetched for" %} <strong>{$ domainFeteched
+                                            $}</strong></p>
+                                    </div>
+
+                                    <div ng-hide="recordDeleted" class="alert alert-success">
+                                        <p>{% trans "Record Successfully Deleted" %}</p>
+                                    </div>
+
+                                    <div ng-hide="couldNotDeleteRecords" class="alert alert-danger">
+                                        <p>{% trans "Cannot delete record. Error message:" %} {$ errorMessage $}</p>
+                                    </div>
+
+                                    <div ng-hide="recordAdded" class="alert alert-success">
+                                        <p>{% trans "Record Successfully Added." %}</p>
+                                    </div>
+
+
+                                    <div ng-hide="couldNotConnect" class="alert alert-success">
+                                        <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                                    </div>
+
+                                </div>
+                            </div>
+
+
+                        </form>
+
+                    {% endif %}
+
+
+                </div>
+            </div>
+        </div>
+
+
     </div>
-</div>
-
-
-</div>
 
 
 {% endblock %}
