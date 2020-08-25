@@ -94,7 +94,7 @@ class pluginInstaller:
     def staticContent():
         currentDir = os.getcwd()
 
-        command = "rm -rf /usr/local/lscp/cyberpanel/static"
+        command = "rm -rf /usr/local/CyberCP/public/static/*"
         subprocess.call(shlex.split(command))
 
         os.chdir('/usr/local/CyberCP')
@@ -102,7 +102,7 @@ class pluginInstaller:
         command = "/usr/local/CyberCP/bin/python manage.py collectstatic --noinput"
         subprocess.call(shlex.split(command))
 
-        command = "mv /usr/local/CyberCP/static /usr/local/lscp/cyberpanel"
+        command = "cp -R  /usr/local/CyberCP/static/* /usr/local/CyberCP/public/static/"
         subprocess.call(shlex.split(command))
 
 
