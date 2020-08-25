@@ -1,0 +1,52 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block styles %}
+    <style>
+        .exampleBody {
+            font-weight: bold;
+        }
+    </style>
+{% endblock %}
+{% block title %}Example plugin - CyberPanel{% endblock %}
+{% block content %}
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
+    <div class="container" id="examplePluginApp">
+
+        <div id="page-title">
+            <h2 id="domainNamePage">{% trans "Example Plugin Page" %}</h2>
+            <p>{% trans "Example Plugin Info" %}</p>
+        </div>
+
+        <div class="panel">
+            <div class="panel-heading container-fluid">
+                <div class="col-xs-4"><h3 class="panel-title">{% trans "examplePlugin" %}</h3></div>
+            </div>
+            <div class="panel-body">
+                <div class="example-box-wrapper">
+                    <p class="exampleBody">[[ pluginBody ]]</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+{% endblock %}
+
+{% block footer_scripts %}
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    {#    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>#}
+    <script src="{% static 'examplePlugin/examplePlugin.js' %}"></script>
+    <script>
+        let examplePluginApp = new Vue({
+            delimiters: ['[[', ']]'],
+            el: '#examplePluginApp',
+            data: function () {
+                return {
+                    pluginBody: "Example Plugin Body leveraging templated imported Vue.js",
+                }
+            },
+            methods: {},
+        });
+    </script>
+{% endblock %}
