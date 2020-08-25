@@ -656,6 +656,22 @@ def magentoInstall(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+def installMautic(request, domain):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager(domain)
+        return wm.installMautic(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def mauticInstall(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.mauticInstall(userID, json.loads(request.body))
+    except KeyError:
+        return redirect(loadLoginPage)
+
 def prestaShopInstall(request):
     try:
         userID = request.session['userID']

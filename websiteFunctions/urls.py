@@ -96,6 +96,11 @@ urlpatterns = [
     url(r'^(?P<domain>(.*))/installMagento$', views.installMagento, name='installMagento'),
     url(r'^magentoInstall$', views.magentoInstall, name='magentoInstall'),
 
+    ## mautic
+
+    url(r'^(?P<domain>(.*))/installMautic$', views.installMautic, name='installMautic'),
+    url(r'^mauticInstall$', views.mauticInstall, name='mauticInstall'),
+
 
     ## Git
     url(r'^(?P<domain>(.*))/setupGit$', views.setupGit, name='setupGit'),

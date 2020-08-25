@@ -17,6 +17,7 @@ from databases.models import Databases
 from plogical.installUtilities import installUtilities
 import shutil
 from plogical.processUtilities import ProcessUtilities
+from random import randint
 
 class ApplicationInstaller(multi.Thread):
 
@@ -39,14 +40,6 @@ class ApplicationInstaller(multi.Thread):
                 self.installWordPress()
             elif self.installApp == 'joomla':
                 self.installJoomla()
-            elif self.installApp == 'git':
-                self.setupGit()
-            elif self.installApp == 'pull':
-                self.gitPull()
-            elif self.installApp == 'detach':
-                self.detachRepo()
-            elif self.installApp == 'changeBranch':
-                self.changeBranch()
             elif self.installApp == 'prestashop':
                 self.installPrestaShop()
             elif self.installApp == 'magento':
@@ -55,9 +48,214 @@ class ApplicationInstaller(multi.Thread):
                 self.convertDomainToSite()
             elif self.installApp == 'updatePackage':
                 self.updatePackage()
+            elif self.installApp == 'mautic':
+                self.installMautic()
 
         except BaseException as msg:
             logging.writeToFile(str(msg) + ' [ApplicationInstaller.run]')
+
+    def installMautic(self):
+        try:
+
+            admin = self.extraArgs['admin']
+            domainName = self.extraArgs['domainName']
+            home = self.extraArgs['home']
+            tempStatusPath = self.extraArgs['tempStatusPath']
+            self.tempStatusPath = tempStatusPath
+            username = self.extraArgs['username']
+            password = self.extraArgs['password']
+            email = self.extraArgs['email']
+
+            FNULL = open(os.devnull, 'w')
+
+            ## Open Status File
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines('Setting up paths,0')
+            statusFile.close()
+
+            finalPath = ''
+            self.permPath = ''
+
+            try:
+                website = ChildDomains.objects.get(domain=domainName)
+                externalApp = website.master.externalApp
+                self.masterDomain = website.master.domain
+
+                if home == '0':
+                    path = self.extraArgs['path']
+                    finalPath = website.path.rstrip('/') + "/" + path + "/"
+                else:
+                    finalPath = website.path
+
+                if website.master.package.dataBases > website.master.databases_set.all().count():
+                    pass
+                else:
+                    raise BaseException("Maximum database limit reached for this website.")
+
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines('Setting up Database,20')
+                statusFile.close()
+
+                dbName, dbUser, dbPassword = self.dbCreation(tempStatusPath, website.master)
+                self.permPath = website.path
+
+            except:
+                website = Websites.objects.get(domain=domainName)
+                externalApp = website.externalApp
+                self.masterDomain = website.domain
+
+                if home == '0':
+                    path = self.extraArgs['path']
+                    finalPath = "/home/" + domainName + "/public_html/" + path + "/"
+                else:
+                    finalPath = "/home/" + domainName + "/public_html/"
+
+                if website.package.dataBases > website.databases_set.all().count():
+                    pass
+                else:
+                    raise BaseException("Maximum database limit reached for this website.")
+
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines('Setting up Database,20')
+                statusFile.close()
+
+                dbName, dbUser, dbPassword = self.dbCreation(tempStatusPath, website)
+                self.permPath = '/home/%s/public_html' % (website.domain)
+
+            ## Security Check
+
+            command = 'chmod 755 %s' % (self.permPath)
+            ProcessUtilities.executioner(command)
+
+            if finalPath.find("..") > -1:
+                raise BaseException("Specified path must be inside virtual host home.")
+
+            if not os.path.exists(finalPath):
+                command = 'mkdir -p ' + finalPath
+                ProcessUtilities.executioner(command, externalApp)
+
+            ## checking for directories/files
+
+            if self.dataLossCheck(finalPath, tempStatusPath) == 0:
+                raise BaseException('Directory is not empty.')
+
+            ####
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines('Downloading Mautic Core,30')
+            statusFile.close()
+
+            command = "wget https://github.com/mautic/mautic/releases/download/3.1.0/3.1.0.zip"
+            ProcessUtilities.outputExecutioner(command, externalApp, None, finalPath)
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines('Extracting Mautic Core,50')
+            statusFile.close()
+
+            command = "unzip 3.1.0.zip"
+            ProcessUtilities.outputExecutioner(command, externalApp, None, finalPath)
+
+            ##
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines('Running Mautic installer,70')
+            statusFile.close()
+
+            if home == '0':
+                path = self.extraArgs['path']
+                finalURL = domainName + '/' + path
+            else:
+                finalURL = domainName
+
+            localDB = "/home/cyberpanel/" + str(randint(1000, 9999))
+
+            localDBContent = """<?php
+// Example local.php to test install (to adapt of course)
+$parameters = array(
+	// Do not set db_driver and mailer_from_name as they are used to assume Mautic is installed
+	'db_host' => 'localhost',
+	'db_table_prefix' => null,
+	'db_port' => 3306,
+	'db_name' => '%s',
+	'db_user' => '%s',
+	'db_password' => '%s',
+	'db_backup_tables' => true,
+	'db_backup_prefix' => 'bak_',
+	'admin_email' => '%s',
+	'admin_password' => '%s',
+	'mailer_transport' => null,
+	'mailer_host' => null,
+	'mailer_port' => null,
+	'mailer_user' => null,
+	'mailer_password' => null,
+	'mailer_api_key' => null,
+	'mailer_encryption' => null,
+	'mailer_auth_mode' => null,
+);""" % (dbName, dbUser, dbPassword, email, password)
+
+            writeToFile = open(localDB, 'w')
+            writeToFile.write(localDBContent)
+            writeToFile.close()
+
+            command = 'rm -rf %s/app/config/local.php' % (finalPath)
+            ProcessUtilities.executioner(command)
+
+            command = 'mv %s %s/app/config/local.php' % (localDB, finalPath)
+            ProcessUtilities.executioner(command)
+
+            command = "/usr/local/lsws/lsphp72/bin/php bin/console mautic:install http://%s" % (finalURL)
+            result = ProcessUtilities.outputExecutioner(command, 'root', None, finalPath)
+
+            if result.find('Install complete') == -1:
+                raise BaseException(result)
+
+
+            ##
+
+            from filemanager.filemanager import FileManager
+
+            fm = FileManager(None, None)
+            fm.fixPermissions(self.masterDomain)
+
+            installUtilities.reStartLiteSpeedSocket()
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines("Successfully Installed. [200]")
+            statusFile.close()
+            return 0
+
+
+        except BaseException as msg:
+            # remove the downloaded files
+            FNULL = open(os.devnull, 'w')
+
+            homeDir = "/home/" + domainName + "/public_html"
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                groupName = 'nobody'
+            else:
+                groupName = 'nogroup'
+
+            if not os.path.exists(homeDir):
+                command = "chown " + externalApp + ":" + groupName + " " + homeDir
+                ProcessUtilities.executioner(command, externalApp)
+
+            try:
+                mysqlUtilities.deleteDatabase(dbName, dbUser)
+                db = Databases.objects.get(dbName=dbName)
+                db.delete()
+            except:
+                pass
+
+            command = 'chmod 750 %s' % (self.permPath)
+            ProcessUtilities.executioner(command)
+
+
+            statusFile = open(self.tempStatusPath, 'w')
+            statusFile.writelines(str(msg) + " [404]")
+            statusFile.close()
+            return 0
 
     def updatePackage(self):
         try:

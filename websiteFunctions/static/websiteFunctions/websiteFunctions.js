@@ -961,6 +961,7 @@ app.controller('websitePages', function ($scope, $http, $timeout, $window) {
     $scope.setupGit = $("#domainNamePage").text() + "/setupGit";
     $scope.installPrestaURL = $("#domainNamePage").text() + "/installPrestaShop";
     $scope.installMagentoURL = $("#domainNamePage").text() + "/installMagento";
+    $scope.installMauticURL = $("#domainNamePage").text() + "/installMautic";
     $scope.domainAliasURL = "/websites/" + $("#domainNamePage").text() + "/domainAlias";
     $scope.previewUrl = "/preview/" + $("#domainNamePage").text() + "/";
 
@@ -5177,6 +5178,191 @@ app.controller('installPrestaShopCTRL', function ($scope, $http, $timeout) {
             firstName: $scope.firstName,
             lastName: $scope.lastName,
             databasePrefix: $scope.databasePrefix,
+            email: $scope.email,
+            passwordByPass: $scope.password
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+            if (response.data.installStatus === 1) {
+                statusFile = response.data.tempStatusPath;
+                getInstallStatus();
+            } else {
+
+                $scope.installationDetailsForm = true;
+                $scope.installationProgress = false;
+                $scope.installationFailed = false;
+                $scope.installationSuccessfull = true;
+                $scope.couldNotConnect = true;
+                $scope.wpInstallLoading = true;
+                $scope.goBackDisable = false;
+
+                $scope.errorMessage = response.data.error_message;
+
+            }
+
+
+        }
+
+        function cantLoadInitialDatas(response) {
+        }
+
+    };
+
+
+});
+
+app.controller('installMauticCTRL', function ($scope, $http, $timeout) {
+
+    $scope.installationDetailsForm = false;
+    $scope.installationProgress = true;
+    $scope.installationFailed = true;
+    $scope.installationSuccessfull = true;
+    $scope.couldNotConnect = true;
+    $scope.wpInstallLoading = true;
+    $scope.goBackDisable = true;
+
+    $scope.databasePrefix = 'ps_';
+
+    var statusFile;
+    var domain = $("#domainNamePage").text();
+    var path;
+
+
+    $scope.goBack = function () {
+        $scope.installationDetailsForm = false;
+        $scope.installationProgress = true;
+        $scope.installationFailed = true;
+        $scope.installationSuccessfull = true;
+        $scope.couldNotConnect = true;
+        $scope.wpInstallLoading = true;
+        $scope.goBackDisable = true;
+        $("#installProgress").css("width", "0%");
+    };
+
+    function getInstallStatus() {
+
+        url = "/websites/installWordpressStatus";
+
+        var data = {
+            statusFile: statusFile,
+            domainName: domain
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+
+            if (response.data.abort === 1) {
+
+                if (response.data.installStatus === 1) {
+
+                    $scope.installationDetailsForm = true;
+                    $scope.installationProgress = false;
+                    $scope.installationFailed = true;
+                    $scope.installationSuccessfull = false;
+                    $scope.couldNotConnect = true;
+                    $scope.wpInstallLoading = true;
+                    $scope.goBackDisable = false;
+
+                    if (typeof path !== 'undefined') {
+                        $scope.installationURL = "http://" + domain + "/" + path;
+                    } else {
+                        $scope.installationURL = domain;
+                    }
+
+
+                    $("#installProgress").css("width", "100%");
+                    $scope.installPercentage = "100";
+                    $scope.currentStatus = response.data.currentStatus;
+                    $timeout.cancel();
+
+                } else {
+
+                    $scope.installationDetailsForm = true;
+                    $scope.installationProgress = false;
+                    $scope.installationFailed = false;
+                    $scope.installationSuccessfull = true;
+                    $scope.couldNotConnect = true;
+                    $scope.wpInstallLoading = true;
+                    $scope.goBackDisable = false;
+
+                    $scope.errorMessage = response.data.error_message;
+
+                    $("#installProgress").css("width", "0%");
+                    $scope.installPercentage = "0";
+
+                }
+
+            } else {
+                $("#installProgress").css("width", response.data.installationProgress + "%");
+                $scope.installPercentage = response.data.installationProgress;
+                $scope.currentStatus = response.data.currentStatus;
+
+                $timeout(getInstallStatus, 1000);
+
+
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+
+            $scope.canNotFetch = true;
+            $scope.couldNotConnect = false;
+
+
+        }
+
+
+    }
+
+    $scope.installMautic = function () {
+
+        $scope.installationDetailsForm = true;
+        $scope.installationProgress = false;
+        $scope.installationFailed = true;
+        $scope.installationSuccessfull = true;
+        $scope.couldNotConnect = true;
+        $scope.wpInstallLoading = false;
+        $scope.goBackDisable = true;
+        $scope.currentStatus = "Starting installation..";
+
+        path = $scope.installPath;
+
+
+        url = "/websites/mauticInstall";
+
+        var home = "1";
+
+        if (typeof path !== 'undefined') {
+            home = "0";
+        }
+
+
+        var data = {
+            domain: domain,
+            home: home,
+            path: path,
+            username: $scope.adminUserName,
             email: $scope.email,
             passwordByPass: $scope.password
         };

@@ -2310,6 +2310,64 @@ StrictHostKeyChecking no
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
+    def installMautic(self, request=None, userID=None, data=None):
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
+            return render(request, 'websiteFunctions/installMautic.html', {'domainName': self.domain})
+        except BaseException as msg:
+            return HttpResponse(str(msg))
+
+    def mauticInstall(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            self.domain = data['domain']
+
+            if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson('installStatus', 0)
+
+            mailUtilities.checkHome()
+
+            extraArgs = {}
+            extraArgs['admin'] = admin
+            extraArgs['domainName'] = data['domain']
+            extraArgs['home'] = data['home']
+            extraArgs['username'] = data['username']
+            extraArgs['email'] = data['email']
+            extraArgs['password'] = data['passwordByPass']
+            extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
+
+            if data['home'] == '0':
+                extraArgs['path'] = data['path']
+
+            background = ApplicationInstaller('mautic', extraArgs)
+            background.start()
+
+            time.sleep(2)
+
+            data_ret = {'status': 1, 'installStatus': 1, 'error_message': 'None',
+                        'tempStatusPath': extraArgs['tempStatusPath']}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+            ## Installation ends
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
     def prestaShopInstall(self, userID=None, data=None):
         try:
 
