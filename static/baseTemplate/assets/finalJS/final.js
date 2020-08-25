@@ -883,8 +883,7 @@ $(document).ready(function() {
         });
 
         //automatically open the current path
-        var path = window.location.pathname.split('/');
-        path = path[path.length-1];
+        var path = window.location.pathname
         if (path !== undefined) {
             $("#sidebar-menu").find("a[href$='" + path + "']").addClass('sfActive');
             $("#sidebar-menu").find("a[href$='" + path + "']").parents().eq(3).superclick('show');
