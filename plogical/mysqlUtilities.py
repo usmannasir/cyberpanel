@@ -155,7 +155,7 @@ class mysqlUtilities:
             if mysqlUtilities.RDS == 0:
                 cursor.execute("GRANT ALL PRIVILEGES ON " + dbName + ".* TO '" + globalUser + "'@'%s'" % (mysqlUtilities.LOCALHOST))
             else:
-                cursor.execute("GRANT SELECT, INSERT, DELETE ON " + dbName + ".* TO '" + globalUser + "'@'%s'" % (
+                cursor.execute("GRANT CREATE, SELECT, INSERT, DELETE ON " + dbName + ".* TO '" + globalUser + "'@'%s'" % (
                     mysqlUtilities.LOCALHOST))
 
             connection.close()
