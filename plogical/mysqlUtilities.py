@@ -26,6 +26,7 @@ import argparse
 class mysqlUtilities:
 
     LOCALHOST = 'localhost'
+    RDS = 0
 
     @staticmethod
     def getPagination(records, toShow):
@@ -66,6 +67,9 @@ class mysqlUtilities:
                 mysqlpassword = jsonData['mysqlpassword']
                 mysqlport = jsonData['mysqlport']
                 mysqlhost = jsonData['mysqlhost']
+
+                if mysqlhost.find('rds.amazon') > -1:
+                    mysqlUtilities.RDS = 1
 
                 ## Also set localhost to this server
 
@@ -148,7 +152,12 @@ class mysqlUtilities:
             if connection == 0:
                 return 0
 
-            cursor.execute("GRANT ALL PRIVILEGES ON " + dbName + ".* TO '" + globalUser + "'@'%s'" % (mysqlUtilities.LOCALHOST))
+            if mysqlUtilities.RDS == 0:
+                cursor.execute("GRANT ALL PRIVILEGES ON " + dbName + ".* TO '" + globalUser + "'@'%s'" % (mysqlUtilities.LOCALHOST))
+            else:
+                cursor.execute("GRANT SELECT, INSERT, DELETE ON " + dbName + ".* TO '" + globalUser + "'@'%s'" % (
+                    mysqlUtilities.LOCALHOST))
+
             connection.close()
 
             return 1
