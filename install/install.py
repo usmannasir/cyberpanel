@@ -443,7 +443,7 @@ class preFlightsChecks:
             # command = "sed -i 's|'mysql'|'%s'|g' %s" % (self.mysqldb, path)
             # preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
-            command = "sed -i 's|'USER': 'root',|'USER': '%s',|g' %s" % (self.mysqluser, path)
+            command = "sed -i 's|root|%s|g' %s" % (self.mysqluser, path)
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
             command = "sed -i 's|'PORT':''|'PORT':'%s'|g' %s" % (self.mysqlport, path)
