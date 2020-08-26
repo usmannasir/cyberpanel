@@ -60,7 +60,7 @@ class mysqlUtilities:
                     if mysqlData['mysqlhost'].find('rds.amazon') == -1:
                         dropDB = "GRANT ALL PRIVILEGES ON " + dbname + ".* TO '" + dbuser + "'@'%s'" % (publicip)
                     else:
-                        dropDB = "GRANT INDEX, REFERENCES, PROCESS, RELOAD, DROP, UPDATE, ALTER, CREATE, SELECT, INSERT, DELETE ON " + dbname + ".* TO '" + dbuser + "'@'%s'" % (publicip)
+                        dropDB = "GRANT INDEX, DROP, UPDATE, ALTER, CREATE, SELECT, INSERT, DELETE ON " + dbname + ".* TO '" + dbuser + "'@'%s'" % (publicip)
                 else:
                     dropDB = "GRANT ALL PRIVILEGES ON " + dbname + ".* TO '" + dbuser + "'@'localhost'"
 
