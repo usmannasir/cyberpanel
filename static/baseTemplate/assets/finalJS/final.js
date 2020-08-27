@@ -883,10 +883,13 @@ $(document).ready(function() {
         });
 
         //automatically open the current path
-        var path = window.location.pathname
+        let path = window.location.pathname;
         if (path !== undefined) {
-            $("#sidebar-menu").find("a[href$='" + path + "']").addClass('sfActive');
-            $("#sidebar-menu").find("a[href$='" + path + "']").parents().eq(3).superclick('show');
+            let menuItem = $("#sidebar-menu").find("a[href$='" + path + "']");
+            if (menuItem !== undefined) {
+                menuItem.addClass('sfActive');
+                menuItem.parents().eq(3).superclick('show');
+            }
         }
 
     });
