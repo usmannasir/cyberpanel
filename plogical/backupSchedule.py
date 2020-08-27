@@ -141,6 +141,9 @@ class backupSchedule:
                                 os.remove(pathToFile)
                             except:
                                 pass
+
+                            command = 'rm -rf %s' % (tempStoragePath)
+                            ProcessUtilities.normalExecutioner(command)
                             return 0, tempStoragePath
 
                         elif os.path.exists(schedulerPath):
@@ -148,6 +151,8 @@ class backupSchedule:
                                 open(schedulerPath, 'r').read()),
                                                                backupSchedule.ERROR)
                             os.remove(schedulerPath)
+                            command = 'rm -rf %s' % (tempStoragePath)
+                            ProcessUtilities.normalExecutioner(command)
                             return 0, 'Backup process killed.'
                 else:
                     if os.path.exists(status):
@@ -177,6 +182,8 @@ class backupSchedule:
                             backupSchedule.remoteBackupLogging(backupLogPath, 'Backup process killed. Error: %s' % (open(schedulerPath, 'r').read()),
                                                            backupSchedule.ERROR)
                             os.remove(schedulerPath)
+                            command = 'rm -rf %s' % (tempStoragePath)
+                            ProcessUtilities.normalExecutioner(command)
                             return 0, 'Backup process killed.'
                     else:
                         if killCounter == 1:
@@ -186,6 +193,8 @@ class backupSchedule:
                                 open(schedulerPath, 'r').read()),
                                                                backupSchedule.ERROR)
                             os.remove(schedulerPath)
+                            command = 'rm -rf %s' % (tempStoragePath)
+                            ProcessUtilities.normalExecutioner(command)
                             return 0, 'Backup process killed.'
                         else:
                             time.sleep(10)
