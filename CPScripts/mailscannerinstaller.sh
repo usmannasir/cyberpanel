@@ -219,6 +219,7 @@ sed -i 's/^SpamAssassin User State Dir =.*/& \/var\/spool\/MailScanner\/spamassa
 sed -i 's/^Always Looked Up Last =.*/Always Looked Up Last = \&MailWatchLogging/' /etc/MailScanner/MailScanner.conf
 sed -i 's/^Quarantine Whole Message =.*/Quarantine Whole Message = yes/' /etc/MailScanner/MailScanner.conf
 sed -i 's/^Spam List =.*/Spam List = SBL + XBL/' /etc/MailScanner/MailScanner.conf
+sed -i 's/^Sign Clean Messages =.*/Sign Clean Messages = no/' /etc/MailScanner/MailScanner.conf
 
 mkdir /usr/local/CyberCP/public/mailwatch
 
