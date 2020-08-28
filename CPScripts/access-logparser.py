@@ -1,9 +1,20 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 # Apache Regex portion original credits to: https://leancrew.com/all-this/2013/07/parsing-my-apache-logs/
+## https://gitlab.com/mikeramsey/access-log-parser
+## How to use.
+#  Run the script from your account via manual or curl method. It autodetects the current user and defaults to the todays date if not argument for how many days ago it provided.
+# For todays hits
+# ./access-logparser.py
+#
+# For yesterdays aka 1 Days ago
+# ./access-logparser.py 1
+#
+##python <(curl -s https://gitlab.com/mikeramsey/access-log-parser/-/raw/master/access-logparser.py || wget -qO - https://gitlab.com/mikeramsey/access-log-parser/-/raw/master/access-logparser.py) 1;
+
 
 __author__ = "Michael Ramsey"
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 __license__ = "GPL-3.0"
 
 import os
@@ -14,7 +25,11 @@ from collections import Counter
 from datetime import date, timedelta
 from datetime import datetime
 from os.path import join, isfile
+import getpass
+import glob
 
+
+# import pathlib
 
 # print('version is', sys.version)
 
@@ -24,10 +39,11 @@ def main():
     # filename = sys.argv[2]
     # filenametest = "/home/example.com.access_log"
     # username = 'server'
-    username = str(sys.argv[1])
+    username = getpass.getuser()
+    # print(username)
     # Define the day of interest in the Apache common log format. Default if not specified
     try:
-        daysago = int(sys.argv[2])
+        daysago = int(sys.argv[1])
         # daysago = 0
     except:
         daysago = 0
@@ -46,7 +62,7 @@ def main():
             # Current Dcpumon file
             dcpumon_current_log = "/var/log/dcpumon/" + datetime_dcpumon  # /var/log/dcpumon/2019/Feb/15
             acesslog_sed = "-ssl_log"
-            if username == 'server':
+            if username == 'root':
                 domlogs_path = '/usr/local/apache/domlogs/'
             else:
                 user_homedir = "/home/" + username
@@ -56,9 +72,9 @@ def main():
         elif os.path.isfile('/usr/bin/cyberpanel') | os.path.isfile(os.getcwd() + '/cyberpanel'):
             controlpanel = 'CyberPanel'
             acesslog_sed = ".access_log"
-            if username == 'server':
+            if username == 'root':
                 # Needs updated to glob all /home/*/logs/
-                domlogs_path = '/home/username/Desktop/domlogs'
+                domlogs_path2 = glob.glob('/home/*/logs/')
             else:
                 # Get users homedir path
                 user_homedir = os.path.expanduser("~" + username)
@@ -70,16 +86,24 @@ def main():
     # Define Output file
     stats_output = open(os.getcwd() + '/stats.txt', "w")
 
-    # Define log path directory
-    path = domlogs_path
+    if username == 'root' and controlpanel == 'CyberPanel':
+        # Needs updated to glob all /home/*/logs/
+        path = '/home/*/logs/*'
+        domlogs_path = glob.glob("/home/*/logs/")
+        print('Root CyberPanel Detected')
+        # Get list of dir contents
+        # logs_path_contents = glob.glob("/home/*/logs/*.access_log", recursive=True)
 
-    # path = "/home/username/Desktop/domlogs"
+        # Get list of files only from this directory
+        logs = glob.glob("/home/*/logs/*.access_log")
 
-    # Get list of dir contents
-    logs_path_contents = os.listdir(path)
-
-    # Get list of files only from this directory
-    logs = filter(lambda f: isfile(join(path, f)), logs_path_contents)
+    else:
+        # Define log path directory
+        path = domlogs_path
+        # Get list of dir contents
+        logs_path_contents = os.listdir(path)
+        # Get list of files only from this directory
+        logs = filter(lambda f: isfile(join(path, f)), logs_path_contents)
 
     # Regex for the Apache common log format.
     parts = [  # host %h  			:ip/hostname of the client 	172.68.142.138
@@ -330,7 +354,7 @@ def main():
 
     print('Accesslog path used: ' + path)
     # print(dcpumon_current_log)
-
+    print('============================================')
     d = post_request_dict
     # Using dictionary comprehension to find list
     # keys having value in 0 will be removed from results
@@ -338,7 +362,7 @@ def main():
 
     # delete the key
     for key in delete: del d[key]
-
+    print('          ')
     print('''Top POST requests for %s''' % the_day.strftime('%b %d, %Y'))
     print('          ')
     # sort by dictionary by the values and print top 10 {key, value} pairs
