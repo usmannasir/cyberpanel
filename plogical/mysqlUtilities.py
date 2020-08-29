@@ -929,8 +929,13 @@ skip-name-resolve
                 cursor.execute(
                     "CREATE USER '" + user + "'@'%s' IDENTIFIED BY '" % (mysqlUtilities.LOCALHOST) + password + "'")
 
-            cursor.execute(
-                "GRANT ALL PRIVILEGES ON " + database + ".* TO '" + user + "'@'%s'" % (mysqlUtilities.LOCALHOST))
+            if mysqlUtilities.RDS == 0:
+                cursor.execute(
+                    "GRANT ALL PRIVILEGES ON " + database + ".* TO '" + user + "'@'%s'" % (mysqlUtilities.LOCALHOST))
+            else:
+                cursor.execute(
+                    "GRANT INDEX, DROP, UPDATE, ALTER, CREATE, SELECT, INSERT, DELETE ON " + database + ".* TO '" + user + "'@'%s'" % (mysqlUtilities.LOCALHOST))
+
             connection.close()
 
             return 1
