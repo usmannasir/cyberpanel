@@ -14,7 +14,7 @@
 
 
 __author__ = "Michael Ramsey"
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 __license__ = "GPL-3.0"
 
 import os
@@ -281,7 +281,12 @@ def main():
                 if re.match("(.*)(/admin[a-zA-Z0-9_]*$)(.*)", line):
                     prestashop_hit_count = prestashop_hit_count + 1
                 m = pattern.match(line)
-                hit = m.groupdict()
+                if m is not None:
+                    hit = m.groupdict()
+                else:
+                    # print("re.search() returned None")
+                    continue
+                # hit = m.groupdict()
                 if ispage(hit):
                     pages.append(pythonized(hit))
                 else:
