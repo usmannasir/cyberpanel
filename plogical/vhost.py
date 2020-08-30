@@ -384,6 +384,11 @@ class vhost:
                     numberOfSites = Websites.objects.count() + ChildDomains.objects.count()
                     vhost.deleteCoreConf(items.domain, numberOfSites)
 
+                    ### Delete ACME Folder
+
+                    if os.path.exists('/root/.acme.sh/%s' % (items.domain)):
+                        shutil.rmtree('/root/.acme.sh/%s' % (items.domain))
+
                 for items in databases:
                     mysqlUtilities.deleteDatabase(items.dbName, items.dbUser)
 
@@ -421,6 +426,12 @@ class vhost:
 
                 if os.path.exists(gitPath):
                     shutil.rmtree(gitPath)
+
+
+                ### Delete Acme folder
+
+                if os.path.exists('/root/.acme.sh/%s' % (virtualHostName)):
+                    shutil.rmtree('/root/.acme.sh/%s' % (virtualHostName))
 
             except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [Not able to remove virtual host configuration from main configuration file.]")
