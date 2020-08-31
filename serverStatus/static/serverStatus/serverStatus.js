@@ -249,6 +249,57 @@ app.controller('litespeedStatus', function ($scope, $http) {
 
     };
 
+    $scope.refreshLicense = function () {
+
+        $scope.cpLoading = false;
+
+        var url = "/serverstatus/refreshLicense";
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        data = {};
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+            if (response.data.status === 1) {
+                $scope.cpLoading = true;
+                new PNotify({
+                    title: 'Success!',
+                    text: 'License successfully refreshed',
+                    type: 'success'
+                });
+            } else {
+                $scope.cpLoading = true;
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.erroMessage,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cpLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+
+        }
+
+
+    };
+
 });
 
 /* Java script code to start/stop litespeed */

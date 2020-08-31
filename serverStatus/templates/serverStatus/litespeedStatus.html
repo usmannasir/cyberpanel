@@ -332,7 +332,7 @@
                     <div class="content-box-wrapper">
                         <div class="row mt-5 mx-10">
 
-                            <div class="col-md-6 panel-body">
+                            <div class="col-md-4 panel-body">
                                 <a ng-click="licenseStatus(1)" href="" title="{% trans 'License Status' %}">
                                     <img src="{% static 'images/license-status.png' %}" width="65" class="mr-10 ">
                                 </a>
@@ -342,13 +342,24 @@
                                 </a>
                             </div>
 
-                            <div class="col-md-6 panel-body">
+                            <div class="col-md-4 panel-body">
                                 <a ng-click="showSerialBox()" href="" title="{% trans 'Change License' %}">
                                     <img src="{% static 'images/change-license.png' %}" width="65" class="mr-10">
                                 </a>
                                 &nbsp;
                                 <a ng-click="showSerialBox()" href="" title="{% trans 'Change License' %}">
                                     <span class="h4">{% trans 'Change License' %}</span>
+                                </a>
+
+                            </div>
+
+                            <div class="col-md-4 panel-body">
+                                <a ng-click="refreshLicense()" href="" title="{% trans 'Refresh License' %}">
+                                    <img src="{% static 'images/change-license.png' %}" width="65" class="mr-10">
+                                </a>
+                                &nbsp;
+                                <a ng-click="refreshLicense()" href="" title="{% trans 'Refresh License' %}">
+                                    <span class="h4">{% trans 'Refresh License' %}</span>
                                 </a>
 
                             </div>

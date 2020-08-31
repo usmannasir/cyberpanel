@@ -417,10 +417,44 @@ def licenseStatus(request):
             command = 'sudo cat /usr/local/lsws/conf/serial.no'
             serial = ProcessUtilities.outputExecutioner(command)
 
+            if serial.find('No such file or directory') > -1:
+                final_dic = {'status': 1, "erroMessage": 0, 'lsSerial': 'Trial License in use.', 'lsexpiration': 'Trial license expires 15 days after activation.'}
+                final_json = json.dumps(final_dic)
+                return HttpResponse(final_json)
+
             command = 'sudo /usr/local/lsws/bin/lshttpd -V'
             expiration = ProcessUtilities.outputExecutioner(command)
 
             final_dic = {'status': 1, "erroMessage": 0, 'lsSerial': serial, 'lsexpiration': expiration}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+        except BaseException as msg:
+            final_dic = {'status': 0, 'erroMessage': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+    except KeyError as msg:
+        final_dic = {'status': 0, 'erroMessage': str(msg)}
+        final_json = json.dumps(final_dic)
+        return HttpResponse(final_json)
+
+def refreshLicense(request):
+    try:
+        userID = request.session['userID']
+
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+
+            if currentACL['admin'] == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson('status', 0)
+
+
+            command = 'sudo /usr/local/lsws/bin/lshttpd -V'
+            ProcessUtilities.outputExecutioner(command)
+
+            final_dic = {'status': 1}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
