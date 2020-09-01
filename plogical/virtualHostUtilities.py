@@ -285,6 +285,12 @@ class virtualHostUtilities:
 
             installUtilities.installUtilities.reStartLiteSpeed()
 
+            command = 'systemctl restart postfix'
+            ProcessUtilities.executioner(command)
+
+            command = 'systemctl restart dovecot'
+            ProcessUtilities.executioner(command)
+
             print("1,None")
             return 1, None
 
