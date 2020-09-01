@@ -454,6 +454,8 @@ def refreshLicense(request):
             command = 'sudo /usr/local/lsws/bin/lshttpd -V'
             ProcessUtilities.outputExecutioner(command)
 
+            installUtilities.reStartLiteSpeed()
+
             final_dic = {'status': 1}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
