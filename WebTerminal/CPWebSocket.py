@@ -32,6 +32,8 @@ class SSHServer(multi.Thread):
                         pass
                     else:
                         SSHServer.DEFAULT_PORT = int(items.split(' ')[1])
+
+            logging.writeToFile('SSH Port for WebTerminal Connection: %s' % (SSHServer.DEFAULT_PORT))
         except BaseException as msg:
             logging.writeToFile('%s. [SSHServer.findSSHPort]' % (str(msg)))
 
@@ -141,6 +143,8 @@ if __name__ == "__main__":
     writeToFile = open(pidfile, 'w')
     writeToFile.write(str(os.getpid()))
     writeToFile.close()
+
+    SSHServer.findSSHPort()
 
     http_server = tornado.httpserver.HTTPServer(application, ssl_options={
         "certfile": "/usr/local/lscp/conf/cert.pem",
