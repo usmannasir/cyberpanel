@@ -245,10 +245,8 @@ class InstallCyberPanel:
         if self.distro == ubuntu:
 
 
-
             command = "apt-get -y install mariadb-server"
         elif self.distro == centos:
-            mRepo = '/etc/yum.repos.d/MariaDB.repo'
 
             content = """# MariaDB 10.5 CentOS repository list - created 2020-09-03 09:44 UTC
 # http://downloads.mariadb.org/mariadb/repositories/
@@ -263,7 +261,7 @@ gpgcheck=1
             writeToFile.write(content)
             writeToFile.close()
 
-            command = 'yum --enablerepo=MariaDB -y install MariaDB-server MariaDB-client'
+            command = 'yum --enablerepo=mariadb -y install MariaDB-server MariaDB-client'
         elif self.distro == cent8:
             command = 'dnf -y install mariadb-server'
 
