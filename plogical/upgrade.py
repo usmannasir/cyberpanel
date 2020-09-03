@@ -1908,12 +1908,12 @@ imap_folder_list_limit = 0
 
                 ## Take conf backup
 
-                command = 'mkdir /etc/postfixback'
-                Upgrade.executioner(command, 0)
-
-
-                command = 'cp -avr /etc/postfix /etc/postfixback'
-                Upgrade.executioner(command, 0)
+                # command = 'mkdir /etc/postfixback'
+                # Upgrade.executioner(command, 0)
+                #
+                #
+                # command = 'cp -avr /etc/postfix /etc/postfixback'
+                # Upgrade.executioner(command, 0)
 
                 ## Restore conf backup
 
@@ -1937,10 +1937,10 @@ imap_folder_list_limit = 0
 
                 Upgrade.executioner(command, 0)
 
-                ## Restore conf backups
-
-                command = 'cp -avr /etc/postfixback /etc/postfix'
-                Upgrade.executioner(command, 0)
+                # ## Restore conf backups
+                #
+                # command = 'cp -avr /etc/postfixback /etc/postfix'
+                # Upgrade.executioner(command, 0)
 
                 ##
 
