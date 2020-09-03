@@ -297,7 +297,9 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                     command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
                     Upgrade.executioner(command, 0)
 
-                path = "/usr/local/CyberCP/public/rainloop/rainloop/v/1.12.1/include.php"
+                iPath = os.listdir('/usr/local/CyberCP/public/rainloop/rainloop/v/')
+
+                path = "/usr/local/CyberCP/public/rainloop/rainloop/v/%s/include.php" % (iPath[0])
 
                 data = open(path, 'r').readlines()
                 writeToFile = open(path, 'w')
@@ -406,8 +408,8 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             labsPath = '/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/application.ini'
 
             labsData = """[labs]
-            imap_folder_list_limit = 0
-            """
+imap_folder_list_limit = 0
+"""
 
             writeToFile = open(labsPath, 'w')
             writeToFile.write(labsData)
@@ -1846,44 +1848,45 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             if os.path.exists(CentOSPath):
 
-                if Upgrade.decideCentosVersion() == CENTOS7:
-                    findText = '2:2.3.10-2'
-                else:
-                    findText = '2.3.10.1-1.gf.el8'
+                ### Take backup of configuration files for dovecot
 
-                if Upgrade.installedOutput.find(findText) == -1:
-                    command = "yum makecache -y"
+                dovecotConf = '/etc/dovecot/dovecot.conf'
+                dovecotConfBak = '/etc/dovecot.conf'
+                dovecotSQLConf = '/etc/dovecot/dovecot-sql.conf.ext'
+                dovecotSQLConfBak = '/etc/dovecot-sql.conf.ext'
+
+
+                command = 'cp %s %s' % (dovecotConf, dovecotConfBak)
+                Upgrade.executioner(command, 0)
+
+                command = 'cp %s %s' % (dovecotSQLConf, dovecotSQLConfBak)
+                Upgrade.executioner(command, 0)
+
+                ### Backup done
+
+                command = "yum makecache -y"
+                Upgrade.executioner(command, 0)
+
+                command = "yum update -y"
+                Upgrade.executioner(command, 0)
+
+                if Upgrade.decideCentosVersion() == CENTOS8:
+                    command = 'dnf remove dovecot23 dovecot23-mysql -y'
                     Upgrade.executioner(command, 0)
 
-                    command = "yum update -y"
+                    command = 'dnf install --enablerepo=gf-plus dovecot23 dovecot23-mysql -y'
                     Upgrade.executioner(command, 0)
 
-                    if Upgrade.decideCentosVersion() == CENTOS8:
-                        command = 'dnf remove dovecot23 dovecot23-mysql -y'
-                        Upgrade.executioner(command, 0)
+                ### Restore dovecot backup files
 
-                        command = 'dnf install --enablerepo=gf-plus dovecot23 dovecot23-mysql -y'
-                        Upgrade.executioner(command, 0)
+                command = 'mv -f %s %s' % (dovecotConfBak, dovecotConf)
+                Upgrade.executioner(command, 0)
 
-                        if os.path.exists('/etc/dovecot/dovecot.conf.rpmsave'):
-                            if os.path.exists('/etc/dovecot/dovecot.conf'):
-                                shutil.move('/etc/dovecot/dovecot.conf', '/etc/dovecot/dovecot.conf.bkcp')
-                                shutil.move('/etc/dovecot/dovecot.conf.rpmsave', '/etc/dovecot/dovecot.conf')
+                command = 'mv -f %s %s' % (dovecotSQLConfBak, dovecotSQLConf)
+                Upgrade.executioner(command, 0)
 
-                    ## Remove Default Password Scheme
+                ## Dovecot conf resoterd
 
-                    path = '/etc/dovecot/dovecot-sql.conf.ext'
-
-                    data = open(path, 'r').readlines()
-
-                    writeToFile = open(path, 'w')
-                    for items in data:
-                        if items.find('default_pass_scheme') > -1:
-                            continue
-                        else:
-                            writeToFile.writelines(items)
-
-                    writeToFile.close()
 
                 import django
                 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
@@ -1901,57 +1904,48 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                 command = "systemctl restart dovecot"
                 Upgrade.executioner(command, 0)
 
-
                 ### Postfix Upgrade
 
+                ## Take conf backup
+
+                command = 'mkdir /etc/postfixback'
+                Upgrade.executioner(command, 0)
+
+
+                command = 'cp -avr /etc/postfix /etc/postfixback'
+                Upgrade.executioner(command, 0)
+
+                ## Restore conf backup
+
+                command = 'yum remove postfix -y'
+                Upgrade.executioner(command, 0)
+
+                command = 'yum clean all'
+                Upgrade.executioner(command, 0)
+
                 if Upgrade.decideCentosVersion() == CENTOS7:
-                    findText = '2:3.4.7-1.gf.el7'
+                    command = 'yum makecache fast'
                 else:
-                    findText = '3.5.2-1.gf.el8'
+                    command = 'yum makecache -y'
 
-                if Upgrade.installedOutput.find(findText) == -1:
-                    try:
-                        shutil.copy('/etc/postfix/master.cf', '/etc/master.cf')
-                    except:
-                        pass
+                Upgrade.executioner(command, 0)
 
-                    try:
-                        shutil.copy('/etc/postfix/main.cf', '/etc/main.cf')
-                    except:
-                        pass
+                if Upgrade.decideCentosVersion() == CENTOS7:
+                    command = 'yum install --enablerepo=CyberPanel -y postfix3 postfix3-mysql'
+                else:
+                    command = 'dnf install --enablerepo=gf-plus postfix3 postfix3-mysql -y'
 
+                Upgrade.executioner(command, 0)
 
+                ## Restore conf backups
 
-                    command = 'yum remove postfix -y'
-                    Upgrade.executioner(command, 0)
+                command = 'cp -avr /etc/postfixback /etc/postfix'
+                Upgrade.executioner(command, 0)
 
-                    command = 'yum clean all'
-                    Upgrade.executioner(command, 0)
+                ##
 
-                    if Upgrade.decideCentosVersion() == CENTOS7:
-                        command = 'yum makecache fast'
-                    else:
-                        command = 'yum makecache -y'
-
-                    Upgrade.executioner(command, 0)
-                    if Upgrade.decideCentosVersion() == CENTOS7:
-                        command = 'yum install --enablerepo=CyberPanel -y postfix3 postfix3-mysql'
-                    else:
-                        command = 'dnf install --enablerepo=gf-plus postfix3 postfix3-mysql -y'
-
-                    Upgrade.executioner(command, 0)
-
-                    try:
-                        shutil.move('/etc/master.cf', '/etc/postfix/master.cf')
-                    except:
-                        pass
-                    try:
-                        shutil.move('/etc/main.cf', '/etc/postfix/main.cf')
-                    except:
-                        pass
-
-                    command = 'systemctl restart postfix'
-                    Upgrade.executioner(command, 0)
+                command = 'systemctl restart postfix'
+                Upgrade.executioner(command, 0)
 
             else:
 
