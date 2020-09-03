@@ -95,8 +95,12 @@ class mysqlUtilities:
                 password = data.split('\n', 1)[0]
                 password = password.strip('\n').strip('\r')
 
+                logging.CyberCPLogFileWriter.writeToFile(repr(password))
+
                 conn = mysql.connect(user='root', passwd=password, cursorclass=cursors.SSCursor)
                 cursor = conn.cursor()
+
+                logging.CyberCPLogFileWriter.writeToFile(str(cursor))
 
                 return conn, cursor
 

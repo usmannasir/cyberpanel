@@ -283,10 +283,11 @@ gpgcheck=1
 
     def changeMYSQLRootPassword(self):
         if self.remotemysql == 'OFF':
+
             if self.distro == ubuntu:
-                passwordCMD = "use mysql;update user set password=PASSWORD('" + InstallCyberPanel.mysql_Root_password + "') where User='root';UPDATE user SET plugin='' WHERE User='root';flush privileges;"
+                passwordCMD = "use mysql;GRANT ALL PRIVILEGES ON . TO 'root'@'localhost' IDENTIFIED BY '%s';update user set password=PASSWORD('" % (InstallCyberPanel.mysql_Root_password) + InstallCyberPanel.mysql_Root_password + "') where User='root';UPDATE user SET plugin='' WHERE User='root';flush privileges;"
             else:
-                passwordCMD = "use mysql;update user set password=PASSWORD('" + InstallCyberPanel.mysql_Root_password + "') where User='root';flush privileges;"
+                passwordCMD = "use mysql;GRANT ALL PRIVILEGES ON . TO 'root'@'localhost' IDENTIFIED BY '%s';update user set password=PASSWORD('" % (InstallCyberPanel.mysql_Root_password) + InstallCyberPanel.mysql_Root_password + "') where User='root';flush privileges;"
 
             command = 'mysql -u root -e "' + passwordCMD + '"'
 
