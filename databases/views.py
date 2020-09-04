@@ -217,13 +217,22 @@ def fetchDetailsPHPMYAdmin(request):
         currentACL = ACLManager.loadedACL(userID)
 
         token = request.GET.get('token')
+        username = request.GET.get('username')
 
         if token == 'FailedLogin':
+
+            ## Remove old key and db entry
+
             keySavePath = '/home/cyberpanel/phpmyadmin_%s' % (admin.userName)
-            GlobalUserDB.objects.get(username=admin.userName).delete()
+            try:
+                GlobalUserDB.objects.get(username=admin.userName).delete()
+            except:
+                pass
 
             command = 'rm -f %s' % (keySavePath)
             ProcessUtilities.executioner(command)
+
+            ## Create and save new key
 
             key = Fernet.generate_key()
 
@@ -255,9 +264,6 @@ def fetchDetailsPHPMYAdmin(request):
 
             returnURL = '/phpmyadmin/phpmyadminsignin.php?username=%s&password=%s' % (admin.userName, password)
             return redirect(returnURL)
-
-
-        username = request.GET.get('username')
 
 
         if username != admin.userName:

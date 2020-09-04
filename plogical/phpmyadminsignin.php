@@ -3,6 +3,7 @@
 
 define("PMA_SIGNON_INDEX", 1);
 
+try{
 
 define('PMA_SIGNON_SESSIONNAME', 'SignonSession');
 define('PMA_DISABLE_SSL_PEER_VALIDATION', TRUE);
@@ -43,5 +44,9 @@ else if(isset($_GET['password'])){
 
     header('Location: /phpmyadmin/index.php?server=' . PMA_SIGNON_INDEX);
 }
+}catch (Exception $e) {
+    echo 'Caught exception: ',  $e->getMessage(), "\n";
+}
 
-$url = "/dataBases/fetchDetailsPHPMYAdmin?token=FailedLogin";
+#$url = "/dataBases/fetchDetailsPHPMYAdmin?token=FailedLogin";
+#header('Location: ' . $url);

@@ -933,17 +933,24 @@ skip-name-resolve
                 try:
                     cursor.execute(
                         "CREATE USER '" + user + "'@'%s' IDENTIFIED BY '" % (mysqlUtilities.LOCALHOST) + password + "'")
-                except:
-                    cursor.execute("DROP USER '%s'@'%s'" % (user, mysqlUtilities.LOCALHOST))
-                    cursor.execute(
-                        "CREATE USER '" + user + "'@'%s' IDENTIFIED BY '" % (mysqlUtilities.LOCALHOST) + password + "'")
+                except BaseException as msg:
+                    logging.CyberCPLogFileWriter.writeToFile('%s [addUserToDB:937]' % (str(msg)))
+                    try:
+                        cursor.execute("DROP USER '%s'@'%s'" % (user, mysqlUtilities.LOCALHOST))
+                        cursor.execute(
+                            "CREATE USER '" + user + "'@'%s' IDENTIFIED BY '" % (mysqlUtilities.LOCALHOST) + password + "'")
+                    except BaseException as msg:
+                        logging.CyberCPLogFileWriter.writeToFile('%s [addUserToDB:943]'  % (str(msg)))
 
             if mysqlUtilities.RDS == 0:
                 cursor.execute(
                     "GRANT ALL PRIVILEGES ON " + database + ".* TO '" + user + "'@'%s'" % (mysqlUtilities.LOCALHOST))
             else:
-                cursor.execute(
-                    "GRANT INDEX, DROP, UPDATE, ALTER, CREATE, SELECT, INSERT, DELETE ON " + database + ".* TO '" + user + "'@'%s'" % (mysqlUtilities.LOCALHOST))
+                try:
+                    cursor.execute(
+                        "GRANT INDEX, DROP, UPDATE, ALTER, CREATE, SELECT, INSERT, DELETE ON " + database + ".* TO '" + user + "'@'%s'" % (mysqlUtilities.LOCALHOST))
+                except BaseException as msg:
+                    logging.CyberCPLogFileWriter.writeToFile('%s [addUserToDB:953]' % (str(msg)))
 
             connection.close()
 
