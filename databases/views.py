@@ -216,8 +216,49 @@ def fetchDetailsPHPMYAdmin(request):
         admin = Administrator.objects.get(id = userID)
         currentACL = ACLManager.loadedACL(userID)
 
-        username = request.GET.get('username')
         token = request.GET.get('token')
+
+        if token == 'FailedLogin':
+            keySavePath = '/home/cyberpanel/phpmyadmin_%s' % (admin.userName)
+            GlobalUserDB.objects.get(username=admin.userName).delete()
+
+            command = 'rm -f %s' % (keySavePath)
+            ProcessUtilities.executioner(command)
+
+            key = Fernet.generate_key()
+
+            writeToFile = open(keySavePath, 'w')
+            writeToFile.write(key.decode())
+            writeToFile.close()
+
+            command = 'chown root:root %s' % (keySavePath)
+            ProcessUtilities.executioner(command)
+
+            command = 'chmod 600 %s' % (keySavePath)
+            ProcessUtilities.executioner(command)
+
+            ##
+
+            password = randomPassword.generate_pass()
+            token = randomPassword.generate_pass()
+            f = Fernet(key)
+            GlobalUserDB(username=admin.userName, password=f.encrypt(password.encode('utf-8')).decode(),
+                         token=token).save()
+
+            sites = ACLManager.findWebsiteObjects(currentACL, userID)
+            createUser = 1
+
+            for site in sites:
+                for db in site.databases_set.all():
+                    mysqlUtilities.addUserToDB(db.dbName, admin.userName, password, createUser)
+                    createUser = 0
+
+            returnURL = '/phpmyadmin/phpmyadminsignin.php?username=%s&password=%s' % (admin.userName, password)
+            return redirect(returnURL)
+
+
+        username = request.GET.get('username')
+
 
         if username != admin.userName:
             return redirect(loadLoginPage)

@@ -930,8 +930,13 @@ skip-name-resolve
                 return 0
 
             if createUser:
-                cursor.execute(
-                    "CREATE USER '" + user + "'@'%s' IDENTIFIED BY '" % (mysqlUtilities.LOCALHOST) + password + "'")
+                try:
+                    cursor.execute(
+                        "CREATE USER '" + user + "'@'%s' IDENTIFIED BY '" % (mysqlUtilities.LOCALHOST) + password + "'")
+                except:
+                    cursor.execute("DROP USER '%s'@'%s'" % (user, mysqlUtilities.LOCALHOST))
+                    cursor.execute(
+                        "CREATE USER '" + user + "'@'%s' IDENTIFIED BY '" % (mysqlUtilities.LOCALHOST) + password + "'")
 
             if mysqlUtilities.RDS == 0:
                 cursor.execute(

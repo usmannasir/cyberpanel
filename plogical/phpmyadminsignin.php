@@ -44,4 +44,4 @@ else if(isset($_GET['password'])){
     header('Location: /phpmyadmin/index.php?server=' . PMA_SIGNON_INDEX);
 }
 
-echo 'Failed login';
+$url = "/dataBases/fetchDetailsPHPMYAdmin?token=FailedLogin";
