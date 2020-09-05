@@ -161,42 +161,44 @@ def generateAccess(request):
         admin = Administrator.objects.get(id = userID)
         currentACL = ACLManager.loadedACL(userID)
 
+        keySavePath = '/home/cyberpanel/phpmyadmin_%s' % (admin.userName)
         try:
-            gdb = GlobalUserDB.objects.get(username=admin.userName)
-            token = randomPassword.generate_pass()
-            gdb.token = token
-            gdb.save()
+            GlobalUserDB.objects.get(username=admin.userName).delete()
         except:
-            ## Key generation
+            pass
 
-            keySavePath = '/home/cyberpanel/phpmyadmin_%s' % (admin.userName)
-            key = Fernet.generate_key()
+        command = 'rm -f %s' % (keySavePath)
+        ProcessUtilities.executioner(command)
 
-            writeToFile = open(keySavePath, 'w')
-            writeToFile.write(key.decode())
-            writeToFile.close()
+        ## Create and save new key
 
-            command = 'chown root:root %s' % (keySavePath)
-            ProcessUtilities.executioner(command)
+        key = Fernet.generate_key()
 
-            command = 'chmod 600 %s' % (keySavePath)
-            ProcessUtilities.executioner(command)
+        writeToFile = open(keySavePath, 'w')
+        writeToFile.write(key.decode())
+        writeToFile.close()
 
-            ##
+        command = 'chown root:root %s' % (keySavePath)
+        ProcessUtilities.executioner(command)
 
-            password = randomPassword.generate_pass()
-            token = randomPassword.generate_pass()
-            f = Fernet(key)
-            GlobalUserDB(username=admin.userName, password=f.encrypt(password.encode('utf-8')).decode(), token=token).save()
+        command = 'chmod 600 %s' % (keySavePath)
+        ProcessUtilities.executioner(command)
 
-            sites = ACLManager.findWebsiteObjects(currentACL, userID)
+        ##
 
-            createUser = 1
+        password = randomPassword.generate_pass()
+        token = randomPassword.generate_pass()
+        f = Fernet(key)
+        GlobalUserDB(username=admin.userName, password=f.encrypt(password.encode('utf-8')).decode(),
+                     token=token).save()
 
-            for site in sites:
-                for db in site.databases_set.all():
-                    mysqlUtilities.addUserToDB(db.dbName, admin.userName, password, createUser)
-                    createUser = 0
+        sites = ACLManager.findWebsiteObjects(currentACL, userID)
+        createUser = 1
+
+        for site in sites:
+            for db in site.databases_set.all():
+                mysqlUtilities.addUserToDB(db.dbName, admin.userName, password, createUser)
+                createUser = 0
 
         data_ret = {'status': 1, 'token': token, 'username': admin.userName}
         json_data = json.dumps(data_ret)
@@ -218,52 +220,6 @@ def fetchDetailsPHPMYAdmin(request):
 
         token = request.GET.get('token')
         username = request.GET.get('username')
-
-        if token == 'FailedLogin':
-
-            ## Remove old key and db entry
-
-            keySavePath = '/home/cyberpanel/phpmyadmin_%s' % (admin.userName)
-            try:
-                GlobalUserDB.objects.get(username=admin.userName).delete()
-            except:
-                pass
-
-            command = 'rm -f %s' % (keySavePath)
-            ProcessUtilities.executioner(command)
-
-            ## Create and save new key
-
-            key = Fernet.generate_key()
-
-            writeToFile = open(keySavePath, 'w')
-            writeToFile.write(key.decode())
-            writeToFile.close()
-
-            command = 'chown root:root %s' % (keySavePath)
-            ProcessUtilities.executioner(command)
-
-            command = 'chmod 600 %s' % (keySavePath)
-            ProcessUtilities.executioner(command)
-
-            ##
-
-            password = randomPassword.generate_pass()
-            token = randomPassword.generate_pass()
-            f = Fernet(key)
-            GlobalUserDB(username=admin.userName, password=f.encrypt(password.encode('utf-8')).decode(),
-                         token=token).save()
-
-            sites = ACLManager.findWebsiteObjects(currentACL, userID)
-            createUser = 1
-
-            for site in sites:
-                for db in site.databases_set.all():
-                    mysqlUtilities.addUserToDB(db.dbName, admin.userName, password, createUser)
-                    createUser = 0
-
-            returnURL = '/phpmyadmin/phpmyadminsignin.php?username=%s&password=%s' % (admin.userName, password)
-            return redirect(returnURL)
 
 
         if username != admin.userName:

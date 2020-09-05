@@ -46,7 +46,15 @@ else if(isset($_GET['password'])){
 }
 }catch (Exception $e) {
     echo 'Caught exception: ',  $e->getMessage(), "\n";
+    $params = session_get_cookie_params();
+    setcookie(session_name(), '', time() - 86400, $params["path"], $params["domain"], $params["secure"], $params["httponly"] );
+    session_destroy();
+    header('Location: /dataBases/phpMyAdmin');
+    return;
 }
 
-#$url = "/dataBases/fetchDetailsPHPMYAdmin?token=FailedLogin";
-#header('Location: ' . $url);
+$params = session_get_cookie_params();
+setcookie(session_name(), '', time() - 86400, $params["path"], $params["domain"], $params["secure"], $params["httponly"] );
+session_destroy();
+header('Location: /dataBases/phpMyAdmin');
+return;
