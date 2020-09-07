@@ -15,7 +15,7 @@ APT_GET_CMD=$(which apt-get)
 
 if [[ -n $YUM_CMD ]]; then
 	# Centos
-	for version in $(ls /usr/local/lsws|grep lsphp); do echo ""; echo "PHP $version"; sed -i -e "s|^;session.save_path.*|session.save_path = '/var/lib/lsphp/session/${version}'|g" -e "s|^session.save_path.*|session.save_path = '/var/lib/lsphp/session/${version}'|g" /usr/local/lsws/${version}/etc/php.ini; /usr/local/lsws/${version}/bin/php -i |grep -Ei 'date.timezone' && echo "" ; done; service lsws restart; killall lsphp;
+	for version in $(ls /usr/local/lsws|grep lsphp); do echo ""; echo "PHP $version"; sed -i -e "s|^;session.save_path.*|session.save_path = '/var/lib/lsphp/session/${version}'|g" -e "s|^session.save_path.*|session.save_path = '/var/lib/lsphp/session/${version}'|g" /usr/local/lsws/${version}/etc/php.ini; /usr/local/lsws/${version}/bin/php -i |grep -Ei 'session.save_path' && echo "" ; done; service lsws restart; killall lsphp;
 
 
 
