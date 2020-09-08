@@ -413,20 +413,10 @@ gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
 gpgcheck=1
 EOF
 
-    ## Ghetoo Repo for Postfix/Dovecot
+  ## Ghetoo Repo for Postfix/Dovecot
 
-    yum --nogpg install https://mirror.ghettoforge.org/distributions/gf/gf-release-latest.gf.el7.noarch.rpm -y
+  yum --nogpg install https://mirror.ghettoforge.org/distributions/gf/gf-release-latest.gf.el7.noarch.rpm -y
 
-    ## Enable LUX Repo
-
-    cat << EOF > /etc/yum.repos.d/lux.repo
-[lux]
-name=CentOS $releasever - $basearch - Lux
-baseurl=http://repo.iotti.biz/CentOS/$releasever
-enabled=1
-gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-LUX
-EOF
 
   ## Copr for restic
 
