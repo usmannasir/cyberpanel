@@ -756,7 +756,7 @@ class preFlightsChecks:
             ##
 
             if self.distro == centos:
-                command = 'yum --enablerepo=gf-plus -y install dovecot dovecot-mysql'
+                command = 'yum --enablerepo=gf-plus -y install dovecot23 dovecot23-mysql'
             elif self.distro == cent8:
                 command = 'dnf install --enablerepo=gf-plus dovecot23 dovecot23-mysql -y'
             else:
