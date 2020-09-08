@@ -391,7 +391,6 @@ if [[ -d /etc/yum.repos.d ]] ; then
 	if [[ $CENTOS_8 == "True" ]] ; then
   		dnf install zip -y
 	elif [[ $CENTOS_8 == "False" ]] ; then
-
 	    ###### Setup Required Repos
 
   		## Start with PDNS
@@ -424,8 +423,6 @@ EOF
   ## IUS Repo
 
   yum install https://repo.ius.io/ius-release-el7.rpm -y
-
-
 	fi
 fi
 
