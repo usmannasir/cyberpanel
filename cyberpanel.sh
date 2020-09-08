@@ -390,10 +390,6 @@ if [[ -d /etc/yum.repos.d ]] ; then
 	if [[ $CENTOS_8 == "True" ]] ; then
   		dnf install zip -y
 	elif [[ $CENTOS_8 == "False" ]] ; then
-<<<<<<< HEAD
-  		curl https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.0.1/install/CyberPanel.repo > /etc/yum.repos.d/CyberPanel.repo
-=======
-
 	    ###### Setup Required Repos
 
   		## Start with PDNS
@@ -426,9 +422,6 @@ EOF
   ## IUS Repo
 
   yum install https://repo.ius.io/ius-release-el7.rpm -y
-
-
->>>>>>> 29c0a38e... do not depend on CyberPanel own repo fro cent7
 	fi
 fi
 
