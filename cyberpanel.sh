@@ -380,42 +380,64 @@ fi
 install_required() {
 
 if [[ -d /etc/yum.repos.d ]] ; then
+  yum clean all
+	yum update -y
+  yum autoremove epel-release -y
+	rm -f /etc/yum.repos.d/epel.repo
+	rm -f /etc/yum.repos.d/epel.repo.rpmsave
+	yum install epel-release -y
+
 	if [[ $CENTOS_8 == "True" ]] ; then
   		dnf install zip -y
 	elif [[ $CENTOS_8 == "False" ]] ; then
-  		curl https://$GIT_CONTENT_URL/v2.0.1/install/CyberPanel.repo > /etc/yum.repos.d/CyberPanel.repo
+	    ###### Setup Required Repos
+
+  		## Start with PDNS
+
+  		yum install yum-plugin-priorities -y
+  		curl -o /etc/yum.repos.d/powerdns-auth-43.repo https://repo.powerdns.com/repo-files/centos-auth-43.repo
+
+  		## MariaDB
+
+  		cat << EOF > /etc/yum.repos.d/MariaDB.repo
+# MariaDB 10.5 CentOS repository list - created 2020-09-08 14:54 UTC
+# http://downloads.mariadb.org/mariadb/repositories/
+[mariadb]
+name = MariaDB
+baseurl = http://yum.mariadb.org/10.5/centos7-amd64
+gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
+gpgcheck=1
+EOF
+
+  ## Ghetoo Repo for Postfix/Dovecot
+
+  yum --nogpg install https://mirror.ghettoforge.org/distributions/gf/gf-release-latest.gf.el7.noarch.rpm -y
+
+
+  ## Copr for restic
+
+  yum install yum-plugin-copr -y
+  yum copr enable copart/restic -y
+
+  ## IUS Repo
+
+  yum install https://repo.ius.io/ius-release-el7.rpm -y
 	fi
 fi
 
 echo -e "\nInstalling necessary components..."
 if [[ $SERVER_OS == "CentOS" ]] ; then
-  if [[ $CENTOS_8 == "False" ]] ; then
-    timeout 10 rpm --import https://$DOWNLOAD_SERVER/mariadb/RPM-GPG-KEY-MariaDB
-    timeout 10 rpm --import https://$DOWNLOAD_SERVER/litespeed/RPM-GPG-KEY-litespeed
-    timeout 10 rpm --import https://$DOWNLOAD_SERVER/powerdns/FD380FBB-pub.asc
-    timeout 10 rpm --import http://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-7
-    timeout 10 rpm --import https://$DOWNLOAD_SERVER/gf-plus/RPM-GPG-KEY-gf.el7
-    timeout 10 rpm --import https://$DOWNLOAD_SERVER/lux/RPM-GPG-KEY-LUX
-    timeout 10 rpm --import https://$DOWNLOAD_SERVER/ius/RPM-GPG-KEY-IUS-7
-    timeout 10 rpm --import https://repo.dovecot.org/DOVECOT-REPO-GPG
-    timeout 10 rpm --import https://copr-be.cloud.fedoraproject.org/results/copart/restic/pubkey.gpg
-    curl https://getfedora.org/static/fedora.gpg | gpg --import
-	fi
 
 	yum clean all
 	yum update -y
-	yum autoremove epel-release -y
-	rm -f /etc/yum.repos.d/epel.repo
-	rm -f /etc/yum.repos.d/epel.repo.rpmsave
 
 	if [[ $CENTOS_8 == "False" ]] ; then
-	  yum --enablerepo=CyberPanel install -y wget strace net-tools curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel gpgme-devel curl-devel git socat openssl-devel MariaDB-shared mariadb-devel yum-utils python36u python36u-pip python36u-devel
+	  yum install -y wget strace net-tools curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel gpgme-devel curl-devel git socat openssl-devel MariaDB-shared mariadb-devel yum-utils python36u python36u-pip python36u-devel
 		check_return
 		yum -y groupinstall development
 		check_return
 	fi
 	if [[ $CENTOS_8 == "True" ]] ; then
-	  dnf install epel-release -y
 		dnf install -y wget strace net-tools curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-devel curl-devel git platform-python-devel tar socat python3
 		check_return
 		dnf --enablerepo=PowerTools install gpgme-devel -y
