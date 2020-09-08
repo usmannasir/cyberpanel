@@ -2036,7 +2036,7 @@ milter_default_action = accept
             if os.path.exists(CentOSPath):
 
                 if self.distro == centos:
-                    command = 'yum --enablerepo=restic install restic -y'
+                    command = 'yum install restic -y'
                     preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
                 elif self.distro == cent8:
 

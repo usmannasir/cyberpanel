@@ -418,18 +418,8 @@ EOF
 
   ## Copr for restic
 
-  cat << EOF > /etc/yum.repos.d/copr.repo
-[restic]
-name=Copr repo for restic owned by copart
-baseurl=https://download.copr.fedorainfracloud.org/results/copart/restic/epel-7-$basearch/
-type=rpm-md
-skip_if_unavailable=True
-gpgcheck=1
-gpgkey=https://download.copr.fedorainfracloud.org/results/copart/restic/pubkey.gpg
-repo_gpgcheck=0
-enabled=1
-enabled_metadata=1
-EOF
+  yum install yum-plugin-copr -y
+  yum copr enable copart/restic -y
 
   ## IUS Repo
 
