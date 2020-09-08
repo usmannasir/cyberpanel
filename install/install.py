@@ -2258,7 +2258,7 @@ def main():
 
     checks.install_unzip()
     checks.install_zip()
-    checks.install_rsync()
+    ## checks.install_rsync()
 
     checks.installFirewalld()
 
