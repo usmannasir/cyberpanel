@@ -243,7 +243,11 @@ class InstallCyberPanel:
         if self.distro == ubuntu:
             command = "apt-get -y install mariadb-server"
         elif self.distro == centos:
+<<<<<<< HEAD
             command = 'yum --enablerepo=CyberPanel -y install mariadb-server'
+=======
+            command = 'yum --enablerepo=mariadb -y install MariaDB-server MariaDB-client'
+>>>>>>> 29c0a38e... do not depend on CyberPanel own repo fro cent7
         elif self.distro == cent8:
             command = 'dnf -y install mariadb-server'
 

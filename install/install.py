@@ -723,7 +723,7 @@ class preFlightsChecks:
             self.stdOut("Install dovecot - do the install")
 
             if self.distro == centos:
-                command = 'yum install --enablerepo=CyberPanel -y postfix3 postfix3-ldap postfix3-mysql postfix3-pcre'
+                command = 'yum install --enablerepo=gf-plus -y postfix3 postfix3-ldap postfix3-mysql postfix3-pcre'
             elif self.distro == cent8:
 
                 command = 'dnf --nogpg install -y https://mirror.ghettoforge.org/distributions/gf/el/8/gf/x86_64/gf-release-8-11.gf.el8.noarch.rpm'
@@ -756,7 +756,7 @@ class preFlightsChecks:
             ##
 
             if self.distro == centos:
-                command = 'yum --enablerepo=CyberPanel -y install dovecot dovecot-mysql'
+                command = 'yum --enablerepo=gf-plus -y install dovecot dovecot-mysql'
             elif self.distro == cent8:
                 command = 'dnf install --enablerepo=gf-plus dovecot23 dovecot23-mysql -y'
             else:
@@ -2009,7 +2009,7 @@ milter_default_action = accept
             if os.path.exists(CentOSPath):
 
                 if self.distro == centos:
-                    command = 'yum --enablerepo=CyberPanel install restic -y'
+                    command = 'yum --enablerepo=restic install restic -y'
                     preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
                 elif self.distro == cent8:
 
