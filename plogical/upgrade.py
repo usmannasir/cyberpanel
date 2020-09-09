@@ -1931,7 +1931,7 @@ imap_folder_list_limit = 0
                 Upgrade.executioner(command, 0)
 
                 if Upgrade.decideCentosVersion() == CENTOS7:
-                    command = 'yum install --enablerepo=CyberPanel -y postfix3 postfix3-mysql'
+                    command = 'yum install --enablerepo=gf-plus -y postfix3 postfix3-ldap postfix3-mysql postfix3-pcre'
                 else:
                     command = 'dnf install --enablerepo=gf-plus postfix3 postfix3-mysql -y'
 
