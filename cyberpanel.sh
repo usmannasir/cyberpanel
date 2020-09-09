@@ -381,6 +381,7 @@ fi
 install_required() {
 
 if [[ -d /etc/yum.repos.d ]] ; then
+
   yum clean all
 	yum update -y
   yum autoremove epel-release -y
