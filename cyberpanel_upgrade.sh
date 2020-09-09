@@ -232,11 +232,11 @@ EOF
     mkdir /etc/cnfbackup
     cp -R /etc/my.cnf.d/ /etc/cnfbackup/
 
-    yum remove MariaDB-server MariaDB-client galera
+    yum remove MariaDB-server MariaDB-client galera -y
     yum --enablerepo=mariadb -y install MariaDB-server MariaDB-client
 
     cp -f /etc/my.cnf.bak /etc/my.cnf
-    rm -rf /etc/etc/my.cnf.d/
+    rm -rf /etc/my.cnf.d/
     mv /etc/cnfbackup/my.cnf.d /etc/
 
     systemctl enable mysql
