@@ -6,6 +6,7 @@ export LC_CTYPE=en_US.UTF-8
 SUDO_TEST=$(set)
 SERVER_OS='Undefined'
 OUTPUT=$(cat /etc/*release)
+MYSQLCurrentVersion=$(systemctl status mysql)
 TEMP=$(curl --silent https://cyberpanel.net/version.txt)
 BRANCH_NAME=v${TEMP:12:3}.${TEMP:25:1}
 GIT_URL="github.com/usmannasir/cyberpanel"
@@ -13,25 +14,6 @@ GIT_CONTENT_URL="raw.githubusercontent.com/usmannasir/cyberpanel"
 SERVER_COUNTRY="unknow"
 SERVER_COUNTRY=$(curl --silent --max-time 5 https://cyberpanel.sh/?country)
 UBUNTU_20="False"
-
-### Update and remove not needed repos
-
-if [[ $SERVER_OS == "CentOS" ]]; then
-  rm -f /etc/yum.repos.d/ius-archive.repo
-  rm -f /etc/yum.repos.d/copart-restic-epel-7.repo
-  rm -f /etc/yum.repos.d/dovecot.repo
-  rm -f /etc/yum.repos.d/epel.repo
-  rm -f /etc/yum.repos.d/epel-testing.repo
-  rm -f /etc/yum.repos.d/frank.repo
-  rm -f /etc/yum.repos.d/ius.repo
-  rm -f /etc/yum.repos.d/ius-testing.repo
-  rm -f /etc/yum.repos.d/MariaDB.repo
-  rm -f /etc/yum.repos.d/lux.repo
-  rm -f /etc/yum.repos.d/gf.repo
-  rm -f /etc/yum.repos.d/powerdns-auth-42.repo
-  rm -rf /etc/yum.repos.d/powerdns-auth-master.repo
-  rm -rf /etc/yum.repos.d/gf.repo.rpmnew
-fi
 
 ##
 
@@ -165,7 +147,7 @@ OUTPUT=$(cat /etc/*release)
 if echo $OUTPUT | grep -q "CentOS Linux 7"; then
   echo -e "\nDetecting CentOS 7.X...\n"
   SERVER_OS="CentOS7"
-  curl https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.0.1/install/CyberPanel.repo >/etc/yum.repos.d/CyberPanel.repo
+  rm -f /etc/yum.repos.d/CyberPanel.repo
   yum clean all
   yum update -y
   yum autoremove epel-release -y
@@ -174,7 +156,7 @@ if echo $OUTPUT | grep -q "CentOS Linux 7"; then
 elif echo $OUTPUT | grep -q "CloudLinux 7"; then
   echo -e "\nDetecting CloudLinux 7.X...\n"
   SERVER_OS="CentOS7"
-  curl https://raw.githubusercontent.com/usmannasir/cyberpanel/v2.0.1/install/CyberPanel.repo >/etc/yum.repos.d/CyberPanel.repo
+  rm -f /etc/yum.repos.d/CyberPanel.repo
   yum clean all
   yum update -y
   yum autoremove epel-release -y
@@ -219,9 +201,68 @@ else
 fi
 
 if [ $SERVER_OS = "CentOS7" ]; then
+  yum install epel-release -y
   yum -y install yum-utils
   yum -y groupinstall development
-  yum --enablerepo=CyberPanel install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel gpgme-devel curl-devel git socat openssl-devel MariaDB-shared mariadb-devel python36u python36u-pip python36u-devel
+
+  ###### Setup Required Repos
+
+  ## Start with PDNS
+
+  yum install yum-plugin-priorities -y
+  curl -o /etc/yum.repos.d/powerdns-auth-43.repo https://repo.powerdns.com/repo-files/centos-auth-43.repo
+
+  ## MariaDB
+
+  		cat << EOF > /etc/yum.repos.d/MariaDB.repo
+# MariaDB 10.5 CentOS repository list - created 2020-09-08 14:54 UTC
+# http://downloads.mariadb.org/mariadb/repositories/
+[mariadb]
+name = MariaDB
+baseurl = http://yum.mariadb.org/10.5/centos7-amd64
+gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
+gpgcheck=1
+EOF
+
+  ## Lets upgrade mariadb on spot
+
+  if echo $MYSQLCurrentVersion | grep -q "MariaDB 10.1"; then
+
+    cp /etc/my.cnf /etc/my.cnf.bak
+    mkdir /etc/cnfbackup
+    cp -R /etc/my.cnf.d/ /etc/cnfbackup/
+
+    yum remove MariaDB-server MariaDB-client galera -y
+    yum --enablerepo=mariadb -y install MariaDB-server MariaDB-client
+
+    cp -f /etc/my.cnf.bak /etc/my.cnf
+    rm -rf /etc/my.cnf.d/
+    mv /etc/cnfbackup/my.cnf.d /etc/
+
+    systemctl enable mysql
+    systemctl start mysql
+
+  fi
+
+
+  ## Ghetoo Repo for Postfix/Dovecot
+
+  yum --nogpg install https://mirror.ghettoforge.org/distributions/gf/gf-release-latest.gf.el7.noarch.rpm -y
+
+
+  ## Copr for restic
+
+  yum install yum-plugin-copr -y
+  yum copr enable copart/restic -y
+
+  ## IUS Repo
+
+  yum install https://repo.ius.io/ius-release-el7.rpm -y
+
+  ###
+
+  yum install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel gpgme-devel curl-devel git socat openssl-devel MariaDB-shared mariadb-devel python36u python36u-pip python36u-devel
+
 elif [ $SERVER_OS = "CentOS8" ]; then
   dnf install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-devel curl-devel git platform-python-devel tar socat
   dnf --enablerepo=PowerTools install gpgme-devel -y
