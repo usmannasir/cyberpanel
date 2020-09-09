@@ -6,6 +6,7 @@ export LC_CTYPE=en_US.UTF-8
 SUDO_TEST=$(set)
 SERVER_OS='Undefined'
 OUTPUT=$(cat /etc/*release)
+MYSQLCurrentVersion=$(systemctl status mysql)
 TEMP=$(curl --silent https://cyberpanel.net/version.txt)
 BRANCH_NAME=v${TEMP:12:3}.${TEMP:25:1}
 GIT_URL="github.com/usmannasir/cyberpanel"
@@ -222,6 +223,27 @@ baseurl = http://yum.mariadb.org/10.5/centos7-amd64
 gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
 gpgcheck=1
 EOF
+
+  ## Lets upgrade mariadb on spot
+
+  if echo $MYSQLCurrentVersion | grep -q "MariaDB 10.1"; then
+
+    cp /etc/my.cnf /etc/my.cnf.bak
+    mkdir /etc/cnfbackup
+    cp -R /etc/my.cnf.d/ /etc/cnfbackup/
+
+    yum remove MariaDB-server MariaDB-client galera
+    yum --enablerepo=mariadb -y install MariaDB-server MariaDB-client
+
+    cp -f /etc/my.cnf.bak /etc/my.cnf
+    rm -rf /etc/etc/my.cnf.d/
+    mv /etc/cnfbackup/my.cnf.d /etc/
+
+    systemctl enable mysql
+    systemctl start mysql
+
+  fi
+
 
   ## Ghetoo Repo for Postfix/Dovecot
 
