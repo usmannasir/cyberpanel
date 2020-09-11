@@ -238,7 +238,7 @@ class WebsiteManager:
                        " --administratorEmail " + adminEmail + " --phpVersion '" + phpSelection + \
                        "' --virtualHostUser " + externalApp + " --ssl " + str(data['ssl']) + " --dkimCheck " \
                        + str(data['dkimCheck']) + " --openBasedir " + str(data['openBasedir']) + \
-                       ' --websiteOwner ' + websiteOwner + ' --package ' + packageName + ' --tempStatusPath ' + tempStatusPath + " --apache " + apacheBackend  + " --mailDomain %s" % (mailDomain)
+                       ' --websiteOwner "' + websiteOwner + '" --package "' + packageName + '" --tempStatusPath ' + tempStatusPath + " --apache " + apacheBackend  + " --mailDomain %s" % (mailDomain)
 
             ProcessUtilities.popenExecutioner(execPath)
             time.sleep(2)
