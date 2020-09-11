@@ -249,7 +249,7 @@ class IncScheduler():
                         ## Create CyberPanel Folder
 
                         file_metadata = {
-                            'name': 'CyberPanel-%s' % (ipAddress),
+                            'name': '%s-%s' % (items.name, ipAddress),
                             'mimeType': 'application/vnd.google-apps.folder'
                         }
                         file = drive.files().create(body=file_metadata,

@@ -126,6 +126,9 @@ class backupSchedule:
                                 command = 'sudo rm -f ' + pid
                                 ProcessUtilities.normalExecutioner(command)
 
+                                command = 'rm -rf %s' % (tempStoragePath)
+                                ProcessUtilities.normalExecutioner(command)
+
                                 backupObs = Backups.objects.filter(fileName=fileName)
                                 for items in backupObs:
                                     items.delete()
@@ -187,6 +190,10 @@ class backupSchedule:
                             return 0, 'Backup process killed.'
                     else:
                         if killCounter == 1:
+
+                            command = 'rm -rf %s' % (tempStoragePath)
+                            ProcessUtilities.normalExecutioner(command)
+
                             return 0, 'Backup process killed without reporting any error. [184]'
                         elif os.path.exists(schedulerPath):
                             backupSchedule.remoteBackupLogging(backupLogPath, 'Backup process killed. Error: %s' % (
