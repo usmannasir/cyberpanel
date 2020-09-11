@@ -195,7 +195,7 @@ class WebsiteManager:
                 HA = data['HA']
                 externalApp = 'nobody'
             except:
-                externalApp = "".join(re.findall("[a-zA-Z]+", domain))[:7]
+                externalApp = "".join(re.findall("[a-zA-Z]+", domain))[:5] + str(randint(1000, 9999))
 
 
 
@@ -222,14 +222,6 @@ class WebsiteManager:
 
             import pwd
             counter = 0
-
-            while 1:
-                try:
-                    pwd.getpwnam(externalApp)
-                    externalApp = '%s%s' % (externalApp, str(counter))
-                    counter = counter + 1
-                except:
-                    break
 
             ## Create Configurations
 
