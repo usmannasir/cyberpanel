@@ -29,8 +29,8 @@ class SMTPHosts(models.Model):
     owner = models.ForeignKey(Administrator, on_delete=models.CASCADE)
     host = models.CharField(max_length=150, unique= True)
     port = models.CharField(max_length=10)
-    userName = models.CharField(max_length=50)
-    password = models.CharField(max_length=50)
+    userName = models.CharField(max_length=200)
+    password = models.CharField(max_length=200)
 
 class EmailTemplate(models.Model):
     owner = models.ForeignKey(Administrator, on_delete=models.CASCADE)

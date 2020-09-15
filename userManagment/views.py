@@ -438,12 +438,31 @@ def submitUserDeletion(request):
 
             accountUsername = data['accountUsername']
 
+            try:
+                force = data['force']
+            except:
+                force = 0
+
+
             currentACL = ACLManager.loadedACL(userID)
 
             currentUser = Administrator.objects.get(pk=userID)
             userInQuestion = Administrator.objects.get(userName=accountUsername)
 
+
             if ACLManager.checkUserOwnerShip(currentACL, currentUser, userInQuestion):
+
+
+                if force:
+                    userACL = ACLManager.loadedACL(userInQuestion.pk)
+                    websitesName = ACLManager.findAllSites(userACL, userInQuestion.pk)
+
+                    from websiteFunctions.website import WebsiteManager
+                    wm = WebsiteManager()
+
+                    for website in websitesName:
+                        wm.submitWebsiteDeletion(userID, {'websiteName': website})
+
                 user = Administrator.objects.get(userName=accountUsername)
 
                 childUsers = Administrator.objects.filter(owner=user.pk)

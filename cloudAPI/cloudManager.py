@@ -62,12 +62,29 @@ class CloudManager:
         try:
 
             try:
-                selectedACL = ACL.objects.get(name='user')
+
                 UserAccountName = self.data['UserAccountName']
                 UserPassword = self.data['UserPassword']
                 FullName = self.data['FullName']
                 token = hashPassword.generateToken(UserAccountName, UserPassword)
                 password = hashPassword.hash_password(UserPassword)
+
+                try:
+                    initWebsitesLimit = int(self.data['websitesLimit'])
+                except:
+                    initWebsitesLimit = 10
+
+                try:
+                    acl = self.data['acl']
+                    selectedACL = ACL.objects.get(name=acl)
+
+                except:
+                    selectedACL = ACL.objects.get(name='user')
+
+                try:
+                    apiAccess = int(self.data['api'])
+                except:
+                    apiAccess = 10
 
                 try:
                     newAdmin = Administrator(firstName=FullName,
@@ -76,10 +93,11 @@ class CloudManager:
                                              type=3,
                                              userName=UserAccountName,
                                              password=password,
-                                             initWebsitesLimit=10,
+                                             initWebsitesLimit=initWebsitesLimit,
                                              owner=1,
                                              acl=selectedACL,
-                                             token=token
+                                             token=token,
+                                             api=apiAccess
                                              )
                     newAdmin.save()
                 except BaseException as msg:

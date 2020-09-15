@@ -623,6 +623,16 @@ imap_folder_list_limit = 0
                 pass
 
             try:
+                cursor.execute("ALTER TABLE emailMarketing_smtphosts MODIFY userName varchar(200)")
+            except:
+                pass
+
+            try:
+                cursor.execute("ALTER TABLE emailMarketing_smtphosts MODIFY password varchar(200)")
+            except:
+                pass
+
+            try:
                 cursor.execute("ALTER TABLE websiteFunctions_backups MODIFY fileName varchar(200)")
             except:
                 pass
