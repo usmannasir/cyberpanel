@@ -259,6 +259,10 @@ def saveSMTPSettings(request):
 
             try:
                 verifyLogin = smtplib.SMTP(str(smtpHost), int(smtpPort))
+
+                if int(smtpPort) == 587:
+                    verifyLogin.starttls()
+
                 verifyLogin.login(str(smtpUserName), str(smtpPassword))
 
                 writeToFile = open(smtpPath, 'w')
