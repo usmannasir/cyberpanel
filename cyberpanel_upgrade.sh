@@ -241,8 +241,8 @@ EOF
     mkdir /etc/cnfbackup
     cp -R /etc/my.cnf.d/ /etc/cnfbackup/
 
-    yum remove MariaDB-server MariaDB-client galera MariaDB-common MariaDB-devel MariaDB-shared -y
-    yum --enablerepo=mariadb -y install MariaDB-server MariaDB-client galera MariaDB-common MariaDB-devel MariaDB-shared
+    yum remove MariaDB-server MariaDB-client galera -y
+    yum --enablerepo=mariadb -y install MariaDB-server MariaDB-client galera
 
     cp -f /etc/my.cnf.bak /etc/my.cnf
     rm -rf /etc/my.cnf.d/
@@ -277,7 +277,7 @@ EOF
 
   cat << EOF > /etc/yum.repos.d/lux.repo
 [lux]
-name=CentOS $releasever - $basearch - Lux
+name=CentOS \$releasever - \$basearch - Lux
 baseurl=http://repo.iotti.biz/CentOS/$releasever
 enabled=1
 gpgcheck=1
