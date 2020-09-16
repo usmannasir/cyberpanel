@@ -425,6 +425,10 @@ EOF
 
   yum install http://repo.iotti.biz/CentOS/7/noarch/lux-release-7-1.noarch.rpm -y
 
+  ## IUS Repo for python 3
+
+  yum install https://repo.ius.io/ius-release-el7.rpm -y
+
 
 	fi
 fi

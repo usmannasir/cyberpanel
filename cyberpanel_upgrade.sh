@@ -275,6 +275,14 @@ EOF
   yum install yum-plugin-copr -y
   yum copr enable copart/restic -y
 
+  ## IUS Repo for python 3
+
+  rm -f /etc/yum.repos.d/ius-archive.repo
+  rm -f /etc/yum.repos.d/ius.repo
+  rm -f /etc/yum.repos.d/ius-testing.repo
+
+  yum install https://repo.ius.io/ius-release-el7.rpm -y
+
 #  ## Lux for git 2.17 or more
 #
 #  cat << EOF > /etc/yum.repos.d/lux.repo
