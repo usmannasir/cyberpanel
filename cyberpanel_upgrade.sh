@@ -7,6 +7,7 @@ SUDO_TEST=$(set)
 SERVER_OS='Undefined'
 OUTPUT=$(cat /etc/*release)
 MYSQLCurrentVersion=$(systemctl status mysql)
+MYSQLPassword=$(cat /etc/cyberpanel/mysqlPassword)
 TEMP=$(curl --silent https://cyberpanel.net/version.txt)
 BRANCH_NAME=v${TEMP:12:3}.${TEMP:25:1}
 GIT_URL="github.com/usmannasir/cyberpanel"
@@ -147,21 +148,9 @@ OUTPUT=$(cat /etc/*release)
 if echo $OUTPUT | grep -q "CentOS Linux 7"; then
   echo -e "\nDetecting CentOS 7.X...\n"
   SERVER_OS="CentOS7"
-  rm -f /etc/yum.repos.d/CyberPanel.repo
-  yum clean all
-  yum update -y
-  yum autoremove epel-release -y
-  rm -f /etc/yum.repos.d/epel.repo
-  rm -f /etc/yum.repos.d/epel.repo.rpmsave
 elif echo $OUTPUT | grep -q "CloudLinux 7"; then
   echo -e "\nDetecting CloudLinux 7.X...\n"
   SERVER_OS="CentOS7"
-  rm -f /etc/yum.repos.d/CyberPanel.repo
-  yum clean all
-  yum update -y
-  yum autoremove epel-release -y
-  rm -f /etc/yum.repos.d/epel.repo
-  rm -f /etc/yum.repos.d/epel.repo.rpmsave
 elif echo $OUTPUT | grep -q "CentOS Linux 8"; then
   rm -f /etc/yum.repos.d/CyberPanel.repo
   dnf --nogpg install -y https://mirror.ghettoforge.org/distributions/gf/el/8/gf/x86_64/gf-release-8-11.gf.el8.noarch.rpm
@@ -201,20 +190,40 @@ else
 fi
 
 if [ $SERVER_OS = "CentOS7" ]; then
+
+  rm -f /etc/yum.repos.d/CyberPanel.repo
+  yum clean all
+  yum update -y
+  yum autoremove epel-release -y
+  rm -f /etc/yum.repos.d/epel.repo
+  rm -f /etc/yum.repos.d/epel.repo.rpmsave
+
   yum install epel-release -y
   yum -y install yum-utils
   yum -y groupinstall development
 
   ###### Setup Required Repos
 
+  rm -f /etc/yum.repos.d/dovecot.repo
+  rm -f /etc/yum.repos.d/frank.repo
+  rm -f /etc/yum.repos.d/ius-archive.repo
+  rm -f /etc/yum.repos.d/ius.repo
+  rm -f /etc/yum.repos.d/ius-testing.repo
+  rm -f /etc/yum.repos.d/lux.repo
+
   ## Start with PDNS
+
+  rm -rf /etc/yum.repos.d/powerdns-auth-*
 
   yum install yum-plugin-priorities -y
   curl -o /etc/yum.repos.d/powerdns-auth-43.repo https://repo.powerdns.com/repo-files/centos-auth-43.repo
 
   ## MariaDB
 
-  		cat << EOF > /etc/yum.repos.d/MariaDB.repo
+  rm -f /etc/yum.repos.d/MariaDB.repo
+  rm -f /etc/yum.repos.d/MariaDB.repo.rpmsave
+
+  cat << EOF > /etc/yum.repos.d/MariaDB.repo
 # MariaDB 10.5 CentOS repository list - created 2020-09-08 14:54 UTC
 # http://downloads.mariadb.org/mariadb/repositories/
 [mariadb]
@@ -232,8 +241,8 @@ EOF
     mkdir /etc/cnfbackup
     cp -R /etc/my.cnf.d/ /etc/cnfbackup/
 
-    yum remove MariaDB-server MariaDB-client galera -y
-    yum --enablerepo=mariadb -y install MariaDB-server MariaDB-client
+    yum remove MariaDB-server MariaDB-client galera MariaDB-common MariaDB-devel MariaDB-shared -y
+    yum --enablerepo=mariadb -y install MariaDB-server MariaDB-client galera MariaDB-common MariaDB-devel MariaDB-shared
 
     cp -f /etc/my.cnf.bak /etc/my.cnf
     rm -rf /etc/my.cnf.d/
@@ -242,24 +251,43 @@ EOF
     systemctl enable mysql
     systemctl start mysql
 
+    mysql_upgrade -uroot -p$MYSQLPassword
+
   fi
 
 
   ## Ghetoo Repo for Postfix/Dovecot
 
+  yum erase gf-* -y
+
+  rm -f /etc/yum.repos.d/gf.repo
+  rm -f /etc/yum.repos.d/gf.repo.rpmsave
+
   yum --nogpg install https://mirror.ghettoforge.org/distributions/gf/gf-release-latest.gf.el7.noarch.rpm -y
 
-
   ## Copr for restic
+
+  rm -f /etc/yum.repos.d/copart-restic-epel-7.repo.repo
+  rm -f /etc/yum.repos.d/copart-restic-epel-7.repo.rpmsave
 
   yum install yum-plugin-copr -y
   yum copr enable copart/restic -y
 
-  ## IUS Repo
+  ## Lux for git 2.17 or more
 
-  yum install https://repo.ius.io/ius-release-el7.rpm -y
+  cat << EOF > /etc/yum.repos.d/lux.repo
+[lux]
+name=CentOS $releasever - $basearch - Lux
+baseurl=http://repo.iotti.biz/CentOS/$releasever
+enabled=1
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-LUX
+EOF
 
   ###
+
+  yum clean all
+  yum update -y
 
   yum install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel gpgme-devel curl-devel git socat openssl-devel MariaDB-shared mariadb-devel python36u python36u-pip python36u-devel
 

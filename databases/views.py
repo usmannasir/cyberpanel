@@ -13,6 +13,7 @@ from databases.models import GlobalUserDB
 from plogical import randomPassword
 from cryptography.fernet import Fernet
 from plogical.mysqlUtilities import mysqlUtilities
+from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 # Create your views here.
 
 def loadDatabaseHome(request):
@@ -157,6 +158,7 @@ def phpMyAdmin(request):
 def generateAccess(request):
     try:
 
+
         userID = request.session['userID']
         admin = Administrator.objects.get(id = userID)
         currentACL = ACLManager.loadedACL(userID)
@@ -186,6 +188,8 @@ def generateAccess(request):
 
         ##
 
+        logging.writeToFile('a')
+
         password = randomPassword.generate_pass()
         token = randomPassword.generate_pass()
         f = Fernet(key)
@@ -206,6 +210,7 @@ def generateAccess(request):
 
 
     except BaseException as msg:
+        logging.writeToFile(str(msg))
         data_ret = {'status': 0, 'createDBStatus': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
