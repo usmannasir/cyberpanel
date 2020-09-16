@@ -1929,16 +1929,16 @@ imap_folder_list_limit = 0
                 ### Restore dovecot/postfix conf
 
                 command = 'rm -rf %s' % (dovecotConfPath)
-                Upgrade.executioner(command)
+                Upgrade.executioner(command, 0)
 
                 command = 'rm -rf %s' % (postfixConfPath)
-                Upgrade.executioner(command)
+                Upgrade.executioner(command, 0)
 
                 command = 'mv %s/dovecot /etc/' % (configbackups)
-                Upgrade.executioner(command)
+                Upgrade.executioner(command, 0)
 
                 command = 'mv %s/postfix /etc/' % (configbackups)
-                Upgrade.executioner(command)
+                Upgrade.executioner(command, 0)
 
                 ## Restored
 
@@ -1984,16 +1984,16 @@ imap_folder_list_limit = 0
                     ### Restore dovecot/postfix conf
 
                     command = 'rm -rf %s' % (dovecotConfPath)
-                    Upgrade.executioner(command)
+                    Upgrade.executioner(command, 0)
 
                     command = 'rm -rf %s' % (postfixConfPath)
-                    Upgrade.executioner(command)
+                    Upgrade.executioner(command, 0)
 
                     command = 'mv %s/dovecot /etc/' % (configbackups)
-                    Upgrade.executioner(command)
+                    Upgrade.executioner(command, 0)
 
                     command = 'mv %s/postfix /etc/' % (configbackups)
-                    Upgrade.executioner(command)
+                    Upgrade.executioner(command, 0)
 
                     ## Restored
 
