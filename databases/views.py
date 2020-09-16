@@ -197,12 +197,11 @@ def generateAccess(request):
                      token=token).save()
 
         sites = ACLManager.findWebsiteObjects(currentACL, userID)
-        createUser = 1
+        mysqlUtilities.addUserToDB(None, None, None, 1)
 
         for site in sites:
             for db in site.databases_set.all():
-                mysqlUtilities.addUserToDB(db.dbName, admin.userName, password, createUser)
-                createUser = 0
+                mysqlUtilities.addUserToDB(db.dbName, admin.userName, password, 0)
 
         data_ret = {'status': 1, 'token': token, 'username': admin.userName}
         json_data = json.dumps(data_ret)
@@ -242,12 +241,9 @@ def fetchDetailsPHPMYAdmin(request):
 
             sites = ACLManager.findWebsiteObjects(currentACL, userID)
 
-            createUser = 0
-
             for site in sites:
                 for db in site.databases_set.all():
-                    mysqlUtilities.addUserToDB(db.dbName, admin.userName, password.decode(), createUser)
-                    createUser = 0
+                    mysqlUtilities.addUserToDB(db.dbName, admin.userName, password.decode(), 0)
 
             returnURL = '/phpmyadmin/phpmyadminsignin.php?username=%s&password=%s' % (admin.userName, password.decode())
             return redirect(returnURL)

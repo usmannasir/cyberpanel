@@ -938,6 +938,8 @@ skip-name-resolve
                     except BaseException as msg:
                         logging.CyberCPLogFileWriter.writeToFile('%s [addUserToDB:943]'  % (str(msg)))
 
+                return
+
             if mysqlUtilities.RDS == 0:
                 cursor.execute(
                     "GRANT ALL PRIVILEGES ON " + database + ".* TO '" + user + "'@'%s'" % (mysqlUtilities.LOCALHOST))
