@@ -1866,10 +1866,10 @@ imap_folder_list_limit = 0
             command = 'mkdir %s' % (configbackups)
             Upgrade.executioner(command, 0)
 
-            command = 'cp -R %s %s' % (dovecotConfPath, configbackups)
+            command = 'cp -pR %s %s' % (dovecotConfPath, configbackups)
             Upgrade.executioner(command, 0)
 
-            command = 'cp -R %s %s' % (postfixConfPath, configbackups)
+            command = 'cp -pR %s %s' % (postfixConfPath, configbackups)
             Upgrade.executioner(command, 0)
 
             if os.path.exists(CentOSPath):
