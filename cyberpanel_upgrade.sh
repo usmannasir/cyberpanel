@@ -252,6 +252,7 @@ EOF
     systemctl start mysql
 
     mysql_upgrade -uroot -p$MYSQLPassword
+    mysql_upgrade -uroot -p$MYSQLPassword -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' IDENTIFIED BY '%s';flush privileges"
 
   fi
 
