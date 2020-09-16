@@ -1856,23 +1856,23 @@ imap_folder_list_limit = 0
             Upgrade.stdOut("Upgrading Dovecot..")
             CentOSPath = '/etc/redhat-release'
 
+            dovecotConfPath = '/etc/dovecot/'
+            postfixConfPath = '/etc/postfix/'
+
+            ## Take backup of configurations
+
+            configbackups = '/home/cyberpanel/configbackups'
+
+            command = 'mkdir %s' % (configbackups)
+            Upgrade.executioner(command, 0)
+
+            command = 'cp -R %s %s' % (dovecotConfPath, configbackups)
+            Upgrade.executioner(command, 0)
+
+            command = 'cp -R %s %s' % (postfixConfPath, configbackups)
+            Upgrade.executioner(command, 0)
+
             if os.path.exists(CentOSPath):
-
-                ### Take backup of configuration files for dovecot
-
-                dovecotConf = '/etc/dovecot/dovecot.conf'
-                dovecotConfBak = '/etc/dovecot.conf'
-                dovecotSQLConf = '/etc/dovecot/dovecot-sql.conf.ext'
-                dovecotSQLConfBak = '/etc/dovecot-sql.conf.ext'
-
-
-                command = 'cp %s %s' % (dovecotConf, dovecotConfBak)
-                Upgrade.executioner(command, 0)
-
-                command = 'cp %s %s' % (dovecotSQLConf, dovecotSQLConfBak)
-                Upgrade.executioner(command, 0)
-
-                ### Backup done
 
                 command = "yum makecache -y"
                 Upgrade.executioner(command, 0)
@@ -1886,16 +1886,6 @@ imap_folder_list_limit = 0
 
                     command = 'dnf install --enablerepo=gf-plus dovecot23 dovecot23-mysql -y'
                     Upgrade.executioner(command, 0)
-
-                ### Restore dovecot backup files
-
-                command = 'mv -f %s %s' % (dovecotConfBak, dovecotConf)
-                Upgrade.executioner(command, 0)
-
-                command = 'mv -f %s %s' % (dovecotSQLConfBak, dovecotSQLConf)
-                Upgrade.executioner(command, 0)
-
-                ## Dovecot conf resoterd
 
 
                 import django
@@ -1915,17 +1905,6 @@ imap_folder_list_limit = 0
                 Upgrade.executioner(command, 0)
 
                 ### Postfix Upgrade
-
-                ## Take conf backup
-
-                # command = 'mkdir /etc/postfixback'
-                # Upgrade.executioner(command, 0)
-                #
-                #
-                # command = 'cp -avr /etc/postfix /etc/postfixback'
-                # Upgrade.executioner(command, 0)
-
-                ## Restore conf backup
 
                 command = 'yum remove postfix -y'
                 Upgrade.executioner(command, 0)
@@ -1947,18 +1926,27 @@ imap_folder_list_limit = 0
 
                 Upgrade.executioner(command, 0)
 
-                # ## Restore conf backups
-                #
-                # command = 'cp -avr /etc/postfixback /etc/postfix'
-                # Upgrade.executioner(command, 0)
+                ### Restore dovecot/postfix conf
 
-                ##
+                command = 'rm -rf %s' % (dovecotConfPath)
+                Upgrade.executioner(command)
+
+                command = 'rm -rf %s' % (postfixConfPath)
+                Upgrade.executioner(command)
+
+                command = 'mv %s/dovecot /etc/' % (configbackups)
+                Upgrade.executioner(command)
+
+                command = 'mv %s/postfix /etc/' % (configbackups)
+                Upgrade.executioner(command)
+
+                ## Restored
+
 
                 command = 'systemctl restart postfix'
                 Upgrade.executioner(command, 0)
 
             else:
-
                 if Upgrade.installedOutput.find('dovecot-mysql/bionic,now 2:2.3.10-2') == -1:
 
                     command = 'curl https://repo.dovecot.org/DOVECOT-REPO-GPG | gpg --import'
@@ -1992,6 +1980,22 @@ imap_folder_list_limit = 0
                         subprocess.call(command, shell=True)
                     except:
                         pass
+
+                    ### Restore dovecot/postfix conf
+
+                    command = 'rm -rf %s' % (dovecotConfPath)
+                    Upgrade.executioner(command)
+
+                    command = 'rm -rf %s' % (postfixConfPath)
+                    Upgrade.executioner(command)
+
+                    command = 'mv %s/dovecot /etc/' % (configbackups)
+                    Upgrade.executioner(command)
+
+                    command = 'mv %s/postfix /etc/' % (configbackups)
+                    Upgrade.executioner(command)
+
+                    ## Restored
 
                 ## Remove Default Password Scheme
 
