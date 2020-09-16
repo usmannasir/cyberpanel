@@ -255,7 +255,7 @@ EOF
 
   fi
 
-  mysql -uroot -p$MYSQLPassword -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' IDENTIFIED BY '%s';flush privileges"
+  mysql -uroot -p$MYSQLPassword -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' IDENTIFIED BY '$MYSQLPassword';flush privileges"
 
 
   ## Ghetoo Repo for Postfix/Dovecot
