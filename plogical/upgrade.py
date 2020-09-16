@@ -1799,6 +1799,9 @@ imap_folder_list_limit = 0
                 command = 'chmod 640 /etc/pdns/pdns.conf'
                 Upgrade.executioner(command, 0)
 
+            command = 'chmod 640 /usr/local/lscp/cyberpanel/logs/access.log'
+            Upgrade.executioner(command, 0)
+
 
             Upgrade.stdOut("Permissions updated.")
 
