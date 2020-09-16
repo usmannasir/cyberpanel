@@ -252,9 +252,10 @@ EOF
     systemctl start mysql
 
     mysql_upgrade -uroot -p$MYSQLPassword
-    mysql -uroot -p$MYSQLPassword -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' IDENTIFIED BY '%s';flush privileges"
 
   fi
+
+  mysql -uroot -p$MYSQLPassword -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' IDENTIFIED BY '%s';flush privileges"
 
 
   ## Ghetoo Repo for Postfix/Dovecot
