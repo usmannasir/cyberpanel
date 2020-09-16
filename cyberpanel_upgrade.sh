@@ -283,17 +283,6 @@ EOF
 
   yum install https://repo.ius.io/ius-release-el7.rpm -y
 
-#  ## Lux for git 2.17 or more
-#
-#  cat << EOF > /etc/yum.repos.d/lux.repo
-#[lux]
-#name=CentOS \$releasever - \$basearch - Lux
-#baseurl=http://repo.iotti.biz/CentOS/$releasever
-#enabled=1
-#gpgcheck=1
-#gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-LUX
-#EOF
-
   ###
 
   yum clean all
