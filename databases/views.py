@@ -197,7 +197,7 @@ def generateAccess(request):
                      token=token).save()
 
         sites = ACLManager.findWebsiteObjects(currentACL, userID)
-        mysqlUtilities.addUserToDB(None, None, password, 1)
+        mysqlUtilities.addUserToDB(None, admin.userName, password, 1)
 
         for site in sites:
             for db in site.databases_set.all():
