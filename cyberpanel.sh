@@ -423,14 +423,14 @@ EOF
 
   ## Lux for git 2.17 or more
 
-  cat << EOF > /etc/yum.repos.d/lux.repo
-[lux]
-name=CentOS \$releasever - \$basearch - Lux
-baseurl=http://repo.iotti.biz/CentOS/$releasever
-enabled=1
-gpgcheck=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-LUX
-EOF
+#  cat << EOF > /etc/yum.repos.d/lux.repo
+#[lux]
+#name=CentOS \$releasever - \$basearch - Lux
+#baseurl=http://repo.iotti.biz/CentOS/$releasever
+#enabled=1
+#gpgcheck=1
+#gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-LUX
+#EOF
 
 
 	fi
