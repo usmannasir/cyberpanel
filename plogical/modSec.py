@@ -340,7 +340,7 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
                 if os.path.exists('cpanel_litespeed_vendor'):
                     os.remove('cpanel_litespeed_vendor')
 
-                command = "wget https://waf.comodo.com/api/cpanel_litespeed_vendor"
+                command = "wget --no-check-certificate https://waf.comodo.com/api/cpanel_litespeed_vendor"
                 result = subprocess.call(shlex.split(command))
 
                 if result == 1:
