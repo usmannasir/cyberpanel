@@ -191,8 +191,6 @@ def generateAccess(request):
 
         ##
 
-        logging.writeToFile('a')
-
         password = randomPassword.generate_pass()
         token = randomPassword.generate_pass()
         f = Fernet(key)
