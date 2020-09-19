@@ -169,6 +169,9 @@ def generateAccess(request):
         except:
             pass
 
+        command = 'chmod 640 /usr/local/lscp/cyberpanel/logs/access.log'
+        ProcessUtilities.executioner(command)
+
         command = 'rm -f %s' % (keySavePath)
         ProcessUtilities.executioner(command)
 
