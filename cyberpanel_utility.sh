@@ -36,7 +36,7 @@ fi
 
 set_watchdog() {
 echo -e "\nPlease choose:"
-echo -e "\n1. Install WatchDog."
+echo -e "\n1. Install/Update WatchDog."
 echo -e "\n2. Start or Check WatchDog."
 echo -e "\n3. Kill WatchDog."
 echo -e "\n4. Back to Main Menu."
