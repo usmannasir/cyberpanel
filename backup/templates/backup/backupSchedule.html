@@ -1,129 +1,204 @@
 {% extends "baseTemplate/index.html" %}
 {% load i18n %}
-{% block title %}{% trans "Schedule Back up - CyberPanel" %} {% endblock %}
+{% block title %}{% trans "Schedule Back up - CyberPanel" %}{% endblock %}
 {% block content %}
 
     {% load static %}
+
 
     {% get_current_language as LANGUAGE_CODE %}
     <!-- Current language: {{ LANGUAGE_CODE }} -->
 
     <div class="container">
         <div id="page-title">
-            <h2>{% trans "Schedule Back up" %} - <a target="_blank" href="http://go.cyberpanel.net/remote-backup"
+            <h2>{% trans "Schedule Back up" %} - <a target="_blank"
+                                                    href="http://go.cyberpanel.net/remote-backup"
                                                     style="height: 23px;line-height: 21px; text-decoration: underline"
                                                     class="btn btn-border btn-alt border-red btn-link font-red"
-                                                    title=""><span>{% trans "Remote Backups" %}</span></a></h2>
-            <p>{% trans "On this page you can schedule Back ups to localhost or remote server (If you have added one)." %}</p>
+                                                    title=""><span>{% trans "Remote Backups" %}</span></a>
+            </h2>
+            <p>{% trans "On this page you can schedule Back ups to localhost or remote server (If you have added one)" %}</p>
         </div>
 
-        <div ng-controller="scheduleBackup" class="panel">
+        <div ng-controller="googleDrive" class="panel">
             <div class="panel-body">
                 <h3 class="title-hero">
-                    {% trans "Schedule Back up" %} - <img ng-hide="scheduleBackupLoading"
-                                                          src="{% static 'images/loading.gif' %}"> <a target="_blank"
-                                                                                                      href="{% url 'backupLogs' %}"
-                                                                                                      style="height: 23px;line-height: 21px;"
-                                                                                                      title="">{% trans "Backup Logs" %}</a>
+                    {% trans "Schedule Back up" %} <img ng-hide="cyberPanelLoading"
+                                                          src="{% static 'images/loading.gif' %}">
                 </h3>
                 <div class="example-box-wrapper">
 
 
                     <form action="/" class="form-horizontal bordered-row">
 
-
                         <div class="form-group">
                             <label class="col-sm-3 control-label">{% trans "Select Destination" %}</label>
                             <div class="col-sm-6">
-                                <select ng-change="scheduleFreqView()" ng-model="backupDest" class="form-control">
+                                <select ng-change="fetchWebsites()" ng-model="selectedAccount" class="form-control">
                                     {% for items in destinations %}
                                         <option>{{ items }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
+                            <button ng-hide="driveHidden" type="button" ng-click="deleteAccount()"
+                                    class="btn btn-danger">{% trans "Delete" %}</button>
                         </div>
 
-                        <div ng-hide="scheduleFreq" class="form-group">
-                            <label class="col-sm-3 control-label">{% trans "Select Frequency" %}</label>
+                        <div ng-hide="driveHidden" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Select Backup Frequency" %}</label>
                             <div class="col-sm-6">
-                                <select ng-change="scheduleBtnView()" ng-model="backupFreq" class="form-control">
+                                <select ng-change="changeFrequency()" ng-model="backupFrequency" class="form-control">
+                                    <option>Never</option>
                                     <option>Daily</option>
                                     <option>Weekly</option>
                                 </select>
                             </div>
+                            Currently: {$ currently $}
                         </div>
 
-                        <div ng-hide="localPath" class="form-group">
-                            <label class="col-sm-3 control-label">{% trans "Local Path" %}</label>
+                        <div ng-hide="driveHidden" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Add Sites for Backup" %}</label>
                             <div class="col-sm-6">
-                                <input name="dom" type="text" class="form-control" ng-model="localPathValue"
-                                       placeholder="{% trans "Local directory where backups will be moved after creation." %}"
-                                       required>
+                                <select ng-model="selectedWebsite" class="form-control">
+                                    {% for items in websites %}
+                                        <option>{{ items }}</option>
+                                    {% endfor %}
+                                </select>
                             </div>
+                            <button type="button" ng-click="addSite()"
+                                    class="btn btn-primary">{% trans "Add Site" %}</button>
                         </div>
 
+                        <div ng-hide="driveHidden" class="form-group">
+                            <div class="row">
+                                <div style="margin-left: 2%" class="col-sm-3">
+                                    <button data-toggle="modal" data-target="#backupLogs" ng-hide="driveHidden"
+                                            type="button" ng-click="fetchLogs()"
+                                            class="btn btn-gray">{% trans "View Logs" %}</button>
+                                    <div id="backupLogs" class="modal fade" role="dialog">
+                                        <div class="modal-dialog modal-lg">
+                                            <!-- Modal content-->
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <button type="button" class="close" data-dismiss="modal">&times;
+                                                    </button>
+                                                    <h4 class="modal-title">{% trans "Git Logs" %} <img
+                                                            ng-hide="cyberPanelLoading"
+                                                            src="{% static 'images/loading.gif' %}">
+                                                    </h4>
+                                                </div>
+                                                <div class="modal-body">
 
-                        <div ng-hide="scheduleBtn" class="form-group">
-                            <label class="col-sm-3 control-label"></label>
-                            <div class="col-sm-4">
-                                <button type="button" ng-click="addSchedule()"
-                                        class="btn btn-primary btn-lg btn-block">{% trans "Add Destination" %}</button>
+                                                    <div class="row">
+                                                        <div class="col-sm-9">
+                                                        </div>
+                                                        <div class="col-sm-2">
+                                                            <div class="form-group">
+                                                                <select ng-model="recordsToShowLogs"
+                                                                        ng-change="fetchLogs()"
+                                                                        class="form-control" id="example-select">
+                                                                    <option>10</option>
+                                                                    <option>50</option>
+                                                                    <option>100</option>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                    </div>
 
-                            </div>
-                        </div>
+                                                    <table style="margin: 0px; padding-bottom: 2%" class="table">
+                                                        <thead>
+                                                        <tr>
+                                                            <th>Type</th>
+                                                            <th>Message</th>
+                                                        </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                        <tr ng-repeat="log in logs track by $index">
+                                                            <td ng-bind="log.type"></td>
+                                                            <td ng-bind="log.message"></td>
+                                                        </tr>
+                                                        </tbody>
+                                                    </table>
 
+                                                    <div style="margin-top: 2%" class="row">
+                                                        <div class="col-md-12">
+                                                            <div class="row">
+                                                                <div class="col-md-8">
+                                                                </div>
+                                                                <div class="col-md-3">
+                                                                    <div class="form-group">
+                                                                        <select ng-model="currentPageLogs"
+                                                                                class="form-control"
+                                                                                ng-change="fetchLogs()">
+                                                                            <option ng-repeat="page in paginationLogs">
+                                                                                {$
+                                                                                $index + 1
+                                                                                $}
+                                                                            </option>
+                                                                        </select>
+                                                                    </div>
+                                                                </div>
+                                                            </div> <!-- end row -->
+                                                        </div>
+                                                    </div>
 
-                        <!------ List of Destinations --------------->
-
-
-                        <div class="form-group">
-
-                            <label class="col-sm-3 control-label"></label>
-                            <div class="col-sm-4">
-
-                                <div ng-hide="canNotAddSchedule" class="alert alert-danger">
-                                    <p>{% trans "Cannot add schedule. Error message:" %} {$ errorMessage $} </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-
-                                <div ng-hide="scheduleAdded" class="alert alert-success">
-                                    <p>{% trans "Schedule Added" %}</p>
+                                <div class="col-sm-6">
                                 </div>
+                                <div class="col-sm-2">
+                                    <div class="form-group">
+                                        <select ng-model="recordsToShow"
+                                                ng-change="fetchWebsites()"
+                                                class="form-control" id="example-select">
+                                            <option>10</option>
+                                            <option>50</option>
+                                            <option>100</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
 
-                                <div ng-hide="couldNotConnect" class="alert alert-danger">
-                                    <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                            <table style="margin-top: 2%" class="table">
+                                <thead>
+                                <tr>
+                                    <th>Sites</th>
+                                    <th>Action</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr ng-repeat="website in websites track by $index">
+                                    <td ng-bind="website.name"></td>
+                                    <td>
+                                        <button type="button" ng-click="deleteSite(website.name)"
+                                                class="btn btn-danger">{% trans "Delete" %}</button>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+
+                            <div style="margin-top: 2%" class="row">
+                                <div class="col-md-12">
+                                    <div class="row">
+                                        <div class="col-md-8">
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="form-group">
+                                                <select ng-model="currentPage" class="form-control"
+                                                        ng-change="fetchWebsites()">
+                                                    <option ng-repeat="page in pagination">{$ $index + 1
+                                                        $}
+                                                    </option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div> <!-- end row -->
                                 </div>
                             </div>
                         </div>
-
-                        <div class="form-group">
-
-                            <div class="col-sm-12">
-
-                                <table class="table">
-                                    <thead>
-                                    <tr>
-                                        <th>{% trans "ID" %}</th>
-                                        <th>{% trans "Destination" %}</th>
-                                        <th>{% trans "Frequency" %}</th>
-                                        <th>{% trans "Delete" %}</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    <tr ng-repeat="record in records track by $index">
-                                        <td ng-bind="record.id"></td>
-                                        <td ng-bind="record.destLoc"></td>
-                                        <td ng-bind="record.frequency"></td>
-                                        <td ng-click="delSchedule(record.destLoc,record.frequency)"><img
-                                                src="{% static 'images/delete.png' %}"></td>
-
-                                    </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        <!------ List of records --------------->
-
 
                     </form>
 

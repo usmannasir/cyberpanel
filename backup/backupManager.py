@@ -757,7 +757,7 @@ class BackupManager:
                     return HttpResponse(final_json)
             else:
                 config = {'type': data['type'], 'path': data['path']}
-                nd = NormalBackupDests(name='local', config=json.dumps(config))
+                nd = NormalBackupDests(name=data['name'], config=json.dumps(config))
                 nd.save()
 
                 final_dic = {'status' : 1, 'destStatus': 1, 'error_message': "None"}
@@ -786,25 +786,26 @@ class BackupManager:
 
                 config = json.loads(items.config)
 
-                if config['type'] == data['type'] and data['type'] == 'SFTP':
-                    dic = {
-                        'name': items.name,
-                        'ip': config['ip'],
-                        'username': config['username'],
-                        'path': config['path'],
-                        'port': config['port'],
-                    }
-                else:
-                    dic = {
-                        'name': items.name,
-                        'path': config['path'],
-                    }
+                if config['type'] == data['type']:
+                    if config['type'] == 'SFTP':
+                        dic = {
+                            'name': items.name,
+                            'ip': config['ip'],
+                            'username': config['username'],
+                            'path': config['path'],
+                            'port': config['port'],
+                        }
+                    else:
+                        dic = {
+                            'name': items.name,
+                            'path': config['path'],
+                        }
 
-                if checker == 0:
-                    json_data = json_data + json.dumps(dic)
-                    checker = 1
-                else:
-                    json_data = json_data + ',' + json.dumps(dic)
+                    if checker == 0:
+                        json_data = json_data + json.dumps(dic)
+                        checker = 1
+                    else:
+                        json_data = json_data + ',' + json.dumps(dic)
 
             json_data = json_data + ']'
             final_json = json.dumps({'status': 1, 'error_message': "None", "data": json_data})
@@ -854,15 +855,7 @@ class BackupManager:
             nameOrPath = data['nameOrPath']
             type = data['type']
 
-            if type == 'SFTP':
-                NormalBackupDests.objects.get(name=nameOrPath).delete()
-            else:
-                dests = NormalBackupDests.objects.filter(name='local')
-                for items in dests:
-                    config = json.loads(items.config)
-                    if config['path'] == nameOrPath:
-                        items.delete()
-                        break
+            NormalBackupDests.objects.get(name=nameOrPath).delete()
 
             final_dic = {'status': 1, 'delStatus': 1, 'error_message': "None"}
             final_json = json.dumps(final_dic)
@@ -880,20 +873,14 @@ class BackupManager:
             if ACLManager.currentContextPermission(currentACL, 'scheDuleBackups') == 0:
                 return ACLManager.loadError()
 
-            if dest.objects.all().count() <= 1:
-                try:
-                    homeDest = dest(destLoc="Home")
-                    homeDest.save()
-                except:
-                    pass
-            backups = dest.objects.all()
+            destinations = NormalBackupDests.objects.all()
 
-            destinations = []
+            dests = []
 
-            for items in backups:
-                destinations.append(items.destLoc)
+            for dest in destinations:
+                dests.append(dest.name)
 
-            return render(request, 'backup/backupSchedule.html', {'destinations': destinations})
+            return render(request, 'backup/backupSchedule.html', {'destinations': dests})
 
         except BaseException as msg:
             return HttpResponse(str(msg))

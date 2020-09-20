@@ -139,6 +139,13 @@
                         <!--- AWS Start --->
 
                         <div ng-hide="localHide" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Name" %}</label>
+                            <div class="col-sm-6">
+                                <input type="text" class="form-control" ng-model="name" required>
+                            </div>
+                        </div>
+
+                        <div ng-hide="localHide" class="form-group">
                             <label class="col-sm-3 control-label">{% trans "Local Path" %}</label>
                             <div class="col-sm-6">
                                 <input type="text" class="form-control" ng-model="localPath" required>
@@ -168,14 +175,16 @@
                                 <table class="table">
                                     <thead>
                                     <tr>
+                                        <th>{% trans "Name" %}</th>
                                         <th>{% trans "Path" %}</th>
                                         <th>{% trans "Delete" %}</th>
                                     </tr>
                                     </thead>
                                     <tbody>
                                     <tr ng-repeat="record in records track by $index">
+                                        <td ng-bind="record.name"></td>
                                         <td ng-bind="record.path"></td>
-                                        <td ng-click="removeDestination('local', record.path)"><img src="{% static 'images/delete.png' %}">
+                                        <td ng-click="removeDestination('local', record.name)"><img src="{% static 'images/delete.png' %}">
                                         </td>
 
                                     </tr>
