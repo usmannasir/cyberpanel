@@ -72,8 +72,14 @@ while [ true = true ]
 		systemctl status $NAME 2>&1>/dev/null
 			if [[ $? == "0" ]] ; then
 				if [[ $NAME == "mariadb" ]] ; then
-				pid=$(ps aux | grep "/usr/sbin/mysqld"  | grep -v grep | awk '{print $2}')
-				echo "-1000" > /proc/$pid/oom_score_adj
+					pid=$(ps aux | grep "/usr/sbin/mysqld"  | grep -v grep | awk '{print $2}')
+						if [[ $pid != "" ]] ; then
+							echo "-1000" > /proc/$pid/oom_score_adj
+						fi 
+					pid=$(ps aux | grep "/usr/sbin/mysqld"  | grep -v grep | awk '{print $2}')
+						if [[ $pid != "" ]] ; then
+							echo "-1000" > /proc/$pid/oom_score_adj
+						fi
 				fi
 				echo "$NAME service is running..."
 			else
@@ -82,8 +88,14 @@ while [ true = true ]
 					pkill lsphp
 				fi
 				if [[ $NAME == "mariadb" ]] ; then
-				pid=$(ps aux | grep "/usr/sbin/mysqld"  | grep -v grep | awk '{print $2}')
-				echo "-1000" > /proc/$pid/oom_score_adj
+					pid=$(ps aux | grep "/usr/sbin/mysqld"  | grep -v grep | awk '{print $2}')
+						if [[ $pid != "" ]] ; then
+							echo "-1000" > /proc/$pid/oom_score_adj
+						fi 
+					pid=$(ps aux | grep "/usr/sbin/mysqld"  | grep -v grep | awk '{print $2}')
+						if [[ $pid != "" ]] ; then
+							echo "-1000" > /proc/$pid/oom_score_adj
+						fi
 				fi
 				systemctl stop $NAME
 				systemctl start $NAME
