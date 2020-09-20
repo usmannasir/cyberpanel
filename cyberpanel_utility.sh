@@ -45,17 +45,20 @@ printf "%s" "Please enter number [1-4]: "
 read TMP_YN
 
 if [[ $TMP_YN == "1" ]] ; then
-	if [[ ! -f /etc/cyberpanel/watchdog.sh ]] ; then
-		echo -e "\nWatchDog no found..."
+	#if [[ ! -f /etc/cyberpanel/watchdog.sh ]] ; then
+		#echo -e "\nWatchDog no found..."
+		rm -f /etc/cyberpanel/watchdog.sh
+		rm -f /usr/local/bin/watchdog
 		wget -O /etc/cyberpanel/watchdog.sh https://$GIT_CONTENT_URL/$BRANCH_NAME/CPScripts/watchdog.sh
 		chmod 700 /etc/cyberpanel/watchdog.sh
 		ln -s /etc/cyberpanel/watchdog.sh /usr/local/bin/watchdog
-		echo -e "\nWatchDog has been installed..."
+		echo -e "\nWatchDog has been installed/updated..."
+		watchdog status
 		set_watchdog
-	else
-		echo -e "\nWatchDog is already installed..."
-		set_watchdog
-	fi
+	#else
+		#echo -e "\nWatchDog is already installed..."
+		#set_watchdog
+	#fi
 elif [[ $TMP_YN == "2" ]] ; then
 	if [[ -f /etc/cyberpanel/watchdog.sh ]] ; then
 		watchdog status
