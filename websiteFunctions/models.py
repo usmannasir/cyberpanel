@@ -76,3 +76,10 @@ class GDriveJobLogs(models.Model):
     owner = models.ForeignKey(GDrive, on_delete=models.CASCADE)
     status = models.IntegerField()
     message = models.TextField()
+
+
+### Normal backup models
+
+class NormalBackupDests(models.Model):
+    name = models.CharField(max_length=25)
+    config = models.TextField()

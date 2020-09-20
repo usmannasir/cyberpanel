@@ -10,7 +10,7 @@ django.setup()
 import json
 from plogical.acl import ACLManager
 import plogical.CyberCPLogFileWriter as logging
-from websiteFunctions.models import Websites, Backups, dest, backupSchedules, BackupJob, BackupJobLogs, GDrive, GDriveSites, GDriveJobLogs
+from websiteFunctions.models import Websites, Backups, dest, backupSchedules, BackupJob, GDrive, GDriveSites
 from plogical.virtualHostUtilities import virtualHostUtilities
 import subprocess
 import shlex
@@ -26,6 +26,7 @@ import requests
 import google.oauth2.credentials
 import googleapiclient.discovery
 from googleapiclient.discovery import build
+from websiteFunctions.models import NormalBackupDests
 
 
 class BackupManager:
@@ -710,35 +711,23 @@ class BackupManager:
             if ACLManager.currentContextPermission(currentACL, 'addDeleteDestinations') == 0:
                 return ACLManager.loadErrorJson('destStatus', 0)
 
-            destinations = backupUtil.backupUtilities.destinationsPath
-
             finalDic = {}
 
-            finalDic['ipAddress'] = data['IPAddress']
-            finalDic['password'] = data['password']
+            if data['type'] == 'SFTP':
 
-            try:
-                finalDic['port'] = data['backupSSHPort']
-            except:
-                finalDic['port'] = "22"
+                finalDic['ipAddress'] = data['IPAddress']
+                finalDic['password'] = data['password']
 
-            try:
-                finalDic['user'] = data['user']
-            except:
-                finalDic['user'] = "root"
+                try:
+                    finalDic['port'] = data['backupSSHPort']
+                except:
+                    finalDic['port'] = "22"
 
-            if dest.objects.all().count() == 2:
-                final_dic = {'destStatus': 0,
-                             'error_message': "Currently only one remote destination is allowed."}
-                final_json = json.dumps(final_dic)
-                return HttpResponse(final_json)
+                try:
+                    finalDic['user'] = data['user']
+                except:
+                    finalDic['user'] = "root"
 
-            try:
-                d = dest.objects.get(destLoc=finalDic['password'])
-                final_dic = {'destStatus': 0, 'error_message': "This destination already exists."}
-                final_json = json.dumps(final_dic)
-                return HttpResponse(final_json)
-            except:
 
                 execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
                 execPath = execPath + " submitDestinationCreation --ipAddress " + finalDic['ipAddress'] + " --password " \
@@ -753,56 +742,63 @@ class BackupManager:
                     logging.CyberCPLogFileWriter.writeToFile(output)
 
                 if output.find('1,') > -1:
-                    try:
-                        writeToFile = open(destinations, "w")
-                        writeToFile.write(json.dumps(finalDic))
-                        writeToFile.close()
-                        newDest = dest(destLoc=finalDic['ipAddress'])
-                        newDest.save()
 
-                        final_dic = {'destStatus': 1, 'error_message': "None"}
-                        final_json = json.dumps(final_dic)
-                        return HttpResponse(final_json)
-                    except:
-                        writeToFile = open(destinations, "w")
-                        writeToFile.write(json.dumps(finalDic))
-                        writeToFile.close()
+                    config = {'type': data['type'], 'ip': data['IPAddress'], 'username': data['userName'], 'port': data['backupSSHPort'], 'path': data['path']}
+                    nd = NormalBackupDests(name=data['name'], config = json.dumps(config))
+                    nd.save()
 
-                        newDest = dest(destLoc=finalDic['ipAddress'])
-                        newDest.save()
 
-                        final_dic = {'destStatus': 1, 'error_message': "None"}
-                        final_json = json.dumps(final_dic)
-                        return HttpResponse(final_json)
-                else:
-                    final_dic = {'destStatus': 0, 'error_message': output}
+                    final_dic = {'status' : 1, 'destStatus': 1, 'error_message': "None"}
                     final_json = json.dumps(final_dic)
                     return HttpResponse(final_json)
+                else:
+                    final_dic = {'status' : 0, 'destStatus': 0, 'error_message': output}
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
+            else:
+                config = {'type': data['type'], 'path': data['path']}
+                nd = NormalBackupDests(name='local', config=json.dumps(config))
+                nd.save()
+
+                final_dic = {'status' : 1, 'destStatus': 1, 'error_message': "None"}
+                final_json = json.dumps(final_dic)
+                return HttpResponse(final_json)
+
 
         except BaseException as msg:
-            final_dic = {'destStatus': 0, 'error_message': str(msg)}
+            final_dic = {'status' : 0, 'destStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
     def getCurrentBackupDestinations(self, userID=None, data=None):
         try:
-
             currentACL = ACLManager.loadedACL(userID)
 
             if ACLManager.currentContextPermission(currentACL, 'addDeleteDestinations') == 0:
                 return ACLManager.loadErrorJson('fetchStatus', 0)
 
-            records = dest.objects.all()
+            destinations = NormalBackupDests.objects.all()
 
             json_data = "["
             checker = 0
 
-            for items in records:
-                if items.destLoc == "Home":
-                    continue
-                dic = {'id': items.id,
-                       'ip': items.destLoc,
-                       }
+            for items in destinations:
+
+                config = json.loads(items.config)
+
+                if config['type'] == data['type'] and data['type'] == 'SFTP':
+                    dic = {
+                        'name': items.name,
+                        'ip': config['ip'],
+                        'username': config['username'],
+                        'path': config['path'],
+                        'port': config['port'],
+                    }
+                else:
+                    dic = {
+                        'name': items.name,
+                        'path': config['path'],
+                    }
 
                 if checker == 0:
                     json_data = json_data + json.dumps(dic)
@@ -811,11 +807,11 @@ class BackupManager:
                     json_data = json_data + ',' + json.dumps(dic)
 
             json_data = json_data + ']'
-            final_json = json.dumps({'fetchStatus': 1, 'error_message': "None", "data": json_data})
+            final_json = json.dumps({'status': 1, 'error_message': "None", "data": json_data})
             return HttpResponse(final_json)
 
         except BaseException as msg:
-            final_dic = {'fetchStatus': 0, 'error_message': str(msg)}
+            final_dic = {'status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
@@ -855,48 +851,25 @@ class BackupManager:
             if ACLManager.currentContextPermission(currentACL, 'addDeleteDestinations') == 0:
                 return ACLManager.loadErrorJson('delStatus', 0)
 
-            ipAddress = data['IPAddress']
+            nameOrPath = data['nameOrPath']
+            type = data['type']
 
-            delDest = dest.objects.get(destLoc=ipAddress)
-            delDest.delete()
+            if type == 'SFTP':
+                NormalBackupDests.objects.get(name=nameOrPath).delete()
+            else:
+                dests = NormalBackupDests.objects.filter(name='local')
+                for items in dests:
+                    config = json.loads(items.config)
+                    if config['path'] == nameOrPath:
+                        items.delete()
+                        break
 
-            path = "/usr/local/CyberCP/backup/"
-            destinations = path + "destinations"
-
-            data = open(destinations, 'r').readlines()
-
-            writeToFile = open(destinations, 'r')
-
-            for items in data:
-                if items.find(ipAddress) > -1:
-                    continue
-                else:
-                    writeToFile.writelines(items)
-
-            writeToFile.close()
-
-            ## Deleting Cron Tab Entries for this destination
-
-            path = "/etc/crontab"
-
-            data = open(path, 'r').readlines()
-
-            writeToFile = open(path, 'w')
-
-            for items in data:
-                if items.find("backupSchedule.py") > -1:
-                    continue
-                else:
-                    writeToFile.writelines(items)
-
-            writeToFile.close()
-
-            final_dic = {'delStatus': 1, 'error_message': "None"}
+            final_dic = {'status': 1, 'delStatus': 1, 'error_message': "None"}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
         except BaseException as msg:
-            final_dic = {'delStatus': 1, 'error_message': str(msg)}
+            final_dic = {'status': 0, 'delStatus': 1, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 

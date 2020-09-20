@@ -415,254 +415,6 @@ app.controller('restoreWebsiteControl', function ($scope, $http, $timeout) {
 
 //*** Restore site ends here ***///
 
-///** Backup Destination ***//
-
-app.controller('backupDestinations', function ($scope, $http, $timeout) {
-
-    $scope.destinationLoading = true;
-    $scope.connectionFailed = true;
-    $scope.connectionSuccess = true;
-    $scope.canNotAddDestination = true;
-    $scope.destinationAdded = true;
-    $scope.couldNotConnect = true;
-
-    populateCurrentRecords();
-
-    $scope.addDestination = function () {
-
-        $scope.destinationLoading = false;
-        $scope.connectionFailed = true;
-        $scope.connectionSuccess = true;
-        $scope.canNotAddDestination = true;
-        $scope.destinationAdded = true;
-        $scope.couldNotConnect = true;
-
-        url = "/backup/submitDestinationCreation";
-
-
-        var data = {
-            IPAddress: $scope.IPAddress,
-            password: $scope.password,
-            user: $scope.user,
-            backupSSHPort: $scope.backupSSHPort,
-        };
-
-        var config = {
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken')
-            }
-        };
-
-
-        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
-
-
-        function ListInitialDatas(response) {
-
-
-            if (response.data.destStatus == 1) {
-
-                $scope.destinationLoading = true;
-                $scope.connectionFailed = true;
-                $scope.connectionSuccess = true;
-                $scope.canNotAddDestination = true;
-                $scope.destinationAdded = false;
-                $scope.couldNotConnect = true;
-
-                populateCurrentRecords();
-
-            }
-            else {
-                $scope.destinationLoading = true;
-                $scope.connectionFailed = true;
-                $scope.connectionSuccess = true;
-                $scope.canNotAddDestination = false;
-                $scope.destinationAdded = true;
-                $scope.couldNotConnect = true;
-
-                $scope.errorMessage = response.data.error_message;
-            }
-        }
-
-        function cantLoadInitialDatas(response) {
-            $scope.destinationLoading = true;
-            $scope.connectionFailed = true;
-            $scope.connectionSuccess = true;
-            $scope.canNotAddDestination = true;
-            $scope.destinationAdded = true;
-            $scope.couldNotConnect = false;
-        }
-
-    };
-
-    $scope.checkConn = function (ip) {
-
-        $scope.destinationLoading = false;
-        $scope.connectionFailed = true;
-        $scope.connectionSuccess = true;
-        $scope.canNotAddDestination = true;
-        $scope.destinationAdded = true;
-        $scope.couldNotConnect = true;
-
-        url = "/backup/getConnectionStatus";
-
-
-        var data = {
-            IPAddress: ip,
-        };
-
-        var config = {
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken')
-            }
-        };
-
-
-        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
-
-
-        function ListInitialDatas(response) {
-
-
-            if (response.data.connStatus == 1) {
-
-                $scope.destinationLoading = true;
-                $scope.connectionFailed = true;
-                $scope.connectionSuccess = false;
-                $scope.canNotAddDestination = true;
-                $scope.destinationAdded = true;
-                $scope.couldNotConnect = true;
-
-                $scope.IPAddress = ip;
-
-            }
-            else {
-                $scope.destinationLoading = true;
-                $scope.connectionFailed = false;
-                $scope.connectionSuccess = true;
-                $scope.canNotAddDestination = true;
-                $scope.destinationAdded = true;
-                $scope.couldNotConnect = true;
-
-                $scope.errorMessage = response.data.error_message;
-                $scope.IPAddress = ip;
-            }
-        }
-
-        function cantLoadInitialDatas(response) {
-            $scope.destinationLoading = true;
-            $scope.connectionFailed = true;
-            $scope.connectionSuccess = true;
-            $scope.canNotAddDestination = true;
-            $scope.destinationAdded = true;
-            $scope.couldNotConnect = false;
-        }
-
-    };
-
-    $scope.delDest = function (ip) {
-
-        $scope.destinationLoading = false;
-        $scope.connectionFailed = true;
-        $scope.connectionSuccess = true;
-        $scope.canNotAddDestination = true;
-        $scope.destinationAdded = true;
-        $scope.couldNotConnect = true;
-
-        url = "/backup/deleteDestination";
-
-
-        var data = {
-            IPAddress: ip,
-        };
-
-        var config = {
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken')
-            }
-        };
-
-
-        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
-
-
-        function ListInitialDatas(response) {
-
-
-            if (response.data.delStatus == 1) {
-
-                $scope.destinationLoading = true;
-                $scope.connectionFailed = true;
-                $scope.connectionSuccess = true;
-                $scope.canNotAddDestination = true;
-                $scope.destinationAdded = true;
-                $scope.couldNotConnect = true;
-                populateCurrentRecords();
-
-                $scope.IPAddress = ip;
-
-            }
-            else {
-                $scope.destinationLoading = true;
-                $scope.connectionFailed = true;
-                $scope.connectionSuccess = true;
-                $scope.canNotAddDestination = true;
-                $scope.destinationAdded = true;
-                $scope.couldNotConnect = true;
-
-                $scope.errorMessage = response.data.error_message;
-                $scope.IPAddress = ip;
-            }
-        }
-
-        function cantLoadInitialDatas(response) {
-            $scope.destinationLoading = true;
-            $scope.connectionFailed = true;
-            $scope.connectionSuccess = true;
-            $scope.canNotAddDestination = true;
-            $scope.destinationAdded = true;
-            $scope.couldNotConnect = false;
-        }
-
-    };
-
-
-    function populateCurrentRecords() {
-
-        url = "/backup/getCurrentBackupDestinations";
-
-        var data = {};
-
-        var config = {
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken')
-            }
-        };
-
-
-        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
-
-
-        function ListInitialDatas(response) {
-
-
-            if (response.data.fetchStatus == 1) {
-
-                $scope.records = JSON.parse(response.data.data);
-
-            }
-        }
-
-        function cantLoadInitialDatas(response) {
-            $scope.couldNotConnect = false;
-        }
-
-    };
-
-});
-
-//*** Backup destination ***///
-
 ///** Schedule Backup ***//
 
 app.controller('scheduleBackup', function ($scope, $http, $timeout) {
@@ -1909,5 +1661,193 @@ app.controller('googleDrive', function ($scope, $http) {
         }
 
     };
+
+});
+
+///
+
+app.controller('backupDestinations', function ($scope, $http) {
+    $scope.cyberpanelLoading = true;
+    $scope.sftpHide = true;
+    $scope.localHide = true;
+
+    $scope.fetchDetails = function () {
+
+        if ($scope.destinationType === 'SFTP') {
+            $scope.sftpHide = false;
+            $scope.localHide = true;
+            $scope.populateCurrentRecords();
+        } else {
+            $scope.sftpHide = true;
+            $scope.localHide = false;
+            $scope.populateCurrentRecords();
+        }
+    };
+
+    $scope.populateCurrentRecords = function () {
+
+        $scope.cyberpanelLoading = false;
+
+        url = "/backup/getCurrentBackupDestinations";
+
+        var type = 'SFTP';
+        if ($scope.destinationType === 'SFTP') {
+            type = 'SFTP';
+        } else {
+            type = 'local';
+        }
+
+        var data = {
+            type: type
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            if (response.data.status === 1) {
+                $scope.records = JSON.parse(response.data.data);
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+        }
+
+    };
+
+    $scope.addDestination = function (type) {
+        $scope.cyberpanelLoading = false;
+
+        url = "/backup/submitDestinationCreation";
+
+        if (type === 'SFTP') {
+            var data = {
+                type: type,
+                name: $scope.name,
+                IPAddress: $scope.IPAddress,
+                userName: $scope.userName,
+                password: $scope.password,
+                backupSSHPort: $scope.backupSSHPort,
+                path: $scope.path
+            };
+        } else {
+            var data = {
+                type: type,
+                path: $scope.localPath,
+            };
+        }
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            $scope.populateCurrentRecords();
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success!',
+                    text: 'Destination successfully added.',
+                    type: 'success'
+                });
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+        }
+
+    };
+
+    $scope.removeDestination = function (type, nameOrPath) {
+        $scope.cyberpanelLoading = false;
+
+
+        url = "/backup/deleteDestination";
+
+        var data = {
+            type: type,
+            nameOrPath: nameOrPath,
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            $scope.populateCurrentRecords();
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success!',
+                    text: 'Destination successfully removed.',
+                    type: 'success'
+                });
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+        }
+
+    };
+
 
 });
