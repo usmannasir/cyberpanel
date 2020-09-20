@@ -507,6 +507,17 @@ rm -f /usr/local/composer.sh
 
 # clean up
 
+if [[ -f /etc/cyberpanel/watchdog.sh ]] ; then
+	watchdog kill 
+	rm -f /etc/cyberpanel/watchdog.sh
+	rm -f /usr/local/bin/watchdog
+	wget -O /etc/cyberpanel/watchdog.sh https://$GIT_CONTENT_URL/$BRANCH_NAME/CPScripts/watchdog.sh
+	chmod 700 /etc/cyberpanel/watchdog.sh
+	ln -s /etc/cyberpanel/watchdog.sh /usr/local/bin/watchdog
+	watchdog status
+fi
+#update and restart watchdog
+
 ### Disable Centos Default Repos
 
 disable_repos() {
