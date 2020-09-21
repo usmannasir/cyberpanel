@@ -1577,9 +1577,110 @@ app.controller('scheduleBackup', function ($scope, $http) {
 
     $scope.cyberPanelLoading = true;
     $scope.driveHidden = true;
+    $scope.jobsHidden = true;
 
     $scope.currentPage = 1;
     $scope.recordsToShow = 10;
+
+    $scope.fetchJobs = function () {
+
+        $scope.cyberPanelLoading = false;
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        var data = {
+            selectedAccount: $scope.selectedAccount,
+        };
+
+
+        dataurl = "/backup/fetchNormalJobs";
+
+        $http.post(dataurl, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+            $scope.cyberPanelLoading = true;
+            if (response.data.status === 1) {
+                $scope.jobsHidden = false;
+                new PNotify({
+                    title: 'Success',
+                    text: 'Successfully fetched.',
+                    type: 'success'
+                });
+                $scope.jobs = response.data.jobs;
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberPanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+
+
+        }
+
+    };
+
+    $scope.addSchedule = function () {
+        $scope.cyberPanelLoading = false;
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+        var data = {
+            selectedAccount: $scope.selectedAccount,
+            name: $scope.name,
+            backupFrequency: $scope.backupFrequency
+        };
+
+        dataurl = "/backup/submitBackupSchedule";
+
+        $http.post(dataurl, data, config).then(ListInitialData, cantLoadInitialData);
+
+
+        function ListInitialData(response) {
+            $scope.cyberPanelLoading = true;
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success',
+                    text: 'Schedule successfully added.',
+                    type: 'success'
+                });
+                $scope.fetchWebsites();
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+        }
+
+        function cantLoadInitialData(response) {
+            $scope.cyberPanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+        }
+
+
+    };
 
     $scope.fetchWebsites = function () {
 
@@ -1592,13 +1693,13 @@ app.controller('scheduleBackup', function ($scope, $http) {
         };
 
         var data = {
-            selectedAccount: $scope.selectedAccount,
+            selectedAccount: $scope.selectedJob,
             page: $scope.currentPage,
             recordsToShow: $scope.recordsToShow
         };
 
 
-        dataurl = "/backup/fetchgDriveSites";
+        dataurl = "/backup/fetchgNormalSites";
 
         $http.post(dataurl, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
@@ -1646,10 +1747,10 @@ app.controller('scheduleBackup', function ($scope, $http) {
         };
         var data = {
             selectedWebsite: $scope.selectedWebsite,
-            selectedAccount: $scope.selectedAccount
+            selectedJob: $scope.selectedJob
         };
 
-        dataurl = "/backup/addSitegDrive";
+        dataurl = "/backup/addSiteNormal";
 
         $http.post(dataurl, data, config).then(ListInitialData, cantLoadInitialData);
 
@@ -1787,11 +1888,11 @@ app.controller('scheduleBackup', function ($scope, $http) {
             }
         };
         var data = {
-            selectedAccount: $scope.selectedAccount,
+            selectedJob: $scope.selectedJob,
             website: website
         };
 
-        dataurl = "/backup/deleteSitegDrive";
+        dataurl = "/backup/deleteSiteNormal";
 
         $http.post(dataurl, data, config).then(ListInitialData, cantLoadInitialData);
 

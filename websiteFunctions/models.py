@@ -83,3 +83,12 @@ class GDriveJobLogs(models.Model):
 class NormalBackupDests(models.Model):
     name = models.CharField(max_length=25)
     config = models.TextField()
+
+class NormalBackupJobs(models.Model):
+    owner = models.ForeignKey(NormalBackupDests, on_delete=models.CASCADE)
+    name = models.CharField(max_length=25)
+    config = models.TextField()
+
+class NormalBackupSites(models.Model):
+    owner = models.ForeignKey(NormalBackupJobs, on_delete=models.CASCADE)
+    domain = models.ForeignKey(Websites, on_delete=models.CASCADE)

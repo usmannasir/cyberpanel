@@ -58,5 +58,9 @@ urlpatterns = [
 
     url(r'^backupLogs$', views.backupLogs, name='backupLogs'),
     url(r'^fetchLogs$', views.fetchLogs, name='fetchLogs'),
+    url(r'^fetchgNormalSites$', views.fetchgNormalSites, name='fetchgNormalSites'),
+    url(r'^fetchNormalJobs$', views.fetchNormalJobs, name='fetchNormalJobs'),
+    url(r'^addSiteNormal$', views.addSiteNormal, name='addSiteNormal'),
+    url(r'^deleteSiteNormal$', views.deleteSiteNormal, name='deleteSiteNormal'),
 
 ]
