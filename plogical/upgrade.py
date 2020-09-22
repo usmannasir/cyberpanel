@@ -14,7 +14,7 @@ import random
 import string
 
 VERSION = '2.0'
-BUILD = 3
+BUILD = 4
 
 CENTOS7 = 0
 CENTOS8 = 1

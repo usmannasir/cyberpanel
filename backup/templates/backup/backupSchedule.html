@@ -126,6 +126,28 @@
                         </div>
 
                         <div ng-hide="driveHidden" class="form-group">
+                            <div class="col-sm-12">
+                                <table style="margin-top: 2%" class="table">
+                                    <thead>
+                                    <tr>
+                                        <th>Sites</th>
+                                        <th>Action</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr ng-repeat="website in websites track by $index">
+                                        <td ng-bind="website.name"></td>
+                                        <td>
+                                            <button type="button" ng-click="deleteSite(website.name)"
+                                                    class="btn btn-danger">{% trans "Delete" %}</button>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div ng-hide="driveHidden" class="form-group">
                             <div class="row">
                                 <div style="margin-left: 2%" class="col-sm-3">
                                     <button data-toggle="modal" data-target="#backupLogs" ng-hide="driveHidden"
