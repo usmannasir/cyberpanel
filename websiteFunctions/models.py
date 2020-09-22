@@ -92,3 +92,9 @@ class NormalBackupJobs(models.Model):
 class NormalBackupSites(models.Model):
     owner = models.ForeignKey(NormalBackupJobs, on_delete=models.CASCADE)
     domain = models.ForeignKey(Websites, on_delete=models.CASCADE)
+
+
+class NormalBackupJobLogs(models.Model):
+    owner = models.ForeignKey(NormalBackupJobs, on_delete=models.CASCADE)
+    status = models.IntegerField()
+    message = models.TextField()

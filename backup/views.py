@@ -451,3 +451,27 @@ def deleteSiteNormal(request):
         return wm.deleteSiteNormal(request, userID)
     except KeyError:
         return redirect(loadLoginPage)
+
+def changeAccountFrequencyNormal(request):
+    try:
+        userID = request.session['userID']
+        wm = BackupManager()
+        return wm.changeAccountFrequencyNormal(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def deleteAccountNormal(request):
+    try:
+        userID = request.session['userID']
+        wm = BackupManager()
+        return wm.deleteAccountNormal(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def fetchNormalLogs(request):
+    try:
+        userID = request.session['userID']
+        wm = BackupManager()
+        return wm.fetchNormalLogs(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)

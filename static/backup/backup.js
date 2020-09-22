@@ -1573,15 +1573,16 @@ app.controller('backupDestinations', function ($scope, $http) {
 
 //
 
-app.controller('scheduleBackup', function ($scope, $http) {
+app.controller('scheduleBackup', function ($scope, $http, $window) {
 
     $scope.cyberPanelLoading = true;
     $scope.driveHidden = true;
+    $scope.jobsHidden = true;
 
     $scope.currentPage = 1;
     $scope.recordsToShow = 10;
 
-    $scope.fetchWebsites = function () {
+    $scope.fetchJobs = function () {
 
         $scope.cyberPanelLoading = false;
 
@@ -1593,27 +1594,23 @@ app.controller('scheduleBackup', function ($scope, $http) {
 
         var data = {
             selectedAccount: $scope.selectedAccount,
-            page: $scope.currentPage,
-            recordsToShow: $scope.recordsToShow
         };
 
 
-        dataurl = "/backup/fetchgDriveSites";
+        dataurl = "/backup/fetchNormalJobs";
 
         $http.post(dataurl, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
         function ListInitialDatas(response) {
             $scope.cyberPanelLoading = true;
             if (response.data.status === 1) {
-                $scope.driveHidden = false;
+                $scope.jobsHidden = false;
                 new PNotify({
                     title: 'Success',
                     text: 'Successfully fetched.',
                     type: 'success'
                 });
-                $scope.websites = JSON.parse(response.data.websites);
-                $scope.pagination = response.data.pagination;
-                $scope.currently = response.data.currently;
+                $scope.jobs = response.data.jobs;
             } else {
                 new PNotify({
                     title: 'Operation Failed!',
@@ -1636,7 +1633,114 @@ app.controller('scheduleBackup', function ($scope, $http) {
 
     };
 
-    $scope.addSite = function () {
+    $scope.addSchedule = function () {
+        $scope.cyberPanelLoading = false;
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+        var data = {
+            selectedAccount: $scope.selectedAccount,
+            name: $scope.name,
+            backupFrequency: $scope.backupFrequency
+        };
+
+        dataurl = "/backup/submitBackupSchedule";
+
+        $http.post(dataurl, data, config).then(ListInitialData, cantLoadInitialData);
+
+
+        function ListInitialData(response) {
+            $scope.cyberPanelLoading = true;
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success',
+                    text: 'Schedule successfully added.',
+                    type: 'success'
+                });
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+        }
+
+        function cantLoadInitialData(response) {
+            $scope.cyberPanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+        }
+
+
+    };
+
+    $scope.fetchWebsites = function () {
+
+        $scope.cyberPanelLoading = false;
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        var data = {
+            selectedAccount: $scope.selectedJob,
+            page: $scope.currentPage,
+            recordsToShow: $scope.recordsToShow
+        };
+
+
+        dataurl = "/backup/fetchgNormalSites";
+
+        $http.post(dataurl, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+            $scope.cyberPanelLoading = true;
+            if (response.data.status === 1) {
+                $scope.driveHidden = false;
+                new PNotify({
+                    title: 'Success',
+                    text: 'Successfully fetched.',
+                    type: 'success'
+                });
+                $scope.websites = JSON.parse(response.data.websites);
+                $scope.pagination = response.data.pagination;
+                $scope.currently = response.data.currently;
+                $scope.allSites = response.data.allSites;
+                $scope.lastRun = response.data.lastRun;
+                $scope.currentStatus = response.data.currentStatus;
+
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberPanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+
+
+        }
+
+    };
+
+    $scope.addSite = function (type) {
         $scope.cyberPanelLoading = false;
 
         var config = {
@@ -1646,10 +1750,11 @@ app.controller('scheduleBackup', function ($scope, $http) {
         };
         var data = {
             selectedWebsite: $scope.selectedWebsite,
-            selectedAccount: $scope.selectedAccount
+            selectedJob: $scope.selectedJob,
+            type: type
         };
 
-        dataurl = "/backup/addSitegDrive";
+        dataurl = "/backup/addSiteNormal";
 
         $http.post(dataurl, data, config).then(ListInitialData, cantLoadInitialData);
 
@@ -1693,10 +1798,10 @@ app.controller('scheduleBackup', function ($scope, $http) {
             }
         };
         var data = {
-            selectedAccount: $scope.selectedAccount
+            selectedJob: $scope.selectedJob
         };
 
-        dataurl = "/backup/deleteAccountgDrive";
+        dataurl = "/backup/deleteAccountNormal";
 
         $http.post(dataurl, data, config).then(ListInitialData, cantLoadInitialData);
 
@@ -1709,6 +1814,7 @@ app.controller('scheduleBackup', function ($scope, $http) {
                     text: 'Account successfully deleted.',
                     type: 'success'
                 });
+                location.reload();
             } else {
                 new PNotify({
                     title: 'Operation Failed!',
@@ -1739,11 +1845,11 @@ app.controller('scheduleBackup', function ($scope, $http) {
             }
         };
         var data = {
-            selectedAccount: $scope.selectedAccount,
+            selectedJob: $scope.selectedJob,
             backupFrequency: $scope.backupFrequency
         };
 
-        dataurl = "/backup/changeAccountFrequencygDrive";
+        dataurl = "/backup/changeAccountFrequencyNormal";
 
         $http.post(dataurl, data, config).then(ListInitialData, cantLoadInitialData);
 
@@ -1787,11 +1893,11 @@ app.controller('scheduleBackup', function ($scope, $http) {
             }
         };
         var data = {
-            selectedAccount: $scope.selectedAccount,
+            selectedJob: $scope.selectedJob,
             website: website
         };
 
-        dataurl = "/backup/deleteSitegDrive";
+        dataurl = "/backup/deleteSiteNormal";
 
         $http.post(dataurl, data, config).then(ListInitialData, cantLoadInitialData);
 
@@ -1840,13 +1946,13 @@ app.controller('scheduleBackup', function ($scope, $http) {
         };
 
         var data = {
-            selectedAccount: $scope.selectedAccount,
+            selectedJob: $scope.selectedJob,
             page: $scope.currentPageLogs,
             recordsToShow: $scope.recordsToShowLogs
         };
 
 
-        dataurl = "/backup/fetchDriveLogs";
+        dataurl = "/backup/fetchNormalLogs";
 
         $http.post(dataurl, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 

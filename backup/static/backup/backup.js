@@ -1573,7 +1573,7 @@ app.controller('backupDestinations', function ($scope, $http) {
 
 //
 
-app.controller('scheduleBackup', function ($scope, $http) {
+app.controller('scheduleBackup', function ($scope, $http, $window) {
 
     $scope.cyberPanelLoading = true;
     $scope.driveHidden = true;
@@ -1660,7 +1660,6 @@ app.controller('scheduleBackup', function ($scope, $http) {
                     text: 'Schedule successfully added.',
                     type: 'success'
                 });
-                $scope.fetchWebsites();
             } else {
                 new PNotify({
                     title: 'Operation Failed!',
@@ -1715,6 +1714,10 @@ app.controller('scheduleBackup', function ($scope, $http) {
                 $scope.websites = JSON.parse(response.data.websites);
                 $scope.pagination = response.data.pagination;
                 $scope.currently = response.data.currently;
+                $scope.allSites = response.data.allSites;
+                $scope.lastRun = response.data.lastRun;
+                $scope.currentStatus = response.data.currentStatus;
+
             } else {
                 new PNotify({
                     title: 'Operation Failed!',
@@ -1737,7 +1740,7 @@ app.controller('scheduleBackup', function ($scope, $http) {
 
     };
 
-    $scope.addSite = function () {
+    $scope.addSite = function (type) {
         $scope.cyberPanelLoading = false;
 
         var config = {
@@ -1747,7 +1750,8 @@ app.controller('scheduleBackup', function ($scope, $http) {
         };
         var data = {
             selectedWebsite: $scope.selectedWebsite,
-            selectedJob: $scope.selectedJob
+            selectedJob: $scope.selectedJob,
+            type: type
         };
 
         dataurl = "/backup/addSiteNormal";
@@ -1794,10 +1798,10 @@ app.controller('scheduleBackup', function ($scope, $http) {
             }
         };
         var data = {
-            selectedAccount: $scope.selectedAccount
+            selectedJob: $scope.selectedJob
         };
 
-        dataurl = "/backup/deleteAccountgDrive";
+        dataurl = "/backup/deleteAccountNormal";
 
         $http.post(dataurl, data, config).then(ListInitialData, cantLoadInitialData);
 
@@ -1810,6 +1814,7 @@ app.controller('scheduleBackup', function ($scope, $http) {
                     text: 'Account successfully deleted.',
                     type: 'success'
                 });
+                location.reload();
             } else {
                 new PNotify({
                     title: 'Operation Failed!',
@@ -1840,11 +1845,11 @@ app.controller('scheduleBackup', function ($scope, $http) {
             }
         };
         var data = {
-            selectedAccount: $scope.selectedAccount,
+            selectedJob: $scope.selectedJob,
             backupFrequency: $scope.backupFrequency
         };
 
-        dataurl = "/backup/changeAccountFrequencygDrive";
+        dataurl = "/backup/changeAccountFrequencyNormal";
 
         $http.post(dataurl, data, config).then(ListInitialData, cantLoadInitialData);
 
@@ -1941,13 +1946,13 @@ app.controller('scheduleBackup', function ($scope, $http) {
         };
 
         var data = {
-            selectedAccount: $scope.selectedAccount,
+            selectedJob: $scope.selectedJob,
             page: $scope.currentPageLogs,
             recordsToShow: $scope.recordsToShowLogs
         };
 
 
-        dataurl = "/backup/fetchDriveLogs";
+        dataurl = "/backup/fetchNormalLogs";
 
         $http.post(dataurl, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 

@@ -62,5 +62,8 @@ urlpatterns = [
     url(r'^fetchNormalJobs$', views.fetchNormalJobs, name='fetchNormalJobs'),
     url(r'^addSiteNormal$', views.addSiteNormal, name='addSiteNormal'),
     url(r'^deleteSiteNormal$', views.deleteSiteNormal, name='deleteSiteNormal'),
+    url(r'^changeAccountFrequencyNormal$', views.changeAccountFrequencyNormal, name='changeAccountFrequencyNormal'),
+    url(r'^deleteAccountNormal$', views.deleteAccountNormal, name='deleteAccountNormal'),
+    url(r'^fetchNormalLogs$', views.fetchNormalLogs, name='fetchNormalLogs'),
 
 ]

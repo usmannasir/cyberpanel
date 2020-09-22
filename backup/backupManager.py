@@ -242,7 +242,8 @@ class BackupManager:
 
             gD = GDrive.objects.get(name=selectedAccount)
 
-            if ACLManager.checkGDriveOwnership(gD, admin, currentACL) == 1 and ACLManager.checkOwnership(selectedWebsite, admin, currentACL) == 1:
+            if ACLManager.checkGDriveOwnership(gD, admin, currentACL) == 1 and ACLManager.checkOwnership(
+                    selectedWebsite, admin, currentACL) == 1:
                 pass
             else:
                 return ACLManager.loadErrorJson('status', 0)
@@ -334,7 +335,8 @@ class BackupManager:
 
             gD = GDrive.objects.get(name=selectedAccount)
 
-            if ACLManager.checkGDriveOwnership(gD, admin, currentACL) == 1 and ACLManager.checkOwnership(website, admin, currentACL) == 1:
+            if ACLManager.checkGDriveOwnership(gD, admin, currentACL) == 1 and ACLManager.checkOwnership(website, admin,
+                                                                                                         currentACL) == 1:
                 pass
             else:
                 return ACLManager.loadErrorJson('status', 0)
@@ -728,7 +730,6 @@ class BackupManager:
                 except:
                     finalDic['user'] = "root"
 
-
                 execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
                 execPath = execPath + " submitDestinationCreation --ipAddress " + finalDic['ipAddress'] + " --password " \
                            + finalDic['password'] + " --port " + finalDic['port'] + ' --user %s' % (finalDic['user'])
@@ -743,16 +744,16 @@ class BackupManager:
 
                 if output.find('1,') > -1:
 
-                    config = {'type': data['type'], 'ip': data['IPAddress'], 'username': data['userName'], 'port': data['backupSSHPort'], 'path': data['path']}
-                    nd = NormalBackupDests(name=data['name'], config = json.dumps(config))
+                    config = {'type': data['type'], 'ip': data['IPAddress'], 'username': data['userName'],
+                              'port': data['backupSSHPort'], 'path': data['path']}
+                    nd = NormalBackupDests(name=data['name'], config=json.dumps(config))
                     nd.save()
 
-
-                    final_dic = {'status' : 1, 'destStatus': 1, 'error_message': "None"}
+                    final_dic = {'status': 1, 'destStatus': 1, 'error_message': "None"}
                     final_json = json.dumps(final_dic)
                     return HttpResponse(final_json)
                 else:
-                    final_dic = {'status' : 0, 'destStatus': 0, 'error_message': output}
+                    final_dic = {'status': 0, 'destStatus': 0, 'error_message': output}
                     final_json = json.dumps(final_dic)
                     return HttpResponse(final_json)
             else:
@@ -760,13 +761,13 @@ class BackupManager:
                 nd = NormalBackupDests(name=data['name'], config=json.dumps(config))
                 nd.save()
 
-                final_dic = {'status' : 1, 'destStatus': 1, 'error_message': "None"}
+                final_dic = {'status': 1, 'destStatus': 1, 'error_message': "None"}
                 final_json = json.dumps(final_dic)
                 return HttpResponse(final_json)
 
 
         except BaseException as msg:
-            final_dic = {'status' : 0, 'destStatus': 0, 'error_message': str(msg)}
+            final_dic = {'status': 0, 'destStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
@@ -935,7 +936,7 @@ class BackupManager:
 
             config = {'frequency': backupFrequency}
 
-            nbj = NormalBackupJobs(owner=nbd, name=name, config=config)
+            nbj = NormalBackupJobs(owner=nbd, name=name, config=json.dumps(config))
             nbj.save()
 
             final_json = json.dumps({'status': 1, 'scheduleStatus': 0})
@@ -1472,10 +1473,11 @@ class BackupManager:
             recordsToShow = int(data['recordsToShow'])
             page = int(str(data['page']).strip('\n'))
 
-            nbd = NormalBackupJobs.objects.get(name=selectedAccount)
 
             if ACLManager.currentContextPermission(currentACL, 'scheDuleBackups') == 0:
                 return ACLManager.loadErrorJson('scheduleStatus', 0)
+
+            nbd = NormalBackupJobs.objects.get(name=selectedAccount)
 
             websites = nbd.normalbackupsites_set.all()
 
@@ -1507,11 +1509,39 @@ class BackupManager:
 
             json_data = json_data + ']'
 
+            config = json.loads(nbd.config)
 
-            data_ret = {'status': 1, 'websites': json_data, 'pagination': pagination}
+            try:
+                lastRun = config['lastRun']
+            except:
+                lastRun = 'Never'
+
+            try:
+                allSites = config['allSites']
+            except:
+                allSites = 'Selected Only'
+
+            try:
+                frequency = config['frequency']
+            except:
+                frequency = 'Never'
+
+            try:
+                currentStatus = config['currentStatus']
+            except:
+                currentStatus = 'Not running'
+
+            data_ret = {
+                'status': 1,
+                'websites': json_data,
+                'pagination': pagination,
+                'lastRun': lastRun,
+                'allSites': allSites,
+                'currently': frequency,
+                'currentStatus': currentStatus
+            }
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
-
 
         except BaseException as msg:
             data_ret = {'status': 0, 'error_message': str(msg)}
@@ -1558,14 +1588,38 @@ class BackupManager:
 
             data = json.loads(request.body)
 
-            selectedJob = data['selectedJob']
-            selectedWebsite = data['selectedWebsite']
-
-            nbj = NormalBackupJobs.objects.get(name=selectedJob)
-            website = Websites.objects.get(domain=selectedWebsite)
-
             if ACLManager.currentContextPermission(currentACL, 'scheDuleBackups') == 0:
                 return ACLManager.loadErrorJson('scheduleStatus', 0)
+
+            selectedJob = data['selectedJob']
+            type = data['type']
+
+            nbj = NormalBackupJobs.objects.get(name=selectedJob)
+
+            if type == 'all':
+                config = json.loads(nbj.config)
+
+                try:
+                    if config['allSites'] == 'all':
+                        config['allSites'] = 'Selected Only'
+                        nbj.config = json.dumps(config)
+                        nbj.save()
+                        data_ret = {'status': 1}
+                        json_data = json.dumps(data_ret)
+                        return HttpResponse(json_data)
+                except:
+                    pass
+                config['allSites'] = type
+                nbj.config = json.dumps(config)
+                nbj.save()
+
+                data_ret = {'status': 1}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+            selectedWebsite = data['selectedWebsite']
+
+            website = Websites.objects.get(domain=selectedWebsite)
 
             try:
                 NormalBackupSites.objects.get(owner=nbj, domain=website)
@@ -1606,6 +1660,129 @@ class BackupManager:
             data_ret = {'status': 1}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def changeAccountFrequencyNormal(self, request=None, userID=None, data=None):
+        try:
+
+            userID = request.session['userID']
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            data = json.loads(request.body)
+
+            selectedJob = data['selectedJob']
+            backupFrequency = data['backupFrequency']
+
+            nbj = NormalBackupJobs.objects.get(name=selectedJob)
+
+            if ACLManager.currentContextPermission(currentACL, 'scheDuleBackups') == 0:
+                return ACLManager.loadErrorJson('scheduleStatus', 0)
+
+            config = json.loads(nbj.config)
+            config['frequency'] = backupFrequency
+
+            nbj.config = json.dumps(config)
+            nbj.save()
+
+            data_ret = {'status': 1}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+    def deleteAccountNormal(self, request=None, userID=None, data=None):
+        try:
+
+            userID = request.session['userID']
+            currentACL = ACLManager.loadedACL(userID)
+
+            data = json.loads(request.body)
+
+            selectedJob = data['selectedJob']
+
+            nbj = NormalBackupJobs.objects.get(name=selectedJob)
+
+            if ACLManager.currentContextPermission(currentACL, 'scheDuleBackups') == 0:
+                return ACLManager.loadErrorJson('scheduleStatus', 0)
+
+            nbj.delete()
+
+            data_ret = {'status': 1}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def fetchNormalLogs(self, request=None, userID=None, data=None):
+        try:
+
+            userID = request.session['userID']
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            data = json.loads(request.body)
+
+            selectedJob = data['selectedJob']
+            recordsToShow = int(data['recordsToShow'])
+            page = int(str(data['page']).strip('\n'))
+
+            if ACLManager.currentContextPermission(currentACL, 'scheDuleBackups') == 0:
+                return ACLManager.loadErrorJson('scheduleStatus', 0)
+
+            nbj = NormalBackupJobs.objects.get(name=selectedJob)
+
+            logs = nbj.normalbackupjoblogs_set.all().order_by('-id')
+
+            from s3Backups.s3Backups import S3Backups
+
+            pagination = S3Backups.getPagination(len(logs), recordsToShow)
+            endPageNumber, finalPageNumber = S3Backups.recordsPointer(page, recordsToShow)
+            logs = logs[finalPageNumber:endPageNumber]
+
+            json_data = "["
+            checker = 0
+            counter = 0
+
+            from plogical.backupSchedule import backupSchedule
+
+            for log in logs:
+
+                if log.status == backupSchedule.INFO:
+                    status = 'INFO'
+                else:
+                    status = 'ERROR'
+
+                dic = {
+                    'type': status,
+                    'message': log.message
+                }
+
+                if checker == 0:
+                    json_data = json_data + json.dumps(dic)
+                    checker = 1
+                else:
+                    json_data = json_data + ',' + json.dumps(dic)
+
+                counter = counter + 1
+
+            json_data = json_data + ']'
+
+            data_ret = {'status': 1, 'logs': json_data, 'pagination': pagination}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
 
         except BaseException as msg:
             data_ret = {'status': 0, 'error_message': str(msg)}

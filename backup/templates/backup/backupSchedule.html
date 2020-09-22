@@ -97,8 +97,6 @@
                                     {% endfor %}
                                 </select>
                             </div>
-                            <button ng-hide="driveHidden" type="button" ng-click="deleteAccount()"
-                                    class="btn btn-danger">{% trans "Delete" %}</button>
                         </div>
 
                         <div ng-hide="jobsHidden" class="form-group">
@@ -121,8 +119,10 @@
                                     {% endfor %}
                                 </select>
                             </div>
-                            <button type="button" ng-click="addSite()"
+                            <button type="button" ng-click="addSite('one')"
                                     class="btn btn-primary">{% trans "Add Site" %}</button>
+                            <button type="button" ng-click="addSite('all')"
+                                    class="btn btn-primary">{% trans "Add All" %}</button>
                         </div>
 
                         <div ng-hide="driveHidden" class="form-group">
@@ -130,17 +130,26 @@
                                 <table style="margin-top: 2%" class="table">
                                     <thead>
                                     <tr>
-                                        <th>Sites</th>
-                                        <th>Action</th>
+                                        <th>Last Run</th>
+                                        <th>All Sites</th>
+                                        <th>Frequency ({$ currently $})</th>
+                                        <th>Current Status</th>
                                     </tr>
                                     </thead>
                                     <tbody>
-                                    <tr ng-repeat="website in websites track by $index">
-                                        <td ng-bind="website.name"></td>
+                                    <tr>
+                                        <td>{$ lastRun $}</td>
+                                        <td>{$ allSites $}</td>
                                         <td>
-                                            <button type="button" ng-click="deleteSite(website.name)"
-                                                    class="btn btn-danger">{% trans "Delete" %}</button>
+                                            <select ng-change="changeFrequency()" ng-model="backupFrequency"
+                                                    class="form-control">
+                                                <option>Never</option>
+                                                <option>Daily</option>
+                                                <option>Weekly</option>
+                                            </select>
                                         </td>
+                                        <td>{$ currentStatus $}</td>
+
                                     </tr>
                                     </tbody>
                                 </table>
