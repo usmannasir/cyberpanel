@@ -1,0 +1,23 @@
+.server-message    {
+    margin-top: 11%;
+}
+h1,h2,p    {
+    font-weight: 300;
+    line-height: 1.1;
+    text-align: center;
+}
+h1    {
+    font-size: 85px;
+    margin: 0;
+    color:grey;
+}
+h2    {
+    margin-top: 2%;
+    margin-bottom: 2%;
+    color: #a56565;
+}
+p    {
+    font-size: 35px;
+    margin: 1%;
+    color:grey;
+}

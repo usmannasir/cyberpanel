@@ -172,9 +172,9 @@ class vhost:
 
             FNULL = open(os.devnull, 'w')
 
-            shutil.copy("/usr/local/CyberCP/index.html", "/home/" + virtualHostName + "/public_html/index.html")
+            shutil.copytree("/usr/local/CyberCP/skeleton", "/home/" + virtualHostName + "/public_html", dirs_exist_ok=True)
 
-            command = "chown " + virtualHostUser + ":" + virtualHostUser + " " + "/home/" + virtualHostName + "/public_html/index.html"
+            command = "chown -R " + virtualHostUser + ":" + virtualHostUser + " " + "/home/" + virtualHostName + "/public_html"
             cmd = shlex.split(command)
             subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
@@ -833,9 +833,9 @@ class vhost:
 
             FNULL = open(os.devnull, 'w')
 
-            shutil.copy("/usr/local/CyberCP/index.html", path + "/index.html")
+            shutil.copytree("/usr/local/CyberCP/skeleton", path + "/", dirs_exist_ok=True)
 
-            command = "chown " + virtualHostUser + ":" + virtualHostUser + " " + path + "/index.html"
+            command = "chown -R " + virtualHostUser + ":" + virtualHostUser + " " + path
             cmd = shlex.split(command)
             subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
