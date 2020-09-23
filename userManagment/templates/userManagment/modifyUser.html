@@ -56,6 +56,15 @@
                                 <input type="email" class="form-control" ng-model="email" required>
                             </div>
                         </div>
+                        
+                        
+                        <div ng-hide="acctDetailsFetched" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Websites Limit" %}</label>
+                            <div class="col-sm-6">
+                                <input name="websitesLimits" placeholder="0 = Unlimited" type="number" class="form-control"
+                                       ng-model="websitesLimits" required>
+                            </div>
+                        </div>
 
 
                         <div ng-hide="acctDetailsFetched" class="form-group">
