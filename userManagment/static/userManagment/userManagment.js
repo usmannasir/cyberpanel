@@ -188,6 +188,7 @@ app.controller('modifyUser', function ($scope, $http) {
                 $scope.firstName = userDetails.firstName;
                 $scope.lastName = userDetails.lastName;
                 $scope.email = userDetails.email;
+                $scope.websitesLimits = userDetails.websitesLimits;
                 $scope.securityLevel = userDetails.securityLevel;
                 $scope.currentSecurityLevel = userDetails.securityLevel;
                 $scope.twofa = Boolean(userDetails.twofa);
@@ -256,13 +257,11 @@ app.controller('modifyUser', function ($scope, $http) {
 
 
         var accountUsername = $scope.accountUsername;
-
         var accountType = $scope.accountType;
         var firstName = $scope.firstName;
-
         var lastName = $scope.lastName;
         var email = $scope.email;
-
+        var websitesLimits = $scope.websitesLimits;
         var password = $scope.password;
 
 
@@ -273,6 +272,7 @@ app.controller('modifyUser', function ($scope, $http) {
             firstName: firstName,
             lastName: lastName,
             email: email,
+            websitesLimit: websitesLimits,
             passwordByPass: password,
             securityLevel: $scope.securityLevel,
             twofa: $scope.twofa
