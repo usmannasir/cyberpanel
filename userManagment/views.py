@@ -285,8 +285,7 @@ def fetchUserDetails(request):
                 firstName = user.firstName
                 lastName = user.lastName
                 email = user.email
-
-                websitesLimit = user.initWebsitesLimit
+                websitesLimits = user.initWebsitesLimit
 
                 import pyotp
 
@@ -302,7 +301,7 @@ def fetchUserDetails(request):
                     "lastName": lastName,
                     "email": email,
                     "acl": user.acl.name,
-                    "websitesLimit": websitesLimit,
+                    "websitesLimits": websitesLimits,
                     "securityLevel": SecurityLevel(user.securityLevel).name,
                     "otpauth": otpauth,
                     'twofa': user.twoFA
@@ -338,6 +337,7 @@ def saveModifications(request):
             firstName = data['firstName']
             lastName = data['lastName']
             email = data['email']
+            websitesLimit = data['websitesLimit']
             try:
                 securityLevel = data['securityLevel']
             except:
@@ -370,6 +370,7 @@ def saveModifications(request):
             user.firstName = firstName
             user.lastName = lastName
             user.email = email
+            user.initWebsitesLimit = websitesLimit
             user.password = password
             user.token = token
             user.type = 0
