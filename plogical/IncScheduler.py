@@ -422,20 +422,6 @@ Automatic backup failed for %s on %s.
                                                 domain, time.strftime("%m.%d.%Y_%H-%M-%S"))).save()
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 def main():
 
     parser = argparse.ArgumentParser(description='CyberPanel Installer')
@@ -446,6 +432,7 @@ def main():
     IncScheduler.runGoogleDriveBackups(args.function)
     IncScheduler.git(args.function)
     IncScheduler.checkDiskUsage()
+    IncScheduler.startNormalBackups(args.function)
 
 
 if __name__ == "__main__":
