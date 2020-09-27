@@ -368,41 +368,105 @@ class IncScheduler():
 
             if destinationConfig['type'] == 'local':
                 finalPath = '%s/%s' % (destinationConfig['path'].rstrip('/'), currentTime)
-                command = 'mkdir %s' % (finalPath)
+                command = 'mkdir -p %s' % (finalPath)
                 ProcessUtilities.executioner(command)
 
+                if jobConfig[IncScheduler.frequency] == type:
+                    NormalBackupJobLogs.objects.filter(owner=backupjob).delete()
+                    NormalBackupJobLogs(owner=backupjob, status=backupSchedule.INFO,
+                                  message='Starting %s backup on %s..' % (type, time.strftime("%m.%d.%Y_%H-%M-%S"))).save()
 
-            if jobConfig[IncScheduler.frequency] == type:
-                NormalBackupJobLogs.objects.filter(owner=backupjob).delete()
-                NormalBackupJobLogs(owner=backupjob, status=backupSchedule.INFO,
-                              message='Starting %s backup on %s..' % (type, time.strftime("%m.%d.%Y_%H-%M-%S"))).save()
-
-                if jobConfig[IncScheduler.allSites] == 'all':
-                    websites = Websites.objects.all()
-
-                else:
-                    websites = backupjob.normalbackupsites_set.all()
-
-
-                for site in websites:
+                    actualDomain = 0
                     try:
-                        domain = site.domain
+                        if jobConfig[IncScheduler.allSites] == 'all':
+                            websites = Websites.objects.all()
+                            actualDomain = 1
+                        else:
+                            websites = backupjob.normalbackupsites_set.all()
                     except:
-                        domain = site.domain.domain
+                        websites = backupjob.normalbackupsites_set.all()
 
-                    retValues = backupSchedule.createLocalBackup(domain, '/dev/null')
 
-                    if retValues[0] == 0:
-                        NormalBackupJobLogs(owner=backupjob, status=backupSchedule.ERROR,
-                                            message='Backup failed for %s on %s.' % (
-                                            domain, time.strftime("%m.%d.%Y_%H-%M-%S"))).save()
+                    for site in websites:
 
-                        SUBJECT = "Automatic backup failed for %s on %s." % (domain, currentTime)
-                        adminEmailPath = '/home/cyberpanel/adminEmail'
-                        adminEmail = open(adminEmailPath, 'r').read().rstrip('\n')
-                        sender = 'root@%s' % (socket.gethostname())
-                        TO = [adminEmail]
-                        message = """\
+                        if actualDomain:
+                            domain = site.domain
+                        else:
+                            domain = site.domain.domain
+
+                        retValues = backupSchedule.createLocalBackup(domain, '/dev/null')
+
+                        if retValues[0] == 0:
+                            NormalBackupJobLogs(owner=backupjob, status=backupSchedule.ERROR,
+                                                message='Backup failed for %s on %s.' % (
+                                                domain, time.strftime("%m.%d.%Y_%H-%M-%S"))).save()
+
+                            SUBJECT = "Automatic backup failed for %s on %s." % (domain, currentTime)
+                            adminEmailPath = '/home/cyberpanel/adminEmail'
+                            adminEmail = open(adminEmailPath, 'r').read().rstrip('\n')
+                            sender = 'root@%s' % (socket.gethostname())
+                            TO = [adminEmail]
+                            message = """\
+    From: %s
+    To: %s
+    Subject: %s
+    
+    Automatic backup failed for %s on %s.
+    """ % (sender, ", ".join(TO), SUBJECT, domain, currentTime)
+
+                            logging.SendEmail(sender, TO, message)
+                        else:
+                            backupPath = retValues[1] + ".tar.gz"
+
+                            command = 'mv %s %s' % (backupPath, finalPath)
+                            ProcessUtilities.executioner(command)
+
+                            NormalBackupJobLogs(owner=backupjob, status=backupSchedule.INFO,
+                                                message='Backup completed for %s on %s.' % (
+                                                    domain, time.strftime("%m.%d.%Y_%H-%M-%S"))).save()
+            else:
+                import subprocess
+                import shlex
+                finalPath = '%s/%s' % (destinationConfig['path'].rstrip('/'), currentTime)
+                command = "ssh -o StrictHostKeyChecking=no -p " + destinationConfig['port'] + " -i /root/.ssh/cyberpanel " + destinationConfig['username'] + "@" + destinationConfig['ip'] + " mkdir -p %s" % (finalPath)
+                subprocess.call(shlex.split(command))
+
+                if jobConfig[IncScheduler.frequency] == type:
+                    NormalBackupJobLogs.objects.filter(owner=backupjob).delete()
+                    NormalBackupJobLogs(owner=backupjob, status=backupSchedule.INFO,
+                                        message='Starting %s backup on %s..' % (
+                                        type, time.strftime("%m.%d.%Y_%H-%M-%S"))).save()
+
+                    actualDomain = 0
+                    try:
+                        if jobConfig[IncScheduler.allSites] == 'all':
+                            websites = Websites.objects.all()
+                            actualDomain = 1
+                        else:
+                            websites = backupjob.normalbackupsites_set.all()
+                    except:
+                        websites = backupjob.normalbackupsites_set.all()
+
+                    for site in websites:
+
+                        if actualDomain:
+                            domain = site.domain
+                        else:
+                            domain = site.domain.domain
+
+                        retValues = backupSchedule.createLocalBackup(domain, '/dev/null')
+
+                        if retValues[0] == 0:
+                            NormalBackupJobLogs(owner=backupjob, status=backupSchedule.ERROR,
+                                                message='Backup failed for %s on %s.' % (
+                                                    domain, time.strftime("%m.%d.%Y_%H-%M-%S"))).save()
+
+                            SUBJECT = "Automatic backup failed for %s on %s." % (domain, currentTime)
+                            adminEmailPath = '/home/cyberpanel/adminEmail'
+                            adminEmail = open(adminEmailPath, 'r').read().rstrip('\n')
+                            sender = 'root@%s' % (socket.gethostname())
+                            TO = [adminEmail]
+                            message = """\
 From: %s
 To: %s
 Subject: %s
@@ -410,16 +474,17 @@ Subject: %s
 Automatic backup failed for %s on %s.
 """ % (sender, ", ".join(TO), SUBJECT, domain, currentTime)
 
-                        logging.SendEmail(sender, TO, message)
-                    else:
-                        backupPath = retValues[1] + ".tar.gz"
+                            logging.SendEmail(sender, TO, message)
+                        else:
+                            backupPath = retValues[1] + ".tar.gz"
 
-                        command = 'mv %s %s' % (backupPath, finalPath)
-                        ProcessUtilities.executioner(command)
+                            command = "scp -o StrictHostKeyChecking=no -P " + destinationConfig['port'] + " -i /root/.ssh/cyberpanel " + backupPath + " " + destinationConfig['username'] + "@" + destinationConfig['ip'] + ":%s" % (finalPath)
+                            ProcessUtilities.executioner(command)
 
-                        NormalBackupJobLogs(owner=backupjob, status=backupSchedule.INFO,
-                                            message='Backup completed for %s on %s.' % (
-                                                domain, time.strftime("%m.%d.%Y_%H-%M-%S"))).save()
+                            NormalBackupJobLogs(owner=backupjob, status=backupSchedule.INFO,
+                                                message='Backup completed for %s on %s.' % (
+                                                    domain, time.strftime("%m.%d.%Y_%H-%M-%S"))).save()
+
 
 
 def main():
