@@ -548,7 +548,7 @@ fi
 
 redis_installation() {
 if [[ $SERVER_OS == "CentOS" ]] ; then
-	yum install -y lsphp74-redis lsphp73-redis lsphp72-redis lsphp71-redis lsphp70-redis lsphp56-redis lsphp55-redis lsphp54-redis redis
+	yum install -y lsphp??-redis redis
 fi
 if [[ $SERVER_OS == "Ubuntu" ]] ; then
 	DEBIAN_FRONTEND=noninteractive apt install -y lsphp74-redis
