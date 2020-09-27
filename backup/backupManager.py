@@ -27,7 +27,7 @@ import google.oauth2.credentials
 import googleapiclient.discovery
 from googleapiclient.discovery import build
 from websiteFunctions.models import NormalBackupDests, NormalBackupJobs, NormalBackupSites
-
+from plogical.IncScheduler import IncScheduler
 
 class BackupManager:
     localBackupPath = '/home/cyberpanel/localBackupPath'
@@ -1512,22 +1512,22 @@ class BackupManager:
             config = json.loads(nbd.config)
 
             try:
-                lastRun = config['lastRun']
+                lastRun = config[IncScheduler.lastRun]
             except:
                 lastRun = 'Never'
 
             try:
-                allSites = config['allSites']
+                allSites = config[IncScheduler.allSites]
             except:
                 allSites = 'Selected Only'
 
             try:
-                frequency = config['frequency']
+                frequency = config[IncScheduler.frequency]
             except:
                 frequency = 'Never'
 
             try:
-                currentStatus = config['currentStatus']
+                currentStatus = config[IncScheduler.currentStatus]
             except:
                 currentStatus = 'Not running'
 
@@ -1574,7 +1574,6 @@ class BackupManager:
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-
         except BaseException as msg:
             data_ret = {'status': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
@@ -1600,8 +1599,8 @@ class BackupManager:
                 config = json.loads(nbj.config)
 
                 try:
-                    if config['allSites'] == 'all':
-                        config['allSites'] = 'Selected Only'
+                    if config[IncScheduler.allSites] == 'all':
+                        config[IncScheduler.allSites] = 'Selected Only'
                         nbj.config = json.dumps(config)
                         nbj.save()
                         data_ret = {'status': 1}
@@ -1609,7 +1608,7 @@ class BackupManager:
                         return HttpResponse(json_data)
                 except:
                     pass
-                config['allSites'] = type
+                config[IncScheduler.allSites] = type
                 nbj.config = json.dumps(config)
                 nbj.save()
 
@@ -1684,7 +1683,7 @@ class BackupManager:
                 return ACLManager.loadErrorJson('scheduleStatus', 0)
 
             config = json.loads(nbj.config)
-            config['frequency'] = backupFrequency
+            config[IncScheduler.frequency] = backupFrequency
 
             nbj.config = json.dumps(config)
             nbj.save()

@@ -18,6 +18,7 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 from plogical.backupSchedule import backupSchedule
 import requests
+from websiteFunctions.models import NormalBackupJobs, NormalBackupSites, NormalBackupDests, NormalBackupJobLogs
 try:
     from plogical.virtualHostUtilities import virtualHostUtilities
     from plogical.mailUtilities import mailUtilities
@@ -28,6 +29,15 @@ except:
 class IncScheduler():
     logPath = '/home/cyberpanel/incbackuplogs'
     gitFolder = '/home/cyberpanel/git'
+
+    timeFormat = time.strftime("%m.%d.%Y_%H-%M-%S")
+
+    ### Normal scheduled backups constants
+
+    frequency = 'frequency'
+    allSites = 'allSites'
+    currentStatus = 'currentStatus'
+    lastRun = 'lastRun'
 
     @staticmethod
     def startBackup(type):
@@ -331,6 +341,99 @@ class IncScheduler():
             except BaseException as msg:
                 GDriveJobLogs(owner=items, status=backupSchedule.ERROR,
                               message='[Completely] Job failed, Error message: %s.' % (str(msg))).save()
+
+    @staticmethod
+    def startNormalBackups(type):
+        from plogical.processUtilities import ProcessUtilities
+        from plogical.backupSchedule import backupSchedule
+        import socket
+
+        ## SFTP Destination Config sample
+        ## {"type": "SFTP", "ip": "ip", "username": "root", "port": "22", "path": "/home/backup"}
+
+        ## Local Destination config sample
+        ## {"type": "local", "path": "/home/backup"}
+
+        ## Backup jobs config
+
+        ## {"frequency": "Daily", "allSites": "Selected Only"}
+        ## {"frequency": "Daily"}
+
+
+        for backupjob in NormalBackupJobs.objects.all():
+            jobConfig = json.loads(backupjob.config)
+            destinationConfig = json.loads(backupjob.owner.config)
+
+            currentTime = time.strftime("%m.%d.%Y_%H-%M-%S")
+
+            if destinationConfig['type'] == 'local':
+                finalPath = '%s/%s' % (destinationConfig['path'].rstrip('/'), currentTime)
+                command = 'mkdir %s' % (finalPath)
+                ProcessUtilities.executioner(command)
+
+
+            if jobConfig[IncScheduler.frequency] == type:
+                NormalBackupJobLogs.objects.filter(owner=backupjob).delete()
+                NormalBackupJobLogs(owner=backupjob, status=backupSchedule.INFO,
+                              message='Starting %s backup on %s..' % (type, time.strftime("%m.%d.%Y_%H-%M-%S"))).save()
+
+                if jobConfig[IncScheduler.allSites] == 'all':
+                    websites = Websites.objects.all()
+
+                else:
+                    websites = backupjob.normalbackupsites_set.all()
+
+
+                for site in websites:
+                    try:
+                        domain = site.domain
+                    except:
+                        domain = site.domain.domain
+
+                    retValues = backupSchedule.createLocalBackup(domain, '/dev/null')
+
+                    if retValues[0] == 0:
+                        NormalBackupJobLogs(owner=backupjob, status=backupSchedule.ERROR,
+                                            message='Backup failed for %s on %s.' % (
+                                            domain, time.strftime("%m.%d.%Y_%H-%M-%S"))).save()
+
+                        SUBJECT = "Automatic backup failed for %s on %s." % (domain, currentTime)
+                        adminEmailPath = '/home/cyberpanel/adminEmail'
+                        adminEmail = open(adminEmailPath, 'r').read().rstrip('\n')
+                        sender = 'root@%s' % (socket.gethostname())
+                        TO = [adminEmail]
+                        message = """\
+From: %s
+To: %s
+Subject: %s
+
+Automatic backup failed for %s on %s.
+""" % (sender, ", ".join(TO), SUBJECT, domain, currentTime)
+
+                        logging.SendEmail(sender, TO, message)
+                    else:
+                        backupPath = retValues[1] + ".tar.gz"
+
+                        command = 'mv %s %s' % (backupPath, finalPath)
+                        ProcessUtilities.executioner(command)
+
+                        NormalBackupJobLogs(owner=backupjob, status=backupSchedule.INFO,
+                                            message='Backup completed for %s on %s.' % (
+                                                domain, time.strftime("%m.%d.%Y_%H-%M-%S"))).save()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 def main():
