@@ -409,14 +409,13 @@ sudo_check() {
 }
 
 
-panel_check
-
 sudo_check
 
-check_OS
+panel_check
 
 self_check
 
+check_OS
 
 if [ $# -eq 0 ] ; then
 main_page
