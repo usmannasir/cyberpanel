@@ -476,6 +476,28 @@ Automatic backup failed for %s on %s.
                 subprocess.call(shlex.split(command))
 
                 if jobConfig[IncScheduler.frequency] == type:
+
+                    ### Check if an old job prematurely killed, then start from there.
+                    try:
+                        oldJobContinue = 1
+                        pid = jobConfig['pid']
+                        stuckDomain = jobConfig['website']
+                        finalPath = jobConfig['finalPath']
+                        jobConfig['pid'] = os.getpid()
+
+                        command = 'ps aux'
+                        result = ProcessUtilities.outputExecutioner(command)
+
+                        if result.find(pid) > -1 and result.find('IncScheduler.py') > -1:
+                            quit(1)
+
+
+                    except:
+                        ### Save some important info in backup config
+                        oldJobContinue = 0
+                        jobConfig['pid'] = str(os.getpid())
+                        jobConfig['finalPath'] = finalPath
+
                     NormalBackupJobLogs.objects.filter(owner=backupjob).delete()
                     NormalBackupJobLogs(owner=backupjob, status=backupSchedule.INFO,
                                         message='Starting %s backup on %s..' % (
@@ -491,12 +513,27 @@ Automatic backup failed for %s on %s.
                     except:
                         websites = backupjob.normalbackupsites_set.all().order_by('domain__domain')
 
+                    doit = 0
+
                     for site in websites:
 
                         if actualDomain:
                             domain = site.domain
                         else:
                             domain = site.domain.domain
+
+                        ## Save currently backing domain in db, so that i can restart from here when prematurely killed
+
+                        jobConfig['website'] = domain
+                        backupjob.config = json.dumps(jobConfig)
+                        backupjob.save()
+
+                        if oldJobContinue and not doit:
+                            if domain == stuckDomain:
+                                doit = 1
+                                pass
+                            else:
+                                continue
 
                         retValues = backupSchedule.createLocalBackup(domain, '/dev/null')
 
@@ -528,6 +565,12 @@ Automatic backup failed for %s on %s.
                             NormalBackupJobLogs(owner=backupjob, status=backupSchedule.INFO,
                                                 message='Backup completed for %s on %s.' % (
                                                     domain, time.strftime("%m.%d.%Y_%H-%M-%S"))).save()
+
+                    jobConfig = json.loads(backupjob.config)
+                    if jobConfig['pid']:
+                        del jobConfig['pid']
+                    backupjob.config = json.dumps(jobConfig)
+                    backupjob.save()
 
 
 
