@@ -369,7 +369,6 @@ class IncScheduler():
 
             if destinationConfig['type'] == 'local':
 
-
                 finalPath = '%s/%s' % (destinationConfig['path'].rstrip('/'), currentTime)
                 command = 'mkdir -p %s' % (finalPath)
                 ProcessUtilities.executioner(command)
@@ -400,6 +399,9 @@ class IncScheduler():
                     NormalBackupJobLogs.objects.filter(owner=backupjob).delete()
                     NormalBackupJobLogs(owner=backupjob, status=backupSchedule.INFO,
                                   message='Starting %s backup on %s..' % (type, time.strftime("%m.%d.%Y_%H-%M-%S"))).save()
+
+                    if oldJobContinue:
+                        NormalBackupJobLogs(owner=backupjob, status=backupSchedule.INFO, message='Will continue old killed job starting from %s.' % (stuckDomain)).save()
 
                     actualDomain = 0
                     try:
