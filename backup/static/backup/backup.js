@@ -1585,6 +1585,7 @@ app.controller('scheduleBackup', function ($scope, $http, $window) {
     $scope.fetchJobs = function () {
 
         $scope.cyberPanelLoading = false;
+        $scope.jobsHidden = true;
 
         var config = {
             headers: {
@@ -1642,7 +1643,7 @@ app.controller('scheduleBackup', function ($scope, $http, $window) {
             }
         };
         var data = {
-            selectedAccount: $scope.selectedAccount,
+            selectedAccount: $scope.selectedAccountAdd,
             name: $scope.name,
             backupFrequency: $scope.backupFrequency
         };

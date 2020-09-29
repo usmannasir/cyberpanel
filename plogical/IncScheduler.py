@@ -369,6 +369,7 @@ class IncScheduler():
 
             if destinationConfig['type'] == 'local':
 
+
                 finalPath = '%s/%s' % (destinationConfig['path'].rstrip('/'), currentTime)
                 command = 'mkdir -p %s' % (finalPath)
                 ProcessUtilities.executioner(command)
@@ -381,7 +382,7 @@ class IncScheduler():
                         pid = jobConfig['pid']
                         stuckDomain = jobConfig['website']
                         finalPath = jobConfig['finalPath']
-                        jobConfig['pid'] = os.getpid()
+                        jobConfig['pid'] = str(os.getpid())
 
                         command = 'ps aux'
                         result = ProcessUtilities.outputExecutioner(command)
@@ -422,6 +423,8 @@ class IncScheduler():
                         ## Save currently backing domain in db, so that i can restart from here when prematurely killed
 
                         jobConfig['website'] = domain
+                        jobConfig[IncScheduler.lastRun] = time.strftime("%d %b %Y, %I:%M %p")
+                        jobConfig[IncScheduler.currentStatus] = 'Running..'
                         backupjob.config = json.dumps(jobConfig)
                         backupjob.save()
 
@@ -466,6 +469,7 @@ Automatic backup failed for %s on %s.
                     jobConfig = json.loads(backupjob.config)
                     if jobConfig['pid']:
                         del jobConfig['pid']
+                    jobConfig[IncScheduler.currentStatus] = 'Not running'
                     backupjob.config = json.dumps(jobConfig)
                     backupjob.save()
             else:
@@ -483,7 +487,7 @@ Automatic backup failed for %s on %s.
                         pid = jobConfig['pid']
                         stuckDomain = jobConfig['website']
                         finalPath = jobConfig['finalPath']
-                        jobConfig['pid'] = os.getpid()
+                        jobConfig['pid'] = str(os.getpid())
 
                         command = 'ps aux'
                         result = ProcessUtilities.outputExecutioner(command)
@@ -502,6 +506,9 @@ Automatic backup failed for %s on %s.
                     NormalBackupJobLogs(owner=backupjob, status=backupSchedule.INFO,
                                         message='Starting %s backup on %s..' % (
                                         type, time.strftime("%m.%d.%Y_%H-%M-%S"))).save()
+
+                    if oldJobContinue:
+                        NormalBackupJobLogs(owner=backupjob, status=backupSchedule.INFO, message='Will continue old killed job starting from %s.' % (stuckDomain)).save()
 
                     actualDomain = 0
                     try:
@@ -525,6 +532,8 @@ Automatic backup failed for %s on %s.
                         ## Save currently backing domain in db, so that i can restart from here when prematurely killed
 
                         jobConfig['website'] = domain
+                        jobConfig[IncScheduler.lastRun] = time.strftime("%d %b %Y, %I:%M %p")
+                        jobConfig[IncScheduler.currentStatus] = 'Running..'
                         backupjob.config = json.dumps(jobConfig)
                         backupjob.save()
 
@@ -562,6 +571,11 @@ Automatic backup failed for %s on %s.
                             command = "scp -o StrictHostKeyChecking=no -P " + destinationConfig['port'] + " -i /root/.ssh/cyberpanel " + backupPath + " " + destinationConfig['username'] + "@" + destinationConfig['ip'] + ":%s" % (finalPath)
                             ProcessUtilities.executioner(command)
 
+                            try:
+                                os.remove(backupPath)
+                            except:
+                                pass
+
                             NormalBackupJobLogs(owner=backupjob, status=backupSchedule.INFO,
                                                 message='Backup completed for %s on %s.' % (
                                                     domain, time.strftime("%m.%d.%Y_%H-%M-%S"))).save()
@@ -569,6 +583,7 @@ Automatic backup failed for %s on %s.
                     jobConfig = json.loads(backupjob.config)
                     if jobConfig['pid']:
                         del jobConfig['pid']
+                    jobConfig[IncScheduler.currentStatus] = 'Not running'
                     backupjob.config = json.dumps(jobConfig)
                     backupjob.save()
 
