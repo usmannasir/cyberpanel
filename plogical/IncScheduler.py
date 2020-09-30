@@ -433,7 +433,7 @@ class IncScheduler():
                         if oldJobContinue and not doit:
                             if domain == stuckDomain:
                                 doit = 1
-                                pass
+                                continue
                             else:
                                 continue
 
@@ -542,7 +542,7 @@ Automatic backup failed for %s on %s.
                         if oldJobContinue and not doit:
                             if domain == stuckDomain:
                                 doit = 1
-                                pass
+                                continue
                             else:
                                 continue
 
