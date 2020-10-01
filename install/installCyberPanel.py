@@ -488,7 +488,7 @@ class InstallCyberPanel:
     def installPowerDNS(self):
         try:
 
-            if self.distro == ubuntu:
+            if self.distro == ubuntu or self.distro == cent8:
                 command = 'systemctl stop systemd-resolved'
                 install.preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
                 command = 'systemctl disable systemd-resolved.service'
