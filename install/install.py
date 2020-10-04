@@ -487,7 +487,7 @@ class preFlightsChecks:
 
             writeToFile = open('/usr/local/lscp/cyberpanel/rainloop/data/data/default/configs/application.ini', 'a')
             writeToFile.write("""
-            [security]
+[security]
 admin_login = "admin"
 admin_password = "12345789"
 """)
