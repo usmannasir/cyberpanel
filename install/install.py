@@ -2347,6 +2347,8 @@ def main():
     #checks.disablePackegeUpdates()
 
     try:
+        command = 'mkdir -p /usr/local/lscp/cyberpanel/rainloop/data/data/default/configs/'
+        subprocess.call(shlex.split(command))
 
         writeToFile = open('/usr/local/lscp/cyberpanel/rainloop/data/data/default/configs/application.ini', 'a')
         writeToFile.write("""
