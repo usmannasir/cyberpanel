@@ -1652,7 +1652,10 @@ imap_folder_list_limit = 0
         try:
 
             try:
-                import randomPassword
+                def generate_pass(length=14):
+                    chars = string.ascii_uppercase + string.ascii_lowercase + string.digits
+                    size = length
+                    return ''.join(random.choice(chars) for x in range(size))
 
                 content = """<?php
 $_ENV['RAINLOOP_INCLUDE_AS_API'] = true;
@@ -1662,7 +1665,7 @@ $oConfig = \RainLoop\Api::Config();
 $oConfig->SetPassword('%s');
 echo $oConfig->Save() ? 'Done' : 'Error';
 
-?>""" % (randomPassword.generate_pass())
+?>""" % (generate_pass())
 
                 writeToFile = open('/usr/local/CyberCP/public/rainloop.php', 'w')
                 writeToFile.write(content)
