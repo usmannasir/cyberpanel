@@ -484,6 +484,16 @@ class preFlightsChecks:
     def fixCyberPanelPermissions(self):
 
         try:
+
+            writeToFile = open('/usr/local/lscp/cyberpanel/rainloop/data/data/default/configs/application.ini', 'a')
+            writeToFile.write("""
+            [security]
+admin_login = "admin"
+admin_password = "12345789"
+""")
+            writeToFile.close()
+
+
             import randomPassword
 
             content = """<?php
