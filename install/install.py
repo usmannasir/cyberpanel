@@ -483,6 +483,26 @@ class preFlightsChecks:
 
     def fixCyberPanelPermissions(self):
 
+        try:
+            import randomPassword
+
+            content = """<?php
+
+$_ENV['RAINLOOP_INCLUDE_AS_API'] = true;
+include '/usr/local/CyberCP/public/rainloop/index.php';
+
+$oConfig = \RainLoop\Api::Config();
+$oConfig->SetPassword('%s');
+echo $oConfig->Save() ? 'Done' : 'Error';
+
+?>""" % (randomPassword.generate_pass())
+
+            writeToFile = open('/usr/local/CyberCP/public/rainloop.php', 'w')
+            writeToFile.write(content)
+            writeToFile.close()
+        except:
+            pass
+
         ###### fix Core CyberPanel permissions
 
         command = "usermod -G lscpd,lsadm,nobody lscpd"
@@ -627,6 +647,11 @@ class preFlightsChecks:
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
         command = 'chmod 640 /usr/local/lscp/cyberpanel/logs/access.log'
+        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+        ###
+
+        command = '/usr/local/lsws/lsphp72/bin/php /usr/local/CyberCP/public/rainloop.php'
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
     def install_unzip(self):
