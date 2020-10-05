@@ -2384,7 +2384,7 @@ echo $oConfig->Save() ? 'Done' : 'Error';
         subprocess.call(shlex.split(command))
         
         command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+        subprocess.call(shlex.split(command))
 
     except:
         pass
