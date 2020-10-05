@@ -2379,14 +2379,12 @@ echo $oConfig->Save() ? 'Done' : 'Error';
         writeToFile.write(content)
         writeToFile.close()
 
-        content = """'%s'""" % (randomPassword.generate_pass())
-        writeToFile = open('/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/salt.php', 'w')
-        writeToFile.write(content)
-        writeToFile.close()
-
 
         command = '/usr/local/lsws/lsphp72/bin/php /usr/local/CyberCP/public/rainloop.php'
         subprocess.call(shlex.split(command))
+        
+        command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
+        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
     except:
         pass
