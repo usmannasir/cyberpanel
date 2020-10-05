@@ -1651,6 +1651,28 @@ imap_folder_list_limit = 0
     def fixPermissions():
         try:
 
+            try:
+                def generate_pass(length=14):
+                    chars = string.ascii_uppercase + string.ascii_lowercase + string.digits
+                    size = length
+                    return ''.join(random.choice(chars) for x in range(size))
+
+                content = """<?php
+$_ENV['RAINLOOP_INCLUDE_AS_API'] = true;
+include '/usr/local/CyberCP/public/rainloop/index.php';
+
+$oConfig = \RainLoop\Api::Config();
+$oConfig->SetPassword('%s');
+echo $oConfig->Save() ? 'Done' : 'Error';
+
+?>""" % (generate_pass())
+
+                writeToFile = open('/usr/local/CyberCP/public/rainloop.php', 'w')
+                writeToFile.write(content)
+                writeToFile.close()
+            except:
+                pass
+
             Upgrade.stdOut("Fixing permissions..")
 
             command = "usermod -G lscpd,lsadm,nobody lscpd"
@@ -1800,6 +1822,9 @@ imap_folder_list_limit = 0
                 Upgrade.executioner(command, 0)
 
             command = 'chmod 640 /usr/local/lscp/cyberpanel/logs/access.log'
+            Upgrade.executioner(command, 0)
+
+            command = '/usr/local/lsws/lsphp72/bin/php /usr/local/CyberCP/public/rainloop.php'
             Upgrade.executioner(command, 0)
 
 

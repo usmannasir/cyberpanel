@@ -629,6 +629,8 @@ class preFlightsChecks:
         command = 'chmod 640 /usr/local/lscp/cyberpanel/logs/access.log'
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
+        ###
+
     def install_unzip(self):
         self.stdOut("Install unzip")
         try:
@@ -2343,6 +2345,42 @@ def main():
 
     checks.installCLScripts()
     #checks.disablePackegeUpdates()
+
+#     try:
+#         command = 'mkdir -p /usr/local/lscp/cyberpanel/rainloop/data/data/default/configs/'
+#         subprocess.call(shlex.split(command))
+#
+#         writeToFile = open('/usr/local/lscp/cyberpanel/rainloop/data/data/default/configs/application.ini', 'a')
+#         writeToFile.write("""
+# [security]
+# admin_login = "admin"
+# admin_password = "12345789"
+# """)
+#         writeToFile.close()
+#
+#         import randomPassword
+#
+#         content = """<?php
+#
+# $_ENV['RAINLOOP_INCLUDE_AS_API'] = true;
+# include '/usr/local/CyberCP/public/rainloop/index.php';
+#
+# $oConfig = \RainLoop\Api::Config();
+# $oConfig->SetPassword('%s');
+# echo $oConfig->Save() ? 'Done' : 'Error';
+#
+# ?>""" % (randomPassword.generate_pass())
+#
+#         writeToFile = open('/usr/local/CyberCP/public/rainloop.php', 'w')
+#         writeToFile.write(content)
+#         writeToFile.close()
+#
+#         command = '/usr/local/lsws/lsphp72/bin/php /usr/local/CyberCP/public/rainloop.php'
+#         subprocess.call(shlex.split(command))
+#
+#     except:
+#         pass
+
     logging.InstallLog.writeToFile("CyberPanel installation successfully completed!")
 
 
