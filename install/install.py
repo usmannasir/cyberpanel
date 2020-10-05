@@ -2354,7 +2354,7 @@ def main():
         # command = 'mkdir -p /usr/local/lscp/cyberpanel/rainloop/data/data/default/configs/'
         # subprocess.call(shlex.split(command))
 
-        writeToFile = open('/usr/local/CyberCP/public/rainloop.php_data_/_default_/configs/application.ini', 'a')
+        writeToFile = open('/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/application.ini', 'a')
         writeToFile.write("""
 [security]
 admin_login = "admin"
@@ -2380,7 +2380,7 @@ echo $oConfig->Save() ? 'Done' : 'Error';
         writeToFile.close()
 
         content = """'%s'""" % (randomPassword.generate_pass())
-        writeToFile = open('/usr/local/CyberCP/public/rainloop.php_data_/_default_/configs/salt.php', 'w')
+        writeToFile = open('/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/salt.php', 'w')
         writeToFile.write(content)
         writeToFile.close()
 
