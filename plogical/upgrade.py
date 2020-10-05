@@ -1670,6 +1670,10 @@ echo $oConfig->Save() ? 'Done' : 'Error';
                 writeToFile = open('/usr/local/CyberCP/public/rainloop.php', 'w')
                 writeToFile.write(content)
                 writeToFile.close()
+
+                command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
+                subprocess.call(shlex.split(command))
+
             except:
                 pass
 
