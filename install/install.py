@@ -2351,10 +2351,15 @@ def main():
     #checks.disablePackegeUpdates()
 
     try:
+<<<<<<< HEAD
         # command = 'mkdir -p /usr/local/lscp/cyberpanel/rainloop/data/data/default/configs/'
         # subprocess.call(shlex.split(command))
 
         writeToFile = open('/usr/local/CyberCP/public/rainloop.php_data_/_default_/configs/application.ini', 'a')
+=======
+
+        writeToFile = open('/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/application.ini', 'a')
+>>>>>>> v2.0.3
         writeToFile.write("""
 [security]
 admin_login = "admin"
@@ -2380,6 +2385,9 @@ echo $oConfig->Save() ? 'Done' : 'Error';
         writeToFile.close()
 
         command = '/usr/local/lsws/lsphp72/bin/php /usr/local/CyberCP/public/rainloop.php'
+        subprocess.call(shlex.split(command))
+
+        command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
         subprocess.call(shlex.split(command))
 
     except:
