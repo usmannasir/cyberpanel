@@ -2355,9 +2355,10 @@ def main():
         # subprocess.call(shlex.split(command))
 
         writeToFile = open('/usr/local/CyberCP/public/rainloop.php_data_/_default_/configs/application.ini', 'a')
-        writeToFile.write("""[security]
+        writeToFile.write("""
+[security]
 admin_login = "admin"
-admin_password = "12345789"
+admin_password = "12345"
 """)
         writeToFile.close()
 
