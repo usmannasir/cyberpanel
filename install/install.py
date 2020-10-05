@@ -2379,6 +2379,12 @@ echo $oConfig->Save() ? 'Done' : 'Error';
         writeToFile.write(content)
         writeToFile.close()
 
+        content = """'%s'""" % (randomPassword.generate_pass())
+        writeToFile = open('/usr/local/CyberCP/public/rainloop.php_data_/_default_/configs/salt.php', 'w')
+        writeToFile.write(content)
+        writeToFile.close()
+
+
         command = '/usr/local/lsws/lsphp72/bin/php /usr/local/CyberCP/public/rainloop.php'
         subprocess.call(shlex.split(command))
 
