@@ -4673,7 +4673,7 @@ app.controller('installJoomlaCTRL', function ($scope, $http, $timeout) {
             domain: domain,
             home: home,
             path: path,
-            sitename: $scope.blogTitle,
+            sitename: $scope.siteName,
             username: $scope.adminUser,
             passwordByPass: $scope.adminPassword,
             prefix: $scope.databasePrefix

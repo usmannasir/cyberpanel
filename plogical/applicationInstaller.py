@@ -977,15 +977,16 @@ $parameters = array(
             command = "sed -i 's|$debug = 1|$debug = 0|g' %sconfiguration.php" % (finalPath)
             ProcessUtilities.executioner(command)
 
-            command = "sed -i 's|$sitename = '%s'|$sitename = '%s'|g' %sconfiguration.php" % (dbUser, siteName, finalPath)
-            ProcessUtilities.executioner(command)
-
             ##
 
             from filemanager.filemanager import FileManager
 
             fm = FileManager(None, None)
             fm.fixPermissions(self.masterDomain)
+
+            command = "sed -i 's|$sitename = '%s'|$sitename = '%s'|g' %sconfiguration.php" % (
+            dbUser, siteName, finalPath)
+            ProcessUtilities.executioner(command, externalApp)
 
             installUtilities.reStartLiteSpeedSocket()
 
