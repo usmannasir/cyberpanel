@@ -1931,6 +1931,7 @@ class WebsiteManager:
             extraArgs['prefix'] = data['prefix']
             extraArgs['domain'] = data['domain']
             extraArgs['home'] = data['home']
+            extraArgs['siteName'] = data['siteName']
             extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
 
             mailUtilities.checkHome()

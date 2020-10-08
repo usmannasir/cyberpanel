@@ -831,6 +831,8 @@ $parameters = array(
             password = self.extraArgs['password']
             prefix = self.extraArgs['prefix']
             home = self.extraArgs['home']
+            siteName = self.extraArgs['siteName']
+
             tempStatusPath = self.extraArgs['tempStatusPath']
             self.tempStatusPath = tempStatusPath
 
@@ -951,7 +953,6 @@ $parameters = array(
             statusFile.writelines('Installing LiteSpeed Cache Joomla plugin..,80')
             statusFile.close()
 
-
             command = 'wget https://raw.githubusercontent.com/litespeedtech/lscache-joomla/master/package/lscache-1.3.1.zip -O /usr/local/CyberCP/joomla.zip'
             ProcessUtilities.executioner(command)
 
@@ -965,6 +966,7 @@ $parameters = array(
             ProcessUtilities.executioner(command)
 
             command = '/home/%s/.composer/vendor/bin/joomla extension:enable %s --www %s lscache' % (self.masterDomain, dbUser, finalPath)
+
             ProcessUtilities.executioner(command)
 
             command = 'mv %s%s/* %s' % (finalPath, dbUser, finalPath)
@@ -982,6 +984,11 @@ $parameters = array(
 
             fm = FileManager(None, None)
             fm.fixPermissions(self.masterDomain)
+
+
+            command = "sed -i \"s|sitename = '%s'|sitename = '%s'|g\" %sconfiguration.php" % (
+            dbUser, siteName, finalPath)
+            ProcessUtilities.executioner(command, externalApp)
 
             installUtilities.reStartLiteSpeedSocket()
 
