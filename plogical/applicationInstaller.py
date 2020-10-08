@@ -831,6 +831,7 @@ $parameters = array(
             password = self.extraArgs['password']
             prefix = self.extraArgs['prefix']
             home = self.extraArgs['home']
+            siteName = self.extraArgs['siteName']
             tempStatusPath = self.extraArgs['tempStatusPath']
             self.tempStatusPath = tempStatusPath
 
@@ -974,6 +975,9 @@ $parameters = array(
             ProcessUtilities.executioner(command)
 
             command = "sed -i 's|$debug = 1|$debug = 0|g' %sconfiguration.php" % (finalPath)
+            ProcessUtilities.executioner(command)
+
+            command = "sed -i 's|$sitename = '%s'|$sitename = '%s'|g' %sconfiguration.php" % (dbUser, siteName, finalPath)
             ProcessUtilities.executioner(command)
 
             ##

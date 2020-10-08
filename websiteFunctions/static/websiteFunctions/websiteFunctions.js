@@ -1739,6 +1739,7 @@ app.controller('websitePages', function ($scope, $http, $timeout, $window) {
 
         var data = {
             domain: domain,
+            siteName: $scope.siteName,
             home: home,
             path: path,
             password: password,
