@@ -9,15 +9,14 @@ django.setup()
 import threading as multi
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 import subprocess
-from plogical.vhost import vhost
 from websiteFunctions.models import ChildDomains, Websites
 from plogical import randomPassword
 from plogical.mysqlUtilities import mysqlUtilities
 from databases.models import Databases
 from plogical.installUtilities import installUtilities
-import shutil
 from plogical.processUtilities import ProcessUtilities
 from random import randint
+import hashlib
 
 class ApplicationInstaller(multi.Thread):
 
@@ -828,16 +827,10 @@ $parameters = array(
 
         try:
 
-            domainName = self.extraArgs['domainName']
-            finalPath = self.extraArgs['finalPath']
-            virtualHostUser = self.extraArgs['virtualHostUser']
-            dbName = self.extraArgs['dbName']
-            dbUser = self.extraArgs['dbUser']
-            dbPassword = self.extraArgs['dbPassword']
-            username = self.extraArgs['username']
+            domainName = self.extraArgs['domain']
             password = self.extraArgs['password']
             prefix = self.extraArgs['prefix']
-            sitename = self.extraArgs['sitename']
+            home = self.extraArgs['home']
             tempStatusPath = self.extraArgs['tempStatusPath']
             self.tempStatusPath = tempStatusPath
 
@@ -847,134 +840,152 @@ $parameters = array(
             command = 'chmod 755 %s' % (permPath)
             ProcessUtilities.executioner(command)
 
-            if not os.path.exists(finalPath):
-                os.makedirs(finalPath)
+            ## Get Joomla
 
-            ## checking for directories/files
+            try:
+                website = ChildDomains.objects.get(domain=domainName)
+                externalApp = website.master.externalApp
+                self.masterDomain = website.master.domain
+
+                if home == '0':
+                    path = self.extraArgs['path']
+                    finalPath = website.path.rstrip('/') + "/" + path + "/"
+                else:
+                    finalPath = website.path + "/"
+
+                if website.master.package.dataBases > website.master.databases_set.all().count():
+                    pass
+                else:
+                    raise BaseException("Maximum database limit reached for this website.")
+
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines('Setting up Database,20')
+                statusFile.close()
+
+                dbName, dbUser, dbPassword = self.dbCreation(tempStatusPath, website.master)
+                self.permPath = website.path
+
+            except:
+                website = Websites.objects.get(domain=domainName)
+                externalApp = website.externalApp
+                self.masterDomain = website.domain
+
+                if home == '0':
+                    path = self.extraArgs['path']
+                    finalPath = "/home/" + domainName + "/public_html/" + path + "/"
+                else:
+                    finalPath = "/home/" + domainName + "/public_html/"
+
+                if website.package.dataBases > website.databases_set.all().count():
+                    pass
+                else:
+                    raise BaseException("Maximum database limit reached for this website.")
+
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines('Installing Joomla Console..,30')
+                statusFile.close()
+
+                dbName, dbUser, dbPassword = self.dbCreation(tempStatusPath, website)
+                self.permPath = '/home/%s/public_html' % (website.domain)
+
+            ## Dataloss check
+
+            command = 'ls -la %s' % (finalPath)
+            result = ProcessUtilities.outputExecutioner(command, externalApp)
+
+            if result.find('No such file or directory') > -1:
+                command = 'mkdir %s' % (finalPath)
+                ProcessUtilities.executioner(command, externalApp)
 
             if self.dataLossCheck(finalPath, tempStatusPath) == 0:
                 raise BaseException('Directory is not empty.')
 
-            ## Get Joomla
+            command = 'composer global require joomlatools/console'
+            ProcessUtilities.outputExecutioner(command, externalApp, None, self.permPath)
 
-            os.chdir(finalPath)
-
-            if not os.path.exists("staging.zip"):
-                command = 'wget --no-check-certificate https://github.com/joomla/joomla-cms/archive/staging.zip -P ' + finalPath
-                ProcessUtilities.executioner(command, virtualHostUser)
-            else:
-                raise BaseException('File already exists.')
-
-            command = 'unzip ' + finalPath + 'staging.zip -d ' + finalPath
-            ProcessUtilities.executioner(command, virtualHostUser)
-
-            command = 'rm -f %s' % (finalPath + 'staging.zip')
-            ProcessUtilities.executioner(command, virtualHostUser)
-
-            command = 'cp -r ' + finalPath + 'joomla-cms-staging/. ' + finalPath
-            ProcessUtilities.executioner(command, virtualHostUser)
-
-            command = 'chown -R cyberpanel:cyberpanel %s' % (finalPath)
-            ProcessUtilities.executioner(command)
-
-            shutil.rmtree(finalPath + "joomla-cms-staging")
-            os.rename(finalPath + "installation/configuration.php-dist", finalPath + "configuration.php")
-            os.rename(finalPath + "robots.txt.dist", finalPath + "robots.txt")
-            os.rename(finalPath + "htaccess.txt", finalPath + ".htaccess")
-
-            ## edit config file
+            ## Run the install command
 
             statusFile = open(tempStatusPath, 'w')
-            statusFile.writelines('Creating configuration files.,40')
+            statusFile.writelines('Installing Joomla..,40')
             statusFile.close()
 
-            configfile = finalPath + "configuration.php"
+            command = '/home/%s/.composer/vendor/bin/joomla site:create %s --mysql-login %s:%s --mysql-database %s --mysql_db_prefix=%s --www %s --sample-data=blog --skip-create-statement' % (self.masterDomain, dbUser, dbUser, dbPassword, dbName, prefix , finalPath)
 
-            data = open(configfile, "r").readlines()
+            result = ProcessUtilities.outputExecutioner(command, externalApp)
 
-            writeDataToFile = open(configfile, "w")
+            if result.find('admin/admin') == -1:
+                raise BaseException(result)
 
-            secret = randomPassword.generate_pass()
-
-            defDBName = "   public $user = '" + dbName + "';" + "\n"
-            defDBUser = "   public $db = '" + dbUser + "';" + "\n"
-            defDBPassword = "   public $password = '" + dbPassword + "';" + "\n"
-            secretKey = "   public $secret = '" + secret + "';" + "\n"
-            logPath = "   public $log_path = '" + finalPath + "administrator/logs';" + "\n"
-            tmpPath = "   public $tmp_path = '" + finalPath + "administrator/tmp';" + "\n"
-            dbprefix = "   public $dbprefix = '" + prefix + "';" + "\n"
-            sitename = "   public $sitename = '" + sitename + "';" + "\n"
-
-            for items in data:
-                if items.find("public $user ") > -1:
-                    writeDataToFile.writelines(defDBUser)
-                elif items.find("public $password ") > -1:
-                    writeDataToFile.writelines(defDBPassword)
-                elif items.find("public $db ") > -1:
-                    writeDataToFile.writelines(defDBName)
-                elif items.find("public $log_path ") > -1:
-                    writeDataToFile.writelines(logPath)
-                elif items.find("public $tmp_path ") > -1:
-                    writeDataToFile.writelines(tmpPath)
-                elif items.find("public $secret ") > -1:
-                    writeDataToFile.writelines(secretKey)
-                elif items.find("public $dbprefix ") > -1:
-                    writeDataToFile.writelines(dbprefix)
-                elif items.find("public $sitename ") > -1:
-                    writeDataToFile.writelines(sitename)
-                elif items.find("/*") > -1:
-                    pass
-                elif items.find(" *") > -1:
-                    pass
-                else:
-                    writeDataToFile.writelines(items)
-
-            writeDataToFile.close()
+            ### Update password as per user requirments
 
             statusFile = open(tempStatusPath, 'w')
-            statusFile.writelines('Creating default user..,70')
+            statusFile.writelines('Updating admin password..,70')
             statusFile.close()
 
-            # Rename SQL db prefix
+            try:
 
-            f1 = open(finalPath + 'installation/sql/mysql/joomla.sql', 'r')
-            f2 = open(finalPath + 'installation/sql/mysql/joomlaInstall.sql', 'w')
-            for line in f1:
-                f2.write(line.replace('#__', prefix))
-            f1.close()
-            f2.close()
+                salt = randomPassword.generate_pass(32)
+                # return salt
+                password_hash = hashlib.md5((password + salt).encode('utf-8')).hexdigest()
+                password = password_hash + ":" + salt
 
-            # Restore SQL
-            proc = subprocess.Popen(["mysql", "--user=%s" % dbUser, "--password=%s" % dbPassword, dbName],
-                                    stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+                import MySQLdb.cursors as cursors
+                import MySQLdb as mysql
 
-            usercreation = """INSERT INTO `%susers`
-            (`name`, `username`, `password`, `params`)
-            VALUES ('Administrator', '%s',
-            '%s', '');
-            INSERT INTO `%suser_usergroup_map` (`user_id`,`group_id`)
-            VALUES (LAST_INSERT_ID(),'8');""" % (prefix, username, password, prefix)
+                conn = mysql.connect(host='localhost', user=dbUser, passwd=dbPassword, port=3306,
+                                     cursorclass=cursors.SSCursor)
+                cursor = conn.cursor()
 
-            out, err = proc.communicate(
-                open(finalPath + 'installation/sql/mysql/joomlaInstall.sql', 'rb').read() + ("\n" + usercreation).encode('utf-8'))
+                cursor.execute("use %s;UPDATE j_users  SET password = '%s' where username = 'admin';FLUSH PRIVILEGES;" % (dbName, password))
 
-            shutil.rmtree(finalPath + "installation")
+                conn.close()
+            except BaseException as msg:
+                logging.writeToFile(str(msg))
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
-                groupName = 'nobody'
-            else:
-                groupName = 'nogroup'
+            try:
+                os.remove('/usr/local/CyberCP/joomla.zip')
+                os.remove('/usr/local/CyberCP/lscache_plugin.zip')
+                os.remove('/usr/local/CyberCP/com_lscache.zip')
+            except:
+                pass
 
-            command = "chown -R " + virtualHostUser + ":" + groupName + " " + finalPath
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines('Installing LiteSpeed Cache Joomla plugin..,80')
+            statusFile.close()
+
+
+            command = 'wget https://raw.githubusercontent.com/litespeedtech/lscache-joomla/master/package/lscache-1.3.1.zip -O /usr/local/CyberCP/joomla.zip'
             ProcessUtilities.executioner(command)
 
-            vhost.addRewriteRules(domainName)
+            command = 'unzip /usr/local/CyberCP/joomla.zip -d /usr/local/CyberCP/'
+            ProcessUtilities.executioner(command)
+
+            command = '/home/%s/.composer/vendor/bin/joomla extension:installfile %s --www %s /usr/local/CyberCP/lscache_plugin.zip' % (self.masterDomain, dbUser, finalPath)
+            ProcessUtilities.executioner(command)
+
+            command = '/home/%s/.composer/vendor/bin/joomla extension:installfile %s --www %s /usr/local/CyberCP/com_lscache.zip' % (self.masterDomain, dbUser, finalPath)
+            ProcessUtilities.executioner(command)
+
+            command = '/home/%s/.composer/vendor/bin/joomla extension:enable %s --www %s lscache' % (self.masterDomain, dbUser, finalPath)
+            ProcessUtilities.executioner(command)
+
+            command = 'mv %s%s/* %s' % (finalPath, dbUser, finalPath)
+            ProcessUtilities.executioner(command)
+
+            command = 'mv %s%s/.[^.]* %s' % (finalPath, dbUser, finalPath)
+            ProcessUtilities.executioner(command)
+
+            command = "sed -i 's|$debug = 1|$debug = 0|g' %sconfiguration.php" % (finalPath)
+            ProcessUtilities.executioner(command)
+
+            ##
+
+            from filemanager.filemanager import FileManager
+
+            fm = FileManager(None, None)
+            fm.fixPermissions(self.masterDomain)
 
             installUtilities.reStartLiteSpeedSocket()
-
-            permPath = '/home/%s/public_html' % (domainName)
-            command = 'chmod 750 %s' % (permPath)
-            ProcessUtilities.executioner(command)
 
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines("Successfully Installed. [200]")
@@ -984,16 +995,10 @@ $parameters = array(
         except BaseException as msg:
             # remove the downloaded files
 
-            homeDir = "/home/" + domainName + "/public_html"
+            from filemanager.filemanager import FileManager
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
-                groupName = 'nobody'
-            else:
-                groupName = 'nogroup'
-
-            if not os.path.exists(homeDir):
-                command = "chown -R " + virtualHostUser + ":" + groupName + " " + homeDir
-                ProcessUtilities.executioner(command)
+            fm = FileManager(None, None)
+            fm.fixPermissions(self.masterDomain)
 
             try:
                 mysqlUtilities.deleteDatabase(dbName, dbUser)

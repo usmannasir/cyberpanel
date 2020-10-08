@@ -2386,10 +2386,6 @@ echo $oConfig->Save() ? 'Done' : 'Error';
         
         command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
         subprocess.call(shlex.split(command))
-
-        command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
-        subprocess.call(shlex.split(command))
-
     except:
         pass
 

@@ -1723,8 +1723,7 @@ app.controller('websitePages', function ($scope, $http, $timeout, $window) {
 
         var domain = $("#domainNamePage").text();
         var path = $scope.installPath;
-        var sitename = $scope.sitename;
-        var username = $scope.username;
+        var username = 'admin';
         var password = $scope.password;
         var prefix = $scope.prefix;
 
@@ -1742,8 +1741,6 @@ app.controller('websitePages', function ($scope, $http, $timeout, $window) {
             domain: domain,
             home: home,
             path: path,
-            sitename: sitename,
-            username: username,
             password: password,
             prefix: prefix,
         };
