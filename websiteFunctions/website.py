@@ -1925,117 +1925,26 @@ class WebsiteManager:
             else:
                 return ACLManager.loadErrorJson('installStatus', 0)
 
-            domainName = data['domain']
-            home = data['home']
+            extraArgs = {}
 
-            sitename = data['sitename']
-            username = data['username']
-            password = data['passwordByPass']
-            prefix = data['prefix']
+            extraArgs['password'] = data['passwordByPass']
+            extraArgs['prefix'] = data['prefix']
+            extraArgs['domain'] = data['domain']
+            extraArgs['home'] = data['home']
+            extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
 
             mailUtilities.checkHome()
 
-            tempStatusPath = "/tmp/" + str(randint(1000, 9999))
+            if data['home'] == '0':
+                extraArgs['path'] = data['path']
 
-            statusFile = open(tempStatusPath, 'w')
-            statusFile.writelines('Setting up paths,0')
-            statusFile.close()
-            os.chmod(tempStatusPath, 0o777)
+            background = ApplicationInstaller('joomla', extraArgs)
+            background.start()
 
-            finalPath = ""
+            time.sleep(2)
 
-            admin = Administrator.objects.get(pk=userID)
-
-            ## DB Creation
-
-            statusFile = open(tempStatusPath, 'w')
-            statusFile.writelines('Creating database..,10')
-            statusFile.close()
-
-            dbName = randomPassword.generate_pass()
-            dbUser = dbName
-            dbPassword = randomPassword.generate_pass()
-
-            if Databases.objects.filter(dbName=dbName).exists() or Databases.objects.filter(
-                    dbUser=dbUser).exists():
-                data_ret = {'status': 0, 'installStatus': 0,
-                            'error_message': "0,This database or user is already taken."}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
-
-            result = mysqlUtilities.createDatabase(dbName, dbUser, dbPassword)
-
-            if result == 1:
-                pass
-            else:
-                data_ret = {'status': 0, 'installStatus': 0,
-                            'error_message': "0,Not able to create database."}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
-
-            ##
-
-            try:
-                website = ChildDomains.objects.get(domain=domainName)
-                externalApp = website.master.externalApp
-
-                if website.master.package.dataBases > website.master.databases_set.all().count():
-                    pass
-                else:
-                    data_ret = {'status': 0, 'installStatus': 0,
-                                'error_message': "0,Maximum database limit reached for this website."}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
-
-                if home == '0':
-                    path = data['path']
-                    finalPath = website.path.rstrip('/') + "/" + path + "/"
-                else:
-                    finalPath = website.path + "/"
-
-                db = Databases(website=website.master, dbName=dbName, dbUser=dbUser)
-                db.save()
-
-            except:
-                website = Websites.objects.get(domain=domainName)
-                externalApp = website.externalApp
-
-                if website.package.dataBases > website.databases_set.all().count():
-                    pass
-                else:
-                    data_ret = {'status': 0, 'installStatus': 0,
-                                'error_message': "0,Maximum database limit reached for this website."}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
-
-                if home == '0':
-                    path = data['path']
-                    finalPath = "/home/" + domainName + "/public_html/" + path + "/"
-                else:
-                    finalPath = "/home/" + domainName + "/public_html/"
-
-                db = Databases(website=website, dbName=dbName, dbUser=dbUser)
-                db.save()
-
-            if finalPath.find("..") > -1:
-                data_ret = {'status': 0, 'installStatus': 0,
-                            'error_message': "Specified path must be inside virtual host home!"}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
-
-            ## Installation
-            salt = randomPassword.generate_pass(32)
-            # return salt
-            password_hash = hashlib.md5((password + salt).encode('utf-8')).hexdigest()
-            password = password_hash + ":" + salt
-
-            statusFile = open(tempStatusPath, 'w')
-            statusFile.writelines('Downloading Joomla Core..,20')
-            statusFile.close()
-
-            virtualHostUtilities.installJoomla(domainName, finalPath, externalApp, dbName, dbUser, dbPassword, username, password, prefix, sitename, tempStatusPath)
-
-            data_ret = {'status': 1, "installStatus": 1, 'tempStatusPath': tempStatusPath}
+            data_ret = {'status': 1, 'installStatus': 1, 'error_message': 'None',
+                        'tempStatusPath': extraArgs['tempStatusPath']}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
