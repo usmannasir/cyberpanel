@@ -984,7 +984,7 @@ $parameters = array(
             fm = FileManager(None, None)
             fm.fixPermissions(self.masterDomain)
 
-            command = "sed -i 's|$sitename = '%s'|$sitename = '%s'|g' %sconfiguration.php" % (
+            command = "sed -i \"s|sitename = '%s'|sitename = '%s'|g\" %sconfiguration.php" % (
             dbUser, siteName, finalPath)
             ProcessUtilities.executioner(command, externalApp)
 
