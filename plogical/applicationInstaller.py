@@ -834,8 +834,6 @@ $parameters = array(
             tempStatusPath = self.extraArgs['tempStatusPath']
             self.tempStatusPath = tempStatusPath
 
-            FNULL = open(os.devnull, 'w')
-
             permPath = '/home/%s/public_html' % (domainName)
             command = 'chmod 755 %s' % (permPath)
             ProcessUtilities.executioner(command)
