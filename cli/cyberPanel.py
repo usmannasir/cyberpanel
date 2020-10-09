@@ -1471,6 +1471,51 @@ def main():
 
         print(response.content.decode())
 
+    ### Application installers
+
+    elif args.function == "installWordPress":
+        completeCommandExample = 'cyberpanel installWordPress --domainName cyberpanel.net --email support@cyberpanel.net --userName cyberpanel --password helloworld --siteTitle "WordPress Site" --path helloworld (this is optional)'
+
+        if not args.domainName:
+            print("\n\nPlease enter Domain name. For example:\n\n" + completeCommandExample + "\n\n")
+            return
+
+        if not args.email:
+            print("\n\nPlease enter email. For example:\n\n" + completeCommandExample + "\n\n")
+            return
+
+        if not args.userName:
+            print("\n\nPlease enter User name. For example:\n\n" + completeCommandExample + "\n\n")
+            return
+
+        if not args.password:
+            print("\n\nPlease enter password. For example:\n\n" + completeCommandExample + "\n\n")
+            return
+
+        if not args.siteTitle:
+            print("\n\nPlease enter site title. For example:\n\n" + completeCommandExample + "\n\n")
+            return
+
+        if not args.path:
+            home = '1'
+            path = ''
+        else:
+            home = '0'
+            path = args.path
+
+        from websiteFunctions.website import WebsiteManager
+
+        data = {}
+        data['adminUser'] = args.userName
+        data['blogTitle'] = args.siteTitle
+        data['domain'] = args.domainName
+        data['adminEmail'] = args.email
+        data['passwordByPass'] = args.password
+        data['home'] = home
+        data['path'] = path
+
+        wm = WebsiteManager()
+        wm.installWordpress(1, data)
 
 
 

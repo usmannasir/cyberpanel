@@ -63,4 +63,10 @@ class cliParser:
         parser.add_argument('--securityLevel', help='Set security level while creating user.')
         parser.add_argument('--state', help='State value used in user suspension.')
 
+
+        ### WP Install
+
+        parser.add_argument('--siteTitle', help='Site Title for application installers.')
+        parser.add_argument('--path', help='Path for application installers.')
+
         return parser.parse_args()
