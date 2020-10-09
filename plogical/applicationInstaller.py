@@ -944,7 +944,8 @@ $parameters = array(
             try:
                 os.remove('/usr/local/CyberCP/joomla.zip')
                 os.remove('/usr/local/CyberCP/lscache_plugin.zip')
-                os.remove('/usr/local/CyberCP/com_lscache.zip')
+                os.remove('/usr/local/CyberCP/pkg_lscache.xml')
+                os.remove('/usr/local/CyberCP/pkg_script.php')
             except:
                 pass
 
@@ -956,7 +957,7 @@ $parameters = array(
             command = 'wget https://raw.githubusercontent.com/litespeedtech/lscache-joomla/master/package/lscache-1.3.1.zip -O /usr/local/CyberCP/joomla.zip'
             ProcessUtilities.executioner(command)
 
-            command = 'unzip /usr/local/CyberCP/joomla.zip -d /usr/local/CyberCP/'
+            command = 'unzip -o /usr/local/CyberCP/joomla.zip -d /usr/local/CyberCP/'
             ProcessUtilities.executioner(command)
 
             command = '/home/%s/.composer/vendor/bin/joomla extension:installfile %s --www %s /usr/local/CyberCP/lscache_plugin.zip' % (self.masterDomain, dbUser, finalPath)
@@ -969,13 +970,13 @@ $parameters = array(
             ProcessUtilities.executioner(command)
 
             command = 'mv %s%s/* %s' % (finalPath, dbUser, finalPath)
-            ProcessUtilities.executioner(command)
+            ProcessUtilities.executioner(command, None, True)
 
             command = 'mv %s%s/.[^.]* %s' % (finalPath, dbUser, finalPath)
-            ProcessUtilities.executioner(command)
+            ProcessUtilities.executioner(command, None, True)
 
             command = "sed -i 's|$debug = 1|$debug = 0|g' %sconfiguration.php" % (finalPath)
-            ProcessUtilities.executioner(command)
+            ProcessUtilities.executioner(command, None, True)
 
             ##
 
@@ -986,9 +987,19 @@ $parameters = array(
 
             command = "sed -i \"s|sitename = '%s'|sitename = '%s'|g\" %sconfiguration.php" % (
             dbUser, siteName, finalPath)
-            ProcessUtilities.executioner(command, externalApp)
+            ProcessUtilities.executioner(command, externalApp, True)
 
             installUtilities.reStartLiteSpeedSocket()
+
+            content = """
+            =====================================================================
+                    Joomla Successfully installed, login details below:
+                                Username: admin
+                                Password: %s
+            =====================================================================
+            """ % (self.extraArgs['password'])
+
+            print(content)
 
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines("Successfully Installed. [200]")

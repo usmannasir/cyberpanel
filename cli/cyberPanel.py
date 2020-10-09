@@ -1517,6 +1517,42 @@ def main():
         wm = WebsiteManager()
         wm.installWordpress(1, data)
 
+    elif args.function == "installJoomla":
+
+        completeCommandExample = 'cyberpanel installJoomla --domainName cyberpanel.net --password helloworld --siteTitle "WordPress Site" --path helloworld (this is optional)'
+
+        if not args.domainName:
+            print("\n\nPlease enter Domain name. For example:\n\n" + completeCommandExample + "\n\n")
+            return
+
+        if not args.password:
+            print("\n\nPlease enter password. For example:\n\n" + completeCommandExample + "\n\n")
+            return
+
+        if not args.siteTitle:
+            print("\n\nPlease enter site title. For example:\n\n" + completeCommandExample + "\n\n")
+            return
+
+        if not args.path:
+            home = '1'
+            path = ''
+        else:
+            home = '0'
+            path = args.path
+
+        from websiteFunctions.website import WebsiteManager
+
+        data = {}
+        data['prefix'] = 'jm_'
+        data['siteName'] = args.siteTitle
+        data['domain'] = args.domainName
+        data['passwordByPass'] = args.password
+        data['home'] = home
+        data['path'] = path
+
+        wm = WebsiteManager()
+        wm.installJoomla(1, data)
+
 
 
 if __name__ == "__main__":
