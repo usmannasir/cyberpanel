@@ -261,6 +261,24 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             command = 'cp /usr/local/CyberCP/plogical/phpmyadminsignin.php /usr/local/CyberCP/public/phpmyadmin/phpmyadminsignin.php'
             Upgrade.executioner(command, 0)
 
+            passFile = "/etc/cyberpanel/mysqlPassword"
+
+            try:
+                import json
+                jsonData = json.loads(open(passFile, 'r').read())
+
+                mysqluser = jsonData['mysqluser']
+                mysqlpassword = jsonData['mysqlpassword']
+                mysqlport = jsonData['mysqlport']
+                mysqlhost = jsonData['mysqlhost']
+
+                command = "sed -i 's|localhost|%s|g' /usr/local/CyberCP/public/phpmyadmin/phpmyadminsignin.php" % (
+                    mysqlhost)
+                Upgrade.executioner(command, 0)
+
+            except:
+                pass
+
             os.chdir(cwd)
 
         except BaseException as msg:
