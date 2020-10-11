@@ -1550,135 +1550,129 @@ argument_mode() {
   fi
 }
 
-##START
-
-if [ $# -eq 0 ]; then
-  echo -e "\nInitializing...\n"
-else
-  if [[ $1 == "help" ]]; then
-    show_help
-    exit
-  elif [[ $1 == "dev" ]]; then
-    DEV="ON"
-    DEV_ARG="ON"
-    SILENT="OFF"
-  elif [[ $1 == "default" ]]; then
-    echo -e "\nThis will start default installation...\n"
-    SILENT="ON"
-    POSTFIX_VARIABLE="ON"
-    POWERDNS_VARIABLE="ON"
-    PUREFTPD_VARIABLE="ON"
-    VERSION="OLS"
-    ADMIN_PASS="1234567"
-    MEMCACHED="ON"
-    REDIS="ON"
+initialize() {
+  if [ $# -eq 0 ]; then
+    echo -e "\nInitializing...\n"
   else
-    while [ ! -z "${1}" ]; do
-      case $1 in
-      -v | --version)
-        shift
-        if [ "${1}" = '' ]; then
+    if [[ $1 == "help" ]]; then
+      show_help
+      exit
+    elif [[ $1 == "dev" ]]; then
+      DEV="ON"
+      DEV_ARG="ON"
+      SILENT="OFF"
+    elif [[ $1 == "default" ]]; then
+      echo -e "\nThis will start default installation...\n"
+      SILENT="ON"
+      POSTFIX_VARIABLE="ON"
+      POWERDNS_VARIABLE="ON"
+      PUREFTPD_VARIABLE="ON"
+      VERSION="OLS"
+      ADMIN_PASS="1234567"
+      MEMCACHED="ON"
+      REDIS="ON"
+    else
+      while [ ! -z "${1}" ]; do
+        case $1 in
+        -v | --version)
+          shift
+          if [ "${1}" = '' ]; then
+            show_help
+            exit
+          else
+            VERSION="${1}"
+            SILENT="ON"
+          fi
+          ;;
+        -p | --password)
+          shift
+          if [[ ${1} == '' ]]; then
+            ADMIN_PASS="1234567"
+          elif [[ ${1} == 'r' ]] || [[ $1 == 'random' ]]; then
+            ADMIN_PASS=$(
+              head /dev/urandom | tr -dc A-Za-z0-9 | head -c 16
+              echo ''
+            )
+          elif [[ ${1} == "d" ]]; then
+            ADMIN_PASS="1234567"
+          else
+            if [ ${#1} -lt 8 ]; then
+              echo -e "\nPassword lenth less than 8 digital, please choose a more complicated password.\n"
+              exit
+            fi
+            ADMIN_PASS="${1}"
+          fi
+          ;;
+        -a | --addons)
+          MEMCACHED="ON"
+          REDIS="ON"
+          ;;
+        -m | --minimal)
+          POSTFIX_VARIABLE="OFF"
+          POWERDNS_VARIABLE="OFF"
+          PUREFTPD_VARIABLE="OFF"
+          ;;
+        -h | --help)
           show_help
           exit
-        else
-          VERSION="${1}"
-          SILENT="ON"
-        fi
-        ;;
-      -p | --password)
+          ;;
+        *)
+          echo "unknown argument..."
+          show_help
+          exit
+          ;;
+        esac
         shift
-        if [[ ${1} == '' ]]; then
-          ADMIN_PASS="1234567"
-        elif [[ ${1} == 'r' ]] || [[ $1 == 'random' ]]; then
-          ADMIN_PASS=$(
-            head /dev/urandom | tr -dc A-Za-z0-9 | head -c 16
-            echo ''
-          )
-        elif [[ ${1} == "d" ]]; then
-          ADMIN_PASS="1234567"
-        else
-          if [ ${#1} -lt 8 ]; then
-            echo -e "\nPassword lenth less than 8 digital, please choose a more complicated password.\n"
-            exit
-          fi
-          ADMIN_PASS="${1}"
-        fi
-        ;;
-      -a | --addons)
-        MEMCACHED="ON"
-        REDIS="ON"
-        ;;
-      -m | --minimal)
-        POSTFIX_VARIABLE="OFF"
-        POWERDNS_VARIABLE="OFF"
-        PUREFTPD_VARIABLE="OFF"
-        ;;
-      -h | --help)
-        show_help
-        exit
-        ;;
-      *)
-        echo "unknown argument..."
-        show_help
-        exit
-        ;;
-      esac
-      shift
-    done
+      done
+    fi
   fi
-fi
 
-SERVER_IP=$(curl --silent --max-time 10 -4 https://cyberpanel.sh/?ip)
-if [[ $SERVER_IP =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-  echo -e "Valid IP detected..."
-else
-  echo -e "Can not detect IP, exit..."
-  exit
-fi
-SERVER_COUNTRY="unknow"
-SERVER_COUNTRY=$(curl --silent --max-time 5 https://cyberpanel.sh/?country)
-if [[ ${#SERVER_COUNTRY} == "2" ]] || [[ ${#SERVER_COUNTRY} == "6" ]]; then
-  echo -e "\nChecking server..."
-else
-  echo -e "\nChecking server..."
+  SERVER_IP=$(curl --silent --max-time 10 -4 https://cyberpanel.sh/?ip)
+  if [[ $SERVER_IP =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    echo -e "Valid IP detected..."
+  else
+    echo -e "Can not detect IP, exit..."
+    exit
+  fi
   SERVER_COUNTRY="unknow"
-fi
-#SERVER_COUNTRY="CN"
-#test string
-if [[ $SERVER_COUNTRY == "CN" ]]; then
-  DOWNLOAD_SERVER="cyberpanel.sh"
-  GIT_URL="gitee.com/qtwrk/cyberpanel"
-  GIT_CONTENT_URL="gitee.com/qtwrk/cyberpanel/raw"
-else
-  DOWNLOAD_SERVER="cdn.cyberpanel.sh"
-fi
+  SERVER_COUNTRY=$(curl --silent --max-time 5 https://cyberpanel.sh/?country)
+  if [[ ${#SERVER_COUNTRY} == "2" ]] || [[ ${#SERVER_COUNTRY} == "6" ]]; then
+    echo -e "\nChecking server..."
+  else
+    echo -e "\nChecking server..."
+    SERVER_COUNTRY="unknow"
+  fi
+  #SERVER_COUNTRY="CN"
+  #test string
+  if [[ $SERVER_COUNTRY == "CN" ]]; then
+    DOWNLOAD_SERVER="cyberpanel.sh"
+    GIT_URL="gitee.com/qtwrk/cyberpanel"
+    GIT_CONTENT_URL="gitee.com/qtwrk/cyberpanel/raw"
+  else
+    DOWNLOAD_SERVER="cdn.cyberpanel.sh"
+  fi
+}
 
-##END
+begin_install() {
+  initialize "$@"
+  check_OS
+  check_virtualization
+  check_root
+  check_panel
+  check_process
+  check_provider
+  if [[ $SILENT == "ON" ]]; then
+    argument_mode
+  else
+    interactive_mode
+  fi
+  SECONDS=0
+  install_required
+  openvz_change
+  pip_virtualenv
+  system_tweak
+  main_install
+  disable_repos
+}
 
-check_OS
-check_virtualization
-check_root
-check_panel
-check_process
-check_provider
-
-if [[ $SILENT == "ON" ]]; then
-  argument_mode
-else
-  interactive_mode
-fi
-
-SECONDS=0
-install_required
-
-openvz_change
-
-pip_virtualenv
-
-system_tweak
-
-main_install
-
-### Disable Centos Default Repos
-
-disable_repos
+begin_install "$@"
