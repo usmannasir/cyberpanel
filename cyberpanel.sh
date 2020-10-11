@@ -1378,7 +1378,7 @@ if [[ $VERSION = "ENT" ]] ; then
 	fi
 fi
 
-systemctl status lsws 2>&1>/dev/null
+systemctl status lsws > /dev/null 2>&1
 if [[ $? == "0" ]] ; then
 	echo "LSWS service is running..."
 else
