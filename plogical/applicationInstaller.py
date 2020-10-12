@@ -902,13 +902,21 @@ $parameters = array(
             command = 'composer global require joomlatools/console'
             ProcessUtilities.outputExecutioner(command, externalApp, None, self.permPath)
 
+            ### Decide joomla console path
+            import getpass
+
+            if getpass.getuser() == 'root':
+                joomlaPath = '/root/.config/composer/vendor/bin/joomla'
+            else:
+                joomlaPath = '/home/%s/.composer/vendor/bin/joomla' % (self.masterDomain)
+
             ## Run the install command
 
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines('Installing Joomla..,40')
             statusFile.close()
 
-            command = '/home/%s/.composer/vendor/bin/joomla site:create %s --mysql-login %s:%s --mysql-database %s --mysql_db_prefix=%s --www %s --sample-data=blog --skip-create-statement' % (self.masterDomain, dbUser, dbUser, dbPassword, dbName, prefix , finalPath)
+            command = '%s site:create %s --mysql-login %s:%s --mysql-database %s --mysql_db_prefix=%s --www %s --sample-data=blog --skip-create-statement' % (joomlaPath, dbUser, dbUser, dbPassword, dbName, prefix , finalPath)
 
             result = ProcessUtilities.outputExecutioner(command, externalApp)
 
@@ -960,13 +968,13 @@ $parameters = array(
             command = 'unzip -o /usr/local/CyberCP/joomla.zip -d /usr/local/CyberCP/'
             ProcessUtilities.executioner(command)
 
-            command = '/home/%s/.composer/vendor/bin/joomla extension:installfile %s --www %s /usr/local/CyberCP/lscache_plugin.zip' % (self.masterDomain, dbUser, finalPath)
+            command = '%s extension:installfile %s --www %s /usr/local/CyberCP/lscache_plugin.zip' % (joomlaPath, dbUser, finalPath)
             ProcessUtilities.executioner(command)
 
-            command = '/home/%s/.composer/vendor/bin/joomla extension:installfile %s --www %s /usr/local/CyberCP/com_lscache.zip' % (self.masterDomain, dbUser, finalPath)
+            command = '%s extension:installfile %s --www %s /usr/local/CyberCP/com_lscache.zip' % (joomlaPath, dbUser, finalPath)
             ProcessUtilities.executioner(command)
 
-            command = '/home/%s/.composer/vendor/bin/joomla extension:enable %s --www %s lscache' % (self.masterDomain, dbUser, finalPath)
+            command = '%s extension:enable %s --www %s lscache' % (joomlaPath, dbUser, finalPath)
             ProcessUtilities.executioner(command)
 
             command = 'mv %s%s/* %s' % (finalPath, dbUser, finalPath)
