@@ -163,14 +163,32 @@ def generateAccess(request):
         admin = Administrator.objects.get(id = userID)
         currentACL = ACLManager.loadedACL(userID)
 
+        ## if user ACL is admin login as root
+
+        command = 'chmod 640 /usr/local/lscp/cyberpanel/logs/access.log'
+        ProcessUtilities.executioner(command)
+
+        if currentACL['admin'] == 1:
+
+            try:
+                GlobalUserDB.objects.get(username=admin.userName).delete()
+            except:
+                pass
+
+            password = randomPassword.generate_pass()
+            token = randomPassword.generate_pass()
+            GlobalUserDB(username=admin.userName, password=password,token=token).save()
+
+            data_ret = {'status': 1, 'token': token, 'username': admin.userName}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
         keySavePath = '/home/cyberpanel/phpmyadmin_%s' % (admin.userName)
         try:
             GlobalUserDB.objects.get(username=admin.userName).delete()
         except:
             pass
-
-        command = 'chmod 640 /usr/local/lscp/cyberpanel/logs/access.log'
-        ProcessUtilities.executioner(command)
 
         command = 'rm -f %s' % (keySavePath)
         ProcessUtilities.executioner(command)
@@ -235,6 +253,31 @@ def fetchDetailsPHPMYAdmin(request):
         gdb = GlobalUserDB.objects.get(username=admin.userName)
 
         if gdb.token == token:
+
+            if currentACL['admin'] == 1:
+                passFile = "/etc/cyberpanel/mysqlPassword"
+
+                try:
+                    jsonData = json.loads(open(passFile, 'r').read())
+
+                    mysqluser = jsonData['mysqluser']
+                    password = jsonData['mysqlpassword']
+
+                    returnURL = '/phpmyadmin/phpmyadminsignin.php?username=%s&password=%s' % (
+                    mysqluser, password)
+                    return redirect(returnURL)
+
+                except BaseException:
+
+                    f = open(passFile)
+                    data = f.read()
+                    password = data.split('\n', 1)[0]
+                    password = password.strip('\n').strip('\r')
+
+                    returnURL = '/phpmyadmin/phpmyadminsignin.php?username=%s&password=%s' % (
+                        'root', password)
+                    return redirect(returnURL)
+
             keySavePath = '/home/cyberpanel/phpmyadmin_%s' % (admin.userName)
             key = ProcessUtilities.outputExecutioner('cat %s' % (keySavePath)).strip('\n').encode()
             f = Fernet(key)
