@@ -39,8 +39,8 @@ class cyberPanel:
 
     def createWebsite(self, package, owner, domainName, email, php, ssl, dkim, openBasedir):
         try:
-
-            externalApp = "".join(re.findall("[a-zA-Z]+", domainName))[:7]
+            from random import randint
+            externalApp = "".join(re.findall("[a-zA-Z]+", domainName))[:5] + str(randint(1000, 9999))
             phpSelection = 'PHP ' + php
 
             result = virtualHostUtilities.createVirtualHost(domainName, email, phpSelection, externalApp, ssl, dkim,
