@@ -237,19 +237,33 @@ def servicesStatus(request):
         dockerStatus.append(getServiceStats('docker'))
 
         # mysql status
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        result = s.connect_ex(('127.0.0.1', 3306))
 
-        if result == 0:
-            sqlStatus.append(1)
-        else:
-            sqlStatus.append(0)
-        s.close()
+        if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
 
-        if getServiceStats('mysql'):
-            sqlStatus.append(getMemStats('mysql'))
+            mysqlResult = ProcessUtilities.outputExecutioner('systemctl status mysql')
+
+            if mysqlResult.find('active (running)') > -1:
+                sqlStatus.append(1)
+                sqlStatus.append(getMemStats('mariadbd'))
+            else:
+                sqlStatus.append(0)
+                sqlStatus.append(0)
+
+
         else:
-            sqlStatus.append(0)
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            result = s.connect_ex(('127.0.0.1', 3306))
+
+            if result == 0:
+                sqlStatus.append(1)
+            else:
+                sqlStatus.append(0)
+            s.close()
+
+            if getServiceStats('mysql'):
+                sqlStatus.append(getMemStats('mysql'))
+            else:
+                sqlStatus.append(0)
 
         dnsStatus.append(getServiceStats('pdns'))
         if getServiceStats('pdns'):
