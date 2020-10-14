@@ -1978,16 +1978,10 @@ echo $oConfig->Save() ? 'Done' : 'Error';
 
                 ### Restore dovecot/postfix conf
 
-                command = 'rm -rf %s' % (dovecotConfPath)
+                command = 'cp -pR %s/dovecot/ /etc/' % (configbackups)
                 Upgrade.executioner(command, 0)
 
-                command = 'rm -rf %s' % (postfixConfPath)
-                Upgrade.executioner(command, 0)
-
-                command = 'mv %s/dovecot /etc/' % (configbackups)
-                Upgrade.executioner(command, 0)
-
-                command = 'mv %s/postfix /etc/' % (configbackups)
+                command = 'cp -pR %s/postfix/ /etc/' % (configbackups)
                 Upgrade.executioner(command, 0)
 
                 ## Restored
@@ -2033,16 +2027,10 @@ echo $oConfig->Save() ? 'Done' : 'Error';
 
                     ### Restore dovecot/postfix conf
 
-                    command = 'rm -rf %s' % (dovecotConfPath)
+                    command = 'cp -pR %s/dovecot/ /etc/' % (configbackups)
                     Upgrade.executioner(command, 0)
 
-                    command = 'rm -rf %s' % (postfixConfPath)
-                    Upgrade.executioner(command, 0)
-
-                    command = 'mv %s/dovecot /etc/' % (configbackups)
-                    Upgrade.executioner(command, 0)
-
-                    command = 'mv %s/postfix /etc/' % (configbackups)
+                    command = 'cp -pR %s/postfix/ /etc/' % (configbackups)
                     Upgrade.executioner(command, 0)
 
                     ## Restored
