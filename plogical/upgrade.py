@@ -2097,6 +2097,9 @@ echo $oConfig->Save() ? 'Done' : 'Error';
                 command = 'systemctl restart dovecot'
                 Upgrade.executioner(command, command, 0)
 
+                command = 'rm -rf %s' % (configbackups)
+                Upgrade.executioner(command, command, 0)
+
             Upgrade.stdOut("Dovecot upgraded.")
 
         except BaseException as msg:
