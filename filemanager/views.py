@@ -165,3 +165,41 @@ def upload(request):
 
     except KeyError:
         return redirect(loadLoginPage)
+
+def editFile(request):
+    try:
+        userID = request.session['userID']
+        admin = Administrator.objects.get(pk=userID)
+        from urllib.parse import quote
+        from django.utils.encoding import iri_to_uri
+
+        domainName = request.GET.get('domainName')
+        fileName = request.GET.get('fileName')
+
+        currentACL = ACLManager.loadedACL(userID)
+
+        if ACLManager.checkOwnership(domainName, admin, currentACL) == 1:
+            pass
+        else:
+            return ACLManager.loadError()
+
+        domainName = domainName
+        website = Websites.objects.get(domain=domainName)
+
+        pathCheck = '/home/%s' % (domainName)
+
+        fm = FM(request, {})
+
+        if fileName.find(pathCheck) == -1 or fileName.find('..') > -1:
+            return fm.ajaxPre(0, 'Not allowed.')
+
+        command = 'cat ' + fm.returnPathEnclosed(fileName)
+        content = ProcessUtilities.outputExecutioner(command, website.externalApp)
+
+        if ACLManager.checkOwnership(domainName, admin, currentACL) == 1:
+            return render(request, 'filemanager/editFile.html', {'domainName': domainName, 'fileName': fileName, 'content': content})
+        else:
+            return ACLManager.loadError()
+
+    except KeyError:
+        return redirect(loadLoginPage)

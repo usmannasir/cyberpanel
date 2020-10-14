@@ -1,0 +1,106 @@
+{% load i18n %}
+<!doctype html>
+<html lang="en">
+<head>
+    <title>{% trans "Editing File - CyberPanel" %}</title>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    {% load static %}
+
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+    <link rel="stylesheet" href="{% static 'filemanager/images/fonts/css/font-awesome.min.css' %}">
+    <link rel="stylesheet" href="{% static 'filemanager/css/fileManager.css' %}">
+
+
+    <!-- Angular JS -->
+
+    <script src = "https://code.angularjs.org/1.6.5/angular.min.js"></script>
+    <script src="{% static 'filemanager/js/fileManager.js' %}"></script>
+
+    <!-- Fix for old browsers -->
+    <script src="{% static 'filemanager/js/es5-shim.min.js' %}"></script>
+    <script src="{% static 'filemanager/js/es5-sham.min.js' %}"></script>
+    <script src="{% static 'filemanager/js/jquery-1.8.3.min.js' %}"></script>
+    <script src="{% static 'filemanager/js/console-sham.js' %}"></script>
+
+
+
+    <!-- HTML Editor Include -->
+
+</head>
+<body ng-app="fileManager" ng-controller="fileManagerCtrl">
+
+<!--- navigation bar ---->
+
+<nav id="navBar" class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="header-logo">
+        <a href="#"><img src="{% static 'filemanager/images/fileManager.png' %}"> <span style="display: none" id="domainNameInitial">{{ domainName }}</span></a>
+    </div>
+    <!--- second bar ---->
+
+    <div class="">
+        <div class="flex-wrap">
+            <!--div class="text-white h4 mt-5 mx-10">
+                 {% trans " File Manager" %}
+            </div-->
+            <ul class="nav mr-10">
+                <li id="editFile" class="nav-item" >
+                    <a onclick="return false;" ng-click="showHTMLEditorModal()"  class="nav-link point-events" href="#"><i class="fa fa-pencil-square-o" aria-hidden="true"></i>  {{ fileName }}</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!--- second bar ends ---->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav mr-auto">
+
+        </ul>
+    </div>
+</nav>
+
+<!--- navigation bar ends ---->
+
+
+
+<!--- File Manager body ---->
+
+<div class="row">
+
+    <div class="col-sm-12">
+        <div class="mb-3 mt-30 mx-10" style="min-height: 30rem;">
+            <div class="">
+                {{ content }}
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!--- File Manager body ends ---->
+
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
+
+
+<script src="https://cdn.jsdelivr.net/npm/alertifyjs@1.11.0/build/alertify.min.js"></script>
+
+<!-- CSS -->
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.11.0/build/css/alertify.min.css"/>
+<!-- Default theme -->
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.11.0/build/css/themes/default.min.css"/>
+<!-- Semantic UI theme -->
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.11.0/build/css/themes/semantic.min.css"/>
+<!-- Bootstrap theme -->
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.11.0/build/css/themes/bootstrap.min.css"/>
+
+</body>
+</html>
