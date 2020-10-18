@@ -176,6 +176,13 @@ def editFile(request):
         domainName = request.GET.get('domainName')
         fileName = request.GET.get('fileName')
 
+        try:
+            theme = request.GET.get('theme')
+            if theme == None:
+                theme = 'cobalt'
+        except:
+            theme = 'cobalt'
+
         currentACL = ACLManager.loadedACL(userID)
 
         if ACLManager.checkOwnership(domainName, admin, currentACL) == 1:
@@ -185,9 +192,12 @@ def editFile(request):
 
         mode = FM.findMode(fileName)
         modeFiles = FM.findModeFiles(mode)
+        themeFile = FM.findThemeFile(theme)
 
         if ACLManager.checkOwnership(domainName, admin, currentACL) == 1:
-            return render(request, 'filemanager/editFile.html', {'domainName': domainName, 'fileName': fileName, 'mode': mode, 'modeFiles': modeFiles})
+            return render(request, 'filemanager/editFile.html', {'domainName': domainName, 'fileName': fileName,
+                                                                 'mode': mode, 'modeFiles': modeFiles, 'theme': theme,
+                                                                 'themeFile': themeFile})
         else:
             return ACLManager.loadError()
 

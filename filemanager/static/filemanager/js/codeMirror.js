@@ -66,11 +66,12 @@ fileManager.controller('editFileCtrl', function ($scope, $http, $window) {
                 var cm = new CodeMirror.fromTextArea(document.getElementById("fileContent"), {
                     lineNumbers: true,
                     mode: $("#mode").text(),
-                    theme: "dracula",
-                    lineWrapping: false
+                    lineWrapping: false,
+                    theme: $("#theme").text()
                 });
 
                 cm.setValue(response.data.fileContents);
+                cm.setSize(null, 800);
                 cm.on("keyup", function (cm, event) {
                     if (!cm.state.completionActive &&
                         event.keyCode != 13) {
@@ -90,6 +91,10 @@ fileManager.controller('editFileCtrl', function ($scope, $http, $window) {
 
     };
     $scope.getFileContents();
+
+    $scope.changeTheme = function () {
+        $window.location.href = window.location.href + '&theme=' + $scope.theme;
+    };
 
     $scope.putFileContents = function () {
 

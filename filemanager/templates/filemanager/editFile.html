@@ -34,34 +34,15 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.1/codemirror.min.css"
           integrity="sha512-xIf9AdJauwKIVtrVRZ0i4nHP61Ogx9fSRAkCLecmE2dL/U8ioWpDvFCAy4dcfecN72HHB9+7FfQj3aiO68aaaw=="
           crossorigin="anonymous"/>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.1/theme/dracula.min.css"
-          integrity="sha512-gFMl3u9d0xt3WR8ZeW05MWm3yZ+ZfgsBVXLSOiFz2xeVrZ8Neg0+V1kkRIo9LikyA/T9HuS91kDfc2XWse0K0A=="
-          crossorigin="anonymous"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.1/addon/hint/show-hint.min.js"
+            integrity="sha512-ge9uKCpgPmuJY2e2zPXhpYCZfyb1/R7KOOfMZ3SzSX3ZayWpINs3sHnI8LGEHUf6UOFX/D03FVHgR36uRL8/Vw=="
+            crossorigin="anonymous"></script>
+    {{ themeFile | safe }}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.1/addon/hint/show-hint.min.css"
           integrity="sha512-OmcLQEy8iGiD7PSm85s06dnR7G7C9C0VqahIPAj/KHk5RpOCmnC6R2ob1oK4/uwYhWa9BF1GC6tzxsC8TIx7Jg=="
           crossorigin="anonymous"/>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.1/addon/hint/show-hint.min.js"
-            integrity="sha512-ge9uKCpgPmuJY2e2zPXhpYCZfyb1/R7KOOfMZ3SzSX3ZayWpINs3sHnI8LGEHUf6UOFX/D03FVHgR36uRL8/Vw=="
-            crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.1/mode/javascript/javascript.min.js"
-            integrity="sha512-e3U/84Fo+2ZAnRhLkjStm2hYnkmZ/NRmeesZ/GHjDhcLh35eYTQxsfSeDppx6Se5aX0N6mrygH7tr4wugWsPeQ=="
-            crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.1/addon/hint/javascript-hint.min.js"
-            integrity="sha512-PPI9W6pViVZfJ5uvmYZsHbPwf7T+voS0OpohIrN8Q4CRCCa6JK39JJ0R16HHmyV7EQR8MTa+O56CpWjfKOxl0A=="
-            crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.1/mode/css/css.min.js"
-            integrity="sha512-DG+5u//fVN9kpDgTGe78IJhJW8e5+tlrPaMgNqcrzyPXsn+GPaF2T62+X3ds7SuhFR9Qeb7XZ6kMD8X09FeJhA=="
-            crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.1/mode/xml/xml.min.js"
-            integrity="sha512-k1HnoY9EXahEfPz7kq/lD9DltloKH9OrB9XNKYoUQrNz9epe5F4mQP5PfuIfeRfoXHkNrE0gF3Mx4LhC5BVl9Q=="
-            crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.1/mode/htmlmixed/htmlmixed.min.js"
-            integrity="sha512-p15qsXPrhaUkH+/RPE6QzCmxUAPkCRw89ityx+tWC1lAYI6Et2L0UpN+iqifxUdt+ss1FQ+9CuzxpBeT9mR3/w=="
-            crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.1/mode/php/php.min.js"
-            integrity="sha512-m8sosGXUwyH6Ppzoy+CoQ/r5zAwZRGdNFUgGH81E3RDQkFnAsE4cP1I3tokvZwgMsDZB5mHxs+7egAgvhaCcMw=="
-            crossorigin="anonymous"></script>
+    {{ modeFiles | safe }}
 
     <script src="{% static 'filemanager/js/codeMirror.js' %}"></script>
 
@@ -89,7 +70,9 @@
                     <a onclick="return false;" ng-click="showHTMLEditorModal()" class="nav-link point-events"
                        href="#"><i class="fa fa-pencil-square-o" aria-hidden="true"></i> <span
                             id="completeFilePath">{{ fileName }}</span> <span id="mode"
-                                                                              style="display: none">{{ mode }}</span></a>
+                                                                              style="display: none">{{ mode }}</span>
+                        <span id="theme" style="display: none">{{ theme }}</span>
+                    </a>
                 </li>
             </ul>
         </div>
@@ -98,6 +81,70 @@
     <!--- second bar ends ---->
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <ul class="navbar-nav mr-auto">
+            <select ng-model="theme" ng-change="changeTheme()" id="select">
+                <option>3024-day</option>
+                <option>3024-night</option>
+                <option>abcdef</option>
+                <option>ambiance</option>
+                <option>ayu-dark</option>
+                <option>ayu-mirage</option>
+                <option>base16-dark</option>
+                <option>base16-light</option>
+                <option>bespin</option>
+                <option>blackboard</option>
+                <option selected="">cobalt</option>
+                <option>colorforth</option>
+                <option>darcula</option>
+                <option>dracula</option>
+                <option>duotone-dark</option>
+                <option>duotone-light</option>
+                <option>eclipse</option>
+                <option>elegant</option>
+                <option>erlang-dark</option>
+                <option>gruvbox-dark</option>
+                <option>hopscotch</option>
+                <option>icecoder</option>
+                <option>idea</option>
+                <option>isotope</option>
+                <option>lesser-dark</option>
+                <option>liquibyte</option>
+                <option>lucario</option>
+                <option>material</option>
+                <option>material-darker</option>
+                <option>material-palenight</option>
+                <option>material-ocean</option>
+                <option>mbo</option>
+                <option>mdn-like</option>
+                <option>midnight</option>
+                <option>monokai</option>
+                <option>moxer</option>
+                <option>neat</option>
+                <option>neo</option>
+                <option>night</option>
+                <option>nord</option>
+                <option>oceanic-next</option>
+                <option>panda-syntax</option>
+                <option>paraiso-dark</option>
+                <option>paraiso-light</option>
+                <option>pastel-on-dark</option>
+                <option>railscasts</option>
+                <option>rubyblue</option>
+                <option>seti</option>
+                <option>shadowfox</option>
+                <option>solarized dark</option>
+                <option>solarized light</option>
+                <option>the-matrix</option>
+                <option>tomorrow-night-bright</option>
+                <option>tomorrow-night-eighties</option>
+                <option>ttcn</option>
+                <option>twilight</option>
+                <option>vibrant-ink</option>
+                <option>xq-dark</option>
+                <option>xq-light</option>
+                <option>yeti</option>
+                <option>yonce</option>
+                <option>zenburn</option>
+            </select>
 
         </ul>
     </div>
@@ -111,7 +158,7 @@
 <div class="row">
 
     <div class="col-sm-12">
-        <div class="mb-3 mt-30 mx-10" style="min-height: 30rem;">
+        <div class="mb-3 mt-30 mx-10" style="min-height: 30rem; margin: 1%">
             <div class="">
                 <textarea id="fileContent" class="form-control" rows="15"></textarea>
             </div>
