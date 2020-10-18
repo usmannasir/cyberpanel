@@ -183,21 +183,11 @@ def editFile(request):
         else:
             return ACLManager.loadError()
 
-        domainName = domainName
-        website = Websites.objects.get(domain=domainName)
-
-        pathCheck = '/home/%s' % (domainName)
-
-        fm = FM(request, {})
-
-        if fileName.find(pathCheck) == -1 or fileName.find('..') > -1:
-            return fm.ajaxPre(0, 'Not allowed.')
-
-        command = 'cat ' + fm.returnPathEnclosed(fileName)
-        content = ProcessUtilities.outputExecutioner(command, website.externalApp)
+        mode = FM.findMode(fileName)
+        modeFiles = FM.findModeFiles(mode)
 
         if ACLManager.checkOwnership(domainName, admin, currentACL) == 1:
-            return render(request, 'filemanager/editFile.html', {'domainName': domainName, 'fileName': fileName, 'content': content})
+            return render(request, 'filemanager/editFile.html', {'domainName': domainName, 'fileName': fileName, 'mode': mode, 'modeFiles': modeFiles})
         else:
             return ACLManager.loadError()
 

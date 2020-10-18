@@ -11,15 +11,15 @@
 
 
     <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css"
+          integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
     <link rel="stylesheet" href="{% static 'filemanager/images/fonts/css/font-awesome.min.css' %}">
     <link rel="stylesheet" href="{% static 'filemanager/css/fileManager.css' %}">
 
 
     <!-- Angular JS -->
 
-    <script src = "https://code.angularjs.org/1.6.5/angular.min.js"></script>
-    <script src="{% static 'filemanager/js/fileManager.js' %}"></script>
+    <script src="https://code.angularjs.org/1.6.5/angular.min.js"></script>
 
     <!-- Fix for old browsers -->
     <script src="{% static 'filemanager/js/es5-shim.min.js' %}"></script>
@@ -28,17 +28,54 @@
     <script src="{% static 'filemanager/js/console-sham.js' %}"></script>
 
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.1/codemirror.min.js"
+            integrity="sha512-WWC1A/JchDFZ2ZGaNyMC7CmPFXGLI/6Ih7WN6YG0DX1NGMkW5lqCVFxCmEx3e56Z7iqdQGpO0f+m2t9CJhdb2Q=="
+            crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.1/codemirror.min.css"
+          integrity="sha512-xIf9AdJauwKIVtrVRZ0i4nHP61Ogx9fSRAkCLecmE2dL/U8ioWpDvFCAy4dcfecN72HHB9+7FfQj3aiO68aaaw=="
+          crossorigin="anonymous"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.1/theme/dracula.min.css"
+          integrity="sha512-gFMl3u9d0xt3WR8ZeW05MWm3yZ+ZfgsBVXLSOiFz2xeVrZ8Neg0+V1kkRIo9LikyA/T9HuS91kDfc2XWse0K0A=="
+          crossorigin="anonymous"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.1/addon/hint/show-hint.min.css"
+          integrity="sha512-OmcLQEy8iGiD7PSm85s06dnR7G7C9C0VqahIPAj/KHk5RpOCmnC6R2ob1oK4/uwYhWa9BF1GC6tzxsC8TIx7Jg=="
+          crossorigin="anonymous"/>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.1/addon/hint/show-hint.min.js"
+            integrity="sha512-ge9uKCpgPmuJY2e2zPXhpYCZfyb1/R7KOOfMZ3SzSX3ZayWpINs3sHnI8LGEHUf6UOFX/D03FVHgR36uRL8/Vw=="
+            crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.1/mode/javascript/javascript.min.js"
+            integrity="sha512-e3U/84Fo+2ZAnRhLkjStm2hYnkmZ/NRmeesZ/GHjDhcLh35eYTQxsfSeDppx6Se5aX0N6mrygH7tr4wugWsPeQ=="
+            crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.1/addon/hint/javascript-hint.min.js"
+            integrity="sha512-PPI9W6pViVZfJ5uvmYZsHbPwf7T+voS0OpohIrN8Q4CRCCa6JK39JJ0R16HHmyV7EQR8MTa+O56CpWjfKOxl0A=="
+            crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.1/mode/css/css.min.js"
+            integrity="sha512-DG+5u//fVN9kpDgTGe78IJhJW8e5+tlrPaMgNqcrzyPXsn+GPaF2T62+X3ds7SuhFR9Qeb7XZ6kMD8X09FeJhA=="
+            crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.1/mode/xml/xml.min.js"
+            integrity="sha512-k1HnoY9EXahEfPz7kq/lD9DltloKH9OrB9XNKYoUQrNz9epe5F4mQP5PfuIfeRfoXHkNrE0gF3Mx4LhC5BVl9Q=="
+            crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.1/mode/htmlmixed/htmlmixed.min.js"
+            integrity="sha512-p15qsXPrhaUkH+/RPE6QzCmxUAPkCRw89ityx+tWC1lAYI6Et2L0UpN+iqifxUdt+ss1FQ+9CuzxpBeT9mR3/w=="
+            crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.1/mode/php/php.min.js"
+            integrity="sha512-m8sosGXUwyH6Ppzoy+CoQ/r5zAwZRGdNFUgGH81E3RDQkFnAsE4cP1I3tokvZwgMsDZB5mHxs+7egAgvhaCcMw=="
+            crossorigin="anonymous"></script>
+
+    <script src="{% static 'filemanager/js/codeMirror.js' %}"></script>
 
     <!-- HTML Editor Include -->
 
 </head>
-<body ng-app="fileManager" ng-controller="fileManagerCtrl">
+<body ng-app="editFile" ng-controller="editFileCtrl">
 
 <!--- navigation bar ---->
 
 <nav id="navBar" class="navbar navbar-expand-lg navbar-light bg-light">
     <div class="header-logo">
-        <a href="#"><img src="{% static 'filemanager/images/fileManager.png' %}"> <span style="display: none" id="domainNameInitial">{{ domainName }}</span></a>
+        <a href="#"><img src="{% static 'filemanager/images/fileManager.png' %}"> <span style="display: none"
+                                                                                        id="domainNameInitial">{{ domainName }}</span></a>
     </div>
     <!--- second bar ---->
 
@@ -48,8 +85,11 @@
                  {% trans " File Manager" %}
             </div-->
             <ul class="nav mr-10">
-                <li id="editFile" class="nav-item" >
-                    <a onclick="return false;" ng-click="showHTMLEditorModal()"  class="nav-link point-events" href="#"><i class="fa fa-pencil-square-o" aria-hidden="true"></i>  {{ fileName }}</a>
+                <li id="editFile" class="nav-item">
+                    <a onclick="return false;" ng-click="showHTMLEditorModal()" class="nav-link point-events"
+                       href="#"><i class="fa fa-pencil-square-o" aria-hidden="true"></i> <span
+                            id="completeFilePath">{{ fileName }}</span> <span id="mode"
+                                                                              style="display: none">{{ mode }}</span></a>
                 </li>
             </ul>
         </div>
@@ -66,7 +106,6 @@
 <!--- navigation bar ends ---->
 
 
-
 <!--- File Manager body ---->
 
 <div class="row">
@@ -74,7 +113,7 @@
     <div class="col-sm-12">
         <div class="mb-3 mt-30 mx-10" style="min-height: 30rem;">
             <div class="">
-                {{ content }}
+                <textarea id="fileContent" class="form-control" rows="15"></textarea>
             </div>
         </div>
     </div>
@@ -86,9 +125,15 @@
 <!-- Optional JavaScript -->
 <!-- jQuery first, then Popper.js, then Bootstrap JS -->
 
-<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+        integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+        crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js"
+        integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh"
+        crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js"
+        integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ"
+        crossorigin="anonymous"></script>
 
 
 <script src="https://cdn.jsdelivr.net/npm/alertifyjs@1.11.0/build/alertify.min.js"></script>
@@ -101,6 +146,5 @@
 <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.11.0/build/css/themes/semantic.min.css"/>
 <!-- Bootstrap theme -->
 <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.11.0/build/css/themes/bootstrap.min.css"/>
-
 </body>
 </html>
