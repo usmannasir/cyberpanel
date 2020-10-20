@@ -63,12 +63,27 @@ fileManager.controller('editFileCtrl', function ($scope, $http, $window) {
 
             if (response.data.status === 1) {
 
-                var cm = new CodeMirror.fromTextArea(document.getElementById("fileContent"), {
-                    lineNumbers: true,
-                    mode: $("#mode").text(),
-                    lineWrapping: false,
-                    theme: $("#theme").text()
-                });
+                let url = new URL(window.location.href);
+                let params = new URLSearchParams(url.search);
+                let python = params.get('python');
+
+                if(python == null) {
+                    var cm = new CodeMirror.fromTextArea(document.getElementById("fileContent"), {
+                        lineNumbers: true,
+                        mode: $("#mode").text(),
+                        lineWrapping: false,
+                        theme: $("#theme").text()
+                    });
+                }else{
+                    var mode = {name: $("#mode").text(), version:python};
+
+                    var cm = new CodeMirror.fromTextArea(document.getElementById("fileContent"), {
+                        lineNumbers: true,
+                        mode: mode,
+                        lineWrapping: false,
+                        theme: $("#theme").text()
+                    });
+                }
 
                 cm.setValue(response.data.fileContents);
                 cm.setSize(null, 800);
@@ -93,7 +108,45 @@ fileManager.controller('editFileCtrl', function ($scope, $http, $window) {
     $scope.getFileContents();
 
     $scope.changeTheme = function () {
-        $window.location.href = window.location.href + '&theme=' + $scope.theme;
+
+        let url = new URL(window.location.href);
+        let params = new URLSearchParams(url.search);
+        let theme = params.get('theme');
+
+        if (theme == null) {
+            $window.location.href = window.location.href + '&theme=' + $scope.theme;
+        } else {
+            params.set('theme', $scope.theme);
+            $window.location.href = 'https://' + window.location.hostname + ':' + window.location.port + window.location.pathname + '?' + params.toString();
+        }
+    };
+
+    $scope.additionalOptions = function () {
+
+        if ($scope.optionValue === 'Python 2') {
+            let url = new URL(window.location.href);
+            let params = new URLSearchParams(url.search);
+            let python = params.get('python');
+
+            if (python == null) {
+                $window.location.href = window.location.href + '&python=2';
+            } else {
+                params.set('python', '2');
+                $window.location.href = 'https://' + window.location.hostname + ':' + window.location.port + window.location.pathname + '?' + params.toString();
+            }
+
+        } else if ($scope.optionValue === 'Python 3') {
+            let url = new URL(window.location.href);
+            let params = new URLSearchParams(url.search);
+            let python = params.get('python');
+
+            if (python == null) {
+                $window.location.href = window.location.href + '&python=3';
+            } else {
+                params.set('python', '3');
+                $window.location.href = 'https://' + window.location.hostname + ':' + window.location.port + window.location.pathname + '?' + params.toString();
+            }
+        }
     };
 
     $scope.putFileContents = function () {

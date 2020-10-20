@@ -192,12 +192,13 @@ def editFile(request):
 
         mode = FM.findMode(fileName)
         modeFiles = FM.findModeFiles(mode)
+        additionalOptions = FM.findAdditionalOptions(mode)
         themeFile = FM.findThemeFile(theme)
 
         if ACLManager.checkOwnership(domainName, admin, currentACL) == 1:
             return render(request, 'filemanager/editFile.html', {'domainName': domainName, 'fileName': fileName,
                                                                  'mode': mode, 'modeFiles': modeFiles, 'theme': theme,
-                                                                 'themeFile': themeFile})
+                                                                 'themeFile': themeFile, 'additionalOptions': additionalOptions})
         else:
             return ACLManager.loadError()
 

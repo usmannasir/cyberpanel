@@ -80,7 +80,7 @@
 
     <!--- second bar ends ---->
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
-        <ul class="navbar-nav mr-auto">
+        <ul class="navbar-nav mr-auto" style="float: right">
             <select ng-model="theme" ng-change="changeTheme()" id="select">
                 <option>3024-day</option>
                 <option>3024-night</option>
@@ -92,7 +92,7 @@
                 <option>base16-light</option>
                 <option>bespin</option>
                 <option>blackboard</option>
-                <option selected="">cobalt</option>
+                <option>cobalt</option>
                 <option>colorforth</option>
                 <option>darcula</option>
                 <option>dracula</option>
@@ -145,7 +145,7 @@
                 <option>yonce</option>
                 <option>zenburn</option>
             </select>
-
+            {{ additionalOptions | safe }}
         </ul>
     </div>
 </nav>
@@ -158,7 +158,7 @@
 <div class="row">
 
     <div class="col-sm-12">
-        <div class="mb-3 mt-30 mx-10" style="min-height: 30rem; margin: 1%">
+        <div class="mb-3 mt-30 mx-10" style="min-height: 30rem; margin: 0px; margin-top: 2px">
             <div class="">
                 <textarea id="fileContent" class="form-control" rows="15"></textarea>
             </div>

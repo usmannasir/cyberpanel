@@ -78,6 +78,17 @@ class FileManager:
     def findThemeFile(theme):
         return '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.1/theme/%s.min.css" />' % (theme)
 
+    @staticmethod
+    def findAdditionalOptions(mode):
+        if mode == 'text/x-python':
+            return """<select ng-model="optionValue" ng-change="additionalOptions()">
+                <option>Python 2</option>
+                <option>Python 3</option>
+            </select>
+"""
+        else:
+            return ""
+
     def ajaxPre(self, status, errorMessage):
         final_dic = {'status': status, 'error_message': errorMessage, 'uploadStatus': status}
         final_json = json.dumps(final_dic)
