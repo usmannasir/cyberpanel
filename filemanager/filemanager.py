@@ -10,7 +10,8 @@ from filemanager.models import Trash
 
 
 class FileManager:
-    modes = {'php': 'application/x-httpd-php', 'javascript': 'javascript', 'python': 'text/x-python', 'html': 'text/html'}
+    modes = {'php': 'application/x-httpd-php', 'javascript': 'javascript', 'python': 'text/x-python',
+             'html': 'text/html', 'go': 'text/x-go'}
 
     def __init__(self, request, data):
         self.request = request
@@ -20,17 +21,19 @@ class FileManager:
     def findMode(fileName):
         if fileName.endswith('.php'):
             return FileManager.modes['php']
-        elif fileName.endswith('js'):
+        elif fileName.endswith('.js'):
             return FileManager.modes['javascript']
         elif fileName.endswith('.py'):
             return FileManager.modes['python']
         elif fileName.endswith('.html'):
             return FileManager.modes['html']
+        elif fileName.endswith('.go'):
+            return FileManager.modes['go']
 
     @staticmethod
     def findModeFiles(mode):
 
-        if mode == 'application/x-httpd-php':
+        if mode == FileManager.modes['php']:
             return """
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.1/mode/javascript/javascript.min.js"
             integrity="sha512-e3U/84Fo+2ZAnRhLkjStm2hYnkmZ/NRmeesZ/GHjDhcLh35eYTQxsfSeDppx6Se5aX0N6mrygH7tr4wugWsPeQ=="
@@ -58,7 +61,7 @@ class FileManager:
             integrity="sha512-m8sosGXUwyH6Ppzoy+CoQ/r5zAwZRGdNFUgGH81E3RDQkFnAsE4cP1I3tokvZwgMsDZB5mHxs+7egAgvhaCcMw=="
             crossorigin="anonymous"></script>
 """
-        elif mode == 'javascript':
+        elif mode == FileManager.modes['javascript']:
             return """
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.1/addon/hint/show-hint.min.js"
             integrity="sha512-ge9uKCpgPmuJY2e2zPXhpYCZfyb1/R7KOOfMZ3SzSX3ZayWpINs3sHnI8LGEHUf6UOFX/D03FVHgR36uRL8/Vw=="
@@ -70,11 +73,11 @@ class FileManager:
             integrity="sha512-PPI9W6pViVZfJ5uvmYZsHbPwf7T+voS0OpohIrN8Q4CRCCa6JK39JJ0R16HHmyV7EQR8MTa+O56CpWjfKOxl0A=="
             crossorigin="anonymous"></script>
 """
-        elif mode == 'text/x-python':
+        elif mode == FileManager.modes['python']:
             return """
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.1/mode/python/python.min.js" integrity="sha512-DS+asaww1mE0V/N6YGVgoNIRj+yXB9hAV68vM6rVeWs0G+OyMd24LKrnS4Z+g26rgghU7qvGeEnRVUArV7nVog==" crossorigin="anonymous"></script>
  """
-        elif mode == 'text/html':
+        elif mode == FileManager.modes['html']:
             return """
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.1/mode/javascript/javascript.min.js"
                         integrity="sha512-e3U/84Fo+2ZAnRhLkjStm2hYnkmZ/NRmeesZ/GHjDhcLh35eYTQxsfSeDppx6Se5aX0N6mrygH7tr4wugWsPeQ=="
@@ -96,6 +99,10 @@ class FileManager:
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.1/addon/hint/html-hint.min.js" integrity="sha512-aGi2Yn9VkLP9HiwiMXfkY7KQoGfwDW6JiGUtPhiPJAL9J7+rwwPVWUtUYvHW+xp3yJ7F0UhTPoPumUZv3+E/Rg==" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.1/addon/hint/sql-hint.min.js" integrity="sha512-zVNOyYBOmDcGRo9/Tz+rYW8vjhAO4D/jqbj9+IIb1xWMU1ROyNWPCeWcOoBTquOBBmdiue78xJg5kkdWzsZJog==" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.1/addon/hint/xml-hint.min.js" integrity="sha512-XtLGFClKrm3hNY3bS01LPiIkF64i9CnlxCqj5O+TSQq7UW8kFhFIc3kOR3bJ98h4ThxFaKdJA9PpQC76LvD/oQ==" crossorigin="anonymous"></script>
+"""
+        elif mode == FileManager.modes['go']:
+            return """
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.1/mode/go/go.min.js" integrity="sha512-DxeIplahS44UYHUdqtsLJ21g5xHilhuP7Y4i+NSsD7J4ow+LXIXLHsjvEpMqcTSg15rkaqBRIXEETAjq3yb5Cw==" crossorigin="anonymous"></script>
 """
 
     @staticmethod
