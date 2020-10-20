@@ -10,7 +10,7 @@ from filemanager.models import Trash
 
 
 class FileManager:
-    modes = {'php': 'application/x-httpd-php', 'javascript': 'javascript', 'python': 'text/x-python'}
+    modes = {'php': 'application/x-httpd-php', 'javascript': 'javascript', 'python': 'text/x-python', 'html': 'text/html'}
 
     def __init__(self, request, data):
         self.request = request
@@ -18,13 +18,14 @@ class FileManager:
 
     @staticmethod
     def findMode(fileName):
-
         if fileName.endswith('.php'):
             return FileManager.modes['php']
         elif fileName.endswith('js'):
             return FileManager.modes['javascript']
         elif fileName.endswith('.py'):
             return FileManager.modes['python']
+        elif fileName.endswith('.html'):
+            return FileManager.modes['html']
 
     @staticmethod
     def findModeFiles(mode):
@@ -73,6 +74,29 @@ class FileManager:
             return """
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.1/mode/python/python.min.js" integrity="sha512-DS+asaww1mE0V/N6YGVgoNIRj+yXB9hAV68vM6rVeWs0G+OyMd24LKrnS4Z+g26rgghU7qvGeEnRVUArV7nVog==" crossorigin="anonymous"></script>
  """
+        elif mode == 'text/html':
+            return """
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.1/mode/javascript/javascript.min.js"
+                        integrity="sha512-e3U/84Fo+2ZAnRhLkjStm2hYnkmZ/NRmeesZ/GHjDhcLh35eYTQxsfSeDppx6Se5aX0N6mrygH7tr4wugWsPeQ=="
+                        crossorigin="anonymous"></script>  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.1/addon/hint/javascript-hint.min.js"
+                        integrity="sha512-PPI9W6pViVZfJ5uvmYZsHbPwf7T+voS0OpohIrN8Q4CRCCa6JK39JJ0R16HHmyV7EQR8MTa+O56CpWjfKOxl0A=="
+                        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.1/mode/css/css.min.js"
+                        integrity="sha512-DG+5u//fVN9kpDgTGe78IJhJW8e5+tlrPaMgNqcrzyPXsn+GPaF2T62+X3ds7SuhFR9Qeb7XZ6kMD8X09FeJhA=="
+                        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.1/mode/xml/xml.min.js"
+                        integrity="sha512-k1HnoY9EXahEfPz7kq/lD9DltloKH9OrB9XNKYoUQrNz9epe5F4mQP5PfuIfeRfoXHkNrE0gF3Mx4LhC5BVl9Q=="
+                        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.1/mode/htmlmixed/htmlmixed.min.js"
+                        integrity="sha512-p15qsXPrhaUkH+/RPE6QzCmxUAPkCRw89ityx+tWC1lAYI6Et2L0UpN+iqifxUdt+ss1FQ+9CuzxpBeT9mR3/w=="
+                        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.1/addon/hint/anyword-hint.min.js" integrity="sha512-wdYOcbX/zcS4tP3HEDTkdOI5UybyuRxJMQzDQIRcafRLY/oTDWyXO+P8SzuajQipcJXkb2vHcd1QetccSFAaVw==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.1/addon/hint/css-hint.min.js" integrity="sha512-iXuwWkAmdAUNuO5rUtzmJZ/LoeJoSG8ZeQVdcUBCkV0dxfe7bxfzQMKCwQ6uNNs0FZ9jmSrN/jzJX7G1bOs4Nw==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.1/addon/hint/html-hint.min.js" integrity="sha512-aGi2Yn9VkLP9HiwiMXfkY7KQoGfwDW6JiGUtPhiPJAL9J7+rwwPVWUtUYvHW+xp3yJ7F0UhTPoPumUZv3+E/Rg==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.1/addon/hint/sql-hint.min.js" integrity="sha512-zVNOyYBOmDcGRo9/Tz+rYW8vjhAO4D/jqbj9+IIb1xWMU1ROyNWPCeWcOoBTquOBBmdiue78xJg5kkdWzsZJog==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.1/addon/hint/xml-hint.min.js" integrity="sha512-XtLGFClKrm3hNY3bS01LPiIkF64i9CnlxCqj5O+TSQq7UW8kFhFIc3kOR3bJ98h4ThxFaKdJA9PpQC76LvD/oQ==" crossorigin="anonymous"></script>
+"""
 
     @staticmethod
     def findThemeFile(theme):
