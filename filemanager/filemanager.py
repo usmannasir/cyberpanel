@@ -11,7 +11,7 @@ from filemanager.models import Trash
 
 class FileManager:
     modes = {'php': 'application/x-httpd-php', 'javascript': 'javascript', 'python': 'text/x-python',
-             'html': 'text/html', 'go': 'text/x-go'}
+             'html': 'text/html', 'go': 'text/x-go', 'css': 'text/css'}
 
     def __init__(self, request, data):
         self.request = request
@@ -29,6 +29,9 @@ class FileManager:
             return FileManager.modes['html']
         elif fileName.endswith('.go'):
             return FileManager.modes['go']
+        elif fileName.endswith('.css') or fileName.endswith('.scss'):
+            return FileManager.modes['css']
+
 
     @staticmethod
     def findModeFiles(mode):
@@ -103,6 +106,10 @@ class FileManager:
         elif mode == FileManager.modes['go']:
             return """
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.1/mode/go/go.min.js" integrity="sha512-DxeIplahS44UYHUdqtsLJ21g5xHilhuP7Y4i+NSsD7J4ow+LXIXLHsjvEpMqcTSg15rkaqBRIXEETAjq3yb5Cw==" crossorigin="anonymous"></script>
+"""
+        elif mode == FileManager.modes['css']:
+            return """
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.1/mode/css/css.min.js" integrity="sha512-DG+5u//fVN9kpDgTGe78IJhJW8e5+tlrPaMgNqcrzyPXsn+GPaF2T62+X3ds7SuhFR9Qeb7XZ6kMD8X09FeJhA==" crossorigin="anonymous"></script>
 """
 
     @staticmethod
