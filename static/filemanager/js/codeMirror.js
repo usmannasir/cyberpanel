@@ -30,11 +30,9 @@ fileManager.controller('editFileCtrl', function ($scope, $http, $window) {
 
     var domainName = $("#domainNameInitial").text();
 
-    $scope.editDisable = true;
     // html editor
-    $scope.errorMessageEditor = true;
-    $scope.htmlEditorLoading = true;
-    $scope.saveSuccess = true;
+    $scope.cyberPanelLoading = true;
+    var globalCM;
 
     var url = '/filemanager/controller';
 
@@ -67,15 +65,16 @@ fileManager.controller('editFileCtrl', function ($scope, $http, $window) {
                 let params = new URLSearchParams(url.search);
                 let python = params.get('python');
 
-                if(python == null) {
+                if (python == null) {
                     var cm = new CodeMirror.fromTextArea(document.getElementById("fileContent"), {
                         lineNumbers: true,
                         mode: $("#mode").text(),
                         lineWrapping: false,
                         theme: $("#theme").text()
                     });
-                }else{
-                    var mode = {name: $("#mode").text(), version:python};
+                    globalCM = cm;
+                } else {
+                    var mode = {name: $("#mode").text(), version: python};
 
                     var cm = new CodeMirror.fromTextArea(document.getElementById("fileContent"), {
                         lineNumbers: true,
@@ -83,6 +82,7 @@ fileManager.controller('editFileCtrl', function ($scope, $http, $window) {
                         lineWrapping: false,
                         theme: $("#theme").text()
                     });
+                    globalCM = cm;
                 }
 
                 cm.setValue(response.data.fileContents);
@@ -151,17 +151,12 @@ fileManager.controller('editFileCtrl', function ($scope, $http, $window) {
 
     $scope.putFileContents = function () {
 
-        $scope.htmlEditorLoading = false;
-        $scope.saveSuccess = true;
-        $scope.errorMessageEditor = true;
-
-        var completePathForFile = $scope.currentPath;
+        $scope.cyberPanelLoading = false;
 
         var data = {
-            fileName: completePathForFile,
+            fileName: $("#completeFilePath").text(),
             method: "writeFileContents",
-            fileContent: editor.getValue(),
-            domainRandomSeed: domainRandomSeed,
+            fileContent: globalCM.getValue(),
             domainName: domainName
         };
 
@@ -176,20 +171,30 @@ fileManager.controller('editFileCtrl', function ($scope, $http, $window) {
         $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
         function ListInitialDatas(response) {
-
-            $scope.htmlEditorLoading = true;
-
+            $scope.cyberPanelLoading = true;
             if (response.data.status === 1) {
-                $scope.htmlEditorLoading = true;
-                $scope.saveSuccess = false;
+                new PNotify({
+                    title: 'Success!',
+                    text: 'File saved successfully.',
+                    type: 'success'
+                });
             } else {
-                $scope.errorMessageEditor = false;
-                $scope.error_message = response.data.error_message;
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
             }
 
         }
 
         function cantLoadInitialDatas(response) {
+            $scope.cyberPanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
         }
 
     };

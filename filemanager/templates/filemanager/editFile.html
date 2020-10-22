@@ -15,6 +15,7 @@
           integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
     <link rel="stylesheet" href="{% static 'filemanager/images/fonts/css/font-awesome.min.css' %}">
     <link rel="stylesheet" href="{% static 'filemanager/css/fileManager.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/custom-js/pnotify.custom.min.css' %}">
 
 
     <!-- Angular JS -->
@@ -43,7 +44,7 @@
           crossorigin="anonymous"/>
 
     {{ modeFiles | safe }}
-
+    <script src="{% static 'baseTemplate/custom-js/pnotify.custom.min.js' %}"></script>
     <script src="{% static 'filemanager/js/codeMirror.js' %}"></script>
 
     <!-- HTML Editor Include -->
@@ -161,6 +162,17 @@
         <div class="mb-3 mt-30 mx-10" style="min-height: 30rem; margin: 0px; margin-top: 2px">
             <div class="">
                 <textarea id="fileContent" class="form-control" rows="15"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <div class="fixed-bottom">
+        <div class="card" style="margin-left: 15%; margin-right: 15%; margin-bottom: -1%">
+            <div class="card-body">
+                <p><span>Editing {{ fileName }}</span>
+                    <button style="float:right" ng-click="putFileContents()" type="button"
+                            class="btn btn-outline-success">{% trans "Save Changes" %} <img ng-hide="cyberPanelLoading" src="{% static 'filemanager/images/loadingSmall.gif' %}"></button>
+                </p>
             </div>
         </div>
     </div>
