@@ -480,6 +480,7 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
             restoreBTN.style.display = "none";
         }
         // for edit button
+
         if (allFilesAndFolders.length === 1) {
             var editNode = document.getElementById("editFile");
             editNode.style.pointerEvents = "auto";
@@ -811,6 +812,14 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
         function cantLoadInitialDatas(response) {
         }
 
+    };
+
+    /// code mirror open
+
+    $scope.editWithCodeMirror = function(){
+        var completePathForFile = $scope.currentPath + "/" + allFilesAndFolders[0];
+        var finalURL = 'https://' + window.location.hostname + ':' + window.location.port + '/filemanager/editFile?domainName=' + domainName + '&fileName=' + completePathForFile;
+        window.open(finalURL);
     };
 
 

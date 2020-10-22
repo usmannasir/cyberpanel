@@ -11,7 +11,7 @@ from filemanager.models import Trash
 
 class FileManager:
     modes = {'php': 'application/x-httpd-php', 'javascript': 'javascript', 'python': 'text/x-python',
-             'html': 'text/html', 'go': 'text/x-go', 'css': 'text/css', 'java': 'text/x-java'}
+             'html': 'text/html', 'go': 'text/x-go', 'css': 'text/css', 'java': 'text/x-java', 'perl': 'text/x-perl'}
 
     def __init__(self, request, data):
         self.request = request
@@ -31,8 +31,12 @@ class FileManager:
             return FileManager.modes['go']
         elif fileName.endswith('.css') or fileName.endswith('.scss'):
             return FileManager.modes['css']
+        elif fileName.endswith('.pl') or fileName.endswith('.PL'):
+            return FileManager.modes['perl']
         elif fileName.endswith('.java'):
             return FileManager.modes['java']
+        else:
+            return ""
 
 
     @staticmethod
@@ -117,6 +121,11 @@ class FileManager:
             return """
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.1/mode/clike/clike.min.js" integrity="sha512-HT3t3u7HfQ7USbSZa0Tk5caEnUfO8s58OWqMBwm96xaZAbA17rpnXXHDefR8ixVmSSVssbOv3W3OMh6mNX/XuQ==" crossorigin="anonymous"></script>
 """
+        elif mode == FileManager.modes['perl']:
+            return """
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.1/mode/perl/perl.min.js" integrity="sha512-6rKFA1mIjmFqxMM/b0dtjQOWFRAoqKCmhb7/6u2KohJcP4poKbrUI08Yf5GXsK+rkCr2dQnppV7gMe2a0HGQBQ==" crossorigin="anonymous"></script>        """
+        else:
+            return ''
 
     @staticmethod
     def findThemeFile(theme):
