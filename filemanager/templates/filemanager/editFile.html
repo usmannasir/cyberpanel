@@ -148,6 +148,13 @@
             </select>
             {{ additionalOptions | safe }}
         </ul>
+        <button style="float:right" ng-click="putFileContents()" type="button"
+                class="btn btn-light">{% trans "Save Changes" %} <img ng-hide="cyberPanelLoading"
+                                                                                src="{% static 'filemanager/images/loadingSmall.gif' %}">
+        </button>
+        <button style="float:right; margin-left: 1%" ng-click="closeWindow()" type="button"
+                class="btn btn-danger">{% trans "Close" %}
+        </button>
     </div>
 </nav>
 
@@ -162,17 +169,6 @@
         <div class="mb-3 mt-30 mx-10" style="min-height: 30rem; margin: 0px; margin-top: 2px">
             <div class="">
                 <textarea id="fileContent" class="form-control" rows="15"></textarea>
-            </div>
-        </div>
-    </div>
-
-    <div class="fixed-bottom">
-        <div class="card" style="margin-left: 15%; margin-right: 15%; margin-bottom: -1%">
-            <div class="card-body">
-                <p><span>Editing {{ fileName }}</span>
-                    <button style="float:right" ng-click="putFileContents()" type="button"
-                            class="btn btn-outline-success">{% trans "Save Changes" %} <img ng-hide="cyberPanelLoading" src="{% static 'filemanager/images/loadingSmall.gif' %}"></button>
-                </p>
             </div>
         </div>
     </div>

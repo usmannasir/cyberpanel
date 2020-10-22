@@ -199,4 +199,8 @@ fileManager.controller('editFileCtrl', function ($scope, $http, $window) {
 
     };
 
+    $scope.closeWindow = function () {
+         window.close();
+    };
+
 });

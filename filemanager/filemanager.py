@@ -11,7 +11,8 @@ from filemanager.models import Trash
 
 class FileManager:
     modes = {'php': 'application/x-httpd-php', 'javascript': 'javascript', 'python': 'text/x-python',
-             'html': 'text/html', 'go': 'text/x-go', 'css': 'text/css', 'java': 'text/x-java', 'perl': 'text/x-perl'}
+             'html': 'text/html', 'go': 'text/x-go', 'css': 'text/css', 'java': 'text/x-java', 'perl': 'text/x-perl',
+             'scss': 'text/x-sass'}
 
     def __init__(self, request, data):
         self.request = request
@@ -29,12 +30,14 @@ class FileManager:
             return FileManager.modes['html']
         elif fileName.endswith('.go'):
             return FileManager.modes['go']
-        elif fileName.endswith('.css') or fileName.endswith('.scss'):
+        elif fileName.endswith('.css'):
             return FileManager.modes['css']
         elif fileName.endswith('.pl') or fileName.endswith('.PL'):
             return FileManager.modes['perl']
         elif fileName.endswith('.java'):
             return FileManager.modes['java']
+        elif fileName.endswith('.scss'):
+            return FileManager.modes['scss']
         else:
             return ""
 
@@ -123,7 +126,12 @@ class FileManager:
 """
         elif mode == FileManager.modes['perl']:
             return """
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.1/mode/perl/perl.min.js" integrity="sha512-6rKFA1mIjmFqxMM/b0dtjQOWFRAoqKCmhb7/6u2KohJcP4poKbrUI08Yf5GXsK+rkCr2dQnppV7gMe2a0HGQBQ==" crossorigin="anonymous"></script>        """
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.1/mode/perl/perl.min.js" integrity="sha512-6rKFA1mIjmFqxMM/b0dtjQOWFRAoqKCmhb7/6u2KohJcP4poKbrUI08Yf5GXsK+rkCr2dQnppV7gMe2a0HGQBQ==" crossorigin="anonymous"></script>        
+"""
+        elif mode == FileManager.modes['scss']:
+            return """
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.1/mode/sass/sass.min.js" integrity="sha512-lFZETu8ovGFrFbFWAJnwgJrRcQ06C0BhjySIpBFPUatL/vqFz/mZIvXhlLtbOwbvRCp+XcLCmTEigKOJPN+YhA==" crossorigin="anonymous"></script>
+"""
         else:
             return ''
 
