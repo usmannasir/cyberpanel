@@ -130,18 +130,20 @@ class FirewallUtilities:
             print("0," + str(msg))
 
     @staticmethod
-    def addSSHKey(tempPath):
+    def addSSHKey(tempPath, path=None):
         try:
             key = open(tempPath, 'r').read()
 
-            sshDir = "/root/.ssh"
+            if path == None:
+                sshDir = "/root/.ssh"
+                pathToSSH = "/root/.ssh/authorized_keys"
 
-            pathToSSH = "/root/.ssh/authorized_keys"
-
-            if os.path.exists(sshDir):
-                pass
+                if os.path.exists(sshDir):
+                    pass
+                else:
+                    os.mkdir(sshDir)
             else:
-                os.mkdir(sshDir)
+                pathToSSH = path
 
             if os.path.exists(pathToSSH):
                 pass
@@ -176,10 +178,14 @@ class FirewallUtilities:
             print("0," + str(msg))
 
     @staticmethod
-    def deleteSSHKey(key):
+    def deleteSSHKey(key, path=None):
         try:
             keyPart = key.split(" ")[1]
-            pathToSSH = "/root/.ssh/authorized_keys"
+
+            if path == None:
+                pathToSSH = "/root/.ssh/authorized_keys"
+            else:
+                pathToSSH = path
 
             data = open(pathToSSH, 'r').readlines()
 
@@ -212,6 +218,7 @@ def main():
     parser.add_argument("--sshPort", help="SSH Port")
     parser.add_argument("--rootLogin", help="Root Login")
     parser.add_argument("--key", help="Key")
+    parser.add_argument("--path", help="Path to key file.")
 
 
     args = parser.parse_args()
@@ -219,9 +226,15 @@ def main():
     if args.function == "saveSSHConfigs":
         FirewallUtilities.saveSSHConfigs(args.type, args.sshPort, args.rootLogin)
     elif args.function == "addSSHKey":
-        FirewallUtilities.addSSHKey(args.tempPath)
+        if not args.path:
+            FirewallUtilities.addSSHKey(args.tempPath)
+        else:
+            FirewallUtilities.addSSHKey(args.tempPath, args.path)
     elif args.function == "deleteSSHKey":
-        FirewallUtilities.deleteSSHKey(args.key)
+        if not args.path:
+            FirewallUtilities.deleteSSHKey(args.key)
+        else:
+            FirewallUtilities.deleteSSHKey(args.key, args.path)
 
 
 

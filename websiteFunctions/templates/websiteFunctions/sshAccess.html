@@ -3,55 +3,122 @@
 {% block title %}{% trans "SSH and CageFS - CyberPanel" %}{% endblock %}
 {% block content %}
 
-{% load static %}
-{% get_current_language as LANGUAGE_CODE %}
-<!-- Current language: {{ LANGUAGE_CODE }} -->
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
 
-<div class="container">
-<div id="page-title">
-   <h2>{% trans "SSH Access" %}</h2>
-   <p>{% trans "Set up SSH access and enable/disable CageFS for " %} {{ domainName }}. {% trans " CageFS require CloudLinux OS." %}</p>
-</div>
-
-
-<div ng-controller="sshAccess" class="panel">
-    <div class="panel-body">
-        <h3 class="title-hero">
-            {% trans "Set up SSH access for " %} {{ domainName }}.</span> <img ng-hide="wpInstallLoading" src="{% static 'images/loading.gif' %}">
-        </h3>
-        <div class="example-box-wrapper">
-
-
-            <form name="websiteCreationForm"  action="/" id="createPackages" class="form-horizontal bordered-row">
-
-                <div ng-hide="installationDetailsForm" class="form-group">
-                    <label class="col-sm-3 control-label"></label>
-                    <label class="col-sm-4 control-label">{% trans "SSH user for " %} <spam id="domainName">{{ domainName }}</spam> {% trans ' is ' %} <span id="externalApp">{{ externalApp }}</span></label>
-                </div>
-
-                <div  class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "Password" %}</label>
-                    <div class="col-sm-6">
-                        <input  type="password" class="form-control" ng-model="password" required>
-                    </div>
-                </div>
-
-                <div ng-hide="installationDetailsForm" class="form-group">
-                    <label class="col-sm-3 control-label"></label>
-                    <div class="col-sm-4">
-                         <button type="button"  ng-click="setupSSHAccess()" class="btn btn-primary btn-lg btn-block">{% trans "Save Changes" %}</button>
-                    </div>
-                </div>
-
-            </form>
-
+    <div class="container">
+        <div id="page-title">
+            <h2>{% trans "SSH Access" %}</h2>
+            <p>{% trans "Set up SSH access and enable/disable CageFS for " %} {{ domainName }}. {% trans " CageFS require CloudLinux OS." %}</p>
         </div>
+
+
+        <div ng-controller="sshAccess" class="panel">
+            <div class="panel-body">
+                <h3 class="title-hero">
+                    {% trans "Set up SSH access for " %} {{ domainName }}.</span> <img ng-hide="wpInstallLoading"
+                                                                                       src="{% static 'images/loading.gif' %}">
+                </h3>
+                <div class="example-box-wrapper">
+
+
+                    <form name="websiteCreationForm" action="/" id="createPackages"
+                          class="form-horizontal bordered-row">
+
+                        <div ng-hide="installationDetailsForm" class="form-group">
+                            <label class="col-sm-3 control-label"></label>
+                            <label class="col-sm-4 control-label">{% trans "SSH user for " %}
+                                <spam id="domainName">{{ domainName }}</spam>
+                                {% trans ' is ' %} <span id="externalApp">{{ externalApp }}</span></label>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Password" %}</label>
+                            <div class="col-sm-6">
+                                <input type="password" class="form-control" ng-model="password" required>
+                            </div>
+                        </div>
+
+                        <div ng-hide="installationDetailsForm" class="form-group">
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-4">
+                                <button type="button" ng-click="setupSSHAccess()"
+                                        class="btn btn-primary btn-lg btn-block">{% trans "Save Changes" %}</button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="col-sm-12">
+                                <form action="/" class="form-horizontal bordered-row">
+
+                                    <!------ List of records --------------->
+
+                                    <div class="form-group">
+
+                                        <div class="col-sm-12">
+
+                                            <table class="table">
+                                                <thead>
+                                                <tr>
+                                                    <th>{% trans "User Name" %}</th>
+                                                    <th>{% trans "Key" %}</th>
+                                                    <th>{% trans "Delete" %}</th>
+                                                </tr>
+                                                </thead>
+                                                <tbody>
+                                                <tr ng-repeat="record in records track by $index">
+                                                    <td ng-bind="record.userName">root</td>
+                                                    <td ng-bind="record.key"></td>
+                                                    <td ng-click="deleteKey(record.key)">
+                                                        <div class="h4 text-danger text-bold">X</div>
+                                                    </td>
+                                                </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+
+
+                                    <!------ List of records --------------->
+
+                                    <div ng-hide="keyBox" class="form-group">
+                                        <div class="col-sm-12">
+                                        <textarea placeholder="Paste your public key here..." ng-model="keyData"
+                                                  rows="6" class="form-control">{{ logs }}</textarea>
+                                        </div>
+                                    </div>
+
+
+                                    <div ng-hide="showKeyBox" class="form-group">
+                                        <label class="col-sm-3 control-label"></label>
+                                        <div class="col-sm-4">
+                                            <button type="button" ng-click="addKey()"
+                                                    class="btn btn-primary btn-lg">{% trans "Add Key" %}</button>
+
+                                        </div>
+                                    </div>
+
+                                    <div ng-hide="saveKeyBtn" class="form-group">
+                                        <label class="col-sm-3 control-label"></label>
+                                        <div class="col-sm-4">
+                                            <button type="button" ng-click="saveKey()"
+                                                    class="btn btn-primary btn-lg">{% trans "Save" %}</button>
+                                        </div>
+                                    </div>
+
+                                </form>
+                            </div>
+                        </div>
+
+                    </form>
+
+                </div>
+            </div>
+        </div>
+
+
     </div>
-</div>
-
-
-
-</div>
 
 
 {% endblock %}

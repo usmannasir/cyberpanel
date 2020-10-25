@@ -4229,3 +4229,138 @@ StrictHostKeyChecking no
             data_ret = {'status': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
+
+    def getSSHConfigs(self, userID = None, data = None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            domain = data['domain']
+            website = Websites.objects.get(domain=domain)
+
+            if ACLManager.checkOwnership(domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson('status', 0)
+
+            pathToKeyFile = "/home/%s/.ssh/authorized_keys" % (domain)
+
+            cat = "cat " + pathToKeyFile
+            data = ProcessUtilities.outputExecutioner(cat, website.externalApp).split('\n')
+
+            json_data = "["
+            checker = 0
+
+            for items in data:
+                if items.find("ssh-rsa") > -1:
+                    keydata = items.split(" ")
+
+                    try:
+                        key = "ssh-rsa " + keydata[1][:50] + "  ..  " + keydata[2]
+                        try:
+                            userName = keydata[2][:keydata[2].index("@")]
+                        except:
+                            userName = keydata[2]
+                    except:
+                        key = "ssh-rsa " + keydata[1][:50]
+                        userName = ''
+
+                    dic = {'userName': userName,
+                           'key': key,
+                           }
+
+                    if checker == 0:
+                        json_data = json_data + json.dumps(dic)
+                        checker = 1
+                    else:
+                        json_data = json_data + ',' + json.dumps(dic)
+
+            json_data = json_data + ']'
+
+            final_json = json.dumps({'status': 1, 'error_message': "None", "data": json_data})
+            return HttpResponse(final_json)
+
+        except BaseException as msg:
+            final_dic = {'status': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+    def deleteSSHKey(self, userID = None, data = None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            domain = data['domain']
+
+            if ACLManager.checkOwnership(domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson('status', 0)
+
+            key = data['key']
+            pathToKeyFile = "/home/%s/.ssh/authorized_keys" % (domain)
+
+            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/firewallUtilities.py"
+            execPath = execPath + " deleteSSHKey --key '%s' --path %s" % (key, pathToKeyFile)
+
+            output = ProcessUtilities.outputExecutioner(execPath)
+
+            if output.find("1,None") > -1:
+                final_dic = {'status': 1, 'delete_status': 1}
+                final_json = json.dumps(final_dic)
+                return HttpResponse(final_json)
+            else:
+                final_dic = {'status': 1, 'delete_status': 1, "error_mssage": output}
+                final_json = json.dumps(final_dic)
+                return HttpResponse(final_json)
+
+        except BaseException as msg:
+            final_dic = {'status': 0, 'delete_status': 0, 'error_mssage': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+    def addSSHKey(self, userID = None, data = None):
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            domain = data['domain']
+            website = Websites.objects.get(domain=domain)
+
+            if ACLManager.checkOwnership(domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson('status', 0)
+
+            key = data['key']
+            pathToKeyFile = "/home/%s/.ssh/authorized_keys" % (domain)
+
+            command = 'mkdir -p /home/%s/.ssh/' % (domain)
+            ProcessUtilities.executioner(command)
+
+            tempPath = "/home/cyberpanel/" + str(randint(1000, 9999))
+
+            writeToFile = open(tempPath, "w")
+            writeToFile.write(key)
+            writeToFile.close()
+
+            execPath = "sudo /usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/firewallUtilities.py"
+            execPath = execPath + " addSSHKey --tempPath %s --path %s" % (tempPath, pathToKeyFile)
+
+            output = ProcessUtilities.outputExecutioner(execPath)
+
+            if output.find("1,None") > -1:
+                final_dic = {'status': 1, 'add_status': 1}
+                final_json = json.dumps(final_dic)
+                return HttpResponse(final_json)
+            else:
+                final_dic = {'status': 0, 'add_status': 0, "error_mssage": output}
+                final_json = json.dumps(final_dic)
+                return HttpResponse(final_json)
+
+        except BaseException as msg:
+            final_dic = {'status': 0, 'add_status': 0, 'error_mssage': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)

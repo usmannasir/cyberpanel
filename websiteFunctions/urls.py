@@ -144,6 +144,12 @@ urlpatterns = [
     url(r'^saveGitConfigurations$', views.saveGitConfigurations, name='saveGitConfigurations'),
     url(r'^fetchGitLogs$', views.fetchGitLogs, name='fetchGitLogs'),
 
+    ### SSH Configs
+
+    url(r'^getSSHConfigs$', views.getSSHConfigs, name='getSSHConfigs'),
+    url(r'^deleteSSHKey$', views.deleteSSHKey, name='deleteSSHKey'),
+    url(r'^addSSHKey$', views.addSSHKey, name='addSSHKey'),
+
 
     ## Catch all for domains
     url(r'^(?P<domain>(.*))/(?P<childDomain>(.*))$', views.launchChild, name='launchChild'),

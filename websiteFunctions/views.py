@@ -886,6 +886,30 @@ def fetchGitLogs(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+def getSSHConfigs(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.getSSHConfigs(userID, json.loads(request.body))
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def deleteSSHKey(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.deleteSSHKey(userID, json.loads(request.body))
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def addSSHKey(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.addSSHKey(userID, json.loads(request.body))
+    except KeyError:
+        return redirect(loadLoginPage)
+
 @csrf_exempt
 def webhook(request, domain):
     try:
