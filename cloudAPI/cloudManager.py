@@ -359,27 +359,32 @@ class CloudManager:
         try:
             statusFile = self.data['statusFile']
             statusData = open(statusFile, 'r').readlines()
-            lastLine = statusData[-1]
-
-            if lastLine.find('[200]') > -1:
-                command = 'sudo rm -f ' + statusFile
-                ProcessUtilities.executioner(command)
-                data_ret = {'status': 1, 'abort': 1, 'installationProgress': "100", 'currentStatus': lastLine}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
-            elif lastLine.find('[404]') > -1:
-                data_ret = {'status': 0, 'abort': 1, 'installationProgress': "0", 'error_message': lastLine}
-                json_data = json.dumps(data_ret)
-                return HttpResponse(json_data)
-            else:
-                progress = lastLine.split(',')
-                currentStatus = progress[0]
-                try:
-                    installationProgress = progress[1]
-                except:
-                    installationProgress = 0
-                data_ret = {'status': 1, 'abort': 0, 'installationProgress': installationProgress,
-                            'currentStatus': currentStatus}
+            try:
+                lastLine = statusData[-1]
+                if lastLine.find('[200]') > -1:
+                    command = 'rm -f ' + statusFile
+                    ProcessUtilities.executioner(command)
+                    data_ret = {'status': 1, 'abort': 1, 'installationProgress': "100", 'currentStatus': lastLine}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+                elif lastLine.find('[404]') > -1:
+                    data_ret = {'status': 0, 'abort': 1, 'installationProgress': "0", 'error_message': lastLine}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+                else:
+                    progress = lastLine.split(',')
+                    currentStatus = progress[0]
+                    try:
+                        installationProgress = progress[1].rstrip('\n')
+                    except:
+                        installationProgress = 0
+                    data_ret = {'status': 1, 'abort': 0, 'installationProgress': installationProgress,
+                                'currentStatus': currentStatus}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+            except IndexError:
+                data_ret = {'status': 1, 'abort': 0, 'installationProgress': 0,
+                            'currentStatus': 'Working..'}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
@@ -1461,5 +1466,175 @@ class CloudManager:
         try:
             request.session['userID'] = self.admin.pk
             return getUsageData(request)
+        except BaseException as msg:
+            return self.ajaxPre(0, str(msg))
+
+    def RunServerLevelEmailChecks(self):
+        try:
+
+            tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
+            reportFile = "/home/cyberpanel/" + str(randint(1000, 9999))
+
+            extraArgs = {'tempStatusPath': tempStatusPath, 'reportFile': reportFile}
+
+            background = MailServerManager(None, 'RunServerLevelEmailChecks', extraArgs)
+            background.start()
+
+            final_dic = {'status': 1, 'tempStatusPath': tempStatusPath, 'reportFile': reportFile}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+        except BaseException as msg:
+            return self.ajaxPre(0, str(msg))
+
+    def ReadReport(self):
+        try:
+            reportFile = self.data['reportFile']
+            reportContent = open(reportFile, 'r').read()
+
+            data_ret = {'status': 1, 'reportContent': reportContent}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'abort': 0, 'installationProgress': "0", 'errorMessage': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def ResetEmailConfigurations(self):
+        try:
+
+            tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
+
+            writeToFile = open(tempStatusPath, 'w')
+            writeToFile.write('Starting..,0')
+            writeToFile.close()
+
+            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/mailServer/mailserverManager.py"
+            execPath = execPath + ' ResetEmailConfigurations --tempStatusPath %s' % (tempStatusPath)
+
+            ProcessUtilities.popenExecutioner(execPath)
+
+            final_dic = {'status': 1, 'tempStatusPath': tempStatusPath}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+        except BaseException as msg:
+            return self.ajaxPre(0, str(msg))
+
+    def fetchAllSites(self):
+        try:
+            currentACL = ACLManager.loadedACL(self.admin.pk)
+            websites = ACLManager.findAllWebsites(currentACL, self.admin.pk)
+
+            final_dic = {'status': 1, 'websites': websites}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+        except BaseException as msg:
+            return self.ajaxPre(0, str(msg))
+
+    def debugEmailForSite(self):
+        try:
+
+            websiteName = self.data['websiteName']
+            result = MailServerManager(None, 'debugEmailForSite', None).debugEmailForSite(websiteName)
+
+            if result[0]:
+                final_dic = {'error_message': result[1], 'status': 1}
+                final_json = json.dumps(final_dic)
+                return HttpResponse(final_json)
+            else:
+                final_dic = {'error_message': result[1], 'status': 0}
+                final_json = json.dumps(final_dic)
+                return HttpResponse(final_json)
+        except BaseException as msg:
+            return self.ajaxPre(0, str(msg))
+
+    def fixMailSSL(self, request):
+        try:
+
+            request.session['userID'] = self.admin.pk
+            msM = MailServerManager(request)
+            return msM.fixMailSSL(self.data)
+
+        except BaseException as msg:
+            return self.ajaxPre(0, str(msg))
+
+    def ReadReportFTP(self):
+        try:
+            command = 'ps aux'
+            result = ProcessUtilities.outputExecutioner(command)
+
+            FTP = 1
+            if result.find('pure-ftpd') == -1:
+                FTP = 0
+
+            data_ret = {'status': 1, 'FTP': FTP}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'abort': 0, 'installationProgress': "0", 'errorMessage': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def ResetFTPConfigurations(self):
+        try:
+
+            tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
+
+            writeToFile = open(tempStatusPath, 'w')
+            writeToFile.write('Starting..,0')
+            writeToFile.close()
+
+            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/ftp/ftpManager.py"
+            execPath = execPath + ' ResetFTPConfigurations --tempStatusPath %s' % (tempStatusPath)
+
+            ProcessUtilities.popenExecutioner(execPath)
+
+            final_dic = {'status': 1, 'tempStatusPath': tempStatusPath}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+        except BaseException as msg:
+            return self.ajaxPre(0, str(msg))
+
+    def ReadReportDNS(self):
+        try:
+            command = 'ps aux'
+            result = ProcessUtilities.outputExecutioner(command)
+
+            DNS = 1
+            if result.find('pdns_server --guardian=no') == -1:
+                DNS = 0
+
+            data_ret = {'status': 1, 'DNS': DNS}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'abort': 0, 'installationProgress': "0", 'errorMessage': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def ResetDNSConfigurations(self):
+        try:
+
+            tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
+
+            writeToFile = open(tempStatusPath, 'w')
+            writeToFile.write('Starting..,0')
+            writeToFile.close()
+
+            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/dns/dnsManager.py"
+            execPath = execPath + ' ResetDNSConfigurations --tempStatusPath %s' % (tempStatusPath)
+
+            ProcessUtilities.popenExecutioner(execPath)
+
+            final_dic = {'status': 1, 'tempStatusPath': tempStatusPath}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
         except BaseException as msg:
             return self.ajaxPre(0, str(msg))

@@ -290,7 +290,6 @@ class ProcessUtilities(multi.Thread):
     def customPoen(self):
         try:
 
-
             if type(self.extraArgs['command']) == str or type(self.extraArgs['command']) == bytes:
                 command = self.extraArgs['command']
             else:

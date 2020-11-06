@@ -64,8 +64,11 @@ class virtualHostUtilities:
             childDomain = 'mail.%s' % (virtualHostName)
             childPath = '/home/%s/public_html/%s' % (virtualHostName, childDomain)
 
-            virtualHostUtilities.createDomain(virtualHostName, childDomain, 'PHP 7.2', childPath, 1, 0, 0,
+            result = virtualHostUtilities.createDomain(virtualHostName, childDomain, 'PHP 7.2', childPath, 1, 0, 0,
                                               admin.userName, 0, "/home/cyberpanel/" + str(randint(1000, 9999)))
+
+            if result[0] == 0:
+                sslUtilities.issueSSLForDomain(virtualHostName, admin.email, childPath)
 
             ## update dovecot conf to enable auto-discover
 
@@ -74,18 +77,18 @@ class virtualHostUtilities:
             if os.path.exists(dovecotPath):
                 dovecotContent = open(dovecotPath, 'r').read()
 
-                if dovecotContent.find(childDomain) == -1:
+                if dovecotContent.find('/live/%s/' % (childDomain)) == -1:
                     content = """\nlocal_name %s {
-                      ssl_cert = </etc/letsencrypt/live/%s/fullchain.pem
-                      ssl_key = </etc/letsencrypt/live/%s/privkey.pem
+        ssl_cert = </etc/letsencrypt/live/%s/fullchain.pem
+        ssl_key = </etc/letsencrypt/live/%s/privkey.pem
 }\n""" % (childDomain, childDomain, childDomain)
 
                     writeToFile = open(dovecotPath, 'a')
                     writeToFile.write(content)
                     writeToFile.close()
 
-                    command = 'systemctl restart dovecot'
-                    ProcessUtilities.executioner(command)
+                command = 'systemctl restart dovecot'
+                ProcessUtilities.executioner(command)
 
                 ### Update postfix configurations
 
@@ -99,13 +102,16 @@ class virtualHostUtilities:
                     writeToFile.close()
 
                 postfixMapFile = '/etc/postfix/vmail_ssl.map'
+                postfixMapFileContent = open(postfixMapFile, 'r').read()
 
-                mapContent = '%s /etc/letsencrypt/live/%s/privkey.pem /etc/letsencrypt/live/%s/fullchain.pem\n' % (
-                    childDomain, childDomain, childDomain)
+                if postfixMapFileContent.find('/live/%s/' % (childDomain)) == -1:
 
-                writeToFile = open(postfixMapFile, 'a')
-                writeToFile.write(mapContent)
-                writeToFile.close()
+                    mapContent = '%s /etc/letsencrypt/live/%s/privkey.pem /etc/letsencrypt/live/%s/fullchain.pem\n' % (
+                        childDomain, childDomain, childDomain)
+
+                    writeToFile = open(postfixMapFile, 'a')
+                    writeToFile.write(mapContent)
+                    writeToFile.close()
 
                 command = 'postmap -F hash:/etc/postfix/vmail_ssl.map'
 
