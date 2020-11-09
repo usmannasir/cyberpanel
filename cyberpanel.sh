@@ -1126,7 +1126,8 @@ main_install() {
     echo "/usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY --postfix $POSTFIX_VARIABLE --powerdns $POWERDNS_VARIABLE --ftp $PUREFTPD_VARIABLE"
     exit
   fi
-
+  rm -f requirments.txt
+  wget https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
   if [[ $debug == "1" ]]; then
 
     if [[ $UBUNTU_20 == "False" ]]; then
