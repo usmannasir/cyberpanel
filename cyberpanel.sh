@@ -476,11 +476,7 @@ EOF
       check_return
     fi
 
-    if [[ $SERVER_OS == "CentOS" ]]; then
-      pip3.6 install virtualenv==16.7.9
-    else
-      pip3.6 install virtualenv
-    fi
+    pip3.6 install virtualenv
     check_return
 
   fi
@@ -500,9 +496,7 @@ EOF
     DEBIAN_FRONTEND=noninteractive apt install -y python3-venv
     check_return
 
-    if [[ $UBUNTU_20 == "True" ]]; then
-      pip3 install virtualenv==16.7.9
-    fi
+    pip3 install virtualenv
     check_return
 
   fi
@@ -1187,24 +1181,24 @@ pip_virtualenv() {
 
   if [[ $DEV == "ON" ]]; then
     #install dev branch
-    #wget https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
+    wget https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
     virtualenv -p /usr/bin/python3 /usr/local/CyberPanel
 
     if [[ $UBUNTU_20 == "False" ]]; then
       source /usr/local/CyberPanel/bin/activate
-      wget -O /usr/local/cyberpanel-pip.zip https://rep.cyberpanel.net/cyberpanel-pip-3.zip
-      check_return
-      unzip /usr/local/cyberpanel-pip.zip -d /usr/local
-      check_return
-      pip3.6 install --ignore-installed /usr/local/pip-packs/*
+      #wget -O /usr/local/cyberpanel-pip.zip https://rep.cyberpanel.net/cyberpanel-pip-3.zip
+      #check_return
+      #unzip /usr/local/cyberpanel-pip.zip -d /usr/local
+      #check_return
+      pip3.6 install --ignore-installed -r requirments.txt
       check_return
     else
       . /usr/local/CyberPanel/bin/activate
-      wget -O /usr/local/cyberpanel-pip.zip https://rep.cyberpanel.net/ubuntu-pip-3.zip
-      check_return
-      unzip /usr/local/cyberpanel-pip.zip -d /usr/local
-      check_return
-      pip3 install --ignore-installed /usr/local/packages/*
+      #wget -O /usr/local/cyberpanel-pip.zip https://rep.cyberpanel.net/ubuntu-pip-3.zip
+      #check_return
+      #unzip /usr/local/cyberpanel-pip.zip -d /usr/local
+      #check_return
+      pip3 install --ignore-installed -r requirments.txt
       check_return
     fi
   fi

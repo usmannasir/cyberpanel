@@ -307,7 +307,7 @@ if [ $SERVER_OS = "Ubuntu" ]; then
   pip3 install virtualenv
   check_return
 else
-  pip3.6 install virtualenv==16.7.9
+  pip3.6 install virtualenv
   check_return
 fi
 
@@ -325,19 +325,20 @@ else
 fi
 
 rm -f requirments.txt
+wget https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
 
-if [[ $UBUNTU_20 == "False" ]]; then
-  wget -O /usr/local/cyberpanel-pip.zip https://rep.cyberpanel.net/cyberpanel-pip-3.zip
-else
-  wget -O /usr/local/cyberpanel-pip.zip https://rep.cyberpanel.net/ubuntu-pip-3.zip
-fi
-
-check_return
-rm -rf /usr/local/pip-packs/
-rm -rf /usr/local/packages
-
-unzip /usr/local/cyberpanel-pip.zip -d /usr/local
-check_return
+#if [[ $UBUNTU_20 == "False" ]]; then
+#  wget -O /usr/local/cyberpanel-pip.zip https://rep.cyberpanel.net/cyberpanel-pip-3.zip
+#else
+#  wget -O /usr/local/cyberpanel-pip.zip https://rep.cyberpanel.net/ubuntu-pip-3.zip
+#fi
+#
+#check_return
+#rm -rf /usr/local/pip-packs/
+#rm -rf /usr/local/packages
+#
+#unzip /usr/local/cyberpanel-pip.zip -d /usr/local
+#check_return
 . /usr/local/CyberPanel/bin/activate
 check_return
 
@@ -345,15 +346,15 @@ if [ $SERVER_OS = "Ubuntu" ]; then
   . /usr/local/CyberPanel/bin/activate
   check_return
   if [[ $UBUNTU_20 == "False" ]]; then
-    pip3 install --ignore-installed /usr/local/pip-packs/*
+    pip3 install --ignore-installed -r requirments.txt
   else
-    pip3 install --ignore-installed /usr/local/packages/*
+    pip3 install --ignore-installed -r requirments.txt
   fi
   check_return
 else
-  source /usr/local/CyberPanel/bin/activate
-  check_return
-  pip3.6 install --ignore-installed /usr/local/pip-packs/*
+  #source /usr/local/CyberPanel/bin/activate
+  #check_return
+  pip3.6 install --ignore-installed -r requirments.txt
   check_return
 fi
 
@@ -390,19 +391,22 @@ fi
 
 check_return
 
+rm -f requirments.txt
+wget https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
+
 if [ $SERVER_OS = "Ubuntu" ]; then
   . /usr/local/CyberCP/bin/activate
   check_return
   if [[ $UBUNTU_20 == "False" ]]; then
-    pip3 install --ignore-installed /usr/local/pip-packs/*
+    pip3 install --ignore-installed -r requirments.txt
   else
-    pip3 install --ignore-installed /usr/local/packages/*
+    pip3 install --ignore-installed -r requirments.txt
   fi
   check_return
 else
   source /usr/local/CyberCP/bin/activate
   check_return
-  pip3.6 install --ignore-installed /usr/local/pip-packs/*
+  pip3.6 install --ignore-installed -r requirments.txt
   check_return
 fi
 
