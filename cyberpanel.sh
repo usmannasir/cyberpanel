@@ -1288,7 +1288,8 @@ EOF
       fi
 
     fi
-
+    rm -f requirments.txt
+    wget https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
     virtualenv -p /usr/bin/python3 /usr/local/CyberCP
 
     if [[ $UBUNTU_20 == "False" ]]; then
