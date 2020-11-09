@@ -1130,9 +1130,9 @@ main_install() {
   if [[ $debug == "1" ]]; then
 
     if [[ $UBUNTU_20 == "False" ]]; then
-      pip3.6 install --ignore-installed /usr/local/pip-packs/*
+      pip3.6 install --ignore-installed -r requirments.txt
     else
-      pip3.6 install --ignore-installed /usr/local/packages/*
+      pip3.6 install --ignore-installed -r requirments.txt
     fi
 
     if [[ $REDIS_HOSTING == "Yes" ]]; then
@@ -1293,12 +1293,12 @@ EOF
     if [[ $UBUNTU_20 == "False" ]]; then
       source /usr/local/CyberCP/bin/activate
       check_return
-      pip3 install --ignore-installed /usr/local/pip-packs/*
+      pip3 install --ignore-installed -r requirments.txt
       check_return
     else
       . /usr/local/CyberCP/bin/activate
       check_return
-      pip3 install --ignore-installed /usr/local/packages/*
+      pip3 install --ignore-installed -r requirments.txt
       check_return
     fi
 
