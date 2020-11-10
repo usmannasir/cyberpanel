@@ -911,11 +911,7 @@ $parameters = array(
             else:
                 command = 'composer global require joomlatools/console'
                 ProcessUtilities.outputExecutioner(command, externalApp, None, self.permPath)
-
-                if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
-                    joomlaPath = '/home/%s/.composer/vendor/bin/joomla' % (self.masterDomain)
-                else:
-                    joomlaPath = '/home/%s/.config/composer/vendor/bin/joomla' % (self.masterDomain)
+                joomlaPath = '/home/%s/.config/composer/vendor/bin/joomla' % (self.masterDomain)
 
             ## Run the install command
 
