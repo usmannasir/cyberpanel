@@ -900,16 +900,19 @@ $parameters = array(
             if self.dataLossCheck(finalPath, tempStatusPath) == 0:
                 raise BaseException('Directory is not empty.')
 
-            command = 'composer global require joomlatools/console'
-            ProcessUtilities.outputExecutioner(command, externalApp, None, self.permPath)
+
 
             ### Decide joomla console path
             import getpass
 
             if getpass.getuser() == 'root':
+                command = 'export COMPOSER_ALLOW_SUPERUSER=1;composer global require joomlatools/console'
+                ProcessUtilities.outputExecutioner(command, externalApp, None, self.permPath)
                 joomlaPath = '/root/.config/composer/vendor/bin/joomla'
             else:
-                joomlaPath = '/home/%s/.composer/vendor/bin/joomla' % (self.masterDomain)
+                command = 'composer global require joomlatools/console'
+                ProcessUtilities.outputExecutioner(command, externalApp, None, self.permPath)
+                joomlaPath = '/home/%s/.config/composer/vendor/bin/joomla' % (self.masterDomain)
 
             ## Run the install command
 

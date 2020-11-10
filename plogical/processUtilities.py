@@ -106,10 +106,13 @@ class ProcessUtilities(multi.Thread):
         try:
             if os.path.exists(ProcessUtilities.debugPath):
                 logging.writeToFile(command)
+
+            f = open(os.devnull, 'w')
+
             if shell == False:
-                res = subprocess.call(shlex.split(command))
+                res = subprocess.call(shlex.split(command), stdout=f, stderr=f)
             else:
-                res = subprocess.call(command, shell=shell)
+                res = subprocess.call(command, shell=shell, stdout=f, stderr=f)
 
             if res == 0:
                 return 1
