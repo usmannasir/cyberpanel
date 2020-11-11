@@ -475,7 +475,7 @@ EOF
       dnf --enablerepo=PowerTools install gpgme-devel -y
       check_return
     fi
-
+    ln -s /usr/bin/pip3 /usr/bin/pip
     pip install virtualenv
     check_return
 
