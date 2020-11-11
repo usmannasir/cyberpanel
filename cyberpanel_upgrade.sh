@@ -304,10 +304,10 @@ else
 fi
 
 if [ $SERVER_OS = "Ubuntu" ]; then
-  pip3 install virtualenv
+  pip3 install virtualenv==16.7.9
   check_return
 else
-  pip3.6 install virtualenv
+  pip3.6 install virtualenv==16.7.9
   check_return
 fi
 
