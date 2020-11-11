@@ -476,7 +476,7 @@ EOF
       check_return
     fi
 
-    pip3.6 install virtualenv
+    pip install virtualenv
     check_return
 
   fi
@@ -496,7 +496,7 @@ EOF
     DEBIAN_FRONTEND=noninteractive apt install -y python3-venv
     check_return
 
-    pip3 install virtualenv
+    pip install virtualenv
     check_return
 
   fi
@@ -1126,16 +1126,7 @@ main_install() {
     echo "/usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY --postfix $POSTFIX_VARIABLE --powerdns $POWERDNS_VARIABLE --ftp $PUREFTPD_VARIABLE"
     exit
   fi
-  rm -f requirments.txt
-  wget https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
   if [[ $debug == "1" ]]; then
-
-    if [[ $UBUNTU_20 == "False" ]]; then
-      pip3.6 install --ignore-installed -r requirments.txt
-    else
-      pip3.6 install --ignore-installed -r requirments.txt
-    fi
-
     if [[ $REDIS_HOSTING == "Yes" ]]; then
       if [[ $REMOTE_MYSQL == "ON" ]]; then
         /usr/local/CyberPanel/bin/python install.py $SERVER_IP $SERIAL_NO $LICENSE_KEY --postfix $POSTFIX_VARIABLE --powerdns $POWERDNS_VARIABLE --ftp $PUREFTPD_VARIABLE --redis enable --remotemysql $REMOTE_MYSQL --mysqlhost $MYSQL_HOST --mysqldb $MYSQL_DB --mysqluser $MYSQL_USER --mysqlpassword $MYSQL_PASSWORD --mysqlport $MYSQL_PORT
@@ -1182,24 +1173,16 @@ pip_virtualenv() {
 
   if [[ $DEV == "ON" ]]; then
     #install dev branch
-    wget https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
+    wget https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt -O /usr/local/requirments.txt
     virtualenv -p /usr/bin/python3 /usr/local/CyberPanel
 
     if [[ $UBUNTU_20 == "False" ]]; then
       source /usr/local/CyberPanel/bin/activate
-      #wget -O /usr/local/cyberpanel-pip.zip https://rep.cyberpanel.net/cyberpanel-pip-3.zip
-      #check_return
-      #unzip /usr/local/cyberpanel-pip.zip -d /usr/local
-      #check_return
-      pip3.6 install --ignore-installed -r requirments.txt
+      pip install -r /usr/local/requirments.txt
       check_return
     else
       . /usr/local/CyberPanel/bin/activate
-      #wget -O /usr/local/cyberpanel-pip.zip https://rep.cyberpanel.net/ubuntu-pip-3.zip
-      #check_return
-      #unzip /usr/local/cyberpanel-pip.zip -d /usr/local
-      #check_return
-      pip3 install --ignore-installed -r requirments.txt
+      pip install -r /usr/local/requirments.txt
       check_return
     fi
   fi
@@ -1288,19 +1271,18 @@ EOF
       fi
 
     fi
-    rm -f requirments.txt
-    wget https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
+
     virtualenv -p /usr/bin/python3 /usr/local/CyberCP
 
     if [[ $UBUNTU_20 == "False" ]]; then
       source /usr/local/CyberCP/bin/activate
       check_return
-      pip3 install --ignore-installed -r requirments.txt
+      pip install -r /usr/local/requirments.txt
       check_return
     else
       . /usr/local/CyberCP/bin/activate
       check_return
-      pip3 install --ignore-installed -r requirments.txt
+      pip install -r /usr/local/requirments.txt
       check_return
     fi
 
