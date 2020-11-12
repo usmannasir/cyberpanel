@@ -500,6 +500,8 @@ fi
 #fix the lsphp74-zip missing issue.
 
 ##
+chown -R cyberpanel:cyberpanel /usr/local/CyberCP/lib
+chown -R cyberpanel:cyberpanel /usr/local/CyberCP/lib64
 systemctl restart lscpd
 
 rm -f requirements.txt

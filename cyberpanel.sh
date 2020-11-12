@@ -1285,7 +1285,10 @@ EOF
       pip install -r /usr/local/requirments.txt
       check_return
     fi
+    ## Some permissions on libs
 
+    chown -R cyberpanel:cyberpanel /usr/local/CyberCP/lib
+    chown -R cyberpanel:cyberpanel /usr/local/CyberCP/lib64
     systemctl restart lscpd
 
     for version in $(ls /usr/local/lsws | grep lsphp); do

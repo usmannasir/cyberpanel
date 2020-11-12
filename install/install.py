@@ -2297,7 +2297,6 @@ def main():
     checks.install_rsync()
 
     checks.installFirewalld()
-
     checks.install_default_keys()
 
     checks.download_install_CyberPanel(installCyberPanel.InstallCyberPanel.mysqlPassword, mysql)
