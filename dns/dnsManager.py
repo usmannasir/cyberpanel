@@ -1160,14 +1160,6 @@ class DNSManager:
                 command = 'systemctl disable systemd-resolved.service'
                 ProcessUtilities.executioner(command)
 
-                try:
-                    os.rename('/etc/resolv.conf', 'etc/resolved.conf')
-                except OSError as e:
-                    try:
-                        os.remove('/etc/resolv.conf')
-                    except OSError as e1:
-                        pass
-
 
             if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
 

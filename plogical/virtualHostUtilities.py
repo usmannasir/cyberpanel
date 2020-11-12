@@ -600,12 +600,12 @@ class virtualHostUtilities:
 
             adminEmail = "email@" + virtualHost
 
-            if not os.path.exists(pathToStoreSSLFullChain):
-                retValues = sslUtilities.issueSSLForDomain(virtualHost, adminEmail, path)
+            retValues = sslUtilities.issueSSLForDomain(virtualHost, adminEmail, path)
 
-                if retValues[0] == 0:
-                    print("0," + str(retValues[1]))
-                    return 0, retValues[1]
+            if retValues[0] == 0:
+                print("0," + str(retValues[1]))
+                return 0, retValues[1]
+
 
             ## removing old certs for lscpd
             if os.path.exists(destPrivKey):
@@ -665,13 +665,12 @@ class virtualHostUtilities:
             srcFullChain = '/etc/letsencrypt/live/' + virtualHost + '/fullchain.pem'
             srcPrivKey = '/etc/letsencrypt/live/' + virtualHost + '/privkey.pem'
 
-            if not os.path.exists(srcFullChain):
-                adminEmail = "email@" + virtualHost
-                retValues = sslUtilities.issueSSLForDomain(virtualHost, adminEmail, path)
+            adminEmail = "email@" + virtualHost
+            retValues = sslUtilities.issueSSLForDomain(virtualHost, adminEmail, path)
 
-                if retValues[0] == 0:
-                    print("0," + str(retValues[1]))
-                    return 0, retValues[1]
+            if retValues[0] == 0:
+                print("0," + str(retValues[1]))
+                return 0, retValues[1]
 
             ## MailServer specific functions
 
