@@ -59,7 +59,6 @@ class virtualHostUtilities:
     def setupAutoDiscover(mailDomain, tempStatusPath, virtualHostName, admin):
 
         if mailDomain:
-
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Creating mail child domain..,80')
             childDomain = 'mail.%s' % (virtualHostName)
             childPath = '/home/%s/public_html/%s' % (virtualHostName, childDomain)
@@ -102,7 +101,10 @@ class virtualHostUtilities:
                     writeToFile.close()
 
                 postfixMapFile = '/etc/postfix/vmail_ssl.map'
-                postfixMapFileContent = open(postfixMapFile, 'r').read()
+                try:
+                    postfixMapFileContent = open(postfixMapFile, 'r').read()
+                except:
+                    postfixMapFileContent = ''
 
                 if postfixMapFileContent.find('/live/%s/' % (childDomain)) == -1:
 

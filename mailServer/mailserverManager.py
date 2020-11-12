@@ -853,6 +853,17 @@ class MailServerManager(multi.Thread):
         if postFixData.find('myhostname = server.example.com') > -1:
             return 0
         else:
+            try:
+
+                postFixLines = ProcessUtilities.outputExecutioner('cat %s' % (postfixPath)).splitlines()
+
+                for items in postFixLines:
+                    if items.find('myhostname') > -1 and items[0] != '#':
+                        self.mailHostName = items.split('=')[1].strip(' ')
+                        self.MailSSL = 1
+            except BaseException as msg:
+                logging.CyberCPLogFileWriter.writeToFile('%s. [checkIfMailServerSSLIssued:864]' % (str(msg)))
+
             ipFile = "/etc/cyberpanel/machineIP"
             f = open(ipFile)
             ipData = f.read()
@@ -1356,6 +1367,68 @@ class MailServerManager(multi.Thread):
 
         return 1
 
+    def configureOpenDKIM(self):
+        try:
+
+            ## Configure OpenDKIM specific settings
+
+            openDKIMConfigurePath = "/etc/opendkim.conf"
+
+            configData = """
+Mode	sv
+Canonicalization	relaxed/simple
+KeyTable	refile:/etc/opendkim/KeyTable
+SigningTable	refile:/etc/opendkim/SigningTable
+ExternalIgnoreList	refile:/etc/opendkim/TrustedHosts
+InternalHosts	refile:/etc/opendkim/TrustedHosts
+"""
+
+            writeToFile = open(openDKIMConfigurePath, 'a')
+            writeToFile.write(configData)
+            writeToFile.close()
+
+            ## Configure postfix specific settings
+
+            postfixFilePath = "/etc/postfix/main.cf"
+
+            configData = """
+smtpd_milters = inet:127.0.0.1:8891
+non_smtpd_milters = $smtpd_milters
+milter_default_action = accept
+"""
+
+            writeToFile = open(postfixFilePath, 'a')
+            writeToFile.write(configData)
+            writeToFile.close()
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+                data = open(openDKIMConfigurePath, 'r').readlines()
+                writeToFile = open(openDKIMConfigurePath, 'w')
+                for items in data:
+                    if items.find('Socket') > -1 and items.find('local:') and items[0] != '#':
+                        writeToFile.writelines('Socket  inet:8891@localhost\n')
+                    else:
+                        writeToFile.writelines(items)
+                writeToFile.close()
+
+            #### Restarting Postfix and OpenDKIM
+
+            command = "systemctl start opendkim"
+            ProcessUtilities.executioner(command)
+
+            command = "systemctl enable opendkim"
+            ProcessUtilities.executioner(command)
+
+            ##
+
+            command = "systemctl restart postfix"
+            ProcessUtilities.executioner(command)
+
+            return 1
+
+        except BaseException as msg:
+            return 0
+
     def fixCyberPanelPermissions(self):
 
         ###### fix Core CyberPanel permissions
@@ -1527,12 +1600,15 @@ class MailServerManager(multi.Thread):
                 ipAddressLocal = ipData.split('\n', 1)[0]
 
                 self.LOCALHOST = ipAddressLocal
-
             except BaseException as msg:
                 self.remotemysql = 'OFF'
 
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.CyberCPLogFileWriter.writeToFile('%s. [setupConnection:75]' % (str(msg)))
+
+            ###
+
+            self.checkIfMailServerSSLIssued()
 
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Removing and re-installing postfix/dovecot..,5')
 
@@ -1554,6 +1630,29 @@ class MailServerManager(multi.Thread):
             if self.setup_postfix_davecot_config() == 0:
                 logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'setup_postfix_davecot_config failed. [404].')
                 return 0
+
+            logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Restoreing OpenDKIM configurations..,70')
+
+            if self.configureOpenDKIM() == 0:
+                logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'configureOpenDKIM failed. [404].')
+                return 0
+
+
+            if self.MailSSL:
+                logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Setting up Mail Server SSL if any..,75')
+                from plogical.virtualHostUtilities import virtualHostUtilities
+                virtualHostUtilities.issueSSLForMailServer(self.mailHostName, '/home/%s/public_html' % (self.mailHostName))
+
+            from websiteFunctions.models import ChildDomains
+            from plogical.virtualHostUtilities import virtualHostUtilities
+            for websites in Websites.objects.all():
+                try:
+                    child = ChildDomains.objects.get(domain='mail.%s' % (websites.domain))
+                    logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
+                                                              'Creating mail domain for %s..,80' % (websites.domain))
+                    virtualHostUtilities.setupAutoDiscover(1, '/dev/null', websites.domain, websites.admin)
+                except:
+                    pass
 
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Fixing permissions..,90')
 
