@@ -227,7 +227,7 @@ class IncScheduler():
                         try:
 
                             finalData = json.dumps({'refresh_token': gDriveData['refresh_token']})
-                            r = requests.post("https://platform.cyberpanel.net/refreshToken", data=finalData
+                            r = requests.post("https://cloud.cyberpanel.net/refreshToken", data=finalData
                                               )
                             gDriveData['token'] = json.loads(r.text)['access_token']
 
@@ -309,7 +309,7 @@ class IncScheduler():
                                 drive.files().create(body=file_metadata, media_body=media, fields='id').execute()
                             except:
                                 finalData = json.dumps({'refresh_token': gDriveData['refresh_token']})
-                                r = requests.post("https://platform.cyberpanel.net/refreshToken", data=finalData
+                                r = requests.post("https://cloud.cyberpanel.net/refreshToken", data=finalData
                                                   )
                                 gDriveData['token'] = json.loads(r.text)['access_token']
 
