@@ -277,7 +277,7 @@ class backupSchedule:
             ##
 
             writeToFile = open(backupLogPath, "a")
-            command = "sudo scp -o StrictHostKeyChecking=no -P "+port+" -i /root/.ssh/cyberpanel " + backupPath + " " + user + "@" + IPAddress+":~/backup/" + ipAddressLocal + "/" + time.strftime("%a-%b") + "/"
+            command = "scp -o StrictHostKeyChecking=no -P "+port+" -i /root/.ssh/cyberpanel " + backupPath + " " + user + "@" + IPAddress+":~/backup/" + ipAddressLocal + "/" + time.strftime("%m.%d.%Y_%H-%M-%S") + "/"
             subprocess.call(shlex.split(command), stdout=writeToFile)
 
             if os.path.exists(ProcessUtilities.debugPath):
@@ -366,7 +366,7 @@ class backupSchedule:
             else:
                 ## Create backup dir on remote server in ~/backup
 
-                command = "sudo ssh -o StrictHostKeyChecking=no -p " + port + " -i /root/.ssh/cyberpanel " + user + "@" + ipAddress + " mkdir -p ~/backup/" + ipAddressLocal + "/" + time.strftime(
+                command = "ssh -o StrictHostKeyChecking=no -p " + port + " -i /root/.ssh/cyberpanel " + user + "@" + ipAddress + " mkdir -p ~/backup/" + ipAddressLocal + "/" + time.strftime(
                     "%a-%b")
                 subprocess.call(shlex.split(command))
                 pass

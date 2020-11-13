@@ -59,13 +59,15 @@ class virtualHostUtilities:
     def setupAutoDiscover(mailDomain, tempStatusPath, virtualHostName, admin):
 
         if mailDomain:
-
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Creating mail child domain..,80')
             childDomain = 'mail.%s' % (virtualHostName)
             childPath = '/home/%s/public_html/%s' % (virtualHostName, childDomain)
 
-            virtualHostUtilities.createDomain(virtualHostName, childDomain, 'PHP 7.2', childPath, 1, 0, 0,
+            result = virtualHostUtilities.createDomain(virtualHostName, childDomain, 'PHP 7.2', childPath, 1, 0, 0,
                                               admin.userName, 0, "/home/cyberpanel/" + str(randint(1000, 9999)))
+
+            if result[0] == 0:
+                sslUtilities.issueSSLForDomain(virtualHostName, admin.email, childPath)
 
             ## update dovecot conf to enable auto-discover
 
@@ -74,18 +76,18 @@ class virtualHostUtilities:
             if os.path.exists(dovecotPath):
                 dovecotContent = open(dovecotPath, 'r').read()
 
-                if dovecotContent.find(childDomain) == -1:
+                if dovecotContent.find('/live/%s/' % (childDomain)) == -1:
                     content = """\nlocal_name %s {
-                      ssl_cert = </etc/letsencrypt/live/%s/fullchain.pem
-                      ssl_key = </etc/letsencrypt/live/%s/privkey.pem
+        ssl_cert = </etc/letsencrypt/live/%s/fullchain.pem
+        ssl_key = </etc/letsencrypt/live/%s/privkey.pem
 }\n""" % (childDomain, childDomain, childDomain)
 
                     writeToFile = open(dovecotPath, 'a')
                     writeToFile.write(content)
                     writeToFile.close()
 
-                    command = 'systemctl restart dovecot'
-                    ProcessUtilities.executioner(command)
+                command = 'systemctl restart dovecot'
+                ProcessUtilities.executioner(command)
 
                 ### Update postfix configurations
 
@@ -99,13 +101,19 @@ class virtualHostUtilities:
                     writeToFile.close()
 
                 postfixMapFile = '/etc/postfix/vmail_ssl.map'
+                try:
+                    postfixMapFileContent = open(postfixMapFile, 'r').read()
+                except:
+                    postfixMapFileContent = ''
 
-                mapContent = '%s /etc/letsencrypt/live/%s/privkey.pem /etc/letsencrypt/live/%s/fullchain.pem\n' % (
-                    childDomain, childDomain, childDomain)
+                if postfixMapFileContent.find('/live/%s/' % (childDomain)) == -1:
 
-                writeToFile = open(postfixMapFile, 'a')
-                writeToFile.write(mapContent)
-                writeToFile.close()
+                    mapContent = '%s /etc/letsencrypt/live/%s/privkey.pem /etc/letsencrypt/live/%s/fullchain.pem\n' % (
+                        childDomain, childDomain, childDomain)
+
+                    writeToFile = open(postfixMapFile, 'a')
+                    writeToFile.write(mapContent)
+                    writeToFile.close()
 
                 command = 'postmap -F hash:/etc/postfix/vmail_ssl.map'
 
@@ -592,12 +600,12 @@ class virtualHostUtilities:
 
             adminEmail = "email@" + virtualHost
 
-            if not os.path.exists(pathToStoreSSLFullChain):
-                retValues = sslUtilities.issueSSLForDomain(virtualHost, adminEmail, path)
+            retValues = sslUtilities.issueSSLForDomain(virtualHost, adminEmail, path)
 
-                if retValues[0] == 0:
-                    print("0," + str(retValues[1]))
-                    return 0, retValues[1]
+            if retValues[0] == 0:
+                print("0," + str(retValues[1]))
+                return 0, retValues[1]
+
 
             ## removing old certs for lscpd
             if os.path.exists(destPrivKey):
@@ -657,13 +665,12 @@ class virtualHostUtilities:
             srcFullChain = '/etc/letsencrypt/live/' + virtualHost + '/fullchain.pem'
             srcPrivKey = '/etc/letsencrypt/live/' + virtualHost + '/privkey.pem'
 
-            if not os.path.exists(srcFullChain):
-                adminEmail = "email@" + virtualHost
-                retValues = sslUtilities.issueSSLForDomain(virtualHost, adminEmail, path)
+            adminEmail = "email@" + virtualHost
+            retValues = sslUtilities.issueSSLForDomain(virtualHost, adminEmail, path)
 
-                if retValues[0] == 0:
-                    print("0," + str(retValues[1]))
-                    return 0, retValues[1]
+            if retValues[0] == 0:
+                print("0," + str(retValues[1]))
+                return 0, retValues[1]
 
             ## MailServer specific functions
 

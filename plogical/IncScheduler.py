@@ -18,6 +18,7 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 from plogical.backupSchedule import backupSchedule
 import requests
+from websiteFunctions.models import NormalBackupJobs, NormalBackupSites, NormalBackupDests, NormalBackupJobLogs
 try:
     from plogical.virtualHostUtilities import virtualHostUtilities
     from plogical.mailUtilities import mailUtilities
@@ -28,6 +29,15 @@ except:
 class IncScheduler():
     logPath = '/home/cyberpanel/incbackuplogs'
     gitFolder = '/home/cyberpanel/git'
+
+    timeFormat = time.strftime("%m.%d.%Y_%H-%M-%S")
+
+    ### Normal scheduled backups constants
+
+    frequency = 'frequency'
+    allSites = 'allSites'
+    currentStatus = 'currentStatus'
+    lastRun = 'lastRun'
 
     @staticmethod
     def startBackup(type):
@@ -217,7 +227,7 @@ class IncScheduler():
                         try:
 
                             finalData = json.dumps({'refresh_token': gDriveData['refresh_token']})
-                            r = requests.post("https://platform.cyberpanel.net/refreshToken", data=finalData
+                            r = requests.post("https://cloud.cyberpanel.net/refreshToken", data=finalData
                                               )
                             gDriveData['token'] = json.loads(r.text)['access_token']
 
@@ -299,7 +309,7 @@ class IncScheduler():
                                 drive.files().create(body=file_metadata, media_body=media, fields='id').execute()
                             except:
                                 finalData = json.dumps({'refresh_token': gDriveData['refresh_token']})
-                                r = requests.post("https://platform.cyberpanel.net/refreshToken", data=finalData
+                                r = requests.post("https://cloud.cyberpanel.net/refreshToken", data=finalData
                                                   )
                                 gDriveData['token'] = json.loads(r.text)['access_token']
 
@@ -332,6 +342,254 @@ class IncScheduler():
                 GDriveJobLogs(owner=items, status=backupSchedule.ERROR,
                               message='[Completely] Job failed, Error message: %s.' % (str(msg))).save()
 
+    @staticmethod
+    def startNormalBackups(type):
+        from plogical.processUtilities import ProcessUtilities
+        from plogical.backupSchedule import backupSchedule
+        import socket
+
+        ## SFTP Destination Config sample
+        ## {"type": "SFTP", "ip": "ip", "username": "root", "port": "22", "path": "/home/backup"}
+
+        ## Local Destination config sample
+        ## {"type": "local", "path": "/home/backup"}
+
+        ## Backup jobs config
+
+        ## {"frequency": "Daily", "allSites": "Selected Only"}
+        ## {"frequency": "Daily"}
+
+
+        for backupjob in NormalBackupJobs.objects.all():
+
+            jobConfig = json.loads(backupjob.config)
+            destinationConfig = json.loads(backupjob.owner.config)
+
+            currentTime = time.strftime("%m.%d.%Y_%H-%M-%S")
+
+            if destinationConfig['type'] == 'local':
+
+                finalPath = '%s/%s' % (destinationConfig['path'].rstrip('/'), currentTime)
+                command = 'mkdir -p %s' % (finalPath)
+                ProcessUtilities.executioner(command)
+
+                if jobConfig[IncScheduler.frequency] == type:
+
+                    ### Check if an old job prematurely killed, then start from there.
+                    try:
+                        oldJobContinue = 1
+                        pid = jobConfig['pid']
+                        stuckDomain = jobConfig['website']
+                        finalPath = jobConfig['finalPath']
+                        jobConfig['pid'] = str(os.getpid())
+
+                        command = 'ps aux'
+                        result = ProcessUtilities.outputExecutioner(command)
+
+                        if result.find(pid) > -1 and result.find('IncScheduler.py') > -1:
+                            quit(1)
+
+
+                    except:
+                        ### Save some important info in backup config
+                        oldJobContinue = 0
+                        jobConfig['pid'] = str(os.getpid())
+                        jobConfig['finalPath'] = finalPath
+
+                    NormalBackupJobLogs.objects.filter(owner=backupjob).delete()
+                    NormalBackupJobLogs(owner=backupjob, status=backupSchedule.INFO,
+                                  message='Starting %s backup on %s..' % (type, time.strftime("%m.%d.%Y_%H-%M-%S"))).save()
+
+                    if oldJobContinue:
+                        NormalBackupJobLogs(owner=backupjob, status=backupSchedule.INFO, message='Will continue old killed job starting from %s.' % (stuckDomain)).save()
+
+                    actualDomain = 0
+                    try:
+                        if jobConfig[IncScheduler.allSites] == 'all':
+                            websites = Websites.objects.all().order_by('domain')
+                            actualDomain = 1
+                        else:
+                            websites = backupjob.normalbackupsites_set.all().order_by('domain__domain')
+                    except:
+                        websites = backupjob.normalbackupsites_set.all().order_by('domain__domain')
+
+                    doit = 0
+
+                    for site in websites:
+                        if actualDomain:
+                            domain = site.domain
+                        else:
+                            domain = site.domain.domain
+
+
+                        ## Save currently backing domain in db, so that i can restart from here when prematurely killed
+
+                        jobConfig['website'] = domain
+                        jobConfig[IncScheduler.lastRun] = time.strftime("%d %b %Y, %I:%M %p")
+                        jobConfig[IncScheduler.currentStatus] = 'Running..'
+                        backupjob.config = json.dumps(jobConfig)
+                        backupjob.save()
+
+                        if oldJobContinue and not doit:
+                            if domain == stuckDomain:
+                                doit = 1
+                                continue
+                            else:
+                                continue
+
+                        retValues = backupSchedule.createLocalBackup(domain, '/dev/null')
+
+                        if retValues[0] == 0:
+                            NormalBackupJobLogs(owner=backupjob, status=backupSchedule.ERROR,
+                                                message='Backup failed for %s on %s.' % (
+                                                domain, time.strftime("%m.%d.%Y_%H-%M-%S"))).save()
+
+                            SUBJECT = "Automatic backup failed for %s on %s." % (domain, currentTime)
+                            adminEmailPath = '/home/cyberpanel/adminEmail'
+                            adminEmail = open(adminEmailPath, 'r').read().rstrip('\n')
+                            sender = 'root@%s' % (socket.gethostname())
+                            TO = [adminEmail]
+                            message = """\
+From: %s
+To: %s
+Subject: %s
+    
+Automatic backup failed for %s on %s.
+""" % (sender, ", ".join(TO), SUBJECT, domain, currentTime)
+
+                            logging.SendEmail(sender, TO, message)
+                        else:
+                            backupPath = retValues[1] + ".tar.gz"
+
+                            command = 'mv %s %s' % (backupPath, finalPath)
+                            ProcessUtilities.executioner(command)
+
+                            NormalBackupJobLogs(owner=backupjob, status=backupSchedule.INFO,
+                                                message='Backup completed for %s on %s.' % (
+                                                    domain, time.strftime("%m.%d.%Y_%H-%M-%S"))).save()
+
+                    jobConfig = json.loads(backupjob.config)
+                    if jobConfig['pid']:
+                        del jobConfig['pid']
+                    jobConfig[IncScheduler.currentStatus] = 'Not running'
+                    backupjob.config = json.dumps(jobConfig)
+                    backupjob.save()
+            else:
+                import subprocess
+                import shlex
+                finalPath = '%s/%s' % (destinationConfig['path'].rstrip('/'), currentTime)
+                command = "ssh -o StrictHostKeyChecking=no -p " + destinationConfig['port'] + " -i /root/.ssh/cyberpanel " + destinationConfig['username'] + "@" + destinationConfig['ip'] + " mkdir -p %s" % (finalPath)
+                subprocess.call(shlex.split(command))
+
+                if jobConfig[IncScheduler.frequency] == type:
+
+                    ### Check if an old job prematurely killed, then start from there.
+                    try:
+                        oldJobContinue = 1
+                        pid = jobConfig['pid']
+                        stuckDomain = jobConfig['website']
+                        finalPath = jobConfig['finalPath']
+                        jobConfig['pid'] = str(os.getpid())
+
+                        command = 'ps aux'
+                        result = ProcessUtilities.outputExecutioner(command)
+
+                        if result.find(pid) > -1 and result.find('IncScheduler.py') > -1:
+                            quit(1)
+
+
+                    except:
+                        ### Save some important info in backup config
+                        oldJobContinue = 0
+                        jobConfig['pid'] = str(os.getpid())
+                        jobConfig['finalPath'] = finalPath
+
+                    NormalBackupJobLogs.objects.filter(owner=backupjob).delete()
+                    NormalBackupJobLogs(owner=backupjob, status=backupSchedule.INFO,
+                                        message='Starting %s backup on %s..' % (
+                                        type, time.strftime("%m.%d.%Y_%H-%M-%S"))).save()
+
+                    if oldJobContinue:
+                        NormalBackupJobLogs(owner=backupjob, status=backupSchedule.INFO, message='Will continue old killed job starting from %s.' % (stuckDomain)).save()
+
+                    actualDomain = 0
+                    try:
+                        if jobConfig[IncScheduler.allSites] == 'all':
+                            websites = Websites.objects.all().order_by('domain')
+                            actualDomain = 1
+                        else:
+                            websites = backupjob.normalbackupsites_set.all().order_by('domain__domain')
+                    except:
+                        websites = backupjob.normalbackupsites_set.all().order_by('domain__domain')
+
+                    doit = 0
+
+                    for site in websites:
+
+                        if actualDomain:
+                            domain = site.domain
+                        else:
+                            domain = site.domain.domain
+
+                        ## Save currently backing domain in db, so that i can restart from here when prematurely killed
+
+                        jobConfig['website'] = domain
+                        jobConfig[IncScheduler.lastRun] = time.strftime("%d %b %Y, %I:%M %p")
+                        jobConfig[IncScheduler.currentStatus] = 'Running..'
+                        backupjob.config = json.dumps(jobConfig)
+                        backupjob.save()
+
+                        if oldJobContinue and not doit:
+                            if domain == stuckDomain:
+                                doit = 1
+                                continue
+                            else:
+                                continue
+
+                        retValues = backupSchedule.createLocalBackup(domain, '/dev/null')
+
+                        if retValues[0] == 0:
+                            NormalBackupJobLogs(owner=backupjob, status=backupSchedule.ERROR,
+                                                message='Backup failed for %s on %s.' % (
+                                                    domain, time.strftime("%m.%d.%Y_%H-%M-%S"))).save()
+
+                            SUBJECT = "Automatic backup failed for %s on %s." % (domain, currentTime)
+                            adminEmailPath = '/home/cyberpanel/adminEmail'
+                            adminEmail = open(adminEmailPath, 'r').read().rstrip('\n')
+                            sender = 'root@%s' % (socket.gethostname())
+                            TO = [adminEmail]
+                            message = """\
+From: %s
+To: %s
+Subject: %s
+
+Automatic backup failed for %s on %s.
+""" % (sender, ", ".join(TO), SUBJECT, domain, currentTime)
+
+                            logging.SendEmail(sender, TO, message)
+                        else:
+                            backupPath = retValues[1] + ".tar.gz"
+
+                            command = "scp -o StrictHostKeyChecking=no -P " + destinationConfig['port'] + " -i /root/.ssh/cyberpanel " + backupPath + " " + destinationConfig['username'] + "@" + destinationConfig['ip'] + ":%s" % (finalPath)
+                            ProcessUtilities.executioner(command)
+
+                            try:
+                                os.remove(backupPath)
+                            except:
+                                pass
+
+                            NormalBackupJobLogs(owner=backupjob, status=backupSchedule.INFO,
+                                                message='Backup completed for %s on %s.' % (
+                                                    domain, time.strftime("%m.%d.%Y_%H-%M-%S"))).save()
+
+                    jobConfig = json.loads(backupjob.config)
+                    if jobConfig['pid']:
+                        del jobConfig['pid']
+                    jobConfig[IncScheduler.currentStatus] = 'Not running'
+                    backupjob.config = json.dumps(jobConfig)
+                    backupjob.save()
+
+
 
 def main():
 
@@ -343,6 +601,7 @@ def main():
     IncScheduler.runGoogleDriveBackups(args.function)
     IncScheduler.git(args.function)
     IncScheduler.checkDiskUsage()
+    IncScheduler.startNormalBackups(args.function)
 
 
 if __name__ == "__main__":

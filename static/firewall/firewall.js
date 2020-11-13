@@ -721,7 +721,6 @@ app.controller('secureSSHCTRL', function ($scope, $http) {
 
     }
 
-
     $scope.saveKey = function (key) {
 
         $scope.secureSSHLoading = false;

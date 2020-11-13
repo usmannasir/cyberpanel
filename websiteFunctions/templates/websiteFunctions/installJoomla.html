@@ -25,16 +25,17 @@
             <form name="websiteCreationForm"  action="/" id="createPackages" class="form-horizontal bordered-row">
 
                 <div ng-hide="installationDetailsForm" class="form-group">
+
                     <label class="col-sm-3 control-label">{% trans "Site Name" %}</label>
                     <div class="col-sm-6">
-                        <input  type="text" class="form-control" ng-model="blogTitle" required>
+                        <input type="text" class="form-control" ng-model="siteName">
                     </div>
                 </div>
 
                 <div ng-hide="installationDetailsForm" class="form-group">
                     <label class="col-sm-3 control-label">{% trans "Login User" %}</label>
                     <div class="col-sm-6">
-                        <input  type="text" class="form-control" ng-model="adminUser" required>
+                        <input placeholder="admin" type="text" class="form-control" ng-model="adminUser" readonly>
                     </div>
                 </div>
 
@@ -48,7 +49,7 @@
                 <div ng-hide="installationDetailsForm" class="form-group">
                     <label class="col-sm-3 control-label">{% trans "Database Prefix" %}</label>
                     <div class="col-sm-6">
-                        <input  type="text" class="form-control" ng-model="databasePrefix" required>
+                        <input  type="text" class="form-control" ng-model="databasePrefix" readonly>
                     </div>
                 </div>
 

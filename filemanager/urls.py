@@ -6,6 +6,7 @@ urlpatterns = [
     url(r'^changePermissions$',views.changePermissions, name='changePermissions'),
     url(r'^controller$',views.controller, name='controller'),
     url(r'^downloadFile$',views.downloadFile, name='downloadFile'),
+    url(r'^editFile$', views.editFile, name='editFile'),
     url(r'^(?P<domain>(.*))$', views.loadFileManagerHome, name='loadFileManagerHome'),
 
 ]

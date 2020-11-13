@@ -10,7 +10,7 @@ django.setup()
 import json
 from plogical.acl import ACLManager
 import plogical.CyberCPLogFileWriter as logging
-from websiteFunctions.models import Websites, Backups, dest, backupSchedules, BackupJob, BackupJobLogs, GDrive, GDriveSites, GDriveJobLogs
+from websiteFunctions.models import Websites, Backups, dest, backupSchedules, BackupJob, GDrive, GDriveSites
 from plogical.virtualHostUtilities import virtualHostUtilities
 import subprocess
 import shlex
@@ -26,7 +26,8 @@ import requests
 import google.oauth2.credentials
 import googleapiclient.discovery
 from googleapiclient.discovery import build
-
+from websiteFunctions.models import NormalBackupDests, NormalBackupJobs, NormalBackupSites
+from plogical.IncScheduler import IncScheduler
 
 class BackupManager:
     localBackupPath = '/home/cyberpanel/localBackupPath'
@@ -241,7 +242,8 @@ class BackupManager:
 
             gD = GDrive.objects.get(name=selectedAccount)
 
-            if ACLManager.checkGDriveOwnership(gD, admin, currentACL) == 1 and ACLManager.checkOwnership(selectedWebsite, admin, currentACL) == 1:
+            if ACLManager.checkGDriveOwnership(gD, admin, currentACL) == 1 and ACLManager.checkOwnership(
+                    selectedWebsite, admin, currentACL) == 1:
                 pass
             else:
                 return ACLManager.loadErrorJson('status', 0)
@@ -333,7 +335,8 @@ class BackupManager:
 
             gD = GDrive.objects.get(name=selectedAccount)
 
-            if ACLManager.checkGDriveOwnership(gD, admin, currentACL) == 1 and ACLManager.checkOwnership(website, admin, currentACL) == 1:
+            if ACLManager.checkGDriveOwnership(gD, admin, currentACL) == 1 and ACLManager.checkOwnership(website, admin,
+                                                                                                         currentACL) == 1:
                 pass
             else:
                 return ACLManager.loadErrorJson('status', 0)
@@ -710,35 +713,22 @@ class BackupManager:
             if ACLManager.currentContextPermission(currentACL, 'addDeleteDestinations') == 0:
                 return ACLManager.loadErrorJson('destStatus', 0)
 
-            destinations = backupUtil.backupUtilities.destinationsPath
-
             finalDic = {}
 
-            finalDic['ipAddress'] = data['IPAddress']
-            finalDic['password'] = data['password']
+            if data['type'] == 'SFTP':
 
-            try:
-                finalDic['port'] = data['backupSSHPort']
-            except:
-                finalDic['port'] = "22"
+                finalDic['ipAddress'] = data['IPAddress']
+                finalDic['password'] = data['password']
 
-            try:
-                finalDic['user'] = data['user']
-            except:
-                finalDic['user'] = "root"
+                try:
+                    finalDic['port'] = data['backupSSHPort']
+                except:
+                    finalDic['port'] = "22"
 
-            if dest.objects.all().count() == 2:
-                final_dic = {'destStatus': 0,
-                             'error_message': "Currently only one remote destination is allowed."}
-                final_json = json.dumps(final_dic)
-                return HttpResponse(final_json)
-
-            try:
-                d = dest.objects.get(destLoc=finalDic['password'])
-                final_dic = {'destStatus': 0, 'error_message': "This destination already exists."}
-                final_json = json.dumps(final_dic)
-                return HttpResponse(final_json)
-            except:
+                try:
+                    finalDic['user'] = data['user']
+                except:
+                    finalDic['user'] = "root"
 
                 execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
                 execPath = execPath + " submitDestinationCreation --ipAddress " + finalDic['ipAddress'] + " --password " \
@@ -753,69 +743,77 @@ class BackupManager:
                     logging.CyberCPLogFileWriter.writeToFile(output)
 
                 if output.find('1,') > -1:
-                    try:
-                        writeToFile = open(destinations, "w")
-                        writeToFile.write(json.dumps(finalDic))
-                        writeToFile.close()
-                        newDest = dest(destLoc=finalDic['ipAddress'])
-                        newDest.save()
 
-                        final_dic = {'destStatus': 1, 'error_message': "None"}
-                        final_json = json.dumps(final_dic)
-                        return HttpResponse(final_json)
-                    except:
-                        writeToFile = open(destinations, "w")
-                        writeToFile.write(json.dumps(finalDic))
-                        writeToFile.close()
+                    config = {'type': data['type'], 'ip': data['IPAddress'], 'username': data['userName'],
+                              'port': data['backupSSHPort'], 'path': data['path']}
+                    nd = NormalBackupDests(name=data['name'], config=json.dumps(config))
+                    nd.save()
 
-                        newDest = dest(destLoc=finalDic['ipAddress'])
-                        newDest.save()
-
-                        final_dic = {'destStatus': 1, 'error_message': "None"}
-                        final_json = json.dumps(final_dic)
-                        return HttpResponse(final_json)
-                else:
-                    final_dic = {'destStatus': 0, 'error_message': output}
+                    final_dic = {'status': 1, 'destStatus': 1, 'error_message': "None"}
                     final_json = json.dumps(final_dic)
                     return HttpResponse(final_json)
+                else:
+                    final_dic = {'status': 0, 'destStatus': 0, 'error_message': output}
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
+            else:
+                config = {'type': data['type'], 'path': data['path']}
+                nd = NormalBackupDests(name=data['name'], config=json.dumps(config))
+                nd.save()
+
+                final_dic = {'status': 1, 'destStatus': 1, 'error_message': "None"}
+                final_json = json.dumps(final_dic)
+                return HttpResponse(final_json)
+
 
         except BaseException as msg:
-            final_dic = {'destStatus': 0, 'error_message': str(msg)}
+            final_dic = {'status': 0, 'destStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
     def getCurrentBackupDestinations(self, userID=None, data=None):
         try:
-
             currentACL = ACLManager.loadedACL(userID)
 
             if ACLManager.currentContextPermission(currentACL, 'addDeleteDestinations') == 0:
                 return ACLManager.loadErrorJson('fetchStatus', 0)
 
-            records = dest.objects.all()
+            destinations = NormalBackupDests.objects.all()
 
             json_data = "["
             checker = 0
 
-            for items in records:
-                if items.destLoc == "Home":
-                    continue
-                dic = {'id': items.id,
-                       'ip': items.destLoc,
-                       }
+            for items in destinations:
 
-                if checker == 0:
-                    json_data = json_data + json.dumps(dic)
-                    checker = 1
-                else:
-                    json_data = json_data + ',' + json.dumps(dic)
+                config = json.loads(items.config)
+
+                if config['type'] == data['type']:
+                    if config['type'] == 'SFTP':
+                        dic = {
+                            'name': items.name,
+                            'ip': config['ip'],
+                            'username': config['username'],
+                            'path': config['path'],
+                            'port': config['port'],
+                        }
+                    else:
+                        dic = {
+                            'name': items.name,
+                            'path': config['path'],
+                        }
+
+                    if checker == 0:
+                        json_data = json_data + json.dumps(dic)
+                        checker = 1
+                    else:
+                        json_data = json_data + ',' + json.dumps(dic)
 
             json_data = json_data + ']'
-            final_json = json.dumps({'fetchStatus': 1, 'error_message': "None", "data": json_data})
+            final_json = json.dumps({'status': 1, 'error_message': "None", "data": json_data})
             return HttpResponse(final_json)
 
         except BaseException as msg:
-            final_dic = {'fetchStatus': 0, 'error_message': str(msg)}
+            final_dic = {'status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
@@ -855,48 +853,17 @@ class BackupManager:
             if ACLManager.currentContextPermission(currentACL, 'addDeleteDestinations') == 0:
                 return ACLManager.loadErrorJson('delStatus', 0)
 
-            ipAddress = data['IPAddress']
+            nameOrPath = data['nameOrPath']
+            type = data['type']
 
-            delDest = dest.objects.get(destLoc=ipAddress)
-            delDest.delete()
+            NormalBackupDests.objects.get(name=nameOrPath).delete()
 
-            path = "/usr/local/CyberCP/backup/"
-            destinations = path + "destinations"
-
-            data = open(destinations, 'r').readlines()
-
-            writeToFile = open(destinations, 'r')
-
-            for items in data:
-                if items.find(ipAddress) > -1:
-                    continue
-                else:
-                    writeToFile.writelines(items)
-
-            writeToFile.close()
-
-            ## Deleting Cron Tab Entries for this destination
-
-            path = "/etc/crontab"
-
-            data = open(path, 'r').readlines()
-
-            writeToFile = open(path, 'w')
-
-            for items in data:
-                if items.find("backupSchedule.py") > -1:
-                    continue
-                else:
-                    writeToFile.writelines(items)
-
-            writeToFile.close()
-
-            final_dic = {'delStatus': 1, 'error_message': "None"}
+            final_dic = {'status': 1, 'delStatus': 1, 'error_message': "None"}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
         except BaseException as msg:
-            final_dic = {'delStatus': 1, 'error_message': str(msg)}
+            final_dic = {'status': 0, 'delStatus': 1, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
@@ -907,20 +874,16 @@ class BackupManager:
             if ACLManager.currentContextPermission(currentACL, 'scheDuleBackups') == 0:
                 return ACLManager.loadError()
 
-            if dest.objects.all().count() <= 1:
-                try:
-                    homeDest = dest(destLoc="Home")
-                    homeDest.save()
-                except:
-                    pass
-            backups = dest.objects.all()
+            destinations = NormalBackupDests.objects.all()
 
-            destinations = []
+            dests = []
 
-            for items in backups:
-                destinations.append(items.destLoc)
+            for dest in destinations:
+                dests.append(dest.name)
 
-            return render(request, 'backup/backupSchedule.html', {'destinations': destinations})
+            websitesName = ACLManager.findAllSites(currentACL, userID)
+
+            return render(request, 'backup/backupSchedule.html', {'destinations': dests, 'websites': websitesName})
 
         except BaseException as msg:
             return HttpResponse(str(msg))
@@ -960,111 +923,27 @@ class BackupManager:
 
     def submitBackupSchedule(self, userID=None, data=None):
         try:
-            backupDest = data['backupDest']
-            backupFreq = data['backupFreq']
+            selectedAccount = data['selectedAccount']
+            name = data['name']
+            backupFrequency = data['backupFrequency']
 
             currentACL = ACLManager.loadedACL(userID)
 
             if ACLManager.currentContextPermission(currentACL, 'scheDuleBackups') == 0:
                 return ACLManager.loadErrorJson('scheduleStatus', 0)
 
-            path = "/etc/crontab"
+            nbd = NormalBackupDests.objects.get(name=selectedAccount)
 
-            ## check if already exists
-            try:
-                schedule = backupSchedules.objects.get(frequency=backupFreq)
+            config = {'frequency': backupFrequency}
 
-                if schedule.dest.destLoc == backupDest:
-                    final_json = json.dumps(
-                        {'scheduleStatus': 0, 'error_message': "This schedule already exists"})
-                    return HttpResponse(final_json)
-                else:
-                    if backupDest == "Home" and backupFreq == "Daily":
-                        cronJob = "0 3 * * * root /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/backupScheduleLocal.py"
-                    elif backupDest == "Home" and backupFreq == "Weekly":
-                        cronJob = "0 0 * * 0 root /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/backupScheduleLocal.py "
-                    elif backupDest != "Home" and backupFreq == "Daily":
-                        cronJob = "0 3 * * * root /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/backupSchedule.py"
-                    elif backupDest != "Home" and backupFreq == "Weekly":
-                        cronJob = "0 0 * * 0 root /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/backupSchedule.py "
+            nbj = NormalBackupJobs(owner=nbd, name=name, config=json.dumps(config))
+            nbj.save()
 
-                    command = "cat " + path
-                    output = ProcessUtilities.outputExecutioner(command)
-
-                    finalCronJob = output + cronJob
-                    tempCronPath = "/home/cyberpanel/" + str(randint(1000, 9999))
-
-                    writeToFile = open(tempCronPath, 'a')
-                    writeToFile.writelines(finalCronJob + "\n")
-                    writeToFile.close()
-
-                    command = "mv " + tempCronPath + " " + path
-                    ProcessUtilities.executioner(command)
-
-                    command = 'chown root:root %s' % (path)
-                    ProcessUtilities.executioner(command)
-
-                    command = "systemctl restart crond"
-                    ProcessUtilities.executioner(command)
-
-                    ## Set local path for backup
-
-                    if backupDest == "Home":
-                        writeToFile = open(BackupManager.localBackupPath, 'w')
-                        writeToFile.write(data['localPath'])
-                        writeToFile.close()
-
-                    destination = dest.objects.get(destLoc=backupDest)
-                    newSchedule = backupSchedules(dest=destination, frequency=backupFreq)
-                    newSchedule.save()
-
-                    final_json = json.dumps({'scheduleStatus': 1, 'error_message': "None"})
-                    return HttpResponse(final_json)
-            except:
-                if backupDest == "Home" and backupFreq == "Daily":
-                    cronJob = "0 3 * * * root /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/backupScheduleLocal.py"
-                elif backupDest == "Home" and backupFreq == "Weekly":
-                    cronJob = "0 0 * * 0 root /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/backupScheduleLocal.py "
-                elif backupDest != "Home" and backupFreq == "Daily":
-                    cronJob = "0 3 * * * root /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/backupSchedule.py"
-                elif backupDest != "Home" and backupFreq == "Weekly":
-                    cronJob = "0 0 * * 0 root /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/backupSchedule.py "
-
-                command = "cat " + path
-                output = ProcessUtilities.outputExecutioner(command)
-
-                finalCronJob = output + cronJob
-                tempCronPath = "/home/cyberpanel/" + str(randint(1000, 9999))
-
-                writeToFile = open(tempCronPath, 'a')
-                writeToFile.writelines(finalCronJob + "\n")
-                writeToFile.close()
-
-                command = "sudo mv " + tempCronPath + " " + path
-                ProcessUtilities.executioner(command)
-
-                command = 'chown root:root %s' % (path)
-                ProcessUtilities.executioner(command)
-
-                command = "sudo systemctl restart crond"
-                ProcessUtilities.executioner(command)
-
-                destination = dest.objects.get(destLoc=backupDest)
-                newSchedule = backupSchedules(dest=destination, frequency=backupFreq)
-                newSchedule.save()
-
-                ## Set local path for backup
-
-                if backupDest == "Home":
-                    writeToFile = open(BackupManager.localBackupPath, 'w')
-                    writeToFile.write(data['localPath'])
-                    writeToFile.close()
-
-                final_json = json.dumps({'scheduleStatus': 1, 'error_message': "None"})
-                return HttpResponse(final_json)
+            final_json = json.dumps({'status': 1, 'scheduleStatus': 0})
+            return HttpResponse(final_json)
 
         except BaseException as msg:
-            final_json = json.dumps({'scheduleStatus': 0, 'error_message': str(msg)})
+            final_json = json.dumps({'status': 0, 'scheduleStatus': 0, 'error_message': str(msg)})
             return HttpResponse(final_json)
 
     def scheduleDelete(self, userID=None, data=None):
@@ -1580,4 +1459,331 @@ class BackupManager:
         except BaseException as msg:
             data = {'remoteRestoreStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data)
+            return HttpResponse(json_data)
+
+    def fetchgNormalSites(self, request=None, userID=None, data=None):
+        try:
+
+            userID = request.session['userID']
+            currentACL = ACLManager.loadedACL(userID)
+
+            data = json.loads(request.body)
+
+            selectedAccount = data['selectedAccount']
+            recordsToShow = int(data['recordsToShow'])
+            page = int(str(data['page']).strip('\n'))
+
+
+            if ACLManager.currentContextPermission(currentACL, 'scheDuleBackups') == 0:
+                return ACLManager.loadErrorJson('scheduleStatus', 0)
+
+            nbd = NormalBackupJobs.objects.get(name=selectedAccount)
+
+            websites = nbd.normalbackupsites_set.all()
+
+            from s3Backups.s3Backups import S3Backups
+
+            pagination = S3Backups.getPagination(len(websites), recordsToShow)
+            endPageNumber, finalPageNumber = S3Backups.recordsPointer(page, recordsToShow)
+            finalWebsites = websites[finalPageNumber:endPageNumber]
+
+            json_data = "["
+            checker = 0
+            counter = 0
+
+            from plogical.backupSchedule import backupSchedule
+
+            for website in finalWebsites:
+
+                dic = {
+                    'name': website.domain.domain
+                }
+
+                if checker == 0:
+                    json_data = json_data + json.dumps(dic)
+                    checker = 1
+                else:
+                    json_data = json_data + ',' + json.dumps(dic)
+
+                counter = counter + 1
+
+            json_data = json_data + ']'
+
+            config = json.loads(nbd.config)
+
+            try:
+                lastRun = config[IncScheduler.lastRun]
+            except:
+                lastRun = 'Never'
+
+            try:
+                allSites = config[IncScheduler.allSites]
+            except:
+                allSites = 'Selected Only'
+
+            try:
+                frequency = config[IncScheduler.frequency]
+            except:
+                frequency = 'Never'
+
+            try:
+                currentStatus = config[IncScheduler.currentStatus]
+            except:
+                currentStatus = 'Not running'
+
+            data_ret = {
+                'status': 1,
+                'websites': json_data,
+                'pagination': pagination,
+                'lastRun': lastRun,
+                'allSites': allSites,
+                'currently': frequency,
+                'currentStatus': currentStatus
+            }
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def fetchNormalJobs(self, request=None, userID=None, data=None):
+        try:
+
+            userID = request.session['userID']
+            currentACL = ACLManager.loadedACL(userID)
+
+            data = json.loads(request.body)
+
+            selectedAccount = data['selectedAccount']
+
+            nbd = NormalBackupDests.objects.get(name=selectedAccount)
+
+            if ACLManager.currentContextPermission(currentACL, 'scheDuleBackups') == 0:
+                return ACLManager.loadErrorJson('scheduleStatus', 0)
+
+            allJobs = nbd.normalbackupjobs_set.all()
+
+            alljbs = []
+
+            for items in allJobs:
+                alljbs.append(items.name)
+
+            data_ret = {'status': 1, 'jobs': alljbs}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def addSiteNormal(self, request=None, userID=None, data=None):
+        try:
+
+            userID = request.session['userID']
+            currentACL = ACLManager.loadedACL(userID)
+
+            data = json.loads(request.body)
+
+            if ACLManager.currentContextPermission(currentACL, 'scheDuleBackups') == 0:
+                return ACLManager.loadErrorJson('scheduleStatus', 0)
+
+            selectedJob = data['selectedJob']
+            type = data['type']
+
+            nbj = NormalBackupJobs.objects.get(name=selectedJob)
+
+            if type == 'all':
+                config = json.loads(nbj.config)
+
+                try:
+                    if config[IncScheduler.allSites] == 'all':
+                        config[IncScheduler.allSites] = 'Selected Only'
+                        nbj.config = json.dumps(config)
+                        nbj.save()
+                        data_ret = {'status': 1}
+                        json_data = json.dumps(data_ret)
+                        return HttpResponse(json_data)
+                except:
+                    pass
+                config[IncScheduler.allSites] = type
+                nbj.config = json.dumps(config)
+                nbj.save()
+
+                data_ret = {'status': 1}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+            selectedWebsite = data['selectedWebsite']
+
+            website = Websites.objects.get(domain=selectedWebsite)
+
+            try:
+                NormalBackupSites.objects.get(owner=nbj, domain=website)
+            except:
+                NormalBackupSites(owner=nbj, domain=website).save()
+
+            data_ret = {'status': 1}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def deleteSiteNormal(self, request=None, userID=None, data=None):
+        try:
+
+            userID = request.session['userID']
+            currentACL = ACLManager.loadedACL(userID)
+
+            data = json.loads(request.body)
+
+            selectedJob = data['selectedJob']
+            selectedWebsite = data['website']
+
+            nbj = NormalBackupJobs.objects.get(name=selectedJob)
+            website = Websites.objects.get(domain=selectedWebsite)
+
+            if ACLManager.currentContextPermission(currentACL, 'scheDuleBackups') == 0:
+                return ACLManager.loadErrorJson('scheduleStatus', 0)
+
+            try:
+                NormalBackupSites.objects.get(owner=nbj, domain=website).delete()
+            except:
+                pass
+
+            data_ret = {'status': 1}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def changeAccountFrequencyNormal(self, request=None, userID=None, data=None):
+        try:
+
+            userID = request.session['userID']
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            data = json.loads(request.body)
+
+            selectedJob = data['selectedJob']
+            backupFrequency = data['backupFrequency']
+
+            nbj = NormalBackupJobs.objects.get(name=selectedJob)
+
+            if ACLManager.currentContextPermission(currentACL, 'scheDuleBackups') == 0:
+                return ACLManager.loadErrorJson('scheduleStatus', 0)
+
+            config = json.loads(nbj.config)
+            config[IncScheduler.frequency] = backupFrequency
+
+            nbj.config = json.dumps(config)
+            nbj.save()
+
+            data_ret = {'status': 1}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+    def deleteAccountNormal(self, request=None, userID=None, data=None):
+        try:
+
+            userID = request.session['userID']
+            currentACL = ACLManager.loadedACL(userID)
+
+            data = json.loads(request.body)
+
+            selectedJob = data['selectedJob']
+
+            nbj = NormalBackupJobs.objects.get(name=selectedJob)
+
+            if ACLManager.currentContextPermission(currentACL, 'scheDuleBackups') == 0:
+                return ACLManager.loadErrorJson('scheduleStatus', 0)
+
+            nbj.delete()
+
+            data_ret = {'status': 1}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def fetchNormalLogs(self, request=None, userID=None, data=None):
+        try:
+
+            userID = request.session['userID']
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            data = json.loads(request.body)
+
+            selectedJob = data['selectedJob']
+            recordsToShow = int(data['recordsToShow'])
+            page = int(str(data['page']).strip('\n'))
+
+            if ACLManager.currentContextPermission(currentACL, 'scheDuleBackups') == 0:
+                return ACLManager.loadErrorJson('scheduleStatus', 0)
+
+            nbj = NormalBackupJobs.objects.get(name=selectedJob)
+
+            logs = nbj.normalbackupjoblogs_set.all().order_by('-id')
+
+            from s3Backups.s3Backups import S3Backups
+
+            pagination = S3Backups.getPagination(len(logs), recordsToShow)
+            endPageNumber, finalPageNumber = S3Backups.recordsPointer(page, recordsToShow)
+            logs = logs[finalPageNumber:endPageNumber]
+
+            json_data = "["
+            checker = 0
+            counter = 0
+
+            from plogical.backupSchedule import backupSchedule
+
+            for log in logs:
+
+                if log.status == backupSchedule.INFO:
+                    status = 'INFO'
+                else:
+                    status = 'ERROR'
+
+                dic = {
+                    'type': status,
+                    'message': log.message
+                }
+
+                if checker == 0:
+                    json_data = json_data + json.dumps(dic)
+                    checker = 1
+                else:
+                    json_data = json_data + ',' + json.dumps(dic)
+
+                counter = counter + 1
+
+            json_data = json_data + ']'
+
+            data_ret = {'status': 1, 'logs': json_data, 'pagination': pagination}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
             return HttpResponse(json_data)

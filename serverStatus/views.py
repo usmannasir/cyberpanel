@@ -25,6 +25,11 @@ NOTHING = 0
 BUNDLE = 2
 EXPIRE = 3
 
+### Version
+
+VERSION = '2.0'
+BUILD = 3
+
 def serverStatusHome(request):
     try:
         userID = request.session['userID']
@@ -237,19 +242,33 @@ def servicesStatus(request):
         dockerStatus.append(getServiceStats('docker'))
 
         # mysql status
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        result = s.connect_ex(('127.0.0.1', 3306))
 
-        if result == 0:
-            sqlStatus.append(1)
-        else:
-            sqlStatus.append(0)
-        s.close()
+        if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
 
-        if getServiceStats('mysql'):
-            sqlStatus.append(getMemStats('mysql'))
+            mysqlResult = ProcessUtilities.outputExecutioner('systemctl status mysql')
+
+            if mysqlResult.find('active (running)') > -1:
+                sqlStatus.append(1)
+                sqlStatus.append(getMemStats('mariadbd'))
+            else:
+                sqlStatus.append(0)
+                sqlStatus.append(0)
+
+
         else:
-            sqlStatus.append(0)
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            result = s.connect_ex(('127.0.0.1', 3306))
+
+            if result == 0:
+                sqlStatus.append(1)
+            else:
+                sqlStatus.append(0)
+            s.close()
+
+            if getServiceStats('mysql'):
+                sqlStatus.append(getMemStats('mysql'))
+            else:
+                sqlStatus.append(0)
 
         dnsStatus.append(getServiceStats('pdns'))
         if getServiceStats('pdns'):
@@ -652,7 +671,6 @@ def topProcessesStatus(request):
         except:
             data['swapBuffCache'] = '%sMB' % ('0')
 
-
         ## Processes
 
         data['totalProcesses'] = processes[1]
@@ -680,6 +698,33 @@ def topProcessesStatus(request):
             elif items.find('cache size') > -1:
                 data['cacheSize'] = items.split(':')[1].strip(' ')
                 break
+
+        ipFile = "/etc/cyberpanel/machineIP"
+        f = open(ipFile)
+        ipData = f.read()
+        ipAddress = ipData.split('\n', 1)[0]
+
+        data['ipAddress'] = ipAddress
+        data['CyberPanelVersion'] = 'v%s.%s' % (VERSION, str(BUILD))
+
+        if ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+            data['OS'] = 'Centos 8'
+        elif ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
+            data['OS'] = 'Ubuntu 20.04'
+        elif ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+            data['OS'] = 'Centos 7'
+        elif ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+            data['OS'] = 'Ubuntu 18.04'
+
+        data['Kernel'] = ProcessUtilities.outputExecutioner('uname -r')
+
+        import shutil
+
+        total, used, free = shutil.disk_usage("/")
+
+        data['TotalDisk'] = '%s GB' % (total // (2 ** 30))
+        data['TotalDiskUsed'] = '%s GB' %  (used // (2 ** 30))
+        data['TotalDiskFree'] =' %s GB' %  (free // (2 ** 30))
 
         final_json = json.dumps(data)
         return HttpResponse(final_json)

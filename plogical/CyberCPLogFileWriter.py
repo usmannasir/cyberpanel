@@ -106,7 +106,5 @@ Subject: %s
                 statusFile = open(tempStatusPath, 'a')
             statusFile.writelines(mesg + '\n')
             statusFile.close()
-            print((mesg + '\n'))
         except BaseException as msg:
             CyberCPLogFileWriter.writeToFile(str(msg) + ' [statusWriter]')
-            #print str(msg)

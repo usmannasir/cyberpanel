@@ -16,7 +16,6 @@ def router(request):
         serverUserName = data['serverUserName']
         admin = Administrator.objects.get(userName=serverUserName)
 
-
         cm = CloudManager(data, admin)
 
         if admin.api == 0:
@@ -32,6 +31,26 @@ def router(request):
 
         if controller == 'verifyLogin':
             return cm.verifyLogin(request)[1]
+        elif controller == 'RunServerLevelEmailChecks':
+            return cm.RunServerLevelEmailChecks()
+        elif controller == 'ReadReport':
+            return cm.ReadReport()
+        elif controller == 'ResetEmailConfigurations':
+            return cm.ResetEmailConfigurations()
+        elif controller == 'fetchAllSites':
+            return cm.fetchAllSites()
+        elif controller == 'debugEmailForSite':
+            return cm.debugEmailForSite()
+        elif controller == 'fixMailSSL':
+            return cm.fixMailSSL(request)
+        elif controller == 'ReadReportFTP':
+            return cm.ReadReportFTP()
+        elif controller == 'ResetFTPConfigurations':
+            return cm.ResetFTPConfigurations()
+        elif controller == 'ReadReportDNS':
+            return cm.ReadReportDNS()
+        elif controller == 'ResetDNSConfigurations':
+            return cm.ResetDNSConfigurations()
         elif controller == 'fetchWebsites':
             return cm.fetchWebsites()
         elif controller == 'fetchWebsiteDataJSON':
@@ -316,6 +335,7 @@ def access(request):
     try:
         serverUserName = request.GET.get('serverUserName')
         token = request.GET.get('token')
+        redirectFinal = request.GET.get('redirect')
 
         admin = Administrator.objects.get(userName=serverUserName)
 
@@ -326,7 +346,11 @@ def access(request):
             request.session['userID'] = admin.pk
             from django.shortcuts import redirect
             from baseTemplate.views import renderBase
-            return redirect(renderBase)
+            if redirectFinal == None:
+                return redirect(renderBase)
+            else:
+                from django.shortcuts import redirect
+                return redirect(redirectFinal)
         else:
             return HttpResponse('Unauthorized access.')
 

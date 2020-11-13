@@ -165,3 +165,42 @@ def upload(request):
 
     except KeyError:
         return redirect(loadLoginPage)
+
+def editFile(request):
+    try:
+        userID = request.session['userID']
+        admin = Administrator.objects.get(pk=userID)
+        from urllib.parse import quote
+        from django.utils.encoding import iri_to_uri
+
+        domainName = request.GET.get('domainName')
+        fileName = request.GET.get('fileName')
+
+        try:
+            theme = request.GET.get('theme')
+            if theme == None:
+                theme = 'cobalt'
+        except:
+            theme = 'cobalt'
+
+        currentACL = ACLManager.loadedACL(userID)
+
+        if ACLManager.checkOwnership(domainName, admin, currentACL) == 1:
+            pass
+        else:
+            return ACLManager.loadError()
+
+        mode = FM.findMode(fileName)
+        modeFiles = FM.findModeFiles(mode)
+        additionalOptions = FM.findAdditionalOptions(mode)
+        themeFile = FM.findThemeFile(theme)
+
+        if ACLManager.checkOwnership(domainName, admin, currentACL) == 1:
+            return render(request, 'filemanager/editFile.html', {'domainName': domainName, 'fileName': fileName,
+                                                                 'mode': mode, 'modeFiles': modeFiles, 'theme': theme,
+                                                                 'themeFile': themeFile, 'additionalOptions': additionalOptions})
+        else:
+            return ACLManager.loadError()
+
+    except KeyError:
+        return redirect(loadLoginPage)

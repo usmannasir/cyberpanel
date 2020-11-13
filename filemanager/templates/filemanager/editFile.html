@@ -1,0 +1,205 @@
+{% load i18n %}
+<!doctype html>
+<html lang="en">
+<head>
+    <title>{% trans "Editing File - CyberPanel" %}</title>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    {% load static %}
+
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css"
+          integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+    <link rel="stylesheet" href="{% static 'filemanager/images/fonts/css/font-awesome.min.css' %}">
+    <link rel="stylesheet" href="{% static 'filemanager/css/fileManager.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/custom-js/pnotify.custom.min.css' %}">
+
+
+    <!-- Angular JS -->
+
+    <script src="https://code.angularjs.org/1.6.5/angular.min.js"></script>
+
+    <!-- Fix for old browsers -->
+    <script src="{% static 'filemanager/js/es5-shim.min.js' %}"></script>
+    <script src="{% static 'filemanager/js/es5-sham.min.js' %}"></script>
+    <script src="{% static 'filemanager/js/jquery-1.8.3.min.js' %}"></script>
+    <script src="{% static 'filemanager/js/console-sham.js' %}"></script>
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.1/codemirror.min.js"
+            integrity="sha512-WWC1A/JchDFZ2ZGaNyMC7CmPFXGLI/6Ih7WN6YG0DX1NGMkW5lqCVFxCmEx3e56Z7iqdQGpO0f+m2t9CJhdb2Q=="
+            crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.1/codemirror.min.css"
+          integrity="sha512-xIf9AdJauwKIVtrVRZ0i4nHP61Ogx9fSRAkCLecmE2dL/U8ioWpDvFCAy4dcfecN72HHB9+7FfQj3aiO68aaaw=="
+          crossorigin="anonymous"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.1/addon/hint/show-hint.min.js"
+            integrity="sha512-ge9uKCpgPmuJY2e2zPXhpYCZfyb1/R7KOOfMZ3SzSX3ZayWpINs3sHnI8LGEHUf6UOFX/D03FVHgR36uRL8/Vw=="
+            crossorigin="anonymous"></script>
+    {{ themeFile | safe }}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.1/addon/hint/show-hint.min.css"
+          integrity="sha512-OmcLQEy8iGiD7PSm85s06dnR7G7C9C0VqahIPAj/KHk5RpOCmnC6R2ob1oK4/uwYhWa9BF1GC6tzxsC8TIx7Jg=="
+          crossorigin="anonymous"/>
+
+    {{ modeFiles | safe }}
+    <script src="{% static 'baseTemplate/custom-js/pnotify.custom.min.js' %}"></script>
+    <script src="{% static 'filemanager/js/codeMirror.js' %}"></script>
+
+    <!-- HTML Editor Include -->
+
+</head>
+<body ng-app="editFile" ng-controller="editFileCtrl">
+
+<!--- navigation bar ---->
+
+<nav id="navBar" class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="header-logo">
+        <a href="#"><img src="{% static 'filemanager/images/fileManager.png' %}"> <span style="display: none"
+                                                                                        id="domainNameInitial">{{ domainName }}</span></a>
+    </div>
+    <!--- second bar ---->
+
+    <div class="">
+        <div class="flex-wrap">
+            <!--div class="text-white h4 mt-5 mx-10">
+                 {% trans " File Manager" %}
+            </div-->
+            <ul class="nav mr-10">
+                <li id="editFile" class="nav-item">
+                    <a onclick="return false;" ng-click="showHTMLEditorModal()" class="nav-link point-events"
+                       href="#"><i class="fa fa-pencil-square-o" aria-hidden="true"></i> <span
+                            id="completeFilePath">{{ fileName }}</span> <span id="mode"
+                                                                              style="display: none">{{ mode }}</span>
+                        <span id="theme" style="display: none">{{ theme }}</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!--- second bar ends ---->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav mr-auto" style="float: right">
+            <select ng-model="theme" ng-change="changeTheme()" id="select">
+                <option>3024-day</option>
+                <option>3024-night</option>
+                <option>abcdef</option>
+                <option>ambiance</option>
+                <option>ayu-dark</option>
+                <option>ayu-mirage</option>
+                <option>base16-dark</option>
+                <option>base16-light</option>
+                <option>bespin</option>
+                <option>blackboard</option>
+                <option>cobalt</option>
+                <option>colorforth</option>
+                <option>darcula</option>
+                <option>dracula</option>
+                <option>duotone-dark</option>
+                <option>duotone-light</option>
+                <option>eclipse</option>
+                <option>elegant</option>
+                <option>erlang-dark</option>
+                <option>gruvbox-dark</option>
+                <option>hopscotch</option>
+                <option>icecoder</option>
+                <option>idea</option>
+                <option>isotope</option>
+                <option>lesser-dark</option>
+                <option>liquibyte</option>
+                <option>lucario</option>
+                <option>material</option>
+                <option>material-darker</option>
+                <option>material-palenight</option>
+                <option>material-ocean</option>
+                <option>mbo</option>
+                <option>mdn-like</option>
+                <option>midnight</option>
+                <option>monokai</option>
+                <option>moxer</option>
+                <option>neat</option>
+                <option>neo</option>
+                <option>night</option>
+                <option>nord</option>
+                <option>oceanic-next</option>
+                <option>panda-syntax</option>
+                <option>paraiso-dark</option>
+                <option>paraiso-light</option>
+                <option>pastel-on-dark</option>
+                <option>railscasts</option>
+                <option>rubyblue</option>
+                <option>seti</option>
+                <option>shadowfox</option>
+                <option>solarized dark</option>
+                <option>solarized light</option>
+                <option>the-matrix</option>
+                <option>tomorrow-night-bright</option>
+                <option>tomorrow-night-eighties</option>
+                <option>ttcn</option>
+                <option>twilight</option>
+                <option>vibrant-ink</option>
+                <option>xq-dark</option>
+                <option>xq-light</option>
+                <option>yeti</option>
+                <option>yonce</option>
+                <option>zenburn</option>
+            </select>
+            {{ additionalOptions | safe }}
+        </ul>
+        <button style="float:right" ng-click="putFileContents()" type="button"
+                class="btn btn-light">{% trans "Save Changes" %} <img ng-hide="cyberPanelLoading"
+                                                                                src="{% static 'filemanager/images/loadingSmall.gif' %}">
+        </button>
+        <button style="float:right; margin-left: 1%" ng-click="closeWindow()" type="button"
+                class="btn btn-danger">{% trans "Close" %}
+        </button>
+    </div>
+</nav>
+
+<!--- navigation bar ends ---->
+
+
+<!--- File Manager body ---->
+
+<div class="row">
+
+    <div class="col-sm-12">
+        <div class="mb-3 mt-30 mx-10" style="min-height: 30rem; margin: 0px; margin-top: 2px">
+            <div class="">
+                <textarea id="fileContent" class="form-control" rows="15"></textarea>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!--- File Manager body ends ---->
+
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+        integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+        crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js"
+        integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh"
+        crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js"
+        integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ"
+        crossorigin="anonymous"></script>
+
+
+<script src="https://cdn.jsdelivr.net/npm/alertifyjs@1.11.0/build/alertify.min.js"></script>
+
+<!-- CSS -->
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.11.0/build/css/alertify.min.css"/>
+<!-- Default theme -->
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.11.0/build/css/themes/default.min.css"/>
+<!-- Semantic UI theme -->
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.11.0/build/css/themes/semantic.min.css"/>
+<!-- Bootstrap theme -->
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.11.0/build/css/themes/bootstrap.min.css"/>
+</body>
+</html>

@@ -419,3 +419,59 @@ def localInitiate(request):
             return wm.submitBackupCreation(1, json.loads(request.body))
     except BaseException as msg:
         logging.writeToFile(str(msg))
+
+def fetchgNormalSites(request):
+    try:
+        userID = request.session['userID']
+        wm = BackupManager()
+        return wm.fetchgNormalSites(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def fetchNormalJobs(request):
+    try:
+        userID = request.session['userID']
+        wm = BackupManager()
+        return wm.fetchNormalJobs(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def addSiteNormal(request):
+    try:
+        userID = request.session['userID']
+        wm = BackupManager()
+        return wm.addSiteNormal(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def deleteSiteNormal(request):
+    try:
+        userID = request.session['userID']
+        wm = BackupManager()
+        return wm.deleteSiteNormal(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def changeAccountFrequencyNormal(request):
+    try:
+        userID = request.session['userID']
+        wm = BackupManager()
+        return wm.changeAccountFrequencyNormal(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def deleteAccountNormal(request):
+    try:
+        userID = request.session['userID']
+        wm = BackupManager()
+        return wm.deleteAccountNormal(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def fetchNormalLogs(request):
+    try:
+        userID = request.session['userID']
+        wm = BackupManager()
+        return wm.fetchNormalLogs(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)

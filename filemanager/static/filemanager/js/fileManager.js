@@ -310,7 +310,7 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
         var collectionOfA = tableBody.getElementsByTagName("tr");
 
         for (var i = 0; i < collectionOfA.length; i++) {
-            collectionOfA[i].style.background = "aliceblue";
+            collectionOfA[i].style.background = "#ccdbe8";
             var getFileName = collectionOfA[i].getElementsByTagName('td')[0].innerHTML;
             allFilesAndFolders.push(getFileName);
         }
@@ -340,7 +340,7 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
         var check = 1;
         var getFileName = nodeName.getElementsByTagName('td')[0].innerHTML;
 
-        if (nodeName.style.backgroundColor === "aliceblue") {
+        if (nodeName.style.backgroundColor === "rgb(204, 219, 232)") {
 
             var tempArray = [];
             nodeName.style.background = "None";
@@ -356,7 +356,7 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
             return;
         }
 
-        nodeName.style.background = "aliceblue";
+        nodeName.style.background = "#ccdbe8";
 
 
         for (var j = 0; j < allFilesAndFolders.length; j++) {
@@ -480,6 +480,7 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
             restoreBTN.style.display = "none";
         }
         // for edit button
+
         if (allFilesAndFolders.length === 1) {
             var editNode = document.getElementById("editFile");
             editNode.style.pointerEvents = "auto";
@@ -811,6 +812,14 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
         function cantLoadInitialDatas(response) {
         }
 
+    };
+
+    /// code mirror open
+
+    $scope.editWithCodeMirror = function(){
+        var completePathForFile = $scope.currentPath + "/" + allFilesAndFolders[0];
+        var finalURL = 'https://' + window.location.hostname + ':' + window.location.port + '/filemanager/editFile?domainName=' + domainName + '&fileName=' + completePathForFile;
+        window.open(finalURL);
     };
 
 
@@ -1170,7 +1179,6 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
 
     };
 
-
     /// move
 
     $scope.moveLoading = true;
@@ -1186,7 +1194,6 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
         }
 
     }
-
 
     $scope.startMoving = function () {
 
@@ -1331,7 +1338,7 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
         var check = 1;
         var getFileName = nodeName.getElementsByTagName('td')[0].innerHTML;
 
-        if (nodeName.style.backgroundColor === "aliceblue") {
+        if (nodeName.style.backgroundColor === "#ccdbe8") {
 
             var tempArray = [];
             nodeName.style.background = "None";
@@ -1347,7 +1354,7 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
             return;
         }
 
-        nodeName.style.background = "aliceblue";
+        nodeName.style.background = "#ccdbe8";
 
 
         for (var j = 0; j < allFilesAndFolders.length; j++) {
@@ -1362,7 +1369,6 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
 
         // activating deactivating functions
         $scope.buttonActivator();
-
 
     };
 

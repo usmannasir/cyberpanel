@@ -629,6 +629,12 @@ class preFlightsChecks:
         command = 'chmod 640 /usr/local/lscp/cyberpanel/logs/access.log'
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
+        command = 'mkdir -p/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/'
+
+        rainloopinipath = '/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/application.ini'
+
+        ###
+
     def install_unzip(self):
         self.stdOut("Install unzip")
         try:
@@ -1043,12 +1049,12 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             ###############Getting SSL
 
-            command = 'openssl req -newkey rsa:1024 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout /etc/postfix/key.pem -out /etc/postfix/cert.pem'
+            command = 'openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout /etc/postfix/key.pem -out /etc/postfix/cert.pem'
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             ##
 
-            command = 'openssl req -newkey rsa:1024 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout /etc/dovecot/key.pem -out /etc/dovecot/cert.pem'
+            command = 'openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout /etc/dovecot/key.pem -out /etc/dovecot/cert.pem'
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             # Cleanup config files for ubuntu
@@ -2291,7 +2297,6 @@ def main():
     checks.install_rsync()
 
     checks.installFirewalld()
-
     checks.install_default_keys()
 
     checks.download_install_CyberPanel(installCyberPanel.InstallCyberPanel.mysqlPassword, mysql)
@@ -2343,6 +2348,46 @@ def main():
 
     checks.installCLScripts()
     #checks.disablePackegeUpdates()
+
+    try:
+        # command = 'mkdir -p /usr/local/lscp/cyberpanel/rainloop/data/data/default/configs/'
+        # subprocess.call(shlex.split(command))
+
+        writeToFile = open('/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/application.ini', 'a')
+
+        writeToFile.write("""
+[security]
+admin_login = "admin"
+admin_password = "12345"
+""")
+        writeToFile.close()
+
+        import randomPassword
+
+        content = """<?php
+
+$_ENV['RAINLOOP_INCLUDE_AS_API'] = true;
+include '/usr/local/CyberCP/public/rainloop/index.php';
+
+$oConfig = \RainLoop\Api::Config();
+$oConfig->SetPassword('%s');
+echo $oConfig->Save() ? 'Done' : 'Error';
+
+?>""" % (randomPassword.generate_pass())
+
+        writeToFile = open('/usr/local/CyberCP/public/rainloop.php', 'w')
+        writeToFile.write(content)
+        writeToFile.close()
+
+
+        command = '/usr/local/lsws/lsphp72/bin/php /usr/local/CyberCP/public/rainloop.php'
+        subprocess.call(shlex.split(command))
+        
+        command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
+        subprocess.call(shlex.split(command))
+    except:
+        pass
+
     logging.InstallLog.writeToFile("CyberPanel installation successfully completed!")
 
 

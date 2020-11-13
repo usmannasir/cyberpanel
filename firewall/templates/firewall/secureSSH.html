@@ -3,18 +3,21 @@
 {% block title %}{% trans "Secure SSH - CyberPanel" %}{% endblock %}
 {% block content %}
 
-{% load static %}
-{% get_current_language as LANGUAGE_CODE %}
-<!-- Current language: {{ LANGUAGE_CODE }} -->
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
 
 
-<div class="container">
-<div id="page-title">
-   <h2>{% trans "Secure SSH" %} - <a  target="_blank" href="http://go.cyberpanel.net/ssh-docs" style="height: 23px;line-height: 21px;" class="btn btn-border btn-alt border-red btn-link font-red" title=""><span>{% trans "SSH Docs" %}</span></a></h2>
-   <p>{% trans "Secure or harden SSH Configurations." %}</p>
-</div>
+    <div class="container">
+        <div id="page-title">
+            <h2>{% trans "Secure SSH" %} - <a target="_blank" href="http://go.cyberpanel.net/ssh-docs"
+                                              style="height: 23px;line-height: 21px;"
+                                              class="btn btn-border btn-alt border-red btn-link font-red"
+                                              title=""><span>{% trans "SSH Docs" %}</span></a></h2>
+            <p>{% trans "Secure or harden SSH Configurations." %}</p>
+        </div>
 
-<div ng-controller="secureSSHCTRL" class="panel">
+        <div ng-controller="secureSSHCTRL" class="panel">
             <div class="panel-body">
                 <h3 class="content-box-header">
                     {% trans "Secure SSH" %} <img ng-hide="secureSSHLoading" src="{% static 'images/loading.gif' %}">
@@ -37,151 +40,148 @@
                     </ul>
                     <div class="tab-content">
                         <div class="tab-pane fade active in" id="tab-example-1">
-                            <div  class="example-box-wrapper">
+                            <div class="example-box-wrapper">
 
 
-                    <form  action="/" class="form-horizontal bordered-row">
+                                <form action="/" class="form-horizontal bordered-row">
 
 
-                         <div ng-hide="emailDetails" class="form-group">
-                            <label class="col-sm-3 control-label">{% trans "SSH Port" %}</label>
-                            <div class="col-sm-6">
-                                <input type="text" class="form-control" ng-model="sshPort" required>
+                                    <div ng-hide="emailDetails" class="form-group">
+                                        <label class="col-sm-3 control-label">{% trans "SSH Port" %}</label>
+                                        <div class="col-sm-6">
+                                            <input type="text" class="form-control" ng-model="sshPort" required>
+                                        </div>
+
+                                    </div>
+
+
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label">{% trans "Permit Root Login" %}</label>
+                                        <div class="col-md-8 text-white">
+                                            <input type="checkbox" id="rootLogin" data-toggle="toggle"
+                                                   data-on="Enabled">
+                                            <div style="margin-top: 2%;margin-bottom: -2%" class="alert alert-warning">
+                                                <p>{% trans "Before disabling root login, make sure you have another account with sudo priviliges on server." %}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label"></label>
+                                        <div class="col-sm-4">
+                                            <button type="button" ng-click="saveChanges()"
+                                                    class="btn btn-primary btn-lg">{% trans "Save Changes" %}</button>
+
+                                        </div>
+                                    </div>
+
+
+                                    <div class="form-group">
+                                        <label class="col-sm-3 control-label"></label>
+                                        <div class="col-sm-4">
+                                            <div ng-hide="couldNotSave" class="alert alert-danger">
+                                                <p>{% trans "Error message: " %}{$ errorMessage $}</p>
+                                            </div>
+
+                                            <div ng-hide="detailsSaved" class="alert alert-success">
+                                                <p>{% trans "SSH Configurations Saved." %}</p>
+                                            </div>
+
+
+                                            <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                                <p>{% trans "Could not connect. Please refresh this page." %}</p>
+                                            </div>
+                                        </div>
+
+
+                                    </div>
+
+
+                                </form>
+
+
                             </div>
-
                         </div>
-
-
-                    <div class="form-group">
-                        <label class="col-sm-3 control-label">{% trans "Permit Root Login" %}</label>
-                        <div class="col-md-8 text-white">
-                            <input type="checkbox" id="rootLogin" data-toggle="toggle" data-on="Enabled">
-                            <div style="margin-top: 2%;margin-bottom: -2%" class="alert alert-warning">
-                                    <p>{% trans "Before disabling root login, make sure you have another account with sudo priviliges on server." %}</p>
-                            </div>
-                        </div>
-                    </div>
-
-            <div class="form-group">
-                    <label class="col-sm-3 control-label"></label>
-                    <div class="col-sm-4">
-                         <button type="button" ng-click="saveChanges()" class="btn btn-primary btn-lg">{% trans "Save Changes" %}</button>
-
-                    </div>
-            </div>
-
-
-            <div class="form-group">
-                    <label class="col-sm-3 control-label"></label>
-                    <div class="col-sm-4">
-                            <div ng-hide="couldNotSave" class="alert alert-danger">
-                                        <p>{% trans "Error message: " %}{$ errorMessage $}</p>
-                            </div>
-
-                            <div ng-hide="detailsSaved" class="alert alert-success">
-                                        <p>{% trans "SSH Configurations Saved." %}</p>
-                            </div>
-
-
-                            <div ng-hide="couldNotConnect" class="alert alert-danger">
-                                        <p>{% trans "Could not connect. Please refresh this page." %}</p>
-                            </div>
-                    </div>
-
-
-
-            </div>
-
-
-
-            </form>
-
-
-
-
-        </div>
-                        </div>
-
 
 
                         <div class="tab-pane fade" id="tab-example-3">
 
-                            <form  action="/" class="form-horizontal bordered-row">
+                            <form action="/" class="form-horizontal bordered-row">
 
                                 <!------ List of records --------------->
 
-                <div class="form-group">
+                                <div class="form-group">
 
-                    <div  class="col-sm-12">
+                                    <div class="col-sm-12">
 
-                        <table class="table">
-                            <thead>
-                            <tr>
-                                <th>{% trans "User Name" %}</th>
-                                <th>{% trans "Key" %}</th>
-                                <th>{% trans "Delete" %}</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            <tr ng-repeat="record in records track by $index">
-                                <td ng-bind="record.userName">root</td>
-                                <td ng-bind="record.key"></td>
-                                <td ng-click="deleteKey(record.key)"><div class="h4 text-danger text-bold">X</div></td>
-                            </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-
-
-            <!------ List of records --------------->
-
-                <div ng-hide="keyBox" class="form-group">
-                                <div class="col-sm-12">
-                                    <textarea placeholder="Paste your public key here..." ng-model="keyData" rows="6" class="form-control">{{ logs }}</textarea>
+                                        <table class="table">
+                                            <thead>
+                                            <tr>
+                                                <th>{% trans "User Name" %}</th>
+                                                <th>{% trans "Key" %}</th>
+                                                <th>{% trans "Delete" %}</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            <tr ng-repeat="record in records track by $index">
+                                                <td ng-bind="record.userName">root</td>
+                                                <td ng-bind="record.key"></td>
+                                                <td ng-click="deleteKey(record.key)">
+                                                    <div class="h4 text-danger text-bold">X</div>
+                                                </td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
-                </div>
 
 
-                <div ng-hide="showKeyBox" class="form-group">
-                    <label class="col-sm-3 control-label"></label>
-                    <div class="col-sm-4">
-                        <button type="button" ng-click="addKey()" class="btn btn-primary btn-lg">{% trans "Add Key" %}</button>
+                                <!------ List of records --------------->
 
-                    </div>
-                </div>
+                                <div ng-hide="keyBox" class="form-group">
+                                    <div class="col-sm-12">
+                                        <textarea placeholder="Paste your public key here..." ng-model="keyData"
+                                                  rows="6" class="form-control">{{ logs }}</textarea>
+                                    </div>
+                                </div>
 
-                <div ng-hide="saveKeyBtn" class="form-group">
-                    <label class="col-sm-3 control-label"></label>
-                    <div class="col-sm-4">
-                        <button type="button" ng-click="saveKey()" class="btn btn-primary btn-lg">{% trans "Save" %}</button>
-                    </div>
-                </div>
 
-                    <div class="form-group">
-                        <label class="col-sm-3 control-label"></label>
-                        <div class="col-sm-4">
+                                <div ng-hide="showKeyBox" class="form-group">
+                                    <label class="col-sm-3 control-label"></label>
+                                    <div class="col-sm-4">
+                                        <button type="button" ng-click="addKey()"
+                                                class="btn btn-primary btn-lg">{% trans "Add Key" %}</button>
 
-                                <div ng-hide="keyDeleted" class="alert alert-success">
+                                    </div>
+                                </div>
+
+                                <div ng-hide="saveKeyBtn" class="form-group">
+                                    <label class="col-sm-3 control-label"></label>
+                                    <div class="col-sm-4">
+                                        <button type="button" ng-click="saveKey()"
+                                                class="btn btn-primary btn-lg">{% trans "Save" %}</button>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label"></label>
+                                    <div class="col-sm-4">
+
+                                        <div ng-hide="keyDeleted" class="alert alert-success">
                                             <p>{% trans "SSH Key Deleted" %}</p>
-                                </div>
+                                        </div>
 
 
-                                <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                        <div ng-hide="couldNotConnect" class="alert alert-danger">
                                             <p>{% trans "Could not connect. Please refresh this page." %}</p>
+                                        </div>
+                                    </div>
                                 </div>
-                        </div>
-                    </div>
-
-
-
 
 
                             </form>
 
 
-
                         </div>
                     </div>
                 </div>
@@ -189,7 +189,7 @@
         </div>
 
 
-</div>
+    </div>
 
 
 {% endblock %}

@@ -76,3 +76,25 @@ class GDriveJobLogs(models.Model):
     owner = models.ForeignKey(GDrive, on_delete=models.CASCADE)
     status = models.IntegerField()
     message = models.TextField()
+
+
+### Normal backup models
+
+class NormalBackupDests(models.Model):
+    name = models.CharField(max_length=25)
+    config = models.TextField()
+
+class NormalBackupJobs(models.Model):
+    owner = models.ForeignKey(NormalBackupDests, on_delete=models.CASCADE)
+    name = models.CharField(max_length=25)
+    config = models.TextField()
+
+class NormalBackupSites(models.Model):
+    owner = models.ForeignKey(NormalBackupJobs, on_delete=models.CASCADE)
+    domain = models.ForeignKey(Websites, on_delete=models.CASCADE)
+
+
+class NormalBackupJobLogs(models.Model):
+    owner = models.ForeignKey(NormalBackupJobs, on_delete=models.CASCADE)
+    status = models.IntegerField()
+    message = models.TextField()

@@ -150,6 +150,7 @@ rewrite  {
     AddHandler application/x-httpd-php{php} .php .php7 .phtml
     <IfModule LiteSpeed>
         CacheRoot lscache
+        CacheLookup on
     </IfModule>
 
 </VirtualHost>
@@ -166,6 +167,7 @@ rewrite  {
     AddHandler application/x-httpd-php{php} .php .php7 .phtml
     <IfModule LiteSpeed>
         CacheRoot lscache
+        CacheLookup on
     </IfModule>
 
 </VirtualHost>"""

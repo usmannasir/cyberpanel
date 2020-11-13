@@ -261,6 +261,24 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             command = 'cp /usr/local/CyberCP/plogical/phpmyadminsignin.php /usr/local/CyberCP/public/phpmyadmin/phpmyadminsignin.php'
             Upgrade.executioner(command, 0)
 
+            passFile = "/etc/cyberpanel/mysqlPassword"
+
+            try:
+                import json
+                jsonData = json.loads(open(passFile, 'r').read())
+
+                mysqluser = jsonData['mysqluser']
+                mysqlpassword = jsonData['mysqlpassword']
+                mysqlport = jsonData['mysqlport']
+                mysqlhost = jsonData['mysqlhost']
+
+                command = "sed -i 's|localhost|%s|g' /usr/local/CyberCP/public/phpmyadmin/phpmyadminsignin.php" % (
+                    mysqlhost)
+                Upgrade.executioner(command, 0)
+
+            except:
+                pass
+
             os.chdir(cwd)
 
         except BaseException as msg:
@@ -650,6 +668,66 @@ imap_folder_list_limit = 0
 
             try:
                 cursor.execute("ALTER TABLE loginSystem_acl ADD COLUMN listPackages INT DEFAULT 0;")
+            except:
+                pass
+
+            query = """CREATE TABLE `websiteFunctions_normalbackupdests` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(25) NOT NULL,
+  `config` longtext NOT NULL,
+  PRIMARY KEY (`id`)
+)"""
+
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+            query = """CREATE TABLE `websiteFunctions_normalbackupjobs` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(25) NOT NULL,
+  `config` longtext NOT NULL,
+  `owner_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `websiteFunctions_nor_owner_id_3a7a13db_fk_websiteFu` (`owner_id`),
+  CONSTRAINT `websiteFunctions_nor_owner_id_3a7a13db_fk_websiteFu` FOREIGN KEY (`owner_id`) REFERENCES `websiteFunctions_normalbackupdests` (`id`)
+)"""
+
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+
+            query = """CREATE TABLE `websiteFunctions_normalbackupsites` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `domain_id` int(11) NOT NULL,
+  `owner_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `websiteFunctions_nor_domain_id_c03362bc_fk_websiteFu` (`domain_id`),
+  KEY `websiteFunctions_nor_owner_id_c6ece6cc_fk_websiteFu` (`owner_id`),
+  CONSTRAINT `websiteFunctions_nor_domain_id_c03362bc_fk_websiteFu` FOREIGN KEY (`domain_id`) REFERENCES `websiteFunctions_websites` (`id`),
+  CONSTRAINT `websiteFunctions_nor_owner_id_c6ece6cc_fk_websiteFu` FOREIGN KEY (`owner_id`) REFERENCES `websiteFunctions_normalbackupjobs` (`id`)
+)"""
+
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+
+            query = """CREATE TABLE `websiteFunctions_normalbackupjoblogs` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `status` int(11) NOT NULL,
+  `message` longtext NOT NULL,
+  `owner_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `websiteFunctions_nor_owner_id_69403e73_fk_websiteFu` (`owner_id`),
+  CONSTRAINT `websiteFunctions_nor_owner_id_69403e73_fk_websiteFu` FOREIGN KEY (`owner_id`) REFERENCES `websiteFunctions_normalbackupjobs` (`id`)
+)"""
+
+            try:
+                cursor.execute(query)
             except:
                 pass
 
@@ -1651,6 +1729,32 @@ imap_folder_list_limit = 0
     def fixPermissions():
         try:
 
+            try:
+                def generate_pass(length=14):
+                    chars = string.ascii_uppercase + string.ascii_lowercase + string.digits
+                    size = length
+                    return ''.join(random.choice(chars) for x in range(size))
+
+                content = """<?php
+$_ENV['RAINLOOP_INCLUDE_AS_API'] = true;
+include '/usr/local/CyberCP/public/rainloop/index.php';
+
+$oConfig = \RainLoop\Api::Config();
+$oConfig->SetPassword('%s');
+echo $oConfig->Save() ? 'Done' : 'Error';
+
+?>""" % (generate_pass())
+
+                writeToFile = open('/usr/local/CyberCP/public/rainloop.php', 'w')
+                writeToFile.write(content)
+                writeToFile.close()
+
+                command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
+                subprocess.call(shlex.split(command))
+
+            except:
+                pass
+
             Upgrade.stdOut("Fixing permissions..")
 
             command = "usermod -G lscpd,lsadm,nobody lscpd"
@@ -1802,6 +1906,9 @@ imap_folder_list_limit = 0
             command = 'chmod 640 /usr/local/lscp/cyberpanel/logs/access.log'
             Upgrade.executioner(command, 0)
 
+            command = '/usr/local/lsws/lsphp72/bin/php /usr/local/CyberCP/public/rainloop.php'
+            Upgrade.executioner(command, 0)
+
 
             Upgrade.stdOut("Permissions updated.")
 
@@ -1931,16 +2038,10 @@ imap_folder_list_limit = 0
 
                 ### Restore dovecot/postfix conf
 
-                command = 'rm -rf %s' % (dovecotConfPath)
+                command = 'cp -pR %s/dovecot/ /etc/' % (configbackups)
                 Upgrade.executioner(command, 0)
 
-                command = 'rm -rf %s' % (postfixConfPath)
-                Upgrade.executioner(command, 0)
-
-                command = 'mv %s/dovecot /etc/' % (configbackups)
-                Upgrade.executioner(command, 0)
-
-                command = 'mv %s/postfix /etc/' % (configbackups)
+                command = 'cp -pR %s/postfix/ /etc/' % (configbackups)
                 Upgrade.executioner(command, 0)
 
                 ## Restored
@@ -1986,16 +2087,10 @@ imap_folder_list_limit = 0
 
                     ### Restore dovecot/postfix conf
 
-                    command = 'rm -rf %s' % (dovecotConfPath)
+                    command = 'cp -pR %s/dovecot/ /etc/' % (configbackups)
                     Upgrade.executioner(command, 0)
 
-                    command = 'rm -rf %s' % (postfixConfPath)
-                    Upgrade.executioner(command, 0)
-
-                    command = 'mv %s/dovecot /etc/' % (configbackups)
-                    Upgrade.executioner(command, 0)
-
-                    command = 'mv %s/postfix /etc/' % (configbackups)
+                    command = 'cp -pR %s/postfix/ /etc/' % (configbackups)
                     Upgrade.executioner(command, 0)
 
                     ## Restored
@@ -2060,6 +2155,9 @@ imap_folder_list_limit = 0
                 writeToFile.close()
 
                 command = 'systemctl restart dovecot'
+                Upgrade.executioner(command, command, 0)
+
+                command = 'rm -rf %s' % (configbackups)
                 Upgrade.executioner(command, command, 0)
 
             Upgrade.stdOut("Dovecot upgraded.")

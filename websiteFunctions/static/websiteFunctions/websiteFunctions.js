@@ -1723,8 +1723,7 @@ app.controller('websitePages', function ($scope, $http, $timeout, $window) {
 
         var domain = $("#domainNamePage").text();
         var path = $scope.installPath;
-        var sitename = $scope.sitename;
-        var username = $scope.username;
+        var username = 'admin';
         var password = $scope.password;
         var prefix = $scope.prefix;
 
@@ -1740,10 +1739,9 @@ app.controller('websitePages', function ($scope, $http, $timeout, $window) {
 
         var data = {
             domain: domain,
+            siteName: $scope.siteName,
             home: home,
             path: path,
-            sitename: sitename,
-            username: username,
             password: password,
             prefix: prefix,
         };
@@ -4675,7 +4673,7 @@ app.controller('installJoomlaCTRL', function ($scope, $http, $timeout) {
             domain: domain,
             home: home,
             path: path,
-            sitename: $scope.blogTitle,
+            siteName: $scope.siteName,
             username: $scope.adminUser,
             passwordByPass: $scope.adminPassword,
             prefix: $scope.databasePrefix
@@ -5466,6 +5464,154 @@ app.controller('sshAccess', function ($scope, $http, $timeout) {
 
     };
 
+    /// SSH Key at user level
+
+    $scope.keyBox = true;
+    $scope.saveKeyBtn = true;
+
+    $scope.addKey = function () {
+        $scope.showKeyBox = true;
+        $scope.keyBox = false;
+        $scope.saveKeyBtn = false;
+    };
+
+    function populateCurrentKeys() {
+
+        url = "/websites/getSSHConfigs";
+
+        var data = {
+            domain: $("#domainName").text(),
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+            if (response.data.status === 1) {
+                $scope.records = JSON.parse(response.data.data);
+            }
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.couldNotConnect = false;
+        }
+
+
+    }
+
+    populateCurrentKeys();
+
+    $scope.deleteKey = function (key) {
+
+        $scope.wpInstallLoading = false;
+
+        url = "/websites/deleteSSHKey";
+
+        var data = {
+            domain: $("#domainName").text(),
+            key: key,
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+            $scope.wpInstallLoading = true;
+            if (response.data.delete_status === 1) {
+                new PNotify({
+                    title: 'Success',
+                    text: 'Key deleted successfully.',
+                    type: 'success'
+                });
+                populateCurrentKeys();
+            } else {
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.wpInstallLoading = true;
+            new PNotify({
+                title: 'Error!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+
+        }
+
+
+    }
+
+    $scope.saveKey = function (key) {
+
+        $scope.wpInstallLoading = false;
+
+        url = "/websites/addSSHKey";
+
+        var data = {
+            domain: $("#domainName").text(),
+            key: $scope.keyData,
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.wpInstallLoading = true;
+            if (response.data.add_status === 1) {
+                new PNotify({
+                    title: 'Success',
+                    text: 'Key added successfully.',
+                    type: 'success'
+                });
+                populateCurrentKeys();
+            } else {
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            new PNotify({
+                title: 'Error!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+
+        }
+
+
+    }
+
 
 });
 
@@ -6170,7 +6316,7 @@ app.controller('manageGIT', function ($scope, $http, $timeout, $window) {
 
     $scope.changeBranch = function () {
 
-        if(changeBranch === 1){
+        if (changeBranch === 1) {
             changeBranch = 0;
             return 0;
         }
@@ -6206,9 +6352,9 @@ app.controller('manageGIT', function ($scope, $http, $timeout, $window) {
                     type: 'success'
                 });
                 $scope.commandStatus = response.data.commandStatus;
-               $timeout(function () {
-                        $window.location.reload();
-                    }, 3000);
+                $timeout(function () {
+                    $window.location.reload();
+                }, 3000);
             } else {
                 new PNotify({
                     title: 'Operation Failed!',
@@ -6739,9 +6885,9 @@ app.controller('manageGIT', function ($scope, $http, $timeout, $window) {
         currentComit = commit;
         $scope.cyberpanelLoading = false;
 
-        if (initial === 1){
+        if (initial === 1) {
             initial = 0;
-        }else {
+        } else {
             fetchFileCheck = 1;
         }
 
@@ -6800,7 +6946,7 @@ app.controller('manageGIT', function ($scope, $http, $timeout, $window) {
     $scope.fetchChangesInFile = function () {
         $scope.fileStatus = true;
 
-        if(fetchFileCheck === 1){
+        if (fetchFileCheck === 1) {
             fetchFileCheck = 0;
             return 0;
         }
@@ -6873,27 +7019,27 @@ app.controller('manageGIT', function ($scope, $http, $timeout, $window) {
             webhookCommand: $scope.webhookCommand
         };
 
-        if ($scope.autoCommit === undefined){
+        if ($scope.autoCommit === undefined) {
             $scope.autoCommitCurrent = 'Never';
-        }else{
+        } else {
             $scope.autoCommitCurrent = $scope.autoCommit;
         }
 
-        if ($scope.autoPush === undefined){
+        if ($scope.autoPush === undefined) {
             $scope.autoPushCurrent = 'Never';
-        }else{
+        } else {
             $scope.autoPushCurrent = $scope.autoPush;
         }
 
-        if ($scope.emailLogs === undefined){
+        if ($scope.emailLogs === undefined) {
             $scope.emailLogsCurrent = false;
-        }else{
+        } else {
             $scope.emailLogsCurrent = $scope.emailLogs;
         }
 
-        if ($scope.webhookCommand === undefined){
+        if ($scope.webhookCommand === undefined) {
             $scope.webhookCommandCurrent = false;
-        }else{
+        } else {
             $scope.webhookCommandCurrent = $scope.webhookCommand;
         }
 

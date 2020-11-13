@@ -1,4 +1,6 @@
 #!/usr/local/CyberCP/bin/python
+import argparse
+import errno
 import os.path
 import sys
 import django
@@ -8,19 +10,26 @@ django.setup()
 from django.shortcuts import render
 from django.http import HttpResponse
 import json
-from plogical.dnsUtilities import DNS
-from loginSystem.models import Administrator
+try:
+    from plogical.dnsUtilities import DNS
+    from loginSystem.models import Administrator
+    from .models import Domains,Records
+    from plogical.mailUtilities import mailUtilities
+except:
+    pass
 import os
-from .models import Domains,Records
 from re import match,I,M
-from plogical.mailUtilities import mailUtilities
 from plogical.acl import ACLManager
 import CloudFlare
 import re
-from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+import plogical.CyberCPLogFileWriter as logging
+from plogical.processUtilities import ProcessUtilities
 
 class DNSManager:
     defaultNameServersPath = '/home/cyberpanel/defaultNameservers'
+
+    def __init__(self, extraArgs=None):
+        self.extraArgs = extraArgs
 
     def loadCFKeys(self):
         cfFile = '%s%s' % (DNS.CFPath, self.admin.userName)
@@ -1140,3 +1149,175 @@ class DNSManager:
             final_dic = {'status': 0, 'delete_status': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
+
+    def installPowerDNS(self):
+        try:
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+
+                command = 'systemctl stop systemd-resolved'
+                ProcessUtilities.executioner(command)
+                command = 'systemctl disable systemd-resolved.service'
+                ProcessUtilities.executioner(command)
+
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+
+                command = 'DEBIAN_FRONTEND=noninteractive apt-get -y remove pdns-server pdns-backend-mysql -y'
+                os.system(command)
+
+                command = "DEBIAN_FRONTEND=noninteractive apt-get -y install pdns-server pdns-backend-mysql"
+                os.system(command)
+                return 1
+            else:
+
+                command = 'yum -y remove pdns pdns-backend-mysql'
+                os.system(command)
+
+                command = 'yum -y install pdns pdns-backend-mysql'
+
+            ProcessUtilities.executioner(command)
+
+            return 1
+
+        except BaseException as msg:
+            return 0
+
+    def installPowerDNSConfigurations(self, mysqlPassword):
+        try:
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.cent8 or ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+                dnsPath = "/etc/pdns/pdns.conf"
+            else:
+                dnsPath = "/etc/powerdns/pdns.conf"
+
+            import shutil
+
+            if os.path.exists(dnsPath):
+                os.remove(dnsPath)
+                shutil.copy("/usr/local/CyberCP/install/dns-one/pdns.conf", dnsPath)
+            else:
+                shutil.copy("/usr/local/CyberCP/install/dns-one/pdns.conf", dnsPath)
+
+            data = open(dnsPath, "r").readlines()
+
+            writeDataToFile = open(dnsPath, "w")
+
+            dataWritten = "gmysql-password=" + mysqlPassword + "\n"
+
+            for items in data:
+                if items.find("gmysql-password") > -1:
+                    writeDataToFile.writelines(dataWritten)
+                else:
+                    writeDataToFile.writelines(items)
+
+            writeDataToFile.close()
+
+
+            if self.remotemysql == 'ON':
+                command = "sed -i 's|gmysql-host=localhost|gmysql-host=%s|g' %s" % (self.mysqlhost, dnsPath)
+                ProcessUtilities.executioner(command)
+
+                command = "sed -i 's|gmysql-port=3306|gmysql-port=%s|g' %s" % (self.mysqlport, dnsPath)
+                ProcessUtilities.executioner(command)
+
+            return 1
+        except IOError as msg:
+            return 0
+
+    def startPowerDNS(self):
+
+        ############## Start PowerDNS ######################
+
+        command = 'systemctl enable pdns'
+        ProcessUtilities.executioner(command)
+
+        command = 'systemctl start pdns'
+        ProcessUtilities.executioner(command)
+
+        return 1
+
+    def ResetDNSConfigurations(self):
+        try:
+
+            ### Check if remote or local mysql
+
+            passFile = "/etc/cyberpanel/mysqlPassword"
+
+            try:
+                jsonData = json.loads(ProcessUtilities.outputExecutioner('cat %s' % (passFile)))
+
+                self.mysqluser = jsonData['mysqluser']
+                self.mysqlpassword = jsonData['mysqlpassword']
+                self.mysqlport = jsonData['mysqlport']
+                self.mysqlhost = jsonData['mysqlhost']
+                self.remotemysql = 'ON'
+
+                if self.mysqlhost.find('rds.amazon') > -1:
+                    self.RDS = 1
+
+                ## Also set localhost to this server
+
+                ipFile = "/etc/cyberpanel/machineIP"
+                f = open(ipFile)
+                ipData = f.read()
+                ipAddressLocal = ipData.split('\n', 1)[0]
+
+                self.LOCALHOST = ipAddressLocal
+            except BaseException as msg:
+                self.remotemysql = 'OFF'
+
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.CyberCPLogFileWriter.writeToFile('%s. [setupConnection:75]' % (str(msg)))
+
+            logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Removing and re-installing DNS..,5')
+
+            if self.installPowerDNS() == 0:
+                logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
+                                                          'installPowerDNS failed. [404].')
+                return 0
+
+            logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Resetting configurations..,40')
+
+            import sys
+            sys.path.append('/usr/local/CyberCP')
+            os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
+            from CyberCP import settings
+
+            logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Configurations reset..,70')
+
+            if self.installPowerDNSConfigurations(settings.DATABASES['default']['PASSWORD']) == 0:
+                logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'installPowerDNSConfigurations failed. [404].')
+                return 0
+
+            if self.startPowerDNS() == 0:
+                logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
+                                                          'startPowerDNS failed. [404].')
+                return 0
+
+            logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Fixing permissions..,90')
+
+            from mailServer.mailserverManager import MailServerManager
+            MailServerManager(None, None, None).fixCyberPanelPermissions()
+            logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Completed [200].')
+
+        except BaseException as msg:
+            final_dic = {'status': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+def main():
+
+    parser = argparse.ArgumentParser(description='CyberPanel')
+    parser.add_argument('function', help='Specify a function to call!')
+    parser.add_argument('--tempStatusPath', help='Path of temporary status file.')
+
+    args = parser.parse_args()
+
+    if args.function == "ResetDNSConfigurations":
+        extraArgs = {'tempStatusPath': args.tempStatusPath}
+        ftp = DNSManager(extraArgs)
+        ftp.ResetDNSConfigurations()
+
+if __name__ == "__main__":
+    main()
