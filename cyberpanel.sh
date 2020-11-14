@@ -491,7 +491,7 @@ EOF
     DEBIAN_FRONTEND=noninteractive apt install -y python3-pip
     check_return
     ln -s /usr/bin/pip3 /usr/bin/pip3.6
-    ln -s /usr/bin/pip /usr/bin/pip3.6
+    ln -s /usr/bin/pip3.6 /usr/bin/pip
     DEBIAN_FRONTEND=noninteractive apt install -y build-essential libssl-dev libffi-dev python3-dev
     check_return
     DEBIAN_FRONTEND=noninteractive apt install -y python3-venv
