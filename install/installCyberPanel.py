@@ -271,9 +271,9 @@ class InstallCyberPanel:
         if self.remotemysql == 'OFF':
 
             if self.distro == ubuntu:
-                passwordCMD = "use mysql;GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' IDENTIFIED BY '%s';UPDATE user SET plugin='' WHERE User='root';flush privileges;" % (InstallCyberPanel.mysql_Root_password)
+                passwordCMD = "use mysql;DROP DATABASE IF EXISTS test;DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%%';GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' IDENTIFIED BY '%s';UPDATE user SET plugin='' WHERE User='root';flush privileges;" % (InstallCyberPanel.mysql_Root_password)
             else:
-                passwordCMD = "use mysql;GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' IDENTIFIED BY '%s';flush privileges;" % (InstallCyberPanel.mysql_Root_password)
+                passwordCMD = "use mysql;DROP DATABASE IF EXISTS test;DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%%';GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' IDENTIFIED BY '%s';flush privileges;" % (InstallCyberPanel.mysql_Root_password)
 
             command = 'mysql -u root -e "' + passwordCMD + '"'
 
