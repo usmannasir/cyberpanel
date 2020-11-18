@@ -42,6 +42,17 @@ class cyberPanel:
             from random import randint
             externalApp = "".join(re.findall("[a-zA-Z]+", domainName))[:5] + str(randint(1000, 9999))
             phpSelection = 'PHP ' + php
+            
+            try:
+                counter = 0
+                _externalApp=externalApp
+                while True:
+                    tWeb = Websites.objects.get(externalApp=externalApp)
+                    externalApp = '%s%s' % (_externalApp, str(counter))
+                    counter = counter + 1
+            except BaseException as msg:
+                logger.writeforCLI(str(msg), "Error", stack()[0][3])
+                time.sleep(2)
 
             result = virtualHostUtilities.createVirtualHost(domainName, email, phpSelection, externalApp, ssl, dkim,
                               openBasedir, owner, package, 0)
