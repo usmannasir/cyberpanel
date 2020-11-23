@@ -125,31 +125,7 @@
       <name>XSS attack</name>
       <ruleSetAction>log,deny,status:403,msg:'XSS attack'</ruleSetAction>
       <enabled>1</enabled>
-      <ruleSet>SecFilterSelective ARGS &quot;(alert|expression|eval|url)[[:space:]]*\(&quot;
-SecFilterSelective ARGS &quot;(&amp;\{.+\}|(&amp;#[[0-9a-fA-F]]|\x5cx[0-9a-fA-F]){2})&quot;
-
-SecFilterSelective ARGS &quot;((javascript|vbscript):|style[[:space:]]*=)&quot;
-SecFilterSelective ARGS &quot;(fromCharCode|http-equiv|&lt;.+&gt;|innerHTML|dynsrc|--&gt;)&quot;
-SecFilterSelective ARGS &quot;document\.(body|cookie|location|write)&quot;
-
-SecFilterSelective ARGS_VALUES &quot;jsessionid|phpsessid|onReadyStateChange|xmlHttp&quot;
-
-SecFilterSelective ARGS &quot;&lt;(applet|div|embed|iframe|img|meta|object|script|textarea)&quot;
-
-# JavaScript event handlers
-SecFilterSelective ARGS &quot;on(Abort|Blur|Click|DblClick|DragDrop|Error|Focus|KeyUp|KeyDown|KeyPrerss|Load|Mouse(Down|Out|Over|Up)|Move|Reset|Resize|Select|Submit|Unload)&quot;</ruleSet>
-    </censorshipRuleSet>
-    <censorshipRuleSet>
-      <name>SQL injection</name>
-      <ruleSetAction>log,pass,msg:'SQL Injection attack'</ruleSetAction>
-      <enabled>1</enabled>
-      <ruleSet>#SQL generic
-SecFilterSelective ARGS &quot;drop[[:space:]]+(database|table|column|procedure)&quot;
-SecFilterSelective ARGS &quot;delete[[:space:]]+from|create[[:space:]]+table|update.+set.+=|insert[[:space:]]+into.+values&quot;
-SecFilterSelective ARGS &quot;select.+from|bulk[[:space:]]+insert|union.+select|alter[[:space:]]+table&quot;
-SecFilterSelective ARGS &quot;or.+1[[:space:]]*=[[:space:]]1|or 1=1--'|'.+--&quot;
-
-SecFilterSelective ARGS &quot;into[[:space:]]+outfile|load[[:space:]]+data|/\*.+\*/&quot;</ruleSet>
+      <ruleSet></ruleSet>
     </censorshipRuleSet>
     <accessDenyDir>
       <dir>/</dir>

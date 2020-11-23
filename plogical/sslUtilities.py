@@ -222,6 +222,7 @@ class sslUtilities:
 
                     cacheRoot = """    <IfModule LiteSpeed>
             CacheRoot lscache
+            CacheLookup on
         </IfModule>
     """
 
