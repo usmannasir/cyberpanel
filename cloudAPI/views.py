@@ -51,6 +51,10 @@ def router(request):
             return cm.ReadReportDNS()
         elif controller == 'ResetDNSConfigurations':
             return cm.ResetDNSConfigurations()
+        elif controller == 'SubmitCloudBackup':
+            return cm.SubmitCloudBackup()
+        elif controller == 'getCurrentCloudBackups':
+            return cm.getCurrentCloudBackups()
         elif controller == 'fetchWebsites':
             return cm.fetchWebsites()
         elif controller == 'fetchWebsiteDataJSON':

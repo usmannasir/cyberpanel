@@ -54,10 +54,15 @@ BUILD = 3
 
 class backupUtilities:
     Server_root = "/usr/local/lsws"
-
     completeKeyPath = "/home/cyberpanel/.ssh"
     destinationsPath = "/home/cyberpanel/destinations"
     licenseKey = '/usr/local/lsws/conf/license.key'
+    NiceDefault = '10'
+    CPUDefault = '40'
+    CloudBackupConfigPath = '/home/cyberpanel/CloudBackup.json'
+
+    def __init__(self, extraArgs):
+        self.extraArgs = extraArgs
 
     @staticmethod
     def prepareBackupMeta(backupDomain, backupName, tempStoragePath, backupPath):
@@ -1246,6 +1251,134 @@ class backupUtilities:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "  [getAliases]")
             print(0)
 
+    ### Cloud Backup functions
+
+    def CheckIfSleepNeeded(self):
+        import psutil
+        while (1):
+            if int(psutil.cpu_percent()) > int(self.cpu):
+                logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
+                                                          'Current CPU usage exceeds %s percent. Backup process will sleep for 10 seconds..,0' % (self.cpu))
+                import time
+                time.sleep(10)
+            else:
+                break
+
+    def BackupData(self):
+
+        ### Creating the dir to store backups
+        self.BackupDataPath = '%s/data' % (self.BackupPath)
+        command = 'mkdir -p %s' % (self.BackupDataPath)
+        ProcessUtilities.executioner(command)
+        self.DataPath = '/home/%s' % (self.extraArgs['domain'])
+
+        ## Backing up data
+
+        self.CheckIfSleepNeeded()
+
+        command = 'nice -n %s cp -R %s %s' % (self.nice, self.DataPath, self.BackupDataPath)
+        ProcessUtilities.executioner(command)
+
+        ## Store child domains if any in json format
+
+        DataJson = {}
+        childs = []
+        import json
+
+        for child in self.website.childdomains_set.all():
+            childs.append(child.domain)
+
+        DataJson['ChildDomains'] = childs
+
+        DataJsonPath = '%s/%s' % (self.BackupPath, 'data.json')
+
+        writeToFile = open(DataJsonPath, 'w')
+        writeToFile.write(json.dumps(DataJson))
+        writeToFile.close()
+
+        return 1
+
+    def BackupEmails(self):
+
+        ### Creating the dir to store backups
+        self.BackupDataPath = '%s/emails' % (self.BackupPath)
+        command = 'mkdir -p %s' % (self.BackupDataPath)
+        ProcessUtilities.executioner(command)
+        self.DataPath = '/home/vmail/%s' % (self.extraArgs['domain'])
+
+        ## Backing up data
+
+        self.CheckIfSleepNeeded()
+
+        command = 'nice -n %s cp -R %s %s' % (self.nice, self.DataPath, self.BackupDataPath)
+        ProcessUtilities.executioner(command)
+
+        ## Store child domains if any in json format
+
+        DataJson = {}
+        emailsList = []
+        import json
+
+        from mailServer.models import Domains, EUsers
+        emailDomain = Domains.objects.get(domainOwner=self.website)
+
+        for emails in emailDomain.eusers_set.all():
+            emailsList.append({'email': emails.email, 'password': emails.password})
+
+        DataJson['emails'] = emailsList
+        DataJsonPath = '%s/%s' % (self.BackupPath, 'emails.json')
+        writeToFile = open(DataJsonPath, 'w')
+        writeToFile.write(json.dumps(DataJson))
+        writeToFile.close()
+
+        return 1
+
+    def CloudBackups(self):
+        import json
+        if os.path.exists(backupUtilities.CloudBackupConfigPath):
+            result = json.loads(open(backupUtilities.CloudBackupConfigPath, 'r').read())
+            self.nice = result['nice']
+            self.cpu = result['cpu']
+        else:
+            self.nice = backupUtilities.NiceDefault
+            self.cpu = backupUtilities.CPUDefault
+
+        self.BackupPath = '/home/cyberpanel/backups/%s/backup-' % (self.extraArgs['domain']) + self.extraArgs['domain'] + "-" + time.strftime("%m.%d.%Y_%H-%M-%S")
+        self.website = Websites.objects.get(domain=self.extraArgs['domain'])
+
+        command = 'mkdir -p %s' % (self.BackupPath)
+        ProcessUtilities.executioner(command)
+
+        logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
+                                                  'Starting backup generation..,0')
+        if self.extraArgs['data']:
+            logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
+                                                      'Generating backup for your data,5')
+            if self.BackupData() == 0:
+                logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
+                                                          'Failed to generate backups for data. [404], 0')
+                return 0
+
+            logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
+                                                      'Data backup successfully generated,30')
+
+        if self.extraArgs['emails']:
+            logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
+                                                      'Generating backup for your emails,5')
+            if self.BackupEmails() == 0:
+                logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
+                                                          'Failed to generate backups for emails. [404], 0')
+                return 0
+
+            logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
+                                                      'Emails backup successfully generated,30')
+
+        logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Completed [200].')
+
+
+
+    ### Cloud Backup functions ends
+
 
 def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
     try:
@@ -1386,7 +1519,6 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
         logging.CyberCPLogFileWriter.writeToFile(
             str(msg) + "  [submitBackupCreation]")
 
-
 def cancelBackupCreation(backupCancellationDomain, fileName):
     try:
 
@@ -1421,7 +1553,6 @@ def cancelBackupCreation(backupCancellationDomain, fileName):
             str(msg) + "  [cancelBackupCreation]")
         print("0," + str(msg))
 
-
 def submitRestore(backupFile, dir):
     try:
 
@@ -1435,7 +1566,6 @@ def submitRestore(backupFile, dir):
             str(msg) + "  [cancelBackupCreation]")
         print("0," + str(msg))
 
-
 def submitDestinationCreation(ipAddress, password, port='22', user='root'):
     setupKeys = backupUtilities.setupSSHKeys(ipAddress, password, port, user)
 
@@ -1444,7 +1574,6 @@ def submitDestinationCreation(ipAddress, password, port='22', user='root'):
         print("1,None")
     else:
         print(setupKeys[1])
-
 
 def getConnectionStatus(ipAddress):
     try:
@@ -1460,8 +1589,8 @@ def getConnectionStatus(ipAddress):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='CyberPanel Installer')
-    parser.add_argument('function', help='Specific a function to call!')
+    parser = argparse.ArgumentParser(description='CyberPanel Backup Generator')
+    parser.add_argument('function', help='Specify a function to call!')
     parser.add_argument('--tempStoragePath', help='')
     parser.add_argument('--backupName', help='!')
     parser.add_argument('--backupPath', help='')
@@ -1485,6 +1614,13 @@ def main():
     parser.add_argument('--backupFile', help='')
     parser.add_argument('--dir', help='')
 
+    ### For Cloud Backups
+
+    parser.add_argument('--data', help='')
+    parser.add_argument('--emails', help='')
+    parser.add_argument('--databases', help='')
+
+
     args = parser.parse_args()
 
     if args.function == "submitBackupCreation":
@@ -1501,6 +1637,15 @@ def main():
         backupUtilities.startBackup(args.tempStoragePath, args.backupName, args.backupPath, args.metaPath)
     elif args.function == "BackupRoot":
         backupUtilities.BackupRoot(args.tempStoragePath, args.backupName, args.backupPath, args.metaPath)
+    elif args.function == 'CloudBackup':
+        extraArgs = {}
+        extraArgs['domain'] = args.backupDomain
+        extraArgs['tempStatusPath'] = args.tempStoragePath
+        extraArgs['data'] = int(args.data)
+        extraArgs['emails'] = int(args.emails)
+        extraArgs['databases'] = int(args.databases)
+        bu = backupUtilities(extraArgs)
+        bu.CloudBackups()
 
 
 if __name__ == "__main__":

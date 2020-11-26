@@ -1638,3 +1638,59 @@ class CloudManager:
 
         except BaseException as msg:
             return self.ajaxPre(0, str(msg))
+
+    def SubmitCloudBackup(self):
+        try:
+
+            tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
+
+            writeToFile = open(tempStatusPath, 'w')
+            writeToFile.write('Starting..,0')
+            writeToFile.close()
+
+            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
+            execPath = execPath + " CloudBackup --backupDomain %s --data 1 --emails 1 --databases 1 --tempStoragePath %s" % (self.data['domain'], tempStatusPath)
+            ProcessUtilities.popenExecutioner(execPath)
+
+            final_dic = {'status': 1, 'tempStatusPath': tempStatusPath}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+        except BaseException as msg:
+            return self.ajaxPre(0, str(msg))
+
+    def getCurrentCloudBackups(self):
+        try:
+
+            backupDomain = self.data['domainName']
+            backupsPath = '/home/cyberpanel/backups/%s/' % (backupDomain)
+            backups = os.listdir(backupsPath)
+            backups.reverse()
+
+            json_data = "["
+            checker = 0
+
+            counter = 1
+            for items in backups:
+
+                size = str(int(int(os.path.getsize('%s/%s' % (backupsPath, items)))/int(1048576)))
+
+                dic = {'id': counter,
+                       'file': items,
+                       'size': '%s MBs' % (size),
+                       }
+                counter = counter + 1
+
+                if checker == 0:
+                    json_data = json_data + json.dumps(dic)
+                    checker = 1
+                else:
+                    json_data = json_data + ',' + json.dumps(dic)
+
+            json_data = json_data + ']'
+            final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": json_data})
+            return HttpResponse(final_json)
+        except BaseException as msg:
+            final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
