@@ -58,7 +58,7 @@ class backupUtilities:
     destinationsPath = "/home/cyberpanel/destinations"
     licenseKey = '/usr/local/lsws/conf/license.key'
     NiceDefault = '10'
-    CPUDefault = '40'
+    CPUDefault = '1000'
     CloudBackupConfigPath = '/home/cyberpanel/CloudBackup.json'
 
     def __init__(self, extraArgs):
@@ -1256,7 +1256,8 @@ class backupUtilities:
     def CheckIfSleepNeeded(self):
         import psutil
         while (1):
-            if int(psutil.cpu_percent()) > int(self.cpu):
+            logging.CyberCPLogFileWriter.writeToFile('Current CPU percent %s.' % (int(psutil.cpu_percent(interval=None))))
+            if int(psutil.cpu_percent(interval=None)) > int(self.cpu):
                 logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
                                                           'Current CPU usage exceeds %s percent. Backup process will sleep for 10 seconds..,0' % (self.cpu))
                 import time
@@ -1265,73 +1266,149 @@ class backupUtilities:
                 break
 
     def BackupData(self):
+        try:
 
-        ### Creating the dir to store backups
-        self.BackupDataPath = '%s/data' % (self.BackupPath)
-        command = 'mkdir -p %s' % (self.BackupDataPath)
-        ProcessUtilities.executioner(command)
-        self.DataPath = '/home/%s' % (self.extraArgs['domain'])
+            ### Creating the dir to store backups
+            self.BackupDataPath = '%s/data' % (self.BackupPath)
+            command = 'mkdir -p %s' % (self.BackupDataPath)
+            ProcessUtilities.executioner(command)
+            self.DataPath = '/home/%s' % (self.extraArgs['domain'])
 
-        ## Backing up data
+            ## Backing up data
 
-        self.CheckIfSleepNeeded()
+            self.CheckIfSleepNeeded()
 
-        command = 'nice -n %s cp -R %s %s' % (self.nice, self.DataPath, self.BackupDataPath)
-        ProcessUtilities.executioner(command)
+            command = 'nice -n %s cp -R %s %s' % (self.nice, self.DataPath, self.BackupDataPath)
+            ProcessUtilities.executioner(command)
 
-        ## Store child domains if any in json format
+            ## Store child domains if any in json format
 
-        DataJson = {}
-        childs = []
-        import json
+            DataJson = {}
+            childs = []
+            import json
 
-        for child in self.website.childdomains_set.all():
-            childs.append(child.domain)
+            for child in self.website.childdomains_set.all():
+                childs.append(child.domain)
 
-        DataJson['ChildDomains'] = childs
+            DataJson['ChildDomains'] = childs
 
-        DataJsonPath = '%s/%s' % (self.BackupPath, 'data.json')
+            DataJsonPath = '%s/%s' % (self.BackupPath, 'data.json')
 
-        writeToFile = open(DataJsonPath, 'w')
-        writeToFile.write(json.dumps(DataJson))
-        writeToFile.close()
+            writeToFile = open(DataJsonPath, 'w')
+            writeToFile.write(json.dumps(DataJson))
+            writeToFile.close()
 
-        return 1
+            return 1, None
+        except BaseException as msg:
+            return 0, str(msg)
 
     def BackupEmails(self):
+        try:
 
-        ### Creating the dir to store backups
-        self.BackupDataPath = '%s/emails' % (self.BackupPath)
-        command = 'mkdir -p %s' % (self.BackupDataPath)
-        ProcessUtilities.executioner(command)
-        self.DataPath = '/home/vmail/%s' % (self.extraArgs['domain'])
+            from mailServer.models import Domains, EUsers
+            try:
+                emailDomain = Domains.objects.get(domainOwner=self.website)
+            except:
+                return 1, None
 
-        ## Backing up data
+            ### Creating the dir to store backups
+            self.BackupDataPath = '%s/emails' % (self.BackupPath)
+            command = 'mkdir -p %s' % (self.BackupDataPath)
+            ProcessUtilities.executioner(command)
+            self.DataPath = '/home/vmail/%s' % (self.extraArgs['domain'])
 
-        self.CheckIfSleepNeeded()
+            ## Backing up data
 
-        command = 'nice -n %s cp -R %s %s' % (self.nice, self.DataPath, self.BackupDataPath)
-        ProcessUtilities.executioner(command)
+            self.CheckIfSleepNeeded()
 
-        ## Store child domains if any in json format
+            command = 'nice -n %s cp -R %s %s' % (self.nice, self.DataPath, self.BackupDataPath)
+            ProcessUtilities.executioner(command)
 
-        DataJson = {}
-        emailsList = []
-        import json
+            ## Store child domains if any in json format
 
-        from mailServer.models import Domains, EUsers
-        emailDomain = Domains.objects.get(domainOwner=self.website)
+            DataJson = {}
+            emailsList = []
+            import json
 
-        for emails in emailDomain.eusers_set.all():
-            emailsList.append({'email': emails.email, 'password': emails.password})
+            for emails in emailDomain.eusers_set.all():
+                emailsList.append({'email': emails.email, 'password': emails.password})
 
-        DataJson['emails'] = emailsList
-        DataJsonPath = '%s/%s' % (self.BackupPath, 'emails.json')
-        writeToFile = open(DataJsonPath, 'w')
-        writeToFile.write(json.dumps(DataJson))
-        writeToFile.close()
+            DataJson['emails'] = emailsList
+            DataJsonPath = '%s/%s' % (self.BackupPath, 'emails.json')
+            writeToFile = open(DataJsonPath, 'w')
+            writeToFile.write(json.dumps(DataJson))
+            writeToFile.close()
 
-        return 1
+            return 1, None
+        except BaseException as msg:
+            return 0, str(msg)
+
+    def BackupDatabases(self):
+        try:
+
+            ### Creating the dir to store backups
+            self.BackupDataPath = '%s/databases' % (self.BackupPath)
+            command = 'mkdir -p %s' % (self.BackupDataPath)
+            ProcessUtilities.executioner(command)
+
+            ## Backing up data
+
+            self.CheckIfSleepNeeded()
+            DataJson = {}
+            databases = []
+            import json
+
+            for items in self.website.databases_set.all():
+                try:
+                    dbuser = DBUsers.objects.get(user=items.dbUser)
+                    userToTry = items.dbUser
+                except:
+                    try:
+                        dbusers = DBUsers.objects.all().filter(user=items.dbUser)
+                        userToTry = items.dbUser
+                        for it in dbusers:
+                            dbuser = it
+                            break
+
+                        userToTry = mysqlUtilities.mysqlUtilities.fetchuser(items.dbName)
+
+                        if userToTry == 0 or userToTry == 1:
+                            continue
+
+                        try:
+                            dbuser = DBUsers.objects.get(user=userToTry)
+                        except:
+                            try:
+                                dbusers = DBUsers.objects.all().filter(user=userToTry)
+                                for it in dbusers:
+                                    dbuser = it
+                                    break
+
+                            except BaseException as msg:
+                                logging.CyberCPLogFileWriter.writeToFile(
+                                    'While creating backup for %s, we failed to backup database %s. Error message: %s' % (
+                                        self.website.domain, items.dbName, str(msg)))
+                                continue
+                    except BaseException as msg:
+                        logging.CyberCPLogFileWriter.writeToFile(
+                            'While creating backup for %s, we failed to backup database %s. Error message: %s' % (
+                                self.website.domain, items.dbName, str(msg)))
+                        continue
+
+                databases.append({'databaseName': str(items.dbName), 'databaseUser': str(userToTry), 'password': str(dbuser.password)})
+                self.CheckIfSleepNeeded()
+                mysqlUtilities.mysqlUtilities.createDatabaseBackup(items.dbName, self.BackupDataPath)
+
+            DataJson['databases'] = databases
+            DataJsonPath = '%s/%s' % (self.BackupPath, 'databases.json')
+
+            writeToFile = open(DataJsonPath, 'w')
+            writeToFile.write(json.dumps(DataJson))
+            writeToFile.close()
+
+            return 1, None
+        except BaseException as msg:
+            return 0, str(msg)
 
     def CloudBackups(self):
         import json
@@ -1354,9 +1431,10 @@ class backupUtilities:
         if self.extraArgs['data']:
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
                                                       'Generating backup for your data,5')
-            if self.BackupData() == 0:
+            result = self.BackupData()
+            if result[0] == 0:
                 logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
-                                                          'Failed to generate backups for data. [404], 0')
+                                                          'Failed to generate backups for data. Error: %s. [404], 0' % (result[1] ))
                 return 0
 
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
@@ -1365,20 +1443,30 @@ class backupUtilities:
         if self.extraArgs['emails']:
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
                                                       'Generating backup for your emails,5')
-            if self.BackupEmails() == 0:
+            result = self.BackupEmails()
+            if result[0] == 0:
                 logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
-                                                          'Failed to generate backups for emails. [404], 0')
+                                                          'Failed to generate backups for emails. Error: %s. [404], 0' % (result[1] ))
                 return 0
 
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
                                                       'Emails backup successfully generated,30')
 
+        if self.extraArgs['databases']:
+            logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
+                                                      'Generating backup for your databases,5')
+            result = self.BackupDatabases()
+            if result[0] == 0:
+                logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
+                                                          'Failed to generate backups for databases. Error: %s. [404], 0' % (result[1] ))
+                return 0
+
+            logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
+                                                      'Databases backups successfully generated,30')
+
         logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Completed [200].')
 
-
-
     ### Cloud Backup functions ends
-
 
 def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
     try:

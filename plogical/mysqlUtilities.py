@@ -228,6 +228,7 @@ class mysqlUtilities:
                 cnfContent = """[mysqldump]
 user=root
 password=%s
+max_allowed_packet=1024M
 [mysql]
 user=root
 password=%s
