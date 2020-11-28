@@ -1442,7 +1442,7 @@ class backupUtilities:
 
         if self.extraArgs['emails']:
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
-                                                      'Generating backup for your emails,5')
+                                                      'Generating backup for your emails,40')
             result = self.BackupEmails()
             if result[0] == 0:
                 logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
@@ -1450,11 +1450,11 @@ class backupUtilities:
                 return 0
 
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
-                                                      'Emails backup successfully generated,30')
+                                                      'Emails backup successfully generated,60')
 
         if self.extraArgs['databases']:
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
-                                                      'Generating backup for your databases,5')
+                                                      'Generating backup for your databases,60')
             result = self.BackupDatabases()
             if result[0] == 0:
                 logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
@@ -1463,6 +1463,15 @@ class backupUtilities:
 
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
                                                       'Databases backups successfully generated,30')
+
+        logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
+                                                  'Creating final archive..,80')
+
+        command = 'nice -n %s tar czf %s.tar.gz -C %s %s' % (self.nice, self.BackupPath, '/home/cyberpanel/backups/%s' % (self.extraArgs['domain']), self.BackupPath.split('/')[-1])
+        ProcessUtilities.executioner(command)
+
+        command = 'rm -rf %s' % (self.BackupPath)
+        ProcessUtilities.executioner(command)
 
         logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Completed [200].')
 
