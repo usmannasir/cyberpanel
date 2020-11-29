@@ -4340,6 +4340,9 @@ StrictHostKeyChecking no
             command = 'mkdir -p /home/%s/.ssh/' % (domain)
             ProcessUtilities.executioner(command)
 
+            command = 'chown %s:%s /home/%s/.ssh/' % (website.externalApp, website.externalApp, domain)
+            ProcessUtilities.executioner(command)
+
             tempPath = "/home/cyberpanel/" + str(randint(1000, 9999))
 
             writeToFile = open(tempPath, "w")
