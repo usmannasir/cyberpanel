@@ -93,10 +93,10 @@ class CageFS:
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
                                                       "Reinstalling important components ..\n", 1)
 
-            command = 'yum install -y lvemanager'
+            command = 'yum install -y lvemanager alt-python37-devel'
             ServerStatusUtil.executioner(command, statusFile)
 
-            command = 'yum reinstall -y lvemanager lve-utils cagefs alt-python27-cllib'
+            command = 'yum reinstall -y lvemanager lve-utils cagefs'
             ServerStatusUtil.executioner(command, statusFile)
 
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
