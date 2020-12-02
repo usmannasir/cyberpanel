@@ -192,6 +192,15 @@ class InstallCyberPanel:
             if res != 0:
                 InstallCyberPanel.stdOut("Failed to install PHP on Ubuntu.", 1, 1)
 
+            command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install ' \
+                      'lsphp8? lsphp8?-common lsphp8?-curl lsphp8?-dev lsphp8?-imap lsphp8?-intl lsphp8?-json ' \
+                      'lsphp8?-ldap lsphp8?-mysql lsphp8?-opcache lsphp8?-pspell lsphp8?-recode ' \
+                      'lsphp8?-sqlite8 lsphp8?-tidy'
+
+            res = os.system(command)
+            if res != 0:
+                InstallCyberPanel.stdOut("Failed to install PHP on Ubuntu.", 1, 1)
+
         elif self.distro == centos:
             command = 'yum -y groupinstall lsphp-all'
             install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
@@ -232,8 +241,11 @@ class InstallCyberPanel:
 
             install.preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
+            command = 'yum install lsphp80*'
+            subprocess.call(command, shell=True)
+
         if self.distro == cent8:
-            command = 'dnf install lsphp71* lsphp72* lsphp73* lsphp74* --exclude lsphp73-pecl-zip -y'
+            command = 'dnf install lsphp71* lsphp72* lsphp73* lsphp74* lsphp80* --exclude lsphp73-pecl-zip -y'
             subprocess.call(command, shell=True)
 
     def installMySQL(self, mysql):
