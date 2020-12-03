@@ -1218,6 +1218,34 @@ def installExtensions(request):
                                                  status=status)
 
                 phpExtension.save()
+        try:
+            newPHP80 = PHP(phpVers="php80")
+            newPHP80.save()
+
+            php80Path = ''
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                php80Path = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'php80.xml')
+            else:
+                php80Path = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'ubuntuphp80.xml')
+
+            php80 = ElementTree.parse(php80Path)
+
+            php80Extensions = php80.findall('extension')
+
+            for extension in php80Extensions:
+                extensionName = extension.find('extensionName').text
+                extensionDescription = extension.find('extensionDescription').text
+                status = int(extension.find('status').text)
+
+                phpExtension = installedPackages(phpVers=newPHP80,
+                                                 extensionName=extensionName,
+                                                 description=extensionDescription,
+                                                 status=status)
+
+                phpExtension.save()
+        except:
+            pass
 
         return render(request, 'managePHP/installExtensions.html', {'phps': PHPManager.findPHPVersions()})
     except KeyError:
