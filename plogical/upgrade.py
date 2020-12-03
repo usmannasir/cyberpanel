@@ -1949,12 +1949,8 @@ echo $oConfig->Save() ? 'Done' : 'Error';
                       'lsphp7?-sqlite3 lsphp7?-tidy'
             Upgrade.executioner(command, 'Install PHP 73, 0')
 
-            command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install ' \
-                      'lsphp8? lsphp8?-common lsphp8?-curl lsphp8?-dev lsphp8?-imap lsphp8?-intl lsphp8?-json ' \
-                      'lsphp8?-ldap lsphp8?-mysql lsphp8?-opcache lsphp8?-pspell lsphp8?-recode ' \
-                      'lsphp8?-sqlite8 lsphp8?-tidy'
-
-            Upgrade.executioner(command, 'Install PHP 80, 0')
+            command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp80*'
+            os.system(command)
 
         CentOSPath = '/etc/redhat-release'
 

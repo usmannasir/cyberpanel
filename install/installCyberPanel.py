@@ -188,18 +188,11 @@ class InstallCyberPanel:
                       'lsphp7?-ldap lsphp7?-mysql lsphp7?-opcache lsphp7?-pspell lsphp7?-recode ' \
                       'lsphp7?-sqlite3 lsphp7?-tidy'
 
-            res = os.system(command)
-            if res != 0:
-                InstallCyberPanel.stdOut("Failed to install PHP on Ubuntu.", 1, 1)
+            os.system(command)
 
-            command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install ' \
-                      'lsphp8? lsphp8?-common lsphp8?-curl lsphp8?-dev lsphp8?-imap lsphp8?-intl lsphp8?-json ' \
-                      'lsphp8?-ldap lsphp8?-mysql lsphp8?-opcache lsphp8?-pspell lsphp8?-recode ' \
-                      'lsphp8?-sqlite8 lsphp8?-tidy'
+            command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp80*'
+            os.system(command)
 
-            res = os.system(command)
-            if res != 0:
-                InstallCyberPanel.stdOut("Failed to install PHP on Ubuntu.", 0, 1)
 
         elif self.distro == centos:
             command = 'yum -y groupinstall lsphp-all'
