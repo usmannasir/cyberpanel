@@ -1939,7 +1939,7 @@ echo $oConfig->Save() ? 'Done' : 'Error';
                 Upgrade.executioner(command, 'Install PHP 74, 0')
 
             if Upgrade.installedOutput.find('lsphp80') == -1:
-                command = 'yum install lsphp80*'
+                command = 'yum install lsphp80* -y'
                 subprocess.call(command, shell=True)
 
         except:

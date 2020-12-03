@@ -241,7 +241,7 @@ class InstallCyberPanel:
 
             install.preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-            command = 'yum install lsphp80*'
+            command = 'yum install lsphp80* -y'
             subprocess.call(command, shell=True)
 
         if self.distro == cent8:
