@@ -1923,7 +1923,6 @@ echo $oConfig->Save() ? 'Done' : 'Error';
     @staticmethod
     def installPHP73():
         try:
-
             if Upgrade.installedOutput.find('lsphp73') == -1:
                 command = 'yum install -y lsphp73 lsphp73-json lsphp73-xmlrpc lsphp73-xml lsphp73-tidy lsphp73-soap lsphp73-snmp ' \
                           'lsphp73-recode lsphp73-pspell lsphp73-process lsphp73-pgsql lsphp73-pear lsphp73-pdo lsphp73-opcache ' \
