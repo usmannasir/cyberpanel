@@ -1694,3 +1694,41 @@ class CloudManager:
             final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
+
+    def fetchCloudBackupSettings(self):
+        try:
+            from plogical.backupUtilities import backupUtilities
+            if os.path.exists(backupUtilities.CloudBackupConfigPath):
+                result = json.loads(open(backupUtilities.CloudBackupConfigPath, 'r').read())
+                self.nice = result['nice']
+                self.cpu = result['cpu']
+                self.time = result['time']
+            else:
+                self.nice = backupUtilities.NiceDefault
+                self.cpu = backupUtilities.CPUDefault
+                self.time = backupUtilities.time
+
+            data_ret = {'status': 1, 'nice': self.nice, 'cpu': self.cpu, 'time': self.time}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'abort': 0, 'installationProgress': "0", 'errorMessage': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def saveCloudBackupSettings(self):
+        try:
+            from plogical.backupUtilities import backupUtilities
+            writeToFile = open(backupUtilities.CloudBackupConfigPath, 'w')
+            writeToFile.write(json.dumps(self.data))
+            writeToFile.close()
+
+            data_ret = {'status': 1}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'abort': 0, 'installationProgress': "0", 'errorMessage': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)

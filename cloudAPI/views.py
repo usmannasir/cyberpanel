@@ -55,6 +55,10 @@ def router(request):
             return cm.SubmitCloudBackup()
         elif controller == 'getCurrentCloudBackups':
             return cm.getCurrentCloudBackups()
+        elif controller == 'fetchCloudBackupSettings':
+            return cm.fetchCloudBackupSettings()
+        elif controller == 'saveCloudBackupSettings':
+            return cm.saveCloudBackupSettings()
         elif controller == 'fetchWebsites':
             return cm.fetchWebsites()
         elif controller == 'fetchWebsiteDataJSON':

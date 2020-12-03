@@ -60,6 +60,7 @@ class backupUtilities:
     NiceDefault = '10'
     CPUDefault = '1000'
     CloudBackupConfigPath = '/home/cyberpanel/CloudBackup.json'
+    time = 10
 
     def __init__(self, extraArgs):
         self.extraArgs = extraArgs
@@ -1259,9 +1260,9 @@ class backupUtilities:
             logging.CyberCPLogFileWriter.writeToFile('Current CPU percent %s.' % (int(psutil.cpu_percent(interval=None))))
             if int(psutil.cpu_percent(interval=None)) > int(self.cpu):
                 logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
-                                                          'Current CPU usage exceeds %s percent. Backup process will sleep for 10 seconds..,0' % (self.cpu))
+                                                          'Current CPU usage exceeds %s percent. Backup process will sleep for %s seconds..,0' % (self.cpu, str(self.time)))
                 import time
-                time.sleep(10)
+                time.sleep(self.time)
             else:
                 break
 
@@ -1416,9 +1417,11 @@ class backupUtilities:
             result = json.loads(open(backupUtilities.CloudBackupConfigPath, 'r').read())
             self.nice = result['nice']
             self.cpu = result['cpu']
+            self.time = int(result['time'])
         else:
             self.nice = backupUtilities.NiceDefault
             self.cpu = backupUtilities.CPUDefault
+            self.time = int(backupUtilities.time)
 
         self.BackupPath = '/home/cyberpanel/backups/%s/backup-' % (self.extraArgs['domain']) + self.extraArgs['domain'] + "-" + time.strftime("%m.%d.%Y_%H-%M-%S")
         self.website = Websites.objects.get(domain=self.extraArgs['domain'])
