@@ -1923,7 +1923,6 @@ echo $oConfig->Save() ? 'Done' : 'Error';
     @staticmethod
     def installPHP73():
         try:
-
             if Upgrade.installedOutput.find('lsphp73') == -1:
                 command = 'yum install -y lsphp73 lsphp73-json lsphp73-xmlrpc lsphp73-xml lsphp73-tidy lsphp73-soap lsphp73-snmp ' \
                           'lsphp73-recode lsphp73-pspell lsphp73-process lsphp73-pgsql lsphp73-pear lsphp73-pdo lsphp73-opcache ' \
@@ -1939,12 +1938,19 @@ echo $oConfig->Save() ? 'Done' : 'Error';
 
                 Upgrade.executioner(command, 'Install PHP 74, 0')
 
+            if Upgrade.installedOutput.find('lsphp80') == -1:
+                command = 'yum install lsphp80* -y'
+                subprocess.call(command, shell=True)
+
         except:
             command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install ' \
                       'lsphp7? lsphp7?-common lsphp7?-curl lsphp7?-dev lsphp7?-imap lsphp7?-intl lsphp7?-json ' \
                       'lsphp7?-ldap lsphp7?-mysql lsphp7?-opcache lsphp7?-pspell lsphp7?-recode ' \
                       'lsphp7?-sqlite3 lsphp7?-tidy'
             Upgrade.executioner(command, 'Install PHP 73, 0')
+
+            command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp80*'
+            os.system(command)
 
         CentOSPath = '/etc/redhat-release'
 
