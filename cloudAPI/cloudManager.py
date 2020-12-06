@@ -1664,8 +1664,11 @@ class CloudManager:
 
             backupDomain = self.data['domainName']
             backupsPath = '/home/cyberpanel/backups/%s/' % (backupDomain)
-            backups = os.listdir(backupsPath)
-            backups.reverse()
+            try:
+                backups = os.listdir(backupsPath)
+                backups.reverse()
+            except:
+                backups = []
 
             json_data = "["
             checker = 0
@@ -1732,3 +1735,40 @@ class CloudManager:
             data_ret = {'status': 0, 'abort': 0, 'installationProgress': "0", 'errorMessage': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
+
+    def deleteCloudBackup(self):
+        try:
+
+            backupDomain = self.data['domainName']
+            backupFile = self.data['backupFile']
+            backupsPathComplete = '/home/cyberpanel/backups/%s/%s' % (backupDomain, backupFile)
+
+            command = 'rm -f %s' % (backupsPathComplete)
+            ProcessUtilities.executioner(command)
+
+            final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None"})
+            return HttpResponse(final_json)
+        except BaseException as msg:
+            final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+    def SubmitCloudBackupRestore(self):
+        try:
+
+            tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
+
+            writeToFile = open(tempStatusPath, 'w')
+            writeToFile.write('Starting..,0')
+            writeToFile.close()
+
+            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
+            execPath = execPath + " SubmitCloudBackupRestore --backupDomain %s --backupFile %s --tempStoragePath %s" % (self.data['domain'], self.data['backupFile'], tempStatusPath)
+            ProcessUtilities.popenExecutioner(execPath)
+
+            final_dic = {'status': 1, 'tempStatusPath': tempStatusPath}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+        except BaseException as msg:
+            return self.ajaxPre(0, str(msg))
