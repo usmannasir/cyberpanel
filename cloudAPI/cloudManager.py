@@ -1651,8 +1651,24 @@ class CloudManager:
             writeToFile.write('Starting..,0')
             writeToFile.close()
 
+            try:
+                data = str(int(self.data['data']))
+            except:
+                data = '0'
+
+            try:
+                emails = str(int(self.data['emails']))
+            except:
+                emails = '0'
+
+            try:
+                databases = str(int(self.data['databases']))
+            except:
+                databases = '0'
+
+
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
-            execPath = execPath + " CloudBackup --backupDomain %s --data 1 --emails 1 --databases 1 --tempStoragePath %s" % (self.data['domain'], tempStatusPath)
+            execPath = execPath + " CloudBackup --backupDomain %s --data %s --emails %s --databases %s --tempStoragePath %s" % (self.data['domain'], data, emails, databases, tempStatusPath)
             ProcessUtilities.popenExecutioner(execPath)
 
             final_dic = {'status': 1, 'tempStatusPath': tempStatusPath}
