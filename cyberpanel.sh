@@ -472,8 +472,9 @@ EOF
     if [[ $CENTOS_8 == "True" ]]; then
       dnf install -y wget strace net-tools curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-devel curl-devel git platform-python-devel tar socat python3
       check_return
+      dnf --enablerepo=PowerTools install gpgme-devel -y
       dnf --enablerepo=powertools install gpgme-devel -y
-      check_return
+      #check_return
     fi
     ln -s /usr/bin/pip3 /usr/bin/pip
     pip install virtualenv==16.7.9
