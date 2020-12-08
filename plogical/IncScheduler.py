@@ -686,12 +686,15 @@ Automatic backup failed for %s on %s.
 
             ts = time.time()
 
+            retentionSeconds = 86400 * plan.retention
+
             for bucket in s3.buckets.all():
-                for file in bucket.objects.all():
-                    result = float(ts - file.last_modified.timestamp())
-                    if result > 100.0:
-                        file.delete()
-                    print(result)
+                if bucket.name == plan.bucket:
+                    for file in bucket.objects.all():
+                        result = float(ts - file.last_modified.timestamp())
+                        if result > retentionSeconds:
+                            file.delete()
+                    break
 
         except BaseException as msg:
             logging.writeToFile(str(msg) + ' [S3Backups.runBackupPlan]')
@@ -699,71 +702,11 @@ Automatic backup failed for %s on %s.
             BackupLogs(owner=plan, timeStamp=time.strftime("%b %d %Y, %H:%M:%S"), level='ERROR', msg=str(msg)).save()
 
     @staticmethod
-    def runAWSBackups():
+    def runAWSBackups(freq):
         try:
             for plan in BackupPlan.objects.all():
-                lastRunDay = plan.lastRun.split(':')[0]
-                lastRunMonth = plan.lastRun.split(':')[1]
-
-                if plan.freq == 'Daily' and lastRunDay != time.strftime("%d"):
+                if plan.freq == 'Daily' == freq:
                     IncScheduler.forceRunAWSBackup(plan.name)
-                else:
-                    if lastRunMonth == time.strftime("%m"):
-                        days = int(time.strftime("%d")) - int(lastRunDay)
-                        if days >= 6:
-                            IncScheduler.forceRunAWSBackup(plan.name)
-                    else:
-                        days = 30 - int(lastRunDay)
-                        days = days + int(time.strftime("%d"))
-                        if days >= 6:
-                            IncScheduler.forceRunAWSBackup(plan.name)
-
-            # for plan in BackupPlanDO.objects.all():
-            #     lastRunDay = plan.lastRun.split(':')[0]
-            #     lastRunMonth = plan.lastRun.split(':')[1]
-            #
-            #     if plan.freq == 'Daily' and lastRunDay != time.strftime("%d"):
-            #         self.data = {}
-            #         self.data['planName'] = plan.name
-            #         self.forceRunAWSBackupDO()
-            #     else:
-            #         if lastRunMonth == time.strftime("%m"):
-            #             days = int(time.strftime("%d")) - int(lastRunDay)
-            #             if days >= 6:
-            #                 self.data = {}
-            #                 self.data['planName'] = plan.name
-            #                 self.forceRunAWSBackupDO()
-            #         else:
-            #             days = 30 - int(lastRunDay)
-            #             days = days + int(time.strftime("%d"))
-            #             if days >= 6:
-            #                 self.data = {}
-            #                 self.data['planName'] = plan.name
-            #                 self.forceRunAWSBackupDO()
-            #
-            # for plan in BackupPlanMINIO.objects.all():
-            #     lastRunDay = plan.lastRun.split(':')[0]
-            #     lastRunMonth = plan.lastRun.split(':')[1]
-            #
-            #     if plan.freq == 'Daily' and lastRunDay != time.strftime("%d"):
-            #         self.data = {}
-            #         self.data['planName'] = plan.name
-            #         self.forceRunAWSBackupMINIO()
-            #     else:
-            #         if lastRunMonth == time.strftime("%m"):
-            #             days = int(time.strftime("%d")) - int(lastRunDay)
-            #             if days >= 6:
-            #                 self.data = {}
-            #                 self.data['planName'] = plan.name
-            #                 self.forceRunAWSBackupMINIO()
-            #         else:
-            #             days = 30 - int(lastRunDay)
-            #             days = days + int(time.strftime("%d"))
-            #             if days >= 6:
-            #                 self.data = {}
-            #                 self.data['planName'] = plan.name
-            #                 self.forceRunAWSBackupMINIO()
-
         except BaseException as msg:
             logging.writeToFile(str(msg) + ' [S3Backups.runAWSBackups]')
 
@@ -785,7 +728,7 @@ def main():
     IncScheduler.git(args.function)
     IncScheduler.checkDiskUsage()
     IncScheduler.startNormalBackups(args.function)
-    IncScheduler.runAWSBackups()
+    IncScheduler.runAWSBackups(args.function)
 
 
 if __name__ == "__main__":
