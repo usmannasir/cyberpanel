@@ -293,6 +293,7 @@ EOF
 elif [ $SERVER_OS = "CentOS8" ]; then
   dnf install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-devel curl-devel git platform-python-devel tar socat
   dnf --enablerepo=powertools install gpgme-devel -y
+  dnf --enablerepo=PowerTools install gpgme-devel -y
   dnf install python3 -y
 else
   apt update -y

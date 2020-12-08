@@ -75,6 +75,7 @@ elif [ "$CENTOSVERSION" = "VERSION_ID=\"8\"" ];then
 setenforce 0
 yum install -y perl yum-utils perl-CPAN 
 dnf --enablerepo=powertools install -y perl-IO-stringy
+dnf --enablerepo=PowerTools install -y perl-IO-stringy
 yum install -y gcc cpp perl bzip2 zip make patch automake rpm-build perl-Archive-Zip perl-Filesys-Df perl-OLE-Storage_Lite perl-Net-CIDR perl-DBI perl-MIME-tools perl-DBD-SQLite binutils glibc-devel perl-Filesys-Df zlib unzip zlib-devel wget mlocate clamav clamav-update "perl(DBD::mysql)"
 
 rpm -Uvh https://forensics.cert.org/centos/cert/8/x86_64/unrar-5.4.0-1.el8.x86_64.rpm
