@@ -97,43 +97,6 @@ class S3Backups(multi.Thread):
         json_data = json_data + ']'
         return json_data
 
-    def setupCron(self):
-        try:
-
-            command = "sudo cat /etc/crontab"
-            crons = ProcessUtilities.outputExecutioner(command).splitlines()
-
-            cronCheck = 1
-
-            for items in crons:
-                if items.find('s3Backups.py') > -1:
-                    cronCheck = 0
-
-            tempPath = '/home/cyberpanel/' + str(randint(10000, 99999))
-
-            writeToFile = open(tempPath, "w")
-
-            for items in crons:
-                writeToFile.writelines(items + "\n")
-
-            if cronCheck:
-                writeToFile.writelines("0 0 * * * root /usr/local/CyberCP/bin/python /usr/local/CyberCP/s3Backups/s3Backups.py > /home/cyberpanel/error-logs.txt 2>&1\n")
-
-            writeToFile.close()
-
-            command = 'sudo mv ' + tempPath + " /etc/crontab"
-            ProcessUtilities.executioner(command)
-
-            command = 'chown root:root /etc/crontab'
-            ProcessUtilities.executioner(command)
-
-            try:
-                os.remove(tempPath)
-            except:
-                pass
-        except BaseException as msg:
-            logging.writeToFile(str(msg) + " [S3Backups.setupCron]")
-
     def connectAccount(self):
         try:
 
@@ -159,8 +122,6 @@ class S3Backups(multi.Thread):
             credFile.close()
 
             ##
-
-            self.setupCron()
 
             return proc.ajax(1, None)
 
@@ -519,111 +480,6 @@ class S3Backups(multi.Thread):
                         items.delete()
                     return 0, status
 
-    def forceRunAWSBackup(self):
-        try:
-
-            plan = BackupPlan.objects.get(name=self.data['planName'])
-            logging.writeToFile(plan.config)
-            bucketName = plan.bucket.strip('\n').strip(' ')
-            runTime = time.strftime("%d:%m:%Y")
-
-            aws_access_key_id, aws_secret_access_key, region = self.fetchAWSKeys()
-
-            client = boto3.client(
-                's3',
-                aws_access_key_id = aws_access_key_id,
-                aws_secret_access_key = aws_secret_access_key,
-                #region_name=region
-            )
-
-
-            config = TransferConfig(multipart_threshold=1024 * 25, max_concurrency=10,
-                                    multipart_chunksize=1024 * 25, use_threads=True)
-
-            ## Set Expiration for objects
-            try:
-
-                client.put_bucket_lifecycle_configuration(
-                    Bucket='string',
-                    LifecycleConfiguration={
-                        'Rules': [
-                            {
-                                'Expiration': {
-                                    'Days': plan.retention,
-                                    'ExpiredObjectDeleteMarker': True
-                                },
-                                'ID': plan.name,
-                                'Prefix': '',
-                                'Filter': {
-                                    'Prefix': plan.name + '/',
-                                },
-                                'Status': 'Enabled',
-
-                            },
-                        ]
-                    }
-                )
-            except BaseException as msg:
-                BackupLogs(owner=plan, timeStamp=time.strftime("%b %d %Y, %H:%M:%S"), level='ERROR',
-                           msg=str(msg)).save()
-
-            ##
-
-            userID = self.request.session['userID']
-            currentACL = ACLManager.loadedACL(userID)
-
-            if currentACL['admin'] == 0:
-                BackupLogs(owner=plan, timeStamp=time.strftime("%b %d %Y, %H:%M:%S"), level='INFO',
-                           msg='Unauthorised user tried to run AWS Backups.').save()
-                return 0
-
-            BackupLogs(owner=plan, level='INFO', timeStamp=time.strftime("%b %d %Y, %H:%M:%S"),
-                       msg='Starting backup process..').save()
-
-            PlanConfig = json.loads(plan.config)
-
-            for items in plan.websitesinplan_set.all():
-
-                from plogical.backupUtilities import backupUtilities
-                tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
-                extraArgs = {}
-                extraArgs['domain'] = items.domain
-                extraArgs['tempStatusPath'] = tempStatusPath
-                extraArgs['data'] = PlanConfig['data']
-                extraArgs['emails'] = PlanConfig['emails']
-                extraArgs['databases'] = PlanConfig['databases']
-                bu = backupUtilities(extraArgs)
-                result = bu.CloudBackups()
-
-                finalResult = open(tempStatusPath, 'r').read()
-
-                if result[0] == 1:
-                    key = plan.name + '/' + runTime + '/' + result[1]
-                    client.upload_file(
-                        result[1],
-                        bucketName,
-                        key,
-                        Config=config,
-                    )
-
-                    command = 'rm -f ' + result[1]
-                    ProcessUtilities.executioner(command)
-
-                    BackupLogs(owner=plan, level='INFO', timeStamp=time.strftime("%b %d %Y, %H:%M:%S"),
-                               msg='Backup successful for ' + items.domain + '.').save()
-                else:
-                    BackupLogs(owner=plan, level='ERROR', timeStamp=time.strftime("%b %d %Y, %H:%M:%S"),
-                               msg='Backup failed for ' + items.domain + '. Error: ' + finalResult).save()
-
-            plan.lastRun = runTime
-            plan.save()
-
-            BackupLogs(owner=plan, level='INFO', timeStamp=time.strftime("%b %d %Y, %H:%M:%S"),
-                       msg='Backup Process Finished.').save()
-        except BaseException as msg:
-            logging.writeToFile(str(msg) + ' [S3Backups.runBackupPlan]')
-            plan = BackupPlan.objects.get(name=self.data['planName'])
-            BackupLogs(owner=plan, timeStamp=time.strftime("%b %d %Y, %H:%M:%S"), level='ERROR', msg=str(msg)).save()
 
     def connectAccountDO(self):
         try:
@@ -649,9 +505,6 @@ class S3Backups(multi.Thread):
             credFile.write(self.data['credData'])
             credFile.close()
 
-            ##
-
-            self.setupCron()
 
             return proc.ajax(1, None)
 
@@ -1023,8 +876,6 @@ class S3Backups(multi.Thread):
                                  secretKey=self.data['secretKey'])
             newNode.save()
 
-            self.setupCron()
-
             return proc.ajax(1, None)
 
         except BaseException as msg:
@@ -1361,93 +1212,3 @@ class S3Backups(multi.Thread):
         except BaseException as msg:
             proc = httpProc(self.request, None, None)
             return proc.ajax(0, str(msg))
-
-    def runAWSBackups(self):
-        try:
-            admin = Administrator.objects.get(userName='admin')
-            self.request.session['userID'] = admin.pk
-
-            for plan in BackupPlan.objects.all():
-                lastRunDay = plan.lastRun.split(':')[0]
-                lastRunMonth = plan.lastRun.split(':')[1]
-
-                if plan.freq == 'Daily' and lastRunDay != time.strftime("%d"):
-                    self.data = {}
-                    self.data['planName'] = plan.name
-                    self.forceRunAWSBackup()
-                else:
-                    if lastRunMonth == time.strftime("%m"):
-                        days = int(time.strftime("%d")) - int(lastRunDay)
-                        if days >= 6:
-                            self.data = {}
-                            self.data['planName'] = plan.name
-                            self.forceRunAWSBackup()
-                    else:
-                        days = 30 - int(lastRunDay)
-                        days = days + int(time.strftime("%d"))
-                        if days >= 6:
-                            self.data = {}
-                            self.data['planName'] = plan.name
-                            self.forceRunAWSBackup()
-
-            for plan in BackupPlanDO.objects.all():
-                lastRunDay = plan.lastRun.split(':')[0]
-                lastRunMonth = plan.lastRun.split(':')[1]
-
-                if plan.freq == 'Daily' and lastRunDay != time.strftime("%d"):
-                    self.data = {}
-                    self.data['planName'] = plan.name
-                    self.forceRunAWSBackupDO()
-                else:
-                    if lastRunMonth == time.strftime("%m"):
-                        days = int(time.strftime("%d")) - int(lastRunDay)
-                        if days >= 6:
-                            self.data = {}
-                            self.data['planName'] = plan.name
-                            self.forceRunAWSBackupDO()
-                    else:
-                        days = 30 - int(lastRunDay)
-                        days = days + int(time.strftime("%d"))
-                        if days >= 6:
-                            self.data = {}
-                            self.data['planName'] = plan.name
-                            self.forceRunAWSBackupDO()
-
-            for plan in BackupPlanMINIO.objects.all():
-                lastRunDay = plan.lastRun.split(':')[0]
-                lastRunMonth = plan.lastRun.split(':')[1]
-
-                if plan.freq == 'Daily' and lastRunDay != time.strftime("%d"):
-                    self.data = {}
-                    self.data['planName'] = plan.name
-                    self.forceRunAWSBackupMINIO()
-                else:
-                    if lastRunMonth == time.strftime("%m"):
-                        days = int(time.strftime("%d")) - int(lastRunDay)
-                        if days >= 6:
-                            self.data = {}
-                            self.data['planName'] = plan.name
-                            self.forceRunAWSBackupMINIO()
-                    else:
-                        days = 30 - int(lastRunDay)
-                        days = days + int(time.strftime("%d"))
-                        if days >= 6:
-                            self.data = {}
-                            self.data['planName'] = plan.name
-                            self.forceRunAWSBackupMINIO()
-
-        except BaseException as msg:
-            logging.writeToFile(str(msg) + ' [S3Backups.runAWSBackups]')
-
-
-def main():
-    pathToFile = "/home/cyberpanel/" + str(randint(1000, 9999))
-    file = open(pathToFile, "w")
-    file.close()
-
-    finalData = json.dumps({'randomFile': pathToFile})
-    requests.post("https://localhost:8090/api/runAWSBackups", data=finalData, verify=False)
-
-
-if __name__ == "__main__":
-    main()

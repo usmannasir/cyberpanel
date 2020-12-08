@@ -1484,7 +1484,7 @@ class backupUtilities:
         command = 'chmod 600:600 %s' % (finalPath)
         ProcessUtilities.executioner(command)
 
-        logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Completed [200].' % (self.BackupPath))
+        logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Completed [200].')
 
         return 1, self.BackupPath + '.tar.gz'
 
@@ -1518,11 +1518,8 @@ class backupUtilities:
         self.extractedPath = '/home/cyberpanel/backups/%s/%s' % (self.extraArgs['domain'], self.extraArgs['backupFile'].rstrip('.tar.gz'))
 
         self.dataPath = '%s/data' % (self.extractedPath)
-        logging.CyberCPLogFileWriter.writeToFile('Data path: %s' % (self.dataPath))
         self.databasesPath = '%s/databases' % (self.extractedPath)
-        logging.CyberCPLogFileWriter.writeToFile('Databases path: %s' % (self.databasesPath))
         self.emailsPath = '%s/emails' % (self.extractedPath)
-        logging.CyberCPLogFileWriter.writeToFile('Emails path: %s' % (self.emailsPath))
 
         ## Data
 

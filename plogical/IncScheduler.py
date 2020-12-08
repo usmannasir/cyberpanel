@@ -19,6 +19,7 @@ from googleapiclient.http import MediaFileUpload
 from plogical.backupSchedule import backupSchedule
 import requests
 from websiteFunctions.models import NormalBackupJobs, NormalBackupJobLogs
+from boto3.s3.transfer import TransferConfig
 
 try:
     from s3Backups.models import BackupPlan, BackupLogs
@@ -607,12 +608,15 @@ Automatic backup failed for %s on %s.
         return aws_access_key_id, aws_secret_access_key, region
 
     @staticmethod
-    def forceRunAWSBackup():
+    def forceRunAWSBackup(planName):
         try:
 
-            plan = BackupPlan.objects.get(name='hi')
+            plan = BackupPlan.objects.get(name=planName)
             bucketName = plan.bucket.strip('\n').strip(' ')
             runTime = time.strftime("%d:%m:%Y")
+
+            config = TransferConfig(multipart_threshold=1024 * 25, max_concurrency=10,
+                                    multipart_chunksize=1024 * 25, use_threads=True)
 
             aws_access_key_id, aws_secret_access_key, region = IncScheduler.fetchAWSKeys()
 
@@ -638,23 +642,25 @@ Automatic backup failed for %s on %s.
                 extraArgs = {}
                 extraArgs['domain'] = items.domain
                 extraArgs['tempStatusPath'] = tempStatusPath
-                extraArgs['data'] = PlanConfig['data']
-                extraArgs['emails'] = PlanConfig['emails']
-                extraArgs['databases'] = PlanConfig['databases']
+                extraArgs['data'] = int(PlanConfig['data'])
+                extraArgs['emails'] = int(PlanConfig['emails'])
+                extraArgs['databases'] = int(PlanConfig['databases'])
+
                 bu = backupUtilities(extraArgs)
-                result = bu.CloudBackups()
+                result, fileName = bu.CloudBackups()
 
                 finalResult = open(tempStatusPath, 'r').read()
 
-                if result[0] == 1:
-                    key = plan.name + '/' + runTime + '/' + result[1]
+                if result == 1:
+                    key = plan.name + '/' + runTime + '/' + fileName.split('/')[-1]
                     client.upload_file(
-                        result[1],
+                        fileName,
                         bucketName,
                         key,
+                        Config=config
                     )
 
-                    command = 'rm -f ' + result[1]
+                    command = 'rm -f ' + fileName
                     ProcessUtilities.executioner(command)
 
                     BackupLogs(owner=plan, level='INFO', timeStamp=time.strftime("%b %d %Y, %H:%M:%S"),
@@ -668,10 +674,98 @@ Automatic backup failed for %s on %s.
 
             BackupLogs(owner=plan, level='INFO', timeStamp=time.strftime("%b %d %Y, %H:%M:%S"),
                        msg='Backup Process Finished.').save()
+
+            ###
+
+            s3 = boto3.resource(
+                's3',
+                aws_access_key_id=aws_access_key_id,
+                aws_secret_access_key=aws_secret_access_key,
+                region_name=region
+            )
+
+            ts = time.time()
+
+            for bucket in s3.buckets.all():
+                for file in bucket.objects.all():
+                    result = float(ts - file.last_modified.timestamp())
+                    if result > 100.0:
+                        file.delete()
+                    print(result)
+
         except BaseException as msg:
             logging.writeToFile(str(msg) + ' [S3Backups.runBackupPlan]')
-            plan = BackupPlan.objects.get(name='hi')
+            plan = BackupPlan.objects.get(name=planName)
             BackupLogs(owner=plan, timeStamp=time.strftime("%b %d %Y, %H:%M:%S"), level='ERROR', msg=str(msg)).save()
+
+    @staticmethod
+    def runAWSBackups():
+        try:
+            for plan in BackupPlan.objects.all():
+                lastRunDay = plan.lastRun.split(':')[0]
+                lastRunMonth = plan.lastRun.split(':')[1]
+
+                if plan.freq == 'Daily' and lastRunDay != time.strftime("%d"):
+                    IncScheduler.forceRunAWSBackup(plan.name)
+                else:
+                    if lastRunMonth == time.strftime("%m"):
+                        days = int(time.strftime("%d")) - int(lastRunDay)
+                        if days >= 6:
+                            IncScheduler.forceRunAWSBackup(plan.name)
+                    else:
+                        days = 30 - int(lastRunDay)
+                        days = days + int(time.strftime("%d"))
+                        if days >= 6:
+                            IncScheduler.forceRunAWSBackup(plan.name)
+
+            # for plan in BackupPlanDO.objects.all():
+            #     lastRunDay = plan.lastRun.split(':')[0]
+            #     lastRunMonth = plan.lastRun.split(':')[1]
+            #
+            #     if plan.freq == 'Daily' and lastRunDay != time.strftime("%d"):
+            #         self.data = {}
+            #         self.data['planName'] = plan.name
+            #         self.forceRunAWSBackupDO()
+            #     else:
+            #         if lastRunMonth == time.strftime("%m"):
+            #             days = int(time.strftime("%d")) - int(lastRunDay)
+            #             if days >= 6:
+            #                 self.data = {}
+            #                 self.data['planName'] = plan.name
+            #                 self.forceRunAWSBackupDO()
+            #         else:
+            #             days = 30 - int(lastRunDay)
+            #             days = days + int(time.strftime("%d"))
+            #             if days >= 6:
+            #                 self.data = {}
+            #                 self.data['planName'] = plan.name
+            #                 self.forceRunAWSBackupDO()
+            #
+            # for plan in BackupPlanMINIO.objects.all():
+            #     lastRunDay = plan.lastRun.split(':')[0]
+            #     lastRunMonth = plan.lastRun.split(':')[1]
+            #
+            #     if plan.freq == 'Daily' and lastRunDay != time.strftime("%d"):
+            #         self.data = {}
+            #         self.data['planName'] = plan.name
+            #         self.forceRunAWSBackupMINIO()
+            #     else:
+            #         if lastRunMonth == time.strftime("%m"):
+            #             days = int(time.strftime("%d")) - int(lastRunDay)
+            #             if days >= 6:
+            #                 self.data = {}
+            #                 self.data['planName'] = plan.name
+            #                 self.forceRunAWSBackupMINIO()
+            #         else:
+            #             days = 30 - int(lastRunDay)
+            #             days = days + int(time.strftime("%d"))
+            #             if days >= 6:
+            #                 self.data = {}
+            #                 self.data['planName'] = plan.name
+            #                 self.forceRunAWSBackupMINIO()
+
+        except BaseException as msg:
+            logging.writeToFile(str(msg) + ' [S3Backups.runAWSBackups]')
 
 
 
@@ -679,14 +773,19 @@ def main():
 
     parser = argparse.ArgumentParser(description='CyberPanel Installer')
     parser.add_argument('function', help='Specific a function to call!')
+    parser.add_argument('--planName', help='Plan name for AWS!')
     args = parser.parse_args()
+
+    if args.function == 'forceRunAWSBackup':
+        IncScheduler.forceRunAWSBackup(args.planName)
+        return 0
 
     IncScheduler.startBackup(args.function)
     IncScheduler.runGoogleDriveBackups(args.function)
     IncScheduler.git(args.function)
     IncScheduler.checkDiskUsage()
     IncScheduler.startNormalBackups(args.function)
-    IncScheduler.forceRunAWSBackup()
+    IncScheduler.runAWSBackups()
 
 
 if __name__ == "__main__":

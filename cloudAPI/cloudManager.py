@@ -964,7 +964,7 @@ class CloudManager:
 
             request.session['userID'] = self.admin.pk
 
-            execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py Daily"
+            execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/IncScheduler.py forceRunAWSBackup --planName %s" % (self.data['planName'])
             ProcessUtilities.popenExecutioner(execPath)
 
             return self.ajaxPre(1, None)
