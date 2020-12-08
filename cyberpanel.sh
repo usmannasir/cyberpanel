@@ -478,6 +478,7 @@ EOF
     fi
     ln -s /usr/bin/pip3 /usr/bin/pip
     pip install virtualenv==16.7.9
+    #pip install virtualenv
     check_return
 
   fi
@@ -499,6 +500,7 @@ EOF
     check_return
 
     pip install virtualenv==16.7.9
+    #pip install virtualenv
     check_return
 
   fi

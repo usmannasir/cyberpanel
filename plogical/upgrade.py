@@ -765,6 +765,11 @@ imap_folder_list_limit = 0
             except:
                 pass
 
+            try:
+                cursor.execute('ALTER TABLE s3Backups_backupplan ADD config longtext')
+            except:
+                pass
+
             query = """CREATE TABLE `s3Backups_websitesinplan` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `domain` varchar(100) NOT NULL,

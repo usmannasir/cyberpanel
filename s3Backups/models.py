@@ -13,6 +13,7 @@ class BackupPlan(models.Model):
     retention = models.IntegerField()
     type = models.CharField(max_length=5, default='AWS')
     lastRun = models.CharField(max_length=50, default='0:0:0')
+    config = models.TextField()
 
 class WebsitesInPlan(models.Model):
     owner = models.ForeignKey(BackupPlan,on_delete=models.CASCADE)
