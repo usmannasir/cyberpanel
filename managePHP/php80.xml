@@ -1,0 +1,275 @@
+<?xml version="1.0" ?>
+<php>
+     <name>php80</name>
+
+     <extension>
+         <extensionName>lsphp80-debuginfo</extensionName>
+         <extensionDescription>Debug information for package lsphp80</extensionDescription>
+         <status>0</status>
+     </extension>
+
+     <extension>
+         <extensionName>lsphp80-pecl-igbinary-debuginfo</extensionName>
+         <extensionDescription>Debug information for package lsphp80-pecl-igbinary</extensionDescription>
+         <status>0</status>
+     </extension>
+
+     <extension>
+         <extensionName>lsphp80-pecl-mcrypt-debuginfo</extensionName>
+         <extensionDescription>lsphp80 lsphp80-pecl-mcrypt-debuginfo Extension</extensionDescription>
+         <status>0</status>
+     </extension>
+
+     <extension>
+         <extensionName>lsphp80-bcmath</extensionName>
+         <extensionDescription>A extension for PHP applications for using the bcmath library.</extensionDescription>
+         <status>1</status>
+     </extension>
+
+     <extension>
+         <extensionName>lsphp80-common</extensionName>
+         <extensionDescription>Common files for PHP.</extensionDescription>
+         <status>1</status>
+     </extension>
+
+     <extension>
+         <extensionName>lsphp80-dba</extensionName>
+         <extensionDescription>A database abstraction layer extension for PHP applications.</extensionDescription>
+         <status>1</status>
+     </extension>
+
+     <extension>
+         <extensionName>lsphp80-devel</extensionName>
+         <extensionDescription>Files needed for building PHP extensions.</extensionDescription>
+         <status>0</status>
+     </extension>
+
+     <extension>
+         <extensionName>lsphp80-enchant</extensionName>
+         <extensionDescription>Enchant spelling extension for PHP applications.</extensionDescription>
+         <status>1</status>
+     </extension>
+
+     <extension>
+         <extensionName>lsphp80-gd</extensionName>
+         <extensionDescription>A extension for PHP applications for using the gd graphics library.</extensionDescription>
+         <status>1</status>
+     </extension>
+
+     <extension>
+         <extensionName>lsphp80-gmp</extensionName>
+         <extensionDescription>A extension for PHP applications for using the GNU MP library.</extensionDescription>
+         <status>1</status>
+     </extension>
+
+     <extension>
+         <extensionName>lsphp80-imap</extensionName>
+         <extensionDescription>A extension for PHP applications that use IMAP.</extensionDescription>
+         <status>1</status>
+     </extension>
+
+     <extension>
+         <extensionName>lsphp80-intl</extensionName>
+         <extensionDescription>Internationalization extension for PHP applications.</extensionDescription>
+         <status>1</status>
+     </extension>
+
+     <extension>
+         <extensionName>lsphp80-json</extensionName>
+         <extensionDescription>lsphp80 Json PHP Extension</extensionDescription>
+         <status>1</status>
+     </extension>
+
+     <extension>
+         <extensionName>lsphp80-ldap</extensionName>
+         <extensionDescription>A extension for PHP applications that use LDAP.</extensionDescription>
+         <status>1</status>
+     </extension>
+
+     <extension>
+         <extensionName>lsphp80-mbstring</extensionName>
+         <extensionDescription>A extension for PHP applications which need multi-byte string handling.</extensionDescription>
+         <status>1</status>
+     </extension>
+
+     <extension>
+         <extensionName>lsphp80-mysqlnd</extensionName>
+         <extensionDescription>A extension for PHP applications that use MySQL databases.</extensionDescription>
+         <status>1</status>
+     </extension>
+
+     <extension>
+         <extensionName>lsphp80-odbc</extensionName>
+         <extensionDescription>A extension for PHP applications that use ODBC databases.</extensionDescription>
+         <status>1</status>
+     </extension>
+
+     <extension>
+         <extensionName>lsphp80-opcache</extensionName>
+         <extensionDescription>The Zend OPcache.</extensionDescription>
+         <status>1</status>
+     </extension>
+
+     <extension>
+         <extensionName>lsphp80-pdo</extensionName>
+         <extensionDescription>A database access abstraction extension for PHP applications.</extensionDescription>
+         <status>1</status>
+     </extension>
+
+     <extension>
+         <extensionName>lsphp80-pear</extensionName>
+         <extensionDescription>PHP Extension and Application Repository framework.</extensionDescription>
+         <status>1</status>
+     </extension>
+
+     <extension>
+         <extensionName>lsphp80-pecl-apcu</extensionName>
+         <extensionDescription>APC User Cache.</extensionDescription>
+         <status>0</status>
+     </extension>
+
+     <extension>
+         <extensionName>lsphp80-pecl-apcu-devel</extensionName>
+         <extensionDescription>APCu developer files (header).</extensionDescription>
+         <status>0</status>
+     </extension>
+
+     <extension>
+         <extensionName>lsphp80-pecl-apcu-panel</extensionName>
+         <extensionDescription>APCu control panel.</extensionDescription>
+         <status>0</status>
+     </extension>
+
+     <extension>
+         <extensionName>lsphp80-pecl-igbinary</extensionName>
+         <extensionDescription>Replacement for the standard PHP serializer.</extensionDescription>
+         <status>0</status>
+     </extension>
+
+    <extension>
+         <extensionName>lsphp80-pecl-igbinary-devel</extensionName>
+         <extensionDescription>Igbinary developer files (header).</extensionDescription>
+         <status>0</status>
+    </extension>
+
+    <extension>
+         <extensionName>lsphp80-pecl-mcrypt</extensionName>
+         <extensionDescription>lsphp80 lsphp80-pecl-mcrypt Extension.</extensionDescription>
+         <status>0</status>
+    </extension>
+
+    <extension>
+         <extensionName>lsphp80-pecl-memcache</extensionName>
+         <extensionDescription>Extension to work with the Memcached caching daemon.</extensionDescription>
+         <status>0</status>
+    </extension>
+
+    <extension>
+         <extensionName>lsphp80-pecl-memcached</extensionName>
+         <extensionDescription>Extension to work with the Memcached caching daemon.</extensionDescription>
+         <status>0</status>
+    </extension>
+
+    <extension>
+         <extensionName>lsphp80-pecl-msgpack</extensionName>
+         <extensionDescription>API for communicating with MessagePack serialization.</extensionDescription>
+         <status>0</status>
+    </extension>
+
+    <extension>
+         <extensionName>lsphp80-pecl-msgpack-devel</extensionName>
+         <extensionDescription>MessagePack developer files (header).</extensionDescription>
+         <status>0</status>
+    </extension>
+
+    <extension>
+         <extensionName>lsphp80-pecl-redis</extensionName>
+         <extensionDescription>Extension for communicating with the Redis key-value store.</extensionDescription>
+         <status>0</status>
+    </extension>
+
+    <extension>
+         <extensionName>lsphp80-pgsql</extensionName>
+         <extensionDescription>A PostgreSQL database extension for PHP.</extensionDescription>
+         <status>1</status>
+    </extension>
+
+    <extension>
+         <extensionName>lsphp80-process</extensionName>
+         <extensionDescription>extensions for PHP script using system process interfaces.</extensionDescription>
+         <status>1</status>
+    </extension>
+
+    <extension>
+         <extensionName>lsphp80-pspell</extensionName>
+         <extensionDescription>A extension for PHP applications for using pspell interfaces.</extensionDescription>
+         <status>1</status>
+    </extension>
+
+    <extension>
+         <extensionName>lsphp80-recode</extensionName>
+         <extensionDescription>A extension for PHP applications for using the recode library.</extensionDescription>
+         <status>1</status>
+    </extension>
+
+    <extension>
+         <extensionName>lsphp80-snmp</extensionName>
+         <extensionDescription>A extension for PHP applications that query SNMP-managed devices.</extensionDescription>
+         <status>1</status>
+    </extension>
+
+    <extension>
+         <extensionName>lsphp80-soap</extensionName>
+         <extensionDescription>A extension for PHP applications that use the SOAP protocol.</extensionDescription>
+         <status>1</status>
+    </extension>
+
+    <extension>
+         <extensionName>lsphp80-tidy</extensionName>
+         <extensionDescription>Standard PHP extension provides tidy library support.</extensionDescription>
+         <status>1</status>
+    </extension>
+
+    <extension>
+         <extensionName>lsphp80-xml</extensionName>
+         <extensionDescription>A module for PHP applications which use XML.</extensionDescription>
+         <status>1</status>
+    </extension>
+
+    <extension>
+         <extensionName>lsphp80-xmlrpc</extensionName>
+         <extensionDescription>A extension for PHP applications which use the XML-RPC protocol.</extensionDescription>
+         <status>1</status>
+    </extension>
+
+    <extension>
+         <extensionName>lsphp80-zip</extensionName>
+         <extensionDescription>ZIP archive management extension for PHP</extensionDescription>
+         <status>0</status>
+    </extension>
+
+    <extension>
+         <extensionName>lsphp80-mcrypt</extensionName>
+         <extensionDescription>Standard PHP extension provides mcrypt library support.</extensionDescription>
+         <status>1</status>
+    </extension>
+
+	<extension>
+         <extensionName>lsphp80-dbg</extensionName>
+         <extensionDescription>php73-dbg lsphp80-package</extensionDescription>
+         <status>0</status>
+    </extension>
+
+    <extension>
+         <extensionName>lsphp80-ioncube</extensionName>
+         <extensionDescription>ioncube loaders</extensionDescription>
+         <status>0</status>
+    </extension>
+
+    <extension>
+         <extensionName>lsphp80-pecl-imagick</extensionName>
+         <extensionDescription>Extension to create and modify images using ImageMagick</extensionDescription>
+         <status>0</status>
+    </extension>
+
+</php>
