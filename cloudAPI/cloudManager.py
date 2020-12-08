@@ -961,9 +961,12 @@ class CloudManager:
 
     def forceRunAWSBackup(self, request):
         try:
+
             request.session['userID'] = self.admin.pk
-            s3 = S3Backups(request, self.data, 'forceRunAWSBackup')
-            s3.start()
+
+            execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py Daily"
+            ProcessUtilities.popenExecutioner(execPath)
+
             return self.ajaxPre(1, None)
         except BaseException as msg:
             return self.ajaxPre(0, str(msg))

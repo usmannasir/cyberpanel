@@ -1438,7 +1438,7 @@ class backupUtilities:
             if result[0] == 0:
                 logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
                                                           'Failed to generate backups for data. Error: %s. [404], 0' % (result[1] ))
-                return 0
+                return 0, self.BackupPath
 
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
                                                       'Data backup successfully generated,30')
@@ -1450,7 +1450,7 @@ class backupUtilities:
             if result[0] == 0:
                 logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
                                                           'Failed to generate backups for emails. Error: %s. [404], 0' % (result[1] ))
-                return 0
+                return 0, self.BackupPath
 
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
                                                       'Emails backup successfully generated,60')
@@ -1462,7 +1462,7 @@ class backupUtilities:
             if result[0] == 0:
                 logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
                                                           'Failed to generate backups for databases. Error: %s. [404], 0' % (result[1] ))
-                return 0
+                return 0, self.BackupPath
 
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
                                                       'Databases backups successfully generated,30')
@@ -1476,7 +1476,17 @@ class backupUtilities:
         command = 'rm -rf %s' % (self.BackupPath)
         ProcessUtilities.executioner(command)
 
-        logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Completed [200].')
+        finalPath = '%s.tar.gz' % (self.BackupPath)
+
+        command = 'chown cyberpanel:cyberpanel %s' % (finalPath)
+        ProcessUtilities.executioner(command)
+
+        command = 'chmod 600:600 %s' % (finalPath)
+        ProcessUtilities.executioner(command)
+
+        logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Completed [200].' % (self.BackupPath))
+
+        return 1, self.BackupPath + '.tar.gz'
 
     ## Restore functions
 
@@ -1605,7 +1615,8 @@ class backupUtilities:
             mysqlUtilities.mysqlUtilities.restoreDatabaseBackup(db['databaseName'], self.databasesPath, db['password'])
 
 
-
+        command = 'rm -rf %s' % (self.extractedPath)
+        ProcessUtilities.executioner(command)
 
         logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Completed [200].')
 

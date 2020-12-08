@@ -5,8 +5,8 @@ Babel==2.8.0
 backports.ssl-match-hostname==3.7.0.1
 bcrypt==3.2.0
 beautifulsoup4==4.9.3
-boto3==1.16.13
-botocore==1.19.13
+boto3==1.19.30
+botocore==1.19.30
 cachetools==4.1.1
 certifi==2020.11.8
 cffi==1.14.3

@@ -176,8 +176,9 @@ class S3Backups(multi.Thread):
 
         aws_access_key_id = data[1].split(' ')[2].strip(' ').strip('\n')
         aws_secret_access_key = data[2].split(' ')[2].strip(' ').strip('\n')
+        region = data[3].split(' ')[2].strip(' ').strip('\n')
 
-        return aws_access_key_id, aws_secret_access_key
+        return aws_access_key_id, aws_secret_access_key, region
 
     def fetchBuckets(self):
         try:
@@ -191,12 +192,13 @@ class S3Backups(multi.Thread):
                 return proc.ajax(0, 'Only administrators can use AWS S3 Backups.')
 
 
-            aws_access_key_id, aws_secret_access_key = self.fetchAWSKeys()
+            aws_access_key_id, aws_secret_access_key, region = self.fetchAWSKeys()
 
             s3 = boto3.resource(
                 's3',
                 aws_access_key_id = aws_access_key_id,
-                aws_secret_access_key = aws_secret_access_key
+                aws_secret_access_key = aws_secret_access_key,
+                region_name=region
             )
 
             json_data = "["
@@ -232,8 +234,28 @@ class S3Backups(multi.Thread):
 
             admin = Administrator.objects.get(pk=userID)
 
+            ## What to backup
+
+            WTB = {}
+            try:
+                WTB['data'] = int(self.data['data'])
+            except:
+                WTB['data'] = 0
+
+            try:
+                WTB['databases'] = int(self.data['databases'])
+            except:
+                WTB['databases'] = 0
+
+            try:
+                WTB['emails'] = int(self.data['emails'])
+            except:
+                WTB['emails'] = 0
+
+            ###
+
             newPlan = BackupPlan(owner=admin, name=self.data['planName'].replace(' ', ''), freq=self.data['frequency'],
-                                 retention=self.data['retenion'], bucket=self.data['bucketName'])
+                                 retention=self.data['retenion'], bucket=self.data['bucketName'], config=json.dumps(WTB))
             newPlan.save()
 
             for items in self.data['websitesInPlan']:
@@ -263,12 +285,16 @@ class S3Backups(multi.Thread):
             checker = 0
 
             for plan in admin.backupplan_set.all():
+                config = json.loads(plan.config)
                 dic = {
                     'name': plan.name,
                     'bucket': plan.bucket,
                     'freq': plan.freq,
                     'retention': plan.retention,
                     'lastRun': plan.lastRun,
+                    'data': config['data'],
+                    'databases': config['databases'],
+                    'emails': config['emails'],
                 }
 
                 if checker == 0:
@@ -374,9 +400,28 @@ class S3Backups(multi.Thread):
 
             changePlan = BackupPlan.objects.get(name=self.data['planName'])
 
+            ## What to backup
+
+            WTB = {}
+            try:
+                WTB['data'] = int(self.data['data'])
+            except:
+                WTB['data'] = 0
+
+            try:
+                WTB['databases'] = int(self.data['databases'])
+            except:
+                WTB['databases'] = 0
+
+            try:
+                WTB['emails'] = int(self.data['emails'])
+            except:
+                WTB['emails'] = 0
+
             changePlan.bucket = self.data['bucketName']
             changePlan.freq = self.data['frequency']
             changePlan.retention = self.data['retention']
+            changePlan.config = json.dumps(WTB)
 
             changePlan.save()
 
@@ -478,15 +523,17 @@ class S3Backups(multi.Thread):
         try:
 
             plan = BackupPlan.objects.get(name=self.data['planName'])
+            logging.writeToFile(plan.config)
             bucketName = plan.bucket.strip('\n').strip(' ')
             runTime = time.strftime("%d:%m:%Y")
 
-            aws_access_key_id, aws_secret_access_key = self.fetchAWSKeys()
+            aws_access_key_id, aws_secret_access_key, region = self.fetchAWSKeys()
 
             client = boto3.client(
                 's3',
                 aws_access_key_id = aws_access_key_id,
-                aws_secret_access_key = aws_secret_access_key
+                aws_secret_access_key = aws_secret_access_key,
+                #region_name=region
             )
 
 
@@ -533,25 +580,40 @@ class S3Backups(multi.Thread):
             BackupLogs(owner=plan, level='INFO', timeStamp=time.strftime("%b %d %Y, %H:%M:%S"),
                        msg='Starting backup process..').save()
 
+            PlanConfig = json.loads(plan.config)
+
             for items in plan.websitesinplan_set.all():
-                result = self.createBackup(items.domain)
-                if result[0]:
-                    key = plan.name + '/' + runTime + '/' + result[1].split('/')[-1] + ".tar.gz"
+
+                from plogical.backupUtilities import backupUtilities
+                tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
+                extraArgs = {}
+                extraArgs['domain'] = items.domain
+                extraArgs['tempStatusPath'] = tempStatusPath
+                extraArgs['data'] = PlanConfig['data']
+                extraArgs['emails'] = PlanConfig['emails']
+                extraArgs['databases'] = PlanConfig['databases']
+                bu = backupUtilities(extraArgs)
+                result = bu.CloudBackups()
+
+                finalResult = open(tempStatusPath, 'r').read()
+
+                if result[0] == 1:
+                    key = plan.name + '/' + runTime + '/' + result[1]
                     client.upload_file(
-                        result[1] + ".tar.gz",
+                        result[1],
                         bucketName,
                         key,
                         Config=config,
                     )
 
-                    command = 'rm -f ' + result[1] + ".tar.gz"
+                    command = 'rm -f ' + result[1]
                     ProcessUtilities.executioner(command)
 
                     BackupLogs(owner=plan, level='INFO', timeStamp=time.strftime("%b %d %Y, %H:%M:%S"),
                                msg='Backup successful for ' + items.domain + '.').save()
                 else:
                     BackupLogs(owner=plan, level='ERROR', timeStamp=time.strftime("%b %d %Y, %H:%M:%S"),
-                               msg='Backup failed for ' + items.domain + '. Error: ' + result[1]).save()
+                               msg='Backup failed for ' + items.domain + '. Error: ' + finalResult).save()
 
             plan.lastRun = runTime
             plan.save()

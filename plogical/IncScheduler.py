@@ -18,11 +18,15 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 from plogical.backupSchedule import backupSchedule
 import requests
-from websiteFunctions.models import NormalBackupJobs, NormalBackupSites, NormalBackupDests, NormalBackupJobLogs
+from websiteFunctions.models import NormalBackupJobs, NormalBackupJobLogs
+
 try:
+    from s3Backups.models import BackupPlan, BackupLogs
+    import boto3
     from plogical.virtualHostUtilities import virtualHostUtilities
     from plogical.mailUtilities import mailUtilities
     from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+    from plogical.processUtilities import ProcessUtilities
 except:
     pass
 
@@ -589,6 +593,86 @@ Automatic backup failed for %s on %s.
                     backupjob.config = json.dumps(jobConfig)
                     backupjob.save()
 
+    @staticmethod
+    def fetchAWSKeys():
+        path = '/home/cyberpanel/.aws'
+        credentials = path + '/credentials'
+
+        data = open(credentials, 'r').readlines()
+
+        aws_access_key_id = data[1].split(' ')[2].strip(' ').strip('\n')
+        aws_secret_access_key = data[2].split(' ')[2].strip(' ').strip('\n')
+        region = data[3].split(' ')[2].strip(' ').strip('\n')
+
+        return aws_access_key_id, aws_secret_access_key, region
+
+    @staticmethod
+    def forceRunAWSBackup():
+        try:
+
+            plan = BackupPlan.objects.get(name='hi')
+            bucketName = plan.bucket.strip('\n').strip(' ')
+            runTime = time.strftime("%d:%m:%Y")
+
+            aws_access_key_id, aws_secret_access_key, region = IncScheduler.fetchAWSKeys()
+
+            client = boto3.client(
+                's3',
+                aws_access_key_id = aws_access_key_id,
+                aws_secret_access_key = aws_secret_access_key,
+                #region_name=region
+            )
+
+            ##
+
+
+            BackupLogs(owner=plan, level='INFO', timeStamp=time.strftime("%b %d %Y, %H:%M:%S"),
+                       msg='Starting backup process..').save()
+
+            PlanConfig = json.loads(plan.config)
+
+            for items in plan.websitesinplan_set.all():
+
+                from plogical.backupUtilities import backupUtilities
+                tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
+                extraArgs = {}
+                extraArgs['domain'] = items.domain
+                extraArgs['tempStatusPath'] = tempStatusPath
+                extraArgs['data'] = PlanConfig['data']
+                extraArgs['emails'] = PlanConfig['emails']
+                extraArgs['databases'] = PlanConfig['databases']
+                bu = backupUtilities(extraArgs)
+                result = bu.CloudBackups()
+
+                finalResult = open(tempStatusPath, 'r').read()
+
+                if result[0] == 1:
+                    key = plan.name + '/' + runTime + '/' + result[1]
+                    client.upload_file(
+                        result[1],
+                        bucketName,
+                        key,
+                    )
+
+                    command = 'rm -f ' + result[1]
+                    ProcessUtilities.executioner(command)
+
+                    BackupLogs(owner=plan, level='INFO', timeStamp=time.strftime("%b %d %Y, %H:%M:%S"),
+                               msg='Backup successful for ' + items.domain + '.').save()
+                else:
+                    BackupLogs(owner=plan, level='ERROR', timeStamp=time.strftime("%b %d %Y, %H:%M:%S"),
+                               msg='Backup failed for ' + items.domain + '. Error: ' + finalResult).save()
+
+            plan.lastRun = runTime
+            plan.save()
+
+            BackupLogs(owner=plan, level='INFO', timeStamp=time.strftime("%b %d %Y, %H:%M:%S"),
+                       msg='Backup Process Finished.').save()
+        except BaseException as msg:
+            logging.writeToFile(str(msg) + ' [S3Backups.runBackupPlan]')
+            plan = BackupPlan.objects.get(name='hi')
+            BackupLogs(owner=plan, timeStamp=time.strftime("%b %d %Y, %H:%M:%S"), level='ERROR', msg=str(msg)).save()
+
 
 
 def main():
@@ -602,6 +686,7 @@ def main():
     IncScheduler.git(args.function)
     IncScheduler.checkDiskUsage()
     IncScheduler.startNormalBackups(args.function)
+    IncScheduler.forceRunAWSBackup()
 
 
 if __name__ == "__main__":
