@@ -63,6 +63,12 @@ def router(request):
             return cm.deleteCloudBackup()
         elif controller == 'SubmitCloudBackupRestore':
             return cm.SubmitCloudBackupRestore()
+        elif controller == 'getCurrentS3Backups':
+            return cm.getCurrentS3Backups()
+        elif controller == 'deleteS3Backup':
+            return cm.deleteS3Backup()
+        elif controller == 'SubmitS3BackupRestore':
+            return cm.SubmitS3BackupRestore()
         elif controller == 'fetchWebsites':
             return cm.fetchWebsites()
         elif controller == 'fetchWebsiteDataJSON':

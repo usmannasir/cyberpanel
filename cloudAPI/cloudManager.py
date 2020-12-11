@@ -1791,3 +1791,106 @@ class CloudManager:
 
         except BaseException as msg:
             return self.ajaxPre(0, str(msg))
+
+    def fetchAWSKeys(self):
+        path = '/home/cyberpanel/.aws'
+        credentials = path + '/credentials'
+
+        data = open(credentials, 'r').readlines()
+
+        aws_access_key_id = data[1].split(' ')[2].strip(' ').strip('\n')
+        aws_secret_access_key = data[2].split(' ')[2].strip(' ').strip('\n')
+        region = data[3].split(' ')[2].strip(' ').strip('\n')
+
+        return aws_access_key_id, aws_secret_access_key, region
+
+    def getCurrentS3Backups(self):
+        try:
+
+            import boto3
+            from s3Backups.models import BackupPlan, BackupLogs
+            plan = BackupPlan.objects.get(name=self.data['planName'])
+
+            aws_access_key_id, aws_secret_access_key, region = self.fetchAWSKeys()
+
+            s3 = boto3.resource(
+                's3',
+                aws_access_key_id=aws_access_key_id,
+                aws_secret_access_key=aws_secret_access_key
+            )
+            bucket = s3.Bucket(plan.bucket)
+            key = '%s/%s/' % (plan.name, self.data['domainName'])
+
+            backups = []
+
+            for file in bucket.objects.filter(Prefix=key):
+                backups.append({'key': file.key, 'size': file.size})
+
+            json_data = "["
+            checker = 0
+
+            counter = 1
+            for items in backups:
+
+                dic = {'id': counter,
+                       'file': items['key'],
+                       'size': items['size'],
+                       }
+                counter = counter + 1
+
+                if checker == 0:
+                    json_data = json_data + json.dumps(dic)
+                    checker = 1
+                else:
+                    json_data = json_data + ',' + json.dumps(dic)
+
+            json_data = json_data + ']'
+            final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": json_data})
+            return HttpResponse(final_json)
+        except BaseException as msg:
+            final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+    def deleteS3Backup(self):
+        try:
+
+            import boto3
+            from s3Backups.models import BackupPlan, BackupLogs
+            plan = BackupPlan.objects.get(name=self.data['planName'])
+
+            aws_access_key_id, aws_secret_access_key, region = self.fetchAWSKeys()
+
+            s3 = boto3.resource(
+                's3',
+                aws_access_key_id=aws_access_key_id,
+                aws_secret_access_key=aws_secret_access_key
+            )
+            s3.Object(plan.bucket, self.data['backupFile']).delete()
+
+            final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None"})
+            return HttpResponse(final_json)
+        except BaseException as msg:
+            final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+    def SubmitS3BackupRestore(self):
+        try:
+
+            tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
+
+            writeToFile = open(tempStatusPath, 'w')
+            writeToFile.write('Starting..,0')
+            writeToFile.close()
+
+            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
+            execPath = execPath + " SubmitS3BackupRestore --backupDomain %s --backupFile '%s' --tempStoragePath %s --planName %s" % (self.data['domain'], self.data['backupFile'], tempStatusPath, self.data['planName'])
+            ProcessUtilities.popenExecutioner(execPath)
+
+            final_dic = {'status': 1, 'tempStatusPath': tempStatusPath}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+        except BaseException as msg:
+            return self.ajaxPre(0, str(msg))

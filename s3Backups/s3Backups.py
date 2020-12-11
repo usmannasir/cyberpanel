@@ -42,12 +42,8 @@ class S3Backups(multi.Thread):
         try:
             if self.function == 'connectAccount':
                 self.connectAccount()
-            elif self.function == 'forceRunAWSBackup':
-                self.forceRunAWSBackup()
             elif self.function == 'forceRunAWSBackupDO':
                 self.forceRunAWSBackupDO()
-            elif self.function == 'runAWSBackups':
-                self.runAWSBackups()
             elif self.function == 'forceRunAWSBackupMINIO':
                 self.forceRunAWSBackupMINIO()
         except BaseException as msg:

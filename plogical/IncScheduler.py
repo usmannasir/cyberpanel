@@ -611,6 +611,7 @@ Automatic backup failed for %s on %s.
     def forceRunAWSBackup(planName):
         try:
 
+
             plan = BackupPlan.objects.get(name=planName)
             bucketName = plan.bucket.strip('\n').strip(' ')
             runTime = time.strftime("%d:%m:%Y")
@@ -618,7 +619,28 @@ Automatic backup failed for %s on %s.
             config = TransferConfig(multipart_threshold=1024 * 25, max_concurrency=10,
                                     multipart_chunksize=1024 * 25, use_threads=True)
 
+            ##
+
             aws_access_key_id, aws_secret_access_key, region = IncScheduler.fetchAWSKeys()
+
+            ts = time.time()
+            retentionSeconds = 86400 * plan.retention
+            s3 = boto3.resource(
+                's3',
+                aws_access_key_id=aws_access_key_id,
+                aws_secret_access_key=aws_secret_access_key
+            )
+            bucket = s3.Bucket(plan.bucket)
+
+            for file in bucket.objects.all():
+                result = float(ts - file.last_modified.timestamp())
+                if result > retentionSeconds:
+                    BackupLogs(owner=plan, level='INFO', timeStamp=time.strftime("%b %d %Y, %H:%M:%S"),
+                               msg='File %s expired and deleted according to your retention settings.' % (
+                                   file.key)).save()
+                    file.delete()
+
+            ###
 
             client = boto3.client(
                 's3',
@@ -628,7 +650,6 @@ Automatic backup failed for %s on %s.
             )
 
             ##
-
 
             BackupLogs(owner=plan, level='INFO', timeStamp=time.strftime("%b %d %Y, %H:%M:%S"),
                        msg='Starting backup process..').save()
@@ -652,7 +673,7 @@ Automatic backup failed for %s on %s.
                 finalResult = open(tempStatusPath, 'r').read()
 
                 if result == 1:
-                    key = plan.name + '/' + runTime + '/' + fileName.split('/')[-1]
+                    key = plan.name + '/' + items.domain + '/' + fileName.split('/')[-1]
                     client.upload_file(
                         fileName,
                         bucketName,
@@ -675,26 +696,6 @@ Automatic backup failed for %s on %s.
             BackupLogs(owner=plan, level='INFO', timeStamp=time.strftime("%b %d %Y, %H:%M:%S"),
                        msg='Backup Process Finished.').save()
 
-            ###
-
-            s3 = boto3.resource(
-                's3',
-                aws_access_key_id=aws_access_key_id,
-                aws_secret_access_key=aws_secret_access_key,
-                region_name=region
-            )
-
-            ts = time.time()
-
-            retentionSeconds = 86400 * plan.retention
-
-            for bucket in s3.buckets.all():
-                if bucket.name == plan.bucket:
-                    for file in bucket.objects.all():
-                        result = float(ts - file.last_modified.timestamp())
-                        if result > retentionSeconds:
-                            file.delete()
-                    break
 
         except BaseException as msg:
             logging.writeToFile(str(msg) + ' [S3Backups.runBackupPlan]')
