@@ -41,7 +41,7 @@ class DNS:
             self.status = data[2].rstrip('\n')
             return 1
         else:
-            logging.CyberCPLogFileWriter.writeToFile('User %s does not have CoudFlare configured.' % (self.admin.userName))
+            logging.CyberCPLogFileWriter.writeToFile('User %s does not have CloudFlare configured.' % (self.admin.userName))
             return 0
 
     def cfTemplate(self, zoneDomain, admin, enableCheck=None):
