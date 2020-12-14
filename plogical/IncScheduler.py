@@ -625,11 +625,21 @@ Automatic backup failed for %s on %s.
 
             ts = time.time()
             retentionSeconds = 86400 * plan.retention
-            s3 = boto3.resource(
-                's3',
-                aws_access_key_id=aws_access_key_id,
-                aws_secret_access_key=aws_secret_access_key
-            )
+
+            if region.find('http') > -1:
+                s3 = boto3.resource(
+                    's3',
+                    aws_access_key_id=aws_access_key_id,
+                    aws_secret_access_key=aws_secret_access_key,
+                    endpoint_url=region
+                )
+            else:
+                s3 = boto3.resource(
+                    's3',
+                    aws_access_key_id=aws_access_key_id,
+                    aws_secret_access_key=aws_secret_access_key,
+                )
+
             bucket = s3.Bucket(plan.bucket)
 
             for file in bucket.objects.all():
@@ -642,12 +652,19 @@ Automatic backup failed for %s on %s.
 
             ###
 
-            client = boto3.client(
-                's3',
-                aws_access_key_id = aws_access_key_id,
-                aws_secret_access_key = aws_secret_access_key,
-                #region_name=region
-            )
+            if region.find('http') > -1:
+                client = boto3.client(
+                    's3',
+                    aws_access_key_id=aws_access_key_id,
+                    aws_secret_access_key=aws_secret_access_key,
+                    endpoint_url=region
+                )
+            else:
+                client = boto3.client(
+                    's3',
+                    aws_access_key_id = aws_access_key_id,
+                    aws_secret_access_key = aws_secret_access_key,
+                )
 
             ##
 
