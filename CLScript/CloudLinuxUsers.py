@@ -81,7 +81,7 @@ class CloudLinuxUsers(CLMain):
         for webs in websites:
             try:
                 itemPackage = webs.package
-                package = {'name': itemPackage.packageName, 'owner': webs.externalApp}
+                package = {'name': itemPackage.packageName, 'owner': webs.admin.userName}
 
                 user = {}
 
@@ -92,7 +92,7 @@ class CloudLinuxUsers(CLMain):
                     user['username'] = webs.externalApp
 
                 if self.ow:
-                    user['owner'] = webs.externalApp
+                    user['owner'] = webs.admin.userName
 
                 if self.domain:
                     user['domain'] = webs.domain
@@ -133,7 +133,7 @@ class CloudLinuxUsers(CLMain):
         if self.owner == None:
             websites = Websites.objects.all()
         else:
-            websites = Websites.objects.filter(externalApp=self.owner)
+            websites = Websites.objects.filter(admin__userName=self.owner)
 
         if self.username != None:
             websites = websites.filter(externalApp=self.username)
