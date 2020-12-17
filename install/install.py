@@ -766,15 +766,15 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
                 command = 'dnf install --enablerepo=gf-plus postfix3 postfix3-mysql -y'
             else:
-                # command = 'apt-get -y debconf-utils'
-                # preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-                # file_name = self.cwd + '/pf.unattend.text'
-                # pf = open(file_name, 'w')
-                # pf.write('postfix postfix/mailname string ' + str(socket.getfqdn() + '\n'))
-                # pf.write('postfix postfix/main_mailer_type string "Internet Site"\n')
-                # pf.close()
-                # command = 'debconf-set-selections ' + file_name
-                # preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                command = 'apt-get -y debconf-utils'
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                file_name = self.cwd + '/pf.unattend.text'
+                pf = open(file_name, 'w')
+                pf.write('postfix postfix/mailname string ' + str(socket.getfqdn() + '\n'))
+                pf.write('postfix postfix/main_mailer_type string "Internet Site"\n')
+                pf.close()
+                command = 'debconf-set-selections ' + file_name
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
                 command = 'apt-get -y install postfix postfix-mysql'
                 # os.remove(file_name)
