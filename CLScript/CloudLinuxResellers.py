@@ -14,7 +14,6 @@ import argparse
 import json
 from CLScript.CLMain import CLMain
 
-
 class CloudLinuxResellers(CLMain):
 
     def __init__(self, id, name):
