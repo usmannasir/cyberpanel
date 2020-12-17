@@ -1567,10 +1567,7 @@ class FirewallManager:
             data = {}
             data['ipAddress'] = fullAddress
 
-            if os.path.exists(FirewallManager.CLPath):
-                data['CL'] = 1
-            else:
-                data['CL'] = 0
+            data['CL'] = 1
 
             if os.path.exists(FirewallManager.imunifyPath):
                 data['imunify'] = 1
