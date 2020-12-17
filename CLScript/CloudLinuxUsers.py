@@ -92,7 +92,12 @@ class CloudLinuxUsers(CLMain):
                     user['username'] = webs.externalApp
 
                 if self.ow:
-                    user['owner'] = webs.admin.userName
+                    if webs.admin.owner == 1:
+                        user['owner'] = webs.admin.userName
+                    else:
+                        from loginSystem.models import Administrator
+                        oAdmin = Administrator.objects.get(pk=webs.admin.owner)
+                        user['owner'] = oAdmin.userName
 
                 if self.domain:
                     user['domain'] = webs.domain
@@ -133,7 +138,11 @@ class CloudLinuxUsers(CLMain):
         if self.owner == None:
             websites = Websites.objects.all()
         else:
-            websites = Websites.objects.filter(admin__userName=self.owner)
+            from loginSystem.models import Administrator
+            from plogical.acl import ACLManager
+            oAdmin = Administrator.objects.get(userName=self.owner)
+            currentACL = ACLManager.loadedACL(oAdmin.pk)
+            websites = ACLManager.findWebsiteObjects(currentACL, oAdmin.pk)
 
         if self.username != None:
             websites = websites.filter(externalApp=self.username)
