@@ -1661,10 +1661,18 @@ class backupUtilities:
 
             aws_access_key_id, aws_secret_access_key, region = self.fetchAWSKeys()
 
-            s3 = boto3.resource(
+            if region.find('http') > -1:
+                s3 = boto3.resource(
                     's3',
                     aws_access_key_id=aws_access_key_id,
-                    aws_secret_access_key=aws_secret_access_key
+                    aws_secret_access_key=aws_secret_access_key,
+                    endpoint_url=region
+                )
+            else:
+                s3 = boto3.resource(
+                    's3',
+                    aws_access_key_id=aws_access_key_id,
+                    aws_secret_access_key=aws_secret_access_key,
                 )
 
             self.BackupPath = '/home/cyberpanel/backups/%s/%s' % (self.extraArgs['domain'], self.extraArgs['backupFile'].split('/')[-1])
