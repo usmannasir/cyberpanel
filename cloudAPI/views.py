@@ -63,6 +63,8 @@ def router(request):
             return cm.deleteCloudBackup()
         elif controller == 'SubmitCloudBackupRestore':
             return cm.SubmitCloudBackupRestore()
+        elif controller == 'DeployWordPress':
+            return cm.DeployWordPress()
         elif controller == 'getCurrentS3Backups':
             return cm.getCurrentS3Backups()
         elif controller == 'deleteS3Backup':

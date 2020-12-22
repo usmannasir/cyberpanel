@@ -148,6 +148,7 @@ class S3Backups(multi.Thread):
             if currentACL['admin'] == 0:
                 return proc.ajax(0, 'Only administrators can use AWS S3 Backups.')
 
+            from botocore.client import Config
 
             aws_access_key_id, aws_secret_access_key, region = self.fetchAWSKeys()
 
@@ -156,7 +157,8 @@ class S3Backups(multi.Thread):
                     's3',
                     aws_access_key_id=aws_access_key_id,
                     aws_secret_access_key=aws_secret_access_key,
-                    endpoint_url=region
+                    endpoint_url=region,
+                    config=Config(signature_version='v4')
                 )
             else:
                 s3 = boto3.resource(

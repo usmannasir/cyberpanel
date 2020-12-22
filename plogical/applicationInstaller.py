@@ -1,4 +1,5 @@
 #!/usr/local/CyberCP/bin/python
+import argparse
 import os, sys
 
 sys.path.append('/usr/local/CyberCP')
@@ -1217,3 +1218,54 @@ $parameters = array(
     #         statusFile.writelines(str(msg) + " [404]")
     #         statusFile.close()
     #         return 0
+
+    def DeployWordPress(self):
+        try:
+            logging.statusWriter(self.extraArgs['tempStatusPath'], 'Checking if MailServer SSL issued..,10')
+
+            import time
+            time.sleep(5)
+
+            logging.statusWriter(self.extraArgs['tempStatusPath'], 'Completed [200].')
+
+        except BaseException as msg:
+            logging.statusWriter(self.extraArgs['tempStatusPath'], '%s [404].' % (str(msg)))
+
+def main():
+    parser = argparse.ArgumentParser(description='CyberPanel Application Installer')
+    parser.add_argument('function', help='Specify a function to call!')
+    parser.add_argument('--tempStatusPath', help='')
+    parser.add_argument('--appsSet', help='')
+    parser.add_argument('--domain', help='')
+    parser.add_argument('--email', help='')
+    parser.add_argument('--password', help='')
+    parser.add_argument('--pluginUpdates', help='')
+    parser.add_argument('--themeUpdates', help='')
+    parser.add_argument('--title', help='')
+    parser.add_argument('--updates', help='')
+    parser.add_argument('--userName', help='')
+    parser.add_argument('--version', help='')
+
+
+    args = parser.parse_args()
+
+    if args.function == "DeployWordPress":
+
+        extraArgs = {}
+        extraArgs['domain'] = args.domain
+        extraArgs['tempStatusPath'] = args.tempStatusPath
+        extraArgs['appsSet'] = args.appsSet
+        extraArgs['email'] = args.email
+        extraArgs['password'] = args.password
+        extraArgs['pluginUpdates'] = args.pluginUpdates
+        extraArgs['themeUpdates'] = args.themeUpdates
+        extraArgs['title'] = args.title
+        extraArgs['updates'] = args.updates
+        extraArgs['userName'] = args.userName
+        extraArgs['version'] = args.version
+        ai = ApplicationInstaller(None, extraArgs)
+        ai.DeployWordPress()
+
+
+if __name__ == "__main__":
+    main()

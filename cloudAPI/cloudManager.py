@@ -24,7 +24,7 @@ from containerization.views import *
 
 
 class CloudManager:
-    def __init__(self, data=None, admin = None):
+    def __init__(self, data=None, admin=None):
         self.data = data
         self.admin = admin
 
@@ -964,13 +964,13 @@ class CloudManager:
 
             request.session['userID'] = self.admin.pk
 
-            execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/IncScheduler.py forceRunAWSBackup --planName %s" % (self.data['planName'])
+            execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/IncScheduler.py forceRunAWSBackup --planName %s" % (
+                self.data['planName'])
             ProcessUtilities.popenExecutioner(execPath)
 
             return self.ajaxPre(1, None)
         except BaseException as msg:
             return self.ajaxPre(0, str(msg))
-
 
     def systemStatus(self, request):
         try:
@@ -979,14 +979,12 @@ class CloudManager:
         except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
-
     def killProcess(self, request):
         try:
             request.session['userID'] = self.admin.pk
             return killProcess(request)
         except BaseException as msg:
             return self.ajaxPre(0, str(msg))
-
 
     def connectAccountDO(self, request):
         try:
@@ -1003,7 +1001,6 @@ class CloudManager:
             return s3.fetchBucketsDO()
         except BaseException as msg:
             return self.ajaxPre(0, str(msg))
-
 
     def createPlanDO(self, request):
         try:
@@ -1073,7 +1070,7 @@ class CloudManager:
     def showStatus(self, request):
         try:
             request.session['userID'] = self.admin.pk
-            currentACL = ACLManager.loadedACL( self.admin.pk)
+            currentACL = ACLManager.loadedACL(self.admin.pk)
 
             if currentACL['admin'] == 0:
                 return self.ajaxPre(0, 'Only administrators can see MySQL status.')
@@ -1088,23 +1085,21 @@ class CloudManager:
     def fetchRam(self, request):
         try:
             request.session['userID'] = self.admin.pk
-            currentACL = ACLManager.loadedACL( self.admin.pk)
+            currentACL = ACLManager.loadedACL(self.admin.pk)
 
             if currentACL['admin'] == 0:
                 return self.ajaxPre(0, 'Only administrators can see MySQL status.')
 
-            #if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+            # if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
             #    return self.ajaxPre(0, 'This feature is currently only available on CentOS.')
-
 
             from psutil import virtual_memory
             import math
 
             finalData = {}
             mem = virtual_memory()
-            inGB = math.ceil(float(mem.total)/float(1024 * 1024 * 1024))
+            inGB = math.ceil(float(mem.total) / float(1024 * 1024 * 1024))
             finalData['ramInGB'] = inGB
-
 
             if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 finalData['conf'] = ProcessUtilities.outputExecutioner('sudo cat /etc/my.cnf')
@@ -1121,7 +1116,7 @@ class CloudManager:
     def applyMySQLChanges(self, request):
         try:
             request.session['userID'] = self.admin.pk
-            currentACL = ACLManager.loadedACL( self.admin.pk)
+            currentACL = ACLManager.loadedACL(self.admin.pk)
 
             if currentACL['admin'] == 0:
                 return self.ajaxPre(0, 'Only administrators can see MySQL status.')
@@ -1139,7 +1134,7 @@ class CloudManager:
     def restartMySQL(self, request):
         try:
             request.session['userID'] = self.admin.pk
-            currentACL = ACLManager.loadedACL( self.admin.pk)
+            currentACL = ACLManager.loadedACL(self.admin.pk)
 
             if currentACL['admin'] == 0:
                 return self.ajaxPre(0, 'Only administrators can see MySQL status.')
@@ -1154,7 +1149,7 @@ class CloudManager:
     def fetchDatabasesMYSQL(self, request):
         try:
             request.session['userID'] = self.admin.pk
-            currentACL = ACLManager.loadedACL( self.admin.pk)
+            currentACL = ACLManager.loadedACL(self.admin.pk)
 
             if currentACL['admin'] == 0:
                 return self.ajaxPre(0, 'Only administrators can see MySQL status.')
@@ -1169,7 +1164,7 @@ class CloudManager:
     def fetchTables(self, request):
         try:
             request.session['userID'] = self.admin.pk
-            currentACL = ACLManager.loadedACL( self.admin.pk)
+            currentACL = ACLManager.loadedACL(self.admin.pk)
 
             if currentACL['admin'] == 0:
                 return self.ajaxPre(0, 'Only administrators can see MySQL status.')
@@ -1184,7 +1179,7 @@ class CloudManager:
     def deleteTable(self, request):
         try:
             request.session['userID'] = self.admin.pk
-            currentACL = ACLManager.loadedACL( self.admin.pk)
+            currentACL = ACLManager.loadedACL(self.admin.pk)
 
             if currentACL['admin'] == 0:
                 return self.ajaxPre(0, 'Only administrators can see MySQL status.')
@@ -1199,7 +1194,7 @@ class CloudManager:
     def fetchTableData(self, request):
         try:
             request.session['userID'] = self.admin.pk
-            currentACL = ACLManager.loadedACL( self.admin.pk)
+            currentACL = ACLManager.loadedACL(self.admin.pk)
 
             if currentACL['admin'] == 0:
                 return self.ajaxPre(0, 'Only administrators can see MySQL status.')
@@ -1214,7 +1209,7 @@ class CloudManager:
     def fetchStructure(self, request):
         try:
             request.session['userID'] = self.admin.pk
-            currentACL = ACLManager.loadedACL( self.admin.pk)
+            currentACL = ACLManager.loadedACL(self.admin.pk)
 
             if currentACL['admin'] == 0:
                 return self.ajaxPre(0, 'Only administrators can see MySQL status.')
@@ -1265,7 +1260,6 @@ class CloudManager:
             return s3.fetchBackupPlansMINIO()
         except BaseException as msg:
             return self.ajaxPre(0, str(msg))
-
 
     def deletePlanMINIO(self, request):
         try:
@@ -1339,7 +1333,6 @@ class CloudManager:
             return wm.getSwitchStatus(self.admin.pk, self.data)
         except BaseException as msg:
             return self.ajaxPre(0, str(msg))
-
 
     def switchServer(self, request):
         try:
@@ -1666,9 +1659,9 @@ class CloudManager:
             except:
                 databases = '0'
 
-
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
-            execPath = execPath + " CloudBackup --backupDomain %s --data %s --emails %s --databases %s --tempStoragePath %s" % (self.data['domain'], data, emails, databases, tempStatusPath)
+            execPath = execPath + " CloudBackup --backupDomain %s --data %s --emails %s --databases %s --tempStoragePath %s" % (
+                self.data['domain'], data, emails, databases, tempStatusPath)
             ProcessUtilities.popenExecutioner(execPath)
 
             final_dic = {'status': 1, 'tempStatusPath': tempStatusPath}
@@ -1695,7 +1688,7 @@ class CloudManager:
             counter = 1
             for items in backups:
 
-                size = str(int(int(os.path.getsize('%s/%s' % (backupsPath, items)))/int(1048576)))
+                size = str(int(int(os.path.getsize('%s/%s' % (backupsPath, items))) / int(1048576)))
 
                 dic = {'id': counter,
                        'file': items,
@@ -1782,7 +1775,8 @@ class CloudManager:
             writeToFile.close()
 
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
-            execPath = execPath + " SubmitCloudBackupRestore --backupDomain %s --backupFile %s --tempStoragePath %s" % (self.data['domain'], self.data['backupFile'], tempStatusPath)
+            execPath = execPath + " SubmitCloudBackupRestore --backupDomain %s --backupFile %s --tempStoragePath %s" % (
+                self.data['domain'], self.data['backupFile'], tempStatusPath)
             ProcessUtilities.popenExecutioner(execPath)
 
             final_dic = {'status': 1, 'tempStatusPath': tempStatusPath}
@@ -1874,7 +1868,7 @@ class CloudManager:
                     's3',
                     aws_access_key_id=aws_access_key_id,
                     aws_secret_access_key=aws_secret_access_key,
-                    endpoint_url = region
+                    endpoint_url=region
                 )
             else:
                 s3 = boto3.resource(
@@ -1902,7 +1896,34 @@ class CloudManager:
             writeToFile.close()
 
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
-            execPath = execPath + " SubmitS3BackupRestore --backupDomain %s --backupFile '%s' --tempStoragePath %s --planName %s" % (self.data['domain'], self.data['backupFile'], tempStatusPath, self.data['planName'])
+            execPath = execPath + " SubmitS3BackupRestore --backupDomain %s --backupFile '%s' --tempStoragePath %s --planName %s" % (
+                self.data['domain'], self.data['backupFile'], tempStatusPath, self.data['planName'])
+            ProcessUtilities.popenExecutioner(execPath)
+
+            final_dic = {'status': 1, 'tempStatusPath': tempStatusPath}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+        except BaseException as msg:
+            return self.ajaxPre(0, str(msg))
+
+    def DeployWordPress(self):
+        try:
+
+            tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
+
+            writeToFile = open(tempStatusPath, 'w')
+            writeToFile.write('Starting..,0')
+            writeToFile.close()
+
+            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/applicationInstaller.py"
+            execPath = execPath + " DeployWordPress --tempStatusPath %s --appsSet '%s' --domain '%s' --email '%s' --password '%s' " \
+                                  "--pluginUpdates '%s' --themeUpdates '%s' --title '%s' --updates '%s' --userName '%s' " \
+                                  "--version '%s'" % (
+                tempStatusPath, self.data['appsSet'], self.data['domain'], self.data['email'], self.data['password'],
+                self.data['pluginUpdates'], self.data['themeUpdates'], self.data['title'], self.data['updates'],
+                self.data['userName'], self.data['version'])
+
             ProcessUtilities.popenExecutioner(execPath)
 
             final_dic = {'status': 1, 'tempStatusPath': tempStatusPath}
