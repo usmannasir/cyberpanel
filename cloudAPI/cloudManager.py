@@ -1924,6 +1924,11 @@ class CloudManager:
                 self.data['pluginUpdates'], self.data['themeUpdates'], self.data['title'], self.data['updates'],
                 self.data['userName'], self.data['version'])
 
+            try:
+                execPath = '%s --path %s' % (execPath, self.data['path'])
+            except:
+                pass
+
             ProcessUtilities.popenExecutioner(execPath)
 
             final_dic = {'status': 1, 'tempStatusPath': tempStatusPath}

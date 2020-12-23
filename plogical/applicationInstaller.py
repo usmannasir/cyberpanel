@@ -467,7 +467,6 @@ $parameters = array(
     def installWordPress(self):
         try:
 
-            admin = self.extraArgs['admin']
             domainName = self.extraArgs['domainName']
             home = self.extraArgs['home']
             tempStatusPath = self.extraArgs['tempStatusPath']
@@ -521,7 +520,6 @@ $parameters = array(
 
                 dbName, dbUser, dbPassword = self.dbCreation(tempStatusPath, website.master)
                 self.permPath = website.path
-
             except:
                 website = Websites.objects.get(domain=domainName)
                 externalApp = website.externalApp
@@ -568,7 +566,11 @@ $parameters = array(
             statusFile.writelines('Downloading WordPress Core,30')
             statusFile.close()
 
-            command = "wp core download --allow-root --path=" + finalPath
+            try:
+                command = "wp core download --allow-root --path=%s --version=%s" % (finalPath, self.extraArgs['version'])
+            except BaseException as msg:
+                command = "wp core download --allow-root --path=" + finalPath
+
             ProcessUtilities.executioner(command, externalApp)
 
             ##
@@ -620,18 +622,10 @@ $parameters = array(
 
         except BaseException as msg:
             # remove the downloaded files
-            FNULL = open(os.devnull, 'w')
 
-            homeDir = "/home/" + domainName + "/public_html"
-
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
-                groupName = 'nobody'
-            else:
-                groupName = 'nogroup'
-
-            if not os.path.exists(homeDir):
-                command = "chown " + externalApp + ":" + groupName + " " + homeDir
-                ProcessUtilities.executioner(command, externalApp)
+            from filemanager.filemanager import FileManager
+            fm = FileManager(None, None)
+            fm.fixPermissions(self.masterDomain)
 
             try:
                 mysqlUtilities.deleteDatabase(dbName, dbUser)
@@ -639,10 +633,6 @@ $parameters = array(
                 db.delete()
             except:
                 pass
-
-            command = 'chmod 750 %s' % (self.permPath)
-            ProcessUtilities.executioner(command)
-
 
             statusFile = open(self.tempStatusPath, 'w')
             statusFile.writelines(str(msg) + " [404]")
@@ -1221,10 +1211,45 @@ $parameters = array(
 
     def DeployWordPress(self):
         try:
-            logging.statusWriter(self.extraArgs['tempStatusPath'], 'Checking if MailServer SSL issued..,10')
+            logging.statusWriter(self.extraArgs['tempStatusPath'], 'Creating this application..,10')
 
-            import time
-            time.sleep(5)
+            ## Create site
+
+            import re
+            from plogical.virtualHostUtilities import virtualHostUtilities
+            tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
+            externalApp = "".join(re.findall("[a-zA-Z]+", self.extraArgs['domain']))[:5] + str(randint(1000, 9999))
+
+            virtualHostUtilities.createVirtualHost(self.extraArgs['domain'], self.extraArgs['email'], 'PHP 7.4',
+                                                   externalApp, 0, 1, 0,
+                                                   'admin', 'Default', 0, tempStatusPath,
+                                                   0)
+            result = open(tempStatusPath, 'r').read()
+            if result.find('[404]') > -1:
+                logging.statusWriter(self.extraArgs['tempStatusPath'], 'Failed to create application. Error: %s [404]' % (result))
+                return 0
+
+            ## Install WordPress
+
+            logging.statusWriter(self.extraArgs['tempStatusPath'], 'Installing WordPress.,50')
+
+            currentTemp = self.extraArgs['tempStatusPath']
+            self.extraArgs['domainName'] = self.extraArgs['domain']
+            self.extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
+            self.extraArgs['blogTitle'] = self.extraArgs['title']
+            self.extraArgs['adminUser'] = self.extraArgs['userName']
+            self.extraArgs['adminPassword'] = self.extraArgs['password']
+            self.extraArgs['adminEmail'] = self.extraArgs['email']
+
+            self.installWordPress()
+
+            result = open(self.extraArgs['tempStatusPath'], 'r').read()
+            if result.find('[404]') > -1:
+                logging.statusWriter(self.extraArgs['tempStatusPath'],
+                                     'Failed to install WordPress. Error: %s [404]' % (result))
+                return 0
+
+            self.extraArgs['tempStatusPath'] = currentTemp
 
             logging.statusWriter(self.extraArgs['tempStatusPath'], 'Completed [200].')
 
@@ -1245,6 +1270,7 @@ def main():
     parser.add_argument('--updates', help='')
     parser.add_argument('--userName', help='')
     parser.add_argument('--version', help='')
+    parser.add_argument('--path', help='')
 
 
     args = parser.parse_args()
@@ -1263,6 +1289,13 @@ def main():
         extraArgs['updates'] = args.updates
         extraArgs['userName'] = args.userName
         extraArgs['version'] = args.version
+
+        try:
+            extraArgs['path'] = args.path
+            extraArgs['home'] = '0'
+        except:
+            extraArgs['home'] = '1'
+
         ai = ApplicationInstaller(None, extraArgs)
         ai.DeployWordPress()
 
