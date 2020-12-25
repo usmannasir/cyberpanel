@@ -158,7 +158,6 @@ class S3Backups(multi.Thread):
                     aws_access_key_id=aws_access_key_id,
                     aws_secret_access_key=aws_secret_access_key,
                     endpoint_url=region,
-                    config=Config(signature_version='v4')
                 )
             else:
                 s3 = boto3.resource(

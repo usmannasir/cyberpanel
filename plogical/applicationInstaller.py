@@ -476,6 +476,7 @@ $parameters = array(
             adminPassword = self.extraArgs['adminPassword']
             adminEmail = self.extraArgs['adminEmail']
 
+
             FNULL = open(os.devnull, 'w')
 
             ### Check WP CLI
@@ -520,7 +521,8 @@ $parameters = array(
 
                 dbName, dbUser, dbPassword = self.dbCreation(tempStatusPath, website.master)
                 self.permPath = website.path
-            except:
+            except BaseException as msg:
+
                 website = Websites.objects.get(domain=domainName)
                 externalApp = website.externalApp
                 self.masterDomain = website.domain
@@ -542,6 +544,7 @@ $parameters = array(
 
                 dbName, dbUser, dbPassword = self.dbCreation(tempStatusPath, website)
                 self.permPath = '/home/%s/public_html' % (website.domain)
+
 
             ## Security Check
 
@@ -568,7 +571,7 @@ $parameters = array(
 
             try:
                 command = "wp core download --allow-root --path=%s --version=%s" % (finalPath, self.extraArgs['version'])
-            except BaseException as msg:
+            except:
                 command = "wp core download --allow-root --path=" + finalPath
 
             ProcessUtilities.executioner(command, externalApp)
@@ -606,6 +609,7 @@ $parameters = array(
 
             command = "wp plugin activate litespeed-cache --allow-root --path=" + finalPath
             ProcessUtilities.executioner(command, externalApp)
+
 
             ##
 
@@ -1251,6 +1255,25 @@ $parameters = array(
 
             self.extraArgs['tempStatusPath'] = currentTemp
 
+            ### Save config in db
+
+            from cloudAPI.models import WPDeployments
+            from websiteFunctions.models import Websites
+            import json
+
+            website = Websites.objects.get(domain = self.extraArgs['domain'])
+            
+            del self.extraArgs['adminPassword']
+            del self.extraArgs['password']
+            del self.extraArgs['tempStatusPath']
+            del self.extraArgs['domain']
+            del self.extraArgs['adminEmail']
+            del self.extraArgs['adminUser']
+            del self.extraArgs['blogTitle']
+
+            wpDeploy = WPDeployments(owner=website, config=json.dumps(self.extraArgs))
+            wpDeploy.save()
+
             logging.statusWriter(self.extraArgs['tempStatusPath'], 'Completed [200].')
 
         except BaseException as msg:
@@ -1290,10 +1313,10 @@ def main():
         extraArgs['userName'] = args.userName
         extraArgs['version'] = args.version
 
-        try:
+        if args.path != None:
             extraArgs['path'] = args.path
             extraArgs['home'] = '0'
-        except:
+        else:
             extraArgs['home'] = '1'
 
         ai = ApplicationInstaller(None, extraArgs)
