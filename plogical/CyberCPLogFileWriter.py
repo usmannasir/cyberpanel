@@ -8,6 +8,18 @@ class CyberCPLogFileWriter:
     fileName = "/home/cyberpanel/error-logs.txt"
 
     @staticmethod
+    def AddFromHeader(sender, message):
+        try:
+            import re
+
+            if not re.search('^From: ', message, re.MULTILINE):
+                message = 'From: {}\n{}'.format(sender, message)
+
+            return message
+        except BaseException as msg:
+            return "Can not add From header to message."
+
+    @staticmethod
     def SendEmail(sender, receivers, message, subject=None, type=None):
         try:
             smtpPath = '/home/cyberpanel/smtpDetails'
@@ -29,9 +41,12 @@ class CyberCPLogFileWriter:
                 if subject != None:
                     message = 'Subject: {}\n\n{}'.format(subject, message)
 
+                message = CyberCPLogFileWriter.AddFromHeader(sender, message)
                 smtpServer.sendmail(smtpUserName, receivers, message)
             else:
                 smtpObj = smtplib.SMTP('localhost')
+
+                message = CyberCPLogFileWriter.AddFromHeader(sender, message)
                 smtpObj.sendmail(sender, receivers, message)
         except BaseException as msg:
             CyberCPLogFileWriter.writeToFile(str(msg))
