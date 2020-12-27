@@ -17,7 +17,7 @@ class CyberCPLogFileWriter:
 
             return message
         except BaseException as msg:
-            return "Can not add From header to message."
+            CyberCPLogFileWriter.writeToFile(str(msg) + ' [AddFromHeader]')
 
     @staticmethod
     def SendEmail(sender, receivers, message, subject=None, type=None):
