@@ -1920,9 +1920,11 @@ class CloudManager:
             execPath = execPath + " DeployWordPress --tempStatusPath %s --appsSet '%s' --domain '%s' --email '%s' --password '%s' " \
                                   "--pluginUpdates '%s' --themeUpdates '%s' --title '%s' --updates '%s' --userName '%s' " \
                                   "--version '%s'" % (
-                tempStatusPath, self.data['appsSet'], self.data['domain'], self.data['email'], self.data['password'],
-                self.data['pluginUpdates'], self.data['themeUpdates'], self.data['title'], self.data['updates'],
-                self.data['userName'], self.data['version'])
+                           tempStatusPath, self.data['appsSet'], self.data['domain'], self.data['email'],
+                           self.data['password'],
+                           self.data['pluginUpdates'], self.data['themeUpdates'], self.data['title'],
+                           self.data['updates'],
+                           self.data['userName'], self.data['version'])
 
             try:
                 execPath = '%s --path %s' % (execPath, self.data['path'])
@@ -1937,3 +1939,385 @@ class CloudManager:
 
         except BaseException as msg:
             return self.ajaxPre(0, str(msg))
+
+    def FetchWordPressDetails(self):
+        try:
+
+            finalDic = {}
+            domain = self.data['domain']
+            finalDic['status'] = 1
+            finalDic['maintenanceMode'] = 1
+            finalDic['php'] = '7.4'
+
+
+            ## Get versopm
+
+            website = Websites.objects.get(domain=domain)
+            command = 'wp core version --path=/home/%s/public_html' % (domain)
+            finalDic['version'] = ProcessUtilities.outputExecutioner(command, website.externalApp)
+
+            ## LSCache
+
+            command = 'wp plugin status litespeed-cache --path=/home/%s/public_html' % (domain)
+            result = ProcessUtilities.outputExecutioner(command, website.externalApp)
+
+            if result.find('Status: Active') > -1:
+                finalDic['lscache'] = 1
+            else:
+                finalDic['lscache'] = 0
+
+            ## Debug
+
+            command = 'wp config list --path=/home/%s/public_html' % (domain)
+            result = ProcessUtilities.outputExecutioner(command, website.externalApp).split('\n')
+            finalDic['debugging'] = 0
+            for items in result:
+                if items.find('WP_DEBUG') > -1 and items.find('1') > - 1:
+                    finalDic['debugging'] = 1
+                    break
+
+            ## Search index
+
+            command = 'wp option get blog_public --path=/home/%s/public_html' % (domain)
+            finalDic['searchIndex'] = int(ProcessUtilities.outputExecutioner(command, website.externalApp).rstrip('\n'))
+
+            ## Maintenece mode
+
+            command = 'wp maintenance-mode status --path=/home/%s/public_html' % (domain)
+            result = ProcessUtilities.outputExecutioner(command, website.externalApp)
+
+            if result.find('not active') > -1:
+                finalDic['maintenanceMode'] = 0
+            else:
+                finalDic['maintenanceMode'] = 1
+
+            ## Get title
+
+            from cloudAPI.models import WPDeployments
+            import json
+            wpd = WPDeployments.objects.get(owner=website)
+            config = json.loads(wpd.config)
+            finalDic['title'] = config['title']
+
+            ##
+
+            final_json = json.dumps(finalDic)
+            return HttpResponse(final_json)
+
+        except BaseException as msg:
+            return self.ajaxPre(0, str(msg))
+
+    def AutoLogin(self):
+        try:
+
+            ## Get versopm
+
+            website = Websites.objects.get(domain=self.data['domain'])
+
+            ## Get title
+
+            import plogical.randomPassword as randomPassword
+            password = randomPassword.generate_pass(32)
+
+            command = 'wp user create cyberpanel support@cyberpanel.cloud --role=administrator --user_pass="%s" --path=/home/%s/public_html' % (password, self.data['domain'])
+            ProcessUtilities.executioner(command, website.externalApp)
+
+            command = 'wp user update cyberpanel --user_pass="%s" --path=/home/%s/public_html' % (password, self.data['domain'])
+            ProcessUtilities.executioner(command, website.externalApp)
+
+            finalDic = {'status': 1, 'password': password}
+            final_json = json.dumps(finalDic)
+            return HttpResponse(final_json)
+
+
+        except BaseException as msg:
+            return self.ajaxPre(0, str(msg))
+
+    def UpdateWPSettings(self):
+        try:
+
+            website = Websites.objects.get(domain=self.data['domain'])
+            domain = self.data['domain']
+
+            if self.data['setting'] == 'lscache':
+               if self.data['settingValue']:
+
+                   command = "wp plugin install litespeed-cache --path=/home/%s/public_html" % (domain)
+                   ProcessUtilities.executioner(command, website.externalApp)
+
+                   command = "wp plugin activate litespeed-cache --path=/home/%s/public_html" % (domain)
+                   ProcessUtilities.executioner(command, website.externalApp)
+
+                   final_dic = {'status': 1, 'message': 'LSCache successfully installed and activated.'}
+                   final_json = json.dumps(final_dic)
+                   return HttpResponse(final_json)
+               else:
+                    command = 'wp plugin deactivate litespeed-cache --path=/home/%s/public_html' % (domain)
+                    ProcessUtilities.executioner(command, website.externalApp)
+
+                    final_dic = {'status': 1, 'message': 'LSCache successfully deactivated.'}
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
+            elif self.data['setting'] == 'debugging':
+                if self.data['settingValue']:
+                    command = "wp config set WP_DEBUG true --path=/home/%s/public_html" % (domain)
+                    ProcessUtilities.executioner(command, website.externalApp)
+
+                    final_dic = {'status': 1, 'message': 'WordPress is now in debug mode.'}
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
+
+                else:
+                    command = "wp config set WP_DEBUG false --path=/home/%s/public_html" % (domain)
+                    ProcessUtilities.executioner(command, website.externalApp)
+
+                    final_dic = {'status': 1, 'message': 'WordPress debug mode turned off.'}
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
+            elif self.data['setting'] == 'searchIndex':
+                if self.data['settingValue']:
+                    command = "wp option update blog_public 1 --path=/home/%s/public_html" % (domain)
+                    ProcessUtilities.executioner(command, website.externalApp)
+
+                    final_dic = {'status': 1, 'message': 'Search Engine Indexing enabled.'}
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
+
+                else:
+                    command = "wp option update blog_public 0 --path=/home/%s/public_html" % (domain)
+                    ProcessUtilities.executioner(command, website.externalApp)
+
+                    final_dic = {'status': 1, 'message': 'Search Engine Indexing disabled.'}
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
+            elif self.data['setting'] == 'maintenanceMode':
+                if self.data['settingValue']:
+                    command = "wp maintenance-mode activate --path=/home/%s/public_html" % (domain)
+                    ProcessUtilities.executioner(command, website.externalApp)
+
+                    final_dic = {'status': 1, 'message': 'WordPress Maintenance mode turned on.'}
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
+
+                else:
+                    command = "wp maintenance-mode deactivate --path=/home/%s/public_html" % (domain)
+                    ProcessUtilities.executioner(command, website.externalApp)
+
+                    final_dic = {'status': 1, 'message': 'WordPress Maintenance mode turned off.'}
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
+
+        except BaseException as msg:
+            return self.ajaxPre(0, str(msg))
+
+    def GetCurrentPlugins(self):
+        try:
+            website = Websites.objects.get(domain=self.data['domain'])
+            command = 'wp plugin list --format=json --path=/home/%s/public_html' % (self.data['domain'])
+            json_data = ProcessUtilities.outputExecutioner(command, website.externalApp)
+            final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": json_data})
+            return HttpResponse(final_json)
+        except BaseException as msg:
+            final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+    def UpdatePlugins(self):
+        try:
+            website = Websites.objects.get(domain=self.data['domain'])
+
+            if self.data['plugin'] == 'all':
+                command = 'wp plugin update --all --path=/home/%s/public_html' % (self.data['domain'])
+                ProcessUtilities.popenExecutioner(command, website.externalApp)
+                final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'message': "Plugin updates started in the background."})
+                return HttpResponse(final_json)
+            elif self.data['plugin'] == 'selected':
+                if self.data['allPluginsChecked']:
+                    command = 'wp plugin update --all --path=/home/%s/public_html' % (self.data['domain'])
+                    ProcessUtilities.popenExecutioner(command, website.externalApp)
+                    final_json = json.dumps(
+                        {'status': 1, 'fetchStatus': 1, 'message': "Plugin updates started in the background."})
+                    return HttpResponse(final_json)
+                else:
+                    pluginsList = ''
+
+                    for plugin in self.data['plugins']:
+                        pluginsList = '%s %s' % (pluginsList, plugin)
+
+                    command = 'wp plugin update %s --path=/home/%s/public_html' % (pluginsList, self.data['domain'])
+                    ProcessUtilities.popenExecutioner(command, website.externalApp)
+                    final_json = json.dumps(
+                        {'status': 1, 'fetchStatus': 1, 'message': "Plugin updates started in the background."})
+                    return HttpResponse(final_json)
+            else:
+                command = 'wp plugin update %s --path=/home/%s/public_html' % (self.data['plugin'], self.data['domain'])
+                ProcessUtilities.popenExecutioner(command, website.externalApp)
+                final_json = json.dumps(
+                    {'status': 1, 'fetchStatus': 1, 'message': "Plugin updates started in the background."})
+                return HttpResponse(final_json)
+
+        except BaseException as msg:
+            final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+    def ChangeState(self):
+        try:
+            website = Websites.objects.get(domain=self.data['domain'])
+
+            command = 'wp plugin status %s --path=/home/%s/public_html' % (self.data['plugin'], self.data['domain'])
+            result = ProcessUtilities.outputExecutioner(command, website.externalApp)
+
+            if result.find('Status: Active') > -1:
+                command = 'wp plugin deactivate %s --path=/home/%s/public_html' % (
+                    self.data['plugin'], self.data['domain'])
+                ProcessUtilities.executioner(command, website.externalApp)
+                final_json = json.dumps(
+                    {'status': 1, 'fetchStatus': 1, 'message': "Plugin successfully deactivated."})
+                return HttpResponse(final_json)
+            else:
+                command = 'wp plugin activate %s --path=/home/%s/public_html' % (
+                self.data['plugin'], self.data['domain'])
+                ProcessUtilities.executioner(command, website.externalApp)
+                final_json = json.dumps(
+                    {'status': 1, 'fetchStatus': 1, 'message': "Plugin successfully activated."})
+                return HttpResponse(final_json)
+
+
+        except BaseException as msg:
+            final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+    def DeletePlugins(self):
+        try:
+            website = Websites.objects.get(domain=self.data['domain'])
+
+            if self.data['plugin'] == 'selected':
+                pluginsList = ''
+
+                for plugin in self.data['plugins']:
+                    pluginsList = '%s %s' % (pluginsList, plugin)
+
+                command = 'wp plugin delete %s --path=/home/%s/public_html' % (pluginsList, self.data['domain'])
+                ProcessUtilities.popenExecutioner(command, website.externalApp)
+                final_json = json.dumps(
+                    {'status': 1, 'fetchStatus': 1, 'message': "Plugin deletion started in the background."})
+                return HttpResponse(final_json)
+            else:
+                command = 'wp plugin delete %s --path=/home/%s/public_html' % (self.data['plugin'], self.data['domain'])
+                ProcessUtilities.popenExecutioner(command, website.externalApp)
+                final_json = json.dumps(
+                    {'status': 1, 'fetchStatus': 1, 'message': "Plugin deletion started in the background."})
+                return HttpResponse(final_json)
+
+        except BaseException as msg:
+            final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+    def GetCurrentThemes(self):
+        try:
+            website = Websites.objects.get(domain=self.data['domain'])
+            command = 'wp theme list --format=json --path=/home/%s/public_html' % (self.data['domain'])
+            json_data = ProcessUtilities.outputExecutioner(command, website.externalApp)
+            final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": json_data})
+            return HttpResponse(final_json)
+        except BaseException as msg:
+            final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+    def UpdateThemes(self):
+        try:
+            website = Websites.objects.get(domain=self.data['domain'])
+
+            if self.data['plugin'] == 'all':
+                command = 'wp theme update --all --path=/home/%s/public_html' % (self.data['domain'])
+                ProcessUtilities.popenExecutioner(command, website.externalApp)
+                final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'message': "Theme updates started in the background."})
+                return HttpResponse(final_json)
+            elif self.data['plugin'] == 'selected':
+                if self.data['allPluginsChecked']:
+                    command = 'wp theme update --all --path=/home/%s/public_html' % (self.data['domain'])
+                    ProcessUtilities.popenExecutioner(command, website.externalApp)
+                    final_json = json.dumps(
+                        {'status': 1, 'fetchStatus': 1, 'message': "Theme updates started in the background."})
+                    return HttpResponse(final_json)
+                else:
+                    pluginsList = ''
+
+                    for plugin in self.data['plugins']:
+                        pluginsList = '%s %s' % (pluginsList, plugin)
+
+                    command = 'wp theme update %s --path=/home/%s/public_html' % (pluginsList, self.data['domain'])
+                    ProcessUtilities.popenExecutioner(command, website.externalApp)
+                    final_json = json.dumps(
+                        {'status': 1, 'fetchStatus': 1, 'message': "Theme updates started in the background."})
+                    return HttpResponse(final_json)
+            else:
+                command = 'wp theme update %s --path=/home/%s/public_html' % (self.data['plugin'], self.data['domain'])
+                ProcessUtilities.popenExecutioner(command, website.externalApp)
+                final_json = json.dumps(
+                    {'status': 1, 'fetchStatus': 1, 'message': "Theme updates started in the background."})
+                return HttpResponse(final_json)
+
+        except BaseException as msg:
+            final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+    def ChangeStateThemes(self):
+        try:
+            website = Websites.objects.get(domain=self.data['domain'])
+
+            command = 'wp theme status %s --path=/home/%s/public_html' % (self.data['plugin'], self.data['domain'])
+            result = ProcessUtilities.outputExecutioner(command, website.externalApp)
+
+            if result.find('Status: Active') > -1:
+                command = 'wp theme deactivate %s --path=/home/%s/public_html' % (
+                    self.data['plugin'], self.data['domain'])
+                ProcessUtilities.executioner(command, website.externalApp)
+                final_json = json.dumps(
+                    {'status': 1, 'fetchStatus': 1, 'message': "Theme successfully deactivated."})
+                return HttpResponse(final_json)
+            else:
+                command = 'wp theme activate %s --path=/home/%s/public_html' % (
+                self.data['plugin'], self.data['domain'])
+                ProcessUtilities.executioner(command, website.externalApp)
+                final_json = json.dumps(
+                    {'status': 1, 'fetchStatus': 1, 'message': "Theme successfully activated."})
+                return HttpResponse(final_json)
+
+
+        except BaseException as msg:
+            final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+    def DeleteThemes(self):
+        try:
+            website = Websites.objects.get(domain=self.data['domain'])
+
+            if self.data['plugin'] == 'selected':
+                pluginsList = ''
+
+                for plugin in self.data['plugins']:
+                    pluginsList = '%s %s' % (pluginsList, plugin)
+
+                command = 'wp theme delete %s --path=/home/%s/public_html' % (pluginsList, self.data['domain'])
+                ProcessUtilities.popenExecutioner(command, website.externalApp)
+                final_json = json.dumps(
+                    {'status': 1, 'fetchStatus': 1, 'message': "Plugin Theme started in the background."})
+                return HttpResponse(final_json)
+            else:
+                command = 'wp theme delete %s --path=/home/%s/public_html' % (self.data['plugin'], self.data['domain'])
+                ProcessUtilities.popenExecutioner(command, website.externalApp)
+                final_json = json.dumps(
+                    {'status': 1, 'fetchStatus': 1, 'message': "Theme deletion started in the background."})
+                return HttpResponse(final_json)
+
+        except BaseException as msg:
+            final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)

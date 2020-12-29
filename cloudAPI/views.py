@@ -65,6 +65,28 @@ def router(request):
             return cm.SubmitCloudBackupRestore()
         elif controller == 'DeployWordPress':
             return cm.DeployWordPress()
+        elif controller == 'FetchWordPressDetails':
+            return cm.FetchWordPressDetails()
+        elif controller == 'AutoLogin':
+            return cm.AutoLogin()
+        elif controller == 'DeletePlugins':
+            return cm.DeletePlugins()
+        elif controller == 'GetCurrentThemes':
+            return cm.GetCurrentThemes()
+        elif controller == 'UpdateThemes':
+            return cm.UpdateThemes()
+        elif controller == 'ChangeStateThemes':
+            return cm.ChangeStateThemes()
+        elif controller == 'DeleteThemes':
+            return cm.DeleteThemes()
+        elif controller == 'UpdateWPSettings':
+            return cm.UpdateWPSettings()
+        elif controller == 'GetCurrentPlugins':
+            return cm.GetCurrentPlugins()
+        elif controller == 'UpdatePlugins':
+            return cm.UpdatePlugins()
+        elif controller == 'ChangeState':
+            return cm.ChangeState()
         elif controller == 'getCurrentS3Backups':
             return cm.getCurrentS3Backups()
         elif controller == 'deleteS3Backup':
