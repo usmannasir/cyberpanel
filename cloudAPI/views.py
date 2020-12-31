@@ -79,6 +79,10 @@ def router(request):
             return cm.ChangeStateThemes()
         elif controller == 'DeleteThemes':
             return cm.DeleteThemes()
+        elif controller == 'GetServerPublicSSHkey':
+            return cm.GetServerPublicSSHkey()
+        elif controller == 'SubmitPublicKey':
+            return cm.SubmitPublicKey()
         elif controller == 'UpdateWPSettings':
             return cm.UpdateWPSettings()
         elif controller == 'GetCurrentPlugins':
@@ -229,6 +233,10 @@ def router(request):
             return cm.getLogsFromFile(request)
         elif controller == 'serverSSL':
             return cm.serverSSL(request)
+        elif controller == 'CreateStaging':
+            return cm.CreateStaging(request)
+        elif controller == 'startSync':
+            return cm.startSync(request)
         elif controller == 'setupNode':
             return cm.setupManager(request)
         elif controller == 'fetchManagerTokens':
@@ -372,7 +380,6 @@ def router(request):
         cm = CloudManager(None)
         return cm.ajaxPre(0, str(msg))
 
-@csrf_exempt
 def access(request):
     try:
         serverUserName = request.GET.get('serverUserName')
@@ -385,6 +392,10 @@ def access(request):
             return HttpResponse('API Access Disabled.')
 
         if token == admin.token.lstrip('Basic ').rstrip('='):
+            try:
+                del request.session['userID']
+            except:
+                pass
             request.session['userID'] = admin.pk
             from django.shortcuts import redirect
             from baseTemplate.views import renderBase

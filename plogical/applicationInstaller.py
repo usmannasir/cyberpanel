@@ -1255,26 +1255,30 @@ $parameters = array(
 
             self.extraArgs['tempStatusPath'] = currentTemp
 
-            ### Save config in db
-
-            from cloudAPI.models import WPDeployments
-            from websiteFunctions.models import Websites
-            import json
-
-            website = Websites.objects.get(domain = self.extraArgs['domain'])
-            
-            del self.extraArgs['adminPassword']
-            del self.extraArgs['password']
-            del self.extraArgs['tempStatusPath']
-            del self.extraArgs['domain']
-            del self.extraArgs['adminEmail']
-            del self.extraArgs['adminUser']
-            del self.extraArgs['blogTitle']
-
-            wpDeploy = WPDeployments(owner=website, config=json.dumps(self.extraArgs))
-            wpDeploy.save()
 
             logging.statusWriter(self.extraArgs['tempStatusPath'], 'Completed [200].')
+
+            try:
+                ### Save config in db
+
+                from cloudAPI.models import WPDeployments
+                from websiteFunctions.models import Websites
+                import json
+
+                website = Websites.objects.get(domain=self.extraArgs['domain'])
+                del self.extraArgs['adminPassword']
+                del self.extraArgs['password']
+                del self.extraArgs['tempStatusPath']
+                del self.extraArgs['domain']
+                del self.extraArgs['adminEmail']
+                del self.extraArgs['adminUser']
+                del self.extraArgs['blogTitle']
+                del self.extraArgs['appsSet']
+
+                wpDeploy = WPDeployments(owner=website, config=json.dumps(self.extraArgs))
+                wpDeploy.save()
+            except:
+                pass
 
         except BaseException as msg:
             logging.statusWriter(self.extraArgs['tempStatusPath'], '%s [404].' % (str(msg)))

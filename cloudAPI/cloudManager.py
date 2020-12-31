@@ -1659,12 +1659,31 @@ class CloudManager:
             except:
                 databases = '0'
 
+            try:
+                port = str(self.data['port'])
+            except:
+                port = '0'
+
+            try:
+                ip = str(self.data['ip'])
+            except:
+                ip = '0'
+
+            try:
+                destinationDomain = self.data['destinationDomain']
+            except:
+                destinationDomain = ''
+
+            import time
+            BackupPath = '/home/cyberpanel/backups/%s/backup-' % (self.data['domain']) + self.data['domain'] + "-" + time.strftime("%m.%d.%Y_%H-%M-%S")
+
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
-            execPath = execPath + " CloudBackup --backupDomain %s --data %s --emails %s --databases %s --tempStoragePath %s" % (
-                self.data['domain'], data, emails, databases, tempStatusPath)
+            execPath = execPath + " CloudBackup --backupDomain %s --data %s --emails %s --databases %s --tempStoragePath %s " \
+                                  "--path %s --port %s --ip %s --destinationDomain %s" % (
+                self.data['domain'], data, emails, databases, tempStatusPath, BackupPath, port, ip, destinationDomain)
             ProcessUtilities.popenExecutioner(execPath)
 
-            final_dic = {'status': 1, 'tempStatusPath': tempStatusPath}
+            final_dic = {'status': 1, 'tempStatusPath': tempStatusPath, 'path': '%s.tar.gz' % (BackupPath)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
@@ -1774,9 +1793,14 @@ class CloudManager:
             writeToFile.write('Starting..,0')
             writeToFile.close()
 
+            try:
+                sourceDomain = self.data['sourceDomain']
+            except:
+                sourceDomain = 'None'
+
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
-            execPath = execPath + " SubmitCloudBackupRestore --backupDomain %s --backupFile %s --tempStoragePath %s" % (
-                self.data['domain'], self.data['backupFile'], tempStatusPath)
+            execPath = execPath + " SubmitCloudBackupRestore --backupDomain %s --backupFile %s --sourceDomain %s --tempStoragePath %s" % (
+                self.data['domain'], self.data['backupFile'],sourceDomain, tempStatusPath)
             ProcessUtilities.popenExecutioner(execPath)
 
             final_dic = {'status': 1, 'tempStatusPath': tempStatusPath}
@@ -1993,11 +2017,8 @@ class CloudManager:
 
             ## Get title
 
-            from cloudAPI.models import WPDeployments
-            import json
-            wpd = WPDeployments.objects.get(owner=website)
-            config = json.loads(wpd.config)
-            finalDic['title'] = config['title']
+            command = 'wp option get blogname --path=/home/%s/public_html' % (domain)
+            finalDic['title'] = ProcessUtilities.outputExecutioner(command, website.externalApp)
 
             ##
 
@@ -2321,3 +2342,61 @@ class CloudManager:
             final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
+
+    def GetServerPublicSSHkey(self):
+        try:
+
+            path = '/root/.ssh/cyberpanel.pub'
+            command = 'cat %s' % (path)
+            key = ProcessUtilities.outputExecutioner(command)
+
+            final_dic = {'status': 1, 'key': key}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+        except BaseException as msg:
+            final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+    def SubmitPublicKey(self):
+        try:
+
+            fm = FirewallManager()
+            fm.addSSHKey(self.admin.pk, self.data)
+
+            ## Create backup path so that file can be sent here later.
+
+            BackupPath = '/home/cyberpanel/backups/%s' % (self.data['domain'])
+            command = 'mkdir -p %s' % (BackupPath)
+            ProcessUtilities.executioner(command, 'cyberpanel')
+
+            ###
+
+            from WebTerminal.CPWebSocket import SSHServer
+            SSHServer.findSSHPort()
+
+            final_dic = {'status': 1, 'port': SSHServer.DEFAULT_PORT}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+        except BaseException as msg:
+            final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+    def CreateStaging(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            wm = WebsiteManager()
+            return wm.startCloning(self.admin.pk, self.data)
+        except BaseException as msg:
+            return self.ajaxPre(0, str(msg))
+
+    def startSync(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            wm = WebsiteManager()
+            return wm.startSync(self.admin.pk, self.data)
+        except BaseException as msg:
+            return self.ajaxPre(0, str(msg))

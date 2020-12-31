@@ -2712,7 +2712,6 @@ StrictHostKeyChecking no
 
             self.domain = data['masterDomain']
 
-
             if not validators.domain(self.domain):
                 data_ret = {'status': 0, 'createWebSiteStatus': 0, 'error_message': "Invalid domain."}
                 json_data = json.dumps(data_ret)

@@ -711,6 +711,9 @@ class FileManager:
         else:
             groupName = 'nogroup'
 
+        command = 'chown %s:%s /home/%s' % (website.externalApp, website.externalApp, domainName)
+        ProcessUtilities.popenExecutioner(command)
+
         command = 'chown -R %s:%s /home/%s/public_html/*' % (externalApp, externalApp, domainName)
         ProcessUtilities.popenExecutioner(command)
 
