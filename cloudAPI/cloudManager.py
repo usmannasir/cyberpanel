@@ -1672,7 +1672,7 @@ class CloudManager:
             try:
                 destinationDomain = self.data['destinationDomain']
             except:
-                destinationDomain = ''
+                destinationDomain = 'None'
 
             import time
             BackupPath = '/home/cyberpanel/backups/%s/backup-' % (self.data['domain']) + self.data['domain'] + "-" + time.strftime("%m.%d.%Y_%H-%M-%S")
@@ -2400,3 +2400,92 @@ class CloudManager:
             return wm.startSync(self.admin.pk, self.data)
         except BaseException as msg:
             return self.ajaxPre(0, str(msg))
+
+    def SaveAutoUpdateSettings(self):
+        try:
+            website = Websites.objects.get(domain=self.data['domainName'])
+            domainName = self.data['domainName']
+            from cloudAPI.models import WPDeployments
+            wpd = WPDeployments.objects.get(owner=website)
+            config = json.loads(wpd.config)
+            config['updates'] = self.data['wpCore']
+            config['pluginUpdates'] = self.data['plugins']
+            config['themeUpdates'] = self.data['themes']
+            wpd.config = json.dumps(config)
+            wpd.save()
+
+            if self.data['wpCore'] == 'Disabled':
+                command = "wp config set WP_AUTO_UPDATE_CORE false --raw --path=/home/%s/public_html" % (domainName)
+                ProcessUtilities.executioner(command, website.externalApp)
+            elif self.data['wpCore'] == 'Minor and Security Updates':
+                command = "wp config set WP_AUTO_UPDATE_CORE minor --allow-root --path=/home/%s/public_html" % (domainName)
+                ProcessUtilities.executioner(command, website.externalApp)
+            else:
+                command = "wp config set WP_AUTO_UPDATE_CORE true --raw --allow-root --path=/home/%s/public_html" % (domainName)
+                ProcessUtilities.executioner(command, website.externalApp)
+
+            final_json = json.dumps(
+                    {'status': 1, 'message': "Autoupdates configured."})
+            return HttpResponse(final_json)
+        except BaseException as msg:
+            final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+    def fetchWPSettings(self):
+        try:
+
+            cliVersion = ProcessUtilities.outputExecutioner('wp --version --allow-root')
+
+            if cliVersion.find('not found') > -1:
+                cliVersion = 'WP CLI Not installed.'
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                localCronPath = "/var/spool/cron/root"
+            else:
+                localCronPath = "/var/spool/cron/crontabs/root"
+
+            cronData = ProcessUtilities.outputExecutioner('cat %s' % (localCronPath)).split('\n')
+
+            finalCron = ''
+            for cronLine in cronData:
+                if cronLine.find('WPAutoUpdates.py') > -1:
+                    finalCron = cronLine
+
+
+            if finalCron.find('WPAutoUpdates.py') == -1:
+                finalCron = 'Not Set'
+
+            final_json = json.dumps(
+                    {'status': 1, 'cliVersion': cliVersion, 'finalCron': finalCron})
+            return HttpResponse(final_json)
+        except BaseException as msg:
+            final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+    def updateWPCLI(self):
+        try:
+
+            command = 'wp cli update'
+            ProcessUtilities.executioner(command)
+            final_json = json.dumps({'status': 1})
+            return HttpResponse(final_json)
+
+        except BaseException as msg:
+            final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+    def saveWPSettings(self):
+        try:
+
+            command = 'wp cli update'
+            ProcessUtilities.executioner(command)
+            final_json = json.dumps({'status': 1})
+            return HttpResponse(final_json)
+
+        except BaseException as msg:
+            final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)

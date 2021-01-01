@@ -610,6 +610,18 @@ $parameters = array(
             command = "wp plugin activate litespeed-cache --allow-root --path=" + finalPath
             ProcessUtilities.executioner(command, externalApp)
 
+            if self.extraArgs['updates']:
+
+                if self.extraArgs['updates'] == 'Disabled':
+                    command = "wp config set WP_AUTO_UPDATE_CORE false --raw --allow-root --path=" + finalPath
+                    ProcessUtilities.executioner(command, externalApp)
+                elif self.extraArgs['updates'] == 'Minor and Security Updates':
+                    command = "wp config set WP_AUTO_UPDATE_CORE minor --allow-root --path=" + finalPath
+                    ProcessUtilities.executioner(command, externalApp)
+                else:
+                    command = "wp config set WP_AUTO_UPDATE_CORE true --raw --allow-root --path=" + finalPath
+                    ProcessUtilities.executioner(command, externalApp)
+
 
             ##
 
@@ -1279,6 +1291,22 @@ $parameters = array(
                 wpDeploy.save()
             except:
                 pass
+
+            ## Set up cron if missing
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                localCronPath = "/var/spool/cron/root"
+            else:
+                localCronPath = "/var/spool/cron/crontabs/root"
+
+            cronData = open(localCronPath, 'r').read()
+
+            if cronData.find('WPAutoUpdates.py') == -1:
+                writeToFile = open(localCronPath, 'a')
+                writeToFile.write('0 12 * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/WPAutoUpdates.py\n')
+                writeToFile.close()
+
+
 
         except BaseException as msg:
             logging.statusWriter(self.extraArgs['tempStatusPath'], '%s [404].' % (str(msg)))

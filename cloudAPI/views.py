@@ -14,9 +14,13 @@ def router(request):
         controller = data['controller']
 
         serverUserName = data['serverUserName']
+
         admin = Administrator.objects.get(userName=serverUserName)
 
         cm = CloudManager(data, admin)
+
+        if serverUserName != 'admin':
+            return cm.ajaxPre(0, 'Only administrator can access API.')
 
         if admin.api == 0:
             return cm.ajaxPre(0, 'API Access Disabled.')
@@ -91,6 +95,8 @@ def router(request):
             return cm.UpdatePlugins()
         elif controller == 'ChangeState':
             return cm.ChangeState()
+        elif controller == 'saveWPSettings':
+            return cm.saveWPSettings()
         elif controller == 'getCurrentS3Backups':
             return cm.getCurrentS3Backups()
         elif controller == 'deleteS3Backup':
@@ -237,6 +243,12 @@ def router(request):
             return cm.CreateStaging(request)
         elif controller == 'startSync':
             return cm.startSync(request)
+        elif controller == 'SaveAutoUpdateSettings':
+            return cm.SaveAutoUpdateSettings()
+        elif controller == 'fetchWPSettings':
+            return cm.fetchWPSettings()
+        elif controller == 'updateWPCLI':
+            return cm.updateWPCLI()
         elif controller == 'setupNode':
             return cm.setupManager(request)
         elif controller == 'fetchManagerTokens':
