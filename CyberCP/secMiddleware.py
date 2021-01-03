@@ -17,7 +17,9 @@ class secMiddleware:
         try:
             uID = request.session['userID']
             admin = Administrator.objects.get(pk=uID)
-            ipAddr = request.META.get('REMOTE_ADDR')
+            ipAddr = request.META.get('HTTP_CF_CONNECTING_IP')
+            if ip is None:
+              ipAddr = request.META.get('REMOTE_ADDR')
 
             if ipAddr.find('.') > -1:
                 if request.session['ipAddr'] == ipAddr or admin.securityLevel == secMiddleware.LOW:
