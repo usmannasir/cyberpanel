@@ -574,7 +574,10 @@ $parameters = array(
             except:
                 command = "wp core download --allow-root --path=" + finalPath
 
-            ProcessUtilities.executioner(command, externalApp)
+            result = ProcessUtilities.outputExecutioner(command, externalApp)
+
+            if result.find('Success:') == -1:
+                raise BaseException(result)
 
             ##
 
@@ -583,7 +586,10 @@ $parameters = array(
             statusFile.close()
 
             command = "wp core config --dbname=" + dbName + " --dbuser=" + dbUser + " --dbpass=" + dbPassword + " --dbhost=%s --dbprefix=wp_ --allow-root --path=" % (ApplicationInstaller.LOCALHOST) + finalPath
-            ProcessUtilities.executioner(command, externalApp)
+            result = ProcessUtilities.outputExecutioner(command, externalApp)
+
+            if result.find('Success:') == -1:
+                raise BaseException(result)
 
             if home == '0':
                 path = self.extraArgs['path']
@@ -592,7 +598,10 @@ $parameters = array(
                 finalURL = domainName
 
             command = 'wp core install --url="http://' + finalURL + '" --title="' + blogTitle + '" --admin_user="' + adminUser + '" --admin_password="' + adminPassword + '" --admin_email="' + adminEmail + '" --allow-root --path=' + finalPath
-            ProcessUtilities.executioner(command, externalApp)
+            result = ProcessUtilities.outputExecutioner(command, externalApp)
+
+            if result.find('Success:') == -1:
+                raise BaseException(result)
 
             ##
 
@@ -601,26 +610,43 @@ $parameters = array(
             statusFile.close()
 
             command = "wp plugin install litespeed-cache --allow-root --path=" + finalPath
-            ProcessUtilities.executioner(command, externalApp)
+            result = ProcessUtilities.outputExecutioner(command, externalApp)
+
+            if result.find('Success:') == -1:
+                raise BaseException(result)
 
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines('Activating LSCache Plugin,90')
             statusFile.close()
 
             command = "wp plugin activate litespeed-cache --allow-root --path=" + finalPath
-            ProcessUtilities.executioner(command, externalApp)
+            result = ProcessUtilities.outputExecutioner(command, externalApp)
 
-            if self.extraArgs['updates']:
+            if result.find('Success:') == -1:
+                raise BaseException(result)
 
-                if self.extraArgs['updates'] == 'Disabled':
-                    command = "wp config set WP_AUTO_UPDATE_CORE false --raw --allow-root --path=" + finalPath
-                    ProcessUtilities.executioner(command, externalApp)
-                elif self.extraArgs['updates'] == 'Minor and Security Updates':
-                    command = "wp config set WP_AUTO_UPDATE_CORE minor --allow-root --path=" + finalPath
-                    ProcessUtilities.executioner(command, externalApp)
-                else:
-                    command = "wp config set WP_AUTO_UPDATE_CORE true --raw --allow-root --path=" + finalPath
-                    ProcessUtilities.executioner(command, externalApp)
+            try:
+                if self.extraArgs['updates']:
+                    if self.extraArgs['updates'] == 'Disabled':
+                        command = "wp config set WP_AUTO_UPDATE_CORE false --raw --allow-root --path=" + finalPath
+                        result = ProcessUtilities.outputExecutioner(command, externalApp)
+
+                        if result.find('Success:') == -1:
+                            raise BaseException(result)
+                    elif self.extraArgs['updates'] == 'Minor and Security Updates':
+                        command = "wp config set WP_AUTO_UPDATE_CORE minor --allow-root --path=" + finalPath
+                        result = ProcessUtilities.outputExecutioner(command, externalApp)
+
+                        if result.find('Success:') == -1:
+                            raise BaseException(result)
+                    else:
+                        command = "wp config set WP_AUTO_UPDATE_CORE true --raw --allow-root --path=" + finalPath
+                        result = ProcessUtilities.outputExecutioner(command, externalApp)
+
+                        if result.find('Success:') == -1:
+                            raise BaseException(result)
+            except:
+                pass
 
 
             ##
@@ -1227,23 +1253,25 @@ $parameters = array(
 
     def DeployWordPress(self):
         try:
-            logging.statusWriter(self.extraArgs['tempStatusPath'], 'Creating this application..,10')
 
-            ## Create site
+            if self.extraArgs['createSite']:
+                logging.statusWriter(self.extraArgs['tempStatusPath'], 'Creating this application..,10')
 
-            import re
-            from plogical.virtualHostUtilities import virtualHostUtilities
-            tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
-            externalApp = "".join(re.findall("[a-zA-Z]+", self.extraArgs['domain']))[:5] + str(randint(1000, 9999))
+                ## Create site
 
-            virtualHostUtilities.createVirtualHost(self.extraArgs['domain'], self.extraArgs['email'], 'PHP 7.4',
-                                                   externalApp, 0, 1, 0,
-                                                   'admin', 'Default', 0, tempStatusPath,
-                                                   0)
-            result = open(tempStatusPath, 'r').read()
-            if result.find('[404]') > -1:
-                logging.statusWriter(self.extraArgs['tempStatusPath'], 'Failed to create application. Error: %s [404]' % (result))
-                return 0
+                import re
+                from plogical.virtualHostUtilities import virtualHostUtilities
+                tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
+                externalApp = "".join(re.findall("[a-zA-Z]+", self.extraArgs['domain']))[:5] + str(randint(1000, 9999))
+
+                virtualHostUtilities.createVirtualHost(self.extraArgs['domain'], self.extraArgs['email'], 'PHP 7.4',
+                                                       externalApp, 1, 1, 0,
+                                                       'admin', 'Default', 0, tempStatusPath,
+                                                       0)
+                result = open(tempStatusPath, 'r').read()
+                if result.find('[404]') > -1:
+                    logging.statusWriter(self.extraArgs['tempStatusPath'], 'Failed to create application. Error: %s [404]' % (result))
+                    return 0
 
             ## Install WordPress
 
@@ -1261,9 +1289,8 @@ $parameters = array(
 
             result = open(self.extraArgs['tempStatusPath'], 'r').read()
             if result.find('[404]') > -1:
-                logging.statusWriter(self.extraArgs['tempStatusPath'],
-                                     'Failed to install WordPress. Error: %s [404]' % (result))
-                return 0
+                self.extraArgs['tempStatusPath'] = currentTemp
+                raise BaseException('Failed to install WordPress. Error: %s [404]' % (result))
 
             self.extraArgs['tempStatusPath'] = currentTemp
 
@@ -1306,9 +1333,11 @@ $parameters = array(
                 writeToFile.write('0 12 * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/WPAutoUpdates.py\n')
                 writeToFile.close()
 
-
-
         except BaseException as msg:
+            self.extraArgs['websiteName'] = self.extraArgs['domain']
+            from websiteFunctions.website import WebsiteManager
+            wm = WebsiteManager()
+            wm.submitWebsiteDeletion(1, self.extraArgs)
             logging.statusWriter(self.extraArgs['tempStatusPath'], '%s [404].' % (str(msg)))
 
 def main():
@@ -1326,6 +1355,7 @@ def main():
     parser.add_argument('--userName', help='')
     parser.add_argument('--version', help='')
     parser.add_argument('--path', help='')
+    parser.add_argument('--createSite', help='')
 
 
     args = parser.parse_args()
@@ -1344,6 +1374,7 @@ def main():
         extraArgs['updates'] = args.updates
         extraArgs['userName'] = args.userName
         extraArgs['version'] = args.version
+        extraArgs['createSite'] = int(args.createSite)
 
         if args.path != None:
             extraArgs['path'] = args.path

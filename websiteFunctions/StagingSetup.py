@@ -50,7 +50,7 @@ class StagingSetup(multi.Thread):
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
 
             execPath = execPath + " createDomain --masterDomain " + masterDomain + " --virtualHostName " + domain + \
-                       " --phpVersion '" + phpSelection + "' --ssl 0 --dkimCheck 0 --openBasedir 0 --path " + path + ' --websiteOwner ' \
+                       " --phpVersion '" + phpSelection + "' --ssl 1 --dkimCheck 0 --openBasedir 0 --path " + path + ' --websiteOwner ' \
                        + admin.userName + ' --tempStatusPath  %s' % (tempStatusPath + '1') + " --apache 0"
 
             ProcessUtilities.executioner(execPath)

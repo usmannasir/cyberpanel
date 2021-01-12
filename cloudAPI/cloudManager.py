@@ -1943,12 +1943,12 @@ class CloudManager:
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/applicationInstaller.py"
             execPath = execPath + " DeployWordPress --tempStatusPath %s --appsSet '%s' --domain '%s' --email '%s' --password '%s' " \
                                   "--pluginUpdates '%s' --themeUpdates '%s' --title '%s' --updates '%s' --userName '%s' " \
-                                  "--version '%s'" % (
+                                  "--version '%s' --createSite %s" % (
                            tempStatusPath, self.data['appsSet'], self.data['domain'], self.data['email'],
                            self.data['password'],
                            self.data['pluginUpdates'], self.data['themeUpdates'], self.data['title'],
                            self.data['updates'],
-                           self.data['userName'], self.data['version'])
+                           self.data['userName'], self.data['version'], str(self.data['createSite']))
 
             try:
                 execPath = '%s --path %s' % (execPath, self.data['path'])
@@ -2484,6 +2484,27 @@ class CloudManager:
             ProcessUtilities.executioner(command)
             final_json = json.dumps({'status': 1})
             return HttpResponse(final_json)
+
+        except BaseException as msg:
+            final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+    def WPScan(self):
+        try:
+
+            path = '/home/%s/public_html' % (self.data['domainName'])
+
+            command = 'wp core version --allow-root --path=%s' % (path)
+            result = ProcessUtilities.outputExecutioner(command)
+
+            if result.find('Error:') > -1:
+                final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': 'This does not seem to be a WordPress installation'}
+                final_json = json.dumps(final_dic)
+                return HttpResponse(final_json)
+            else:
+                final_json = json.dumps({'status': 1})
+                return HttpResponse(final_json)
 
         except BaseException as msg:
             final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}

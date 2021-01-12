@@ -97,6 +97,8 @@ def router(request):
             return cm.ChangeState()
         elif controller == 'saveWPSettings':
             return cm.saveWPSettings()
+        elif controller == 'WPScan':
+            return cm.WPScan()
         elif controller == 'getCurrentS3Backups':
             return cm.getCurrentS3Backups()
         elif controller == 'deleteS3Backup':

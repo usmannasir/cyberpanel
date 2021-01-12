@@ -1646,6 +1646,14 @@ class backupUtilities:
                     command = "wp search-replace '%s' '%s' --path=%s --allow-root" % (self.extraArgs['sourceDomain'], self.extraArgs['domain'], path)
                     ProcessUtilities.outputExecutioner(command)
 
+                    command = "wp search-replace 'www.%s' '%s' --path=%s --allow-root" % (
+                    self.extraArgs['sourceDomain'], self.extraArgs['domain'], path)
+                    ProcessUtilities.outputExecutioner(command)
+
+                    command = "wp search-replace 'www.%s' '%s' --path=%s --allow-root" % (
+                        self.extraArgs['domain'], self.extraArgs['domain'], path)
+                    ProcessUtilities.outputExecutioner(command)
+
 
             command = 'rm -rf %s' % (self.extractedPath)
             ProcessUtilities.executioner(command)

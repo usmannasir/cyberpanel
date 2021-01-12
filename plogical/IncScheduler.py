@@ -683,6 +683,10 @@ Automatic backup failed for %s on %s.
                 extraArgs['data'] = int(PlanConfig['data'])
                 extraArgs['emails'] = int(PlanConfig['emails'])
                 extraArgs['databases'] = int(PlanConfig['databases'])
+                extraArgs['port'] = '0'
+                extraArgs['ip'] = '0'
+                extraArgs['destinationDomain'] = 'None'
+                extraArgs['path'] = '/home/cyberpanel/backups/%s/backup-' % (items.domain) + items.domain + "-" + time.strftime("%m.%d.%Y_%H-%M-%S")
 
                 bu = backupUtilities(extraArgs)
                 result, fileName = bu.CloudBackups()
