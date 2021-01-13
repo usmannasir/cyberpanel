@@ -385,13 +385,10 @@ $parameters = array(
 
     def installWPCLI(self):
         try:
-            command = 'wget https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar'
+            command = 'wget -O /usr/bin/wp https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar'
             ProcessUtilities.executioner(command)
 
-            command = 'chmod +x wp-cli.phar'
-            ProcessUtilities.executioner(command)
-
-            command = 'mv wp-cli.phar /usr/bin/wp'
+            command = 'chmod +x /usr/bin/wp'
             ProcessUtilities.executioner(command)
 
         except BaseException as msg:
