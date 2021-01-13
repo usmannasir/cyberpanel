@@ -1525,7 +1525,7 @@ $parameters = array(
       
 
             # Secure WHMCS configuration.php file : https://docs.whmcs.com/Further_Security_Steps#Secure_the_configuration.php_File
-            command = "chmod 400 %s/configuration.php" % (finalPath
+            command = "chmod 400 %s/configuration.php" % (finalPath)
             ProcessUtilities.executioner(command)
 
             ##
