@@ -385,13 +385,10 @@ $parameters = array(
 
     def installWPCLI(self):
         try:
-            command = 'wget https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar'
+            command = 'wget -O /usr/bin/wp https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar'
             ProcessUtilities.executioner(command)
 
-            command = 'chmod +x wp-cli.phar'
-            ProcessUtilities.executioner(command)
-
-            command = 'mv wp-cli.phar /usr/bin/wp'
+            command = 'chmod +x /usr/bin/wp'
             ProcessUtilities.executioner(command)
 
         except BaseException as msg:
@@ -1339,6 +1336,239 @@ $parameters = array(
             wm = WebsiteManager()
             wm.submitWebsiteDeletion(1, self.extraArgs)
             logging.statusWriter(self.extraArgs['tempStatusPath'], '%s [404].' % (str(msg)))
+	
+	
+    def installWhmcs(self):
+        try:
+
+            admin = self.extraArgs['admin']
+            domainName = self.extraArgs['domainName']
+            home = self.extraArgs['home']
+            firstName = self.extraArgs['firstName']
+            lastName = self.extraArgs['lastName']
+            email = self.extraArgs['email']
+            username = self.extraArgs['username']
+            password = self.extraArgs['password']
+            whmcs_installer = self.extraArgs['whmcsinstallerpath']
+            whmcs_licensekey = self.extraArgs['whmcslicensekey']
+            tempStatusPath = self.extraArgs['tempStatusPath']
+            self.tempStatusPath = tempStatusPath
+
+            FNULL = open(os.devnull, 'w')
+
+            ## Open Status File
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines('Setting up paths,0')
+            statusFile.close()
+
+            finalPath = ''
+            self.permPath = ''
+
+            try:
+                website = ChildDomains.objects.get(domain=domainName)
+                externalApp = website.master.externalApp
+                self.masterDomain = website.master.domain
+
+                if home == '0':
+                    path = self.extraArgs['path']
+                    finalPath = website.path.rstrip('/') + "/" + path + "/"
+                else:
+                    finalPath = website.path + "/"
+
+                if website.master.package.dataBases > website.master.databases_set.all().count():
+                    pass
+                else:
+                    raise BaseException("Maximum database limit reached for this website.")
+
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines('Setting up Database,20')
+                statusFile.close()
+
+                dbName, dbUser, dbPassword = self.dbCreation(tempStatusPath, website.master)
+                self.permPath = website.path
+
+            except:
+                website = Websites.objects.get(domain=domainName)
+                externalApp = website.externalApp
+                self.masterDomain = website.domain
+
+                if home == '0':
+                    path = self.extraArgs['path']
+                    finalPath = "/home/" + domainName + "/public_html/" + path + "/"
+                else:
+                    finalPath = "/home/" + domainName + "/public_html/"
+
+                if website.package.dataBases > website.databases_set.all().count():
+                    pass
+                else:
+                    raise BaseException("Maximum database limit reached for this website.")
+
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines('Setting up Database,20')
+                statusFile.close()
+
+                dbName, dbUser, dbPassword = self.dbCreation(tempStatusPath, website)
+                self.permPath = '/home/%s/public_html' % (website.domain)
+
+            ## Security Check
+
+            command = 'chmod 755 %s' % (self.permPath)
+            ProcessUtilities.executioner(command)
+
+            if finalPath.find("..") > -1:
+                raise BaseException('Specified path must be inside virtual host home.')
+
+            if not os.path.exists(finalPath):
+                command = 'mkdir -p ' + finalPath
+                ProcessUtilities.executioner(command, externalApp)
+
+            ## checking for directories/files
+
+            if self.dataLossCheck(finalPath, tempStatusPath) == 0:
+                raise BaseException('Directory is not empty.')
+
+            ####
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines('Extracting WHMCS Installer zip..,30')
+            statusFile.close()
+            command = "unzip -qq %s -d %s" % (whmcs_installer, finalPath)
+            ProcessUtilities.executioner(command, externalApp)          
+            
+            ##
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines('Configuring the installation,40')
+            statusFile.close()
+
+            if home == '0':
+                path = self.extraArgs['path']
+                # finalURL = domainName + '/' + path
+                finalURL = domainName
+            else:
+                finalURL = domainName
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines('Installing and configuring WHMCS..,60')
+            statusFile.close()
+            
+            command = "chown -R " + externalApp + ":" + groupName + " " + homeDir
+            ProcessUtilities.executioner(command, externalApp)
+
+            # Walk through whmcs webinstaller via curl with all except errors hidden https://stackoverflow.com/a/49502232
+            # Accept EULA and generate configuration.php
+            command = "curl %s/install/install.php?step=2 --insecure --silent --output /dev/null --show-error --fail" % (finalURL)
+            ProcessUtilities.executioner(command, externalApp)
+
+            command = "curl %s/install/install.php?step=2 --insecure --silent --output /dev/null --show-error --fail" % (finalURL)
+            ProcessUtilities.executioner(command, externalApp)
+
+            command = "mv %s/configuration.php.new %s/configuration.php" % (finalPath, finalPath)
+            ProcessUtilities.executioner(command, externalApp)
+          
+            # Post database and license information to webinstaller form
+            command = """
+            curl %s/install/install.php?step=4" \
+            -H 'Content-Type: application/x-www-form-urlencoded' \
+            --data "licenseKey=%s&databaseHost=localhost&databasePort=&databaseUsername=%s&databasePassword=%s&databaseName=%s" \
+            --compressed \
+            --insecure \
+            --silent \
+            --output /dev/null \
+            --show-error \
+            --fail
+            """ % (whmcs_licensekey, dbUser, dbPassword, dbName)
+
+            # Post admin user and password information to webinstaller form
+            command = """
+            curl %s/install/install.php?step=5" \
+            -H 'Content-Type: application/x-www-form-urlencoded' \
+            --data "firstName=%s&lastName=%s&email=%s&username=%s&password=%s&confirmPassword=%s" \
+            --compressed \
+            --insecure \
+            --silent \
+            --output /dev/null \
+            --show-error \
+            --fail
+            """ % (firstName, lastName, email, username, password, password)
+
+            ##
+
+            command = "rm -rf " + finalPath + "install"
+            ProcessUtilities.executioner(command, externalApp)
+            
+            
+            ### Update whmcs urls to siteurl
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines('Update whmcs urls to siteurl..,70')
+            statusFile.close()
+
+            try:
+
+                import MySQLdb.cursors as cursors
+                import MySQLdb as mysql
+
+                conn = mysql.connect(host='localhost', user=dbUser, passwd=dbPassword, port=3306,
+                                     cursorclass=cursors.SSCursor)
+                cursor = conn.cursor()
+
+                cursor.execute("use %s;UPDATE tblconfiguration SET value='%s' WHERE setting='SystemURL';" % (dbName, finalURL))
+                cursor.execute("use %s;UPDATE tblconfiguration SET value='%s' WHERE setting='Domain';" % (dbName, finalURL))
+                cursor.execute("use %s;UPDATE tblconfiguration SET value='%s' WHERE setting='SystemSSLURL';" % (dbName, finalURL))
+
+                conn.close()
+            except BaseException as msg:
+                logging.writeToFile(str(msg))
+
+      
+
+            # Secure WHMCS configuration.php file : https://docs.whmcs.com/Further_Security_Steps#Secure_the_configuration.php_File
+            command = "chmod 400 %s/configuration.php" % (finalPath)
+            ProcessUtilities.executioner(command)
+
+            ##
+
+            from filemanager.filemanager import FileManager
+
+            fm = FileManager(None, None)
+            fm.fixPermissions(self.masterDomain)
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines("Successfully Installed. [200]")
+            statusFile.close()
+            return 0
+
+
+        except BaseException as msg:
+            # remove the downloaded files
+
+            homeDir = "/home/" + domainName + "/public_html"
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                groupName = 'nobody'
+            else:
+                groupName = 'nogroup'
+
+            if not os.path.exists(homeDir):
+                command = "chown -R " + externalApp + ":" + groupName + " " + homeDir
+                ProcessUtilities.executioner(command, externalApp)
+
+            try:
+                mysqlUtilities.deleteDatabase(dbName, dbUser)
+                db = Databases.objects.get(dbName=dbName)
+                db.delete()
+            except:
+                pass
+
+            command = 'chmod 750 %s' % (self.permPath)
+            ProcessUtilities.executioner(command)
+
+            statusFile = open(self.tempStatusPath, 'w')
+            statusFile.writelines(str(msg) + " [404]")
+            statusFile.close()
+            return 0
 
 def main():
     parser = argparse.ArgumentParser(description='CyberPanel Application Installer')
