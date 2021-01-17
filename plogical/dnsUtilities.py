@@ -637,8 +637,12 @@ class DNS:
                     record.save()
 
                     if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
-                        command = 'sudo systemctl restart pdns'
-                        ProcessUtilities.executioner(command)
+                        command = 'ls -la /etc/systemd/system/multi-user.target.wants/pdns.service'
+                        result = ProcessUtilities.outputExecutioner(command)
+
+                        if result.find('No such file') == -1:
+                            command = 'sudo systemctl restart pdns'
+                            ProcessUtilities.executioner(command)
 
                 return
 
@@ -656,8 +660,12 @@ class DNS:
                     record.save()
 
                     if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
-                        command = 'sudo systemctl restart pdns'
-                        ProcessUtilities.executioner(command)
+                        command = 'ls -la /etc/systemd/system/multi-user.target.wants/pdns.service'
+                        result = ProcessUtilities.outputExecutioner(command)
+
+                        if result.find('No such file') == -1:
+                            command = 'sudo systemctl restart pdns'
+                            ProcessUtilities.executioner(command)
                 return
 
             if type == 'MX':
@@ -673,8 +681,12 @@ class DNS:
                 record.save()
 
                 if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
-                    command = 'sudo systemctl restart pdns'
-                    ProcessUtilities.executioner(command)
+                    command = 'ls -la /etc/systemd/system/multi-user.target.wants/pdns.service'
+                    result = ProcessUtilities.outputExecutioner(command)
+
+                    if result.find('No such file') == -1:
+                        command = 'sudo systemctl restart pdns'
+                        ProcessUtilities.executioner(command)
                 return
 
             if Records.objects.filter(name=name, type=type).count() == 0:
@@ -689,8 +701,13 @@ class DNS:
                                  auth=1)
                 record.save()
                 if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
-                    command = 'sudo systemctl restart pdns'
-                    ProcessUtilities.executioner(command)
+
+                    command = 'ls -la /etc/systemd/system/multi-user.target.wants/pdns.service'
+                    result = ProcessUtilities.outputExecutioner(command)
+
+                    if result.find('No such file') == -1:
+                        command = 'sudo systemctl restart pdns'
+                        ProcessUtilities.executioner(command)
 
             ## Add Record to CF if SYNC Enabled
 

@@ -335,7 +335,6 @@ class IncScheduler():
                                           message='Backup for %s successfully sent to Google Drive.' % (website.domain)).save()
 
                             os.remove(completeFileToSend)
-
                         except BaseException as msg:
                             GDriveJobLogs(owner=items, status=backupSchedule.ERROR,
                                           message='[Site] Site backup failed, Error message: %s.' % (str(msg))).save()
