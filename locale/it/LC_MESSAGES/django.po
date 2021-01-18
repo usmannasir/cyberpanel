@@ -30,13 +30,13 @@ msgstr ""
 #, fuzzy
 #| msgid "Create Package - CyberPanel"
 msgid "Create Cloud Linux Package - CyberPanel"
-msgstr "Crea pacchetto - CyberPanel"
+msgstr "Crea pacchetto Cloud Linux - CyberPanel"
 
 #: CLManager/templates/CLManager/createPackage.html:9
 #, fuzzy
 #| msgid "Create Package"
 msgid "Create CloudLinux Package."
-msgstr "Crea Pacchetto"
+msgstr "Crea pacchetto CloudLinux"
 
 #: CLManager/templates/CLManager/createPackage.html:10
 msgid ""
@@ -44,6 +44,9 @@ msgid ""
 "During website creation associated CloudLinux package will be assigned to "
 "website user."
 msgstr ""
+"Ogni pacchetto CloudLinux ha un pacchetto CyberPanel associato (proprietario). "
+"Durante la creazione del sito web il pacchetto CloudLinux associato sarà assegnato all'"
+"utente del sito web".
 
 #: CLManager/templates/CLManager/createPackage.html:15
 #: CLManager/templates/CLManager/createPackage.html:130
@@ -74,65 +77,65 @@ msgstr "Nome Pacchetto"
 #: CLManager/templates/CLManager/createPackage.html:47
 #: CLManager/templates/CLManager/listPackages.html:87
 msgid "SPEED"
-msgstr ""
+msgstr "VELOCITÀ"
 
 #: CLManager/templates/CLManager/createPackage.html:56
 #: CLManager/templates/CLManager/listPackages.html:98
 msgid "VMEM"
-msgstr ""
+msgstr "VMEM"
 
 #: CLManager/templates/CLManager/createPackage.html:64
 #: CLManager/templates/CLManager/listPackages.html:109
 msgid "PMEM"
-msgstr ""
+msgstr "PMEM"
 
 #: CLManager/templates/CLManager/createPackage.html:73
 #: CLManager/templates/CLManager/listPackages.html:120
 msgid "IO"
-msgstr ""
+msgstr "IO"
 
 #: CLManager/templates/CLManager/createPackage.html:81
 #: CLManager/templates/CLManager/listPackages.html:131
 #: containerization/templates/containerization/websiteContainerLimit.html:52
 #: containerization/templates/containerization/websiteContainerLimit.html:99
 msgid "IOPS"
-msgstr ""
+msgstr "IOPS"
 
 #: CLManager/templates/CLManager/createPackage.html:89
 #: CLManager/templates/CLManager/listPackages.html:142
 msgid "EP"
-msgstr ""
+msgstr "EP"
 
 #: CLManager/templates/CLManager/createPackage.html:97
 #: CLManager/templates/CLManager/listPackages.html:153
 msgid "NPROC"
-msgstr ""
+msgstr "NPROC"
 
 #: CLManager/templates/CLManager/createPackage.html:105
 #: CLManager/templates/CLManager/listPackages.html:164
 msgid "INODES soft"
-msgstr ""
+msgstr "INODES soft"
 
 #: CLManager/templates/CLManager/createPackage.html:113
 #: CLManager/templates/CLManager/listPackages.html:175
 msgid "INODES hard"
-msgstr ""
+msgstr "INODES hard"
 
 #: CLManager/templates/CLManager/listPackages.html:3
 #, fuzzy
 #| msgid "Modify Package - CyberPanel"
 msgid "Manage CloudLinux Packages - CyberPanel"
-msgstr "Modifica Pacchetto - CyberPanel"
+msgstr "Gestisci pacchetto CloudLinux - CyberPanel"
 
 #: CLManager/templates/CLManager/listPackages.html:14
 #, fuzzy
 #| msgid "Modify Package"
 msgid "Manage CloudLinux Packages"
-msgstr "Modifica Pacchetto"
+msgstr "Gestisci pacchetto CloudLinux"
 
 #: CLManager/templates/CLManager/listPackages.html:15
 msgid "Manage/Delete CloudLinux Packages."
-msgstr ""
+msgstr "Gestisci/Elimina pacchetti Cloudlinux"
 
 #: CLManager/templates/CLManager/listPackages.html:76
 #: dns/templates/dns/addDeleteDNSRecords.html:74
@@ -173,7 +176,7 @@ msgstr "Non è possibile elencare siti Web. Messaggio di errore:"
 #, fuzzy
 #| msgid "Manage SSL - CyberPanel"
 msgid "CageFS - CyberPanel"
-msgstr "Gestisci SSL - CyberPanel"
+msgstr "CageFS - CyberPanel"
 
 #: CLManager/templates/CLManager/listWebsites.html:14
 #: CLManager/templates/CLManager/monitorUsage.html:14
@@ -183,7 +186,7 @@ msgstr "Gestisci SSL - CyberPanel"
 #: websiteFunctions/templates/websiteFunctions/index.html:55
 #: websiteFunctions/templates/websiteFunctions/listWebsites.html:19
 msgid "List Websites"
-msgstr "Lista Siti Web"
+msgstr "Lista siti web"
 
 #: CLManager/templates/CLManager/listWebsites.html:15
 msgid "Enable/Disable and view CageFS status for websites."
