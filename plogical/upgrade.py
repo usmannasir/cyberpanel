@@ -636,6 +636,11 @@ imap_folder_list_limit = 0
                 pass
 
             try:
+                cursor.execute('ALTER TABLE websiteFunctions_websites ADD config longtext')
+            except:
+                pass
+
+            try:
                 cursor.execute("ALTER TABLE websiteFunctions_websites MODIFY externalApp varchar(30)")
             except:
                 pass
