@@ -546,10 +546,16 @@ class FileManager:
             if self.data['fileName'].find(self.data['home']) == -1 or self.data['fileName'].find('..') > -1:
                 return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
+            command = 'stat -c "%%a" %s' % (self.returnPathEnclosed(self.data['fileName']))
+            currentMode = ProcessUtilities.outputExecutioner(command).strip('\n')
+
             command = 'mv ' + tempPath + ' ' + self.returnPathEnclosed(self.data['fileName'])
             ProcessUtilities.executioner(command)
 
             command = 'chown %s:%s %s' % (website.externalApp, website.externalApp, self.data['fileName'])
+            ProcessUtilities.executioner(command)
+
+            command = 'chmod %s %s' % (currentMode, self.returnPathEnclosed(self.data['fileName']))
             ProcessUtilities.executioner(command)
 
             self.changeOwner(self.data['fileName'])
