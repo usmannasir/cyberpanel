@@ -1035,11 +1035,12 @@ def fetchTableUsers(request):
 
         for items in users:
 
-            diskUsage = 0
+            diskUsageCurrent = 0
 
             for webs in items.websites_set.all():
-                #diskUsage = virtualHostUtilities.getDiskUsage("/home/" + webs.domain, webs.package.diskSpace)[0] + diskUsage
-                diskUsage = 1
+                DiskUsage, DiskUsagePercentage, bwInMB, bwUsage = virtualHostUtilities.FindStats(webs)
+                diskUsageCurrent = DiskUsage + diskUsageCurrent
+
 
             owner = Administrator.objects.get(pk=items.owner)
 
@@ -1047,7 +1048,7 @@ def fetchTableUsers(request):
                    'name': items.userName,
                    'owner': owner.userName,
                    'acl': items.acl.name,
-                   'diskUsage': '%sMB' % str(diskUsage),
+                   'diskUsage': '%sMB' % str(diskUsageCurrent),
                    'websites': items.initWebsitesLimit,
                    'state': items.state
                    }

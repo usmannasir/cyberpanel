@@ -731,6 +731,27 @@ Automatic backup failed for %s on %s.
         except BaseException as msg:
             logging.writeToFile(str(msg) + ' [S3Backups.runAWSBackups]')
 
+    @staticmethod
+    def CalculateAndUpdateDiskUsage():
+        for website in Websites.objects.all():
+            try:
+                try:
+                    config = json.loads(website.config)
+                except:
+                    config = {}
+
+                config['DiskUsage'], config['DiskUsagePercentage'] = virtualHostUtilities.getDiskUsage("/home/" + website.domain, website.package.diskSpace)
+
+                ## Calculate bw usage
+
+                from plogical.vhost import vhost
+                config['bwInMB'], config['bwUsage'] = vhost.findDomainBW(website.domain, int(website.package.bandwidth))
+
+                website.config = json.dumps(config)
+                website.save()
+
+            except BaseException as msg:
+                logging.writeToFile('%s. [CalculateAndUpdateDiskUsage:753]' % (str(msg)))
 
 
 def main():
@@ -744,6 +765,7 @@ def main():
         IncScheduler.forceRunAWSBackup(args.planName)
         return 0
 
+    IncScheduler.CalculateAndUpdateDiskUsage()
     IncScheduler.startBackup(args.function)
     IncScheduler.runGoogleDriveBackups(args.function)
     IncScheduler.git(args.function)

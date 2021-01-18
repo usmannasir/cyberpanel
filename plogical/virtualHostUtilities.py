@@ -1308,8 +1308,7 @@ class virtualHostUtilities:
     def getDiskUsage(path, totalAllowed):
         try:
 
-            totalUsageInMB = ProcessUtilities.outputExecutioner(["sudo", "du", "-hs", path, "--block-size=1M"]).split()[
-                0]
+            totalUsageInMB = subprocess.check_output('du -hs %s --block-size=1M' % (path), shell=True).decode("utf-8").split()[0]
 
             percentage = float(100) / float(totalAllowed)
 
@@ -1346,6 +1345,24 @@ class virtualHostUtilities:
 
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
+
+    @staticmethod
+    def FindStats(website):
+
+        import json
+        try:
+            config = json.loads(website.config)
+            DiskUsage = config['DiskUsage']
+            DiskUsagePercentage = config['DiskUsagePercentage']
+            bwInMB = config['bwInMB']
+            bwUsage = config['bwUsage']
+        except:
+            DiskUsage = 0
+            DiskUsagePercentage = 0
+            bwInMB = 0
+            bwUsage = 0
+
+        return DiskUsage, DiskUsagePercentage, bwInMB, bwUsage
 
 
 def main():

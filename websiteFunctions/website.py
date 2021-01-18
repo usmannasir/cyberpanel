@@ -452,9 +452,9 @@ class WebsiteManager:
             else:
                 state = "Active"
 
-            #diskUsed = "%sMB" % str(virtualHostUtilities.getDiskUsage("/home/" + items.domain, items.package.diskSpace)[0])
+            DiskUsage, DiskUsagePercentage, bwInMB, bwUsage = virtualHostUtilities.FindStats(items)
+            diskUsed = "%sMB" % str(DiskUsage)
 
-            diskUsed = '1MB' ## to be fixed later
 
             dic = {'domain': items.domain, 'adminEmail': items.adminEmail, 'ipAddress': ipAddress,
                    'admin': items.admin.userName, 'package': items.package.packageName, 'state': state, 'diskUsed': diskUsed}
@@ -830,38 +830,20 @@ class WebsiteManager:
 
             Data['domain'] = self.domain
 
-            diskUsageDetails = virtualHostUtilities.getDiskUsage("/home/" + self.domain, website.package.diskSpace)
-
-            ## bw usage calculation
-
-            try:
-                execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-                execPath = execPath + " findDomainBW --virtualHostName " + self.domain + " --bandwidth " + str(
-                    website.package.bandwidth)
-
-                output = ProcessUtilities.outputExecutioner(execPath)
-                bwData = output.split(",")
-            except BaseException as msg:
-                logging.CyberCPLogFileWriter.writeToFile(str(msg))
-                bwData = [0, 0]
+            DiskUsage, DiskUsagePercentage, bwInMB, bwUsage = virtualHostUtilities.FindStats(website)
 
             ## bw usage calculations
 
             Data['bwInMBTotal'] = website.package.bandwidth
-            Data['bwInMB'] = bwData[0]
-            Data['bwUsage'] = bwData[1]
+            Data['bwInMB'] = bwInMB
+            Data['bwUsage'] = bwUsage
 
-            if diskUsageDetails != None:
-                if diskUsageDetails[1] > 100:
-                    diskUsageDetails[1] = 100
+            if DiskUsagePercentage > 100:
+                DiskUsagePercentage = 100
 
-                Data['diskUsage'] = diskUsageDetails[1]
-                Data['diskInMB'] = diskUsageDetails[0]
-                Data['diskInMBTotal'] = website.package.diskSpace
-            else:
-                Data['diskUsage'] = 0
-                Data['diskInMB'] = 0
-                Data['diskInMBTotal'] = website.package.diskSpace
+            Data['diskUsage'] = DiskUsagePercentage
+            Data['diskInMB'] = DiskUsage
+            Data['diskInMBTotal'] = website.package.diskSpace
 
             Data['phps'] = PHPManager.findPHPVersions()
 
@@ -932,38 +914,20 @@ class WebsiteManager:
             Data['domain'] = self.domain
             Data['childDomain'] = self.childDomain
 
-            diskUsageDetails = virtualHostUtilities.getDiskUsage("/home/" + self.domain, website.package.diskSpace)
-
-            ## bw usage calculation
-
-            try:
-                execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-                execPath = execPath + " findDomainBW --virtualHostName " + self.domain + " --bandwidth " + str(
-                    website.package.bandwidth)
-
-                output = ProcessUtilities.outputExecutioner(execPath)
-                bwData = output.split(",")
-            except BaseException as msg:
-                logging.CyberCPLogFileWriter.writeToFile(str(msg))
-                bwData = [0, 0]
+            DiskUsage, DiskUsagePercentage, bwInMB, bwUsage = virtualHostUtilities.FindStats(website)
 
             ## bw usage calculations
 
             Data['bwInMBTotal'] = website.package.bandwidth
-            Data['bwInMB'] = bwData[0]
-            Data['bwUsage'] = bwData[1]
+            Data['bwInMB'] = bwInMB
+            Data['bwUsage'] = bwUsage
 
-            if diskUsageDetails != None:
-                if diskUsageDetails[1] > 100:
-                    diskUsageDetails[1] = 100
+            if DiskUsagePercentage > 100:
+                DiskUsagePercentage = 100
 
-                Data['diskUsage'] = diskUsageDetails[1]
-                Data['diskInMB'] = diskUsageDetails[0]
-                Data['diskInMBTotal'] = website.package.diskSpace
-            else:
-                Data['diskUsage'] = 0
-                Data['diskInMB'] = 0
-                Data['diskInMBTotal'] = website.package.diskSpace
+            Data['diskUsage'] = DiskUsagePercentage
+            Data['diskInMB'] = DiskUsage
+            Data['diskInMBTotal'] = website.package.diskSpace
 
             Data['phps'] = PHPManager.findPHPVersions()
 
@@ -2393,8 +2357,9 @@ StrictHostKeyChecking no
             else:
                 state = "Active"
 
-            diskUsed = "%sMB" % str(
-                virtualHostUtilities.getDiskUsage("/home/" + items.domain, items.package.diskSpace)[0])
+            DiskUsage, DiskUsagePercentage, bwInMB, bwUsage = virtualHostUtilities.FindStats(items)
+
+            diskUsed = "%sMB" % str(DiskUsage)
             dic = {'domain': items.domain, 'adminEmail': items.adminEmail, 'ipAddress': ipAddress,
                    'admin': items.admin.userName, 'package': items.package.packageName, 'state': state, 'diskUsed': diskUsed}
 
@@ -2431,7 +2396,9 @@ StrictHostKeyChecking no
             else:
                 state = "Active"
 
-            diskUsed = "%sMB" % str(virtualHostUtilities.getDiskUsage("/home/" + items.domain, items.package.diskSpace)[0])
+            DiskUsage, DiskUsagePercentage, bwInMB, bwUsage = virtualHostUtilities.FindStats(items)
+
+            diskUsed = "%sMB" % str(DiskUsage)
 
             dic = {'domain': items.domain, 'adminEmail': items.adminEmail, 'ipAddress': ipAddress,
                    'admin': items.admin.userName, 'package': items.package.packageName, 'state': state, 'diskUsed': diskUsed}

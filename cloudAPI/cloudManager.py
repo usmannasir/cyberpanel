@@ -123,6 +123,7 @@ class CloudManager:
 
     def fetchWebsiteData(self):
         try:
+
             currentACL = ACLManager.loadedACL(self.admin.pk)
             website = Websites.objects.get(domain=self.data['domainName'])
             admin = Administrator.objects.get(pk=self.admin.pk)
@@ -140,39 +141,22 @@ class CloudManager:
             Data['dbUsed'] = website.databases_set.all().count()
             Data['dbAllowed'] = website.package.dataBases
 
-            diskUsageDetails = virtualHostUtilities.getDiskUsage("/home/" + self.data['domainName'],
-                                                                 website.package.diskSpace)
-
-            ## bw usage calculation
-
-            try:
-                execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-                execPath = execPath + " findDomainBW --virtualHostName " + self.data[
-                    'domainName'] + " --bandwidth " + str(
-                    website.package.bandwidth)
-
-                output = ProcessUtilities.outputExecutioner(execPath)
-                bwData = output.split(",")
-            except BaseException:
-                bwData = [0, 0]
+            DiskUsage, DiskUsagePercentage, bwInMB, bwUsage = virtualHostUtilities.FindStats(website)
 
             ## bw usage calculations
 
-            Data['bwAllowed'] = website.package.bandwidth
-            Data['bwUsed'] = bwData[0]
-            Data['bwUsage'] = bwData[1]
+            Data['bwInMBTotal'] = website.package.bandwidth
+            Data['bwInMB'] = bwInMB
+            Data['bwUsage'] = bwUsage
 
-            if diskUsageDetails != None:
-                if diskUsageDetails[1] > 100:
-                    diskUsageDetails[1] = 100
+            if DiskUsagePercentage > 100:
+                DiskUsagePercentage = 100
 
-                Data['diskUsage'] = diskUsageDetails[1]
-                Data['diskUsed'] = diskUsageDetails[0]
-                Data['diskAllowed'] = website.package.diskSpace
-            else:
-                Data['diskUsed'] = 0
-                Data['diskUsage'] = 0
-                Data['diskInMBTotal'] = website.package.diskSpace
+            Data['diskUsage'] = DiskUsagePercentage
+            Data['diskInMB'] = DiskUsage
+            Data['diskInMBTotal'] = website.package.diskSpace
+
+            ##
 
             Data['status'] = 1
             final_json = json.dumps(Data)
