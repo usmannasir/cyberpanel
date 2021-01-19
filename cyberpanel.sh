@@ -506,7 +506,7 @@ EOF
     check_return
 
   fi
-  echo 'Necessary components installed,5' >/var/log/installLogs.txt
+  echo 'Necessary components installed..,5' >/var/log/installLogs.txt
 }
 
 memcached_installation() {
