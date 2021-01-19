@@ -40,6 +40,7 @@ VIRT_TYPE=""
 MASTER_GIT_URL="github.com/usmannasir/cyberpanel"
 
 set_git_repos_and_branch() {
+  echo 'Setting up Branches,1' >/var/log/installLogs.txt
   local GIT_DIR
   local GIT_USER
   local GIT_REPO
@@ -66,6 +67,7 @@ set_git_repos_and_branch() {
   printf "Github Content URL: %s\n" "$GIT_CONTENT_URL"
   printf "Github Branch: %s\n" "$BRANCH_NAME"
   printf "~~~~~~~~~~\n"
+  echo 'Setting up Branches,1' >/var/log/installLogs.txt
 }
 
 disable_repos() {
@@ -404,7 +406,7 @@ root             hard    nproc           65535" >>/etc/security/limits.conf
 }
 
 install_required() {
-
+  echo 'Installing necessary components..,3' >/var/log/installLogs.txt
   if [[ -d /etc/yum.repos.d ]]; then
 
     yum clean all
@@ -504,6 +506,7 @@ EOF
     check_return
 
   fi
+  echo 'Necessary components installed,5' >/var/log/installLogs.txt
 }
 
 memcached_installation() {
@@ -1250,6 +1253,7 @@ EOF
 }
 
 after_install() {
+  echo 'Finalization..,80' >>/var/log/installLogs.txt
   if [ ! -d "/var/lib/php" ]; then
     mkdir /var/lib/php
   fi
@@ -1524,6 +1528,7 @@ options edns0" /etc/resolv.conf
     echo "something went wrong..."
     exit
   fi
+
 }
 
 argument_mode() {
@@ -1669,6 +1674,8 @@ initialize() {
   else
     DOWNLOAD_SERVER="cdn.cyberpanel.sh"
   fi
+
+  echo 'Initialization completed..,2' >/var/log/installLogs.txt
 }
 
 begin_install() {
@@ -1695,3 +1702,5 @@ begin_install() {
 }
 
 begin_install "$@"
+
+echo 'Completed [200]' >>/var/log/installLogs.txt

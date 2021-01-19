@@ -2157,7 +2157,7 @@ def main():
     parser.add_argument('--mysqlport', help='MySQL port if remote is chosen.')
     args = parser.parse_args()
 
-    logging.InstallLog.writeToFile("Starting CyberPanel installation..")
+    logging.InstallLog.writeToFile("Starting CyberPanel installation..,10")
     preFlightsChecks.stdOut("Starting CyberPanel installation..")
 
     if args.ent == None:
@@ -2348,7 +2348,7 @@ echo $oConfig->Save() ? 'Done' : 'Error';
     except:
         pass
 
-    logging.InstallLog.writeToFile("CyberPanel installation successfully completed!")
+    logging.InstallLog.writeToFile("CyberPanel installation successfully completed!,80")
 
 
 if __name__ == "__main__":
