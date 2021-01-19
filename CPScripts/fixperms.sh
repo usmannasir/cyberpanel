@@ -184,7 +184,7 @@ fixperms_cyberpanel () {
     find "$HOMEDIR"/public_html -type d -exec chmod "$verbose" 755 {} \;
     find "$HOMEDIR"/public_html -type f -print0 | xargs -d$'\n' -r chmod "$verbose" 644
     find "$HOMEDIR"/public_html -name '*.cgi' -print0 -o -name '*.pl' | xargs -0 -r chmod "$verbose" 755
-    #chown $verbose -R "$account":"$account" "$HOMEDIR"/public_html/*
+    chown $verbose -R "$account":"$account" "$HOMEDIR"/public_html/*
     # Hidden files test support: https://serverfault.com/a/156481
     chown "$verbose" -R "$account":"$account" "$HOMEDIR"/public_html/.[^.]*
     find "$HOMEDIR"/* -name .htaccess -exec chown "$verbose" "$account"."$account" {} \;
@@ -293,6 +293,7 @@ fixperms_cpanel () {
     find "$HOMEDIR"/public_html -type d -exec chmod "$verbose" 755 {} \;
     find "$HOMEDIR"/public_html -type f -print0 | xargs -0 -d$'\n' -r chmod "$verbose" 644
     find "$HOMEDIR"/public_html -name '*.cgi' -print0 -o -name '*.pl' | xargs -0 -r chmod "$verbose" 755
+    chown $verbose -R "$account":"$account" "$HOMEDIR"/public_html/*
     # fix hidden files and folders like .well-known/ with root or other user perms
     chown "$verbose" -R "$account":"$account" "$HOMEDIR"/public_html/.[^.]*
     find "$HOMEDIR"/* -name .htaccess -exec chown "$verbose" "$account"."$account" {} \;

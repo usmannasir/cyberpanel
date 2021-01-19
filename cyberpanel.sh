@@ -569,7 +569,14 @@ memcached_installation() {
 
 redis_installation() {
   if [[ $SERVER_OS == "CentOS" ]]; then
-    yum install -y lsphp74-redis lsphp73-redis lsphp72-redis lsphp71-redis lsphp70-redis lsphp56-redis lsphp55-redis lsphp54-redis redis
+  	if [[ CENTOS_8 == "True" ]]; then
+    		yum install -y lsphp74-redis lsphp73-redis lsphp72-redis lsphp71-redis lsphp70-redis lsphp56-redis lsphp55-redis lsphp54-redis redis
+    	else
+		yum -y install http://rpms.remirepo.net/enterprise/remi-release-7.rpm 
+		yum-config-manager --disable remi
+		yum-config-manager --disable remi-safe
+		yum -y --enablerepo=remi install redis
+	fi
   fi
   if [[ $SERVER_OS == "Ubuntu" ]]; then
     DEBIAN_FRONTEND=noninteractive apt install -y lsphp74-redis
