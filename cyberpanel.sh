@@ -57,6 +57,12 @@ set_git_repos_and_branch() {
     printf "Found custom provided branch...\n"
   fi
 
+  ### To be removed when branch is merged
+
+  BRANCH_NAME="v2.0.4-dev"
+
+  ###
+
   GIT_DIR=$(dirname "$GIT_URL")
   GIT_USER=$(basename "$GIT_DIR")
   GIT_REPO=$(basename "$GIT_URL")
