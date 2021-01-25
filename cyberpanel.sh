@@ -96,6 +96,7 @@ check_return() {
     :
   else
     echo -e "\ncommand failed, exiting..."
+    echo 'command failed, exiting. For more information read /var/log/installLogs.txt [404]' >>/var/log/installLogs.txt
     exit
   fi
 }
@@ -182,6 +183,7 @@ check_virtualization() {
     echo -e "\nLXC detected..."
     echo -e "CyberPanel does not support LXC"
     echo -e "Exiting..."
+    echo 'CyberPanel does not support LXC.. [404]' >>/var/log/installLogs.txt
     exit
   fi
 
@@ -218,6 +220,7 @@ license_validation() {
   if [[ $LICENSE_KEY == "TRIAL" ]]; then
     if ./lshttpd -V |& grep "ERROR"; then
       echo -e "\n\nIt apeears to have some issue with license , please check above result..."
+      echo 'It appears to have some issue with LiteSpeed License, make sure you are using correct serial key. [404]' >>/var/log/installLogs.txt
       exit
     fi
     LICENSE_KEY="1111-2222-3333-4444"
@@ -225,6 +228,7 @@ license_validation() {
     if ./lshttpd -r |& grep "ERROR"; then
       ./lshttpd -r
       echo -e "\n\nIt apeears to have some issue with license , please check above result..."
+      echo 'It appears to have some issue with LiteSpeed License, make sure you are using correct serial key. [404]' >>/var/log/installLogs.txt
       exit
     fi
   fi
@@ -668,6 +672,7 @@ check_OS() {
       SERVER_OS="Ubuntu"
     else
       echo -e "\nUbuntu 18.04 x32 detected...ths only works on x64 system."
+      echo 'Ubuntu 18.04 x32 detected...ths only works on x64 system. [404]' >>/var/log/installLogs.txt
       exit
     fi
   elif echo $OUTPUT | grep -q "Ubuntu 20.04"; then
@@ -677,12 +682,14 @@ check_OS() {
       UBUNTU_20="True"
     else
       echo -e "\nUbuntu 20 x32 detected...ths only works on x64 system."
+      echo 'Ubuntu 20 x32 detected...ths only works on x64 system. [404]' >>/var/log/installLogs.txt
       exit
     fi
   else
     cat /etc/*release
     echo -e "\nUnable to detect your OS...\n"
     echo -e "\nCyberPanel is supported on Ubuntu 18.04 x86_64, Ubuntu 20.04 x86_64, CentOS 7.x, CentOS 8.x and CloudLinux 7.x...\n"
+    echo 'CyberPanel is supported on Ubuntu 18.04 x86_64, Ubuntu 20.04 x86_64, CentOS 7.x, CentOS 8.x and CloudLinux 7.x... [404]' >>/var/log/installLogs.txt
     exit 1
   fi
 
@@ -709,10 +716,12 @@ check_root() {
 check_panel() {
   if [ -d /usr/local/cpanel ]; then
     echo -e "\ncPanel detected...exit...\n"
+    echo 'cPanel detected...exit... [404]' >>/var/log/installLogs.txt
     exit 1
   fi
   if [ -d /opt/plesk ]; then
     echo -e "\nPlesk detected...exit...\n"
+    echo 'Plesk detected...exit... [404]' >>/var/log/installLogs.txt
     exit 1
   fi
 }
@@ -1120,6 +1129,7 @@ main_install() {
 
   if [[ -e /usr/local/CyberCP ]]; then
     echo -e "\n CyberPanel already installed, exiting..."
+    echo 'CyberPanel already installed, exiting... [404]' >>/var/log/installLogs.txt
     exit
   fi
 
@@ -1166,6 +1176,7 @@ main_install() {
       echo -e "\nCyberPanel installation sucessfully completed..."
     else
       echo -e "Oops, something went wrong..."
+      echo 'Oops, something went wrong... [404]' >>/var/log/installLogs.txt
       exit
     fi
 
@@ -1275,6 +1286,7 @@ after_install() {
     ./install.sh
     echo -e "\n\n\nIt seems LiteSpeed Enterprise has failed to install, please check your license key is valid"
     echo -e "\nIf this license key has been used before, you may need to go to store to release it first."
+    echo 'It seems LiteSpeed Enterprise has failed to install, please check your license key is valid. If this license key has been used before, you may need to go to store to release it first. [404]' >>/var/log/installLogs.txt
     exit
   fi
 
@@ -1532,6 +1544,8 @@ options edns0" /etc/resolv.conf
   else
 
     echo "something went wrong..."
+    echo 'something went wrong... [404]' >>/var/log/installLogs.txt
+
     exit
   fi
 
