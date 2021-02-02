@@ -753,6 +753,40 @@ Automatic backup failed for %s on %s.
             except BaseException as msg:
                 logging.writeToFile('%s. [CalculateAndUpdateDiskUsage:753]' % (str(msg)))
 
+    @staticmethod
+    def WPUpdates():
+        from cloudAPI.models import WPDeployments
+        for wp in WPDeployments.objects.all():
+            try:
+                try:
+                    config = json.loads(wp.config)
+                except:
+                    config = {}
+
+                ### Core Updates
+
+                if config['updates'] == 'Minor and Security Updates':
+                    command = 'wp core update --minor --allow-root --path=/home/%s/public_html' % (config['domainName'])
+                    ProcessUtilities.executioner(command)
+                elif config['updates'] == 'All (minor and major)':
+                    command = 'wp core update --allow-root --path=/home/%s/public_html' % (config['domainName'])
+                    ProcessUtilities.executioner(command)
+
+                ### Plugins, for plugins we will do minor updates only.
+
+                if config['pluginUpdates'] == 'Enabled':
+                    command = 'wp plugin update --all --minor --allow-root --path=/home/%s/public_html' % (config['domainName'])
+                    ProcessUtilities.executioner(command)
+
+                ### Themes, for plugins we will do minor updates only.
+
+                if config['themeUpdates'] == 'Enabled':
+                    command = 'wp theme update --all --minor --allow-root --path=/home/%s/public_html' % (config['domainName'])
+                    ProcessUtilities.executioner(command)
+
+            except BaseException as msg:
+                logging.writeToFile('%s. [WPUpdates:767]' % (str(msg)))
+
 
 def main():
 
@@ -766,6 +800,7 @@ def main():
         return 0
 
     IncScheduler.CalculateAndUpdateDiskUsage()
+    IncScheduler.WPUpdates()
     IncScheduler.startBackup(args.function)
     IncScheduler.runGoogleDriveBackups(args.function)
     IncScheduler.git(args.function)
