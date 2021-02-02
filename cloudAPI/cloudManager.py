@@ -2064,6 +2064,10 @@ class CloudManager:
                     final_json = json.dumps(final_dic)
                     return HttpResponse(final_json)
             elif self.data['setting'] == 'debugging':
+
+                command = "wp litespeed-purge all --path=/home/%s/public_html" % (domain)
+                ProcessUtilities.executioner(command, website.externalApp)
+
                 if self.data['settingValue']:
                     command = "wp config set WP_DEBUG true --path=/home/%s/public_html" % (domain)
                     ProcessUtilities.executioner(command, website.externalApp)
@@ -2080,6 +2084,10 @@ class CloudManager:
                     final_json = json.dumps(final_dic)
                     return HttpResponse(final_json)
             elif self.data['setting'] == 'searchIndex':
+
+                command = "wp litespeed-purge all --path=/home/%s/public_html" % (domain)
+                ProcessUtilities.executioner(command, website.externalApp)
+
                 if self.data['settingValue']:
                     command = "wp option update blog_public 1 --path=/home/%s/public_html" % (domain)
                     ProcessUtilities.executioner(command, website.externalApp)
@@ -2096,7 +2104,12 @@ class CloudManager:
                     final_json = json.dumps(final_dic)
                     return HttpResponse(final_json)
             elif self.data['setting'] == 'maintenanceMode':
+
+                command = "wp litespeed-purge all --path=/home/%s/public_html" % (domain)
+                ProcessUtilities.executioner(command, website.externalApp)
+
                 if self.data['settingValue']:
+
                     command = "wp maintenance-mode activate --path=/home/%s/public_html" % (domain)
                     ProcessUtilities.executioner(command, website.externalApp)
 
