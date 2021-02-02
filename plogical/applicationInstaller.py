@@ -645,6 +645,46 @@ $parameters = array(
             except:
                 pass
 
+            try:
+                if self.extraArgs['appsSet'] == 'WordPress + LSCache + Classic Editor':
+
+                    command = "wp plugin install classic-editor --allow-root --path=" + finalPath
+                    result = ProcessUtilities.outputExecutioner(command, externalApp)
+
+                    if result.find('Success:') == -1:
+                        raise BaseException(result)
+
+                    statusFile = open(tempStatusPath, 'w')
+                    statusFile.writelines('Activating Classic Editor Plugin,90')
+                    statusFile.close()
+
+                    command = "wp plugin activate classic-editor --allow-root --path=" + finalPath
+                    result = ProcessUtilities.outputExecutioner(command, externalApp)
+
+                    if result.find('Success:') == -1:
+                        raise BaseException(result)
+
+                elif self.extraArgs['appsSet'] == 'WordPress + LSCache + WooCommerce':
+
+                    command = "wp plugin install woocommerce --allow-root --path=" + finalPath
+                    result = ProcessUtilities.outputExecutioner(command, externalApp)
+
+                    if result.find('Success:') == -1:
+                        raise BaseException(result)
+
+                    statusFile = open(tempStatusPath, 'w')
+                    statusFile.writelines('Activating WooCommerce Plugin,90')
+                    statusFile.close()
+
+                    command = "wp plugin activate woocommerce --allow-root --path=" + finalPath
+                    result = ProcessUtilities.outputExecutioner(command, externalApp)
+
+                    if result.find('Success:') == -1:
+                        raise BaseException(result)
+
+            except:
+                pass
+
 
             ##
 
