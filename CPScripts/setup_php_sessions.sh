@@ -6,8 +6,12 @@
 
 
 # Create the session path directories and chmod it for security to 1733 like the existing one is.
-mkdir -p /var/lib/lsphp/session/lsphp{53,54,55,56,70,71,72,73,74}
-chmod -R 1733 /var/lib/lsphp/session/lsphp{53,54,55,56,70,71,72,73,74}
+
+for version in $(ls /usr/local/lsws|grep lsphp); 
+  do
+    mkdir -p "/var/lib/lsphp/session/$version"
+    chmod -R 1733 "/var/lib/lsphp/session/$version"
+done
 
 
 YUM_CMD=$(which yum 2> /dev/null)
