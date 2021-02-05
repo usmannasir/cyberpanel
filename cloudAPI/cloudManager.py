@@ -2403,8 +2403,14 @@ class CloudManager:
             website = Websites.objects.get(domain=self.data['domainName'])
             domainName = self.data['domainName']
             from cloudAPI.models import WPDeployments
-            wpd = WPDeployments.objects.get(owner=website)
-            config = json.loads(wpd.config)
+
+            try:
+                wpd = WPDeployments.objects.get(owner=website)
+                config = json.loads(wpd.config)
+            except:
+                wpd = WPDeployments(owner=website)
+                config = {}
+
             config['updates'] = self.data['wpCore']
             config['pluginUpdates'] = self.data['plugins']
             config['themeUpdates'] = self.data['themes']
