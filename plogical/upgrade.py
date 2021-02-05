@@ -682,6 +682,19 @@ imap_folder_list_limit = 0
   `config` longtext NOT NULL,
   PRIMARY KEY (`id`)
 )"""
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+            query = """CREATE TABLE `cloudAPI_wpdeployments` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `config` longtext NOT NULL,
+  `owner_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `cloudAPI_wpdeploymen_owner_id_506ddf01_fk_websiteFu` (`owner_id`),
+  CONSTRAINT `cloudAPI_wpdeploymen_owner_id_506ddf01_fk_websiteFu` FOREIGN KEY (`owner_id`) REFERENCES `websiteFunctions_websites` (`id`)
+)"""
 
             try:
                 cursor.execute(query)
