@@ -36,7 +36,17 @@ class StagingSetup(multi.Thread):
 
             website = Websites.objects.get(domain=masterDomain)
 
-            masterPath = '/home/%s/public_html' % (masterDomain)
+            try:
+                import json
+                from cloudAPI.models import WPDeployments
+                wpd = WPDeployments.objects.get(owner=website)
+                path = json.loads(wpd.config)['path']
+                masterPath = '/home/%s/public_html/%s' % (masterDomain, path)
+                replaceDomain = '%s/%s' % (masterDomain, path)
+            except:
+                masterPath = '/home/%s/public_html' % (masterDomain)
+                replaceDomain = masterDomain
+
             configPath = '%s/wp-config.php' % (masterPath)
 
             ## Check if WP Detected on Main Site
@@ -114,10 +124,10 @@ class StagingSetup(multi.Thread):
 
             ## Search and replace url
 
-            command = 'wp search-replace --allow-root --path=%s "%s" "%s"' % (path, masterDomain, domain)
+            command = 'wp search-replace --allow-root --path=%s "%s" "%s"' % (path, replaceDomain, domain)
             ProcessUtilities.executioner(command)
 
-            command = 'wp search-replace --allow-root --path=%s "www.%s" "%s"' % (path, masterDomain, domain)
+            command = 'wp search-replace --allow-root --path=%s "www.%s" "%s"' % (path, replaceDomain, domain)
             ProcessUtilities.executioner(command)
 
             logging.statusWriter(tempStatusPath, 'Fixing permissions..,90')
@@ -147,7 +157,17 @@ class StagingSetup(multi.Thread):
 
 
             child = ChildDomains.objects.get(domain=childDomain)
-            masterPath = '/home/%s/public_html' % (child.master.domain)
+
+            try:
+                import json
+                from cloudAPI.models import WPDeployments
+                wpd = WPDeployments.objects.get(owner=child.master)
+                path = json.loads(wpd.config)['path']
+                masterPath = '/home/%s/public_html/%s' % (child.master.domain, path)
+                replaceDomain = '%s/%s' % (child.master.domain, path)
+            except:
+                masterPath = '/home/%s/public_html' % (child.master.domain)
+                replaceDomain = child.master.domain
 
             command = 'chmod 755 /home/%s/public_html' % (child.master.domain)
             ProcessUtilities.executioner(command)
@@ -185,10 +205,10 @@ class StagingSetup(multi.Thread):
 
             ## Search and replace url
 
-            command = 'wp search-replace --allow-root --path=%s "%s" "%s"' % (masterPath, child.domain, child.master.domain)
+            command = 'wp search-replace --allow-root --path=%s "%s" "%s"' % (masterPath, child.domain, replaceDomain)
             ProcessUtilities.executioner(command)
 
-            command = 'wp search-replace --allow-root --path=%s "www.%s" "%s"' % (masterPath, child.domain, child.master.domain)
+            command = 'wp search-replace --allow-root --path=%s "www.%s" "%s"' % (masterPath, child.domain, replaceDomain)
             ProcessUtilities.executioner(command)
 
             from filemanager.filemanager import FileManager
@@ -200,6 +220,15 @@ class StagingSetup(multi.Thread):
             installUtilities.reStartLiteSpeed()
 
             logging.statusWriter(tempStatusPath, 'Completed,[200]')
+
+            http = []
+            finalHTTP = []
+
+            for items in http:
+                if items.find('x-litespeed-cache') > -1 or items.find('x-lsadc-cache') > -1 or items.find('x-qc-cache') > -1:
+                    finalHTTP.append('<strong>%s</strong>' % (items))
+                else:
+                    finalHTTP.append(items)
 
             return 0
         except BaseException as msg:

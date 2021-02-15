@@ -2701,7 +2701,6 @@ StrictHostKeyChecking no
             extraArgs['masterDomain'] = data['masterDomain']
             extraArgs['admin'] = admin
 
-
             tempStatusPath = "/tmp/" + str(randint(1000, 9999))
             writeToFile = open(tempStatusPath, 'a')
             message = 'Cloning process has started..,5'
