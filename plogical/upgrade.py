@@ -1211,6 +1211,11 @@ imap_folder_list_limit = 0
                 pass
 
             try:
+                cursor.execute('ALTER TABLE loginSystem_administrator ADD config longtext')
+            except:
+                pass
+
+            try:
                 cursor.execute('ALTER TABLE dockerManager_containers ADD volumes longtext')
             except:
                 pass
