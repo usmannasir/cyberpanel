@@ -93,7 +93,7 @@ class Administrator(models.Model):
    acl = models.ForeignKey(ACL, default=1, on_delete=models.PROTECT)
    twoFA = models.IntegerField(default=0)
    secretKey = models.CharField(max_length=50, default='None')
-   config = models.TextField()
+   config = models.TextField(default='{}')
 
 
 
