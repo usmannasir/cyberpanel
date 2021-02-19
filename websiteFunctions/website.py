@@ -140,8 +140,7 @@ class WebsiteManager:
             else:
                 return ACLManager.loadError()
 
-            websitesName = ACLManager.findAllSites(currentACL, userID)
-            return render(request, 'websiteFunctions/listCron.html', {'domain': request.GET.get('domain'), 'websiteList': websitesName})
+            return render(request, 'websiteFunctions/listCron.html', {'domain': request.GET.get('domain')})
         except BaseException as msg:
             return HttpResponse(str(msg))
 

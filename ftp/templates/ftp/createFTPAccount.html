@@ -41,7 +41,7 @@
                             <div class="form-group">
                                 <label class="col-sm-3 control-label">{% trans "Select Website" %} </label>
                                 <div class="col-sm-6">
-                                    <select ng-change="showFTPDetails()" ng-model="ftpDomain" class="form-control">
+                                    <select class="create-ftp-acct-select" ng-model="ftpDomain" class="form-control">
                                         {% for items in websiteList %}
                                             <option>{{ items }}</option>
                                         {% endfor %}
@@ -53,7 +53,7 @@
                             <!------ Modification form that appears after a click --------------->
 
 
-                            <div ng-hide="ftpDetails" class="form-group">
+                            <div class="form-group ftpDetails">
                                 <label class="col-sm-3 control-label">{% trans "User Name" %}</label>
                                 <div class="col-sm-6">
                                     <input ng-change="hideFewDetails()" type="text" class="form-control"
@@ -63,7 +63,7 @@
 
                             </div>
 
-                            <div ng-hide="ftpDetails" class="form-group">
+                            <div class="form-group ftpDetails">
                                 <label class="col-sm-3 control-label">{% trans "FTP Password" %}</label>
                                 <div class="col-sm-6">
                                     <input type="password" class="form-control" ng-model="ftpPassword" required>
@@ -74,7 +74,7 @@
                                 </div>
                             </div>
 
-                            <div ng-hide="generatedPasswordView" class="form-group">
+                            <div class="form-group ftpPasswordView">
                                 <label class="col-sm-3 control-label">{% trans "Generated Password" %}</label>
                                 <div class="col-sm-6">
                                     <input type="text" name="email" class="form-control" ng-model="ftpPassword"
@@ -86,7 +86,7 @@
                                 </div>
                             </div>
 
-                            <div ng-hide="ftpDetails" class="form-group">
+                            <div ng-hide="ftpDetails" class="form-group ftpDetails">
                                 <label class="col-sm-3 control-label">{% trans "Path (Relative)" %}</label>
                                 <div class="col-sm-6">
                                     <input placeholder="{% trans 'Leave empty to select default home directory.' %}"
@@ -98,36 +98,13 @@
                             <!------ Modification form that appears after a click --------------->
 
 
-                            <div ng-hide="ftpDetails" class="form-group">
+                            <div class="form-group dbDetails">
                                 <label class="col-sm-3 control-label"></label>
                                 <div class="col-sm-4">
                                     <button type="button" ng-click="createFTPAccount()"
                                             class="btn btn-primary btn-lg btn-block">{% trans "Create FTP" %}</button>
                                 </div>
                             </div>
-
-                            <div class="form-group">
-                                <label class="col-sm-3 control-label"></label>
-                                <div class="col-sm-6">
-                                    <div ng-hide="canNotCreate" class="alert alert-danger">
-                                        <p>{% trans "Cannot create FTP account. Error message:" %} {$ errorMessage
-                                            $}</p>
-                                    </div>
-
-                                    <div ng-hide="successfullyCreated" class="alert alert-success">
-                                        <p>{% trans "FTP Account with username:" %} {$ ftpUserName
-                                            $} {% trans "is successfully created." %}</p>
-                                    </div>
-                                    <div ng-hide="couldNotConnect" class="alert alert-success">
-                                        <p>{% trans "FTP Account with username:" %} {$ ftpUserName
-                                            $} {% trans "is successfully created." %}</p>
-                                    </div>
-
-                                </div>
-
-
-                            </div>
-
 
                         </form>
 

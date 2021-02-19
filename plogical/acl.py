@@ -409,35 +409,34 @@ class ACLManager:
         websiteNames = []
 
         if currentACL['admin'] == 1:
-            allWebsites = Websites.objects.all()
+            allWebsites = Websites.objects.all().order_by('domain')
 
             for items in allWebsites:
                 websiteNames.append(items.domain)
 
                 if fetchChilds:
-                    for child in items.childdomains_set.all():
+                    for child in items.childdomains_set.all().order_by('domain'):
                         websiteNames.append(child.domain)
-
         else:
             admin = Administrator.objects.get(pk=userID)
 
-            websites = admin.websites_set.all()
+            websites = admin.websites_set.all().order_by('domain')
             admins = Administrator.objects.filter(owner=admin.pk)
 
             for items in websites:
                 websiteNames.append(items.domain)
 
                 if fetchChilds:
-                    for child in items.childdomains_set.all():
+                    for child in items.childdomains_set.all().order_by('domain'):
                         websiteNames.append(child.domain)
 
             for items in admins:
-                webs = items.websites_set.all()
+                webs = items.websites_set.all().order_by('domain')
                 for web in webs:
                     websiteNames.append(web.domain)
 
                     if fetchChilds:
-                        for child in web.childdomains_set.all():
+                        for child in web.childdomains_set.all().order_by('domain'):
                             websiteNames.append(child.domain)
 
 
@@ -469,13 +468,13 @@ class ACLManager:
     @staticmethod
     def findWebsiteObjects(currentACL, userID):
         if currentACL['admin'] == 1:
-            return Websites.objects.all()
+            return Websites.objects.all().order_by('domain')
         else:
 
             websiteList = []
             admin = Administrator.objects.get(pk=userID)
 
-            websites = admin.websites_set.all()
+            websites = admin.websites_set.all().order_by('domain')
 
             for items in websites:
                 websiteList.append(items)
@@ -483,7 +482,7 @@ class ACLManager:
             admins = Administrator.objects.filter(owner=admin.pk)
 
             for items in admins:
-                webs = items.websites_set.all()
+                webs = items.websites_set.all().order_by('domain')
                 for web in webs:
                     websiteList.append(web)
 
@@ -494,12 +493,12 @@ class ACLManager:
         domainsList = []
 
         if currentACL['admin'] == 1:
-            domains = Websites.objects.all()
+            domains = Websites.objects.all().order_by('domain')
             for items in domains:
                 domainsList.append(items.domain)
         else:
             admin = Administrator.objects.get(pk=userID)
-            domains = admin.websites_set.all()
+            domains = admin.websites_set.all().order_by('domain')
 
             for items in domains:
                 domainsList.append(items.domain)
@@ -507,7 +506,7 @@ class ACLManager:
             admins = Administrator.objects.filter(owner=admin.pk)
 
             for items in admins:
-                doms = items.websites_set.all()
+                doms = items.websites_set.all().order_by('domain')
                 for dom in doms:
                     domainsList.append(dom.domain)
 
@@ -518,12 +517,12 @@ class ACLManager:
         domainsList = []
 
         if currentACL['admin'] == 1:
-            domains = Websites.objects.order_by('domain').all()
+            domains = Websites.objects.all().order_by('domain')
             for items in domains:
                 domainsList.append(items.domain)
         else:
             admin = Administrator.objects.get(pk=userID)
-            domains = admin.websites_set.all()
+            domains = admin.websites_set.all().order_by('domain')
 
             for items in domains:
                 domainsList.append(items.domain)
@@ -531,7 +530,7 @@ class ACLManager:
             admins = Administrator.objects.filter(owner=admin.pk)
 
             for items in admins:
-                doms = items.websites_set.all()
+                doms = items.websites_set.all().order_by('domain')
                 for dom in doms:
                     domainsList.append(dom.domain)
         return domainsList
@@ -675,7 +674,7 @@ class ACLManager:
 
         for items in websiteNames:
             website = Websites.objects.get(domain = items)
-            for childDomain in website.childdomains_set.all():
+            for childDomain in website.childdomains_set.all().order_by('domain'):
                 childDomains.append(childDomain.domain)
 
         return childDomains
