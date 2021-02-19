@@ -131,9 +131,17 @@ class WebsiteManager:
 
     def listCron(self, request=None, userID=None, data=None):
         try:
+
             currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            if ACLManager.checkOwnership(request.GET.get('domain'), admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
             websitesName = ACLManager.findAllSites(currentACL, userID)
-            return render(request, 'websiteFunctions/listCron.html', {'websiteList': websitesName})
+            return render(request, 'websiteFunctions/listCron.html', {'domain': request.GET.get('domain'), 'websiteList': websitesName})
         except BaseException as msg:
             return HttpResponse(str(msg))
 

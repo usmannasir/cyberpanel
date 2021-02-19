@@ -16,27 +16,19 @@
 <div class="panel">
     <div class="panel-body">
         <h3 class="title-hero">
-            {% trans "Cron Management" %} <img id="manageCronLoading" src="{% static 'images/loading.gif' %}">
+            {% trans "Cron Management" %} - <span id="domain">{{ domain }}</span> <img id="manageCronLoading" src="{% static 'images/loading.gif' %}">
         </h3>
         <div  class="example-box-wrapper">
 
 
             <form   action="/" class="form-horizontal bordered-row">
 
-
-                 <div class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "Select Website" %} </label>
-                    <div class="col-sm-6">
-                        <select ng-change="fetchWebsites()" ng-model="websiteToBeModified" class="form-control">
-                            {% for items in websiteList %}
-                                <option>{{ items }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                   <button type="button" class="btn btn-primary" ng-click="fetchWebsites()" href=""><i class="glyph-icon icon-refresh" title="{% trans "Refresh" %}"></i></button>
-                   <button type="button" class="btn btn-primary" ng-click="addCronForm()" href=""><i class="glyph-icon icon-plus" title="{% trans "Add Cron" %}"></i></button>
+                 <div style="padding-bottom: 0px; margin-bottom: 0px" class="form-group">
+                    <a style="margin-left: 1%" ng-click="addCronForm()" class="btn btn-border btn-alt border-blue btn-link font-blue" href="#" title=""><span>{% trans "Add Cron" %}</span></a>
+                    <a ng-click="fetchWebsites()" class="btn btn-border btn-alt border-blue btn-link font-blue" href="#" title=""><span>{% trans "Fetch Current Cron Jobs" %}</span></a>
                 </div>
 
+                <hr>
 
             <!------ Modification form that appears after a click --------------->
 
@@ -74,7 +66,6 @@
             <div id="modifyCronForm">
             <form  action="/" class="form-horizontal bordered-row ng-scope ng-dirty ng-valid-parse ng-valid ng-valid-required">
                 <input type="hidden" ng-value="line" required="">
-                <hr>
                 <div class="form-group">
                     <label class="col-sm-3 control-label">{% trans "Pre defined" %}</label>
                     <div class="col-sm-6">
