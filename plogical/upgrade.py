@@ -651,8 +651,10 @@ imap_folder_list_limit = 0
 
             try:
                 cursor.execute("UPDATE loginSystem_acl SET config = '%s' where name = 'admin'" % (Upgrade.AdminACL))
-            except:
-                pass
+            except BaseException as msg:
+                print(str(msg))
+                import sleep
+                sleep(10)
 
             try:
                 cursor.execute("UPDATE loginSystem_acl SET config = '%s' where name = 'reseller'" % (Upgrade.ResellerACL))
