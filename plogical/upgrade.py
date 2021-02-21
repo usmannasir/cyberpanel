@@ -19,6 +19,10 @@ BUILD = 3
 
 CENTOS7 = 0
 CENTOS8 = 1
+Ubuntu18 = 2
+Ubuntu20 = 3
+CloudLinux7 = 4
+CloudLinux8 = 5
 
 
 class Upgrade:
@@ -26,6 +30,7 @@ class Upgrade:
     cdn = 'cdn.cyberpanel.sh'
     installedOutput = ''
     CentOSPath = '/etc/redhat-release'
+    UbuntuPath = '/etc/lsb-release'
 
     AdminACL = '{"adminStatus":1, "versionManagement": 1, "createNewUser": 1, "listUsers": 1, "deleteUser":1 , "resellerCenter": 1, ' \
                '"changeUserACL": 1, "createWebsite": 1, "modifyWebsite": 1, "suspendWebsite": 1, "deleteWebsite": 1, ' \
@@ -61,6 +66,25 @@ class Upgrade:
             return CENTOS8
         else:
             return CENTOS7
+
+    @staticmethod
+    def FindOperatingSytem():
+
+        if os.path.exists(Upgrade.CentOSPath):
+            result = open(Upgrade.CentOSPath, 'r').read()
+
+            if result.find('CentOS Linux release 8') > -1 or result.find('CloudLinux release 8') > -1:
+                return CENTOS8
+            else:
+                return CENTOS7
+        else:
+            result = open(Upgrade.UbuntuPath, 'r').read()
+
+            if result.find('20.04') > -1:
+                return Ubuntu20
+            else:
+                return Ubuntu18
+
 
     @staticmethod
     def stdOut(message, do_exit=0):
@@ -2070,7 +2094,7 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             command = 'cp -pR %s %s' % (postfixConfPath, configbackups)
             Upgrade.executioner(command, 0)
 
-            if os.path.exists(CentOSPath):
+            if Upgrade.FindOperatingSytem() == CENTOS8 or Upgrade.FindOperatingSytem() == CENTOS7:
 
                 command = "yum makecache -y"
                 Upgrade.executioner(command, 0)
@@ -2078,7 +2102,7 @@ echo $oConfig->Save() ? 'Done' : 'Error';
                 command = "yum update -y"
                 Upgrade.executioner(command, 0)
 
-                if Upgrade.decideCentosVersion() == CENTOS8:
+                if Upgrade.FindOperatingSytem() == CENTOS8:
                     command = 'dnf remove dovecot23 dovecot23-mysql -y'
                     Upgrade.executioner(command, 0)
 
@@ -2109,14 +2133,14 @@ echo $oConfig->Save() ? 'Done' : 'Error';
                 command = 'yum clean all'
                 Upgrade.executioner(command, 0)
 
-                if Upgrade.decideCentosVersion() == CENTOS7:
+                if Upgrade.FindOperatingSytem() == CENTOS7:
                     command = 'yum makecache fast'
                 else:
                     command = 'yum makecache -y'
 
                 Upgrade.executioner(command, 0)
 
-                if Upgrade.decideCentosVersion() == CENTOS7:
+                if Upgrade.FindOperatingSytem() == CENTOS7:
                     command = 'yum install --enablerepo=gf-plus -y postfix3 postfix3-ldap postfix3-mysql postfix3-pcre'
                 else:
                     command = 'dnf install --enablerepo=gf-plus postfix3 postfix3-mysql -y'
@@ -2135,6 +2159,30 @@ echo $oConfig->Save() ? 'Done' : 'Error';
 
                 command = 'systemctl restart postfix'
                 Upgrade.executioner(command, 0)
+            elif Upgrade.FindOperatingSytem() == Ubuntu20:
+
+                debPath = '/etc/apt/sources.list.d/dovecot.list'
+                writeToFile = open(debPath, 'w')
+                writeToFile.write('deb https://repo.dovecot.org/ce-2.3-latest/ubuntu/focal focal main\n')
+                writeToFile.close()
+
+                command = "apt update -y"
+                Upgrade.executioner(command, command)
+
+                try:
+                    os.remove('/etc/dovecot/conf.d/10-mail.conf')
+                    os.remove('/etc/dovecot/conf.d/15-mailboxes.conf')
+                    os.remove('/etc/dovecot/conf.d/15-mailboxes.conf')
+                except:
+                    pass
+
+                command = "apt upgrade -y"
+                Upgrade.executioner(command, command)
+
+
+
+
+
 
             dovecotConf = '/etc/dovecot/dovecot.conf'
 
