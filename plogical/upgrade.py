@@ -2317,7 +2317,8 @@ vmail
             command = 'chmod 600 %s' % (cronPath)
             Upgrade.executioner(command, 0)
 
-    def UpdateConfigOfCustomACL(self):
+    @staticmethod
+    def UpdateConfigOfCustomACL():
         from loginSystem.models import ACL
         for acl in ACL.objects.all():
             if acl.name == 'admin' or acl.name == 'reseller' or acl.name == 'user':
