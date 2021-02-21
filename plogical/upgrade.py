@@ -2169,8 +2169,14 @@ echo $oConfig->Save() ? 'Done' : 'Error';
                 command = "apt update -y"
                 Upgrade.executioner(command, command)
 
+                command = 'dpkg --configure -a'
+                subprocess.call(command, shell=True)
+
+                command = 'apt --fix-broken install -y'
+                subprocess.call(command, shell=True)
+
                 command = 'apt -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" upgrade -y'
-                Upgrade.executioner(command, command)
+                subprocess.call(command, shell=True)
 
 
 
