@@ -2319,6 +2319,10 @@ vmail
 
     @staticmethod
     def UpdateConfigOfCustomACL():
+        sys.path.append('/usr/local/CyberCP')
+        os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
+        import django
+        django.setup()
         from loginSystem.models import ACL
         for acl in ACL.objects.all():
             if acl.name == 'admin' or acl.name == 'reseller' or acl.name == 'user':
