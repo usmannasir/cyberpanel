@@ -2169,14 +2169,7 @@ echo $oConfig->Save() ? 'Done' : 'Error';
                 command = "apt update -y"
                 Upgrade.executioner(command, command)
 
-                try:
-                    os.remove('/etc/dovecot/conf.d/10-mail.conf')
-                    os.remove('/etc/dovecot/conf.d/15-mailboxes.conf')
-                    os.remove('/etc/dovecot/conf.d/15-mailboxes.conf')
-                except:
-                    pass
-
-                command = "apt upgrade -y"
+                command = 'apt -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" upgrade -y'
                 Upgrade.executioner(command, command)
 
 
