@@ -9,6 +9,27 @@ class httpProc:
         self.templateName = templateName
         self.data = data
 
+
+    def render(self):
+        try:
+
+            userID = self.request.session['userID']
+            admin = self.data['admin']
+
+            ###
+
+            if self.data == None:
+                self.data = {}
+
+            self.data['fullName'] = admin.fullName
+            self.data['ownerEmail'] = admin.email
+
+            return render(self.request, self.templateName, self.data)
+
+        except BaseException as msg:
+            templateName = 'UserManagement/login.html'
+            return render(self.request, templateName)
+
     def renderPre(self):
         if self.data == None:
             return render(self.request, self.templateName)
@@ -41,4 +62,7 @@ class httpProc:
         final_dic = {'status': status, 'error_message': errorMessage, 'success': success}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
+
+
+
 

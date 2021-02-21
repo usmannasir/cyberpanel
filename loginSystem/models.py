@@ -72,6 +72,9 @@ class ACL(models.Model):
    manageSSL = models.IntegerField(default=1)
    hostnameSSL = models.IntegerField(default=0)
    mailServerSSL = models.IntegerField(default=0)
+   config = models.TextField(default='{}')
+
+
 
 class Administrator(models.Model):
    userName = models.CharField(unique=True,max_length = 50)

@@ -75,18 +75,9 @@
 
     <!-- HELPERS -->
 
+    {% with version="2.0.4" %}
+
     <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/finalBase/finalBase.css' %}">
-
-    <!-- ELEMENTS -->
-
-    <!-- ICONS -->
-
-    <!-- WIDGETS -->
-
-    <!-- SNIPPETS -->
-
-    <!-- APPLICATIONS -->
-    <!-- Admin theme -->
 
     <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/finalBase/finalBaseTheme.css' %}">
 
@@ -965,34 +956,36 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="{% static 'baseTemplate/custom-js/pnotify.custom.min.js' %}"></script>
-    <script src="{% static 'baseTemplate/custom-js/system-status.js' %}"></script>
-    <script src="{% static 'packages/packages.js' %}"></script>
-    <script src="{% static 'websiteFunctions/websiteFunctions.js' %}"></script>
-    <script src="{% static 'tuning/tuning.js' %}"></script>
-    <script src="{% static 'serverStatus/serverStatus.js' %}"></script>
-    <script src="{% static 'dns/dns.js' %}"></script>
-    <script src="{% static 'ftp/ftp.js' %}"></script>
-    <script src="{% static 'userManagment/userManagment.js' %}"></script>
-    <script src="{% static 'databases/databases.js' %}"></script>
-    <script src="{% static 'mailServer/mailServer.js' %}"></script>
-    <script src="{% static 'serverLogs/serverLogs.js' %}"></script>
-    <script src="{% static 'emailPremium/emailPremium.js' %}"></script>
-    <script src="{% static 'emailMarketing/emailMarketing.js' %}"></script>
+    <script src="{% static 'baseTemplate/custom-js/system-status.js' %}?ver={{ version }}"></script>
+    <script src="{% static 'packages/packages.js' %}?ver={{ version }}"></script>
+    <script src="{% static 'websiteFunctions/websiteFunctions.js' %}?ver={{ version }}"></script>
+    <script src="{% static 'tuning/tuning.js' %}?ver={{ version }}"></script>
+    <script src="{% static 'serverStatus/serverStatus.js' %}?ver={{ version }}"></script>
+    <script src="{% static 'dns/dns.js' %}?ver={{ version }}"></script>
+    <script src="{% static 'ftp/ftp.js' %}?ver={{ version }}"></script>
+    <script src="{% static 'userManagment/userManagment.js' %}?ver={{ version }}"></script>
+    <script src="{% static 'databases/databases.js' %}?ver={{ version }}"></script>
+    <script src="{% static 'mailServer/mailServer.js' %}?ver={{ version }}"></script>
+    <script src="{% static 'serverLogs/serverLogs.js' %}?ver={{ version }}"></script>
+    <script src="{% static 'emailPremium/emailPremium.js' %}?ver={{ version }}"></script>
+    <script src="{% static 'emailMarketing/emailMarketing.js' %}?ver={{ version }}"></script>
 
     <script type="text/javascript" src="{% static 'baseTemplate/assets/finalJS/final.js' %}"></script>
-    <script src="{% static 'backup/backup.js' %}"></script>
-    <script src="{% static 'managePHP/managePHP.js' %}"></script>
+    <script src="{% static 'backup/backup.js' %}?ver={{ version }}"></script>
+    <script src="{% static 'managePHP/managePHP.js' %}?ver={{ version }}"></script>
     <script src="{% static 'baseTemplate/bootstrap-toggle.min.js' %}"></script>
-    <script src="{% static 'firewall/firewall.js' %}"></script>
-    <script src="{% static 'manageSSL/manageSSL.js' %}"></script>
-    <script src="{% static 'manageServices/manageServices.js' %}"></script>
-    <script src="{% static 'dockerManager/dockerManager.js' %}"></script>
-    <script src="{% static 'containerization/containerization.js' %}"></script>
-    <script src="{% static 'CLManager/CLManager.js' %}"></script>
-    <script src="{% static 'IncBackups/IncBackups.js' %}"></script>
-    <script src="{% static 'WebTerminal/term.js' %}"></script>
-    <script src="{% static 'WebTerminal/ws.js' %}"></script>
-    <script src="{% static 'WebTerminal/main.js' %}"></script>
+    <script src="{% static 'firewall/firewall.js' %}?ver={{ version }}"></script>
+    <script src="{% static 'manageSSL/manageSSL.js' %}?ver={{ version }}"></script>
+    <script src="{% static 'manageServices/manageServices.js' %}?ver={{ version }}"></script>
+    <script src="{% static 'dockerManager/dockerManager.js' %}?ver={{ version }}"></script>
+    <script src="{% static 'containerization/containerization.js' %}?ver={{ version }}"></script>
+    <script src="{% static 'CLManager/CLManager.js' %}?ver={{ version }}"></script>
+    <script src="{% static 'IncBackups/IncBackups.js' %}?ver={{ version }}"></script>
+    <script src="{% static 'WebTerminal/term.js' %}?ver={{ version }}"></script>
+    <script src="{% static 'WebTerminal/ws.js' %}?ver={{ version }}"></script>
+    <script src="{% static 'WebTerminal/main.js' %}?ver={{ version }}"></script>
+
+    {% endwith %}
 
 </div>
 {% block footer_scripts %}
