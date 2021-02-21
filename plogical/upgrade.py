@@ -650,17 +650,17 @@ imap_folder_list_limit = 0
                 pass
 
             try:
-                cursor.execute("UPDATE loginSystem_acl SET config = '%s' where userName = 'admin'" % (Upgrade.AdminACL))
+                cursor.execute("UPDATE loginSystem_acl SET config = '%s' where name = 'admin'" % (Upgrade.AdminACL))
             except:
                 pass
 
             try:
-                cursor.execute("UPDATE loginSystem_acl SET config = '%s' where userName = 'reseller'" % (Upgrade.ResellerACL))
+                cursor.execute("UPDATE loginSystem_acl SET config = '%s' where name = 'reseller'" % (Upgrade.ResellerACL))
             except:
                 pass
 
             try:
-                cursor.execute("UPDATE loginSystem_acl SET config = '%s' where userName = 'user'" % (Upgrade.UserACL))
+                cursor.execute("UPDATE loginSystem_acl SET config = '%s' where name = 'user'" % (Upgrade.UserACL))
             except:
                 pass
 
