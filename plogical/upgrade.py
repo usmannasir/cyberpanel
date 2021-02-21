@@ -2317,6 +2317,25 @@ vmail
             command = 'chmod 600 %s' % (cronPath)
             Upgrade.executioner(command, 0)
 
+    def UpdateConfigOfCustomACL(self):
+        from loginSystem.models import ACL
+        for acl in ACL.objects.all():
+            if acl.name == 'admin' or acl.name == 'reseller' or acl.name == 'user':
+                continue
+            elif acl.config == '{}':
+                acl.config = '{"adminStatus":%s, "versionManagement": %s, "createNewUser": %s, "listUsers": %s, "deleteUser": %s, "resellerCenter": %s, "changeUserACL": %s, "createWebsite": %s, "modifyWebsite": %s, "suspendWebsite": %s, "deleteWebsite": %s, "createPackage": %s, "listPackages": %s, "deletePackage": %s, "modifyPackage": %s, "createDatabase": %s, "deleteDatabase": %s, "listDatabases": %s, "createNameServer": %s, "createDNSZone": %s, "deleteZone": %s, "addDeleteRecords": %s, "createEmail": %s, "listEmails": %s, "deleteEmail": %s, "emailForwarding": %s, "changeEmailPassword": %s, "dkimManager": %s, "createFTPAccount": %s, "deleteFTPAccount": %s, "listFTPAccounts": %s, "createBackup": %s, "restoreBackup": %s, "addDeleteDestinations": %s, "scheDuleBackups": %s, "remoteBackups": %s, "googleDriveBackups": %s, "manageSSL": %s, "hostnameSSL": %s, "mailServerSSL": %s }' \
+                             % (str(acl.adminStatus), str(acl.versionManagement), str(acl.createNewUser),
+                                str(acl.listUsers), str(acl.deleteUser), str(acl.resellerCenter), str(acl.changeUserACL),
+                                str(acl.createWebsite), str(acl.modifyWebsite), str(acl.suspendWebsite), str(acl.deleteWebsite),
+                                str(acl.createPackage), str(acl.listPackages), str(acl.deletePackage), str(acl.modifyPackage),
+                                str(acl.createDatabase), str(acl.deleteDatabase), str(acl.listDatabases), str(acl.createNameServer),
+                                str(acl.createDNSZone), str(acl.deleteZone), str(acl.addDeleteRecords), str(acl.createEmail),
+                                str(acl.listEmails), str(acl.deleteEmail), str(acl.emailForwarding), str(acl.changeEmailPassword),
+                                str(acl.dkimManager), str(acl.createFTPAccount), str(acl.deleteFTPAccount), str(acl.listFTPAccounts),
+                                str(acl.createBackup), str(acl.restoreBackup), str(acl.addDeleteDestinations), str(acl.scheDuleBackups), str(acl.remoteBackups), '1',
+                                str(acl.manageSSL), str(acl.hostnameSSL), str(acl.mailServerSSL))
+                acl.save()
+
     @staticmethod
     def upgrade(branch):
 
@@ -2397,6 +2416,11 @@ vmail
         ##
 
         Upgrade.applyLoginSystemMigrations()
+
+        ## Put function here to update custom ACLs
+
+        Upgrade.UpdateConfigOfCustomACL()
+
         Upgrade.s3BackupMigrations()
         Upgrade.containerMigrations()
         Upgrade.manageServiceMigrations()
@@ -2463,6 +2487,7 @@ vmail
             Upgrade.executioner(command, command, 1)
 
         Upgrade.stdOut("Upgrade Completed.")
+
 
 
 def main():
