@@ -2175,7 +2175,7 @@ echo $oConfig->Save() ? 'Done' : 'Error';
                 command = 'apt --fix-broken install -y'
                 subprocess.call(command, shell=True)
 
-                command = 'apt -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" upgrade -y'
+                command = 'DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical apt -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" upgrade -y'
                 subprocess.call(command, shell=True)
 
 
