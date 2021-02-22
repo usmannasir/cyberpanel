@@ -12,18 +12,17 @@ class httpProc:
 
     def render(self):
         try:
-
+            from loginSystem.models import Administrator
+            from plogical.acl import ACLManager
             userID = self.request.session['userID']
-            admin = self.data['admin']
+            admin = Administrator.objects.get(pk=userID)
 
             ###
 
             if self.data == None:
                 self.data = {}
 
-            self.data['fullName'] = admin.fullName
-            self.data['ownerEmail'] = admin.email
-
+            self.data.update(ACLManager.loadedACL(userID))
             return render(self.request, self.templateName, self.data)
 
         except BaseException as msg:

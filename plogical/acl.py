@@ -76,73 +76,76 @@ class ACLManager:
         else:
             finalResponse['admin'] = 0
 
+            config = json.loads(admin.acl.config)
+
             acl = ACL.objects.get(name=admin.acl.name)
-            finalResponse['versionManagement'] = acl.versionManagement
+            finalResponse['versionManagement'] = config['versionManagement']
 
             ## User Management
 
-            finalResponse['createNewUser'] = acl.createNewUser
-            finalResponse['listUsers'] = acl.listUsers
-            finalResponse['deleteUser'] = acl.deleteUser
-            finalResponse['changeUserACL'] = acl.changeUserACL
-            finalResponse['resellerCenter'] = acl.resellerCenter
+            finalResponse['createNewUser'] = config['createNewUser']
+            finalResponse['listUsers'] = config['listUsers']
+            finalResponse['deleteUser'] = config['deleteUser']
+            finalResponse['changeUserACL'] = config['changeUserACL']
+            finalResponse['resellerCenter'] = config['resellerCenter']
 
             ## Website Management
 
-            finalResponse['createWebsite'] = acl.createWebsite
-            finalResponse['modifyWebsite'] = acl.modifyWebsite
-            finalResponse['suspendWebsite'] = acl.suspendWebsite
-            finalResponse['deleteWebsite'] = acl.deleteWebsite
+            finalResponse['createWebsite'] = config['createWebsite']
+            finalResponse['modifyWebsite'] = config['modifyWebsite']
+            finalResponse['suspendWebsite'] = config['suspendWebsite']
+            finalResponse['deleteWebsite'] = config['deleteWebsite']
 
             ## Package Management
 
 
-            finalResponse['createPackage'] = acl.createPackage
-            finalResponse['listPackages'] = acl.listPackages
-            finalResponse['deletePackage'] = acl.deletePackage
-            finalResponse['modifyPackage'] = acl.modifyPackage
+            finalResponse['createPackage'] = config['createPackage']
+            finalResponse['listPackages'] = config['listPackages']
+            finalResponse['deletePackage'] = config['deletePackage']
+            finalResponse['modifyPackage'] = config['modifyPackage']
 
             ## Database Management
 
-            finalResponse['createDatabase'] = acl.createDatabase
-            finalResponse['deleteDatabase'] = acl.deleteDatabase
-            finalResponse['listDatabases'] = acl.listDatabases
+            finalResponse['createDatabase'] = config['createDatabase']
+            finalResponse['deleteDatabase'] = config['deleteDatabase']
+            finalResponse['listDatabases'] = config['listDatabases']
 
             ## DNS Management
 
-            finalResponse['createNameServer'] = acl.createNameServer
-            finalResponse['createDNSZone'] = acl.createDNSZone
-            finalResponse['deleteZone'] = acl.deleteZone
-            finalResponse['addDeleteRecords'] = acl.addDeleteRecords
+            finalResponse['createNameServer'] = config['createNameServer']
+            finalResponse['createDNSZone'] = config['createDNSZone']
+            finalResponse['deleteZone'] = config['deleteZone']
+            finalResponse['addDeleteRecords'] = config['addDeleteRecords']
 
             ## Email Management
 
-            finalResponse['createEmail'] = acl.createEmail
-            finalResponse['listEmails'] = acl.listEmails
-            finalResponse['deleteEmail'] = acl.deleteEmail
-            finalResponse['emailForwarding'] = acl.emailForwarding
-            finalResponse['changeEmailPassword'] = acl.changeEmailPassword
-            finalResponse['dkimManager'] = acl.dkimManager
+            finalResponse['createEmail'] = config['createEmail']
+            finalResponse['listEmails'] = config['listEmails']
+            finalResponse['deleteEmail'] = config['deleteEmail']
+            finalResponse['emailForwarding'] = config['emailForwarding']
+            finalResponse['changeEmailPassword'] = config['changeEmailPassword']
+            finalResponse['dkimManager'] = config['dkimManager']
 
             ## FTP Management
 
-            finalResponse['createFTPAccount'] = acl.createFTPAccount
-            finalResponse['deleteFTPAccount'] = acl.deleteFTPAccount
-            finalResponse['listFTPAccounts'] = acl.listFTPAccounts
+            finalResponse['createFTPAccount'] = config['createFTPAccount']
+            finalResponse['deleteFTPAccount'] = config['deleteFTPAccount']
+            finalResponse['listFTPAccounts'] = config['listFTPAccounts']
 
             ## Backup Management
 
-            finalResponse['createBackup'] = acl.createBackup
-            finalResponse['restoreBackup'] = acl.restoreBackup
-            finalResponse['addDeleteDestinations'] = acl.addDeleteDestinations
-            finalResponse['scheDuleBackups'] = acl.scheDuleBackups
-            finalResponse['remoteBackups'] = acl.remoteBackups
+            finalResponse['createBackup'] = config['createBackup']
+            finalResponse['googleDriveBackups'] = config['googleDriveBackups']
+            finalResponse['restoreBackup'] = config['restoreBackup']
+            finalResponse['addDeleteDestinations'] = config['addDeleteDestinations']
+            finalResponse['scheDuleBackups'] = config['scheDuleBackups']
+            finalResponse['remoteBackups'] = config['remoteBackups']
 
             ## SSL Management
 
-            finalResponse['manageSSL'] = acl.manageSSL
-            finalResponse['hostnameSSL'] = acl.hostnameSSL
-            finalResponse['mailServerSSL'] = acl.mailServerSSL
+            finalResponse['manageSSL'] = config['manageSSL']
+            finalResponse['hostnameSSL'] = config['hostnameSSL']
+            finalResponse['mailServerSSL'] = config['mailServerSSL']
 
         return finalResponse
 

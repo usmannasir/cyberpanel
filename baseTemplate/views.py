@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-
-
 from django.shortcuts import render,redirect
 from django.http import HttpResponse
 from plogical.getSystemInformation import SystemInformation
@@ -16,6 +14,7 @@ from plogical.acl import ACLManager
 from manageServices.models import PDNSStatus
 from django.views.decorators.csrf import ensure_csrf_cookie
 from plogical.processUtilities import ProcessUtilities
+from plogical.httpProc import httpProc
 # Create your views here.
 
 VERSION = '2.0'
@@ -23,22 +22,12 @@ BUILD = 3
 
 @ensure_csrf_cookie
 def renderBase(request):
-    try:
-        userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
-
-        if currentACL['admin'] == 1:
-            admin = 1
-        else:
-            admin = 0
-
-        cpuRamDisk = SystemInformation.cpuRamDisk()
-
-        finaData = {"admin": admin,'ramUsage':cpuRamDisk['ramUsage'],'cpuUsage':cpuRamDisk['cpuUsage'],'diskUsage':cpuRamDisk['diskUsage'] }
-
-        return render(request, 'baseTemplate/homePage.html', finaData)
-    except KeyError:
-        return redirect(loadLoginPage)
+    template = 'baseTemplate/homePage.html'
+    cpuRamDisk = SystemInformation.cpuRamDisk()
+    finaData = {'ramUsage': cpuRamDisk['ramUsage'], 'cpuUsage': cpuRamDisk['cpuUsage'],
+                'diskUsage': cpuRamDisk['diskUsage']}
+    proc = httpProc(request, template, finaData)
+    return proc.render()
 
 def getAdminStatus(request):
     try:
