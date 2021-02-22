@@ -539,7 +539,7 @@ memcached_installation() {
 
     if [[ $TOTAL_RAM -eq "2048" ]] || [[ $TOTAL_RAM -gt "2048" ]]; then
       DEBIAN_FRONTEND=noninteractive apt install build-essential zlib1g-dev libexpat1-dev openssl libssl-dev libsasl2-dev libpcre3-dev git -y
-      wget https://$DOWNLOAD/litespeed/lsmcd.tar.gz
+      wget https://$DOWNLOAD_SERVER/litespeed/lsmcd.tar.gz
       tar xzvf lsmcd.tar.gz
       DIR=$(pwd)
       cd $DIR/lsmcd
