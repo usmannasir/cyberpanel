@@ -88,38 +88,26 @@ def getLoadAverage(request):
 
 @ensure_csrf_cookie
 def versionManagment(request):
-    try:
-        userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
+    ## Get latest version
 
-        if currentACL['admin'] == 1:
-            pass
-        elif currentACL['versionManagement'] == 1:
-            pass
-        else:
-            return ACLManager.loadError()
+    getVersion = requests.get('https://cyberpanel.net/version.txt')
 
-        ## Get latest version
+    latest = getVersion.json()
 
-        getVersion = requests.get('https://cyberpanel.net/version.txt')
+    latestVersion = latest['version']
+    latestBuild = latest['build']
 
-        latest = getVersion.json()
+    ## Get local version
 
-        latestVersion = latest['version']
-        latestBuild = latest['build']
+    currentVersion = VERSION
+    currentBuild = str(BUILD)
 
-        ## Get local version
+    template = 'baseTemplate/versionManagment.html'
+    finalData = {'build': currentBuild, 'currentVersion': currentVersion, 'latestVersion': latestVersion,
+                 'latestBuild': latestBuild}
 
-        currentVersion = VERSION
-        currentBuild = str(BUILD)
-
-        return render(request, 'baseTemplate/versionManagment.html', {'build': currentBuild,
-                                                                      'currentVersion': currentVersion,
-                                                                      'latestVersion': latestVersion,
-                                                                      'latestBuild': latestBuild})
-
-    except KeyError:
-        return redirect(loadLoginPage)
+    proc = httpProc(request, template, finalData, 'versionManagement')
+    return proc.render()
 
 def upgrade(request):
     try:

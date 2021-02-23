@@ -2,12 +2,14 @@
 
 from django.shortcuts import render, HttpResponse
 import json
+from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter
 
 class httpProc:
-    def __init__(self, request, templateName, data = None):
+    def __init__(self, request, templateName, data = None, function = None):
         self.request = request
         self.templateName = templateName
         self.data = data
+        self.function = function
 
 
     def render(self):
@@ -15,19 +17,33 @@ class httpProc:
             from loginSystem.models import Administrator
             from plogical.acl import ACLManager
             userID = self.request.session['userID']
-            admin = Administrator.objects.get(pk=userID)
+            currentACL = ACLManager.loadedACL(userID)
+
+            ### Permissions Check
+
+            if self.function != None:
+                if not currentACL['admin']:
+                    if not currentACL[self.function]:
+                        templateName = 'baseTemplate/error.html'
+                        return render(self.request, templateName, {'error_message': 'You are not authorized to access %s' % (self.function)})
 
             ###
 
             if self.data == None:
                 self.data = {}
 
-            self.data.update(ACLManager.loadedACL(userID))
-            return render(self.request, self.templateName, self.data)
+            ipFile = "/etc/cyberpanel/machineIP"
+            f = open(ipFile)
+            ipData = f.read()
+            ipAddress = ipData.split('\n', 1)[0]
+            self.data['ipAddress'] = ipAddress
 
+            self.data.update(currentACL)
+
+            return render(self.request, self.templateName, self.data)
         except BaseException as msg:
-            templateName = 'UserManagement/login.html'
-            return render(self.request, templateName)
+            templateName = 'baseTemplate/error.html'
+            return render(self.request, templateName, {'error_message': str(msg)})
 
     def renderPre(self):
         if self.data == None:

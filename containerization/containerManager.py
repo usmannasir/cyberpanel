@@ -5,7 +5,7 @@ from plogical.acl import ACLManager
 import plogical.CyberCPLogFileWriter as logging
 from serverStatus.serverStatusUtil import ServerStatusUtil
 import os, stat
-
+from plogical.httpProc import httpProc
 
 class ContainerManager(multi.Thread):
     defaultConf = """group {groupName}{
@@ -84,14 +84,6 @@ class ContainerManager(multi.Thread):
 
     def renderC(self):
 
-        userID = self.request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
-
-        if currentACL['admin'] == 1:
-            pass
-        else:
-            return ACLManager.loadError()
-
         data = {}
         data['OLS'] = 0
         data['notInstalled'] = 0
@@ -99,17 +91,20 @@ class ContainerManager(multi.Thread):
         if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
             data['OLS'] = 1
             data['notInstalled'] = 0
-            return render(self.request, 'containerization/notAvailable.html', data)
+            proc = httpProc(self.request, 'containerization/notAvailable.html', data, 'admin')
+            return proc.render()
         elif not ProcessUtilities.containerCheck():
             data['OLS'] = 0
             data['notInstalled'] = 1
-            return render(self.request, 'containerization/notAvailable.html', data)
+            proc = httpProc(self.request, 'containerization/notAvailable.html', data, 'admin')
+            return proc.render()
         else:
             if self.data == None:
                 self.data = {}
             self.data['OLS'] = 0
             self.data['notInstalled'] = 0
-            return render(self.request, self.templateName, self.data)
+            proc = httpProc(self.request, self.templateName, data, 'admin')
+            return proc.render()
 
     def submitContainerInstall(self):
         try:
@@ -165,7 +160,6 @@ class ContainerManager(multi.Thread):
         #        self.data['classID']) + ' protocol ip prio 10 handle 1: cgroup'
 
         command = 'sudo tc filter add dev eth0 parent 10: protocol ip prio 10 handle 1: cgroup'
-        #logging.CyberCPLogFileWriter.writeToFile(command)
         ProcessUtilities.executioner(command)
 
         self.restartServices()

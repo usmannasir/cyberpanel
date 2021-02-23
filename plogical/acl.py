@@ -71,14 +71,12 @@ class ACLManager:
         finalResponse['serverIPAddress'] = serverIPAddress
         finalResponse['adminName'] = admin.firstName
 
-        if admin.acl.adminStatus == 1:
+        config = json.loads(admin.acl.config)
+
+        if config['adminStatus']:
             finalResponse['admin'] = 1
         else:
             finalResponse['admin'] = 0
-
-            config = json.loads(admin.acl.config)
-
-            acl = ACL.objects.get(name=admin.acl.name)
             finalResponse['versionManagement'] = config['versionManagement']
 
             ## User Management
