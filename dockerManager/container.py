@@ -6,6 +6,8 @@ import sys
 import django
 import mimetypes
 
+from plogical.httpProc import httpProc
+
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
@@ -91,59 +93,53 @@ class ContainerManager(multi.Thread):
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath, str(msg) + ' [404].', 1)
 
     def createContainer(self, request=None, userID=None, data=None):
+        client = docker.from_env()
+        dockerAPI = docker.APIClient()
+
+        adminNames = ACLManager.loadAllUsers(userID)
+        tag = request.GET.get('tag')
+        image = request.GET.get('image')
+        tag = tag.split(" (")[0]
+
+        if "/" in image:
+            name = image.split("/")[0] + "." + image.split("/")[1]
+        else:
+            name = image
+
         try:
-            admin = Administrator.objects.get(pk=userID)
-            if admin.acl.adminStatus != 1:
-                return ACLManager.loadError()
+            inspectImage = dockerAPI.inspect_image(image + ":" + tag)
+        except docker.errors.ImageNotFound:
+            val = request.session['userID']
+            admin = Administrator.objects.get(pk=val)
+            return render(request, 'dockerManager/images.html', {"type": admin.type,
+                                                                 'image': image,
+                                                                 'tag': tag})
 
-            client = docker.from_env()
-            dockerAPI = docker.APIClient()
+        envList = {};
+        if 'Env' in inspectImage['Config']:
+            for item in inspectImage['Config']['Env']:
+                if '=' in item:
+                    splitedItem = item.split('=', 1)
+                    print(splitedItem)
+                    envList[splitedItem[0]] = splitedItem[1]
+                else:
+                    envList[item] = ""
 
-            adminNames = ACLManager.loadAllUsers(userID)
-            tag = request.GET.get('tag')
-            image = request.GET.get('image')
-            tag = tag.split(" (")[0]
+        portConfig = {};
+        if 'ExposedPorts' in inspectImage['Config']:
+            for item in inspectImage['Config']['ExposedPorts']:
+                portDef = item.split('/')
+                portConfig[portDef[0]] = portDef[1]
 
-            if "/" in image:
-                name = image.split("/")[0] + "." + image.split("/")[1]
-            else:
-                name = image
+        if image is None or image is '' or tag is None or tag is '':
+            return redirect(loadImages)
 
-            try:
-                inspectImage = dockerAPI.inspect_image(image + ":" + tag)
-            except docker.errors.ImageNotFound:
-                val = request.session['userID']
-                admin = Administrator.objects.get(pk=val)
-                return render(request, 'dockerManager/images.html', {"type": admin.type,
-                                                                     'image': image,
-                                                                     'tag': tag})
+        Data = {"ownerList": adminNames, "image": image, "name": name, "tag": tag, "portConfig": portConfig,
+                "envList": envList}
 
-            envList = {};
-            if 'Env' in inspectImage['Config']:
-                for item in inspectImage['Config']['Env']:
-                    if '=' in item:
-                        splitedItem = item.split('=', 1)
-                        print(splitedItem)
-                        envList[splitedItem[0]] = splitedItem[1]
-                    else:
-                        envList[item] = ""
-
-            portConfig = {};
-            if 'ExposedPorts' in inspectImage['Config']:
-                for item in inspectImage['Config']['ExposedPorts']:
-                    portDef = item.split('/')
-                    portConfig[portDef[0]] = portDef[1]
-
-            if image is None or image is '' or tag is None or tag is '':
-                return redirect(loadImages)
-
-            Data = {"ownerList": adminNames, "image": image, "name": name, "tag": tag, "portConfig": portConfig,
-                    "envList": envList}
-
-            return render(request, 'dockerManager/runContainer.html', Data)
-
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+        template = 'dockerManager/runContainer.html'
+        proc = httpProc(request, template, Data, 'admin')
+        return proc.render()
 
     def loadContainerHome(self, request=None, userID=None, data=None):
         name = self.name
@@ -196,51 +192,52 @@ class ContainerManager(multi.Thread):
             data['memoryUsage'] = 0
             data['cpuUsage'] = 0
 
-        return render(request, 'dockerManager/viewContainer.html', data)
+        template = 'dockerManager/viewContainer.html'
+        proc = httpProc(request, template, data, 'admin')
+        return proc.render()
 
     def listContainers(self, request=None, userID=None, data=None):
-        try:
-            client = docker.from_env()
-            dockerAPI = docker.APIClient()
+        client = docker.from_env()
+        dockerAPI = docker.APIClient()
 
-            currentACL = ACLManager.loadedACL(userID)
-            containers = ACLManager.findAllContainers(currentACL, userID)
+        currentACL = ACLManager.loadedACL(userID)
+        containers = ACLManager.findAllContainers(currentACL, userID)
 
-            allContainers = client.containers.list()
-            containersList = []
-            showUnlistedContainer = True
+        allContainers = client.containers.list()
+        containersList = []
+        showUnlistedContainer = True
 
-            # TODO: Add condition to show unlisted Containers only if user has admin level access
+        # TODO: Add condition to show unlisted Containers only if user has admin level access
 
-            unlistedContainers = []
-            for container in allContainers:
-                if container.name not in containers:
-                    unlistedContainers.append(container)
+        unlistedContainers = []
+        for container in allContainers:
+            if container.name not in containers:
+                unlistedContainers.append(container)
 
-            if not unlistedContainers:
-                showUnlistedContainer = False
+        if not unlistedContainers:
+            showUnlistedContainer = False
 
-            adminNames = ACLManager.loadAllUsers(userID)
+        adminNames = ACLManager.loadAllUsers(userID)
 
-            pages = float(len(containers)) / float(10)
-            pagination = []
+        pages = float(len(containers)) / float(10)
+        pagination = []
 
-            if pages <= 1.0:
-                pages = 1
-                pagination.append('<li><a href="\#"></a></li>')
-            else:
-                pages = ceil(pages)
-                finalPages = int(pages) + 1
+        if pages <= 1.0:
+            pages = 1
+            pagination.append('<li><a href="\#"></a></li>')
+        else:
+            pages = ceil(pages)
+            finalPages = int(pages) + 1
 
-                for i in range(1, finalPages):
-                    pagination.append('<li><a href="\#">' + str(i) + '</a></li>')
+            for i in range(1, finalPages):
+                pagination.append('<li><a href="\#">' + str(i) + '</a></li>')
 
-            return render(request, 'dockerManager/listContainers.html', {"pagination": pagination,
-                                                                         "unlistedContainers": unlistedContainers,
-                                                                         "adminNames": adminNames,
-                                                                         "showUnlistedContainer": showUnlistedContainer})
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+        template = 'dockerManager/listContainers.html'
+        proc = httpProc(request, template, {"pagination": pagination,
+                                            "unlistedContainers": unlistedContainers,
+                                            "adminNames": adminNames,
+                                            "showUnlistedContainer": showUnlistedContainer}, 'admin')
+        return proc.render()
 
     def getContainerLogs(self, userID=None, data=None):
         try:
@@ -774,7 +771,9 @@ class ContainerManager(multi.Thread):
                 except:
                     continue
 
-            return render(request, 'dockerManager/images.html', {"images": images, "test": ''})
+            template = 'dockerManager/images.html'
+            proc = httpProc(request, template, {"images": images, "test": ''}, 'admin')
+            return proc.render()
 
         except BaseException as msg:
             return HttpResponse(str(msg))
@@ -808,7 +807,9 @@ class ContainerManager(multi.Thread):
                 except:
                     continue
 
-            return render(request, 'dockerManager/manageImages.html', {"images": images})
+            template = 'dockerManager/manageImages.html'
+            proc = httpProc(request, template, {"images": images}, 'admin')
+            return proc.render()
 
         except BaseException as msg:
             return HttpResponse(str(msg))

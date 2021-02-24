@@ -6,6 +6,7 @@ from django.http import HttpResponse
 from mailServer.models import Domains, EUsers
 # Create your views here.
 from loginSystem.models import Administrator
+from plogical.httpProc import httpProc
 from websiteFunctions.models import Websites
 from loginSystem.views import loadLoginPage
 import plogical.CyberCPLogFileWriter as logging
@@ -34,7 +35,9 @@ def emailPolicyServer(request):
         else:
             return ACLManager.loadError()
 
-        return render(request, 'emailPremium/policyServer.html')
+        proc = httpProc(request, 'emailPremium/policyServer.html',
+                        None, 'admin')
+        return proc.render()
 
     except KeyError:
         return redirect(loadLoginPage)
@@ -171,8 +174,9 @@ def listDomains(request):
                 for i in range(1, finalPages):
                     pagination.append('<li><a href="\#">' + str(i) + '</a></li>')
 
-
-            return render(request,'emailPremium/listDomains.html',{"pagination":pagination, "installCheck": installCheck})
+            proc = httpProc(request, 'emailPremium/listDomains.html',
+                            {"pagination":pagination, "installCheck": installCheck}, 'admin')
+            return proc.render()
 
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
@@ -350,9 +354,12 @@ def emailLimits(request,domain):
 
             Data['pagination'] = pagination
 
-            return render(request, 'emailPremium/emailLimits.html', Data)
+            proc = httpProc(request, 'emailPremium/emailLimits.html', Data, 'admin')
+            return proc.render()
+
         else:
-            return render(request, 'emailPremium/emailLimits.html', {"error":1,"domain": "This domain does not exists"})
+            proc = httpProc(request, 'emailPremium/emailLimits.html', {"error":1,"domain": "This domain does not exists"}, 'admin')
+            return proc.render()
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -525,7 +532,9 @@ def emailPage(request, emailAddress):
 
         Data['pagination'] = pagination
 
-        return render(request, 'emailPremium/emailPage.html', Data)
+        proc = httpProc(request, 'emailPremium/emailPage.html', Data, 'admin')
+        return proc.render()
+
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -785,8 +794,8 @@ def spamAssassinHome(request):
         if mailUtilities.checkIfSpamAssassinInstalled() == 1:
             checkIfSpamAssassinInstalled = 1
 
-        return render(request, 'emailPremium/SpamAssassin.html',{'checkIfSpamAssassinInstalled': checkIfSpamAssassinInstalled})
-
+        proc = httpProc(request, 'emailPremium/SpamAssassin.html', {'checkIfSpamAssassinInstalled': checkIfSpamAssassinInstalled}, 'admin')
+        return proc.render()
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -1037,8 +1046,9 @@ def mailQueue(request):
         else:
             return ACLManager.loadError()
 
-        return render(request, 'emailPremium/mailQueue.html')
-
+        proc = httpProc(request, 'emailPremium/mailQueue.html',
+                        None, 'admin')
+        return proc.render()
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -1195,7 +1205,9 @@ def MailScanner(request):
         if mailUtilities.checkIfMailScannerInstalled() == 1:
             checkIfMailScannerInstalled = 1
 
-        return render(request, 'emailPremium/MailScanner.html',{'checkIfMailScannerInstalled': checkIfMailScannerInstalled, 'ipAddress': ipAddress})
+        proc = httpProc(request, 'emailPremium/MailScanner.html',
+                        {'checkIfMailScannerInstalled': checkIfMailScannerInstalled, 'ipAddress': ipAddress}, 'admin')
+        return proc.render()
 
     except KeyError:
         return redirect(loadLoginPage)

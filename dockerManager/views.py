@@ -1,9 +1,10 @@
  # -*- coding: utf-8 -*-
 
 
-from django.shortcuts import render, redirect, HttpResponse
+from django.shortcuts import redirect, HttpResponse
 from loginSystem.models import Administrator
 from loginSystem.views import loadLoginPage
+from plogical.httpProc import httpProc
 from .container import ContainerManager
 from .decorators import preDockerRun
 from plogical.acl import ACLManager
@@ -25,15 +26,12 @@ def dockerPermission(request, userID, context):
         
 @preDockerRun
 def loadDockerHome(request):
-    try:
-        userID = request.session['userID']
-        perm = dockerPermission(request, userID, 'loadDockerHome')
-        if perm: return perm
-        
-        admin = Administrator.objects.get(pk=userID)
-        return render(request,'dockerManager/index.html',{"type":admin.type})
-    except KeyError:
-        return redirect(loadLoginPage)
+    userID = request.session['userID']
+    admin = Administrator.objects.get(pk=userID)
+    template = 'dockerManager/index.html'
+
+    proc = httpProc(request, template, {"type": admin.type}, 'admin')
+    return proc.render()
 
 def installDocker(request):
     try:

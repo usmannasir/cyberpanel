@@ -2,6 +2,9 @@
 import os.path
 import sys
 import django
+
+from plogical.httpProc import httpProc
+
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
@@ -33,8 +36,9 @@ class FTPManager:
 
     def loadFTPHome(self):
         try:
-            val = self.request.session['userID']
-            return render(self.request, 'ftp/index.html')
+            proc = httpProc(self.request, 'ftp/index.html',
+                            None, 'createFTPAccount')
+            return proc.render()
         except KeyError:
             return redirect(loadLoginPage)
 
@@ -49,12 +53,15 @@ class FTPManager:
             admin = Administrator.objects.get(pk=userID)
 
             if not os.path.exists('/home/cyberpanel/pureftpd'):
-                return render(self.request, "ftp/createFTPAccount.html", {"status": 0})
+                proc = httpProc(self.request, 'ftp/createFTPAccount.html',
+                                { "status": 0}, 'createFTPAccount')
+                return proc.render()
 
             websitesName = ACLManager.findAllSites(currentACL, userID)
 
-            return render(self.request, 'ftp/createFTPAccount.html',
-                          {'websiteList': websitesName, 'admin': admin.userName, "status": 1})
+            proc = httpProc(self.request, 'ftp/createFTPAccount.html',
+                            {'websiteList': websitesName, 'admin': admin.userName, "status": 1}, 'createFTPAccount')
+            return proc.render()
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return HttpResponse(str(msg))
@@ -123,11 +130,16 @@ class FTPManager:
                 return ACLManager.loadError()
 
             if not os.path.exists('/home/cyberpanel/pureftpd'):
-                return render(self.request, "ftp/deleteFTPAccount.html", {"status": 0})
+                proc = httpProc(self.request, 'ftp/deleteFTPAccount.html',
+                                { "status": 0}, 'deleteFTPAccount')
+                return proc.render()
 
             websitesName = ACLManager.findAllSites(currentACL, userID)
 
-            return render(self.request, 'ftp/deleteFTPAccount.html', {'websiteList': websitesName, "status": 1})
+            proc = httpProc(self.request, 'ftp/deleteFTPAccount.html',
+                            {'websiteList': websitesName, "status": 1}, 'deleteFTPAccount')
+            return proc.render()
+
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return HttpResponse(str(msg))
@@ -212,11 +224,14 @@ class FTPManager:
                 return ACLManager.loadError()
 
             if not os.path.exists('/home/cyberpanel/pureftpd'):
-                return render(self.request, "ftp/listFTPAccounts.html", {"status": 0})
+                proc = httpProc(self.request, 'ftp/listFTPAccounts.html',
+                                {"status": 0}, 'listFTPAccounts')
+                return proc.render()
 
             websitesName = ACLManager.findAllSites(currentACL, userID)
-
-            return render(self.request, 'ftp/listFTPAccounts.html', {'websiteList': websitesName, "status": 1})
+            proc = httpProc(self.request, 'ftp/listFTPAccounts.html',
+                            {'websiteList': websitesName, "status": 1}, 'listFTPAccounts')
+            return proc.render()
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return HttpResponse(str(msg))

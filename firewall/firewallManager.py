@@ -3,6 +3,9 @@ import os
 import os.path
 import sys
 import django
+
+from plogical.httpProc import httpProc
+
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
@@ -31,30 +34,14 @@ class FirewallManager:
         self.request = request
 
     def securityHome(self, request = None, userID = None):
-        try:
-            currentACL = ACLManager.loadedACL(userID)
-
-            if currentACL['admin'] == 1:
-                pass
-            else:
-                return ACLManager.loadError()
-
-            return render(request, 'firewall/index.html')
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+        proc = httpProc(request, 'firewall/index.html',
+                        None, 'admin')
+        return proc.render()
 
     def firewallHome(self, request = None, userID = None):
-        try:
-            currentACL = ACLManager.loadedACL(userID)
-
-            if currentACL['admin'] == 1:
-                pass
-            else:
-                return ACLManager.loadError()
-
-            return render(request, 'firewall/firewall.html')
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+        proc = httpProc(request, 'firewall/firewall.html',
+                        None, 'admin')
+        return proc.render()
 
     def getCurrentRules(self, userID = None):
         try:
@@ -265,17 +252,9 @@ class FirewallManager:
             return HttpResponse(final_json)
 
     def secureSSH(self, request = None, userID = None):
-        try:
-            currentACL = ACLManager.loadedACL(userID)
-
-            if currentACL['admin'] == 1:
-                pass
-            else:
-                return ACLManager.loadError()
-
-            return render(request, 'firewall/secureSSH.html')
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+        proc = httpProc(request, 'firewall/secureSSH.html',
+                        None, 'admin')
+        return proc.render()
 
     def getSSHConfigs(self, userID = None, data = None):
         try:
@@ -512,7 +491,10 @@ class FirewallManager:
                 OLS = 0
                 modSecInstalled = 1
 
-            return render(request, 'firewall/modSecurity.html', {'modSecInstalled': modSecInstalled, 'OLS': OLS})
+            proc = httpProc(request, 'firewall/modSecurity.html',
+                            {'modSecInstalled': modSecInstalled, 'OLS': OLS}, 'admin')
+            return proc.render()
+
         except BaseException as msg:
             return HttpResponse(str(msg))
 
@@ -894,8 +876,9 @@ class FirewallManager:
             else:
                 modSecInstalled = 1
 
-            return render(request, 'firewall/modSecurityRules.html', {'modSecInstalled': modSecInstalled})
-
+            proc = httpProc(request, 'firewall/modSecurityRules.html',
+                            {'modSecInstalled': modSecInstalled}, 'admin')
+            return proc.render()
         except BaseException as msg:
             return HttpResponse(str(msg))
 
@@ -1019,7 +1002,9 @@ class FirewallManager:
             else:
                 modSecInstalled = 1
 
-            return render(request, 'firewall/modSecurityRulesPacks.html', {'modSecInstalled': modSecInstalled})
+            proc = httpProc(request, 'firewall/modSecurityRulesPacks.html',
+                            {'modSecInstalled': modSecInstalled}, 'admin')
+            return proc.render()
 
         except BaseException as msg:
             return HttpResponse(msg)
@@ -1316,7 +1301,11 @@ class FirewallManager:
                     csfInstalled = 0
             except subprocess.CalledProcessError:
                 csfInstalled = 0
-            return render(self.request,'firewall/csf.html', {'csfInstalled' : csfInstalled})
+
+            proc = httpProc(self.request, 'firewall/csf.html',
+                            {'csfInstalled' : csfInstalled}, 'admin')
+            return proc.render()
+
         except BaseException as msg:
                 return HttpResponse(str(msg))
 
@@ -1575,11 +1564,17 @@ class FirewallManager:
                 data['imunify'] = 0
 
             if data['CL'] == 0:
-                return render(self.request, 'firewall/notAvailable.html', data)
+                proc = httpProc(self.request, 'firewall/notAvailable.html',
+                                data, 'admin')
+                return proc.render()
             elif data['imunify'] == 0:
-                return render(self.request, 'firewall/notAvailable.html', data)
+                proc = httpProc(self.request, 'firewall/notAvailable.html',
+                                data, 'admin')
+                return proc.render()
             else:
-                return render(self.request, 'firewall/imunify.html', data)
+                proc = httpProc(self.request, 'firewall/imunify.html',
+                                data, 'admin')
+                return proc.render()
 
 
         except BaseException as msg:
@@ -1639,9 +1634,14 @@ class FirewallManager:
                 data['imunify'] = 0
 
             if data['imunify'] == 0:
-                return render(self.request, 'firewall/notAvailableAV.html', data)
+                proc = httpProc(self.request, 'firewall/notAvailableAV.html',
+                                data, 'admin')
+                return proc.render()
             else:
-                return render(self.request, 'firewall/imunifyAV.html', data)
+                proc = httpProc(self.request, 'firewall/imunifyAV.html',
+                                data, 'admin')
+                return proc.render()
+
 
 
         except BaseException as msg:
