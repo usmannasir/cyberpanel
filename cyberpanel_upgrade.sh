@@ -182,6 +182,9 @@ elif echo $OUTPUT | grep -q "Ubuntu 20.04"; then
   echo -e "\nDetecting Ubuntu 20.04...\n"
   SERVER_OS="Ubuntu"
   UBUNTU_20="True"
+elif echo $OUTPUT | grep -q "Zorin OS 15.3" ; then
+	echo -e "\nDetecting Zorin OS 15.3...\n"
+	SERVER_OS="Ubuntu"
 else
   cat /etc/*release
   echo -e "\nUnable to detect your OS...\n"

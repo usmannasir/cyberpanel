@@ -22,6 +22,9 @@ apt install -y -qq wget curl
 elif echo $OUTPUT | grep -q "Ubuntu 20.04" ; then
 apt install -y -qq wget curl
                 SERVER_OS="Ubuntu"
+elif echo $OUTPUT | grep -q "Zorin OS 15.3" ; then
+apt install -y -qq wget curl
+                SERVER_OS="Ubuntu"
 else
 
                 echo -e "\nUnable to detect your OS...\n"

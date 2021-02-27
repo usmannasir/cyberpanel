@@ -483,6 +483,9 @@ elif echo $OUTPUT | grep -q "CloudLinux 7" ; then
 elif echo $OUTPUT | grep -q "Ubuntu 18.04" ; then
 	echo -e "\nDetecting Ubuntu 18.04...\n"
 	SERVER_OS="Ubuntu"
+elif echo $OUTPUT | grep -q "Zorin OS 15.3" ; then
+	echo -e "\nDetecting Zorin OS 15.3...\n"
+	SERVER_OS="Ubuntu"
 else
 	cat /etc/*release
 	echo -e "\nUnable to detect your OS...\n"

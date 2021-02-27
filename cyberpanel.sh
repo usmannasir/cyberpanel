@@ -670,6 +670,14 @@ check_OS() {
       echo -e "\nUbuntu 20 x32 detected...ths only works on x64 system."
       exit
     fi
+  elif echo $OUTPUT | grep -q "Zorin OS 15.3"; then
+    if uname -m | grep -q 64; then
+      echo -e "\nDetecting Zorin OS 15.3 ...\n"
+      SERVER_OS="Ubuntu"
+    else
+      echo -e "\Zorin OS 15.3 x32 detected...ths only works on x64 system."
+      exit
+    fi
   else
     cat /etc/*release
     echo -e "\nUnable to detect your OS...\n"
