@@ -1,49 +1,31 @@
 # -*- coding: utf-8 -*-
 
-
-from django.shortcuts import render, redirect
-from loginSystem.views import loadLoginPage
+from plogical.httpProc import httpProc
 from websiteFunctions.models import Websites, ChildDomains
 from loginSystem.models import Administrator
 from plogical.virtualHostUtilities import virtualHostUtilities
 from django.http import HttpResponse
 import json
-import shlex
-import subprocess
 from plogical.acl import ACLManager
-from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from plogical.processUtilities import ProcessUtilities
-
 
 # Create your views here.
 
-
 def loadSSLHome(request):
-    try:
-        userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
-        return render(request, 'manageSSL/index.html', currentACL)
-    except KeyError:
-        return redirect(loadLoginPage)
+    userID = request.session['userID']
+    currentACL = ACLManager.loadedACL(userID)
+    proc = httpProc(request, 'manageSSL/index.html',
+                    currentACL, 'admin')
+    return proc.render()
 
 
 def manageSSL(request):
-    try:
-        userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
-
-        if currentACL['admin'] == 1:
-            pass
-        elif currentACL['manageSSL'] == 1:
-            pass
-        else:
-            return ACLManager.loadError()
-
-        websitesName = ACLManager.findAllSites(currentACL, userID)
-
-        return render(request, 'manageSSL/manageSSL.html', {'websiteList': websitesName})
-    except KeyError:
-        return redirect(loadLoginPage)
+    userID = request.session['userID']
+    currentACL = ACLManager.loadedACL(userID)
+    websitesName = ACLManager.findAllSites(currentACL, userID)
+    proc = httpProc(request, 'manageSSL/manageSSL.html',
+                    {'websiteList': websitesName}, 'manageSSL')
+    return proc.render()
 
 
 def issueSSL(request):
@@ -115,22 +97,13 @@ def issueSSL(request):
 
 
 def sslForHostName(request):
-    try:
-        userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
+    userID = request.session['userID']
+    currentACL = ACLManager.loadedACL(userID)
+    websitesName = ACLManager.findAllSites(currentACL, userID, 1)
 
-        if currentACL['admin'] == 1:
-            pass
-        elif currentACL['hostnameSSL'] == 1:
-            pass
-        else:
-            return ACLManager.loadError()
-
-        websitesName = ACLManager.findAllSites(currentACL, userID, 1)
-
-        return render(request, 'manageSSL/sslForHostName.html', {'websiteList': websitesName})
-    except KeyError:
-        return redirect(loadLoginPage)
+    proc = httpProc(request, 'manageSSL/sslForHostName.html',
+                    {'websiteList': websitesName}, 'hostnameSSL')
+    return proc.render()
 
 
 def obtainHostNameSSL(request):
@@ -197,23 +170,15 @@ def obtainHostNameSSL(request):
 
 
 def sslForMailServer(request):
-    try:
-        userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
+    userID = request.session['userID']
+    currentACL = ACLManager.loadedACL(userID)
 
-        if currentACL['admin'] == 1:
-            pass
-        elif currentACL['mailServerSSL'] == 1:
-            pass
-        else:
-            return ACLManager.loadError()
+    websitesName = ACLManager.findAllSites(currentACL, userID)
+    websitesName = websitesName + ACLManager.findChildDomains(websitesName)
 
-        websitesName = ACLManager.findAllSites(currentACL, userID)
-        websitesName = websitesName + ACLManager.findChildDomains(websitesName)
-
-        return render(request, 'manageSSL/sslForMailServer.html', {'websiteList': websitesName})
-    except KeyError:
-        return redirect(loadLoginPage)
+    proc = httpProc(request, 'manageSSL/sslForMailServer.html',
+                    {'websiteList': websitesName}, 'mailServerSSL')
+    return proc.render()
 
 
 def obtainMailServerSSL(request):
