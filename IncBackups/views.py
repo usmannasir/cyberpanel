@@ -12,6 +12,7 @@ from loginSystem.models import Administrator
 from loginSystem.views import loadLoginPage
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from plogical.acl import ACLManager
+from plogical.httpProc import httpProc
 from plogical.processUtilities import ProcessUtilities as pu
 from plogical.virtualHostUtilities import virtualHostUtilities as vhu
 from websiteFunctions.models import Websites
@@ -21,8 +22,10 @@ from .IncBackupsControl import IncJobs
 from .models import IncJob, BackupJob, JobSites
 
 
-def def_renderer(request, templateName, args):
-    return render(request, templateName, args)
+def def_renderer(request, templateName, args, context=None):
+    proc = httpProc(request, templateName,
+                    args, context)
+    return proc.render()
 
 
 def _get_destinations(local: bool = False):
@@ -48,6 +51,7 @@ def _get_user_acl(request):
 
 
 def create_backup(request):
+
     try:
         user_id, current_acl = _get_user_acl(request)
         if ACLManager.currentContextPermission(current_acl, 'createBackup') == 0:
@@ -58,7 +62,7 @@ def create_backup(request):
         destinations = _get_destinations(local=True)
 
         return def_renderer(request, 'IncBackups/createBackup.html',
-                            {'websiteList': websites, 'destinations': destinations})
+                            {'websiteList': websites, 'destinations': destinations}, 'createBackup')
     except BaseException as msg:
         logging.writeToFile(str(msg))
         return redirect(loadLoginPage)
@@ -70,7 +74,7 @@ def backup_destinations(request):
         if ACLManager.currentContextPermission(current_acl, 'addDeleteDestinations') == 0:
             return ACLManager.loadError()
 
-        return def_renderer(request, 'IncBackups/incrementalDestinations.html', {})
+        return def_renderer(request, 'IncBackups/incrementalDestinations.html', {}, 'addDeleteDestinations')
     except BaseException as msg:
         logging.writeToFile(str(msg))
         return redirect(loadLoginPage)
@@ -506,7 +510,7 @@ def schedule_backups(request):
         destinations = _get_destinations(local=True)
 
         return def_renderer(request, 'IncBackups/backupSchedule.html',
-                            {'websiteList': websites, 'destinations': destinations})
+                            {'websiteList': websites, 'destinations': destinations}, 'scheDuleBackups')
     except BaseException as msg:
         logging.writeToFile(str(msg))
         return redirect(loadLoginPage)
@@ -622,7 +626,7 @@ def restore_remote_backups(request):
         destinations = _get_destinations()
 
         return def_renderer(request, 'IncBackups/restoreRemoteBackups.html',
-                            {'websiteList': websites, 'destinations': destinations})
+                            {'websiteList': websites, 'destinations': destinations}, 'createBackup')
     except BaseException as msg:
         logging.writeToFile(str(msg))
         return redirect(loadLoginPage)
