@@ -7,6 +7,8 @@ from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from loginSystem.views import loadLoginPage
 from random import randint
 import os
+
+from plogical.httpProc import httpProc
 from plogical.processUtilities import ProcessUtilities
 from plogical.firewallUtilities import FirewallUtilities
 from firewall.models import FirewallRules
@@ -17,13 +19,6 @@ import plogical.randomPassword
 
 def terminal(request):
     try:
-        userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
-
-        if currentACL['admin'] == 1:
-            pass
-        else:
-            return ACLManager.loadError()
 
         password = plogical.randomPassword.generate_pass()
 
@@ -48,12 +43,13 @@ def terminal(request):
             newFWRule = FirewallRules(name='terminal', proto='tcp', port='5678', ipAddress='0.0.0.0/0')
             newFWRule.save()
 
-        return render(request, 'WebTerminal/WebTerminal.html', {'verifyPath': verifyPath, 'password': password})
+        proc = httpProc(request, 'WebTerminal/WebTerminal.html',
+                        {'verifyPath': verifyPath, 'password': password})
+        return proc.render()
+
     except BaseException as msg:
         logging.writeToFile(str(msg))
         return redirect(loadLoginPage)
-
-
 
 def restart(request):
     try:

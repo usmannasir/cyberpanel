@@ -2,7 +2,6 @@
 
 from django.shortcuts import render, HttpResponse
 import json
-from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter
 
 class httpProc:
     def __init__(self, request, templateName, data = None, function = None):
