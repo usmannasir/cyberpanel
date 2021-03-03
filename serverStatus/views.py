@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 
-
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 import plogical.CyberCPLogFileWriter as logging
 from loginSystem.views import loadLoginPage
 import json
-import subprocess, shlex
+import subprocess
 import psutil
 import socket
 from plogical.acl import ACLManager
@@ -17,7 +16,6 @@ from . import serverStatusUtil
 from plogical.processUtilities import ProcessUtilities
 from plogical.httpProc import httpProc
 from plogical.installUtilities import installUtilities
-
 
 # Create your views here.
 
@@ -31,22 +29,15 @@ VERSION = '2.0'
 BUILD = 3
 
 def serverStatusHome(request):
-    try:
-        userID = request.session['userID']
-        return render(request, 'serverStatus/index.html')
-    except KeyError:
-        return redirect(loadLoginPage)
+    proc = httpProc(request, 'serverStatus/index.html',
+                    None, 'admin')
+    return proc.render()
 
 
 def litespeedStatus(request):
     try:
         userID = request.session['userID']
         currentACL = ACLManager.loadedACL(userID)
-
-        if currentACL['admin'] == 1:
-            pass
-        else:
-            return ACLManager.loadError()
 
         processList = ProcessUtilities.getLitespeedProcessNumber()
 
@@ -82,17 +73,21 @@ def litespeedStatus(request):
 
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[litespeedStatus]")
-            return render(request, "serverStatus/litespeedStatus.html", {"processList": processList,
-                                                                         "liteSpeedVersionStatus": "For some reaons not able to load version details, see CyberCP main log file.",
-                                                                         'OLS': OLS , 'message': message})
+            proc = httpProc(request, 'serverStatus/litespeedStatus.html',
+                            {"processList": processList,
+                             "liteSpeedVersionStatus": "For some reaons not able to load version details, see CyberCP main log file.",
+                             'OLS': OLS, 'message': message}, 'admin')
+            return proc.render()
         if (processList != 0):
             dataForHtml = {"processList": processList, "lsversion": lsversion, "modules": modules,
                            "loadedModules": loadedModules, 'OLS': OLS, 'message': message}
-            return render(request, "serverStatus/litespeedStatus.html", dataForHtml)
+            proc = httpProc(request, 'serverStatus/litespeedStatus.html', dataForHtml, 'admin')
+            return proc.render()
         else:
             dataForHtml = {"lsversion": lsversion, "modules": modules,
                            "loadedModules": loadedModules, 'OLS': OLS, 'message': message}
-            return render(request, "serverStatus/litespeedStatus.html", dataForHtml)
+            proc = httpProc(request, 'serverStatus/litespeedStatus.html', dataForHtml, 'admin')
+            return proc.render()
 
     except KeyError as msg:
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[litespeedStatus]")
@@ -132,21 +127,8 @@ def stopOrRestartLitespeed(request):
         return HttpResponse("Not Logged in as admin")
 
 def cyberCPMainLogFile(request):
-    try:
-        userID = request.session['userID']
-
-        currentACL = ACLManager.loadedACL(userID)
-
-        if currentACL['admin'] == 1:
-            pass
-        else:
-            return ACLManager.loadError()
-
-        return render(request, 'serverStatus/cybercpmainlogfile.html')
-
-    except KeyError as msg:
-        logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[cyberCPMainLogFile]")
-        return redirect(loadLoginPage)
+    proc = httpProc(request, 'serverStatus/cybercpmainlogfile.html', None, 'admin')
+    return proc.render()
 
 def getFurtherDataFromLogFile(request):
     try:
@@ -177,10 +159,6 @@ def services(request):
         userID = request.session['userID']
         currentACL = ACLManager.loadedACL(userID)
 
-        if currentACL['admin'] == 1:
-            pass
-        else:
-            return ACLManager.loadError()
         data = {}
 
         if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
@@ -194,7 +172,8 @@ def services(request):
         else:
             data['isDocker'] = True
 
-        return render(request, 'serverStatus/services.html', data)
+        proc = httpProc(request, 'serverStatus/services.html', data, 'admin')
+        return proc.render()
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -536,22 +515,8 @@ def changeLicense(request):
 
 
 def topProcesses(request):
-    try:
-        userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
-
-        if currentACL['admin'] == 1:
-            pass
-        else:
-            return ACLManager.loadError()
-
-        templateName = "serverStatus/topProcesses.html"
-        proc = httpProc(request, templateName)
-        return proc.renderPre()
-
-    except KeyError as msg:
-        logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[litespeedStatus]")
-        return redirect(loadLoginPage)
+    proc = httpProc(request, "serverStatus/topProcesses.html", None, 'admin')
+    return proc.render()
 
 def topProcessesStatus(request):
     try:
@@ -764,22 +729,8 @@ def killProcess(request):
         return HttpResponse(final_json)
 
 def packageManager(request):
-    try:
-        userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
-
-        if currentACL['admin'] == 1:
-            pass
-        else:
-            return ACLManager.loadError()
-
-        templateName = "serverStatus/packageManager.html"
-        proc = httpProc(request, templateName)
-        return proc.renderPre()
-
-    except KeyError as msg:
-        logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[packageManager]")
-        return redirect(loadLoginPage)
+    proc = httpProc(request, "serverStatus/packageManager.html", None, 'admin')
+    return proc.render()
 
 def fetchPackages(request):
     try:
@@ -1181,23 +1132,9 @@ def lockStatus(request):
 
 
 def CyberPanelPort(request):
-    try:
-        userID = request.session['userID']
-
-        currentACL = ACLManager.loadedACL(userID)
-
-        if currentACL['admin'] == 1:
-            pass
-        else:
-            return ACLManager.loadError()
-
-        port = ProcessUtilities.fetchCurrentPort()
-
-        return render(request, 'serverStatus/changeCyberPanelPort.html', {'port': port})
-
-    except KeyError as msg:
-        logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[CyberPanelPort]")
-        return redirect(loadLoginPage)
+    port = ProcessUtilities.fetchCurrentPort()
+    proc = httpProc(request, "serverStatus/changeCyberPanelPort.html", {'port': port}, 'admin')
+    return proc.render()
 
 
 def submitPortChange(request):
