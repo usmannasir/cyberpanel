@@ -4,6 +4,7 @@ import sys
 import django
 
 from plogical import hashPassword
+from plogical.httpProc import httpProc
 
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
@@ -21,39 +22,24 @@ class PackagesManager:
         self.request  = request
 
     def packagesHome(self):
-        try:
-            val = self.request.session['userID']
-            return render(self.request, 'packages/index.html', {})
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+        proc = httpProc(self.request, 'packages/index.html',
+                        None, 'admin')
+        return proc.render()
 
     def createPacakge(self):
-        try:
-            userID = self.request.session['userID']
-            currentACL = ACLManager.loadedACL(userID)
-
-            if ACLManager.currentContextPermission(currentACL, 'createPackage') == 0:
-                return ACLManager.loadError()
-
-            admin = Administrator.objects.get(pk=userID)
-            return render(self.request, 'packages/createPackage.html', {"admin": admin.userName})
-
-        except KeyError:
-            return redirect(loadLoginPage)
+        userID = self.request.session['userID']
+        admin = Administrator.objects.get(pk=userID)
+        proc = httpProc(self.request, 'packages/createPackage.html',
+                        {"admin": admin.userName}, 'createPackage')
+        return proc.render()
 
     def deletePacakge(self):
-        try:
-            userID = self.request.session['userID']
-            currentACL = ACLManager.loadedACL(userID)
-
-            if ACLManager.currentContextPermission(currentACL, 'deletePackage') == 0:
-                return ACLManager.loadError()
-
-            packageList = ACLManager.loadPackages(userID, currentACL)
-            return render(self.request, 'packages/deletePackage.html', {"packageList": packageList})
-
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+        userID = self.request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+        packageList = ACLManager.loadPackages(userID, currentACL)
+        proc = httpProc(self.request, 'packages/deletePackage.html',
+                        {"packageList": packageList}, 'deletePackage')
+        return proc.render()
 
     def submitPackage(self):
         try:
@@ -134,18 +120,12 @@ class PackagesManager:
             return HttpResponse(json_data)
 
     def modifyPackage(self):
-        try:
-            userID = self.request.session['userID']
-            currentACL = ACLManager.loadedACL(userID)
-
-            if ACLManager.currentContextPermission(currentACL, 'modifyPackage') == 0:
-                return ACLManager.loadError()
-
-            packageList = ACLManager.loadPackages(userID, currentACL)
-            return render(self.request, 'packages/modifyPackage.html', {"packList": packageList})
-
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+        userID = self.request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+        packageList = ACLManager.loadPackages(userID, currentACL)
+        proc = httpProc(self.request, 'packages/modifyPackage.html',
+                        {"packageList": packageList}, 'modifyPackage')
+        return proc.render()
 
     def submitModify(self):
         try:
@@ -225,18 +205,12 @@ class PackagesManager:
 
 
     def listPackages(self):
-        try:
-            userID = self.request.session['userID']
-            currentACL = ACLManager.loadedACL(userID)
-
-            if ACLManager.currentContextPermission(currentACL, 'listPackages') == 0:
-                return ACLManager.loadError()
-
-            packageList = ACLManager.loadPackages(userID, currentACL)
-            return render(self.request, 'packages/listPackages.html', {"packList": packageList})
-
-        except BaseException as msg:
-            return redirect(loadLoginPage)
+        userID = self.request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+        packageList = ACLManager.loadPackages(userID, currentACL)
+        proc = httpProc(self.request, 'packages/listPackages.html',
+                        {"packageList": packageList}, 'listPackages')
+        return proc.render()
 
     def listPackagesAPI(self,data=None):
         """
