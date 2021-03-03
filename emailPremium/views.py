@@ -5,8 +5,6 @@ from django.shortcuts import render,redirect
 from django.http import HttpResponse
 from mailServer.models import Domains, EUsers
 # Create your views here.
-from loginSystem.models import Administrator
-from plogical.httpProc import httpProc
 from websiteFunctions.models import Websites
 from loginSystem.views import loadLoginPage
 import plogical.CyberCPLogFileWriter as logging
@@ -20,7 +18,7 @@ from plogical.virtualHostUtilities import virtualHostUtilities
 from random import randint
 from plogical.acl import ACLManager
 from plogical.processUtilities import ProcessUtilities
-
+from plogical.httpProc import httpProc
 # Create your views here.
 
 ## Email Policy Server
@@ -157,7 +155,8 @@ def listDomains(request):
                     break
 
             if installCheck == 0:
-                return render(request, 'emailPremium/listDomains.html', {"installCheck": installCheck})
+                proc  = httpProc(request, 'emailPremium/listDomains.html', {"installCheck": installCheck})
+                return proc.render()
 
             ###
 
@@ -962,7 +961,8 @@ def fetchSpamAssassinSettings(request):
             return HttpResponse(final_json)
 
 
-        return render(request,'managePHP/editPHPConfig.html')
+        proc = httpProc(request,'managePHP/editPHPConfig.html')
+        return proc.render()
     except KeyError:
         return redirect(loadLoginPage)
 

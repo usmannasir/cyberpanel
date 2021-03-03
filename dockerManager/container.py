@@ -27,7 +27,7 @@ import requests
 from plogical.processUtilities import ProcessUtilities
 from serverStatus.serverStatusUtil import ServerStatusUtil
 import threading as multi
-
+from plogical.httpProc import httpProc
 
 # Use default socket to connect
 class ContainerManager(multi.Thread):
@@ -50,7 +50,8 @@ class ContainerManager(multi.Thread):
         else:
             return ACLManager.loadError()
 
-        return render(self.request, self.templateName, self.data)
+        proc = httpProc(self.request, self.templateName, self.data)
+        return proc.render()
 
     def run(self):
         try:
@@ -111,9 +112,10 @@ class ContainerManager(multi.Thread):
         except docker.errors.ImageNotFound:
             val = request.session['userID']
             admin = Administrator.objects.get(pk=val)
-            return render(request, 'dockerManager/images.html', {"type": admin.type,
+            proc = httpProc(request, 'dockerManager/images.html', {"type": admin.type,
                                                                  'image': image,
                                                                  'tag': tag})
+            return proc.render()
 
         envList = {};
         if 'Env' in inspectImage['Config']:

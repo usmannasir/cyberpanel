@@ -4,6 +4,8 @@ import os.path
 import sys
 import django
 
+from plogical.httpProc import httpProc
+
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
@@ -53,15 +55,14 @@ class WebsiteManager:
     def createWebsite(self, request=None, userID=None, data=None):
         try:
             currentACL = ACLManager.loadedACL(userID)
-            if ACLManager.currentContextPermission(currentACL, 'createWebsite') == 0:
-                return ACLManager.loadError()
-
             adminNames = ACLManager.loadAllUsers(userID)
             packagesName = ACLManager.loadPackages(userID, currentACL)
             phps = PHPManager.findPHPVersions()
 
             Data = {'packageList': packagesName, "owernList": adminNames, 'phps': phps}
-            return render(request, 'websiteFunctions/createWebsite.html', Data)
+            proc = httpProc(request, 'websiteFunctions/createWebsite.html',
+                            Data, 'createWebsite')
+            return proc.render()
 
         except BaseException as msg:
             return HttpResponse(str(msg))
@@ -71,25 +72,22 @@ class WebsiteManager:
 
             currentACL = ACLManager.loadedACL(userID)
 
-            if ACLManager.currentContextPermission(currentACL, 'modifyWebsite') == 0:
-                return ACLManager.loadError()
-
             websitesName = ACLManager.findAllSites(currentACL, userID)
             phps = PHPManager.findPHPVersions()
-
-            return render(request, 'websiteFunctions/modifyWebsite.html', {'websiteList': websitesName, 'phps': phps})
+            proc = httpProc(request, 'websiteFunctions/modifyWebsite.html',
+                            {'websiteList': websitesName, 'phps': phps}, 'modifyWebsite')
+            return proc.render()
         except BaseException as msg:
             return HttpResponse(str(msg))
 
     def deleteWebsite(self, request=None, userID=None, data=None):
         try:
             currentACL = ACLManager.loadedACL(userID)
-            if ACLManager.currentContextPermission(currentACL, 'deleteWebsite') == 0:
-                return ACLManager.loadError()
 
             websitesName = ACLManager.findAllSites(currentACL, userID)
-
-            return render(request, 'websiteFunctions/deleteWebsite.html', {'websiteList': websitesName})
+            proc = httpProc(request, 'websiteFunctions/deleteWebsite.html',
+                            {'websiteList': websitesName}, 'deleteWebsite')
+            return proc.render()
         except BaseException as msg:
             return HttpResponse(str(msg))
 
@@ -97,12 +95,12 @@ class WebsiteManager:
         try:
             currentACL = ACLManager.loadedACL(userID)
 
-            if ACLManager.currentContextPermission(currentACL, 'suspendWebsite') == 0:
-                return ACLManager.loadError()
-
             websitesName = ACLManager.findAllSites(currentACL, userID)
 
-            return render(request, 'websiteFunctions/suspendWebsite.html', {'websiteList': websitesName})
+            proc = httpProc(request, 'websiteFunctions/suspendWebsite.html',
+                            {'websiteList': websitesName}, 'suspendWebsite')
+            return proc.render()
+
         except BaseException as msg:
             return HttpResponse(str(msg))
 
@@ -110,8 +108,9 @@ class WebsiteManager:
         try:
             currentACL = ACLManager.loadedACL(userID)
             pagination = self.websitePagination(currentACL, userID)
-
-            return render(request, 'websiteFunctions/listWebsites.html', {"pagination": pagination})
+            proc = httpProc(request, 'websiteFunctions/listWebsites.html',
+                            {"pagination": pagination})
+            return proc.render()
         except BaseException as msg:
             return HttpResponse(str(msg))
 
@@ -124,8 +123,9 @@ class WebsiteManager:
             phps = PHPManager.findPHPVersions()
 
             Data = {'packageList': packagesName, "owernList": adminNames, 'phps': phps}
-
-            return render(request, 'websiteFunctions/listChildDomains.html', Data)
+            proc = httpProc(request, 'websiteFunctions/listChildDomains.html',
+                            Data)
+            return proc.render()
         except BaseException as msg:
             return HttpResponse(str(msg))
 
@@ -140,7 +140,9 @@ class WebsiteManager:
             else:
                 return ACLManager.loadError()
 
-            return render(request, 'websiteFunctions/listCron.html', {'domain': request.GET.get('domain')})
+            proc = httpProc(request, 'websiteFunctions/listCron.html',
+                            {'domain': request.GET.get('domain')})
+            return proc.render()
         except BaseException as msg:
             return HttpResponse(str(msg))
 
@@ -159,12 +161,13 @@ class WebsiteManager:
 
             path = "/home/" + self.domain + "/public_html"
 
-            return render(request, 'websiteFunctions/domainAlias.html', {
+            proc = httpProc(request, 'websiteFunctions/domainAlias.html', {
                 'masterDomain': self.domain,
                 'aliases': finalAlisList,
                 'path': path,
                 'noAlias': noAlias
             })
+            return proc.render()
         except BaseException as msg:
             return HttpResponse(str(msg))
 
@@ -891,11 +894,12 @@ class WebsiteManager:
             else:
                 Data['ftp'] = 0
 
-            return render(request, 'websiteFunctions/website.html', Data)
-
+            proc = httpProc(request, 'websiteFunctions/website.html', Data)
+            return proc.render()
         else:
-            return render(request, 'websiteFunctions/website.html',
+            proc = httpProc(request, 'websiteFunctions/website.html',
                           {"error": 1, "domain": "This domain does not exists."})
+            return proc.render()
 
     def launchChild(self, request=None, userID=None, data=None):
 
@@ -976,11 +980,12 @@ class WebsiteManager:
                 logging.CyberCPLogFileWriter.writeToFile(str(msg))
 
 
-            return render(request, 'websiteFunctions/launchChild.html', Data)
+            proc = httpProc(request, 'websiteFunctions/launchChild.html', Data)
+            return proc.render()
         else:
-            return render(request, 'websiteFunctions/launchChild.html',
+            proc = httpProc(request, 'websiteFunctions/launchChild.html',
                           {"error": 1, "domain": "This child domain does not exists"})
-
+            return proc.render()
     def getDataFromLogFile(self, userID=None, data=None):
 
         currentACL = ACLManager.loadedACL(userID)
@@ -1774,8 +1779,8 @@ class WebsiteManager:
             else:
                 return ACLManager.loadError()
 
-            return render(request, 'websiteFunctions/installWordPress.html', {'domainName': self.domain})
-
+            proc = httpProc(request, 'websiteFunctions/installWordPress.html', {'domainName': self.domain})
+            return proc.render()
         except BaseException as msg:
             return HttpResponse(str(msg))
 
@@ -1879,7 +1884,8 @@ class WebsiteManager:
             else:
                 return ACLManager.loadError()
 
-            return render(request, 'websiteFunctions/installJoomla.html', {'domainName': self.domain})
+            proc = httpProc(request, 'websiteFunctions/installJoomla.html', {'domainName': self.domain})
+            return proc.render()
         except BaseException as msg:
             return HttpResponse(str(msg))
 
@@ -1951,8 +1957,9 @@ class WebsiteManager:
 
                 webhookURL = 'https://' + ipAddress + ':%s/websites/' % (port) + self.domain + '/gitNotify'
 
-                return render(request, 'websiteFunctions/setupGit.html',
+                proc = httpProc(request, 'websiteFunctions/setupGit.html',
                               {'domainName': self.domain, 'installed': 1, 'webhookURL': webhookURL})
+                return proc.render()
             else:
 
                 command = "ssh-keygen -f /home/%s/.ssh/%s -t rsa -N ''" % (self.domain, website.externalApp)
@@ -1979,8 +1986,9 @@ StrictHostKeyChecking no
                 command = 'cat /home/%s/.ssh/%s.pub' % (self.domain, website.externalApp)
                 deploymentKey = ProcessUtilities.outputExecutioner(command, website.externalApp)
 
-            return render(request, 'websiteFunctions/setupGit.html',
+            proc = httpProc(request, 'websiteFunctions/setupGit.html',
                           {'domainName': self.domain, 'deploymentKey': deploymentKey, 'installed': 0})
+            return proc.render()
         except BaseException as msg:
             return HttpResponse(str(msg))
 
@@ -2118,7 +2126,8 @@ StrictHostKeyChecking no
             else:
                 return ACLManager.loadError()
 
-            return render(request, 'websiteFunctions/installPrestaShop.html', {'domainName': self.domain})
+            proc = httpProc(request, 'websiteFunctions/installPrestaShop.html', {'domainName': self.domain})
+            return proc.render()
         except BaseException as msg:
             return HttpResponse(str(msg))
 
@@ -2132,7 +2141,8 @@ StrictHostKeyChecking no
             else:
                 return ACLManager.loadError()
 
-            return render(request, 'websiteFunctions/installMagento.html', {'domainName': self.domain})
+            proc = httpProc(request, 'websiteFunctions/installMagento.html', {'domainName': self.domain})
+            return proc.render()
         except BaseException as msg:
             return HttpResponse(str(msg))
 
@@ -2193,7 +2203,8 @@ StrictHostKeyChecking no
             else:
                 return ACLManager.loadError()
 
-            return render(request, 'websiteFunctions/installMautic.html', {'domainName': self.domain})
+            proc = httpProc(request, 'websiteFunctions/installMautic.html', {'domainName': self.domain})
+            return proc.render()
         except BaseException as msg:
             return HttpResponse(str(msg))
 
@@ -2616,8 +2627,9 @@ StrictHostKeyChecking no
             website = Websites.objects.get(domain=self.domain)
             externalApp = website.externalApp
 
-            return render(request, 'websiteFunctions/sshAccess.html',
+            proc = httpProc(request, 'websiteFunctions/sshAccess.html',
                           {'domainName': self.domain, 'externalApp': externalApp})
+            return proc.render()
         except BaseException as msg:
             return HttpResponse(str(msg))
 
@@ -2673,8 +2685,9 @@ StrictHostKeyChecking no
             website = Websites.objects.get(domain=self.domain)
             externalApp = website.externalApp
 
-            return render(request, 'websiteFunctions/setupStaging.html',
+            proc = httpProc(request, 'websiteFunctions/setupStaging.html',
                           {'domainName': self.domain, 'externalApp': externalApp})
+            return proc.render()
         except BaseException as msg:
             return HttpResponse(str(msg))
 
@@ -2741,8 +2754,9 @@ StrictHostKeyChecking no
             website = Websites.objects.get(domain=self.domain)
             externalApp = website.externalApp
 
-            return render(request, 'websiteFunctions/syncMaster.html',
+            proc = httpProc(request, 'websiteFunctions/syncMaster.html',
                           {'domainName': self.domain, 'externalApp': externalApp, 'childDomain': childDomain})
+            return proc.render()
         except BaseException as msg:
             return HttpResponse(str(msg))
 
@@ -2855,9 +2869,9 @@ StrictHostKeyChecking no
                     basePath = '/var/lib/mysql/'
                     folders.append('%s%s' % (basePath, database.dbName))
 
-            return render(request, 'websiteFunctions/manageGIT.html',
+            proc = httpProc(request, 'websiteFunctions/manageGIT.html',
                           {'domainName': self.domain, 'folders': folders})
-
+            return proc.render()
         except BaseException as msg:
             return HttpResponse(str(msg))
 

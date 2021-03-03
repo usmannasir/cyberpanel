@@ -4,6 +4,8 @@ import os.path
 import sys
 import django
 
+from plogical.httpProc import httpProc
+
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
@@ -39,7 +41,8 @@ class BackupManager:
     def loadBackupHome(self, request=None, userID=None, data=None):
         try:
             currentACL = ACLManager.loadedACL(userID)
-            return render(request, 'backup/index.html', currentACL)
+            proc = httpProc(request, 'backup/index.html', currentACL)
+            return proc.render()
         except BaseException as msg:
             return HttpResponse(str(msg))
 
@@ -51,7 +54,8 @@ class BackupManager:
                 return ACLManager.loadError()
 
             websitesName = ACLManager.findAllSites(currentACL, userID)
-            return render(request, 'backup/backup.html', {'websiteList': websitesName})
+            proc = httpProc(request, 'backup/backup.html', {'websiteList': websitesName})
+            return proc.render()
         except BaseException as msg:
             return HttpResponse(str(msg))
 
@@ -73,7 +77,8 @@ class BackupManager:
 
             websitesName = ACLManager.findAllSites(currentACL, userID)
 
-            return render(request, 'backup/googleDrive.html', {'accounts': gDriveAcctsList, 'websites': websitesName})
+            proc = httpProc(request, 'backup/googleDrive.html', {'accounts': gDriveAcctsList, 'websites': websitesName})
+            return proc.render()
         except BaseException as msg:
             return HttpResponse(str(msg))
 
@@ -365,7 +370,8 @@ class BackupManager:
             path = os.path.join("/home", "backup")
 
             if not os.path.exists(path):
-                return render(request, 'backup/restore.html')
+                proc = httpProc(request, 'backup/restore.html')
+                return proc.render()
             else:
                 all_files = []
                 ext = ".tar.gz"
@@ -378,7 +384,8 @@ class BackupManager:
                     if filename.endswith(ext):
                         all_files.append(filename)
 
-                return render(request, 'backup/restore.html', {'backups': all_files})
+                proc = httpProc(request, 'backup/restore.html', {'backups': all_files})
+                return proc.render()
 
         except BaseException as msg:
             return HttpResponse(str(msg))
@@ -701,7 +708,8 @@ class BackupManager:
             if ACLManager.currentContextPermission(currentACL, 'addDeleteDestinations') == 0:
                 return ACLManager.loadError()
 
-            return render(request, 'backup/backupDestinations.html', {})
+            proc = httpProc(request, 'backup/backupDestinations.html', {})
+            return proc.render()
 
         except BaseException as msg:
             return HttpResponse(str(msg))
@@ -883,7 +891,8 @@ class BackupManager:
 
             websitesName = ACLManager.findAllSites(currentACL, userID)
 
-            return render(request, 'backup/backupSchedule.html', {'destinations': dests, 'websites': websitesName})
+            proc = httpProc(request, 'backup/backupSchedule.html', {'destinations': dests, 'websites': websitesName})
+            return proc.render()
 
         except BaseException as msg:
             return HttpResponse(str(msg))
@@ -1015,7 +1024,8 @@ class BackupManager:
             if ACLManager.currentContextPermission(currentACL, 'remoteBackups') == 0:
                 return ACLManager.loadError()
 
-            return render(request, 'backup/remoteBackups.html')
+            proc = httpProc(request, 'backup/remoteBackups.html')
+            return proc.render()
 
         except BaseException as msg:
             return HttpResponse(str(msg))
@@ -1386,7 +1396,8 @@ class BackupManager:
             for logFile in logFiles:
                 all_files.append(logFile.logFile)
 
-            return render(request, 'backup/backupLogs.html', {'backups': all_files})
+            proc = httpProc(request, 'backup/backupLogs.html', {'backups': all_files})
+            return proc.render()
 
         except BaseException as msg:
             return HttpResponse(str(msg))
