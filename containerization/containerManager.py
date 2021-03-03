@@ -1,4 +1,3 @@
-from django.shortcuts import render
 from plogical.processUtilities import ProcessUtilities
 import threading as multi
 from plogical.acl import ACLManager

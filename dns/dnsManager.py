@@ -113,10 +113,12 @@ class DNSManager:
             return HttpResponse(final_json)
 
     def createDNSZone(self, request = None, userID = None):
+
         if os.path.exists('/home/cyberpanel/powerdns'):
             finalData = {'status': 1}
         else:
             finalData = {'status': 0}
+
         template = 'dns/createDNSZone.html'
         proc = httpProc(request, template, finalData, 'createDNSZone')
         return proc.render()
@@ -158,6 +160,7 @@ class DNSManager:
 
     def addDeleteDNSRecords(self, request = None, userID = None):
         currentACL = ACLManager.loadedACL(userID)
+
         if not os.path.exists('/home/cyberpanel/powerdns'):
             finalData = {"status": 0}
         else:

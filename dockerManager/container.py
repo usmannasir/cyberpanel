@@ -1,13 +1,8 @@
 #!/usr/local/CyberCP/bin/python
 
-import os
 import os.path
 import sys
 import django
-import mimetypes
-
-from plogical.httpProc import httpProc
-
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()

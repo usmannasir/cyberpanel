@@ -66,7 +66,6 @@ def getAdminStatus(request):
 
 def getSystemStatus(request):
     try:
-
         HTTPData = SystemInformation.getSystemInformation()
         json_data = json.dumps(HTTPData)
         return HttpResponse(json_data)
@@ -79,11 +78,8 @@ def getLoadAverage(request):
     one = loadAverage[0]
     two = loadAverage[1]
     three = loadAverage[2]
-
     loadAvg = {"one": one, "two": two,"three": three}
-
     json_data = json.dumps(loadAvg)
-
     return HttpResponse(json_data)
 
 @ensure_csrf_cookie
@@ -91,9 +87,7 @@ def versionManagment(request):
     ## Get latest version
 
     getVersion = requests.get('https://cyberpanel.net/version.txt')
-
     latest = getVersion.json()
-
     latestVersion = latest['version']
     latestBuild = latest['build']
 

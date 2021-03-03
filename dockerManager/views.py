@@ -29,7 +29,6 @@ def loadDockerHome(request):
     userID = request.session['userID']
     admin = Administrator.objects.get(pk=userID)
     template = 'dockerManager/index.html'
-
     proc = httpProc(request, template, {"type": admin.type}, 'admin')
     return proc.render()
 
