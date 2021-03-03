@@ -1377,7 +1377,6 @@ $parameters = array(
             wm.submitWebsiteDeletion(1, self.extraArgs)
             logging.statusWriter(self.extraArgs['tempStatusPath'], '%s [404].' % (str(msg)))
 	
-	
     def installWhmcs(self):
         try:
 
