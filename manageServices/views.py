@@ -6,6 +6,8 @@ import plogical.CyberCPLogFileWriter as logging
 from loginSystem.views import loadLoginPage
 import os
 import json
+
+from plogical.httpProc import httpProc
 from plogical.mailUtilities import mailUtilities
 from plogical.acl import ACLManager
 from .models import PDNSStatus, SlaveServers
@@ -18,11 +20,6 @@ def managePowerDNS(request):
         userID = request.session['userID']
         currentACL = ACLManager.loadedACL(userID)
 
-
-        if currentACL['admin'] == 1:
-            pass
-        else:
-            return ACLManager.loadError()
         try:
 
             data = {}
@@ -47,7 +44,10 @@ def managePowerDNS(request):
                 data['slaveServerNS'] = pdnsStatus.masterServer
                 data['masterServerIP'] = pdnsStatus.masterIP
 
-            return render(request, 'manageServices/managePowerDNS.html', data)
+            proc = httpProc(request, 'manageServices/managePowerDNS.html',
+                            data, 'admin')
+            return proc.render()
+
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             return HttpResponse("See CyberCP main log file.")
@@ -56,42 +56,14 @@ def managePowerDNS(request):
         return redirect(loadLoginPage)
 
 def managePostfix(request):
-    try:
-        userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
-
-        if currentACL['admin'] == 1:
-            pass
-        else:
-            return ACLManager.loadError()
-        try:
-
-            return render(request, 'manageServices/managePostfix.html', {"status": 1})
-
-        except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg))
-            return HttpResponse("See CyberCP main log file.")
-
-    except KeyError:
-        return redirect(loadLoginPage)
+    proc = httpProc(request, 'manageServices/managePostfix.html',
+                    {"status": 1}, 'admin')
+    return proc.render()
 
 def managePureFtpd(request):
-    try:
-        userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
-
-        if currentACL['admin'] == 1:
-            pass
-        else:
-            return ACLManager.loadError()
-        try:
-            return render(request, 'manageServices/managePureFtpd.html', {"status": 1})
-        except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg))
-            return HttpResponse("See CyberCP main log file.")
-
-    except KeyError:
-        return redirect(loadLoginPage)
+    proc = httpProc(request, 'manageServices/managePureFtpd.html',
+                    {"status": 1}, 'admin')
+    return proc.render()
 
 def fetchStatus(request):
     try:
@@ -333,11 +305,9 @@ def manageApplications(request):
         services.append(elasticSearch)
         services.append(redis)
 
-        try:
-            return render(request, 'manageServices/applications.html', {'services': services})
-        except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg))
-            return HttpResponse("See CyberCP main log file.")
+        proc = httpProc(request, 'manageServices/applications.html',
+                        {'services': services}, 'admin')
+        return proc.render()
 
     except KeyError:
         return redirect(loadLoginPage)
