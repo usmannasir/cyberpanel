@@ -585,7 +585,7 @@ $parameters = array(
             statusFile.writelines('Configuring the installation,40')
             statusFile.close()
 
-            command = "wp core config --dbname=" + dbName + " --dbuser=" + dbUser + " --dbpass=" + dbPassword + " --dbhost=%s --dbprefix=wp_ --allow-root --path=" % (ApplicationInstaller.LOCALHOST) + finalPath
+            command = "wp core config --dbname=" + dbName + " --dbuser=" + dbUser + " --dbpass=" + dbPassword + " --dbhost=%s:%s --dbprefix=wp_ --allow-root --path=" % (ApplicationInstaller.LOCALHOST, ApplicationInstaller.PORT) + finalPath
             result = ProcessUtilities.outputExecutioner(command, externalApp)
 
             if result.find('Success:') == -1:

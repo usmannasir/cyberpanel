@@ -98,7 +98,7 @@ class StagingSetup(multi.Thread):
 
             dbNameRestore, dbUser, dbPassword = ApplicationInstaller(None, None).dbCreation(tempStatusPath, website)
 
-            command = 'wp core config --dbname=%s --dbuser=%s --dbpass=%s --dbhost=%s --path=%s' % (dbNameRestore, dbUser, dbPassword, ApplicationInstaller.LOCALHOST, path)
+            command = 'wp core config --dbname=%s --dbuser=%s --dbpass=%s --dbhost=%s:%s --path=%s' % (dbNameRestore, dbUser, dbPassword, ApplicationInstaller.LOCALHOST, ApplicationInstaller.PORT, path)
             ProcessUtilities.executioner(command, website.externalApp)
 
             ## Exporting and importing database
