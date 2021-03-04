@@ -22,6 +22,8 @@ import hashlib
 class ApplicationInstaller(multi.Thread):
 
     LOCALHOST = 'localhost'
+    REMOTE = 0
+    PORT = '3306'
 
     def __init__(self, installApp, extraArgs):
         multi.Thread.__init__(self)
@@ -421,9 +423,10 @@ $parameters = array(
         try:
             import json
             jsonData = json.loads(open(passFile, 'r').read())
-
             mysqlhost = jsonData['mysqlhost']
             ApplicationInstaller.LOCALHOST = mysqlhost
+            ApplicationInstaller.REMOTE = 1
+            ApplicationInstaller.PORT = jsonData['mysqlport']
         except:
             pass
 
