@@ -116,20 +116,19 @@ class mysqlUtilities:
                 return 0
 
             cursor.execute("CREATE DATABASE " + dbname)
-            cursor.execute("CREATE USER '" + dbuser + "'@'%s' IDENTIFIED BY '" % (mysqlUtilities.LOCALHOST) + dbpassword+ "'")
+
+            if mysqlUtilities.REMOTEHOST.find('ondigitalocean') > -1:
+                query = "CREATE USER '%s'@'%s' IDENTIFIED WITH mysql_native_password BY '%s'" % (
+                dbuser, mysqlUtilities.LOCALHOST, dbpassword)
+            else:
+                query = "CREATE USER '" + dbuser + "'@'%s' IDENTIFIED BY '" % (
+                    mysqlUtilities.LOCALHOST) + dbpassword + "'"
+
+            cursor.execute(query)
 
             if mysqlUtilities.RDS == 0:
-                cursor.execute(
-                    "CREATE USER '" + dbuser + "'@'%s' IDENTIFIED BY '" % (mysqlUtilities.LOCALHOST) + dbpassword + "'")
                 cursor.execute("GRANT ALL PRIVILEGES ON " + dbname + ".* TO '" + dbuser + "'@'%s'" % (mysqlUtilities.LOCALHOST))
             else:
-                if mysqlUtilities.REMOTEHOST.find('ondigitalocean') > -1:
-                    query = "CREATE USER '%s'@'%s' IDENTIFIED WITH mysql_native_password BY '%s'" % (dbuser, mysqlUtilities.LOCALHOST, dbpassword)
-                else:
-                    query = "CREATE USER '" + dbuser + "'@'%s' IDENTIFIED BY '" % (mysqlUtilities.LOCALHOST) + dbpassword + "'"
-
-                cursor.execute(query)
-
                 cursor.execute(
                     "GRANT INDEX, DROP, UPDATE, ALTER, CREATE, SELECT, INSERT, DELETE ON " + dbname + ".* TO '" + dbuser + "'@'%s'" % (mysqlUtilities.LOCALHOST))
             connection.close()
