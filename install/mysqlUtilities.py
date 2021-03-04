@@ -14,7 +14,6 @@ class mysqlUtilities:
                 from json import loads
                 mysqlData = loads(open("/etc/cyberpanel/mysqlPassword", 'r').read())
 
-
                 initCommand = 'mysql -h %s --port %s -u %s -p%s -e "' % (mysqlData['mysqlhost'], mysqlData['mysqlport'], mysqlData['mysqluser'], mysqlData['mysqlpassword'])
                 remote = 1
             except:
@@ -56,6 +55,19 @@ class mysqlUtilities:
             if res == 1:
                 return 0
             else:
+                ### DO Check
+                if mysqlData['mysqlhost'].find('ondigitalocean') > -1:
+
+                    alterUserPassword = "ALTER USER 'cyberpanel'@'%s' IDENTIFIED WITH mysql_native_password BY '%s'" % (publicip, dbpassword)
+                    command = initCommand + alterUserPassword + '"'
+
+                    if install.preFlightsChecks.debug:
+                        print(command)
+                        time.sleep(10)
+
+                    cmd = shlex.split(command)
+                    subprocess.call(cmd)
+
                 if remote:
                     if mysqlData['mysqlhost'].find('rds.amazon') == -1:
                         dropDB = "GRANT ALL PRIVILEGES ON " + dbname + ".* TO '" + dbuser + "'@'%s'" % (publicip)
