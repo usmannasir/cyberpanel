@@ -1402,6 +1402,11 @@ imap_folder_list_limit = 0
             except:
                 pass
 
+            try:
+                cursor.execute('ALTER TABLE `manageServices_pdnsstatus` CHANGE `type` `type` VARCHAR(6) NULL;')
+            except:
+                pass
+
             query = '''CREATE TABLE `databases_dbmeta` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `key` varchar(200) NOT NULL,
