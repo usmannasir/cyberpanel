@@ -36,16 +36,7 @@ class ContainerManager(multi.Thread):
         self.data = data
 
     def renderDM(self):
-
-        userID = self.request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
-
-        if currentACL['admin'] == 1:
-            pass
-        else:
-            return ACLManager.loadError()
-
-        proc = httpProc(self.request, self.templateName, self.data)
+        proc = httpProc(self.request, self.templateName, self.data, 'admin')
         return proc.render()
 
     def run(self):
