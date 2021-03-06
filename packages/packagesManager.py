@@ -2,14 +2,11 @@
 import os.path
 import sys
 import django
-
-from plogical import hashPassword
 from plogical.httpProc import httpProc
-
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
-from django.shortcuts import render,redirect
+from django.shortcuts import redirect
 from django.http import HttpResponse
 from loginSystem.views import loadLoginPage
 from loginSystem.models import Administrator
@@ -124,7 +121,7 @@ class PackagesManager:
         currentACL = ACLManager.loadedACL(userID)
         packageList = ACLManager.loadPackages(userID, currentACL)
         proc = httpProc(self.request, 'packages/modifyPackage.html',
-                        {"packageList": packageList}, 'modifyPackage')
+                        {"packList": packageList}, 'modifyPackage')
         return proc.render()
 
     def submitModify(self):
@@ -209,7 +206,7 @@ class PackagesManager:
         currentACL = ACLManager.loadedACL(userID)
         packageList = ACLManager.loadPackages(userID, currentACL)
         proc = httpProc(self.request, 'packages/listPackages.html',
-                        {"packageList": packageList}, 'listPackages')
+                        {"packList": packageList}, 'listPackages')
         return proc.render()
 
     def listPackagesAPI(self,data=None):
