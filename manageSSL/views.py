@@ -100,7 +100,6 @@ def sslForHostName(request):
     userID = request.session['userID']
     currentACL = ACLManager.loadedACL(userID)
     websitesName = ACLManager.findAllSites(currentACL, userID, 1)
-
     proc = httpProc(request, 'manageSSL/sslForHostName.html',
                     {'websiteList': websitesName}, 'hostnameSSL')
     return proc.render()
