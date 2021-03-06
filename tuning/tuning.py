@@ -31,24 +31,18 @@ class tuningManager:
         return proc.render()
 
     def phpTuning(self, request, userID):
-        try:
-            userID = request.session['userID']
-            currentACL = ACLManager.loadedACL(userID)
-
-            if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
-                websitesName = ACLManager.findAllSites(currentACL, userID)
-                OLS = 1
-                proc = httpProc(request, 'tuning/phpTuning.html',
-                                {'websiteList': websitesName, 'OLS': OLS}, 'admin')
-                return proc.render()
-            else:
-                OLS = 0
-                proc = httpProc(request, 'tuning/phpTuning.html',
-                                {'OLS': OLS}, 'admin')
-                return proc.render()
-
-        except KeyError:
-            return redirect(loadLoginPage)
+        currentACL = ACLManager.loadedACL(userID)
+        if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+            websitesName = ACLManager.findAllSites(currentACL, userID)
+            OLS = 1
+            proc = httpProc(request, 'tuning/phpTuning.html',
+                            {'websiteList': websitesName, 'OLS': OLS}, 'admin')
+            return proc.render()
+        else:
+            OLS = 0
+            proc = httpProc(request, 'tuning/phpTuning.html',
+                            {'OLS': OLS}, 'admin')
+            return proc.render()
 
     def tuneLitespeed(self, userID, data):
         try:
