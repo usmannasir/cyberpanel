@@ -18,38 +18,32 @@ import plogical.randomPassword
 # Create your views here.
 
 def terminal(request):
-    try:
+    password = plogical.randomPassword.generate_pass()
 
-        password = plogical.randomPassword.generate_pass()
+    verifyPath = "/home/cyberpanel/" + str(randint(100000, 999999))
+    writeToFile = open(verifyPath, 'w')
+    writeToFile.write(password)
+    writeToFile.close()
 
-        verifyPath = "/home/cyberpanel/" + str(randint(100000, 999999))
-        writeToFile = open(verifyPath, 'w')
-        writeToFile.write(password)
-        writeToFile.close()
+    ## setting up ssh server
+    path = '/etc/systemd/system/cpssh.service'
+    curPath = '/usr/local/CyberCP/WebTerminal/cpssh.service'
 
-        ## setting up ssh server
-        path = '/etc/systemd/system/cpssh.service'
-        curPath = '/usr/local/CyberCP/WebTerminal/cpssh.service'
+    if not os.path.exists(path):
+        command = 'mv %s %s' % (curPath, path)
+        ProcessUtilities.executioner(command)
 
-        if not os.path.exists(path):
-            command = 'mv %s %s' % (curPath, path)
-            ProcessUtilities.executioner(command)
+        command = 'systemctl start cpssh'
+        ProcessUtilities.executioner(command)
 
-            command = 'systemctl start cpssh'
-            ProcessUtilities.executioner(command)
+        FirewallUtilities.addRule('tcp', '5678', '0.0.0.0/0')
 
-            FirewallUtilities.addRule('tcp', '5678', '0.0.0.0/0')
+        newFWRule = FirewallRules(name='terminal', proto='tcp', port='5678', ipAddress='0.0.0.0/0')
+        newFWRule.save()
 
-            newFWRule = FirewallRules(name='terminal', proto='tcp', port='5678', ipAddress='0.0.0.0/0')
-            newFWRule.save()
-
-        proc = httpProc(request, 'WebTerminal/WebTerminal.html',
-                        {'verifyPath': verifyPath, 'password': password})
-        return proc.render()
-
-    except BaseException as msg:
-        logging.writeToFile(str(msg))
-        return redirect(loadLoginPage)
+    proc = httpProc(request, 'WebTerminal/WebTerminal.html',
+                    {'verifyPath': verifyPath, 'password': password})
+    return proc.render()
 
 def restart(request):
     try:
