@@ -155,27 +155,21 @@ def getFurtherDataFromLogFile(request):
 
 
 def services(request):
-    try:
-        userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
+    data = {}
 
-        data = {}
+    if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+        data['serverName'] = 'OpenLiteSpeed'
+    else:
+        data['serverName'] = 'LiteSpeed Ent'
 
-        if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
-            data['serverName'] = 'OpenLiteSpeed'
-        else:
-            data['serverName'] = 'LiteSpeed Ent'
+    dockerInstallPath = '/usr/bin/docker'
+    if not os.path.exists(dockerInstallPath):
+        data['isDocker'] = False
+    else:
+        data['isDocker'] = True
 
-        dockerInstallPath = '/usr/bin/docker'
-        if not os.path.exists(dockerInstallPath):
-            data['isDocker'] = False
-        else:
-            data['isDocker'] = True
-
-        proc = httpProc(request, 'serverStatus/services.html', data, 'admin')
-        return proc.render()
-    except KeyError:
-        return redirect(loadLoginPage)
+    proc = httpProc(request, 'serverStatus/services.html', data, 'admin')
+    return proc.render()
 
 def servicesStatus(request):
     try:
