@@ -6,8 +6,6 @@ from pathlib import Path
 from random import randint
 
 from django.shortcuts import HttpResponse, redirect
-from django.shortcuts import render
-
 from loginSystem.models import Administrator
 from loginSystem.views import loadLoginPage
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
