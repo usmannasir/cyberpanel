@@ -96,11 +96,14 @@ class secMiddleware:
                 logging.writeToFile(str(msg))
                 response = self.get_response(request)
                 return response
-        else:
-            try:
-                uID = request.session['userID']
-            except:
-                return render(request, 'loginSystem/login.html', {})
+        # else:
+        #     try:
+        #         if request.path.find('cloudAPI/') > -1 or request.path.find('api/') > -1:
+        #             pass
+        #         else:
+        #             uID = request.session['userID']
+        #     except:
+        #         return render(request, 'loginSystem/login.html', {})
 
         response = self.get_response(request)
 
@@ -110,7 +113,7 @@ class secMiddleware:
         response['Content-Security-Policy'] = "connect-src *;"
         response['Content-Security-Policy'] = "font-src 'self' 'unsafe-inline' https://www.jsdelivr.com https://fonts.googleapis.com"
         response['Content-Security-Policy'] = "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://www.jsdelivr.com https://cdnjs.cloudflare.com https://maxcdn.bootstrapcdn.com https://cdn.jsdelivr.net"
-        response['Content-Security-Policy'] = "default-src 'self' cyberpanel.cloud *.cyberpanel.cloud"
+        #response['Content-Security-Policy'] = "default-src 'self' cyberpanel.cloud *.cyberpanel.cloud"
         response['X-Content-Type-Options'] = "nosniff"
         response['Referrer-Policy'] = "same-origin"
 
