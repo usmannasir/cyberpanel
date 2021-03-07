@@ -1,7 +1,7 @@
 # coding=utf-8
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 import json
-from django.shortcuts import HttpResponse
+from django.shortcuts import HttpResponse, render
 import re
 from loginSystem.models import Administrator
 
@@ -96,12 +96,15 @@ class secMiddleware:
                 logging.writeToFile(str(msg))
                 response = self.get_response(request)
                 return response
-
+        else:
+            try:
+                uID = request.session['userID']
+            except:
+                return render(request, 'loginSystem/login.html', {})
 
         response = self.get_response(request)
 
         response['X-XSS-Protection'] = "1; mode=block"
-        #response['Strict-Transport-Security'] = "max-age=31536000; includeSubDomains; preload"
         response['X-Frame-Options'] = "sameorigin"
         response['Content-Security-Policy'] = "script-src 'self' https://www.jsdelivr.com"
         response['Content-Security-Policy'] = "connect-src *;"
