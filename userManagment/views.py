@@ -7,7 +7,6 @@ from loginSystem.views import loadLoginPage
 from loginSystem.models import Administrator, ACL
 import json
 from plogical import hashPassword
-from plogical import CyberCPLogFileWriter as logging
 from plogical.acl import ACLManager
 from plogical.httpProc import httpProc
 from plogical.virtualHostUtilities import virtualHostUtilities
@@ -17,91 +16,67 @@ from CyberCP.SecurityLevel import SecurityLevel
 # Create your views here.
 
 def loadUserHome(request):
-    try:
-        val = request.session['userID']
-        try:
-            admin = Administrator.objects.get(pk=val)
-            currentACL = ACLManager.loadedACL(val)
-            if currentACL['admin'] == 1:
-                listUsers = 1
-            else:
-                listUsers = currentACL['listUsers']
 
-            proc = httpProc(request, 'userManagment/index.html',
-                            {"type": admin.type, 'listUsers': listUsers}, 'admin')
-            return proc.render()
-        except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg))
-            return HttpResponse(str(msg))
+    val = request.session['userID']
+    admin = Administrator.objects.get(pk=val)
+    currentACL = ACLManager.loadedACL(val)
 
-    except KeyError:
-        return redirect(loadLoginPage)
+    if currentACL['admin'] == 1:
+        listUsers = 1
+    else:
+        listUsers = currentACL['listUsers']
+
+    proc = httpProc(request, 'userManagment/index.html',
+                    {"type": admin.type, 'listUsers': listUsers}, 'listUsers')
+    return proc.render()
 
 def viewProfile(request):
-    try:
-        userID = request.session['userID']
+    userID = request.session['userID']
+    admin = Administrator.objects.get(pk=userID)
 
-        admin = Administrator.objects.get(pk=userID)
+    AdminData = {}
 
-        AdminData = {}
+    AdminData['userName'] = admin.userName
+    AdminData['firstName'] = admin.firstName
+    AdminData['lastName'] = admin.lastName
+    AdminData['websitesLimit'] = admin.initWebsitesLimit
+    AdminData['email'] = admin.email
+    AdminData['accountACL'] = admin.acl.name
 
-        AdminData['userName'] = admin.userName
-        AdminData['firstName'] = admin.firstName
-        AdminData['lastName'] = admin.lastName
-        AdminData['websitesLimit'] = admin.initWebsitesLimit
-        AdminData['email'] = admin.email
-        AdminData['accountACL'] = admin.acl.name
-
-        proc = httpProc(request, 'userManagment/userProfile.html',
-                        AdminData)
-        return proc.render()
-    except KeyError:
-        return redirect(loadLoginPage)
+    proc = httpProc(request, 'userManagment/userProfile.html',
+                    AdminData)
+    return proc.render()
 
 def createUser(request):
-    try:
-        userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
+    userID = request.session['userID']
+    currentACL = ACLManager.loadedACL(userID)
 
-        if currentACL['admin'] == 1:
-            aclNames = ACLManager.unFileteredACLs()
-            proc = httpProc(request, 'userManagment/createUser.html',
-                            {'aclNames': aclNames, 'securityLevels': SecurityLevel.list()})
-            return proc.render()
-        elif currentACL['changeUserACL'] == 1:
-            aclNames = ACLManager.unFileteredACLs()
-            proc = httpProc(request, 'userManagment/createUser.html',
-                            {'aclNames': aclNames, 'securityLevels': SecurityLevel.list()})
-            return proc.render()
-        elif currentACL['createNewUser'] == 1:
-            aclNames = ['user']
-            proc = httpProc(request, 'userManagment/createUser.html',
-                            {'aclNames': aclNames, 'securityLevels': SecurityLevel.list()})
-            return proc.render()
-        else:
-            return ACLManager.loadError()
-
-    except BaseException as msg:
-        logging.CyberCPLogFileWriter.writeToFile(str(msg))
-        return redirect(loadLoginPage)
+    if currentACL['admin'] == 1:
+        aclNames = ACLManager.unFileteredACLs()
+        proc = httpProc(request, 'userManagment/createUser.html',
+                        {'aclNames': aclNames, 'securityLevels': SecurityLevel.list()})
+        return proc.render()
+    elif currentACL['changeUserACL'] == 1:
+        aclNames = ACLManager.unFileteredACLs()
+        proc = httpProc(request, 'userManagment/createUser.html',
+                        {'aclNames': aclNames, 'securityLevels': SecurityLevel.list()})
+        return proc.render()
+    elif currentACL['createNewUser'] == 1:
+        aclNames = ['user']
+        proc = httpProc(request, 'userManagment/createUser.html',
+                        {'aclNames': aclNames, 'securityLevels': SecurityLevel.list()})
+        return proc.render()
+    else:
+        return ACLManager.loadError()
 
 def apiAccess(request):
-    try:
-        userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
-
-        if currentACL['admin'] == 1:
-            adminNames = ACLManager.loadDeletionUsers(userID, currentACL)
-            adminNames.append("admin")
-            proc = httpProc(request, 'userManagment/apiAccess.html',
-                            {'acctNames': adminNames})
-            return proc.render()
-        else:
-            return ACLManager.loadError()
-
-    except BaseException as msg:
-        logging.CyberCPLogFileWriter.writeToFile(str(msg))
-        return redirect(loadLoginPage)
+    userID = request.session['userID']
+    currentACL = ACLManager.loadedACL(userID)
+    adminNames = ACLManager.loadDeletionUsers(userID, currentACL)
+    adminNames.append("admin")
+    proc = httpProc(request, 'userManagment/apiAccess.html',
+                    {'acctNames': adminNames}, 'admin')
+    return proc.render()
 
 def saveChangesAPIAccess(request):
     try:
@@ -261,14 +236,11 @@ def submitUserCreation(request):
 
 
 def modifyUsers(request):
-    try:
-        userID = request.session['userID']
-        userNames = ACLManager.loadAllUsers(userID)
-        proc = httpProc(request, 'userManagment/modifyUser.html',
-                        {"acctNames": userNames, 'securityLevels': SecurityLevel.list()})
-        return proc.render()
-    except KeyError:
-        return redirect(loadLoginPage)
+    userID = request.session['userID']
+    userNames = ACLManager.loadAllUsers(userID)
+    proc = httpProc(request, 'userManagment/modifyUser.html',
+                    {"acctNames": userNames, 'securityLevels': SecurityLevel.list()})
+    return proc.render()
 
 def fetchUserDetails(request):
     try:
@@ -417,26 +389,21 @@ def saveModifications(request):
         return HttpResponse(json_data)
 
 def deleteUser(request):
-    try:
-        userID = request.session['userID']
+    userID = request.session['userID']
+    currentACL = ACLManager.loadedACL(userID)
 
-        currentACL = ACLManager.loadedACL(userID)
-
-        if currentACL['admin'] == 1:
-            adminNames = ACLManager.loadDeletionUsers(userID, currentACL)
-            proc = httpProc(request, 'userManagment/deleteUser.html',
-                            {"acctNames": adminNames})
-            return proc.render()
-        elif currentACL['deleteUser'] == 1:
-            adminNames = ACLManager.loadDeletionUsers(userID, currentACL)
-            proc = httpProc(request, 'userManagment/deleteUser.html',
-                            {"acctNames": adminNames})
-            return proc.render()
-        else:
-            return ACLManager.loadError()
-
-    except KeyError:
-        return redirect(loadLoginPage)
+    if currentACL['admin'] == 1:
+        adminNames = ACLManager.loadDeletionUsers(userID, currentACL)
+        proc = httpProc(request, 'userManagment/deleteUser.html',
+                        {"acctNames": adminNames})
+        return proc.render()
+    elif currentACL['deleteUser'] == 1:
+        adminNames = ACLManager.loadDeletionUsers(userID, currentACL)
+        proc = httpProc(request, 'userManagment/deleteUser.html',
+                        {"acctNames": adminNames})
+        return proc.render()
+    else:
+        return ACLManager.loadError()
 
 def submitUserDeletion(request):
 
@@ -508,12 +475,9 @@ def submitUserDeletion(request):
         return HttpResponse(json_data)
 
 def createNewACL(request):
-    try:
-        proc = httpProc(request, 'userManagment/createACL.html',
-                        None, 'admin')
-        return proc.render()
-    except KeyError:
-        return redirect(loadLoginPage)
+    proc = httpProc(request, 'userManagment/createACL.html',
+                    None, 'admin')
+    return proc.render()
 
 def createACLFunc(request):
     try:
@@ -647,28 +611,23 @@ def submitACLModifications(request):
         return HttpResponse(json_data)
 
 def changeUserACL(request):
-    try:
-        userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
+    userID = request.session['userID']
+    currentACL = ACLManager.loadedACL(userID)
 
-        if currentACL['admin'] == 1:
-            aclNames = ACLManager.unFileteredACLs()
-            userNames = ACLManager.findAllUsers()
-            proc = httpProc(request, 'userManagment/changeUserACL.html',
-                            {'aclNames': aclNames, 'usersList': userNames}, 'admin')
-            return proc.render()
-        elif currentACL['changeUserACL'] == 1:
-            aclNames = ACLManager.unFileteredACLs()
-            userNames = ACLManager.findAllUsers()
-            proc = httpProc(request, 'userManagment/changeUserACL.html',
-                            {'aclNames': aclNames, 'usersList': userNames})
-            return proc.render()
-        else:
-            return ACLManager.loadError()
-
-
-    except KeyError:
-        return redirect(loadLoginPage)
+    if currentACL['admin'] == 1:
+        aclNames = ACLManager.unFileteredACLs()
+        userNames = ACLManager.findAllUsers()
+        proc = httpProc(request, 'userManagment/changeUserACL.html',
+                        {'aclNames': aclNames, 'usersList': userNames}, 'admin')
+        return proc.render()
+    elif currentACL['changeUserACL'] == 1:
+        aclNames = ACLManager.unFileteredACLs()
+        userNames = ACLManager.findAllUsers()
+        proc = httpProc(request, 'userManagment/changeUserACL.html',
+                        {'aclNames': aclNames, 'usersList': userNames})
+        return proc.render()
+    else:
+        return ACLManager.loadError()
 
 def changeACLFunc(request):
     try:
@@ -711,28 +670,23 @@ def changeACLFunc(request):
         return HttpResponse(json_data)
 
 def resellerCenter(request):
-    try:
-        userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
+    userID = request.session['userID']
+    currentACL = ACLManager.loadedACL(userID)
 
-        if currentACL['admin'] == 1:
-            userNames = ACLManager.loadDeletionUsers(userID, currentACL)
-            resellerPrivUsers = ACLManager.userWithResellerPriv(userID)
-            proc = httpProc(request, 'userManagment/resellerCenter.html',
-                            {'userToBeModified': userNames, 'resellerPrivUsers': resellerPrivUsers})
-            return proc.render()
-        elif currentACL['resellerCenter'] == 1:
-            userNames = ACLManager.loadDeletionUsers(userID, currentACL)
-            resellerPrivUsers = ACLManager.userWithResellerPriv(userID)
-            proc = httpProc(request, 'userManagment/resellerCenter.html',
-                            {'userToBeModified': userNames, 'resellerPrivUsers': resellerPrivUsers})
-            return proc.render()
-        else:
-            return ACLManager.loadError()
-
-
-    except KeyError:
-        return redirect(loadLoginPage)
+    if currentACL['admin'] == 1:
+        userNames = ACLManager.loadDeletionUsers(userID, currentACL)
+        resellerPrivUsers = ACLManager.userWithResellerPriv(userID)
+        proc = httpProc(request, 'userManagment/resellerCenter.html',
+                        {'userToBeModified': userNames, 'resellerPrivUsers': resellerPrivUsers})
+        return proc.render()
+    elif currentACL['resellerCenter'] == 1:
+        userNames = ACLManager.loadDeletionUsers(userID, currentACL)
+        resellerPrivUsers = ACLManager.userWithResellerPriv(userID)
+        proc = httpProc(request, 'userManagment/resellerCenter.html',
+                        {'userToBeModified': userNames, 'resellerPrivUsers': resellerPrivUsers})
+        return proc.render()
+    else:
+        return ACLManager.loadError()
 
 def saveResellerChanges(request):
     try:
@@ -791,40 +745,35 @@ def saveResellerChanges(request):
         return HttpResponse(json_data)
 
 def listUsers(request):
-    try:
-        userID = request.session['userID']
+    userID = request.session['userID']
+    currentACL = ACLManager.loadedACL(userID)
 
-        currentACL = ACLManager.loadedACL(userID)
+    if currentACL['admin'] == 1:
+        aclNames = ACLManager.unFileteredACLs()
+    elif currentACL['changeUserACL'] == 1:
+        aclNames = ACLManager.unFileteredACLs()
+    elif currentACL['createNewUser'] == 1:
+        aclNames = ['user']
+    else:
+        aclNames = []
 
-        if currentACL['admin'] == 1:
-            aclNames = ACLManager.unFileteredACLs()
-        elif currentACL['changeUserACL'] == 1:
-            aclNames = ACLManager.unFileteredACLs()
-        elif currentACL['createNewUser'] == 1:
-            aclNames = ['user']
-        else:
-            aclNames = []
+    if currentACL['admin'] == 1:
+        resellerPrivUsers = ACLManager.userWithResellerPriv(userID)
+    elif currentACL['resellerCenter'] == 1:
+        resellerPrivUsers = ACLManager.userWithResellerPriv(userID)
+    else:
+        resellerPrivUsers = []
 
-        if currentACL['admin'] == 1:
-            resellerPrivUsers = ACLManager.userWithResellerPriv(userID)
-        elif currentACL['resellerCenter'] == 1:
-            resellerPrivUsers = ACLManager.userWithResellerPriv(userID)
-        else:
-            resellerPrivUsers = []
-
-        if currentACL['admin'] == 1:
-            proc = httpProc(request, 'userManagment/listUsers.html',
-                            {'aclNames': aclNames, 'resellerPrivUsers': resellerPrivUsers})
-            return proc.render()
-        elif currentACL['listUsers'] == 1:
-            proc = httpProc(request, 'userManagment/listUsers.html',
-                            {'aclNames': aclNames, 'resellerPrivUsers': resellerPrivUsers})
-            return proc.render()
-        else:
-            return ACLManager.loadError()
-
-    except KeyError:
-        return redirect(loadLoginPage)
+    if currentACL['admin'] == 1:
+        proc = httpProc(request, 'userManagment/listUsers.html',
+                        {'aclNames': aclNames, 'resellerPrivUsers': resellerPrivUsers})
+        return proc.render()
+    elif currentACL['listUsers'] == 1:
+        proc = httpProc(request, 'userManagment/listUsers.html',
+                        {'aclNames': aclNames, 'resellerPrivUsers': resellerPrivUsers})
+        return proc.render()
+    else:
+        return ACLManager.loadError()
 
 def fetchTableUsers(request):
     try:
