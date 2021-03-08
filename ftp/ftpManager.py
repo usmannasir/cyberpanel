@@ -53,7 +53,7 @@ class FTPManager:
         websitesName = ACLManager.findAllSites(currentACL, userID)
 
         proc = httpProc(self.request, 'ftp/createFTPAccount.html',
-                        {'websiteList': websitesName, 'admin': admin.userName, "status": 1}, 'createFTPAccount')
+                        {'websiteList': websitesName, 'OwnerFTP': admin.userName, "status": 1}, 'createFTPAccount')
         return proc.render()
 
     def submitFTPCreation(self):

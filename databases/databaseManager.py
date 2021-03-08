@@ -158,9 +158,9 @@ class DatabaseManager:
 
     def listDBs(self, request = None, userID = None):
         currentACL = ACLManager.loadedACL(userID)
-        websitesName = ACLManager.findAllSites(currentACL, userID)
+        AllWebsites = ACLManager.findAllSites(currentACL, userID)
         template = 'databases/listDataBases.html'
-        proc = httpProc(request, template, {'websitesList': websitesName}, 'listDatabases')
+        proc = httpProc(request, template, {'AllWebsites': AllWebsites}, 'listDatabases')
         return proc.render()
 
     def changePassword(self, userID = None, data = None):
