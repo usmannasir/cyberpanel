@@ -14,8 +14,8 @@ from CyberCP import settings
 import random
 import string
 
-VERSION = '2.0'
-BUILD = 3
+VERSION = '2.1'
+BUILD = 1
 
 CENTOS7 = 0
 CENTOS8 = 1

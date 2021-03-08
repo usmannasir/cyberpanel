@@ -17,8 +17,8 @@ from plogical.processUtilities import ProcessUtilities
 from plogical.httpProc import httpProc
 # Create your views here.
 
-VERSION = '2.0'
-BUILD = 3
+VERSION = '2.1'
+BUILD = 1
 
 @ensure_csrf_cookie
 def renderBase(request):
