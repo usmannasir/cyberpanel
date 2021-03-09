@@ -14,9 +14,13 @@ def router(request):
         controller = data['controller']
 
         serverUserName = data['serverUserName']
+
         admin = Administrator.objects.get(userName=serverUserName)
 
         cm = CloudManager(data, admin)
+
+        if serverUserName != 'admin':
+            return cm.ajaxPre(0, 'Only administrator can access API.')
 
         if admin.api == 0:
             return cm.ajaxPre(0, 'API Access Disabled.')
@@ -63,6 +67,38 @@ def router(request):
             return cm.deleteCloudBackup()
         elif controller == 'SubmitCloudBackupRestore':
             return cm.SubmitCloudBackupRestore()
+        elif controller == 'DeployWordPress':
+            return cm.DeployWordPress()
+        elif controller == 'FetchWordPressDetails':
+            return cm.FetchWordPressDetails()
+        elif controller == 'AutoLogin':
+            return cm.AutoLogin()
+        elif controller == 'DeletePlugins':
+            return cm.DeletePlugins()
+        elif controller == 'GetCurrentThemes':
+            return cm.GetCurrentThemes()
+        elif controller == 'UpdateThemes':
+            return cm.UpdateThemes()
+        elif controller == 'ChangeStateThemes':
+            return cm.ChangeStateThemes()
+        elif controller == 'DeleteThemes':
+            return cm.DeleteThemes()
+        elif controller == 'GetServerPublicSSHkey':
+            return cm.GetServerPublicSSHkey()
+        elif controller == 'SubmitPublicKey':
+            return cm.SubmitPublicKey()
+        elif controller == 'UpdateWPSettings':
+            return cm.UpdateWPSettings()
+        elif controller == 'GetCurrentPlugins':
+            return cm.GetCurrentPlugins()
+        elif controller == 'UpdatePlugins':
+            return cm.UpdatePlugins()
+        elif controller == 'ChangeState':
+            return cm.ChangeState()
+        elif controller == 'saveWPSettings':
+            return cm.saveWPSettings()
+        elif controller == 'WPScan':
+            return cm.WPScan()
         elif controller == 'getCurrentS3Backups':
             return cm.getCurrentS3Backups()
         elif controller == 'deleteS3Backup':
@@ -205,6 +241,16 @@ def router(request):
             return cm.getLogsFromFile(request)
         elif controller == 'serverSSL':
             return cm.serverSSL(request)
+        elif controller == 'CreateStaging':
+            return cm.CreateStaging(request)
+        elif controller == 'startSync':
+            return cm.startSync(request)
+        elif controller == 'SaveAutoUpdateSettings':
+            return cm.SaveAutoUpdateSettings()
+        elif controller == 'fetchWPSettings':
+            return cm.fetchWPSettings()
+        elif controller == 'updateWPCLI':
+            return cm.updateWPCLI()
         elif controller == 'setupNode':
             return cm.setupManager(request)
         elif controller == 'fetchManagerTokens':
@@ -348,7 +394,6 @@ def router(request):
         cm = CloudManager(None)
         return cm.ajaxPre(0, str(msg))
 
-@csrf_exempt
 def access(request):
     try:
         serverUserName = request.GET.get('serverUserName')
@@ -361,6 +406,10 @@ def access(request):
             return HttpResponse('API Access Disabled.')
 
         if token == admin.token.lstrip('Basic ').rstrip('='):
+            try:
+                del request.session['userID']
+            except:
+                pass
             request.session['userID'] = admin.pk
             from django.shortcuts import redirect
             from baseTemplate.views import renderBase

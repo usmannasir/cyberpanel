@@ -48,8 +48,8 @@ try:
 except:
     pass
 
-VERSION = '2.0'
-BUILD = 3
+VERSION = '2.1'
+BUILD = 1
 
 
 ## I am not the monster that you think I am..
@@ -1425,7 +1425,7 @@ class backupUtilities:
             self.cpu = backupUtilities.CPUDefault
             self.time = int(backupUtilities.time)
 
-        self.BackupPath = '/home/cyberpanel/backups/%s/backup-' % (self.extraArgs['domain']) + self.extraArgs['domain'] + "-" + time.strftime("%m.%d.%Y_%H-%M-%S")
+        self.BackupPath = self.extraArgs['path']
         self.website = Websites.objects.get(domain=self.extraArgs['domain'])
 
         command = 'mkdir -p %s' % (self.BackupPath)
@@ -1485,6 +1485,13 @@ class backupUtilities:
 
         command = 'chmod 600:600 %s' % (finalPath)
         ProcessUtilities.executioner(command)
+
+        if self.extraArgs['port'] != 0:
+            logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
+                                                      'Sending file to destination server..,90')
+
+            command = "scp -o StrictHostKeyChecking=no -P %s -i /root/.ssh/cyberpanel %s root@%s:/home/cyberpanel/backups/%s/" % (self.extraArgs['port'], finalPath, self.extraArgs['ip'], self.extraArgs['destinationDomain'])
+            ProcessUtilities.outputExecutioner(command)
 
         logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Completed [200].')
 
@@ -1548,8 +1555,13 @@ class backupUtilities:
                 command = 'rm -rf %s' % (homePath)
                 ProcessUtilities.executioner(command)
 
-                command = 'mv %s/%s %s' % (self.dataPath, self.website.domain, '/home')
+                if self.extraArgs['sourceDomain'] == 'None':
+                    command = 'mv %s/%s %s' % (self.dataPath, self.website.domain, '/home')
+                else:
+                    command = 'mv %s/%s %s/%s' % (self.dataPath, self.extraArgs['sourceDomain'], '/home', self.extraArgs['domain'])
+
                 ProcessUtilities.executioner(command)
+
 
                 from filemanager.filemanager import FileManager
 
@@ -1614,6 +1626,34 @@ class backupUtilities:
 
                 mysqlUtilities.mysqlUtilities.restoreDatabaseBackup(db['databaseName'], self.databasesPath, db['password'])
 
+            if self.extraArgs['sourceDomain'] != 'None':
+                if self.extraArgs['sourceDomain'] != self.extraArgs['domain']:
+
+                    try:
+                        command = 'wp --info'
+                        outout = ProcessUtilities.outputExecutioner(command)
+
+                        if not outout.find('WP-CLI root dir:') > -1:
+                            from plogical.applicationInstaller import ApplicationInstaller
+                            ai = ApplicationInstaller(None, None)
+                            ai.installWPCLI()
+                    except subprocess.CalledProcessError:
+                        from plogical.applicationInstaller import ApplicationInstaller
+                        ai = ApplicationInstaller(None, None)
+                        ai.installWPCLI()
+
+                    path = '/home/%s/public_html' % (self.extraArgs['domain'])
+                    command = "wp search-replace '%s' '%s' --path=%s --allow-root" % (self.extraArgs['sourceDomain'], self.extraArgs['domain'], path)
+                    ProcessUtilities.outputExecutioner(command)
+
+                    command = "wp search-replace 'www.%s' '%s' --path=%s --allow-root" % (
+                    self.extraArgs['sourceDomain'], self.extraArgs['domain'], path)
+                    ProcessUtilities.outputExecutioner(command)
+
+                    command = "wp search-replace 'www.%s' '%s' --path=%s --allow-root" % (
+                        self.extraArgs['domain'], self.extraArgs['domain'], path)
+                    ProcessUtilities.outputExecutioner(command)
+
 
             command = 'rm -rf %s' % (self.extractedPath)
             ProcessUtilities.executioner(command)
@@ -1661,10 +1701,18 @@ class backupUtilities:
 
             aws_access_key_id, aws_secret_access_key, region = self.fetchAWSKeys()
 
-            s3 = boto3.resource(
+            if region.find('http') > -1:
+                s3 = boto3.resource(
                     's3',
                     aws_access_key_id=aws_access_key_id,
-                    aws_secret_access_key=aws_secret_access_key
+                    aws_secret_access_key=aws_secret_access_key,
+                    endpoint_url=region
+                )
+            else:
+                s3 = boto3.resource(
+                    's3',
+                    aws_access_key_id=aws_access_key_id,
+                    aws_secret_access_key=aws_secret_access_key,
                 )
 
             self.BackupPath = '/home/cyberpanel/backups/%s/%s' % (self.extraArgs['domain'], self.extraArgs['backupFile'].split('/')[-1])
@@ -2030,6 +2078,10 @@ def main():
     parser.add_argument('--data', help='')
     parser.add_argument('--emails', help='')
     parser.add_argument('--databases', help='')
+    parser.add_argument('--path', help='')
+    parser.add_argument('--ip', help='')
+    parser.add_argument('--sourceDomain', help='')
+    parser.add_argument('--destinationDomain', help='')
 
     ## FOR S3
 
@@ -2059,13 +2111,19 @@ def main():
         extraArgs['data'] = int(args.data)
         extraArgs['emails'] = int(args.emails)
         extraArgs['databases'] = int(args.databases)
+        extraArgs['path'] = args.path
+        extraArgs['port'] = args.port
+        extraArgs['ip'] = args.ip
+        extraArgs['destinationDomain'] = args.destinationDomain
         bu = backupUtilities(extraArgs)
         bu.CloudBackups()
+
     elif args.function == 'SubmitCloudBackupRestore':
         extraArgs = {}
         extraArgs['domain'] = args.backupDomain
         extraArgs['tempStatusPath'] = args.tempStoragePath
         extraArgs['backupFile'] = args.backupFile
+        extraArgs['sourceDomain'] = args.sourceDomain
         bu = backupUtilities(extraArgs)
         bu.SubmitCloudBackupRestore()
     elif args.function == 'SubmitS3BackupRestore':
@@ -2076,7 +2134,6 @@ def main():
         extraArgs['planName'] = args.planName
         bu = backupUtilities(extraArgs)
         bu.SubmitS3BackupRestore()
-
 
 if __name__ == "__main__":
     main()

@@ -17,6 +17,7 @@ class Websites(models.Model):
     ssl = models.IntegerField()
     state = models.IntegerField(default=1)
     externalApp = models.CharField(max_length=30, default=None)
+    config = models.TextField(default='')
 
 class ChildDomains(models.Model):
     master = models.ForeignKey(Websites,on_delete=models.CASCADE)

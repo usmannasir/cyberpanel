@@ -14,8 +14,8 @@ from os.path import *
 from stat import *
 import stat
 
-VERSION = '2.0'
-BUILD = 3
+VERSION = '2.1'
+BUILD = 1
 
 char_set = {'small': 'abcdefghijklmnopqrstuvwxyz',
             'nums': '0123456789',
@@ -776,15 +776,8 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                 command = 'debconf-set-selections ' + file_name
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-                command = 'apt-get -y install postfix'
+                command = 'apt-get -y install postfix postfix-mysql'
                 # os.remove(file_name)
-
-            preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-
-            if self.distro == centos or self.distro == cent8:
-                pass
-            else:
-                command = 'apt-get -y install dovecot-imapd dovecot-pop3d postfix-mysql'
 
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
@@ -795,42 +788,42 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             elif self.distro == cent8:
                 command = 'dnf install --enablerepo=gf-plus dovecot23 dovecot23-mysql -y'
             else:
-                command = 'apt-get -y install dovecot-mysql'
+                command = 'apt-get -y install dovecot-mysql dovecot-imapd dovecot-pop3d'
 
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
-            if self.distro != centos:
-                command = 'curl https://repo.dovecot.org/DOVECOT-REPO-GPG | gpg --import'
-                subprocess.call(command, shell=True)
-
-                command = 'gpg --export ED409DA1 > /etc/apt/trusted.gpg.d/dovecot.gpg'
-                subprocess.call(command, shell=True)
-
-                debPath = '/etc/apt/sources.list.d/dovecot.list'
-                writeToFile = open(debPath, 'w')
-                writeToFile.write('deb https://repo.dovecot.org/ce-2.3-latest/ubuntu/bionic bionic main\n')
-                writeToFile.close()
-
-                try:
-                    command = 'apt update -y'
-                    subprocess.call(command, shell=True)
-                except:
-                    pass
-
-                try:
-                    command = 'DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical sudo apt-get -q -y -o "Dpkg::Options::=--force-confdef" -o "Dpkg::Options::=--force-confold" --only-upgrade install dovecot-mysql -y'
-                    subprocess.call(command, shell=True)
-
-                    command = 'dpkg --configure -a'
-                    subprocess.call(command, shell=True)
-
-                    command = 'apt --fix-broken install -y'
-                    subprocess.call(command, shell=True)
-
-                    command = 'DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical sudo apt-get -q -y -o "Dpkg::Options::=--force-confdef" -o "Dpkg::Options::=--force-confold" --only-upgrade install dovecot-mysql -y'
-                    subprocess.call(command, shell=True)
-                except:
-                    pass
+            # if self.distro != centos:
+            #     command = 'curl https://repo.dovecot.org/DOVECOT-REPO-GPG | gpg --import'
+            #     subprocess.call(command, shell=True)
+            #
+            #     command = 'gpg --export ED409DA1 > /etc/apt/trusted.gpg.d/dovecot.gpg'
+            #     subprocess.call(command, shell=True)
+            #
+            #     debPath = '/etc/apt/sources.list.d/dovecot.list'
+            #     writeToFile = open(debPath, 'w')
+            #     writeToFile.write('deb https://repo.dovecot.org/ce-2.3-latest/ubuntu/bionic bionic main\n')
+            #     writeToFile.close()
+            #
+            #     try:
+            #         command = 'apt update -y'
+            #         subprocess.call(command, shell=True)
+            #     except:
+            #         pass
+            #
+            #     try:
+            #         command = 'DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical sudo apt-get -q -y -o "Dpkg::Options::=--force-confdef" -o "Dpkg::Options::=--force-confold" --only-upgrade install dovecot-mysql -y'
+            #         subprocess.call(command, shell=True)
+            #
+            #         command = 'dpkg --configure -a'
+            #         subprocess.call(command, shell=True)
+            #
+            #         command = 'apt --fix-broken install -y'
+            #         subprocess.call(command, shell=True)
+            #
+            #         command = 'DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical sudo apt-get -q -y -o "Dpkg::Options::=--force-confdef" -o "Dpkg::Options::=--force-confold" --only-upgrade install dovecot-mysql -y'
+            #         subprocess.call(command, shell=True)
+            #     except:
+            #         pass
 
         except BaseException as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [install_postfix_davecot]")
@@ -845,20 +838,14 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             os.chdir(self.cwd)
 
-            if mysql == 'Two':
-                mysql_virtual_domains = "email-configs/mysql-virtual_domains.cf"
-                mysql_virtual_forwardings = "email-configs/mysql-virtual_forwardings.cf"
-                mysql_virtual_mailboxes = "email-configs/mysql-virtual_mailboxes.cf"
-                mysql_virtual_email2email = "email-configs/mysql-virtual_email2email.cf"
-                davecotmysql = "email-configs/dovecot-sql.conf.ext"
-            else:
-                mysql_virtual_domains = "email-configs-one/mysql-virtual_domains.cf"
-                mysql_virtual_forwardings = "email-configs-one/mysql-virtual_forwardings.cf"
-                mysql_virtual_mailboxes = "email-configs-one/mysql-virtual_mailboxes.cf"
-                mysql_virtual_email2email = "email-configs-one/mysql-virtual_email2email.cf"
-                davecotmysql = "email-configs-one/dovecot-sql.conf.ext"
+            mysql_virtual_domains = "email-configs-one/mysql-virtual_domains.cf"
+            mysql_virtual_forwardings = "email-configs-one/mysql-virtual_forwardings.cf"
+            mysql_virtual_mailboxes = "email-configs-one/mysql-virtual_mailboxes.cf"
+            mysql_virtual_email2email = "email-configs-one/mysql-virtual_email2email.cf"
+            davecotmysql = "email-configs-one/dovecot-sql.conf.ext"
 
-                ### update password:
+
+            ### update password:
 
             data = open(davecotmysql, "r").readlines()
 
@@ -875,8 +862,6 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                 else:
                     writeDataToFile.writelines(items)
 
-            # if self.distro == ubuntu:
-            #    os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
 
             writeDataToFile.close()
 
@@ -894,9 +879,6 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                 else:
                     writeDataToFile.writelines(items)
 
-            # if self.distro == ubuntu:
-            #    os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
-
             writeDataToFile.close()
 
             ### update password:
@@ -912,9 +894,6 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                     writeDataToFile.writelines(dataWritten)
                 else:
                     writeDataToFile.writelines(items)
-
-            # if self.distro == ubuntu:
-            #    os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
 
             writeDataToFile.close()
 
@@ -932,9 +911,6 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                 else:
                     writeDataToFile.writelines(items)
 
-            # if self.distro == ubuntu:
-            #    os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
-
             writeDataToFile.close()
 
             ### update password:
@@ -950,9 +926,6 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                     writeDataToFile.writelines(dataWritten)
                 else:
                     writeDataToFile.writelines(items)
-
-            # if self.distro == ubuntu:
-            #    os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
 
             writeDataToFile.close()
 
@@ -1060,37 +1033,24 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             # Cleanup config files for ubuntu
             if self.distro == ubuntu:
                 preFlightsChecks.stdOut("Cleanup postfix/dovecot config files", 1)
-                if mysql == 'Two':
-                    self.centos_lib_dir_to_ubuntu("email-configs/master.cf", "/usr/libexec/", "/usr/lib/")
-                    self.centos_lib_dir_to_ubuntu("email-configs/main.cf", "/usr/libexec/postfix",
-                                                  "/usr/lib/postfix/sbin")
-                else:
-                    self.centos_lib_dir_to_ubuntu("email-configs-one/master.cf", "/usr/libexec/", "/usr/lib/")
-                    self.centos_lib_dir_to_ubuntu("email-configs-one/main.cf", "/usr/libexec/postfix",
-                                                  "/usr/lib/postfix/sbin")
+
+                self.centos_lib_dir_to_ubuntu("email-configs-one/master.cf", "/usr/libexec/", "/usr/lib/")
+                self.centos_lib_dir_to_ubuntu("email-configs-one/main.cf", "/usr/libexec/postfix",
+                                              "/usr/lib/postfix/sbin")
 
             ########### Copy config files
 
-            if mysql == 'Two':
-                shutil.copy("email-configs/mysql-virtual_domains.cf", "/etc/postfix/mysql-virtual_domains.cf")
-                shutil.copy("email-configs/mysql-virtual_forwardings.cf", "/etc/postfix/mysql-virtual_forwardings.cf")
-                shutil.copy("email-configs/mysql-virtual_mailboxes.cf", "/etc/postfix/mysql-virtual_mailboxes.cf")
-                shutil.copy("email-configs/mysql-virtual_email2email.cf", "/etc/postfix/mysql-virtual_email2email.cf")
-                shutil.copy("email-configs/main.cf", main)
-                shutil.copy("email-configs/master.cf", master)
-                shutil.copy("email-configs/dovecot.conf", davecot)
-                shutil.copy("email-configs/dovecot-sql.conf.ext", davecotmysql)
-            else:
-                shutil.copy("email-configs-one/mysql-virtual_domains.cf", "/etc/postfix/mysql-virtual_domains.cf")
-                shutil.copy("email-configs-one/mysql-virtual_forwardings.cf",
-                            "/etc/postfix/mysql-virtual_forwardings.cf")
-                shutil.copy("email-configs-one/mysql-virtual_mailboxes.cf", "/etc/postfix/mysql-virtual_mailboxes.cf")
-                shutil.copy("email-configs-one/mysql-virtual_email2email.cf",
-                            "/etc/postfix/mysql-virtual_email2email.cf")
-                shutil.copy("email-configs-one/main.cf", main)
-                shutil.copy("email-configs-one/master.cf", master)
-                shutil.copy("email-configs-one/dovecot.conf", davecot)
-                shutil.copy("email-configs-one/dovecot-sql.conf.ext", davecotmysql)
+            shutil.copy("email-configs-one/mysql-virtual_domains.cf", "/etc/postfix/mysql-virtual_domains.cf")
+            shutil.copy("email-configs-one/mysql-virtual_forwardings.cf",
+                        "/etc/postfix/mysql-virtual_forwardings.cf")
+            shutil.copy("email-configs-one/mysql-virtual_mailboxes.cf", "/etc/postfix/mysql-virtual_mailboxes.cf")
+            shutil.copy("email-configs-one/mysql-virtual_email2email.cf",
+                        "/etc/postfix/mysql-virtual_email2email.cf")
+            shutil.copy("email-configs-one/main.cf", main)
+            shutil.copy("email-configs-one/master.cf", master)
+            shutil.copy("email-configs-one/dovecot.conf", davecot)
+            shutil.copy("email-configs-one/dovecot-sql.conf.ext", davecotmysql)
+
 
             ######################################## Permissions
 
@@ -2197,7 +2157,7 @@ def main():
     parser.add_argument('--mysqlport', help='MySQL port if remote is chosen.')
     args = parser.parse_args()
 
-    logging.InstallLog.writeToFile("Starting CyberPanel installation..")
+    logging.InstallLog.writeToFile("Starting CyberPanel installation..,10")
     preFlightsChecks.stdOut("Starting CyberPanel installation..")
 
     if args.ent == None:
@@ -2388,7 +2348,7 @@ echo $oConfig->Save() ? 'Done' : 'Error';
     except:
         pass
 
-    logging.InstallLog.writeToFile("CyberPanel installation successfully completed!")
+    logging.InstallLog.writeToFile("CyberPanel installation successfully completed!,80")
 
 
 if __name__ == "__main__":

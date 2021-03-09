@@ -4,6 +4,7 @@
 #set -x
 #set -u
 
+
 #CyberPanel installer script for CentOS 7.X, CentOS 8.X, CloudLinux 7.X, Ubuntu 18.04 and Ubuntu 20.04
 #For whoever may edit this script, please follow :
 #Please use Pre_Install_xxx() and Post_Install_xxx() if you want to something respectively before or after the panel installation
@@ -1228,7 +1229,6 @@ sed -i 's|$PROJECT/archive/$BRANCH.tar.gz|https://cyberpanel.sh/codeload.github.
 Retry_Command "/root/.acme.sh/acme.sh --upgrade --auto-upgrade"
 #install acme and upgrade it beforehand, to prevent gitee fail
 }
-
 
 Main_Installation() {
 Debug_Log2 "Start to main installation..."

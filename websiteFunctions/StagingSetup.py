@@ -36,21 +36,43 @@ class StagingSetup(multi.Thread):
 
             website = Websites.objects.get(domain=masterDomain)
 
-            masterPath = '/home/%s/public_html' % (masterDomain)
+            try:
+                import json
+                from cloudAPI.models import WPDeployments
+                wpd = WPDeployments.objects.get(owner=website)
+                path = json.loads(wpd.config)['path']
+                masterPath = '/home/%s/public_html/%s' % (masterDomain, path)
+                replaceDomain = '%s/%s' % (masterDomain, path)
+            except:
+                masterPath = '/home/%s/public_html' % (masterDomain)
+                replaceDomain = masterDomain
+
+            configPath = '%s/wp-config.php' % (masterPath)
+
+            ## Check if WP Detected on Main Site
+
+            command = 'ls -la %s' % (configPath)
+            output = ProcessUtilities.outputExecutioner(command)
+
+            if output.find('No such file or') > -1:
+                logging.statusWriter(tempStatusPath, 'WordPress is not detected. [404]')
+                return 0
+
+            ##
 
             command = 'chmod 755 %s' % (masterPath)
             ProcessUtilities.executioner(command)
 
             ## Creating Child Domain
 
-            path = "/home/" + masterDomain + "/public_html/" + domain
+            path = "/home/" + masterDomain + "/" + domain
 
             logging.statusWriter(tempStatusPath, 'Creating domain for staging environment..,5')
-            phpSelection = 'PHP 7.2'
+            phpSelection = website.phpSelection
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
 
             execPath = execPath + " createDomain --masterDomain " + masterDomain + " --virtualHostName " + domain + \
-                       " --phpVersion '" + phpSelection + "' --ssl 0 --dkimCheck 0 --openBasedir 0 --path " + path + ' --websiteOwner ' \
+                       " --phpVersion '" + phpSelection + "' --ssl 1 --dkimCheck 0 --openBasedir 0 --path " + path + ' --websiteOwner ' \
                        + admin.userName + ' --tempStatusPath  %s' % (tempStatusPath + '1') + " --apache 0"
 
             ProcessUtilities.executioner(execPath)
@@ -67,127 +89,48 @@ class StagingSetup(multi.Thread):
 
             logging.statusWriter(tempStatusPath, 'Domain successfully created..,15')
 
-            ## Copying Data
+            ## Creating WP Site and setting Database
 
-            ## Fetch child domain path
-
-            childDomainPaths = []
-
-            for childs in website.childdomains_set.all():
-                childDomainPaths.append(childs.path)
-
-            filesAndFolder = os.listdir(masterPath)
-
-            for items in filesAndFolder:
-                completePath = '%s/%s' % (masterPath, items)
-
-                if completePath in childDomainPaths:
-                    continue
-                else:
-                    command = 'cp -r %s %s/' % (completePath, path)
-                    ProcessUtilities.executioner(command, website.externalApp)
-
-            foldersToBeRemoved = ['%s/.git' % (path), '%s/wp-content/backups' % (path), '%s/wp-content/updraft' % (path), '%s/wp-content/cache' % (path), '%s/wp-content/plugins/litespeed-cache' % (path)]
-
-            for rmv in foldersToBeRemoved:
-                command = 'rm -rf %s' % (rmv)
-                ProcessUtilities.executioner(command, website.externalApp)
-
-
-            logging.statusWriter(tempStatusPath, 'Data copied..,50')
-
-            ## Creating Database
+            command = 'wp core download --path=%s' % (path)
+            ProcessUtilities.executioner(command, website.externalApp)
 
             logging.statusWriter(tempStatusPath, 'Creating and copying database..,50')
 
             dbNameRestore, dbUser, dbPassword = ApplicationInstaller(None, None).dbCreation(tempStatusPath, website)
 
-            # Create dump of existing database
+            command = 'wp core config --dbname=%s --dbuser=%s --dbpass=%s --path=%s' % (dbNameRestore, dbUser, dbPassword, path)
+            ProcessUtilities.executioner(command, website.externalApp)
 
-            configPath = '%s/wp-config.php' % (masterPath)
+            ## Exporting and importing database
 
-            command = 'ls -la %s' % (configPath)
-            output = ProcessUtilities.outputExecutioner(command)
+            command = 'wp --allow-root --path=%s db export %s/dbexport-stage.sql' % (masterPath, path)
+            ProcessUtilities.executioner(command)
 
-            if output.find('No such file or') > -1:
-                logging.statusWriter(tempStatusPath, 'WordPress is not detected. [404]')
-                return 0
+            ## Import
 
-            command = 'cat %s' % (configPath)
-            data =  ProcessUtilities.outputExecutioner(command).split('\n')
-
-            for items in data:
-                if items.find('DB_NAME') > -1 and items[0] != '/':
-                    try:
-                        dbName = items.split("'")[3]
-                        if mysqlUtilities.createDatabaseBackup(dbName, '/home/cyberpanel'):
-                            break
-                        else:
-                            raise BaseException('Failed to create database backup.')
-                    except:
-                        dbName = items.split('"')[1]
-                        if mysqlUtilities.createDatabaseBackup(dbName, '/home/cyberpanel'):
-                            break
-                        else:
-                            raise BaseException('Failed to create database backup.')
-
-            databasePath = '%s/%s.sql' % ('/home/cyberpanel', dbName)
-
-            if not mysqlUtilities.restoreDatabaseBackup(dbNameRestore, '/home/cyberpanel', None, 1, dbName):
-                try:
-                    os.remove(databasePath)
-                except:
-                    pass
-                raise BaseException('Failed to restore database backup.')
+            command = 'wp --allow-root --path=%s --quiet db import %s/dbexport-stage.sql' % (path, path)
+            ProcessUtilities.executioner(command)
 
             try:
-                os.remove(databasePath)
+                command = 'rm -f %s/dbexport-stage.sql' % (path)
+                ProcessUtilities.executioner(command)
             except:
                 pass
 
-            ## Update final config file
+            ## Sync WP-Content Folder
 
-            pathFinalConfig = '%s/wp-config.php' % (path)
-
-            command = 'cat %s' % (configPath)
-            data = ProcessUtilities.outputExecutioner(command).split('\n')
-
-            tmp = "/tmp/" + str(randint(1000, 9999))
-            writeToFile = open(tmp, 'w')
-
-            for items in data:
-                if items.find('DB_NAME') > -1:
-                    writeToFile.write("\ndefine( 'DB_NAME', '%s' );\n" % (dbNameRestore))
-                elif items.find('DB_USER') > -1:
-                    writeToFile.write("\ndefine( 'DB_USER', '%s' );\n" % (dbUser))
-                elif items.find('DB_PASSWORD') > -1:
-                    writeToFile.write("\ndefine( 'DB_PASSWORD', '%s' );\n" % (dbPassword))
-                elif items.find('WP_SITEURL') > -1:
-                    continue
-                elif items.find("table_prefix") > -1:
-                    writeToFile.writelines(items)
-                    content = """
-define('WP_HOME','http://%s');
-define('WP_SITEURL','http://%s');
-""" % (domain, domain)
-                    writeToFile.write(content)
-                else:
-                    writeToFile.write(items + '\n')
-
-            writeToFile.close()
-
-            command = 'mv %s %s' % (tmp, pathFinalConfig)
+            command = 'rsync -avz %s/wp-content/ %s/wp-content/' % (masterPath, path)
             ProcessUtilities.executioner(command)
 
-            command = 'chown %s:%s %s' % (website.externalApp, website.externalApp, pathFinalConfig)
+            ## Search and replace url
+
+            command = 'wp search-replace --allow-root --path=%s "%s" "%s"' % (path, replaceDomain, domain)
             ProcessUtilities.executioner(command)
 
-            logging.statusWriter(tempStatusPath, 'Database synced..,100')
+            command = 'wp search-replace --allow-root --path=%s "www.%s" "%s"' % (path, replaceDomain, domain)
+            ProcessUtilities.executioner(command)
 
-            try:
-                os.remove(databasePath)
-            except:
-                pass
+            logging.statusWriter(tempStatusPath, 'Fixing permissions..,90')
 
             from filemanager.filemanager import FileManager
 
@@ -197,7 +140,7 @@ define('WP_SITEURL','http://%s');
             from plogical.installUtilities import installUtilities
             installUtilities.reStartLiteSpeed()
 
-            logging.statusWriter(tempStatusPath, 'Data copied..,[200]')
+            logging.statusWriter(tempStatusPath, 'Completed,[200]')
 
             return 0
         except BaseException as msg:
@@ -208,11 +151,23 @@ define('WP_SITEURL','http://%s');
         try:
             tempStatusPath = self.extraArgs['tempStatusPath']
             childDomain = self.extraArgs['childDomain']
-            eraseCheck = self.extraArgs['eraseCheck']
+            #eraseCheck = self.extraArgs['eraseCheck']
             dbCheck = self.extraArgs['dbCheck']
-            copyChanged = self.extraArgs['copyChanged']
+            #copyChanged = self.extraArgs['copyChanged']
+
 
             child = ChildDomains.objects.get(domain=childDomain)
+
+            try:
+                import json
+                from cloudAPI.models import WPDeployments
+                wpd = WPDeployments.objects.get(owner=child.master)
+                path = json.loads(wpd.config)['path']
+                masterPath = '/home/%s/public_html/%s' % (child.master.domain, path)
+                replaceDomain = '%s/%s' % (child.master.domain, path)
+            except:
+                masterPath = '/home/%s/public_html' % (child.master.domain)
+                replaceDomain = child.master.domain
 
             command = 'chmod 755 /home/%s/public_html' % (child.master.domain)
             ProcessUtilities.executioner(command)
@@ -223,59 +178,38 @@ define('WP_SITEURL','http://%s');
                 logging.statusWriter(tempStatusPath, 'WordPress is not detected. [404]')
                 return 0
 
-            if dbCheck:
-                logging.statusWriter(tempStatusPath, 'Syncing databases..,10')
+            ## Restore db
 
-                ## Create backup of child-domain database
+            logging.statusWriter(tempStatusPath, 'Syncing databases..,10')
 
-                configPath = '%s/wp-config.php' % (child.path)
+            command = 'wp --allow-root --path=%s db export %s/dbexport-stage.sql' % (child.path, masterPath)
+            ProcessUtilities.executioner(command)
 
-                data = open(configPath, 'r').readlines()
+            ## Restore to master domain
 
-                for items in data:
-                    if items.find('DB_NAME') > -1 and items[0] != '/':
-                        dbName = items.split("'")[3]
-                        if mysqlUtilities.createDatabaseBackup(dbName, '/home/cyberpanel'):
-                            break
-                        else:
-                            raise BaseException('Failed to create database backup.')
+            command = 'wp --allow-root --path=%s --quiet db import %s/dbexport-stage.sql' % (masterPath, masterPath)
+            ProcessUtilities.executioner(command)
 
-                databasePath = '%s/%s.sql' % ('/home/cyberpanel', dbName)
+            try:
+                command = 'rm -f %s/dbexport-stage.sql' % (masterPath)
+                ProcessUtilities.executioner(command)
+            except:
+                pass
 
-                ## Restore to master domain
+            ## Sync WP-Content Folder
 
-                masterPath = '/home/%s/public_html' % (child.master.domain)
+            logging.statusWriter(tempStatusPath, 'Syncing data..,50')
 
-                configPath = '%s/wp-config.php' % (masterPath)
+            command = 'rsync -avz %s/wp-content/ %s/wp-content/' % (child.path, masterPath)
+            ProcessUtilities.executioner(command)
 
-                data = open(configPath, 'r').readlines()
+            ## Search and replace url
 
-                for items in data:
-                    if items.find('DB_NAME') > -1 and items[0] != '/':
-                        dbNameRestore = items.split("'")[3]
-                        if not mysqlUtilities.restoreDatabaseBackup(dbNameRestore, '/home/cyberpanel', None, 1, dbName):
-                            try:
-                                os.remove(databasePath)
-                            except:
-                                pass
-                            raise BaseException('Failed to restore database backup.')
+            command = 'wp search-replace --allow-root --path=%s "%s" "%s"' % (masterPath, child.domain, replaceDomain)
+            ProcessUtilities.executioner(command)
 
-                try:
-                    os.remove(databasePath)
-                except:
-                    pass
-            if eraseCheck:
-                sourcePath = child.path
-                destinationPath = '/home/%s/public_html' % (child.master.domain)
-
-                command = 'rsync -avzh --exclude "wp-config.php" %s/ %s' % (sourcePath, destinationPath)
-                ProcessUtilities.executioner(command, child.master.externalApp)
-            elif copyChanged:
-                sourcePath = child.path
-                destinationPath = '/home/%s/public_html' % (child.master.domain)
-
-                command = 'rsync -avzh --exclude "wp-config.php" %s/ %s' % (sourcePath, destinationPath)
-                ProcessUtilities.executioner(command, child.master.externalApp)
+            command = 'wp search-replace --allow-root --path=%s "www.%s" "%s"' % (masterPath, child.domain, replaceDomain)
+            ProcessUtilities.executioner(command)
 
             from filemanager.filemanager import FileManager
 
@@ -285,7 +219,16 @@ define('WP_SITEURL','http://%s');
             from plogical.installUtilities import installUtilities
             installUtilities.reStartLiteSpeed()
 
-            logging.statusWriter(tempStatusPath, 'Data copied..,[200]')
+            logging.statusWriter(tempStatusPath, 'Completed,[200]')
+
+            http = []
+            finalHTTP = []
+
+            for items in http:
+                if items.find('x-litespeed-cache') > -1 or items.find('x-lsadc-cache') > -1 or items.find('x-qc-cache') > -1:
+                    finalHTTP.append('<strong>%s</strong>' % (items))
+                else:
+                    finalHTTP.append(items)
 
             return 0
         except BaseException as msg:

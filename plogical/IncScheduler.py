@@ -335,7 +335,6 @@ class IncScheduler():
                                           message='Backup for %s successfully sent to Google Drive.' % (website.domain)).save()
 
                             os.remove(completeFileToSend)
-
                         except BaseException as msg:
                             GDriveJobLogs(owner=items, status=backupSchedule.ERROR,
                                           message='[Site] Site backup failed, Error message: %s.' % (str(msg))).save()
@@ -625,11 +624,21 @@ Automatic backup failed for %s on %s.
 
             ts = time.time()
             retentionSeconds = 86400 * plan.retention
-            s3 = boto3.resource(
-                's3',
-                aws_access_key_id=aws_access_key_id,
-                aws_secret_access_key=aws_secret_access_key
-            )
+
+            if region.find('http') > -1:
+                s3 = boto3.resource(
+                    's3',
+                    aws_access_key_id=aws_access_key_id,
+                    aws_secret_access_key=aws_secret_access_key,
+                    endpoint_url=region
+                )
+            else:
+                s3 = boto3.resource(
+                    's3',
+                    aws_access_key_id=aws_access_key_id,
+                    aws_secret_access_key=aws_secret_access_key,
+                )
+
             bucket = s3.Bucket(plan.bucket)
 
             for file in bucket.objects.all():
@@ -642,12 +651,19 @@ Automatic backup failed for %s on %s.
 
             ###
 
-            client = boto3.client(
-                's3',
-                aws_access_key_id = aws_access_key_id,
-                aws_secret_access_key = aws_secret_access_key,
-                #region_name=region
-            )
+            if region.find('http') > -1:
+                client = boto3.client(
+                    's3',
+                    aws_access_key_id=aws_access_key_id,
+                    aws_secret_access_key=aws_secret_access_key,
+                    endpoint_url=region
+                )
+            else:
+                client = boto3.client(
+                    's3',
+                    aws_access_key_id = aws_access_key_id,
+                    aws_secret_access_key = aws_secret_access_key,
+                )
 
             ##
 
@@ -666,6 +682,10 @@ Automatic backup failed for %s on %s.
                 extraArgs['data'] = int(PlanConfig['data'])
                 extraArgs['emails'] = int(PlanConfig['emails'])
                 extraArgs['databases'] = int(PlanConfig['databases'])
+                extraArgs['port'] = '0'
+                extraArgs['ip'] = '0'
+                extraArgs['destinationDomain'] = 'None'
+                extraArgs['path'] = '/home/cyberpanel/backups/%s/backup-' % (items.domain) + items.domain + "-" + time.strftime("%m.%d.%Y_%H-%M-%S")
 
                 bu = backupUtilities(extraArgs)
                 result, fileName = bu.CloudBackups()
@@ -711,6 +731,61 @@ Automatic backup failed for %s on %s.
         except BaseException as msg:
             logging.writeToFile(str(msg) + ' [S3Backups.runAWSBackups]')
 
+    @staticmethod
+    def CalculateAndUpdateDiskUsage():
+        for website in Websites.objects.all():
+            try:
+                try:
+                    config = json.loads(website.config)
+                except:
+                    config = {}
+
+                config['DiskUsage'], config['DiskUsagePercentage'] = virtualHostUtilities.getDiskUsage("/home/" + website.domain, website.package.diskSpace)
+
+                ## Calculate bw usage
+
+                from plogical.vhost import vhost
+                config['bwInMB'], config['bwUsage'] = vhost.findDomainBW(website.domain, int(website.package.bandwidth))
+
+                website.config = json.dumps(config)
+                website.save()
+
+            except BaseException as msg:
+                logging.writeToFile('%s. [CalculateAndUpdateDiskUsage:753]' % (str(msg)))
+
+    @staticmethod
+    def WPUpdates():
+        from cloudAPI.models import WPDeployments
+        for wp in WPDeployments.objects.all():
+            try:
+                try:
+                    config = json.loads(wp.config)
+                except:
+                    config = {}
+
+                ### Core Updates
+
+                if config['updates'] == 'Minor and Security Updates':
+                    command = 'wp core update --minor --allow-root --path=/home/%s/public_html' % (config['domainName'])
+                    ProcessUtilities.executioner(command)
+                elif config['updates'] == 'All (minor and major)':
+                    command = 'wp core update --allow-root --path=/home/%s/public_html' % (config['domainName'])
+                    ProcessUtilities.executioner(command)
+
+                ### Plugins, for plugins we will do minor updates only.
+
+                if config['pluginUpdates'] == 'Enabled':
+                    command = 'wp plugin update --all --minor --allow-root --path=/home/%s/public_html' % (config['domainName'])
+                    ProcessUtilities.executioner(command)
+
+                ### Themes, for plugins we will do minor updates only.
+
+                if config['themeUpdates'] == 'Enabled':
+                    command = 'wp theme update --all --minor --allow-root --path=/home/%s/public_html' % (config['domainName'])
+                    ProcessUtilities.executioner(command)
+
+            except BaseException as msg:
+                logging.writeToFile('%s. [WPUpdates:767]' % (str(msg)))
 
 
 def main():
@@ -724,6 +799,8 @@ def main():
         IncScheduler.forceRunAWSBackup(args.planName)
         return 0
 
+    IncScheduler.CalculateAndUpdateDiskUsage()
+    IncScheduler.WPUpdates()
     IncScheduler.startBackup(args.function)
     IncScheduler.runGoogleDriveBackups(args.function)
     IncScheduler.git(args.function)

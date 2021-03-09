@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-
 from django.shortcuts import redirect
 import json
 from loginSystem.views import loadLoginPage

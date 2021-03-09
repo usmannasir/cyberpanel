@@ -6,22 +6,22 @@
 /* Java script code to create account */
 app.controller('createFTPAccount', function ($scope, $http) {
 
+
+
+    $(document).ready(function () {
+        $( ".ftpDetails" ).hide();
+        $( ".ftpPasswordView" ).hide();
+        $('.create-ftp-acct-select').select2();
+    });
+
+    $('.create-ftp-acct-select').on('select2:select', function (e) {
+        var data = e.params.data;
+        $scope.ftpDomain = data.text;
+        $( ".ftpDetails" ).show();
+
+    });
+
     $scope.ftpLoading = true;
-    $scope.ftpDetails = true;
-    $scope.canNotCreate = true;
-    $scope.successfullyCreated = true;
-    $scope.couldNotConnect = true;
-
-    $scope.showFTPDetails = function () {
-
-        $scope.ftpLoading = true;
-        $scope.ftpDetails = false;
-        $scope.canNotCreate = true;
-        $scope.successfullyCreated = true;
-        $scope.couldNotConnect = true;
-
-
-    };
 
     $scope.createFTPAccount = function () {
 
@@ -62,37 +62,35 @@ app.controller('createFTPAccount', function ($scope, $http) {
         function ListInitialDatas(response) {
 
 
-            if (response.data.creatFTPStatus == 1) {
-
+            if (response.data.creatFTPStatus === 1) {
                 $scope.ftpLoading = true;
-                $scope.ftpDetails = false;
-                $scope.canNotCreate = true;
-                $scope.successfullyCreated = false;
-                $scope.couldNotConnect = true;
+                new PNotify({
+                title: 'Success!',
+                text: 'FTP account successfully created.',
+                type: 'success'
+            });
 
 
             } else {
                 $scope.ftpLoading = true;
-                $scope.ftpDetails = false;
-                $scope.canNotCreate = false;
-                $scope.successfullyCreated = true;
-                $scope.couldNotConnect = true;
-
-                $scope.errorMessage = response.data.error_message;
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
 
 
             }
 
-
         }
-
         function cantLoadInitialDatas(response) {
 
             $scope.ftpLoading = true;
-            $scope.ftpDetails = false;
-            $scope.canNotCreate = true;
-            $scope.successfullyCreated = true;
-            $scope.couldNotConnect = false;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
 
 
         }
@@ -109,15 +107,13 @@ app.controller('createFTPAccount', function ($scope, $http) {
 
     ///
 
-    $scope.generatedPasswordView = true;
-
     $scope.generatePassword = function () {
-        $scope.generatedPasswordView = false;
+        $( ".ftpPasswordView" ).show();
         $scope.ftpPassword = randomPassword(16);
     };
 
     $scope.usePassword = function () {
-        $scope.generatedPasswordView = true;
+        $(".ftpPasswordView" ).hide();
     };
 
 });

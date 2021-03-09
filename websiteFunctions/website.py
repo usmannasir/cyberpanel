@@ -4,6 +4,8 @@ import os.path
 import sys
 import django
 
+from plogical.httpProc import httpProc
+
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
@@ -26,9 +28,6 @@ from plogical.childDomain import ChildDomainManager
 from math import ceil
 from plogical.alias import AliasManager
 from plogical.applicationInstaller import ApplicationInstaller
-from databases.models import Databases
-import hashlib
-from plogical.mysqlUtilities import mysqlUtilities
 from plogical import hashPassword
 from emailMarketing.emACL import emACL
 from plogical.processUtilities import ProcessUtilities
@@ -36,7 +35,6 @@ from managePHP.phpManager import PHPManager
 from ApachController.ApacheVhosts import ApacheVhost
 from plogical.vhostConfs import vhostConfs
 from plogical.cronUtil import CronUtil
-from plogical import randomPassword
 from .StagingSetup import StagingSetup
 import validators
 
@@ -51,115 +49,93 @@ class WebsiteManager:
         self.childDomain = childDomain
 
     def createWebsite(self, request=None, userID=None, data=None):
-        try:
-            currentACL = ACLManager.loadedACL(userID)
-            if ACLManager.currentContextPermission(currentACL, 'createWebsite') == 0:
-                return ACLManager.loadError()
+        currentACL = ACLManager.loadedACL(userID)
+        adminNames = ACLManager.loadAllUsers(userID)
+        packagesName = ACLManager.loadPackages(userID, currentACL)
+        phps = PHPManager.findPHPVersions()
 
-            adminNames = ACLManager.loadAllUsers(userID)
-            packagesName = ACLManager.loadPackages(userID, currentACL)
-            phps = PHPManager.findPHPVersions()
-
-            Data = {'packageList': packagesName, "owernList": adminNames, 'phps': phps}
-            return render(request, 'websiteFunctions/createWebsite.html', Data)
-
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+        Data = {'packageList': packagesName, "owernList": adminNames, 'phps': phps}
+        proc = httpProc(request, 'websiteFunctions/createWebsite.html',
+                        Data, 'createWebsite')
+        return proc.render()
 
     def modifyWebsite(self, request=None, userID=None, data=None):
-        try:
+        currentACL = ACLManager.loadedACL(userID)
 
-            currentACL = ACLManager.loadedACL(userID)
-
-            if ACLManager.currentContextPermission(currentACL, 'modifyWebsite') == 0:
-                return ACLManager.loadError()
-
-            websitesName = ACLManager.findAllSites(currentACL, userID)
-            phps = PHPManager.findPHPVersions()
-
-            return render(request, 'websiteFunctions/modifyWebsite.html', {'websiteList': websitesName, 'phps': phps})
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+        websitesName = ACLManager.findAllSites(currentACL, userID)
+        phps = PHPManager.findPHPVersions()
+        proc = httpProc(request, 'websiteFunctions/modifyWebsite.html',
+                        {'websiteList': websitesName, 'phps': phps}, 'modifyWebsite')
+        return proc.render()
 
     def deleteWebsite(self, request=None, userID=None, data=None):
-        try:
-            currentACL = ACLManager.loadedACL(userID)
-            if ACLManager.currentContextPermission(currentACL, 'deleteWebsite') == 0:
-                return ACLManager.loadError()
-
-            websitesName = ACLManager.findAllSites(currentACL, userID)
-
-            return render(request, 'websiteFunctions/deleteWebsite.html', {'websiteList': websitesName})
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+        currentACL = ACLManager.loadedACL(userID)
+        websitesName = ACLManager.findAllSites(currentACL, userID)
+        proc = httpProc(request, 'websiteFunctions/deleteWebsite.html',
+                        {'websiteList': websitesName}, 'deleteWebsite')
+        return proc.render()
 
     def siteState(self, request=None, userID=None, data=None):
-        try:
-            currentACL = ACLManager.loadedACL(userID)
+        currentACL = ACLManager.loadedACL(userID)
 
-            if ACLManager.currentContextPermission(currentACL, 'suspendWebsite') == 0:
-                return ACLManager.loadError()
+        websitesName = ACLManager.findAllSites(currentACL, userID)
 
-            websitesName = ACLManager.findAllSites(currentACL, userID)
-
-            return render(request, 'websiteFunctions/suspendWebsite.html', {'websiteList': websitesName})
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+        proc = httpProc(request, 'websiteFunctions/suspendWebsite.html',
+                        {'websiteList': websitesName}, 'suspendWebsite')
+        return proc.render()
 
     def listWebsites(self, request=None, userID=None, data=None):
-        try:
-            currentACL = ACLManager.loadedACL(userID)
-            pagination = self.websitePagination(currentACL, userID)
-
-            return render(request, 'websiteFunctions/listWebsites.html', {"pagination": pagination})
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+        currentACL = ACLManager.loadedACL(userID)
+        pagination = self.websitePagination(currentACL, userID)
+        proc = httpProc(request, 'websiteFunctions/listWebsites.html',
+                        {"pagination": pagination})
+        return proc.render()
 
     def listChildDomains(self, request=None, userID=None, data=None):
-        try:
-            currentACL = ACLManager.loadedACL(userID)
-            pagination = self.websitePagination(currentACL, userID)
-            adminNames = ACLManager.loadAllUsers(userID)
-            packagesName = ACLManager.loadPackages(userID, currentACL)
-            phps = PHPManager.findPHPVersions()
+        currentACL = ACLManager.loadedACL(userID)
+        adminNames = ACLManager.loadAllUsers(userID)
+        packagesName = ACLManager.loadPackages(userID, currentACL)
+        phps = PHPManager.findPHPVersions()
 
-            Data = {'packageList': packagesName, "owernList": adminNames, 'phps': phps}
-
-            return render(request, 'websiteFunctions/listChildDomains.html', Data)
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+        Data = {'packageList': packagesName, "owernList": adminNames, 'phps': phps}
+        proc = httpProc(request, 'websiteFunctions/listChildDomains.html',
+                        Data)
+        return proc.render()
 
     def listCron(self, request=None, userID=None, data=None):
-        try:
-            currentACL = ACLManager.loadedACL(userID)
-            websitesName = ACLManager.findAllSites(currentACL, userID)
-            return render(request, 'websiteFunctions/listCron.html', {'websiteList': websitesName})
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+        currentACL = ACLManager.loadedACL(userID)
+        admin = Administrator.objects.get(pk=userID)
+
+        if ACLManager.checkOwnership(request.GET.get('domain'), admin, currentACL) == 1:
+            pass
+        else:
+            return ACLManager.loadError()
+
+        proc = httpProc(request, 'websiteFunctions/listCron.html',
+                        {'domain': request.GET.get('domain')})
+        return proc.render()
 
     def domainAlias(self, request=None, userID=None, data=None):
-        try:
-            currentACL = ACLManager.loadedACL(userID)
-            admin = Administrator.objects.get(pk=userID)
+        currentACL = ACLManager.loadedACL(userID)
+        admin = Administrator.objects.get(pk=userID)
 
-            if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
-                pass
-            else:
-                return ACLManager.loadError()
+        if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
+            pass
+        else:
+            return ACLManager.loadError()
 
-            aliasManager = AliasManager(self.domain)
-            noAlias, finalAlisList = aliasManager.fetchAlisForDomains()
+        aliasManager = AliasManager(self.domain)
+        noAlias, finalAlisList = aliasManager.fetchAlisForDomains()
 
-            path = "/home/" + self.domain + "/public_html"
+        path = "/home/" + self.domain + "/public_html"
 
-            return render(request, 'websiteFunctions/domainAlias.html', {
-                'masterDomain': self.domain,
-                'aliases': finalAlisList,
-                'path': path,
-                'noAlias': noAlias
-            })
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+        proc = httpProc(request, 'websiteFunctions/domainAlias.html', {
+            'masterDomain': self.domain,
+            'aliases': finalAlisList,
+            'path': path,
+            'noAlias': noAlias
+        })
+        return proc.render()
 
     def submitWebsiteCreation(self, userID=None, data=None):
         try:
@@ -452,9 +428,9 @@ class WebsiteManager:
             else:
                 state = "Active"
 
-            #diskUsed = "%sMB" % str(virtualHostUtilities.getDiskUsage("/home/" + items.domain, items.package.diskSpace)[0])
+            DiskUsage, DiskUsagePercentage, bwInMB, bwUsage = virtualHostUtilities.FindStats(items)
+            diskUsed = "%sMB" % str(DiskUsage)
 
-            diskUsed = '1MB' ## to be fixed later
 
             dic = {'domain': items.domain, 'adminEmail': items.adminEmail, 'ipAddress': ipAddress,
                    'admin': items.admin.userName, 'package': items.package.packageName, 'state': state, 'diskUsed': diskUsed}
@@ -830,38 +806,20 @@ class WebsiteManager:
 
             Data['domain'] = self.domain
 
-            diskUsageDetails = virtualHostUtilities.getDiskUsage("/home/" + self.domain, website.package.diskSpace)
-
-            ## bw usage calculation
-
-            try:
-                execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-                execPath = execPath + " findDomainBW --virtualHostName " + self.domain + " --bandwidth " + str(
-                    website.package.bandwidth)
-
-                output = ProcessUtilities.outputExecutioner(execPath)
-                bwData = output.split(",")
-            except BaseException as msg:
-                logging.CyberCPLogFileWriter.writeToFile(str(msg))
-                bwData = [0, 0]
+            DiskUsage, DiskUsagePercentage, bwInMB, bwUsage = virtualHostUtilities.FindStats(website)
 
             ## bw usage calculations
 
             Data['bwInMBTotal'] = website.package.bandwidth
-            Data['bwInMB'] = bwData[0]
-            Data['bwUsage'] = bwData[1]
+            Data['bwInMB'] = bwInMB
+            Data['bwUsage'] = bwUsage
 
-            if diskUsageDetails != None:
-                if diskUsageDetails[1] > 100:
-                    diskUsageDetails[1] = 100
+            if DiskUsagePercentage > 100:
+                DiskUsagePercentage = 100
 
-                Data['diskUsage'] = diskUsageDetails[1]
-                Data['diskInMB'] = diskUsageDetails[0]
-                Data['diskInMBTotal'] = website.package.diskSpace
-            else:
-                Data['diskUsage'] = 0
-                Data['diskInMB'] = 0
-                Data['diskInMBTotal'] = website.package.diskSpace
+            Data['diskUsage'] = DiskUsagePercentage
+            Data['diskInMB'] = DiskUsage
+            Data['diskInMBTotal'] = website.package.diskSpace
 
             Data['phps'] = PHPManager.findPHPVersions()
 
@@ -902,11 +860,12 @@ class WebsiteManager:
             else:
                 Data['ftp'] = 0
 
-            return render(request, 'websiteFunctions/website.html', Data)
-
+            proc = httpProc(request, 'websiteFunctions/website.html', Data)
+            return proc.render()
         else:
-            return render(request, 'websiteFunctions/website.html',
+            proc = httpProc(request, 'websiteFunctions/website.html',
                           {"error": 1, "domain": "This domain does not exists."})
+            return proc.render()
 
     def launchChild(self, request=None, userID=None, data=None):
 
@@ -932,38 +891,20 @@ class WebsiteManager:
             Data['domain'] = self.domain
             Data['childDomain'] = self.childDomain
 
-            diskUsageDetails = virtualHostUtilities.getDiskUsage("/home/" + self.domain, website.package.diskSpace)
-
-            ## bw usage calculation
-
-            try:
-                execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-                execPath = execPath + " findDomainBW --virtualHostName " + self.domain + " --bandwidth " + str(
-                    website.package.bandwidth)
-
-                output = ProcessUtilities.outputExecutioner(execPath)
-                bwData = output.split(",")
-            except BaseException as msg:
-                logging.CyberCPLogFileWriter.writeToFile(str(msg))
-                bwData = [0, 0]
+            DiskUsage, DiskUsagePercentage, bwInMB, bwUsage = virtualHostUtilities.FindStats(website)
 
             ## bw usage calculations
 
             Data['bwInMBTotal'] = website.package.bandwidth
-            Data['bwInMB'] = bwData[0]
-            Data['bwUsage'] = bwData[1]
+            Data['bwInMB'] = bwInMB
+            Data['bwUsage'] = bwUsage
 
-            if diskUsageDetails != None:
-                if diskUsageDetails[1] > 100:
-                    diskUsageDetails[1] = 100
+            if DiskUsagePercentage > 100:
+                DiskUsagePercentage = 100
 
-                Data['diskUsage'] = diskUsageDetails[1]
-                Data['diskInMB'] = diskUsageDetails[0]
-                Data['diskInMBTotal'] = website.package.diskSpace
-            else:
-                Data['diskUsage'] = 0
-                Data['diskInMB'] = 0
-                Data['diskInMBTotal'] = website.package.diskSpace
+            Data['diskUsage'] = DiskUsagePercentage
+            Data['diskInMB'] = DiskUsage
+            Data['diskInMBTotal'] = website.package.diskSpace
 
             Data['phps'] = PHPManager.findPHPVersions()
 
@@ -1005,10 +946,12 @@ class WebsiteManager:
                 logging.CyberCPLogFileWriter.writeToFile(str(msg))
 
 
-            return render(request, 'websiteFunctions/launchChild.html', Data)
+            proc = httpProc(request, 'websiteFunctions/launchChild.html', Data)
+            return proc.render()
         else:
-            return render(request, 'websiteFunctions/launchChild.html',
+            proc = httpProc(request, 'websiteFunctions/launchChild.html',
                           {"error": 1, "domain": "This child domain does not exists"})
+            return proc.render()
 
     def getDataFromLogFile(self, userID=None, data=None):
 
@@ -1794,19 +1737,16 @@ class WebsiteManager:
             return HttpResponse(json_data)
 
     def wordpressInstall(self, request=None, userID=None, data=None):
-        try:
-            currentACL = ACLManager.loadedACL(userID)
-            admin = Administrator.objects.get(pk=userID)
+        currentACL = ACLManager.loadedACL(userID)
+        admin = Administrator.objects.get(pk=userID)
 
-            if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
-                pass
-            else:
-                return ACLManager.loadError()
+        if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
+            pass
+        else:
+            return ACLManager.loadError()
 
-            return render(request, 'websiteFunctions/installWordPress.html', {'domainName': self.domain})
-
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+        proc = httpProc(request, 'websiteFunctions/installWordPress.html', {'domainName': self.domain})
+        return proc.render()
 
     def installWordpress(self, userID=None, data=None):
         try:
@@ -1899,18 +1839,16 @@ class WebsiteManager:
             return HttpResponse(json_data)
 
     def joomlaInstall(self, request=None, userID=None, data=None):
-        try:
-            currentACL = ACLManager.loadedACL(userID)
-            admin = Administrator.objects.get(pk=userID)
+        currentACL = ACLManager.loadedACL(userID)
+        admin = Administrator.objects.get(pk=userID)
 
-            if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
-                pass
-            else:
-                return ACLManager.loadError()
+        if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
+            pass
+        else:
+            return ACLManager.loadError()
 
-            return render(request, 'websiteFunctions/installJoomla.html', {'domainName': self.domain})
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+        proc = httpProc(request, 'websiteFunctions/installJoomla.html', {'domainName': self.domain})
+        return proc.render()
 
     def installJoomla(self, userID=None, data=None):
         try:
@@ -1957,61 +1895,59 @@ class WebsiteManager:
             return HttpResponse(json_data)
 
     def setupGit(self, request=None, userID=None, data=None):
-        try:
+        currentACL = ACLManager.loadedACL(userID)
+        admin = Administrator.objects.get(pk=userID)
+        website = Websites.objects.get(domain=self.domain)
 
-            currentACL = ACLManager.loadedACL(userID)
-            admin = Administrator.objects.get(pk=userID)
-            website = Websites.objects.get(domain=self.domain)
+        if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
 
-            if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
-                pass
-            else:
-                return ACLManager.loadErrorJson()
+        path = '/home/cyberpanel/' + self.domain + '.git'
 
-            path = '/home/cyberpanel/' + self.domain + '.git'
+        if os.path.exists(path):
+            ipFile = "/etc/cyberpanel/machineIP"
+            f = open(ipFile)
+            ipData = f.read()
+            ipAddress = ipData.split('\n', 1)[0]
 
-            if os.path.exists(path):
-                ipFile = "/etc/cyberpanel/machineIP"
-                f = open(ipFile)
-                ipData = f.read()
-                ipAddress = ipData.split('\n', 1)[0]
+            port = ProcessUtilities.fetchCurrentPort()
 
-                port = ProcessUtilities.fetchCurrentPort()
+            webhookURL = 'https://' + ipAddress + ':%s/websites/' % (port) + self.domain + '/gitNotify'
 
-                webhookURL = 'https://' + ipAddress + ':%s/websites/' % (port) + self.domain + '/gitNotify'
+            proc = httpProc(request, 'websiteFunctions/setupGit.html',
+                            {'domainName': self.domain, 'installed': 1, 'webhookURL': webhookURL})
+            return proc.render()
+        else:
 
-                return render(request, 'websiteFunctions/setupGit.html',
-                              {'domainName': self.domain, 'installed': 1, 'webhookURL': webhookURL})
-            else:
+            command = "ssh-keygen -f /home/%s/.ssh/%s -t rsa -N ''" % (self.domain, website.externalApp)
+            ProcessUtilities.executioner(command, website.externalApp)
 
-                command = "ssh-keygen -f /home/%s/.ssh/%s -t rsa -N ''" % (self.domain, website.externalApp)
-                ProcessUtilities.executioner(command, website.externalApp)
+            ###
 
-                ###
-
-                configContent = """Host github.com
+            configContent = """Host github.com
 IdentityFile /home/%s/.ssh/%s
 StrictHostKeyChecking no
 """ % (self.domain, website.externalApp)
 
-                path = "/home/cyberpanel/config"
-                writeToFile = open(path, 'w')
-                writeToFile.writelines(configContent)
-                writeToFile.close()
+            path = "/home/cyberpanel/config"
+            writeToFile = open(path, 'w')
+            writeToFile.writelines(configContent)
+            writeToFile.close()
 
-                command = 'mv %s /home/%s/.ssh/config' % (path, self.domain)
-                ProcessUtilities.executioner(command)
+            command = 'mv %s /home/%s/.ssh/config' % (path, self.domain)
+            ProcessUtilities.executioner(command)
 
-                command = 'chown %s:%s /home/%s/.ssh/config' % (website.externalApp, website.externalApp, self.domain)
-                ProcessUtilities.executioner(command)
+            command = 'chown %s:%s /home/%s/.ssh/config' % (website.externalApp, website.externalApp, self.domain)
+            ProcessUtilities.executioner(command)
 
-                command = 'cat /home/%s/.ssh/%s.pub' % (self.domain, website.externalApp)
-                deploymentKey = ProcessUtilities.outputExecutioner(command, website.externalApp)
+            command = 'cat /home/%s/.ssh/%s.pub' % (self.domain, website.externalApp)
+            deploymentKey = ProcessUtilities.outputExecutioner(command, website.externalApp)
 
-            return render(request, 'websiteFunctions/setupGit.html',
-                          {'domainName': self.domain, 'deploymentKey': deploymentKey, 'installed': 0})
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+        proc = httpProc(request, 'websiteFunctions/setupGit.html',
+                        {'domainName': self.domain, 'deploymentKey': deploymentKey, 'installed': 0})
+        return proc.render()
 
     def setupGitRepo(self, userID=None, data=None):
         try:
@@ -2138,32 +2074,28 @@ StrictHostKeyChecking no
             return HttpResponse(json_data)
 
     def installPrestaShop(self, request=None, userID=None, data=None):
-        try:
-            currentACL = ACLManager.loadedACL(userID)
-            admin = Administrator.objects.get(pk=userID)
+        currentACL = ACLManager.loadedACL(userID)
+        admin = Administrator.objects.get(pk=userID)
 
-            if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
-                pass
-            else:
-                return ACLManager.loadError()
+        if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
+            pass
+        else:
+            return ACLManager.loadError()
 
-            return render(request, 'websiteFunctions/installPrestaShop.html', {'domainName': self.domain})
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+        proc = httpProc(request, 'websiteFunctions/installPrestaShop.html', {'domainName': self.domain})
+        return proc.render()
 
     def installMagento(self, request=None, userID=None, data=None):
-        try:
-            currentACL = ACLManager.loadedACL(userID)
-            admin = Administrator.objects.get(pk=userID)
+        currentACL = ACLManager.loadedACL(userID)
+        admin = Administrator.objects.get(pk=userID)
 
-            if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
-                pass
-            else:
-                return ACLManager.loadError()
+        if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
+            pass
+        else:
+            return ACLManager.loadError()
 
-            return render(request, 'websiteFunctions/installMagento.html', {'domainName': self.domain})
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+        proc = httpProc(request, 'websiteFunctions/installMagento.html', {'domainName': self.domain})
+        return proc.render()
 
     def magentoInstall(self, userID=None, data=None):
         try:
@@ -2213,18 +2145,16 @@ StrictHostKeyChecking no
             return HttpResponse(json_data)
 
     def installMautic(self, request=None, userID=None, data=None):
-        try:
-            currentACL = ACLManager.loadedACL(userID)
-            admin = Administrator.objects.get(pk=userID)
+        currentACL = ACLManager.loadedACL(userID)
+        admin = Administrator.objects.get(pk=userID)
 
-            if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
-                pass
-            else:
-                return ACLManager.loadError()
+        if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
+            pass
+        else:
+            return ACLManager.loadError()
 
-            return render(request, 'websiteFunctions/installMautic.html', {'domainName': self.domain})
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+        proc = httpProc(request, 'websiteFunctions/installMautic.html', {'domainName': self.domain})
+        return proc.render()
 
     def mauticInstall(self, userID=None, data=None):
         try:
@@ -2393,8 +2323,9 @@ StrictHostKeyChecking no
             else:
                 state = "Active"
 
-            diskUsed = "%sMB" % str(
-                virtualHostUtilities.getDiskUsage("/home/" + items.domain, items.package.diskSpace)[0])
+            DiskUsage, DiskUsagePercentage, bwInMB, bwUsage = virtualHostUtilities.FindStats(items)
+
+            diskUsed = "%sMB" % str(DiskUsage)
             dic = {'domain': items.domain, 'adminEmail': items.adminEmail, 'ipAddress': ipAddress,
                    'admin': items.admin.userName, 'package': items.package.packageName, 'state': state, 'diskUsed': diskUsed}
 
@@ -2431,7 +2362,9 @@ StrictHostKeyChecking no
             else:
                 state = "Active"
 
-            diskUsed = "%sMB" % str(virtualHostUtilities.getDiskUsage("/home/" + items.domain, items.package.diskSpace)[0])
+            DiskUsage, DiskUsagePercentage, bwInMB, bwUsage = virtualHostUtilities.FindStats(items)
+
+            diskUsed = "%sMB" % str(DiskUsage)
 
             dic = {'domain': items.domain, 'adminEmail': items.adminEmail, 'ipAddress': ipAddress,
                    'admin': items.admin.userName, 'package': items.package.packageName, 'state': state, 'diskUsed': diskUsed}
@@ -2630,22 +2563,20 @@ StrictHostKeyChecking no
         return HttpResponse(json_data)
 
     def sshAccess(self, request=None, userID=None, data=None):
-        try:
-            currentACL = ACLManager.loadedACL(userID)
-            admin = Administrator.objects.get(pk=userID)
+        currentACL = ACLManager.loadedACL(userID)
+        admin = Administrator.objects.get(pk=userID)
 
-            if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
-                pass
-            else:
-                return ACLManager.loadError()
+        if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
+            pass
+        else:
+            return ACLManager.loadError()
 
-            website = Websites.objects.get(domain=self.domain)
-            externalApp = website.externalApp
+        website = Websites.objects.get(domain=self.domain)
+        externalApp = website.externalApp
 
-            return render(request, 'websiteFunctions/sshAccess.html',
-                          {'domainName': self.domain, 'externalApp': externalApp})
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+        proc = httpProc(request, 'websiteFunctions/sshAccess.html',
+                        {'domainName': self.domain, 'externalApp': externalApp})
+        return proc.render()
 
     def saveSSHAccessChanges(self, userID=None, data=None):
         try:
@@ -2687,22 +2618,20 @@ StrictHostKeyChecking no
 
 
     def setupStaging(self, request=None, userID=None, data=None):
-        try:
-            currentACL = ACLManager.loadedACL(userID)
-            admin = Administrator.objects.get(pk=userID)
+        currentACL = ACLManager.loadedACL(userID)
+        admin = Administrator.objects.get(pk=userID)
 
-            if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
-                pass
-            else:
-                return ACLManager.loadError()
+        if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
+            pass
+        else:
+            return ACLManager.loadError()
 
-            website = Websites.objects.get(domain=self.domain)
-            externalApp = website.externalApp
+        website = Websites.objects.get(domain=self.domain)
+        externalApp = website.externalApp
 
-            return render(request, 'websiteFunctions/setupStaging.html',
-                          {'domainName': self.domain, 'externalApp': externalApp})
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+        proc = httpProc(request, 'websiteFunctions/setupStaging.html',
+                        {'domainName': self.domain, 'externalApp': externalApp})
+        return proc.render()
 
     def startCloning(self, userID=None, data=None):
         try:
@@ -2711,7 +2640,6 @@ StrictHostKeyChecking no
             admin = Administrator.objects.get(pk=userID)
 
             self.domain = data['masterDomain']
-
 
             if not validators.domain(self.domain):
                 data_ret = {'status': 0, 'createWebSiteStatus': 0, 'error_message': "Invalid domain."}
@@ -2735,7 +2663,6 @@ StrictHostKeyChecking no
             extraArgs['masterDomain'] = data['masterDomain']
             extraArgs['admin'] = admin
 
-
             tempStatusPath = "/tmp/" + str(randint(1000, 9999))
             writeToFile = open(tempStatusPath, 'a')
             message = 'Cloning process has started..,5'
@@ -2757,22 +2684,20 @@ StrictHostKeyChecking no
             return HttpResponse(json_data)
 
     def syncToMaster(self, request=None, userID=None, data=None, childDomain = None):
-        try:
-            currentACL = ACLManager.loadedACL(userID)
-            admin = Administrator.objects.get(pk=userID)
+        currentACL = ACLManager.loadedACL(userID)
+        admin = Administrator.objects.get(pk=userID)
 
-            if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
-                pass
-            else:
-                return ACLManager.loadError()
+        if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
+            pass
+        else:
+            return ACLManager.loadError()
 
-            website = Websites.objects.get(domain=self.domain)
-            externalApp = website.externalApp
+        website = Websites.objects.get(domain=self.domain)
+        externalApp = website.externalApp
 
-            return render(request, 'websiteFunctions/syncMaster.html',
-                          {'domainName': self.domain, 'externalApp': externalApp, 'childDomain': childDomain})
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+        proc = httpProc(request, 'websiteFunctions/syncMaster.html',
+                        {'domainName': self.domain, 'externalApp': externalApp, 'childDomain': childDomain})
+        return proc.render()
 
     def startSync(self, userID=None, data=None):
         try:
@@ -2851,43 +2776,39 @@ StrictHostKeyChecking no
             return HttpResponse(json_data)
 
     def manageGIT(self, request=None, userID=None, data=None):
+        currentACL = ACLManager.loadedACL(userID)
+        admin = Administrator.objects.get(pk=userID)
+
+        if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
+            pass
+        else:
+            return ACLManager.loadError()
+
         try:
-            currentACL = ACLManager.loadedACL(userID)
-            admin = Administrator.objects.get(pk=userID)
+            website = Websites.objects.get(domain=self.domain)
+            folders = ['/home/%s/public_html' % (self.domain), '/home/%s' % (self.domain),
+                       '/home/vmail/%s' % (self.domain)]
 
-            if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
-                pass
-            else:
-                return ACLManager.loadError()
+            databases = website.databases_set.all()
 
-            try:
-                website = Websites.objects.get(domain=self.domain)
-                folders = ['/home/%s/public_html' % (self.domain), '/home/%s' % (self.domain), '/home/vmail/%s' % (self.domain)]
+            for database in databases:
+                basePath = '/var/lib/mysql/'
+                folders.append('%s%s' % (basePath, database.dbName))
+        except:
 
-                databases = website.databases_set.all()
+            self.childWebsite = ChildDomains.objects.get(domain=self.domain)
 
-                for database in databases:
-                    basePath = '/var/lib/mysql/'
-                    folders.append('%s%s' % (basePath, database.dbName))
+            folders = [self.childWebsite.path]
 
+            databases = self.childWebsite.master.databases_set.all()
 
-            except:
+            for database in databases:
+                basePath = '/var/lib/mysql/'
+                folders.append('%s%s' % (basePath, database.dbName))
 
-                self.childWebsite = ChildDomains.objects.get(domain=self.domain)
-
-                folders = [self.childWebsite.path]
-
-                databases = self.childWebsite.master.databases_set.all()
-
-                for database in databases:
-                    basePath = '/var/lib/mysql/'
-                    folders.append('%s%s' % (basePath, database.dbName))
-
-            return render(request, 'websiteFunctions/manageGIT.html',
-                          {'domainName': self.domain, 'folders': folders})
-
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+        proc = httpProc(request, 'websiteFunctions/manageGIT.html',
+                        {'domainName': self.domain, 'folders': folders})
+        return proc.render()
 
     def folderCheck(self):
 

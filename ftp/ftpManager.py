@@ -2,11 +2,14 @@
 import os.path
 import sys
 import django
+
+from plogical.httpProc import httpProc
+
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
 import json
-from django.shortcuts import render,redirect
+from django.shortcuts import redirect
 from django.http import HttpResponse
 try:
     from .models import Users
@@ -32,32 +35,26 @@ class FTPManager:
         self.extraArgs = extraArgs
 
     def loadFTPHome(self):
-        try:
-            val = self.request.session['userID']
-            return render(self.request, 'ftp/index.html')
-        except KeyError:
-            return redirect(loadLoginPage)
+        proc = httpProc(self.request, 'ftp/index.html',
+                        None, 'createFTPAccount')
+        return proc.render()
 
     def createFTPAccount(self):
-        try:
-            userID = self.request.session['userID']
-            currentACL = ACLManager.loadedACL(userID)
+        userID = self.request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
 
-            if ACLManager.currentContextPermission(currentACL, 'createFTPAccount') == 0:
-                return ACLManager.loadError()
+        admin = Administrator.objects.get(pk=userID)
 
-            admin = Administrator.objects.get(pk=userID)
+        if not os.path.exists('/home/cyberpanel/pureftpd'):
+            proc = httpProc(self.request, 'ftp/createFTPAccount.html',
+                            {"status": 0}, 'createFTPAccount')
+            return proc.render()
 
-            if not os.path.exists('/home/cyberpanel/pureftpd'):
-                return render(self.request, "ftp/createFTPAccount.html", {"status": 0})
+        websitesName = ACLManager.findAllSites(currentACL, userID)
 
-            websitesName = ACLManager.findAllSites(currentACL, userID)
-
-            return render(self.request, 'ftp/createFTPAccount.html',
-                          {'websiteList': websitesName, 'admin': admin.userName, "status": 1})
-        except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg))
-            return HttpResponse(str(msg))
+        proc = httpProc(self.request, 'ftp/createFTPAccount.html',
+                        {'websiteList': websitesName, 'OwnerFTP': admin.userName, "status": 1}, 'createFTPAccount')
+        return proc.render()
 
     def submitFTPCreation(self):
         try:
@@ -114,23 +111,19 @@ class FTPManager:
             return HttpResponse(json_data)
 
     def deleteFTPAccount(self):
-        try:
+        userID = self.request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
 
-            userID = self.request.session['userID']
-            currentACL = ACLManager.loadedACL(userID)
+        if not os.path.exists('/home/cyberpanel/pureftpd'):
+            proc = httpProc(self.request, 'ftp/deleteFTPAccount.html',
+                            {"status": 0}, 'deleteFTPAccount')
+            return proc.render()
 
-            if ACLManager.currentContextPermission(currentACL, 'deleteFTPAccount') == 0:
-                return ACLManager.loadError()
+        websitesName = ACLManager.findAllSites(currentACL, userID)
 
-            if not os.path.exists('/home/cyberpanel/pureftpd'):
-                return render(self.request, "ftp/deleteFTPAccount.html", {"status": 0})
-
-            websitesName = ACLManager.findAllSites(currentACL, userID)
-
-            return render(self.request, 'ftp/deleteFTPAccount.html', {'websiteList': websitesName, "status": 1})
-        except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg))
-            return HttpResponse(str(msg))
+        proc = httpProc(self.request, 'ftp/deleteFTPAccount.html',
+                        {'websiteList': websitesName, "status": 1}, 'deleteFTPAccount')
+        return proc.render()
 
     def fetchFTPAccounts(self):
         try:
@@ -204,22 +197,18 @@ class FTPManager:
             return HttpResponse(json_data)
 
     def listFTPAccounts(self):
-        try:
-            userID = self.request.session['userID']
-            currentACL = ACLManager.loadedACL(userID)
+        userID = self.request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
 
-            if ACLManager.currentContextPermission(currentACL, 'listFTPAccounts') == 0:
-                return ACLManager.loadError()
+        if not os.path.exists('/home/cyberpanel/pureftpd'):
+            proc = httpProc(self.request, 'ftp/listFTPAccounts.html',
+                            {"status": 0}, 'listFTPAccounts')
+            return proc.render()
 
-            if not os.path.exists('/home/cyberpanel/pureftpd'):
-                return render(self.request, "ftp/listFTPAccounts.html", {"status": 0})
-
-            websitesName = ACLManager.findAllSites(currentACL, userID)
-
-            return render(self.request, 'ftp/listFTPAccounts.html', {'websiteList': websitesName, "status": 1})
-        except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg))
-            return HttpResponse(str(msg))
+        websitesName = ACLManager.findAllSites(currentACL, userID)
+        proc = httpProc(self.request, 'ftp/listFTPAccounts.html',
+                        {'websiteList': websitesName, "status": 1}, 'listFTPAccounts')
+        return proc.render()
 
     def getAllFTPAccounts(self):
         try:

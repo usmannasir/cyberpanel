@@ -2830,6 +2830,8 @@ app.controller('manageCronController', function ($scope, $http) {
     $("#cronEditSuccess").hide();
     $("#fetchCronFailure").hide();
 
+    $scope.websiteToBeModified = $("#domain").text();
+
     $scope.fetchWebsites = function () {
 
         $("#manageCronLoading").show();
@@ -2880,6 +2882,7 @@ app.controller('manageCronController', function ($scope, $http) {
             $("#cronEditSuccess").hide();
         }
     };
+    $scope.fetchWebsites();
 
     $scope.fetchCron = function (cronLine) {
 
@@ -3032,7 +3035,6 @@ app.controller('manageCronController', function ($scope, $http) {
             $("#fetchCronFailure").hide();
         }
     };
-
 
     $scope.removeCron = function (line) {
 

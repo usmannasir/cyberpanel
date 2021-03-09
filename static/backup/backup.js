@@ -6,6 +6,21 @@
 
 app.controller('backupWebsiteControl', function ($scope, $http, $timeout) {
 
+    $(document).ready(function () {
+        $(".destinationHide").hide();
+        $('#create-backup-select').select2();
+    });
+
+    $('#create-backup-select').on('select2:select', function (e) {
+        var data = e.params.data;
+        $scope.websiteToBeBacked = data.text;
+        $(".destinationHide").show();
+        getBackupStatus();
+        populateCurrentRecords();
+        $scope.destination = false;
+        $scope.runningBackup = true;
+    });
+
     $scope.destination = true;
     $scope.backupButton = true;
     $scope.backupLoading = true;
@@ -42,7 +57,6 @@ app.controller('backupWebsiteControl', function ($scope, $http, $timeout) {
         $scope.runningBackup = true;
 
     };
-
 
     function getBackupStatus() {
 
@@ -111,11 +125,9 @@ app.controller('backupWebsiteControl', function ($scope, $http, $timeout) {
 
     };
 
-
     $scope.destinationSelection = function () {
         $scope.backupButton = false;
     };
-
 
     function populateCurrentRecords() {
 
@@ -151,7 +163,6 @@ app.controller('backupWebsiteControl', function ($scope, $http, $timeout) {
         }
 
     };
-
 
     $scope.createBackup = function () {
 
@@ -189,9 +200,7 @@ app.controller('backupWebsiteControl', function ($scope, $http, $timeout) {
 
     };
 
-
     $scope.deleteBackup = function (id) {
-
 
         url = "/backup/deleteBackup";
 

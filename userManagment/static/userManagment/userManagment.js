@@ -458,6 +458,7 @@ app.controller('deleteUser', function ($scope, $http) {
 
 
 /* Java script code to create acl */
+
 app.controller('createACLCTRL', function ($scope, $http) {
 
     $scope.aclLoading = true;
@@ -520,10 +521,12 @@ app.controller('createACLCTRL', function ($scope, $http) {
     // Backup Management
 
     $scope.createBackup = true;
+    $scope.googleDriveBackups = true;
     $scope.restoreBackup = false;
     $scope.addDeleteDestinations = false;
     $scope.scheDuleBackups = false;
     $scope.remoteBackups = false;
+
 
     // SSL Management
 
@@ -599,6 +602,7 @@ app.controller('createACLCTRL', function ($scope, $http) {
             // Backup Management
 
             createBackup: $scope.createBackup,
+            googleDriveBackups: $scope.googleDriveBackups,
             restoreBackup: $scope.restoreBackup,
             addDeleteDestinations: $scope.addDeleteDestinations,
             scheDuleBackups: $scope.scheDuleBackups,
@@ -976,6 +980,7 @@ app.controller('modifyACLCtrl', function ($scope, $http) {
                 // Backup Management
 
                 $scope.createBackup = Boolean(response.data.createBackup);
+                $scope.googleDriveBackups = Boolean(response.data.googleDriveBackups);
                 $scope.restoreBackup = Boolean(response.data.restoreBackup);
                 $scope.addDeleteDestinations = Boolean(response.data.addDeleteDestinations);
                 $scope.scheDuleBackups = Boolean(response.data.scheDuleBackups);
@@ -1076,6 +1081,7 @@ app.controller('modifyACLCtrl', function ($scope, $http) {
             // Backup Management
 
             createBackup: $scope.createBackup,
+            googleDriveBackups: $scope.googleDriveBackups,
             restoreBackup: $scope.restoreBackup,
             addDeleteDestinations: $scope.addDeleteDestinations,
             scheDuleBackups: $scope.scheDuleBackups,

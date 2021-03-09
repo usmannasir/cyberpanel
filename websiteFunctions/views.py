@@ -1,22 +1,23 @@
 # -*- coding: utf-8 -*-
 
 
-from django.shortcuts import render,redirect
+from django.shortcuts import redirect
 from django.http import HttpResponse
 from loginSystem.models import Administrator
 from loginSystem.views import loadLoginPage
 import json
+
+from plogical.httpProc import httpProc
 from websiteFunctions.website import WebsiteManager
 from websiteFunctions.pluginManager import pluginManager
 from django.views.decorators.csrf import csrf_exempt
 
 def loadWebsitesHome(request):
-    try:
-        val = request.session['userID']
-        admin = Administrator.objects.get(pk=val)
-        return render(request,'websiteFunctions/index.html',{"type":admin.type})
-    except KeyError:
-        return redirect(loadLoginPage)
+    val = request.session['userID']
+    admin = Administrator.objects.get(pk=val)
+    proc = httpProc(request, 'websiteFunctions/index.html',
+                    {"type": admin.type})
+    return proc.render()
 
 def createWebsite(request):
     try:
