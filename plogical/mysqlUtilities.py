@@ -381,7 +381,9 @@ password=%s
                 databaseToBeDeleted.delete()
                 return 1,'None'
             else:
-                return 0,result
+                databaseToBeDeleted.delete()
+                logging.CyberCPLogFileWriter.writeToFile('Deleted database with some errors. Error: %s' % (result))
+                return 1,'None'
 
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
