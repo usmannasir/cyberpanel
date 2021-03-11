@@ -535,13 +535,18 @@ class WebsiteManager:
             admin = Administrator.objects.get(pk=userID)
             websiteName = data['websiteName']
 
+            try:
+                DeleteDocRoot = int(data['DeleteDocRoot'])
+            except:
+                DeleteDocRoot = 0
+
             if ACLManager.checkOwnership(websiteName, admin, currentACL) == 1:
                 pass
             else:
                 return ACLManager.loadErrorJson('websiteDeleteStatus', 0)
 
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-            execPath = execPath + " deleteDomain --virtualHostName " + websiteName
+            execPath = execPath + " deleteDomain --virtualHostName " + websiteName + ' --DeleteDocRoot %s' % (str(DeleteDocRoot))
             ProcessUtilities.outputExecutioner(execPath)
 
             data_ret = {'status': 1, 'websiteDeleteStatus': 1, 'error_message': "None"}

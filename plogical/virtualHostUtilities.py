@@ -1222,12 +1222,17 @@ class virtualHostUtilities:
             return 0, str(msg)
 
     @staticmethod
-    def deleteDomain(virtualHostName):
+    def deleteDomain(virtualHostName, DeleteDocRoot=0):
         try:
 
             numberOfWebsites = Websites.objects.count() + ChildDomains.objects.count()
             vhost.deleteCoreConf(virtualHostName, numberOfWebsites)
             delWebsite = ChildDomains.objects.get(domain=virtualHostName)
+
+            if DeleteDocRoot:
+                command = 'rm -rf %s' % (delWebsite.path)
+                ProcessUtilities.executioner(command)
+
             delWebsite.delete()
             installUtilities.installUtilities.reStartLiteSpeed()
 
@@ -1432,6 +1437,10 @@ def main():
 
     parser.add_argument('--server', help='Switch server parameter.')
 
+    ## Doc root deletion for child domain
+
+    parser.add_argument('--DeleteDocRoot', help='Doc root deletion for child domain.')
+
     args = parser.parse_args()
 
     if args.function == "createVirtualHost":
@@ -1524,7 +1533,7 @@ def main():
     elif args.function == 'changeOpenBasedir':
         virtualHostUtilities.changeOpenBasedir(args.virtualHostName, args.openBasedirValue)
     elif args.function == 'deleteDomain':
-        virtualHostUtilities.deleteDomain(args.virtualHostName)
+        virtualHostUtilities.deleteDomain(args.virtualHostName, int(args.DeleteDocRoot))
     elif args.function == 'switchServer':
         virtualHostUtilities.switchServer(args.virtualHostName, args.phpVersion, int(args.server), args.tempStatusPath)
 
