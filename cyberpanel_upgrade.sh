@@ -427,7 +427,17 @@ elif [[ "$Server_OS" = "Ubutnu" ]] ; then
     :
 #all pre-upgrade operation for Ubuntu 18
   elif [[ "$Server_OS_Version" = "20" ]] ; then
-    :
+    if ! grep -q "focal" /etc/apt/sources.list.d/dovecot.list ; then 
+      sed -i 's|ce-2.3-latest/ubuntu/bionic bionic main|ce-2.3-latest/ubuntu/focal focal main|g' /etc/apt/sources.list.d/dovecot.list
+      rm -rf /etc/dovecot-backup
+      cp -r /etc/dovecot /etc/dovecot-backup
+      apt update 
+      DEBIAN_FRONTEND=noninteractive apt -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" remove -y dovecot-mysql dovecot-pop3d dovecot-imapd
+      DEBIAN_FRONTEND=noninteractive apt -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" install -y dovecot-mysql dovecot-pop3d dovecot-imapd
+      systemctl restart dovecot
+    fi 
+    #fix ubuntu 20 webmail login issue 
+    
   fi
 #all pre-upgrade operation for Ubuntu 20
 fi
