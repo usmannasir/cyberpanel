@@ -525,6 +525,20 @@ if [[ -f /etc/cyberpanel/watchdog.sh ]] ; then
 fi
 #update and restart watchdog
 
+if [[ $UBUNTU_20 == "True" ]] ; then
+  if ! grep -q "focal" /etc/apt/sources.list.d/dovecot.list ; then 
+  sed -i 's|ce-2.3-latest/ubuntu/bionic bionic main|ce-2.3-latest/ubuntu/focal focal main|g' /etc/apt/sources.list.d/dovecot.list
+  rm -rf /etc/dovecot-backup
+  cp -r /etc/dovecot /etc/dovecot-backup
+  apt update 
+  DEBIAN_FRONTEND=noninteractive apt -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" remove -y dovecot-mysql dovecot-pop3d dovecot-imapd
+  DEBIAN_FRONTEND=noninteractive apt -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" install -y dovecot-mysql dovecot-pop3d dovecot-imapd
+  systemctl restart dovecot
+  fi 
+fi 
+#fix webmail login issue on ubuntu 20 
+
+
 ### Disable Centos Default Repos
 
 disable_repos() {
