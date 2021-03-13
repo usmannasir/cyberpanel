@@ -1929,7 +1929,7 @@ class CloudManager:
                                   "--pluginUpdates '%s' --themeUpdates '%s' --title '%s' --updates '%s' --userName '%s' " \
                                   "--version '%s' --createSite %s" % (
                            tempStatusPath, self.data['appsSet'], self.data['domain'], self.data['email'],
-                           self.data['password'],
+                           self.data['passwordByPass'],
                            self.data['pluginUpdates'], self.data['themeUpdates'], self.data['title'],
                            self.data['updates'],
                            self.data['userName'], self.data['version'], str(self.data['createSite']))
