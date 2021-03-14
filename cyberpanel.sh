@@ -1751,6 +1751,9 @@ Post_Install_CN_Replacement() {
 sed -i 's|wp core download|wp core download https://cyberpanel.sh/wordpress.org/latest.tar.gz|g' /usr/local/CyberCP/plogical/applicationInstaller.py
 sed -i 's|https://raw.githubusercontent.com/|https://cyberpanel.sh/raw.githubusercontent.com/|g' /usr/local/CyberCP/plogical/applicationInstaller.py
 sed -i 's|wp plugin install litespeed-cache|wp plugin install  https://cyberpanel.sh/downloads.wordpress.org/plugin/litespeed-cache.zip|g' /usr/local/CyberCP/plogical/applicationInstaller.py
+
+sed -i 's|https://www.litespeedtech.com/|https://cyberpanel.sh/www.litespeedtech.com/|g' /usr/local/CyberCP/serverStatus/serverStatusUtil.py
+sed -i 's|http://license.litespeedtech.com/|https://cyberpanel.sh/license.litespeedtech.com/|g' /usr/local/CyberCP/serverStatus/serverStatusUtil.py
 }
 
 echo -e "\nInitializing...\n"
