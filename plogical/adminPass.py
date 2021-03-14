@@ -59,6 +59,7 @@ def main():
                               emailAccounts=1000, allowedDomains=20)
             package.save()
 
+
             print("Admin password successfully changed!")
             return 1
 
