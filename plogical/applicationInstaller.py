@@ -22,6 +22,8 @@ import hashlib
 class ApplicationInstaller(multi.Thread):
 
     LOCALHOST = 'localhost'
+    REMOTE = 0
+    PORT = '3306'
 
     def __init__(self, installApp, extraArgs):
         multi.Thread.__init__(self)
@@ -421,9 +423,10 @@ $parameters = array(
         try:
             import json
             jsonData = json.loads(open(passFile, 'r').read())
-
             mysqlhost = jsonData['mysqlhost']
             ApplicationInstaller.LOCALHOST = mysqlhost
+            ApplicationInstaller.REMOTE = 1
+            ApplicationInstaller.PORT = jsonData['mysqlport']
         except:
             pass
 
@@ -582,7 +585,7 @@ $parameters = array(
             statusFile.writelines('Configuring the installation,40')
             statusFile.close()
 
-            command = "wp core config --dbname=" + dbName + " --dbuser=" + dbUser + " --dbpass=" + dbPassword + " --dbhost=%s --dbprefix=wp_ --allow-root --path=" % (ApplicationInstaller.LOCALHOST) + finalPath
+            command = "wp core config --dbname=" + dbName + " --dbuser=" + dbUser + " --dbpass=" + dbPassword + " --dbhost=%s:%s --dbprefix=wp_ --allow-root --path=" % (ApplicationInstaller.LOCALHOST, ApplicationInstaller.PORT) + finalPath
             result = ProcessUtilities.outputExecutioner(command, externalApp)
 
             if result.find('Success:') == -1:
@@ -1376,7 +1379,6 @@ $parameters = array(
             wm = WebsiteManager()
             wm.submitWebsiteDeletion(1, self.extraArgs)
             logging.statusWriter(self.extraArgs['tempStatusPath'], '%s [404].' % (str(msg)))
-	
 	
     def installWhmcs(self):
         try:
