@@ -1420,7 +1420,7 @@ wget -O /root/php_session_script.sh "${Git_Content_URL}/stable/CPScripts/setup_p
 chmod +x /root/php_session_script.sh
 bash /root/php_session_script.sh
 rm -f /root/php_session_script.sh
-Debug_Log2 "Setting up PHP session conf..."
+Debug_Log2 "Setting up PHP session conf...,90"
 }
 
 Post_Install_PHP_TimezoneDB() {
@@ -1472,7 +1472,7 @@ for PHP_Version in /usr/local/lsws/lsphp?? ;
   done
 rm -rf /usr/local/lsws/cyberpanel-tmp
 cd "$Current_Dir" || exit
-Debug_Log2 "Installing timezoneDB..."
+Debug_Log2 "Installing timezoneDB...,95"
 }
 
 Post_Install_Regenerate_Webadmin_Console_Passwd() {
