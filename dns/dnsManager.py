@@ -140,7 +140,7 @@ class DNSManager:
 
             zoneDomain = data['zoneDomain']
 
-            newZone = Domains(admin=admin, name=zoneDomain, type="NATIVE")
+            newZone = Domains(admin=admin, name=zoneDomain, type="MASTER")
             newZone.save()
 
             content = "ns1." + zoneDomain + " hostmaster." + zoneDomain + " 1 10800 3600 604800 3600"
