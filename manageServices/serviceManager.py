@@ -93,6 +93,9 @@ class ServiceManager:
 
                 counter = 0
 
+                tempPath = "/home/cyberpanel/" + str(randint(1000, 9999))
+                writeToFile = open(tempPath, 'w')
+
                 for items in data:
                     if items.find('allow-axfr-ips') > -1:
                         continue
@@ -111,10 +114,6 @@ class ServiceManager:
 
                     counter = counter + 1
 
-                tempPath = "/home/cyberpanel/" + str(randint(1000, 9999))
-                writeToFile = open(tempPath, 'w')
-
-                for items in data:
                     writeToFile.writelines(items  + '\n')
 
                 slaveData = """
@@ -128,7 +127,7 @@ class ServiceManager:
                 slave-cycle-interval=60
                 setgid=pdns
                 setuid=pdns
-                superslave=yes        
+                superslave=yes
                 """
 
                 writeToFile.writelines(slaveData)
