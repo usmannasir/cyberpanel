@@ -7,6 +7,8 @@ from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from loginSystem.views import loadLoginPage
 from random import randint
 import os
+
+from plogical.httpProc import httpProc
 from plogical.processUtilities import ProcessUtilities
 from plogical.firewallUtilities import FirewallUtilities
 from firewall.models import FirewallRules
@@ -16,44 +18,32 @@ import plogical.randomPassword
 # Create your views here.
 
 def terminal(request):
-    try:
-        userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
+    password = plogical.randomPassword.generate_pass()
 
-        if currentACL['admin'] == 1:
-            pass
-        else:
-            return ACLManager.loadError()
+    verifyPath = "/home/cyberpanel/" + str(randint(100000, 999999))
+    writeToFile = open(verifyPath, 'w')
+    writeToFile.write(password)
+    writeToFile.close()
 
-        password = plogical.randomPassword.generate_pass()
+    ## setting up ssh server
+    path = '/etc/systemd/system/cpssh.service'
+    curPath = '/usr/local/CyberCP/WebTerminal/cpssh.service'
 
-        verifyPath = "/home/cyberpanel/" + str(randint(100000, 999999))
-        writeToFile = open(verifyPath, 'w')
-        writeToFile.write(password)
-        writeToFile.close()
+    if not os.path.exists(path):
+        command = 'mv %s %s' % (curPath, path)
+        ProcessUtilities.executioner(command)
 
-        ## setting up ssh server
-        path = '/etc/systemd/system/cpssh.service'
-        curPath = '/usr/local/CyberCP/WebTerminal/cpssh.service'
+        command = 'systemctl start cpssh'
+        ProcessUtilities.executioner(command)
 
-        if not os.path.exists(path):
-            command = 'mv %s %s' % (curPath, path)
-            ProcessUtilities.executioner(command)
+        FirewallUtilities.addRule('tcp', '5678', '0.0.0.0/0')
 
-            command = 'systemctl start cpssh'
-            ProcessUtilities.executioner(command)
+        newFWRule = FirewallRules(name='terminal', proto='tcp', port='5678', ipAddress='0.0.0.0/0')
+        newFWRule.save()
 
-            FirewallUtilities.addRule('tcp', '5678', '0.0.0.0/0')
-
-            newFWRule = FirewallRules(name='terminal', proto='tcp', port='5678', ipAddress='0.0.0.0/0')
-            newFWRule.save()
-
-        return render(request, 'WebTerminal/WebTerminal.html', {'verifyPath': verifyPath, 'password': password})
-    except BaseException as msg:
-        logging.writeToFile(str(msg))
-        return redirect(loadLoginPage)
-
-
+    proc = httpProc(request, 'WebTerminal/WebTerminal.html',
+                    {'verifyPath': verifyPath, 'password': password})
+    return proc.render()
 
 def restart(request):
     try:

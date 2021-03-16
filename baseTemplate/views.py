@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-
-
 from django.shortcuts import render,redirect
 from django.http import HttpResponse
 from plogical.getSystemInformation import SystemInformation
@@ -16,29 +14,20 @@ from plogical.acl import ACLManager
 from manageServices.models import PDNSStatus
 from django.views.decorators.csrf import ensure_csrf_cookie
 from plogical.processUtilities import ProcessUtilities
+from plogical.httpProc import httpProc
 # Create your views here.
 
-VERSION = '2.0'
-BUILD = 3
+VERSION = '2.1'
+BUILD = 1
 
 @ensure_csrf_cookie
 def renderBase(request):
-    try:
-        userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
-
-        if currentACL['admin'] == 1:
-            admin = 1
-        else:
-            admin = 0
-
-        cpuRamDisk = SystemInformation.cpuRamDisk()
-
-        finaData = {"admin": admin,'ramUsage':cpuRamDisk['ramUsage'],'cpuUsage':cpuRamDisk['cpuUsage'],'diskUsage':cpuRamDisk['diskUsage'] }
-
-        return render(request, 'baseTemplate/homePage.html', finaData)
-    except KeyError:
-        return redirect(loadLoginPage)
+    template = 'baseTemplate/homePage.html'
+    cpuRamDisk = SystemInformation.cpuRamDisk()
+    finaData = {'ramUsage': cpuRamDisk['ramUsage'], 'cpuUsage': cpuRamDisk['cpuUsage'],
+                'diskUsage': cpuRamDisk['diskUsage']}
+    proc = httpProc(request, template, finaData)
+    return proc.render()
 
 def getAdminStatus(request):
     try:
@@ -77,7 +66,6 @@ def getAdminStatus(request):
 
 def getSystemStatus(request):
     try:
-
         HTTPData = SystemInformation.getSystemInformation()
         json_data = json.dumps(HTTPData)
         return HttpResponse(json_data)
@@ -90,47 +78,30 @@ def getLoadAverage(request):
     one = loadAverage[0]
     two = loadAverage[1]
     three = loadAverage[2]
-
     loadAvg = {"one": one, "two": two,"three": three}
-
     json_data = json.dumps(loadAvg)
-
     return HttpResponse(json_data)
 
 @ensure_csrf_cookie
 def versionManagment(request):
-    try:
-        userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
+    ## Get latest version
 
-        if currentACL['admin'] == 1:
-            pass
-        elif currentACL['versionManagement'] == 1:
-            pass
-        else:
-            return ACLManager.loadError()
+    getVersion = requests.get('https://cyberpanel.net/version.txt')
+    latest = getVersion.json()
+    latestVersion = latest['version']
+    latestBuild = latest['build']
 
-        ## Get latest version
+    ## Get local version
 
-        getVersion = requests.get('https://cyberpanel.net/version.txt')
+    currentVersion = VERSION
+    currentBuild = str(BUILD)
 
-        latest = getVersion.json()
+    template = 'baseTemplate/versionManagment.html'
+    finalData = {'build': currentBuild, 'currentVersion': currentVersion, 'latestVersion': latestVersion,
+                 'latestBuild': latestBuild}
 
-        latestVersion = latest['version']
-        latestBuild = latest['build']
-
-        ## Get local version
-
-        currentVersion = VERSION
-        currentBuild = str(BUILD)
-
-        return render(request, 'baseTemplate/versionManagment.html', {'build': currentBuild,
-                                                                      'currentVersion': currentVersion,
-                                                                      'latestVersion': latestVersion,
-                                                                      'latestBuild': latestBuild})
-
-    except KeyError:
-        return redirect(loadLoginPage)
+    proc = httpProc(request, template, finalData, 'versionManagement')
+    return proc.render()
 
 def upgrade(request):
     try:

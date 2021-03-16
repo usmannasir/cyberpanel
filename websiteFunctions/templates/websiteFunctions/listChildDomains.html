@@ -57,7 +57,7 @@
                                 </a>
                                 <a target="_blank" href="/filemanager/{$ web.masterDomain $}" title="Open File Manager">
                                     --
-                                    {$ web.path $}</a>
+                                    File Manager</a>
                             </div>
                             <div class="col-md-2 content-box-header" style="text-transform: none;">
                                 <a href="/websites/{$ web.masterDomain $}/{$ web.domain $}" target="_blank"
@@ -69,9 +69,48 @@
                         </div>
                         <div class="col-md-12">
                             <div class="col-md-4 content-box-header">
-                                <i class="p fa fa-user-circle btn-icon text-muted" data-toggle="tooltip"
-                                   data-placement="right" title="Master Domain/Owner">&emsp;</i>
-                                <span ng-bind="web.masterDomain" style="text-transform: none"></span>
+                                <i class="p fa fa-trash-o btn-icon text-muted" data-toggle="tooltip"
+                                   data-placement="right"
+                                   title="Delete Child Domain">&emsp;</i>
+                                <span><a ng-click='deleteDomainInit(web.domain)' data-toggle="modal" data-target="#DeleteChild" href=""
+                                         style="text-transform: none">Delete</a></span>
+                                <div id="DeleteChild" class="modal fade" role="dialog">
+                                    <div class="modal-dialog">
+                                        <!-- Modal content-->
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <button type="button" class="close" data-dismiss="modal">&times;
+                                                </button>
+                                                <h4 class="modal-title">Delete Child Domain
+                                                    <img ng-hide="$parent.cyberPanelLoading"
+                                                         src="/static/images/loading.gif"
+                                                         style="display: none;">
+                                                </h4>
+                                            </div>
+                                            <div class="modal-body">
+                                                <form name="DeleteDocumentRootForm" action="/" class="form-horizontal">
+
+                                                    <div ng-hide="installationDetailsForm" class="form-group">
+                                                        <label class="col-sm-2 control-label">{% trans "" %}</label>
+                                                        <div class="col-sm-8">
+                                                            <input ng-model="$parent.DeleteDocRoot" type="checkbox" value="">
+                                                            Delete Document Root
+                                                        </div>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-primary"
+                                                        ng-click="deleteChildDomain()">Delete Now
+                                                </button>
+                                                <button type="button" ng-disabled="savingSettings"
+                                                        class="btn btn-default" data-dismiss="modal">
+                                                    Close
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             <div class="col-md-4 content-box-header">
                                 <i class="p fa fa-map-marker btn-icon text-muted" data-toggle="tooltip"
@@ -114,7 +153,8 @@
                                                 <button type="button" class="close" data-dismiss="modal">&times;
                                                 </button>
                                                 <h4 class="modal-title">Convert Child Domain to normal Website
-                                                    <img ng-hide="$parent.cyberPanelLoading" src="/static/images/loading.gif"
+                                                    <img ng-hide="$parent.cyberPanelLoading"
+                                                         src="/static/images/loading.gif"
                                                          style="display: none;">
                                                 </h4>
                                             </div>

@@ -10,7 +10,7 @@ from django.shortcuts import HttpResponse
 from math import ceil
 from websiteFunctions.models import Websites
 from CLManager.models import CLPackages
-
+from plogical.httpProc import httpProc
 
 class CLManagerMain(multi.Thread):
 
@@ -27,29 +27,14 @@ class CLManagerMain(multi.Thread):
                 self.submitCageFSInstall()
             elif self.function == 'enableOrDisable':
                 self.enableOrDisable()
-
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [ContainerManager.run]')
 
     def renderC(self):
 
-        userID = self.request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
-
-        if currentACL['admin'] == 1:
-            pass
-        else:
-            return ACLManager.loadError()
-
-        ipFile = "/etc/cyberpanel/machineIP"
-        f = open(ipFile)
-        ipData = f.read()
-        ipAddress = ipData.split('\n', 1)[0]
-
         data = {}
         data['CL'] = 0
         data['activatedPath'] = 0
-        data['ipAddress'] = ipAddress
         CLPath = '/etc/sysconfig/cloudlinux'
         activatedPath = '/home/cyberpanel/cloudlinux'
 
@@ -60,11 +45,14 @@ class CLManagerMain(multi.Thread):
             data['activatedPath'] = 1
 
         if data['CL']  == 0:
-            return render(self.request, 'CLManager/notAvailable.html', data)
+            proc = httpProc(self.request, 'CLManager/notAvailable.html', data, 'admin')
+            return proc.render()
         elif data['activatedPath']  == 0:
-            return render(self.request, 'CLManager/notAvailable.html', data)
+            proc = httpProc(self.request, 'CLManager/notAvailable.html', data, 'admin')
+            return proc.render()
         else:
-            return render(self.request, 'CLManager/cloudLinux.html', data)
+            proc = httpProc(self.request, 'CLManager/cloudLinux.html', data, 'admin')
+            return proc.render()
 
     def submitCageFSInstall(self):
         try:

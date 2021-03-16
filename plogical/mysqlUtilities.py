@@ -27,6 +27,7 @@ class mysqlUtilities:
 
     LOCALHOST = 'localhost'
     RDS = 0
+    REMOTEHOST = ''
 
     @staticmethod
     def getPagination(records, toShow):
@@ -67,6 +68,7 @@ class mysqlUtilities:
                 mysqlpassword = jsonData['mysqlpassword']
                 mysqlport = jsonData['mysqlport']
                 mysqlhost = jsonData['mysqlhost']
+                mysqlUtilities.REMOTEHOST = mysqlhost
 
                 if mysqlhost.find('rds.amazon') > -1:
                     mysqlUtilities.RDS = 1
@@ -114,7 +116,15 @@ class mysqlUtilities:
                 return 0
 
             cursor.execute("CREATE DATABASE " + dbname)
-            cursor.execute("CREATE USER '" + dbuser + "'@'%s' IDENTIFIED BY '" % (mysqlUtilities.LOCALHOST) + dbpassword+ "'")
+
+            if mysqlUtilities.REMOTEHOST.find('ondigitalocean') > -1:
+                query = "CREATE USER '%s'@'%s' IDENTIFIED WITH mysql_native_password BY '%s'" % (
+                dbuser, mysqlUtilities.LOCALHOST, dbpassword)
+            else:
+                query = "CREATE USER '" + dbuser + "'@'%s' IDENTIFIED BY '" % (
+                    mysqlUtilities.LOCALHOST) + dbpassword + "'"
+
+            cursor.execute(query)
 
             if mysqlUtilities.RDS == 0:
                 cursor.execute("GRANT ALL PRIVILEGES ON " + dbname + ".* TO '" + dbuser + "'@'%s'" % (mysqlUtilities.LOCALHOST))
@@ -381,7 +391,9 @@ password=%s
                 databaseToBeDeleted.delete()
                 return 1,'None'
             else:
-                return 0,result
+                databaseToBeDeleted.delete()
+                logging.CyberCPLogFileWriter.writeToFile('Deleted database with some errors. Error: %s' % (result))
+                return 1,'None'
 
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
@@ -959,6 +971,27 @@ skip-name-resolve
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[addUserToDB]")
             return 0
+
+    @staticmethod
+    def UpdateWPTempPassword(dbname, password):
+        try:
+
+            ##
+
+            connection, cursor = mysqlUtilities.setupConnection()
+
+            if connection == 0:
+                return 0
+
+            cursor.execute("use %s" % (dbname))
+            cursor.execute("UPDATE `wp_users` SET `user_pass`= MD5('%s') WHERE `user_login`='usman'" % (password))
+            connection.close()
+
+            return 1
+
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[deleteDatabase]")
+            return str(msg)
 
 def main():
     parser = argparse.ArgumentParser(description='CyberPanel')

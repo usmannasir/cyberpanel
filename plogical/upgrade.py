@@ -2,6 +2,7 @@ import os
 import os.path
 import sys
 import argparse
+
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 import shlex
@@ -13,17 +14,50 @@ from CyberCP import settings
 import random
 import string
 
-VERSION = '2.0'
-BUILD = 3
+VERSION = '2.1'
+BUILD = 1
 
 CENTOS7 = 0
 CENTOS8 = 1
+Ubuntu18 = 2
+Ubuntu20 = 3
+CloudLinux7 = 4
+CloudLinux8 = 5
+
 
 class Upgrade:
     logPath = "/usr/local/lscp/logs/upgradeLog"
     cdn = 'cdn.cyberpanel.sh'
     installedOutput = ''
     CentOSPath = '/etc/redhat-release'
+    UbuntuPath = '/etc/lsb-release'
+
+    AdminACL = '{"adminStatus":1, "versionManagement": 1, "createNewUser": 1, "listUsers": 1, "deleteUser":1 , "resellerCenter": 1, ' \
+               '"changeUserACL": 1, "createWebsite": 1, "modifyWebsite": 1, "suspendWebsite": 1, "deleteWebsite": 1, ' \
+               '"createPackage": 1, "listPackages": 1, "deletePackage": 1, "modifyPackage": 1, "createDatabase": 1, "deleteDatabase": 1, ' \
+               '"listDatabases": 1, "createNameServer": 1, "createDNSZone": 1, "deleteZone": 1, "addDeleteRecords": 1, ' \
+               '"createEmail": 1, "listEmails": 1, "deleteEmail": 1, "emailForwarding": 1, "changeEmailPassword": 1, ' \
+               '"dkimManager": 1, "createFTPAccount": 1, "deleteFTPAccount": 1, "listFTPAccounts": 1, "createBackup": 1,' \
+               ' "restoreBackup": 1, "addDeleteDestinations": 1, "scheDuleBackups": 1, "remoteBackups": 1, "googleDriveBackups": 1, "manageSSL": 1, ' \
+               '"hostnameSSL": 1, "mailServerSSL": 1 }'
+
+    ResellerACL = '{"adminStatus":0, "versionManagement": 1, "createNewUser": 1, "listUsers": 1, "deleteUser": 1 , "resellerCenter": 1, ' \
+               '"changeUserACL": 0, "createWebsite": 1, "modifyWebsite": 1, "suspendWebsite": 1, "deleteWebsite": 1, ' \
+               '"createPackage": 1, "listPackages": 1, "deletePackage": 1, "modifyPackage": 1, "createDatabase": 1, "deleteDatabase": 1, ' \
+               '"listDatabases": 1, "createNameServer": 1, "createDNSZone": 1, "deleteZone": 1, "addDeleteRecords": 1, ' \
+               '"createEmail": 1, "listEmails": 1, "deleteEmail": 1, "emailForwarding": 1, "changeEmailPassword": 1, ' \
+               '"dkimManager": 1, "createFTPAccount": 1, "deleteFTPAccount": 1, "listFTPAccounts": 1, "createBackup": 1,' \
+               ' "restoreBackup": 1, "addDeleteDestinations": 0, "scheDuleBackups": 0, "remoteBackups": 0, "googleDriveBackups": 1, "manageSSL": 1, ' \
+               '"hostnameSSL": 0, "mailServerSSL": 0 }'
+
+    UserACL = '{"adminStatus":0, "versionManagement": 1, "createNewUser": 0, "listUsers": 0, "deleteUser": 0 , "resellerCenter": 0, ' \
+                  '"changeUserACL": 0, "createWebsite": 0, "modifyWebsite": 0, "suspendWebsite": 0, "deleteWebsite": 0, ' \
+                  '"createPackage": 0, "listPackages": 0, "deletePackage": 0, "modifyPackage": 0, "createDatabase": 1, "deleteDatabase": 1, ' \
+                  '"listDatabases": 1, "createNameServer": 0, "createDNSZone": 1, "deleteZone": 1, "addDeleteRecords": 1, ' \
+                  '"createEmail": 1, "listEmails": 1, "deleteEmail": 1, "emailForwarding": 1, "changeEmailPassword": 1, ' \
+                  '"dkimManager": 1, "createFTPAccount": 1, "deleteFTPAccount": 1, "listFTPAccounts": 1, "createBackup": 1,' \
+                  ' "restoreBackup": 0, "addDeleteDestinations": 0, "scheDuleBackups": 0, "remoteBackups": 0, "googleDriveBackups": 1, "manageSSL": 1, ' \
+                  '"hostnameSSL": 0, "mailServerSSL": 0 }'
 
     @staticmethod
     def decideCentosVersion():
@@ -32,6 +66,25 @@ class Upgrade:
             return CENTOS8
         else:
             return CENTOS7
+
+    @staticmethod
+    def FindOperatingSytem():
+
+        if os.path.exists(Upgrade.CentOSPath):
+            result = open(Upgrade.CentOSPath, 'r').read()
+
+            if result.find('CentOS Linux release 8') > -1 or result.find('CloudLinux release 8') > -1:
+                return CENTOS8
+            else:
+                return CENTOS7
+        else:
+            result = open(Upgrade.UbuntuPath, 'r').read()
+
+            if result.find('20.04') > -1:
+                return Ubuntu20
+            else:
+                return Ubuntu18
+
 
     @staticmethod
     def stdOut(message, do_exit=0):
@@ -616,6 +669,28 @@ imap_folder_list_limit = 0
                 pass
 
             try:
+                cursor.execute('ALTER TABLE loginSystem_acl ADD config longtext')
+            except:
+                pass
+
+            try:
+                cursor.execute("UPDATE loginSystem_acl SET config = '%s' where name = 'admin'" % (Upgrade.AdminACL))
+            except BaseException as msg:
+                print(str(msg))
+                import sleep
+                sleep(10)
+
+            try:
+                cursor.execute("UPDATE loginSystem_acl SET config = '%s' where name = 'reseller'" % (Upgrade.ResellerACL))
+            except:
+                pass
+
+            try:
+                cursor.execute("UPDATE loginSystem_acl SET config = '%s' where name = 'user'" % (Upgrade.UserACL))
+            except:
+                pass
+
+            try:
                 cursor.execute("alter table loginSystem_administrator drop initUserAccountsLimit")
             except:
                 pass
@@ -632,6 +707,11 @@ imap_folder_list_limit = 0
             try:
                 cursor.execute(
                     "ALTER TABLE `websiteFunctions_aliasdomains` ADD CONSTRAINT `websiteFunctions_ali_master_id_726c433d_fk_websiteFu` FOREIGN KEY (`master_id`) REFERENCES `websiteFunctions_websites` (`id`)")
+            except:
+                pass
+
+            try:
+                cursor.execute('ALTER TABLE websiteFunctions_websites ADD config longtext')
             except:
                 pass
 
@@ -655,7 +735,6 @@ imap_folder_list_limit = 0
             except:
                 pass
 
-
             try:
                 cursor.execute("ALTER TABLE loginSystem_acl ADD COLUMN listUsers INT DEFAULT 0;")
             except:
@@ -676,6 +755,19 @@ imap_folder_list_limit = 0
   `name` varchar(25) NOT NULL,
   `config` longtext NOT NULL,
   PRIMARY KEY (`id`)
+)"""
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+            query = """CREATE TABLE `cloudAPI_wpdeployments` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `config` longtext NOT NULL,
+  `owner_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `cloudAPI_wpdeploymen_owner_id_506ddf01_fk_websiteFu` (`owner_id`),
+  CONSTRAINT `cloudAPI_wpdeploymen_owner_id_506ddf01_fk_websiteFu` FOREIGN KEY (`owner_id`) REFERENCES `websiteFunctions_websites` (`id`)
 )"""
 
             try:
@@ -698,7 +790,6 @@ imap_folder_list_limit = 0
             except:
                 pass
 
-
             query = """CREATE TABLE `websiteFunctions_normalbackupsites` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `domain_id` int(11) NOT NULL,
@@ -714,7 +805,6 @@ imap_folder_list_limit = 0
                 cursor.execute(query)
             except:
                 pass
-
 
             query = """CREATE TABLE `websiteFunctions_normalbackupjoblogs` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -1193,6 +1283,16 @@ imap_folder_list_limit = 0
                 pass
 
             try:
+                cursor.execute('ALTER TABLE loginSystem_administrator ADD config longtext')
+            except:
+                pass
+
+            try:
+                cursor.execute('ALTER TABLE loginSystem_acl ADD config longtext')
+            except:
+                pass
+
+            try:
                 cursor.execute('ALTER TABLE dockerManager_containers ADD volumes longtext')
             except:
                 pass
@@ -1299,6 +1399,11 @@ imap_folder_list_limit = 0
 
             try:
                 cursor.execute('alter table manageServices_pdnsstatus add masterIP varchar(200)')
+            except:
+                pass
+
+            try:
+                cursor.execute('ALTER TABLE `manageServices_pdnsstatus` CHANGE `type` `type` VARCHAR(6) NULL;')
             except:
                 pass
 
@@ -1461,7 +1566,6 @@ imap_folder_list_limit = 0
             except:
                 pass
 
-
             query = """CREATE TABLE `websiteFunctions_backupjoblogs` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `message` longtext NOT NULL,
@@ -1607,7 +1711,8 @@ imap_folder_list_limit = 0
             command = 'git status'
             currentBranch = subprocess.check_output(shlex.split(command)).decode()
 
-            if currentBranch.find('On branch %s' % (branch)) > -1 and currentBranch.find('On branch %s-dev' % (branch)) == -1:
+            if currentBranch.find('On branch %s' % (branch)) > -1 and currentBranch.find(
+                    'On branch %s-dev' % (branch)) == -1:
 
                 command = 'git stash'
                 Upgrade.executioner(command, command, 1)
@@ -1640,7 +1745,6 @@ imap_folder_list_limit = 0
 
                 command = 'git pull'
                 Upgrade.executioner(command, command, 1)
-
 
             ## Copy settings file
 
@@ -1883,9 +1987,12 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             command = 'chmod +x /usr/local/CyberCP/CLManager/CLPackages.py'
             Upgrade.executioner(command, command, 0)
 
-            clScripts = ['/usr/local/CyberCP/CLScript/panel_info.py', '/usr/local/CyberCP/CLScript/CloudLinuxPackages.py',
-                         '/usr/local/CyberCP/CLScript/CloudLinuxUsers.py', '/usr/local/CyberCP/CLScript/CloudLinuxDomains.py'
-                ,'/usr/local/CyberCP/CLScript/CloudLinuxResellers.py', '/usr/local/CyberCP/CLScript/CloudLinuxAdmins.py',
+            clScripts = ['/usr/local/CyberCP/CLScript/panel_info.py',
+                         '/usr/local/CyberCP/CLScript/CloudLinuxPackages.py',
+                         '/usr/local/CyberCP/CLScript/CloudLinuxUsers.py',
+                         '/usr/local/CyberCP/CLScript/CloudLinuxDomains.py'
+                , '/usr/local/CyberCP/CLScript/CloudLinuxResellers.py',
+                         '/usr/local/CyberCP/CLScript/CloudLinuxAdmins.py',
                          '/usr/local/CyberCP/CLScript/CloudLinuxDB.py', '/usr/local/CyberCP/CLScript/UserInfo.py']
 
             for items in clScripts:
@@ -1913,7 +2020,6 @@ echo $oConfig->Save() ? 'Done' : 'Error';
 
             command = '/usr/local/lsws/lsphp72/bin/php /usr/local/CyberCP/public/rainloop.php'
             Upgrade.executioner(command, 0)
-
 
             Upgrade.stdOut("Permissions updated.")
 
@@ -1993,7 +2099,7 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             command = 'cp -pR %s %s' % (postfixConfPath, configbackups)
             Upgrade.executioner(command, 0)
 
-            if os.path.exists(CentOSPath):
+            if Upgrade.FindOperatingSytem() == CENTOS8 or Upgrade.FindOperatingSytem() == CENTOS7:
 
                 command = "yum makecache -y"
                 Upgrade.executioner(command, 0)
@@ -2001,13 +2107,12 @@ echo $oConfig->Save() ? 'Done' : 'Error';
                 command = "yum update -y"
                 Upgrade.executioner(command, 0)
 
-                if Upgrade.decideCentosVersion() == CENTOS8:
+                if Upgrade.FindOperatingSytem() == CENTOS8:
                     command = 'dnf remove dovecot23 dovecot23-mysql -y'
                     Upgrade.executioner(command, 0)
 
                     command = 'dnf install --enablerepo=gf-plus dovecot23 dovecot23-mysql -y'
                     Upgrade.executioner(command, 0)
-
 
                 import django
                 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
@@ -2033,14 +2138,14 @@ echo $oConfig->Save() ? 'Done' : 'Error';
                 command = 'yum clean all'
                 Upgrade.executioner(command, 0)
 
-                if Upgrade.decideCentosVersion() == CENTOS7:
+                if Upgrade.FindOperatingSytem() == CENTOS7:
                     command = 'yum makecache fast'
                 else:
                     command = 'yum makecache -y'
 
                 Upgrade.executioner(command, 0)
 
-                if Upgrade.decideCentosVersion() == CENTOS7:
+                if Upgrade.FindOperatingSytem() == CENTOS7:
                     command = 'yum install --enablerepo=gf-plus -y postfix3 postfix3-ldap postfix3-mysql postfix3-pcre'
                 else:
                     command = 'dnf install --enablerepo=gf-plus postfix3 postfix3-mysql -y'
@@ -2057,97 +2162,38 @@ echo $oConfig->Save() ? 'Done' : 'Error';
 
                 ## Restored
 
-
                 command = 'systemctl restart postfix'
                 Upgrade.executioner(command, 0)
+            elif Upgrade.FindOperatingSytem() == Ubuntu20:
 
-            else:
-                if Upgrade.installedOutput.find('dovecot-mysql/bionic,now 2:2.3.10-2') == -1:
-
-                    command = 'curl https://repo.dovecot.org/DOVECOT-REPO-GPG | gpg --import'
-                    subprocess.call(command, shell=True)
-
-                    command = 'gpg --export ED409DA1 > /etc/apt/trusted.gpg.d/dovecot.gpg'
-                    subprocess.call(command, shell=True)
-
-                    debPath = '/etc/apt/sources.list.d/dovecot.list'
-                    writeToFile = open(debPath, 'w')
-                    writeToFile.write('deb https://repo.dovecot.org/ce-2.3-latest/ubuntu/bionic bionic main\n')
-                    writeToFile.close()
-
-                    try:
-                        command = 'apt update -y'
-                        Upgrade.executioner(command, 0)
-                    except:
-                        pass
-
-                    try:
-                        command = 'DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical sudo apt-get -q -y -o "Dpkg::Options::=--force-confdef" -o "Dpkg::Options::=--force-confold" --only-upgrade install dovecot-mysql -y'
-                        subprocess.call(command, shell=True)
-
-                        command = 'dpkg --configure -a'
-                        Upgrade.executioner(command, 0)
-
-                        command = 'apt --fix-broken install -y'
-                        Upgrade.executioner(command, 0)
-
-                        command = 'DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical sudo apt-get -q -y -o "Dpkg::Options::=--force-confdef" -o "Dpkg::Options::=--force-confold" --only-upgrade install dovecot-mysql -y'
-                        subprocess.call(command, shell=True)
-                    except:
-                        pass
-
-                    ### Restore dovecot/postfix conf
-
-                    command = 'cp -pR %s/dovecot/ /etc/' % (configbackups)
-                    Upgrade.executioner(command, 0)
-
-                    command = 'cp -pR %s/postfix/ /etc/' % (configbackups)
-                    Upgrade.executioner(command, 0)
-
-                    ## Restored
-
-                ## Remove Default Password Scheme
-
-                path = '/etc/dovecot/dovecot-sql.conf.ext'
-
-                data = open(path, 'r').readlines()
-
-                updatePasswords = 0
-
-                writeToFile = open(path, 'w')
-                for items in data:
-                    if items.find('default_pass_scheme') > -1:
-                        updatePasswords = 1
-                        continue
-                    else:
-                        writeToFile.writelines(items)
-
+                debPath = '/etc/apt/sources.list.d/dovecot.list'
+                writeToFile = open(debPath, 'w')
+                writeToFile.write('deb https://repo.dovecot.org/ce-2.3-latest/ubuntu/focal focal main\n')
                 writeToFile.close()
 
-                Upgrade.stdOut("Upgrading passwords...")
+                command = "apt update -y"
+                Upgrade.executioner(command, command)
 
-                import django
-                os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
-                django.setup()
-                from mailServer.models import EUsers
+                command = 'dpkg --configure -a'
+                subprocess.call(command, shell=True)
 
-                for items in EUsers.objects.all():
-                    if items.password.find('CRYPT') > -1:
-                        continue
-                    command = 'doveadm pw -p %s' % (items.password)
-                    items.password = subprocess.check_output(shlex.split(command)).decode("utf-8").strip('\n')
-                    items.save()
+                command = 'apt --fix-broken install -y'
+                subprocess.call(command, shell=True)
+
+                command = 'DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical apt -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" upgrade -y'
+                subprocess.call(command, shell=True)
 
 
-                command = "systemctl restart dovecot"
-                Upgrade.executioner(command, 0)
+
+
+
 
             dovecotConf = '/etc/dovecot/dovecot.conf'
 
             dovecotContent = open(dovecotConf, 'r').read()
 
             if dovecotContent.find('service stats') == -1:
-                writeToFile  = open(dovecotConf, 'a')
+                writeToFile = open(dovecotConf, 'a')
 
                 content = """\nservice stats {
     unix_listener stats-reader {
@@ -2232,7 +2278,6 @@ service_port = 9000
                     writeToFile = open('/opt/cpvendor/etc/integration.ini', 'w')
                     writeToFile.write(content)
                     writeToFile.close()
-
 
                 command = 'mkdir -p /etc/cagefs/exclude'
                 Upgrade.executioner(command, command, 0)
@@ -2325,6 +2370,30 @@ vmail
             Upgrade.executioner(command, 0)
 
     @staticmethod
+    def UpdateConfigOfCustomACL():
+        sys.path.append('/usr/local/CyberCP')
+        os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
+        import django
+        django.setup()
+        from loginSystem.models import ACL
+        for acl in ACL.objects.all():
+            if acl.name == 'admin' or acl.name == 'reseller' or acl.name == 'user':
+                continue
+            elif acl.config == '{}':
+                acl.config = '{"adminStatus":%s, "versionManagement": %s, "createNewUser": %s, "listUsers": %s, "deleteUser": %s, "resellerCenter": %s, "changeUserACL": %s, "createWebsite": %s, "modifyWebsite": %s, "suspendWebsite": %s, "deleteWebsite": %s, "createPackage": %s, "listPackages": %s, "deletePackage": %s, "modifyPackage": %s, "createDatabase": %s, "deleteDatabase": %s, "listDatabases": %s, "createNameServer": %s, "createDNSZone": %s, "deleteZone": %s, "addDeleteRecords": %s, "createEmail": %s, "listEmails": %s, "deleteEmail": %s, "emailForwarding": %s, "changeEmailPassword": %s, "dkimManager": %s, "createFTPAccount": %s, "deleteFTPAccount": %s, "listFTPAccounts": %s, "createBackup": %s, "restoreBackup": %s, "addDeleteDestinations": %s, "scheDuleBackups": %s, "remoteBackups": %s, "googleDriveBackups": %s, "manageSSL": %s, "hostnameSSL": %s, "mailServerSSL": %s }' \
+                             % (str(acl.adminStatus), str(acl.versionManagement), str(acl.createNewUser),
+                                str(acl.listUsers), str(acl.deleteUser), str(acl.resellerCenter), str(acl.changeUserACL),
+                                str(acl.createWebsite), str(acl.modifyWebsite), str(acl.suspendWebsite), str(acl.deleteWebsite),
+                                str(acl.createPackage), str(acl.listPackages), str(acl.deletePackage), str(acl.modifyPackage),
+                                str(acl.createDatabase), str(acl.deleteDatabase), str(acl.listDatabases), str(acl.createNameServer),
+                                str(acl.createDNSZone), str(acl.deleteZone), str(acl.addDeleteRecords), str(acl.createEmail),
+                                str(acl.listEmails), str(acl.deleteEmail), str(acl.emailForwarding), str(acl.changeEmailPassword),
+                                str(acl.dkimManager), str(acl.createFTPAccount), str(acl.deleteFTPAccount), str(acl.listFTPAccounts),
+                                str(acl.createBackup), str(acl.restoreBackup), str(acl.addDeleteDestinations), str(acl.scheDuleBackups), str(acl.remoteBackups), '1',
+                                str(acl.manageSSL), str(acl.hostnameSSL), str(acl.mailServerSSL))
+                acl.save()
+
+    @staticmethod
     def upgrade(branch):
 
         # Upgrade.stdOut("Upgrades are currently disabled")
@@ -2337,10 +2406,8 @@ vmail
             command = 'apt list'
             Upgrade.installedOutput = subprocess.check_output(shlex.split(command)).decode()
 
-
         command = 'systemctl stop cpssh'
         Upgrade.executioner(command, 'fix csf if there', 0)
-
 
         ## Add LSPHP7.4 TO LSWS Ent configs
 
@@ -2351,8 +2418,8 @@ vmail
 
             command = 'wget https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/install/litespeed/httpd_config.xml'
             Upgrade.executioner(command, command, 0)
-            #os.remove('/usr/local/lsws/conf/httpd_config.xml')
-            #shutil.copy('httpd_config.xml', '/usr/local/lsws/conf/httpd_config.xml')
+            # os.remove('/usr/local/lsws/conf/httpd_config.xml')
+            # shutil.copy('httpd_config.xml', '/usr/local/lsws/conf/httpd_config.xml')
 
         postfixPath = '/home/cyberpanel/postfix'
         pdns = '/home/cyberpanel/pdns'
@@ -2366,7 +2433,6 @@ vmail
         Upgrade.executioner(command, 'remove yum-plugin-priorities', 0)
 
         ## Current Version
-
 
         command = "systemctl stop lscpd"
         Upgrade.executioner(command, 'stop lscpd', 0)
@@ -2402,11 +2468,16 @@ vmail
 
         ##
 
-        #Upgrade.setupVirtualEnv()
+        # Upgrade.setupVirtualEnv()
 
         ##
 
         Upgrade.applyLoginSystemMigrations()
+
+        ## Put function here to update custom ACLs
+
+        Upgrade.UpdateConfigOfCustomACL()
+
         Upgrade.s3BackupMigrations()
         Upgrade.containerMigrations()
         Upgrade.manageServiceMigrations()
@@ -2417,7 +2488,7 @@ vmail
         Upgrade.someDirectories()
         Upgrade.installLSCPD(branch)
         Upgrade.GeneralMigrations()
-        #Upgrade.p3()
+        # Upgrade.p3()
 
         if os.path.exists(postfixPath):
             Upgrade.upgradeDovecot()
@@ -2444,13 +2515,11 @@ vmail
         command = 'cp /usr/local/lsws/lsphp73/bin/lsphp %s' % (phpPath)
         Upgrade.executioner(command, 0)
 
-
         try:
             command = "systemctl start lscpd"
             Upgrade.executioner(command, 'Start LSCPD', 0)
         except:
             pass
-
 
         command = 'csf -uf'
         Upgrade.executioner(command, 'fix csf if there', 0)
@@ -2475,6 +2544,7 @@ vmail
             Upgrade.executioner(command, command, 1)
 
         Upgrade.stdOut("Upgrade Completed.")
+
 
 
 def main():

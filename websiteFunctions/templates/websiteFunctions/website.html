@@ -272,11 +272,11 @@
                             </div>
 
                             <div class="col-md-3 panel-body">
-                                <a href="{% url 'listCron' %}" target="_blank" title="{% trans 'Add new Cron Job' %}"
+                                <a href="{% url 'listCron' %}?domain={{ domain }}" target="_blank" title="{% trans 'Add new Cron Job' %}"
                                    href="" title="{% trans 'List Domains' %}">
                                     <img src="{% static 'images/icons/repeat.png' %}" width="65" class="mr-10">
                                 </a>
-                                <a href="{% url 'listCron' %}" target="_blank" title="{% trans 'List Domains' %}"
+                                <a href="{% url 'listCron' %}?domain={{ domain }}" target="_blank" title="{% trans 'Add new Cron Job' %}"
                                    title="{% trans 'Add new Cron Job' %}">
                                     <span class="h4">{% trans "Cron Jobs" %}</span>
                                 </a>

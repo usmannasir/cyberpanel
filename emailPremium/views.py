@@ -1,11 +1,8 @@
 # -*- coding: utf-8 -*-
 
-
-from django.shortcuts import render,redirect
+from django.shortcuts import redirect
 from django.http import HttpResponse
 from mailServer.models import Domains, EUsers
-# Create your views here.
-from loginSystem.models import Administrator
 from websiteFunctions.models import Websites
 from loginSystem.views import loadLoginPage
 import plogical.CyberCPLogFileWriter as logging
@@ -13,31 +10,19 @@ import json
 from .models import DomainLimits, EmailLimits
 from math import ceil
 from postfixSenderPolicy.client import cacheClient
-import _thread
 from plogical.mailUtilities import mailUtilities
 from plogical.virtualHostUtilities import virtualHostUtilities
 from random import randint
 from plogical.acl import ACLManager
 from plogical.processUtilities import ProcessUtilities
-
-# Create your views here.
+from plogical.httpProc import httpProc
 
 ## Email Policy Server
 
 def emailPolicyServer(request):
-    try:
-        userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
-
-        if currentACL['admin'] == 1:
-            pass
-        else:
-            return ACLManager.loadError()
-
-        return render(request, 'emailPremium/policyServer.html')
-
-    except KeyError:
-        return redirect(loadLoginPage)
+    proc = httpProc(request, 'emailPremium/policyServer.html',
+                    None, 'admin')
+    return proc.render()
 
 def fetchPolicyServerStatus(request):
     try:
@@ -129,57 +114,43 @@ def savePolicyServerStatus(request):
 ## Email Policy Server configs
 
 def listDomains(request):
-    try:
-        userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
 
-        if currentACL['admin'] == 1:
-            pass
-        else:
-            return ACLManager.loadError()
+    websites = DomainLimits.objects.all()
 
-        try:
-            websites = DomainLimits.objects.all()
+    ## Check if Policy Server is installed.
 
-            ## Check if Policy Server is installed.
+    command = 'sudo cat /etc/postfix/main.cf'
+    output = ProcessUtilities.outputExecutioner(command).split('\n')
 
-            command = 'sudo cat /etc/postfix/main.cf'
-            output = ProcessUtilities.outputExecutioner(command).split('\n')
+    installCheck = 0
 
-            installCheck = 0
+    for items in output:
+        if items.find('check_policy_service unix:/var/log/policyServerSocket') > -1:
+            installCheck = 1
+            break
 
-            for items in output:
-                if items.find('check_policy_service unix:/var/log/policyServerSocket') > -1:
-                    installCheck = 1
-                    break
+    if installCheck == 0:
+        proc = httpProc(request, 'emailPremium/listDomains.html', {"installCheck": installCheck}, 'admin')
+        return proc.render()
 
-            if installCheck == 0:
-                return render(request, 'emailPremium/listDomains.html', {"installCheck": installCheck})
+    ###
 
-            ###
+    pages = float(len(websites)) / float(10)
+    pagination = []
 
-            pages = float(len(websites)) / float(10)
-            pagination = []
+    if pages <= 1.0:
+        pages = 1
+        pagination.append('<li><a href="\#"></a></li>')
+    else:
+        pages = ceil(pages)
+        finalPages = int(pages) + 1
 
-            if pages <= 1.0:
-                pages = 1
-                pagination.append('<li><a href="\#"></a></li>')
-            else:
-                pages = ceil(pages)
-                finalPages = int(pages) + 1
+        for i in range(1, finalPages):
+            pagination.append('<li><a href="\#">' + str(i) + '</a></li>')
 
-                for i in range(1, finalPages):
-                    pagination.append('<li><a href="\#">' + str(i) + '</a></li>')
-
-
-            return render(request,'emailPremium/listDomains.html',{"pagination":pagination, "installCheck": installCheck})
-
-        except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg))
-            return HttpResponse("See CyberCP main log file.")
-
-    except KeyError:
-        return redirect(loadLoginPage)
+    proc = httpProc(request, 'emailPremium/listDomains.html',
+                    {"pagination": pagination, "installCheck": installCheck}, 'admin')
+    return proc.render()
 
 def getFurtherDomains(request):
     try:
@@ -304,57 +275,47 @@ def enableDisableEmailLimits(request):
         return HttpResponse(json_data)
 
 def emailLimits(request,domain):
-    try:
-        userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
+    if Websites.objects.filter(domain=domain).exists():
+        website = Websites.objects.get(domain=domain)
+        domainEmail = Domains.objects.get(domainOwner=website)
+        domainLimits = DomainLimits.objects.get(domain=domainEmail)
 
-        if currentACL['admin'] == 1:
-            pass
+        Data = {}
+        Data['domain'] = domain
+        Data['monthlyLimit'] = domainLimits.monthlyLimit
+        Data['monthlyUsed'] = domainLimits.monthlyUsed
+        Data['emailAccounts'] = domainEmail.eusers_set.count()
+
+        if domainLimits.limitStatus == 1:
+            Data['limitsOn'] = 1
+            Data['limitsOff'] = 0
         else:
-            return ACLManager.loadError()
+            Data['limitsOn'] = 0
+            Data['limitsOff'] = 1
 
+        ## Pagination for emails
 
-        if Websites.objects.filter(domain=domain).exists():
-            website = Websites.objects.get(domain=domain)
-            domainEmail = Domains.objects.get(domainOwner=website)
-            domainLimits = DomainLimits.objects.get(domain=domainEmail)
+        pages = float(Data['emailAccounts']) / float(10)
+        pagination = []
 
-            Data = {}
-            Data['domain'] = domain
-            Data['monthlyLimit'] = domainLimits.monthlyLimit
-            Data['monthlyUsed'] = domainLimits.monthlyUsed
-            Data['emailAccounts'] = domainEmail.eusers_set.count()
-
-            if domainLimits.limitStatus == 1:
-                Data['limitsOn'] = 1
-                Data['limitsOff'] = 0
-            else:
-                Data['limitsOn'] = 0
-                Data['limitsOff'] = 1
-
-            ## Pagination for emails
-
-
-            pages = float(Data['emailAccounts']) / float(10)
-            pagination = []
-
-            if pages <= 1.0:
-                pages = 1
-                pagination.append('<li><a href="\#"></a></li>')
-            else:
-                pages = ceil(pages)
-                finalPages = int(pages) + 1
-
-                for i in range(1, finalPages):
-                    pagination.append('<li><a href="\#">' + str(i) + '</a></li>')
-
-            Data['pagination'] = pagination
-
-            return render(request, 'emailPremium/emailLimits.html', Data)
+        if pages <= 1.0:
+            pages = 1
+            pagination.append('<li><a href="\#"></a></li>')
         else:
-            return render(request, 'emailPremium/emailLimits.html', {"error":1,"domain": "This domain does not exists"})
-    except KeyError:
-        return redirect(loadLoginPage)
+            pages = ceil(pages)
+            finalPages = int(pages) + 1
+
+            for i in range(1, finalPages):
+                pagination.append('<li><a href="\#">' + str(i) + '</a></li>')
+
+        Data['pagination'] = pagination
+
+        proc = httpProc(request, 'emailPremium/emailLimits.html', Data, 'admin')
+        return proc.render()
+    else:
+        proc = httpProc(request, 'emailPremium/emailLimits.html', {"error": 1, "domain": "This domain does not exists"},
+                        'admin')
+        return proc.render()
 
 def changeDomainLimit(request):
     try:
@@ -495,39 +456,29 @@ def enableDisableIndividualEmailLimits(request):
         return HttpResponse(json_data)
 
 def emailPage(request, emailAddress):
-    try:
-        userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
+    Data = {}
+    Data['emailAddress'] = emailAddress
 
-        if currentACL['admin'] == 1:
-            pass
-        else:
-            return ACLManager.loadError()
+    email = EUsers.objects.get(email=emailAddress)
+    logEntries = email.emaillogs_set.all().count()
 
-        Data = {}
-        Data['emailAddress'] = emailAddress
+    pages = float(logEntries) / float(10)
+    pagination = []
 
-        email = EUsers.objects.get(email=emailAddress)
-        logEntries = email.emaillogs_set.all().count()
+    if pages <= 1.0:
+        pages = 1
+        pagination.append('<li><a href="\#"></a></li>')
+    else:
+        pages = ceil(pages)
+        finalPages = int(pages) + 1
 
-        pages = float(logEntries) / float(10)
-        pagination = []
+        for i in range(1, finalPages):
+            pagination.append('<li><a href="\#">' + str(i) + '</a></li>')
 
-        if pages <= 1.0:
-            pages = 1
-            pagination.append('<li><a href="\#"></a></li>')
-        else:
-            pages = ceil(pages)
-            finalPages = int(pages) + 1
+    Data['pagination'] = pagination
 
-            for i in range(1, finalPages):
-                pagination.append('<li><a href="\#">' + str(i) + '</a></li>')
-
-        Data['pagination'] = pagination
-
-        return render(request, 'emailPremium/emailPage.html', Data)
-    except KeyError:
-        return redirect(loadLoginPage)
+    proc = httpProc(request, 'emailPremium/emailPage.html', Data, 'admin')
+    return proc.render()
 
 def getEmailStats(request):
     try:
@@ -771,24 +722,14 @@ def flushEmailLogs(request):
 ### SpamAssassin
 
 def spamAssassinHome(request):
-    try:
-        userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
+    checkIfSpamAssassinInstalled = 0
 
-        if currentACL['admin'] == 1:
-            pass
-        else:
-            return ACLManager.loadError()
+    if mailUtilities.checkIfSpamAssassinInstalled() == 1:
+        checkIfSpamAssassinInstalled = 1
 
-        checkIfSpamAssassinInstalled = 0
-
-        if mailUtilities.checkIfSpamAssassinInstalled() == 1:
-            checkIfSpamAssassinInstalled = 1
-
-        return render(request, 'emailPremium/SpamAssassin.html',{'checkIfSpamAssassinInstalled': checkIfSpamAssassinInstalled})
-
-    except KeyError:
-        return redirect(loadLoginPage)
+    proc = httpProc(request, 'emailPremium/SpamAssassin.html',
+                    {'checkIfSpamAssassinInstalled': checkIfSpamAssassinInstalled}, 'admin')
+    return proc.render()
 
 def installSpamAssassin(request):
     try:
@@ -951,9 +892,6 @@ def fetchSpamAssassinSettings(request):
             final_dic = {'fetchStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
-
-
-        return render(request,'managePHP/editPHPConfig.html')
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -1028,19 +966,9 @@ def saveSpamAssassinConfigurations(request):
         return HttpResponse(json_data)
 
 def mailQueue(request):
-    try:
-        userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
-
-        if currentACL['admin'] == 1:
-            pass
-        else:
-            return ACLManager.loadError()
-
-        return render(request, 'emailPremium/mailQueue.html')
-
-    except KeyError:
-        return redirect(loadLoginPage)
+    proc = httpProc(request, 'emailPremium/mailQueue.html',
+                    None, 'admin')
+    return proc.render()
 
 def fetchMailQueue(request):
     try:
@@ -1176,29 +1104,19 @@ def delete(request):
 ## MailScanner
 
 def MailScanner(request):
-    try:
-        userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
+    checkIfMailScannerInstalled = 0
 
-        if currentACL['admin'] == 1:
-            pass
-        else:
-            return ACLManager.loadError()
+    ipFile = "/etc/cyberpanel/machineIP"
+    f = open(ipFile)
+    ipData = f.read()
+    ipAddress = ipData.split('\n', 1)[0]
 
-        checkIfMailScannerInstalled = 0
+    if mailUtilities.checkIfMailScannerInstalled() == 1:
+        checkIfMailScannerInstalled = 1
 
-        ipFile = "/etc/cyberpanel/machineIP"
-        f = open(ipFile)
-        ipData = f.read()
-        ipAddress = ipData.split('\n', 1)[0]
-
-        if mailUtilities.checkIfMailScannerInstalled() == 1:
-            checkIfMailScannerInstalled = 1
-
-        return render(request, 'emailPremium/MailScanner.html',{'checkIfMailScannerInstalled': checkIfMailScannerInstalled, 'ipAddress': ipAddress})
-
-    except KeyError:
-        return redirect(loadLoginPage)
+    proc = httpProc(request, 'emailPremium/MailScanner.html',
+                    {'checkIfMailScannerInstalled': checkIfMailScannerInstalled, 'ipAddress': ipAddress}, 'admin')
+    return proc.render()
 
 def installMailScanner(request):
     try:

@@ -64,6 +64,14 @@ class sslUtilities:
 
     @staticmethod
     def installSSLForDomain(virtualHostName, adminEmail='usman@cyberpersons.com'):
+
+        try:
+            website = Websites.objects.get(domain=virtualHostName)
+            adminEmail = website.adminEmail
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile('%s [installSSLForDomain:72]' % (str(msg)))
+
+
         if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
             confPath = sslUtilities.Server_root + "/conf/vhosts/" + virtualHostName
             completePathToConfigFile = confPath + "/vhost.conf"
