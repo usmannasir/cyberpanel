@@ -5,7 +5,6 @@ import django
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
-from django.shortcuts import render
 from django.http import HttpResponse
 import json
 from plogical.acl import ACLManager
@@ -16,34 +15,28 @@ from databases.models import Databases, DBMeta
 import argparse
 from loginSystem.models import Administrator
 import plogical.randomPassword as randomPassword
+from plogical.httpProc import httpProc
 
 class DatabaseManager:
 
     REMOTE_ACCESS = 'remote_access'
 
     def loadDatabaseHome(self, request = None, userID = None):
-        try:
-            return render(request, 'databases/index.html')
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+        template = 'databases/index.html'
+        proc = httpProc(request, template, None, 'createDatabase')
+        return proc.render()
 
     def phpMyAdmin(self, request = None, userID = None):
-        try:
-            return render(request, 'databases/phpMyAdmin.html')
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+        template = 'databases/phpMyAdmin.html'
+        proc = httpProc(request, template, None, 'createDatabase')
+        return proc.render()
 
     def createDatabase(self, request = None, userID = None):
-        try:
-            currentACL = ACLManager.loadedACL(userID)
-            if ACLManager.currentContextPermission(currentACL, 'createDatabase') == 0:
-                return ACLManager.loadError()
-
-            websitesName = ACLManager.findAllSites(currentACL, userID)
-
-            return render(request, 'databases/createDatabase.html', {'websitesList': websitesName})
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+        currentACL = ACLManager.loadedACL(userID)
+        websitesName = ACLManager.findAllSites(currentACL, userID)
+        template = 'databases/createDatabase.html'
+        proc = httpProc(request, template, {'websitesList': websitesName}, 'createDatabase')
+        return proc.render()
 
     def submitDBCreation(self, userID = None, data = None, rAPI = None):
         try:
@@ -84,18 +77,11 @@ class DatabaseManager:
             return HttpResponse(json_data)
 
     def deleteDatabase(self, request = None, userID = None):
-        try:
-
-            currentACL = ACLManager.loadedACL(userID)
-            if ACLManager.currentContextPermission(currentACL, 'deleteDatabase') == 0:
-                return ACLManager.loadError()
-
-            websitesName = ACLManager.findAllSites(currentACL, userID)
-
-            return render(request, 'databases/deleteDatabase.html', {'websitesList': websitesName})
-        except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg))
-            return HttpResponse(str(msg))
+        currentACL = ACLManager.loadedACL(userID)
+        websitesName = ACLManager.findAllSites(currentACL, userID)
+        template = 'databases/deleteDatabase.html'
+        proc = httpProc(request, template, {'websitesList': websitesName}, 'deleteDatabase')
+        return proc.render()
 
     def fetchDatabases(self, userID = None, data = None):
         try:
@@ -171,16 +157,11 @@ class DatabaseManager:
             return HttpResponse(json_data)
 
     def listDBs(self, request = None, userID = None):
-        try:
-            currentACL = ACLManager.loadedACL(userID)
-            if ACLManager.currentContextPermission(currentACL, 'listDatabases') == 0:
-                return ACLManager.loadError()
-
-            websitesName = ACLManager.findAllSites(currentACL, userID)
-
-            return render(request, 'databases/listDataBases.html', {'websiteList': websitesName})
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+        currentACL = ACLManager.loadedACL(userID)
+        AllWebsites = ACLManager.findAllSites(currentACL, userID)
+        template = 'databases/listDataBases.html'
+        proc = httpProc(request, template, {'AllWebsites': AllWebsites}, 'listDatabases')
+        return proc.render()
 
     def changePassword(self, userID = None, data = None):
         try:

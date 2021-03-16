@@ -261,7 +261,7 @@ class virtualHostUtilities:
             CLPath = '/etc/sysconfig/cloudlinux'
 
             if os.path.exists(CLPath):
-                command = '/usr/share/cloudlinux/hooks/post_modify_user.py create --username %s --owner %s' % (virtualHostUser, virtualHostUser)
+                command = '/usr/share/cloudlinux/hooks/post_modify_user.py create --username %s --owner %s' % (virtualHostUser, admin.userName)
                 ProcessUtilities.executioner(command)
 
             ### For autodiscover of mail clients.
@@ -1222,12 +1222,17 @@ class virtualHostUtilities:
             return 0, str(msg)
 
     @staticmethod
-    def deleteDomain(virtualHostName):
+    def deleteDomain(virtualHostName, DeleteDocRoot=0):
         try:
 
             numberOfWebsites = Websites.objects.count() + ChildDomains.objects.count()
             vhost.deleteCoreConf(virtualHostName, numberOfWebsites)
             delWebsite = ChildDomains.objects.get(domain=virtualHostName)
+
+            if DeleteDocRoot:
+                command = 'rm -rf %s' % (delWebsite.path)
+                ProcessUtilities.executioner(command)
+
             delWebsite.delete()
             installUtilities.installUtilities.reStartLiteSpeed()
 
@@ -1308,8 +1313,7 @@ class virtualHostUtilities:
     def getDiskUsage(path, totalAllowed):
         try:
 
-            totalUsageInMB = ProcessUtilities.outputExecutioner(["sudo", "du", "-hs", path, "--block-size=1M"]).split()[
-                0]
+            totalUsageInMB = subprocess.check_output('du -hs %s --block-size=1M' % (path), shell=True).decode("utf-8").split()[0]
 
             percentage = float(100) / float(totalAllowed)
 
@@ -1346,6 +1350,24 @@ class virtualHostUtilities:
 
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
+
+    @staticmethod
+    def FindStats(website):
+
+        import json
+        try:
+            config = json.loads(website.config)
+            DiskUsage = config['DiskUsage']
+            DiskUsagePercentage = config['DiskUsagePercentage']
+            bwInMB = config['bwInMB']
+            bwUsage = config['bwUsage']
+        except:
+            DiskUsage = 0
+            DiskUsagePercentage = 0
+            bwInMB = 0
+            bwUsage = 0
+
+        return DiskUsage, DiskUsagePercentage, bwInMB, bwUsage
 
 
 def main():
@@ -1414,6 +1436,10 @@ def main():
     ## Switch Server
 
     parser.add_argument('--server', help='Switch server parameter.')
+
+    ## Doc root deletion for child domain
+
+    parser.add_argument('--DeleteDocRoot', help='Doc root deletion for child domain.')
 
     args = parser.parse_args()
 
@@ -1507,7 +1533,7 @@ def main():
     elif args.function == 'changeOpenBasedir':
         virtualHostUtilities.changeOpenBasedir(args.virtualHostName, args.openBasedirValue)
     elif args.function == 'deleteDomain':
-        virtualHostUtilities.deleteDomain(args.virtualHostName)
+        virtualHostUtilities.deleteDomain(args.virtualHostName, int(args.DeleteDocRoot))
     elif args.function == 'switchServer':
         virtualHostUtilities.switchServer(args.virtualHostName, args.phpVersion, int(args.server), args.tempStatusPath)
 

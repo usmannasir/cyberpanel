@@ -1,117 +1,45 @@
 # -*- coding: utf-8 -*-
 
-
-from django.shortcuts import render,redirect
-from loginSystem.views import loadLoginPage
 from django.http import HttpResponse
 import json
 import plogical.CyberCPLogFileWriter as logging
+from plogical.httpProc import httpProc
 from plogical.installUtilities import installUtilities
-import subprocess
-import shlex
 from plogical.virtualHostUtilities import virtualHostUtilities
 from plogical.acl import ACLManager
 from plogical.processUtilities import ProcessUtilities
 import os
 # Create your views here.
 
-
 def logsHome(request):
-    try:
-        userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
-
-        if currentACL['admin'] == 1:
-            pass
-        else:
-            return ACLManager.loadError()
-
-    except KeyError:
-        return redirect(loadLoginPage)
-
-    return render(request,'serverLogs/index.html')
+    proc = httpProc(request, 'serverLogs/index.html',
+                    None, 'admin')
+    return proc.render()
 
 def accessLogs(request):
-    try:
-        userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
-
-        if currentACL['admin'] == 1:
-            pass
-        else:
-            return ACLManager.loadError()
-
-        return render(request,'serverLogs/accessLogs.html')
-
-    except KeyError as msg:
-        logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[accessLogs]")
-        return redirect(loadLoginPage)
+    proc = httpProc(request, 'serverLogs/accessLogs.html',
+                    None, 'admin')
+    return proc.render()
 
 def errorLogs(request):
-    try:
-        userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
-
-        if currentACL['admin'] == 1:
-            pass
-        else:
-            return ACLManager.loadError()
-
-
-        return render(request,'serverLogs/errorLogs.html')
-
-    except KeyError as msg:
-        logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[accessLogs]")
-        return redirect(loadLoginPage)
+    proc = httpProc(request, 'serverLogs/errorLogs.html',
+                    None, 'admin')
+    return proc.render()
 
 def ftplogs(request):
-    try:
-        userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
-
-        if currentACL['admin'] == 1:
-            pass
-        else:
-            return ACLManager.loadError()
-
-        return render(request,'serverLogs/ftplogs.html')
-
-    except KeyError as msg:
-        logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[accessLogs]")
-        return redirect(loadLoginPage)
+    proc = httpProc(request, 'serverLogs/ftplogs.html',
+                    None, 'admin')
+    return proc.render()
 
 def emailLogs(request):
-    try:
-        userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
-
-        if currentACL['admin'] == 1:
-            pass
-        else:
-            return ACLManager.loadError()
-
-
-        return render(request,'serverLogs/emailLogs.html')
-
-    except KeyError as msg:
-        logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[accessLogs]")
-        return redirect(loadLoginPage)
+    proc = httpProc(request, 'serverLogs/emailLogs.html',
+                    None, 'admin')
+    return proc.render()
 
 def modSecAuditLogs(request):
-    try:
-        userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
-
-        if currentACL['admin'] == 1:
-            pass
-        else:
-            return ACLManager.loadError()
-
-        return render(request,'serverLogs/modSecAuditLog.html')
-
-    except KeyError as msg:
-        logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[accessLogs]")
-        return redirect(loadLoginPage)
+    proc = httpProc(request, 'serverLogs/modSecAuditLog.html',
+                    None, 'admin')
+    return proc.render()
 
 def getLogsFromFile(request):
     try:
@@ -205,30 +133,19 @@ def clearLogFile(request):
         return HttpResponse(json_data)
 
 def serverMail(request):
-    try:
-        userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
+    smtpPath = '/home/cyberpanel/smtpDetails'
+    data = {}
 
-        if currentACL['admin'] == 1:
-            pass
-        else:
-            return ACLManager.loadError()
+    if os.path.exists(smtpPath):
+        mailSettings = json.loads(open(smtpPath, 'r').read())
+        data['smtpHost'] = mailSettings['smtpHost']
+        data['smtpPort'] = mailSettings['smtpPort']
+        data['smtpUserName'] = mailSettings['smtpUserName']
+        data['smtpPassword'] = mailSettings['smtpPassword']
 
-        smtpPath = '/home/cyberpanel/smtpDetails'
-        data = {}
-
-        if os.path.exists(smtpPath):
-            mailSettings = json.loads(open(smtpPath, 'r').read())
-            data['smtpHost'] = mailSettings['smtpHost']
-            data['smtpPort'] = mailSettings['smtpPort']
-            data['smtpUserName'] = mailSettings['smtpUserName']
-            data['smtpPassword'] = mailSettings['smtpPassword']
-
-        return render(request,'serverLogs/serverMail.html', data)
-
-    except KeyError as msg:
-        logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[accessLogs]")
-        return redirect(loadLoginPage)
+    proc = httpProc(request, 'serverLogs/serverMail.html',
+                    data, 'admin')
+    return proc.render()
 
 def saveSMTPSettings(request):
     try:

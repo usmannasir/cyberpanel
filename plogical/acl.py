@@ -16,6 +16,34 @@ from dockerManager.models import Containers
 from re import compile
 class ACLManager:
 
+
+    AdminACL = '{"adminStatus":1, "versionManagement": 1, "createNewUser": 1, "listUsers": 1, "deleteUser":1 , "resellerCenter": 1, ' \
+               '"changeUserACL": 1, "createWebsite": 1, "modifyWebsite": 1, "suspendWebsite": 1, "deleteWebsite": 1, ' \
+               '"createPackage": 1, "listPackages": 1, "deletePackage": 1, "modifyPackage": 1, "createDatabase": 1, "deleteDatabase": 1, ' \
+               '"listDatabases": 1, "createNameServer": 1, "createDNSZone": 1, "deleteZone": 1, "addDeleteRecords": 1, ' \
+               '"createEmail": 1, "listEmails": 1, "deleteEmail": 1, "emailForwarding": 1, "changeEmailPassword": 1, ' \
+               '"dkimManager": 1, "createFTPAccount": 1, "deleteFTPAccount": 1, "listFTPAccounts": 1, "createBackup": 1,' \
+               ' "restoreBackup": 1, "addDeleteDestinations": 1, "scheDuleBackups": 1, "remoteBackups": 1, "googleDriveBackups": 1, "manageSSL": 1, ' \
+               '"hostnameSSL": 1, "mailServerSSL": 1 }'
+
+    ResellerACL = '{"adminStatus":0, "versionManagement": 1, "createNewUser": 1, "listUsers": 1, "deleteUser": 1 , "resellerCenter": 1, ' \
+                  '"changeUserACL": 0, "createWebsite": 1, "modifyWebsite": 1, "suspendWebsite": 1, "deleteWebsite": 1, ' \
+                  '"createPackage": 1, "listPackages": 1, "deletePackage": 1, "modifyPackage": 1, "createDatabase": 1, "deleteDatabase": 1, ' \
+                  '"listDatabases": 1, "createNameServer": 1, "createDNSZone": 1, "deleteZone": 1, "addDeleteRecords": 1, ' \
+                  '"createEmail": 1, "listEmails": 1, "deleteEmail": 1, "emailForwarding": 1, "changeEmailPassword": 1, ' \
+                  '"dkimManager": 1, "createFTPAccount": 1, "deleteFTPAccount": 1, "listFTPAccounts": 1, "createBackup": 1,' \
+                  ' "restoreBackup": 1, "addDeleteDestinations": 0, "scheDuleBackups": 0, "remoteBackups": 0, "googleDriveBackups": 1, "manageSSL": 1, ' \
+                  '"hostnameSSL": 0, "mailServerSSL": 0 }'
+
+    UserACL = '{"adminStatus":0, "versionManagement": 1, "createNewUser": 0, "listUsers": 0, "deleteUser": 0 , "resellerCenter": 0, ' \
+              '"changeUserACL": 0, "createWebsite": 0, "modifyWebsite": 0, "suspendWebsite": 0, "deleteWebsite": 0, ' \
+              '"createPackage": 0, "listPackages": 0, "deletePackage": 0, "modifyPackage": 0, "createDatabase": 1, "deleteDatabase": 1, ' \
+              '"listDatabases": 1, "createNameServer": 0, "createDNSZone": 1, "deleteZone": 1, "addDeleteRecords": 1, ' \
+              '"createEmail": 1, "listEmails": 1, "deleteEmail": 1, "emailForwarding": 1, "changeEmailPassword": 1, ' \
+              '"dkimManager": 1, "createFTPAccount": 1, "deleteFTPAccount": 1, "listFTPAccounts": 1, "createBackup": 1,' \
+              ' "restoreBackup": 0, "addDeleteDestinations": 0, "scheDuleBackups": 0, "remoteBackups": 0, "googleDriveBackups": 1, "manageSSL": 1, ' \
+              '"hostnameSSL": 0, "mailServerSSL": 0 }'
+
     @staticmethod
     def fetchIP():
         try:
@@ -71,78 +99,79 @@ class ACLManager:
         finalResponse['serverIPAddress'] = serverIPAddress
         finalResponse['adminName'] = admin.firstName
 
-        if admin.acl.adminStatus == 1:
+        config = json.loads(admin.acl.config)
+
+        if config['adminStatus']:
             finalResponse['admin'] = 1
         else:
             finalResponse['admin'] = 0
-
-            acl = ACL.objects.get(name=admin.acl.name)
-            finalResponse['versionManagement'] = acl.versionManagement
+            finalResponse['versionManagement'] = config['versionManagement']
 
             ## User Management
 
-            finalResponse['createNewUser'] = acl.createNewUser
-            finalResponse['listUsers'] = acl.listUsers
-            finalResponse['deleteUser'] = acl.deleteUser
-            finalResponse['changeUserACL'] = acl.changeUserACL
-            finalResponse['resellerCenter'] = acl.resellerCenter
+            finalResponse['createNewUser'] = config['createNewUser']
+            finalResponse['listUsers'] = config['listUsers']
+            finalResponse['deleteUser'] = config['deleteUser']
+            finalResponse['changeUserACL'] = config['changeUserACL']
+            finalResponse['resellerCenter'] = config['resellerCenter']
 
             ## Website Management
 
-            finalResponse['createWebsite'] = acl.createWebsite
-            finalResponse['modifyWebsite'] = acl.modifyWebsite
-            finalResponse['suspendWebsite'] = acl.suspendWebsite
-            finalResponse['deleteWebsite'] = acl.deleteWebsite
+            finalResponse['createWebsite'] = config['createWebsite']
+            finalResponse['modifyWebsite'] = config['modifyWebsite']
+            finalResponse['suspendWebsite'] = config['suspendWebsite']
+            finalResponse['deleteWebsite'] = config['deleteWebsite']
 
             ## Package Management
 
 
-            finalResponse['createPackage'] = acl.createPackage
-            finalResponse['listPackages'] = acl.listPackages
-            finalResponse['deletePackage'] = acl.deletePackage
-            finalResponse['modifyPackage'] = acl.modifyPackage
+            finalResponse['createPackage'] = config['createPackage']
+            finalResponse['listPackages'] = config['listPackages']
+            finalResponse['deletePackage'] = config['deletePackage']
+            finalResponse['modifyPackage'] = config['modifyPackage']
 
             ## Database Management
 
-            finalResponse['createDatabase'] = acl.createDatabase
-            finalResponse['deleteDatabase'] = acl.deleteDatabase
-            finalResponse['listDatabases'] = acl.listDatabases
+            finalResponse['createDatabase'] = config['createDatabase']
+            finalResponse['deleteDatabase'] = config['deleteDatabase']
+            finalResponse['listDatabases'] = config['listDatabases']
 
             ## DNS Management
 
-            finalResponse['createNameServer'] = acl.createNameServer
-            finalResponse['createDNSZone'] = acl.createDNSZone
-            finalResponse['deleteZone'] = acl.deleteZone
-            finalResponse['addDeleteRecords'] = acl.addDeleteRecords
+            finalResponse['createNameServer'] = config['createNameServer']
+            finalResponse['createDNSZone'] = config['createDNSZone']
+            finalResponse['deleteZone'] = config['deleteZone']
+            finalResponse['addDeleteRecords'] = config['addDeleteRecords']
 
             ## Email Management
 
-            finalResponse['createEmail'] = acl.createEmail
-            finalResponse['listEmails'] = acl.listEmails
-            finalResponse['deleteEmail'] = acl.deleteEmail
-            finalResponse['emailForwarding'] = acl.emailForwarding
-            finalResponse['changeEmailPassword'] = acl.changeEmailPassword
-            finalResponse['dkimManager'] = acl.dkimManager
+            finalResponse['createEmail'] = config['createEmail']
+            finalResponse['listEmails'] = config['listEmails']
+            finalResponse['deleteEmail'] = config['deleteEmail']
+            finalResponse['emailForwarding'] = config['emailForwarding']
+            finalResponse['changeEmailPassword'] = config['changeEmailPassword']
+            finalResponse['dkimManager'] = config['dkimManager']
 
             ## FTP Management
 
-            finalResponse['createFTPAccount'] = acl.createFTPAccount
-            finalResponse['deleteFTPAccount'] = acl.deleteFTPAccount
-            finalResponse['listFTPAccounts'] = acl.listFTPAccounts
+            finalResponse['createFTPAccount'] = config['createFTPAccount']
+            finalResponse['deleteFTPAccount'] = config['deleteFTPAccount']
+            finalResponse['listFTPAccounts'] = config['listFTPAccounts']
 
             ## Backup Management
 
-            finalResponse['createBackup'] = acl.createBackup
-            finalResponse['restoreBackup'] = acl.restoreBackup
-            finalResponse['addDeleteDestinations'] = acl.addDeleteDestinations
-            finalResponse['scheDuleBackups'] = acl.scheDuleBackups
-            finalResponse['remoteBackups'] = acl.remoteBackups
+            finalResponse['createBackup'] = config['createBackup']
+            finalResponse['googleDriveBackups'] = config['googleDriveBackups']
+            finalResponse['restoreBackup'] = config['restoreBackup']
+            finalResponse['addDeleteDestinations'] = config['addDeleteDestinations']
+            finalResponse['scheDuleBackups'] = config['scheDuleBackups']
+            finalResponse['remoteBackups'] = config['remoteBackups']
 
             ## SSL Management
 
-            finalResponse['manageSSL'] = acl.manageSSL
-            finalResponse['hostnameSSL'] = acl.hostnameSSL
-            finalResponse['mailServerSSL'] = acl.mailServerSSL
+            finalResponse['manageSSL'] = config['manageSSL']
+            finalResponse['hostnameSSL'] = config['hostnameSSL']
+            finalResponse['mailServerSSL'] = config['mailServerSSL']
 
         return finalResponse
 
@@ -175,7 +204,7 @@ class ACLManager:
 
             ## Admin ACL
 
-            newACL = ACL(name='admin', adminStatus=1)
+            newACL = ACL(name='admin', adminStatus=1, config=ACLManager.AdminACL)
             newACL.save()
 
             ## Reseller ACL
@@ -193,11 +222,12 @@ class ACLManager:
                          modifyPackage=1,
                          createNameServer=1,
                          restoreBackup=1,
+                         config=ACLManager.ResellerACL
                          )
             newACL.save()
 
             ## User ACL
-            newACL = ACL(name='user')
+            newACL = ACL(name='user', config=ACLManager.UserACL)
             newACL.save()
         except:
             pass
@@ -409,35 +439,34 @@ class ACLManager:
         websiteNames = []
 
         if currentACL['admin'] == 1:
-            allWebsites = Websites.objects.all()
+            allWebsites = Websites.objects.all().order_by('domain')
 
             for items in allWebsites:
                 websiteNames.append(items.domain)
 
                 if fetchChilds:
-                    for child in items.childdomains_set.all():
+                    for child in items.childdomains_set.all().order_by('domain'):
                         websiteNames.append(child.domain)
-
         else:
             admin = Administrator.objects.get(pk=userID)
 
-            websites = admin.websites_set.all()
+            websites = admin.websites_set.all().order_by('domain')
             admins = Administrator.objects.filter(owner=admin.pk)
 
             for items in websites:
                 websiteNames.append(items.domain)
 
                 if fetchChilds:
-                    for child in items.childdomains_set.all():
+                    for child in items.childdomains_set.all().order_by('domain'):
                         websiteNames.append(child.domain)
 
             for items in admins:
-                webs = items.websites_set.all()
+                webs = items.websites_set.all().order_by('domain')
                 for web in webs:
                     websiteNames.append(web.domain)
 
                     if fetchChilds:
-                        for child in web.childdomains_set.all():
+                        for child in web.childdomains_set.all().order_by('domain'):
                             websiteNames.append(child.domain)
 
 
@@ -469,13 +498,13 @@ class ACLManager:
     @staticmethod
     def findWebsiteObjects(currentACL, userID):
         if currentACL['admin'] == 1:
-            return Websites.objects.all()
+            return Websites.objects.all().order_by('domain')
         else:
 
             websiteList = []
             admin = Administrator.objects.get(pk=userID)
 
-            websites = admin.websites_set.all()
+            websites = admin.websites_set.all().order_by('domain')
 
             for items in websites:
                 websiteList.append(items)
@@ -483,7 +512,7 @@ class ACLManager:
             admins = Administrator.objects.filter(owner=admin.pk)
 
             for items in admins:
-                webs = items.websites_set.all()
+                webs = items.websites_set.all().order_by('domain')
                 for web in webs:
                     websiteList.append(web)
 
@@ -494,12 +523,12 @@ class ACLManager:
         domainsList = []
 
         if currentACL['admin'] == 1:
-            domains = Websites.objects.all()
+            domains = Websites.objects.all().order_by('domain')
             for items in domains:
                 domainsList.append(items.domain)
         else:
             admin = Administrator.objects.get(pk=userID)
-            domains = admin.websites_set.all()
+            domains = admin.websites_set.all().order_by('domain')
 
             for items in domains:
                 domainsList.append(items.domain)
@@ -507,7 +536,7 @@ class ACLManager:
             admins = Administrator.objects.filter(owner=admin.pk)
 
             for items in admins:
-                doms = items.websites_set.all()
+                doms = items.websites_set.all().order_by('domain')
                 for dom in doms:
                     domainsList.append(dom.domain)
 
@@ -518,12 +547,12 @@ class ACLManager:
         domainsList = []
 
         if currentACL['admin'] == 1:
-            domains = Websites.objects.order_by('domain').all()
+            domains = Websites.objects.all().order_by('domain')
             for items in domains:
                 domainsList.append(items.domain)
         else:
             admin = Administrator.objects.get(pk=userID)
-            domains = admin.websites_set.all()
+            domains = admin.websites_set.all().order_by('domain')
 
             for items in domains:
                 domainsList.append(items.domain)
@@ -531,7 +560,7 @@ class ACLManager:
             admins = Administrator.objects.filter(owner=admin.pk)
 
             for items in admins:
-                doms = items.websites_set.all()
+                doms = items.websites_set.all().order_by('domain')
                 for dom in doms:
                     domainsList.append(dom.domain)
         return domainsList
@@ -675,7 +704,7 @@ class ACLManager:
 
         for items in websiteNames:
             website = Websites.objects.get(domain = items)
-            for childDomain in website.childdomains_set.all():
+            for childDomain in website.childdomains_set.all().order_by('domain'):
                 childDomains.append(childDomain.domain)
 
         return childDomains

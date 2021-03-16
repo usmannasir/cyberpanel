@@ -24,7 +24,7 @@ from containerization.views import *
 
 
 class CloudManager:
-    def __init__(self, data=None, admin = None):
+    def __init__(self, data=None, admin=None):
         self.data = data
         self.admin = admin
 
@@ -123,6 +123,7 @@ class CloudManager:
 
     def fetchWebsiteData(self):
         try:
+
             currentACL = ACLManager.loadedACL(self.admin.pk)
             website = Websites.objects.get(domain=self.data['domainName'])
             admin = Administrator.objects.get(pk=self.admin.pk)
@@ -140,39 +141,22 @@ class CloudManager:
             Data['dbUsed'] = website.databases_set.all().count()
             Data['dbAllowed'] = website.package.dataBases
 
-            diskUsageDetails = virtualHostUtilities.getDiskUsage("/home/" + self.data['domainName'],
-                                                                 website.package.diskSpace)
-
-            ## bw usage calculation
-
-            try:
-                execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-                execPath = execPath + " findDomainBW --virtualHostName " + self.data[
-                    'domainName'] + " --bandwidth " + str(
-                    website.package.bandwidth)
-
-                output = ProcessUtilities.outputExecutioner(execPath)
-                bwData = output.split(",")
-            except BaseException:
-                bwData = [0, 0]
+            DiskUsage, DiskUsagePercentage, bwInMB, bwUsage = virtualHostUtilities.FindStats(website)
 
             ## bw usage calculations
 
-            Data['bwAllowed'] = website.package.bandwidth
-            Data['bwUsed'] = bwData[0]
-            Data['bwUsage'] = bwData[1]
+            Data['bwInMBTotal'] = website.package.bandwidth
+            Data['bwInMB'] = bwInMB
+            Data['bwUsage'] = bwUsage
 
-            if diskUsageDetails != None:
-                if diskUsageDetails[1] > 100:
-                    diskUsageDetails[1] = 100
+            if DiskUsagePercentage > 100:
+                DiskUsagePercentage = 100
 
-                Data['diskUsage'] = diskUsageDetails[1]
-                Data['diskUsed'] = diskUsageDetails[0]
-                Data['diskAllowed'] = website.package.diskSpace
-            else:
-                Data['diskUsed'] = 0
-                Data['diskUsage'] = 0
-                Data['diskInMBTotal'] = website.package.diskSpace
+            Data['diskUsage'] = DiskUsagePercentage
+            Data['diskInMB'] = DiskUsage
+            Data['diskInMBTotal'] = website.package.diskSpace
+
+            ##
 
             Data['status'] = 1
             final_json = json.dumps(Data)
@@ -964,13 +948,13 @@ class CloudManager:
 
             request.session['userID'] = self.admin.pk
 
-            execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/IncScheduler.py forceRunAWSBackup --planName %s" % (self.data['planName'])
+            execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/IncScheduler.py forceRunAWSBackup --planName %s" % (
+                self.data['planName'])
             ProcessUtilities.popenExecutioner(execPath)
 
             return self.ajaxPre(1, None)
         except BaseException as msg:
             return self.ajaxPre(0, str(msg))
-
 
     def systemStatus(self, request):
         try:
@@ -979,14 +963,12 @@ class CloudManager:
         except BaseException as msg:
             return self.ajaxPre(0, str(msg))
 
-
     def killProcess(self, request):
         try:
             request.session['userID'] = self.admin.pk
             return killProcess(request)
         except BaseException as msg:
             return self.ajaxPre(0, str(msg))
-
 
     def connectAccountDO(self, request):
         try:
@@ -1003,7 +985,6 @@ class CloudManager:
             return s3.fetchBucketsDO()
         except BaseException as msg:
             return self.ajaxPre(0, str(msg))
-
 
     def createPlanDO(self, request):
         try:
@@ -1073,7 +1054,7 @@ class CloudManager:
     def showStatus(self, request):
         try:
             request.session['userID'] = self.admin.pk
-            currentACL = ACLManager.loadedACL( self.admin.pk)
+            currentACL = ACLManager.loadedACL(self.admin.pk)
 
             if currentACL['admin'] == 0:
                 return self.ajaxPre(0, 'Only administrators can see MySQL status.')
@@ -1088,23 +1069,21 @@ class CloudManager:
     def fetchRam(self, request):
         try:
             request.session['userID'] = self.admin.pk
-            currentACL = ACLManager.loadedACL( self.admin.pk)
+            currentACL = ACLManager.loadedACL(self.admin.pk)
 
             if currentACL['admin'] == 0:
                 return self.ajaxPre(0, 'Only administrators can see MySQL status.')
 
-            #if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+            # if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
             #    return self.ajaxPre(0, 'This feature is currently only available on CentOS.')
-
 
             from psutil import virtual_memory
             import math
 
             finalData = {}
             mem = virtual_memory()
-            inGB = math.ceil(float(mem.total)/float(1024 * 1024 * 1024))
+            inGB = math.ceil(float(mem.total) / float(1024 * 1024 * 1024))
             finalData['ramInGB'] = inGB
-
 
             if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 finalData['conf'] = ProcessUtilities.outputExecutioner('sudo cat /etc/my.cnf')
@@ -1121,7 +1100,7 @@ class CloudManager:
     def applyMySQLChanges(self, request):
         try:
             request.session['userID'] = self.admin.pk
-            currentACL = ACLManager.loadedACL( self.admin.pk)
+            currentACL = ACLManager.loadedACL(self.admin.pk)
 
             if currentACL['admin'] == 0:
                 return self.ajaxPre(0, 'Only administrators can see MySQL status.')
@@ -1139,7 +1118,7 @@ class CloudManager:
     def restartMySQL(self, request):
         try:
             request.session['userID'] = self.admin.pk
-            currentACL = ACLManager.loadedACL( self.admin.pk)
+            currentACL = ACLManager.loadedACL(self.admin.pk)
 
             if currentACL['admin'] == 0:
                 return self.ajaxPre(0, 'Only administrators can see MySQL status.')
@@ -1154,7 +1133,7 @@ class CloudManager:
     def fetchDatabasesMYSQL(self, request):
         try:
             request.session['userID'] = self.admin.pk
-            currentACL = ACLManager.loadedACL( self.admin.pk)
+            currentACL = ACLManager.loadedACL(self.admin.pk)
 
             if currentACL['admin'] == 0:
                 return self.ajaxPre(0, 'Only administrators can see MySQL status.')
@@ -1169,7 +1148,7 @@ class CloudManager:
     def fetchTables(self, request):
         try:
             request.session['userID'] = self.admin.pk
-            currentACL = ACLManager.loadedACL( self.admin.pk)
+            currentACL = ACLManager.loadedACL(self.admin.pk)
 
             if currentACL['admin'] == 0:
                 return self.ajaxPre(0, 'Only administrators can see MySQL status.')
@@ -1184,7 +1163,7 @@ class CloudManager:
     def deleteTable(self, request):
         try:
             request.session['userID'] = self.admin.pk
-            currentACL = ACLManager.loadedACL( self.admin.pk)
+            currentACL = ACLManager.loadedACL(self.admin.pk)
 
             if currentACL['admin'] == 0:
                 return self.ajaxPre(0, 'Only administrators can see MySQL status.')
@@ -1199,7 +1178,7 @@ class CloudManager:
     def fetchTableData(self, request):
         try:
             request.session['userID'] = self.admin.pk
-            currentACL = ACLManager.loadedACL( self.admin.pk)
+            currentACL = ACLManager.loadedACL(self.admin.pk)
 
             if currentACL['admin'] == 0:
                 return self.ajaxPre(0, 'Only administrators can see MySQL status.')
@@ -1214,7 +1193,7 @@ class CloudManager:
     def fetchStructure(self, request):
         try:
             request.session['userID'] = self.admin.pk
-            currentACL = ACLManager.loadedACL( self.admin.pk)
+            currentACL = ACLManager.loadedACL(self.admin.pk)
 
             if currentACL['admin'] == 0:
                 return self.ajaxPre(0, 'Only administrators can see MySQL status.')
@@ -1265,7 +1244,6 @@ class CloudManager:
             return s3.fetchBackupPlansMINIO()
         except BaseException as msg:
             return self.ajaxPre(0, str(msg))
-
 
     def deletePlanMINIO(self, request):
         try:
@@ -1339,7 +1317,6 @@ class CloudManager:
             return wm.getSwitchStatus(self.admin.pk, self.data)
         except BaseException as msg:
             return self.ajaxPre(0, str(msg))
-
 
     def switchServer(self, request):
         try:
@@ -1666,12 +1643,31 @@ class CloudManager:
             except:
                 databases = '0'
 
+            try:
+                port = str(self.data['port'])
+            except:
+                port = '0'
+
+            try:
+                ip = str(self.data['ip'])
+            except:
+                ip = '0'
+
+            try:
+                destinationDomain = self.data['destinationDomain']
+            except:
+                destinationDomain = 'None'
+
+            import time
+            BackupPath = '/home/cyberpanel/backups/%s/backup-' % (self.data['domain']) + self.data['domain'] + "-" + time.strftime("%m.%d.%Y_%H-%M-%S")
 
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
-            execPath = execPath + " CloudBackup --backupDomain %s --data %s --emails %s --databases %s --tempStoragePath %s" % (self.data['domain'], data, emails, databases, tempStatusPath)
+            execPath = execPath + " CloudBackup --backupDomain %s --data %s --emails %s --databases %s --tempStoragePath %s " \
+                                  "--path %s --port %s --ip %s --destinationDomain %s" % (
+                self.data['domain'], data, emails, databases, tempStatusPath, BackupPath, port, ip, destinationDomain)
             ProcessUtilities.popenExecutioner(execPath)
 
-            final_dic = {'status': 1, 'tempStatusPath': tempStatusPath}
+            final_dic = {'status': 1, 'tempStatusPath': tempStatusPath, 'path': '%s.tar.gz' % (BackupPath)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
@@ -1695,7 +1691,7 @@ class CloudManager:
             counter = 1
             for items in backups:
 
-                size = str(int(int(os.path.getsize('%s/%s' % (backupsPath, items)))/int(1048576)))
+                size = str(int(int(os.path.getsize('%s/%s' % (backupsPath, items))) / int(1048576)))
 
                 dic = {'id': counter,
                        'file': items,
@@ -1781,8 +1777,14 @@ class CloudManager:
             writeToFile.write('Starting..,0')
             writeToFile.close()
 
+            try:
+                sourceDomain = self.data['sourceDomain']
+            except:
+                sourceDomain = 'None'
+
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
-            execPath = execPath + " SubmitCloudBackupRestore --backupDomain %s --backupFile %s --tempStoragePath %s" % (self.data['domain'], self.data['backupFile'], tempStatusPath)
+            execPath = execPath + " SubmitCloudBackupRestore --backupDomain %s --backupFile %s --sourceDomain %s --tempStoragePath %s" % (
+                self.data['domain'], self.data['backupFile'],sourceDomain, tempStatusPath)
             ProcessUtilities.popenExecutioner(execPath)
 
             final_dic = {'status': 1, 'tempStatusPath': tempStatusPath}
@@ -1813,11 +1815,19 @@ class CloudManager:
 
             aws_access_key_id, aws_secret_access_key, region = self.fetchAWSKeys()
 
-            s3 = boto3.resource(
-                's3',
-                aws_access_key_id=aws_access_key_id,
-                aws_secret_access_key=aws_secret_access_key
-            )
+            if region.find('http') > -1:
+                s3 = boto3.resource(
+                    's3',
+                    aws_access_key_id=aws_access_key_id,
+                    aws_secret_access_key=aws_secret_access_key,
+                    endpoint_url=region
+                )
+            else:
+                s3 = boto3.resource(
+                    's3',
+                    aws_access_key_id=aws_access_key_id,
+                    aws_secret_access_key=aws_secret_access_key,
+                )
             bucket = s3.Bucket(plan.bucket)
             key = '%s/%s/' % (plan.name, self.data['domainName'])
 
@@ -1861,11 +1871,20 @@ class CloudManager:
 
             aws_access_key_id, aws_secret_access_key, region = self.fetchAWSKeys()
 
-            s3 = boto3.resource(
-                's3',
-                aws_access_key_id=aws_access_key_id,
-                aws_secret_access_key=aws_secret_access_key
-            )
+            if region.find('http') > -1:
+                s3 = boto3.resource(
+                    's3',
+                    aws_access_key_id=aws_access_key_id,
+                    aws_secret_access_key=aws_secret_access_key,
+                    endpoint_url=region
+                )
+            else:
+                s3 = boto3.resource(
+                    's3',
+                    aws_access_key_id=aws_access_key_id,
+                    aws_secret_access_key=aws_secret_access_key,
+                )
+
             s3.Object(plan.bucket, self.data['backupFile']).delete()
 
             final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None"})
@@ -1885,7 +1904,8 @@ class CloudManager:
             writeToFile.close()
 
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
-            execPath = execPath + " SubmitS3BackupRestore --backupDomain %s --backupFile '%s' --tempStoragePath %s --planName %s" % (self.data['domain'], self.data['backupFile'], tempStatusPath, self.data['planName'])
+            execPath = execPath + " SubmitS3BackupRestore --backupDomain %s --backupFile '%s' --tempStoragePath %s --planName %s" % (
+                self.data['domain'], self.data['backupFile'], tempStatusPath, self.data['planName'])
             ProcessUtilities.popenExecutioner(execPath)
 
             final_dic = {'status': 1, 'tempStatusPath': tempStatusPath}
@@ -1894,3 +1914,714 @@ class CloudManager:
 
         except BaseException as msg:
             return self.ajaxPre(0, str(msg))
+
+    def DeployWordPress(self):
+        try:
+
+            tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
+
+            writeToFile = open(tempStatusPath, 'w')
+            writeToFile.write('Starting..,0')
+            writeToFile.close()
+
+            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/applicationInstaller.py"
+            execPath = execPath + " DeployWordPress --tempStatusPath %s --appsSet '%s' --domain '%s' --email '%s' --password '%s' " \
+                                  "--pluginUpdates '%s' --themeUpdates '%s' --title '%s' --updates '%s' --userName '%s' " \
+                                  "--version '%s' --createSite %s" % (
+                           tempStatusPath, self.data['appsSet'], self.data['domain'], self.data['email'],
+                           self.data['passwordByPass'],
+                           self.data['pluginUpdates'], self.data['themeUpdates'], self.data['title'],
+                           self.data['updates'],
+                           self.data['userName'], self.data['version'], str(self.data['createSite']))
+
+            try:
+                execPath = '%s --path %s' % (execPath, self.data['path'])
+            except:
+                pass
+
+            ProcessUtilities.popenExecutioner(execPath)
+
+            final_dic = {'status': 1, 'tempStatusPath': tempStatusPath}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+        except BaseException as msg:
+            return self.ajaxPre(0, str(msg))
+
+    def FetchWordPressDetails(self):
+        try:
+
+            finalDic = {}
+            domain = self.data['domain']
+            finalDic['status'] = 1
+            finalDic['maintenanceMode'] = 1
+            finalDic['php'] = '7.4'
+
+
+            ## Get versopm
+
+            website = Websites.objects.get(domain=domain)
+
+            try:
+                from cloudAPI.models import WPDeployments
+                wpd = WPDeployments.objects.get(owner=website)
+                path = json.loads(wpd.config)['path']
+                path = '/home/%s/public_html/%s' % (self.data['domain'], path)
+
+            except:
+                path = '/home/%s/public_html' % (self.data['domain'])
+
+            command = 'wp core version --path=%s' % (path)
+            finalDic['version'] = ProcessUtilities.outputExecutioner(command, website.externalApp)
+
+            ## LSCache
+
+            command = 'wp plugin status litespeed-cache --path=%s' % (path)
+            result = ProcessUtilities.outputExecutioner(command, website.externalApp)
+
+            if result.find('Status: Active') > -1:
+                finalDic['lscache'] = 1
+            else:
+                finalDic['lscache'] = 0
+
+            ## Debug
+
+            command = 'wp config list --path=%s' % (path)
+            result = ProcessUtilities.outputExecutioner(command, website.externalApp).split('\n')
+            finalDic['debugging'] = 0
+            for items in result:
+                if items.find('WP_DEBUG') > -1 and items.find('1') > - 1:
+                    finalDic['debugging'] = 1
+                    break
+
+            ## Search index
+
+            command = 'wp option get blog_public --path=%s' % (path)
+            finalDic['searchIndex'] = int(ProcessUtilities.outputExecutioner(command, website.externalApp).rstrip('\n'))
+
+            ## Maintenece mode
+
+            command = 'wp maintenance-mode status --path=%s' % (path)
+            result = ProcessUtilities.outputExecutioner(command, website.externalApp)
+
+            if result.find('not active') > -1:
+                finalDic['maintenanceMode'] = 0
+            else:
+                finalDic['maintenanceMode'] = 1
+
+            ## Get title
+
+            command = 'wp option get blogname --path=%s' % (path)
+            finalDic['title'] = ProcessUtilities.outputExecutioner(command, website.externalApp)
+
+            ##
+
+            final_json = json.dumps(finalDic)
+            return HttpResponse(final_json)
+
+        except BaseException as msg:
+            return self.ajaxPre(0, str(msg))
+
+    def AutoLogin(self):
+        try:
+
+            ## Get versopm
+
+            website = Websites.objects.get(domain=self.data['domain'])
+
+            try:
+                from cloudAPI.models import WPDeployments
+                wpd = WPDeployments.objects.get(owner=website)
+                path = json.loads(wpd.config)['path']
+                path = '/home/%s/public_html/%s' % (self.data['domain'], path)
+
+            except:
+                path = '/home/%s/public_html' % (self.data['domain'])
+
+            ## Get title
+
+            import plogical.randomPassword as randomPassword
+            password = randomPassword.generate_pass(32)
+
+            command = 'wp user create cyberpanel support@cyberpanel.cloud --role=administrator --user_pass="%s" --path=%s' % (password, path)
+            ProcessUtilities.executioner(command, website.externalApp)
+
+            command = 'wp user update cyberpanel --user_pass="%s" --path=%s' % (password, path)
+            ProcessUtilities.executioner(command, website.externalApp)
+
+            finalDic = {'status': 1, 'password': password}
+            final_json = json.dumps(finalDic)
+            return HttpResponse(final_json)
+
+
+        except BaseException as msg:
+            return self.ajaxPre(0, str(msg))
+
+    def UpdateWPSettings(self):
+        try:
+
+            website = Websites.objects.get(domain=self.data['domain'])
+            domain = self.data['domain']
+
+            try:
+                from cloudAPI.models import WPDeployments
+                wpd = WPDeployments.objects.get(owner=website)
+                path = json.loads(wpd.config)['path']
+                path = '/home/%s/public_html/%s' % (self.data['domain'], path)
+
+            except:
+                path = '/home/%s/public_html' % (self.data['domain'])
+
+
+            if self.data['setting'] == 'lscache':
+               if self.data['settingValue']:
+
+                   command = "wp plugin install litespeed-cache --path=%s" % (path)
+                   ProcessUtilities.executioner(command, website.externalApp)
+
+                   command = "wp plugin activate litespeed-cache --path=%s" % (path)
+                   ProcessUtilities.executioner(command, website.externalApp)
+
+                   final_dic = {'status': 1, 'message': 'LSCache successfully installed and activated.'}
+                   final_json = json.dumps(final_dic)
+                   return HttpResponse(final_json)
+               else:
+                    command = 'wp plugin deactivate litespeed-cache --path=%s' % (path)
+                    ProcessUtilities.executioner(command, website.externalApp)
+
+                    final_dic = {'status': 1, 'message': 'LSCache successfully deactivated.'}
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
+            elif self.data['setting'] == 'debugging':
+
+                command = "wp litespeed-purge all --path=%s" % (path)
+                ProcessUtilities.executioner(command, website.externalApp)
+
+                if self.data['settingValue']:
+                    command = "wp config set WP_DEBUG true --path=%s" % (path)
+                    ProcessUtilities.executioner(command, website.externalApp)
+
+                    final_dic = {'status': 1, 'message': 'WordPress is now in debug mode.'}
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
+
+                else:
+                    command = "wp config set WP_DEBUG false --path=%s" % (path)
+                    ProcessUtilities.executioner(command, website.externalApp)
+
+                    final_dic = {'status': 1, 'message': 'WordPress debug mode turned off.'}
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
+            elif self.data['setting'] == 'searchIndex':
+
+                command = "wp litespeed-purge all --path=%s" % (path)
+                ProcessUtilities.executioner(command, website.externalApp)
+
+                if self.data['settingValue']:
+                    command = "wp option update blog_public 1 --path=%s" % (path)
+                    ProcessUtilities.executioner(command, website.externalApp)
+
+                    final_dic = {'status': 1, 'message': 'Search Engine Indexing enabled.'}
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
+
+                else:
+                    command = "wp option update blog_public 0 --path=%s" % (path)
+                    ProcessUtilities.executioner(command, website.externalApp)
+
+                    final_dic = {'status': 1, 'message': 'Search Engine Indexing disabled.'}
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
+            elif self.data['setting'] == 'maintenanceMode':
+
+                command = "wp litespeed-purge all --path=%s" % (path)
+                ProcessUtilities.executioner(command, website.externalApp)
+
+                if self.data['settingValue']:
+
+                    command = "wp maintenance-mode activate --path=%s" % (path)
+                    ProcessUtilities.executioner(command, website.externalApp)
+
+                    final_dic = {'status': 1, 'message': 'WordPress Maintenance mode turned on.'}
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
+
+                else:
+                    command = "wp maintenance-mode deactivate --path=%s" % (path)
+                    ProcessUtilities.executioner(command, website.externalApp)
+
+                    final_dic = {'status': 1, 'message': 'WordPress Maintenance mode turned off.'}
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
+
+        except BaseException as msg:
+            return self.ajaxPre(0, str(msg))
+
+    def GetCurrentPlugins(self):
+        try:
+            website = Websites.objects.get(domain=self.data['domain'])
+
+            try:
+                from cloudAPI.models import WPDeployments
+                wpd = WPDeployments.objects.get(owner=website)
+                path = json.loads(wpd.config)['path']
+                path = '/home/%s/public_html/%s' % (self.data['domain'], path)
+
+            except:
+                path = '/home/%s/public_html' % (self.data['domain'])
+
+            command = 'wp plugin list --format=json --path=%s' % (path)
+            json_data = ProcessUtilities.outputExecutioner(command, website.externalApp)
+            final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": json_data})
+
+            return HttpResponse(final_json)
+        except BaseException as msg:
+            final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+    def UpdatePlugins(self):
+        try:
+            website = Websites.objects.get(domain=self.data['domain'])
+
+            try:
+                from cloudAPI.models import WPDeployments
+                wpd = WPDeployments.objects.get(owner=website)
+                path = json.loads(wpd.config)['path']
+                path = '/home/%s/public_html/%s' % (self.data['domain'], path)
+
+            except:
+                path = '/home/%s/public_html' % (self.data['domain'])
+
+            if self.data['plugin'] == 'all':
+                command = 'wp plugin update --all --path=%s' % (path)
+                ProcessUtilities.popenExecutioner(command, website.externalApp)
+                final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'message': "Plugin updates started in the background."})
+                return HttpResponse(final_json)
+            elif self.data['plugin'] == 'selected':
+                if self.data['allPluginsChecked']:
+                    command = 'wp plugin update --all --path=%s' % (path)
+                    ProcessUtilities.popenExecutioner(command, website.externalApp)
+                    final_json = json.dumps(
+                        {'status': 1, 'fetchStatus': 1, 'message': "Plugin updates started in the background."})
+                    return HttpResponse(final_json)
+                else:
+                    pluginsList = ''
+
+                    for plugin in self.data['plugins']:
+                        pluginsList = '%s %s' % (pluginsList, plugin)
+
+                    command = 'wp plugin update %s --path=%s' % (pluginsList, path)
+                    ProcessUtilities.popenExecutioner(command, website.externalApp)
+                    final_json = json.dumps(
+                        {'status': 1, 'fetchStatus': 1, 'message': "Plugin updates started in the background."})
+                    return HttpResponse(final_json)
+            else:
+                command = 'wp plugin update %s --path=%s' % (self.data['plugin'], path)
+                ProcessUtilities.popenExecutioner(command, website.externalApp)
+                final_json = json.dumps(
+                    {'status': 1, 'fetchStatus': 1, 'message': "Plugin updates started in the background."})
+                return HttpResponse(final_json)
+
+        except BaseException as msg:
+            final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+    def ChangeState(self):
+        try:
+            website = Websites.objects.get(domain=self.data['domain'])
+
+            try:
+                from cloudAPI.models import WPDeployments
+                wpd = WPDeployments.objects.get(owner=website)
+                path = json.loads(wpd.config)['path']
+                path = '/home/%s/public_html/%s' % (self.data['domain'], path)
+
+            except:
+                path = '/home/%s/public_html' % (self.data['domain'])
+
+            command = 'wp plugin status %s --path=%s' % (self.data['plugin'], path)
+            result = ProcessUtilities.outputExecutioner(command, website.externalApp)
+
+            if result.find('Status: Active') > -1:
+                command = 'wp plugin deactivate %s --path=%s' % (self.data['plugin'], path)
+                ProcessUtilities.executioner(command, website.externalApp)
+                final_json = json.dumps(
+                    {'status': 1, 'fetchStatus': 1, 'message': "Plugin successfully deactivated."})
+                return HttpResponse(final_json)
+            else:
+                command = 'wp plugin activate %s --path=%s' % (
+                self.data['plugin'], path)
+                ProcessUtilities.executioner(command, website.externalApp)
+                final_json = json.dumps(
+                    {'status': 1, 'fetchStatus': 1, 'message': "Plugin successfully activated."})
+                return HttpResponse(final_json)
+
+        except BaseException as msg:
+            final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+    def DeletePlugins(self):
+        try:
+            website = Websites.objects.get(domain=self.data['domain'])
+
+            try:
+                from cloudAPI.models import WPDeployments
+                wpd = WPDeployments.objects.get(owner=website)
+                path = json.loads(wpd.config)['path']
+                path = '/home/%s/public_html/%s' % (self.data['domain'], path)
+
+            except:
+                path = '/home/%s/public_html' % (self.data['domain'])
+
+            if self.data['plugin'] == 'selected':
+                pluginsList = ''
+
+                for plugin in self.data['plugins']:
+                    pluginsList = '%s %s' % (pluginsList, plugin)
+
+                command = 'wp plugin delete %s --path=%s' % (pluginsList, path)
+                ProcessUtilities.popenExecutioner(command, website.externalApp)
+                final_json = json.dumps(
+                    {'status': 1, 'fetchStatus': 1, 'message': "Plugin deletion started in the background."})
+                return HttpResponse(final_json)
+            else:
+                command = 'wp plugin delete %s --path=%s' % (self.data['plugin'], path)
+                ProcessUtilities.popenExecutioner(command, website.externalApp)
+                final_json = json.dumps(
+                    {'status': 1, 'fetchStatus': 1, 'message': "Plugin deletion started in the background."})
+                return HttpResponse(final_json)
+
+        except BaseException as msg:
+            final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+    def GetCurrentThemes(self):
+        try:
+
+            website = Websites.objects.get(domain=self.data['domain'])
+
+            try:
+                from cloudAPI.models import WPDeployments
+                wpd = WPDeployments.objects.get(owner=website)
+                path = json.loads(wpd.config)['path']
+                path = '/home/%s/public_html/%s' % (self.data['domain'], path)
+
+            except:
+                path = '/home/%s/public_html' % (self.data['domain'])
+
+            command = 'wp theme list --format=json --path=%s' % (path)
+            json_data = ProcessUtilities.outputExecutioner(command, website.externalApp)
+            final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": json_data})
+            return HttpResponse(final_json)
+        except BaseException as msg:
+            final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+    def UpdateThemes(self):
+        try:
+            website = Websites.objects.get(domain=self.data['domain'])
+
+            try:
+                from cloudAPI.models import WPDeployments
+                wpd = WPDeployments.objects.get(owner=website)
+                path = json.loads(wpd.config)['path']
+                path = '/home/%s/public_html/%s' % (self.data['domain'], path)
+
+            except:
+                path = '/home/%s/public_html' % (self.data['domain'])
+
+            if self.data['plugin'] == 'all':
+                command = 'wp theme update --all --path=%s' % (path)
+                ProcessUtilities.popenExecutioner(command, website.externalApp)
+                final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'message': "Theme updates started in the background."})
+                return HttpResponse(final_json)
+            elif self.data['plugin'] == 'selected':
+                if self.data['allPluginsChecked']:
+                    command = 'wp theme update --all --path=%s' % (path)
+                    ProcessUtilities.popenExecutioner(command, website.externalApp)
+                    final_json = json.dumps(
+                        {'status': 1, 'fetchStatus': 1, 'message': "Theme updates started in the background."})
+                    return HttpResponse(final_json)
+                else:
+                    pluginsList = ''
+
+                    for plugin in self.data['plugins']:
+                        pluginsList = '%s %s' % (pluginsList, plugin)
+
+                    command = 'wp theme update %s --path=%s' % (pluginsList, path)
+                    ProcessUtilities.popenExecutioner(command, website.externalApp)
+                    final_json = json.dumps(
+                        {'status': 1, 'fetchStatus': 1, 'message': "Theme updates started in the background."})
+                    return HttpResponse(final_json)
+            else:
+                command = 'wp theme update %s --path=%s' % (self.data['plugin'], path)
+                ProcessUtilities.popenExecutioner(command, website.externalApp)
+                final_json = json.dumps(
+                    {'status': 1, 'fetchStatus': 1, 'message': "Theme updates started in the background."})
+                return HttpResponse(final_json)
+
+        except BaseException as msg:
+            final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+    def ChangeStateThemes(self):
+        try:
+            website = Websites.objects.get(domain=self.data['domain'])
+
+            try:
+                from cloudAPI.models import WPDeployments
+                wpd = WPDeployments.objects.get(owner=website)
+                path = json.loads(wpd.config)['path']
+                path = '/home/%s/public_html/%s' % (self.data['domain'], path)
+
+            except:
+                path = '/home/%s/public_html' % (self.data['domain'])
+
+            command = 'wp theme status %s --path=%s' % (self.data['plugin'], path)
+            result = ProcessUtilities.outputExecutioner(command, website.externalApp)
+
+            if result.find('Status: Active') > -1:
+                command = 'wp theme deactivate %s --path=%s' % (
+                    self.data['plugin'], path)
+                ProcessUtilities.executioner(command, website.externalApp)
+                final_json = json.dumps(
+                    {'status': 1, 'fetchStatus': 1, 'message': "Theme successfully deactivated."})
+                return HttpResponse(final_json)
+            else:
+                command = 'wp theme activate %s --path=%s' % (
+                self.data['plugin'], path)
+                ProcessUtilities.executioner(command, website.externalApp)
+                final_json = json.dumps(
+                    {'status': 1, 'fetchStatus': 1, 'message': "Theme successfully activated."})
+                return HttpResponse(final_json)
+
+
+        except BaseException as msg:
+            final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+    def DeleteThemes(self):
+        try:
+            website = Websites.objects.get(domain=self.data['domain'])
+
+            try:
+                from cloudAPI.models import WPDeployments
+                wpd = WPDeployments.objects.get(owner=website)
+                path = json.loads(wpd.config)['path']
+                path = '/home/%s/public_html/%s' % (self.data['domain'], path)
+
+            except:
+                path = '/home/%s/public_html' % (self.data['domain'])
+
+            if self.data['plugin'] == 'selected':
+                pluginsList = ''
+
+                for plugin in self.data['plugins']:
+                    pluginsList = '%s %s' % (pluginsList, plugin)
+
+                command = 'wp theme delete %s --path=%s' % (pluginsList, path)
+                ProcessUtilities.popenExecutioner(command, website.externalApp)
+                final_json = json.dumps(
+                    {'status': 1, 'fetchStatus': 1, 'message': "Plugin Theme started in the background."})
+                return HttpResponse(final_json)
+            else:
+                command = 'wp theme delete %s --path=%s' % (self.data['plugin'], path)
+                ProcessUtilities.popenExecutioner(command, website.externalApp)
+                final_json = json.dumps(
+                    {'status': 1, 'fetchStatus': 1, 'message': "Theme deletion started in the background."})
+                return HttpResponse(final_json)
+
+        except BaseException as msg:
+            final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+    def GetServerPublicSSHkey(self):
+        try:
+
+            path = '/root/.ssh/cyberpanel.pub'
+            command = 'cat %s' % (path)
+            key = ProcessUtilities.outputExecutioner(command)
+
+            final_dic = {'status': 1, 'key': key}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+        except BaseException as msg:
+            final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+    def SubmitPublicKey(self):
+        try:
+
+            fm = FirewallManager()
+            fm.addSSHKey(self.admin.pk, self.data)
+
+            ## Create backup path so that file can be sent here later.
+
+            BackupPath = '/home/cyberpanel/backups/%s' % (self.data['domain'])
+            command = 'mkdir -p %s' % (BackupPath)
+            ProcessUtilities.executioner(command, 'cyberpanel')
+
+            ###
+
+            from WebTerminal.CPWebSocket import SSHServer
+            SSHServer.findSSHPort()
+
+            final_dic = {'status': 1, 'port': SSHServer.DEFAULT_PORT}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+        except BaseException as msg:
+            final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+    def CreateStaging(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            wm = WebsiteManager()
+            return wm.startCloning(self.admin.pk, self.data)
+        except BaseException as msg:
+            return self.ajaxPre(0, str(msg))
+
+    def startSync(self, request):
+        try:
+            request.session['userID'] = self.admin.pk
+            wm = WebsiteManager()
+            return wm.startSync(self.admin.pk, self.data)
+        except BaseException as msg:
+            return self.ajaxPre(0, str(msg))
+
+    def SaveAutoUpdateSettings(self):
+        try:
+            website = Websites.objects.get(domain=self.data['domainName'])
+            domainName = self.data['domainName']
+            from cloudAPI.models import WPDeployments
+
+            try:
+                wpd = WPDeployments.objects.get(owner=website)
+                config = json.loads(wpd.config)
+            except:
+                wpd = WPDeployments(owner=website)
+                config = {}
+
+            try:
+                from cloudAPI.models import WPDeployments
+                wpd = WPDeployments.objects.get(owner=website)
+                path = json.loads(wpd.config)['path']
+                path = '/home/%s/public_html/%s' % (self.data['domain'], path)
+
+            except:
+                path = '/home/%s/public_html' % (self.data['domain'])
+
+            config['updates'] = self.data['wpCore']
+            config['pluginUpdates'] = self.data['plugins']
+            config['themeUpdates'] = self.data['themes']
+            wpd.config = json.dumps(config)
+            wpd.save()
+
+            if self.data['wpCore'] == 'Disabled':
+                command = "wp config set WP_AUTO_UPDATE_CORE false --raw --path=%s" % (path)
+                ProcessUtilities.executioner(command, website.externalApp)
+            elif self.data['wpCore'] == 'Minor and Security Updates':
+                command = "wp config set WP_AUTO_UPDATE_CORE minor --allow-root --path=%s" % (path)
+                ProcessUtilities.executioner(command, website.externalApp)
+            else:
+                command = "wp config set WP_AUTO_UPDATE_CORE true --raw --allow-root --path=%s" % (path)
+                ProcessUtilities.executioner(command, website.externalApp)
+
+            final_json = json.dumps(
+                    {'status': 1, 'message': "Autoupdates configured."})
+            return HttpResponse(final_json)
+        except BaseException as msg:
+            final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+    def fetchWPSettings(self):
+        try:
+
+            cliVersion = ProcessUtilities.outputExecutioner('wp --version --allow-root')
+
+            if cliVersion.find('not found') > -1:
+                cliVersion = 'WP CLI Not installed.'
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                localCronPath = "/var/spool/cron/root"
+            else:
+                localCronPath = "/var/spool/cron/crontabs/root"
+
+            cronData = ProcessUtilities.outputExecutioner('cat %s' % (localCronPath)).split('\n')
+
+            finalCron = ''
+            for cronLine in cronData:
+                if cronLine.find('WPAutoUpdates.py') > -1:
+                    finalCron = cronLine
+
+
+            if finalCron.find('WPAutoUpdates.py') == -1:
+                finalCron = 'Not Set'
+
+            final_json = json.dumps(
+                    {'status': 1, 'cliVersion': cliVersion, 'finalCron': finalCron})
+            return HttpResponse(final_json)
+        except BaseException as msg:
+            final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+    def updateWPCLI(self):
+        try:
+
+            command = 'wp cli update'
+            ProcessUtilities.executioner(command)
+            final_json = json.dumps({'status': 1})
+            return HttpResponse(final_json)
+
+        except BaseException as msg:
+            final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+    def saveWPSettings(self):
+        try:
+
+            command = 'wp cli update'
+            ProcessUtilities.executioner(command)
+            final_json = json.dumps({'status': 1})
+            return HttpResponse(final_json)
+
+        except BaseException as msg:
+            final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+    def WPScan(self):
+        try:
+
+            path = '/home/%s/public_html' % (self.data['domainName'])
+
+            command = 'wp core version --allow-root --path=%s' % (path)
+            result = ProcessUtilities.outputExecutioner(command)
+
+            if result.find('Error:') > -1:
+                final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': 'This does not seem to be a WordPress installation'}
+                final_json = json.dumps(final_dic)
+                return HttpResponse(final_json)
+            else:
+                final_json = json.dumps({'status': 1})
+                return HttpResponse(final_json)
+
+        except BaseException as msg:
+            final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)

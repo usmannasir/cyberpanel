@@ -274,7 +274,6 @@ class InstallCyberPanel:
 
     def changeMYSQLRootPassword(self):
         if self.remotemysql == 'OFF':
-
             if self.distro == ubuntu:
                 passwordCMD = "use mysql;DROP DATABASE IF EXISTS test;DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%%';GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' IDENTIFIED BY '%s';UPDATE user SET plugin='' WHERE User='root';flush privileges;" % (InstallCyberPanel.mysql_Root_password)
             else:
@@ -656,13 +655,16 @@ def Main(cwd, mysql, distro, ent, serial = None, port = "8090", ftp = None, dns 
 
     installer = InstallCyberPanel("/usr/local/lsws/",cwd, distro, ent, serial, port, ftp, dns, publicip, remotemysql, mysqlhost, mysqldb, mysqluser, mysqlpassword, mysqlport)
 
+    logging.InstallLog.writeToFile('Installing LiteSpeed Web server,40')
     installer.installLiteSpeed()
     if ent == 0:
         installer.changePortTo80()
+    logging.InstallLog.writeToFile('Installing Optimized PHPs..,50')
     installer.installAllPHPVersions()
     if ent == 0:
         installer.fix_ols_configs()
 
+    logging.InstallLog.writeToFile('Installing MySQL,60')
     installer.installMySQL(mysql)
     installer.changeMYSQLRootPassword()
 

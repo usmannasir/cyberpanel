@@ -20,6 +20,7 @@ from xml.etree import ElementTree
 from plogical.acl import ACLManager
 from plogical.processUtilities import ProcessUtilities
 from .phpManager import PHPManager
+from plogical.httpProc import httpProc
 
 
 # Create your views here.
@@ -29,12 +30,10 @@ def loadPHPHome(request):
         userID = request.session['userID']
         currentACL = ACLManager.loadedACL(userID)
 
-        if currentACL['admin'] == 1:
-            pass
-        else:
-            return ACLManager.loadError()
+        proc = httpProc(request, 'managePHP/index.html',
+                        None, 'admin')
+        return proc.render()
 
-        return render(request, 'managePHP/index.html')
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -42,11 +41,6 @@ def installExtensions(request):
     try:
         userID = request.session['userID']
         currentACL = ACLManager.loadedACL(userID)
-
-        if currentACL['admin'] == 1:
-            pass
-        else:
-            return ACLManager.loadError()
 
         if PHP.objects.count() == 0:
             for i in range(3, 7):
@@ -1247,7 +1241,10 @@ def installExtensions(request):
         except:
             pass
 
-        return render(request, 'managePHP/installExtensions.html', {'phps': PHPManager.findPHPVersions()})
+        proc = httpProc(request, 'managePHP/installExtensions.html',
+                        {'phps': PHPManager.findPHPVersions()}, 'admin')
+        return proc.render()
+
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -1601,14 +1598,10 @@ def getRequestStatusApache(request):
 def editPHPConfigs(request):
     try:
         userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
+        proc = httpProc(request, 'managePHP/editPHPConfig.html',
+                        {'phps': PHPManager.findPHPVersions()}, 'admin')
+        return proc.render()
 
-        if currentACL['admin'] == 1:
-            pass
-        else:
-            return ACLManager.loadError()
-
-        return render(request, 'managePHP/editPHPConfig.html', {'phps': PHPManager.findPHPVersions()})
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -1695,7 +1688,9 @@ def getCurrentPHPConfig(request):
 
             return HttpResponse(final_json)
 
-        return render(request, 'managePHP/editPHPConfig.html')
+        proc = httpProc(request, 'managePHP/editPHPConfig.html',
+                        None, 'admin')
+        return proc.render()
     except KeyError:
         return redirect(loadLoginPage)
 

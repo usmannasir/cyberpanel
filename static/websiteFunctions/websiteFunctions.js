@@ -20,6 +20,7 @@ function getCookie(name) {
     return cookieValue;
 }
 
+
 /* Java script code to create account */
 app.controller('createWebsite', function ($scope, $http, $timeout, $window) {
 
@@ -388,7 +389,6 @@ app.controller('listWebsites', function ($scope, $http) {
 
 app.controller('listChildDomainsMain', function ($scope, $http, $timeout) {
 
-
     $scope.currentPage = 1;
     $scope.recordsToShow = 10;
 
@@ -700,7 +700,59 @@ app.controller('listChildDomainsMain', function ($scope, $http, $timeout) {
 
 
     }
+    var DeleteDomain;
+    $scope.deleteDomainInit = function (childDomainForDeletion){
+        DeleteDomain = childDomainForDeletion;
+    };
 
+    $scope.deleteChildDomain = function () {
+        $scope.cyberPanelLoading = false;
+        url = "/websites/submitDomainDeletion";
+
+        var data = {
+            websiteName: DeleteDomain,
+            DeleteDocRoot: $scope.DeleteDocRoot
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+            $scope.cyberPanelLoading = true;
+            if (response.data.websiteDeleteStatus === 1) {
+                new PNotify({
+                    title: 'Success!',
+                    text: 'Child Domain successfully deleted.',
+                    type: 'success'
+                });
+                $scope.getFurtherWebsitesFromDB();
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberPanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+
+        }
+
+    };
 
 });
 
@@ -2830,6 +2882,8 @@ app.controller('manageCronController', function ($scope, $http) {
     $("#cronEditSuccess").hide();
     $("#fetchCronFailure").hide();
 
+    $scope.websiteToBeModified = $("#domain").text();
+
     $scope.fetchWebsites = function () {
 
         $("#manageCronLoading").show();
@@ -2880,6 +2934,7 @@ app.controller('manageCronController', function ($scope, $http) {
             $("#cronEditSuccess").hide();
         }
     };
+    $scope.fetchWebsites();
 
     $scope.fetchCron = function (cronLine) {
 
@@ -3032,7 +3087,6 @@ app.controller('manageCronController', function ($scope, $http) {
             $("#fetchCronFailure").hide();
         }
     };
-
 
     $scope.removeCron = function (line) {
 

@@ -721,11 +721,13 @@ class vhost:
 
             if not os.path.exists("/home/" + domainName + "/logs"):
                 print("0,0")
+                return 0,0
 
             bwmeta = "/home/" + domainName + "/logs/bwmeta"
 
             if not os.path.exists(path):
                 print("0,0")
+                return 0, 0
 
             if os.path.exists(bwmeta):
                 try:
@@ -741,19 +743,24 @@ class vhost:
                     percentage = float(percentage) * float(inMB)
                 except:
                     print("0,0")
+                    return 0, 0
 
                 if percentage > 100.0:
                     percentage = 100
 
                 print(str(inMB) + "," + str(percentage))
+                return str(inMB), str(percentage)
             else:
                 print("0,0")
+                return 0, 0
         except OSError as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [findDomainBW]")
             print("0,0")
+            return 0, 0
         except ValueError as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [findDomainBW]")
             print("0,0")
+            return 0, 0
 
     @staticmethod
     def permissionControl(path):
