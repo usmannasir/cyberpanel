@@ -53,8 +53,8 @@ Silent="Off"
 Server_Edition="OLS"
 Admin_Pass="1234567"
 
-Memcached="On"
-Redis="On"
+Memcached="Off"
+Redis="Off"
 
 Postfix_Switch="On"
 PowerDNS_Switch="On"
