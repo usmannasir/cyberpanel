@@ -665,6 +665,9 @@ fi
 sed -i 's|python2|python|g' /usr/bin/adminPass
 chmod 700 /usr/bin/adminPass
 
+rm -f /usr/bin/php
+ln -s /usr/local/lsws/lsphp74/bin/php /usr/bin/php
+
 if [[ -f /etc/cyberpanel/webadmin_passwd ]]; then
   chmod 600 /etc/cyberpanel/webadmin_passwd
 fi
