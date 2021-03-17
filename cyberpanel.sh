@@ -1694,6 +1694,9 @@ echo '/usr/local/CyberPanel/bin/python /usr/local/CyberCP/plogical/adminPass.py 
 echo "systemctl restart lscpd" >> /usr/bin/adminPass
 chmod 700 /usr/bin/adminPass
 
+rm -f /usr/bin/php
+ln -s /usr/local/lsws/lsphp74/bin/php /usr/bin/php
+
 if [[ "$Server_OS" = "CentOS" ]] ; then
 #all centos7/8 post change goes here
 
