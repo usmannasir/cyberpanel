@@ -1730,7 +1730,7 @@ elif [[ "$Server_OS" = "Ubuntu" ]] ; then
 
   if [[ "$Server_OS_Version" = "20" ]] ; then
     #all ubuntu 20 specific post change goes here
-    cp /usr/local/lsws/lsphp73/bin/php /usr/bin
+    :
   fi
 
 fi
