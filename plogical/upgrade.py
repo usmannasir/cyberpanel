@@ -2168,25 +2168,21 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             elif Upgrade.FindOperatingSytem() == Ubuntu20:
 
                 debPath = '/etc/apt/sources.list.d/dovecot.list'
-                writeToFile = open(debPath, 'w')
-                writeToFile.write('deb https://repo.dovecot.org/ce-2.3-latest/ubuntu/focal focal main\n')
-                writeToFile.close()
-
-                command = "apt update -y"
-                Upgrade.executioner(command, command)
-
-                command = 'dpkg --configure -a'
-                subprocess.call(command, shell=True)
-
-                command = 'apt --fix-broken install -y'
-                subprocess.call(command, shell=True)
-
-                command = 'DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical apt -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" upgrade -y'
-                subprocess.call(command, shell=True)
-
-
-
-
+                # writeToFile = open(debPath, 'w')
+                # writeToFile.write('deb https://repo.dovecot.org/ce-2.3-latest/ubuntu/focal focal main\n')
+                # writeToFile.close()
+                #
+                # command = "apt update -y"
+                # Upgrade.executioner(command, command)
+                #
+                # command = 'dpkg --configure -a'
+                # subprocess.call(command, shell=True)
+                #
+                # command = 'apt --fix-broken install -y'
+                # subprocess.call(command, shell=True)
+                #
+                # command = 'DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical apt -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" upgrade -y'
+                # subprocess.call(command, shell=True)
 
 
             dovecotConf = '/etc/dovecot/dovecot.conf'
