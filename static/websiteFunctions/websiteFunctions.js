@@ -738,8 +738,6 @@ app.controller('listChildDomainsMain', function ($scope, $http, $timeout) {
                     type: 'error'
                 });
             }
-
-
         }
 
         function cantLoadInitialDatas(response) {
