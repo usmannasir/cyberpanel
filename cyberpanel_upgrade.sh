@@ -414,7 +414,7 @@ EOF
   dnf install python3 -y
   fi
   #all pre-upgrade operation for CentOS 8
-elif [[ "$Server_OS" = "Ubutnu" ]] ; then
+elif [[ "$Server_OS" = "Ubuntu" ]] ; then
 
   apt update -y
   DEBIAN_FRONTEND=noninteractive apt upgrade -y
