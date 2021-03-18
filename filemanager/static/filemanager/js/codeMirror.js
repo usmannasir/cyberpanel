@@ -89,6 +89,7 @@ fileManager.controller('editFileCtrl', function ($scope, $http, $window) {
                 cm.setSize(null, 800);
                 cm.on("keyup", function (cm, event) {
                     if (!cm.state.completionActive && event.keyCode === 9) {
+                        event.preventDefault();
                         CodeMirror.commands.autocomplete(cm, null, {completeSingle: false});
                     }
                 });
