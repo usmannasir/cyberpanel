@@ -440,6 +440,7 @@ elif [[ "$Server_OS" = "Ubutnu" ]] ; then
 
     rm -f /etc/apt/sources.list.d/dovecot.list
     apt update
+    DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical apt -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" upgrade -y
   fi
 #all pre-upgrade operation for Ubuntu 20
 fi
