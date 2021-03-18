@@ -22,7 +22,11 @@ class ServiceManager:
 
     def managePDNS(self):
         type = self.extraArgs['type']
-        path = '/etc/pdns/pdns.conf'
+
+        if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+            path = '/etc/pdns/pdns.conf'
+        else:
+            path = '/etc/powerdns/pdns.conf'
 
         data = ProcessUtilities.outputExecutioner('sudo cat ' + path).splitlines()
         #data = subprocess.check_output(shlex.split('sudo cat ' + path)).decode("utf-8").splitlines()
@@ -35,8 +39,9 @@ class ServiceManager:
             ipStringNoSubnet = ''
 
             for items in SlaveServers.objects.all():
-                ipsString = ipsString + '%s/32, ' % (items.slaveServerIP)
-                ipStringNoSubnet = ipStringNoSubnet + '%s, ' % (items.slaveServerIP)
+                if items.slaveServerIP:
+                    ipsString = ipsString + '%s/32, ' % (items.slaveServerIP)
+                    ipStringNoSubnet = ipStringNoSubnet + '%s, ' % (items.slaveServerIP)
 
             ipsString = ipsString.rstrip(', ')
             ipStringNoSubnet = ipStringNoSubnet.rstrip(', ')
@@ -74,6 +79,9 @@ class ServiceManager:
             writeToFile.writelines('disable-axfr=no\n')
             writeToFile.writelines('master=yes\n')
             writeToFile.close()
+
+            command = 'sudo mv ' + tempPath + ' ' + path
+            ProcessUtilities.executioner(command)
         else:
             import os
 
@@ -84,6 +92,9 @@ class ServiceManager:
                 writeToFile.close()
 
                 counter = 0
+
+                tempPath = "/home/cyberpanel/" + str(randint(1000, 9999))
+                writeToFile = open(tempPath, 'w')
 
                 for items in data:
                     if items.find('allow-axfr-ips') > -1:
@@ -103,10 +114,6 @@ class ServiceManager:
 
                     counter = counter + 1
 
-                tempPath = "/home/cyberpanel/" + str(randint(1000, 9999))
-                writeToFile = open(tempPath, 'w')
-
-                for items in data:
                     writeToFile.writelines(items  + '\n')
 
                 slaveData = """
@@ -120,7 +127,7 @@ master=no
 slave-cycle-interval=60
 setgid=pdns
 setuid=pdns
-superslave=yes        
+superslave=yes
 """
 
                 writeToFile.writelines(slaveData)
@@ -145,7 +152,8 @@ superslave=yes
 
             repoPath = '/etc/yum.repos.d/elasticsearch.repo'
 
-            content = '''[elasticsearch]
+            content = '''
+[elasticsearch]
 name=Elasticsearch repository for 7.x packages
 baseurl=https://artifacts.elastic.co/packages/7.x/yum
 gpgcheck=1
@@ -317,4 +325,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
