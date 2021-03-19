@@ -147,7 +147,7 @@ class installUtilities:
         except OSError as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [reStartLiteSpeed]")
             return 0
-        except ValueError as msg:
+        except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [reStartLiteSpeed]")
             return 0
         return 1
