@@ -1997,12 +1997,12 @@ class CloudManager:
             ## Search index
 
             command = 'wp option get blog_public --path=%s' % (path)
-            finalDic['searchIndex'] = int(ProcessUtilities.outputExecutioner(command, website.externalApp).rstrip('\n'))
+            finalDic['searchIndex'] = int(ProcessUtilities.outputExecutioner(command, website.externalApp).splitlines()[-1])
 
             ## Maintenece mode
 
             command = 'wp maintenance-mode status --path=%s' % (path)
-            result = ProcessUtilities.outputExecutioner(command, website.externalApp)
+            result = ProcessUtilities.outputExecutioner(command, website.externalApp).splitlines()[-1]
 
             if result.find('not active') > -1:
                 finalDic['maintenanceMode'] = 0
@@ -2012,7 +2012,7 @@ class CloudManager:
             ## Get title
 
             command = 'wp option get blogname --path=%s' % (path)
-            finalDic['title'] = ProcessUtilities.outputExecutioner(command, website.externalApp)
+            finalDic['title'] = ProcessUtilities.outputExecutioner(command, website.externalApp).splitlines()[-1]
 
             ##
 
@@ -2171,7 +2171,7 @@ class CloudManager:
                 path = '/home/%s/public_html' % (self.data['domain'])
 
             command = 'wp plugin list --format=json --path=%s' % (path)
-            json_data = ProcessUtilities.outputExecutioner(command, website.externalApp)
+            json_data = ProcessUtilities.outputExecutioner(command, website.externalApp).splitlines()[-1]
             final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": json_data})
 
             return HttpResponse(final_json)
@@ -2314,7 +2314,7 @@ class CloudManager:
                 path = '/home/%s/public_html' % (self.data['domain'])
 
             command = 'wp theme list --format=json --path=%s' % (path)
-            json_data = ProcessUtilities.outputExecutioner(command, website.externalApp)
+            json_data = ProcessUtilities.outputExecutioner(command, website.externalApp).splitlines()[-1]
             final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": json_data})
             return HttpResponse(final_json)
         except BaseException as msg:
