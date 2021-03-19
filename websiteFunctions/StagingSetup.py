@@ -119,7 +119,10 @@ class StagingSetup(multi.Thread):
 
             ## Sync WP-Content Folder
 
-            command = 'rsync -avz %s/wp-content/ %s/wp-content/' % (masterPath, path)
+            command = 'wp theme path --allow-root --path=%s' % (masterPath)
+            WpContentPath = ProcessUtilities.outputExecutioner(command).splitlines()[-1].replace('themes', '')
+
+            command = 'rsync -avz %s %s/wp-content/' % (WpContentPath, path)
             ProcessUtilities.executioner(command)
 
             ## Search and replace url
@@ -200,7 +203,10 @@ class StagingSetup(multi.Thread):
 
             logging.statusWriter(tempStatusPath, 'Syncing data..,50')
 
-            command = 'rsync -avz %s/wp-content/ %s/wp-content/' % (child.path, masterPath)
+            command = 'wp theme path --allow-root --path=%s' % (masterPath)
+            WpContentPath = ProcessUtilities.outputExecutioner(command).splitlines()[-1].replace('themes', '')
+
+            command = 'rsync -avz %s/wp-content/ %s' % (child.path, WpContentPath)
             ProcessUtilities.executioner(command)
 
             ## Search and replace url
