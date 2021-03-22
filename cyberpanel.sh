@@ -974,6 +974,7 @@ else
   update-locale LC_ALL="en_US.UTF-8"
 fi
 
+Debug_Log2 "Installing required virtual enviroment,3"
 
 export LC_CTYPE=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
@@ -994,11 +995,15 @@ else
   . /usr/local/CyberPanel/bin/activate
 fi
 
+Debug_Log2 "Installing requirments..,3"
+
 Retry_Command "pip install --default-timeout=3600 -r /usr/local/requirments.txt"
   Check_Return "requirments" "no_exit"
 
 rm -rf cyberpanel
 echo -e "\nFetching files from ${Git_Clone_URL}...\n"
+
+Debug_Log2 "Getting CyberPanel code..,4"
 
 Retry_Command "git clone ${Git_Clone_URL}"
   Check_Return "git clone ${Git_Clone_URL}"
@@ -1242,7 +1247,7 @@ Retry_Command "/root/.acme.sh/acme.sh --upgrade --auto-upgrade"
 }
 
 Main_Installation() {
-Debug_Log2 "Start to main installation...,30"
+Debug_Log2 "Starting main installation..,30"
 if [[ -d /usr/local/CyberCP ]] ; then
   echo -e "\n CyberPanel already installed, exiting..."
   Debug_Log2 "CyberPanel already installed, exiting... [404]"
