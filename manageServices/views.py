@@ -276,7 +276,7 @@ def manageApplications(request):
     else:
         rInstalled = 'Not-Installed'
 
-    elasticSearch = {'image': '/static/manageServices/images/elastic-search.png', 'name': 'Elastic Search',
+    elasticSearch = {'image': '/static/manageServices/images/elastic-search.png', 'name': 'Elasticsearch',
                      'installed': installed}
     redis = {'image': '/static/manageServices/images/redis.png', 'name': 'Redis',
              'installed': rInstalled}
