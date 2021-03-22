@@ -10,6 +10,8 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 
 class UpgradeCyberPanel:
 
+    LogURL = "http://cloud.cyberpanel.net:8000/settings/RecvData"
+
     def __init__(self, branch, mail, dns, ftp):
         ipFile = "/etc/cyberpanel/machineIP"
         f = open(ipFile)
@@ -18,8 +20,7 @@ class UpgradeCyberPanel:
 
     def PostStatus(self, message):
         finalData = json.dumps({'ipAddress': self.ipAddress, "UpgradeCyberPanelStatus": message})
-        url = "http://de-a.cyberhosting.org:8000/settings/RecvData"
-        resp = requests.post(url, data=finalData, verify=False)
+        resp = requests.post(UpgradeCyberPanel.LogURL, data=finalData, verify=False)
         print (resp.text)
 
     def UpgardeNow(self):

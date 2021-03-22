@@ -1021,7 +1021,7 @@ Debug_Log2 "Necessary components installed..,5"
 }
 
 Pre_Install_System_Tweak() {
-Debug_Log2 "Setting up sytem tweak...,90"
+Debug_Log2 "Setting up sytem tweak...,20"
 Line_Number=$(grep -n "127.0.0.1" /etc/hosts | cut -d: -f 1)
 My_Hostname=$(hostname)
 
