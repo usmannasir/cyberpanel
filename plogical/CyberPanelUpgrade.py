@@ -9,7 +9,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 
 class UpgradeCyberPanel:
 
-    LogURL = "http://cloud.cyberpanel.net:8000/settings/RecvData"
+    LogURL = "https://cloud.cyberpanel.net/settings/RecvData"
 
     def __init__(self, branch, mail, dns, ftp):
         ipFile = "/etc/cyberpanel/machineIP"
@@ -48,7 +48,7 @@ class UpgradeCyberPanel:
 
         ## Backup current CyberCP, incase of failure restore
 
-        self.PostStatus('Backing up current installation..,5' % (self.branch))
+        self.PostStatus('Backing up current installation..,5')
 
         command = 'cp -R /usr/local/CyberCP /usr/local/CyberCPBak'
         Upgrade.executioner(command, command)
