@@ -31,6 +31,7 @@ class Upgrade:
     installedOutput = ''
     CentOSPath = '/etc/redhat-release'
     UbuntuPath = '/etc/lsb-release'
+    FromCloud = 0
 
     AdminACL = '{"adminStatus":1, "versionManagement": 1, "createNewUser": 1, "listUsers": 1, "deleteUser":1 , "resellerCenter": 1, ' \
                '"changeUserACL": 1, "createWebsite": 1, "modifyWebsite": 1, "suspendWebsite": 1, "deleteWebsite": 1, ' \
@@ -96,7 +97,8 @@ class Upgrade:
             "%m.%d.%Y_%H-%M-%S") + "] #########################################################################\n"))
 
         if do_exit:
-            os._exit(0)
+            if Upgrade.FromCloud == 0:
+                os._exit(0)
 
     @staticmethod
     def executioner(command, component, do_exit=0):

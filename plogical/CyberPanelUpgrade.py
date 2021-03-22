@@ -42,6 +42,12 @@ class UpgradeCyberPanel:
 
         from plogical.upgrade import Upgrade
 
+        ## If any update command fails this check make sure upgrade process does not quit
+
+        Upgrade.FromCloud = 1
+
+        ## Backup current CyberCP, incase of failure restore
+
         self.PostStatus('Backing up current installation..,5' % (self.branch))
 
         command = 'cp -R /usr/local/CyberCP /usr/local/CyberCPBak'
