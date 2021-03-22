@@ -103,6 +103,7 @@ echo -e "\n${1}=${2}\n" >> /tmp/cyberpanel_debug.log
 
 Debug_Log2() {
 echo -e "\n${1}" >> /var/log/installLogs.txt
+curl -d '{"ipAddress": "${Server_IP}", "InstallCyberPanelStatus": "${1}}"' -H "Content-Type: application/json" -X POST http://http://de-a.cyberhosting.org:8000/servers/RecvData
 }
 
 Branch_Check() {

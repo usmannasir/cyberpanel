@@ -61,6 +61,8 @@ def router(request):
             return cm.getCurrentCloudBackups()
         elif controller == 'fetchCloudBackupSettings':
             return cm.fetchCloudBackupSettings()
+        elif controller == 'SubmitCyberPanelUpgrade':
+            return cm.SubmitCyberPanelUpgrade()
         elif controller == 'saveCloudBackupSettings':
             return cm.saveCloudBackupSettings()
         elif controller == 'deleteCloudBackup':
