@@ -104,7 +104,7 @@ echo -e "\n${1}=${2}\n" >> /tmp/cyberpanel_debug.log
 Debug_Log2() {
 Check_Server_IP "$@"
 echo -e "\n${1}" >> /var/log/installLogs.txt
-curl -d '{"ipAddress": "'"$Server_IP"'", "InstallCyberPanelStatus": "'"$1"'"}' -H "Content-Type: application/json" -X POST http://cloud.cyberpanel.net:8000/servers/RecvData > /dev/null
+curl -d '{"ipAddress": "'"$Server_IP"'", "InstallCyberPanelStatus": "'"$1"'"}' -H "Content-Type: application/json" -X POST https://cloud.cyberpanel.net/servers/RecvData > /dev/null
 }
 
 Branch_Check() {

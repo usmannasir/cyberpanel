@@ -1,5 +1,4 @@
 import json
-import os
 import os.path
 import sys
 import argparse
@@ -17,17 +16,87 @@ class UpgradeCyberPanel:
         f = open(ipFile)
         ipData = f.read()
         self.ipAddress = ipData.split('\n', 1)[0]
+        self.branch = branch
+        self.mail = mail
+        self.ftp = ftp
+        self.dns = dns
 
     def PostStatus(self, message):
         finalData = json.dumps({'ipAddress': self.ipAddress, "UpgradeCyberPanelStatus": message})
         resp = requests.post(UpgradeCyberPanel.LogURL, data=finalData, verify=False)
         print (resp.text)
 
+    def RestoreOldCP(self):
+
+        from plogical.upgrade import Upgrade
+
+        command = 'rm -rf /usr/local/CyberCP'
+        Upgrade.executioner(command, command)
+
+        command = 'mv /usr/local/CyberCPBak /usr/local/CyberCP'
+        Upgrade.executioner(command, command)
+        Upgrade.fixPermissions()
+
+
     def UpgardeNow(self):
-        self.PostStatus('Upgrade in route..,35')
-        import time
-        time.sleep(10)
-        self.PostStatus('Upgrade completed. [200]')
+
+        from plogical.upgrade import Upgrade
+
+        self.PostStatus('Backing up current installation..,5' % (self.branch))
+
+        command = 'cp -R /usr/local/CyberCP /usr/local/CyberCPBak'
+        Upgrade.executioner(command, command)
+
+        self.PostStatus('Upgrading/Downgrading to branch %s..,10' % (self.branch))
+
+        status, message = Upgrade.downloadAndUpgrade(None, self.branch)
+
+        if status == 0:
+            self.RestoreOldCP()
+            self.PostStatus('Failed to upgrade, error %s.[404]' % (message))
+            return 0
+
+        self.PostStatus('CyberPanel is now on %s..,40' % (self.branch))
+
+        ##
+
+        self.PostStatus('Updating database..,45')
+
+        Upgrade.mailServerMigrations()
+        Upgrade.emailMarketingMigrationsa()
+        Upgrade.dockerMigrations()
+        Upgrade.CLMigrations()
+        Upgrade.IncBackupMigrations()
+        Upgrade.applyLoginSystemMigrations()
+        Upgrade.s3BackupMigrations()
+        Upgrade.containerMigrations()
+        Upgrade.manageServiceMigrations()
+
+        self.PostStatus('Database updated.,55')
+
+
+        ## Put function here to update custom ACLs
+
+        Upgrade.UpdateConfigOfCustomACL()
+        Upgrade.enableServices()
+        Upgrade.someDirectories()
+        Upgrade.GeneralMigrations()
+
+        ## Upgrade version
+
+        self.PostStatus('Fixing permissions,70')
+
+        Upgrade.fixPermissions()
+
+        ##
+
+        Upgrade.upgradeVersion()
+        Upgrade.UpdateMaxSSLCons()
+
+        self.PostStatus('CyberPanel Upgraded/Downgraded to %s. [200]' % (self.branch))
+
+
+
 
 
 def main():
@@ -39,7 +108,7 @@ def main():
 
     args = parser.parse_args()
 
-    uc = UpgradeCyberPanel(1,1,1,1)
+    uc = UpgradeCyberPanel(args.branch,int(args.mail),int(args.dns),int(args.ftp))
     uc.UpgardeNow()
 
 

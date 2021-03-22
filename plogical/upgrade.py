@@ -1772,8 +1772,10 @@ imap_folder_list_limit = 0
 
             Upgrade.staticContent()
 
-        except:
-            pass
+            return 1, None
+
+        except BaseException as msg:
+            return 0, str(msg)
 
     @staticmethod
     def installLSCPD(branch):

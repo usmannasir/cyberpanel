@@ -7,7 +7,7 @@ import requests
 class InstallLog:
     fileName = "/var/log/installLogs.txt"
     currentPercent = '10'
-    LogURL = 'http://cloud.cyberpanel.net:8000/servers/RecvData'
+    LogURL = 'https://cloud.cyberpanel.net/servers/RecvData'
     ServerIP = ''
 
     @staticmethod

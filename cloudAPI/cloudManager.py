@@ -1659,12 +1659,14 @@ class CloudManager:
                 destinationDomain = 'None'
 
             import time
-            BackupPath = '/home/cyberpanel/backups/%s/backup-' % (self.data['domain']) + self.data['domain'] + "-" + time.strftime("%m.%d.%Y_%H-%M-%S")
+            BackupPath = '/home/cyberpanel/backups/%s/backup-' % (self.data['domain']) + self.data[
+                'domain'] + "-" + time.strftime("%m.%d.%Y_%H-%M-%S")
 
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
             execPath = execPath + " CloudBackup --backupDomain %s --data %s --emails %s --databases %s --tempStoragePath %s " \
                                   "--path %s --port %s --ip %s --destinationDomain %s" % (
-                self.data['domain'], data, emails, databases, tempStatusPath, BackupPath, port, ip, destinationDomain)
+                           self.data['domain'], data, emails, databases, tempStatusPath, BackupPath, port, ip,
+                           destinationDomain)
             ProcessUtilities.popenExecutioner(execPath)
 
             final_dic = {'status': 1, 'tempStatusPath': tempStatusPath, 'path': '%s.tar.gz' % (BackupPath)}
@@ -1784,7 +1786,7 @@ class CloudManager:
 
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
             execPath = execPath + " SubmitCloudBackupRestore --backupDomain %s --backupFile %s --sourceDomain %s --tempStoragePath %s" % (
-                self.data['domain'], self.data['backupFile'],sourceDomain, tempStatusPath)
+                self.data['domain'], self.data['backupFile'], sourceDomain, tempStatusPath)
             ProcessUtilities.popenExecutioner(execPath)
 
             final_dic = {'status': 1, 'tempStatusPath': tempStatusPath}
@@ -1957,7 +1959,6 @@ class CloudManager:
             finalDic['maintenanceMode'] = 1
             finalDic['php'] = '7.4'
 
-
             ## Get versopm
 
             website = Websites.objects.get(domain=domain)
@@ -1997,7 +1998,8 @@ class CloudManager:
             ## Search index
 
             command = 'wp option get blog_public --path=%s' % (path)
-            finalDic['searchIndex'] = int(ProcessUtilities.outputExecutioner(command, website.externalApp).splitlines()[-1])
+            finalDic['searchIndex'] = int(
+                ProcessUtilities.outputExecutioner(command, website.externalApp).splitlines()[-1])
 
             ## Maintenece mode
 
@@ -2043,7 +2045,8 @@ class CloudManager:
             import plogical.randomPassword as randomPassword
             password = randomPassword.generate_pass(32)
 
-            command = 'wp user create cyberpanel support@cyberpanel.cloud --role=administrator --user_pass="%s" --path=%s' % (password, path)
+            command = 'wp user create cyberpanel support@cyberpanel.cloud --role=administrator --user_pass="%s" --path=%s' % (
+            password, path)
             ProcessUtilities.executioner(command, website.externalApp)
 
             command = 'wp user update cyberpanel --user_pass="%s" --path=%s' % (password, path)
@@ -2072,20 +2075,19 @@ class CloudManager:
             except:
                 path = '/home/%s/public_html' % (self.data['domain'])
 
-
             if self.data['setting'] == 'lscache':
-               if self.data['settingValue']:
+                if self.data['settingValue']:
 
-                   command = "wp plugin install litespeed-cache --path=%s" % (path)
-                   ProcessUtilities.executioner(command, website.externalApp)
+                    command = "wp plugin install litespeed-cache --path=%s" % (path)
+                    ProcessUtilities.executioner(command, website.externalApp)
 
-                   command = "wp plugin activate litespeed-cache --path=%s" % (path)
-                   ProcessUtilities.executioner(command, website.externalApp)
+                    command = "wp plugin activate litespeed-cache --path=%s" % (path)
+                    ProcessUtilities.executioner(command, website.externalApp)
 
-                   final_dic = {'status': 1, 'message': 'LSCache successfully installed and activated.'}
-                   final_json = json.dumps(final_dic)
-                   return HttpResponse(final_json)
-               else:
+                    final_dic = {'status': 1, 'message': 'LSCache successfully installed and activated.'}
+                    final_json = json.dumps(final_dic)
+                    return HttpResponse(final_json)
+                else:
                     command = 'wp plugin deactivate litespeed-cache --path=%s' % (path)
                     ProcessUtilities.executioner(command, website.externalApp)
 
@@ -2196,7 +2198,8 @@ class CloudManager:
             if self.data['plugin'] == 'all':
                 command = 'wp plugin update --all --path=%s' % (path)
                 ProcessUtilities.popenExecutioner(command, website.externalApp)
-                final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'message': "Plugin updates started in the background."})
+                final_json = json.dumps(
+                    {'status': 1, 'fetchStatus': 1, 'message': "Plugin updates started in the background."})
                 return HttpResponse(final_json)
             elif self.data['plugin'] == 'selected':
                 if self.data['allPluginsChecked']:
@@ -2252,7 +2255,7 @@ class CloudManager:
                 return HttpResponse(final_json)
             else:
                 command = 'wp plugin activate %s --path=%s' % (
-                self.data['plugin'], path)
+                    self.data['plugin'], path)
                 ProcessUtilities.executioner(command, website.externalApp)
                 final_json = json.dumps(
                     {'status': 1, 'fetchStatus': 1, 'message': "Plugin successfully activated."})
@@ -2338,7 +2341,8 @@ class CloudManager:
             if self.data['plugin'] == 'all':
                 command = 'wp theme update --all --path=%s' % (path)
                 ProcessUtilities.popenExecutioner(command, website.externalApp)
-                final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'message': "Theme updates started in the background."})
+                final_json = json.dumps(
+                    {'status': 1, 'fetchStatus': 1, 'message': "Theme updates started in the background."})
                 return HttpResponse(final_json)
             elif self.data['plugin'] == 'selected':
                 if self.data['allPluginsChecked']:
@@ -2395,7 +2399,7 @@ class CloudManager:
                 return HttpResponse(final_json)
             else:
                 command = 'wp theme activate %s --path=%s' % (
-                self.data['plugin'], path)
+                    self.data['plugin'], path)
                 ProcessUtilities.executioner(command, website.externalApp)
                 final_json = json.dumps(
                     {'status': 1, 'fetchStatus': 1, 'message': "Theme successfully activated."})
@@ -2540,7 +2544,7 @@ class CloudManager:
                 ProcessUtilities.executioner(command, website.externalApp)
 
             final_json = json.dumps(
-                    {'status': 1, 'message': "Autoupdates configured."})
+                {'status': 1, 'message': "Autoupdates configured."})
             return HttpResponse(final_json)
         except BaseException as msg:
             final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
@@ -2567,12 +2571,11 @@ class CloudManager:
                 if cronLine.find('WPAutoUpdates.py') > -1:
                     finalCron = cronLine
 
-
             if finalCron.find('WPAutoUpdates.py') == -1:
                 finalCron = 'Not Set'
 
             final_json = json.dumps(
-                    {'status': 1, 'cliVersion': cliVersion, 'finalCron': finalCron})
+                {'status': 1, 'cliVersion': cliVersion, 'finalCron': finalCron})
             return HttpResponse(final_json)
         except BaseException as msg:
             final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
@@ -2614,7 +2617,8 @@ class CloudManager:
             result = ProcessUtilities.outputExecutioner(command)
 
             if result.find('Error:') > -1:
-                final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': 'This does not seem to be a WordPress installation'}
+                final_dic = {'status': 0, 'fetchStatus': 0,
+                             'error_message': 'This does not seem to be a WordPress installation'}
                 final_json = json.dumps(final_dic)
                 return HttpResponse(final_json)
             else:
@@ -2628,8 +2632,24 @@ class CloudManager:
 
     def SubmitCyberPanelUpgrade(self):
         try:
+            try:
+                mail = str(int(self.data['mail']))
+            except:
+                mail = '0'
 
-            execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/CyberPanelUpgrade.py"
+            try:
+                dns = str(int(self.data['dns']))
+            except:
+                dns = '0'
+
+            try:
+                ftp = str(int(self.data['ftp']))
+            except:
+                ftp = '0'
+
+            execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/CyberPanelUpgrade.py --branch %s --mail %s --dns %s --ftp %s" % (
+            self.data['CyberPanelBranch'], mail, dns, ftp)
+
             ProcessUtilities.popenExecutioner(execPath)
             final_json = json.dumps({'status': 1})
             return HttpResponse(final_json)
