@@ -104,7 +104,7 @@ echo -e "\n${1}=${2}\n" >> /tmp/cyberpanel_debug.log
 Debug_Log2() {
 Check_Server_IP "$@"
 echo -e "\n${1}" >> /var/log/installLogs.txt
-curl -d {"ipAddress": "'"$Server_IP"'", "InstallCyberPanelStatus": "'"$1"'"}' -H "Content-Type: application/json" -X POST http://cloud.cyberpanel.net:8000/servers/RecvData > /dev/null
+curl -d '{"ipAddress": "'"$Server_IP"'", "InstallCyberPanelStatus": "'"$1"'"}' -H "Content-Type: application/json" -X POST http://cloud.cyberpanel.net:8000/servers/RecvData > /dev/null
 }
 
 Branch_Check() {
@@ -851,11 +851,11 @@ EOF
       Check_Return "yum repo" "no_exit"
   fi
 fi
-Debug_Log2 "Setting up repositories..."
+Debug_Log2 "Setting up repositories...,1"
 
 if [[ "$Server_Country" = "CN" ]] ; then
   Pre_Install_Setup_CN_Repository
-  Debug_Log2 "Setting up repositories for CN server..."
+  Debug_Log2 "Setting up repositories for CN server...,1"
 fi
 
 if [[ "$Server_Country" = "CN" ]] || [[ "$Server_Provider" = "Alibaba Cloud" ]] || [[ "$Server_Provider" = "Tencent Cloud" ]]; then
@@ -885,7 +885,7 @@ fi
 #set Alibaba and Tencent to their private mirror
 
 
-Debug_Log2 "Setting up PIP repo..."
+Debug_Log2 "Setting up PIP repo...,3"
 #set up pip for Alibaba, Tencent worldwide and Chinese server
 
 if [[ "$Debug" = "On" ]] ; then
@@ -916,7 +916,7 @@ if [[ "$Server_OS" = "CentOS" ]] && [[ "$Server_OS_Version" = "7" ]]; then
 fi
 #  sed -i 's|http://mirrors.tencentyun.com/ubuntu/|https://cyberpanel.sh/us.archive.ubuntu.com/ubuntu/|g' /etc/apt/sources.list
 
-Debug_Log2 "Setting up repositories for CN server..."
+Debug_Log2 "Setting up repositories for CN server...,1"
 }
 
 Download_Requirement() {
@@ -1016,7 +1016,7 @@ Debug_Log2 "Necessary components installed..,5"
 }
 
 Pre_Install_System_Tweak() {
-Debug_Log2 "Setting up sytem tweak..."
+Debug_Log2 "Setting up sytem tweak...,90"
 Line_Number=$(grep -n "127.0.0.1" /etc/hosts | cut -d: -f 1)
 My_Hostname=$(hostname)
 
@@ -1145,7 +1145,7 @@ sed -i "${Line1}i\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ command = 'cat /etc/resolv.conf
 }
 
 License_Validation() {
-Debug_Log2 "Validating LiteSpeed license..."
+Debug_Log2 "Validating LiteSpeed license...,40"
 Current_Dir=$(pwd)
 
 if [ -f /root/cyberpanel-tmp ]; then
@@ -1221,7 +1221,7 @@ sed -i "s|rep.cyberpanel.net|cyberpanel.sh/rep.cyberpanel.net|g" installCyberPan
 sed -i "s|rep.cyberpanel.net|cyberpanel.sh/rep.cyberpanel.net|g" install.py
 
 
-Debug_Log2 "Setting up URLs for CN server..."
+Debug_Log2 "Setting up URLs for CN server...,1"
 
 
 sed -i 's|wget -O -  https://get.acme.sh \| sh|echo acme|g' install.py
@@ -1242,7 +1242,7 @@ Retry_Command "/root/.acme.sh/acme.sh --upgrade --auto-upgrade"
 }
 
 Main_Installation() {
-Debug_Log2 "Start to main installation..."
+Debug_Log2 "Start to main installation...,30"
 if [[ -d /usr/local/CyberCP ]] ; then
   echo -e "\n CyberPanel already installed, exiting..."
   Debug_Log2 "CyberPanel already installed, exiting... [404]"
@@ -1305,7 +1305,7 @@ fi
 
 if grep "CyberPanel installation successfully completed" /var/log/installLogs.txt >/dev/null; then
   echo -e "\nCyberPanel installation sucessfully completed...\n"
-  Debug_Log2 "Main installation completed..."
+  Debug_Log2 "Main installation completed...,70"
 else
   echo -e "Oops, something went wrong..."
   Debug_Log2 "Oops, something went wrong... [404]"
