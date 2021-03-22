@@ -28,5 +28,8 @@ class InstallLog:
                     "%m.%d.%Y_%H-%M-%S") + "] " + message + "\n")
         file.close()
 
-        finalData = json.dumps({'ipAddress': InstallLog.ServerIP, "InstallCyberPanelStatus": message})
-        requests.post(InstallLog.LogURL, data=finalData, verify=False)
+        try:
+            finalData = json.dumps({'ipAddress': InstallLog.ServerIP, "InstallCyberPanelStatus": message})
+            requests.post(InstallLog.LogURL, data=finalData, verify=False)
+        except:
+            pass
