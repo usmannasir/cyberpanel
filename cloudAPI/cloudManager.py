@@ -1998,8 +1998,7 @@ class CloudManager:
             ## Search index
 
             command = 'wp option get blog_public --path=%s' % (path)
-            finalDic['searchIndex'] = int(
-                ProcessUtilities.outputExecutioner(command, website.externalApp).splitlines()[-1])
+            finalDic['searchIndex'] = int(ProcessUtilities.outputExecutioner(command, website.externalApp).splitlines()[-1])
 
             ## Maintenece mode
 

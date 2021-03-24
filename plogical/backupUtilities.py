@@ -372,7 +372,11 @@ class backupUtilities:
 
             ## Stop making archive of document_root and copy instead
 
-            copy_tree('/home/%s/public_html' % domainName, '%s/%s' % (tempStoragePath, 'public_html'))
+            # copy_tree('/home/%s/public_html' % domainName, '%s/%s' % (tempStoragePath, 'public_html'))
+            command = 'cp -R /home/%s/public_html %s/public_html' % (domainName, tempStoragePath)
+            ProcessUtilities.executioner(command)
+
+            time.sleep(5)
 
             # make_archive(os.path.join(tempStoragePath,"public_html"), 'gztar', os.path.join("/home",domainName,"public_html"))
 
@@ -458,7 +462,9 @@ class backupUtilities:
                         pass
 
                 if childPath.find('/home/%s/public_html' % domainName) == -1:
-                    copy_tree(childPath, '%s/%s-docroot' % (tempStoragePath, actualChildDomain))
+                    # copy_tree(childPath, '%s/%s-docroot' % (tempStoragePath, actualChildDomain))
+                    command = 'cp -R %s %s/%s-docroot' % (childPath, tempStoragePath, actualChildDomain)
+                    ProcessUtilities.executioner(command)
 
         except BaseException as msg:
             pass
@@ -482,7 +488,9 @@ class backupUtilities:
             emailPath = '/home/vmail/%s' % (domainName)
 
             if os.path.exists(emailPath):
-                copy_tree(emailPath, '%s/vmail' % (tempStoragePath), preserve_symlinks=True)
+                # copy_tree(emailPath, '%s/vmail' % (tempStoragePath), preserve_symlinks=True)
+                command = 'cp -R %s %s/vmail' % (emailPath, tempStoragePath)
+                ProcessUtilities.executioner(command)
 
             ## shutil.make_archive. Creating final package.
 
@@ -789,7 +797,9 @@ class backupUtilities:
 
                         if float(version) > 2.0 or float(build) > 0:
                             if path.find('/home/%s/public_html' % masterDomain) == -1:
-                                copy_tree('%s/%s-docroot' % (completPath, domain), path)
+                                #copy_tree('%s/%s-docroot' % (completPath, domain), path)
+                                command = 'cp -R %s/%s-docroot %s' % (completPath, domain, path)
+                                ProcessUtilities.executioner(command)
 
                         continue
                     else:
@@ -862,7 +872,9 @@ class backupUtilities:
                 tar.close()
             else:
                 if float(version) > 2.0 or float(build) > 0:
-                    copy_tree('%s/public_html' % (completPath), websiteHome)
+                    #copy_tree('%s/public_html' % (completPath), websiteHome)
+                    command = 'cp -R %s/public_html %s' % (completPath, websiteHome)
+                    ProcessUtilities.executioner(command)
 
             ## extracting email accounts
 
@@ -890,7 +902,9 @@ class backupUtilities:
                 emailsPath = '%s/vmail' % (completPath)
 
                 if os.path.exists(emailsPath):
-                    copy_tree(emailsPath, '/home/vmail/%s' % (masterDomain))
+                    #copy_tree(emailsPath, '/home/vmail/%s' % (masterDomain))
+                    command = 'cp -R %s /home/vmail/%s' % (emailsPath, masterDomain)
+                    ProcessUtilities.executioner(command)
 
                 command = "chown -R vmail:vmail /home/vmail/%s" % (masterDomain)
                 ProcessUtilities.executioner(command)
