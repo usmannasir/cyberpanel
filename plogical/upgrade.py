@@ -118,7 +118,7 @@ class Upgrade:
                     break
             return True
         except:
-            return 0
+            return False
 
     @staticmethod
     def updateRepoURL():
@@ -1706,10 +1706,14 @@ imap_folder_list_limit = 0
             os.chdir('/usr/local/CyberCP')
 
             command = 'git config --global user.email "support@cyberpanel.net"'
-            Upgrade.executioner(command, command, 1)
+
+            if not Upgrade.executioner(command, command, 1):
+                return 0, 'Failed to execute %s' % (command)
 
             command = 'git config --global user.name "CyberPanel"'
-            Upgrade.executioner(command, command, 1)
+
+            if not Upgrade.executioner(command, command, 1):
+                return 0, 'Failed to execute %s' % (command)
 
             command = 'git status'
             currentBranch = subprocess.check_output(shlex.split(command)).decode()
@@ -1718,17 +1722,20 @@ imap_folder_list_limit = 0
                     'On branch %s-dev' % (branch)) == -1:
 
                 command = 'git stash'
-                Upgrade.executioner(command, command, 1)
+                if not Upgrade.executioner(command, command, 1):
+                    return 0, 'Failed to execute %s' % (command)
 
                 command = 'git pull'
-                Upgrade.executioner(command, command, 1)
+                if not Upgrade.executioner(command, command, 1):
+                    return 0, 'Failed to execute %s' % (command)
 
             elif currentBranch.find('not a git repository') > -1:
 
                 os.chdir('/usr/local')
 
                 command = 'git clone https://github.com/usmannasir/cyberpanel'
-                Upgrade.executioner(command, 'Download CyberPanel', 1)
+                if not Upgrade.executioner(command, command, 1):
+                    return 0, 'Failed to execute %s' % (command)
 
                 if os.path.exists('CyberCP'):
                     shutil.rmtree('CyberCP')
@@ -1738,16 +1745,20 @@ imap_folder_list_limit = 0
             else:
 
                 command = 'git fetch'
-                Upgrade.executioner(command, command, 1)
+                if not Upgrade.executioner(command, command, 1):
+                    return 0, 'Failed to execute %s' % (command)
 
                 command = 'git stash'
-                Upgrade.executioner(command, command, 1)
+                if not Upgrade.executioner(command, command, 1):
+                    return 0, 'Failed to execute %s' % (command)
 
                 command = 'git checkout %s' % (branch)
-                Upgrade.executioner(command, command, 1)
+                if not Upgrade.executioner(command, command, 1):
+                    return 0, 'Failed to execute %s' % (command)
 
                 command = 'git pull'
-                Upgrade.executioner(command, command, 1)
+                if not Upgrade.executioner(command, command, 1):
+                    return 0, 'Failed to execute %s' % (command)
 
             ## Copy settings file
 

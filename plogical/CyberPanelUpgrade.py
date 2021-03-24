@@ -53,6 +53,9 @@ class UpgradeCyberPanel:
         command = 'cp -R /usr/local/CyberCP /usr/local/CyberCPBak'
         Upgrade.executioner(command, command)
 
+        if not Upgrade.executioner(command, command, 1):
+            self.PostStatus('Failed to execute %s. [404]' % (command))
+
         self.PostStatus('Upgrading/Downgrading to branch %s..,10' % (self.branch))
 
         status, message = Upgrade.downloadAndUpgrade(None, self.branch)
@@ -80,7 +83,6 @@ class UpgradeCyberPanel:
 
         self.PostStatus('Database updated.,55')
 
-
         ## Put function here to update custom ACLs
 
         Upgrade.UpdateConfigOfCustomACL()
@@ -99,9 +101,11 @@ class UpgradeCyberPanel:
         Upgrade.upgradeVersion()
         Upgrade.UpdateMaxSSLCons()
 
+        command = 'systemctl restart lscpd'
+        if not Upgrade.executioner(command, command, 1):
+            self.PostStatus('Failed to execute %s. [404]' % (command))
+
         self.PostStatus('CyberPanel Upgraded/Downgraded to %s. [200]' % (self.branch))
-
-
 
 
 
