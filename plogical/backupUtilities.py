@@ -376,8 +376,6 @@ class backupUtilities:
             command = 'cp -R /home/%s/public_html %s/public_html' % (domainName, tempStoragePath)
             ProcessUtilities.executioner(command)
 
-            time.sleep(5)
-
             # make_archive(os.path.join(tempStoragePath,"public_html"), 'gztar', os.path.join("/home",domainName,"public_html"))
 
             ##
