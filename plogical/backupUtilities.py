@@ -374,7 +374,9 @@ class backupUtilities:
 
             # copy_tree('/home/%s/public_html' % domainName, '%s/%s' % (tempStoragePath, 'public_html'))
             command = 'cp -R /home/%s/public_html %s/public_html' % (domainName, tempStoragePath)
-            ProcessUtilities.executioner(command)
+
+            if ProcessUtilities.normalExecutioner(command) == 0:
+                raise BaseException('Failed to run %s.' % (command))
 
             # make_archive(os.path.join(tempStoragePath,"public_html"), 'gztar', os.path.join("/home",domainName,"public_html"))
 
@@ -1939,7 +1941,7 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
                    + backupName + " --backupPath " + backupPath + ' --backupDomain ' + backupDomain + ' --metaPath %s' % (
                        result[2])
 
-        output = ProcessUtilities.outputExecutioner(execPath)
+        output = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
 
         if output.find('[5009]') > -1:
             logging.CyberCPLogFileWriter.writeToFile(output)
