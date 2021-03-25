@@ -1939,8 +1939,9 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
                    + backupName + " --backupPath " + backupPath + ' --backupDomain ' + backupDomain + ' --metaPath %s' % (
                        result[2])
 
-        output = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
-        if output.find('[5009') > -1:
+        output = ProcessUtilities.outputExecutioner(execPath)
+
+        if output.find('[5009]') > -1:
             logging.CyberCPLogFileWriter.writeToFile(output)
             writeToFile = open(schedulerPath, 'w')
             writeToFile.writelines(output)
@@ -1968,7 +1969,7 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
 
         ##
 
-        output = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
+        #output = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
 
         if output.find('1,None') > -1:
             execPath = "sudo nice -n 10 /usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"

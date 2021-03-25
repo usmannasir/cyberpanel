@@ -345,7 +345,7 @@ class BackupManager:
     def restoreSite(self, request=None, userID=None, data=None):
         path = os.path.join("/home", "backup")
         if not os.path.exists(path):
-            proc = httpProc(request, 'backup/restore.html', 'restoreBackup')
+            proc = httpProc(request, 'backup/restore.html', None, 'restoreBackup')
             return proc.render()
         else:
             all_files = []
@@ -969,7 +969,7 @@ class BackupManager:
             return HttpResponse(final_json)
 
     def remoteBackups(self, request, userID=None, data=None):
-        proc = httpProc(request, 'backup/remoteBackups.html', 'remoteBackups')
+        proc = httpProc(request, 'backup/remoteBackups.html', None, 'remoteBackups')
         return proc.render()
 
     def submitRemoteBackups(self, userID=None, data=None):
