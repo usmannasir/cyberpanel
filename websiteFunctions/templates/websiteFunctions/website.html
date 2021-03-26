@@ -261,22 +261,22 @@
                             </div>
 
                             <div class="col-md-3 panel-body">
-                                <a href="{$ domainAliasURL $}" target="_blank" title="{% trans 'Domain Alias' %}"
+                                <a href="{$ domainAliasURL $}" target="_self" title="{% trans 'Domain Alias' %}"
                                    href="" title="{% trans 'Domain Alias' %}">
                                     <img src="{% static 'images/icons/web-domain.png' %}" width="65" class="mr-10">
                                 </a>
-                                <a href="{$ domainAliasURL $}" target="_blank" title="{% trans 'Domain Alias' %}"
+                                <a href="{$ domainAliasURL $}" target="_self" title="{% trans 'Domain Alias' %}"
                                    href="" title="{% trans 'Domain Alias' %}">
                                     <span class="h4">{% trans "Domain Alias" %}</span>
                                 </a>
                             </div>
 
                             <div class="col-md-3 panel-body">
-                                <a href="{% url 'listCron' %}?domain={{ domain }}" target="_blank" title="{% trans 'Add new Cron Job' %}"
+                                <a href="{% url 'listCron' %}?domain={{ domain }}" target="_self" title="{% trans 'Add new Cron Job' %}"
                                    href="" title="{% trans 'List Domains' %}">
                                     <img src="{% static 'images/icons/repeat.png' %}" width="65" class="mr-10">
                                 </a>
-                                <a href="{% url 'listCron' %}?domain={{ domain }}" target="_blank" title="{% trans 'Add new Cron Job' %}"
+                                <a href="{% url 'listCron' %}?domain={{ domain }}" target="_self" title="{% trans 'Add new Cron Job' %}"
                                    title="{% trans 'Add new Cron Job' %}">
                                     <span class="h4">{% trans "Cron Jobs" %}</span>
                                 </a>
@@ -810,10 +810,10 @@
                     <div class="content-box-wrapper">
                         <div class="row mx-10">
                             <div class="col-md-3 panel-body">
-                                <a href="{$ fileManagerURL $}" target="_blank" title="{% trans 'File Manager' %}">
+                                <a href="{$ fileManagerURL $}" target="_self" title="{% trans 'File Manager' %}">
                                     <img src="{% static 'images/icons/office-material.png' %}" width="65" class="mr-10">
                                 </a>
-                                <a href="{$ fileManagerURL $}" target="_blank" title="{% trans 'File Manager' %}">
+                                <a href="{$ fileManagerURL $}" target="_self" title="{% trans 'File Manager' %}">
                                     <span class="h4">{% trans "File Manager" %}</span>
                                 </a>
                             </div>
@@ -925,52 +925,52 @@
                             <div class="content-box-wrapper">
                                 <div class="row mx-10">
                                     <div class="col-md-3 panel-body">
-                                        <a id="emailLists" target="_blank" title="{% trans 'Create Lists' %}">
+                                        <a id="emailLists" target="_self" title="{% trans 'Create Lists' %}">
                                             <img src="{% static 'emailMarketing/mailing.png' %}" width="65"
                                                  class="mr-10">
                                         </a>
-                                        <a id="emailListsChild" target="_blank" title="{% trans 'Create Lists' %}">
+                                        <a id="emailListsChild" target="_self" title="{% trans 'Create Lists' %}">
                                             <span class="h4">{% trans "Create Lists" %}</span>
                                         </a>
                                     </div>
 
                                     <div class="col-md-3 panel-body">
-                                        <a id="manageLists" target="_blank" title="{% trans 'Manage Lists' %}">
+                                        <a id="manageLists" target="_self" title="{% trans 'Manage Lists' %}">
                                             <img src="{% static 'emailMarketing/checklist.png' %}" width="65"
                                                  class="mr-10">
                                         </a>
-                                        <a id="manageListsChild" target="_blank" title="{% trans 'Manage Lists' %}">
+                                        <a id="manageListsChild" target="_self" title="{% trans 'Manage Lists' %}">
                                             <span class="h4">{% trans "Manage Lists" %}</span>
                                         </a>
                                     </div>
 
                                     <div class="col-md-3 panel-body">
-                                        <a id="manageSMTPHosts" target="_blank" title="{% trans 'SMTP Hosts' %}">
+                                        <a id="manageSMTPHosts" target="_self" title="{% trans 'SMTP Hosts' %}">
                                             <img src="{% static 'emailMarketing/post-office.png' %}" width="65"
                                                  class="mr-10">
                                         </a>
-                                        <a id="manageSMTPHostsChild" target="_blank" title="{% trans 'SMTP Hosts' %}">
+                                        <a id="manageSMTPHostsChild" target="_self" title="{% trans 'SMTP Hosts' %}">
                                             <span class="h4">{% trans "SMTP Hosts" %}</span>
                                         </a>
                                     </div>
 
                                     <div class="col-md-3 panel-body">
-                                        <a id="composeEmails" target="_blank" title="{% trans 'Compose Message' %}">
+                                        <a id="composeEmails" target="_self" title="{% trans 'Compose Message' %}">
                                             <img src="{% static 'emailMarketing/compose.png' %}" width="65"
                                                  class="mr-10">
                                         </a>
-                                        <a id="composeEmailsChild" target="_blank"
+                                        <a id="composeEmailsChild" target="_self"
                                            title="{% trans 'Compose Message' %}">
                                             <span class="h4">{% trans "Compose" %}</span>
                                         </a>
                                     </div>
 
                                     <div class="col-md-3 panel-body">
-                                        <a id="sendEmailsPage" target="_blank" title="{% trans 'Send Emails' %}">
+                                        <a id="sendEmailsPage" target="_self" title="{% trans 'Send Emails' %}">
                                             <img src="{% static 'emailMarketing/paper-plane.png' %}" width="65"
                                                  class="mr-10">
                                         </a>
-                                        <a id="sendEmailsPageChild" target="_blank" title="{% trans 'Send Emails' %}">
+                                        <a id="sendEmailsPageChild" target="_self" title="{% trans 'Send Emails' %}">
                                             <span class="h4">{% trans "Send Emails" %}</span>
                                         </a>
                                     </div>
@@ -994,66 +994,66 @@
                     <div class="content-box-wrapper">
                         <div class="row mx-10">
                             <div class="col-md-3 panel-body">
-                                <a href="{$ wordPressInstallURL $}" target="_blank"
+                                <a href="{$ wordPressInstallURL $}" target="_self"
                                    title="{% trans 'Install wordpress with LSCache' %}">
                                     <img src="{% static 'images/icons/wordpress.png' %}" width="65" class="mr-10">
                                 </a>
-                                <a href="{$ wordPressInstallURL $}" target="_blank"
+                                <a href="{$ wordPressInstallURL $}" target="_self"
                                    title="{% trans 'Install wordpress with LSCache' %}">
                                     <span class="h4">{% trans "WP + LSCache" %}</span>
                                 </a>
                             </div>
 
                             <div class="col-md-3 panel-body">
-                                <a href="{$ joomlaInstallURL $}" target="_blank"
+                                <a href="{$ joomlaInstallURL $}" target="_self"
                                    title="{% trans 'Install Joomla with LSCache' %}">
                                     <img src="{% static 'images/icons/joomla-logo.png' %}" width="65" class="mr-10">
                                 </a>
-                                <a href="{$ joomlaInstallURL $}" target="_blank"
+                                <a href="{$ joomlaInstallURL $}" target="_self"
                                    title="{% trans 'Install Joomla with LSCache' %}">
                                     <span class="h4">{% trans "Joomla" %}</span>
                                 </a>
                             </div>
 
                             <div class="col-md-3 panel-body">
-                                <a href="/websites/{{ domain }}/manageGIT" target="_blank"
+                                <a href="/websites/{{ domain }}/manageGIT" target="_self"
                                    title="{% trans 'Attach Git with this website!' %}">
                                     <img src="{% static 'images/icons/git-logo.png' %}" width="65" class="mr-10">
                                 </a>
-                                <a href="/websites/{{ domain }}/manageGIT" target="_blank"
+                                <a href="/websites/{{ domain }}/manageGIT" target="_self"
                                    title="{% trans 'Attach Git with this website!' %}">
                                     <span class="h4">{% trans "Git" %}</span>
                                 </a>
                             </div>
 
                             <div class="col-md-3 panel-body">
-                                <a href="{$ installPrestaURL $}" target="_blank"
+                                <a href="{$ installPrestaURL $}" target="_self"
                                    title="{% trans 'Install Prestashop' %}">
                                     <img src="{% static 'images/icons/prestashop.png' %}" width="65" class="mr-10">
                                 </a>
-                                <a href="{$ installPrestaURL $}" target="_blank"
+                                <a href="{$ installPrestaURL $}" target="_self"
                                    title="{% trans 'Install Prestashop' %}">
                                     <span class="h4">{% trans "Prestashop" %}</span>
                                 </a>
                             </div>
 
                             <div class="col-md-3 panel-body">
-                                <a href="{$ installMagentoURL $}" target="_blank"
+                                <a href="{$ installMagentoURL $}" target="_self"
                                    title="{% trans 'Install Magento' %}">
                                     <img src="{% static 'images/icons/magento.png' %}" width="65" class="mr-10">
                                 </a>
-                                <a href="{$ installMagentoURL $}" target="_blank"
+                                <a href="{$ installMagentoURL $}" target="_self"
                                    title="{% trans 'Install Magento' %}">
                                     <span class="h4">{% trans "Magento" %}</span>
                                 </a>
                             </div>
 
                             <div class="col-md-3 panel-body">
-                                <a href="{$ installMauticURL $}" target="_blank"
+                                <a href="{$ installMauticURL $}" target="_self"
                                    title="{% trans 'Install Mautic' %}">
                                     <img src="{% static 'images/icons/mautic.png' %}" width="65" class="mr-10">
                                 </a>
-                                <a href="{$ installMauticURL $}" target="_blank"
+                                <a href="{$ installMauticURL $}" target="_self"
                                    title="{% trans 'Install Mautic' %}">
                                     <span class="h4">{% trans "Mautic" %}</span>
                                 </a>
