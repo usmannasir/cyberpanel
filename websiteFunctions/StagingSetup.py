@@ -103,12 +103,12 @@ class StagingSetup(multi.Thread):
 
             ## Exporting and importing database
 
-            command = 'wp --allow-root --path=%s db export %s/dbexport-stage.sql' % (masterPath, path)
+            command = 'wp --allow-root --skip-plugins --skip-themes --path=%s db export %s/dbexport-stage.sql' % (masterPath, path)
             ProcessUtilities.executioner(command)
 
             ## Import
 
-            command = 'wp --allow-root --path=%s --quiet db import %s/dbexport-stage.sql' % (path, path)
+            command = 'wp --allow-root --skip-plugins --skip-themes --path=%s --quiet db import %s/dbexport-stage.sql' % (path, path)
             ProcessUtilities.executioner(command)
 
             try:
@@ -119,7 +119,7 @@ class StagingSetup(multi.Thread):
 
             ## Sync WP-Content Folder
 
-            command = 'wp theme path --allow-root --path=%s' % (masterPath)
+            command = 'wp theme path --skip-plugins --skip-themes --allow-root --path=%s' % (masterPath)
             WpContentPath = ProcessUtilities.outputExecutioner(command).splitlines()[-1].replace('themes', '')
 
             command = 'rsync -avz %s %s/wp-content/' % (WpContentPath, path)
@@ -127,10 +127,10 @@ class StagingSetup(multi.Thread):
 
             ## Search and replace url
 
-            command = 'wp search-replace --allow-root --path=%s "%s" "%s"' % (path, replaceDomain, domain)
+            command = 'wp search-replace --skip-plugins --skip-themes --allow-root --path=%s "%s" "%s"' % (path, replaceDomain, domain)
             ProcessUtilities.executioner(command)
 
-            command = 'wp search-replace --allow-root --path=%s "www.%s" "%s"' % (path, replaceDomain, domain)
+            command = 'wp search-replace --skip-plugins --skip-themes --allow-root --path=%s "www.%s" "%s"' % (path, replaceDomain, domain)
             ProcessUtilities.executioner(command)
 
             logging.statusWriter(tempStatusPath, 'Fixing permissions..,90')
@@ -185,12 +185,12 @@ class StagingSetup(multi.Thread):
 
             logging.statusWriter(tempStatusPath, 'Syncing databases..,10')
 
-            command = 'wp --allow-root --path=%s db export %s/dbexport-stage.sql' % (child.path, masterPath)
+            command = 'wp --allow-root --skip-plugins --skip-themes --path=%s db export %s/dbexport-stage.sql' % (child.path, masterPath)
             ProcessUtilities.executioner(command)
 
             ## Restore to master domain
 
-            command = 'wp --allow-root --path=%s --quiet db import %s/dbexport-stage.sql' % (masterPath, masterPath)
+            command = 'wp --allow-root --skip-plugins --skip-themes --path=%s --quiet db import %s/dbexport-stage.sql' % (masterPath, masterPath)
             ProcessUtilities.executioner(command)
 
             try:
@@ -203,7 +203,7 @@ class StagingSetup(multi.Thread):
 
             logging.statusWriter(tempStatusPath, 'Syncing data..,50')
 
-            command = 'wp theme path --allow-root --path=%s' % (masterPath)
+            command = 'wp theme path --allow-root --skip-plugins --skip-themes --path=%s' % (masterPath)
             WpContentPath = ProcessUtilities.outputExecutioner(command).splitlines()[-1].replace('themes', '')
 
             command = 'rsync -avz %s/wp-content/ %s' % (child.path, WpContentPath)
@@ -211,10 +211,10 @@ class StagingSetup(multi.Thread):
 
             ## Search and replace url
 
-            command = 'wp search-replace --allow-root --path=%s "%s" "%s"' % (masterPath, child.domain, replaceDomain)
+            command = 'wp search-replace --allow-root --skip-plugins --skip-themes --path=%s "%s" "%s"' % (masterPath, child.domain, replaceDomain)
             ProcessUtilities.executioner(command)
 
-            command = 'wp search-replace --allow-root --path=%s "www.%s" "%s"' % (masterPath, child.domain, replaceDomain)
+            command = 'wp search-replace --allow-root --skip-plugins --skip-themes --path=%s "www.%s" "%s"' % (masterPath, child.domain, replaceDomain)
             ProcessUtilities.executioner(command)
 
             from filemanager.filemanager import FileManager

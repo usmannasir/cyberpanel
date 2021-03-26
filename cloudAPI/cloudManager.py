@@ -1972,13 +1972,13 @@ class CloudManager:
             except:
                 path = '/home/%s/public_html' % (self.data['domain'])
 
-            command = 'wp core version --path=%s' % (path)
-            finalDic['version'] = ProcessUtilities.outputExecutioner(command, website.externalApp)
+            command = 'wp core version --skip-plugins --skip-themes --path=%s' % (path)
+            finalDic['version'] = str(ProcessUtilities.outputExecutioner(command, website.externalApp))
 
             ## LSCache
 
-            command = 'wp plugin status litespeed-cache --path=%s' % (path)
-            result = ProcessUtilities.outputExecutioner(command, website.externalApp)
+            command = 'wp plugin status litespeed-cache --skip-plugins --skip-themes --path=%s' % (path)
+            result = str(ProcessUtilities.outputExecutioner(command, website.externalApp))
 
             if result.find('Status: Active') > -1:
                 finalDic['lscache'] = 1
@@ -1987,33 +1987,50 @@ class CloudManager:
 
             ## Debug
 
-            command = 'wp config list --path=%s' % (path)
-            result = ProcessUtilities.outputExecutioner(command, website.externalApp).split('\n')
-            finalDic['debugging'] = 0
-            for items in result:
-                if items.find('WP_DEBUG') > -1 and items.find('1') > - 1:
-                    finalDic['debugging'] = 1
-                    break
+            try:
+                command = 'wp config list --skip-plugins --skip-themes --path=%s' % (path)
+                result = ProcessUtilities.outputExecutioner(command, website.externalApp).split('\n')
+                finalDic['debugging'] = 0
+                for items in result:
+                    if items.find('WP_DEBUG') > -1 and items.find('1') > - 1:
+                        finalDic['debugging'] = 1
+                        break
+            except BaseException as msg:
+                finalDic['debugging'] = 0
+                logging.writeToFile('Error fetching WordPress debug mode for %s. [404]' % (website.domain))
 
             ## Search index
 
-            command = 'wp option get blog_public --path=%s' % (path)
-            finalDic['searchIndex'] = int(ProcessUtilities.outputExecutioner(command, website.externalApp).splitlines()[-1])
+            try:
+                command = 'wp option get blog_public --skip-plugins --skip-themes --path=%s' % (path)
+                finalDic['searchIndex'] = int(ProcessUtilities.outputExecutioner(command, website.externalApp).splitlines()[-1])
+            except BaseException as msg:
+                logging.writeToFile('Error fetching WordPress searchIndex mode for %s. [404]' % (website.domain))
+                finalDic['searchIndex'] = 0
 
             ## Maintenece mode
 
-            command = 'wp maintenance-mode status --path=%s' % (path)
-            result = ProcessUtilities.outputExecutioner(command, website.externalApp).splitlines()[-1]
+            try:
 
-            if result.find('not active') > -1:
+                command = 'wp maintenance-mode status --skip-plugins --skip-themes --path=%s' % (path)
+                result = ProcessUtilities.outputExecutioner(command, website.externalApp).splitlines()[-1]
+
+                if result.find('not active') > -1:
+                    finalDic['maintenanceMode'] = 0
+                else:
+                    finalDic['maintenanceMode'] = 1
+            except BaseException as msg:
+                logging.writeToFile('Error fetching WordPress maintenanceMode mode for %s. [404]' % (website.domain))
                 finalDic['maintenanceMode'] = 0
-            else:
-                finalDic['maintenanceMode'] = 1
 
             ## Get title
 
-            command = 'wp option get blogname --path=%s' % (path)
-            finalDic['title'] = ProcessUtilities.outputExecutioner(command, website.externalApp).splitlines()[-1]
+            try:
+                command = 'wp option get blogname --skip-plugins --skip-themes --path=%s' % (path)
+                finalDic['title'] = ProcessUtilities.outputExecutioner(command, website.externalApp).splitlines()[-1]
+            except:
+                logging.writeToFile('Error fetching WordPress Title for %s. [404]' % (website.domain))
+                finalDic['title'] = 'CyberPanel'
 
             ##
 
@@ -2044,17 +2061,16 @@ class CloudManager:
             import plogical.randomPassword as randomPassword
             password = randomPassword.generate_pass(32)
 
-            command = 'wp user create cyberpanel support@cyberpanel.cloud --role=administrator --user_pass="%s" --path=%s' % (
+            command = 'wp user create cyberpanel support@cyberpanel.cloud --role=administrator --user_pass="%s" --path=%s --skip-plugins --skip-themes' % (
             password, path)
             ProcessUtilities.executioner(command, website.externalApp)
 
-            command = 'wp user update cyberpanel --user_pass="%s" --path=%s' % (password, path)
+            command = 'wp user update cyberpanel --user_pass="%s" --path=%s --skip-plugins --skip-themes' % (password, path)
             ProcessUtilities.executioner(command, website.externalApp)
 
             finalDic = {'status': 1, 'password': password}
             final_json = json.dumps(finalDic)
             return HttpResponse(final_json)
-
 
         except BaseException as msg:
             return self.ajaxPre(0, str(msg))
@@ -2077,17 +2093,17 @@ class CloudManager:
             if self.data['setting'] == 'lscache':
                 if self.data['settingValue']:
 
-                    command = "wp plugin install litespeed-cache --path=%s" % (path)
+                    command = "wp plugin install litespeed-cache --path=%s --skip-plugins --skip-themes" % (path)
                     ProcessUtilities.executioner(command, website.externalApp)
 
-                    command = "wp plugin activate litespeed-cache --path=%s" % (path)
+                    command = "wp plugin activate litespeed-cache --path=%s --skip-plugins --skip-themes" % (path)
                     ProcessUtilities.executioner(command, website.externalApp)
 
                     final_dic = {'status': 1, 'message': 'LSCache successfully installed and activated.'}
                     final_json = json.dumps(final_dic)
                     return HttpResponse(final_json)
                 else:
-                    command = 'wp plugin deactivate litespeed-cache --path=%s' % (path)
+                    command = 'wp plugin deactivate litespeed-cache --path=%s --skip-plugins --skip-themes' % (path)
                     ProcessUtilities.executioner(command, website.externalApp)
 
                     final_dic = {'status': 1, 'message': 'LSCache successfully deactivated.'}
@@ -2095,11 +2111,11 @@ class CloudManager:
                     return HttpResponse(final_json)
             elif self.data['setting'] == 'debugging':
 
-                command = "wp litespeed-purge all --path=%s" % (path)
+                command = "wp litespeed-purge all --path=%s --skip-plugins --skip-themes" % (path)
                 ProcessUtilities.executioner(command, website.externalApp)
 
                 if self.data['settingValue']:
-                    command = "wp config set WP_DEBUG true --path=%s" % (path)
+                    command = "wp config set WP_DEBUG true --path=%s --skip-plugins --skip-themes" % (path)
                     ProcessUtilities.executioner(command, website.externalApp)
 
                     final_dic = {'status': 1, 'message': 'WordPress is now in debug mode.'}
@@ -2107,7 +2123,7 @@ class CloudManager:
                     return HttpResponse(final_json)
 
                 else:
-                    command = "wp config set WP_DEBUG false --path=%s" % (path)
+                    command = "wp config set WP_DEBUG false --path=%s --skip-plugins --skip-themes" % (path)
                     ProcessUtilities.executioner(command, website.externalApp)
 
                     final_dic = {'status': 1, 'message': 'WordPress debug mode turned off.'}
@@ -2115,11 +2131,11 @@ class CloudManager:
                     return HttpResponse(final_json)
             elif self.data['setting'] == 'searchIndex':
 
-                command = "wp litespeed-purge all --path=%s" % (path)
+                command = "wp litespeed-purge all --path=%s --skip-plugins --skip-themes" % (path)
                 ProcessUtilities.executioner(command, website.externalApp)
 
                 if self.data['settingValue']:
-                    command = "wp option update blog_public 1 --path=%s" % (path)
+                    command = "wp option update blog_public 1 --path=%s --skip-plugins --skip-themes" % (path)
                     ProcessUtilities.executioner(command, website.externalApp)
 
                     final_dic = {'status': 1, 'message': 'Search Engine Indexing enabled.'}
@@ -2127,7 +2143,7 @@ class CloudManager:
                     return HttpResponse(final_json)
 
                 else:
-                    command = "wp option update blog_public 0 --path=%s" % (path)
+                    command = "wp option update blog_public 0 --path=%s --skip-plugins --skip-themes" % (path)
                     ProcessUtilities.executioner(command, website.externalApp)
 
                     final_dic = {'status': 1, 'message': 'Search Engine Indexing disabled.'}
@@ -2135,12 +2151,12 @@ class CloudManager:
                     return HttpResponse(final_json)
             elif self.data['setting'] == 'maintenanceMode':
 
-                command = "wp litespeed-purge all --path=%s" % (path)
+                command = "wp litespeed-purge all --path=%s --skip-plugins --skip-themes" % (path)
                 ProcessUtilities.executioner(command, website.externalApp)
 
                 if self.data['settingValue']:
 
-                    command = "wp maintenance-mode activate --path=%s" % (path)
+                    command = "wp maintenance-mode activate --path=%s --skip-plugins --skip-themes" % (path)
                     ProcessUtilities.executioner(command, website.externalApp)
 
                     final_dic = {'status': 1, 'message': 'WordPress Maintenance mode turned on.'}
@@ -2148,7 +2164,7 @@ class CloudManager:
                     return HttpResponse(final_json)
 
                 else:
-                    command = "wp maintenance-mode deactivate --path=%s" % (path)
+                    command = "wp maintenance-mode deactivate --path=%s --skip-plugins --skip-themes" % (path)
                     ProcessUtilities.executioner(command, website.externalApp)
 
                     final_dic = {'status': 1, 'message': 'WordPress Maintenance mode turned off.'}
@@ -2171,7 +2187,7 @@ class CloudManager:
             except:
                 path = '/home/%s/public_html' % (self.data['domain'])
 
-            command = 'wp plugin list --format=json --path=%s' % (path)
+            command = 'wp plugin list --skip-plugins --skip-themes --format=json --path=%s' % (path)
             json_data = ProcessUtilities.outputExecutioner(command, website.externalApp).splitlines()[-1]
             final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": json_data})
 
@@ -2195,14 +2211,14 @@ class CloudManager:
                 path = '/home/%s/public_html' % (self.data['domain'])
 
             if self.data['plugin'] == 'all':
-                command = 'wp plugin update --all --path=%s' % (path)
+                command = 'wp plugin update --all --skip-plugins --skip-themes --path=%s' % (path)
                 ProcessUtilities.popenExecutioner(command, website.externalApp)
                 final_json = json.dumps(
                     {'status': 1, 'fetchStatus': 1, 'message': "Plugin updates started in the background."})
                 return HttpResponse(final_json)
             elif self.data['plugin'] == 'selected':
                 if self.data['allPluginsChecked']:
-                    command = 'wp plugin update --all --path=%s' % (path)
+                    command = 'wp plugin update --all --skip-plugins --skip-themes --path=%s' % (path)
                     ProcessUtilities.popenExecutioner(command, website.externalApp)
                     final_json = json.dumps(
                         {'status': 1, 'fetchStatus': 1, 'message': "Plugin updates started in the background."})
@@ -2213,13 +2229,13 @@ class CloudManager:
                     for plugin in self.data['plugins']:
                         pluginsList = '%s %s' % (pluginsList, plugin)
 
-                    command = 'wp plugin update %s --path=%s' % (pluginsList, path)
+                    command = 'wp plugin update %s --skip-plugins --skip-themes --path=%s' % (pluginsList, path)
                     ProcessUtilities.popenExecutioner(command, website.externalApp)
                     final_json = json.dumps(
                         {'status': 1, 'fetchStatus': 1, 'message': "Plugin updates started in the background."})
                     return HttpResponse(final_json)
             else:
-                command = 'wp plugin update %s --path=%s' % (self.data['plugin'], path)
+                command = 'wp plugin update %s --skip-plugins --skip-themes --path=%s' % (self.data['plugin'], path)
                 ProcessUtilities.popenExecutioner(command, website.externalApp)
                 final_json = json.dumps(
                     {'status': 1, 'fetchStatus': 1, 'message': "Plugin updates started in the background."})
@@ -2243,17 +2259,17 @@ class CloudManager:
             except:
                 path = '/home/%s/public_html' % (self.data['domain'])
 
-            command = 'wp plugin status %s --path=%s' % (self.data['plugin'], path)
+            command = 'wp plugin status %s --skip-plugins --skip-themes --path=%s' % (self.data['plugin'], path)
             result = ProcessUtilities.outputExecutioner(command, website.externalApp)
 
             if result.find('Status: Active') > -1:
-                command = 'wp plugin deactivate %s --path=%s' % (self.data['plugin'], path)
+                command = 'wp plugin deactivate %s --skip-plugins --skip-themes --path=%s' % (self.data['plugin'], path)
                 ProcessUtilities.executioner(command, website.externalApp)
                 final_json = json.dumps(
                     {'status': 1, 'fetchStatus': 1, 'message': "Plugin successfully deactivated."})
                 return HttpResponse(final_json)
             else:
-                command = 'wp plugin activate %s --path=%s' % (
+                command = 'wp plugin activate %s --skip-plugins --skip-themes --path=%s' % (
                     self.data['plugin'], path)
                 ProcessUtilities.executioner(command, website.externalApp)
                 final_json = json.dumps(
@@ -2284,13 +2300,13 @@ class CloudManager:
                 for plugin in self.data['plugins']:
                     pluginsList = '%s %s' % (pluginsList, plugin)
 
-                command = 'wp plugin delete %s --path=%s' % (pluginsList, path)
+                command = 'wp plugin delete %s --skip-plugins --skip-themes --path=%s' % (pluginsList, path)
                 ProcessUtilities.popenExecutioner(command, website.externalApp)
                 final_json = json.dumps(
                     {'status': 1, 'fetchStatus': 1, 'message': "Plugin deletion started in the background."})
                 return HttpResponse(final_json)
             else:
-                command = 'wp plugin delete %s --path=%s' % (self.data['plugin'], path)
+                command = 'wp plugin delete %s --skip-plugins --skip-themes --path=%s' % (self.data['plugin'], path)
                 ProcessUtilities.popenExecutioner(command, website.externalApp)
                 final_json = json.dumps(
                     {'status': 1, 'fetchStatus': 1, 'message': "Plugin deletion started in the background."})
@@ -2315,7 +2331,7 @@ class CloudManager:
             except:
                 path = '/home/%s/public_html' % (self.data['domain'])
 
-            command = 'wp theme list --format=json --path=%s' % (path)
+            command = 'wp theme list --skip-plugins --skip-themes --format=json --path=%s' % (path)
             json_data = ProcessUtilities.outputExecutioner(command, website.externalApp).splitlines()[-1]
             final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": json_data})
             return HttpResponse(final_json)
@@ -2338,14 +2354,14 @@ class CloudManager:
                 path = '/home/%s/public_html' % (self.data['domain'])
 
             if self.data['plugin'] == 'all':
-                command = 'wp theme update --all --path=%s' % (path)
+                command = 'wp theme update --all --skip-plugins --skip-themes --path=%s' % (path)
                 ProcessUtilities.popenExecutioner(command, website.externalApp)
                 final_json = json.dumps(
                     {'status': 1, 'fetchStatus': 1, 'message': "Theme updates started in the background."})
                 return HttpResponse(final_json)
             elif self.data['plugin'] == 'selected':
                 if self.data['allPluginsChecked']:
-                    command = 'wp theme update --all --path=%s' % (path)
+                    command = 'wp theme update --all --skip-plugins --skip-themes --path=%s' % (path)
                     ProcessUtilities.popenExecutioner(command, website.externalApp)
                     final_json = json.dumps(
                         {'status': 1, 'fetchStatus': 1, 'message': "Theme updates started in the background."})
@@ -2356,13 +2372,13 @@ class CloudManager:
                     for plugin in self.data['plugins']:
                         pluginsList = '%s %s' % (pluginsList, plugin)
 
-                    command = 'wp theme update %s --path=%s' % (pluginsList, path)
+                    command = 'wp theme update %s --skip-plugins --skip-themes --path=%s' % (pluginsList, path)
                     ProcessUtilities.popenExecutioner(command, website.externalApp)
                     final_json = json.dumps(
                         {'status': 1, 'fetchStatus': 1, 'message': "Theme updates started in the background."})
                     return HttpResponse(final_json)
             else:
-                command = 'wp theme update %s --path=%s' % (self.data['plugin'], path)
+                command = 'wp theme update %s --skip-plugins --skip-themes --path=%s' % (self.data['plugin'], path)
                 ProcessUtilities.popenExecutioner(command, website.externalApp)
                 final_json = json.dumps(
                     {'status': 1, 'fetchStatus': 1, 'message': "Theme updates started in the background."})
@@ -2386,18 +2402,18 @@ class CloudManager:
             except:
                 path = '/home/%s/public_html' % (self.data['domain'])
 
-            command = 'wp theme status %s --path=%s' % (self.data['plugin'], path)
+            command = 'wp theme status %s --skip-plugins --skip-themes --path=%s' % (self.data['plugin'], path)
             result = ProcessUtilities.outputExecutioner(command, website.externalApp)
 
             if result.find('Status: Active') > -1:
-                command = 'wp theme deactivate %s --path=%s' % (
+                command = 'wp theme deactivate %s --skip-plugins --skip-themes --path=%s' % (
                     self.data['plugin'], path)
                 ProcessUtilities.executioner(command, website.externalApp)
                 final_json = json.dumps(
                     {'status': 1, 'fetchStatus': 1, 'message': "Theme successfully deactivated."})
                 return HttpResponse(final_json)
             else:
-                command = 'wp theme activate %s --path=%s' % (
+                command = 'wp theme activate %s --skip-plugins --skip-themes --path=%s' % (
                     self.data['plugin'], path)
                 ProcessUtilities.executioner(command, website.externalApp)
                 final_json = json.dumps(
@@ -2429,13 +2445,13 @@ class CloudManager:
                 for plugin in self.data['plugins']:
                     pluginsList = '%s %s' % (pluginsList, plugin)
 
-                command = 'wp theme delete %s --path=%s' % (pluginsList, path)
+                command = 'wp theme delete %s --skip-plugins --skip-themes --path=%s' % (pluginsList, path)
                 ProcessUtilities.popenExecutioner(command, website.externalApp)
                 final_json = json.dumps(
                     {'status': 1, 'fetchStatus': 1, 'message': "Plugin Theme started in the background."})
                 return HttpResponse(final_json)
             else:
-                command = 'wp theme delete %s --path=%s' % (self.data['plugin'], path)
+                command = 'wp theme delete %s --skip-plugins --skip-themes --path=%s' % (self.data['plugin'], path)
                 ProcessUtilities.popenExecutioner(command, website.externalApp)
                 final_json = json.dumps(
                     {'status': 1, 'fetchStatus': 1, 'message': "Theme deletion started in the background."})
@@ -2533,10 +2549,10 @@ class CloudManager:
             wpd.save()
 
             if self.data['wpCore'] == 'Disabled':
-                command = "wp config set WP_AUTO_UPDATE_CORE false --raw --path=%s" % (path)
+                command = "wp config set WP_AUTO_UPDATE_CORE false --skip-plugins --skip-themes --raw --path=%s" % (path)
                 ProcessUtilities.executioner(command, website.externalApp)
             elif self.data['wpCore'] == 'Minor and Security Updates':
-                command = "wp config set WP_AUTO_UPDATE_CORE minor --allow-root --path=%s" % (path)
+                command = "wp config set WP_AUTO_UPDATE_CORE minor --skip-plugins --skip-themes --allow-root --path=%s" % (path)
                 ProcessUtilities.executioner(command, website.externalApp)
             else:
                 command = "wp config set WP_AUTO_UPDATE_CORE true --raw --allow-root --path=%s" % (path)
@@ -2612,7 +2628,7 @@ class CloudManager:
 
             path = '/home/%s/public_html' % (self.data['domainName'])
 
-            command = 'wp core version --allow-root --path=%s' % (path)
+            command = 'wp core version --allow-root --skip-plugins --skip-themes --path=%s' % (path)
             result = ProcessUtilities.outputExecutioner(command)
 
             if result.find('Error:') > -1:
