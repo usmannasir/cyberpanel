@@ -10,7 +10,9 @@
 
     <div class="container">
         <div id="page-title">
-            <h2>{% trans "List Email Accounts" %}</h2>
+            <h2>{% trans "List Email Accounts" %}
+                <a class="pull-right btn btn-primary" href="{% url "createEmailAccount" %}">{% trans "Create Email" %}</a>
+            </h2>
             <p>{% trans "List Emails Accounts. Change their passwords or delete them." %}</p>
         </div>
         <div ng-controller="listEmails" class="panel">
