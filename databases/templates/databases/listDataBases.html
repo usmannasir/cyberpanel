@@ -10,7 +10,9 @@
 
     <div class="container">
         <div id="page-title">
-            <h2>{% trans "List Databases" %}</h2>
+            <h2>{% trans "List Databases" %}
+                <a class="pull-right btn btn-primary" href="{% url "createDatabase" %}">{% trans "Create Database" %}</a>
+            </h2>
             <p>{% trans "List Databases or change their passwords." %}</p>
         </div>
         <div ng-controller="listDBs" class="panel">
