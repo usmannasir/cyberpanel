@@ -122,7 +122,12 @@ class StagingSetup(multi.Thread):
             command = 'wp theme path --skip-plugins --skip-themes --allow-root --path=%s' % (masterPath)
             WpContentPath = ProcessUtilities.outputExecutioner(command).splitlines()[-1].replace('themes', '')
 
-            command = 'rsync -avz %s %s/wp-content/' % (WpContentPath, path)
+            command = 'cp -R %s %s/' % (WpContentPath, path)
+            ProcessUtilities.executioner(command)
+
+            ## Copy htaccess
+
+            command = 'cp -f %s/.htaccess %s/' % (WpContentPath.replace('/wp-content/', ''), path)
             ProcessUtilities.executioner(command)
 
             ## Search and replace url
@@ -204,9 +209,14 @@ class StagingSetup(multi.Thread):
             logging.statusWriter(tempStatusPath, 'Syncing data..,50')
 
             command = 'wp theme path --allow-root --skip-plugins --skip-themes --path=%s' % (masterPath)
-            WpContentPath = ProcessUtilities.outputExecutioner(command).splitlines()[-1].replace('themes', '')
+            WpContentPath = ProcessUtilities.outputExecutioner(command).splitlines()[-1].replace('wp-content/themes', '')
 
-            command = 'rsync -avz %s/wp-content/ %s' % (child.path, WpContentPath)
+            command = 'cp -R %s/wp-content/ %s' % (child.path, WpContentPath)
+            ProcessUtilities.executioner(command)
+
+            ## COPY Htaccess
+
+            command = 'cp -f %s/.htaccess %s' % (child.path, WpContentPath)
             ProcessUtilities.executioner(command)
 
             ## Search and replace url
