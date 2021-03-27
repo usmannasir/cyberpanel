@@ -10,7 +10,9 @@
 
     <div class="container">
         <div id="page-title">
-            <h2>{% trans "List Users" %}</h2>
+            <h2>{% trans "List Users" %}
+                <a class="pull-right btn btn-primary" href="{% url "createUser" %}">{% trans "Create User" %}</a>
+            </h2>
             <p>{% trans "List Users that you own." %}</p>
         </div>
         <div ng-controller="listTableUsers" class="panel">
