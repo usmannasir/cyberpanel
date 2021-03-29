@@ -3,10 +3,9 @@ import os.path
 import sys
 import argparse
 import requests
-from plogical.processUtilities import ProcessUtilities
-
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
+from plogical.processUtilities import ProcessUtilities
 
 class ClusterManager:
 
