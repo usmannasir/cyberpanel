@@ -37,6 +37,8 @@ def router(request):
             return cm.verifyLogin(request)[1]
         elif controller == 'RunServerLevelEmailChecks':
             return cm.RunServerLevelEmailChecks()
+        elif controller == 'DetachCluster':
+            return cm.DetachCluster()
         elif controller == 'ReadReport':
             return cm.ReadReport()
         elif controller == 'ResetEmailConfigurations':

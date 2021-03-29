@@ -488,25 +488,29 @@ Automatic backup failed for %s on %s.
                 if jobConfig[IncScheduler.frequency] == type:
 
                     ### Check if an old job prematurely killed, then start from there.
-                    try:
-                        oldJobContinue = 1
-                        pid = jobConfig['pid']
-                        stuckDomain = jobConfig['website']
-                        finalPath = jobConfig['finalPath']
-                        jobConfig['pid'] = str(os.getpid())
+                    # try:
+                    #     oldJobContinue = 1
+                    #     pid = jobConfig['pid']
+                    #     stuckDomain = jobConfig['website']
+                    #     finalPath = jobConfig['finalPath']
+                    #     jobConfig['pid'] = str(os.getpid())
+                    #
+                    #     command = 'ps aux'
+                    #     result = ProcessUtilities.outputExecutioner(command)
+                    #
+                    #     if result.find(pid) > -1 and result.find('IncScheduler.py') > -1:
+                    #         quit(1)
+                    #
+                    #
+                    # except:
+                    #     ### Save some important info in backup config
+                    #     oldJobContinue = 0
+                    #     jobConfig['pid'] = str(os.getpid())
+                    #     jobConfig['finalPath'] = finalPath
 
-                        command = 'ps aux'
-                        result = ProcessUtilities.outputExecutioner(command)
-
-                        if result.find(pid) > -1 and result.find('IncScheduler.py') > -1:
-                            quit(1)
-
-
-                    except:
-                        ### Save some important info in backup config
-                        oldJobContinue = 0
-                        jobConfig['pid'] = str(os.getpid())
-                        jobConfig['finalPath'] = finalPath
+                    oldJobContinue = 0
+                    jobConfig['pid'] = str(os.getpid())
+                    jobConfig['finalPath'] = finalPath
 
                     NormalBackupJobLogs.objects.filter(owner=backupjob).delete()
                     NormalBackupJobLogs(owner=backupjob, status=backupSchedule.INFO,
