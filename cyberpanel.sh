@@ -102,9 +102,9 @@ echo -e "\n${1}=${2}\n" >> /tmp/cyberpanel_debug.log
 }
 
 Debug_Log2() {
-Check_Server_IP "$@"
+Check_Server_IP "$@" >/dev/null 2>&1
 echo -e "\n${1}" >> /var/log/installLogs.txt
-curl -d '{"ipAddress": "'"$Server_IP"'", "InstallCyberPanelStatus": "'"$1"'"}' -H "Content-Type: application/json" -X POST https://cloud.cyberpanel.net/servers/RecvData > /dev/null
+curl -d '{"ipAddress": "'"$Server_IP"'", "InstallCyberPanelStatus": "'"$1"'"}' -H "Content-Type: application/json" -X POST https://cloud.cyberpanel.net/servers/RecvData  >/dev/null 2>&1
 }
 
 Branch_Check() {
@@ -1586,6 +1586,8 @@ if ! timeout 3 telnet mx.zoho.com 25 | grep "Escape" >/dev/null 2>&1; then
   echo -e "Your provider seems \e[31mblocked\033[39m port 25 , E-mail sending may \e[31mnot\033[39m work properly."
 fi
 
+Debug_Log2 "Completed [200]"
+
 if [[ "$Silent" != "On" ]]; then
   printf "%s" "Would you like to restart your server now? [y/N]: "
   read -r Tmp_Input
@@ -1594,7 +1596,7 @@ if [[ "$Silent" != "On" ]]; then
     reboot
   fi
 fi
-Debug_Log2 "Completed [200]"
+
 }
 
 
