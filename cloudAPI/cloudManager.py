@@ -2702,7 +2702,7 @@ class CloudManager:
             writeToFile.close()
 
             execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/ClusterManager.py --function %s --type %s" % (
-                'SetupCluster', type)
+                'SetupCluster', self.data['type'])
             ProcessUtilities.popenExecutioner(execPath)
 
             final_json = json.dumps({'status': 1})
