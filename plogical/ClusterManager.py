@@ -22,6 +22,10 @@ class ClusterManager:
         self.config = json.loads(open(ClusterManager.ClusterFile, 'r').read())
 
     def PostStatus(self):
+        import os
+        if os.path.exists(ProcessUtilities.debugPath):
+            from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+            logging.writeToFile(str(self.config))
         finalData = json.dumps(self.config)
         resp = requests.post(ClusterManager.LogURL, data=finalData, verify=False)
         print (resp.text)
