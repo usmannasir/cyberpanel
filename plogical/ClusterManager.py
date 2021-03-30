@@ -21,7 +21,6 @@ class ClusterManager:
         ##
         self.config = json.loads(open(ClusterManager.ClusterFile, 'r').read())
 
-
     def PostStatus(self):
         finalData = json.dumps(self.config)
         resp = requests.post(ClusterManager.LogURL, data=finalData, verify=False)
@@ -36,6 +35,7 @@ class ClusterManager:
 
     def DetechFromCluster(self, type):
         try:
+
             command = 'rm -rf %s' % (self.FetchMySQLConfigFile())
             ProcessUtilities.normalExecutioner(command)
 
@@ -70,8 +70,10 @@ class ClusterManager:
             command = 'systemctl stop mysql'
             ProcessUtilities.normalExecutioner(command)
 
-            if type == 'Child':
+            command = 'rm -rf %s' % (ClusterConfigPath)
+            ProcessUtilities.executioner(command)
 
+            if type == 'Child':
                 writeToFile = open(ClusterPath, 'w')
                 writeToFile.write(config['ClusterConfigFailover'])
 
@@ -81,7 +83,6 @@ class ClusterManager:
                 self.config['failoverServerMessage'] = 'Successfully attached to cluster. [200]'
                 self.PostStatus()
             else:
-
                 writeToFile = open(ClusterPath, 'w')
                 writeToFile.write(config['ClusterConfigMaster'])
 
@@ -90,6 +91,11 @@ class ClusterManager:
 
                 self.config['masterServerMessage'] = 'Successfully attached to cluster. [200]'
                 self.PostStatus()
+
+            ###
+
+            command = 'rm -rf %s' % (ClusterConfigPath)
+            ProcessUtilities.executioner(command)
 
         except BaseException as msg:
             if type == 'Child':
