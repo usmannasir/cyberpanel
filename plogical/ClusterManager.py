@@ -74,17 +74,21 @@ class ClusterManager:
             ProcessUtilities.executioner(command)
 
             if type == 'Child':
+
                 writeToFile = open(ClusterPath, 'w')
                 writeToFile.write(config['ClusterConfigFailover'])
+                writeToFile.close()
 
                 command = 'systemctl start mysql'
                 ProcessUtilities.normalExecutioner(command)
 
                 self.config['failoverServerMessage'] = 'Successfully attached to cluster. [200]'
                 self.PostStatus()
+
             else:
                 writeToFile = open(ClusterPath, 'w')
                 writeToFile.write(config['ClusterConfigMaster'])
+                writeToFile.close()
 
                 command = 'galera_new_cluster'
                 ProcessUtilities.normalExecutioner(command)

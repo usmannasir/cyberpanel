@@ -25,7 +25,7 @@ class SSHServer(multi.Thread):
     def findSSHPort():
         try:
 
-            sshData = ProcessUtilities.outputExecutioner('cat /etc/ssh/sshd_config').readlines()
+            sshData = ProcessUtilities.outputExecutioner('cat /etc/ssh/sshd_config').split('\n')
 
             for items in sshData:
                 if items.find('Port') > -1:
