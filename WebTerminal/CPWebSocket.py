@@ -13,7 +13,7 @@ import json
 import threading as multi
 import time
 import asyncio
-
+from plogical.processUtilities import ProcessUtilities
 
 class SSHServer(multi.Thread):
     OKGREEN = '\033[92m'
@@ -24,7 +24,8 @@ class SSHServer(multi.Thread):
     @staticmethod
     def findSSHPort():
         try:
-            sshData = open('/etc/ssh/sshd_config', 'r').readlines()
+
+            sshData = ProcessUtilities.outputExecutioner('cat /etc/ssh/sshd_config').readlines()
 
             for items in sshData:
                 if items.find('Port') > -1:

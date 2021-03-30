@@ -2484,11 +2484,14 @@ class CloudManager:
             fm = FirewallManager()
             fm.addSSHKey(self.admin.pk, self.data)
 
-            ## Create backup path so that file can be sent here later.
+            ## Create backup path so that file can be sent here later. If just submitting the key, no need to create backup folder domain.
 
-            BackupPath = '/home/cyberpanel/backups/%s' % (self.data['domain'])
-            command = 'mkdir -p %s' % (BackupPath)
-            ProcessUtilities.executioner(command, 'cyberpanel')
+            try:
+                BackupPath = '/home/cyberpanel/backups/%s' % (self.data['domain'])
+                command = 'mkdir -p %s' % (BackupPath)
+                ProcessUtilities.executioner(command, 'cyberpanel')
+            except:
+                pass
 
             ###
 
@@ -2680,6 +2683,26 @@ class CloudManager:
             type = self.data['type']
 
             execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/ClusterManager.py --function %s --type %s" % ('DetachCluster', type)
+            ProcessUtilities.popenExecutioner(execPath)
+
+            final_json = json.dumps({'status': 1})
+            return HttpResponse(final_json)
+
+        except BaseException as msg:
+            final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+    def SetupCluster(self):
+        try:
+
+            ClusterConfigPath = '/home/cyberpanel/cluster'
+            writeToFile = open(ClusterConfigPath, 'w')
+            writeToFile.write(json.dumps(self.data))
+            writeToFile.close()
+
+            execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/ClusterManager.py --function %s --type %s" % (
+                'SetupCluster', type)
             ProcessUtilities.popenExecutioner(execPath)
 
             final_json = json.dumps({'status': 1})

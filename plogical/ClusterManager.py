@@ -60,6 +60,45 @@ class ClusterManager:
                 self.config['masterServerMessage'] = 'Failed to detach, error %s [404].' % (str(msg))
                 self.PostStatus()
 
+    def SetupCluster(self, type):
+        try:
+
+            ClusterPath = self.FetchMySQLConfigFile()
+            ClusterConfigPath = '/home/cyberpanel/cluster'
+            config = json.loads(open(ClusterConfigPath, 'r').read())
+
+            command = 'systemctl stop mysql'
+            ProcessUtilities.normalExecutioner(command)
+
+            if type == 'Child':
+
+                writeToFile = open(ClusterPath, 'w')
+                writeToFile.write(config['ClusterConfigFailover'])
+
+                command = 'systemctl start mysql'
+                ProcessUtilities.normalExecutioner(command)
+
+                self.config['failoverServerMessage'] = 'Successfully attached to cluster. [200]'
+                self.PostStatus()
+            else:
+
+                writeToFile = open(ClusterPath, 'w')
+                writeToFile.write(config['ClusterConfigMaster'])
+
+                command = 'galera_new_cluster'
+                ProcessUtilities.normalExecutioner(command)
+
+                self.config['masterServerMessage'] = 'Successfully attached to cluster. [200]'
+                self.PostStatus()
+
+        except BaseException as msg:
+            if type == 'Child':
+                self.config['failoverServerMessage'] = 'Failed to attach, error %s [404].' % (str(msg))
+                self.PostStatus()
+            else:
+                self.config['masterServerMessage'] = 'Failed to attach, error %s [404].' % (str(msg))
+                self.PostStatus()
+
 
 def main():
     parser = argparse.ArgumentParser(description='CyberPanel Installer')
@@ -71,7 +110,9 @@ def main():
     uc = ClusterManager()
 
     if args.function == 'DetachCluster':
-        uc.DetechFromCluster()
+        uc.DetechFromCluster(args.type)
+    elif args.function == 'SetupCluster':
+        uc.SetupCluster(args.type)
 
 
 if __name__ == "__main__":

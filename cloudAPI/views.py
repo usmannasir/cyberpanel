@@ -39,6 +39,8 @@ def router(request):
             return cm.RunServerLevelEmailChecks()
         elif controller == 'DetachCluster':
             return cm.DetachCluster()
+        elif controller == 'SetupCluster':
+            return cm.SetupCluster()
         elif controller == 'ReadReport':
             return cm.ReadReport()
         elif controller == 'ResetEmailConfigurations':
