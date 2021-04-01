@@ -54,6 +54,7 @@ class virtualHostUtilities:
     Server_root = "/usr/local/lsws"
     cyberPanel = "/usr/local/CyberCP"
     redisConf = '/usr/local/lsws/conf/dvhost_redis.conf'
+    vhostConfPath = '/usr/local/lsws/conf'
 
     @staticmethod
     def setupAutoDiscover(mailDomain, tempStatusPath, virtualHostName, admin):
@@ -125,7 +126,7 @@ class virtualHostUtilities:
     @staticmethod
     def createVirtualHost(virtualHostName, administratorEmail, phpVersion, virtualHostUser, ssl,
                           dkimCheck, openBasedir, websiteOwner, packageName, apache,
-                          tempStatusPath='/home/cyberpanel/fakePath', mailDomain = None):
+                          tempStatusPath='/home/cyberpanel/fakePath', mailDomain = None, LimitsCheck = 1):
         try:
 
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Running some checks..,0')
@@ -134,52 +135,54 @@ class virtualHostUtilities:
 
             admin = Administrator.objects.get(userName=websiteOwner)
 
-            if ACLManager.websitesLimitCheck(admin, 1) == 0:
-                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
-                                                          'You\'ve reached maximum websites limit as a reseller. [404]')
-                return 0, 'You\'ve reached maximum websites limit as a reseller.'
+            if LimitsCheck:
 
-            ####### Limitations Check End
+                if ACLManager.websitesLimitCheck(admin, 1) == 0:
+                    logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
+                                                              'You\'ve reached maximum websites limit as a reseller. [404]')
+                    return 0, 'You\'ve reached maximum websites limit as a reseller.'
 
-            if Websites.objects.filter(domain=virtualHostName).count() > 0:
-                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'This website already exists. [404]')
-                return 0, "This website already exists."
+                ####### Limitations Check End
+
+                if Websites.objects.filter(domain=virtualHostName).count() > 0:
+                    logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'This website already exists. [404]')
+                    return 0, "This website already exists."
 
 
-            if Websites.objects.filter(domain=virtualHostName.lstrip('www.')).count() > 0:
-                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'This website already exists. [404]')
-                return 0, "This website already exists."
+                if Websites.objects.filter(domain=virtualHostName.lstrip('www.')).count() > 0:
+                    logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'This website already exists. [404]')
+                    return 0, "This website already exists."
 
-            if ChildDomains.objects.filter(domain=virtualHostName).count() > 0:
-                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
-                                                          'This website already exists as child domain. [404]')
-                return 0, "This website already exists as child domain."
+                if ChildDomains.objects.filter(domain=virtualHostName).count() > 0:
+                    logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
+                                                              'This website already exists as child domain. [404]')
+                    return 0, "This website already exists as child domain."
 
-            if ChildDomains.objects.filter(domain=virtualHostName.lstrip('www.')).count() > 0:
-                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
-                                                          'This website already exists as child domain. [404]')
-                return 0, "This website already exists as child domain."
+                if ChildDomains.objects.filter(domain=virtualHostName.lstrip('www.')).count() > 0:
+                    logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
+                                                              'This website already exists as child domain. [404]')
+                    return 0, "This website already exists as child domain."
 
-            ####### Limitations Check End
+                ####### Limitations Check End
 
-            logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Creating DNS records..,10')
+                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Creating DNS records..,10')
 
-            ##### Zone creation
+                ##### Zone creation
 
-            DNS.dnsTemplate(virtualHostName, admin)
+                DNS.dnsTemplate(virtualHostName, admin)
 
-            ## Zone creation
+                ## Zone creation
 
-            logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Setting up directories..,25')
+                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Setting up directories..,25')
 
-            if vhost.checkIfVirtualHostExists(virtualHostName) == 1:
-                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
-                                                          'Virtual Host Directory already exists. [404]')
-                return 0, "Virtual Host Directory already exists!"
+                if vhost.checkIfVirtualHostExists(virtualHostName) == 1:
+                    logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
+                                                              'Virtual Host Directory already exists. [404]')
+                    return 0, "Virtual Host Directory already exists!"
 
-            if vhost.checkIfAliasExists(virtualHostName) == 1:
-                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'This domain exists as Alias. [404]')
-                return 0, "This domain exists as Alias."
+                if vhost.checkIfAliasExists(virtualHostName) == 1:
+                    logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'This domain exists as Alias. [404]')
+                    return 0, "This domain exists as Alias."
 
             retValues = mailUtilities.setupDKIM(virtualHostName)
             if retValues[0] == 0:
@@ -199,11 +202,12 @@ class virtualHostUtilities:
 
             selectedPackage = Package.objects.get(packageName=packageName)
 
-            website = Websites(admin=admin, package=selectedPackage, domain=virtualHostName,
-                               adminEmail=administratorEmail,
-                               phpSelection=phpVersion, ssl=ssl, externalApp=virtualHostUser)
+            if LimitsCheck:
+                website = Websites(admin=admin, package=selectedPackage, domain=virtualHostName,
+                                   adminEmail=administratorEmail,
+                                   phpSelection=phpVersion, ssl=ssl, externalApp=virtualHostUser)
 
-            website.save()
+                website.save()
 
             if ssl == 1:
                 sslPath = "/home/" + virtualHostName + "/public_html"
@@ -1073,7 +1077,7 @@ class virtualHostUtilities:
 
     @staticmethod
     def createDomain(masterDomain, virtualHostName, phpVersion, path, ssl, dkimCheck, openBasedir, owner, apache,
-                     tempStatusPath='/home/cyberpanel/fakePath'):
+                     tempStatusPath='/home/cyberpanel/fakePath', LimitsCheck = 1):
         try:
 
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Running some checks..,0')
@@ -1081,61 +1085,63 @@ class virtualHostUtilities:
             ## Check if this domain either exists as website or child domain
 
             admin = Administrator.objects.get(userName=owner)
-            DNS.dnsTemplate(virtualHostName, admin)
-
-            if Websites.objects.filter(domain=virtualHostName).count() > 0:
-                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
-                                                          'This Domain already exists as a website. [404]')
-                return 0, "This Domain already exists as a website."
-
-            if Websites.objects.filter(domain=virtualHostName.lstrip('www.')).count() > 0:
-                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
-                                                          'This Domain already exists as a website. [404]')
-                return 0, "This Domain already exists as a website."
-
-            if ChildDomains.objects.filter(domain=virtualHostName).count() > 0:
-                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
-                                                          'This domain already exists as child domain. [404]')
-                return 0, "This domain already exists as child domain."
-
-
-            if ChildDomains.objects.filter(domain=virtualHostName.lstrip('www.')).count() > 0:
-                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
-                                                          'This domain already exists as child domain. [404]')
-                return 0, "This domain already exists as child domain."
-
-            ####### Limitations check
-
             master = Websites.objects.get(domain=masterDomain)
-            domainsInPackage = master.package.allowedDomains
 
-            if master.package.allowFullDomain == 0:
-                if virtualHostName.find(masterDomain) > -1:
+            if LimitsCheck:
+                DNS.dnsTemplate(virtualHostName, admin)
+
+                if Websites.objects.filter(domain=virtualHostName).count() > 0:
+                    logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
+                                                              'This Domain already exists as a website. [404]')
+                    return 0, "This Domain already exists as a website."
+
+                if Websites.objects.filter(domain=virtualHostName.lstrip('www.')).count() > 0:
+                    logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
+                                                              'This Domain already exists as a website. [404]')
+                    return 0, "This Domain already exists as a website."
+
+                if ChildDomains.objects.filter(domain=virtualHostName).count() > 0:
+                    logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
+                                                              'This domain already exists as child domain. [404]')
+                    return 0, "This domain already exists as child domain."
+
+
+                if ChildDomains.objects.filter(domain=virtualHostName.lstrip('www.')).count() > 0:
+                    logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
+                                                              'This domain already exists as child domain. [404]')
+                    return 0, "This domain already exists as child domain."
+
+                ####### Limitations check
+
+                domainsInPackage = master.package.allowedDomains
+
+                if master.package.allowFullDomain == 0:
+                    if virtualHostName.find(masterDomain) > -1:
+                        pass
+                    else:
+                        logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
+                                                                  'Fully qualified domain is not allowed in the package. [404]')
+                        return 0, "Fully qualified domain is not allowed in the package."
+
+                if domainsInPackage == 0:
+                    pass
+                elif domainsInPackage > master.childdomains_set.all().count():
                     pass
                 else:
                     logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
-                                                              'Fully qualified domain is not allowed in the package. [404]')
-                    return 0, "Fully qualified domain is not allowed in the package."
+                                                              'Exceeded maximum number of domains for this package. [404]')
+                    return 0, "Exceeded maximum number of domains for this package"
 
-            if domainsInPackage == 0:
-                pass
-            elif domainsInPackage > master.childdomains_set.all().count():
-                pass
-            else:
-                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
-                                                          'Exceeded maximum number of domains for this package. [404]')
-                return 0, "Exceeded maximum number of domains for this package"
+                ####### Limitations Check End
 
-            ####### Limitations Check End
+                if vhost.checkIfVirtualHostExists(virtualHostName) == 1:
+                    logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
+                                                              'Virtual Host Directory already exists. [404]')
+                    return 0, "Virtual Host Directory already exists!"
 
-            if vhost.checkIfVirtualHostExists(virtualHostName) == 1:
-                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
-                                                          'Virtual Host Directory already exists. [404]')
-                return 0, "Virtual Host Directory already exists!"
-
-            if vhost.checkIfAliasExists(virtualHostName) == 1:
-                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'This domain exists as Alias. [404]')
-                return 0, "This domain exists as Alias."
+                if vhost.checkIfAliasExists(virtualHostName) == 1:
+                    logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'This domain exists as Alias. [404]')
+                    return 0, "This domain exists as Alias."
 
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'DKIM Setup..,30')
 
@@ -1159,8 +1165,9 @@ class virtualHostUtilities:
 
             ## Now restart litespeed after initial configurations are done
 
-            website = ChildDomains(master=master, domain=virtualHostName, path=path, phpSelection=phpVersion, ssl=ssl)
-            website.save()
+            if LimitsCheck:
+                website = ChildDomains(master=master, domain=virtualHostName, path=path, phpSelection=phpVersion, ssl=ssl)
+                website.save()
 
             if ssl == 1:
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Creating SSL..,50')

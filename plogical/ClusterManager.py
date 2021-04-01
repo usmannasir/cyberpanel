@@ -12,6 +12,7 @@ class ClusterManager:
 
     LogURL = "http://de-a.cyberhosting.org:8000/HighAvailability/RecvData"
     ClusterFile = '/home/cyberpanel/cluster'
+    vhostConfPath = '/usr/local/lsws/conf'
 
     def __init__(self, type):
         ##
@@ -70,6 +71,20 @@ class ClusterManager:
                 writeToFile = open(ClusterPath, 'w')
                 writeToFile.write(config['ClusterConfigMaster'])
                 writeToFile.close()
+
+                CentOSPath = '/etc/redhat-release'
+
+                if os.path.exists(CentOSPath):
+                    cronPath = '/var/spool/cron/root'
+                else:
+                    cronPath = '/var/spool/cron/crontabs/root'
+
+                writeToFile = open(cronPath, 'a')
+                writeToFile.write('*/%s * * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/ClusterManager.py --function SyncNow --type Master\n' % (str(self.config['syncTime'])))
+                writeToFile.close()
+
+                command = 'systemctl restart cron'
+                ProcessUtilities.normalExecutioner(command)
 
             self.PostStatus('Successfully attached to cluster. [200]')
 
@@ -179,6 +194,48 @@ class ClusterManager:
         except BaseException as msg:
             self.PostStatus('Failed to boot, error %s [404].' % (str(msg)))
 
+    def CreatePendingVirtualHosts(self):
+        try:
+
+            from plogical.virtualHostUtilities import virtualHostUtilities
+            from websiteFunctions.models import Websites, ChildDomains
+
+            for website in Websites.objects.all():
+                confPath = '%s/%s' % (ClusterManager.vhostConfPath, website.domain)
+                if not os.path.exists(confPath):
+                    self.PostStatus('Domain %s found in master server, creating on child server now..' % (website.domain))
+                    virtualHostUtilities.createVirtualHost(website.domain, website.adminEmail, website.phpSelection, website.externalApp, 1, 1, 0, website.admin.userName, website.package.packageName, 0, '/home/cyberpanel/temp', 1, 0)
+
+            for childDomain in ChildDomains.objects.all():
+                confPath = '%s/%s' % (ClusterManager.vhostConfPath, childDomain.domain)
+                if not os.path.exists(confPath):
+                    self.PostStatus(
+                        'Domain %s found in master server, creating on child server now..' % (childDomain.domain))
+                    virtualHostUtilities.createDomain(childDomain.master.domain, childDomain.domain, childDomain.phpSelection, childDomain.path, 1, 1, 0, childDomain.master.admin.userName, 0, 0)
+
+            self.PostStatus('All domains synced.')
+
+        except BaseException as msg:
+            self.PostStatus('Failed to create pending vhosts, error %s [404].' % (str(msg)))
+
+    def SyncNow(self):
+        try:
+            self.PostStatus('Syncing data from home directory to fail over server..')
+
+            command = "rsync -avzp -e 'ssh -o StrictHostKeyChecking=no -p %s -i /root/.ssh/cyberpanel' /home root@%s:/" % (self.config['failoverServerSSHPort'], self.config['failoverServerIP'])
+            ProcessUtilities.normalExecutioner(command)
+
+            self.PostStatus('Syncing SSL certificates to fail over server..')
+
+            command = "rsync -avzp -e 'ssh -o StrictHostKeyChecking=no -p %s -i /root/.ssh/cyberpanel' /etc/letsencrypt/ root@%s:/etc" % (
+            self.config['failoverServerSSHPort'], self.config['failoverServerIP'])
+            ProcessUtilities.normalExecutioner(command)
+
+            self.PostStatus('Data and SSL certificates currently synced.')
+
+        except BaseException as msg:
+            self.PostStatus('Failed to create pending vhosts, error %s [404].' % (str(msg)))
+
 
 def main():
     parser = argparse.ArgumentParser(description='CyberPanel Installer')
@@ -197,6 +254,10 @@ def main():
         uc.BootMaster()
     elif args.function == 'BootChild':
         uc.BootChild()
+    elif args.function == 'CreatePendingVirtualHosts':
+        uc.CreatePendingVirtualHosts()
+    elif args.function == 'SyncNow':
+        uc.SyncNow()
 
 
 if __name__ == "__main__":

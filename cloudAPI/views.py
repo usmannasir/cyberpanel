@@ -52,6 +52,8 @@ def router(request):
             return cm.FetchMasterBootStrapStatus()
         elif controller == 'FetchChildBootStrapStatus':
             return cm.FetchChildBootStrapStatus()
+        elif controller == 'CreatePendingVirtualHosts':
+            return cm.CreatePendingVirtualHosts()
         elif controller == 'BootMaster':
             return cm.BootMaster()
         elif controller == 'BootChild':
