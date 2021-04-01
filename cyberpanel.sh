@@ -93,7 +93,7 @@ LSWS_Stable_Version=$(expr "$LSWS_Stable_Line" : '.*LSWS_STABLE=\(.*\) BUILD .*'
 
 Enterprise_Flag=""
 License_Key=""
-Debug_Log2 "Starting installation...1"
+Debug_Log2 "Starting installation..,1"
 
 }
 
