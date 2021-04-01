@@ -1,3 +1,4 @@
+import sys
 import userManagment.views as um
 from backup.backupManager import BackupManager
 from databases.databaseManager import DatabaseManager
@@ -21,7 +22,8 @@ from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from managePHP.phpManager import PHPManager
 from managePHP.views import submitExtensionRequest, getRequestStatusApache
 from containerization.views import *
-
+sys.path.append('/usr/local/CyberCP')
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 
 class CloudManager:
     def __init__(self, data=None, admin=None):
@@ -2683,7 +2685,7 @@ class CloudManager:
             type = self.data['type']
 
             execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/ClusterManager.py --function %s --type %s" % ('DetachCluster', type)
-            ProcessUtilities.popenExecutioner(execPath)
+            ProcessUtilities.executioner(execPath)
 
             final_json = json.dumps({'status': 1})
             return HttpResponse(final_json)
@@ -2701,9 +2703,103 @@ class CloudManager:
             writeToFile.write(json.dumps(self.data))
             writeToFile.close()
 
-            execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/ClusterManager.py --function %s --type %s" % (
-                'SetupCluster', self.data['type'])
-            ProcessUtilities.popenExecutioner(execPath)
+            execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/ClusterManager.py --function SetupCluster --type %s" % (self.data['type'])
+            ProcessUtilities.executioner(execPath)
+
+            final_json = json.dumps({'status': 1})
+            return HttpResponse(final_json)
+
+        except BaseException as msg:
+            final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+    def FetchMasterBootStrapStatus(self):
+        try:
+            from CyberCP import settings
+
+            data = {}
+            data['status'] = 1
+
+            ## CyberPanel DB Creds
+            data['dbName'] = settings.DATABASES['default']['NAME']
+            data['dbUser'] = settings.DATABASES['default']['USER']
+            data['password'] = settings.DATABASES['default']['PASSWORD']
+            data['host'] = settings.DATABASES['default']['HOST']
+            data['port'] = settings.DATABASES['default']['PORT']
+
+            ## Root DB Creds
+
+            data['rootdbName'] = settings.DATABASES['rootdb']['NAME']
+            data['rootdbdbUser'] = settings.DATABASES['rootdb']['USER']
+            data['rootdbpassword'] = settings.DATABASES['rootdb']['PASSWORD']
+
+            command = 'cat /var/lib/mysql/grastate.dat'
+            output = ProcessUtilities.outputExecutioner(command)
+
+            if output.find('No such file or directory') > -1:
+                data['safe'] = 1
+            elif output.find('safe_to_bootstrap: 1') > -1:
+                data['safe'] = 1
+            else:
+                data['safe'] = 0
+
+            final_json = json.dumps(data)
+            return HttpResponse(final_json)
+
+        except BaseException as msg:
+            final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+    def FetchChildBootStrapStatus(self):
+        try:
+
+            data = {}
+            data['status'] = 1
+
+            command = 'cat /var/lib/mysql/grastate.dat'
+            output = ProcessUtilities.outputExecutioner(command)
+
+            if output.find('No such file or directory') > -1:
+                data['safe'] = 1
+            elif output.find('safe_to_bootstrap: 0') > -1:
+                data['safe'] = 1
+            else:
+                data['safe'] = 0
+
+            final_json = json.dumps(data)
+            return HttpResponse(final_json)
+
+        except BaseException as msg:
+            final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+    def BootMaster(self):
+        try:
+
+            execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/ClusterManager.py --function BootMaster --type Master"
+            ProcessUtilities.executioner(execPath)
+
+            final_json = json.dumps({'status': 1})
+            return HttpResponse(final_json)
+
+        except BaseException as msg:
+            final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+    def BootChild(self):
+        try:
+
+            ChildData = '/home/cyberpanel/childaata'
+            writeToFile = open(ChildData, 'w')
+            writeToFile.write(json.dumps(self.data))
+            writeToFile.close()
+
+            execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/ClusterManager.py --function BootChild --type Child"
+            ProcessUtilities.executioner(execPath)
 
             final_json = json.dumps({'status': 1})
             return HttpResponse(final_json)

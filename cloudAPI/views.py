@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-
 from .cloudManager import CloudManager
 import json
 from loginSystem.models import Administrator
@@ -33,12 +32,30 @@ def router(request):
             else:
                 return cm.verifyLogin(request)[1]
 
+        ## Debug Log
+
+        import os
+        from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+        from plogical.processUtilities import ProcessUtilities
+        if os.path.exists(ProcessUtilities.debugPath):
+            logging.writeToFile('Current controller: %s' % (controller))
+
+        ##
+
         if controller == 'verifyLogin':
             return cm.verifyLogin(request)[1]
         elif controller == 'RunServerLevelEmailChecks':
             return cm.RunServerLevelEmailChecks()
         elif controller == 'DetachCluster':
             return cm.DetachCluster()
+        elif controller == 'FetchMasterBootStrapStatus':
+            return cm.FetchMasterBootStrapStatus()
+        elif controller == 'FetchChildBootStrapStatus':
+            return cm.FetchChildBootStrapStatus()
+        elif controller == 'BootMaster':
+            return cm.BootMaster()
+        elif controller == 'BootChild':
+            return cm.BootChild()
         elif controller == 'SetupCluster':
             return cm.SetupCluster()
         elif controller == 'ReadReport':
