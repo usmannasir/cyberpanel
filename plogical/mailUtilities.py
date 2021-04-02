@@ -220,6 +220,7 @@ class mailUtilities:
             virtualHostName = extractDomain.domain + '.' + extractDomain.suffix
 
             if not os.path.exists("/etc/opendkim/keys/" + virtualHostName + "/default.txt"):
+
                 path = '/etc/opendkim/keys/%s' % (virtualHostName)
                 command = 'mkdir %s' % (path)
                 ProcessUtilities.normalExecutioner(command)
@@ -231,7 +232,10 @@ class mailUtilities:
                 else:
                     command = "opendkim-genkey -D /etc/opendkim/keys/%s -d %s -s default" % (
                     virtualHostName, virtualHostName)
+
                 ProcessUtilities.normalExecutioner(command)
+
+
                 ## Fix permissions
 
                 command = "chown -R root:opendkim /etc/opendkim/keys/" + virtualHostName
@@ -244,7 +248,6 @@ class mailUtilities:
                 ProcessUtilities.normalExecutioner(command)
 
             ## Edit key file
-
 
             keyTable = "/etc/opendkim/KeyTable"
             configToWrite = "default._domainkey." + actualDomain + " " + actualDomain + ":default:/etc/opendkim/keys/" + virtualHostName + "/default.private\n"
@@ -271,7 +274,7 @@ class mailUtilities:
             writeToFile.write(configToWrite)
             writeToFile.close()
 
-            ## Restart postfix and OpenDKIM
+            ## Restart Postfix and OpenDKIM
 
             command = "systemctl restart opendkim"
             subprocess.call(shlex.split(command))

@@ -172,8 +172,6 @@ class ClusterManager:
 
             writeToFile.close()
 
-
-
             ## new settings file restored
 
             command = 'systemctl stop mysql'
@@ -186,6 +184,26 @@ class ClusterManager:
 
             command = 'systemctl restart lscpd'
             ProcessUtilities.normalExecutioner(command)
+
+            ## Update root password in cyberpanel file
+
+            writeToFile = open('/etc/cyberpanel/mysqlPassword', 'w')
+            writeToFile.write(rootdbpassword)
+            writeToFile.close()
+
+            ## Update root password in .my.cnf
+
+            writeToFile = open('/home/cyberpanel/.my.cnf', 'w')
+            content = """[mysqldump]
+user=root
+password=%s
+max_allowed_packet=1024M
+[mysql]
+user=root
+password=%s""" % (rootdbpassword, rootdbpassword)
+
+            writeToFile.write(content)
+            writeToFile.close()
 
             self.PostStatus('Fail over server successfully booted. [200]')
 

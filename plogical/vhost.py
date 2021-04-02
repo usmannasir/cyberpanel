@@ -86,7 +86,7 @@ class vhost:
             except OSError as msg:
                 logging.CyberCPLogFileWriter.writeToFile(
                     str(msg) + " [27 Not able create to directories for virtual host [createDirectories]]")
-                return [0, "[27 Not able to directories for virtual host [createDirectories]]"]
+                #return [0, "[27 Not able to directories for virtual host [createDirectories]]"]
 
             try:
                 os.makedirs(pathHTML)
@@ -107,7 +107,7 @@ class vhost:
             except OSError as msg:
                 logging.CyberCPLogFileWriter.writeToFile(
                     str(msg) + " [33 Not able to directories for virtual host [createDirectories]]")
-                return [0, "[33 Not able to directories for virtual host [createDirectories]]"]
+                #return [0, "[33 Not able to directories for virtual host [createDirectories]]"]
 
             try:
                 os.makedirs(pathLogs)
@@ -133,7 +133,7 @@ class vhost:
             except OSError as msg:
                 logging.CyberCPLogFileWriter.writeToFile(
                     str(msg) + " [39 Not able to directories for virtual host [createDirectories]]")
-                return [0, "[39 Not able to directories for virtual host [createDirectories]]"]
+                #return [0, "[39 Not able to directories for virtual host [createDirectories]]"]
 
             try:
                 ## For configuration files permissions will be changed later globally.
@@ -142,7 +142,7 @@ class vhost:
             except OSError as msg:
                 logging.CyberCPLogFileWriter.writeToFile(
                     str(msg) + " [45 Not able to directories for virtual host [createDirectories]]")
-                return [0, "[45 Not able to directories for virtual host [createDirectories]]"]
+                #return [0, "[45 Not able to directories for virtual host [createDirectories]]"]
 
             try:
                 ## For configuration files permissions will be changed later globally.
@@ -158,13 +158,13 @@ class vhost:
 
             except IOError as msg:
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [createDirectories]]")
-                return [0, "[45 Not able to directories for virtual host [createDirectories]]"]
+                #return [0, "[45 Not able to directories for virtual host [createDirectories]]"]
 
             return [1, 'None']
 
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [createDirectories]")
-            return [0, str(msg)]
+            return [1, str(msg)]
 
     @staticmethod
     def finalizeVhostCreation(virtualHostName, virtualHostUser):
@@ -242,11 +242,12 @@ class vhost:
                 confFile.write(currentConf)
                 confFile.close()
 
+                return 1
+
             except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(
                     str(msg) + " [IO Error with per host config file [perHostVirtualConf]]")
                 return 0
-            return 1
         else:
             try:
 
@@ -296,12 +297,13 @@ class vhost:
                     command = 'redis-cli set %s' % (currentConf)
                     ProcessUtilities.executioner(command)
 
+                    return 1
 
             except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(
                     str(msg) + " [IO Error with per host config file [perHostVirtualConf]]")
                 return 0
-            return 1
+
 
     @staticmethod
     def createNONSSLMapEntry(virtualHostName):
@@ -889,20 +891,23 @@ class vhost:
         except OSError as msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "335 [Not able to create directories for virtual host [createDirectoryForDomain]]")
-            return [0, "[344 Not able to directories for virtual host [createDirectoryForDomain]]"]
+            #return [0, "[344 Not able to directories for virtual host [createDirectoryForDomain]]"]
 
         try:
             ## For configuration files permissions will be changed later globally.
             file = open(completePathToConfigFile, "w+")
         except IOError as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [createDirectoryForDomain]]")
-            return [0, "[351 Not able to directories for virtual host [createDirectoryForDomain]]"]
+            #return [0, "[351 Not able to directories for virtual host [createDirectoryForDomain]]"]
 
         if vhost.perHostDomainConf(path, masterDomain, domain, completePathToConfigFile,
                                    administratorEmail, phpVersion, virtualHostUser, openBasedir) == 1:
             return [1, "None"]
         else:
-            return [0, "[359 Not able to create per host virtual configurations [createDirectoryForDomain]"]
+            pass
+            #return [0, "[359 Not able to create per host virtual configurations [createDirectoryForDomain]"]
+
+        return [1, "None"]
 
     @staticmethod
     def perHostDomainConf(path, masterDomain, domain, vhFile, administratorEmail, phpVersion, virtualHostUser, openBasedir):

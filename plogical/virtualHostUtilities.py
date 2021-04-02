@@ -138,6 +138,7 @@ class virtualHostUtilities:
             if LimitsCheck:
 
                 if ACLManager.websitesLimitCheck(admin, 1) == 0:
+
                     logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
                                                               'You\'ve reached maximum websites limit as a reseller. [404]')
                     return 0, 'You\'ve reached maximum websites limit as a reseller.'
@@ -147,7 +148,6 @@ class virtualHostUtilities:
                 if Websites.objects.filter(domain=virtualHostName).count() > 0:
                     logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'This website already exists. [404]')
                     return 0, "This website already exists."
-
 
                 if Websites.objects.filter(domain=virtualHostName.lstrip('www.')).count() > 0:
                     logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'This website already exists. [404]')
@@ -184,9 +184,12 @@ class virtualHostUtilities:
                     logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'This domain exists as Alias. [404]')
                     return 0, "This domain exists as Alias."
 
-            retValues = mailUtilities.setupDKIM(virtualHostName)
-            if retValues[0] == 0:
-                raise BaseException(retValues[1])
+            postfixPath = '/home/cyberpanel/postfix'
+
+            if os.path.exists(postfixPath):
+                retValues = mailUtilities.setupDKIM(virtualHostName)
+                if retValues[0] == 0:
+                    raise BaseException(retValues[1])
 
             retValues = vhost.createDirectoryForVirtualHost(virtualHostName, administratorEmail,
                                                             virtualHostUser, phpVersion, openBasedir)
@@ -279,7 +282,8 @@ class virtualHostUtilities:
             return 1, 'None'
 
         except BaseException as msg:
-            vhost.deleteVirtualHostConfigurations(virtualHostName)
+            if ACLManager.FindIfChild() == 0:
+                vhost.deleteVirtualHostConfigurations(virtualHostName)
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "  [createVirtualHost]")
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, str(msg) + " [404]")
             return 0, str(msg)
@@ -436,155 +440,6 @@ class virtualHostUtilities:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "  [saveRewriteRules]")
             print("0," + str(msg))
-
-    @staticmethod
-    def installWordPress(domainName, finalPath, virtualHostUser, dbName, dbUser, dbPassword):
-        try:
-
-            FNULL = open(os.devnull, 'w')
-
-            if not os.path.exists(finalPath):
-                os.makedirs(finalPath)
-
-            ## checking for directories/files
-
-            dirFiles = os.listdir(finalPath)
-
-            if len(dirFiles) == 1:
-                if dirFiles[0] == ".well-known":
-                    pass
-                else:
-                    print("0,Target directory should be empty before installation, otherwise data loss could occur.")
-                    return
-            elif len(dirFiles) == 0:
-                pass
-            else:
-                print("0,Target directory should be empty before installation, otherwise data loss could occur.")
-                return
-
-            ## Get wordpress
-
-            if not os.path.exists("latest.tar.gz"):
-                command = 'wget --no-check-certificate http://wordpress.org/latest.tar.gz -O latest.tar.gz'
-                cmd = shlex.split(command)
-                res = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
-
-            command = 'tar -xzvf latest.tar.gz -C ' + finalPath
-
-            cmd = shlex.split(command)
-
-            res = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
-
-            ## Get plugin
-
-            if not os.path.exists("litespeed-cache.1.1.5.1.zip"):
-                command = 'wget --no-check-certificate https://downloads.wordpress.org/plugin/litespeed-cache.1.1.5.1.zip'
-
-                cmd = shlex.split(command)
-
-                res = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
-
-            command = 'unzip litespeed-cache.1.1.5.1.zip -d ' + finalPath
-
-            cmd = shlex.split(command)
-
-            res = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
-
-            root = finalPath
-
-            for filename in listdir(join(root, 'wordpress')):
-                move(join(root, 'wordpress', filename), join(root, filename))
-
-            rmdir(root + "wordpress")
-
-            shutil.copytree(finalPath + "litespeed-cache", finalPath + "wp-content/plugins/litespeed-cache")
-            shutil.rmtree(finalPath + "litespeed-cache")
-
-            ## edit config file
-
-            wpconfigfile = finalPath + "wp-config-sample.php"
-
-            data = open(wpconfigfile, "r").readlines()
-
-            writeDataToFile = open(wpconfigfile, "w")
-
-            defDBName = "define('DB_NAME', '" + dbName + "');" + "\n"
-            defDBUser = "define('DB_USER', '" + dbUser + "');" + "\n"
-            defDBPassword = "define('DB_PASSWORD', '" + dbPassword + "');" + "\n"
-
-            for items in data:
-                if items.find("DB_NAME") > -1:
-                    if items.find("database_name_here") > -1:
-                        writeDataToFile.writelines(defDBName)
-                elif items.find("DB_USER") > -1:
-                    if items.find("username_here") > -1:
-                        writeDataToFile.writelines(defDBUser)
-                elif items.find("DB_PASSWORD") > -1:
-                    writeDataToFile.writelines(defDBPassword)
-                else:
-                    writeDataToFile.writelines(items)
-
-            writeDataToFile.close()
-
-            os.rename(wpconfigfile, finalPath + 'wp-config.php')
-
-            command = "chown -R " + virtualHostUser + ":" + virtualHostUser + " " + "/home/" + domainName + "/public_html/"
-
-            cmd = shlex.split(command)
-
-            res = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
-
-            vhost.addRewriteRules(domainName)
-
-            installUtilities.installUtilities.reStartLiteSpeed()
-
-            print("1,None")
-
-
-        except BaseException as msg:
-            # remove the downloaded files
-            try:
-
-                shutil.rmtree(finalPath)
-            except:
-                logging.CyberCPLogFileWriter.writeToFile("shutil.rmtree(finalPath)")
-
-            homeDir = "/home/" + domainName + "/public_html"
-
-            if not os.path.exists(homeDir):
-                FNULL = open(os.devnull, 'w')
-                os.mkdir(homeDir)
-                command = "chown -R " + virtualHostUser + ":" + virtualHostUser + " " + homeDir
-                cmd = shlex.split(command)
-                res = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
-
-            print("0," + str(msg))
-            return
-
-    @staticmethod
-    def installJoomla(domainName, finalPath, virtualHostUser, dbName, dbUser, dbPassword, username, password, prefix,
-                      sitename, tempStatusPath):
-        try:
-
-            extraArgs = {}
-            extraArgs['domainName'] = domainName
-            extraArgs['finalPath'] = finalPath
-            extraArgs['virtualHostUser'] = virtualHostUser
-            extraArgs['dbName'] = dbName
-            extraArgs['dbUser'] = dbUser
-            extraArgs['dbPassword'] = dbPassword
-            extraArgs['username'] = username
-            extraArgs['password'] = password
-            extraArgs['prefix'] = prefix
-            extraArgs['sitename'] = sitename
-            extraArgs['tempStatusPath'] = tempStatusPath
-
-            background = ApplicationInstaller('joomla', extraArgs)
-            background.start()
-
-
-        except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [installJoomla]')
 
     @staticmethod
     def issueSSLForHostName(virtualHost, path):
@@ -1145,9 +1000,12 @@ class virtualHostUtilities:
 
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'DKIM Setup..,30')
 
-            retValues = mailUtilities.setupDKIM(virtualHostName)
-            if retValues[0] == 0:
-                raise BaseException(retValues[1])
+            postFixPath = '/home/cyberpanel/postfix'
+
+            if os.path.exists(postFixPath):
+                retValues = mailUtilities.setupDKIM(virtualHostName)
+                if retValues[0] == 0:
+                    raise BaseException(retValues[1])
 
             FNULL = open(os.devnull, 'w')
 
@@ -1157,11 +1015,12 @@ class virtualHostUtilities:
                                                        master.adminEmail, master.externalApp, openBasedir)
             if retValues[0] == 0:
                 raise BaseException(retValues[1])
+
             if not os.path.exists(virtualHostUtilities.redisConf):
                 retValues = vhost.createConfigInMainDomainHostFile(virtualHostName, masterDomain)
 
-            if retValues[0] == 0:
-                raise BaseException(retValues[1])
+                if retValues[0] == 0:
+                    raise BaseException(retValues[1])
 
             ## Now restart litespeed after initial configurations are done
 
@@ -1221,8 +1080,10 @@ class virtualHostUtilities:
             return 1, "None"
 
         except BaseException as msg:
-            numberOfWebsites = Websites.objects.count() + ChildDomains.objects.count()
-            vhost.deleteCoreConf(virtualHostName, numberOfWebsites)
+            if ACLManager.FindIfChild() == 0:
+                numberOfWebsites = Websites.objects.count() + ChildDomains.objects.count()
+                vhost.deleteCoreConf(virtualHostName, numberOfWebsites)
+
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, str(msg) + ". [404]")
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "  [createDomain]")

@@ -43,6 +43,22 @@ class ACLManager:
               '"dkimManager": 1, "createFTPAccount": 1, "deleteFTPAccount": 1, "listFTPAccounts": 1, "createBackup": 1,' \
               ' "restoreBackup": 0, "addDeleteDestinations": 0, "scheDuleBackups": 0, "remoteBackups": 0, "googleDriveBackups": 1, "manageSSL": 1, ' \
               '"hostnameSSL": 0, "mailServerSSL": 0 }'
+    @staticmethod
+    def FindIfChild():
+        try:
+            ipFile = "/etc/cyberpanel/machineIP"
+            f = open(ipFile)
+            ipData = f.read()
+            ipAddress = ipData.split('\n', 1)[0]
+
+            config = json.loads(open('/home/cyberpanel/cluster', 'r').read())
+            if config['failoverServerIP'] == ipAddress:
+                return 1
+            else:
+                return 0
+        except:
+            return 0
+
 
     @staticmethod
     def fetchIP():
