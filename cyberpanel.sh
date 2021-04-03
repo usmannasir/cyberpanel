@@ -199,10 +199,13 @@ Server_IP=$(curl --silent --max-time 30 -4 https://cyberpanel.sh/?ip)
 
 echo -e "\nChecking server location...\n"
 
-Server_Country=$(curl --silent --max-time 10 -4 https://cyberpanel.sh/?country)
-if [[ ${#Server_Country} != "2" ]] ; then
-  Server_Country="Unknow"
-fi
+if [[ "$Server_Country" != "CN" ]] ; then 
+  Server_Country=$(curl --silent --max-time 10 -4 https://cyberpanel.sh/?country)
+  if [[ ${#Server_Country} != "2" ]] ; then
+   Server_Country="Unknow"
+  fi
+fi 
+#to avoid repeated check_ip called by debug_log2 to break force mirror for CN servers.
 
 if [[ "$Debug" = "On" ]] ; then
   Debug_Log "Server_IP" "$Server_IP"
