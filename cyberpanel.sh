@@ -193,7 +193,7 @@ Server_IP=$(curl --silent --max-time 30 -4 https://cyberpanel.sh/?ip)
     echo -e "Valid IP detected..."
   else
     echo -e "Can not detect IP, exit..."
-    Debug_Log2 "Can not detect IP"
+    Debug_Log2 "Can not detect IP. [404]"
     exit
   fi
 

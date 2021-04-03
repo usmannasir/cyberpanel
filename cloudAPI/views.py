@@ -56,6 +56,8 @@ def router(request):
             return cm.CreatePendingVirtualHosts()
         elif controller == 'BootMaster':
             return cm.BootMaster()
+        elif controller == 'SwitchDNS':
+            return cm.SwitchDNS()
         elif controller == 'BootChild':
             return cm.BootChild()
         elif controller == 'SetupCluster':

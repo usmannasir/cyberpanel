@@ -2822,3 +2822,110 @@ class CloudManager:
             final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
+
+    def SwitchDNS(self):
+        try:
+
+            command = 'chown -R cyberpanel:cyberpanel /usr/local/CyberCP/lib/python3.8/site-packages/tldextract/.suffix_cache/'
+            ProcessUtilities.executioner(command)
+
+            ##
+
+            ipFile = "/etc/cyberpanel/machineIP"
+            f = open(ipFile)
+            ipData = f.read()
+            ipAddress = ipData.split('\n', 1)[0]
+
+            ##
+
+            import CloudFlare
+            cf = CloudFlare.CloudFlare(email=self.data['cfemail'], token=self.data['apikey'])
+
+            zones = cf.zones.get(params = {'per_page':100})
+
+            for website in Websites.objects.all():
+                import tldextract
+                extractDomain = tldextract.extract(website.domain)
+                topLevelDomain = extractDomain.domain + '.' + extractDomain.suffix
+
+                for zone in zones:
+                    if topLevelDomain == zone['name']:
+                        try:
+                            dns_records = cf.zones.dns_records.get(zone['id'], params={'name': website.domain})
+
+                            for dns_record in dns_records:
+
+                                r_zone_id = dns_record['zone_id']
+                                r_id = dns_record['id']
+                                r_name = dns_record['name']
+                                r_type = dns_record['type']
+                                r_ttl = dns_record['ttl']
+                                r_proxied = dns_record['proxied']
+
+
+                                dns_record_id = dns_record['id']
+
+                                new_dns_record = {
+                                    'zone_id': r_zone_id,
+                                    'id': r_id,
+                                    'type': r_type,
+                                    'name': r_name,
+                                    'content': ipAddress,
+                                    'ttl': r_ttl,
+                                    'proxied': r_proxied
+                                }
+
+                                cf.zones.dns_records.put(zone['id'], dns_record_id, data=new_dns_record)
+
+                        except:
+                            pass
+
+            ### For child domainsa
+
+            from websiteFunctions.models import ChildDomains
+            for website in ChildDomains.objects.all():
+
+                import tldextract
+                extractDomain = tldextract.extract(website.domain)
+                topLevelDomain = extractDomain.domain + '.' + extractDomain.suffix
+
+                for zone in zones:
+                    if topLevelDomain == zone['name']:
+                        try:
+                            dns_records = cf.zones.dns_records.get(zone['id'], params={'name': website.domain})
+
+                            for dns_record in dns_records:
+
+                                r_zone_id = dns_record['zone_id']
+                                r_id = dns_record['id']
+                                r_name = dns_record['name']
+                                r_type = dns_record['type']
+                                r_ttl = dns_record['ttl']
+                                r_proxied = dns_record['proxied']
+
+
+                                dns_record_id = dns_record['id']
+
+                                new_dns_record = {
+                                    'zone_id': r_zone_id,
+                                    'id': r_id,
+                                    'type': r_type,
+                                    'name': r_name,
+                                    'content': ipAddress,
+                                    'ttl': r_ttl,
+                                    'proxied': r_proxied
+                                }
+
+                                cf.zones.dns_records.put(zone['id'], dns_record_id, data=new_dns_record)
+
+                        except:
+                            pass
+
+            final_json = json.dumps({'status': 1})
+            return HttpResponse(final_json)
+
+        except BaseException as msg:
+            logging.writeToFile(str(msg))
+            final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)

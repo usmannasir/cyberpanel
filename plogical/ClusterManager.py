@@ -2,9 +2,13 @@ import json
 import os.path
 import sys
 import argparse
+import django
 import requests
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
+django.setup()
+from firewall.models import FirewallRules
+from plogical.firewallUtilities import FirewallUtilities
 from plogical.processUtilities import ProcessUtilities
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 
@@ -64,9 +68,11 @@ class ClusterManager:
             config = json.loads(open(ClusterConfigPath, 'r').read())
 
             if self.type == 'Child':
+
                 writeToFile = open(ClusterPath, 'w')
                 writeToFile.write(config['ClusterConfigFailover'])
                 writeToFile.close()
+
             else:
                 writeToFile = open(ClusterPath, 'w')
                 writeToFile.write(config['ClusterConfigMaster'])
@@ -81,10 +87,46 @@ class ClusterManager:
 
                 writeToFile = open(cronPath, 'a')
                 writeToFile.write('*/%s * * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/ClusterManager.py --function SyncNow --type Master\n' % (str(self.config['syncTime'])))
+                writeToFile.write('*/3 * * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/ClusterManager.py --function PingNow --type Master\n')
                 writeToFile.close()
 
                 command = 'systemctl restart cron'
                 ProcessUtilities.normalExecutioner(command)
+
+            try:
+                ### MySQL Public
+
+                newFireWallRule = FirewallRules(name="mysqlpub", port='3306', proto="tcp")
+                newFireWallRule.save()
+                FirewallUtilities.addRule('tcp', '3306', "0.0.0.0/0")
+
+                ### For Galera Cluster replication traffic.
+
+                newFireWallRule = FirewallRules(name="galery", port='4567', proto="tcp")
+                newFireWallRule.save()
+                FirewallUtilities.addRule('tcp', '4567', "0.0.0.0/0")
+
+                ### For Galera Cluster IST
+
+                newFireWallRule = FirewallRules(name="galeryist", port='4568', proto="tcp")
+                newFireWallRule.save()
+                FirewallUtilities.addRule('tcp', '4568', "0.0.0.0/0")
+
+                ### For Galera Cluster SST
+
+                newFireWallRule = FirewallRules(name="galerysst", port='4444', proto="tcp")
+                newFireWallRule.save()
+                FirewallUtilities.addRule('tcp', '4444', "0.0.0.0/0")
+
+                ### For Galera Cluster replication traffic. (UDP)
+
+                newFireWallRule = FirewallRules(name="galeryudp", port='4567', proto="udp")
+                newFireWallRule.save()
+                FirewallUtilities.addRule('udp', '4567', "0.0.0.0/0")
+
+            except:
+                self.PostStatus('Failed to add Firewall rules, manually open the required ports..')
+
 
             self.PostStatus('Successfully attached to cluster. [200]')
 
@@ -245,7 +287,7 @@ password=%s""" % (rootdbpassword, rootdbpassword)
 
             self.PostStatus('Syncing SSL certificates to fail over server..')
 
-            command = "rsync -avzp -e 'ssh -o StrictHostKeyChecking=no -p %s -i /root/.ssh/cyberpanel' /etc/letsencrypt/ root@%s:/etc" % (
+            command = "rsync -avzp -e 'ssh -o StrictHostKeyChecking=no -p %s -i /root/.ssh/cyberpanel' /etc/letsencrypt root@%s:/etc" % (
             self.config['failoverServerSSHPort'], self.config['failoverServerIP'])
             ProcessUtilities.normalExecutioner(command)
 
@@ -253,6 +295,12 @@ password=%s""" % (rootdbpassword, rootdbpassword)
 
         except BaseException as msg:
             self.PostStatus('Failed to create pending vhosts, error %s [404].' % (str(msg)))
+
+    def PingNow(self):
+        try:
+            self.PostStatus('Master up. [200]')
+        except BaseException as msg:
+            self.PostStatus('Failed to ping cloud for online status, error %s [404].' % (str(msg)))
 
 
 def main():
@@ -276,6 +324,8 @@ def main():
         uc.CreatePendingVirtualHosts()
     elif args.function == 'SyncNow':
         uc.SyncNow()
+    elif args.function == 'PingNow':
+        uc.PingNow()
 
 
 if __name__ == "__main__":
