@@ -222,6 +222,7 @@ class vhost:
         # General Configurations tab
         if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
             try:
+
                 confFile = open(vhFile, "w+")
 
                 php = PHPManager.getPHPString(phpVersion)
@@ -297,7 +298,7 @@ class vhost:
                     command = 'redis-cli set %s' % (currentConf)
                     ProcessUtilities.executioner(command)
 
-                    return 1
+                return 1
 
             except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(
