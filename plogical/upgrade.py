@@ -1303,7 +1303,7 @@ imap_folder_list_limit = 0
                 pass
 
             try:
-                cursor.execute('ALTER TABLE `manageServices_pdnsstatus` CHANGE `type` `type` VARCHAR(6) NULL;')
+                cursor.execute('ALTER TABLE `manageServices_pdnsstatus` CHANGE `type` `type` VARCHAR(10) NULL;')
             except:
                 pass
 
