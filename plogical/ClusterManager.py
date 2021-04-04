@@ -273,13 +273,30 @@ password=%s""" % (rootdbpassword, rootdbpassword)
                     self.PostStatus('Domain %s successfully created.' % (website.domain))
 
 
-
             for childDomain in ChildDomains.objects.all():
                 confPath = '%s/%s' % (ClusterManager.vhostConfPath, childDomain.domain)
                 if not os.path.exists(confPath):
                     self.PostStatus('Child Domain %s found in master server, creating on child server now..' % (childDomain.domain))
                     virtualHostUtilities.createDomain(childDomain.master.domain, childDomain.domain, childDomain.phpSelection, childDomain.path, 1, 1, 0, childDomain.master.admin.userName, 0, 0)
                     self.PostStatus('Child Domain %s successfully created.' % (childDomain.domain))
+
+            ## Cleanup of deleted domains
+
+            from plogical.acl import ACLManager
+            currentACL = ACLManager.loadedACL(1)
+            allSite = ACLManager.findAllSites(currentACL, 1)
+
+            for website in os.listdir('/home'):
+                if website not in allSite:
+                    self.PostStatus('Domain %s not found in Master, deleting data directories and configurations.' % (website))
+
+                    command = 'rm -rf /home/%s' % (website)
+                    ProcessUtilities.normalExecutioner(command)
+
+                    command = 'rm -rf /%s/%s' % (ClusterManager.vhostConfPath, website)
+                    ProcessUtilities.normalExecutioner(command)
+
+
 
             self.PostStatus('All domains synced.')
 
