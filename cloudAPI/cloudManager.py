@@ -2670,7 +2670,7 @@ class CloudManager:
             execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/CyberPanelUpgrade.py --branch %s --mail %s --dns %s --ftp %s" % (
             self.data['CyberPanelBranch'], mail, dns, ftp)
 
-            ProcessUtilities.popenExecutioner(execPath)
+            ProcessUtilities.executioner(execPath)
             final_json = json.dumps({'status': 1})
             return HttpResponse(final_json)
 
