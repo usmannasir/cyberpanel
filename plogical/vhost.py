@@ -54,7 +54,7 @@ class vhost:
             command = "/usr/sbin/groupadd " + virtualHostUser
             ProcessUtilities.executioner(command)
 
-            command = "usermod -a -G " + virtualHostUser + " " + virtualHostUser
+            command = "/usr/sbin/usermod -a -G " + virtualHostUser + " " + virtualHostUser
             ProcessUtilities.executioner(command)
 
         except BaseException as msg:
