@@ -16,7 +16,7 @@ class ClusterManager:
 
     LogURL = "http://de-a.cyberhosting.org:8000/HighAvailability/RecvData"
     ClusterFile = '/home/cyberpanel/cluster'
-    vhostConfPath = '/usr/local/lsws/conf'
+    vhostConfPath = '/usr/local/lsws/conf/vhosts'
 
     def __init__(self, type):
         ##
@@ -63,6 +63,13 @@ class ClusterManager:
     def SetupCluster(self):
         try:
 
+            CentOSPath = '/etc/redhat-release'
+
+            if os.path.exists(CentOSPath):
+                cronPath = '/var/spool/cron/root'
+            else:
+                cronPath = '/var/spool/cron/crontabs/root'
+
             ClusterPath = self.FetchMySQLConfigFile()
             ClusterConfigPath = '/home/cyberpanel/cluster'
             config = json.loads(open(ClusterConfigPath, 'r').read())
@@ -73,25 +80,22 @@ class ClusterManager:
                 writeToFile.write(config['ClusterConfigFailover'])
                 writeToFile.close()
 
+                writeToFile = open(cronPath, 'a')
+                writeToFile.write('*/5 * * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/ClusterManager.py --function CreatePendingVirtualHosts --type Child\n')
+                writeToFile.close()
+
             else:
                 writeToFile = open(ClusterPath, 'w')
                 writeToFile.write(config['ClusterConfigMaster'])
                 writeToFile.close()
-
-                CentOSPath = '/etc/redhat-release'
-
-                if os.path.exists(CentOSPath):
-                    cronPath = '/var/spool/cron/root'
-                else:
-                    cronPath = '/var/spool/cron/crontabs/root'
 
                 writeToFile = open(cronPath, 'a')
                 writeToFile.write('*/%s * * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/ClusterManager.py --function SyncNow --type Master\n' % (str(self.config['syncTime'])))
                 writeToFile.write('*/3 * * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/ClusterManager.py --function PingNow --type Master\n')
                 writeToFile.close()
 
-                command = 'systemctl restart cron'
-                ProcessUtilities.normalExecutioner(command)
+            command = 'systemctl restart cron'
+            ProcessUtilities.normalExecutioner(command)
 
             try:
                 ### MySQL Public
@@ -265,13 +269,18 @@ password=%s""" % (rootdbpassword, rootdbpassword)
                 if not os.path.exists(confPath):
                     self.PostStatus('Domain %s found in master server, creating on child server now..' % (website.domain))
                     virtualHostUtilities.createVirtualHost(website.domain, website.adminEmail, website.phpSelection, website.externalApp, 1, 1, 0, website.admin.userName, website.package.packageName, 0, '/home/cyberpanel/temp', 1, 0)
+                    self.PostStatus('Domain %s successfully created.' % (website.domain))
+
+                    ## Delete cache folders
+
+                    command = 'rm -rf /usr/local/lsws/cachedata'
 
             for childDomain in ChildDomains.objects.all():
                 confPath = '%s/%s' % (ClusterManager.vhostConfPath, childDomain.domain)
                 if not os.path.exists(confPath):
-                    self.PostStatus(
-                        'Domain %s found in master server, creating on child server now..' % (childDomain.domain))
+                    self.PostStatus('Child Domain %s found in master server, creating on child server now..' % (childDomain.domain))
                     virtualHostUtilities.createDomain(childDomain.master.domain, childDomain.domain, childDomain.phpSelection, childDomain.path, 1, 1, 0, childDomain.master.admin.userName, 0, 0)
+                    self.PostStatus('Child Domain %s successfully created.' % (childDomain.domain))
 
             self.PostStatus('All domains synced.')
 
