@@ -283,22 +283,22 @@ password=%s""" % (rootdbpassword, rootdbpassword)
             ## Cleanup of deleted domains
 
             from plogical.acl import ACLManager
+            import validators
             currentACL = ACLManager.loadedACL(1)
             allSite = ACLManager.findAllSites(currentACL, 1)
 
+            for website in os.listdir('/home'):
 
-            for website in os.listdir(ClusterManager.vhostConfPath):
+                if validators.domain(website):
+                    if website not in allSite:
+                        self.PostStatus(
+                            'Domain %s not found in Master, deleting data directories and configurations.' % (website))
 
-                if website not in allSite:
-                    self.PostStatus(
-                        'Domain %s not found in Master, deleting data directories and configurations.' % (website))
+                        command = 'rm -rf /home/%s' % (website)
+                        ProcessUtilities.normalExecutioner(command)
 
-                    command = 'rm -rf /home/%s' % (website)
-                    ProcessUtilities.normalExecutioner(command)
-
-                    command = 'rm -rf /%s/%s' % (ClusterManager.vhostConfPath, website)
-                    ProcessUtilities.normalExecutioner(command)
-
+                        command = 'rm -rf /%s/%s' % (ClusterManager.vhostConfPath, website)
+                        ProcessUtilities.normalExecutioner(command)
 
             self.PostStatus('All domains synced.')
 
