@@ -45,13 +45,13 @@ class vhost:
 
             FNULL = open(os.devnull, 'w')
             if os.path.exists("/etc/lsb-release"):
-                command = 'adduser --no-create-home --home ' + path + ' --disabled-login --gecos "" ' + virtualHostUser
+                command = '/usr/sbin/adduser --no-create-home --home ' + path + ' --disabled-login --gecos "" ' + virtualHostUser
             else:
                 command = "adduser " + virtualHostUser + " -M -d " + path
 
             ProcessUtilities.executioner(command)
 
-            command = "groupadd " + virtualHostUser
+            command = "/usr/sbin/groupadd " + virtualHostUser
             ProcessUtilities.executioner(command)
 
             command = "usermod -a -G " + virtualHostUser + " " + virtualHostUser

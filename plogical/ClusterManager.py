@@ -265,15 +265,14 @@ password=%s""" % (rootdbpassword, rootdbpassword)
             from websiteFunctions.models import Websites, ChildDomains
 
             for website in Websites.objects.all():
+
                 confPath = '%s/%s' % (ClusterManager.vhostConfPath, website.domain)
                 if not os.path.exists(confPath):
                     self.PostStatus('Domain %s found in master server, creating on child server now..' % (website.domain))
                     virtualHostUtilities.createVirtualHost(website.domain, website.adminEmail, website.phpSelection, website.externalApp, 1, 1, 0, website.admin.userName, website.package.packageName, 0, '/home/cyberpanel/temp', 1, 0)
                     self.PostStatus('Domain %s successfully created.' % (website.domain))
 
-                    ## Delete cache folders
 
-                    command = 'rm -rf /usr/local/lsws/cachedata'
 
             for childDomain in ChildDomains.objects.all():
                 confPath = '%s/%s' % (ClusterManager.vhostConfPath, childDomain.domain)
