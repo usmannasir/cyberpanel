@@ -3,6 +3,9 @@ import os
 import os.path
 import sys
 import django
+
+from plogical.acl import ACLManager
+
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 try:
@@ -392,14 +395,18 @@ class vhost:
                     if os.path.exists('/root/.acme.sh/%s' % (items.domain)):
                         shutil.rmtree('/root/.acme.sh/%s' % (items.domain))
 
-                for items in databases:
-                    mysqlUtilities.deleteDatabase(items.dbName, items.dbUser)
+                ## Child check, to make sure no database entires are being deleted from child node
 
-                delWebsite.delete()
+                if ACLManager.FindIfChild() == 0:
 
-                ## Deleting DNS Zone if there is any.
+                    for items in databases:
+                        mysqlUtilities.deleteDatabase(items.dbName, items.dbUser)
 
-                DNS.deleteDNSZone(virtualHostName)
+                    delWebsite.delete()
+
+                    ## Deleting DNS Zone if there is any.
+
+                    DNS.deleteDNSZone(virtualHostName)
 
                 if not os.path.exists(vhost.redisConf):
                     installUtilities.installUtilities.reStartLiteSpeed()
@@ -464,14 +471,18 @@ class vhost:
                     numberOfSites = Websites.objects.count() + ChildDomains.objects.count()
                     vhost.deleteCoreConf(items.domain, numberOfSites)
 
-                for items in databases:
-                    mysqlUtilities.deleteDatabase(items.dbName, items.dbUser)
 
-                delWebsite.delete()
+                ## child check to make sure no database entires are being deleted from child server
 
-                ## Deleting DNS Zone if there is any.
+                if ACLManager.FindIfChild() == 0:
+                    for items in databases:
+                        mysqlUtilities.deleteDatabase(items.dbName, items.dbUser)
 
-                DNS.deleteDNSZone(virtualHostName)
+                    delWebsite.delete()
+
+                    ## Deleting DNS Zone if there is any.
+
+                    DNS.deleteDNSZone(virtualHostName)
 
                 installUtilities.installUtilities.reStartLiteSpeed()
 

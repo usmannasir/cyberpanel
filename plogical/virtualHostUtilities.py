@@ -12,14 +12,9 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 from random import randint
 
 django.setup()
-
-import shutil
 import argparse
 from plogical import installUtilities
 from plogical import sslUtilities
-from os.path import join
-from os import listdir, rmdir
-from shutil import move
 from multiprocessing import Process
 import subprocess
 import shlex
@@ -27,7 +22,6 @@ from plogical.mailUtilities import mailUtilities
 from plogical import CyberCPLogFileWriter as logging
 from plogical.dnsUtilities import DNS
 from plogical.vhost import vhost
-from plogical.applicationInstaller import ApplicationInstaller
 from plogical.acl import ACLManager
 from plogical.processUtilities import ProcessUtilities
 from ApachController.ApacheController import ApacheController

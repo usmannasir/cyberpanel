@@ -284,6 +284,8 @@ password=%s""" % (rootdbpassword, rootdbpassword)
 
             from plogical.acl import ACLManager
             import validators
+            from plogical.vhost import vhost
+
             currentACL = ACLManager.loadedACL(1)
             allSite = ACLManager.findAllSites(currentACL, 1)
 
@@ -294,11 +296,7 @@ password=%s""" % (rootdbpassword, rootdbpassword)
                         self.PostStatus(
                             'Domain %s not found in Master, deleting data directories and configurations.' % (website))
 
-                        command = 'rm -rf /home/%s' % (website)
-                        ProcessUtilities.normalExecutioner(command)
-
-                        command = 'rm -rf /%s/%s' % (ClusterManager.vhostConfPath, website)
-                        ProcessUtilities.normalExecutioner(command)
+                        vhost.deleteVirtualHostConfigurations(website)
 
             self.PostStatus('All domains synced.')
 
