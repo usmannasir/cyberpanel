@@ -173,7 +173,12 @@ def generateAccess(request):
             try:
                 GlobalUserDB.objects.get(username=admin.userName).delete()
             except:
-                pass
+                try:
+                    gbobs = GlobalUserDB.objects.filter(username=admin.userName)
+                    for gbobs in gbobs:
+                        gbobs.delete()
+                except:
+                    pass
 
             password = randomPassword.generate_pass()
             token = randomPassword.generate_pass()
