@@ -1372,6 +1372,12 @@ imap_folder_list_limit = 0
             except:
                 pass
 
+            query = "ALTER TABLE packages_package ADD COLUMN enforceDiskLimits INT DEFAULT 0;"
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
             try:
                 connection.close()
             except:
