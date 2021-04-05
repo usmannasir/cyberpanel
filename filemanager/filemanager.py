@@ -342,7 +342,7 @@ class FileManager:
 
                 if skipTrash:
                     command = 'rm -rf ' + self.returnPathEnclosed(self.data['path'] + '/' + item)
-                    ProcessUtilities.outputExecutioner(command, website.externalApp)
+                    ProcessUtilities.executioner(command, website.externalApp)
                 else:
                     trashPath = '%s/.trash' % (self.homePath)
 
