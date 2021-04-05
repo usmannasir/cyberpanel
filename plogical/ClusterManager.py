@@ -14,7 +14,7 @@ from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 
 class ClusterManager:
 
-    LogURL = "http://de-a.cyberhosting.org:8000/HighAvailability/RecvData"
+    LogURL = "https://cloud.cyberpanel.net/HighAvailability/RecvData"
     ClusterFile = '/home/cyberpanel/cluster'
     vhostConfPath = '/usr/local/lsws/conf/vhosts'
 
