@@ -27,7 +27,7 @@ class PackagesManager:
         userID = self.request.session['userID']
         admin = Administrator.objects.get(pk=userID)
         proc = httpProc(self.request, 'packages/createPackage.html',
-                        {"admin": admin.userName}, 'createPackage')
+                        {"adminNamePackage": admin.userName}, 'createPackage')
         return proc.render()
 
     def deletePacakge(self):
@@ -66,6 +66,11 @@ class PackagesManager:
             except:
                 allowFullDomain = 1
 
+            try:
+                enforceDiskLimits = int(data['enforceDiskLimits'])
+            except:
+                enforceDiskLimits = 0
+
 
             if packageSpace < 0 or packageBandwidth < 0 or packageDatabases < 0 or ftpAccounts < 0 or emails < 0 or allowedDomains < 0:
                 data_ret = {'saveStatus': 0, 'error_message': "All values should be positive or 0."}
@@ -79,7 +84,7 @@ class PackagesManager:
 
             package = Package(admin=admin, packageName=packageName, diskSpace=packageSpace,
                               bandwidth=packageBandwidth, ftpAccounts=ftpAccounts, dataBases=packageDatabases,
-                              emailAccounts=emails, allowedDomains=allowedDomains, allowFullDomain=allowFullDomain)
+                              emailAccounts=emails, allowedDomains=allowedDomains, allowFullDomain=allowFullDomain, enforceDiskLimits=enforceDiskLimits)
 
             package.save()
 

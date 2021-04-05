@@ -37,7 +37,6 @@ class UpgradeCyberPanel:
         Upgrade.executioner(command, command)
         Upgrade.fixPermissions()
 
-
     def UpgardeNow(self):
 
         from plogical.upgrade import Upgrade
@@ -106,7 +105,6 @@ class UpgradeCyberPanel:
             self.PostStatus('Failed to execute %s. [404]' % (command))
 
         self.PostStatus('CyberPanel Upgraded/Downgraded to %s. [200]' % (self.branch))
-
 
 
 def main():
