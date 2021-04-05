@@ -64,7 +64,7 @@ app.controller('createPackage', function ($scope, $http) {
             dataBases: dataBases,
             emails: emails,
             allowedDomains: $scope.allowedDomains,
-            allowFullDomain: $scope.allowFullDomain
+            enforceDiskLimits: $scope.enforceDiskLimits
         };
 
         var config = {
