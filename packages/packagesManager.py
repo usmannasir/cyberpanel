@@ -151,7 +151,7 @@ class PackagesManager:
 
             data_ret = {'emails': emails, 'modifyStatus': 1, 'error_message': "None",
                         "diskSpace": diskSpace, "bandwidth": bandwidth, "ftpAccounts": ftpAccounts,
-                        "dataBases": dataBases, "allowedDomains": modifyPack.allowedDomains, 'allowFullDomain': modifyPack.allowFullDomain}
+                        "dataBases": dataBases, "allowedDomains": modifyPack.allowedDomains, 'allowFullDomain': modifyPack.allowFullDomain, 'enforceDiskLimits': modifyPack.enforceDiskLimits}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -193,6 +193,10 @@ class PackagesManager:
             except:
                 modifyPack.allowFullDomain = 1
 
+            try:
+                modifyPack.enforceDiskLimits = int(data['enforceDiskLimits'])
+            except:
+                modifyPack.enforceDiskLimits = 0
 
             modifyPack.save()
 
@@ -255,7 +259,8 @@ class PackagesManager:
                        'dataBases': items.dataBases,
                        'ftpAccounts': items.ftpAccounts,
                        'allowedDomains': items.allowedDomains,
-                       'allowFullDomain': items.allowFullDomain
+                       'allowFullDomain': items.allowFullDomain,
+                       'enforceDiskLimits': items.enforceDiskLimits
                        }
 
                 if checker == 0:

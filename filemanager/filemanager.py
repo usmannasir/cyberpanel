@@ -318,6 +318,22 @@ class FileManager:
             website = Websites.objects.get(domain=domainName)
             self.homePath = '/home/%s' % (domainName)
 
+            RemoveOK = 1
+
+            command = 'touch %s/hello.txt' % (self.homePath)
+            result = ProcessUtilities.outputExecutioner(command)
+
+            if result.find('No such file or directory') > -1:
+                RemoveOK = 0
+
+                command = 'chattr -R -i %s' % (self.homePath)
+                ProcessUtilities.executioner(command)
+
+            else:
+                command = 'rm -f %s/hello.txt' % (self.homePath)
+                ProcessUtilities.executioner(command)
+
+
             for item in self.data['fileAndFolders']:
 
                 if (self.data['path'] + '/' + item).find('..') > -1 or (self.data['path'] + '/' + item).find(
@@ -326,7 +342,7 @@ class FileManager:
 
                 if skipTrash:
                     command = 'rm -rf ' + self.returnPathEnclosed(self.data['path'] + '/' + item)
-                    ProcessUtilities.executioner(command, website.externalApp)
+                    ProcessUtilities.outputExecutioner(command, website.externalApp)
                 else:
                     trashPath = '%s/.trash' % (self.homePath)
 
@@ -338,6 +354,10 @@ class FileManager:
 
                     command = 'mv %s %s' % (self.returnPathEnclosed(self.data['path'] + '/' + item), trashPath)
                     ProcessUtilities.executioner(command, website.externalApp)
+
+            if RemoveOK == 0:
+                command = 'chattr -R +i %s' % (self.homePath)
+                ProcessUtilities.executioner(command)
 
             json_data = json.dumps(finalData)
             return HttpResponse(json_data)

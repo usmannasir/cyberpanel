@@ -197,7 +197,6 @@ app.controller('modifyPackages', function ($scope, $http) {
         $("#successfullyModified").hide();
 
         var packageName = $scope.packageToBeModified;
-        console.log(packageName);
 
 
         url = "/packages/submitModify";
@@ -234,11 +233,8 @@ app.controller('modifyPackages', function ($scope, $http) {
                 $scope.emails = response.data.emails;
                 $scope.allowedDomains = response.data.allowedDomains;
 
-                if (response.data.allowFullDomain === 1) {
-                    $scope.allowFullDomain = true;
-                } else {
-                    $scope.allowFullDomain = false;
-                }
+                $scope.allowFullDomain = response.data.allowFullDomain === 1;
+                $scope.enforceDiskLimits = response.data.enforceDiskLimits === 1;
 
                 $scope.modifyButton = "Save Details";
 
@@ -259,7 +255,6 @@ app.controller('modifyPackages', function ($scope, $http) {
         }
 
     };
-
 
     $scope.modifyPackageFunc = function () {
 
@@ -286,7 +281,8 @@ app.controller('modifyPackages', function ($scope, $http) {
             dataBases: dataBases,
             emails: emails,
             allowedDomains: $scope.allowedDomains,
-            allowFullDomain: $scope.allowFullDomain
+            allowFullDomain: $scope.allowFullDomain,
+            enforceDiskLimits: $scope.enforceDiskLimits,
         };
 
         var config = {
@@ -446,7 +442,7 @@ app.controller('listPackageTables', function ($scope, $http) {
     };
 
     $scope.editInitial = function (package, diskSpace, bandwidth,
-                                   emailAccounts, dataBases, ftpAccounts, allowedDomains, allowFullDomain) {
+                                   emailAccounts, dataBases, ftpAccounts, allowedDomains, allowFullDomain, enforceDiskLimits) {
         $scope.name = package;
         $scope.diskSpace = diskSpace;
         $scope.bandwidth = bandwidth;
@@ -455,12 +451,8 @@ app.controller('listPackageTables', function ($scope, $http) {
         $scope.ftpAccounts = ftpAccounts;
         $scope.allowedDomains = allowedDomains;
         $scope.allowFullDomain = allowFullDomain;
-
-        if (allowFullDomain === 1) {
-            $scope.allowFullDomain = true;
-        } else {
-            $scope.allowFullDomain = false;
-        }
+        $scope.allowFullDomain = allowFullDomain === 1;
+        $scope.enforceDiskLimits = enforceDiskLimits === 1;
     };
 
     $scope.saveChanges = function () {
@@ -482,7 +474,8 @@ app.controller('listPackageTables', function ($scope, $http) {
             dataBases: dataBases,
             emails: emails,
             allowedDomains: $scope.allowedDomains,
-            allowFullDomain: $scope.allowFullDomain
+            allowFullDomain: $scope.allowFullDomain,
+            enforceDiskLimits: $scope.enforceDiskLimits,
         };
 
         var config = {
