@@ -13,7 +13,9 @@ import json
 # Create your views here.
 
 # This function checks if user has admin permissions
+
 def dockerPermission(request, userID, context):
+
     currentACL = ACLManager.loadedACL(userID)
     
     if currentACL['admin'] != 1:
@@ -34,9 +36,14 @@ def loadDockerHome(request):
 
 def installDocker(request):
     try:
+
         userID = request.session['userID']
-        perm = dockerPermission(request, userID, 'loadDockerHome')
-        if perm: return perm
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
 
         cm = ContainerManager(userID, 'submitInstallDocker')
         cm.start()
@@ -54,8 +61,12 @@ def installDocker(request):
 def installImage(request):
     try:
         userID = request.session['userID']
-        perm = dockerPermission(request, userID, 'loadDockerHome')
-        if perm: return perm
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
 
         cm = ContainerManager()
         coreResult = cm.submitInstallImage(userID, json.loads(request.body))
@@ -73,8 +84,13 @@ def viewContainer(request, name):
         request.GET['name'] = name
 
         userID = request.session['userID']
-        perm = dockerPermission(request, userID, 'loadDockerHome')
-        if perm: return perm
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
+
         cm = ContainerManager(name)
         coreResult = cm.loadContainerHome(request, userID)
 
@@ -87,8 +103,12 @@ def viewContainer(request, name):
 def getTags(request): 
     try:
         userID = request.session['userID']
-        perm = dockerPermission(request, userID, 'loadDockerHome')
-        if perm: return perm
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
 
         cm = ContainerManager()
         coreResult = cm.getTags(userID, json.loads(request.body))
@@ -101,9 +121,14 @@ def getTags(request):
 @preDockerRun
 def delContainer(request): 
     try:
+
         userID = request.session['userID']
-        perm = dockerPermission(request, userID, 'loadDockerHome')
-        if perm: return perm
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
 
         cm = ContainerManager()
         coreResult = cm.submitContainerDeletion(userID, json.loads(request.body))
@@ -117,8 +142,12 @@ def delContainer(request):
 def recreateContainer(request): 
     try:
         userID = request.session['userID']
-        perm = dockerPermission(request, userID, 'loadDockerHome')
-        if perm: return perm
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
 
         cm = ContainerManager()
         coreResult = cm.recreateContainer(userID, json.loads(request.body))
@@ -132,8 +161,12 @@ def recreateContainer(request):
 def runContainer(request):
     try:
         userID = request.session['userID']
-        perm = dockerPermission(request, userID, 'loadDockerHome')
-        if perm: return perm
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
         
         cm = ContainerManager()
         return cm.createContainer(request, userID)
@@ -144,8 +177,12 @@ def runContainer(request):
 def listContainers(request):
     try:
         userID = request.session['userID']
-        perm = dockerPermission(request, userID, 'loadDockerHome')
-        if perm: return perm
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
         
         cm = ContainerManager()
         return cm.listContainers(request, userID)
@@ -155,9 +192,14 @@ def listContainers(request):
 @preDockerRun    
 def getContainerLogs(request):
     try:
+
         userID = request.session['userID']
-        perm = dockerPermission(request, userID, 'loadDockerHome')
-        if perm: return perm
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
 
         cm = ContainerManager()
         coreResult = cm.getContainerLogs(userID, json.loads(request.body))
@@ -169,9 +211,14 @@ def getContainerLogs(request):
 @preDockerRun    
 def submitContainerCreation(request):
     try:
+
         userID = request.session['userID']
-        perm = dockerPermission(request, userID, 'loadDockerHome')
-        if perm: return perm
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
 
         cm = ContainerManager()
         coreResult = cm.submitContainerCreation(userID, json.loads(request.body))
@@ -185,8 +232,12 @@ def submitContainerCreation(request):
 def getContainerList(request):
     try:
         userID = request.session['userID']
-        perm = dockerPermission(request, userID, 'loadDockerHome')
-        if perm: return perm
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
         
         cm = ContainerManager()
         return cm.getContainerList(userID, json.loads(request.body))
@@ -197,8 +248,12 @@ def getContainerList(request):
 def doContainerAction(request):
     try:
         userID = request.session['userID']
-        perm = dockerPermission(request, userID, 'loadDockerHome')
-        if perm: return perm
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
         
         cm = ContainerManager()
         coreResult = cm.doContainerAction(userID, json.loads(request.body))
@@ -211,8 +266,12 @@ def doContainerAction(request):
 def getContainerStatus(request):
     try:
         userID = request.session['userID']
-        perm = dockerPermission(request, userID, 'loadDockerHome')
-        if perm: return perm
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
         
         cm = ContainerManager()
         coreResult = cm.getContainerStatus(userID, json.loads(request.body))
@@ -225,8 +284,12 @@ def getContainerStatus(request):
 def exportContainer(request):
     try:
         userID = request.session['userID']
-        perm = dockerPermission(request, userID, 'loadDockerHome')
-        if perm: return perm
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
         
         cm = ContainerManager()
         coreResult = cm.exportContainer(request, userID)
@@ -239,8 +302,12 @@ def exportContainer(request):
 def saveContainerSettings(request):
     try:
         userID = request.session['userID']
-        perm = dockerPermission(request, userID, 'loadDockerHome')
-        if perm: return perm
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
         
         cm = ContainerManager()
         coreResult = cm.saveContainerSettings(userID, json.loads(request.body))
@@ -253,8 +320,12 @@ def saveContainerSettings(request):
 def getContainerTop(request):
     try:
         userID = request.session['userID']
-        perm = dockerPermission(request, userID, 'loadDockerHome')
-        if perm: return perm
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
         
         cm = ContainerManager()
         coreResult = cm.getContainerTop(userID, json.loads(request.body))
@@ -267,8 +338,12 @@ def getContainerTop(request):
 def assignContainer(request):
     try:
         userID = request.session['userID']
-        perm = dockerPermission(request, userID, 'loadDockerHome')
-        if perm: return perm
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
         
         cm = ContainerManager()
         coreResult = cm.assignContainer(userID, json.loads(request.body))
@@ -281,8 +356,12 @@ def assignContainer(request):
 def searchImage(request):
     try:
         userID = request.session['userID']
-        perm = dockerPermission(request, userID, 'loadDockerHome')
-        if perm: return perm
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
         
         cm = ContainerManager()
         coreResult = cm.searchImage(userID, json.loads(request.body))
@@ -294,10 +373,14 @@ def searchImage(request):
 @preDockerRun    
 def images(request):
     try:
+
         userID = request.session['userID']
-        perm = dockerPermission(request, userID, 'images')
-        if perm: return perm
-        
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
         
         cm = ContainerManager()
         coreResult = cm.images(request, userID)
@@ -310,8 +393,12 @@ def images(request):
 def manageImages(request):
     try:
         userID = request.session['userID']
-        perm = dockerPermission(request, userID, 'loadDockerHome')
-        if perm: return perm
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
         
         cm = ContainerManager()
         coreResult = cm.manageImages(request, userID)
@@ -324,9 +411,12 @@ def manageImages(request):
 def getImageHistory(request):
     try:
         userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
 
-        perm = dockerPermission(request, userID, 'loadDockerHome')
-        if perm: return perm
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
         
         cm = ContainerManager()
         coreResult = cm.getImageHistory(userID, json.loads(request.body))
@@ -339,8 +429,12 @@ def getImageHistory(request):
 def removeImage(request):
     try:
         userID = request.session['userID']
-        perm = dockerPermission(request, userID, 'loadDockerHome')
-        if perm: return perm
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
         
         cm = ContainerManager()
         coreResult = cm.removeImage(userID, json.loads(request.body))
