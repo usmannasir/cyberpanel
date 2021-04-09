@@ -48,6 +48,8 @@ def router(request):
             return cm.RunServerLevelEmailChecks()
         elif controller == 'DetachCluster':
             return cm.DetachCluster()
+        elif controller == 'DebugCluster':
+            return cm.DebugCluster()
         elif controller == 'FetchMasterBootStrapStatus':
             return cm.FetchMasterBootStrapStatus()
         elif controller == 'FetchChildBootStrapStatus':

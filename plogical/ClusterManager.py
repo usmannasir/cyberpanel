@@ -1,5 +1,7 @@
 import json
 import os.path
+import shlex
+import subprocess
 import sys
 import argparse
 import django
@@ -329,6 +331,30 @@ password=%s""" % (rootdbpassword, rootdbpassword)
         except BaseException as msg:
             self.PostStatus('Failed to ping cloud for online status, error %s [404].' % (str(msg)))
 
+    def DebugCluster(self):
+        try:
+
+            if os.path.exists(ClusterManager.ClusterFile):
+                self.PostStatus('Cluster config file exixts.')
+            else:
+                self.PostStatus('Cluster config file does not exists. [404]')
+
+            if os.path.exists(self.FetchMySQLConfigFile()):
+                self.PostStatus('MySQL Cluster file exists.')
+            else:
+                self.PostStatus('MySQL Cluster file does not exists. [404]')
+
+            command = 'systemctl status mysql'
+            result = subprocess.check_output(shlex.split(command)).decode("utf-8")
+
+            if result.find("active (running)") > -1:
+                self.PostStatus('MySQL server is running.')
+            else:
+                self.PostStatus('MySQL server is down. [404]')
+
+        except BaseException as msg:
+            self.PostStatus('Failed to debug cluster, error %s [404].' % (str(msg)))
+
 
 def main():
     parser = argparse.ArgumentParser(description='CyberPanel Installer')
@@ -353,6 +379,8 @@ def main():
         uc.SyncNow()
     elif args.function == 'PingNow':
         uc.PingNow()
+    elif args.function == 'DebugCluster':
+        uc.DebugCluster()
 
 
 if __name__ == "__main__":
