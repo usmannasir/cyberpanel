@@ -806,10 +806,13 @@ if [[ $Server_OS = "CentOS" ]] ; then
   yum autoremove -y epel-release
   rm -f /etc/yum.repos.d/epel.repo
   rm -f /etc/yum.repos.d/epel.repo.rpmsave
-  yum install -y epel-release
-      Check_Return "yum repo" "no_exit"
+
 
   if [[ "$Server_OS_Version" = "8" ]]; then
+    rpm --import https://cyberpanel.sh/dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-8
+    yum install -y https://cyberpanel.sh/dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
+      Check_Return "yum repo" "no_exit"
+
     cat <<EOF >/etc/yum.repos.d/CentOS-PowerTools-CyberPanel.repo
 [powertools-for-cyberpanel]
 name=CentOS Linux \$releasever - PowerTools
@@ -822,7 +825,9 @@ EOF
   fi
 
   if [[ "$Server_OS_Version" = "7" ]]; then
-
+    rpm --import https://cyberpanel.sh/dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-7
+    yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+      Check_Return "yum repo" "no_exit"
 
     yum install -y yum-plugin-priorities
       Check_Return "yum repo" "no_exit"
