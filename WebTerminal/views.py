@@ -42,7 +42,7 @@ def terminal(request):
         newFWRule.save()
 
     proc = httpProc(request, 'WebTerminal/WebTerminal.html',
-                    {'verifyPath': verifyPath, 'password': password})
+                    {'verifyPath': verifyPath, 'password': password}, 'admin')
     return proc.render()
 
 def restart(request):
