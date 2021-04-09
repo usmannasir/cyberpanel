@@ -719,8 +719,6 @@ class ContainerManager(multi.Thread):
     def images(self, request=None, userID=None, data=None):
         try:
             admin = Administrator.objects.get(pk=userID)
-            if admin.acl.adminStatus != 1:
-                return ACLManager.loadError()
 
             client = docker.from_env()
             dockerAPI = docker.APIClient()
@@ -768,12 +766,6 @@ class ContainerManager(multi.Thread):
 
     def manageImages(self, request=None, userID=None, data=None):
         try:
-            currentACL = ACLManager.loadedACL(userID)
-
-            if currentACL['admin'] == 1:
-                pass
-            else:
-                return ACLManager.loadError()
 
             client = docker.from_env()
             dockerAPI = docker.APIClient()

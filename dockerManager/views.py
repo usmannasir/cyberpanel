@@ -177,13 +177,6 @@ def runContainer(request):
 def listContainers(request):
     try:
         userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
-
-        if currentACL['admin'] == 1:
-            pass
-        else:
-            return ACLManager.loadErrorJson()
-        
         cm = ContainerManager()
         return cm.listContainers(request, userID)
     except KeyError:
@@ -375,13 +368,6 @@ def images(request):
     try:
 
         userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
-
-        if currentACL['admin'] == 1:
-            pass
-        else:
-            return ACLManager.loadErrorJson()
-        
         cm = ContainerManager()
         coreResult = cm.images(request, userID)
         
@@ -393,16 +379,8 @@ def images(request):
 def manageImages(request):
     try:
         userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
-
-        if currentACL['admin'] == 1:
-            pass
-        else:
-            return ACLManager.loadErrorJson()
-        
         cm = ContainerManager()
         coreResult = cm.manageImages(request, userID)
-        
         return coreResult
     except KeyError:
         return redirect(loadLoginPage)
