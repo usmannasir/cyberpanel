@@ -443,7 +443,6 @@ def enableDisableRuleFile(request):
 
 def csf(request):
     try:
-        userID = request.session['userID']
 
         result = pluginManager.preCSF(request)
         if result != 200:
@@ -462,7 +461,6 @@ def csf(request):
 
 def installCSF(request):
     try:
-        userID = request.session['userID']
         fm = FirewallManager(request)
         return fm.installCSF()
     except KeyError:
@@ -470,7 +468,6 @@ def installCSF(request):
 
 def installStatusCSF(request):
     try:
-        userID = request.session['userID']
         fm = FirewallManager(request)
         return fm.installStatusCSF()
     except KeyError:
@@ -478,7 +475,6 @@ def installStatusCSF(request):
 
 def removeCSF(request):
     try:
-        userID = request.session['userID']
         fm = FirewallManager(request)
         return fm.removeCSF()
     except KeyError:
@@ -486,7 +482,6 @@ def removeCSF(request):
 
 def fetchCSFSettings(request):
     try:
-        userID = request.session['userID']
         fm = FirewallManager(request)
         return fm.fetchCSFSettings()
     except KeyError:
@@ -494,7 +489,6 @@ def fetchCSFSettings(request):
 
 def changeStatus(request):
     try:
-        userID = request.session['userID']
 
         result = pluginManager.preChangeStatus(request)
         if result != 200:
@@ -513,7 +507,6 @@ def changeStatus(request):
 
 def modifyPorts(request):
     try:
-        userID = request.session['userID']
 
         result = pluginManager.preModifyPorts(request)
         if result != 200:
@@ -532,7 +525,6 @@ def modifyPorts(request):
 
 def modifyIPs(request):
     try:
-        userID = request.session['userID']
 
         result = pluginManager.preModifyIPs(request)
         if result != 200:

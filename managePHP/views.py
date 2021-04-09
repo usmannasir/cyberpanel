@@ -28,7 +28,6 @@ from plogical.httpProc import httpProc
 def loadPHPHome(request):
     try:
         userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
 
         proc = httpProc(request, 'managePHP/index.html',
                         None, 'admin')
@@ -39,8 +38,6 @@ def loadPHPHome(request):
 
 def installExtensions(request):
     try:
-        userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
 
         if PHP.objects.count() == 0:
             for i in range(3, 7):
@@ -1597,7 +1594,6 @@ def getRequestStatusApache(request):
 
 def editPHPConfigs(request):
     try:
-        userID = request.session['userID']
         proc = httpProc(request, 'managePHP/editPHPConfig.html',
                         {'phps': PHPManager.findPHPVersions()}, 'admin')
         return proc.render()
@@ -1693,7 +1689,6 @@ def getCurrentPHPConfig(request):
         return proc.render()
     except KeyError:
         return redirect(loadLoginPage)
-
 
 def savePHPConfigBasic(request):
     try:

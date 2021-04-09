@@ -103,7 +103,6 @@ def fetchStatus(request):
                         data_ret = {'status': 1, 'error_message': 'None', 'installCheck': 0}
                         json_data = json.dumps(data_ret)
                         return HttpResponse(json_data)
-
         except BaseException as msg:
             data_ret = {'status': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)

@@ -520,7 +520,6 @@ class FirewallManager:
             if installStatus.find("[200]") > -1:
 
                 execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
-
                 execPath = execPath + " installModSecConfigs"
 
                 output = ProcessUtilities.outputExecutioner(execPath)
@@ -1292,7 +1291,6 @@ class FirewallManager:
     def installStatusCSF(self):
         try:
             userID = self.request.session['userID']
-            currentACL = ACLManager.loadedACL(userID)
 
             installStatus = ProcessUtilities.outputExecutioner("sudo cat " + CSF.installLogPath)
 

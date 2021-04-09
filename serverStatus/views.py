@@ -37,7 +37,6 @@ def serverStatusHome(request):
 def litespeedStatus(request):
     try:
         userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
 
         processList = ProcessUtilities.getLitespeedProcessNumber()
 
@@ -605,7 +604,6 @@ def topProcessesStatus(request):
             data['buffCache'] = '%sMB' % (memoryInf0[1][5])
         except:
             data['buffCache'] = '%sMB' % ('0')
-
 
 
         ## Swap
