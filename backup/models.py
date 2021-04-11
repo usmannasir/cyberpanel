@@ -1,5 +1,3 @@
-
-
 from django.db import models
 
 class DBUsers(models.Model):

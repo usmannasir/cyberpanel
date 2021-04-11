@@ -107,22 +107,33 @@ class mysqlUtilities:
             return 0, 0
 
     @staticmethod
-    def createDatabase(dbname,dbuser,dbpassword):
+    def createDatabase(dbname,dbuser,dbpassword, dbcreate = 1, host = None):
         try:
+
+            if dbcreate:
+                HostToUse = mysqlUtilities.LOCALHOST
+            else:
+                HostToUse = host
 
             connection, cursor = mysqlUtilities.setupConnection()
 
             if connection == 0:
                 return 0
 
-            cursor.execute("CREATE DATABASE " + dbname)
+
+            ## Create db
+
+            if dbcreate:
+                cursor.execute("CREATE DATABASE " + dbname)
+
+            ## create user
 
             if mysqlUtilities.REMOTEHOST.find('ondigitalocean') > -1:
                 query = "CREATE USER '%s'@'%s' IDENTIFIED WITH mysql_native_password BY '%s'" % (
-                dbuser, mysqlUtilities.LOCALHOST, dbpassword)
+                dbuser, HostToUse, dbpassword)
             else:
                 query = "CREATE USER '" + dbuser + "'@'%s' IDENTIFIED BY '" % (
-                    mysqlUtilities.LOCALHOST) + dbpassword + "'"
+                    HostToUse) + dbpassword + "'"
 
             if os.path.exists(ProcessUtilities.debugPath):
                 logging.CyberCPLogFileWriter.writeToFile(query)
@@ -130,14 +141,15 @@ class mysqlUtilities:
             cursor.execute(query)
 
             if mysqlUtilities.RDS == 0:
-                cursor.execute("GRANT ALL PRIVILEGES ON " + dbname + ".* TO '" + dbuser + "'@'%s'" % (mysqlUtilities.LOCALHOST))
+                cursor.execute("GRANT ALL PRIVILEGES ON " + dbname + ".* TO '" + dbuser + "'@'%s'" % (HostToUse))
                 if os.path.exists(ProcessUtilities.debugPath):
-                    logging.CyberCPLogFileWriter.writeToFile("GRANT ALL PRIVILEGES ON " + dbname + ".* TO '" + dbuser + "'@'%s'" % (mysqlUtilities.LOCALHOST))
+                    logging.CyberCPLogFileWriter.writeToFile("GRANT ALL PRIVILEGES ON " + dbname + ".* TO '" + dbuser + "'@'%s'" % (HostToUse))
             else:
                 cursor.execute(
-                    "GRANT INDEX, DROP, UPDATE, ALTER, CREATE, SELECT, INSERT, DELETE ON " + dbname + ".* TO '" + dbuser + "'@'%s'" % (mysqlUtilities.LOCALHOST))
+                    "GRANT INDEX, DROP, UPDATE, ALTER, CREATE, SELECT, INSERT, DELETE ON " + dbname + ".* TO '" + dbuser + "'@'%s'" % (HostToUse))
                 if os.path.exists(ProcessUtilities.debugPath):
-                    logging.CyberCPLogFileWriter.writeToFile("GRANT INDEX, DROP, UPDATE, ALTER, CREATE, SELECT, INSERT, DELETE ON " + dbname + ".* TO '" + dbuser + "'@'%s'" % (mysqlUtilities.LOCALHOST))
+                    logging.CyberCPLogFileWriter.writeToFile("GRANT INDEX, DROP, UPDATE, ALTER, CREATE, SELECT, INSERT, DELETE ON " + dbname + ".* TO '" + dbuser + "'@'%s'" % (HostToUse))
+
             connection.close()
 
             return 1
@@ -207,7 +219,14 @@ class mysqlUtilities:
                 return 0
 
             cursor.execute("DROP DATABASE `%s`" % (dbname))
-            cursor.execute("DROP USER '"+dbuser+"'@'%s'" % (mysqlUtilities.LOCALHOST))
+
+            ## Try deleting all user who had priviliges on db
+
+            cursor.execute("select user,host from mysql.db where db='%s'" % (dbname))
+            databaseUsers = cursor.fetchall()
+
+            for databaseUser in databaseUsers:
+                cursor.execute("DROP USER '"+databaseUser[0]+"'@'%s'" % (databaseUser[1]))
             connection.close()
 
             return 1
@@ -337,6 +356,7 @@ password=%s
                     return 0
 
             if passwordCheck == None:
+
                 connection, cursor = mysqlUtilities.setupConnection()
 
                 if connection == 0:

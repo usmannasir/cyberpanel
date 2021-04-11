@@ -13,7 +13,7 @@ from firewall.models import FirewallRules
 from plogical.firewallUtilities import FirewallUtilities
 from plogical.processUtilities import ProcessUtilities
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
-
+from plogical.mysqlUtilities import mysqlUtilities
 class ClusterManager:
 
     LogURL = "https://cloud.cyberpanel.net/HighAvailability/RecvData"
@@ -34,7 +34,7 @@ class ClusterManager:
         try:
             finalData = {'name': self.config['name'], 'type': self.type, 'message': message, 'token': self.config['token']}
             resp = requests.post(ClusterManager.LogURL, data=json.dumps(finalData), verify=False)
-            logging.writeToFile(resp.text + '[info]')
+            # logging.writeToFile(resp.text + '[info]')
         except BaseException as msg:
             logging.writeToFile('%s. [31:404]' % (str(msg)))
 
@@ -252,6 +252,12 @@ password=%s""" % (rootdbpassword, rootdbpassword)
 
             writeToFile.write(content)
             writeToFile.close()
+
+            ## Let this server process updates if master is down
+
+            connection, cursor = mysqlUtilities.setupConnection()
+            cursor.execute("SET GLOBAL wsrep_provider_options='pc.ignore_sb=TRUE'")
+            connection.close()
 
             self.PostStatus('Fail over server successfully booted. [200]')
 

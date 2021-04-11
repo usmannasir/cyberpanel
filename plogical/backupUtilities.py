@@ -1,7 +1,5 @@
 import os, sys
 
-from s3transfer import TransferConfig
-
 sys.path.append('/usr/local/CyberCP')
 import django
 
@@ -10,6 +8,8 @@ try:
     django.setup()
 except:
     pass
+
+
 import pexpect
 from plogical import CyberCPLogFileWriter as logging
 import subprocess
@@ -34,7 +34,6 @@ from xml.etree import ElementTree
 from xml.dom import minidom
 import time
 from shutil import copy
-from distutils.dir_util import copy_tree
 from random import randint
 from plogical.processUtilities import ProcessUtilities
 
@@ -70,6 +69,8 @@ class backupUtilities:
     @staticmethod
     def prepareBackupMeta(backupDomain, backupName, tempStoragePath, backupPath):
         try:
+
+            connection, cursor = mysqlUtilities.mysqlUtilities.setupConnection()
 
             status = os.path.join(backupPath, 'status')
 
@@ -170,50 +171,31 @@ class backupUtilities:
             databasesXML = Element('Databases')
 
             for items in databases:
-                try:
-                    dbuser = DBUsers.objects.get(user=items.dbUser)
-                    userToTry = items.dbUser
-                except:
-                    try:
-                        dbusers = DBUsers.objects.all().filter(user=items.dbUser)
-                        userToTry = items.dbUser
-                        for it in dbusers:
-                            dbuser = it
-                            break
-
-                        userToTry = mysqlUtilities.mysqlUtilities.fetchuser(items.dbName)
-
-                        if userToTry == 0 or userToTry == 1:
-                            continue
-
-                        try:
-                            dbuser = DBUsers.objects.get(user=userToTry)
-                        except:
-                            try:
-                                dbusers = DBUsers.objects.all().filter(user=userToTry)
-                                for it in dbusers:
-                                    dbuser = it
-                                    break
-
-                            except BaseException as msg:
-                                logging.CyberCPLogFileWriter.writeToFile(
-                                    'While creating backup for %s, we failed to backup database %s. Error message: %s' % (
-                                        backupDomain, items.dbName, str(msg)))
-                                continue
-                    except BaseException as msg:
-                        logging.CyberCPLogFileWriter.writeToFile(
-                            'While creating backup for %s, we failed to backup database %s. Error message: %s' % (
-                                backupDomain, items.dbName, str(msg)))
-                        continue
 
                 databaseXML = Element('database')
 
                 child = SubElement(databaseXML, 'dbName')
                 child.text = str(items.dbName)
-                child = SubElement(databaseXML, 'dbUser')
-                child.text = str(userToTry)
-                child = SubElement(databaseXML, 'password')
-                child.text = str(dbuser.password)
+
+                cursor.execute("select user,host from mysql.db where db='%s'" % (items.dbName))
+                databaseUsers = cursor.fetchall()
+
+                for databaseUser in databaseUsers:
+
+                    databaseUserXML = Element('databaseUsers')
+
+                    child = SubElement(databaseUserXML, 'dbUser')
+                    child.text = databaseUser[0]
+
+                    child = SubElement(databaseUserXML, 'dbHost')
+                    child.text = databaseUser[1]
+
+                    ## Fetch user password
+                    dbuser = DBUsers.objects.get(user=databaseUser[0])
+                    child = SubElement(databaseUserXML, 'password')
+                    child.text = str(dbuser.password)
+
+                    databaseXML.append(databaseUserXML)
 
                 databasesXML.append(databaseXML)
 
@@ -232,7 +214,6 @@ class backupUtilities:
                     child.text = items
 
                 metaFileXML.append(aliasesXML)
-
             except BaseException as msg:
                 logging.CyberCPLogFileWriter.statusWriter(status, '%s. [167:prepMeta]' % (str(msg)))
 
@@ -260,7 +241,6 @@ class backupUtilities:
                     dnsRecordsXML.append(dnsRecordXML)
 
                 metaFileXML.append(dnsRecordsXML)
-
             except BaseException as msg:
                 logging.CyberCPLogFileWriter.statusWriter(status, '%s. [158:prepMeta]' % (str(msg)))
 
@@ -316,6 +296,7 @@ class backupUtilities:
 
 
         except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile("%s [207][5009]" % (str(msg)))
             logging.CyberCPLogFileWriter.statusWriter(status, "%s [207][5009]" % (str(msg)))
             return 0, str(msg)
 
@@ -562,6 +543,8 @@ class backupUtilities:
             domain = backupMetaData.find('masterDomain').text
             phpSelection = backupMetaData.find('phpSelection').text
             externalApp = backupMetaData.find('externalApp').text
+            VERSION = backupMetaData.find('VERSION').text
+            BUILD = backupMetaData.find('BUILD').text
 
             ### Fetch user details
 
@@ -619,14 +602,35 @@ class backupUtilities:
             website = Websites.objects.get(domain=domain)
 
             for database in databases:
+
                 dbName = database.find('dbName').text
-                dbUser = database.find('dbUser').text
 
-                if mysqlUtilities.mysqlUtilities.createDatabase(dbName, dbUser, "cyberpanel") == 0:
-                    raise BaseException("Failed to create Databases!")
+                if VERSION == '2.1' and BUILD == '1':
+                    first = 1
 
-                newDB = Databases(website=website, dbName=dbName, dbUser=dbUser)
-                newDB.save()
+                    databaseUsers = database.findall('databaseUsers')
+
+                    for databaseUser in databaseUsers:
+
+                        dbUser = databaseUser.find('dbUser').text
+
+                        if first:
+                            if mysqlUtilities.mysqlUtilities.createDatabase(dbName, dbUser, "cyberpanel") == 0:
+                                raise BaseException("Failed to create Databases!")
+
+                            newDB = Databases(website=website, dbName=dbName, dbUser=dbUser)
+                            newDB.save()
+                            first = 0
+
+
+                else:
+                    dbUser = database.find('dbUser').text
+
+                    if mysqlUtilities.mysqlUtilities.createDatabase(dbName, dbUser, "cyberpanel") == 0:
+                        raise BaseException("Failed to create Databases!")
+
+                    newDB = Databases(website=website, dbName=dbName, dbUser=dbUser)
+                    newDB.save()
 
             ## Create dns zone
 
@@ -692,6 +696,8 @@ class backupUtilities:
             ## extracting master domain for later use
             backupMetaData = ElementTree.parse(os.path.join(completPath, "meta.xml"))
             masterDomain = backupMetaData.find('masterDomain').text
+            VERSION = backupMetaData.find('VERSION').text
+            BUILD = backupMetaData.find('BUILD').text
 
             twoPointO = 0
             try:
@@ -854,10 +860,31 @@ class backupUtilities:
             databases = backupMetaData.findall('Databases/database')
 
             for database in databases:
+
                 dbName = database.find('dbName').text
-                password = database.find('password').text
-                if mysqlUtilities.mysqlUtilities.restoreDatabaseBackup(dbName, completPath, password) == 0:
-                    raise BaseException
+
+                if VERSION == '2.1' and BUILD == '1':
+                    first = 1
+
+                    databaseUsers = database.findall('databaseUsers')
+
+                    for databaseUser in databaseUsers:
+
+                        dbUser = databaseUser.find('dbUser').text
+                        dbHost = databaseUser.find('dbHost').text
+                        password = databaseUser.find('password').text
+
+                        if first:
+                            first = 0
+                            if mysqlUtilities.mysqlUtilities.restoreDatabaseBackup(dbName, completPath, password, 1) == 0:
+                                raise BaseException
+
+                        mysqlUtilities.mysqlUtilities.createDatabase(dbName, dbUser, password, 0, dbHost)
+
+                else:
+                    password = database.find('password').text
+                    if mysqlUtilities.mysqlUtilities.restoreDatabaseBackup(dbName, completPath, password) == 0:
+                        raise BaseException
 
             ## Databases restored
 
