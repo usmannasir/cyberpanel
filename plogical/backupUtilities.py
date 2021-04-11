@@ -598,6 +598,8 @@ class backupUtilities:
 
             ## Create databases
 
+            ### This code is just to create databases, database users will be created later
+
             databases = backupMetaData.findall('Databases/database')
             website = Websites.objects.get(domain=domain)
 
@@ -606,7 +608,6 @@ class backupUtilities:
                 dbName = database.find('dbName').text
 
                 if VERSION == '2.1' and BUILD == '1':
-                    first = 1
 
                     databaseUsers = database.findall('databaseUsers')
 
@@ -614,14 +615,12 @@ class backupUtilities:
 
                         dbUser = databaseUser.find('dbUser').text
 
-                        if first:
-                            if mysqlUtilities.mysqlUtilities.createDatabase(dbName, dbUser, "cyberpanel") == 0:
-                                raise BaseException("Failed to create Databases!")
+                        if mysqlUtilities.mysqlUtilities.createDatabase(dbName, dbUser, "cyberpanel") == 0:
+                            raise BaseException("Failed to create Databases!")
 
-                            newDB = Databases(website=website, dbName=dbName, dbUser=dbUser)
-                            newDB.save()
-                            first = 0
-
+                        newDB = Databases(website=website, dbName=dbName, dbUser=dbUser)
+                        newDB.save()
+                        break
 
                 else:
                     dbUser = database.find('dbUser').text
@@ -854,6 +853,8 @@ class backupUtilities:
             ## Emails restored
 
             ## restoring databases
+
+            ### This will actually restore mysql dump and create mysql users
 
             logging.CyberCPLogFileWriter.statusWriter(status, "Restoring Databases!")
 
