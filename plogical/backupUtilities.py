@@ -804,6 +804,7 @@ class backupUtilities:
 
                         if float(version) > 2.0 or float(build) > 0:
                             if path.find('/home/%s/public_html' % masterDomain) == -1:
+
                                 #copy_tree('%s/%s-docroot' % (completPath, domain), path)
 
                                 ## First remove if already exists
@@ -899,8 +900,10 @@ class backupUtilities:
                             if mysqlUtilities.mysqlUtilities.restoreDatabaseBackup(dbName, completPath, password, 1) == 0:
                                 raise BaseException
 
-                        mysqlUtilities.mysqlUtilities.createDatabase(dbName, dbUser, password, 0, dbHost)
 
+                        ### This function will not create database, only database user is created as third value is 0 for createDB
+
+                        mysqlUtilities.mysqlUtilities.createDatabase(dbName, dbUser, password, 0, dbHost)
                         mysqlUtilities.mysqlUtilities.changePassword(dbUser, password, 1, dbHost)
 
                         # UserInMySQLTable = DBUsers.objects.get(user=dbUser, host=dbHost)

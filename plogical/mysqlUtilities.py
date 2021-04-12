@@ -840,8 +840,6 @@ password=%s
                 return 0
             cursor.execute("use mysql")
 
-
-
             if host != None:
                 LOCALHOST = host
             else:
@@ -915,18 +913,6 @@ password=%s
 
             execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/mysqlUtilities.py enableRemoteMYSQL"
             ProcessUtilities.executioner(execPath)
-
-            connection, cursor = mysqlUtilities.setupConnection()
-
-            if connection == 0:
-                return 0
-            cursor.execute("use mysql")
-
-            cursor.execute("update db set Host='%s' where Db='%s'" % (remoteIP, dbName))
-            cursor.execute("update user set Host='%s' where user='%s'" % (remoteIP, userName))
-            cursor.execute("FLUSH PRIVILEGES")
-
-            connection.close()
 
             return 1
 

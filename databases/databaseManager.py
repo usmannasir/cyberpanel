@@ -16,6 +16,7 @@ import argparse
 from loginSystem.models import Administrator
 import plogical.randomPassword as randomPassword
 from plogical.httpProc import httpProc
+from backup.models import DBUsers
 
 class DatabaseManager:
 
@@ -250,12 +251,17 @@ class DatabaseManager:
             db = Databases.objects.filter(dbUser=userName)
 
             admin = Administrator.objects.get(pk=userID)
+
             if ACLManager.checkOwnership(db[0].website.domain, admin, currentACL) == 1:
                 pass
             else:
                 return ACLManager.loadErrorJson()
 
-            mysqlUtilities.allowRemoteAccess(db[0].dbName, userName, remoteIP)
+            # mysqlUtilities.allowRemoteAccess(db[0].dbName, userName, remoteIP)
+
+            mysqlUtilities.createDatabase(db[0].dbName, userName, 'cyberpanel', 0, remoteIP)
+            dbUserInMysql = DBUsers.objects.get(user=userName, host='localhost')
+            mysqlUtilities.changePassword(userName, dbUserInMysql.password, 1, remoteIP)
 
             metaData = {'remoteIP': remoteIP}
 
