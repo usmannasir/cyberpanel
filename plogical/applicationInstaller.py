@@ -576,6 +576,9 @@ $parameters = array(
 
             result = ProcessUtilities.outputExecutioner(command, externalApp)
 
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.writeToFile(str(result))
+
             if result.find('Success:') == -1:
                 raise BaseException(result)
 
@@ -587,6 +590,9 @@ $parameters = array(
 
             command = "wp core config --dbname=" + dbName + " --dbuser=" + dbUser + " --dbpass=" + dbPassword + " --dbhost=%s:%s --dbprefix=wp_ --allow-root --path=" % (ApplicationInstaller.LOCALHOST, ApplicationInstaller.PORT) + finalPath
             result = ProcessUtilities.outputExecutioner(command, externalApp)
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.writeToFile(str(result))
 
             if result.find('Success:') == -1:
                 raise BaseException(result)
@@ -600,6 +606,9 @@ $parameters = array(
             command = 'wp core install --url="http://' + finalURL + '" --title="' + blogTitle + '" --admin_user="' + adminUser + '" --admin_password="' + adminPassword + '" --admin_email="' + adminEmail + '" --allow-root --path=' + finalPath
             result = ProcessUtilities.outputExecutioner(command, externalApp)
 
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.writeToFile(str(result))
+
             if result.find('Success:') == -1:
                 raise BaseException(result)
 
@@ -612,6 +621,9 @@ $parameters = array(
             command = "wp plugin install litespeed-cache --allow-root --path=" + finalPath
             result = ProcessUtilities.outputExecutioner(command, externalApp)
 
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.writeToFile(str(result))
+
             if result.find('Success:') == -1:
                 raise BaseException(result)
 
@@ -621,6 +633,9 @@ $parameters = array(
 
             command = "wp plugin activate litespeed-cache --allow-root --path=" + finalPath
             result = ProcessUtilities.outputExecutioner(command, externalApp)
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.writeToFile(str(result))
 
             if result.find('Success:') == -1:
                 raise BaseException(result)
@@ -705,16 +720,17 @@ $parameters = array(
         except BaseException as msg:
             # remove the downloaded files
 
-            from filemanager.filemanager import FileManager
-            fm = FileManager(None, None)
-            fm.fixPermissions(self.masterDomain)
+            if not os.path.exists(ProcessUtilities.debugPath):
+                from filemanager.filemanager import FileManager
+                fm = FileManager(None, None)
+                fm.fixPermissions(self.masterDomain)
 
-            try:
-                mysqlUtilities.deleteDatabase(dbName, dbUser)
-                db = Databases.objects.get(dbName=dbName)
-                db.delete()
-            except:
-                pass
+                try:
+                    mysqlUtilities.deleteDatabase(dbName, dbUser)
+                    db = Databases.objects.get(dbName=dbName)
+                    db.delete()
+                except:
+                    pass
 
             statusFile = open(self.tempStatusPath, 'w')
             statusFile.writelines(str(msg) + " [404]")
