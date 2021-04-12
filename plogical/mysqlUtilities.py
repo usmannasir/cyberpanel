@@ -124,7 +124,13 @@ class mysqlUtilities:
             ## Create db
 
             if dbcreate:
-                cursor.execute("CREATE DATABASE " + dbname)
+
+                query = "CREATE DATABASE %s" % (dbname)
+
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.CyberCPLogFileWriter.writeToFile(query)
+
+                cursor.execute(query)
 
             ## create user
 
@@ -155,7 +161,10 @@ class mysqlUtilities:
             return 1
 
         except BaseException as msg:
-            mysqlUtilities.deleteDatabase(dbname, dbuser)
+            if dbcreate:
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.CyberCPLogFileWriter.writeToFile('Deleting database because failed to create %s' % (dbname))
+                mysqlUtilities.deleteDatabase(dbname, dbuser)
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[createDatabase]")
             return 0
 
@@ -831,18 +840,27 @@ password=%s
                 return 0
             cursor.execute("use mysql")
 
+
+
             if host != None:
-                mysqlUtilities.LOCALHOST = host
+                LOCALHOST = host
+            else:
+                LOCALHOST = mysqlUtilities.LOCALHOST
 
             if encrypt == None:
                 try:
                     dbuser = DBUsers.objects.get(user=userName)
-                    cursor.execute("SET PASSWORD FOR '" + userName + "'@'%s' = PASSWORD('" % (mysqlUtilities.LOCALHOST) + dbPassword + "')")
+                    query = "SET PASSWORD FOR '" + userName + "'@'%s' = PASSWORD('" % (LOCALHOST) + dbPassword + "')"
                 except:
                     userName = mysqlUtilities.fetchuser(userName)
-                    cursor.execute("SET PASSWORD FOR '" + userName + "'@'%s' = PASSWORD('" % (mysqlUtilities.LOCALHOST) + dbPassword + "')")
+                    query = "SET PASSWORD FOR '" + userName + "'@'%s' = PASSWORD('" % (LOCALHOST) + dbPassword + "')"
             else:
-                cursor.execute("SET PASSWORD FOR '" + userName + "'@'%s' = '" % (mysqlUtilities.LOCALHOST) + dbPassword + "'")
+                query = "SET PASSWORD FOR '" + userName + "'@'%s' = '" % (LOCALHOST) + dbPassword + "'"
+
+            cursor.execute(query)
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.CyberCPLogFileWriter.writeToFile(query)
 
             connection.close()
 

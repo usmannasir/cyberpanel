@@ -191,7 +191,7 @@ class backupUtilities:
                     child.text = databaseUser[1]
 
                     ## Fetch user password
-                    dbuser = DBUsers.objects.get(user=databaseUser[0])
+                    dbuser = DBUsers.objects.get(user=databaseUser[0], host=databaseUser[1])
                     child = SubElement(databaseUserXML, 'password')
                     child.text = str(dbuser.password)
 
@@ -609,14 +609,16 @@ class backupUtilities:
 
                 if VERSION == '2.1' and BUILD == '1':
 
+                    logging.CyberCPLogFileWriter.writeToFile('Backup version 2.1.1 detected..')
+
                     databaseUsers = database.findall('databaseUsers')
 
                     for databaseUser in databaseUsers:
 
                         dbUser = databaseUser.find('dbUser').text
 
-                        if mysqlUtilities.mysqlUtilities.createDatabase(dbName, dbUser, "cyberpanel") == 0:
-                            raise BaseException("Failed to create Databases!")
+                        if mysqlUtilities.mysqlUtilities.createDatabase(dbName, dbUser, 'cyberpanel') == 0:
+                            raise BaseException
 
                         newDB = Databases(website=website, dbName=dbName, dbUser=dbUser)
                         newDB.save()
@@ -626,7 +628,7 @@ class backupUtilities:
                     dbUser = database.find('dbUser').text
 
                     if mysqlUtilities.mysqlUtilities.createDatabase(dbName, dbUser, "cyberpanel") == 0:
-                        raise BaseException("Failed to create Databases!")
+                        raise BaseException
 
                     newDB = Databases(website=website, dbName=dbName, dbUser=dbUser)
                     newDB.save()
@@ -803,6 +805,14 @@ class backupUtilities:
                         if float(version) > 2.0 or float(build) > 0:
                             if path.find('/home/%s/public_html' % masterDomain) == -1:
                                 #copy_tree('%s/%s-docroot' % (completPath, domain), path)
+
+                                ## First remove if already exists
+
+                                command = 'rm -rf %s' % (path)
+                                ProcessUtilities.executioner(command)
+
+                                ##
+
                                 command = 'cp -R %s/%s-docroot %s' % (completPath, domain, path)
                                 ProcessUtilities.executioner(command)
 
@@ -865,6 +875,9 @@ class backupUtilities:
                 dbName = database.find('dbName').text
 
                 if VERSION == '2.1' and BUILD == '1':
+
+                    logging.CyberCPLogFileWriter.writeToFile('Backup version 2.1.1 detected..')
+
                     first = 1
 
                     databaseUsers = database.findall('databaseUsers')
@@ -875,12 +888,24 @@ class backupUtilities:
                         dbHost = databaseUser.find('dbHost').text
                         password = databaseUser.find('password').text
 
+                        if os.path.exists(ProcessUtilities.debugPath):
+
+                            logging.CyberCPLogFileWriter.writeToFile('Database user: %s' % (dbUser))
+                            logging.CyberCPLogFileWriter.writeToFile('Database host: %s' % (dbHost))
+                            logging.CyberCPLogFileWriter.writeToFile('Database password: %s' % (password))
+
                         if first:
                             first = 0
                             if mysqlUtilities.mysqlUtilities.restoreDatabaseBackup(dbName, completPath, password, 1) == 0:
                                 raise BaseException
 
                         mysqlUtilities.mysqlUtilities.createDatabase(dbName, dbUser, password, 0, dbHost)
+
+                        mysqlUtilities.mysqlUtilities.changePassword(dbUser, password, 1, dbHost)
+
+                        # UserInMySQLTable = DBUsers.objects.get(user=dbUser, host=dbHost)
+                        # UserInMySQLTable.password = password
+                        # UserInMySQLTable.save()
 
                 else:
                     password = database.find('password').text
@@ -901,6 +926,14 @@ class backupUtilities:
             else:
                 if float(version) > 2.0 or float(build) > 0:
                     #copy_tree('%s/public_html' % (completPath), websiteHome)
+
+                    ## First remove if already exists
+
+                    command = 'rm -rf %s' % (websiteHome)
+                    ProcessUtilities.executioner(command)
+
+                    ##
+
                     command = 'cp -R %s/public_html %s' % (completPath, websiteHome)
                     ProcessUtilities.executioner(command)
 
@@ -931,6 +964,14 @@ class backupUtilities:
 
                 if os.path.exists(emailsPath):
                     #copy_tree(emailsPath, '/home/vmail/%s' % (masterDomain))
+
+                    ## First remove if already exists
+
+                    command = 'rm -rf /home/vmail/%s' % (masterDomain)
+                    ProcessUtilities.executioner(command)
+
+                    ##
+
                     command = 'cp -R %s /home/vmail/%s' % (emailsPath, masterDomain)
                     ProcessUtilities.executioner(command)
 
