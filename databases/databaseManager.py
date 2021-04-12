@@ -257,8 +257,7 @@ class DatabaseManager:
             else:
                 return ACLManager.loadErrorJson()
 
-            # mysqlUtilities.allowRemoteAccess(db[0].dbName, userName, remoteIP)
-
+            mysqlUtilities.allowRemoteAccess(db[0].dbName, userName, remoteIP)
             mysqlUtilities.createDatabase(db[0].dbName, userName, 'cyberpanel', 0, remoteIP)
             dbUserInMysql = DBUsers.objects.get(user=userName, host='localhost')
             mysqlUtilities.changePassword(userName, dbUserInMysql.password, 1, remoteIP)
