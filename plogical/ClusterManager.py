@@ -17,7 +17,9 @@ from plogical.mysqlUtilities import mysqlUtilities
 class ClusterManager:
 
     LogURL = "https://cloud.cyberpanel.net/HighAvailability/RecvData"
+    UptimeURL = "https://cloud.cyberpanel.net/servers/UptimeReport"
     ClusterFile = '/home/cyberpanel/cluster'
+    CloudConfig = '/home/cyberpanel/cloud'
     vhostConfPath = '/usr/local/lsws/conf/vhosts'
 
     def __init__(self, type):
@@ -27,14 +29,19 @@ class ClusterManager:
         ipData = f.read()
         self.ipAddress = ipData.split('\n', 1)[0]
         ##
-        self.config = json.loads(open(ClusterManager.ClusterFile, 'r').read())
+        if os.path.exists(ClusterManager.ClusterFile):
+            self.config = json.loads(open(ClusterManager.ClusterFile, 'r').read())
+        elif os.path.exists(ClusterManager.CloudConfig):
+            self.config = json.loads(open(ClusterManager.CloudConfig, 'r').read())
+
         self.type = type
 
     def PostStatus(self, message):
         try:
             finalData = {'name': self.config['name'], 'type': self.type, 'message': message, 'token': self.config['token']}
             resp = requests.post(ClusterManager.LogURL, data=json.dumps(finalData), verify=False)
-            # logging.writeToFile(resp.text + '[info]')
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.writeToFile(resp.text + '[info]')
         except BaseException as msg:
             logging.writeToFile('%s. [31:404]' % (str(msg)))
 
@@ -85,7 +92,6 @@ class ClusterManager:
                 writeToFile = open(cronPath, 'a')
                 writeToFile.write('*/5 * * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/ClusterManager.py --function CreatePendingVirtualHosts --type Child\n')
                 writeToFile.close()
-
             else:
                 writeToFile = open(ClusterPath, 'w')
                 writeToFile.write(config['ClusterConfigMaster'])
@@ -133,6 +139,12 @@ class ClusterManager:
             except:
                 self.PostStatus('Failed to add Firewall rules, manually open the required ports..')
 
+            ## Change permissions of cluster config path
+
+            command = 'chmod 600 %s' % (ClusterConfigPath)
+            ProcessUtilities.executioner(command)
+
+            ##
 
             self.PostStatus('Successfully attached to cluster. [200]')
 
@@ -361,6 +373,40 @@ password=%s""" % (rootdbpassword, rootdbpassword)
         except BaseException as msg:
             self.PostStatus('Failed to debug cluster, error %s [404].' % (str(msg)))
 
+    def UptimeMonitor(self):
+        try:
+
+            CentOSPath = '/etc/redhat-release'
+
+            if os.path.exists(CentOSPath):
+                cronPath = '/var/spool/cron/root'
+            else:
+                cronPath = '/var/spool/cron/crontabs/root'
+
+            writeToFile = open(cronPath, 'a')
+
+            writeToFile.write('*/3 * * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/ClusterManager.py --function Uptime --type All\n')
+            writeToFile.close()
+
+
+            command = 'systemctl restart cron'
+            ProcessUtilities.normalExecutioner(command)
+
+
+            ###
+
+        except BaseException as msg:
+            logging.writeToFile('Error while setting up Uptime cron. Error %s' % (str(msg)))
+
+    def Uptime(self):
+        try:
+            finalData = {'name': self.config['name'], 'token': self.config['token']}
+            resp = requests.post(ClusterManager.LogURL, data=json.dumps(finalData), verify=False)
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.writeToFile(resp.text + '[Uptime:info]')
+        except BaseException as msg:
+            logging.writeToFile('%s. [31:404]' % (str(msg)))
+
 
 def main():
     parser = argparse.ArgumentParser(description='CyberPanel Installer')
@@ -387,6 +433,10 @@ def main():
         uc.PingNow()
     elif args.function == 'DebugCluster':
         uc.DebugCluster()
+    elif args.function == 'UptimeMonitor':
+        uc.UptimeMonitor()
+    elif args.function == 'Uptime':
+        uc.Uptime()
 
 
 if __name__ == "__main__":

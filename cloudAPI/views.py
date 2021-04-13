@@ -50,6 +50,8 @@ def router(request):
             return cm.DetachCluster()
         elif controller == 'DebugCluster':
             return cm.DebugCluster()
+        elif controller == 'UptimeMonitor':
+            return cm.UptimeMonitor()
         elif controller == 'FetchMasterBootStrapStatus':
             return cm.FetchMasterBootStrapStatus()
         elif controller == 'FetchChildBootStrapStatus':

@@ -2945,3 +2945,28 @@ class CloudManager:
             final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
+
+    def UptimeMonitor(self):
+        try:
+            try:
+                del self.data['controller']
+                del self.data['serverUserName']
+                del self.data['serverPassword']
+            except:
+                pass
+
+            CloudConfigPath = '/home/cyberpanel/cloud'
+            writeToFile = open(CloudConfigPath, 'w')
+            writeToFile.write(json.dumps(self.data))
+            writeToFile.close()
+
+            execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/ClusterManager.py --function UptimeMonitor --type All"
+            ProcessUtilities.executioner(execPath)
+
+            final_json = json.dumps({'status': 1})
+            return HttpResponse(final_json)
+
+        except BaseException as msg:
+            final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
