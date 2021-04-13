@@ -216,11 +216,12 @@ class MailServerManager(multi.Thread):
             if ACLManager.currentContextPermission(currentACL, 'deleteEmail') == 0:
                 return ACLManager.loadErrorJson('deleteEmailStatus', 0)
 
-
             data = json.loads(self.request.body)
             email = data['email']
 
             eUser = EUsers.objects.get(email=email)
+
+            emailOwnerDomain = eUser.emailOwner
 
             admin = Administrator.objects.get(pk=userID)
             if ACLManager.checkOwnership(eUser.emailOwner.domainOwner.domain, admin, currentACL) == 1:
@@ -229,6 +230,10 @@ class MailServerManager(multi.Thread):
                 return ACLManager.loadErrorJson()
 
             mailUtilities.deleteEmailAccount(email)
+
+            if emailOwnerDomain.eusers_set.all().count() == 0:
+                emailOwnerDomain.delete()
+
             data_ret = {'status': 1, 'deleteEmailStatus': 1, 'error_message': "None"}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
