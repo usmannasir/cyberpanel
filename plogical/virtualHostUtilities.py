@@ -12,14 +12,9 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 from random import randint
 
 django.setup()
-
-import shutil
 import argparse
 from plogical import installUtilities
 from plogical import sslUtilities
-from os.path import join
-from os import listdir, rmdir
-from shutil import move
 from multiprocessing import Process
 import subprocess
 import shlex
@@ -27,7 +22,6 @@ from plogical.mailUtilities import mailUtilities
 from plogical import CyberCPLogFileWriter as logging
 from plogical.dnsUtilities import DNS
 from plogical.vhost import vhost
-from plogical.applicationInstaller import ApplicationInstaller
 from plogical.acl import ACLManager
 from plogical.processUtilities import ProcessUtilities
 from ApachController.ApacheController import ApacheController
@@ -54,6 +48,7 @@ class virtualHostUtilities:
     Server_root = "/usr/local/lsws"
     cyberPanel = "/usr/local/CyberCP"
     redisConf = '/usr/local/lsws/conf/dvhost_redis.conf'
+    vhostConfPath = '/usr/local/lsws/conf'
 
     @staticmethod
     def setupAutoDiscover(mailDomain, tempStatusPath, virtualHostName, admin):
@@ -125,7 +120,7 @@ class virtualHostUtilities:
     @staticmethod
     def createVirtualHost(virtualHostName, administratorEmail, phpVersion, virtualHostUser, ssl,
                           dkimCheck, openBasedir, websiteOwner, packageName, apache,
-                          tempStatusPath='/home/cyberpanel/fakePath', mailDomain = None):
+                          tempStatusPath='/home/cyberpanel/fakePath', mailDomain = None, LimitsCheck = 1):
         try:
 
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Running some checks..,0')
@@ -134,56 +129,61 @@ class virtualHostUtilities:
 
             admin = Administrator.objects.get(userName=websiteOwner)
 
-            if ACLManager.websitesLimitCheck(admin, 1) == 0:
-                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
-                                                          'You\'ve reached maximum websites limit as a reseller. [404]')
-                return 0, 'You\'ve reached maximum websites limit as a reseller.'
+            if LimitsCheck:
 
-            ####### Limitations Check End
+                if ACLManager.websitesLimitCheck(admin, 1) == 0:
 
-            if Websites.objects.filter(domain=virtualHostName).count() > 0:
-                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'This website already exists. [404]')
-                return 0, "This website already exists."
+                    logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
+                                                              'You\'ve reached maximum websites limit as a reseller. [404]')
+                    return 0, 'You\'ve reached maximum websites limit as a reseller.'
 
+                ####### Limitations Check End
 
-            if Websites.objects.filter(domain=virtualHostName.lstrip('www.')).count() > 0:
-                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'This website already exists. [404]')
-                return 0, "This website already exists."
+                if Websites.objects.filter(domain=virtualHostName).count() > 0:
+                    logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'This website already exists. [404]')
+                    return 0, "This website already exists."
 
-            if ChildDomains.objects.filter(domain=virtualHostName).count() > 0:
-                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
-                                                          'This website already exists as child domain. [404]')
-                return 0, "This website already exists as child domain."
+                if Websites.objects.filter(domain=virtualHostName.lstrip('www.')).count() > 0:
+                    logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'This website already exists. [404]')
+                    return 0, "This website already exists."
 
-            if ChildDomains.objects.filter(domain=virtualHostName.lstrip('www.')).count() > 0:
-                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
-                                                          'This website already exists as child domain. [404]')
-                return 0, "This website already exists as child domain."
+                if ChildDomains.objects.filter(domain=virtualHostName).count() > 0:
+                    logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
+                                                              'This website already exists as child domain. [404]')
+                    return 0, "This website already exists as child domain."
 
-            ####### Limitations Check End
+                if ChildDomains.objects.filter(domain=virtualHostName.lstrip('www.')).count() > 0:
+                    logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
+                                                              'This website already exists as child domain. [404]')
+                    return 0, "This website already exists as child domain."
 
-            logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Creating DNS records..,10')
+                ####### Limitations Check End
 
-            ##### Zone creation
+                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Creating DNS records..,10')
 
-            DNS.dnsTemplate(virtualHostName, admin)
+                ##### Zone creation
 
-            ## Zone creation
+                DNS.dnsTemplate(virtualHostName, admin)
 
-            logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Setting up directories..,25')
+                ## Zone creation
 
-            if vhost.checkIfVirtualHostExists(virtualHostName) == 1:
-                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
-                                                          'Virtual Host Directory already exists. [404]')
-                return 0, "Virtual Host Directory already exists!"
+                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Setting up directories..,25')
 
-            if vhost.checkIfAliasExists(virtualHostName) == 1:
-                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'This domain exists as Alias. [404]')
-                return 0, "This domain exists as Alias."
+                if vhost.checkIfVirtualHostExists(virtualHostName) == 1:
+                    logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
+                                                              'Virtual Host Directory already exists. [404]')
+                    return 0, "Virtual Host Directory already exists!"
 
-            retValues = mailUtilities.setupDKIM(virtualHostName)
-            if retValues[0] == 0:
-                raise BaseException(retValues[1])
+                if vhost.checkIfAliasExists(virtualHostName) == 1:
+                    logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'This domain exists as Alias. [404]')
+                    return 0, "This domain exists as Alias."
+
+            postfixPath = '/home/cyberpanel/postfix'
+
+            if os.path.exists(postfixPath):
+                retValues = mailUtilities.setupDKIM(virtualHostName)
+                if retValues[0] == 0:
+                    raise BaseException(retValues[1])
 
             retValues = vhost.createDirectoryForVirtualHost(virtualHostName, administratorEmail,
                                                             virtualHostUser, phpVersion, openBasedir)
@@ -199,11 +199,12 @@ class virtualHostUtilities:
 
             selectedPackage = Package.objects.get(packageName=packageName)
 
-            website = Websites(admin=admin, package=selectedPackage, domain=virtualHostName,
-                               adminEmail=administratorEmail,
-                               phpSelection=phpVersion, ssl=ssl, externalApp=virtualHostUser)
+            if LimitsCheck:
+                website = Websites(admin=admin, package=selectedPackage, domain=virtualHostName,
+                                   adminEmail=administratorEmail,
+                                   phpSelection=phpVersion, ssl=ssl, externalApp=virtualHostUser)
 
-            website.save()
+                website.save()
 
             if ssl == 1:
                 sslPath = "/home/" + virtualHostName + "/public_html"
@@ -261,7 +262,7 @@ class virtualHostUtilities:
             CLPath = '/etc/sysconfig/cloudlinux'
 
             if os.path.exists(CLPath):
-                command = '/usr/share/cloudlinux/hooks/post_modify_user.py create --username %s --owner %s' % (virtualHostUser, virtualHostUser)
+                command = '/usr/share/cloudlinux/hooks/post_modify_user.py create --username %s --owner %s' % (virtualHostUser, admin.userName)
                 ProcessUtilities.executioner(command)
 
             ### For autodiscover of mail clients.
@@ -275,7 +276,8 @@ class virtualHostUtilities:
             return 1, 'None'
 
         except BaseException as msg:
-            vhost.deleteVirtualHostConfigurations(virtualHostName)
+            if ACLManager.FindIfChild() == 0:
+                vhost.deleteVirtualHostConfigurations(virtualHostName)
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "  [createVirtualHost]")
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, str(msg) + " [404]")
             return 0, str(msg)
@@ -432,155 +434,6 @@ class virtualHostUtilities:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "  [saveRewriteRules]")
             print("0," + str(msg))
-
-    @staticmethod
-    def installWordPress(domainName, finalPath, virtualHostUser, dbName, dbUser, dbPassword):
-        try:
-
-            FNULL = open(os.devnull, 'w')
-
-            if not os.path.exists(finalPath):
-                os.makedirs(finalPath)
-
-            ## checking for directories/files
-
-            dirFiles = os.listdir(finalPath)
-
-            if len(dirFiles) == 1:
-                if dirFiles[0] == ".well-known":
-                    pass
-                else:
-                    print("0,Target directory should be empty before installation, otherwise data loss could occur.")
-                    return
-            elif len(dirFiles) == 0:
-                pass
-            else:
-                print("0,Target directory should be empty before installation, otherwise data loss could occur.")
-                return
-
-            ## Get wordpress
-
-            if not os.path.exists("latest.tar.gz"):
-                command = 'wget --no-check-certificate http://wordpress.org/latest.tar.gz -O latest.tar.gz'
-                cmd = shlex.split(command)
-                res = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
-
-            command = 'tar -xzvf latest.tar.gz -C ' + finalPath
-
-            cmd = shlex.split(command)
-
-            res = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
-
-            ## Get plugin
-
-            if not os.path.exists("litespeed-cache.1.1.5.1.zip"):
-                command = 'wget --no-check-certificate https://downloads.wordpress.org/plugin/litespeed-cache.1.1.5.1.zip'
-
-                cmd = shlex.split(command)
-
-                res = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
-
-            command = 'unzip litespeed-cache.1.1.5.1.zip -d ' + finalPath
-
-            cmd = shlex.split(command)
-
-            res = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
-
-            root = finalPath
-
-            for filename in listdir(join(root, 'wordpress')):
-                move(join(root, 'wordpress', filename), join(root, filename))
-
-            rmdir(root + "wordpress")
-
-            shutil.copytree(finalPath + "litespeed-cache", finalPath + "wp-content/plugins/litespeed-cache")
-            shutil.rmtree(finalPath + "litespeed-cache")
-
-            ## edit config file
-
-            wpconfigfile = finalPath + "wp-config-sample.php"
-
-            data = open(wpconfigfile, "r").readlines()
-
-            writeDataToFile = open(wpconfigfile, "w")
-
-            defDBName = "define('DB_NAME', '" + dbName + "');" + "\n"
-            defDBUser = "define('DB_USER', '" + dbUser + "');" + "\n"
-            defDBPassword = "define('DB_PASSWORD', '" + dbPassword + "');" + "\n"
-
-            for items in data:
-                if items.find("DB_NAME") > -1:
-                    if items.find("database_name_here") > -1:
-                        writeDataToFile.writelines(defDBName)
-                elif items.find("DB_USER") > -1:
-                    if items.find("username_here") > -1:
-                        writeDataToFile.writelines(defDBUser)
-                elif items.find("DB_PASSWORD") > -1:
-                    writeDataToFile.writelines(defDBPassword)
-                else:
-                    writeDataToFile.writelines(items)
-
-            writeDataToFile.close()
-
-            os.rename(wpconfigfile, finalPath + 'wp-config.php')
-
-            command = "chown -R " + virtualHostUser + ":" + virtualHostUser + " " + "/home/" + domainName + "/public_html/"
-
-            cmd = shlex.split(command)
-
-            res = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
-
-            vhost.addRewriteRules(domainName)
-
-            installUtilities.installUtilities.reStartLiteSpeed()
-
-            print("1,None")
-
-
-        except BaseException as msg:
-            # remove the downloaded files
-            try:
-
-                shutil.rmtree(finalPath)
-            except:
-                logging.CyberCPLogFileWriter.writeToFile("shutil.rmtree(finalPath)")
-
-            homeDir = "/home/" + domainName + "/public_html"
-
-            if not os.path.exists(homeDir):
-                FNULL = open(os.devnull, 'w')
-                os.mkdir(homeDir)
-                command = "chown -R " + virtualHostUser + ":" + virtualHostUser + " " + homeDir
-                cmd = shlex.split(command)
-                res = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
-
-            print("0," + str(msg))
-            return
-
-    @staticmethod
-    def installJoomla(domainName, finalPath, virtualHostUser, dbName, dbUser, dbPassword, username, password, prefix,
-                      sitename, tempStatusPath):
-        try:
-
-            extraArgs = {}
-            extraArgs['domainName'] = domainName
-            extraArgs['finalPath'] = finalPath
-            extraArgs['virtualHostUser'] = virtualHostUser
-            extraArgs['dbName'] = dbName
-            extraArgs['dbUser'] = dbUser
-            extraArgs['dbPassword'] = dbPassword
-            extraArgs['username'] = username
-            extraArgs['password'] = password
-            extraArgs['prefix'] = prefix
-            extraArgs['sitename'] = sitename
-            extraArgs['tempStatusPath'] = tempStatusPath
-
-            background = ApplicationInstaller('joomla', extraArgs)
-            background.start()
-
-
-        except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [installJoomla]')
 
     @staticmethod
     def issueSSLForHostName(virtualHost, path):
@@ -1073,7 +926,7 @@ class virtualHostUtilities:
 
     @staticmethod
     def createDomain(masterDomain, virtualHostName, phpVersion, path, ssl, dkimCheck, openBasedir, owner, apache,
-                     tempStatusPath='/home/cyberpanel/fakePath'):
+                     tempStatusPath='/home/cyberpanel/fakePath', LimitsCheck = 1):
         try:
 
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Running some checks..,0')
@@ -1081,67 +934,72 @@ class virtualHostUtilities:
             ## Check if this domain either exists as website or child domain
 
             admin = Administrator.objects.get(userName=owner)
-            DNS.dnsTemplate(virtualHostName, admin)
-
-            if Websites.objects.filter(domain=virtualHostName).count() > 0:
-                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
-                                                          'This Domain already exists as a website. [404]')
-                return 0, "This Domain already exists as a website."
-
-            if Websites.objects.filter(domain=virtualHostName.lstrip('www.')).count() > 0:
-                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
-                                                          'This Domain already exists as a website. [404]')
-                return 0, "This Domain already exists as a website."
-
-            if ChildDomains.objects.filter(domain=virtualHostName).count() > 0:
-                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
-                                                          'This domain already exists as child domain. [404]')
-                return 0, "This domain already exists as child domain."
-
-
-            if ChildDomains.objects.filter(domain=virtualHostName.lstrip('www.')).count() > 0:
-                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
-                                                          'This domain already exists as child domain. [404]')
-                return 0, "This domain already exists as child domain."
-
-            ####### Limitations check
-
             master = Websites.objects.get(domain=masterDomain)
-            domainsInPackage = master.package.allowedDomains
 
-            if master.package.allowFullDomain == 0:
-                if virtualHostName.find(masterDomain) > -1:
+            if LimitsCheck:
+                DNS.dnsTemplate(virtualHostName, admin)
+
+                if Websites.objects.filter(domain=virtualHostName).count() > 0:
+                    logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
+                                                              'This Domain already exists as a website. [404]')
+                    return 0, "This Domain already exists as a website."
+
+                if Websites.objects.filter(domain=virtualHostName.lstrip('www.')).count() > 0:
+                    logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
+                                                              'This Domain already exists as a website. [404]')
+                    return 0, "This Domain already exists as a website."
+
+                if ChildDomains.objects.filter(domain=virtualHostName).count() > 0:
+                    logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
+                                                              'This domain already exists as child domain. [404]')
+                    return 0, "This domain already exists as child domain."
+
+
+                if ChildDomains.objects.filter(domain=virtualHostName.lstrip('www.')).count() > 0:
+                    logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
+                                                              'This domain already exists as child domain. [404]')
+                    return 0, "This domain already exists as child domain."
+
+                ####### Limitations check
+
+                domainsInPackage = master.package.allowedDomains
+
+                if master.package.allowFullDomain == 0:
+                    if virtualHostName.find(masterDomain) > -1:
+                        pass
+                    else:
+                        logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
+                                                                  'Fully qualified domain is not allowed in the package. [404]')
+                        return 0, "Fully qualified domain is not allowed in the package."
+
+                if domainsInPackage == 0:
+                    pass
+                elif domainsInPackage > master.childdomains_set.all().count():
                     pass
                 else:
                     logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
-                                                              'Fully qualified domain is not allowed in the package. [404]')
-                    return 0, "Fully qualified domain is not allowed in the package."
+                                                              'Exceeded maximum number of domains for this package. [404]')
+                    return 0, "Exceeded maximum number of domains for this package"
 
-            if domainsInPackage == 0:
-                pass
-            elif domainsInPackage > master.childdomains_set.all().count():
-                pass
-            else:
-                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
-                                                          'Exceeded maximum number of domains for this package. [404]')
-                return 0, "Exceeded maximum number of domains for this package"
+                ####### Limitations Check End
 
-            ####### Limitations Check End
+                if vhost.checkIfVirtualHostExists(virtualHostName) == 1:
+                    logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
+                                                              'Virtual Host Directory already exists. [404]')
+                    return 0, "Virtual Host Directory already exists!"
 
-            if vhost.checkIfVirtualHostExists(virtualHostName) == 1:
-                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
-                                                          'Virtual Host Directory already exists. [404]')
-                return 0, "Virtual Host Directory already exists!"
-
-            if vhost.checkIfAliasExists(virtualHostName) == 1:
-                logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'This domain exists as Alias. [404]')
-                return 0, "This domain exists as Alias."
+                if vhost.checkIfAliasExists(virtualHostName) == 1:
+                    logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'This domain exists as Alias. [404]')
+                    return 0, "This domain exists as Alias."
 
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'DKIM Setup..,30')
 
-            retValues = mailUtilities.setupDKIM(virtualHostName)
-            if retValues[0] == 0:
-                raise BaseException(retValues[1])
+            postFixPath = '/home/cyberpanel/postfix'
+
+            if os.path.exists(postFixPath):
+                retValues = mailUtilities.setupDKIM(virtualHostName)
+                if retValues[0] == 0:
+                    raise BaseException(retValues[1])
 
             FNULL = open(os.devnull, 'w')
 
@@ -1151,16 +1009,18 @@ class virtualHostUtilities:
                                                        master.adminEmail, master.externalApp, openBasedir)
             if retValues[0] == 0:
                 raise BaseException(retValues[1])
+
             if not os.path.exists(virtualHostUtilities.redisConf):
                 retValues = vhost.createConfigInMainDomainHostFile(virtualHostName, masterDomain)
 
-            if retValues[0] == 0:
-                raise BaseException(retValues[1])
+                if retValues[0] == 0:
+                    raise BaseException(retValues[1])
 
             ## Now restart litespeed after initial configurations are done
 
-            website = ChildDomains(master=master, domain=virtualHostName, path=path, phpSelection=phpVersion, ssl=ssl)
-            website.save()
+            if LimitsCheck:
+                website = ChildDomains(master=master, domain=virtualHostName, path=path, phpSelection=phpVersion, ssl=ssl)
+                website.save()
 
             if ssl == 1:
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Creating SSL..,50')
@@ -1214,20 +1074,27 @@ class virtualHostUtilities:
             return 1, "None"
 
         except BaseException as msg:
-            numberOfWebsites = Websites.objects.count() + ChildDomains.objects.count()
-            vhost.deleteCoreConf(virtualHostName, numberOfWebsites)
+            if ACLManager.FindIfChild() == 0:
+                numberOfWebsites = Websites.objects.count() + ChildDomains.objects.count()
+                vhost.deleteCoreConf(virtualHostName, numberOfWebsites)
+
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, str(msg) + ". [404]")
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "  [createDomain]")
             return 0, str(msg)
 
     @staticmethod
-    def deleteDomain(virtualHostName):
+    def deleteDomain(virtualHostName, DeleteDocRoot=0):
         try:
 
             numberOfWebsites = Websites.objects.count() + ChildDomains.objects.count()
             vhost.deleteCoreConf(virtualHostName, numberOfWebsites)
             delWebsite = ChildDomains.objects.get(domain=virtualHostName)
+
+            if DeleteDocRoot:
+                command = 'rm -rf %s' % (delWebsite.path)
+                ProcessUtilities.executioner(command)
+
             delWebsite.delete()
             installUtilities.installUtilities.reStartLiteSpeed()
 
@@ -1308,8 +1175,7 @@ class virtualHostUtilities:
     def getDiskUsage(path, totalAllowed):
         try:
 
-            totalUsageInMB = ProcessUtilities.outputExecutioner(["sudo", "du", "-hs", path, "--block-size=1M"]).split()[
-                0]
+            totalUsageInMB = subprocess.check_output('du -hs %s --block-size=1M' % (path), shell=True).decode("utf-8").split()[0]
 
             percentage = float(100) / float(totalAllowed)
 
@@ -1346,6 +1212,24 @@ class virtualHostUtilities:
 
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
+
+    @staticmethod
+    def FindStats(website):
+
+        import json
+        try:
+            config = json.loads(website.config)
+            DiskUsage = config['DiskUsage']
+            DiskUsagePercentage = config['DiskUsagePercentage']
+            bwInMB = config['bwInMB']
+            bwUsage = config['bwUsage']
+        except:
+            DiskUsage = 0
+            DiskUsagePercentage = 0
+            bwInMB = 0
+            bwUsage = 0
+
+        return DiskUsage, DiskUsagePercentage, bwInMB, bwUsage
 
 
 def main():
@@ -1414,6 +1298,10 @@ def main():
     ## Switch Server
 
     parser.add_argument('--server', help='Switch server parameter.')
+
+    ## Doc root deletion for child domain
+
+    parser.add_argument('--DeleteDocRoot', help='Doc root deletion for child domain.')
 
     args = parser.parse_args()
 
@@ -1507,7 +1395,7 @@ def main():
     elif args.function == 'changeOpenBasedir':
         virtualHostUtilities.changeOpenBasedir(args.virtualHostName, args.openBasedirValue)
     elif args.function == 'deleteDomain':
-        virtualHostUtilities.deleteDomain(args.virtualHostName)
+        virtualHostUtilities.deleteDomain(args.virtualHostName, int(args.DeleteDocRoot))
     elif args.function == 'switchServer':
         virtualHostUtilities.switchServer(args.virtualHostName, args.phpVersion, int(args.server), args.tempStatusPath)
 

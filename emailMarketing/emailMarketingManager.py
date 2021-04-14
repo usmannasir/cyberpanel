@@ -4,6 +4,7 @@ from loginSystem.views import loadLoginPage
 import json
 from random import randint
 import time
+from plogical.httpProc import httpProc
 from .models import EmailMarketing, EmailLists, EmailsInList, EmailJobs
 from websiteFunctions.models import Websites
 from .emailMarketing import emailMarketing as EM
@@ -12,7 +13,6 @@ import smtplib
 from .models import SMTPHosts, EmailTemplate
 from loginSystem.models import Administrator
 from .emACL import emACL
-from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 
 class EmailMarketingManager:
 
@@ -21,18 +21,8 @@ class EmailMarketingManager:
         self.domain = domain
 
     def emailMarketing(self):
-        try:
-            userID = self.request.session['userID']
-            currentACL = ACLManager.loadedACL(userID)
-
-            if currentACL['admin'] == 1:
-                pass
-            else:
-                return ACLManager.loadError()
-
-            return render(self.request, 'emailMarketing/emailMarketing.html')
-        except KeyError as msg:
-            return redirect(loadLoginPage)
+        proc = httpProc(self.request, 'emailMarketing/emailMarketing.html', None, 'admin')
+        return proc.render()
 
     def fetchUsers(self):
         try:
@@ -123,7 +113,8 @@ class EmailMarketingManager:
             if emACL.checkIfEMEnabled(admin.userName) == 0:
                 return ACLManager.loadError()
 
-            return render(self.request, 'emailMarketing/createEmailList.html', {'domain': self.domain})
+            proc = httpProc(self.request, 'emailMarketing/createEmailList.html', {'domain': self.domain})
+            return proc.render()
         except KeyError as msg:
             return redirect(loadLoginPage)
 
@@ -168,6 +159,7 @@ class EmailMarketingManager:
             userID = self.request.session['userID']
             currentACL = ACLManager.loadedACL(userID)
             admin = Administrator.objects.get(pk=userID)
+
             if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
                 pass
             else:
@@ -178,12 +170,15 @@ class EmailMarketingManager:
 
             listNames = emACL.getEmailsLists(self.domain)
 
-            return render(self.request, 'emailMarketing/manageLists.html', {'listNames': listNames, 'domain': self.domain})
+            proc = httpProc(self.request, 'emailMarketing/manageLists.html', {'listNames': listNames, 'domain': self.domain})
+            return proc.render()
+
         except KeyError as msg:
             return redirect(loadLoginPage)
 
     def configureVerify(self):
         try:
+
             userID = self.request.session['userID']
             currentACL = ACLManager.loadedACL(userID)
             admin = Administrator.objects.get(pk=userID)
@@ -196,7 +191,10 @@ class EmailMarketingManager:
             if emACL.checkIfEMEnabled(admin.userName) == 0:
                 return ACLManager.loadError()
 
-            return render(self.request, 'emailMarketing/configureVerify.html', {'domain': self.domain})
+            proc = httpProc(self.request, 'emailMarketing/configureVerify.html',
+                            {'domain': self.domain})
+            return proc.render()
+
         except KeyError as msg:
             return redirect(loadLoginPage)
 
@@ -490,7 +488,10 @@ class EmailMarketingManager:
 
             for items in emailLists:
                 listNames.append(items.listName)
-            return render(self.request, 'emailMarketing/manageSMTPHosts.html', {'listNames': listNames, 'domain': self.domain})
+
+            proc = httpProc(self.request, 'emailMarketing/manageSMTPHosts.html',
+                            {'listNames': listNames, 'domain': self.domain})
+            return proc.render()
         except KeyError as msg:
             return redirect(loadLoginPage)
 
@@ -657,7 +658,9 @@ class EmailMarketingManager:
             if emACL.checkIfEMEnabled(admin.userName) == 0:
                 return ACLManager.loadErrorJson()
 
-            return render(self.request, 'emailMarketing/composeMessages.html')
+            proc = httpProc(self.request, 'emailMarketing/composeMessages.html',
+                            None)
+            return proc.render()
         except KeyError as msg:
             return redirect(loadLoginPage)
 
@@ -709,7 +712,11 @@ class EmailMarketingManager:
             Data['templateNames'] = templateNames
             Data['hostNames'] = hostNames
             Data['listNames'] = listNames
-            return render(self.request, 'emailMarketing/sendEmails.html', Data)
+
+            proc = httpProc(self.request, 'emailMarketing/sendEmails.html',
+                            Data)
+            return proc.render()
+
         except KeyError as msg:
             return redirect(loadLoginPage)
 

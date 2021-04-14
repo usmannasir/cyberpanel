@@ -1,4 +1,5 @@
 #!/usr/local/CyberCP/bin/python
+import argparse
 import os, sys
 
 sys.path.append('/usr/local/CyberCP')
@@ -21,6 +22,8 @@ import hashlib
 class ApplicationInstaller(multi.Thread):
 
     LOCALHOST = 'localhost'
+    REMOTE = 0
+    PORT = '3306'
 
     def __init__(self, installApp, extraArgs):
         multi.Thread.__init__(self)
@@ -384,13 +387,10 @@ $parameters = array(
 
     def installWPCLI(self):
         try:
-            command = 'wget https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar'
+            command = 'wget -O /usr/bin/wp https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar'
             ProcessUtilities.executioner(command)
 
-            command = 'chmod +x wp-cli.phar'
-            ProcessUtilities.executioner(command)
-
-            command = 'mv wp-cli.phar /usr/bin/wp'
+            command = 'chmod +x /usr/bin/wp'
             ProcessUtilities.executioner(command)
 
         except BaseException as msg:
@@ -423,9 +423,10 @@ $parameters = array(
         try:
             import json
             jsonData = json.loads(open(passFile, 'r').read())
-
             mysqlhost = jsonData['mysqlhost']
             ApplicationInstaller.LOCALHOST = mysqlhost
+            ApplicationInstaller.REMOTE = 1
+            ApplicationInstaller.PORT = jsonData['mysqlport']
         except:
             pass
 
@@ -466,7 +467,6 @@ $parameters = array(
     def installWordPress(self):
         try:
 
-            admin = self.extraArgs['admin']
             domainName = self.extraArgs['domainName']
             home = self.extraArgs['home']
             tempStatusPath = self.extraArgs['tempStatusPath']
@@ -475,6 +475,7 @@ $parameters = array(
             adminUser = self.extraArgs['adminUser']
             adminPassword = self.extraArgs['adminPassword']
             adminEmail = self.extraArgs['adminEmail']
+
 
             FNULL = open(os.devnull, 'w')
 
@@ -520,8 +521,8 @@ $parameters = array(
 
                 dbName, dbUser, dbPassword = self.dbCreation(tempStatusPath, website.master)
                 self.permPath = website.path
+            except BaseException as msg:
 
-            except:
                 website = Websites.objects.get(domain=domainName)
                 externalApp = website.externalApp
                 self.masterDomain = website.domain
@@ -543,6 +544,7 @@ $parameters = array(
 
                 dbName, dbUser, dbPassword = self.dbCreation(tempStatusPath, website)
                 self.permPath = '/home/%s/public_html' % (website.domain)
+
 
             ## Security Check
 
@@ -567,8 +569,18 @@ $parameters = array(
             statusFile.writelines('Downloading WordPress Core,30')
             statusFile.close()
 
-            command = "wp core download --allow-root --path=" + finalPath
-            ProcessUtilities.executioner(command, externalApp)
+            try:
+                command = "wp core download --allow-root --path=%s --version=%s" % (finalPath, self.extraArgs['version'])
+            except:
+                command = "wp core download --allow-root --path=" + finalPath
+
+            result = ProcessUtilities.outputExecutioner(command, externalApp)
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.writeToFile(str(result))
+
+            if result.find('Success:') == -1:
+                raise BaseException(result)
 
             ##
 
@@ -576,8 +588,14 @@ $parameters = array(
             statusFile.writelines('Configuring the installation,40')
             statusFile.close()
 
-            command = "wp core config --dbname=" + dbName + " --dbuser=" + dbUser + " --dbpass=" + dbPassword + " --dbhost=%s --dbprefix=wp_ --allow-root --path=" % (ApplicationInstaller.LOCALHOST) + finalPath
-            ProcessUtilities.executioner(command, externalApp)
+            command = "wp core config --dbname=" + dbName + " --dbuser=" + dbUser + " --dbpass=" + dbPassword + " --dbhost=%s:%s --dbprefix=wp_ --allow-root --path=" % (ApplicationInstaller.LOCALHOST, ApplicationInstaller.PORT) + finalPath
+            result = ProcessUtilities.outputExecutioner(command, externalApp)
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.writeToFile(str(result))
+
+            if result.find('Success:') == -1:
+                raise BaseException(result)
 
             if home == '0':
                 path = self.extraArgs['path']
@@ -586,7 +604,13 @@ $parameters = array(
                 finalURL = domainName
 
             command = 'wp core install --url="http://' + finalURL + '" --title="' + blogTitle + '" --admin_user="' + adminUser + '" --admin_password="' + adminPassword + '" --admin_email="' + adminEmail + '" --allow-root --path=' + finalPath
-            ProcessUtilities.executioner(command, externalApp)
+            result = ProcessUtilities.outputExecutioner(command, externalApp)
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.writeToFile(str(result))
+
+            if result.find('Success:') == -1:
+                raise BaseException(result)
 
             ##
 
@@ -595,14 +619,90 @@ $parameters = array(
             statusFile.close()
 
             command = "wp plugin install litespeed-cache --allow-root --path=" + finalPath
-            ProcessUtilities.executioner(command, externalApp)
+            result = ProcessUtilities.outputExecutioner(command, externalApp)
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.writeToFile(str(result))
+
+            if result.find('Success:') == -1:
+                raise BaseException(result)
 
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines('Activating LSCache Plugin,90')
             statusFile.close()
 
             command = "wp plugin activate litespeed-cache --allow-root --path=" + finalPath
-            ProcessUtilities.executioner(command, externalApp)
+            result = ProcessUtilities.outputExecutioner(command, externalApp)
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.writeToFile(str(result))
+
+            if result.find('Success:') == -1:
+                raise BaseException(result)
+
+            try:
+                if self.extraArgs['updates']:
+                    if self.extraArgs['updates'] == 'Disabled':
+                        command = "wp config set WP_AUTO_UPDATE_CORE false --raw --allow-root --path=" + finalPath
+                        result = ProcessUtilities.outputExecutioner(command, externalApp)
+
+                        if result.find('Success:') == -1:
+                            raise BaseException(result)
+                    elif self.extraArgs['updates'] == 'Minor and Security Updates':
+                        command = "wp config set WP_AUTO_UPDATE_CORE minor --allow-root --path=" + finalPath
+                        result = ProcessUtilities.outputExecutioner(command, externalApp)
+
+                        if result.find('Success:') == -1:
+                            raise BaseException(result)
+                    else:
+                        command = "wp config set WP_AUTO_UPDATE_CORE true --raw --allow-root --path=" + finalPath
+                        result = ProcessUtilities.outputExecutioner(command, externalApp)
+
+                        if result.find('Success:') == -1:
+                            raise BaseException(result)
+            except:
+                pass
+
+            try:
+                if self.extraArgs['appsSet'] == 'WordPress + LSCache + Classic Editor':
+
+                    command = "wp plugin install classic-editor --allow-root --path=" + finalPath
+                    result = ProcessUtilities.outputExecutioner(command, externalApp)
+
+                    if result.find('Success:') == -1:
+                        raise BaseException(result)
+
+                    statusFile = open(tempStatusPath, 'w')
+                    statusFile.writelines('Activating Classic Editor Plugin,90')
+                    statusFile.close()
+
+                    command = "wp plugin activate classic-editor --allow-root --path=" + finalPath
+                    result = ProcessUtilities.outputExecutioner(command, externalApp)
+
+                    if result.find('Success:') == -1:
+                        raise BaseException(result)
+
+                elif self.extraArgs['appsSet'] == 'WordPress + LSCache + WooCommerce':
+
+                    command = "wp plugin install woocommerce --allow-root --path=" + finalPath
+                    result = ProcessUtilities.outputExecutioner(command, externalApp)
+
+                    if result.find('Success:') == -1:
+                        raise BaseException(result)
+
+                    statusFile = open(tempStatusPath, 'w')
+                    statusFile.writelines('Activating WooCommerce Plugin,90')
+                    statusFile.close()
+
+                    command = "wp plugin activate woocommerce --allow-root --path=" + finalPath
+                    result = ProcessUtilities.outputExecutioner(command, externalApp)
+
+                    if result.find('Success:') == -1:
+                        raise BaseException(result)
+
+            except:
+                pass
+
 
             ##
 
@@ -619,29 +719,18 @@ $parameters = array(
 
         except BaseException as msg:
             # remove the downloaded files
-            FNULL = open(os.devnull, 'w')
 
-            homeDir = "/home/" + domainName + "/public_html"
+            if not os.path.exists(ProcessUtilities.debugPath):
+                from filemanager.filemanager import FileManager
+                fm = FileManager(None, None)
+                fm.fixPermissions(self.masterDomain)
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
-                groupName = 'nobody'
-            else:
-                groupName = 'nogroup'
-
-            if not os.path.exists(homeDir):
-                command = "chown " + externalApp + ":" + groupName + " " + homeDir
-                ProcessUtilities.executioner(command, externalApp)
-
-            try:
-                mysqlUtilities.deleteDatabase(dbName, dbUser)
-                db = Databases.objects.get(dbName=dbName)
-                db.delete()
-            except:
-                pass
-
-            command = 'chmod 750 %s' % (self.permPath)
-            ProcessUtilities.executioner(command)
-
+                try:
+                    mysqlUtilities.deleteDatabase(dbName, dbUser)
+                    db = Databases.objects.get(dbName=dbName)
+                    db.delete()
+                except:
+                    pass
 
             statusFile = open(self.tempStatusPath, 'w')
             statusFile.writelines(str(msg) + " [404]")
@@ -1217,3 +1306,373 @@ $parameters = array(
     #         statusFile.writelines(str(msg) + " [404]")
     #         statusFile.close()
     #         return 0
+
+    def DeployWordPress(self):
+        try:
+
+            if self.extraArgs['createSite']:
+                logging.statusWriter(self.extraArgs['tempStatusPath'], 'Creating this application..,10')
+
+                ## Create site
+
+                import re
+                from plogical.virtualHostUtilities import virtualHostUtilities
+                tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
+                externalApp = "".join(re.findall("[a-zA-Z]+", self.extraArgs['domain']))[:5] + str(randint(1000, 9999))
+
+                virtualHostUtilities.createVirtualHost(self.extraArgs['domain'], self.extraArgs['email'], 'PHP 7.4',
+                                                       externalApp, 1, 1, 0,
+                                                       'admin', 'Default', 0, tempStatusPath,
+                                                       0)
+                result = open(tempStatusPath, 'r').read()
+                if result.find('[404]') > -1:
+                    logging.statusWriter(self.extraArgs['tempStatusPath'], 'Failed to create application. Error: %s [404]' % (result))
+                    return 0
+
+            ## Install WordPress
+
+            logging.statusWriter(self.extraArgs['tempStatusPath'], 'Installing WordPress.,50')
+
+            currentTemp = self.extraArgs['tempStatusPath']
+            self.extraArgs['domainName'] = self.extraArgs['domain']
+            self.extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
+            self.extraArgs['blogTitle'] = self.extraArgs['title']
+            self.extraArgs['adminUser'] = self.extraArgs['userName']
+            self.extraArgs['adminPassword'] = self.extraArgs['password']
+            self.extraArgs['adminEmail'] = self.extraArgs['email']
+
+            self.installWordPress()
+
+            result = open(self.extraArgs['tempStatusPath'], 'r').read()
+            if result.find('[404]') > -1:
+                self.extraArgs['tempStatusPath'] = currentTemp
+                raise BaseException('Failed to install WordPress. Error: %s [404]' % (result))
+
+            self.extraArgs['tempStatusPath'] = currentTemp
+
+
+            logging.statusWriter(self.extraArgs['tempStatusPath'], 'Completed [200].')
+
+            try:
+                ### Save config in db
+
+                from cloudAPI.models import WPDeployments
+                from websiteFunctions.models import Websites
+                import json
+
+                website = Websites.objects.get(domain=self.extraArgs['domain'])
+                del self.extraArgs['adminPassword']
+                del self.extraArgs['password']
+                del self.extraArgs['tempStatusPath']
+                del self.extraArgs['domain']
+                del self.extraArgs['adminEmail']
+                del self.extraArgs['adminUser']
+                del self.extraArgs['blogTitle']
+                del self.extraArgs['appsSet']
+
+                wpDeploy = WPDeployments(owner=website, config=json.dumps(self.extraArgs))
+                wpDeploy.save()
+            except:
+                pass
+
+            ## Set up cron if missing
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                localCronPath = "/var/spool/cron/root"
+            else:
+                localCronPath = "/var/spool/cron/crontabs/root"
+
+            cronData = open(localCronPath, 'r').read()
+
+            if cronData.find('WPAutoUpdates.py') == -1:
+                writeToFile = open(localCronPath, 'a')
+                writeToFile.write('0 12 * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/WPAutoUpdates.py\n')
+                writeToFile.close()
+
+        except BaseException as msg:
+            self.extraArgs['websiteName'] = self.extraArgs['domain']
+            from websiteFunctions.website import WebsiteManager
+            wm = WebsiteManager()
+            wm.submitWebsiteDeletion(1, self.extraArgs)
+            logging.statusWriter(self.extraArgs['tempStatusPath'], '%s [404].' % (str(msg)))
+	
+    def installWhmcs(self):
+        try:
+
+            admin = self.extraArgs['admin']
+            domainName = self.extraArgs['domainName']
+            home = self.extraArgs['home']
+            firstName = self.extraArgs['firstName']
+            lastName = self.extraArgs['lastName']
+            email = self.extraArgs['email']
+            username = self.extraArgs['username']
+            password = self.extraArgs['password']
+            whmcs_installer = self.extraArgs['whmcsinstallerpath']
+            whmcs_licensekey = self.extraArgs['whmcslicensekey']
+            tempStatusPath = self.extraArgs['tempStatusPath']
+            self.tempStatusPath = tempStatusPath
+
+            FNULL = open(os.devnull, 'w')
+
+            ## Open Status File
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines('Setting up paths,0')
+            statusFile.close()
+
+            finalPath = ''
+            self.permPath = ''
+
+            try:
+                website = ChildDomains.objects.get(domain=domainName)
+                externalApp = website.master.externalApp
+                self.masterDomain = website.master.domain
+
+                if home == '0':
+                    path = self.extraArgs['path']
+                    finalPath = website.path.rstrip('/') + "/" + path + "/"
+                else:
+                    finalPath = website.path + "/"
+
+                if website.master.package.dataBases > website.master.databases_set.all().count():
+                    pass
+                else:
+                    raise BaseException("Maximum database limit reached for this website.")
+
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines('Setting up Database,20')
+                statusFile.close()
+
+                dbName, dbUser, dbPassword = self.dbCreation(tempStatusPath, website.master)
+                self.permPath = website.path
+
+            except:
+                website = Websites.objects.get(domain=domainName)
+                externalApp = website.externalApp
+                self.masterDomain = website.domain
+
+                if home == '0':
+                    path = self.extraArgs['path']
+                    finalPath = "/home/" + domainName + "/public_html/" + path + "/"
+                else:
+                    finalPath = "/home/" + domainName + "/public_html/"
+
+                if website.package.dataBases > website.databases_set.all().count():
+                    pass
+                else:
+                    raise BaseException("Maximum database limit reached for this website.")
+
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines('Setting up Database,20')
+                statusFile.close()
+
+                dbName, dbUser, dbPassword = self.dbCreation(tempStatusPath, website)
+                self.permPath = '/home/%s/public_html' % (website.domain)
+
+            ## Security Check
+
+            command = 'chmod 755 %s' % (self.permPath)
+            ProcessUtilities.executioner(command)
+
+            if finalPath.find("..") > -1:
+                raise BaseException('Specified path must be inside virtual host home.')
+
+            if not os.path.exists(finalPath):
+                command = 'mkdir -p ' + finalPath
+                ProcessUtilities.executioner(command, externalApp)
+
+            ## checking for directories/files
+
+            if self.dataLossCheck(finalPath, tempStatusPath) == 0:
+                raise BaseException('Directory is not empty.')
+
+            ####
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines('Extracting WHMCS Installer zip..,30')
+            statusFile.close()
+            command = "unzip -qq %s -d %s" % (whmcs_installer, finalPath)
+            ProcessUtilities.executioner(command, externalApp)          
+            
+            ##
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines('Configuring the installation,40')
+            statusFile.close()
+
+            if home == '0':
+                path = self.extraArgs['path']
+                # finalURL = domainName + '/' + path
+                finalURL = domainName
+            else:
+                finalURL = domainName
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines('Installing and configuring WHMCS..,60')
+            statusFile.close()
+            
+            command = "chown -R " + externalApp + ":" + groupName + " " + homeDir
+            ProcessUtilities.executioner(command, externalApp)
+
+            # Walk through whmcs webinstaller via curl with all except errors hidden https://stackoverflow.com/a/49502232
+            # Accept EULA and generate configuration.php
+            command = "curl %s/install/install.php?step=2 --insecure --silent --output /dev/null --show-error --fail" % (finalURL)
+            ProcessUtilities.executioner(command, externalApp)
+
+            command = "curl %s/install/install.php?step=2 --insecure --silent --output /dev/null --show-error --fail" % (finalURL)
+            ProcessUtilities.executioner(command, externalApp)
+
+            command = "mv %s/configuration.php.new %s/configuration.php" % (finalPath, finalPath)
+            ProcessUtilities.executioner(command, externalApp)
+          
+            # Post database and license information to webinstaller form
+            command = """
+            curl %s/install/install.php?step=4" \
+            -H 'Content-Type: application/x-www-form-urlencoded' \
+            --data "licenseKey=%s&databaseHost=localhost&databasePort=&databaseUsername=%s&databasePassword=%s&databaseName=%s" \
+            --compressed \
+            --insecure \
+            --silent \
+            --output /dev/null \
+            --show-error \
+            --fail
+            """ % (whmcs_licensekey, dbUser, dbPassword, dbName)
+
+            # Post admin user and password information to webinstaller form
+            command = """
+            curl %s/install/install.php?step=5" \
+            -H 'Content-Type: application/x-www-form-urlencoded' \
+            --data "firstName=%s&lastName=%s&email=%s&username=%s&password=%s&confirmPassword=%s" \
+            --compressed \
+            --insecure \
+            --silent \
+            --output /dev/null \
+            --show-error \
+            --fail
+            """ % (firstName, lastName, email, username, password, password)
+
+            ##
+
+            command = "rm -rf " + finalPath + "install"
+            ProcessUtilities.executioner(command, externalApp)
+            
+            
+            ### Update whmcs urls to siteurl
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines('Update whmcs urls to siteurl..,70')
+            statusFile.close()
+
+            try:
+
+                import MySQLdb.cursors as cursors
+                import MySQLdb as mysql
+
+                conn = mysql.connect(host='localhost', user=dbUser, passwd=dbPassword, port=3306,
+                                     cursorclass=cursors.SSCursor)
+                cursor = conn.cursor()
+
+                cursor.execute("use %s;UPDATE tblconfiguration SET value='%s' WHERE setting='SystemURL';" % (dbName, finalURL))
+                cursor.execute("use %s;UPDATE tblconfiguration SET value='%s' WHERE setting='Domain';" % (dbName, finalURL))
+                cursor.execute("use %s;UPDATE tblconfiguration SET value='%s' WHERE setting='SystemSSLURL';" % (dbName, finalURL))
+
+                conn.close()
+            except BaseException as msg:
+                logging.writeToFile(str(msg))
+
+      
+
+            # Secure WHMCS configuration.php file : https://docs.whmcs.com/Further_Security_Steps#Secure_the_configuration.php_File
+            command = "chmod 400 %s/configuration.php" % (finalPath)
+            ProcessUtilities.executioner(command)
+
+            ##
+
+            from filemanager.filemanager import FileManager
+
+            fm = FileManager(None, None)
+            fm.fixPermissions(self.masterDomain)
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines("Successfully Installed. [200]")
+            statusFile.close()
+            return 0
+
+
+        except BaseException as msg:
+            # remove the downloaded files
+
+            homeDir = "/home/" + domainName + "/public_html"
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                groupName = 'nobody'
+            else:
+                groupName = 'nogroup'
+
+            if not os.path.exists(homeDir):
+                command = "chown -R " + externalApp + ":" + groupName + " " + homeDir
+                ProcessUtilities.executioner(command, externalApp)
+
+            try:
+                mysqlUtilities.deleteDatabase(dbName, dbUser)
+                db = Databases.objects.get(dbName=dbName)
+                db.delete()
+            except:
+                pass
+
+            command = 'chmod 750 %s' % (self.permPath)
+            ProcessUtilities.executioner(command)
+
+            statusFile = open(self.tempStatusPath, 'w')
+            statusFile.writelines(str(msg) + " [404]")
+            statusFile.close()
+            return 0
+
+def main():
+    parser = argparse.ArgumentParser(description='CyberPanel Application Installer')
+    parser.add_argument('function', help='Specify a function to call!')
+    parser.add_argument('--tempStatusPath', help='')
+    parser.add_argument('--appsSet', help='')
+    parser.add_argument('--domain', help='')
+    parser.add_argument('--email', help='')
+    parser.add_argument('--password', help='')
+    parser.add_argument('--pluginUpdates', help='')
+    parser.add_argument('--themeUpdates', help='')
+    parser.add_argument('--title', help='')
+    parser.add_argument('--updates', help='')
+    parser.add_argument('--userName', help='')
+    parser.add_argument('--version', help='')
+    parser.add_argument('--path', help='')
+    parser.add_argument('--createSite', help='')
+
+
+    args = parser.parse_args()
+
+    if args.function == "DeployWordPress":
+
+        extraArgs = {}
+        extraArgs['domain'] = args.domain
+        extraArgs['tempStatusPath'] = args.tempStatusPath
+        extraArgs['appsSet'] = args.appsSet
+        extraArgs['email'] = args.email
+        extraArgs['password'] = args.password
+        extraArgs['pluginUpdates'] = args.pluginUpdates
+        extraArgs['themeUpdates'] = args.themeUpdates
+        extraArgs['title'] = args.title
+        extraArgs['updates'] = args.updates
+        extraArgs['userName'] = args.userName
+        extraArgs['version'] = args.version
+        extraArgs['createSite'] = int(args.createSite)
+
+        if args.path != None:
+            extraArgs['path'] = args.path
+            extraArgs['home'] = '0'
+        else:
+            extraArgs['home'] = '1'
+
+        ai = ApplicationInstaller(None, extraArgs)
+        ai.DeployWordPress()
+
+
+if __name__ == "__main__":
+    main()

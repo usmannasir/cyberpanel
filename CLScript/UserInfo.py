@@ -2,10 +2,15 @@
 import getpass
 
 def main():
+    import pwd
     if getpass.getuser() == 'root':
         userType = "admin"
     else:
-        userType = "user"
+        try:
+            uid = pwd.getpwnam(getpass.getuser()).pw_uid
+            userType = 'reseller'
+        except:
+            userType = 'user'
 
     data = """{
     "userName": "%s",

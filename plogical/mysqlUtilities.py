@@ -27,6 +27,7 @@ class mysqlUtilities:
 
     LOCALHOST = 'localhost'
     RDS = 0
+    REMOTEHOST = ''
 
     @staticmethod
     def getPagination(records, toShow):
@@ -67,6 +68,7 @@ class mysqlUtilities:
                 mysqlpassword = jsonData['mysqlpassword']
                 mysqlport = jsonData['mysqlport']
                 mysqlhost = jsonData['mysqlhost']
+                mysqlUtilities.REMOTEHOST = mysqlhost
 
                 if mysqlhost.find('rds.amazon') > -1:
                     mysqlUtilities.RDS = 1
@@ -105,28 +107,64 @@ class mysqlUtilities:
             return 0, 0
 
     @staticmethod
-    def createDatabase(dbname,dbuser,dbpassword):
+    def createDatabase(dbname,dbuser,dbpassword, dbcreate = 1, host = None):
         try:
+
+            if dbcreate:
+                HostToUse = mysqlUtilities.LOCALHOST
+            else:
+                HostToUse = host
 
             connection, cursor = mysqlUtilities.setupConnection()
 
             if connection == 0:
                 return 0
 
-            cursor.execute("CREATE DATABASE " + dbname)
-            cursor.execute("CREATE USER '" + dbuser + "'@'%s' IDENTIFIED BY '" % (mysqlUtilities.LOCALHOST) + dbpassword+ "'")
+
+            ## Create db
+
+            if dbcreate:
+
+                query = "CREATE DATABASE %s" % (dbname)
+
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.CyberCPLogFileWriter.writeToFile(query)
+
+                cursor.execute(query)
+
+            ## create user
+
+            if mysqlUtilities.REMOTEHOST.find('ondigitalocean') > -1:
+                query = "CREATE USER '%s'@'%s' IDENTIFIED WITH mysql_native_password BY '%s'" % (
+                dbuser, HostToUse, dbpassword)
+            else:
+                query = "CREATE USER '" + dbuser + "'@'%s' IDENTIFIED BY '" % (
+                    HostToUse) + dbpassword + "'"
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.CyberCPLogFileWriter.writeToFile(query)
+
+            cursor.execute(query)
 
             if mysqlUtilities.RDS == 0:
-                cursor.execute("GRANT ALL PRIVILEGES ON " + dbname + ".* TO '" + dbuser + "'@'%s'" % (mysqlUtilities.LOCALHOST))
+                cursor.execute("GRANT ALL PRIVILEGES ON " + dbname + ".* TO '" + dbuser + "'@'%s'" % (HostToUse))
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.CyberCPLogFileWriter.writeToFile("GRANT ALL PRIVILEGES ON " + dbname + ".* TO '" + dbuser + "'@'%s'" % (HostToUse))
             else:
                 cursor.execute(
-                    "GRANT INDEX, DROP, UPDATE, ALTER, CREATE, SELECT, INSERT, DELETE ON " + dbname + ".* TO '" + dbuser + "'@'%s'" % (mysqlUtilities.LOCALHOST))
+                    "GRANT INDEX, DROP, UPDATE, ALTER, CREATE, SELECT, INSERT, DELETE ON " + dbname + ".* TO '" + dbuser + "'@'%s'" % (HostToUse))
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.CyberCPLogFileWriter.writeToFile("GRANT INDEX, DROP, UPDATE, ALTER, CREATE, SELECT, INSERT, DELETE ON " + dbname + ".* TO '" + dbuser + "'@'%s'" % (HostToUse))
+
             connection.close()
 
             return 1
 
         except BaseException as msg:
-            mysqlUtilities.deleteDatabase(dbname, dbuser)
+            if dbcreate:
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.CyberCPLogFileWriter.writeToFile('Deleting database because failed to create %s' % (dbname))
+                mysqlUtilities.deleteDatabase(dbname, dbuser)
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[createDatabase]")
             return 0
 
@@ -190,7 +228,14 @@ class mysqlUtilities:
                 return 0
 
             cursor.execute("DROP DATABASE `%s`" % (dbname))
-            cursor.execute("DROP USER '"+dbuser+"'@'%s'" % (mysqlUtilities.LOCALHOST))
+
+            ## Try deleting all user who had priviliges on db
+
+            cursor.execute("select user,host from mysql.db where db='%s'" % (dbname))
+            databaseUsers = cursor.fetchall()
+
+            for databaseUser in databaseUsers:
+                cursor.execute("DROP USER '"+databaseUser[0]+"'@'%s'" % (databaseUser[1]))
             connection.close()
 
             return 1
@@ -320,6 +365,7 @@ password=%s
                     return 0
 
             if passwordCheck == None:
+
                 connection, cursor = mysqlUtilities.setupConnection()
 
                 if connection == 0:
@@ -381,7 +427,9 @@ password=%s
                 databaseToBeDeleted.delete()
                 return 1,'None'
             else:
-                return 0,result
+                databaseToBeDeleted.delete()
+                logging.CyberCPLogFileWriter.writeToFile('Deleted database with some errors. Error: %s' % (result))
+                return 1,'None'
 
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
@@ -793,17 +841,24 @@ password=%s
             cursor.execute("use mysql")
 
             if host != None:
-                mysqlUtilities.LOCALHOST = host
+                LOCALHOST = host
+            else:
+                LOCALHOST = mysqlUtilities.LOCALHOST
 
             if encrypt == None:
                 try:
                     dbuser = DBUsers.objects.get(user=userName)
-                    cursor.execute("SET PASSWORD FOR '" + userName + "'@'%s' = PASSWORD('" % (mysqlUtilities.LOCALHOST) + dbPassword + "')")
+                    query = "SET PASSWORD FOR '" + userName + "'@'%s' = PASSWORD('" % (LOCALHOST) + dbPassword + "')"
                 except:
                     userName = mysqlUtilities.fetchuser(userName)
-                    cursor.execute("SET PASSWORD FOR '" + userName + "'@'%s' = PASSWORD('" % (mysqlUtilities.LOCALHOST) + dbPassword + "')")
+                    query = "SET PASSWORD FOR '" + userName + "'@'%s' = PASSWORD('" % (LOCALHOST) + dbPassword + "')"
             else:
-                cursor.execute("SET PASSWORD FOR '" + userName + "'@'%s' = '" % (mysqlUtilities.LOCALHOST) + dbPassword + "'")
+                query = "SET PASSWORD FOR '" + userName + "'@'%s' = '" % (LOCALHOST) + dbPassword + "'"
+
+            cursor.execute(query)
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.CyberCPLogFileWriter.writeToFile(query)
 
             connection.close()
 
@@ -858,18 +913,6 @@ password=%s
 
             execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/mysqlUtilities.py enableRemoteMYSQL"
             ProcessUtilities.executioner(execPath)
-
-            connection, cursor = mysqlUtilities.setupConnection()
-
-            if connection == 0:
-                return 0
-            cursor.execute("use mysql")
-
-            cursor.execute("update db set Host='%s' where Db='%s'" % (remoteIP, dbName))
-            cursor.execute("update user set Host='%s' where user='%s'" % (remoteIP, userName))
-            cursor.execute("FLUSH PRIVILEGES")
-
-            connection.close()
 
             return 1
 
@@ -959,6 +1002,27 @@ skip-name-resolve
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[addUserToDB]")
             return 0
+
+    @staticmethod
+    def UpdateWPTempPassword(dbname, password):
+        try:
+
+            ##
+
+            connection, cursor = mysqlUtilities.setupConnection()
+
+            if connection == 0:
+                return 0
+
+            cursor.execute("use %s" % (dbname))
+            cursor.execute("UPDATE `wp_users` SET `user_pass`= MD5('%s') WHERE `user_login`='usman'" % (password))
+            connection.close()
+
+            return 1
+
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[deleteDatabase]")
+            return str(msg)
 
 def main():
     parser = argparse.ArgumentParser(description='CyberPanel')

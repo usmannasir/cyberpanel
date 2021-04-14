@@ -51,10 +51,37 @@ class cPanelImporter:
         self.mailFormat = 1
         self.externalApp = ''
 
+        ## New
+
+        self.MainSite = []
+        self.OtherDomains = []
+        self.OtherDomainNames = []
+        self.InheritPHP = ''
+
+    def LoadDomains(self):
+        try:
+            ###
+            CompletPathToExtractedArchive = cPanelImporter.mainBackupPath + self.fileName
+            ### Find Domain Name
+            import json
+            UserData = json.loads(open('%s/userdata/cache.json' % (CompletPathToExtractedArchive), 'r').read())
+
+            for key, value in UserData.items():
+                if value[2] == 'main':
+                    self.MainSite = value
+                    self.PHPVersion = value[9]
+                    self.InheritPHP = self.PHPDecider()
+                else:
+                    self.OtherDomainNames.append(key)
+                    self.OtherDomains.append(value)
+
+        except BaseException as msg:
+            print(str(msg))
+
     def PHPDecider(self):
 
         if self.PHPVersion == 'inherit':
-            self.PHPVersion = 'PHP 7.2'
+            self.PHPVersion = 'PHP 7.4'
         if self.PHPVersion.find('53') > -1:
             self.PHPVersion = 'PHP 5.3'
         elif self.PHPVersion.find('54') > -1:
@@ -73,9 +100,13 @@ class cPanelImporter:
             self.PHPVersion = 'PHP 7.3'
         elif self.PHPVersion.find('74') > -1:
             self.PHPVersion = 'PHP 7.4'
+        elif self.PHPVersion.find('80') > -1:
+            self.PHPVersion = 'PHP 8.0'
             
         if self.PHPVersion == '':
-            self.PHPVersion = 'PHP 7.1'
+            self.PHPVersion = self.InheritPHP
+
+        return self.PHPVersion
 
     def SetupSSL(self, path, domain):
 
@@ -153,19 +184,14 @@ class cPanelImporter:
             message = 'Creating main account from archive file: %s' % (self.backupFile)
             logging.statusWriter(self.logFile, message, 1)
 
+            ## Paths
+
+            DomainName = self.MainSite[3]
+            self.mainDomain = DomainName
             CompletPathToExtractedArchive = cPanelImporter.mainBackupPath + self.fileName
+            DomainMeta = '%s/userdata/%s' % (CompletPathToExtractedArchive, DomainName)
 
             ### Find Domain Name
-            UserData = '%s/userdata/main' % (CompletPathToExtractedArchive)
-
-            data = open(UserData, 'r').readlines()
-            DomainName = ''
-
-            for items in data:
-                if items.find('main_domain') > -1:
-                    DomainName = items.split(' ')[-1].replace('\n', '')
-                    self.mainDomain = DomainName
-                    break
 
             message = 'Detected main domain for this file is: %s.' % (DomainName)
             logging.statusWriter(self.logFile, message, 1)
@@ -175,20 +201,8 @@ class cPanelImporter:
             message = 'Finding PHP version for %s.' % (DomainName)
             logging.statusWriter(self.logFile, message, 1)
 
-            DomainMeta = '%s/userdata/%s' % (CompletPathToExtractedArchive, DomainName)
-
-            data = open(DomainMeta, 'r').readlines()
-            phpChecker = 1
-
-            for items in data:
-                if items.find('phpversion') > -1:
-                    self.PHPVersion = items.split(' ')[-1].replace('\n', '')
-                    self.PHPDecider()
-                    phpChecker = 0
-                    break
-
-            if phpChecker:
-                self.PHPDecider()
+            self.PHPVersion = self.MainSite[9]
+            self.PHPDecider()
 
             message = 'PHP version of %s is %s.' % (DomainName, self.PHPVersion)
             logging.statusWriter(self.logFile, message, 1)
@@ -227,7 +241,7 @@ class cPanelImporter:
                 time.sleep(2)
 
 
-            result = virtualHostUtilities.createVirtualHost(DomainName, self.email, self.PHPVersion, self.externalApp, 0, 0,
+            result = virtualHostUtilities.createVirtualHost(DomainName, self.email, self.PHPVersion, self.externalApp, 1, 0,
                                                             0, 'admin', 'Default', 0)
 
             if result[0] == 1:
@@ -262,31 +276,16 @@ class cPanelImporter:
             message = 'Restoring document root files for %s.' % (DomainName)
             logging.statusWriter(self.logFile, message, 1)
 
-            data = open(DomainMeta, 'r').readlines()
-
-            for items in data:
-                if items.find('homedir') > -1:
-                    self.homeDir = items.split(' ')[-1].replace('\n', '')
-                    break
-
-            data = open(DomainMeta, 'r').readlines()
-
-            for items in data:
-                if items.find('documentroot') > -1:
-                    self.documentRoot = items.split(' ')[-1].replace('\n', '')
-                    break
+            self.homeDir = self.MainSite[4].replace('/home/%s/' % (self.MainSite[0]), '')
 
             nowPath = '/home/%s/public_html' % (DomainName)
             if os.path.exists(nowPath):
                 shutil.rmtree(nowPath)
 
             movePath = '%s/homedir/%s' % (
-            CompletPathToExtractedArchive, self.documentRoot.replace(self.homeDir, '', 1).replace('/', ''))
+            CompletPathToExtractedArchive, self.homeDir)
 
             shutil.copytree(movePath, nowPath, symlinks=True)
-
-            command = 'chown -R %s:%s %s' % (self.externalApp, self.externalApp, nowPath)
-            ProcessUtilities.normalExecutioner(command)
 
             message = 'Main site %s created from archive file: %s' % (DomainName, self.backupFile)
             logging.statusWriter(self.logFile, message, 1)
@@ -312,51 +311,12 @@ class cPanelImporter:
             message = 'Finding Addon/Subdomains from backup file %s. Account main domain was %s.' % (self.backupFile, self.mainDomain)
             logging.statusWriter(self.logFile, message, 1)
 
-            UserData = '%s/userdata/main' % (CompletPathToExtractedArchive)
-
-            data = open(UserData, 'r').readlines()
-            Domains = []
-            addonStatus = 0
-            subDomainsStatus = 0
-
-            for items in data:
-                if items.find('addon_domains') > -1:
-                    addonStatus = 1
-                    continue
-
-                if addonStatus == 1:
-                    if items.find('main_domain') > -1:
-                        addonStatus = 0
-                        continue
-                    else:
-                        cDomain = items.split(':')[0].replace(' ', '')
-                        if len(cDomain) < 2:
-                            continue
-                        Domains.append(ChildDomains(cDomain, 1))
-                        continue
-
-                ##
-
-                if items.find('sub_domains') > -1:
-                    subDomainsStatus = 1
-                    continue
-
-                existCheck = 0
-                if subDomainsStatus == 1:
-                    cDomain = items.split(' ')[-1].replace('\n', '')
-                    for items in Domains:
-                        if cDomain.find(items.domain) > -1:
-                            existCheck = 1
-                    if existCheck == 0:
-                        if len(cDomain) > 2:
-                            Domains.append(ChildDomains(cDomain, 0))
-
             message = 'Following Addon/Subdomains found for backup file %s. Account main domain was %s.' % (
             self.backupFile, self.mainDomain)
             logging.statusWriter(self.logFile, message, 1)
 
-            for items in Domains:
-                print(items.domain)
+            for items in self.OtherDomainNames:
+                print(items)
 
             ## Starting Child-domains creation
 
@@ -364,116 +324,87 @@ class cPanelImporter:
                 self.backupFile, self.mainDomain)
             logging.statusWriter(self.logFile, message, 1)
 
-            for items in Domains:
+            counter = 0
+
+            for items in self.OtherDomainNames:
 
                 try:
 
-                    message = 'Creating %s.' % (items.domain)
+                    message = 'Creating %s.' % (items)
                     logging.statusWriter(self.logFile, message, 1)
 
-                    path = '/home/' + self.mainDomain + '/public_html/' + items.domain
+                    path = '/home/' + self.mainDomain + '/' + items
 
                     ## Find PHP Version
 
-                    if items.addon == 1:
-                        DomainMeta = '%s/userdata/%s.%s' % (CompletPathToExtractedArchive, items.domain, self.mainDomain)
-                    else:
-                        DomainMeta = '%s/userdata/%s' % (CompletPathToExtractedArchive, items.domain)
+                    self.PHPVersion = self.OtherDomains[counter][9]
+                    self.PHPDecider()
 
-                    data = open(DomainMeta, 'r').readlines()
-                    phpChecker = 1
-                    for it in data:
-                        if it.find('phpversion') > -1:
-                            self.PHPVersion = it.split(' ')[-1].replace('\n', '')
-                            self.PHPDecider()
-                            phpChecker = 0
-                            break
-
-                    if phpChecker:
-                        self.PHPDecider()
-
-                    message = 'Calling core to create %s.' % (items.domain)
+                    message = 'Calling core to create %s.' % (items)
                     logging.statusWriter(self.logFile, message, 1)
 
-                    result = virtualHostUtilities.createDomain(self.mainDomain, items.domain, self.PHPVersion, path, 0, 0,
+                    result = virtualHostUtilities.createDomain(self.mainDomain, items, self.PHPVersion, path, 1, 0,
                                                                0, 'admin', 0)
 
                     if result[0] == 1:
-                        message = 'Child domain %s created from archive file: %s' % (items.domain, self.backupFile)
+                        message = 'Child domain %s created from archive file: %s' % (items, self.backupFile)
                         logging.statusWriter(self.logFile, message, 1)
                     else:
-                        message = 'Failed to create Child domain %s from archive file: %s' % (items.domain, self.backupFile)
+                        message = 'Failed to create Child domain %s from archive file: %s' % (items, self.backupFile)
                         logging.statusWriter(self.logFile, message, 1)
-
-
 
                     ## Setup SSL
 
-                    message = 'Detecting SSL for %s.' % (items.domain)
+                    message = 'Detecting SSL for %s.' % (items)
                     logging.statusWriter(self.logFile, message, 1)
 
-                    SSLPath = '%s/apache_tls/%s' % (CompletPathToExtractedArchive, items.domain)
+                    SSLPath = '%s/apache_tls/%s' % (CompletPathToExtractedArchive, items)
 
                     if os.path.exists(SSLPath):
-                        message = 'SSL found for %s, setting up.' % (items.domain)
+                        message = 'SSL found for %s, setting up.' % (items)
                         logging.statusWriter(self.logFile, message, 1)
-                        self.SetupSSL(SSLPath, items.domain)
-                        message = 'SSL set up OK for %s.' % (items.domain)
+                        self.SetupSSL(SSLPath, items)
+                        message = 'SSL set up OK for %s.' % (items)
                         logging.statusWriter(self.logFile, message, 1)
                     else:
-                        SSLPath = '%s/apache_tls/%s.%s' % (CompletPathToExtractedArchive, items.domain, self.mainDomain)
+                        SSLPath = '%s/apache_tls/%s.%s' % (CompletPathToExtractedArchive, items, self.mainDomain)
                         if os.path.exists(SSLPath):
-                            message = 'SSL found for %s, setting up.' % (items.domain)
+                            message = 'SSL found for %s, setting up.' % (items)
                             logging.statusWriter(self.logFile, message, 1)
-                            self.SetupSSL(SSLPath, items.domain)
-                            message = 'SSL set up OK for %s.' % (items.domain)
+                            self.SetupSSL(SSLPath, items)
+                            message = 'SSL set up OK for %s.' % (items)
                             logging.statusWriter(self.logFile, message, 1)
                         else:
                             message = 'SSL not detected for %s, you can later issue SSL from Manage SSL in CyberPanel.' % (
-                                items.domain)
+                                items)
                             logging.statusWriter(self.logFile, message, 1)
-
 
                     ## Creating Document root for childs
 
-                    message = 'Restoring document root files for %s.' % (items.domain)
+                    message = 'Restoring document root files for %s.' % (items)
                     logging.statusWriter(self.logFile, message, 1)
 
-                    externalApp = "".join(re.findall("[a-zA-Z]+", self.mainDomain))[:7]
-
-                    data = open(DomainMeta, 'r').readlines()
-
-                    for items in data:
-                        if items.find('documentroot') > -1:
-                            ChildDocRoot = items.split(' ')[-1].replace('\n', '')
-                            break
+                    ChildDocRoot = self.OtherDomains[counter][4].replace('/home/%s/' % (self.MainSite[0]), '')
 
                     if os.path.exists(path):
                         shutil.rmtree(path)
 
-                    movePath = '%s/homedir/public_html/%s' % (
-                        CompletPathToExtractedArchive, ChildDocRoot.replace(self.documentRoot, '', 1).replace('/', ''))
+                    movePath = '%s/homedir/%s' % (CompletPathToExtractedArchive, ChildDocRoot)
+                    logging.statusWriter(self.logFile, 'Document root in cPanel Backup for %s is %s' % (items, movePath), 1)
 
                     if os.path.exists(movePath):
-                        shutil.move(movePath, path)
-                    else:
-                        movePath = '%s/homedir/%s' % (
-                        CompletPathToExtractedArchive, ChildDocRoot.split('/')[-1].replace(self.documentRoot, '', 1).replace('/', ''))
-                        if os.path.exists(movePath):
-                            shutil.move(movePath, path)
-                        else:
-                            movePath = '%s/homedir/%s' % (
-                                CompletPathToExtractedArchive, items.domain)
-                            shutil.move(movePath, path)
-
-                    command = 'chown -R %s:%s %s' % (externalApp, externalApp, path)
-                    ProcessUtilities.normalExecutioner(command)
+                        shutil.copytree(movePath, path)
 
                     message = 'Successfully created child domain.'
                     logging.statusWriter(self.logFile, message, 1)
+
+                    counter = counter + 1
+
                 except BaseException as msg:
                     message = 'Failed to create child domain from backup file %s, error message: %s. Moving on..' % (
                         self.backupFile, str(msg))
+                    logging.statusWriter(self.logFile, message, 1)
+                    counter = counter + 1
 
             return 1
 
@@ -768,47 +699,6 @@ class cPanelImporter:
             logging.statusWriter(self.logFile, message, 1)
             return 0
 
-    def MainController(self):
-
-        if self.ExtractBackup():
-            pass
-        else:
-            return 0
-
-        if self.CreateMainWebsite():
-            pass
-        else:
-            return 0
-
-        if self.CreateChildDomains():
-            pass
-        else:
-            return 0
-
-        if self.CreateDNSRecords():
-            pass
-        else:
-            return 0
-
-
-        if self.RestoreDatabases():
-            pass
-        else:
-            return 0
-        
-        if self.createCronJobs():
-            pass
-        else:
-            return 0
-
-        self.RestoreEmails()
-        self.FixPermissions()
-
-        message = 'Backup file %s successfully restored.' % (self.backupFile)
-        logging.statusWriter(self.logFile, message, 1)
-
-        return 1
-
     def DeleteSite(self):
         vhost.deleteVirtualHostConfigurations(self.mainDomain)
 
@@ -935,6 +825,48 @@ class cPanelImporter:
             self.backupFile, str(msg))
             logging.statusWriter(self.logFile, message, 1)
             return 0
+
+    def MainController(self):
+
+        if self.ExtractBackup():
+            pass
+        else:
+            return
+
+        self.LoadDomains()
+
+        if self.CreateMainWebsite():
+            pass
+        else:
+            return 0
+
+        if self.CreateChildDomains():
+            pass
+        else:
+            return 0
+
+        if self.CreateDNSRecords():
+            pass
+        else:
+            return 0
+
+        if self.RestoreDatabases():
+            pass
+        else:
+            return 0
+
+        if self.createCronJobs():
+            pass
+        else:
+            return 0
+
+        self.RestoreEmails()
+        self.FixPermissions()
+
+        message = 'Backup file %s successfully restored.' % (self.backupFile)
+        logging.statusWriter(self.logFile, message, 1)
+
+        return 1
 
 
 def main():

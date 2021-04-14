@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-
 from .cloudManager import CloudManager
 import json
 from loginSystem.models import Administrator
@@ -14,9 +13,13 @@ def router(request):
         controller = data['controller']
 
         serverUserName = data['serverUserName']
+
         admin = Administrator.objects.get(userName=serverUserName)
 
         cm = CloudManager(data, admin)
+
+        if serverUserName != 'admin':
+            return cm.ajaxPre(0, 'Only administrator can access API.')
 
         if admin.api == 0:
             return cm.ajaxPre(0, 'API Access Disabled.')
@@ -29,10 +32,40 @@ def router(request):
             else:
                 return cm.verifyLogin(request)[1]
 
+        ## Debug Log
+
+        import os
+        from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+        from plogical.processUtilities import ProcessUtilities
+        if os.path.exists(ProcessUtilities.debugPath):
+            logging.writeToFile('Current controller: %s' % (controller))
+
+        ##
+
         if controller == 'verifyLogin':
             return cm.verifyLogin(request)[1]
         elif controller == 'RunServerLevelEmailChecks':
             return cm.RunServerLevelEmailChecks()
+        elif controller == 'DetachCluster':
+            return cm.DetachCluster()
+        elif controller == 'DebugCluster':
+            return cm.DebugCluster()
+        elif controller == 'UptimeMonitor':
+            return cm.UptimeMonitor()
+        elif controller == 'FetchMasterBootStrapStatus':
+            return cm.FetchMasterBootStrapStatus()
+        elif controller == 'FetchChildBootStrapStatus':
+            return cm.FetchChildBootStrapStatus()
+        elif controller == 'CreatePendingVirtualHosts':
+            return cm.CreatePendingVirtualHosts()
+        elif controller == 'BootMaster':
+            return cm.BootMaster()
+        elif controller == 'SwitchDNS':
+            return cm.SwitchDNS()
+        elif controller == 'BootChild':
+            return cm.BootChild()
+        elif controller == 'SetupCluster':
+            return cm.SetupCluster()
         elif controller == 'ReadReport':
             return cm.ReadReport()
         elif controller == 'ResetEmailConfigurations':
@@ -57,12 +90,46 @@ def router(request):
             return cm.getCurrentCloudBackups()
         elif controller == 'fetchCloudBackupSettings':
             return cm.fetchCloudBackupSettings()
+        elif controller == 'SubmitCyberPanelUpgrade':
+            return cm.SubmitCyberPanelUpgrade()
         elif controller == 'saveCloudBackupSettings':
             return cm.saveCloudBackupSettings()
         elif controller == 'deleteCloudBackup':
             return cm.deleteCloudBackup()
         elif controller == 'SubmitCloudBackupRestore':
             return cm.SubmitCloudBackupRestore()
+        elif controller == 'DeployWordPress':
+            return cm.DeployWordPress()
+        elif controller == 'FetchWordPressDetails':
+            return cm.FetchWordPressDetails()
+        elif controller == 'AutoLogin':
+            return cm.AutoLogin()
+        elif controller == 'DeletePlugins':
+            return cm.DeletePlugins()
+        elif controller == 'GetCurrentThemes':
+            return cm.GetCurrentThemes()
+        elif controller == 'UpdateThemes':
+            return cm.UpdateThemes()
+        elif controller == 'ChangeStateThemes':
+            return cm.ChangeStateThemes()
+        elif controller == 'DeleteThemes':
+            return cm.DeleteThemes()
+        elif controller == 'GetServerPublicSSHkey':
+            return cm.GetServerPublicSSHkey()
+        elif controller == 'SubmitPublicKey':
+            return cm.SubmitPublicKey()
+        elif controller == 'UpdateWPSettings':
+            return cm.UpdateWPSettings()
+        elif controller == 'GetCurrentPlugins':
+            return cm.GetCurrentPlugins()
+        elif controller == 'UpdatePlugins':
+            return cm.UpdatePlugins()
+        elif controller == 'ChangeState':
+            return cm.ChangeState()
+        elif controller == 'saveWPSettings':
+            return cm.saveWPSettings()
+        elif controller == 'WPScan':
+            return cm.WPScan()
         elif controller == 'getCurrentS3Backups':
             return cm.getCurrentS3Backups()
         elif controller == 'deleteS3Backup':
@@ -205,6 +272,16 @@ def router(request):
             return cm.getLogsFromFile(request)
         elif controller == 'serverSSL':
             return cm.serverSSL(request)
+        elif controller == 'CreateStaging':
+            return cm.CreateStaging(request)
+        elif controller == 'startSync':
+            return cm.startSync(request)
+        elif controller == 'SaveAutoUpdateSettings':
+            return cm.SaveAutoUpdateSettings()
+        elif controller == 'fetchWPSettings':
+            return cm.fetchWPSettings()
+        elif controller == 'updateWPCLI':
+            return cm.updateWPCLI()
         elif controller == 'setupNode':
             return cm.setupManager(request)
         elif controller == 'fetchManagerTokens':
@@ -348,7 +425,6 @@ def router(request):
         cm = CloudManager(None)
         return cm.ajaxPre(0, str(msg))
 
-@csrf_exempt
 def access(request):
     try:
         serverUserName = request.GET.get('serverUserName')
@@ -361,6 +437,10 @@ def access(request):
             return HttpResponse('API Access Disabled.')
 
         if token == admin.token.lstrip('Basic ').rstrip('='):
+            try:
+                del request.session['userID']
+            except:
+                pass
             request.session['userID'] = admin.pk
             from django.shortcuts import redirect
             from baseTemplate.views import renderBase

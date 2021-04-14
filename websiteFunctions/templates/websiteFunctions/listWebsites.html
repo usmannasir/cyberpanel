@@ -16,8 +16,10 @@
     <div ng-controller="listWebsites" class="container">
 
         <div id="page-title">
-            <h2 id="domainNamePage">{% trans "List Websites" %}</h2> <img ng-hide="cyberPanelLoading"
-                                                                          src="{% static 'images/loading.gif' %}">
+            <h2 id="domainNamePage">{% trans "List Websites" %}
+                <a class="pull-right btn btn-primary" href="{% url "createWebsite" %}">{% trans "Create Website" %}</a>
+            </h2>
+            <img ng-hide="cyberPanelLoading" src="{% static 'images/loading.gif' %}">
             <p>{% trans "On this page you can launch, list, modify and delete websites from your server." %}</p>
         </div>
 
@@ -48,7 +50,7 @@
                                     background-repeat: no-repeat;
                                     background-size: cover;
                                     position: relative;"
-                            class="col-lg-3 col-md-12">
+                         class="col-lg-3 col-md-12">
                     </div>
                     <div class="col-lg-9" style="text-transform: none">
                         <div style="border-bottom: 1px solid #888888" class="col-md-12">
@@ -56,11 +58,11 @@
                                 <a href="http://{$ web.domain $}" target="_blank" title="Visit Site">
                                     <h2 style="display: inline; color: #414C59;" ng-bind="web.domain"></h2>
                                 </a>
-                                <a target="_blank" href="/filemanager/{$ web.domain $}" title="Open File Manager"> --
-                                    /home/{$ web.domain $}/public_html</a>
+                                <a target="_self" href="/filemanager/{$ web.domain $}" title="Open File Manager"> --
+                                    File Manager</a>
                             </div>
                             <div class="col-md-2 content-box-header" style="text-transform: none;">
-                                <a href="/websites/{$ web.domain $}" target="_blank" title="Manage Website">
+                                <a href="/websites/{$ web.domain $}" target="_self" title="Manage Website">
                                     <i class="p fa fa-external-link btn-icon">&emsp;</i>
                                     <span>Manage</span>
                                 </a>

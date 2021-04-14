@@ -14,7 +14,6 @@ import argparse
 import json
 from CLScript.CLMain import CLMain
 
-
 class CloudLinuxResellers(CLMain):
 
     def __init__(self, id, name):
@@ -23,17 +22,26 @@ class CloudLinuxResellers(CLMain):
         self.name = name
 
     def listAll(self, owner=None):
+        import pwd
         users = []
         acl = ACL.objects.get(name='reseller')
+        from plogical.vhost import vhost
         for items in Administrator.objects.filter(acl=acl):
             if self.name != None:
                 if self.name != items.userName:
                     continue
 
+
+            try:
+                uid = pwd.getpwnam(items.userName).pw_uid
+            except:
+                vhost.addUser(items.userName, '/home/%s' % (items.userName))
+                uid = pwd.getpwnam(items.userName).pw_uid
+
             user = {'name': items.userName,
                     "locale_code": "EN_us",
                      "email": items.email,
-                    "id": None
+                    "id": uid
                     }
 
             users.append(user)

@@ -1,7 +1,5 @@
 import os, sys
 
-from s3transfer import TransferConfig
-
 sys.path.append('/usr/local/CyberCP')
 import django
 
@@ -10,6 +8,8 @@ try:
     django.setup()
 except:
     pass
+
+
 import pexpect
 from plogical import CyberCPLogFileWriter as logging
 import subprocess
@@ -34,7 +34,6 @@ from xml.etree import ElementTree
 from xml.dom import minidom
 import time
 from shutil import copy
-from distutils.dir_util import copy_tree
 from random import randint
 from plogical.processUtilities import ProcessUtilities
 
@@ -48,8 +47,8 @@ try:
 except:
     pass
 
-VERSION = '2.0'
-BUILD = 3
+VERSION = '2.1'
+BUILD = 1
 
 
 ## I am not the monster that you think I am..
@@ -70,6 +69,8 @@ class backupUtilities:
     @staticmethod
     def prepareBackupMeta(backupDomain, backupName, tempStoragePath, backupPath):
         try:
+
+            connection, cursor = mysqlUtilities.mysqlUtilities.setupConnection()
 
             status = os.path.join(backupPath, 'status')
 
@@ -170,50 +171,31 @@ class backupUtilities:
             databasesXML = Element('Databases')
 
             for items in databases:
-                try:
-                    dbuser = DBUsers.objects.get(user=items.dbUser)
-                    userToTry = items.dbUser
-                except:
-                    try:
-                        dbusers = DBUsers.objects.all().filter(user=items.dbUser)
-                        userToTry = items.dbUser
-                        for it in dbusers:
-                            dbuser = it
-                            break
-
-                        userToTry = mysqlUtilities.mysqlUtilities.fetchuser(items.dbName)
-
-                        if userToTry == 0 or userToTry == 1:
-                            continue
-
-                        try:
-                            dbuser = DBUsers.objects.get(user=userToTry)
-                        except:
-                            try:
-                                dbusers = DBUsers.objects.all().filter(user=userToTry)
-                                for it in dbusers:
-                                    dbuser = it
-                                    break
-
-                            except BaseException as msg:
-                                logging.CyberCPLogFileWriter.writeToFile(
-                                    'While creating backup for %s, we failed to backup database %s. Error message: %s' % (
-                                        backupDomain, items.dbName, str(msg)))
-                                continue
-                    except BaseException as msg:
-                        logging.CyberCPLogFileWriter.writeToFile(
-                            'While creating backup for %s, we failed to backup database %s. Error message: %s' % (
-                                backupDomain, items.dbName, str(msg)))
-                        continue
 
                 databaseXML = Element('database')
 
                 child = SubElement(databaseXML, 'dbName')
                 child.text = str(items.dbName)
-                child = SubElement(databaseXML, 'dbUser')
-                child.text = str(userToTry)
-                child = SubElement(databaseXML, 'password')
-                child.text = str(dbuser.password)
+
+                cursor.execute("select user,host from mysql.db where db='%s'" % (items.dbName))
+                databaseUsers = cursor.fetchall()
+
+                for databaseUser in databaseUsers:
+
+                    databaseUserXML = Element('databaseUsers')
+
+                    child = SubElement(databaseUserXML, 'dbUser')
+                    child.text = databaseUser[0]
+
+                    child = SubElement(databaseUserXML, 'dbHost')
+                    child.text = databaseUser[1]
+
+                    ## Fetch user password
+                    dbuser = DBUsers.objects.get(user=databaseUser[0], host=databaseUser[1])
+                    child = SubElement(databaseUserXML, 'password')
+                    child.text = str(dbuser.password)
+
+                    databaseXML.append(databaseUserXML)
 
                 databasesXML.append(databaseXML)
 
@@ -232,7 +214,6 @@ class backupUtilities:
                     child.text = items
 
                 metaFileXML.append(aliasesXML)
-
             except BaseException as msg:
                 logging.CyberCPLogFileWriter.statusWriter(status, '%s. [167:prepMeta]' % (str(msg)))
 
@@ -260,7 +241,6 @@ class backupUtilities:
                     dnsRecordsXML.append(dnsRecordXML)
 
                 metaFileXML.append(dnsRecordsXML)
-
             except BaseException as msg:
                 logging.CyberCPLogFileWriter.statusWriter(status, '%s. [158:prepMeta]' % (str(msg)))
 
@@ -316,6 +296,7 @@ class backupUtilities:
 
 
         except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile("%s [207][5009]" % (str(msg)))
             logging.CyberCPLogFileWriter.statusWriter(status, "%s [207][5009]" % (str(msg)))
             return 0, str(msg)
 
@@ -372,7 +353,11 @@ class backupUtilities:
 
             ## Stop making archive of document_root and copy instead
 
-            copy_tree('/home/%s/public_html' % domainName, '%s/%s' % (tempStoragePath, 'public_html'))
+            # copy_tree('/home/%s/public_html' % domainName, '%s/%s' % (tempStoragePath, 'public_html'))
+            command = 'cp -R /home/%s/public_html %s/public_html' % (domainName, tempStoragePath)
+
+            if ProcessUtilities.normalExecutioner(command) == 0:
+                raise BaseException('Failed to run %s.' % (command))
 
             # make_archive(os.path.join(tempStoragePath,"public_html"), 'gztar', os.path.join("/home",domainName,"public_html"))
 
@@ -458,7 +443,9 @@ class backupUtilities:
                         pass
 
                 if childPath.find('/home/%s/public_html' % domainName) == -1:
-                    copy_tree(childPath, '%s/%s-docroot' % (tempStoragePath, actualChildDomain))
+                    # copy_tree(childPath, '%s/%s-docroot' % (tempStoragePath, actualChildDomain))
+                    command = 'cp -R %s %s/%s-docroot' % (childPath, tempStoragePath, actualChildDomain)
+                    ProcessUtilities.executioner(command)
 
         except BaseException as msg:
             pass
@@ -482,7 +469,9 @@ class backupUtilities:
             emailPath = '/home/vmail/%s' % (domainName)
 
             if os.path.exists(emailPath):
-                copy_tree(emailPath, '%s/vmail' % (tempStoragePath), preserve_symlinks=True)
+                # copy_tree(emailPath, '%s/vmail' % (tempStoragePath), preserve_symlinks=True)
+                command = 'cp -R %s %s/vmail' % (emailPath, tempStoragePath)
+                ProcessUtilities.executioner(command)
 
             ## shutil.make_archive. Creating final package.
 
@@ -554,6 +543,8 @@ class backupUtilities:
             domain = backupMetaData.find('masterDomain').text
             phpSelection = backupMetaData.find('phpSelection').text
             externalApp = backupMetaData.find('externalApp').text
+            VERSION = backupMetaData.find('VERSION').text
+            BUILD = backupMetaData.find('BUILD').text
 
             ### Fetch user details
 
@@ -607,18 +598,40 @@ class backupUtilities:
 
             ## Create databases
 
+            ### This code is just to create databases, database users will be created later
+
             databases = backupMetaData.findall('Databases/database')
             website = Websites.objects.get(domain=domain)
 
             for database in databases:
+
                 dbName = database.find('dbName').text
-                dbUser = database.find('dbUser').text
 
-                if mysqlUtilities.mysqlUtilities.createDatabase(dbName, dbUser, "cyberpanel") == 0:
-                    raise BaseException("Failed to create Databases!")
+                if VERSION == '2.1' and BUILD == '1':
 
-                newDB = Databases(website=website, dbName=dbName, dbUser=dbUser)
-                newDB.save()
+                    logging.CyberCPLogFileWriter.writeToFile('Backup version 2.1.1 detected..')
+
+                    databaseUsers = database.findall('databaseUsers')
+
+                    for databaseUser in databaseUsers:
+
+                        dbUser = databaseUser.find('dbUser').text
+
+                        if mysqlUtilities.mysqlUtilities.createDatabase(dbName, dbUser, 'cyberpanel') == 0:
+                            raise BaseException
+
+                        newDB = Databases(website=website, dbName=dbName, dbUser=dbUser)
+                        newDB.save()
+                        break
+
+                else:
+                    dbUser = database.find('dbUser').text
+
+                    if mysqlUtilities.mysqlUtilities.createDatabase(dbName, dbUser, "cyberpanel") == 0:
+                        raise BaseException
+
+                    newDB = Databases(website=website, dbName=dbName, dbUser=dbUser)
+                    newDB.save()
 
             ## Create dns zone
 
@@ -684,6 +697,8 @@ class backupUtilities:
             ## extracting master domain for later use
             backupMetaData = ElementTree.parse(os.path.join(completPath, "meta.xml"))
             masterDomain = backupMetaData.find('masterDomain').text
+            VERSION = backupMetaData.find('VERSION').text
+            BUILD = backupMetaData.find('BUILD').text
 
             twoPointO = 0
             try:
@@ -789,7 +804,18 @@ class backupUtilities:
 
                         if float(version) > 2.0 or float(build) > 0:
                             if path.find('/home/%s/public_html' % masterDomain) == -1:
-                                copy_tree('%s/%s-docroot' % (completPath, domain), path)
+
+                                #copy_tree('%s/%s-docroot' % (completPath, domain), path)
+
+                                ## First remove if already exists
+
+                                command = 'rm -rf %s' % (path)
+                                ProcessUtilities.executioner(command)
+
+                                ##
+
+                                command = 'cp -R %s/%s-docroot %s' % (completPath, domain, path)
+                                ProcessUtilities.executioner(command)
 
                         continue
                     else:
@@ -839,15 +865,55 @@ class backupUtilities:
 
             ## restoring databases
 
+            ### This will actually restore mysql dump and create mysql users
+
             logging.CyberCPLogFileWriter.statusWriter(status, "Restoring Databases!")
 
             databases = backupMetaData.findall('Databases/database')
 
             for database in databases:
+
                 dbName = database.find('dbName').text
-                password = database.find('password').text
-                if mysqlUtilities.mysqlUtilities.restoreDatabaseBackup(dbName, completPath, password) == 0:
-                    raise BaseException
+
+                if VERSION == '2.1' and BUILD == '1':
+
+                    logging.CyberCPLogFileWriter.writeToFile('Backup version 2.1.1 detected..')
+
+                    first = 1
+
+                    databaseUsers = database.findall('databaseUsers')
+
+                    for databaseUser in databaseUsers:
+
+                        dbUser = databaseUser.find('dbUser').text
+                        dbHost = databaseUser.find('dbHost').text
+                        password = databaseUser.find('password').text
+
+                        if os.path.exists(ProcessUtilities.debugPath):
+
+                            logging.CyberCPLogFileWriter.writeToFile('Database user: %s' % (dbUser))
+                            logging.CyberCPLogFileWriter.writeToFile('Database host: %s' % (dbHost))
+                            logging.CyberCPLogFileWriter.writeToFile('Database password: %s' % (password))
+
+                        if first:
+                            first = 0
+                            if mysqlUtilities.mysqlUtilities.restoreDatabaseBackup(dbName, completPath, password, 1) == 0:
+                                raise BaseException
+
+
+                        ### This function will not create database, only database user is created as third value is 0 for createDB
+
+                        mysqlUtilities.mysqlUtilities.createDatabase(dbName, dbUser, password, 0, dbHost)
+                        mysqlUtilities.mysqlUtilities.changePassword(dbUser, password, 1, dbHost)
+
+                        # UserInMySQLTable = DBUsers.objects.get(user=dbUser, host=dbHost)
+                        # UserInMySQLTable.password = password
+                        # UserInMySQLTable.save()
+
+                else:
+                    password = database.find('password').text
+                    if mysqlUtilities.mysqlUtilities.restoreDatabaseBackup(dbName, completPath, password) == 0:
+                        raise BaseException
 
             ## Databases restored
 
@@ -862,7 +928,17 @@ class backupUtilities:
                 tar.close()
             else:
                 if float(version) > 2.0 or float(build) > 0:
-                    copy_tree('%s/public_html' % (completPath), websiteHome)
+                    #copy_tree('%s/public_html' % (completPath), websiteHome)
+
+                    ## First remove if already exists
+
+                    command = 'rm -rf %s' % (websiteHome)
+                    ProcessUtilities.executioner(command)
+
+                    ##
+
+                    command = 'cp -R %s/public_html %s' % (completPath, websiteHome)
+                    ProcessUtilities.executioner(command)
 
             ## extracting email accounts
 
@@ -890,7 +966,17 @@ class backupUtilities:
                 emailsPath = '%s/vmail' % (completPath)
 
                 if os.path.exists(emailsPath):
-                    copy_tree(emailsPath, '/home/vmail/%s' % (masterDomain))
+                    #copy_tree(emailsPath, '/home/vmail/%s' % (masterDomain))
+
+                    ## First remove if already exists
+
+                    command = 'rm -rf /home/vmail/%s' % (masterDomain)
+                    ProcessUtilities.executioner(command)
+
+                    ##
+
+                    command = 'cp -R %s /home/vmail/%s' % (emailsPath, masterDomain)
+                    ProcessUtilities.executioner(command)
 
                 command = "chown -R vmail:vmail /home/vmail/%s" % (masterDomain)
                 ProcessUtilities.executioner(command)
@@ -1414,6 +1500,7 @@ class backupUtilities:
             return 0, str(msg)
 
     def CloudBackups(self):
+
         import json
         if os.path.exists(backupUtilities.CloudBackupConfigPath):
             result = json.loads(open(backupUtilities.CloudBackupConfigPath, 'r').read())
@@ -1425,7 +1512,7 @@ class backupUtilities:
             self.cpu = backupUtilities.CPUDefault
             self.time = int(backupUtilities.time)
 
-        self.BackupPath = '/home/cyberpanel/backups/%s/backup-' % (self.extraArgs['domain']) + self.extraArgs['domain'] + "-" + time.strftime("%m.%d.%Y_%H-%M-%S")
+        self.BackupPath = self.extraArgs['path']
         self.website = Websites.objects.get(domain=self.extraArgs['domain'])
 
         command = 'mkdir -p %s' % (self.BackupPath)
@@ -1485,6 +1572,13 @@ class backupUtilities:
 
         command = 'chmod 600:600 %s' % (finalPath)
         ProcessUtilities.executioner(command)
+
+        if self.extraArgs['port'] != 0:
+            logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
+                                                      'Sending file to destination server..,90')
+
+            command = "scp -o StrictHostKeyChecking=no -P %s -i /root/.ssh/cyberpanel %s root@%s:/home/cyberpanel/backups/%s/" % (self.extraArgs['port'], finalPath, self.extraArgs['ip'], self.extraArgs['destinationDomain'])
+            ProcessUtilities.outputExecutioner(command)
 
         logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Completed [200].')
 
@@ -1548,8 +1642,13 @@ class backupUtilities:
                 command = 'rm -rf %s' % (homePath)
                 ProcessUtilities.executioner(command)
 
-                command = 'mv %s/%s %s' % (self.dataPath, self.website.domain, '/home')
+                if self.extraArgs['sourceDomain'] == 'None':
+                    command = 'mv %s/%s %s' % (self.dataPath, self.website.domain, '/home')
+                else:
+                    command = 'mv %s/%s %s/%s' % (self.dataPath, self.extraArgs['sourceDomain'], '/home', self.extraArgs['domain'])
+
                 ProcessUtilities.executioner(command)
+
 
                 from filemanager.filemanager import FileManager
 
@@ -1614,6 +1713,34 @@ class backupUtilities:
 
                 mysqlUtilities.mysqlUtilities.restoreDatabaseBackup(db['databaseName'], self.databasesPath, db['password'])
 
+            if self.extraArgs['sourceDomain'] != 'None':
+                if self.extraArgs['sourceDomain'] != self.extraArgs['domain']:
+
+                    try:
+                        command = 'wp --info'
+                        outout = ProcessUtilities.outputExecutioner(command)
+
+                        if not outout.find('WP-CLI root dir:') > -1:
+                            from plogical.applicationInstaller import ApplicationInstaller
+                            ai = ApplicationInstaller(None, None)
+                            ai.installWPCLI()
+                    except subprocess.CalledProcessError:
+                        from plogical.applicationInstaller import ApplicationInstaller
+                        ai = ApplicationInstaller(None, None)
+                        ai.installWPCLI()
+
+                    path = '/home/%s/public_html' % (self.extraArgs['domain'])
+                    command = "wp search-replace '%s' '%s' --path=%s --allow-root" % (self.extraArgs['sourceDomain'], self.extraArgs['domain'], path)
+                    ProcessUtilities.outputExecutioner(command)
+
+                    command = "wp search-replace 'www.%s' '%s' --path=%s --allow-root" % (
+                    self.extraArgs['sourceDomain'], self.extraArgs['domain'], path)
+                    ProcessUtilities.outputExecutioner(command)
+
+                    command = "wp search-replace 'www.%s' '%s' --path=%s --allow-root" % (
+                        self.extraArgs['domain'], self.extraArgs['domain'], path)
+                    ProcessUtilities.outputExecutioner(command)
+
 
             command = 'rm -rf %s' % (self.extractedPath)
             ProcessUtilities.executioner(command)
@@ -1661,10 +1788,18 @@ class backupUtilities:
 
             aws_access_key_id, aws_secret_access_key, region = self.fetchAWSKeys()
 
-            s3 = boto3.resource(
+            if region.find('http') > -1:
+                s3 = boto3.resource(
                     's3',
                     aws_access_key_id=aws_access_key_id,
-                    aws_secret_access_key=aws_secret_access_key
+                    aws_secret_access_key=aws_secret_access_key,
+                    endpoint_url=region
+                )
+            else:
+                s3 = boto3.resource(
+                    's3',
+                    aws_access_key_id=aws_access_key_id,
+                    aws_secret_access_key=aws_secret_access_key,
                 )
 
             self.BackupPath = '/home/cyberpanel/backups/%s/%s' % (self.extraArgs['domain'], self.extraArgs['backupFile'].split('/')[-1])
@@ -1880,7 +2015,8 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
                        result[2])
 
         output = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
-        if output.find('[5009') > -1:
+
+        if output.find('[5009]') > -1:
             logging.CyberCPLogFileWriter.writeToFile(output)
             writeToFile = open(schedulerPath, 'w')
             writeToFile.writelines(output)
@@ -1908,7 +2044,7 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
 
         ##
 
-        output = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
+        #output = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
 
         if output.find('1,None') > -1:
             execPath = "sudo nice -n 10 /usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
@@ -2030,6 +2166,10 @@ def main():
     parser.add_argument('--data', help='')
     parser.add_argument('--emails', help='')
     parser.add_argument('--databases', help='')
+    parser.add_argument('--path', help='')
+    parser.add_argument('--ip', help='')
+    parser.add_argument('--sourceDomain', help='')
+    parser.add_argument('--destinationDomain', help='')
 
     ## FOR S3
 
@@ -2059,13 +2199,19 @@ def main():
         extraArgs['data'] = int(args.data)
         extraArgs['emails'] = int(args.emails)
         extraArgs['databases'] = int(args.databases)
+        extraArgs['path'] = args.path
+        extraArgs['port'] = args.port
+        extraArgs['ip'] = args.ip
+        extraArgs['destinationDomain'] = args.destinationDomain
         bu = backupUtilities(extraArgs)
         bu.CloudBackups()
+
     elif args.function == 'SubmitCloudBackupRestore':
         extraArgs = {}
         extraArgs['domain'] = args.backupDomain
         extraArgs['tempStatusPath'] = args.tempStoragePath
         extraArgs['backupFile'] = args.backupFile
+        extraArgs['sourceDomain'] = args.sourceDomain
         bu = backupUtilities(extraArgs)
         bu.SubmitCloudBackupRestore()
     elif args.function == 'SubmitS3BackupRestore':
@@ -2076,7 +2222,6 @@ def main():
         extraArgs['planName'] = args.planName
         bu = backupUtilities(extraArgs)
         bu.SubmitS3BackupRestore()
-
 
 if __name__ == "__main__":
     main()

@@ -318,6 +318,22 @@ class FileManager:
             website = Websites.objects.get(domain=domainName)
             self.homePath = '/home/%s' % (domainName)
 
+            RemoveOK = 1
+
+            command = 'touch %s/hello.txt' % (self.homePath)
+            result = ProcessUtilities.outputExecutioner(command)
+
+            if result.find('No such file or directory') > -1:
+                RemoveOK = 0
+
+                command = 'chattr -R -i %s' % (self.homePath)
+                ProcessUtilities.executioner(command)
+
+            else:
+                command = 'rm -f %s/hello.txt' % (self.homePath)
+                ProcessUtilities.executioner(command)
+
+
             for item in self.data['fileAndFolders']:
 
                 if (self.data['path'] + '/' + item).find('..') > -1 or (self.data['path'] + '/' + item).find(
@@ -338,6 +354,10 @@ class FileManager:
 
                     command = 'mv %s %s' % (self.returnPathEnclosed(self.data['path'] + '/' + item), trashPath)
                     ProcessUtilities.executioner(command, website.externalApp)
+
+            if RemoveOK == 0:
+                command = 'chattr -R +i %s' % (self.homePath)
+                ProcessUtilities.executioner(command)
 
             json_data = json.dumps(finalData)
             return HttpResponse(json_data)
@@ -546,10 +566,16 @@ class FileManager:
             if self.data['fileName'].find(self.data['home']) == -1 or self.data['fileName'].find('..') > -1:
                 return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
+            command = 'stat -c "%%a" %s' % (self.returnPathEnclosed(self.data['fileName']))
+            currentMode = ProcessUtilities.outputExecutioner(command).strip('\n')
+
             command = 'mv ' + tempPath + ' ' + self.returnPathEnclosed(self.data['fileName'])
             ProcessUtilities.executioner(command)
 
             command = 'chown %s:%s %s' % (website.externalApp, website.externalApp, self.data['fileName'])
+            ProcessUtilities.executioner(command)
+
+            command = 'chmod %s %s' % (currentMode, self.returnPathEnclosed(self.data['fileName']))
             ProcessUtilities.executioner(command)
 
             self.changeOwner(self.data['fileName'])
@@ -710,6 +736,9 @@ class FileManager:
             groupName = 'nobody'
         else:
             groupName = 'nogroup'
+
+        command = 'chown %s:%s /home/%s' % (website.externalApp, website.externalApp, domainName)
+        ProcessUtilities.popenExecutioner(command)
 
         command = 'chown -R %s:%s /home/%s/public_html/*' % (externalApp, externalApp, domainName)
         ProcessUtilities.popenExecutioner(command)

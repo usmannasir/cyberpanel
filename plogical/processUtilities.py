@@ -274,6 +274,7 @@ class ProcessUtilities(multi.Thread):
     @staticmethod
     def outputExecutioner(command, user=None, shell = None, dir = None):
         try:
+
             if getpass.getuser() == 'root':
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.writeToFile(command)
@@ -320,6 +321,7 @@ class ProcessUtilities(multi.Thread):
 
     @staticmethod
     def BuildCommand(path, functionName, parameters):
+
         execPath = "/usr/local/CyberCP/bin/python %s %s " % (path, functionName)
         for key, value in parameters.items():
             execPath = execPath + ' --%s %s' % (key, value)

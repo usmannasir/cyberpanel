@@ -2,10 +2,13 @@
 import os.path
 import sys
 import django
+
+from plogical.httpProc import httpProc
+
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
-from django.shortcuts import render,redirect
+from django.shortcuts import redirect
 from django.http import HttpResponse
 import json
 import plogical.CyberCPLogFileWriter as logging
@@ -18,52 +21,28 @@ from plogical.processUtilities import ProcessUtilities
 
 class tuningManager:
     def loadTuningHome(self, request, userID):
-        try:
-            userID = request.session['userID']
-            currentACL = ACLManager.loadedACL(userID)
-
-            if currentACL['admin'] == 1:
-                pass
-            else:
-                return ACLManager.loadError()
-
-            return render(request, 'tuning/index.html', {})
-        except KeyError:
-            return redirect(loadLoginPage)
+        proc = httpProc(request, 'tuning/index.html',
+                        None, 'admin')
+        return proc.render()
 
     def liteSpeedTuning(self, request, userID):
-        try:
-            userID = request.session['userID']
-            currentACL = ACLManager.loadedACL(userID)
-
-            if currentACL['admin'] == 1:
-                pass
-            else:
-                return ACLManager.loadError()
-            return render(request, 'tuning/liteSpeedTuning.html', {})
-        except KeyError:
-            return redirect(loadLoginPage)
+        proc = httpProc(request, 'tuning/liteSpeedTuning.html',
+                        None, 'admin')
+        return proc.render()
 
     def phpTuning(self, request, userID):
-        try:
-            userID = request.session['userID']
-            currentACL = ACLManager.loadedACL(userID)
-
-            if currentACL['admin'] == 1:
-                pass
-            else:
-                return ACLManager.loadError()
-
-            if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
-                websitesName = ACLManager.findAllSites(currentACL, userID)
-                OLS = 1
-                return render(request, 'tuning/phpTuning.html', {'websiteList': websitesName, 'OLS': OLS})
-            else:
-                OLS = 0
-                return render(request, 'tuning/phpTuning.html', {'OLS': OLS})
-
-        except KeyError:
-            return redirect(loadLoginPage)
+        currentACL = ACLManager.loadedACL(userID)
+        if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+            websitesName = ACLManager.findAllSites(currentACL, userID)
+            OLS = 1
+            proc = httpProc(request, 'tuning/phpTuning.html',
+                            {'websiteList': websitesName, 'OLS': OLS}, 'admin')
+            return proc.render()
+        else:
+            OLS = 0
+            proc = httpProc(request, 'tuning/phpTuning.html',
+                            {'OLS': OLS}, 'admin')
+            return proc.render()
 
     def tuneLitespeed(self, userID, data):
         try:

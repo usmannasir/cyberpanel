@@ -3,6 +3,9 @@ import os
 import os.path
 import sys
 import django
+
+from plogical.acl import ACLManager
+
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 try:
@@ -45,16 +48,16 @@ class vhost:
 
             FNULL = open(os.devnull, 'w')
             if os.path.exists("/etc/lsb-release"):
-                command = 'adduser --no-create-home --home ' + path + ' --disabled-login --gecos "" ' + virtualHostUser
+                command = '/usr/sbin/adduser --no-create-home --home ' + path + ' --disabled-login --gecos "" ' + virtualHostUser
             else:
                 command = "adduser " + virtualHostUser + " -M -d " + path
 
             ProcessUtilities.executioner(command)
 
-            command = "groupadd " + virtualHostUser
+            command = "/usr/sbin/groupadd " + virtualHostUser
             ProcessUtilities.executioner(command)
 
-            command = "usermod -a -G " + virtualHostUser + " " + virtualHostUser
+            command = "/usr/sbin/usermod -a -G " + virtualHostUser + " " + virtualHostUser
             ProcessUtilities.executioner(command)
 
         except BaseException as msg:
@@ -86,7 +89,7 @@ class vhost:
             except OSError as msg:
                 logging.CyberCPLogFileWriter.writeToFile(
                     str(msg) + " [27 Not able create to directories for virtual host [createDirectories]]")
-                return [0, "[27 Not able to directories for virtual host [createDirectories]]"]
+                #return [0, "[27 Not able to directories for virtual host [createDirectories]]"]
 
             try:
                 os.makedirs(pathHTML)
@@ -107,7 +110,7 @@ class vhost:
             except OSError as msg:
                 logging.CyberCPLogFileWriter.writeToFile(
                     str(msg) + " [33 Not able to directories for virtual host [createDirectories]]")
-                return [0, "[33 Not able to directories for virtual host [createDirectories]]"]
+                #return [0, "[33 Not able to directories for virtual host [createDirectories]]"]
 
             try:
                 os.makedirs(pathLogs)
@@ -133,7 +136,7 @@ class vhost:
             except OSError as msg:
                 logging.CyberCPLogFileWriter.writeToFile(
                     str(msg) + " [39 Not able to directories for virtual host [createDirectories]]")
-                return [0, "[39 Not able to directories for virtual host [createDirectories]]"]
+                #return [0, "[39 Not able to directories for virtual host [createDirectories]]"]
 
             try:
                 ## For configuration files permissions will be changed later globally.
@@ -142,7 +145,7 @@ class vhost:
             except OSError as msg:
                 logging.CyberCPLogFileWriter.writeToFile(
                     str(msg) + " [45 Not able to directories for virtual host [createDirectories]]")
-                return [0, "[45 Not able to directories for virtual host [createDirectories]]"]
+                #return [0, "[45 Not able to directories for virtual host [createDirectories]]"]
 
             try:
                 ## For configuration files permissions will be changed later globally.
@@ -158,13 +161,13 @@ class vhost:
 
             except IOError as msg:
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [createDirectories]]")
-                return [0, "[45 Not able to directories for virtual host [createDirectories]]"]
+                #return [0, "[45 Not able to directories for virtual host [createDirectories]]"]
 
             return [1, 'None']
 
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [createDirectories]")
-            return [0, str(msg)]
+            return [1, str(msg)]
 
     @staticmethod
     def finalizeVhostCreation(virtualHostName, virtualHostUser):
@@ -222,6 +225,7 @@ class vhost:
         # General Configurations tab
         if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
             try:
+
                 confFile = open(vhFile, "w+")
 
                 php = PHPManager.getPHPString(phpVersion)
@@ -242,11 +246,12 @@ class vhost:
                 confFile.write(currentConf)
                 confFile.close()
 
+                return 1
+
             except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(
                     str(msg) + " [IO Error with per host config file [perHostVirtualConf]]")
                 return 0
-            return 1
         else:
             try:
 
@@ -296,12 +301,13 @@ class vhost:
                     command = 'redis-cli set %s' % (currentConf)
                     ProcessUtilities.executioner(command)
 
+                return 1
 
             except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(
                     str(msg) + " [IO Error with per host config file [perHostVirtualConf]]")
                 return 0
-            return 1
+
 
     @staticmethod
     def createNONSSLMapEntry(virtualHostName):
@@ -389,14 +395,18 @@ class vhost:
                     if os.path.exists('/root/.acme.sh/%s' % (items.domain)):
                         shutil.rmtree('/root/.acme.sh/%s' % (items.domain))
 
-                for items in databases:
-                    mysqlUtilities.deleteDatabase(items.dbName, items.dbUser)
+                ## Child check, to make sure no database entires are being deleted from child node
 
-                delWebsite.delete()
+                if ACLManager.FindIfChild() == 0:
 
-                ## Deleting DNS Zone if there is any.
+                    for items in databases:
+                        mysqlUtilities.deleteDatabase(items.dbName, items.dbUser)
 
-                DNS.deleteDNSZone(virtualHostName)
+                    delWebsite.delete()
+
+                    ## Deleting DNS Zone if there is any.
+
+                    DNS.deleteDNSZone(virtualHostName)
 
                 if not os.path.exists(vhost.redisConf):
                     installUtilities.installUtilities.reStartLiteSpeed()
@@ -461,14 +471,18 @@ class vhost:
                     numberOfSites = Websites.objects.count() + ChildDomains.objects.count()
                     vhost.deleteCoreConf(items.domain, numberOfSites)
 
-                for items in databases:
-                    mysqlUtilities.deleteDatabase(items.dbName, items.dbUser)
 
-                delWebsite.delete()
+                ## child check to make sure no database entires are being deleted from child server
 
-                ## Deleting DNS Zone if there is any.
+                if ACLManager.FindIfChild() == 0:
+                    for items in databases:
+                        mysqlUtilities.deleteDatabase(items.dbName, items.dbUser)
 
-                DNS.deleteDNSZone(virtualHostName)
+                    delWebsite.delete()
+
+                    ## Deleting DNS Zone if there is any.
+
+                    DNS.deleteDNSZone(virtualHostName)
 
                 installUtilities.installUtilities.reStartLiteSpeed()
 
@@ -721,11 +735,13 @@ class vhost:
 
             if not os.path.exists("/home/" + domainName + "/logs"):
                 print("0,0")
+                return 0,0
 
             bwmeta = "/home/" + domainName + "/logs/bwmeta"
 
             if not os.path.exists(path):
                 print("0,0")
+                return 0, 0
 
             if os.path.exists(bwmeta):
                 try:
@@ -741,19 +757,24 @@ class vhost:
                     percentage = float(percentage) * float(inMB)
                 except:
                     print("0,0")
+                    return 0, 0
 
                 if percentage > 100.0:
                     percentage = 100
 
                 print(str(inMB) + "," + str(percentage))
+                return str(inMB), str(percentage)
             else:
                 print("0,0")
+                return 0, 0
         except OSError as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [findDomainBW]")
             print("0,0")
+            return 0, 0
         except ValueError as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [findDomainBW]")
             print("0,0")
+            return 0, 0
 
     @staticmethod
     def permissionControl(path):
@@ -882,20 +903,23 @@ class vhost:
         except OSError as msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "335 [Not able to create directories for virtual host [createDirectoryForDomain]]")
-            return [0, "[344 Not able to directories for virtual host [createDirectoryForDomain]]"]
+            #return [0, "[344 Not able to directories for virtual host [createDirectoryForDomain]]"]
 
         try:
             ## For configuration files permissions will be changed later globally.
             file = open(completePathToConfigFile, "w+")
         except IOError as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [createDirectoryForDomain]]")
-            return [0, "[351 Not able to directories for virtual host [createDirectoryForDomain]]"]
+            #return [0, "[351 Not able to directories for virtual host [createDirectoryForDomain]]"]
 
         if vhost.perHostDomainConf(path, masterDomain, domain, completePathToConfigFile,
                                    administratorEmail, phpVersion, virtualHostUser, openBasedir) == 1:
             return [1, "None"]
         else:
-            return [0, "[359 Not able to create per host virtual configurations [createDirectoryForDomain]"]
+            pass
+            #return [0, "[359 Not able to create per host virtual configurations [createDirectoryForDomain]"]
+
+        return [1, "None"]
 
     @staticmethod
     def perHostDomainConf(path, masterDomain, domain, vhFile, administratorEmail, phpVersion, virtualHostUser, openBasedir):

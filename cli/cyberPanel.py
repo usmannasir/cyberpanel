@@ -333,13 +333,22 @@ class cyberPanel:
 
     ## Backup Functions
 
-    def createBackup(self, virtualHostName):
+    def createBackup(self, virtualHostName, backupPath=None):
         try:
-            backupLogPath = "/usr/local/lscp/logs/backup_log."+time.strftime("%I-%M-%S-%a-%b-%Y")
+            # Setup default backup path to /home/<domain name>/backup if not passed in
+            if backupPath is None:
+                backupPath = '/home/' + virtualHostName + '/backup'
+                   
+            # remove trailing slash in path
+            backupPath = backupPath.rstrip("/")
+            backuptime = time.strftime("%m.%d.%Y_%H-%M-%S")
+            backupLogPath = "/usr/local/lscp/logs/backup_log." + backuptime
 
             print('Backup logs to be generated in %s' % (backupLogPath))
-
-            backupSchedule.createLocalBackup(virtualHostName, backupLogPath)
+            tempStoragePath = backupPath + '/backup-' + virtualHostName + '-' + backuptime
+            backupName = 'backup-' + virtualHostName + '-' + backuptime
+            backupDomain = virtualHostName
+            backupUtilities.submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain)
 
         except BaseException as msg:
             logger.writeforCLI(str(msg), "Error", stack()[0][3])

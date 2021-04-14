@@ -114,7 +114,7 @@ DATABASES = {
         'USER': 'cyberpanel',
         'PASSWORD': 'Bz9gF7Hr7X4RtD',
         'HOST': 'localhost',
-        'PORT':''
+        'PORT': ''
     },
     'rootdb': {
         'ENGINE': 'django.db.backends.mysql',

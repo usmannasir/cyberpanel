@@ -41,7 +41,7 @@ class DNS:
             self.status = data[2].rstrip('\n')
             return 1
         else:
-            logging.CyberCPLogFileWriter.writeToFile('User %s does not have CoudFlare configured.' % (self.admin.userName))
+            #logging.CyberCPLogFileWriter.writeToFile('User %s does not have CloudFlare configured.' % (self.admin.userName))
             return 0
 
     def cfTemplate(self, zoneDomain, admin, enableCheck=None):
@@ -637,8 +637,12 @@ class DNS:
                     record.save()
 
                     if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
-                        command = 'sudo systemctl restart pdns'
-                        ProcessUtilities.executioner(command)
+                        command = 'ls -la /etc/systemd/system/multi-user.target.wants/pdns.service'
+                        result = ProcessUtilities.outputExecutioner(command)
+
+                        if result.find('No such file') == -1:
+                            command = 'sudo systemctl restart pdns'
+                            ProcessUtilities.executioner(command)
 
                 return
 
@@ -656,8 +660,12 @@ class DNS:
                     record.save()
 
                     if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
-                        command = 'sudo systemctl restart pdns'
-                        ProcessUtilities.executioner(command)
+                        command = 'ls -la /etc/systemd/system/multi-user.target.wants/pdns.service'
+                        result = ProcessUtilities.outputExecutioner(command)
+
+                        if result.find('No such file') == -1:
+                            command = 'sudo systemctl restart pdns'
+                            ProcessUtilities.executioner(command)
                 return
 
             if type == 'MX':
@@ -673,8 +681,12 @@ class DNS:
                 record.save()
 
                 if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
-                    command = 'sudo systemctl restart pdns'
-                    ProcessUtilities.executioner(command)
+                    command = 'ls -la /etc/systemd/system/multi-user.target.wants/pdns.service'
+                    result = ProcessUtilities.outputExecutioner(command)
+
+                    if result.find('No such file') == -1:
+                        command = 'sudo systemctl restart pdns'
+                        ProcessUtilities.executioner(command)
                 return
 
             if Records.objects.filter(name=name, type=type).count() == 0:
@@ -689,31 +701,40 @@ class DNS:
                                  auth=1)
                 record.save()
                 if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
-                    command = 'sudo systemctl restart pdns'
-                    ProcessUtilities.executioner(command)
+
+                    command = 'ls -la /etc/systemd/system/multi-user.target.wants/pdns.service'
+                    result = ProcessUtilities.outputExecutioner(command)
+
+                    if result.find('No such file') == -1:
+                        command = 'sudo systemctl restart pdns'
+                        ProcessUtilities.executioner(command)
 
             ## Add Record to CF if SYNC Enabled
 
-            dns = DNS()
-            dns.admin = zone.admin
-            dns.loadCFKeys()
+            try:
 
-            cf = CloudFlare.CloudFlare(email=dns.email, token=dns.key)
+                dns = DNS()
+                dns.admin = zone.admin
+                dns.loadCFKeys()
 
-            if dns.status == 'Enable':
-                try:
-                    params = {'name': zone.name, 'per_page': 50}
-                    zones = cf.zones.get(params=params)
+                cf = CloudFlare.CloudFlare(email=dns.email, token=dns.key)
 
-                    for zone in sorted(zones, key=lambda v: v['name']):
-                        zone = zone['id']
+                if dns.status == 'Enable':
+                    try:
+                        params = {'name': zone.name, 'per_page': 50}
+                        zones = cf.zones.get(params=params)
 
-                        DNS.createDNSRecordCloudFlare(cf, zone, name, type, value, ttl, priority)
+                        for zone in sorted(zones, key=lambda v: v['name']):
+                            zone = zone['id']
 
-                except CloudFlare.exceptions.CloudFlareAPIError as e:
-                    logging.CyberCPLogFileWriter.writeToFile(str(e))
-                except Exception as e:
-                    logging.CyberCPLogFileWriter.writeToFile(str(e))
+                            DNS.createDNSRecordCloudFlare(cf, zone, name, type, value, ttl, priority)
+
+                    except CloudFlare.exceptions.CloudFlareAPIError as e:
+                        logging.CyberCPLogFileWriter.writeToFile(str(e))
+                    except Exception as e:
+                        logging.CyberCPLogFileWriter.writeToFile(str(e))
+            except:
+                pass
 
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [createDNSRecord]")

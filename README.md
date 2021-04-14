@@ -26,6 +26,7 @@ Webhosting control panel that uses OpenLiteSpeed as web server.
 * PHP 7.2
 * PHP 7.3
 * PHP 7.4
+* PHP 8.0
 
 # Installation Instructions
 

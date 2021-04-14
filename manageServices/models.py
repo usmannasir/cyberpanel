@@ -7,7 +7,7 @@ from django.db import models
 
 class PDNSStatus(models.Model):
     serverStatus = models.IntegerField(default=1)
-    type = models.CharField(max_length=6, default='NATIVE')
+    type = models.CharField(max_length=10, default='NATIVE')
     masterServer = models.CharField(max_length=200, default='')
     masterIP = models.CharField(max_length=200, default='')
 

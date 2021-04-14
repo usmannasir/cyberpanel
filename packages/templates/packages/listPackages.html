@@ -55,7 +55,7 @@
                                     <td>
                                         <a data-toggle="modal" data-target="#settings"
                                            ng-click="editInitial(record.package, record.diskSpace, record.bandwidth,
-                                           record.emailAccounts, record.dataBases, record.ftpAccounts, record.allowedDomains, record.allowFullDomain)"
+                                           record.emailAccounts, record.dataBases, record.ftpAccounts, record.allowedDomains, record.allowFullDomain, record.enforceDiskLimits)"
                                            class="btn btn-border btn-alt border-purple btn-link font-purple" href="#"
                                            title=""><span>{% trans 'Edit' %}</span></a>
                                         <a ng-click="deletePackageFinal(record.package)"
@@ -158,6 +158,13 @@
                                                                                    type="checkbox" value="">
                                                                             Allow Creation of Fully Qualified Domain as
                                                                             Child-Domains
+                                                                        </label>
+                                                                    </div>
+                                                                    <div class="checkbox">
+                                                                        <label>
+                                                                            <input ng-model="$parent.enforceDiskLimits"
+                                                                                   type="checkbox" value="">
+                                                                            Enforce Disk Limits
                                                                         </label>
                                                                     </div>
                                                                 </div>

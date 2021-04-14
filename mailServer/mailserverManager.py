@@ -3,6 +3,9 @@
 import os.path
 import sys
 import django
+
+from plogical.httpProc import httpProc
+
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
@@ -55,50 +58,42 @@ class MailServerManager(multi.Thread):
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [MailServerManager.run]')
 
     def loadEmailHome(self):
-        try:
-            val = self.request.session['userID']
-            return render(self.request, 'mailServer/index.html')
-        except KeyError:
-            return redirect(loadLoginPage)
+        proc = httpProc(self.request, 'mailServer/index.html',
+                        None, 'createEmail')
+        return proc.render()
 
 
     def createEmailAccount(self):
-        try:
-            userID = self.request.session['userID']
-            currentACL = ACLManager.loadedACL(userID)
+        userID = self.request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
 
-            if ACLManager.currentContextPermission(currentACL, 'createEmail') == 0:
-                return ACLManager.loadError()
+        if not os.path.exists('/home/cyberpanel/postfix'):
+            proc = httpProc(self.request, 'mailServer/createEmailAccount.html',
+                            {"status": 0}, 'createEmail')
+            return proc.render()
 
-            if not os.path.exists('/home/cyberpanel/postfix'):
-                return render(self.request, "mailServer/createEmailAccount.html", {"status": 0})
+        websitesName = ACLManager.findAllSites(currentACL, userID)
+        websitesName = websitesName + ACLManager.findChildDomains(websitesName)
 
-            websitesName = ACLManager.findAllSites(currentACL, userID)
-            websitesName = websitesName + ACLManager.findChildDomains(websitesName)
-
-            return render(self.request, 'mailServer/createEmailAccount.html',
-                          {'websiteList': websitesName, "status": 1})
-        except BaseException as msg:
-            return redirect(loadLoginPage)
+        proc = httpProc(self.request, 'mailServer/createEmailAccount.html',
+                        {'websiteList': websitesName, "status": 1}, 'createEmail')
+        return proc.render()
 
     def listEmails(self):
-        try:
-            userID = self.request.session['userID']
-            currentACL = ACLManager.loadedACL(userID)
+        userID = self.request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
 
-            if ACLManager.currentContextPermission(currentACL, 'listEmails') == 0:
-                return ACLManager.loadError()
+        if not os.path.exists('/home/cyberpanel/postfix'):
+            proc = httpProc(self.request, 'mailServer/listEmails.html',
+                            {"status": 0}, 'listEmails')
+            return proc.render()
 
-            if not os.path.exists('/home/cyberpanel/postfix'):
-                return render(self.request, "mailServer/listEmails.html", {"status": 0})
+        websitesName = ACLManager.findAllSites(currentACL, userID)
+        websitesName = websitesName + ACLManager.findChildDomains(websitesName)
 
-            websitesName = ACLManager.findAllSites(currentACL, userID)
-            websitesName = websitesName + ACLManager.findChildDomains(websitesName)
-
-            return render(self.request, 'mailServer/listEmails.html',
-                          {'websiteList': websitesName, "status": 1})
-        except BaseException as msg:
-            return redirect(loadLoginPage)
+        proc = httpProc(self.request, 'mailServer/listEmails.html',
+                        {'websiteList': websitesName, "status": 1}, 'listEmails')
+        return proc.render()
 
     def submitEmailCreation(self):
         try:
@@ -142,24 +137,20 @@ class MailServerManager(multi.Thread):
             return HttpResponse(json_data)
 
     def deleteEmailAccount(self):
-        try:
+        userID = self.request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
 
-            userID = self.request.session['userID']
-            currentACL = ACLManager.loadedACL(userID)
+        if not os.path.exists('/home/cyberpanel/postfix'):
+            proc = httpProc(self.request, 'mailServer/deleteEmailAccount.html',
+                            {"status": 0}, 'deleteEmail')
+            return proc.render()
 
-            if ACLManager.currentContextPermission(currentACL, 'deleteEmail') == 0:
-                return ACLManager.loadError()
+        websitesName = ACLManager.findAllSites(currentACL, userID)
+        websitesName = websitesName + ACLManager.findChildDomains(websitesName)
 
-            if not os.path.exists('/home/cyberpanel/postfix'):
-                return render(self.request, "mailServer/deleteEmailAccount.html", {"status": 0})
-
-            websitesName = ACLManager.findAllSites(currentACL, userID)
-            websitesName = websitesName + ACLManager.findChildDomains(websitesName)
-
-            return render(self.request, 'mailServer/deleteEmailAccount.html',
-                          {'websiteList': websitesName, "status": 1})
-        except BaseException as msg:
-            return redirect(loadLoginPage)
+        proc = httpProc(self.request, 'mailServer/deleteEmailAccount.html',
+                        {'websiteList': websitesName, "status": 1}, 'deleteEmail')
+        return proc.render()
 
     def getEmailsForDomain(self):
         try:
@@ -225,11 +216,12 @@ class MailServerManager(multi.Thread):
             if ACLManager.currentContextPermission(currentACL, 'deleteEmail') == 0:
                 return ACLManager.loadErrorJson('deleteEmailStatus', 0)
 
-
             data = json.loads(self.request.body)
             email = data['email']
 
             eUser = EUsers.objects.get(email=email)
+
+            emailOwnerDomain = eUser.emailOwner
 
             admin = Administrator.objects.get(pk=userID)
             if ACLManager.checkOwnership(eUser.emailOwner.domainOwner.domain, admin, currentACL) == 1:
@@ -238,6 +230,10 @@ class MailServerManager(multi.Thread):
                 return ACLManager.loadErrorJson()
 
             mailUtilities.deleteEmailAccount(email)
+
+            if emailOwnerDomain.eusers_set.all().count() == 0:
+                emailOwnerDomain.delete()
+
             data_ret = {'status': 1, 'deleteEmailStatus': 1, 'error_message': "None"}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -284,22 +280,20 @@ class MailServerManager(multi.Thread):
             return HttpResponse(json_data)
 
     def emailForwarding(self):
-        try:
-            userID = self.request.session['userID']
-            currentACL = ACLManager.loadedACL(userID)
+        userID = self.request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
 
-            if ACLManager.currentContextPermission(currentACL, 'emailForwarding') == 0:
-                return ACLManager.loadError()
+        if not os.path.exists('/home/cyberpanel/postfix'):
+            proc = httpProc(self.request, 'mailServer/emailForwarding.html',
+                            {"status": 0}, 'emailForwarding')
+            return proc.render()
 
-            if not os.path.exists('/home/cyberpanel/postfix'):
-                return render(self.request, "mailServer/emailForwarding.html", {"status": 0})
+        websitesName = ACLManager.findAllSites(currentACL, userID)
+        websitesName = websitesName + ACLManager.findChildDomains(websitesName)
 
-            websitesName = ACLManager.findAllSites(currentACL, userID)
-            websitesName = websitesName + ACLManager.findChildDomains(websitesName)
-
-            return render(self.request, 'mailServer/emailForwarding.html', {'websiteList': websitesName, "status": 1})
-        except BaseException as msg:
-            return redirect(loadLoginPage)
+        proc = httpProc(self.request, 'mailServer/emailForwarding.html',
+                        {'websiteList': websitesName, "status": 1}, 'emailForwarding')
+        return proc.render()
 
     def fetchCurrentForwardings(self):
         try:
@@ -573,23 +567,20 @@ class MailServerManager(multi.Thread):
     #######
 
     def changeEmailAccountPassword(self):
-        try:
-            userID = self.request.session['userID']
-            currentACL = ACLManager.loadedACL(userID)
+        userID = self.request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
 
-            if ACLManager.currentContextPermission(currentACL, 'changeEmailPassword') == 0:
-                return ACLManager.loadError()
+        if not os.path.exists('/home/cyberpanel/postfix'):
+            proc = httpProc(self.request, 'mailServer/changeEmailPassword.html',
+                            {"status": 0}, 'changeEmailPassword')
+            return proc.render()
 
-            if not os.path.exists('/home/cyberpanel/postfix'):
-                return render(self.request, "mailServer/changeEmailPassword.html", {"status": 0})
+        websitesName = ACLManager.findAllSites(currentACL, userID)
+        websitesName = websitesName + ACLManager.findChildDomains(websitesName)
 
-            websitesName = ACLManager.findAllSites(currentACL, userID)
-            websitesName = websitesName + ACLManager.findChildDomains(websitesName)
-
-            return render(self.request, 'mailServer/changeEmailPassword.html',
-                          {'websiteList': websitesName, "status": 1})
-        except BaseException as msg:
-            return redirect(loadLoginPage)
+        proc = httpProc(self.request, 'mailServer/changeEmailPassword.html',
+                        {'websiteList': websitesName, "status": 1}, 'changeEmailPassword')
+        return proc.render()
 
     def submitPasswordChange(self):
         try:
@@ -641,23 +632,17 @@ class MailServerManager(multi.Thread):
     #######
 
     def dkimManager(self):
-        try:
-            userID = self.request.session['userID']
-            currentACL = ACLManager.loadedACL(userID)
+        userID = self.request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
 
-            if ACLManager.currentContextPermission(currentACL, 'dkimManager') == 0:
-                return ACLManager.loadError()
+        openDKIMInstalled = 1
 
-            openDKIMInstalled = 1
+        websitesName = ACLManager.findAllSites(currentACL, userID)
+        websitesName = websitesName + ACLManager.findChildDomains(websitesName)
 
-            websitesName = ACLManager.findAllSites(currentACL, userID)
-            websitesName = websitesName + ACLManager.findChildDomains(websitesName)
-
-            return render(self.request, 'mailServer/dkimManager.html',
-                          {'websiteList': websitesName, 'openDKIMInstalled': openDKIMInstalled})
-
-        except BaseException as msg:
-            return redirect(loadLoginPage)
+        proc = httpProc(self.request, 'mailServer/dkimManager.html',
+                        {'websiteList': websitesName, 'openDKIMInstalled': openDKIMInstalled}, 'dkimManager')
+        return proc.render()
 
     def fetchDKIMKeys(self):
         try:

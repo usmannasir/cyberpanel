@@ -2,13 +2,11 @@
 import os.path
 import sys
 import django
-
-from plogical import hashPassword
-
+from plogical.httpProc import httpProc
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
-from django.shortcuts import render,redirect
+from django.shortcuts import redirect
 from django.http import HttpResponse
 from loginSystem.views import loadLoginPage
 from loginSystem.models import Administrator
@@ -21,39 +19,24 @@ class PackagesManager:
         self.request  = request
 
     def packagesHome(self):
-        try:
-            val = self.request.session['userID']
-            return render(self.request, 'packages/index.html', {})
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+        proc = httpProc(self.request, 'packages/index.html',
+                        None, 'admin')
+        return proc.render()
 
     def createPacakge(self):
-        try:
-            userID = self.request.session['userID']
-            currentACL = ACLManager.loadedACL(userID)
-
-            if ACLManager.currentContextPermission(currentACL, 'createPackage') == 0:
-                return ACLManager.loadError()
-
-            admin = Administrator.objects.get(pk=userID)
-            return render(self.request, 'packages/createPackage.html', {"admin": admin.userName})
-
-        except KeyError:
-            return redirect(loadLoginPage)
+        userID = self.request.session['userID']
+        admin = Administrator.objects.get(pk=userID)
+        proc = httpProc(self.request, 'packages/createPackage.html',
+                        {"adminNamePackage": admin.userName}, 'createPackage')
+        return proc.render()
 
     def deletePacakge(self):
-        try:
-            userID = self.request.session['userID']
-            currentACL = ACLManager.loadedACL(userID)
-
-            if ACLManager.currentContextPermission(currentACL, 'deletePackage') == 0:
-                return ACLManager.loadError()
-
-            packageList = ACLManager.loadPackages(userID, currentACL)
-            return render(self.request, 'packages/deletePackage.html', {"packageList": packageList})
-
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+        userID = self.request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+        packageList = ACLManager.loadPackages(userID, currentACL)
+        proc = httpProc(self.request, 'packages/deletePackage.html',
+                        {"packageList": packageList}, 'deletePackage')
+        return proc.render()
 
     def submitPackage(self):
         try:
@@ -83,6 +66,11 @@ class PackagesManager:
             except:
                 allowFullDomain = 1
 
+            try:
+                enforceDiskLimits = int(data['enforceDiskLimits'])
+            except:
+                enforceDiskLimits = 0
+
 
             if packageSpace < 0 or packageBandwidth < 0 or packageDatabases < 0 or ftpAccounts < 0 or emails < 0 or allowedDomains < 0:
                 data_ret = {'saveStatus': 0, 'error_message': "All values should be positive or 0."}
@@ -96,7 +84,7 @@ class PackagesManager:
 
             package = Package(admin=admin, packageName=packageName, diskSpace=packageSpace,
                               bandwidth=packageBandwidth, ftpAccounts=ftpAccounts, dataBases=packageDatabases,
-                              emailAccounts=emails, allowedDomains=allowedDomains, allowFullDomain=allowFullDomain)
+                              emailAccounts=emails, allowedDomains=allowedDomains, allowFullDomain=allowFullDomain, enforceDiskLimits=enforceDiskLimits)
 
             package.save()
 
@@ -134,18 +122,12 @@ class PackagesManager:
             return HttpResponse(json_data)
 
     def modifyPackage(self):
-        try:
-            userID = self.request.session['userID']
-            currentACL = ACLManager.loadedACL(userID)
-
-            if ACLManager.currentContextPermission(currentACL, 'modifyPackage') == 0:
-                return ACLManager.loadError()
-
-            packageList = ACLManager.loadPackages(userID, currentACL)
-            return render(self.request, 'packages/modifyPackage.html', {"packList": packageList})
-
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+        userID = self.request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+        packageList = ACLManager.loadPackages(userID, currentACL)
+        proc = httpProc(self.request, 'packages/modifyPackage.html',
+                        {"packList": packageList}, 'modifyPackage')
+        return proc.render()
 
     def submitModify(self):
         try:
@@ -169,7 +151,7 @@ class PackagesManager:
 
             data_ret = {'emails': emails, 'modifyStatus': 1, 'error_message': "None",
                         "diskSpace": diskSpace, "bandwidth": bandwidth, "ftpAccounts": ftpAccounts,
-                        "dataBases": dataBases, "allowedDomains": modifyPack.allowedDomains, 'allowFullDomain': modifyPack.allowFullDomain}
+                        "dataBases": dataBases, "allowedDomains": modifyPack.allowedDomains, 'allowFullDomain': modifyPack.allowFullDomain, 'enforceDiskLimits': modifyPack.enforceDiskLimits}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -211,6 +193,10 @@ class PackagesManager:
             except:
                 modifyPack.allowFullDomain = 1
 
+            try:
+                modifyPack.enforceDiskLimits = int(data['enforceDiskLimits'])
+            except:
+                modifyPack.enforceDiskLimits = 0
 
             modifyPack.save()
 
@@ -225,18 +211,12 @@ class PackagesManager:
 
 
     def listPackages(self):
-        try:
-            userID = self.request.session['userID']
-            currentACL = ACLManager.loadedACL(userID)
-
-            if ACLManager.currentContextPermission(currentACL, 'listPackages') == 0:
-                return ACLManager.loadError()
-
-            packageList = ACLManager.loadPackages(userID, currentACL)
-            return render(self.request, 'packages/listPackages.html', {"packList": packageList})
-
-        except BaseException as msg:
-            return redirect(loadLoginPage)
+        userID = self.request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+        packageList = ACLManager.loadPackages(userID, currentACL)
+        proc = httpProc(self.request, 'packages/listPackages.html',
+                        {"packList": packageList}, 'listPackages')
+        return proc.render()
 
     def listPackagesAPI(self,data=None):
         """
@@ -279,7 +259,8 @@ class PackagesManager:
                        'dataBases': items.dataBases,
                        'ftpAccounts': items.ftpAccounts,
                        'allowedDomains': items.allowedDomains,
-                       'allowFullDomain': items.allowFullDomain
+                       'allowFullDomain': items.allowFullDomain,
+                       'enforceDiskLimits': items.enforceDiskLimits
                        }
 
                 if checker == 0:

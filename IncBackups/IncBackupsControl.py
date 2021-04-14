@@ -83,9 +83,7 @@ class IncJobs(multi.Thread):
             result = self.getRemoteBackups()
 
             activator = 0
-            json_data = "["
-            checker = 0
-
+            json_data = []
             if result[0].find('unable to open config file') == -1:
                 for items in reversed(result):
 
@@ -98,20 +96,11 @@ class IncJobs(multi.Thread):
 
                     if activator:
                         entry = items.split(' ')
-
-                        dic = {'id': entry[0],
-                               'date': "%s %s" % (entry[2], entry[3]),
-                               'host': entry[5],
-                               'path': entry[-1]
-                               }
-
-                        if checker == 0:
-                            json_data = json_data + json.dumps(dic)
-                            checker = 1
-                        else:
-                            json_data = json_data + ',' + json.dumps(dic)
-
-            json_data = json_data + ']'
+                        json_data.append({'id': entry[0],
+                                          'date': "%s %s" % (entry[2], entry[3]),
+                                          'host': entry[5],
+                                          'path': entry[-1]
+                                          })
             final_json = json.dumps({'status': 1, 'error_message': "None", "data": json_data})
             return HttpResponse(final_json)
 
