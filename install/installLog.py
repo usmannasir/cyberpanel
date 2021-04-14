@@ -30,6 +30,6 @@ class InstallLog:
 
         try:
             finalData = json.dumps({'ipAddress': InstallLog.ServerIP, "InstallCyberPanelStatus": message})
-            requests.post(InstallLog.LogURL, data=finalData, verify=False)
+            requests.post(InstallLog.LogURL, data=finalData)
         except:
             pass
