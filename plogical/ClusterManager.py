@@ -48,7 +48,7 @@ class ClusterManager:
     def FetchMySQLConfigFile(self):
 
         if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
-            return '/etc/mysql/conf.d/cluster.cnf'
+            return '/etc/my.cnf.d/cluster.cnf'
         else:
             return '/etc/mysql/conf.d/cluster.cnf'
 
