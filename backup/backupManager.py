@@ -845,14 +845,14 @@ class BackupManager:
             dests.append(dest.name)
         websitesName = ACLManager.findAllSites(currentACL, userID)
         proc = httpProc(request, 'backup/backupSchedule.html', {'destinations': dests, 'websites': websitesName},
-                        'scheDuleBackups')
+                        'scheduleBackups')
         return proc.render()
 
     def getCurrentBackupSchedules(self, userID=None, data=None):
         try:
             currentACL = ACLManager.loadedACL(userID)
 
-            if ACLManager.currentContextPermission(currentACL, 'scheDuleBackups') == 0:
+            if ACLManager.currentContextPermission(currentACL, 'scheduleBackups') == 0:
                 return ACLManager.loadErrorJson('fetchStatus', 0)
 
             records = backupSchedules.objects.all()
@@ -889,7 +889,7 @@ class BackupManager:
 
             currentACL = ACLManager.loadedACL(userID)
 
-            if ACLManager.currentContextPermission(currentACL, 'scheDuleBackups') == 0:
+            if ACLManager.currentContextPermission(currentACL, 'scheduleBackups') == 0:
                 return ACLManager.loadErrorJson('scheduleStatus', 0)
 
             nbd = NormalBackupDests.objects.get(name=selectedAccount)
@@ -910,7 +910,7 @@ class BackupManager:
         try:
             currentACL = ACLManager.loadedACL(userID)
 
-            if ACLManager.currentContextPermission(currentACL, 'scheDuleBackups') == 0:
+            if ACLManager.currentContextPermission(currentACL, 'scheduleBackups') == 0:
                 return ACLManager.loadErrorJson('scheduleStatus', 0)
 
             backupDest = data['destLoc']
@@ -1413,7 +1413,7 @@ class BackupManager:
             page = int(str(data['page']).strip('\n'))
 
 
-            if ACLManager.currentContextPermission(currentACL, 'scheDuleBackups') == 0:
+            if ACLManager.currentContextPermission(currentACL, 'scheduleBackups') == 0:
                 return ACLManager.loadErrorJson('scheduleStatus', 0)
 
             nbd = NormalBackupJobs.objects.get(name=selectedAccount)
@@ -1499,7 +1499,7 @@ class BackupManager:
 
             nbd = NormalBackupDests.objects.get(name=selectedAccount)
 
-            if ACLManager.currentContextPermission(currentACL, 'scheDuleBackups') == 0:
+            if ACLManager.currentContextPermission(currentACL, 'scheduleBackups') == 0:
                 return ACLManager.loadErrorJson('scheduleStatus', 0)
 
             allJobs = nbd.normalbackupjobs_set.all()
@@ -1526,7 +1526,7 @@ class BackupManager:
 
             data = json.loads(request.body)
 
-            if ACLManager.currentContextPermission(currentACL, 'scheDuleBackups') == 0:
+            if ACLManager.currentContextPermission(currentACL, 'scheduleBackups') == 0:
                 return ACLManager.loadErrorJson('scheduleStatus', 0)
 
             selectedJob = data['selectedJob']
@@ -1587,7 +1587,7 @@ class BackupManager:
             nbj = NormalBackupJobs.objects.get(name=selectedJob)
             website = Websites.objects.get(domain=selectedWebsite)
 
-            if ACLManager.currentContextPermission(currentACL, 'scheDuleBackups') == 0:
+            if ACLManager.currentContextPermission(currentACL, 'scheduleBackups') == 0:
                 return ACLManager.loadErrorJson('scheduleStatus', 0)
 
             try:
@@ -1618,7 +1618,7 @@ class BackupManager:
 
             nbj = NormalBackupJobs.objects.get(name=selectedJob)
 
-            if ACLManager.currentContextPermission(currentACL, 'scheDuleBackups') == 0:
+            if ACLManager.currentContextPermission(currentACL, 'scheduleBackups') == 0:
                 return ACLManager.loadErrorJson('scheduleStatus', 0)
 
             config = json.loads(nbj.config)
@@ -1649,7 +1649,7 @@ class BackupManager:
 
             nbj = NormalBackupJobs.objects.get(name=selectedJob)
 
-            if ACLManager.currentContextPermission(currentACL, 'scheDuleBackups') == 0:
+            if ACLManager.currentContextPermission(currentACL, 'scheduleBackups') == 0:
                 return ACLManager.loadErrorJson('scheduleStatus', 0)
 
             nbj.delete()
@@ -1676,7 +1676,7 @@ class BackupManager:
             recordsToShow = int(data['recordsToShow'])
             page = int(str(data['page']).strip('\n'))
 
-            if ACLManager.currentContextPermission(currentACL, 'scheDuleBackups') == 0:
+            if ACLManager.currentContextPermission(currentACL, 'scheduleBackups') == 0:
                 return ACLManager.loadErrorJson('scheduleStatus', 0)
 
             nbj = NormalBackupJobs.objects.get(name=selectedJob)

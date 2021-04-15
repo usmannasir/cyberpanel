@@ -64,7 +64,7 @@ class ACL(models.Model):
    createBackup = models.IntegerField(default=1)
    restoreBackup = models.IntegerField(default=0)
    addDeleteDestinations = models.IntegerField(default=0)
-   scheDuleBackups = models.IntegerField(default=0)
+   scheduleBackups = models.IntegerField(default=0)
    remoteBackups = models.IntegerField(default=0)
 
    ## SSL Management
