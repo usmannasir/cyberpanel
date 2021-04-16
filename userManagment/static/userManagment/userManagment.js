@@ -524,7 +524,7 @@ app.controller('createACLCTRL', function ($scope, $http) {
     $scope.googleDriveBackups = true;
     $scope.restoreBackup = false;
     $scope.addDeleteDestinations = false;
-    $scope.scheDuleBackups = false;
+    $scope.scheduleBackups = false;
     $scope.remoteBackups = false;
 
 
@@ -605,7 +605,7 @@ app.controller('createACLCTRL', function ($scope, $http) {
             googleDriveBackups: $scope.googleDriveBackups,
             restoreBackup: $scope.restoreBackup,
             addDeleteDestinations: $scope.addDeleteDestinations,
-            scheDuleBackups: $scope.scheDuleBackups,
+            scheduleBackups: $scope.scheduleBackups,
             remoteBackups: $scope.remoteBackups,
 
             // SSL Management
@@ -727,7 +727,7 @@ app.controller('createACLCTRL', function ($scope, $http) {
             $scope.createBackup = true;
             $scope.restoreBackup = true;
             $scope.addDeleteDestinations = true;
-            $scope.scheDuleBackups = true;
+            $scope.scheduleBackups = true;
             $scope.remoteBackups = true;
 
             // SSL Management
@@ -798,7 +798,7 @@ app.controller('createACLCTRL', function ($scope, $http) {
             $scope.createBackup = true;
             $scope.restoreBackup = false;
             $scope.addDeleteDestinations = false;
-            $scope.scheDuleBackups = false;
+            $scope.scheduleBackups = false;
             $scope.remoteBackups = false;
 
             // SSL Management
@@ -983,7 +983,7 @@ app.controller('modifyACLCtrl', function ($scope, $http) {
                 $scope.googleDriveBackups = Boolean(response.data.googleDriveBackups);
                 $scope.restoreBackup = Boolean(response.data.restoreBackup);
                 $scope.addDeleteDestinations = Boolean(response.data.addDeleteDestinations);
-                $scope.scheDuleBackups = Boolean(response.data.scheDuleBackups);
+                $scope.scheduleBackups = Boolean(response.data.scheduleBackups);
                 $scope.remoteBackups = Boolean(response.data.remoteBackups);
 
                 // SSL Management
@@ -1084,7 +1084,7 @@ app.controller('modifyACLCtrl', function ($scope, $http) {
             googleDriveBackups: $scope.googleDriveBackups,
             restoreBackup: $scope.restoreBackup,
             addDeleteDestinations: $scope.addDeleteDestinations,
-            scheDuleBackups: $scope.scheDuleBackups,
+            scheduleBackups: $scope.scheduleBackups,
             remoteBackups: $scope.remoteBackups,
 
             // SSL Management
@@ -1206,7 +1206,7 @@ app.controller('modifyACLCtrl', function ($scope, $http) {
             $scope.createBackup = true;
             $scope.restoreBackup = true;
             $scope.addDeleteDestinations = true;
-            $scope.scheDuleBackups = true;
+            $scope.scheduleBackups = true;
             $scope.remoteBackups = true;
 
             // SSL Management
@@ -1277,7 +1277,7 @@ app.controller('modifyACLCtrl', function ($scope, $http) {
             $scope.createBackup = true;
             $scope.restoreBackup = false;
             $scope.addDeleteDestinations = false;
-            $scope.scheDuleBackups = false;
+            $scope.scheduleBackups = false;
             $scope.remoteBackups = false;
 
             // SSL Management

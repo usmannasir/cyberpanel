@@ -10,7 +10,7 @@
 
     <div class="container">
         <div id="page-title">
-            <h2>{% trans "Schedule Back up" %} - <a target="_blank" href="http://cyberpanel.net/"
+            <h2>{% trans "Schedule Back up" %} - <a target="_blank" href="https://cyberpanel.net/"
                                                     style="height: 23px;line-height: 21px;"
                                                     class="btn btn-border btn-alt border-red btn-link font-red"
                                                     title=""><span>{% trans "Remote Backups" %}</span></a></h2>
@@ -49,6 +49,18 @@
                                 </select>
                             </div>
                         </div>
+
+                        <div ng-hide="scheduleRetention" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Select Backup Retention. Leave 0 for no limit" %}</label>
+                            <div class="col-sm-9">
+                                <div class="number">
+                                    <label>
+                                        <input ng-model="backupRetention" type="number" value="0">
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
 
                         <div ng-hide="scheduleFreq" class="form-group">
                             <label class="col-sm-3 control-label">{% trans "Backup Content" %}</label>
