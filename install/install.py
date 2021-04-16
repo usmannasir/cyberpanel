@@ -1336,6 +1336,7 @@ imap_folder_list_limit = 0
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             FirewallUtilities.addRule("tcp", "8090")
+            FirewallUtilities.addRule("tcp", "7080")
             FirewallUtilities.addRule("tcp", "80")
             FirewallUtilities.addRule("tcp", "443")
             FirewallUtilities.addRule("tcp", "21")
