@@ -1517,6 +1517,15 @@ imap_folder_list_limit = 0
             except:
                 pass
 
+
+            query = 'ALTER TABLE IncBackups_backupjob ADD retention integer DEFAULT 0'
+
+
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
             query = """CREATE TABLE `IncBackups_incjob` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `date` datetime(6) NOT NULL,
