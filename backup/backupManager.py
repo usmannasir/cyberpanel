@@ -886,6 +886,7 @@ class BackupManager:
             selectedAccount = data['selectedAccount']
             name = data['name']
             backupFrequency = data['backupFrequency']
+            backupRetention = data['backupRetention']
 
             currentACL = ACLManager.loadedACL(userID)
 
@@ -894,7 +895,8 @@ class BackupManager:
 
             nbd = NormalBackupDests.objects.get(name=selectedAccount)
 
-            config = {'frequency': backupFrequency}
+            config = {'frequency': backupFrequency,
+                      'retention': backupRetention}
 
             nbj = NormalBackupJobs(owner=nbd, name=name, config=json.dumps(config))
             nbj.save()
@@ -1466,6 +1468,11 @@ class BackupManager:
                 frequency = 'Never'
 
             try:
+                retention = config[IncScheduler.retention]
+            except:
+                retention = 'Never'
+
+            try:
                 currentStatus = config[IncScheduler.currentStatus]
             except:
                 currentStatus = 'Not running'
@@ -1615,6 +1622,7 @@ class BackupManager:
 
             selectedJob = data['selectedJob']
             backupFrequency = data['backupFrequency']
+            backupRetention = data['backupRetention']
 
             nbj = NormalBackupJobs.objects.get(name=selectedJob)
 
@@ -1623,6 +1631,7 @@ class BackupManager:
 
             config = json.loads(nbj.config)
             config[IncScheduler.frequency] = backupFrequency
+            config[IncScheduler.retention] = backupRetention
 
             nbj.config = json.dumps(config)
             nbj.save()

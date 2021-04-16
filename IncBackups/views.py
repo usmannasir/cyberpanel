@@ -524,6 +524,7 @@ def submit_backup_schedule(request):
 
         backup_dest = data['backupDestinations']
         backup_freq = data['backupFreq']
+        backup_retention = data['backupRetention']
         backup_sites = data['websitesToBeBacked']
 
         backup_data = 1 if 'websiteData' in data else 0
@@ -531,7 +532,8 @@ def submit_backup_schedule(request):
         backup_databases = 1 if 'websiteDatabases' in data else 0
 
         backup_job = BackupJob(websiteData=backup_data, websiteDataEmails=backup_emails,
-                               websiteDatabases=backup_databases, destination=backup_dest, frequency=backup_freq)
+                               websiteDatabases=backup_databases, destination=backup_dest, frequency=backup_freq,
+                               retention=backup_retention)
         backup_job.save()
 
         for site in backup_sites:
@@ -558,6 +560,7 @@ def get_current_backup_schedules(request):
             json_data.append({'id': items.id,
                               'destination': items.destination,
                               'frequency': items.frequency,
+                              'retention': items.retention,
                               'numberOfSites': items.jobsites_set.all().count()
                               })
         final_json = json.dumps({'status': 1, 'error_message': "None", "data": json_data})

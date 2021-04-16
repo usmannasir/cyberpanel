@@ -1247,7 +1247,8 @@ app.controller('googleDrive', function ($scope, $http) {
         };
         var data = {
             selectedAccount: $scope.selectedAccount,
-            backupFrequency: $scope.backupFrequency
+            backupFrequency: $scope.backupFrequency,
+            backupRetention: $scope.backupRetention,
         };
 
         dataurl = "/backup/changeAccountFrequencygDrive";
@@ -1654,7 +1655,8 @@ app.controller('scheduleBackup', function ($scope, $http, $window) {
         var data = {
             selectedAccount: $scope.selectedAccountAdd,
             name: $scope.name,
-            backupFrequency: $scope.backupFrequency
+            backupFrequency: $scope.backupFrequency,
+            backupRetention: $scope.backupRetention,
         };
 
         dataurl = "/backup/submitBackupSchedule";
@@ -1856,7 +1858,8 @@ app.controller('scheduleBackup', function ($scope, $http, $window) {
         };
         var data = {
             selectedJob: $scope.selectedJob,
-            backupFrequency: $scope.backupFrequency
+            backupFrequency: $scope.backupFrequency,
+            backupRetention: $scope.backupRetention,
         };
 
         dataurl = "/backup/changeAccountFrequencyNormal";
