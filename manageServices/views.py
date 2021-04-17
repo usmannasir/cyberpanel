@@ -301,7 +301,7 @@ def removeInstall(request):
             status = data['status']
             appName = data['appName']
 
-            if appName == 'Elastic Search':
+            if appName == 'Elasticsearch':
                 if status == 'Installing':
                     command = '/usr/local/CyberCP/bin/python /usr/local/CyberCP/manageServices/serviceManager.py --function InstallElasticSearch'
                 else:
