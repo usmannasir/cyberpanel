@@ -267,13 +267,14 @@ fi
 
 Check_Virualization() {
 echo -e "Checking virtualization type..."
-if hostnamectl | grep -q "Virtualization: lxc"; then
-  echo -e "\nLXC detected..."
-  echo -e "CyberPanel does not support LXC"
-  echo -e "Exiting..."
-  Debug_Log2 "CyberPanel does not support LXC.. [404]"
-  exit
-fi
+#if hostnamectl | grep -q "Virtualization: lxc"; then
+#  echo -e "\nLXC detected..."
+#  echo -e "CyberPanel does not support LXC"
+#  echo -e "Exiting..."
+#  Debug_Log2 "CyberPanel does not support LXC.. [404]"
+#  exit
+#fi
+#remove per https://github.com/usmannasir/cyberpanel/issues/589
 
 if hostnamectl | grep -q "Virtualization: openvz"; then
   echo -e "OpenVZ detected...\n"
