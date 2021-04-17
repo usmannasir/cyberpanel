@@ -783,7 +783,8 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                 # os.remove(file_name)
 
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-
+            
+            
             ##
 
             if self.distro == centos:
@@ -794,7 +795,18 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                 command = 'apt-get -y install dovecot-mysql dovecot-imapd dovecot-pop3d'
 
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-
+            
+            # We are going to leverage postconfig -e to edit the settings for hostname
+            command = '"postconf -e "myhostname = %s"' % (str(socket.getfqdn())
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            command = '"postconf -e "myhostname = %s"' % (str(socket.getfqdn())
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                                                          
+            # We are explicitly going to use sed to set the hostname default from "myhostname = server.example.com" to the fqdn from socket if the default is still found
+            postfix_main = '/etc/postfix/main.cf'
+            command = "sed -i 's|server.example.com|%s|g' %s" % (str(socket.getfqdn(), postfix_main)
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            
             # if self.distro != centos:
             #     command = 'curl https://repo.dovecot.org/DOVECOT-REPO-GPG | gpg --import'
             #     subprocess.call(command, shell=True)
