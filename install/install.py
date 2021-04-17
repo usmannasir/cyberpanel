@@ -391,6 +391,24 @@ class preFlightsChecks:
 
         ### Put correct mysql passwords in settings file!
 
+        # This allows root/sudo users to be able to work with MySQL/MariaDB without hunting down the password like
+        # all the other control panels allow
+        # reference: https://oracle-base.com/articles/mysql/mysql-password-less-logins-using-option-files
+        mysql_my_root_cnf = '/root/.my.cnf'
+        mysql_root_pass_file = """
+        [client]
+        user=root
+        password="%s"
+        """ % password
+        
+        with open(mysql_root_pass_file, 'w') as f:
+            f.write(mysql_root_pass_file)
+        os.chmod(mysql_root_pass_file, 0o600)
+        command = 'chown root:root %s' % mysql_root_pass_file
+        subprocess.call(shlex.split(command))
+        
+        logging.InstallLog.writeToFile("Updating /root/.my.cnf!")
+
         logging.InstallLog.writeToFile("Updating settings.py!")
 
         path = self.cyberPanelPath + "/CyberCP/settings.py"
