@@ -395,18 +395,18 @@ class preFlightsChecks:
         # all the other control panels allow
         # reference: https://oracle-base.com/articles/mysql/mysql-password-less-logins-using-option-files
         mysql_my_root_cnf = '/root/.my.cnf'
-        mysql_root_pass_file = """
+        mysql_root_cnf_content = """
         [client]
         user=root
         password="%s"
         """ % password
-        
-        with open(mysql_root_pass_file, 'w') as f:
-            f.write(mysql_root_pass_file)
-        os.chmod(mysql_root_pass_file, 0o600)
-        command = 'chown root:root %s' % mysql_root_pass_file
+
+        with open(mysql_my_root_cnf, 'w') as f:
+            f.write(mysql_root_cnf_content)
+        os.chmod(mysql_my_root_cnf, 0o600)
+        command = 'chown root:root %s' % mysql_my_root_cnf
         subprocess.call(shlex.split(command))
-        
+
         logging.InstallLog.writeToFile("Updating /root/.my.cnf!")
 
         logging.InstallLog.writeToFile("Updating settings.py!")
@@ -813,16 +813,6 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
-            # We are going to leverage postconfig -e to edit the settings for hostname
-            command = "postconf -e 'myhostname = %s'" % (str(socket.getfqdn()))
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            # We are explicitly going to use sed to set the hostname default from "myhostname = server.example.com" 
-            # to the fqdn from socket if the default is still found 
-            postfix_main = '/etc/postfix/main.cf'
-            command = "sed -i 's|server.example.com|%s|g' %s" % (str(socket.getfqdn(), postfix_main))
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
             # if self.distro != centos:
             #     command = 'curl https://repo.dovecot.org/DOVECOT-REPO-GPG | gpg --import'
             #     subprocess.call(command, shell=True)
@@ -1078,6 +1068,17 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             shutil.copy("email-configs-one/master.cf", master)
             shutil.copy("email-configs-one/dovecot.conf", dovecot)
             shutil.copy("email-configs-one/dovecot-sql.conf.ext", dovecotmysql)
+            
+            ########### Set custom settings
+
+            # We are going to leverage postconfig -e to edit the settings for hostname
+            command = "postconf -e 'myhostname = %s'" % (str(socket.getfqdn()))
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+            # We are explicitly going to use sed to set the hostname default from "myhostname = server.example.com"
+            # to the fqdn from socket if the default is still found
+            command = "sed -i 's|server.example.com|%s|g' %s" % (str(socket.getfqdn()), main)
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             ######################################## Permissions
 
