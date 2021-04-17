@@ -2992,7 +2992,7 @@ class CloudManager:
     def SyncToMaster(self):
         try:
 
-            command = '/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/ClusterManager.py --function SyncToMaster --type Master'
+            command = '/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/ClusterManager.py --function SyncToMaster --type Failover'
             ProcessUtilities.executioner(command)
 
             final_json = json.dumps({'status': 1})
