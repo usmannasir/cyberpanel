@@ -920,15 +920,16 @@ class MailServerManager(multi.Thread):
             
             import socket
             # We are going to leverage postconfig -e to edit the settings for hostname
-            command = '"postconf -e "myhostname = %s"' % (str(socket.getfqdn())
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-            command = '"postconf -e "myhostname = %s"' % (str(socket.getfqdn())
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-                                                          
-            # We are explicitly going to use sed to set the hostname default from "myhostname = server.example.com" to the fqdn from socket if the default is still found
+            command = '"postconf -e "myhostname = %s"' % (str(socket.getfqdn()))
+            ProcessUtilities.executioner(command)
+            command = '"postconf -e "myhostname = %s"' % (str(socket.getfqdn()))
+            ProcessUtilities.executioner(command)
+
+            # We are explicitly going to use sed to set the hostname default from "myhostname = server.example.com"
+            # to the fqdn from socket if the default is still found
             postfix_main = '/etc/postfix/main.cf'
-            command = "sed -i 's|server.example.com|%s|g' %s" % (str(socket.getfqdn(), postfix_main)
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            command = "sed -i 's|server.example.com|%s|g' %s" % (str(socket.getfqdn()), postfix_main)
+            ProcessUtilities.executioner(command)
             
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Re-installing Dovecot..,15')
 
