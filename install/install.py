@@ -743,7 +743,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
     ###################################################### Email setup
 
-    def install_postfix_davecot(self):
+    def install_postfix_dovecot(self):
         self.stdOut("Install dovecot - first remove postfix")
 
         try:
@@ -841,7 +841,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             #         pass
 
         except BaseException as msg:
-            logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [install_postfix_davecot]")
+            logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [install_postfix_dovecot]")
             return 0
 
         return 1
@@ -857,14 +857,14 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             mysql_virtual_forwardings = "email-configs-one/mysql-virtual_forwardings.cf"
             mysql_virtual_mailboxes = "email-configs-one/mysql-virtual_mailboxes.cf"
             mysql_virtual_email2email = "email-configs-one/mysql-virtual_email2email.cf"
-            davecotmysql = "email-configs-one/dovecot-sql.conf.ext"
+            dovecotmysql = "email-configs-one/dovecot-sql.conf.ext"
 
 
             ### update password:
 
-            data = open(davecotmysql, "r").readlines()
+            data = open(dovecotmysql, "r").readlines()
 
-            writeDataToFile = open(davecotmysql, "w")
+            writeDataToFile = open(dovecotmysql, "w")
 
             if mysql == 'Two':
                 dataWritten = "connect = host=127.0.0.1 dbname=cyberpanel user=cyberpanel password=" + mysqlPassword + " port=3307\n"
@@ -947,10 +947,10 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
 
             if self.remotemysql == 'ON':
-                command = "sed -i 's|host=localhost|host=%s|g' %s" % (self.mysqlhost, davecotmysql)
+                command = "sed -i 's|host=localhost|host=%s|g' %s" % (self.mysqlhost, dovecotmysql)
                 preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
-                command = "sed -i 's|port=3306|port=%s|g' %s" % (self.mysqlport, davecotmysql)
+                command = "sed -i 's|port=3306|port=%s|g' %s" % (self.mysqlport, dovecotmysql)
                 preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
                 ##
@@ -1008,8 +1008,8 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             mysql_virtual_email2email = "/etc/postfix/mysql-virtual_email2email.cf"
             main = "/etc/postfix/main.cf"
             master = "/etc/postfix/master.cf"
-            davecot = "/etc/dovecot/dovecot.conf"
-            davecotmysql = "/etc/dovecot/dovecot-sql.conf.ext"
+            dovecot = "/etc/dovecot/dovecot.conf"
+            dovecotmysql = "/etc/dovecot/dovecot-sql.conf.ext"
 
             if os.path.exists(mysql_virtual_domains):
                 os.remove(mysql_virtual_domains)
@@ -1029,11 +1029,11 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             if os.path.exists(master):
                 os.remove(master)
 
-            if os.path.exists(davecot):
-                os.remove(davecot)
+            if os.path.exists(dovecot):
+                os.remove(dovecot)
 
-            if os.path.exists(davecotmysql):
-                os.remove(davecotmysql)
+            if os.path.exists(dovecotmysql):
+                os.remove(dovecotmysql)
 
             ###############Getting SSL
 
@@ -1063,8 +1063,8 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                         "/etc/postfix/mysql-virtual_email2email.cf")
             shutil.copy("email-configs-one/main.cf", main)
             shutil.copy("email-configs-one/master.cf", master)
-            shutil.copy("email-configs-one/dovecot.conf", davecot)
-            shutil.copy("email-configs-one/dovecot-sql.conf.ext", davecotmysql)
+            shutil.copy("email-configs-one/dovecot.conf", dovecot)
+            shutil.copy("email-configs-one/dovecot-sql.conf.ext", dovecotmysql)
 
 
             ######################################## Permissions
@@ -1161,7 +1161,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             command = 'chmod o= /etc/dovecot/dovecot-sql.conf.ext'
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-            ################################### Restart davecot
+            ################################### Restart dovecot
 
             command = 'systemctl enable dovecot.service'
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
@@ -2261,12 +2261,12 @@ def main():
     checks.install_psmisc()
 
     if args.postfix == None:
-        checks.install_postfix_davecot()
+        checks.install_postfix_dovecot()
         checks.setup_email_Passwords(installCyberPanel.InstallCyberPanel.mysqlPassword, mysql)
         checks.setup_postfix_dovecot_config(mysql)
     else:
         if args.postfix == 'ON':
-            checks.install_postfix_davecot()
+            checks.install_postfix_dovecot()
             checks.setup_email_Passwords(installCyberPanel.InstallCyberPanel.mysqlPassword, mysql)
             checks.setup_postfix_dovecot_config(mysql)
 
