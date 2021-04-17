@@ -6,8 +6,8 @@ urlpatterns = [
     url(r'^listPackages$', views.listPackages, name='listPackagesCL'),
     url(r'^monitorUsage$', views.monitorUsage, name='monitorUsage'),
     url(r'^CageFS$', views.CageFS, name='CageFS'),
-
     url(r'^submitCageFSInstall$', views.submitCageFSInstall, name='submitCageFSInstall'),
+
     # url(r'^submitWebsiteListing$', views.getFurtherAccounts, name='submitWebsiteListing'),
     # url(r'^enableOrDisable$', views.enableOrDisable, name='enableOrDisable'),
     # url(r'^submitCreatePackage$', views.submitCreatePackage, name='submitCreatePackageCL'),
