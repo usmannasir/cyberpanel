@@ -56,6 +56,8 @@ def get_distro():
 
         if data.find('CentOS Linux release 8') > -1:
             return cent8
+        if data.find('AlmaLinux release 8') > -1:
+            return cent8
 
     else:
         logging.InstallLog.writeToFile("Can't find linux release file - fatal error")
@@ -2348,7 +2350,7 @@ echo $oConfig->Save() ? 'Done' : 'Error';
 
         command = '/usr/local/lsws/lsphp72/bin/php /usr/local/CyberCP/public/rainloop.php'
         subprocess.call(shlex.split(command))
-        
+
         command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
         subprocess.call(shlex.split(command))
     except:

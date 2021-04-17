@@ -199,12 +199,12 @@ Server_IP=$(curl --silent --max-time 30 -4 https://cyberpanel.sh/?ip)
 
 echo -e "\nChecking server location...\n"
 
-if [[ "$Server_Country" != "CN" ]] ; then 
+if [[ "$Server_Country" != "CN" ]] ; then
   Server_Country=$(curl --silent --max-time 10 -4 https://cyberpanel.sh/?country)
   if [[ ${#Server_Country} != "2" ]] ; then
    Server_Country="Unknow"
   fi
-fi 
+fi
 #to avoid repeated check_ip called by debug_log2 to break force mirror for CN servers.
 
 if [[ "$Debug" = "On" ]] ; then
@@ -238,25 +238,25 @@ if grep -q -E "CentOS Linux 7|CentOS Linux 8" /etc/os-release ; then
   Server_OS="CentOS"
 elif grep -q -E "CloudLinux 7|CloudLinux 8" /etc/os-release ; then
   Server_OS="CloudLinux"
+elif grep -q "AlmaLinux-8" /etc/os-release ; then
+  Server_OS="AlmaLinux"
 elif grep -q -E "Ubuntu 18.04|Ubuntu 20.04" /etc/os-release ; then
   Server_OS="Ubuntu"
 else
   echo -e "Unable to detect your system..."
-  echo -e "\nCyberPanel is supported on Ubuntu 18.04 x86_64, Ubuntu 20.04 x86_64, CentOS 7.x, CentOS 8.x and CloudLinux 7.x...\n"
-  Debug_Log2 "CyberPanel is supported on Ubuntu 18.04 x86_64, Ubuntu 20.04 x86_64, CentOS 7.x, CentOS 8.x and CloudLinux 7.x... [404]"
+  echo -e "\nCyberPanel is supported on Ubuntu 18.04 x86_64, Ubuntu 20.04 x86_64, CentOS 7.x, CentOS 8.x, AlmaLinux 8.x and CloudLinux 7.x...\n"
+  Debug_Log2 "CyberPanel is supported on Ubuntu 18.04 x86_64, Ubuntu 20.04 x86_64, CentOS 7.x, CentOS 8.x, AlmaLinux 8.x and CloudLinux 7.x... [404]"
   exit
 fi
 
-Server_OS_Version=$(grep VERSION_ID /etc/os-release | awk -F[=,] '{print $2}' | tr -d \" | head -c2)
+Server_OS_Version=$(grep VERSION_ID /etc/os-release | awk -F[=,] '{print $2}' | tr -d \" | head -c2 | tr -d . )
 #to make 20.04 display as 20
 
 echo -e "System: $Server_OS $Server_OS_Version detected...\n"
 
-if [[ $Server_OS = "CloudLinux" ]] ; then
-  Server_OS_Version=$(grep VERSION_ID /etc/os-release | awk -F[=,] '{print $2}' | tr -d \" | cut -c1-1)
+if [[ $Server_OS = "CloudLinux" ]] || [[ "$Server_OS" = "AlmaLinux" ]] ; then
   Server_OS="CentOS"
-  #CloudLinux gives version id like 7.8 , 7.9 , so cut it to show first number only
-  #then treat it as CentOS system.
+  #treat CL and Alma as CentOS
 fi
 
 if [[ "$Debug" = "On" ]] ; then
@@ -809,6 +809,7 @@ if [[ $Server_OS = "CentOS" ]] ; then
 
 
   if [[ "$Server_OS_Version" = "8" ]]; then
+    rpm --import https://cyberpanel.sh/www.centos.org/keys/RPM-GPG-KEY-CentOS-Official
     rpm --import https://cyberpanel.sh/dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-8
     yum install -y https://cyberpanel.sh/dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
       Check_Return "yum repo" "no_exit"
@@ -963,7 +964,7 @@ if [[ "$Server_OS" = "CentOS" ]] ; then
 else
   apt update -y
   DEBIAN_FRONTEND=noninteractive apt upgrade -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
-  DEBIAN_FRONTEND=noninteracitve apt install -y dnsutils htop telnet libcurl4-gnutls-dev libgnutls28-dev libgcrypt20-dev libattr1 libattr1-dev liblzma-dev libgpgme-dev libmariadbclient-dev libcurl4-gnutls-dev libssl-dev nghttp2 libnghttp2-dev idn2 libidn2-dev libidn2-0-dev librtmp-dev libpsl-dev nettle-dev libgnutls28-dev libldap2-dev libgssapi-krb5-2 libk5crypto3 libkrb5-dev libcomerr2 libldap2-dev virtualenv git socat vim unzip zip
+  DEBIAN_FRONTEND=noninteracitve apt install -y dnsutils net-tools htop telnet libcurl4-gnutls-dev libgnutls28-dev libgcrypt20-dev libattr1 libattr1-dev liblzma-dev libgpgme-dev libmariadbclient-dev libcurl4-gnutls-dev libssl-dev nghttp2 libnghttp2-dev idn2 libidn2-dev libidn2-0-dev librtmp-dev libpsl-dev nettle-dev libgnutls28-dev libldap2-dev libgssapi-krb5-2 libk5crypto3 libkrb5-dev libcomerr2 libldap2-dev virtualenv git socat vim unzip zip
     Check_Return
 
   DEBIAN_FRONTEND=noninteractive apt install -y python3-pip
