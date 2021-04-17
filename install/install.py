@@ -996,7 +996,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             self.stdOut("[ERROR] Error converting: " + filename + " from centos defaults to ubuntu defaults: " + str(err), 1,
                         1, os.EX_OSERR)
 
-    def setup_postfix_davecot_config(self, mysql):
+    def setup_postfix_dovecot_config(self, mysql):
         try:
             logging.InstallLog.writeToFile("Configuring postfix and dovecot...")
 
@@ -1214,7 +1214,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             logging.InstallLog.writeToFile("Postfix and Dovecot configured")
         except BaseException as msg:
-            logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [setup_postfix_davecot_config]")
+            logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [setup_postfix_dovecot_config]")
             return 0
 
         return 1
@@ -2263,12 +2263,12 @@ def main():
     if args.postfix == None:
         checks.install_postfix_davecot()
         checks.setup_email_Passwords(installCyberPanel.InstallCyberPanel.mysqlPassword, mysql)
-        checks.setup_postfix_davecot_config(mysql)
+        checks.setup_postfix_dovecot_config(mysql)
     else:
         if args.postfix == 'ON':
             checks.install_postfix_davecot()
             checks.setup_email_Passwords(installCyberPanel.InstallCyberPanel.mysqlPassword, mysql)
-            checks.setup_postfix_davecot_config(mysql)
+            checks.setup_postfix_dovecot_config(mysql)
 
     checks.install_unzip()
     checks.install_zip()
