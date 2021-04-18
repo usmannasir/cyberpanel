@@ -19,7 +19,7 @@
 #Check_OS() ---> check system , support on centos7/8 ubutnu18/20 and cloudlinux 7 , 8 is untested.
 #Check_Virualization()  ---> check for virtualizaon , LXC not suppoed , some edit needed on OVZ
 #Check_Panel() --->  check to make sure no other panel is installed
-#Check_Porcess() ---> check no other process like apache is running
+#Check_Process() ---> check no other process like apache is running
 #Check_Provider() ---> check the provider, certain provider like Alibaba or tencent yun may need some special change
 #Check_Argument() ---> parse argument and go to Argument_Mode() or Interactive_Mode() respectively
 #Pre_Install_Setup_Repository() ---> setup/install repositories for centos system.
@@ -321,7 +321,7 @@ elif [[ -d /etc/httpd/conf/plesk.conf.d/ ]] || [[ -d /etc/apache2/plesk.conf.d/ 
 fi
 }
 
-Check_Porcess() {
+Check_Process() {
 if systemctl is-active --quiet httpd; then
     systemctl disable httpd
     systemctl stop httpd
@@ -1545,6 +1545,7 @@ fi
 }
 
 Post_Install_Display_Final_Info() {
+RainloopAdminPass=$(grep SetPassword /usr/local/CyberCP/public/rainloop.php| sed -e 's|$oConfig->SetPassword(||g' -e "s|');||g" -e "s|'||g")
 Elapsed_Time="$((Time_Count / 3600)) hrs $(((SECONDS / 60) % 60)) min $((Time_Count % 60)) sec"
 echo "###################################################################"
 echo "                CyberPanel Successfully Installed                  "
@@ -1553,7 +1554,7 @@ echo "                Current Disk usage : $(df -h | awk '$NF=="/"{printf "%d/%d
 echo "                                                                   "
 echo "                Current RAM  usage : $(free -m | awk 'NR==2{printf "%s/%sMB (%.2f%%)\n", $3,$2,$3*100/$2 }')                         "
 echo "                                                                   "
-echo "                Installation time  : $Elapsed_Time                      "
+echo "                Installation time  : $Elapsed_Time                 "
 echo "                                                                   "
 echo "                Visit: https://$Server_IP:8090                     "
 echo "                Panel username: admin                              "
@@ -1562,8 +1563,13 @@ echo "                Panel password: *****                              "
 else
 echo "                Panel password: $Admin_Pass                        "
 fi
-echo "                WebAdmin console username: admin                         "
-echo "                WebAdmin console password: $Webadmin_Pass                "
+echo "                Visit: https://$Server_IP:7080                     "
+echo "                WebAdmin console username: admin                   "
+echo "                WebAdmin console password: $Webadmin_Pass          "
+echo "                                                                   "
+echo "                Visit: https://$Server_IP:8090/rainloop/?admin     "
+echo "                Rainloop Admin username: admin                     "
+echo "                Rainloop Admin password: $RainloopAdminPass        "
 echo "                                                                   "
 echo -e "             Run \e[31mcyberpanel help\e[39m to get FAQ info"
 echo -e "             Run \e[31mcyberpanel upgrade\e[39m to upgrade it to latest version."
@@ -1572,6 +1578,7 @@ echo "                                                                   "
 echo "              Website : https://www.cyberpanel.net                 "
 echo "              Forums  : https://forums.cyberpanel.net              "
 echo "              Wikipage: https://docs.cyberpanel.net                "
+echo "              Docs    : https://cyberpanel.net/docs/               "
 echo "                                                                   "
 echo -e "            Enjoy your accelerated Internet by                  "
 echo -e "                CyberPanel & $Word 				                     "
@@ -1774,6 +1781,10 @@ if [[ "$Server_Country" = "CN" ]] ; then
 Post_Install_CN_Replacement
 fi
 
+# If valid hostname that resolves where we can issue an ssl we will create the hostname as a website so we can issue the SSL and do our first login without SSL warnings or exceptions needed.
+HostName=$(hostname --fqdn); [ -z "$(dig +short "$HostName")" ]  &&  echo "$HostName resolves to valid IP. Setting up hostname SSL" && cyberpanel createWebsite --package Default --owner admin --domainName $(hostname --fqdn) --email root@localhost --php 7.4 && cyberpanel hostNameSSL --domainName $(hostname --fqdn)
+
+
 }
 
 Post_Install_CN_Replacement() {
@@ -1805,7 +1816,7 @@ Check_Virualization
 
 Check_Panel
 
-Check_Porcess
+Check_Process
 
 Check_Provider
 
