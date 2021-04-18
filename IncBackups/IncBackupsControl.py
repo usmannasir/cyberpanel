@@ -138,9 +138,16 @@ class IncJobs(multi.Thread):
             if fType == 'backup':
                 key, secret = self.getAWSData()
 
+                # Define our excludes file for use with restic
+                backupExcludesFile = '/home/%s/backup-exclude.conf' % (self.website.domain)
+                resticBackupExcludeCMD = ' --exclude-file=%s' % (backupExcludesFile)
+
                 command = 'export AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s  && restic -r s3:s3.amazonaws.com/%s backup %s --password-file %s' % (
                     key, secret, self.website.domain, backupPath, self.passwordFile)
 
+                # If /home/%s/backup-exclude.conf file exists lets pass this to restic by appending the command to end.
+                if os.path.isfile(backupExcludesFile):
+                    command = command + resticBackupExcludeCMD
                 result = ProcessUtilities.outputExecutioner(command)
 
                 if result.find('saved') == -1:
@@ -198,8 +205,15 @@ class IncJobs(multi.Thread):
 
     def localFunction(self, backupPath, type, restore=None):
         if restore == None:
+            # Define our excludes file for use with restic
+            backupExcludesFile = '/home/%s/backup-exclude.conf' % (self.website.domain)
+            resticBackupExcludeCMD = ' --exclude-file=%s' % (backupExcludesFile)
+
             command = 'restic -r %s backup %s --password-file %s --exclude %s' % (
                 self.repoPath, backupPath, self.passwordFile, self.repoPath)
+            # If /home/%s/backup-exclude.conf file exists lets pass this to restic by appending the command to end.
+            if os.path.isfile(backupExcludesFile):
+                command = command + resticBackupExcludeCMD
             result = ProcessUtilities.outputExecutioner(command)
 
             if result.find('saved') == -1:
@@ -233,9 +247,15 @@ class IncJobs(multi.Thread):
 
     def sftpFunction(self, backupPath, type, restore=None):
         if restore == None:
+            # Define our excludes file for use with restic
+            backupExcludesFile = '/home/%s/backup-exclude.conf' % (self.website.domain)
+            resticBackupExcludeCMD = ' --exclude-file=%s' % (backupExcludesFile)
             remotePath = '/home/backup/%s' % (self.website.domain)
             command = 'export PATH=${PATH}:/usr/bin && restic -r %s:%s backup %s --password-file %s --exclude %s' % (
                 self.backupDestinations, remotePath, backupPath, self.passwordFile, self.repoPath)
+            # If /home/%s/backup-exclude.conf file exists lets pass this to restic by appending the command to end.
+            if os.path.isfile(backupExcludesFile):
+                command = command + resticBackupExcludeCMD
             result = ProcessUtilities.outputExecutioner(command)
 
             if result.find('saved') == -1:
