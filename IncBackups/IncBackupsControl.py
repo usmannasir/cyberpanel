@@ -1,6 +1,8 @@
 #!/usr/local/CyberCP/bin/python
 import os
 import os.path
+import shlex
+import subprocess
 import sys
 
 sys.path.append('/usr/local/CyberCP')
@@ -860,9 +862,46 @@ Subject: %s
 
         command = 'restic'
         if ProcessUtilities.outputExecutioner(command).find('restic is a backup program which') == -1:
-            logging.statusWriter(self.statusPath, 'It seems restic is not installed, for incremental backups to work '
-                                                  'restic must be installed. You can manually install restic using this '
-                                                  'guide -> http://go.cyberpanel.net/restic. [5009]', 1)
+            try:
+                CentOSPath = '/etc/redhat-release'
+
+                if os.path.exists(CentOSPath):
+                    import platform
+                    distro = 'centos'
+                    release = platform.uname().release
+                    if distro == 'centos' and 'el7' in release:
+                        command = 'yum install restic -y'
+                        ProcessUtilities.executioner(command)
+                    elif distro == 'centos' and 'el8' in release:
+                        command = 'cat /proc/cpuinfo'
+
+                        result = subprocess.check_output(shlex.split(command)).decode("utf-8")
+
+                        if result.find('ARM') > -1 or result.find('arm') > -1:
+                            command = 'wget -O /usr/bin/restic https://rep.cyberpanel.net/restic_0.9.6_linux_arm64'
+                            ProcessUtilities.executioner(command)
+
+                        else:
+                            command = 'wget -O /usr/bin/restic https://rep.cyberpanel.net/restic_0.9.6_linux_amd64'
+                            ProcessUtilities.executioner(command)
+
+                        command = 'chmod +x /usr/bin/restic'
+                        ProcessUtilities.executioner(command)
+
+                else:
+                    command = 'apt-get update -y'
+                    ProcessUtilities.executioner(command)
+
+                    command = 'apt-get install restic -y'
+                    ProcessUtilities.executioner(command)
+
+            except:
+                logging.statusWriter(self.statusPath,
+                                     'It seems restic is not installed, for incremental backups to work '
+                                     'restic must be installed. You can manually install restic using this '
+                                     'guide -> http://go.cyberpanel.net/restic. [5009]', 1)
+                pass
+
             return 0
 
         ## Restic check completed.
