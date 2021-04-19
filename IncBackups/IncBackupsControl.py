@@ -4,7 +4,7 @@ import os.path
 import shlex
 import subprocess
 import sys
-
+import requests
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 
@@ -869,25 +869,24 @@ Subject: %s
                     import platform
                     distro = 'centos'
                     release = platform.uname().release
+
+                    url = 'https://api.github.com/repos/restic/restic/releases/latest'
+                    releases = json.loads(str(requests.get(url).text))
+                    version = releases['tag_name'].strip('v')
+                    download_url = f'https://github.com/restic/restic/releases/download/v{version}/restic_{version}_linux_amd64.bz2'
+                    ResticArchivePath = f'/root/restic_{version}_linux_amd64.bz2'
+                    ResticBinPath = '/usr/local/bin/restic'
+
                     if distro == 'centos' and 'el7' in release:
                         command = 'yum install restic -y'
                         ProcessUtilities.executioner(command)
                     elif distro == 'centos' and 'el8' in release:
-                        command = 'cat /proc/cpuinfo'
-
-                        result = subprocess.check_output(shlex.split(command)).decode("utf-8")
-
-                        if result.find('ARM') > -1 or result.find('arm') > -1:
-                            command = 'wget -O /usr/bin/restic https://rep.cyberpanel.net/restic_0.9.6_linux_arm64'
-                            ProcessUtilities.executioner(command)
-
-                        else:
-                            command = 'wget -O /usr/bin/restic https://rep.cyberpanel.net/restic_0.9.6_linux_amd64'
-                            ProcessUtilities.executioner(command)
-
-                        command = 'chmod +x /usr/bin/restic'
+                        command = 'wget -O %s %s' % (ResticArchivePath, download_url)
                         ProcessUtilities.executioner(command)
-
+                        command = 'bzip2 -dc %s > %s' % (ResticArchivePath, ResticBinPath)
+                        ProcessUtilities.executioner(command)
+                        command = 'chmod +x %s' % ResticBinPath
+                        ProcessUtilities.executioner(command)
                 else:
                     command = 'apt-get update -y'
                     ProcessUtilities.executioner(command)
