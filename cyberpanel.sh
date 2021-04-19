@@ -806,6 +806,11 @@ if [[ $Server_OS = "CentOS" ]] ; then
   yum autoremove -y epel-release
   rm -f /etc/yum.repos.d/epel.repo
   rm -f /etc/yum.repos.d/epel.repo.rpmsave
+  
+  yum install -y yum-plugin-copr
+    Check_Return "yum repo" "no_exit"
+  yum copr enable -y copart/restic
+    Check_Return "yum repo" "no_exit"
 
 
   if [[ "$Server_OS_Version" = "8" ]]; then
@@ -845,11 +850,6 @@ gpgcheck=1
 EOF
 
     yum install --nogpg -y https://cyberpanel.sh/mirror.ghettoforge.org/distributions/gf/gf-release-latest.gf.el7.noarch.rpm
-      Check_Return "yum repo" "no_exit"
-
-    yum install -y yum-plugin-copr
-      Check_Return "yum repo" "no_exit"
-    yum copr enable -y copart/restic
       Check_Return "yum repo" "no_exit"
 
     rpm -ivh https://cyberpanel.sh/repo.iotti.biz/CentOS/7/noarch/lux-release-7-1.noarch.rpm
