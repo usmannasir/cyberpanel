@@ -2030,25 +2030,11 @@ milter_default_action = accept
             CentOSPath = '/etc/redhat-release'
 
             if os.path.exists(CentOSPath):
-
-                if self.distro == centos:
-                    command = 'yum install restic -y'
+                    command = 'yum install -y yum-plugin-copr'
                     preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-                elif self.distro == cent8:
-
-                    command = 'cat /proc/cpuinfo'
-
-                    result = subprocess.check_output(shlex.split(command)).decode("utf-8")
-
-                    if result.find('ARM') > -1 or result.find('arm') > -1:
-                        command = 'wget -O /usr/bin/restic https://rep.cyberpanel.net/restic_0.9.6_linux_arm64'
-                        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-                    else:
-                        command = 'wget -O /usr/bin/restic https://rep.cyberpanel.net/restic_0.9.6_linux_amd64'
-                        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-                    command = 'chmod +x /usr/bin/restic'
+                    command = 'yum copr enable -y copart/restic'
+                    preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                    command = 'yum install -y restic'
                     preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             else:

@@ -863,30 +863,17 @@ Subject: %s
         command = 'restic'
         if ProcessUtilities.outputExecutioner(command).find('restic is a backup program which') == -1:
             try:
+
                 CentOSPath = '/etc/redhat-release'
 
                 if os.path.exists(CentOSPath):
-                    import platform
-                    distro = 'centos'
-                    release = platform.uname().release
+                        command = 'yum install -y yum-plugin-copr'
+                        ProcessUtilities.executioner(command)
+                        command = 'yum copr enable -y copart/restic'
+                        ProcessUtilities.executioner(command)
+                        command = 'yum install -y restic'
+                        ProcessUtilities.executioner(command)
 
-                    url = 'https://api.github.com/repos/restic/restic/releases/latest'
-                    releases = json.loads(str(requests.get(url).text))
-                    version = releases['tag_name'].strip('v')
-                    download_url = f'https://github.com/restic/restic/releases/download/v{version}/restic_{version}_linux_amd64.bz2'
-                    ResticArchivePath = f'/root/restic_{version}_linux_amd64.bz2'
-                    ResticBinPath = '/usr/local/bin/restic'
-
-                    if distro == 'centos' and 'el7' in release:
-                        command = 'yum install restic -y'
-                        ProcessUtilities.executioner(command)
-                    elif distro == 'centos' and 'el8' in release:
-                        command = 'wget -O %s %s' % (ResticArchivePath, download_url)
-                        ProcessUtilities.executioner(command)
-                        command = 'bzip2 -dc %s > %s' % (ResticArchivePath, ResticBinPath)
-                        ProcessUtilities.executioner(command)
-                        command = 'chmod +x %s' % ResticBinPath
-                        ProcessUtilities.executioner(command)
                 else:
                     command = 'apt-get update -y'
                     ProcessUtilities.executioner(command)
@@ -898,7 +885,7 @@ Subject: %s
                 logging.statusWriter(self.statusPath,
                                      'It seems restic is not installed, for incremental backups to work '
                                      'restic must be installed. You can manually install restic using this '
-                                     'guide -> http://go.cyberpanel.net/restic. [5009]', 1)
+                                     'guide -> https://go.cyberpanel.net/restic. [5009]', 1)
                 pass
 
             return 0
