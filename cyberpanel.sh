@@ -17,7 +17,7 @@
 #Check_Root()  ---> check for root
 #Check_Server_IP()  ---> check for server IP and geolocation at country level
 #Check_OS() ---> check system , support on centos7/8 ubutnu18/20 and cloudlinux 7 , 8 is untested.
-#Check_Virualization()  ---> check for virtualizaon , #LXC not supported# , some edit needed on OVZ
+#Check_Virtualization()  ---> check for virtualizaon , #LXC not supported# , some edit needed on OVZ
 #Check_Panel() --->  check to make sure no other panel is installed
 #Check_Process() ---> check no other process like Apache is running
 #Check_Provider() ---> check the provider, certain provider like Alibaba or Tencent Yun may need some special change
@@ -266,7 +266,7 @@ fi
 
 }
 
-Check_Virualization() {
+Check_Virtualization() {
 echo -e "Checking virtualization type..."
 #if hostnamectl | grep -q "Virtualization: lxc"; then
 #  echo -e "\nLXC detected..."
@@ -1815,7 +1815,7 @@ Check_Server_IP "$@"
 
 Check_OS
 
-Check_Virualization
+Check_Virtualization
 
 Check_Panel
 
