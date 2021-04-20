@@ -5,8 +5,8 @@ from plogical.processUtilities import ProcessUtilities
 
 def main():
 
-    parser = argparse.ArgumentParser(description='CyberPanel Installer')
-    parser.add_argument('function', help='Specific a function to call!')
+    parser = argparse.ArgumentParser(description='CyberPanel IncScheduler')
+    parser.add_argument('function', help='Feed me your Backup jobs!')
     args = parser.parse_args()
 
     command = '/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/IncScheduler.py %s' % (args.function)

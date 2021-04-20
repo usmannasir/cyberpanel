@@ -318,7 +318,7 @@ class preFlightsChecks:
 
         if self.distro == ubuntu:
             try:
-                filename = "enable_lst_debain_repo.sh"
+                filename = "enable_lst_debian_repo.sh"
                 command = "wget http://rpms.litespeedtech.com/debian/" + filename
                 preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
@@ -602,8 +602,10 @@ class preFlightsChecks:
         command = 'chmod 644 /etc/postfix/dynamicmaps.cf'
         subprocess.call(command, shell=True)
 
-        fileM = ['/usr/local/lsws/FileManager/', '/usr/local/CyberCP/install/FileManager',
-                 '/usr/local/CyberCP/serverStatus/litespeed/FileManager', '/usr/local/lsws/Example/html/FileManager']
+        fileM = ['/usr/local/lsws/FileManager/',
+                 '/usr/local/CyberCP/install/FileManager',
+                 '/usr/local/CyberCP/serverStatus/litespeed/FileManager',
+                 '/usr/local/lsws/Example/html/FileManager']
 
         for items in fileM:
             try:
@@ -620,11 +622,14 @@ class preFlightsChecks:
         command = 'chmod +x /usr/local/CyberCP/CLManager/CLPackages.py'
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-        clScripts = ['/usr/local/CyberCP/CLScript/panel_info.py', '/usr/local/CyberCP/CLScript/CloudLinuxPackages.py',
+        clScripts = ['/usr/local/CyberCP/CLScript/panel_info.py',
+                     '/usr/local/CyberCP/CLScript/CloudLinuxPackages.py',
                      '/usr/local/CyberCP/CLScript/CloudLinuxUsers.py',
-                     '/usr/local/CyberCP/CLScript/CloudLinuxDomains.py'
-            , '/usr/local/CyberCP/CLScript/CloudLinuxResellers.py', '/usr/local/CyberCP/CLScript/CloudLinuxAdmins.py',
-                     '/usr/local/CyberCP/CLScript/CloudLinuxDB.py', '/usr/local/CyberCP/CLScript/UserInfo.py']
+                     '/usr/local/CyberCP/CLScript/CloudLinuxDomains.py',
+                     '/usr/local/CyberCP/CLScript/CloudLinuxResellers.py',
+                     '/usr/local/CyberCP/CLScript/CloudLinuxAdmins.py',
+                     '/usr/local/CyberCP/CLScript/CloudLinuxDB.py',
+                     '/usr/local/CyberCP/CLScript/UserInfo.py']
 
         for items in clScripts:
             command = 'chmod +x %s' % (items)
@@ -650,7 +655,7 @@ class preFlightsChecks:
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
         command = 'mkdir -p/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/'
-
+        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
         rainloopinipath = '/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/application.ini'
 
         ###
@@ -1070,7 +1075,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             shutil.copy("email-configs-one/master.cf", master)
             shutil.copy("email-configs-one/dovecot.conf", dovecot)
             shutil.copy("email-configs-one/dovecot-sql.conf.ext", dovecotmysql)
-            
+
             ########### Set custom settings
 
             # We are going to leverage postconfig -e to edit the settings for hostname
@@ -2032,12 +2037,12 @@ milter_default_action = accept
             CentOSPath = '/etc/redhat-release'
 
             if os.path.exists(CentOSPath):
-                    command = 'yum install -y yum-plugin-copr'
-                    preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-                    command = 'yum copr enable -y copart/restic'
-                    preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-                    command = 'yum install -y restic'
-                    preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                command = 'yum install -y yum-plugin-copr'
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                command = 'yum copr enable -y copart/restic'
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                command = 'yum install -y restic'
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             else:
                 command = 'apt-get update -y'

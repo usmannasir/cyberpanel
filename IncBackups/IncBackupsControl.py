@@ -4,7 +4,6 @@ import os.path
 import shlex
 import subprocess
 import sys
-import requests
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 
