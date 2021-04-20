@@ -5,7 +5,7 @@
 #set -u
 
 
-#CyberPanel installer script for CentOS 7.X, CentOS 8.X, CloudLinux 7.X, Ubuntu 18.04 and Ubuntu 20.04
+#CyberPanel installer script for CentOS 7.X, CentOS 8.X, CloudLinux 7.X, Ubuntu 18.04, Ubuntu 20.04 , Ubuntu 20.10 and AlmaLinux 8.X
 #For whoever may edit this script, please follow :
 #Please use Pre_Install_xxx() and Post_Install_xxx() if you want to something respectively before or after the panel installation
 #and update below accordingly
@@ -17,10 +17,10 @@
 #Check_Root()  ---> check for root
 #Check_Server_IP()  ---> check for server IP and geolocation at country level
 #Check_OS() ---> check system , support on centos7/8 ubutnu18/20 and cloudlinux 7 , 8 is untested.
-#Check_Virualization()  ---> check for virtualizaon , LXC not suppoed , some edit needed on OVZ
+#Check_Virtualization()  ---> check for virtualizaon , #LXC not supported# , some edit needed on OVZ
 #Check_Panel() --->  check to make sure no other panel is installed
-#Check_Process() ---> check no other process like apache is running
-#Check_Provider() ---> check the provider, certain provider like Alibaba or tencent yun may need some special change
+#Check_Process() ---> check no other process like Apache is running
+#Check_Provider() ---> check the provider, certain provider like Alibaba or Tencent Yun may need some special change
 #Check_Argument() ---> parse argument and go to Argument_Mode() or Interactive_Mode() respectively
 #Pre_Install_Setup_Repository() ---> setup/install repositories for centos system.
 #go to Pre_Install_Setup_CN_Repository() if server is within China.
@@ -255,7 +255,6 @@ Server_OS_Version=$(grep VERSION_ID /etc/os-release | awk -F[=,] '{print $2}' | 
 echo -e "System: $Server_OS $Server_OS_Version detected...\n"
 
 if [[ $Server_OS = "CloudLinux" ]] || [[ "$Server_OS" = "AlmaLinux" ]] ; then
-  Server_OS_Version=$(grep VERSION_ID /etc/os-release | awk -F[=,] '{print $2}' | tr -d \" | cut -c1-1)
   Server_OS="CentOS"
   #CloudLinux gives version id like 7.8 , 7.9 , so cut it to show first number only
   #treat CL and Alma as CentOS
@@ -267,15 +266,16 @@ fi
 
 }
 
-Check_Virualization() {
+Check_Virtualization() {
 echo -e "Checking virtualization type..."
-if hostnamectl | grep -q "Virtualization: lxc"; then
-  echo -e "\nLXC detected..."
-  echo -e "CyberPanel does not support LXC"
-  echo -e "Exiting..."
-  Debug_Log2 "CyberPanel does not support LXC.. [404]"
-  exit
-fi
+#if hostnamectl | grep -q "Virtualization: lxc"; then
+#  echo -e "\nLXC detected..."
+#  echo -e "CyberPanel does not support LXC"
+#  echo -e "Exiting..."
+#  Debug_Log2 "CyberPanel does not support LXC.. [404]"
+#  exit
+#fi
+#remove per https://github.com/usmannasir/cyberpanel/issues/589
 
 if hostnamectl | grep -q "Virtualization: openvz"; then
   echo -e "OpenVZ detected...\n"
@@ -816,6 +816,7 @@ if [[ $Server_OS = "CentOS" ]] ; then
 
 
   if [[ "$Server_OS_Version" = "8" ]]; then
+    rpm --import https://cyberpanel.sh/www.centos.org/keys/RPM-GPG-KEY-CentOS-Official
     rpm --import https://cyberpanel.sh/dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-8
     yum install -y https://cyberpanel.sh/dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
       Check_Return "yum repo" "no_exit"
@@ -965,7 +966,7 @@ if [[ "$Server_OS" = "CentOS" ]] ; then
 else
   apt update -y
   DEBIAN_FRONTEND=noninteractive apt upgrade -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
-  DEBIAN_FRONTEND=noninteracitve apt install -y dnsutils htop telnet libcurl4-gnutls-dev libgnutls28-dev libgcrypt20-dev libattr1 libattr1-dev liblzma-dev libgpgme-dev libmariadbclient-dev libcurl4-gnutls-dev libssl-dev nghttp2 libnghttp2-dev idn2 libidn2-dev libidn2-0-dev librtmp-dev libpsl-dev nettle-dev libgnutls28-dev libldap2-dev libgssapi-krb5-2 libk5crypto3 libkrb5-dev libcomerr2 libldap2-dev virtualenv git socat vim unzip zip
+  DEBIAN_FRONTEND=noninteracitve apt install -y dnsutils net-tools htop telnet libcurl4-gnutls-dev libgnutls28-dev libgcrypt20-dev libattr1 libattr1-dev liblzma-dev libgpgme-dev libmariadbclient-dev libcurl4-gnutls-dev libssl-dev nghttp2 libnghttp2-dev idn2 libidn2-dev libidn2-0-dev librtmp-dev libpsl-dev nettle-dev libgnutls28-dev libldap2-dev libgssapi-krb5-2 libk5crypto3 libkrb5-dev libcomerr2 libldap2-dev virtualenv git socat vim unzip zip
     Check_Return
 
   DEBIAN_FRONTEND=noninteractive apt install -y python3-pip
@@ -1814,7 +1815,7 @@ Check_Server_IP "$@"
 
 Check_OS
 
-Check_Virualization
+Check_Virtualization
 
 Check_Panel
 
