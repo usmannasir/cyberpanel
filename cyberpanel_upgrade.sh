@@ -117,25 +117,26 @@ if grep -q -E "CentOS Linux 7|CentOS Linux 8" /etc/os-release ; then
   Server_OS="CentOS"
 elif grep -q -E "CloudLinux 7|CloudLinux 8" /etc/os-release ; then
   Server_OS="CloudLinux"
-elif grep -q -E "Ubuntu 18.04|Ubuntu 20.04" /etc/os-release ; then
+elif grep -q "AlmaLinux-8" /etc/os-release ; then
+  Server_OS="AlmaLinux"
+elif grep -q -E "Ubuntu 18.04|Ubuntu 20.04|Ubuntu 20.10" /etc/os-release ; then
   Server_OS="Ubuntu"
 else
   echo -e "Unable to detect your system..."
-  echo -e "\nCyberPanel is supported on Ubuntu 18.04 x86_64, Ubuntu 20.04 x86_64, CentOS 7.x, CentOS 8.x and CloudLinux 7.x...\n"
-  Debug_Log2 "CyberPanel is supported on Ubuntu 18.04 x86_64, Ubuntu 20.04 x86_64, CentOS 7.x, CentOS 8.x and CloudLinux 7.x... [404]"
+  echo -e "\nCyberPanel is supported on Ubuntu 18.04 x86_64, Ubuntu 20.04 x86_64, Ubuntu 20.10 x86_64, CentOS 7.x, CentOS 8.x, CloudLinux 7.x and AlmaLinux 8.x...\n"
+  Debug_Log2 "CyberPanel is supported on Ubuntu 18.04 x86_64, Ubuntu 20.04 x86_64, Ubuntu 20.10 x86_64, CentOS 7.x, CentOS 8.x, AlmaLinux 8.x... [404]"
   exit
 fi
 
-Server_OS_Version=$(grep VERSION_ID /etc/os-release | awk -F[=,] '{print $2}' | tr -d \" | head -c2)
+Server_OS_Version=$(grep VERSION_ID /etc/os-release | awk -F[=,] '{print $2}' | tr -d \" | head -c2 | tr -d . )
 #to make 20.04 display as 20
 
 echo -e "System: $Server_OS $Server_OS_Version detected...\n"
 
-if [[ $Server_OS = "CloudLinux" ]] ; then
-  Server_OS_Version=$(grep VERSION_ID /etc/os-release | awk -F[=,] '{print $2}' | tr -d \" | cut -c1-1)
+if [[ $Server_OS = "CloudLinux" ]] || [[ "$Server_OS" = "AlmaLinux" ]] ; then
   Server_OS="CentOS"
   #CloudLinux gives version id like 7.8 , 7.9 , so cut it to show first number only
-  #then treat it as CentOS system.
+  #treat CL and Alma as CentOS
 fi
 
 if [[ "$Debug" = "On" ]] ; then
