@@ -1,12 +1,12 @@
-
-
 from django.db import models
 from websiteFunctions.models import Websites
 from datetime import datetime
 
+
 class IncJob(models.Model):
     website = models.ForeignKey(Websites, on_delete=models.CASCADE)
     date = models.DateTimeField(default=datetime.now, blank=True)
+
 
 class JobSnapshots(models.Model):
     job = models.ForeignKey(IncJob, on_delete=models.CASCADE)
@@ -21,10 +21,9 @@ class BackupJob(models.Model):
     websiteData = models.IntegerField()
     websiteDatabases = models.IntegerField()
     websiteDataEmails = models.IntegerField()
+    retention = models.IntegerField(default=0) # 0 being unlimited retention
 
 
 class JobSites(models.Model):
     job = models.ForeignKey(BackupJob, on_delete=models.CASCADE)
     website = models.CharField(max_length=300)
-
-

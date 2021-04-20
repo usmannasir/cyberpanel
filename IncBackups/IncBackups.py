@@ -219,9 +219,16 @@ class IncJobs(multi.Thread):
         try:
             logging.statusWriter(self.statusPath, 'Backing up data..', 1)
 
+            backupPath = '/home/%s' % (self.website.domain)
+            # Define our excludes file for use with restic
+            backupExcludesFile = '/home/%s/backup-exclude.conf' % (self.website.domain)
+            resticBackupExcludeCMD = ' --exclude-file=%s' % (backupExcludesFile)
+
             if self.backupDestinations == 'local':
-                backupPath = '/home/%s' % (self.website.domain)
                 command = 'restic -r %s backup %s --password-file %s --exclude %s' % (self.repoPath, backupPath, self.passwordFile, self.repoPath)
+                # If /home/%s/backup-exclude.conf file exists lets pass this to restic by appending the command to end.
+                if os.path.isfile(backupExcludesFile):
+                    command = command + resticBackupExcludeCMD
                 snapShotid = ProcessUtilities.outputExecutioner(command).split(' ')[-2]
 
                 newSnapshot = JobSnapshots(job=self.jobid, type='data:%s' % (backupPath), snapshotid=snapShotid, destination=self.backupDestinations)
@@ -230,8 +237,10 @@ class IncJobs(multi.Thread):
 
             elif self.backupDestinations[:4] == 'sftp':
                 remotePath = '/home/backup/%s' % (self.website.domain)
-                backupPath = '/home/%s' % (self.website.domain)
                 command = 'export PATH=${PATH}:/usr/bin && restic -r %s:%s backup %s --password-file %s --exclude %s' % (self.backupDestinations, remotePath, backupPath, self.passwordFile, self.repoPath)
+                # If /home/%s/backup-exclude.conf file exists lets pass this to restic by appending the command to end.
+                if os.path.isfile(backupExcludesFile):
+                    command = command + resticBackupExcludeCMD
                 snapShotid = ProcessUtilities.outputExecutioner(command).split(' ')[-2]
                 newSnapshot = JobSnapshots(job=self.jobid, type='data:%s' % (remotePath), snapshotid=snapShotid,
                                            destination=self.backupDestinations)
@@ -312,13 +321,23 @@ class IncJobs(multi.Thread):
         try:
             logging.statusWriter(self.statusPath, 'Will first initiate backup repo..', 1)
 
+            # Define our excludes file for use with restic
+            backupExcludesFile = '/home/%s/backup-exclude.conf' % (self.website.domain)
+            resticBackupExcludeCMD = ' --exclude-file=%s' % (backupExcludesFile)
+
             if self.backupDestinations == 'local':
                 command = 'restic init --repo %s --password-file %s' % (self.repoPath, self.passwordFile)
+                # If /home/%s/backup-exclude.conf file exists lets pass this to restic by appending the command to end.
+                if os.path.isfile(backupExcludesFile):
+                    command = command + resticBackupExcludeCMD
                 ProcessUtilities.executioner(command, self.website.externalApp)
 
             elif self.backupDestinations[:4] == 'sftp':
                 remotePath = '/home/backup/%s' % (self.website.domain)
                 command = 'export PATH=${PATH}:/usr/bin && restic init --repo %s:%s --password-file %s' % (self.backupDestinations, remotePath, self.passwordFile)
+                # If /home/%s/backup-exclude.conf file exists lets pass this to restic by appending the command to end.
+                if os.path.isfile(backupExcludesFile):
+                    command = command + resticBackupExcludeCMD
                 ProcessUtilities.executioner(command)
 
             logging.statusWriter(self.statusPath, 'Repo %s initiated for %s.' % (self.backupDestinations, self.website.domain), 1)

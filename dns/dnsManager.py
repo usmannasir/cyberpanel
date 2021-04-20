@@ -269,7 +269,7 @@ class DNSManager:
 
             if recordType == "A":
 
-                recordContentA = data['recordContentA']  ## IP or ponting value
+                recordContentA = data['recordContentA']  ## IP or pointing value
 
                 if recordName == "@":
                     value = zoneDomain
@@ -309,7 +309,7 @@ class DNSManager:
                 else:
                     value = recordName + "." + zoneDomain
 
-                recordContentAAAA = data['recordContentAAAA']  ## IP or ponting value
+                recordContentAAAA = data['recordContentAAAA']  ## IP or pointing value
 
                 DNS.createDNSRecord(zone, value, recordType, recordContentAAAA, 0, ttl)
 
@@ -324,7 +324,7 @@ class DNSManager:
                 else:
                     value = recordName + "." + zoneDomain
 
-                recordContentCNAME = data['recordContentCNAME']  ## IP or ponting value
+                recordContentCNAME = data['recordContentCNAME']  ## IP or pointing value
 
                 DNS.createDNSRecord(zone, value, recordType, recordContentCNAME, 0, ttl)
 
@@ -339,7 +339,7 @@ class DNSManager:
                 else:
                     value = recordName + "." + zoneDomain
 
-                recordContentSPF = data['recordContentSPF']  ## IP or ponting value
+                recordContentSPF = data['recordContentSPF']  ## IP or pointing value
 
                 DNS.createDNSRecord(zone, value, recordType, recordContentSPF, 0, ttl)
 
@@ -354,7 +354,7 @@ class DNSManager:
                 else:
                     value = recordName + "." + zoneDomain
 
-                recordContentTXT = data['recordContentTXT']  ## IP or ponting value
+                recordContentTXT = data['recordContentTXT']  ## IP or pointing value
 
                 DNS.createDNSRecord(zone, value, recordType, recordContentTXT, 0, ttl)
 
@@ -404,7 +404,7 @@ class DNSManager:
                     value = recordName
                 else:
                     value = recordName + "." + zoneDomain
-                recordContentCAA = data['recordContentCAA']  ## IP or ponting value
+                recordContentCAA = data['recordContentCAA']  ## IP or pointing value
                 DNS.createDNSRecord(zone, value, recordType, recordContentCAA, 0, ttl)
 
             final_dic = {'status': 1, 'add_status': 1, 'error_message': "None"}
@@ -849,7 +849,7 @@ class DNSManager:
 
                 if recordType == "A":
 
-                    recordContentA = data['recordContentA']  ## IP or ponting value
+                    recordContentA = data['recordContentA']  ## IP or pointing value
 
                     if recordName == "@":
                         value = zoneDomain
@@ -889,7 +889,7 @@ class DNSManager:
                     else:
                         value = recordName + "." + zoneDomain
 
-                    recordContentAAAA = data['recordContentAAAA']  ## IP or ponting value
+                    recordContentAAAA = data['recordContentAAAA']  ## IP or pointing value
 
                     DNS.createDNSRecordCloudFlare(cf, zone, value, recordType, recordContentAAAA, 0, ttl)
 
@@ -904,7 +904,7 @@ class DNSManager:
                     else:
                         value = recordName + "." + zoneDomain
 
-                    recordContentCNAME = data['recordContentCNAME']  ## IP or ponting value
+                    recordContentCNAME = data['recordContentCNAME']  ## IP or pointing value
 
                     DNS.createDNSRecordCloudFlare(cf, zone, value, recordType, recordContentCNAME, 0, ttl)
 
@@ -919,7 +919,7 @@ class DNSManager:
                     else:
                         value = recordName + "." + zoneDomain
 
-                    recordContentSPF = data['recordContentSPF']  ## IP or ponting value
+                    recordContentSPF = data['recordContentSPF']  ## IP or pointing value
 
                     DNS.createDNSRecordCloudFlare(cf, zone, value, recordType, recordContentSPF, 0, ttl)
 
@@ -934,7 +934,7 @@ class DNSManager:
                     else:
                         value = recordName + "." + zoneDomain
 
-                    recordContentTXT = data['recordContentTXT']  ## IP or ponting value
+                    recordContentTXT = data['recordContentTXT']  ## IP or pointing value
 
                     DNS.createDNSRecordCloudFlare(cf, zone, value, recordType, recordContentTXT, 0, ttl)
 
@@ -984,7 +984,7 @@ class DNSManager:
                         value = recordName
                     else:
                         value = recordName + "." + zoneDomain
-                    recordContentCAA = data['recordContentCAA']  ## IP or ponting value
+                    recordContentCAA = data['recordContentCAA']  ## IP or pointing value
                     DNS.createDNSRecordCloudFlare(cf, zone, value, recordType, recordContentCAA, 0, ttl)
 
                 final_dic = {'status': 1, 'add_status': 1, 'error_message': "None"}
