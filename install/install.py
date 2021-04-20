@@ -24,9 +24,9 @@ char_set = {'small': 'abcdefghijklmnopqrstuvwxyz',
 
 
 def generate_pass(length=14):
-  chars = string.ascii_uppercase + string.ascii_lowercase + string.digits
-  size = length
-  return ''.join(random.choice(chars) for x in range(size))
+    chars = string.ascii_uppercase + string.ascii_lowercase + string.digits
+    size = length
+    return ''.join(random.choice(chars) for x in range(size))
 
 
 # There can not be peace without first a great suffering.
@@ -55,6 +55,8 @@ def get_distro():
         data = open('/etc/redhat-release', 'r').read()
 
         if data.find('CentOS Linux release 8') > -1:
+            return cent8
+        if data.find('AlmaLinux release 8') > -1:
             return cent8
 
     else:
@@ -96,7 +98,8 @@ class preFlightsChecks:
     cyberPanelMirror = "mirror.cyberpanel.net/pip"
     cdn = 'cyberpanel.sh'
 
-    def __init__(self, rootPath, ip, path, cwd, cyberPanelPath, distro, remotemysql = None , mysqlhost = None, mysqldb = None, mysqluser = None, mysqlpassword = None, mysqlport = None):
+    def __init__(self, rootPath, ip, path, cwd, cyberPanelPath, distro, remotemysql=None, mysqlhost=None, mysqldb=None,
+                 mysqluser=None, mysqlpassword=None, mysqlport=None):
         self.ipAddr = ip
         self.path = path
         self.cwd = cwd
@@ -276,12 +279,11 @@ class preFlightsChecks:
             if self.distro == ubuntu:
                 self.stdOut("Add Cyberpanel user")
                 command = 'adduser --disabled-login --gecos "" cyberpanel'
-                preFlightsChecks.call(command, self.distro, command,command,1, 1, os.EX_OSERR)
+                preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
             else:
                 command = "useradd -s /bin/false cyberpanel"
-                preFlightsChecks.call(command, self.distro, command,command,1, 1, os.EX_OSERR)
-
+                preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
             ###############################
 
@@ -292,21 +294,21 @@ class preFlightsChecks:
             else:
                 command = "adduser docker"
 
-            preFlightsChecks.call(command, self.distro, command,command,1, 0, os.EX_OSERR)
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             command = 'groupadd docker'
-            preFlightsChecks.call(command, self.distro, command,command,1, 0, os.EX_OSERR)
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             command = 'usermod -aG docker docker'
-            preFlightsChecks.call(command, self.distro, command,command,1, 0, os.EX_OSERR)
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             command = 'usermod -aG docker cyberpanel'
-            preFlightsChecks.call(command, self.distro, command,command,1, 0, os.EX_OSERR)
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             ###
 
             command = "mkdir -p /etc/letsencrypt/live/"
-            preFlightsChecks.call(command, self.distro, command,command,1, 0, os.EX_OSERR)
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
         except BaseException as msg:
             logging.InstallLog.writeToFile("[ERROR] setup_account_cyberpanel. " + str(msg))
@@ -391,6 +393,24 @@ class preFlightsChecks:
 
         ### Put correct mysql passwords in settings file!
 
+        # This allows root/sudo users to be able to work with MySQL/MariaDB without hunting down the password like
+        # all the other control panels allow
+        # reference: https://oracle-base.com/articles/mysql/mysql-password-less-logins-using-option-files
+        mysql_my_root_cnf = '/root/.my.cnf'
+        mysql_root_cnf_content = """
+        [client]
+        user=root
+        password="%s"
+        """ % password
+
+        with open(mysql_my_root_cnf, 'w') as f:
+            f.write(mysql_root_cnf_content)
+        os.chmod(mysql_my_root_cnf, 0o600)
+        command = 'chown root:root %s' % mysql_my_root_cnf
+        subprocess.call(shlex.split(command))
+
+        logging.InstallLog.writeToFile("Updating /root/.my.cnf!")
+
         logging.InstallLog.writeToFile("Updating settings.py!")
 
         path = self.cyberPanelPath + "/CyberCP/settings.py"
@@ -451,7 +471,7 @@ class preFlightsChecks:
 
         logging.InstallLog.writeToFile("settings.py updated!")
 
-        #self.setupVirtualEnv(self.distro)
+        # self.setupVirtualEnv(self.distro)
 
         ### Applying migrations
 
@@ -645,7 +665,7 @@ class preFlightsChecks:
 
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
         except BaseException as msg:
-            logging.InstallLog.writeToFile('[ERROR] '+ str(msg) + " [install_unzip]")
+            logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [install_unzip]")
 
     def install_zip(self):
         self.stdOut("Install zip")
@@ -665,7 +685,8 @@ class preFlightsChecks:
             if not os.path.exists("/usr/local/CyberCP/public"):
                 os.mkdir("/usr/local/CyberCP/public")
 
-            command = 'wget -O /usr/local/CyberCP/public/phpmyadmin.zip https://%s/misc/phpmyadmin.zip' % (preFlightsChecks.cdn)
+            command = 'wget -O /usr/local/CyberCP/public/phpmyadmin.zip https://%s/misc/phpmyadmin.zip' % (
+                preFlightsChecks.cdn)
 
             preFlightsChecks.call(command, self.distro, '[download_install_phpmyadmin]',
                                   command, 1, 0, os.EX_OSERR)
@@ -680,7 +701,6 @@ class preFlightsChecks:
             command = 'rm -f /usr/local/CyberCP/public/phpmyadmin.zip'
             preFlightsChecks.call(command, self.distro, '[download_install_phpmyadmin]',
                                   command, 1, 0, os.EX_OSERR)
-
 
             ## Write secret phrase
 
@@ -725,15 +745,16 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                                   'chown -R lscpd:lscpd /usr/local/CyberCP/public/phpmyadmin', 1, 0, os.EX_OSERR)
 
             if self.remotemysql == 'ON':
-                command = "sed -i 's|'localhost'|'%s'|g' %s" % (self.mysqlhost, '/usr/local/CyberCP/public/phpmyadmin/config.inc.php')
+                command = "sed -i 's|'localhost'|'%s'|g' %s" % (
+                    self.mysqlhost, '/usr/local/CyberCP/public/phpmyadmin/config.inc.php')
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
 
             command = 'cp /usr/local/CyberCP/plogical/phpmyadminsignin.php /usr/local/CyberCP/public/phpmyadmin/phpmyadminsignin.php'
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             if self.remotemysql == 'ON':
-                command = "sed -i 's|localhost|%s|g' /usr/local/CyberCP/public/phpmyadmin/phpmyadminsignin.php" % (self.mysqlhost)
+                command = "sed -i 's|localhost|%s|g' /usr/local/CyberCP/public/phpmyadmin/phpmyadminsignin.php" % (
+                    self.mysqlhost)
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
 
@@ -743,7 +764,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
     ###################################################### Email setup
 
-    def install_postfix_davecot(self):
+    def install_postfix_dovecot(self):
         self.stdOut("Install dovecot - first remove postfix")
 
         try:
@@ -753,7 +774,6 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             elif self.distro == ubuntu:
                 command = 'apt-get -y remove postfix'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
 
             self.stdOut("Install dovecot - do the install")
 
@@ -829,7 +849,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             #         pass
 
         except BaseException as msg:
-            logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [install_postfix_davecot]")
+            logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [install_postfix_dovecot]")
             return 0
 
         return 1
@@ -845,14 +865,13 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             mysql_virtual_forwardings = "email-configs-one/mysql-virtual_forwardings.cf"
             mysql_virtual_mailboxes = "email-configs-one/mysql-virtual_mailboxes.cf"
             mysql_virtual_email2email = "email-configs-one/mysql-virtual_email2email.cf"
-            davecotmysql = "email-configs-one/dovecot-sql.conf.ext"
-
+            dovecotmysql = "email-configs-one/dovecot-sql.conf.ext"
 
             ### update password:
 
-            data = open(davecotmysql, "r").readlines()
+            data = open(dovecotmysql, "r").readlines()
 
-            writeDataToFile = open(davecotmysql, "w")
+            writeDataToFile = open(dovecotmysql, "w")
 
             if mysql == 'Two':
                 dataWritten = "connect = host=127.0.0.1 dbname=cyberpanel user=cyberpanel password=" + mysqlPassword + " port=3307\n"
@@ -864,7 +883,6 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                     writeDataToFile.writelines(dataWritten)
                 else:
                     writeDataToFile.writelines(items)
-
 
             writeDataToFile.close()
 
@@ -932,13 +950,11 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             writeDataToFile.close()
 
-
-
             if self.remotemysql == 'ON':
-                command = "sed -i 's|host=localhost|host=%s|g' %s" % (self.mysqlhost, davecotmysql)
+                command = "sed -i 's|host=localhost|host=%s|g' %s" % (self.mysqlhost, dovecotmysql)
                 preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
-                command = "sed -i 's|port=3306|port=%s|g' %s" % (self.mysqlport, davecotmysql)
+                command = "sed -i 's|port=3306|port=%s|g' %s" % (self.mysqlport, dovecotmysql)
                 preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
                 ##
@@ -947,7 +963,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                 preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
                 command = "sed -i 's|localhost|%s:%s|g' %s" % (
-                self.mysqlhost, self.mysqlport, mysql_virtual_forwardings)
+                    self.mysqlhost, self.mysqlport, mysql_virtual_forwardings)
                 preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
                 command = "sed -i 's|localhost|%s:%s|g' %s" % (
@@ -981,10 +997,11 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                 fd.write(line)
             fd.close()
         except IOError as err:
-            self.stdOut("[ERROR] Error converting: " + filename + " from centos defaults to ubuntu defaults: " + str(err), 1,
-                        1, os.EX_OSERR)
+            self.stdOut(
+                "[ERROR] Error converting: " + filename + " from centos defaults to ubuntu defaults: " + str(err), 1,
+                1, os.EX_OSERR)
 
-    def setup_postfix_davecot_config(self, mysql):
+    def setup_postfix_dovecot_config(self, mysql):
         try:
             logging.InstallLog.writeToFile("Configuring postfix and dovecot...")
 
@@ -996,8 +1013,8 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             mysql_virtual_email2email = "/etc/postfix/mysql-virtual_email2email.cf"
             main = "/etc/postfix/main.cf"
             master = "/etc/postfix/master.cf"
-            davecot = "/etc/dovecot/dovecot.conf"
-            davecotmysql = "/etc/dovecot/dovecot-sql.conf.ext"
+            dovecot = "/etc/dovecot/dovecot.conf"
+            dovecotmysql = "/etc/dovecot/dovecot-sql.conf.ext"
 
             if os.path.exists(mysql_virtual_domains):
                 os.remove(mysql_virtual_domains)
@@ -1017,11 +1034,11 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             if os.path.exists(master):
                 os.remove(master)
 
-            if os.path.exists(davecot):
-                os.remove(davecot)
+            if os.path.exists(dovecot):
+                os.remove(dovecot)
 
-            if os.path.exists(davecotmysql):
-                os.remove(davecotmysql)
+            if os.path.exists(dovecotmysql):
+                os.remove(dovecotmysql)
 
             ###############Getting SSL
 
@@ -1051,9 +1068,19 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                         "/etc/postfix/mysql-virtual_email2email.cf")
             shutil.copy("email-configs-one/main.cf", main)
             shutil.copy("email-configs-one/master.cf", master)
-            shutil.copy("email-configs-one/dovecot.conf", davecot)
-            shutil.copy("email-configs-one/dovecot-sql.conf.ext", davecotmysql)
+            shutil.copy("email-configs-one/dovecot.conf", dovecot)
+            shutil.copy("email-configs-one/dovecot-sql.conf.ext", dovecotmysql)
+            
+            ########### Set custom settings
 
+            # We are going to leverage postconfig -e to edit the settings for hostname
+            command = "postconf -e 'myhostname = %s'" % (str(socket.getfqdn()))
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+            # We are explicitly going to use sed to set the hostname default from "myhostname = server.example.com"
+            # to the fqdn from socket if the default is still found
+            command = "sed -i 's|server.example.com|%s|g' %s" % (str(socket.getfqdn()), main)
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             ######################################## Permissions
 
@@ -1149,7 +1176,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             command = 'chmod o= /etc/dovecot/dovecot-sql.conf.ext'
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-            ################################### Restart davecot
+            ################################### Restart dovecot
 
             command = 'systemctl enable dovecot.service'
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
@@ -1202,7 +1229,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             logging.InstallLog.writeToFile("Postfix and Dovecot configured")
         except BaseException as msg:
-            logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [setup_postfix_davecot_config]")
+            logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [setup_postfix_dovecot_config]")
             return 0
 
         return 1
@@ -1630,7 +1657,7 @@ imap_folder_list_limit = 0
             ##
 
             command = 'systemctl start lscpd'
-            #preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            # preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             preFlightsChecks.stdOut("LSCPD Daemon Set!")
 
@@ -1680,7 +1707,6 @@ imap_folder_list_limit = 0
 
             cronFile = open(cronPath, "w")
 
-
             content = """
 0 * * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/findBWUsage.py >/dev/null 2>&1
 0 * * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/postfixSenderPolicy/client.py hourlyCleanup >/dev/null 2>&1
@@ -1698,7 +1724,6 @@ imap_folder_list_limit = 0
             if not os.path.exists(CentOSPath):
                 command = 'chmod 600 %s' % (cronPath)
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
 
             if self.distro == centos or self.distro == cent8:
                 command = 'systemctl restart crond.service'
@@ -2007,25 +2032,11 @@ milter_default_action = accept
             CentOSPath = '/etc/redhat-release'
 
             if os.path.exists(CentOSPath):
-
-                if self.distro == centos:
-                    command = 'yum install restic -y'
+                    command = 'yum install -y yum-plugin-copr'
                     preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-                elif self.distro == cent8:
-
-                    command = 'cat /proc/cpuinfo'
-
-                    result = subprocess.check_output(shlex.split(command)).decode("utf-8")
-
-                    if result.find('ARM') > -1 or result.find('arm') > -1:
-                        command = 'wget -O /usr/bin/restic https://rep.cyberpanel.net/restic_0.9.6_linux_arm64'
-                        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-                    else:
-                        command = 'wget -O /usr/bin/restic https://rep.cyberpanel.net/restic_0.9.6_linux_amd64'
-                        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-                    command = 'chmod +x /usr/bin/restic'
+                    command = 'yum copr enable -y copart/restic'
+                    preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                    command = 'yum install -y restic'
                     preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             else:
@@ -2132,7 +2143,6 @@ vmail
 
     def disablePackegeUpdates(self):
         if self.distro == centos:
-
             mainConfFile = '/etc/yum.conf'
             content = 'exclude=MariaDB-client MariaDB-common MariaDB-devel MariaDB-server MariaDB-shared ' \
                       'pdns pdns-backend-mysql dovecot dovecot-mysql postfix3 postfix3-ldap postfix3-mysql ' \
@@ -2141,6 +2151,7 @@ vmail
             writeToFile = open(mainConfFile, 'a')
             writeToFile.write(content)
             writeToFile.close()
+
 
 def main():
     parser = argparse.ArgumentParser(description='CyberPanel Installer')
@@ -2205,7 +2216,8 @@ def main():
         mysqldb = args.mysqldb
 
         if preFlightsChecks.debug:
-            print('mysqlhost: %s, mysqldb: %s,  mysqluser: %s, mysqlpassword: %s, mysqlport: %s' % (mysqlhost, mysqldb, mysqluser, mysqlpassword, mysqlport))
+            print('mysqlhost: %s, mysqldb: %s,  mysqluser: %s, mysqlpassword: %s, mysqlport: %s' % (
+                mysqlhost, mysqldb, mysqluser, mysqlpassword, mysqlport))
             time.sleep(10)
 
     else:
@@ -2217,7 +2229,8 @@ def main():
         mysqldb = ''
 
     distro = get_distro()
-    checks = preFlightsChecks("/usr/local/lsws/", args.publicip, "/usr/local", cwd, "/usr/local/CyberCP", distro, remotemysql, mysqlhost, mysqldb, mysqluser, mysqlpassword, mysqlport)
+    checks = preFlightsChecks("/usr/local/lsws/", args.publicip, "/usr/local", cwd, "/usr/local/CyberCP", distro,
+                              remotemysql, mysqlhost, mysqldb, mysqluser, mysqlpassword, mysqlport)
     checks.mountTemp()
 
     if args.port == None:
@@ -2238,25 +2251,26 @@ def main():
 
     import installCyberPanel
 
-
     if ent == 0:
-        installCyberPanel.Main(cwd, mysql, distro, ent, None, port, args.ftp, args.powerdns, args.publicip, remotemysql, mysqlhost, mysqldb, mysqluser, mysqlpassword, mysqlport)
+        installCyberPanel.Main(cwd, mysql, distro, ent, None, port, args.ftp, args.powerdns, args.publicip, remotemysql,
+                               mysqlhost, mysqldb, mysqluser, mysqlpassword, mysqlport)
     else:
-        installCyberPanel.Main(cwd, mysql, distro, ent, serial, port, args.ftp, args.powerdns, args.publicip, remotemysql, mysqlhost, mysqldb, mysqluser, mysqlpassword, mysqlport)
+        installCyberPanel.Main(cwd, mysql, distro, ent, serial, port, args.ftp, args.powerdns, args.publicip,
+                               remotemysql, mysqlhost, mysqldb, mysqluser, mysqlpassword, mysqlport)
 
     checks.setupPHPAndComposer()
     checks.fix_selinux_issue()
     checks.install_psmisc()
 
     if args.postfix == None:
-        checks.install_postfix_davecot()
+        checks.install_postfix_dovecot()
         checks.setup_email_Passwords(installCyberPanel.InstallCyberPanel.mysqlPassword, mysql)
-        checks.setup_postfix_davecot_config(mysql)
+        checks.setup_postfix_dovecot_config(mysql)
     else:
         if args.postfix == 'ON':
-            checks.install_postfix_davecot()
+            checks.install_postfix_dovecot()
             checks.setup_email_Passwords(installCyberPanel.InstallCyberPanel.mysqlPassword, mysql)
-            checks.setup_postfix_davecot_config(mysql)
+            checks.setup_postfix_dovecot_config(mysql)
 
     checks.install_unzip()
     checks.install_zip()
@@ -2313,7 +2327,7 @@ def main():
         checks.enableDisableFTP('on', distro)
 
     checks.installCLScripts()
-    #checks.disablePackegeUpdates()
+    # checks.disablePackegeUpdates()
 
     try:
         # command = 'mkdir -p /usr/local/lscp/cyberpanel/rainloop/data/data/default/configs/'
@@ -2345,10 +2359,9 @@ echo $oConfig->Save() ? 'Done' : 'Error';
         writeToFile.write(content)
         writeToFile.close()
 
-
         command = '/usr/local/lsws/lsphp72/bin/php /usr/local/CyberCP/public/rainloop.php'
         subprocess.call(shlex.split(command))
-        
+
         command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
         subprocess.call(shlex.split(command))
     except:

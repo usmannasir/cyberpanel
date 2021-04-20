@@ -500,7 +500,7 @@ def restore_point(request):
 def schedule_backups(request):
     try:
         user_id, current_acl = _get_user_acl(request)
-        if ACLManager.currentContextPermission(current_acl, 'scheDuleBackups') == 0:
+        if ACLManager.currentContextPermission(current_acl, 'scheduleBackups') == 0:
             return ACLManager.loadError()
 
         websites = ACLManager.findAllSites(current_acl, user_id)
@@ -508,7 +508,7 @@ def schedule_backups(request):
         destinations = _get_destinations(local=True)
 
         return def_renderer(request, 'IncBackups/backupSchedule.html',
-                            {'websiteList': websites, 'destinations': destinations}, 'scheDuleBackups')
+                            {'websiteList': websites, 'destinations': destinations}, 'scheduleBackups')
     except BaseException as msg:
         logging.writeToFile(str(msg))
         return redirect(loadLoginPage)
@@ -517,13 +517,14 @@ def schedule_backups(request):
 def submit_backup_schedule(request):
     try:
         user_id, current_acl = _get_user_acl(request)
-        if ACLManager.currentContextPermission(current_acl, 'scheDuleBackups') == 0:
+        if ACLManager.currentContextPermission(current_acl, 'scheduleBackups') == 0:
             return ACLManager.loadErrorJson('scheduleStatus', 0)
 
         data = json.loads(request.body)
 
         backup_dest = data['backupDestinations']
         backup_freq = data['backupFreq']
+        backup_retention = data['backupRetention']
         backup_sites = data['websitesToBeBacked']
 
         backup_data = 1 if 'websiteData' in data else 0
@@ -531,7 +532,8 @@ def submit_backup_schedule(request):
         backup_databases = 1 if 'websiteDatabases' in data else 0
 
         backup_job = BackupJob(websiteData=backup_data, websiteDataEmails=backup_emails,
-                               websiteDatabases=backup_databases, destination=backup_dest, frequency=backup_freq)
+                               websiteDatabases=backup_databases, destination=backup_dest, frequency=backup_freq,
+                               retention=backup_retention)
         backup_job.save()
 
         for site in backup_sites:
@@ -548,7 +550,7 @@ def submit_backup_schedule(request):
 def get_current_backup_schedules(request):
     try:
         user_id, current_acl = _get_user_acl(request)
-        if ACLManager.currentContextPermission(current_acl, 'scheDuleBackups') == 0:
+        if ACLManager.currentContextPermission(current_acl, 'scheduleBackups') == 0:
             return ACLManager.loadErrorJson('fetchStatus', 0)
 
         records = BackupJob.objects.all()
@@ -558,6 +560,7 @@ def get_current_backup_schedules(request):
             json_data.append({'id': items.id,
                               'destination': items.destination,
                               'frequency': items.frequency,
+                              'retention': items.retention,
                               'numberOfSites': items.jobsites_set.all().count()
                               })
         final_json = json.dumps({'status': 1, 'error_message': "None", "data": json_data})
@@ -571,7 +574,7 @@ def get_current_backup_schedules(request):
 def fetch_sites(request):
     try:
         user_id, current_acl = _get_user_acl(request)
-        if ACLManager.currentContextPermission(current_acl, 'scheDuleBackups') == 0:
+        if ACLManager.currentContextPermission(current_acl, 'scheduleBackups') == 0:
             return ACLManager.loadErrorJson('fetchStatus', 0)
 
         data = json.loads(request.body)
@@ -596,7 +599,7 @@ def fetch_sites(request):
 def schedule_delete(request):
     try:
         user_id, current_acl = _get_user_acl(request)
-        if ACLManager.currentContextPermission(current_acl, 'scheDuleBackups') == 0:
+        if ACLManager.currentContextPermission(current_acl, 'scheduleBackups') == 0:
             return ACLManager.loadErrorJson('scheduleStatus', 0)
 
         data = json.loads(request.body)
@@ -633,7 +636,7 @@ def restore_remote_backups(request):
 def save_changes(request):
     try:
         user_id, current_acl = _get_user_acl(request)
-        if ACLManager.currentContextPermission(current_acl, 'scheDuleBackups') == 0:
+        if ACLManager.currentContextPermission(current_acl, 'scheduleBackups') == 0:
             return ACLManager.loadErrorJson('scheduleStatus', 0)
 
         data = json.loads(request.body)
@@ -661,7 +664,7 @@ def save_changes(request):
 def remove_site(request):
     try:
         _, current_acl = _get_user_acl(request)
-        if ACLManager.currentContextPermission(current_acl, 'scheDuleBackups') == 0:
+        if ACLManager.currentContextPermission(current_acl, 'scheduleBackups') == 0:
             return ACLManager.loadErrorJson('scheduleStatus', 0)
 
         data = json.loads(request.body)
@@ -682,7 +685,7 @@ def remove_site(request):
 def add_website(request):
     try:
         _, current_acl = _get_user_acl(request)
-        if ACLManager.currentContextPermission(current_acl, 'scheDuleBackups') == 0:
+        if ACLManager.currentContextPermission(current_acl, 'scheduleBackups') == 0:
             return ACLManager.loadErrorJson('scheduleStatus', 0)
 
         data = json.loads(request.body)

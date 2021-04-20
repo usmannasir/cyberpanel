@@ -599,6 +599,7 @@ app.controller('scheduleBackupInc', function ($scope, $http) {
         var data = {
             backupDestinations: $scope.backupDest,
             backupFreq: $scope.backupFreq,
+            backupRetention: $scope.backupRetention,
             websiteData: $scope.websiteData,
             websiteEmails: $scope.websiteEmails,
             websiteDatabases: $scope.websiteDatabases,

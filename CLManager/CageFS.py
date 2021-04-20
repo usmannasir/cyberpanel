@@ -243,10 +243,6 @@ def main():
     elif args["function"] == "submitinstallImunifyAV":
         CageFS.submitinstallImunifyAV()
 
-
-
-
-
 if __name__ == "__main__":
     main()
 

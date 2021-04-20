@@ -317,8 +317,8 @@ app.controller('adminController', function ($scope, $http, $timeout) {
                 $('.addDeleteDestinations').hide();
             }
 
-            if (!Boolean(response.data.scheDuleBackups)) {
-                $('.scheDuleBackups').hide();
+            if (!Boolean(response.data.scheduleBackups)) {
+                $('.scheduleBackups').hide();
             }
 
             if (!Boolean(response.data.remoteBackups)) {

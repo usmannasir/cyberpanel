@@ -83,18 +83,34 @@ class ClusterManager:
             ClusterConfigPath = '/home/cyberpanel/cluster'
             config = json.loads(open(ClusterConfigPath, 'r').read())
 
+
             if self.type == 'Child':
 
+                ### If Centos then update library path for galera
+
+                ClusterConfigFailover = config['ClusterConfigFailover']
+
+                if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                    ClusterConfigFailover = ClusterConfigFailover.replace('/usr/lib/galera/libgalera_smm.so', '/usr/lib64/galera-4/libgalera_smm.so')
+
                 writeToFile = open(ClusterPath, 'w')
-                writeToFile.write(config['ClusterConfigFailover'])
+                writeToFile.write(ClusterConfigFailover)
                 writeToFile.close()
 
                 writeToFile = open(cronPath, 'a')
                 writeToFile.write('*/5 * * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/ClusterManager.py --function CreatePendingVirtualHosts --type Child\n')
                 writeToFile.close()
             else:
+
+                ### If Centos then update library path for galera
+
+                ClusterConfigMaster = config['ClusterConfigMaster']
+
+                if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                    ClusterConfigMaster = ClusterConfigMaster.replace('/usr/lib/galera/libgalera_smm.so', '/usr/lib64/galera-4/libgalera_smm.so')
+
                 writeToFile = open(ClusterPath, 'w')
-                writeToFile.write(config['ClusterConfigMaster'])
+                writeToFile.write(ClusterConfigMaster)
                 writeToFile.close()
 
                 writeToFile = open(cronPath, 'a')
@@ -341,7 +357,7 @@ password=%s""" % (rootdbpassword, rootdbpassword)
             self.PostStatus('Data and SSL certificates currently synced.')
 
         except BaseException as msg:
-            self.PostStatus('Failed to create pending vhosts, error %s [404].' % (str(msg)))
+            self.PostStatus('Failed to sync data, error %s [404].' % (str(msg)))
 
     def PingNow(self):
         try:
@@ -407,6 +423,25 @@ password=%s""" % (rootdbpassword, rootdbpassword)
         except BaseException as msg:
             logging.writeToFile('%s. [31:404]' % (str(msg)))
 
+    def SyncToMaster(self):
+        try:
+
+            self.PostStatus('Syncing data from home directory to Main server..')
+
+            command = "rsync -avzp -e 'ssh -o StrictHostKeyChecking=no -p %s -i /root/.ssh/cyberpanel' /home root@%s:/" % (self.config['masterServerSSHPort'], self.config['masterServerIP'])
+            ProcessUtilities.normalExecutioner(command)
+
+            self.PostStatus('Syncing SSL certificates to Main server..')
+
+            command = "rsync -avzp -e 'ssh -o StrictHostKeyChecking=no -p %s -i /root/.ssh/cyberpanel' /etc/letsencrypt root@%s:/etc" % (
+            self.config['masterServerSSHPort'], self.config['masterServerIP'])
+            ProcessUtilities.normalExecutioner(command)
+
+            self.PostStatus('Data back to main.')
+
+        except BaseException as msg:
+            self.PostStatus('Failed to sync data, error %s [404].' % (str(msg)))
+
 
 def main():
     parser = argparse.ArgumentParser(description='CyberPanel Installer')
@@ -437,6 +472,8 @@ def main():
         uc.UptimeMonitor()
     elif args.function == 'Uptime':
         uc.Uptime()
+    elif args.function == 'SyncToMaster':
+        uc.SyncToMaster()
 
 
 if __name__ == "__main__":

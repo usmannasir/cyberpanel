@@ -882,7 +882,7 @@ class MailServerManager(multi.Thread):
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-    def install_postfix_davecot(self):
+    def install_postfix_dovecot(self):
         try:
             if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 command = 'yum remove postfix -y'
@@ -901,9 +901,9 @@ class MailServerManager(multi.Thread):
                 ProcessUtilities.executioner(command)
 
                 command = 'dnf install --enablerepo=gf-plus postfix3 postfix3-mysql -y'
+                ProcessUtilities.executioner(command)
             else:
-                import socket
-                command = 'apt-get -y debconf-utils'
+                command = 'apt-get install -y debconf-utils'
                 ProcessUtilities.executioner(command)
                 file_name = 'pf.unattend.text'
                 pf = open(file_name, 'w')
@@ -917,7 +917,20 @@ class MailServerManager(multi.Thread):
                 # os.remove(file_name)
 
             ProcessUtilities.executioner(command)
+            
+            import socket
+            # We are going to leverage postconfig -e to edit the settings for hostname
+            command = '"postconf -e "myhostname = %s"' % (str(socket.getfqdn()))
+            ProcessUtilities.executioner(command)
+            command = '"postconf -e "myhostname = %s"' % (str(socket.getfqdn()))
+            ProcessUtilities.executioner(command)
 
+            # We are explicitly going to use sed to set the hostname default from "myhostname = server.example.com"
+            # to the fqdn from socket if the default is still found
+            postfix_main = '/etc/postfix/main.cf'
+            command = "sed -i 's|server.example.com|%s|g' %s" % (str(socket.getfqdn()), postfix_main)
+            ProcessUtilities.executioner(command)
+            
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Re-installing Dovecot..,15')
 
             if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
@@ -975,7 +988,7 @@ class MailServerManager(multi.Thread):
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Postfix/dovecot reinstalled.,40')
 
         except BaseException as msg:
-            logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], '%s [install_postfix_davecot][404]' % (str(msg)), 10)
+            logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], '%s [install_postfix_dovecot][404]' % (str(msg)), 10)
             return 0
 
         return 1
@@ -988,13 +1001,13 @@ class MailServerManager(multi.Thread):
             mysql_virtual_forwardings = "/usr/local/CyberCP/install/email-configs-one/mysql-virtual_forwardings.cf"
             mysql_virtual_mailboxes = "/usr/local/CyberCP/install/email-configs-one/mysql-virtual_mailboxes.cf"
             mysql_virtual_email2email = "/usr/local/CyberCP/install/email-configs-one/mysql-virtual_email2email.cf"
-            davecotmysql = "/usr/local/CyberCP/install/email-configs-one/dovecot-sql.conf.ext"
+            dovecotmysql = "/usr/local/CyberCP/install/email-configs-one/dovecot-sql.conf.ext"
 
             ### update password:
 
-            data = open(davecotmysql, "r").readlines()
+            data = open(dovecotmysql, "r").readlines()
 
-            writeDataToFile = open(davecotmysql, "w")
+            writeDataToFile = open(dovecotmysql, "w")
 
             dataWritten = "connect = host=localhost dbname=cyberpanel user=cyberpanel password=" + mysqlPassword + " port=3306\n"
 
@@ -1086,10 +1099,10 @@ class MailServerManager(multi.Thread):
             writeDataToFile.close()
 
             if self.remotemysql == 'ON':
-                command = "sed -i 's|host=localhost|host=%s|g' %s" % (self.mysqlhost, davecotmysql)
+                command = "sed -i 's|host=localhost|host=%s|g' %s" % (self.mysqlhost, dovecotmysql)
                 ProcessUtilities.executioner(command)
 
-                command = "sed -i 's|port=3306|port=%s|g' %s" % (self.mysqlport, davecotmysql)
+                command = "sed -i 's|port=3306|port=%s|g' %s" % (self.mysqlport, dovecotmysql)
                 ProcessUtilities.executioner(command)
 
                 ##
@@ -1133,7 +1146,7 @@ class MailServerManager(multi.Thread):
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
                                                       '%s [centos_lib_dir_to_ubuntu][404]' % (str(msg)), 10)
 
-    def setup_postfix_davecot_config(self):
+    def setup_postfix_dovecot_config(self):
         try:
 
             mysql_virtual_domains = "/etc/postfix/mysql-virtual_domains.cf"
@@ -1142,8 +1155,8 @@ class MailServerManager(multi.Thread):
             mysql_virtual_email2email = "/etc/postfix/mysql-virtual_email2email.cf"
             main = "/etc/postfix/main.cf"
             master = "/etc/postfix/master.cf"
-            davecot = "/etc/dovecot/dovecot.conf"
-            davecotmysql = "/etc/dovecot/dovecot-sql.conf.ext"
+            dovecot = "/etc/dovecot/dovecot.conf"
+            dovecotmysql = "/etc/dovecot/dovecot-sql.conf.ext"
 
             if os.path.exists(mysql_virtual_domains):
                 os.remove(mysql_virtual_domains)
@@ -1163,11 +1176,11 @@ class MailServerManager(multi.Thread):
             if os.path.exists(master):
                 os.remove(master)
 
-            if os.path.exists(davecot):
-                os.remove(davecot)
+            if os.path.exists(dovecot):
+                os.remove(dovecot)
 
-            if os.path.exists(davecotmysql):
-                os.remove(davecotmysql)
+            if os.path.exists(dovecotmysql):
+                os.remove(dovecotmysql)
 
             ###############Getting SSL
 
@@ -1197,8 +1210,8 @@ class MailServerManager(multi.Thread):
                         "/etc/postfix/mysql-virtual_email2email.cf")
             shutil.copy("/usr/local/CyberCP/install/email-configs-one/main.cf", main)
             shutil.copy("/usr/local/CyberCP/install/email-configs-one/master.cf", master)
-            shutil.copy("/usr/local/CyberCP/install/email-configs-one/dovecot.conf", davecot)
-            shutil.copy("/usr/local/CyberCP/install/email-configs-one/dovecot-sql.conf.ext", davecotmysql)
+            shutil.copy("/usr/local/CyberCP/install/email-configs-one/dovecot.conf", dovecot)
+            shutil.copy("/usr/local/CyberCP/install/email-configs-one/dovecot-sql.conf.ext", dovecotmysql)
 
 
             ######################################## Permissions
@@ -1294,7 +1307,7 @@ class MailServerManager(multi.Thread):
             command = 'chmod o= /etc/dovecot/dovecot-sql.conf.ext'
             ProcessUtilities.executioner(command)
 
-            ################################### Restart davecot
+            ################################### Restart dovecot
 
             command = 'systemctl enable dovecot.service'
             ProcessUtilities.executioner(command)
@@ -1309,7 +1322,7 @@ class MailServerManager(multi.Thread):
             command = 'systemctl restart  postfix.service'
             ProcessUtilities.executioner(command)
 
-            ## chaging permissions for main.cf
+            ## changing permissions for main.cf
 
             command = "chmod 755 " + main
             ProcessUtilities.executioner(command)
@@ -1346,7 +1359,7 @@ class MailServerManager(multi.Thread):
                 ProcessUtilities.executioner(command)
         except BaseException as msg:
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
-                                                      '%s [setup_postfix_davecot_config][404]' % (
+                                                      '%s [setup_postfix_dovecot_config][404]' % (
                                                           str(msg)), 10)
             return 0
 
@@ -1597,7 +1610,7 @@ milter_default_action = accept
 
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Removing and re-installing postfix/dovecot..,5')
 
-            if self.install_postfix_davecot() == 0:
+            if self.install_postfix_dovecot() == 0:
                 return 0
 
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Resetting configurations..,40')
@@ -1612,8 +1625,8 @@ milter_default_action = accept
 
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Configurations reset..,70')
 
-            if self.setup_postfix_davecot_config() == 0:
-                logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'setup_postfix_davecot_config failed. [404].')
+            if self.setup_postfix_dovecot_config() == 0:
+                logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'setup_postfix_dovecot_config failed. [404].')
                 return 0
 
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Restoreing OpenDKIM configurations..,70')

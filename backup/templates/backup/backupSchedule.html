@@ -12,7 +12,7 @@
     <div ng-controller="scheduleBackup" class="container">
         <div id="page-title">
             <h2>{% trans "Schedule Back up" %} - <a target="_blank"
-                                                    href="http://go.cyberpanel.net/remote-backup"
+                                                    href="https://go.cyberpanel.net/remote-backup"
                                                     style="height: 23px;line-height: 21px; text-decoration: underline"
                                                     class="btn btn-border btn-alt border-red btn-link font-red"
                                                     title=""><span>{% trans "Remote Backups" %}</span></a>
@@ -24,7 +24,7 @@
             <div class="panel-body">
                 <h3 class="title-hero">
                     {% trans "Create New Backup Schedule" %} <img ng-hide="cyberPanelLoading"
-                                                                  src="{% static 'images/loading.gif' %}">
+                                                                  src="{% static 'images/loading.gif' %}" alt="cyberPanelLoading">
                 </h3>
                 <div class="example-box-wrapper">
 
@@ -62,6 +62,16 @@
                         </div>
 
                         <div class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Select Backup Retention. Leave 0 for no limit" %}</label>
+                            <div class="col-sm-9">
+                                <div class="number">
+                                    <label>
+                                        <input ng-model="backupRetention" type="number" value="0">
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
                             <label class="col-sm-3 control-label"></label>
                             <div class="col-sm-4">
                                 <button type="button" ng-click="addSchedule()"
@@ -81,7 +91,7 @@
             <div class="panel-body">
                 <h3 class="title-hero">
                     {% trans "Manage Existing Back up Schedules" %} <img ng-hide="cyberPanelLoading"
-                                                                         src="{% static 'images/loading.gif' %}">
+                                                                         src="{% static 'images/loading.gif' %}" alt="cyberPanelLoading">
                 </h3>
                 <div class="example-box-wrapper">
 
@@ -133,6 +143,7 @@
                                         <th>Last Run</th>
                                         <th>All Sites</th>
                                         <th>Frequency ({$ currently $})</th>
+                                        <th>Retention ({$ currently $})</th>
                                         <th>Current Status</th>
                                     </tr>
                                     </thead>
