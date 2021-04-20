@@ -104,7 +104,10 @@ class cPanelImporter:
             self.PHPVersion = 'PHP 8.0'
             
         if self.PHPVersion == '':
-            self.PHPVersion = self.InheritPHP
+            if self.InheritPHP != '':
+                self.PHPVersion = self.InheritPHP
+            else:
+                self.PHPVersion = 'PHP 7.4'
 
         return self.PHPVersion
 
