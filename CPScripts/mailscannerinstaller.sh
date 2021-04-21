@@ -33,6 +33,17 @@ if [ -d $MAILSCANNER ]; then
   exit
 fi
 
+### Check SpamAssasin before moving forward
+
+DIR=/etc/mail/spamassassin
+
+if [ -d "$DIR" ]; then
+  sa-update
+else
+  echo "Please install spamassassin through the CyberPanel interface before proceeding"
+  exit
+fi
+
 if [ -f /etc/os-release ]; then
   OS=$(head -1 /etc/os-release)
   UBUNTUVERSION=$(sed '6q;d' /etc/os-release)
@@ -56,14 +67,6 @@ if [ "$CENTOSVERSION" = "VERSION_ID=\"7\"" ]; then
   perl -MCPAN -e 'install Net::Patricia'
 
   freshclam -v
-  DIR=/etc/mail/spamassassin
-
-  if [ -d "$DIR" ]; then
-    sa-update
-  else
-    echo "Please install spamassassin through the CyberPanel interface before proceeding"
-    exit
-  fi
 
 elif [ "$CENTOSVERSION" = "VERSION_ID=\"8\"" ]; then
 
@@ -87,15 +90,6 @@ elif [ "$CENTOSVERSION" = "VERSION_ID=\"8\"" ]; then
 
   freshclam -v
 
-  DIR=/etc/mail/spamassassin
-
-  if [ -d "$DIR" ]; then
-    sa-update
-  else
-    echo "Please install spamassassin through the CyberPanel interface before proceeding"
-    exit
-  fi
-
 elif [ "$CLNVERSION" = "ID=\"cloudlinux\"" ]; then
 
   setenforce 0
@@ -112,17 +106,6 @@ elif [ "$CLNVERSION" = "ID=\"cloudlinux\"" ]; then
   perl -MCPAN -e 'install Net::Patricia'
 
   freshclam -v
-  DIR=/etc/mail/spamassassin
-
-  if [ -d "$DIR" ]; then
-    sa-update
-
-  else
-
-    echo "Please install spamassassin through the CyberPanel interface before proceeding"
-
-    exit
-  fi
 
 elif [ "$OS" = "NAME=\"Ubuntu\"" ]; then
 
@@ -142,16 +125,6 @@ elif [ "$OS" = "NAME=\"Ubuntu\"" ]; then
   freshclam
 
   sudo systemctl start clamav-freshclam.service
-
-  DIR=/etc/spamassassin
-  if [ -d "$DIR" ]; then
-
-    apt-get -y install razor pyzor libencode-detect-perl libgeo-ip-perl libnet-patricia-perl
-    sa-update
-  else
-    echo "Please install spamassassin through the CyberPanel interface before proceeding"
-    exit
-  fi
 
 fi
 
