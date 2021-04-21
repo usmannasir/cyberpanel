@@ -343,6 +343,7 @@ password=%s""" % (rootdbpassword, rootdbpassword)
 
     def SyncNow(self):
         try:
+
             self.PostStatus('Syncing data from home directory to fail over server..')
 
             command = "rsync -avzp -e 'ssh -o StrictHostKeyChecking=no -p %s -i /root/.ssh/cyberpanel' /home root@%s:/" % (self.config['failoverServerSSHPort'], self.config['failoverServerIP'])
