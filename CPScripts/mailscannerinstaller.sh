@@ -197,6 +197,13 @@ PASSWORD=$(cat /etc/cyberpanel/mysqlPassword)
 USER=root
 DATABASE=mailscanner
 ADMINPASS=$(cat /etc/cyberpanel/adminPass)
+
+### Fix a bug in MailWatch SQL File
+
+sed -i 's/char(512)/char(255)/g' /usr/local/CyberCP/public/mailwatch/create.sql
+
+##
+
 mysql -u${USER} -p${PASSWORD} <"/usr/local/CyberCP/public/mailwatch/create.sql"
 mysql -u${USER} -p${PASSWORD} -e "use mailscanner"
 mysql -u${USER} -D${DATABASE} -p${PASSWORD} -e "GRANT ALL ON mailscanner.* TO root@localhost IDENTIFIED BY '${PASSWORD}';"
