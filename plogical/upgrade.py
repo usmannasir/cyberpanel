@@ -492,7 +492,7 @@ imap_folder_list_limit = 0
             os.chdir(cwd)
 
         except BaseException as msg:
-            Upgrade.stdOut(str(msg) + " [downoad_and_install_raindloop]", 0)
+            Upgrade.stdOut(str(msg) + " [download_and_install_rainloop]", 0)
 
         return 1
 

@@ -13,6 +13,8 @@ import socket
 from os.path import *
 from stat import *
 import stat
+from pathlib import Path
+from plogical import filesPermsUtilities
 
 VERSION = '2.1'
 BUILD = 1
@@ -812,46 +814,39 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             ##
 
             if self.distro == centos:
-                command = 'yum --enablerepo=gf-plus -y install dovecot23 dovecot23-mysql'
+                command = 'yum --enablerepo=gf-plus -y install dovecot23 dovecot23-mysql net-tools dovecot-pigeonhole postfix-perl-scripts'
             elif self.distro == cent8:
-                command = 'dnf install --enablerepo=gf-plus dovecot23 dovecot23-mysql -y'
+                command = 'dnf install --enablerepo=gf-plus -y dovecot23* dovecot23-pigeonhole dovecot23-mysql net-tools postfix-perl-scripts'
             else:
-                command = 'apt-get -y install dovecot-mysql dovecot-imapd dovecot-pop3d'
+                command = 'apt-get -y install dovecot-mysql dovecot-imapd dovecot-pop3d dovecot-managesieved dovecot-sieve dovecot-lmtpd net-tools pflogsumm'
 
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
-            # if self.distro != centos:
-            #     command = 'curl https://repo.dovecot.org/DOVECOT-REPO-GPG | gpg --import'
-            #     subprocess.call(command, shell=True)
-            #
-            #     command = 'gpg --export ED409DA1 > /etc/apt/trusted.gpg.d/dovecot.gpg'
-            #     subprocess.call(command, shell=True)
-            #
-            #     debPath = '/etc/apt/sources.list.d/dovecot.list'
-            #     writeToFile = open(debPath, 'w')
-            #     writeToFile.write('deb https://repo.dovecot.org/ce-2.3-latest/ubuntu/bionic bionic main\n')
-            #     writeToFile.close()
-            #
-            #     try:
-            #         command = 'apt update -y'
-            #         subprocess.call(command, shell=True)
-            #     except:
-            #         pass
-            #
-            #     try:
-            #         command = 'DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical sudo apt-get -q -y -o "Dpkg::Options::=--force-confdef" -o "Dpkg::Options::=--force-confold" --only-upgrade install dovecot-mysql -y'
-            #         subprocess.call(command, shell=True)
-            #
-            #         command = 'dpkg --configure -a'
-            #         subprocess.call(command, shell=True)
-            #
-            #         command = 'apt --fix-broken install -y'
-            #         subprocess.call(command, shell=True)
-            #
-            #         command = 'DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical sudo apt-get -q -y -o "Dpkg::Options::=--force-confdef" -o "Dpkg::Options::=--force-confold" --only-upgrade install dovecot-mysql -y'
-            #         subprocess.call(command, shell=True)
-            #     except:
-            #         pass
+            # Create Sieve files and paths
+            os.makedirs("/etc/dovecot/sieve/global", exist_ok=True)
+
+            sievefiles = [
+                '/var/log/dovecot-lda.log'
+                '/var/log/dovecot-lda-errors.log',
+                '/var/log/dovecot-sieve.log',
+                '/var/log/dovecot-sieve-errors.log',
+                '/var/log/dovecot-lmtp.log',
+                '/var/log/dovecot-lmtp-errors.log',
+            ]
+
+            sieve_default = """require "fileinto";
+if header :contains "X-Spam-Flag" "YES" {
+  fileinto "INBOX.Junk E-mail";
+}"""
+
+            with open('/etc/dovecot/sieve/default.sieve', 'w') as f:
+                f.write(sieve_default)
+
+            for file in sievefiles:
+                Path(file).touch(mode=0o666, exist_ok=True)
+                shutil.chown(file, 'vmail', 'mail')
+
+            filesPermsUtilities.recursive_chown('/etc/dovecot/sieve', 'vmail')
 
         except BaseException as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [install_postfix_dovecot]")
@@ -1021,31 +1016,23 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             dovecot = "/etc/dovecot/dovecot.conf"
             dovecotmysql = "/etc/dovecot/dovecot-sql.conf.ext"
 
-            if os.path.exists(mysql_virtual_domains):
-                os.remove(mysql_virtual_domains)
+            email_configs = [
+                mysql_virtual_domains,
+                mysql_virtual_forwardings,
+                mysql_virtual_mailboxes,
+                mysql_virtual_email2email,
+                main,
+                master,
+                dovecot,
+                dovecotmysql,
+            ]
 
-            if os.path.exists(mysql_virtual_forwardings):
-                os.remove(mysql_virtual_forwardings)
+            # Remove stock configs so we can replace with our copy later
+            for config in email_configs:
+                if os.path.exists(config):
+                    os.remove(config)
 
-            if os.path.exists(mysql_virtual_mailboxes):
-                os.remove(mysql_virtual_mailboxes)
-
-            if os.path.exists(mysql_virtual_email2email):
-                os.remove(mysql_virtual_email2email)
-
-            if os.path.exists(main):
-                os.remove(main)
-
-            if os.path.exists(master):
-                os.remove(master)
-
-            if os.path.exists(dovecot):
-                os.remove(dovecot)
-
-            if os.path.exists(dovecotmysql):
-                os.remove(dovecotmysql)
-
-            ###############Getting SSL
+            ############### Getting SSL
 
             command = 'openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout /etc/postfix/key.pem -out /etc/postfix/cert.pem'
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
@@ -1059,93 +1046,60 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             if self.distro == ubuntu:
                 preFlightsChecks.stdOut("Cleanup postfix/dovecot config files", 1)
 
-                self.centos_lib_dir_to_ubuntu("email-configs-one/master.cf", "/usr/libexec/", "/usr/lib/")
-                self.centos_lib_dir_to_ubuntu("email-configs-one/main.cf", "/usr/libexec/postfix",
+                self.centos_lib_dir_to_ubuntu("email-configs-one/postfix/master.cf", "/usr/libexec/", "/usr/lib/")
+                self.centos_lib_dir_to_ubuntu("email-configs-one/postfix/main.cf", "/usr/libexec/postfix",
                                               "/usr/lib/postfix/sbin")
 
             ########### Copy config files
 
-            shutil.copy("email-configs-one/mysql-virtual_domains.cf", "/etc/postfix/mysql-virtual_domains.cf")
-            shutil.copy("email-configs-one/mysql-virtual_forwardings.cf",
-                        "/etc/postfix/mysql-virtual_forwardings.cf")
-            shutil.copy("email-configs-one/mysql-virtual_mailboxes.cf", "/etc/postfix/mysql-virtual_mailboxes.cf")
-            shutil.copy("email-configs-one/mysql-virtual_email2email.cf",
-                        "/etc/postfix/mysql-virtual_email2email.cf")
-            shutil.copy("email-configs-one/main.cf", main)
-            shutil.copy("email-configs-one/master.cf", master)
-            shutil.copy("email-configs-one/dovecot.conf", dovecot)
-            shutil.copy("email-configs-one/dovecot-sql.conf.ext", dovecotmysql)
+            shutil.copy("email-configs-one/postfix/mysql-virtual_domains.cf", mysql_virtual_domains)
+            shutil.copy("email-configs-one/postfix/mysql-virtual_forwardings.cf", mysql_virtual_forwardings)
+            shutil.copy("email-configs-one/postfix/mysql-virtual_mailboxes.cf", mysql_virtual_mailboxes)
+            shutil.copy("email-configs-one/postfix/mysql-virtual_email2email.cf", mysql_virtual_email2email)
+            shutil.copy("email-configs-one/postfix/main.cf", main)
+            shutil.copy("email-configs-one/postfix/master.cf", master)
+            shutil.copy("email-configs-one/dovecot/dovecot.conf", dovecot)
+            shutil.copy("email-configs-one/dovecot/dovecot-sql.conf.ext", dovecotmysql)
 
             ########### Set custom settings
+            hostname = str(socket.getfqdn())
 
             # We are going to leverage postconfig -e to edit the settings for hostname
-            command = "postconf -e 'myhostname = %s'" % (str(socket.getfqdn()))
+            command = "postconf -e 'myhostname = %s'" % (hostname)
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             # We are explicitly going to use sed to set the hostname default from "myhostname = server.example.com"
             # to the fqdn from socket if the default is still found
-            command = "sed -i 's|server.example.com|%s|g' %s" % (str(socket.getfqdn()), main)
+            command = "sed -i 's|server.example.com|%s|g' %s" % (hostname, main)
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-            ######################################## Permissions
-
-            command = 'chmod o= /etc/postfix/mysql-virtual_domains.cf'
+            # dovecot conf replace postmaster email/hostname
+            command = "sed -i 's|server.example.com|%s|g' %s" % (hostname, dovecot)
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-            ##
+            ######################################## Postfix Permissions/Ownership
 
-            command = 'chmod o= /etc/postfix/mysql-virtual_forwardings.cf'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            postfix_configs = [
+                mysql_virtual_domains,
+                mysql_virtual_domains,
+                mysql_virtual_forwardings,
+                mysql_virtual_mailboxes,
+                mysql_virtual_email2email,
+                main,
+                master,
+            ]
 
-            ##
+            for conf in postfix_configs:
+                # Setting chmod o= aka 640
+                os.chmod(conf, 0o640)
+                # We want to leave user untouched hence -1 and group to postfix
+                shutil.chown(conf, -1, 'postfix')
 
-            command = 'chmod o= /etc/postfix/mysql-virtual_mailboxes.cf'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            ######################################## Dovecot Permissions
 
-            ##
-
-            command = 'chmod o= /etc/postfix/mysql-virtual_email2email.cf'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            ##
-
-            command = 'chmod o= ' + main
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            ##
-
-            command = 'chmod o= ' + master
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            #######################################
-
-            command = 'chgrp postfix /etc/postfix/mysql-virtual_domains.cf'
-
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            ##
-
-            command = 'chgrp postfix /etc/postfix/mysql-virtual_forwardings.cf'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-            ##
-
-            command = 'chgrp postfix /etc/postfix/mysql-virtual_mailboxes.cf'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            ##
-
-            command = 'chgrp postfix /etc/postfix/mysql-virtual_email2email.cf'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            ##
-
-            command = 'chgrp postfix ' + main
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            ##
-
-            command = 'chgrp postfix ' + master
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            # chgrp dovecot and set chmod o= /etc/dovecot/dovecot-sql.conf.ext
+            os.chmod(dovecotmysql, 0o640)
+            shutil.chown(dovecotmysql, -1, 'dovecot')
 
             ######################################## users and groups
 
@@ -1159,9 +1113,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             ######################################## Further configurations
 
-            # hostname = socket.gethostname()
-
-            ################################### Restart postix
+            ################################### Restart postfix
 
             command = 'systemctl enable postfix.service'
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
@@ -1169,16 +1121,6 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             ##
 
             command = 'systemctl start postfix.service'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            ######################################## Permissions
-
-            command = 'chgrp dovecot /etc/dovecot/dovecot-sql.conf.ext'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            ##
-
-            command = 'chmod o= /etc/dovecot/dovecot-sql.conf.ext'
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             ################################### Restart dovecot
@@ -1196,20 +1138,16 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             command = 'systemctl restart  postfix.service'
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-            ## chaging permissions for main.cf
-
-            command = "chmod 755 " + main
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
+            # For Ubuntu create paths for keys gracefully that may not exist
             if self.distro == ubuntu:
-                command = "mkdir -p /etc/pki/dovecot/private/"
-                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                email_dirs = [
+                    '/etc/pki/dovecot/private/',
+                    '/etc/pki/dovecot/certs/',
+                    '/etc/opendkim/keys/',
+                ]
 
-                command = "mkdir -p /etc/pki/dovecot/certs/"
-                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-                command = "mkdir -p /etc/opendkim/keys/"
-                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                for dir in email_dirs:
+                    os.makedirs(dir, exist_ok=True)
 
                 command = "sed -i 's/auth_mechanisms = plain/#auth_mechanisms = plain/g' /etc/dovecot/conf.d/10-auth.conf"
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
@@ -1217,10 +1155,9 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                 ## Ubuntu 18.10 ssl_dh for dovecot 2.3.2.1
 
                 if get_Ubuntu_release() == 18.10:
-                    dovecotConf = '/etc/dovecot/dovecot.conf'
 
-                    data = open(dovecotConf, 'r').readlines()
-                    writeToFile = open(dovecotConf, 'w')
+                    data = open(dovecot, 'r').readlines()
+                    writeToFile = open(dovecot, 'w')
                     for items in data:
                         if items.find('ssl_key = <key.pem') > -1:
                             writeToFile.writelines(items)
@@ -1239,7 +1176,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
         return 1
 
-    def downoad_and_install_raindloop(self):
+    def download_and_install_rainloop(self):
         try:
             #######
 
@@ -1263,25 +1200,19 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             #######
 
+            rainloop_dir = '/usr/local/CyberCP/public/rainloop'
+
             os.chdir("/usr/local/CyberCP/public/rainloop")
 
-            command = 'find . -type d -exec chmod 755 {} \;'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            #############
-
-            command = 'find . -type f -exec chmod 644 {} \;'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            filesPermsUtilities.recursive_permissions(rainloop_dir, 0o755, 0o644)
 
             ######
 
-            command = "mkdir -p /usr/local/lscp/cyberpanel/rainloop/data"
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            os.makedirs('/usr/local/lscp/cyberpanel/rainloop/data', exist_ok=True)
 
             ### Enable sub-folders
 
-            command = "mkdir -p /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/"
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            os.makedirs('/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/', exist_ok=True)
 
             labsPath = '/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/application.ini'
 
@@ -1310,7 +1241,7 @@ imap_folder_list_limit = 0
             writeToFile.close()
 
         except BaseException as msg:
-            logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [downoad_and_install_rainloop]")
+            logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [download_and_install_rainloop]")
             return 0
 
         return 1
@@ -2285,7 +2216,7 @@ def main():
     checks.install_default_keys()
 
     checks.download_install_CyberPanel(installCyberPanel.InstallCyberPanel.mysqlPassword, mysql)
-    checks.downoad_and_install_raindloop()
+    checks.download_and_install_rainloop()
     checks.download_install_phpmyadmin()
     checks.setupCLI()
     checks.setup_cron()

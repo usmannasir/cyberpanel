@@ -1,4 +1,0 @@
-driver = mysql
-connect = host=localhost dbname=cyberpanel user=cyberpanel password=1qaz@9xvps
-password_query = SELECT email as user, password FROM e_users WHERE email='%u';
-user_query = SELECT '5000' as uid, '5000' as gid, mail FROM e_users WHERE email='%u';
