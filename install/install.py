@@ -14,7 +14,7 @@ from os.path import *
 from stat import *
 import stat
 from pathlib import Path
-from plogical import filesPermsUtilities
+import filesPermsUtilities
 
 VERSION = '2.1'
 BUILD = 1
