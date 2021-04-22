@@ -19,7 +19,11 @@ def chmod_digit(file_path, perms):
     Helper function to chmod like you would in unix without having to preface 0o or converting to octal yourself.
     Credits: https://stackoverflow.com/a/60052847/1621381
     """
-    os.chmod(file_path, int(str(perms), base=8))
+    try:
+        os.chmod(file_path, int(str(perms), base=8))
+    except:
+        print(f'Could not chmod : {file_path} to {perms}')
+        pass
 
 
 def touch(filepath: str, exist_ok=True):
