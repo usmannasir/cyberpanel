@@ -511,71 +511,30 @@ class preFlightsChecks:
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
         recursive_permissions('/usr/local/CyberCP', 755, 644)
-        # command = "find /usr/local/CyberCP -type d -exec chmod 0755 {} \;"
-        # preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-        # command = "find /usr/local/CyberCP -type f -exec chmod 0644 {} \;"
-        # preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
         recursive_permissions('/usr/local/CyberCP/bin', 755, 755)
-        # command = "chmod -R 755 /usr/local/CyberCP/bin"
-        # preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
 
         ## change owner
 
         recursive_chown('/usr/local/CyberCP', 'root', 'root')
-        # command = "chown -R root:root /usr/local/CyberCP"
-        # preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
         ########### Fix LSCPD
 
         recursive_permissions('/usr/local/lscp', 755, 644)
-        # command = "find /usr/local/lscp -type d -exec chmod 0755 {} \;"
-        # preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-        # command = "find /usr/local/lscp -type f -exec chmod 0644 {} \;"
-        # preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
         recursive_permissions('/usr/local/lscp/bin', 755, 755)
-        # command = "chmod -R 755 /usr/local/lscp/bin"
-        # preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
         recursive_permissions('/usr/local/lscp/fcgi-bin', 755, 755)
-        # command = "chmod -R 755 /usr/local/lscp/fcgi-bin"
-        # preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
         recursive_chown('/usr/local/CyberCP/public/phpmyadmin/tmp', 'lscpd', 'lscpd')
-        # command = "chown -R lscpd:lscpd /usr/local/CyberCP/public/phpmyadmin/tmp"
-        # preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
         ## change owner
         recursive_chown('/usr/local/lscp', 'root', 'root')
-        # command = "chown -R root:root /usr/local/lscp"
-        # preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
         recursive_chown('/usr/local/lscp/cyberpanel/rainloop/data', 'lscpd', 'lscpd')
-        # command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
-        # preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
         chmod_digit('/usr/local/CyberCP/cli/cyberPanel.py', 700)
-        # command = "chmod 700 /usr/local/CyberCP/cli/cyberPanel.py"
-        # preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
         chmod_digit('/usr/local/CyberCP/plogical/upgradeCritical.py', 700)
-        # command = "chmod 700 /usr/local/CyberCP/plogical/upgradeCritical.py"
-        # preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
         chmod_digit('/usr/local/CyberCP/postfixSenderPolicy/client.py', 755)
-        # command = "chmod 755 /usr/local/CyberCP/postfixSenderPolicy/client.py"
-        # preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
         chmod_digit('/usr/local/CyberCP/CyberCP/settings.py', 640)
-        # command = "chmod 640 /usr/local/CyberCP/CyberCP/settings.py"
-        # preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
         chown('/usr/local/CyberCP/CyberCP/settings.py', 'root', 'cyberpanel')
-        # command = "chown root:cyberpanel /usr/local/CyberCP/CyberCP/settings.py"
-        # preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
         files = ['/etc/yum.repos.d/MariaDB.repo', '/etc/pdns/pdns.conf', '/etc/systemd/system/lscpd.service',
                  '/etc/pure-ftpd/pure-ftpd.conf', '/etc/pure-ftpd/pureftpd-pgsql.conf',
@@ -585,8 +544,6 @@ class preFlightsChecks:
 
         for items in files:
             chmod_digit(items, 644)
-            # command = 'chmod 644 %s' % (items)
-            # preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
         impFile = ['/etc/pure-ftpd/pure-ftpd.conf', '/etc/pure-ftpd/pureftpd-pgsql.conf',
                    '/etc/pure-ftpd/pureftpd-mysql.conf', '/etc/pure-ftpd/pureftpd-ldap.conf',
@@ -595,31 +552,19 @@ class preFlightsChecks:
 
         for items in impFile:
             chmod_digit(items, 600)
-            # command = 'chmod 600 %s' % (items)
-            # preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
         # chmod_digit(items, 640) hmm looks like we need to glob for this?
         command = 'chmod 640 /etc/postfix/*.cf'
         subprocess.call(command, shell=True)
 
         chmod_digit('/etc/postfix/main.cf', 644)
-        # command = 'chmod 644 /etc/postfix/main.cf'
-        # subprocess.call(command, shell=True)
 
         command = 'chmod 640 /etc/dovecot/*.conf'
         subprocess.call(command, shell=True)
 
         chmod_digit('/etc/dovecot/dovecot.conf', 644)
-        # command = 'chmod 644 /etc/dovecot/dovecot.conf'
-        # subprocess.call(command, shell=True)
-
         chmod_digit('/etc/dovecot/dovecot-sql.conf.ext', 640)
-        # command = 'chmod 640 /etc/dovecot/dovecot-sql.conf.ext'
-        # subprocess.call(command, shell=True)
-
         chmod_digit('/etc/postfix/dynamicmaps.cf', 644)
-        # command = 'chmod 644 /etc/postfix/dynamicmaps.cf'
-        # subprocess.call(command, shell=True)
 
         fileM = ['/usr/local/lsws/FileManager/',
                  '/usr/local/CyberCP/install/FileManager',
@@ -633,16 +578,8 @@ class preFlightsChecks:
                 pass
 
         chmod_digit('/etc/pure-ftpd/', 755)
-        # command = 'chmod 755 /etc/pure-ftpd/'
-        # subprocess.call(command, shell=True)
-
         chmod_digit('/usr/local/CyberCP/plogical/renew.py', 775)
-        # command = 'chmod +x /usr/local/CyberCP/plogical/renew.py'
-        # preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
         chmod_digit('/usr/local/CyberCP/CLManager/CLPackages.py', 775)
-        # command = 'chmod +x /usr/local/CyberCP/CLManager/CLPackages.py'
-        # preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
         clScripts = ['/usr/local/CyberCP/CLScript/panel_info.py',
                      '/usr/local/CyberCP/CLScript/CloudLinuxPackages.py',
@@ -655,36 +592,20 @@ class preFlightsChecks:
 
         for items in clScripts:
             chmod_digit(items, 775)
-            # command = 'chmod +x %s' % (items)
-            # preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
         chmod_digit('/usr/local/CyberCP/plogical/adminPass.py', 600)
-        # command = 'chmod 600 /usr/local/CyberCP/plogical/adminPass.py'
-        # preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
         chmod_digit('/etc/cagefs/exclude/cyberpanelexclude', 600)
-        # command = 'chmod 600 /etc/cagefs/exclude/cyberpanelexclude'
-        # preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
         command = "find /usr/local/CyberCP/ -name '*.pyc' -delete"
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
         if self.distro == cent8 or self.distro == centos:
             chown('/etc/pdns/pdns.conf', 'root', 'pdns')
-            # command = 'chown root:pdns /etc/pdns/pdns.conf'
-            # preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
             chmod_digit('/etc/pdns/pdns.conf', 640)
-            # command = 'chmod 640 /etc/pdns/pdns.conf'
-            # preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
         chmod_digit('/usr/local/lscp/cyberpanel/logs/access.log', 640)
-        # command = 'chmod 640 /usr/local/lscp/cyberpanel/logs/access.log'
-        # preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
         mkdir_p('/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/')
-        # command = 'mkdir -p /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/'
-        # preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
         rainloopinipath = '/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/application.ini'
 
         ###
@@ -872,8 +793,6 @@ if header :contains "X-Spam-Flag" "YES" {
             for file in sievefiles:
                 touch(file, 666)
                 chown(file, 'vmail', 'mail')
-                # Path(file).touch(mode=0o666, exist_ok=True)
-                # shutil.chown(file, 'vmail', 'mail')
 
             recursive_chown('/etc/dovecot/sieve', 'vmail')
 
@@ -1399,8 +1318,6 @@ imap_folder_list_limit = 0
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
             chmod_digit(lscpdPath, 755)
-            # command = 'chmod 755 %s' % (lscpdPath)
-            # preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
             ##
 
@@ -1453,8 +1370,6 @@ imap_folder_list_limit = 0
             extractLocation = "/usr/local/lscp/modsec"
 
             mkdir_p('/usr/local/lscp/modsec')
-            # command = "mkdir -p /usr/local/lscp/modsec"
-            # preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             try:
                 if os.path.exists('comodo.tar.gz'):
@@ -1526,8 +1441,6 @@ imap_folder_list_limit = 0
             ###
 
             recursive_chown('/usr/local/lscp/modsec', 'lscpd', 'lscpd')
-            # command = "chown -R lscpd:lscpd /usr/local/lscp/modsec"
-            # preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             return 1
 
@@ -1588,20 +1501,11 @@ imap_folder_list_limit = 0
 
             ##
             chmod_digit('/usr/local/lscp/bin/lscpdctrl', 775)
-            # command = 'chmod +x /usr/local/lscp/bin/lscpdctrl'
-            # preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             ##
 
             mkdir_p('/usr/local/lscpd/admin/')
-            # path = "/usr/local/lscpd/admin/"
-            # command = "mkdir -p " + path
-            # preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
             mkdir_p('/usr/local/CyberCP/conf/')
-            # path = "/usr/local/CyberCP/conf/"
-            # command = "mkdir -p " + path
-            # preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             path = "/usr/local/CyberCP/conf/token_env"
             writeToFile = open(path, "w")
@@ -1609,8 +1513,6 @@ imap_folder_list_limit = 0
             writeToFile.close()
 
             chmod_digit(path, 600)
-            # command = "chmod 600 " + path
-            # preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             ##
             command = 'systemctl enable lscpd.service'
@@ -1622,13 +1524,12 @@ imap_folder_list_limit = 0
             # In Ubuntu, the library that lscpd looks for is libpcre.so.1, but the one it installs is libpcre.so.3...
             if self.distro == ubuntu:
                 symlink('/lib/x86_64-linux-gnu/libpcre.so.3', '/lib/x86_64-linux-gnu/libpcre.so.1')
-                # command = 'ln -s /lib/x86_64-linux-gnu/libpcre.so.3 /lib/x86_64-linux-gnu/libpcre.so.1'
-                # preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
 
             ##
 
             command = 'systemctl start lscpd'
-            # preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             preFlightsChecks.stdOut("LSCPD Daemon Set!")
 
@@ -1694,8 +1595,6 @@ imap_folder_list_limit = 0
 
             if not os.path.exists(CentOSPath):
                 chmod_digit(cronPath, 600)
-                # command = 'chmod 600 %s' % (cronPath)
-                # preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             if self.distro == centos or self.distro == cent8:
                 command = 'systemctl restart crond.service'
@@ -1795,8 +1694,6 @@ imap_folder_list_limit = 0
 
                 mkdir_p('/etc/opendkim/keys/')
                 chown('/etc/opendkim/keys/', 'opendkim', 'opendkim')
-                # command = 'mkdir -p /etc/opendkim/keys/'
-                # preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             chmod_digit('/etc/opendkim/', 755)
             chown('/etc/opendkim/', 'root', 'opendkim')
@@ -1901,8 +1798,6 @@ milter_default_action = accept
             os.chdir(self.cwd)
 
             chmod_digit(os.path.join(self.cwd, 'composer.sh'), 775)
-            # command = "chmod +x composer.sh"
-            # preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             command = "./composer.sh"
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
@@ -2038,8 +1933,6 @@ milter_default_action = accept
 
             if os.path.exists(CentOSPath):
                 mkdir_p('/opt/cpvendor/etc/')
-                # command = 'mkdir -p /opt/cpvendor/etc/'
-                # preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
                 content = """[integration_scripts]
 
@@ -2063,8 +1956,6 @@ service_port = 9000
                 writeToFile.close()
 
                 mkdir_p('/etc/cagefs/exclude')
-                # command = 'mkdir -p /etc/cagefs/exclude'
-                # preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
                 content = """cyberpanel
 docker
@@ -2347,8 +2238,7 @@ echo $oConfig->Save() ? 'Done' : 'Error';
         subprocess.call(shlex.split(command))
 
         recursive_chown('/usr/local/lscp/cyberpanel/rainloop/data', 'lscpd', 'lscpd')
-        # command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
-        # subprocess.call(shlex.split(command))
+
     except:
         pass
 
