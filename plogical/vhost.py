@@ -50,7 +50,7 @@ class vhost:
             if os.path.exists("/etc/lsb-release"):
                 command = '/usr/sbin/adduser --no-create-home --home ' + path + ' --disabled-login --gecos "" ' + virtualHostUser
             else:
-                command = "adduser " + virtualHostUser + " -M -d " + path
+                command = "/usr/sbin/adduser " + virtualHostUser + " -M -d " + path
 
             ProcessUtilities.executioner(command)
 
