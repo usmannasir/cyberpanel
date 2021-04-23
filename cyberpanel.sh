@@ -1785,7 +1785,7 @@ Post_Install_CN_Replacement
 fi
 
 # If valid hostname that resolves where we can issue an ssl we will create the hostname as a website so we can issue the SSL and do our first login without SSL warnings or exceptions needed.
-HostName=$(hostname --fqdn); [ -z "$(dig +short "$HostName")" ]  &&  echo "$HostName resolves to valid IP. Setting up hostname SSL" && cyberpanel createWebsite --package Default --owner admin --domainName $(hostname --fqdn) --email root@localhost --php 7.4 && cyberpanel hostNameSSL --domainName $(hostname --fqdn)
+#HostName=$(hostname --fqdn); [ -z "$(dig +short "$HostName")" ]  &&  echo "$HostName resolves to valid IP. Setting up hostname SSL" && cyberpanel createWebsite --package Default --owner admin --domainName $(hostname --fqdn) --email root@localhost --php 7.4 && cyberpanel hostNameSSL --domainName $(hostname --fqdn)
 
 
 }
