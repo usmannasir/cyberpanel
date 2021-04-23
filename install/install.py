@@ -815,39 +815,6 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
-            # if self.distro != centos:
-            #     command = 'curl https://repo.dovecot.org/DOVECOT-REPO-GPG | gpg --import'
-            #     subprocess.call(command, shell=True)
-            #
-            #     command = 'gpg --export ED409DA1 > /etc/apt/trusted.gpg.d/dovecot.gpg'
-            #     subprocess.call(command, shell=True)
-            #
-            #     debPath = '/etc/apt/sources.list.d/dovecot.list'
-            #     writeToFile = open(debPath, 'w')
-            #     writeToFile.write('deb https://repo.dovecot.org/ce-2.3-latest/ubuntu/bionic bionic main\n')
-            #     writeToFile.close()
-            #
-            #     try:
-            #         command = 'apt update -y'
-            #         subprocess.call(command, shell=True)
-            #     except:
-            #         pass
-            #
-            #     try:
-            #         command = 'DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical sudo apt-get -q -y -o "Dpkg::Options::=--force-confdef" -o "Dpkg::Options::=--force-confold" --only-upgrade install dovecot-mysql -y'
-            #         subprocess.call(command, shell=True)
-            #
-            #         command = 'dpkg --configure -a'
-            #         subprocess.call(command, shell=True)
-            #
-            #         command = 'apt --fix-broken install -y'
-            #         subprocess.call(command, shell=True)
-            #
-            #         command = 'DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical sudo apt-get -q -y -o "Dpkg::Options::=--force-confdef" -o "Dpkg::Options::=--force-confold" --only-upgrade install dovecot-mysql -y'
-            #         subprocess.call(command, shell=True)
-            #     except:
-            #         pass
-
         except BaseException as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [install_postfix_dovecot]")
             return 0

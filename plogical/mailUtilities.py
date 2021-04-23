@@ -22,7 +22,6 @@ import bcrypt
 import getpass
 import smtplib
 import threading as multi
-import socket
 
 try:
     from mailServer.models import Domains, EUsers
@@ -757,6 +756,7 @@ class MailServerManagerUtils(multi.Thread):
         postFixData = ProcessUtilities.outputExecutioner('cat %s' % (postfixPath))
 
         if postFixData.find('myhostname = server.example.com') > -1:
+            self.MailSSL = 0
             return 0
         else:
             try:
@@ -768,6 +768,7 @@ class MailServerManagerUtils(multi.Thread):
                         self.mailHostName = items.split('=')[1].strip(' ')
                         self.MailSSL = 1
             except BaseException as msg:
+                self.MailSSL = 0
                 logging.CyberCPLogFileWriter.writeToFile('%s. [checkIfMailServerSSLIssued:864]' % (str(msg)))
 
             ipFile = "/etc/cyberpanel/machineIP"
@@ -825,6 +826,7 @@ class MailServerManagerUtils(multi.Thread):
                 command = 'dnf install --enablerepo=gf-plus postfix3 postfix3-mysql -y'
                 ProcessUtilities.executioner(command)
             else:
+                import socket
                 command = 'apt-get install -y debconf-utils'
                 ProcessUtilities.executioner(command)
                 file_name = 'pf.unattend.text'
@@ -1494,7 +1496,7 @@ class MailServerManagerUtils(multi.Thread):
                 return 0
 
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
-                                                      'Restoreing OpenDKIM configurations..,70')
+                                                      'Restoring OpenDKIM configurations..,70')
 
             if self.configureOpenDKIM() == 0:
                 logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
@@ -1526,9 +1528,8 @@ class MailServerManagerUtils(multi.Thread):
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Completed [200].')
 
         except BaseException as msg:
-            final_dic = {'installOpenDKIM': 0, 'error_message': str(msg)}
-            final_json = json.dumps(final_dic)
-            return HttpResponse(final_json)
+            logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
+                                                      'Failed. Error %s [404].' % str(msg))
 
     def configureOpenDKIM(self):
         try:
@@ -1590,6 +1591,8 @@ milter_default_action = accept
             return 1
 
         except BaseException as msg:
+            logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
+                                                      'configureOpenDKIM failed. Error %s [404].' % str(msg))
             return 0
 
     def debugEmailForSite(self, websiteName):
