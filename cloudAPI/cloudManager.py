@@ -1492,7 +1492,7 @@ class CloudManager:
             writeToFile.write('Starting..,0')
             writeToFile.close()
 
-            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/mailServer/mailserverManager.py"
+            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
             execPath = execPath + ' ResetEmailConfigurations --tempStatusPath %s' % (tempStatusPath)
 
             ProcessUtilities.popenExecutioner(execPath)
