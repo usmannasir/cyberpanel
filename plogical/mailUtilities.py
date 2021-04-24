@@ -817,6 +817,10 @@ class MailServerManagerUtils(multi.Thread):
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Re-installing postfix..,10')
 
             if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+
+                command = 'yum --nogpg install https://mirror.ghettoforge.org/distributions/gf/gf-release-latest.gf.el7.noarch.rpm -y'
+                ProcessUtilities.executioner(command)
+
                 command = 'yum install --enablerepo=gf-plus -y postfix3 postfix3-ldap postfix3-mysql postfix3-pcre'
             elif ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
 
