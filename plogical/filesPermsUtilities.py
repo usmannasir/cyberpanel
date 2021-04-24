@@ -1,6 +1,7 @@
 import os
 import shutil
 import pathlib
+import stat
 
 
 def mkdir_p(path, exist_ok=True):
@@ -39,7 +40,7 @@ def touch(filepath: str, exist_ok=True):
 
 def symlink(src, dst):
     """
-    Symlink a patch to another if the src exists.
+    Symlink a path to another if the src exists.
     """
     try:
         if os.access(src, os.R_OK):
@@ -80,14 +81,12 @@ def recursive_chown(path, owner, group=-1):
                 pass
 
 
-# https://docs.python.org/3.6/library/os.html#os.walk
-#
-#
 def recursive_permissions(path, dir_mode=755, file_mode=644, topdir=True):
     """
     Recursively chmod a path and contents to mode.
     Defaults to chmod top level directory but can be optionally
     toggled off when you want to chmod only contents of like a user's homedir vs homedir itself
+    https://docs.python.org/3.6/library/os.html#os.walk
     """
 
     # Here we are converting the integers to string and then to octal.
@@ -115,6 +114,7 @@ def recursive_permissions(path, dir_mode=755, file_mode=644, topdir=True):
                 print('Could not chmod :' + path + ' to ' + str(file_mode))
                 pass
 
+
 # Left intentionally here for reference.
 # Set recursive chown for a path
 # recursive_chown(my_path, 'root', 'root')
@@ -126,3 +126,65 @@ def recursive_permissions(path, dir_mode=755, file_mode=644, topdir=True):
 
 # Fix permissions and use default values
 # recursive_permissions(my_path)
+# =========================================================
+# Below is a helper class for getting and working with permissions
+# Original credits to : https://github.com/keysemble/perfm
+
+def perm_octal_digit(rwx):
+    digit = 0
+    if rwx[0] == 'r':
+        digit += 4
+    if rwx[1] == 'w':
+        digit += 2
+    if rwx[2] == 'x':
+        digit += 1
+    return digit
+
+
+class FilePerm:
+    def __init__(self, filepath):
+        filemode = stat.filemode(os.stat(filepath).st_mode)
+        permissions = [filemode[-9:][i:i + 3] for i in range(0, len(filemode[-9:]), 3)]
+        self.filepath = filepath
+        self.access_dict = dict(zip(['user', 'group', 'other'], [list(perm) for perm in permissions]))
+
+    def mode(self):
+        mode = 0
+        for shift, digit in enumerate(self.octal()[::-1]):
+            mode += digit << (shift * 3)
+        return mode
+
+    def digits(self):
+        """Get the octal chmod equivalent value 755 in single string"""
+        return "".join(map(str, self.octal()))
+
+    def octal(self):
+        """Get the octal value in a list [7, 5, 5]"""
+        return [perm_octal_digit(p) for p in self.access_dict.values()]
+
+    def access_bits(self, access):
+        if access in self.access_dict.keys():
+            r, w, x = self.access_dict[access]
+            return [r == 'r', w == 'w', x == 'x']
+
+    def update_bitwise(self, settings):
+        def perm_list(read=False, write=False, execute=False):
+            pl = ['-', '-', '-']
+            if read:
+                pl[0] = 'r'
+            if write:
+                pl[1] = 'w'
+            if execute:
+                pl[2] = 'x'
+            return pl
+
+        self.access_dict = dict(
+            [(access, perm_list(read=r, write=w, execute=x)) for access, [r, w, x] in settings.items()])
+        os.chmod(self.filepath, self.mode())
+
+# project_directory = os.path.abspath(os.path.dirname(sys.argv[0]))
+# home_directory = os.path.expanduser('~')
+# print(f'Path: {home_directory}  Mode: {FilePerm(home_directory).mode()}  Octal: {FilePerm(home_directory).octal()} '
+#      f'Digits: {FilePerm(home_directory).digits()}')
+# Example: Output
+# Path: /home/cooluser  Mode: 493  Octal: [7, 5, 5] Digits: 755

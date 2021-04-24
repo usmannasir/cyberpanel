@@ -7,6 +7,8 @@ from random import randint
 from django.core.files.storage import FileSystemStorage
 from plogical.acl import ACLManager
 from filemanager.models import Trash
+from plogical.filesPermsUtilities import chown, chmod_digit, mkdir_p, touch, symlink, recursive_chown, \
+    recursive_permissions, perm_octal_digit, FilePerm
 
 
 class FileManager:
@@ -40,7 +42,6 @@ class FileManager:
             return FileManager.modes['scss']
         else:
             return ""
-
 
     @staticmethod
     def findModeFiles(mode):
@@ -137,7 +138,8 @@ class FileManager:
 
     @staticmethod
     def findThemeFile(theme):
-        return '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.1/theme/%s.min.css" />' % (theme)
+        return '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.58.1/theme/%s.min.css" />' % (
+            theme)
 
     @staticmethod
     def findAdditionalOptions(mode):
@@ -165,8 +167,9 @@ class FileManager:
         if path.find('..') > -1:
             return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
-        command = "chown -R " + website.externalApp + ':' + website.externalApp + ' ' + self.returnPathEnclosed(path)
-        ProcessUtilities.executioner(command, website.externalApp)
+        recursive_chown(self.returnPathEnclosed(path), website.externalApp, website.externalApp)
+        # command = "chown -R " + website.externalApp + ':' + website.externalApp + ' ' + self.returnPathEnclosed(path)
+        # ProcessUtilities.executioner(command, website.externalApp)
 
     def listForTable(self):
         try:
@@ -269,8 +272,9 @@ class FileManager:
             if self.data['fileName'].find('..') > -1 or self.data['fileName'].find(homePath) == -1:
                 return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
-            command = "touch " + self.returnPathEnclosed(self.data['fileName'])
-            ProcessUtilities.executioner(command, website.externalApp)
+            touch(self.returnPathEnclosed(self.data['fileName']))
+            # command = "touch " + self.returnPathEnclosed(self.data['fileName'])
+            # ProcessUtilities.executioner(command, website.externalApp)
 
             self.changeOwner(self.returnPathEnclosed(self.data['fileName']))
 
@@ -292,9 +296,9 @@ class FileManager:
             if self.data['folderName'].find('..') > -1 or self.data['folderName'].find(homePath) == -1:
                 return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
-            command = "mkdir " + self.returnPathEnclosed(self.data['folderName'])
-            ProcessUtilities.executioner(command, website.externalApp)
-
+            mkdir_p(self.returnPathEnclosed(self.data['folderName']))
+            # command = "mkdir " + self.returnPathEnclosed(self.data['folderName'])
+            # ProcessUtilities.executioner(command, website.externalApp)
             self.changeOwner(self.returnPathEnclosed(self.data['folderName']))
 
             json_data = json.dumps(finalData)
@@ -333,7 +337,6 @@ class FileManager:
                 command = 'rm -f %s/hello.txt' % (self.homePath)
                 ProcessUtilities.executioner(command)
 
-
             for item in self.data['fileAndFolders']:
 
                 if (self.data['path'] + '/' + item).find('..') > -1 or (self.data['path'] + '/' + item).find(
@@ -346,8 +349,9 @@ class FileManager:
                 else:
                     trashPath = '%s/.trash' % (self.homePath)
 
-                    command = 'mkdir %s' % (trashPath)
-                    ProcessUtilities.executioner(command, website.externalApp)
+                    mkdir_p(trashPath)
+                    # command = 'mkdir %s' % (trashPath)
+                    # ProcessUtilities.executioner(command, website.externalApp)
 
                     Trash(website=website, originalPath=self.returnPathEnclosed(self.data['path']),
                           fileName=self.returnPathEnclosed(item)).save()
@@ -429,8 +433,9 @@ class FileManager:
                 json_data = json.dumps(finalData)
                 return HttpResponse(json_data)
 
-            command = 'mkdir ' + self.returnPathEnclosed(self.data['newPath'])
-            ProcessUtilities.executioner(command, website.externalApp)
+            mkdir_p(self.returnPathEnclosed(self.data['newPath']))
+            # command = 'mkdir ' + self.returnPathEnclosed(self.data['newPath'])
+            # ProcessUtilities.executioner(command, website.externalApp)
 
             for item in self.data['fileAndFolders']:
                 if (self.data['basePath'] + '/' + item).find('..') > -1 or (self.data['basePath'] + '/' + item).find(
@@ -459,8 +464,9 @@ class FileManager:
 
             homePath = '/home/%s' % (domainName)
 
-            command = 'mkdir ' + self.returnPathEnclosed(self.data['newPath'])
-            ProcessUtilities.executioner(command, website.externalApp)
+            mkdir_p(self.returnPathEnclosed(self.data['newPath']))
+            # command = 'mkdir ' + self.returnPathEnclosed(self.data['newPath'])
+            # ProcessUtilities.executioner(command, website.externalApp)
 
             for item in self.data['fileAndFolders']:
 
@@ -566,17 +572,20 @@ class FileManager:
             if self.data['fileName'].find(self.data['home']) == -1 or self.data['fileName'].find('..') > -1:
                 return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
-            command = 'stat -c "%%a" %s' % (self.returnPathEnclosed(self.data['fileName']))
-            currentMode = ProcessUtilities.outputExecutioner(command).strip('\n')
+            currentMode = FilePerm(self.returnPathEnclosed(self.data['fileName'])).digits()
+            # command = 'stat -c "%%a" %s' % (self.returnPathEnclosed(self.data['fileName']))
+            # currentMode = ProcessUtilities.outputExecutioner(command).strip('\n')
 
             command = 'mv ' + tempPath + ' ' + self.returnPathEnclosed(self.data['fileName'])
             ProcessUtilities.executioner(command)
 
-            command = 'chown %s:%s %s' % (website.externalApp, website.externalApp, self.data['fileName'])
-            ProcessUtilities.executioner(command)
+            chown(self.data['fileName'], website.externalApp, website.externalApp)
+            # command = 'chown %s:%s %s' % (website.externalApp, website.externalApp, self.data['fileName'])
+            # ProcessUtilities.executioner(command)
 
-            command = 'chmod %s %s' % (currentMode, self.returnPathEnclosed(self.data['fileName']))
-            ProcessUtilities.executioner(command)
+            chmod_digit(self.returnPathEnclosed(self.data['fileName']), currentMode)
+            # command = 'chmod %s %s' % (currentMode, self.returnPathEnclosed(self.data['fileName']))
+            # ProcessUtilities.executioner(command)
 
             self.changeOwner(self.data['fileName'])
 
@@ -619,9 +628,11 @@ class FileManager:
             domainName = self.data['domainName']
             website = Websites.objects.get(domain=domainName)
 
-            command = 'chown %s:%s %s' % (website.externalApp, website.externalApp,
-                                          self.returnPathEnclosed(self.data['completePath'] + '/' + myfile.name))
-            ProcessUtilities.executioner(command)
+            chown(self.returnPathEnclosed(self.data['completePath'] + '/' + myfile.name), website.externalApp,
+                  website.externalApp)
+            # command = 'chown %s:%s %s' % (website.externalApp, website.externalApp,
+            #                              self.returnPathEnclosed(self.data['completePath'] + '/' + myfile.name))
+            # ProcessUtilities.executioner(command)
 
             self.changeOwner(self.returnPathEnclosed(self.data['completePath'] + '/' + myfile.name))
 
@@ -711,15 +722,18 @@ class FileManager:
             finalData['status'] = 1
             domainName = self.data['domainName']
             website = Websites.objects.get(domain=domainName)
+            path = self.returnPathEnclosed(self.data['basePath'] + '/' + self.data['permissionsPath'])
 
             if self.data['recursive'] == 1:
-                command = 'chmod -R ' + self.data['newPermissions'] + ' ' + self.returnPathEnclosed(
-                    self.data['basePath'] + '/' + self.data['permissionsPath'])
+                recursive_permissions(path, self.data['newPermissions'])
+                # command = 'chmod -R ' + self.data['newPermissions'] + ' ' + self.returnPathEnclosed(
+                #    self.data['basePath'] + '/' + self.data['permissionsPath'])
             else:
-                command = 'chmod ' + self.data['newPermissions'] + ' ' + self.returnPathEnclosed(
-                    self.data['basePath'] + '/' + self.data['permissionsPath'])
+                chmod_digit(path, self.data['newPermissions'])
+                # command = 'chmod ' + self.data['newPermissions'] + ' ' + self.returnPathEnclosed(
+                #    self.data['basePath'] + '/' + self.data['permissionsPath'])
 
-            ProcessUtilities.executioner(command, website.externalApp)
+            # ProcessUtilities.executioner(command, website.externalApp)
 
             json_data = json.dumps(finalData)
             return HttpResponse(json_data)
@@ -731,51 +745,62 @@ class FileManager:
 
         website = Websites.objects.get(domain=domainName)
         externalApp = website.externalApp
+        BaseHome = f'/home/{domainName}'
+        BasePublicHtml = f'/home/{domainName}/public_html'
 
         if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
             groupName = 'nobody'
         else:
             groupName = 'nogroup'
 
-        command = 'chown %s:%s /home/%s' % (website.externalApp, website.externalApp, domainName)
-        ProcessUtilities.popenExecutioner(command)
+        recursive_chown(BaseHome, externalApp, externalApp)
+        # command = 'chown %s:%s /home/%s' % (website.externalApp, website.externalApp, domainName)
+        # ProcessUtilities.popenExecutioner(command)
 
-        command = 'chown -R %s:%s /home/%s/public_html/*' % (externalApp, externalApp, domainName)
-        ProcessUtilities.popenExecutioner(command)
+        # command = 'chown -R %s:%s /home/%s/public_html/*' % (externalApp, externalApp, domainName)
+        # ProcessUtilities.popenExecutioner(command)
 
-        command = 'chown -R %s:%s /home/%s/public_html/.[^.]*' % (externalApp, externalApp, domainName)
-        ProcessUtilities.popenExecutioner(command)
+        # command = 'chown -R %s:%s /home/%s/public_html/.[^.]*' % (externalApp, externalApp, domainName)
+        # ProcessUtilities.popenExecutioner(command)
 
-        command = "chown root:%s /home/" % (groupName) + domainName + "/logs"
-        ProcessUtilities.popenExecutioner(command)
+        # command = "chown root:%s /home/" % (groupName) + domainName + "/logs"
+        # ProcessUtilities.popenExecutioner(command)
 
-        command = "find %s -type d -exec chmod 0755 {} \;" % ("/home/" + domainName + "/public_html")
-        ProcessUtilities.popenExecutioner(command)
+        recursive_permissions(BaseHome, 755, 644)
+        # command = "find %s -type d -exec chmod 0755 {} \;" % ("/home/" + domainName + "/public_html")
+        # ProcessUtilities.popenExecutioner(command)
 
-        command = "find %s -type f -exec chmod 0644 {} \;" % ("/home/" + domainName + "/public_html")
-        ProcessUtilities.popenExecutioner(command)
+        # command = "find %s -type f -exec chmod 0644 {} \;" % ("/home/" + domainName + "/public_html")
+        # ProcessUtilities.popenExecutioner(command)
 
-        command = 'chown %s:%s /home/%s/public_html' % (externalApp, groupName, domainName)
-        ProcessUtilities.executioner(command)
+        chown(BasePublicHtml, externalApp, groupName)
+        # command = 'chown %s:%s /home/%s/public_html' % (externalApp, groupName, domainName)
+        # ProcessUtilities.executioner(command)
 
-        command = 'chmod 750 /home/%s/public_html' % (domainName)
-        ProcessUtilities.executioner(command)
+        chmod_digit(BasePublicHtml, 750)
+        # command = 'chmod 750 /home/%s/public_html' % (domainName)
+        # ProcessUtilities.executioner(command)
 
         for childs in website.childdomains_set.all():
-            command = "find %s -type d -exec chmod 0755 {} \;" % (childs.path)
-            ProcessUtilities.popenExecutioner(command)
 
-            command = "find %s -type f -exec chmod 0644 {} \;" % (childs.path)
-            ProcessUtilities.popenExecutioner(command)
+            recursive_permissions(childs.path, 755, 644)
+            recursive_chown(childs.path, externalApp, externalApp)
+            chmod_digit(childs.path, 755)
+            chown(childs.path, externalApp, groupName)
+            # command = "find %s -type d -exec chmod 0755 {} \;" % (childs.path)
+            # ProcessUtilities.popenExecutioner(command)
+            #
+            # command = "find %s -type f -exec chmod 0644 {} \;" % (childs.path)
+            # ProcessUtilities.popenExecutioner(command)
 
-            command = 'chown -R %s:%s %s/*' % (externalApp, externalApp, childs.path)
-            ProcessUtilities.popenExecutioner(command)
+            # command = 'chown -R %s:%s %s/*' % (externalApp, externalApp, childs.path)
+            # ProcessUtilities.popenExecutioner(command)
+            #
+            # command = 'chown -R %s:%s %s/.[^.]*' % (externalApp, externalApp, childs.path)
+            # ProcessUtilities.popenExecutioner(command)
 
-            command = 'chown -R %s:%s %s/.[^.]*' % (externalApp, externalApp, childs.path)
-            ProcessUtilities.popenExecutioner(command)
+            # command = 'chmod 755 %s' % (childs.path)
+            # ProcessUtilities.popenExecutioner(command)
 
-            command = 'chmod 755 %s' % (childs.path)
-            ProcessUtilities.popenExecutioner(command)
-
-            command = 'chown %s:%s %s' % (externalApp, groupName, childs.path)
-            ProcessUtilities.popenExecutioner(command)
+            # command = 'chown %s:%s %s' % (externalApp, groupName, childs.path)
+            # ProcessUtilities.popenExecutioner(command)

@@ -8,6 +8,7 @@ import time
 import getpass
 import codecs
 
+
 class ProcessUtilities(multi.Thread):
     debugPath = '/usr/local/CyberCP/debug'
     litespeedProcess = "litespeed"
@@ -29,9 +30,9 @@ class ProcessUtilities(multi.Thread):
     def run(self):
         try:
             if self.function == 'popen':
-                self.customPoen()
+                self.customPopen()
         except BaseException as msg:
-            logging.writeToFile( str(msg) + ' [ApplicationInstaller.run]')
+            logging.writeToFile(str(msg) + ' [ApplicationInstaller.run]')
 
     @staticmethod
     def fetchCurrentPort():
@@ -59,7 +60,7 @@ class ProcessUtilities(multi.Thread):
             return 0
 
         if len(finalListOfProcesses) > 0:
-         return finalListOfProcesses
+            return finalListOfProcesses
         else:
             return 0
 
@@ -134,7 +135,7 @@ class ProcessUtilities(multi.Thread):
             pass
 
         pids = ProcessUtilities.getLitespeedProcessNumber()
-        if pids !=0:
+        if pids != 0:
             for items in pids:
                 try:
                     command = 'sudo kill -9 ' + str(items)
@@ -184,12 +185,14 @@ class ProcessUtilities(multi.Thread):
                 return [sock, "None"]
             except BaseException as msg:
                 if count == 3:
-                    logging.writeToFile("Failed to connect to LSCPD socket, run 'systemctl restart lscpd' on command line to fix this issue.")
+                    logging.writeToFile(
+                        "Failed to connect to LSCPD socket, run 'systemctl restart lscpd' on command line to fix this issue.")
                     return [-1, str(msg)]
                 else:
                     count = count + 1
 
-                logging.writeToFile("Failed to connect to LSCPD UDS, error message:" + str(msg) + ". Attempt " + str(count) + ", we will attempt again in 2 seconds. [setupUDSConnection:138]")
+                logging.writeToFile("Failed to connect to LSCPD UDS, error message:" + str(msg) + ". Attempt " + str(
+                    count) + ", we will attempt again in 2 seconds. [setupUDSConnection:138]")
                 time.sleep(2)
 
     @staticmethod
@@ -206,7 +209,7 @@ class ProcessUtilities(multi.Thread):
 
             sock = ret[0]
 
-            if user == None:
+            if user is None:
                 if command.find('export') > -1:
                     pass
                 elif command.find('sudo') == -1:
@@ -215,13 +218,13 @@ class ProcessUtilities(multi.Thread):
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.writeToFile(ProcessUtilities.token + command)
 
-                if dir == None:
+                if dir is None:
                     sock.sendall((ProcessUtilities.token + command).encode('utf-8'))
                 else:
                     command = '%s-d %s %s' % (ProcessUtilities.token, dir, command)
                     sock.sendall(command.encode('utf-8'))
             else:
-                if dir == None:
+                if dir is None:
                     command = '%s-u %s %s' % (ProcessUtilities.token, user, command)
                 else:
                     command = '%s-u %s -d %s %s' % (ProcessUtilities.token, user, dir, command)
@@ -235,15 +238,15 @@ class ProcessUtilities(multi.Thread):
 
             while (1):
                 currentData = sock.recv(32)
-                if len(currentData) == 0 or currentData == None:
+                if len(currentData) == 0 or currentData is None:
                     break
                 try:
-                    data = data + currentData.decode(errors = 'ignore')
+                    data = data + currentData.decode(errors='ignore')
                 except BaseException as msg:
                     logging.writeToFile('Some data could not be decoded to str, error message: %s' % str(msg))
 
             sock.close()
-            #logging.writeToFile('Final data: %s.' % (str(data)))
+            # logging.writeToFile('Final data: %s.' % (str(data)))
 
             return data
         except BaseException as msg:
@@ -259,7 +262,7 @@ class ProcessUtilities(multi.Thread):
 
             ret = ProcessUtilities.sendCommand(command, user)
 
-            exitCode = ret[len(ret) -1]
+            exitCode = ret[len(ret) - 1]
             exitCode = int(codecs.encode(exitCode.encode(), 'hex'))
 
             if exitCode == 0:
@@ -272,16 +275,16 @@ class ProcessUtilities(multi.Thread):
             return 0
 
     @staticmethod
-    def outputExecutioner(command, user=None, shell = None, dir = None):
+    def outputExecutioner(command, user=None, shell=None, dir=None):
         try:
 
             if getpass.getuser() == 'root':
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.writeToFile(command)
-                if shell == None or shell == True:
+                if shell is None or shell is True:
                     p = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                 else:
-                    p = subprocess.Popen(shlex.split(command),  stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                    p = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                 return p.communicate()[0].decode("utf-8")
 
             if type(command) == list:
@@ -291,7 +294,7 @@ class ProcessUtilities(multi.Thread):
         except BaseException as msg:
             logging.writeToFile(str(msg) + "[outputExecutioner:188]")
 
-    def customPoen(self):
+    def customPopen(self):
         try:
 
             if type(self.extraArgs['command']) == str or type(self.extraArgs['command']) == bytes:
@@ -306,7 +309,7 @@ class ProcessUtilities(multi.Thread):
 
             return 1
         except BaseException as msg:
-            logging.writeToFile(str(msg) + " [customPoen]")
+            logging.writeToFile(str(msg) + " [customPopen]")
 
     @staticmethod
     def popenExecutioner(command, user=None):
@@ -327,6 +330,3 @@ class ProcessUtilities(multi.Thread):
             execPath = execPath + ' --%s %s' % (key, value)
 
         return execPath
-
-
-

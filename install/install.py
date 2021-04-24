@@ -403,7 +403,7 @@ class preFlightsChecks:
         password="%s"
         """ % password
 
-        with open(mysql_my_root_cnf, 'w') as f:
+        with open(mysql_my_root_cnf, 'w+') as f:
             f.write(mysql_root_cnf_content)
         chmod_digit(mysql_my_root_cnf, 600)
         chown(mysql_my_root_cnf, 'root', 'root')
@@ -513,7 +513,6 @@ class preFlightsChecks:
         recursive_permissions('/usr/local/CyberCP', 755, 644)
 
         recursive_permissions('/usr/local/CyberCP/bin', 755, 755)
-
 
         ## change owner
 
@@ -1525,7 +1524,6 @@ imap_folder_list_limit = 0
             if self.distro == ubuntu:
                 symlink('/lib/x86_64-linux-gnu/libpcre.so.3', '/lib/x86_64-linux-gnu/libpcre.so.1')
 
-
             ##
 
             command = 'systemctl start lscpd'
@@ -1791,8 +1789,17 @@ milter_default_action = accept
                 if not os.access('/usr/local/lsws/lsphp72/bin/php', os.R_OK):
                     if os.access('/usr/local/lsws/lsphp72/bin/php7.2', os.R_OK):
                         symlink('/usr/local/lsws/lsphp72/bin/php7.2', '/usr/local/lsws/lsphp72/bin/php')
+                if not os.access('/usr/local/lsws/lsphp73/bin/php', os.R_OK):
+                    if os.access('/usr/local/lsws/lsphp73/bin/php7.3', os.R_OK):
+                        symlink('/usr/local/lsws/lsphp73/bin/php7.3', '/usr/local/lsws/lsphp73/bin/php')
+                if not os.access('/usr/local/lsws/lsphp74/bin/php', os.R_OK):
+                    if os.access('/usr/local/lsws/lsphp74/bin/php7.4', os.R_OK):
+                        symlink('/usr/local/lsws/lsphp74/bin/php7.4', '/usr/local/lsws/lsphp74/bin/php')
+                if not os.access('/usr/local/lsws/lsphp80/bin/php', os.R_OK):
+                    if os.access('/usr/local/lsws/lsphp80/bin/php8.0', os.R_OK):
+                        symlink('/usr/local/lsws/lsphp74/bin/php8.0', '/usr/local/lsws/lsphp80/bin/php')
 
-            command = "cp /usr/local/lsws/lsphp71/bin/php /usr/bin/"
+            command = "cp /usr/local/lsws/lsphp73/bin/php /usr/bin/"
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             os.chdir(self.cwd)

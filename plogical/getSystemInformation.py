@@ -4,6 +4,7 @@ import datetime
 import math
 import argparse
 
+
 class SystemInformation:
     now = datetime.datetime.now()
     olsReport = ""
@@ -16,7 +17,7 @@ class SystemInformation:
     def getOSName():
 
         OSName = platform.platform()
-        data =  OSName.split("-")
+        data = OSName.split("-")
 
         checker = 0
         finalOSName = ""
@@ -67,17 +68,18 @@ class SystemInformation:
         three = loadAverage[2]
 
         data = {"weekDayNameInString": weekDayNameInString, "currentMonthName": currentMonthName,
-         "currentDayInDecimal": currentDayInDecimal, "currentYear": currentYear, "OSName": OSName,
-         "loadAVG": loadAverage, "currentTime": currentTime, "one":one,"two":two,"three":three}
+                "currentDayInDecimal": currentDayInDecimal, "currentYear": currentYear, "OSName": OSName,
+                "loadAVG": loadAverage, "currentTime": currentTime, "one": one, "two": two, "three": three}
 
         return data
-
 
     @staticmethod
     def getSystemInformation():
         try:
             import psutil
-            SystemInfo = {'ramUsage': int(math.floor(psutil.virtual_memory()[2])), 'cpuUsage': int(math.floor(psutil.cpu_percent())), 'diskUsage': int(math.floor(psutil.disk_usage('/')[3]))}
+            SystemInfo = {'ramUsage': int(math.floor(psutil.virtual_memory()[2])),
+                          'cpuUsage': int(math.floor(psutil.cpu_percent())),
+                          'diskUsage': int(math.floor(psutil.disk_usage('/')[3]))}
             return SystemInfo
         except:
             SystemInfo = {'ramUsage': 0,
@@ -104,10 +106,8 @@ class SystemInformation:
         SystemInformation.olsReport = open("/tmp/lshttpd/.rtreport", "r").readlines()
 
 
-
 def main():
-
-    parser = argparse.ArgumentParser(description='CyberPanel Installer')
+    parser = argparse.ArgumentParser(description='CyberPanel GetSystemInformation')
     parser.add_argument('function', help='Specific a function to call!')
 
     args = parser.parse_args()

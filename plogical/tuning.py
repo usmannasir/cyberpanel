@@ -1,4 +1,5 @@
 import sys
+
 sys.path.append('/usr/local/CyberCP')
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from plogical.installUtilities import installUtilities
@@ -6,8 +7,8 @@ import argparse
 from plogical.processUtilities import ProcessUtilities
 from xml.etree import ElementTree
 
-class tuning:
 
+class tuning:
 
     @staticmethod
     def fetchTuningDetails():
@@ -18,7 +19,7 @@ class tuning:
                 datas = ProcessUtilities.outputExecutioner(command).split("\n")
 
                 for items in datas:
-                    if items.find("maxConnections")>-1:
+                    if items.find("maxConnections") > -1:
                         data = items.split()
                         dataToReturn['maxConnections'] = data[1]
 
@@ -30,15 +31,13 @@ class tuning:
                         data = items.split()
                         dataToReturn['connTimeout'] = data[1]
 
-
-                    if items.find("maxConnections")>-1:
+                    if items.find("maxConnections") > -1:
                         data = items.split()
                         dataToReturn['maxConnections'] = data[1]
 
                     if items.find("keepAliveTimeout") > -1:
                         data = items.split()
                         dataToReturn['keepAliveTimeout'] = data[1]
-
 
                     if items.find("totalInMemCacheSize") > -1:
                         data = items.split()
@@ -76,33 +75,32 @@ class tuning:
                     str(msg) + " [fetchTuningDetails]")
                 return 0
 
-
     @staticmethod
-    def saveTuningDetails(maxConnections,maxSSLConnections,connectionTimeOut,keepAliveTimeOut,cacheSizeInMemory,gzipCompression):
+    def saveTuningDetails(maxConnections, maxSSLConnections, connectionTimeOut, keepAliveTimeOut, cacheSizeInMemory,
+                          gzipCompression):
         if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
             try:
                 datas = open("/usr/local/lsws/conf/httpd_config.conf").readlines()
-                writeDataToFile = open("/usr/local/lsws/conf/httpd_config.conf","w")
+                writeDataToFile = open("/usr/local/lsws/conf/httpd_config.conf", "w")
 
                 if gzipCompression == "Enable":
                     gzip = 1
                 else:
                     gzip = 0
 
-
                 for items in datas:
                     if items.find("maxConnections") > -1:
-                        data = "  maxConnections          "+str(maxConnections)+"\n"
+                        data = "  maxConnections          " + str(maxConnections) + "\n"
                         writeDataToFile.writelines(data)
                         continue
 
                     elif items.find("maxSSLConnections") > -1:
-                        data = "  maxSSLConnections       "+str(maxSSLConnections) + "\n"
+                        data = "  maxSSLConnections       " + str(maxSSLConnections) + "\n"
                         writeDataToFile.writelines(data)
                         continue
 
                     elif items.find("connTimeout") > -1:
-                        data ="  connTimeout             "+str(connectionTimeOut)+"\n"
+                        data = "  connTimeout             " + str(connectionTimeOut) + "\n"
                         writeDataToFile.writelines(data)
                         continue
 
@@ -179,20 +177,19 @@ class tuning:
                     str(msg) + " [saveTuningDetails]")
                 print("0," + str(msg))
 
-
     @staticmethod
     def fetchPHPDetails(virtualHost):
         if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
             try:
-                path = installUtilities.Server_root_path + "/conf/vhosts/"+virtualHost+"/vhost.conf"
+                path = installUtilities.Server_root_path + "/conf/vhosts/" + virtualHost + "/vhost.conf"
 
-                command = "sudo cat "+path
+                command = "sudo cat " + path
                 datas = ProcessUtilities.outputExecutioner(command).split("\n")
 
                 dataToReturn = {}
 
                 for items in datas:
-                    if items.find("maxConns")>-1:
+                    if items.find("maxConns") > -1:
                         data = items.split()
                         dataToReturn['maxConns'] = data[1]
 
@@ -204,15 +201,13 @@ class tuning:
                         data = items.split()
                         dataToReturn['persistConn'] = data[1]
 
-
-                    if items.find("memSoftLimit")>-1:
+                    if items.find("memSoftLimit") > -1:
                         data = items.split()
                         dataToReturn['memSoftLimit'] = data[1]
 
                     if items.find("memHardLimit") > -1:
                         data = items.split()
                         dataToReturn['memHardLimit'] = data[1]
-
 
                     if items.find("procSoftLimit") > -1:
                         data = items.split()
@@ -254,28 +249,28 @@ class tuning:
                 return 0
 
     @staticmethod
-    def tunePHP(virtualHost,maxConns,initTimeout,persistConn,memSoftLimit,memHardLimit,procSoftLimit,procHardLimit):
+    def tunePHP(virtualHost, maxConns, initTimeout, persistConn, memSoftLimit, memHardLimit, procSoftLimit,
+                procHardLimit):
         if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
             try:
                 path = installUtilities.Server_root_path + "/conf/vhosts/" + virtualHost + "/vhost.conf"
                 datas = open(path).readlines()
 
-                writeDataToFile = open(path,"w")
-
+                writeDataToFile = open(path, "w")
 
                 for items in datas:
                     if items.find("maxConns") > -1:
-                        data = "  maxConns                "+str(maxConns)+"\n"
+                        data = "  maxConns                " + str(maxConns) + "\n"
                         writeDataToFile.writelines(data)
                         continue
 
                     elif items.find("initTimeout") > -1:
-                        data = "  initTimeout             "+str(initTimeout) + "\n"
+                        data = "  initTimeout             " + str(initTimeout) + "\n"
                         writeDataToFile.writelines(data)
                         continue
 
                     elif items.find("memSoftLimit") > -1:
-                        data ="  memSoftLimit            "+str(memSoftLimit)+"\n"
+                        data = "  memSoftLimit            " + str(memSoftLimit) + "\n"
                         writeDataToFile.writelines(data)
                         continue
 
@@ -299,7 +294,6 @@ class tuning:
                         else:
                             persist = 0
 
-
                         data = "  persistConn             " + str(persist) + "\n"
                         writeDataToFile.writelines(data)
                         continue
@@ -312,7 +306,7 @@ class tuning:
             except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(
                     str(msg) + " [saveTuningDetails]")
-                print("0,"+str(msg))
+                print("0," + str(msg))
         else:
             try:
                 path = "/usr/local/lsws/conf/httpd_config.xml"
@@ -384,9 +378,9 @@ class tuning:
                     str(msg) + " [saveTuningDetails]")
                 print("0," + str(msg))
 
-def main():
 
-    parser = argparse.ArgumentParser(description='CyberPanel Installer')
+def main():
+    parser = argparse.ArgumentParser(description='CyberPanel Tuning')
     parser.add_argument('function', help='Specific a function to call!')
     parser.add_argument('--virtualHost', help='Domain name!')
     parser.add_argument('--maxConns', help='Max Connections for PHP!')
@@ -406,18 +400,16 @@ def main():
     parser.add_argument("--inMemCache", help="Total Small File Cache Size (bytes) for LiteSpeed!")
     parser.add_argument("--gzipCompression", help="Enable disable GZIP Compression for LiteSpeed!")
 
-
     args = parser.parse_args()
 
     if args.function == "tunePHP":
-        tuning.tunePHP(args.virtualHost, args.maxConns, args.initTimeout, args.persistConn, args.memSoftLimit, args.memHardLimit, args.procSoftLimit,
+        tuning.tunePHP(args.virtualHost, args.maxConns, args.initTimeout, args.persistConn, args.memSoftLimit,
+                       args.memHardLimit, args.procSoftLimit,
                        args.procHardLimit)
     elif args.function == "saveTuningDetails":
-        tuning.saveTuningDetails(args.maxConn, args.maxSSLConn, args.connTime, args.keepAlive, args.inMemCache, args.gzipCompression)
-
-
+        tuning.saveTuningDetails(args.maxConn, args.maxSSLConn, args.connTime, args.keepAlive, args.inMemCache,
+                                 args.gzipCompression)
 
 
 if __name__ == "__main__":
     main()
-

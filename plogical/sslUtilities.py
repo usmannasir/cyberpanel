@@ -4,13 +4,14 @@ import shlex
 import subprocess
 import socket
 from plogical.processUtilities import ProcessUtilities
+
 try:
     from websiteFunctions.models import ChildDomains, Websites
 except:
     pass
 
-class sslUtilities:
 
+class sslUtilities:
     Server_root = "/usr/local/lsws"
     redisConf = '/usr/local/lsws/conf/dvhost_redis.conf'
 
@@ -22,7 +23,7 @@ class sslUtilities:
             sslCheck = 0
 
             for items in data:
-                if items.find("listener") >-1 and items.find("SSL") > -1:
+                if items.find("listener") > -1 and items.find("SSL") > -1:
                     sslCheck = 1
                     continue
                 if sslCheck == 1:
@@ -71,7 +72,6 @@ class sslUtilities:
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile('%s [installSSLForDomain:72]' % (str(msg)))
 
-
         if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
             confPath = sslUtilities.Server_root + "/conf/vhosts/" + virtualHostName
             completePathToConfigFile = confPath + "/vhost.conf"
@@ -109,7 +109,7 @@ class sslUtilities:
                     writeDataToFile.writelines(certChain)
                     writeDataToFile.writelines(sslProtocol)
                     writeDataToFile.writelines(ciphers)
-                    writeDataToFile.writelines(enableECDHE) 
+                    writeDataToFile.writelines(enableECDHE)
                     writeDataToFile.writelines(renegProtection)
                     writeDataToFile.writelines(sslSessionCache)
                     writeDataToFile.writelines(enableSpdy)
@@ -277,9 +277,8 @@ class sslUtilities:
                 ProcessUtilities.executioner(command)
                 return 1
 
-
     @staticmethod
-    def obtainSSLForADomain(virtualHostName,adminEmail,sslpath, aliasDomain = None):
+    def obtainSSLForADomain(virtualHostName, adminEmail, sslpath, aliasDomain=None):
         try:
             acmePath = '/root/.acme.sh/acme.sh'
 
@@ -294,7 +293,8 @@ class sslUtilities:
                     subprocess.call(shlex.split(command))
 
                 try:
-                    logging.CyberCPLogFileWriter.writeToFile("Trying to obtain SSL for: " + virtualHostName + " and: www." + virtualHostName, 0)
+                    logging.CyberCPLogFileWriter.writeToFile(
+                        "Trying to obtain SSL for: " + virtualHostName + " and: www." + virtualHostName, 0)
 
                     command = acmePath + " --issue -d " + virtualHostName + " -d www." + virtualHostName \
                               + ' --cert-file ' + existingCertPath + '/cert.pem' + ' --key-file ' + existingCertPath + '/privkey.pem' \
@@ -303,9 +303,11 @@ class sslUtilities:
                     logging.CyberCPLogFileWriter.writeToFile(command, 0)
 
                     output = subprocess.check_output(shlex.split(command)).decode("utf-8")
-                    logging.CyberCPLogFileWriter.writeToFile("Successfully obtained SSL for: " + virtualHostName + " and: www." + virtualHostName, 0)
+                    logging.CyberCPLogFileWriter.writeToFile(
+                        "Successfully obtained SSL for: " + virtualHostName + " and: www." + virtualHostName, 0)
 
-                    logging.CyberCPLogFileWriter.SendEmail(adminEmail, adminEmail, output, 'SSL Notification for %s.' % (virtualHostName))
+                    logging.CyberCPLogFileWriter.SendEmail(adminEmail, adminEmail, output,
+                                                           'SSL Notification for %s.' % (virtualHostName))
 
 
                 except subprocess.CalledProcessError:
@@ -326,8 +328,10 @@ class sslUtilities:
                         logging.CyberCPLogFileWriter.SendEmail(adminEmail, adminEmail, finalText,
                                                                'SSL Notification for %s.' % (virtualHostName))
                     except subprocess.CalledProcessError:
-                        logging.CyberCPLogFileWriter.writeToFile('Failed to obtain SSL, issuing self-signed SSL for: ' + virtualHostName, 0)
-                        logging.CyberCPLogFileWriter.SendEmail(adminEmail, adminEmail, 'Failed to obtain SSL, issuing self-signed SSL for: ' + virtualHostName,
+                        logging.CyberCPLogFileWriter.writeToFile(
+                            'Failed to obtain SSL, issuing self-signed SSL for: ' + virtualHostName, 0)
+                        logging.CyberCPLogFileWriter.SendEmail(adminEmail, adminEmail,
+                                                               'Failed to obtain SSL, issuing self-signed SSL for: ' + virtualHostName,
                                                                'SSL Notification for %s.' % (virtualHostName))
                         return 0
             else:
@@ -342,7 +346,7 @@ class sslUtilities:
                         "Trying to obtain SSL for: " + virtualHostName + ", www." + virtualHostName + ", " + aliasDomain + " and www." + aliasDomain + ",")
 
                     command = acmePath + " --issue -d " + virtualHostName + " -d www." + virtualHostName \
-                              + ' -d ' + aliasDomain + ' -d www.' + aliasDomain\
+                              + ' -d ' + aliasDomain + ' -d www.' + aliasDomain \
                               + ' --cert-file ' + existingCertPath + '/cert.pem' + ' --key-file ' + existingCertPath + '/privkey.pem' \
                               + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w ' + sslpath + ' --force'
 
@@ -368,7 +372,7 @@ class sslUtilities:
             return 0
 
 
-def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain = None):
+def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None):
     try:
         if sslUtilities.obtainSSLForADomain(domain, adminEmail, sslpath, aliasDomain) == 1:
             if sslUtilities.installSSLForDomain(domain, adminEmail) == 1:
@@ -391,5 +395,4 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain = None):
                 return [0, "210 Failed to install SSL for domain. [issueSSLForDomain]"]
 
     except BaseException as msg:
-        return [0, "347 "+ str(msg)+ " [issueSSLForDomain]"]
-
+        return [0, "347 " + str(msg) + " [issueSSLForDomain]"]
