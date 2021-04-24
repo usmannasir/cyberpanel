@@ -837,32 +837,12 @@ class MailServerManagerUtils(multi.Thread):
                 command = 'debconf-set-selections ' + file_name
                 ProcessUtilities.executioner(command)
 
-                command = 'apt-get -y install postfix'
+                command = 'apt-get -y install postfix postfix-mysql'
                 # os.remove(file_name)
 
             ProcessUtilities.executioner(command)
 
-            import socket
-            # We are going to leverage postconfig -e to edit the settings for hostname
-            command = '"postconf -e "myhostname = %s"' % (str(socket.getfqdn()))
-            ProcessUtilities.executioner(command)
-            command = '"postconf -e "myhostname = %s"' % (str(socket.getfqdn()))
-            ProcessUtilities.executioner(command)
-
-            # We are explicitly going to use sed to set the hostname default from "myhostname = server.example.com"
-            # to the fqdn from socket if the default is still found
-            postfix_main = '/etc/postfix/main.cf'
-            command = "sed -i 's|server.example.com|%s|g' %s" % (str(socket.getfqdn()), postfix_main)
-            ProcessUtilities.executioner(command)
-
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Re-installing Dovecot..,15')
-
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
-                pass
-            else:
-                command = 'apt-get -y install dovecot-imapd dovecot-pop3d postfix-mysql'
-
-            ProcessUtilities.executioner(command)
 
             ##
 
@@ -871,43 +851,9 @@ class MailServerManagerUtils(multi.Thread):
             elif ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 command = 'dnf install --enablerepo=gf-plus dovecot23 dovecot23-mysql -y'
             else:
-                command = 'apt-get -y install dovecot-mysql'
+                command = 'apt-get -y install dovecot-mysql dovecot-imapd dovecot-pop3d'
 
             ProcessUtilities.executioner(command)
-
-            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
-
-                command = 'curl https://repo.dovecot.org/DOVECOT-REPO-GPG | gpg --import'
-                subprocess.call(command, shell=True)
-
-                command = 'gpg --export ED409DA1 > /etc/apt/trusted.gpg.d/dovecot.gpg'
-                subprocess.call(command, shell=True)
-
-                debPath = '/etc/apt/sources.list.d/dovecot.list'
-                writeToFile = open(debPath, 'w')
-                writeToFile.write('deb https://repo.dovecot.org/ce-2.3-latest/ubuntu/bionic bionic main\n')
-                writeToFile.close()
-
-                try:
-                    command = 'apt update -y'
-                    subprocess.call(command, shell=True)
-                except:
-                    pass
-
-                try:
-                    command = 'DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical sudo apt-get -q -y -o "Dpkg::Options::=--force-confdef" -o "Dpkg::Options::=--force-confold" --only-upgrade install dovecot-mysql -y'
-                    subprocess.call(command, shell=True)
-
-                    command = 'dpkg --configure -a'
-                    subprocess.call(command, shell=True)
-
-                    command = 'apt --fix-broken install -y'
-                    subprocess.call(command, shell=True)
-
-                    command = 'DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical sudo apt-get -q -y -o "Dpkg::Options::=--force-confdef" -o "Dpkg::Options::=--force-confold" --only-upgrade install dovecot-mysql -y'
-                    subprocess.call(command, shell=True)
-                except:
-                    pass
 
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
                                                       'Postfix/dovecot reinstalled.,40')
