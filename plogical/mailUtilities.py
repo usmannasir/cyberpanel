@@ -748,6 +748,7 @@ class MailServerManagerUtils(multi.Thread):
         self.request = request
         self.function = function
         self.extraArgs = extraArgs
+        self.MailSSL = 0
 
     def checkIfMailServerSSLIssued(self):
 
