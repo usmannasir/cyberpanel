@@ -2,8 +2,6 @@ import os
 import os.path
 import sys
 import argparse
-# from filesPermsUtilities import chmod_digit, chown, recursive_permissions, recursive_chown, mkdir_p
-from plogical.filesPermsUtilities import chmod_digit, chown, recursive_permissions, recursive_chown, mkdir_p
 
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
@@ -15,6 +13,8 @@ import MySQLdb as mysql
 from CyberCP import settings
 import random
 import string
+# from filesPermsUtilities import chmod_digit, chown, recursive_permissions, recursive_chown, mkdir_p
+from plogical.filesPermsUtilities import chmod_digit, chown, recursive_permissions, recursive_chown, mkdir_p
 
 VERSION = '2.1'
 BUILD = 1
