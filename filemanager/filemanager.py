@@ -746,7 +746,8 @@ class FileManager:
         website = Websites.objects.get(domain=domainName)
         externalApp = website.externalApp
         BaseHome = f'/home/{domainName}'
-        BasePublicHtml = f'/home/{domainName}/public_html'
+        BasePublicHtml = f'{BaseHome}/public_html'
+        BaseHomeLogs = f'{BaseHome}/logs'
 
         if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
             groupName = 'nobody'
@@ -780,6 +781,10 @@ class FileManager:
         chmod_digit(BasePublicHtml, 750)
         # command = 'chmod 750 /home/%s/public_html' % (domainName)
         # ProcessUtilities.executioner(command)
+
+        # Fix perms of $HOMEDIR/logs to groupName:externalApp aka nobody:user/nogroup:user
+        recursive_chown(BaseHomeLogs, groupName, externalApp)
+        chmod_digit(BaseHomeLogs, 750)
 
         for childs in website.childdomains_set.all():
 
