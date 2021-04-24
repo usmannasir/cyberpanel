@@ -2,8 +2,7 @@ import os
 import os.path
 import sys
 import argparse
-
-from plogical.filesPermsUtilities import chmod_digit, chown, recursive_permissions, recursive_chown, mkdir_p
+from filesPermsUtilities import chmod_digit, chown, recursive_permissions, recursive_chown, mkdir_p
 
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
