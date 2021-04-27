@@ -114,6 +114,9 @@ class DNS:
             ipData = f.read()
             ipAddress = ipData.split('\n', 1)[0]
 
+            command = 'chown cyberpanel:cyberpanel -R /usr/local/CyberCP/lib/python3.6/site-packages/tldextract/.suffix_cache'
+            ProcessUtilities.executioner(command)
+
             import tldextract
 
             extractDomain = tldextract.extract(domain)
@@ -514,6 +517,9 @@ class DNS:
     @staticmethod
     def createDKIMRecords(domain):
         try:
+
+            command = 'chown cyberpanel:cyberpanel -R /usr/local/CyberCP/lib/python3.6/site-packages/tldextract/.suffix_cache'
+            ProcessUtilities.executioner(command)
 
             import tldextract
 

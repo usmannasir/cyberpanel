@@ -659,6 +659,9 @@ class MailServerManager(multi.Thread):
 
             try:
 
+                command = 'chown cyberpanel:cyberpanel -R /usr/local/CyberCP/lib/python3.6/site-packages/tldextract/.suffix_cache'
+                ProcessUtilities.executioner(command)
+
                 import tldextract
 
                 extractDomain = tldextract.extract(domainName)
@@ -717,6 +720,10 @@ class MailServerManager(multi.Thread):
             DNS.dnsTemplate(domainName, admin)
 
             if output.find("1,None") > -1:
+
+                command = 'chown cyberpanel:cyberpanel -R /usr/local/CyberCP/lib/python3.6/site-packages/tldextract/.suffix_cache'
+                ProcessUtilities.executioner(command)
+
                 import tldextract
 
                 extractDomain = tldextract.extract(domainName)
