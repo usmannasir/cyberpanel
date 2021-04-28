@@ -1,4 +1,4 @@
-from plogical import CyberCPLogFileWriter as logging
+import CyberCPLogFileWriter as logging
 import argparse
 
 class serverLogs:
