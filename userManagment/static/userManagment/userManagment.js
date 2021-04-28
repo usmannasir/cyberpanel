@@ -1723,6 +1723,7 @@ app.controller('listTableUsers', function ($scope, $http) {
     };
 
     $scope.controlUserState = function (userName, state) {
+
         $scope.cyberpanelLoading = false;
 
         var url = "/users/controlUserState";

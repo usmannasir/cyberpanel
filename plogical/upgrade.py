@@ -2528,12 +2528,18 @@ vmail
         Upgrade.setupCLI()
         Upgrade.someDirectories()
         Upgrade.installLSCPD(branch)
-        Upgrade.GeneralMigrations()
+
+        ### General migrations are not needed any more
+
+        # Upgrade.GeneralMigrations()
+
         # Upgrade.p3()
 
-        if os.path.exists(postfixPath):
-            Upgrade.upgradeDovecot()
-        time.sleep(3)
+        ## Also disable email service upgrade
+
+        # if os.path.exists(postfixPath):
+        #     Upgrade.upgradeDovecot()
+
 
         ## Upgrade version
 
@@ -2541,7 +2547,10 @@ vmail
 
         ##
 
-        Upgrade.upgradeVersion()
+        ### Disable version upgrade too
+
+        # Upgrade.upgradeVersion()
+
         Upgrade.UpdateMaxSSLCons()
 
         ## Update LSCPD PHP
