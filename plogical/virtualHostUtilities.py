@@ -56,7 +56,7 @@ class virtualHostUtilities:
         if mailDomain:
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Creating mail child domain..,80')
             childDomain = 'mail.%s' % (virtualHostName)
-            childPath = '/home/%s/public_html/%s' % (virtualHostName, childDomain)
+            childPath = '/home/%s/%s' % (virtualHostName, childDomain)
 
             result = virtualHostUtilities.createDomain(virtualHostName, childDomain, 'PHP 7.2', childPath, 1, 0, 0,
                                               admin.userName, 0, "/home/cyberpanel/" + str(randint(1000, 9999)))
