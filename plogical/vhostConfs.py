@@ -14,6 +14,7 @@ vhDomain                  $VH_NAME
 vhAliases                 www.$VH_NAME
 adminEmails               {adminEmails}
 enableGzip                1
+enableBr                  1
 enableIpGeo               1
 
 index  {
@@ -84,6 +85,7 @@ vhDomain                  $VH_NAME
 vhAliases                 www.$VH_NAME
 adminEmails               {adminEmails}
 enableGzip                1
+enableBr                  1
 enableIpGeo               1
 
 index  {
@@ -309,6 +311,7 @@ vhDomain                  $VH_NAME
 vhAliases                 www.$VH_NAME
 adminEmails               {adminEmails}
 enableGzip                1
+enableBr                  1
 enableIpGeo               1
 
 index  {
