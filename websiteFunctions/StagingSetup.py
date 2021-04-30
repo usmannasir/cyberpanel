@@ -191,12 +191,18 @@ class StagingSetup(multi.Thread):
             logging.statusWriter(tempStatusPath, 'Syncing databases..,10')
 
             command = 'wp --allow-root --skip-plugins --skip-themes --path=%s db export %s/dbexport-stage.sql' % (child.path, masterPath)
-            ProcessUtilities.executioner(command)
+            result = ProcessUtilities.outputExecutioner(command)
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.writeToFile(result)
 
             ## Restore to master domain
 
             command = 'wp --allow-root --skip-plugins --skip-themes --path=%s --quiet db import %s/dbexport-stage.sql' % (masterPath, masterPath)
-            ProcessUtilities.executioner(command)
+            result = ProcessUtilities.outputExecutioner(command)
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.writeToFile(result)
 
             try:
                 command = 'rm -f %s/dbexport-stage.sql' % (masterPath)
@@ -211,6 +217,9 @@ class StagingSetup(multi.Thread):
             command = 'wp theme path --allow-root --skip-plugins --skip-themes --path=%s' % (masterPath)
             WpContentPath = ProcessUtilities.outputExecutioner(command).splitlines()[-1].replace('wp-content/themes', '')
 
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.writeToFile(WpContentPath)
+
             command = 'cp -R %s/wp-content/ %s' % (child.path, WpContentPath)
             ProcessUtilities.executioner(command)
 
@@ -222,10 +231,16 @@ class StagingSetup(multi.Thread):
             ## Search and replace url
 
             command = 'wp search-replace --allow-root --skip-plugins --skip-themes --path=%s "%s" "%s"' % (masterPath, child.domain, replaceDomain)
-            ProcessUtilities.executioner(command)
+            result = ProcessUtilities.outputExecutioner(command)
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.writeToFile(result)
 
             command = 'wp search-replace --allow-root --skip-plugins --skip-themes --path=%s "www.%s" "%s"' % (masterPath, child.domain, replaceDomain)
-            ProcessUtilities.executioner(command)
+            result = ProcessUtilities.outputExecutioner(command)
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.writeToFile(result)
 
             from filemanager.filemanager import FileManager
 

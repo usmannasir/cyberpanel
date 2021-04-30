@@ -931,7 +931,7 @@ password=%s
 
             data = open(cnfPath, 'r').read()
 
-            if data.find('bind-address') > -1 and data.find('skip-name-resolve') > -1:
+            if data.find('bind-address'):
                 print('1,None')
                 return 1
             else:
@@ -943,7 +943,6 @@ password=%s
                 mysqldContent = '''
 [mysqld] 
 bind-address=%s
-skip-name-resolve
 ''' % (ipAddressLocal)
 
                 writeToFile = open(cnfPath, 'a')
