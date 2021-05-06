@@ -807,6 +807,10 @@ class IncJobs(multi.Thread):
             if self.backupDestinations == 'local':
                 command = 'restic init --repo %s --password-file %s' % (self.repoPath, self.passwordFile)
                 result = ProcessUtilities.outputExecutioner(command)
+
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.writeToFile(result)
+
                 if result.find('config file already exists') == -1:
                     logging.statusWriter(self.statusPath, result, 1)
 
@@ -815,6 +819,10 @@ class IncJobs(multi.Thread):
                 command = 'export PATH=${PATH}:/usr/bin && restic init --repo %s:%s --password-file %s' % (
                     self.backupDestinations, remotePath, self.passwordFile)
                 result = ProcessUtilities.outputExecutioner(command)
+
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.writeToFile(result)
+
                 if result.find('config file already exists') == -1:
                     logging.statusWriter(self.statusPath, result, 1)
             else:
@@ -822,9 +830,12 @@ class IncJobs(multi.Thread):
                 command = 'export AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s  && restic -r s3:s3.amazonaws.com/%s init --password-file %s' % (
                     key, secret, self.website.domain, self.passwordFile)
                 result = ProcessUtilities.outputExecutioner(command)
+
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.writeToFile(result)
+
                 if result.find('config file already exists') == -1:
                     logging.statusWriter(self.statusPath, result, 1)
-                return 1
 
             logging.statusWriter(self.statusPath,
                                  'Repo %s initiated for %s.' % (self.backupDestinations, self.website.domain), 1)
@@ -851,6 +862,7 @@ Subject: %s
         mailUtilities.SendEmail(sender, TO, message)
 
     def createBackup(self):
+
         self.statusPath = self.extraArgs['tempPath']
         website = self.extraArgs['website']
         self.backupDestinations = self.extraArgs['backupDestinations']
@@ -861,6 +873,7 @@ Subject: %s
         ### Checking if restic is installed before moving on
 
         command = 'restic'
+
         if ProcessUtilities.outputExecutioner(command).find('restic is a backup program which') == -1:
             try:
 
