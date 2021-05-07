@@ -5,10 +5,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: CyberPanel 2.3\n"
+"Project-Id-Version: CyberPanel 2.1.1\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2019-11-21 19:54+0500\n"
-"PO-Revision-Date: 2021-04-10 11:02+0200\n"
+"PO-Revision-Date: 2021-05-07 15:52+0200\n"
 "Last-Translator: Maicol <maicolbattistini@live.it>\n"
 "Language-Team: Maicol Battistini <maicolbattistini@live.it>, Burak BOZ "
 "<burakboz@icloud.com>\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
-"X-Generator: Poedit 2.4.2\n"
+"X-Generator: Poedit 2.4.3\n"
 
 #: CLManager/templates/CLManager/createPackage.html:3
 msgid "Create Cloud Linux Package - CyberPanel"
@@ -1240,7 +1240,7 @@ msgstr "Menu rapido dashboard"
 #: baseTemplate/templates/baseTemplate/index.html:725
 #: baseTemplate/templates/baseTemplate/index.html:727
 msgid "Tuning"
-msgstr "Sintonizzazione in corso"
+msgstr "Ottimizzazione in corso"
 
 #: baseTemplate/templates/baseTemplate/index.html:332
 msgid "Overview"
@@ -1730,19 +1730,19 @@ msgstr "Crea un nuovo container"
 #: tuning/templates/tuning/index.html:24 tuning/templates/tuning/index.html:26
 #: tuning/templates/tuning/liteSpeedTuning.html:12
 msgid "LiteSpeed Tuning"
-msgstr "Sintonizza LiteSpeed"
+msgstr "Ottimizzazione di LiteSpeed"
 
 #: baseTemplate/templates/baseTemplate/index.html:736
 #: tuning/templates/tuning/index.html:36 tuning/templates/tuning/index.html:38
 #: tuning/templates/tuning/phpTuning.html:13 tuning/templates/tuning/phpTuning.html:149
 msgid "PHP Tuning"
-msgstr "Sintonizza PHP"
+msgstr "Ottimizzazione di PHP"
 
 #: baseTemplate/templates/baseTemplate/index.html:751
 #: serverStatus/templates/serverStatus/topProcesses.html:14
 #: serverStatus/templates/serverStatus/topProcesses.html:179
 msgid "Top Processes"
-msgstr "Processi top"
+msgstr "Processi principali"
 
 #: baseTemplate/templates/baseTemplate/index.html:754
 #: serverStatus/templates/serverStatus/index.html:25
@@ -1884,7 +1884,7 @@ msgstr "Impostazioni mail"
 #: baseTemplate/templates/baseTemplate/index.html:852
 #: emailPremium/templates/emailPremium/policyServer.html:20
 msgid "Email Policy Server"
-msgstr "Politica del server email"
+msgstr "Server dei criteri email"
 
 #: baseTemplate/templates/baseTemplate/index.html:855
 msgid "Email Limits"
@@ -2271,7 +2271,7 @@ msgstr "Priorità"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:181
 msgid "Policy"
-msgstr "Politica"
+msgstr "Criterio"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:205
 msgid "Text"
@@ -2768,7 +2768,7 @@ msgstr ""
 #: emailMarketing/templates/emailMarketing/emailMarketing.html:29
 #: emailPremium/templates/emailPremium/listDomains.html:29
 msgid "Email Policy Server is not enabled "
-msgstr "Politica server email non attivata "
+msgstr "Server dei criteri email non attivato "
 
 #: emailMarketing/templates/emailMarketing/emailMarketing.html:32
 #: emailPremium/templates/emailPremium/listDomains.html:33
@@ -3402,32 +3402,24 @@ msgstr "open_basedir"
 #: emailMarketing/templates/emailMarketing/website.html:890
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:577
 #: websiteFunctions/templates/websiteFunctions/website.html:825
-#, fuzzy
-#| msgid "Create FTP Account"
 msgid "Create FTP Acct"
-msgstr "Crea Account FTP"
+msgstr "Crea account FTP"
 
 #: emailMarketing/templates/emailMarketing/website.html:902
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:589
 #: websiteFunctions/templates/websiteFunctions/website.html:834
-#, fuzzy
-#| msgid "Delete FTP Account"
 msgid "Delete FTP Acct"
-msgstr "Elimina Account FTP"
+msgstr "Elimina account FTP"
 
 #: emailMarketing/templates/emailMarketing/website.html:939
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:628
 #: websiteFunctions/templates/websiteFunctions/website.html:868
-#, fuzzy
-#| msgid "Save Changes"
 msgid "Apply Changes"
-msgstr "Applica Cambiamenti"
+msgstr "Applica modifiche"
 
 #: emailMarketing/templates/emailMarketing/website.html:951
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:640
 #: websiteFunctions/templates/websiteFunctions/website.html:880
-#, fuzzy
-#| msgid "File Successfully saved."
 msgid "Changes successfully saved."
 msgstr "Modifiche salvate correttamente."
 
@@ -3437,10 +3429,8 @@ msgstr "Modifiche salvate correttamente."
 #: websiteFunctions/templates/websiteFunctions/website.html:915
 #: websiteFunctions/templates/websiteFunctions/website.html:919
 #: websiteFunctions/templates/websiteFunctions/website.html:920
-#, fuzzy
-#| msgid "Create File"
 msgid "Create Lists"
-msgstr "Crea Liste"
+msgstr "Crea liste"
 
 #: emailMarketing/templates/emailMarketing/website.html:997
 #: emailMarketing/templates/emailMarketing/website.html:1000
@@ -3448,10 +3438,8 @@ msgstr "Crea Liste"
 #: websiteFunctions/templates/websiteFunctions/website.html:925
 #: websiteFunctions/templates/websiteFunctions/website.html:929
 #: websiteFunctions/templates/websiteFunctions/website.html:930
-#, fuzzy
-#| msgid "Manage SSL"
 msgid "Manage Lists"
-msgstr "Gestisci Liste"
+msgstr "Gestisci liste"
 
 #: emailMarketing/templates/emailMarketing/website.html:1008
 #: emailMarketing/templates/emailMarketing/website.html:1011
@@ -3460,21 +3448,17 @@ msgstr "Gestisci Liste"
 #: websiteFunctions/templates/websiteFunctions/website.html:939
 #: websiteFunctions/templates/websiteFunctions/website.html:940
 msgid "SMTP Hosts"
-msgstr "SMTP Host"
+msgstr "Host SMTP"
 
 #: emailMarketing/templates/emailMarketing/website.html:1019
 #: emailMarketing/templates/emailMarketing/website.html:1022
 #: websiteFunctions/templates/websiteFunctions/website.html:945
 #: websiteFunctions/templates/websiteFunctions/website.html:950
-#, fuzzy
-#| msgid "Compress"
 msgid "Compose Message"
-msgstr "Componi Messaggio"
+msgstr "Componi messaggio"
 
 #: emailMarketing/templates/emailMarketing/website.html:1023
 #: websiteFunctions/templates/websiteFunctions/website.html:951
-#, fuzzy
-#| msgid "Compress"
 msgid "Compose"
 msgstr "Componi"
 
@@ -3495,7 +3479,7 @@ msgstr "Programma di installazione dell'applicazione"
 #: websiteFunctions/templates/websiteFunctions/website.html:985
 #: websiteFunctions/templates/websiteFunctions/website.html:989
 msgid "Install wordpress with LSCache"
-msgstr "Installa wordpress con LSCache"
+msgstr "Installa WordPress con LSCache"
 
 #: emailMarketing/templates/emailMarketing/website.html:1066
 #: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:35
@@ -3510,8 +3494,6 @@ msgstr "Wordpress con LSCache"
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:689
 #: websiteFunctions/templates/websiteFunctions/website.html:996
 #: websiteFunctions/templates/websiteFunctions/website.html:1000
-#, fuzzy
-#| msgid "Install Joomla with(?) LSCache"
 msgid "Install Joomla with LSCache"
 msgstr "Installa Joomla con LSCache"
 
@@ -3529,7 +3511,7 @@ msgstr "Joomla"
 #: websiteFunctions/templates/websiteFunctions/website.html:1007
 #: websiteFunctions/templates/websiteFunctions/website.html:1011
 msgid "Attach Git with this website!"
-msgstr "Allega Git con questo sito Web!"
+msgstr "Collega Git con questo sito Web!"
 
 #: emailMarketing/templates/emailMarketing/website.html:1094
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:702
@@ -3543,8 +3525,6 @@ msgstr "Git"
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:715
 #: websiteFunctions/templates/websiteFunctions/website.html:1018
 #: websiteFunctions/templates/websiteFunctions/website.html:1022
-#, fuzzy
-#| msgid "Install"
 msgid "Install Prestashop"
 msgstr "Installa Prestashop"
 
@@ -3556,26 +3536,20 @@ msgstr "Prestashop"
 
 #: emailPremium/templates/emailPremium/SpamAssassin.html:3
 #: firewall/templates/firewall/spamassassin.html:3
-#, fuzzy
-#| msgid "Packages - CyberPanel"
 msgid "SpamAssassin - CyberPanel"
 msgstr "SpamAssassin - CyberPanel"
 
 #: emailPremium/templates/emailPremium/SpamAssassin.html:13
 #: firewall/templates/firewall/spamassassin.html:13
-#, fuzzy
-#| msgid "Configurations"
 msgid "SpamAssassin Configurations!"
-msgstr "Configurazioni SpamAssassin"
+msgstr "Configurazioni SpamAssassin!"
 
 #: emailPremium/templates/emailPremium/SpamAssassin.html:17
 msgid "SpamAssassin Docs"
-msgstr "SpamAssassin Documentazione"
+msgstr "Documentazione SpamAssassin"
 
 #: emailPremium/templates/emailPremium/SpamAssassin.html:19
 #: firewall/templates/firewall/spamassassin.html:14
-#, fuzzy
-#| msgid "On this page you can set up your Back up destinations. (SFTP)"
 msgid "On this page you can configure SpamAssassin settings."
 msgstr "In questa pagina puoi configurare le impostazioni di SpamAssassin."
 
@@ -3590,20 +3564,16 @@ msgstr "SpamAssassin non è installato "
 #: firewall/templates/firewall/modSecurityRules.html:73
 #: firewall/templates/firewall/modSecurityRulesPacks.html:31
 #: firewall/templates/firewall/spamassassin.html:31
-#, fuzzy
-#| msgid "Install"
 msgid "Install Now."
-msgstr "Installa Ora"
+msgstr "Installa ora."
 
 #: emailPremium/templates/emailPremium/SpamAssassin.html:49
 #: firewall/templates/firewall/csf.html:43
 #: firewall/templates/firewall/modSecurity.html:47
 #: firewall/templates/firewall/modSecurity.html:244
 #: firewall/templates/firewall/spamassassin.html:43
-#, fuzzy
-#| msgid "Cannot add destination. Error message:"
 msgid "Failed to start installation, Error message: "
-msgstr "Impossibile avviare l'installazione, messaggio di errore:"
+msgstr "Impossibile avviare l'installazione, messaggio di errore: "
 
 #: emailPremium/templates/emailPremium/SpamAssassin.html:54
 #: emailPremium/templates/emailPremium/SpamAssassin.html:146
@@ -3634,14 +3604,12 @@ msgstr "Impossibile connettersi. Si prega di aggiornare questa pagina."
 #: firewall/templates/firewall/modSecurity.html:57
 #: firewall/templates/firewall/modSecurity.html:253
 #: firewall/templates/firewall/spamassassin.html:51
-#, fuzzy
-#| msgid "Installation failed. Error message:"
 msgid "Installation failed."
-msgstr "Installazione Fallita."
+msgstr "Installazione fallita."
 
 #: emailPremium/templates/emailPremium/SpamAssassin.html:62
 msgid "SpamAssassin successfully installed, refreshing page in 3 seconds.."
-msgstr "SpamAssassin installato con successo, pagina in aggiornamento tra 3 secondi .."
+msgstr "SpamAssassin installato con successo, la pagina si ricaricherà tra 3 secondi.."
 
 #: emailPremium/templates/emailPremium/SpamAssassin.html:74
 msgid "Winter is coming, but so is SpamAssassin."
@@ -3651,38 +3619,28 @@ msgstr "L'inverno sta arrivando, ma lo è anche Spam Assassin."
 #: firewall/templates/firewall/modSecurity.html:163
 #: firewall/templates/firewall/modSecurity.html:351
 #: firewall/templates/firewall/spamassassin.html:157
-#, fuzzy
-#| msgid "Save Changes"
 msgid "Save changes."
-msgstr "Salva I Cambiamenti."
+msgstr "Salva le modifiche."
 
 #: emailPremium/templates/emailPremium/SpamAssassin.html:137
-#, fuzzy
-#| msgid "Could not fetch current configuration. Error message:"
 msgid "Failed to save SpamAssassin configurations. Error message: "
 msgstr "Impossibile salvare le configurazioni di SpamAssassin. Messaggio di errore: "
 
 #: emailPremium/templates/emailPremium/SpamAssassin.html:142
-#, fuzzy
-#| msgid "Backup Process successfully started."
 msgid "SpamAssassin configurations successfully saved."
 msgstr "Le configurazioni di SpamAssassin sono state salvate correttamente."
 
 #: emailPremium/templates/emailPremium/emailLimits.html:13
 #: emailPremium/templates/emailPremium/listDomains.html:14
 #: emailPremium/templates/emailPremium/policyServer.html:13
-#, fuzzy
-#| msgid "Email Logs"
 msgid "Email Limits Docs"
-msgstr "Documentazione Limiti Email"
+msgstr "Documentazione limiti email"
 
 #: emailPremium/templates/emailPremium/emailLimits.html:14
 msgid "View and change email limits for a domain name."
 msgstr "Visualizza e modifica i limiti email per un nome di dominio."
 
 #: emailPremium/templates/emailPremium/emailLimits.html:25
-#, fuzzy
-#| msgid "Resource Usage"
 msgid "Domain Resource Usage"
 msgstr "Utilizzo delle risorse del dominio"
 
@@ -3691,14 +3649,14 @@ msgstr "Utilizzo delle risorse del dominio"
 #: emailPremium/templates/emailPremium/emailPage.html:54
 #: emailPremium/templates/emailPremium/listDomains.html:61
 msgid "Limits are being Applied!"
-msgstr "I limiti sono stati applicati!"
+msgstr "I limiti stanno per essere applicati!"
 
 #: emailPremium/templates/emailPremium/emailLimits.html:54
 #: emailPremium/templates/emailPremium/emailLimits.html:160
 #: emailPremium/templates/emailPremium/emailPage.html:56
 #: emailPremium/templates/emailPremium/listDomains.html:63
 msgid "Limits are not being applied!"
-msgstr "I limiti non vengono applicati!"
+msgstr "I limiti non stanno per essere applicati!"
 
 #: emailPremium/templates/emailPremium/emailLimits.html:58
 #: emailPremium/templates/emailPremium/emailPage.html:66
@@ -3712,57 +3670,41 @@ msgstr "Modifica"
 
 #: emailPremium/templates/emailPremium/emailLimits.html:70
 #: emailPremium/templates/emailPremium/emailPage.html:78
-#, fuzzy
-#| msgid "Memory Soft Limit"
 msgid "Monthly Limit"
-msgstr "Limite Mensile"
+msgstr "Limite mensile"
 
 #: emailPremium/templates/emailPremium/emailLimits.html:83
 #: emailPremium/templates/emailPremium/emailPage.html:101
-#, fuzzy
-#| msgid "Change"
 msgid "Change Limits"
-msgstr "Cambia Limiti"
+msgstr "Cambia limiti"
 
 #: emailPremium/templates/emailPremium/emailLimits.html:93
 #: emailPremium/templates/emailPremium/emailPage.html:111
-#, fuzzy
-#| msgid "Cannot create user. Error message:"
 msgid "Can not change limits. Error message:"
 msgstr "Non posso cambiare i limiti. Messaggio di errore:"
 
 #: emailPremium/templates/emailPremium/emailLimits.html:97
-#, fuzzy
-#| msgid "Password successfully changed for :"
 msgid "Limits successfully changed, refreshing in 3 seconds."
-msgstr "Limiti modificati con successo, aggiornamento in 3 secondi."
+msgstr "Limiti modificati con successo, ricaricamento in 3 secondi."
 
 #: emailPremium/templates/emailPremium/emailLimits.html:126
 #: emailPremium/templates/emailPremium/emailPage.html:25
-#, fuzzy
-#| msgid "Resource Usage"
 msgid "Email Resource Usage"
-msgstr "Utilizzo delle risorse di posta elettronica"
+msgstr "Utilizzo delle risorse email"
 
 #: emailPremium/templates/emailPremium/emailLimits.html:133
-#, fuzzy
-#| msgid "Search Extensions.."
 msgid "Search Emails.."
-msgstr "Cerca Email.."
+msgstr "Cerca email.."
 
 #: emailPremium/templates/emailPremium/emailLimits.html:164
 #: emailPremium/templates/emailPremium/listDomains.html:67
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:207
-#, fuzzy
-#| msgid "Manage SSL"
 msgid "Manage"
 msgstr "Gestisci"
 
 #: emailPremium/templates/emailPremium/emailPage.html:13
-#, fuzzy
-#| msgid "Email Logs"
 msgid "Emai Limits Docs"
-msgstr "Documentazione Limiti Email"
+msgstr "Documentazione limiti email"
 
 #: emailPremium/templates/emailPremium/emailPage.html:14
 msgid "View and change limits for an Email Address."
@@ -3770,39 +3712,29 @@ msgstr "Visualizza e modifica i limiti per un indirizzo email."
 
 #: emailPremium/templates/emailPremium/emailPage.html:60
 msgid "Logging in ON!"
-msgstr "Accesso ON!"
+msgstr "La registrazione di log è attivata!"
 
 #: emailPremium/templates/emailPremium/emailPage.html:62
 msgid "Logging is Off"
-msgstr "Accesso Off"
+msgstr "La registrazione di log è disattivata"
 
 #: emailPremium/templates/emailPremium/emailPage.html:88
-#, fuzzy
-#| msgid "Memory Soft Limit"
 msgid "Hourly Limit"
-msgstr "Limite Orario"
+msgstr "Limite orario"
 
 #: emailPremium/templates/emailPremium/emailPage.html:115
-#, fuzzy
-#| msgid "is successfully created."
 msgid "Limits successfully changed."
 msgstr "Limiti modificati con successo."
 
 #: emailPremium/templates/emailPremium/emailPage.html:151
-#, fuzzy
-#| msgid "Search Extensions.."
 msgid "Search Emails Logs.."
-msgstr "Cerca i log delle email .."
+msgstr "Cerca tra i registri delle email.."
 
 #: emailPremium/templates/emailPremium/emailPage.html:155
-#, fuzzy
-#| msgid "FTP Logs"
 msgid "Flush Logs"
 msgstr "Registri di flusso"
 
 #: emailPremium/templates/emailPremium/listDomains.html:3
-#, fuzzy
-#| msgid "Home - CyberPanel"
 msgid "Domains - CyberPanel"
 msgstr "Domini - CyberPanel"
 
@@ -3812,31 +3744,25 @@ msgstr ""
 "In questa pagina gestisci i limiti di posta elettronica per domini/indirizzi email"
 
 #: emailPremium/templates/emailPremium/policyServer.html:3
-#, fuzzy
-#| msgid "Services - CyberPanel"
 msgid "Email Policy Server - CyberPanel"
-msgstr "Politica Server Email - CyberPanel"
+msgstr "Server dei criteri email - CyberPanel"
 
 #: emailPremium/templates/emailPremium/policyServer.html:13
-#, fuzzy
-#| msgid "Edit PHP Configurations"
 msgid "Email Policy Server Configurations!"
-msgstr "Configurazioni Politica Server Email"
+msgstr "Configurazioni server dei criteri email!"
 
 #: emailPremium/templates/emailPremium/policyServer.html:14
 msgid "Turn ON Email Policy Server to use Email Limits Feature. "
 msgstr ""
-"Attiva il server dei criteri di posta elettronica per utilizzare la funzionalità dei "
-"limiti di posta elettronica. "
+"Attiva il server dei criteri email per utilizzare la funzionalità dei limiti di posta "
+"elettronica. "
 
 #: emailPremium/templates/emailPremium/policyServer.html:40
 #: manageServices/templates/manageServices/managePostfix.html:41
 #: manageServices/templates/manageServices/managePowerDNS.html:112
 #: manageServices/templates/manageServices/managePureFtpd.html:41
-#, fuzzy
-#| msgid "Save Changes"
 msgid "Save changes"
-msgstr "Salva I Cambiamenti."
+msgstr "Salva le modifiche"
 
 #: emailPremium/templates/emailPremium/policyServer.html:52
 #: firewall/templates/firewall/secureSSH.html:78
@@ -3852,14 +3778,12 @@ msgstr "Messaggio di errore: "
 #: manageServices/templates/manageServices/managePostfix.html:55
 #: manageServices/templates/manageServices/managePowerDNS.html:126
 #: manageServices/templates/manageServices/managePureFtpd.html:55
-#, fuzzy
-#| msgid "is successfully erased."
 msgid "Changes successfully applied."
 msgstr "Modifiche applicate con successo."
 
 #: filemanager/templates/filemanager/index.html:5
 msgid "File Manager - CyberPanel"
-msgstr "Gestisci File - CyberPanel"
+msgstr "Gestione file - CyberPanel"
 
 #: filemanager/templates/filemanager/index.html:54
 msgid " File Manager"
@@ -3873,11 +3797,11 @@ msgstr "Carica"
 
 #: filemanager/templates/filemanager/index.html:61
 msgid "New File"
-msgstr "Nuovo File"
+msgstr "Nuovo fle"
 
 #: filemanager/templates/filemanager/index.html:64
 msgid "New Folder"
-msgstr "Nuova Cartella"
+msgstr "Nuova cartella"
 
 #: filemanager/templates/filemanager/index.html:70
 #: filemanager/templates/filemanager/index.html:557
@@ -3911,10 +3835,8 @@ msgid "Extract"
 msgstr "Estrai"
 
 #: filemanager/templates/filemanager/index.html:88
-#, fuzzy
-#| msgid "Permissions"
 msgid "Fix Permissions"
-msgstr "Correggi autorizzazioni"
+msgstr "Correggi permessi"
 
 #: filemanager/templates/filemanager/index.html:113
 msgid "Current Path"
@@ -3937,11 +3859,11 @@ msgstr "Aggiorna"
 
 #: filemanager/templates/filemanager/index.html:146
 msgid "Select All"
-msgstr "Seleziona Tutto"
+msgstr "Seleziona tutto"
 
 #: filemanager/templates/filemanager/index.html:150
 msgid "UnSelect All"
-msgstr "Deseleziona Tutto"
+msgstr "Deseleziona tutto"
 
 #: filemanager/templates/filemanager/index.html:159
 msgid "Size (KB)"
@@ -3949,7 +3871,7 @@ msgstr "Dimensione (KB)"
 
 #: filemanager/templates/filemanager/index.html:160
 msgid "Last Modified"
-msgstr "Ultima Modifica"
+msgstr "Ultima modifica"
 
 #: filemanager/templates/filemanager/index.html:161
 msgid "Permissions"
@@ -3957,17 +3879,15 @@ msgstr "Permessi"
 
 #: filemanager/templates/filemanager/index.html:181
 msgid "Upload File"
-msgstr "Carica File"
+msgstr "Carica file"
 
 #: filemanager/templates/filemanager/index.html:181
-#, fuzzy
-#| msgid "Upload File"
 msgid "Upload Limits"
-msgstr "Limiti di Caricamento"
+msgstr "Limiti di caricamento"
 
 #: filemanager/templates/filemanager/index.html:187
 msgid "Upload queue"
-msgstr "Carica coda"
+msgstr "Coda di caricamento"
 
 #: filemanager/templates/filemanager/index.html:188
 msgid "Queue length:"
@@ -3991,7 +3911,7 @@ msgstr "Rimuovi"
 
 #: filemanager/templates/filemanager/index.html:243
 msgid "Queue progress:"
-msgstr "Progresso Coda:"
+msgstr "Progresso coda:"
 
 #: filemanager/templates/filemanager/index.html:252
 msgid "can not be uploaded, Error message:"
@@ -3999,15 +3919,15 @@ msgstr "non può essere caricato, messaggio di errore:"
 
 #: filemanager/templates/filemanager/index.html:256
 msgid "Upload all"
-msgstr "Carica Tutti"
+msgstr "Carica tutti"
 
 #: filemanager/templates/filemanager/index.html:259
 msgid "Cancel all"
-msgstr "Cancella Tutti"
+msgstr "Cancella tutti"
 
 #: filemanager/templates/filemanager/index.html:262
 msgid "Remove all"
-msgstr "Rimuovi Tutti"
+msgstr "Rimuovi tutti"
 
 #: filemanager/templates/filemanager/index.html:298
 msgid "File Successfully saved."
@@ -4022,23 +3942,23 @@ msgstr "File salvato con successo."
 #: userManagment/templates/userManagment/resellerCenter.html:58
 #: websiteFunctions/templates/websiteFunctions/sshAccess.html:42
 msgid "Save Changes"
-msgstr "Salva Modifiche"
+msgstr "Salva modifiche"
 
 #: filemanager/templates/filemanager/index.html:322
 msgid "Create new folder!"
-msgstr "Nuova Cartella Creata!"
+msgstr "Nuova cartella creata!"
 
 #: filemanager/templates/filemanager/index.html:330
 msgid "New Folder Name"
-msgstr "Nome Nuova Cartella"
+msgstr "Nome nuova cartella"
 
 #: filemanager/templates/filemanager/index.html:332
 msgid "Folder will be created in your current directory"
-msgstr "La cartella verrà creata nella directory corrente"
+msgstr "La cartella verrà creata nella directory attuale"
 
 #: filemanager/templates/filemanager/index.html:334
 msgid "Create Folder"
-msgstr "Crea Cartella"
+msgstr "Crea cartella"
 
 #: filemanager/templates/filemanager/index.html:347
 msgid "Folder Successfully created."
@@ -4050,7 +3970,7 @@ msgstr "Crea un nuovo file!"
 
 #: filemanager/templates/filemanager/index.html:374
 msgid "New File Name"
-msgstr "Nome Nuovo File"
+msgstr "Nome del nuovo file"
 
 #: filemanager/templates/filemanager/index.html:376
 msgid ""
@@ -4061,7 +3981,7 @@ msgstr ""
 
 #: filemanager/templates/filemanager/index.html:378
 msgid "Create File"
-msgstr "Crea File"
+msgstr "Crea file"
 
 #: filemanager/templates/filemanager/index.html:391
 msgid "File Successfully created."
@@ -4069,7 +3989,7 @@ msgstr "File creato con successo."
 
 #: filemanager/templates/filemanager/index.html:407
 msgid "Confirm Deletion!"
-msgstr "Conferma Eliminazione!"
+msgstr "Conferma l'eliminazione!"
 
 #: filemanager/templates/filemanager/index.html:440
 msgid "List of files/folder!"
@@ -4081,11 +4001,11 @@ msgstr "Nome file compresso"
 
 #: filemanager/templates/filemanager/index.html:446
 msgid "Enter without extension name!"
-msgstr "Inserisci estensione senza nome!"
+msgstr "Inserisci senza il nome dell'estensione!"
 
 #: filemanager/templates/filemanager/index.html:450
 msgid "Compression Type"
-msgstr "Tipo di Compressione"
+msgstr "Tipo di compressione"
 
 #: filemanager/templates/filemanager/index.html:475
 msgid "Extracting"
@@ -4097,11 +4017,11 @@ msgstr "Estrai in"
 
 #: filemanager/templates/filemanager/index.html:485
 msgid "You can enter . to extract in current directory!"
-msgstr "Puoi entrare . per estrarre nella directory corrente!"
+msgstr "Puoi entrare . per estrarre nella directory attuale!"
 
 #: filemanager/templates/filemanager/index.html:503
 msgid "Move Files"
-msgstr "Muovi File"
+msgstr "Muovi file"
 
 #: filemanager/templates/filemanager/index.html:511
 #: filemanager/templates/filemanager/index.html:546
@@ -4118,7 +4038,7 @@ msgstr "Inserisci un percorso per spostare i tuoi file!"
 
 #: filemanager/templates/filemanager/index.html:538
 msgid "Copy Files"
-msgstr "Copia File"
+msgstr "Copia file"
 
 #: filemanager/templates/filemanager/index.html:550
 msgid "Copy to"
@@ -4134,15 +4054,13 @@ msgstr "Rinomina"
 
 #: filemanager/templates/filemanager/index.html:580
 msgid "New Name"
-msgstr "Nuovo Nome"
+msgstr "Nuovo nome"
 
 #: filemanager/templates/filemanager/index.html:582
 msgid "Enter new name of file!"
 msgstr "Inserisci il nuovo nome del file!"
 
 #: filemanager/templates/filemanager/index.html:602
-#, fuzzy
-#| msgid "Permissions"
 msgid "Changing permissions for"
 msgstr "Cambia i permessi per"
 
@@ -4152,8 +4070,6 @@ msgstr "Modalità"
 
 #: filemanager/templates/filemanager/index.html:612
 #: serverStatus/templates/serverStatus/topProcesses.html:193
-#, fuzzy
-#| msgid "Users"
 msgid "User"
 msgstr "Utente"
 
@@ -4179,16 +4095,12 @@ msgstr "Esegui"
 
 #: filemanager/templates/filemanager/index.html:647
 #: filemanager/templates/filemanager/index.html:695
-#, fuzzy
-#| msgid "Select PHP Version"
 msgid "Change Permissions"
-msgstr "Cambia Permessi"
+msgstr "Cambia permessi"
 
 #: filemanager/templates/filemanager/index.html:648
-#, fuzzy
-#| msgid "Select PHP Version"
 msgid "Change Recursively"
-msgstr "Cambia in modo ricorsivo"
+msgstr "Cambia ricorsivamente"
 
 #: filemanager/templates/filemanager/index.html:692
 msgid "Download"
@@ -4196,28 +4108,25 @@ msgstr "Scarica"
 
 #: firewall/templates/firewall/csf.html:3
 msgid "CSF (ConfigServer Security and Firewall) - CyberPanel"
-msgstr "CSF (ConfigServer Sicurezza e Firewall) - CyberPanel"
+msgstr "CSF (Sicurezza e Firewall ConfigServer) - CyberPanel"
 
 #: firewall/templates/firewall/csf.html:13
 msgid "CSF (ConfigServer Security and Firewall)!"
-msgstr "CSF (ConfigServer Sicurezza e Firewall) !"
+msgstr "CSF (Sicurezza e Firewall ConfigServer)!"
 
 #: firewall/templates/firewall/csf.html:14
-#, fuzzy
-#| msgid "On this page you can set up your Back up destinations. (SFTP)"
 msgid "On this page you can configure CSF (ConfigServer Security and Firewall) settings."
 msgstr ""
-"In questa pagina puoi configurare CSF (ConfigServer Sicurezza e Firewall)impostazioni."
+"In questa pagina puoi configurare le impostazioni di CSF (Sicurezza e Firewall "
+"ConfigServer)."
 
 #: firewall/templates/firewall/csf.html:28
 msgid "CSF is not installed "
 msgstr "CSF non è installato "
 
 #: firewall/templates/firewall/csf.html:55
-#, fuzzy
-#| msgid "Records successfully fetched for"
 msgid "CSF successfully installed, refreshing page in 3 seconds.."
-msgstr "CSF installato con successo, pagina in aggiornamento tra 3 secondi.."
+msgstr "CSF installato con successo, la pagina si ricaricherà tra 3 secondi.."
 
 #: firewall/templates/firewall/csf.html:66
 msgid "In winter we must protect each other.."
@@ -4232,46 +4141,40 @@ msgid "LFD"
 msgstr "LFD"
 
 #: firewall/templates/firewall/csf.html:109
-#, fuzzy
-#| msgid "Remove"
 msgid "Remove CSF"
-msgstr "Rimuovi CSF"
+msgstr "Elimina CSF"
 
 #: firewall/templates/firewall/csf.html:112
 msgid "Completely Remove CSF"
-msgstr "Rimuovere completamente CSF"
+msgstr "Elimina completamente CSF"
 
 #: firewall/templates/firewall/csf.html:126
 msgid "Testing Mode"
-msgstr "Modalità Test"
+msgstr "Modalità test"
 
 #: firewall/templates/firewall/csf.html:133
 msgid "TCP IN Ports"
-msgstr "TCP IN Porta"
+msgstr "Porte TCP di ingresso"
 
 #: firewall/templates/firewall/csf.html:143
 msgid "TCP Out Ports"
-msgstr "TCP Out Porta"
+msgstr "Porte TCP di uscita"
 
 #: firewall/templates/firewall/csf.html:153
 msgid "UDP In Ports"
-msgstr "UDP In Porta"
+msgstr "Porte UDP di ingresso"
 
 #: firewall/templates/firewall/csf.html:163
 msgid "UDP Out Ports"
-msgstr "UDP Out Porta"
+msgstr "Porte UDP di uscita"
 
 #: firewall/templates/firewall/csf.html:181
-#, fuzzy
-#| msgid "Allowed"
 msgid "Allow IP"
-msgstr "Abilita IP"
+msgstr "Attiva IP"
 
 #: firewall/templates/firewall/csf.html:191
-#, fuzzy
-#| msgid "IP Address"
 msgid "Block IP Address"
-msgstr "Blocca Indirizzo IP"
+msgstr "Blocca indirizzo IP"
 
 #: firewall/templates/firewall/csf.html:203
 msgid "Coming Soon."
@@ -4283,15 +4186,15 @@ msgstr "Firewall - CyberPanel"
 
 #: firewall/templates/firewall/firewall.html:13
 msgid "Add/Delete Firewall Rules"
-msgstr "Aggiungi/Elimina regole firewall"
+msgstr "Aggiungi/Elimina regole del firewall"
 
 #: firewall/templates/firewall/firewall.html:14
 msgid ""
 "On this page you can add/delete firewall rules. (By default all ports are blocked, "
 "except mentioned below)"
 msgstr ""
-"In questa pagina puoi aggiungere / eliminare le regole del firewall. (Di default tutte "
-"le porte sono bloccato, eccetto menzionato sotto)"
+"In questa pagina puoi aggiungere/eliminare le regole del firewall. (Per impostazione "
+"predefinita tutte le porte sono bloccate, eccetto quelle menzionate sotto)"
 
 #: firewall/templates/firewall/firewall.html:19
 msgid "Add/Delete Rules"
@@ -4321,22 +4224,18 @@ msgstr "Sicurezza - CyberPanel"
 
 #: firewall/templates/firewall/index.html:12
 msgid "Security Functions"
-msgstr "Funzioni Sicurezza"
+msgstr "Funzioni di sicurezza"
 
 #: firewall/templates/firewall/index.html:13
 msgid "Manage the security of the server on this page."
 msgstr "Gestisci la sicurezza del server su questa pagina."
 
 #: firewall/templates/firewall/modSecurity.html:3
-#, fuzzy
-#| msgid "Security - CyberPanel"
 msgid "ModSecurity - CyberPanel"
 msgstr "ModSecurity - CyberPanel"
 
 #: firewall/templates/firewall/modSecurity.html:14
 #: firewall/templates/firewall/modSecurity.html:208
-#, fuzzy
-#| msgid "Edit PHP Configurations"
 msgid "ModSecurity Configurations!"
 msgstr "Configurazioni ModSecurity!"
 
@@ -4345,19 +4244,15 @@ msgstr "Configurazioni ModSecurity!"
 #: firewall/templates/firewall/modSecurityRules.html:13
 #: firewall/templates/firewall/modSecurityRulesPacks.html:13
 msgid "ModSec Docs"
-msgstr "ModSec Documentazione"
+msgstr "Documentazione di ModSecurity"
 
 #: firewall/templates/firewall/modSecurity.html:20
 #: firewall/templates/firewall/modSecurity.html:214
-#, fuzzy
-#| msgid "On this page you can set up your Back up destinations. (SFTP)"
 msgid "On this page you can configure ModSecurity settings."
 msgstr "In questa pagina puoi configurare le impostazioni di ModSecurity."
 
 #: firewall/templates/firewall/modSecurity.html:26
 #: firewall/templates/firewall/modSecurity.html:220
-#, fuzzy
-#| msgid "Security"
 msgid "ModSecurity"
 msgstr "ModSecurity"
 
@@ -4373,52 +4268,39 @@ msgstr "ModSecurity non è installato "
 #: firewall/templates/firewall/modSecurity.html:257
 #: firewall/templates/firewall/spamassassin.html:55
 msgid "ModSecurity successfully installed, refreshing page in 3 seconds.."
-msgstr "ModSecurity installato con successo, pagina di aggiornamento in 3 secondi .."
+msgstr "ModSecurity installato con successo, la pagina si ricaricherà in 3 secondi .."
 
 #: firewall/templates/firewall/modSecurity.html:73
 #: firewall/templates/firewall/modSecurity.html:269
 #: firewall/templates/firewall/spamassassin.html:66
 msgid "Winter is coming, but so is ModSecurity."
-msgstr "L'inverno sta arrivando, ma anche ModSecurity."
+msgstr "L'inverno sta arrivando, ed anche ModSecurity."
 
 #: firewall/templates/firewall/modSecurity.html:174
 #: firewall/templates/firewall/modSecurity.html:362
 #: firewall/templates/firewall/spamassassin.html:169
-#, fuzzy
-#| msgid "Could not fetch current configuration. Error message:"
 msgid "Failed to save ModSecurity configurations. Error message: "
-msgstr "Impossibile salvare le configurazioni di ModSecurity. Messaggio di errore:"
+msgstr "Impossibile salvare le configurazioni di ModSecurity. Messaggio di errore: "
 
 #: firewall/templates/firewall/modSecurity.html:179
 #: firewall/templates/firewall/modSecurity.html:367
 #: firewall/templates/firewall/spamassassin.html:173
-#, fuzzy
-#| msgid "Backup Process successfully started."
 msgid "ModSecurity configurations successfully saved."
-msgstr "Le configurazioni ModSecurity sono state salvate correttamente."
+msgstr "Le configurazioni di ModSecurity sono state salvate correttamente."
 
 #: firewall/templates/firewall/modSecurityRules.html:3
-#, fuzzy
-#| msgid "Security - CyberPanel"
 msgid "ModSecurity Rules - CyberPanel"
-msgstr "Regole ModSecurity - CyberPanel"
+msgstr "Regole di ModSecurity - CyberPanel"
 
 #: firewall/templates/firewall/modSecurityRules.html:13
-#, fuzzy
-#| msgid "Security"
 msgid "ModSecurity Rules!"
-msgstr "Regole ModSecurity"
+msgstr "Regole di ModSecurity!"
 
 #: firewall/templates/firewall/modSecurityRules.html:14
-#, fuzzy
-#| msgid ""
-#| "On this page you can launch, list, modify and delete websites from your server."
 msgid "On this page you can add/delete ModSecurity rules."
 msgstr "In questa pagina puoi aggiungere/eliminare le regole di ModSecurity."
 
 #: firewall/templates/firewall/modSecurityRules.html:42
-#, fuzzy
-#| msgid "Save Rewrite Rules"
 msgid "Save Rules!"
 msgstr "Salva le regole!"
 
@@ -4427,67 +4309,51 @@ msgid "ModSecurity Rules Saved"
 msgstr "Regole ModSecurity salvate"
 
 #: firewall/templates/firewall/modSecurityRules.html:58
-#, fuzzy
-#| msgid "Could not save rewrite rules. Error message:"
 msgid "Could not save rules, Error message: "
-msgstr "Impossibile salvare le regole, messaggio di errore:"
+msgstr "Impossibile salvare le regole, messaggio di errore: "
 
 #: firewall/templates/firewall/modSecurityRulesPacks.html:3
-#, fuzzy
-#| msgid "Security - CyberPanel"
 msgid "ModSecurity Rules Packs - CyberPanel"
-msgstr "Pacchetti di regole ModSecurity - CyberPanel"
+msgstr "Pacchetti di regole di ModSecurity - CyberPanel"
 
 #: firewall/templates/firewall/modSecurityRulesPacks.html:13
 #: firewall/templates/firewall/modSecurityRulesPacks.html:20
-#, fuzzy
-#| msgid "Modify Package"
 msgid "ModSecurity Rules Packages!"
-msgstr "Pacchetti di regole ModSecurity!"
+msgstr "Pacchetti di regole di ModSecurity!"
 
 #: firewall/templates/firewall/modSecurityRulesPacks.html:14
 msgid "Install/Un-install ModSecurity rules packages."
-msgstr "Installa/Disinstalla i pacchetti di regole ModSecurity."
+msgstr "Installa/Disinstalla i pacchetti di regole di ModSecurity."
 
 #: firewall/templates/firewall/modSecurityRulesPacks.html:60
 #: firewall/templates/firewall/modSecurityRulesPacks.html:71
-#, fuzzy
-#| msgid "Confirm"
 msgid "Configure"
 msgstr "Configura"
 
 #: firewall/templates/firewall/modSecurityRulesPacks.html:84
 #: firewall/templates/firewall/modSecurityRulesPacks.html:96
-#, fuzzy
-#| msgid "Action successful."
 msgid "Operation successful."
 msgstr "Operazione riuscita."
 
 #: firewall/templates/firewall/modSecurityRulesPacks.html:92
-#, fuzzy
-#| msgid "Action failed. Error message:"
 msgid "Operation failed, Error message: "
-msgstr "Operazione non riuscita, messaggio di errore:"
+msgstr "Operazione non riuscita, messaggio di errore: "
 
 #: firewall/templates/firewall/modSecurityRulesPacks.html:110
 msgid "Supplier"
 msgstr "Fornitore"
 
 #: firewall/templates/firewall/modSecurityRulesPacks.html:111
-#, fuzzy
-#| msgid "File Name"
 msgid "Filename"
-msgstr "Nome File"
+msgstr "Nome file"
 
 #: firewall/templates/firewall/secureSSH.html:3
 msgid "Secure SSH - CyberPanel"
 msgstr "Sicurezza SSH - CyberPanel"
 
 #: firewall/templates/firewall/secureSSH.html:13
-#, fuzzy
-#| msgid "SSH Keys"
 msgid "SSH Docs"
-msgstr "SSH Documentazione"
+msgstr "Documentazione SSH"
 
 #: firewall/templates/firewall/secureSSH.html:14
 msgid "Secure or harden SSH Configurations."
@@ -4496,7 +4362,7 @@ msgstr "Proteggi o rafforza le configurazioni SSH."
 #: firewall/templates/firewall/secureSSH.html:28
 #: managePHP/templates/managePHP/editPHPConfig.html:29
 msgid "Basic"
-msgstr "Basico"
+msgstr "Base"
 
 #: firewall/templates/firewall/secureSSH.html:34
 msgid "SSH Keys"
@@ -4508,15 +4374,15 @@ msgstr "Porta SSH"
 
 #: firewall/templates/firewall/secureSSH.html:56
 msgid "Permit Root Login"
-msgstr "Permetti Accesso Root"
+msgstr "Permetti l'accesso all'utente root"
 
 #: firewall/templates/firewall/secureSSH.html:60
 msgid ""
 "Before disabling root login, make sure you have another account with sudo priviliges "
 "on server."
 msgstr ""
-"Prima di disabilitare il login di root, assicurati di avere un altro account con sudo "
-"privilegi sul server."
+"Prima di disabilitare il l'accesso all'utente root, assicurati di avere un altro "
+"account con privilegi sudo sul server."
 
 #: firewall/templates/firewall/secureSSH.html:82
 msgid "SSH Configurations Saved."
@@ -4528,23 +4394,23 @@ msgstr "Chiave"
 
 #: firewall/templates/firewall/secureSSH.html:150
 msgid "Add Key"
-msgstr "Aggiungi Chiave"
+msgstr "Aggiungi chiave"
 
 #: firewall/templates/firewall/secureSSH.html:167
 msgid "SSH Key Deleted"
-msgstr "Chiave SSH Cancellata"
+msgstr "Chiave SSH eliminata"
 
 #: ftp/templates/ftp/createFTPAccount.html:3
 msgid "Create FTP Account - CyberPanel"
-msgstr "Crea FTP Account - CyberPanel"
+msgstr "Crea account FTP - CyberPanel"
 
 #: ftp/templates/ftp/createFTPAccount.html:13
 msgid ""
 "Select the website from list, and its home directory will be set as the path to ftp "
 "account."
 msgstr ""
-"Seleziona il sito web dalla lista, e la sua directory home verrà impostata come "
-"percorsoper l'account ftp."
+"Seleziona il sito web dalla lista, e la sua directory inziale verrà impostata come "
+"percorso per l'account ftp."
 
 #: ftp/templates/ftp/createFTPAccount.html:26 ftp/templates/ftp/deleteFTPAccount.html:25
 #: ftp/templates/ftp/listFTPAccounts.html:26
@@ -4553,7 +4419,7 @@ msgstr "PureFTPD è disabilitato."
 
 #: ftp/templates/ftp/createFTPAccount.html:67
 msgid "FTP Password"
-msgstr "FTP Password"
+msgstr "Password FTP"
 
 #: ftp/templates/ftp/createFTPAccount.html:90
 msgid "Path (Relative)"
@@ -4592,7 +4458,7 @@ msgstr "Seleziona il dominio ed elimina i relativi account FTP."
 
 #: ftp/templates/ftp/deleteFTPAccount.html:52
 msgid "Select FTP Account"
-msgstr "Seleziona Account FTP"
+msgstr "Seleziona account FTP"
 
 #: ftp/templates/ftp/deleteFTPAccount.html:83
 msgid "Cannot delete account. Error message:"
@@ -4630,8 +4496,8 @@ msgstr "Password modificata per"
 #: ftp/templates/ftp/listFTPAccounts.html:70
 msgid "Cannot change password for <strong>{$ ftpUsername $}</strong>. Error message:"
 msgstr ""
-"Impossibile cambiare la password per <strong> {$ ftpUsername $} </strong>. Messaggio "
-"di errore:"
+"Impossibile cambiare la password per <strong>{$ ftpUsername $}</strong>. Messaggio di "
+"errore:"
 
 #: ftp/templates/ftp/listFTPAccounts.html:124
 msgid "Directory"
@@ -4650,7 +4516,7 @@ msgstr "Cambia password email"
 
 #: mailServer/templates/mailServer/changeEmailPassword.html:13
 msgid "Select a website from the list, to change its password."
-msgstr "Seleziona un sito web dall'elenco, per cambiare la sua password."
+msgstr "Seleziona un sito web dall'elenco per cambiare la sua password."
 
 #: mailServer/templates/mailServer/changeEmailPassword.html:27
 #: mailServer/templates/mailServer/createEmailAccount.html:27
@@ -4658,13 +4524,13 @@ msgstr "Seleziona un sito web dall'elenco, per cambiare la sua password."
 #: mailServer/templates/mailServer/emailForwarding.html:26
 #: mailServer/templates/mailServer/listEmails.html:27
 msgid "Postfix is disabled."
-msgstr "Postfix è disabilitato."
+msgstr "Postfix è disattivato."
 
 #: mailServer/templates/mailServer/changeEmailPassword.html:58
 #: mailServer/templates/mailServer/deleteEmailAccount.html:58
 #: mailServer/templates/mailServer/emailForwarding.html:52
 msgid "Select Email"
-msgstr "Seleziona Email"
+msgstr "Seleziona email"
 
 #: mailServer/templates/mailServer/changeEmailPassword.html:106
 #: mailServer/templates/mailServer/deleteEmailAccount.html:90
@@ -4682,7 +4548,7 @@ msgstr "Attualmente non esistono account di posta elettronica per questo dominio
 
 #: mailServer/templates/mailServer/createEmailAccount.html:3
 msgid "Create Email Account - CyberPanel"
-msgstr "Crea un account e-mail - CyberPanel"
+msgstr "Crea un account email - CyberPanel"
 
 #: mailServer/templates/mailServer/createEmailAccount.html:13
 msgid "Select a website from the list, to create an email account."
@@ -4702,29 +4568,25 @@ msgstr " è stato creato con successo."
 
 #: mailServer/templates/mailServer/deleteEmailAccount.html:3
 msgid "Delete Email Account - CyberPanel"
-msgstr "Elimina account di posta elettronica - CyberPanel"
+msgstr "Elimina account email - CyberPanel"
 
 #: mailServer/templates/mailServer/deleteEmailAccount.html:13
 msgid "Select a website from the list, to delete an email account."
-msgstr "Seleziona un sito web dall'elenco, per eliminare un account email."
+msgstr "Seleziona un sito web dall'elenco per eliminare un account email."
 
 #: mailServer/templates/mailServer/deleteEmailAccount.html:95
 msgid "Email with id : {$ deletedID $} is successfully deleted."
-msgstr "Email con ID: {$ deletedID $} è stato cancellato con successo."
+msgstr "Email con ID: {$ deletedID $} è stata eliminata con successo."
 
 #: mailServer/templates/mailServer/dkimManager.html:3
-#, fuzzy
-#| msgid "File Manager - CyberPanel"
 msgid "DKIM Manager - CyberPanel"
 msgstr "Gestione DKIM - CyberPanel"
 
 #: mailServer/templates/mailServer/dkimManager.html:13
 msgid "DKIM Docs"
-msgstr "DKIM Documentazione"
+msgstr "Documentazione DKIM"
 
 #: mailServer/templates/mailServer/dkimManager.html:14
-#, fuzzy
-#| msgid "This page can be used to Back up your websites"
 msgid "This page can be used to generate and view DKIM keys for Domains"
 msgstr ""
 "Questa pagina può essere utilizzata per generare e visualizzare le chiavi DKIM per i "
@@ -4739,112 +4601,92 @@ msgstr "OpenDKIM non è installato. "
 #: websiteFunctions/templates/websiteFunctions/installMagento.html:104
 #: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:81
 #: websiteFunctions/templates/websiteFunctions/installWordPress.html:67
-#, fuzzy
-#| msgid "Install"
 msgid "Install Now"
-msgstr "Installa Ora"
+msgstr "Installa ora"
 
 #: mailServer/templates/mailServer/dkimManager.html:48
 msgid "OpenDKIM successfully installed, refreshing page in 3 seconds.."
-msgstr "OpenDKIM installato con successo, pagina di aggiornamento in 3 secondi.."
+msgstr "OpenDKIM installato con successo, la pagina si ricaricherà in 3 secondi.."
 
 #: mailServer/templates/mailServer/dkimManager.html:97
-#, fuzzy
-#| msgid "Currently no email accounts exist for this domain."
 msgid "Keys not available for this domain."
 msgstr "Chiavi non disponibili per questo dominio."
 
 #: mailServer/templates/mailServer/dkimManager.html:98
 msgid "Generate Now"
-msgstr "Genera Ora"
+msgstr "Genera ora"
 
 #: mailServer/templates/mailServer/dkimManager.html:110
 #: websiteFunctions/templates/websiteFunctions/setupStaging.html:37
-#, fuzzy
-#| msgid "Domains"
 msgid "Domain"
 msgstr "Dominio"
 
 #: mailServer/templates/mailServer/dkimManager.html:111
 msgid "Private Key"
-msgstr "Chiave Privata"
+msgstr "Chiave privata"
 
 #: mailServer/templates/mailServer/dkimManager.html:112
 msgid "Public Key"
-msgstr "Chiave Pubblica"
+msgstr "Chiave pubblica"
 
 #: mailServer/templates/mailServer/emailForwarding.html:3
-#, fuzzy
-#| msgid "Create Email Account - CyberPanel"
 msgid "Setup Email Forwarding - CyberPanel"
-msgstr "Imposta l'inoltro della posta elettronica - CyberPanel"
+msgstr "Imposta l'inoltro delle email - CyberPanel"
 
 #: mailServer/templates/mailServer/emailForwarding.html:12
 #: mailServer/templates/mailServer/emailForwarding.html:19
 msgid "Setup Email Forwarding"
-msgstr "Imposta l'inoltro della posta elettronica"
+msgstr "Imposta l'inoltro delle email"
 
 #: mailServer/templates/mailServer/emailForwarding.html:12
 msgid "Forwarding Docs"
-msgstr "Documentazione Inoltro"
+msgstr "Documentazione inoltro"
 
 #: mailServer/templates/mailServer/emailForwarding.html:13
 msgid "This page help you setup email forwarding for your emails."
-msgstr "Questa pagina ti aiuta a configurare l'inoltro della posta per le tue e-mail."
+msgstr "Questa pagina ti aiuta a configurare l'inoltro della posta per le tue email."
 
 #: mailServer/templates/mailServer/emailForwarding.html:61
-#, fuzzy
-#| msgid "Forwarding Docs"
 msgid "Forwarding Options"
-msgstr "Documentazione Inoltro"
+msgstr "Opzioni inoltro"
 
 #: mailServer/templates/mailServer/emailForwarding.html:97
 #: mailServer/templates/mailServer/emailForwarding.html:118
-#, fuzzy
-#| msgid "Resource"
 msgid "Source"
 msgstr "Sorgente"
 
 #: mailServer/templates/mailServer/emailForwarding.html:101
 msgid "or path to the program"
-msgstr ""
+msgstr "o percorso al programma"
 
 #: mailServer/templates/mailServer/emailForwarding.html:106
-#, fuzzy
-#| msgid "Create Email"
 msgid "Forward Email"
-msgstr "Inoltra Email"
+msgstr "Inoltra email"
 
 #: mailServer/templates/mailServer/index.html:3
 msgid "Mail Functions - CyberPanel"
-msgstr "Funzioni Mail - CyberPanel"
+msgstr "Funzioni mail - CyberPanel"
 
 #: mailServer/templates/mailServer/index.html:12
 msgid "Mail Functions"
-msgstr "Funzioni Mail"
+msgstr "Funzioni mail"
 
 #: mailServer/templates/mailServer/index.html:13
 msgid "Manage email accounts on this page."
-msgstr "Gestisci gli account di posta elettronica su questa pagina."
+msgstr "Gestisci gli account email in questa pagina."
 
 #: mailServer/templates/mailServer/listEmails.html:3
-#, fuzzy
-#| msgid "List FTP Accounts - CyberPanel"
 msgid "List Email Accounts - CyberPanel"
-msgstr "Elenca account FTP - CyberPanel"
+msgstr "Elenca account email - CyberPanel"
 
 #: mailServer/templates/mailServer/listEmails.html:13
 #: mailServer/templates/mailServer/listEmails.html:19
-#, fuzzy
-#| msgid "List FTP Accounts"
 msgid "List Email Accounts"
-msgstr "Elenco Account FTP"
+msgstr "Elenca account email"
 
 #: mailServer/templates/mailServer/listEmails.html:14
-#, fuzzy
-#| msgid "List FTP Accounts or change their passwords."
 msgid "List Emails Accounts. Change their passwords or delete them."
-msgstr "Elenca account FTP o modifica le loro password."
+msgstr "Elenca account email. Cambia le loro password o eliminali."
 
 #: managePHP/templates/managePHP/editPHPConfig.html:3
 msgid "Edit PHP Configurations - CyberPanel"
@@ -4857,7 +4699,7 @@ msgstr "Modifica le configurazioni PHP"
 
 #: managePHP/templates/managePHP/editPHPConfig.html:15
 msgid "Edit PHP Configurations on this page."
-msgstr "Modifica le configurazioni PHP su questa pagina."
+msgstr "Modifica le configurazioni PHP in questa pagina."
 
 #: managePHP/templates/managePHP/editPHPConfig.html:36
 msgid "Advanced"
@@ -4865,7 +4707,7 @@ msgstr "Avanzate"
 
 #: managePHP/templates/managePHP/editPHPConfig.html:65
 msgid "display_errors"
-msgstr "mostra_errori"
+msgstr "display_errors"
 
 #: managePHP/templates/managePHP/editPHPConfig.html:72
 msgid "file_uploads"
@@ -4892,10 +4734,9 @@ msgid "upload_max_filesize"
 msgstr "upload_max_filesize"
 
 #: managePHP/templates/managePHP/editPHPConfig.html:119
-#, fuzzy
 #| msgid "upload_max_filesize"
 msgid "post_max_size"
-msgstr "upload_max_filesize"
+msgstr "post_max_size"
 
 #: managePHP/templates/managePHP/editPHPConfig.html:126
 msgid "max_input_time"
@@ -4904,7 +4745,7 @@ msgstr "max_input_time"
 #: managePHP/templates/managePHP/editPHPConfig.html:152
 #: managePHP/templates/managePHP/editPHPConfig.html:218
 msgid "PHP Configs Saved."
-msgstr "Configs PHP Salvato."
+msgstr "Configurazioni PHP salvate."
 
 #: managePHP/templates/managePHP/index.html:3
 msgid "Manage PHP Installations - CyberPanel"
@@ -4924,16 +4765,16 @@ msgstr "Installa le estensioni PHP - CyberPanel"
 
 #: managePHP/templates/managePHP/installExtensions.html:14
 msgid "Install/uninstall php extensions on this page."
-msgstr "Installa/disinstalla le estensioni php in questa pagina."
+msgstr "Installa/disinstalla le estensioni di PHP in questa pagina."
 
 #: managePHP/templates/managePHP/installExtensions.html:19
 #: tuning/templates/tuning/phpTuning.html:19 tuning/templates/tuning/phpTuning.html:155
 msgid "Select PHP Version"
-msgstr "Seleziona Versione PHP"
+msgstr "Seleziona la versione di PHP"
 
 #: managePHP/templates/managePHP/installExtensions.html:47
 msgid "Search Extensions.."
-msgstr "Cerca estensioni .."
+msgstr "Cerca estensioni.."
 
 #: managePHP/templates/managePHP/installExtensions.html:62
 msgid "Extension Name"
@@ -4958,7 +4799,7 @@ msgstr "Disinstalla"
 #: tuning/templates/tuning/phpTuning.html:115 tuning/templates/tuning/phpTuning.html:255
 #: userManagment/templates/userManagment/modifyUser.html:126
 msgid "Cannot fetch details. Error message:"
-msgstr "Impossibile recuperare dettagli. Messaggio di errore:"
+msgstr "Impossibile recuperare i dettagli. Messaggio di errore:"
 
 #: managePHP/templates/managePHP/installExtensions.html:119
 msgid "Cannot perform operation. Error message:"
@@ -4974,7 +4815,7 @@ msgstr "Funzioni SSL"
 
 #: manageSSL/templates/manageSSL/index.html:14
 msgid "Issue Let’s Encrypt SSLs for websites and hostname."
-msgstr "Emettere Let’s Encrypt SSL per siti Web e nome host."
+msgstr "Emetti certificati SSL di Let’s Encrypt per siti Web e nome host."
 
 #: manageSSL/templates/manageSSL/manageSSL.html:3
 msgid "Manage SSL - CyberPanel"
@@ -4984,25 +4825,25 @@ msgstr "Gestisci SSL - CyberPanel"
 #: manageSSL/templates/manageSSL/sslForHostName.html:13
 #: manageSSL/templates/manageSSL/sslForMailServer.html:13
 msgid "SSL Docs"
-msgstr "SSL Documentazione"
+msgstr "Documentazione SSL"
 
 #: manageSSL/templates/manageSSL/manageSSL.html:14
 msgid "This page can be used to issue Let’s Encrypt SSL for existing websites on server."
 msgstr ""
-"Questa pagina può essere utilizzata per emettere Let's Encrypt SSL per siti Web "
-"esistenti suserver."
+"Questa pagina può essere utilizzata per emettere certificati SSL di Let's Encrypt per "
+"siti Web esistenti sul server."
 
 #: manageSSL/templates/manageSSL/manageSSL.html:42
 #: manageSSL/templates/manageSSL/sslForHostName.html:42
 #: manageSSL/templates/manageSSL/sslForMailServer.html:40
 msgid "Issue SSL"
-msgstr "Problema SSL"
+msgstr "Emetti SSL"
 
 #: manageSSL/templates/manageSSL/manageSSL.html:52
 #: manageSSL/templates/manageSSL/sslForHostName.html:52
 #: manageSSL/templates/manageSSL/sslForMailServer.html:50
 msgid "Cannot issue SSL. Error message:"
-msgstr "Impossibile rilasciare SSL. Messaggio di errore:"
+msgstr "Impossibile emettere il certificato SSL. Messaggio di errore:"
 
 #: manageSSL/templates/manageSSL/manageSSL.html:56
 msgid "SSL Issued for"
@@ -5010,54 +4851,46 @@ msgstr "SSL emesso per"
 
 #: manageSSL/templates/manageSSL/sslForHostName.html:3
 msgid "Issue SSL For Hostname - CyberPanel"
-msgstr "Problema SSL per nomehost - CyberPanel"
+msgstr "Emetti SSL per nomehost - CyberPanel"
 
 #: manageSSL/templates/manageSSL/sslForHostName.html:13
 #: manageSSL/templates/manageSSL/sslForHostName.html:20
 msgid "Issue SSL For Hostname"
-msgstr "Problema SSL per nomehost"
+msgstr "Emetti SSL per nomehost"
 
 #: manageSSL/templates/manageSSL/sslForHostName.html:14
 msgid "Let’s Encrypt SSL for hostname to access CyberPanel on verified SSL."
-msgstr "Let’s Encrypt SSL per il nome host accedere a CyberPanel su SSL verificato."
+msgstr ""
+"Certificato SSL di Let’s Encrypt per il nome host per accedere a CyberPanel tramite un "
+"certificato SSL verificato."
 
 #: manageSSL/templates/manageSSL/sslForHostName.html:56
 #: manageSSL/templates/manageSSL/sslForHostName.html:60
 msgid "SSL Issued. You can now access CyberPanel at:"
-msgstr "SSL Rilasciato. Ora puoi accedere a CyberPanel a:"
+msgstr "Certificato SSL emesso. Ora puoi accedere a CyberPanel da:"
 
 #: manageSSL/templates/manageSSL/sslForMailServer.html:3
-#, fuzzy
-#| msgid "Issue SSL For Hostname - CyberPanel"
 msgid "Issue SSL For MailServer - CyberPanel"
-msgstr "Issue SSL Per Hostname - CyberPanel"
+msgstr "Emetti SSL per server email - CyberPanel"
 
 #: manageSSL/templates/manageSSL/sslForMailServer.html:13
 #: manageSSL/templates/manageSSL/sslForMailServer.html:20
-#, fuzzy
-#| msgid "Issue SSL For Hostname"
 msgid "Issue SSL For MailServer"
-msgstr "Issue SSL Per Hostname"
+msgstr "Emetti SSL per server email"
 
 #: manageSSL/templates/manageSSL/sslForMailServer.html:14
-#, fuzzy
-#| msgid "Issue Let’s Encrypt SSLs for websites and hostname."
 msgid "Let’s Encrypt SSL for MailServer (Postfix/Dovecot)."
-msgstr "Let’s Encrypt SSL per MailServer (Postfix/Dovecot)."
+msgstr "Certificato SSL di Let’s Encrypt per server email(Postfix/Dovecot)."
 
 #: manageSSL/templates/manageSSL/sslForMailServer.html:54
 msgid "SSL Issued, your mail server now uses Lets Encrypt!"
-msgstr "SSL Rilasciato, il tuo mail server ora usa Lets Encrypt!"
+msgstr "Certificato SSL emesso, il tuo server email ora usa Lets Encrypt!"
 
 #: manageSSL/templates/manageSSL/sslForMailServer.html:58
-#, fuzzy
-#| msgid "Could not connect to server. Please refresh this page."
 msgid "Could not connect to server, please refresh this page."
 msgstr "Impossibile connettersi al server, si prega di aggiornare questa pagina."
 
 #: manageServices/templates/manageServices/managePostfix.html:3
-#, fuzzy
-#| msgid "Change Email Password - CyberPanel"
 msgid "Manage Email Server (Postfix) - CyberPanel"
 msgstr "Gestisci server email (Postfix) - CyberPanel"
 
@@ -5068,14 +4901,12 @@ msgstr "Gestisci server email (Postfix)!"
 #: manageServices/templates/manageServices/managePostfix.html:13
 #: manageServices/templates/manageServices/managePowerDNS.html:16
 #: manageServices/templates/manageServices/managePureFtpd.html:13
-#, fuzzy
-#| msgid "Services Status"
 msgid "Services Docs"
-msgstr "Documentazione Servizi"
+msgstr "Documentazione servizi"
 
 #: manageServices/templates/manageServices/managePostfix.html:14
 msgid "Enable or disable Email services. "
-msgstr "Abilita o disabilita i servizi di posta elettronica. "
+msgstr "Attiva o disattiva i servizi email. "
 
 #: manageServices/templates/manageServices/managePostfix.html:79
 #: manageServices/templates/manageServices/managePowerDNS.html:149
@@ -5084,70 +4915,54 @@ msgid "Only administrator can manage services."
 msgstr "Solo l'amministratore può gestire i servizi."
 
 #: manageServices/templates/manageServices/managePowerDNS.html:3
-#, fuzzy
-#| msgid "Manage SSL - CyberPanel"
 msgid "Manage PowerDNS - CyberPanel"
 msgstr "Gestisci PowerDNS - CyberPanel"
 
 #: manageServices/templates/manageServices/managePowerDNS.html:13
-#, fuzzy
-#| msgid "Manage SSL"
 msgid "Manage PowerDNS!"
 msgstr "Gestisci PowerDNS!"
 
 #: manageServices/templates/manageServices/managePowerDNS.html:17
 msgid "Enable or disable DNS services. "
-msgstr "Abilita o disabilita i servizi DNS. "
+msgstr "Attiva o disattiva i servizi DNS. "
 
 #: manageServices/templates/manageServices/managePowerDNS.html:42
-#, fuzzy
-#| msgid "Security Functions"
 msgid "Select Function Mode"
-msgstr "Funzioni Sicurezza"
+msgstr "Seleziona la modalità di funzionamento"
 
 #: manageServices/templates/manageServices/managePowerDNS.html:53
-#, fuzzy
-#| msgid "First Nameserver"
 msgid "Slave Server"
-msgstr "Nome Server"
+msgstr "Server slave"
 
 #: manageServices/templates/manageServices/managePowerDNS.html:60
-#, fuzzy
-#| msgid "Server Logs"
 msgid "Master Server IP"
-msgstr "MailServer SSL"
+msgstr "IP del server master"
 
 #: manageServices/templates/manageServices/managePowerDNS.html:67
-#, fuzzy
-#| msgid "First Nameserver"
 msgid "Slave Server 1"
-msgstr "Nome Server"
+msgstr "Server slave 1"
 
 #: manageServices/templates/manageServices/managePowerDNS.html:74
-#, fuzzy
-#| msgid "First Nameserver"
 msgid "Slave Server IP"
-msgstr "Nome Server"
+msgstr "IP del server slave"
 
 #: manageServices/templates/manageServices/managePowerDNS.html:81
 msgid "Slave Server 2 (Optional)"
-msgstr ""
+msgstr "Server slave 1 (Opzionale)"
 
 #: manageServices/templates/manageServices/managePowerDNS.html:88
 msgid "Slave Server IP 2 (Optional)"
-msgstr ""
+msgstr "IP del server slave 2 (Opzionale)"
 
 #: manageServices/templates/manageServices/managePowerDNS.html:95
 msgid "Slave Server 3 (Optional)"
-msgstr ""
+msgstr "Server slave 3 (Opzionale)"
 
 #: manageServices/templates/manageServices/managePowerDNS.html:102
 msgid "Slave Server IP 3 (Optional)"
-msgstr ""
+msgstr "IP del server slave 3 (Opzionale)"
 
 #: manageServices/templates/manageServices/managePureFtpd.html:3
-#, fuzzy
-#| msgid "Manage SSL - CyberPanel"
 msgid "Manage FTP Server (Pure FTPD) - CyberPanel"
 msgstr "Gestisci server FTP (Pure FTPD) - CyberPanel"
 
@@ -5157,7 +4972,7 @@ msgstr "Gestisci server FTP (Pure FTPD)!"
 
 #: manageServices/templates/manageServices/managePureFtpd.html:14
 msgid "Enable or disable FTP services. "
-msgstr "Abilita o disabilita i servizi FTP. "
+msgstr "Attiva o disattiva i servizi FTP. "
 
 #: manageServices/templates/manageServices/managePureFtpd.html:22
 msgid "Manage PureFTPD"
@@ -5176,8 +4991,8 @@ msgid ""
 "Packages define resources for your websites, you need to add package before creating a "
 "website."
 msgstr ""
-"I pacchetti definiscono le risorse per i tuoi siti web, devi aggiungere il pacchetto "
-"prima creazione di un sito Web."
+"I pacchetti definiscono le risorse per i tuoi siti web, devi aggiungere un pacchetto "
+"prima creazione di un sito web."
 
 #: packages/templates/packages/createPackage.html:19
 msgid "Package Details"
@@ -5193,7 +5008,7 @@ msgstr "(0 = Illimitato)"
 #: packages/templates/packages/listPackages.html:104
 #: packages/templates/packages/modifyPackage.html:49
 msgid "Disk Space"
-msgstr "Spazio Disco"
+msgstr "Spazio disco"
 
 #: packages/templates/packages/createPackage.html:49
 #: packages/templates/packages/createPackage.html:57
@@ -5209,7 +5024,7 @@ msgstr "MB (0 = Illimitato)"
 #: packages/templates/packages/listPackages.html:114
 #: packages/templates/packages/modifyPackage.html:57
 msgid "Bandwidth"
-msgstr "Bandwidth"
+msgstr "Larghezza di banda"
 
 #: packages/templates/packages/createPackage.html:62
 #: packages/templates/packages/listPackages.html:125
@@ -5234,56 +5049,44 @@ msgid "Cannot delete package. Error message:"
 msgstr "Impossibile eliminare il pacchetto. Messaggio di errore:"
 
 #: packages/templates/packages/deletePackage.html:60
-#, fuzzy
-#| msgid " Successfully Deleted"
 msgid " Successfully Deleted."
-msgstr " Eliminato con successo"
+msgstr " Eliminato con successo."
 
 #: packages/templates/packages/index.html:3
 msgid "Packages - CyberPanel"
 msgstr "Pacchetti - CyberPanel"
 
 #: packages/templates/packages/listPackages.html:3
-#, fuzzy
-#| msgid "Packages - CyberPanel"
 msgid "List Packages  - CyberPanel"
-msgstr "Pacchetti - CyberPanel"
+msgstr "Elenca pacchetti - CyberPanel"
 
 #: packages/templates/packages/listPackages.html:14
 msgid "List Packages and delete or edit them."
-msgstr ""
+msgstr "Elenca pacchetti e modificali o eliminali."
 
 #: packages/templates/packages/listPackages.html:34
-#, fuzzy
-#| msgid "Disk Space"
 msgid "Diskspace"
-msgstr "Spazio Disco"
+msgstr "Spazio su disco"
 
 #: packages/templates/packages/listPackages.html:36
-#, fuzzy
-#| msgid "Create Email Account"
 msgid "Email Accounts"
-msgstr "Crea Account Email"
+msgstr "Account email"
 
 #: packages/templates/packages/listPackages.html:38
 msgid "FTPs"
-msgstr ""
+msgstr "FTP"
 
 #: packages/templates/packages/listPackages.html:39
-#, fuzzy
-#| msgid "Add Domains"
 msgid "Child Domains"
-msgstr "Aggiungi Dominio"
+msgstr "Domini figli"
 
 #: packages/templates/packages/listPackages.html:40
 msgid "Allow FQDN as Childs"
-msgstr ""
+msgstr "Permetti FQDN come figli"
 
 #: packages/templates/packages/listPackages.html:152
-#, fuzzy
-#| msgid "Additional Features"
 msgid "Additional"
-msgstr "Caratteristiche aggiuntive"
+msgstr "Aggiuntivo"
 
 #: packages/templates/packages/modifyPackage.html:3
 msgid "Modify Package - CyberPanel"
@@ -5302,24 +5105,20 @@ msgid "Successfully Modified"
 msgstr "Modificato con successo"
 
 #: pluginHolder/templates/pluginHolder/plugins.html:15
-#, fuzzy
-#| msgid "List Databases  - CyberPanel"
 msgid "List of installed plugins on your CyberPanel."
 msgstr "Elenco dei plugin installati sul tuo CyberPanel."
 
 #: pluginHolder/templates/pluginHolder/plugins.html:31
-#, fuzzy
-#| msgid "Latest Version"
 msgid "Version"
 msgstr "Versione"
 
 #: serverLogs/templates/serverLogs/accessLogs.html:3
 msgid "Access Logs - CyberPanel"
-msgstr "Log Accessi - CyberPanel"
+msgstr "Log accessi - CyberPanel"
 
 #: serverLogs/templates/serverLogs/accessLogs.html:17
 msgid "Access Logs for main web server."
-msgstr "Log di accesso per il server web principale."
+msgstr "Log accessi per il server web principale."
 
 #: serverLogs/templates/serverLogs/accessLogs.html:24
 #: serverLogs/templates/serverLogs/emailLogs.html:23
@@ -5328,17 +5127,15 @@ msgstr "Log di accesso per il server web principale."
 #: serverLogs/templates/serverLogs/modSecAuditLog.html:22
 #: serverStatus/templates/serverStatus/cybercpmainlogfile.html:21
 msgid "Last 50 Lines"
-msgstr "Ultime 50 Linee"
+msgstr "Ultime 50 linee"
 
 #: serverLogs/templates/serverLogs/accessLogs.html:41
 #: serverLogs/templates/serverLogs/emailLogs.html:42
 #: serverLogs/templates/serverLogs/errorLogs.html:38
 #: serverLogs/templates/serverLogs/ftplogs.html:38
 #: serverLogs/templates/serverLogs/modSecAuditLog.html:39
-#, fuzzy
-#| msgid "Server Logs"
 msgid "Clear Logs"
-msgstr "Pulisci Log"
+msgstr "Elimina registri"
 
 #: serverLogs/templates/serverLogs/accessLogs.html:47
 #: serverLogs/templates/serverLogs/emailLogs.html:49
@@ -5363,19 +5160,19 @@ msgstr ""
 #: serverLogs/templates/serverLogs/emailLogs.html:3
 #: serverLogs/templates/serverLogs/errorLogs.html:3
 msgid "Error Logs - CyberPanel"
-msgstr "Log Errori - CyberPanel"
+msgstr "Log errori - CyberPanel"
 
 #: serverLogs/templates/serverLogs/emailLogs.html:15
 msgid "Email Logs for main web server."
-msgstr "Email Log per il server web principale."
+msgstr "Registri email per il server web principale."
 
 #: serverLogs/templates/serverLogs/errorLogs.html:14
 msgid "Error Logs for main web server."
-msgstr "Registro errori per il server web principale."
+msgstr "Registri errori per il server web principale."
 
 #: serverLogs/templates/serverLogs/ftplogs.html:3
 msgid "FTP Logs - CyberPanel"
-msgstr "FTP Log - CyberPanel"
+msgstr "Registri FTP - CyberPanel"
 
 #: serverLogs/templates/serverLogs/ftplogs.html:14
 msgid "FTP Logs for main web server."
@@ -5383,86 +5180,80 @@ msgstr "Registri FTP per il server Web principale."
 
 #: serverLogs/templates/serverLogs/index.html:3
 msgid "Server Logs - CyberPanel"
-msgstr "Server Log - CyberPanel"
+msgstr "Registri server - CyberPanel"
 
 #: serverLogs/templates/serverLogs/index.html:13
 msgid "Server Logs"
-msgstr "Server Log"
+msgstr "Registri server"
 
 #: serverLogs/templates/serverLogs/index.html:14
 msgid ""
 "These are the logs from main server, to see logs for your website navigate to: "
 "Websites -> List Websites -> Select Website -> View Logs."
 msgstr ""
-"Questi sono i log dal server principale, per vedere i log per il tuo sito web visitaa: "
-"Siti Web -> Elenca siti Web -> Seleziona sito Web -> Visualizza registri."
+"Questi sono i registri dal server principale, per vedere i registri del tuo sito web "
+"vai in: Siti Web -> Elenca siti Web -> Seleziona sito Web -> Visualizza registri."
 
 #: serverLogs/templates/serverLogs/modSecAuditLog.html:3
-#, fuzzy
-#| msgid "Security - CyberPanel"
 msgid "ModSecurity Audit Logs - CyberPanel"
-msgstr "Log di controllo di ModSecurity - CyberPanel"
+msgstr "Registro di controllo di ModSecurity - CyberPanel"
 
 #: serverLogs/templates/serverLogs/modSecAuditLog.html:15
-#, fuzzy
-#| msgid "Security Functions"
 msgid "ModSecurity Audit logs"
-msgstr "Log di controllo di ModSecurity"
+msgstr "Registro di controllo di ModSecurity"
 
 #: serverStatus/templates/serverStatus/cybercpmainlogfile.html:3
 msgid "CyberPanel Main Log File - CyberPanel"
-msgstr "CyberPanel Log File Principale - CyberPanel"
+msgstr "Registro file principale di CyberPanel - CyberPanel"
 
 #: serverStatus/templates/serverStatus/cybercpmainlogfile.html:14
 msgid ""
 "This log file corresponds to errors generated by CyberPanel for your domain errors log "
 "you can look into /home/domain/logs."
 msgstr ""
-"Questo file di registro corrisponde agli errori generati da CyberPanel per il tuo "
-"dominiolog degli errori puoi cercare in /home/dominio/logs."
+"Questo file di registro corrisponde agli errori generati da CyberPanel per il registro "
+"degli errori del tuo dominio che puoi trovare in /home/dominio/logs."
 
 #: serverStatus/templates/serverStatus/index.html:3
 msgid "Server Status - CyberPanel"
-msgstr "Stato del Server - CyberPanel"
+msgstr "Stato del server - CyberPanel"
 
 #: serverStatus/templates/serverStatus/index.html:14
 msgid "View LiteSpeed status and log files."
 msgstr "Visualizza lo stato LiteSpeed e i file di registro."
 
 #: serverStatus/templates/serverStatus/index.html:41
-#, fuzzy
-#| msgid "CyberPanel Main Log File"
 msgid "CyberPanel Main Log"
-msgstr "CyberPanel File di registro principale"
+msgstr "File di registro principale di CyberPanel"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:3
 msgid "LiteSpeed Status - CyberPanel"
-msgstr "Stato LiteSpeed: - CyberPanel"
+msgstr "Stato di LiteSpeed - CyberPanel"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:14
 #: serverStatus/templates/serverStatus/litespeedStatus.html:221
 msgid "LiteSpeed Status:"
-msgstr "Stato LiteSpeed:"
+msgstr "Stato di LiteSpeed:"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:16
 #: serverStatus/templates/serverStatus/litespeedStatus.html:222
 msgid "On this page you can get information regarding your LiteSpeed processes."
-msgstr "In questa pagina puoi ottenere informazioni sui tuoi processi LiteSpeed."
+msgstr "In questa pagina puoi ottenere informazioni sui tuoi processi di LiteSpeed."
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:30
 #: serverStatus/templates/serverStatus/litespeedStatus.html:254
 msgid "LiteSpeed Processes"
-msgstr "Processi LiteSpeed"
+msgstr "Processi di LiteSpeed"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:37
 #: serverStatus/templates/serverStatus/litespeedStatus.html:261
 msgid "Process ID"
-msgstr "ID Processo"
+msgstr "ID processo"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:49
 #: serverStatus/templates/serverStatus/litespeedStatus.html:273
 msgid "Main Process"
-msgstr "Processo Principale"
+msgstr "Processo principale"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:52
 #: serverStatus/templates/serverStatus/litespeedStatus.html:276
@@ -5472,7 +5263,7 @@ msgstr "Processo lscgid"
 #: serverStatus/templates/serverStatus/litespeedStatus.html:55
 #: serverStatus/templates/serverStatus/litespeedStatus.html:279
 msgid "Worker Process"
-msgstr "Processo di lavoro"
+msgstr "Processo che sta lavorando"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:67
 #: serverStatus/templates/serverStatus/litespeedStatus.html:291
@@ -5482,27 +5273,25 @@ msgstr "Riavvia Litespeed"
 #: serverStatus/templates/serverStatus/litespeedStatus.html:73
 #: serverStatus/templates/serverStatus/litespeedStatus.html:297
 msgid "Stop LiteSpeed"
-msgstr "Stop LiteSpeed"
+msgstr "Arresta LiteSpeed"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:87
 #: serverStatus/templates/serverStatus/litespeedStatus.html:310
 msgid "Error Occurred. See CyberPanel main log file."
-msgstr "Errore. Vedi il file di log principale di CyberPanel."
+msgstr "Errore. Vedi il file di registro  principale di CyberPanel."
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:92
 #: serverStatus/templates/serverStatus/litespeedStatus.html:315
 msgid "Could not connect to server."
-msgstr "Non poteva collegarsi al server."
+msgstr "Impossibile connetttersi al server."
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:138
 msgid "Switch to LiteSpeed Enterprise Web Server"
-msgstr "Passare al server Web LiteSpeed Enterprise"
+msgstr "Passare al server web LiteSpeed Enterprise"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:149
-#, fuzzy
-#| msgid "LiteSpeed Processes"
 msgid "LiteSpeed Serial No. (License Key)"
-msgstr "Processi LiteSpeed"
+msgstr "Numero di serie (Chiave di licenza) di LiteSpeed"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:160
 msgid "Switch"
@@ -5510,7 +5299,7 @@ msgstr "Cambia"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:162
 msgid "Get 15 Days Trial"
-msgstr ""
+msgstr "Ottieni 15 giorni di prova"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:175
 msgid ""
@@ -5518,44 +5307,37 @@ msgid ""
 "will auto fetch 15 days trial key for you. Make sure this server have not used trial "
 "already."
 msgstr ""
+"Nota: Se selezioni 15 giorni di prova non c'è bisogno di inserire la chiave seriale, "
+"CyberPanel recupererà automaticamente la chiave di prova di 15 giorni per te. "
+"Assicurati che questo server non abbia già usato la prova."
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:193
 msgid "With great wisdom comes great responsibility."
-msgstr "Con grande saggezza derivano grandi responsabilità."
+msgstr "Da una grande saggezza derivano grandi responsabilità."
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:329
-#, fuzzy
-#| msgid "File Manager"
 msgid "License Manager"
-msgstr "Gestione Licenza"
+msgstr "Gestore licenza"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:336
 #: serverStatus/templates/serverStatus/litespeedStatus.html:340
 #: serverStatus/templates/serverStatus/litespeedStatus.html:341
-#, fuzzy
-#| msgid "Services Status"
 msgid "License Status"
-msgstr "Stato Licenza"
+msgstr "Stato licenza"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:346
 #: serverStatus/templates/serverStatus/litespeedStatus.html:350
 #: serverStatus/templates/serverStatus/litespeedStatus.html:351
-#, fuzzy
-#| msgid "Change"
 msgid "Change License"
-msgstr "Cambia Licenza"
+msgstr "Cambia licenza"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:378
-#, fuzzy
-#| msgid "New File"
 msgid "New key"
-msgstr "Nuova Chiave"
+msgstr "Nuova chiave"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:388
-#, fuzzy
-#| msgid "Change"
 msgid "Change Key"
-msgstr "Cambia Chiave"
+msgstr "Cambia chiave"
 
 #: serverStatus/templates/serverStatus/services.html:3
 msgid "Services - CyberPanel"
@@ -5563,144 +5345,128 @@ msgstr "Servizi - CyberPanel"
 
 #: serverStatus/templates/serverStatus/services.html:25
 msgid "Show stats for services and actions (Start, Stop, Restart)"
-msgstr "Mostra statistiche per servizi e azioni (Start, Stop, Restart)"
+msgstr "Mostra statistiche per servizi e azioni (Avvia, arresta, riavvia)"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:3
-#, fuzzy
-#| msgid "Packages - CyberPanel"
 msgid "Top Processes - CyberPanel"
-msgstr "Pacchetti - CyberPanel"
+msgstr "Processi principali - CyberPanel"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:16
 msgid "List of top processes on your server. (Refresh every 3 seconds)"
-msgstr ""
+msgstr "Elenco dei processi principali sul tuo server. (Si aggiorna ogni 3 secondi)"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:27
 msgid "Cores"
-msgstr ""
+msgstr "Core"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:28
-#, fuzzy
-#| msgid "New Name"
 msgid "Model Name"
-msgstr "Nuovo Nome"
+msgstr "Nome modello"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:29
 msgid "CPU Mhz"
-msgstr ""
+msgstr "Mhz CPU"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:30
-#, fuzzy
-#| msgid "Cache Size in memory"
 msgid "Cache Size"
-msgstr "Dimensione cache in memoria"
+msgstr "Dimensione cache"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:51
-#, fuzzy
-#| msgid "Process ID"
 msgid "Processes"
-msgstr "ID Processo"
+msgstr "Processi"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:53
 msgid "Sleeping"
-msgstr ""
+msgstr "Inattivo"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:54
-#, fuzzy
-#| msgid "Stop"
 msgid "Stopped"
-msgstr "Ferma"
+msgstr "Arrestato"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:55
 msgid "Zombie"
-msgstr ""
+msgstr "Zombi"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:80
-#, fuzzy
-#| msgid "CPU Load Average"
 msgid "CPU Load"
-msgstr "Carico medio della CPU"
+msgstr "Carico della CPU"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:81
 msgid "1 Min"
-msgstr ""
+msgstr "1 min"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:82
 msgid "5 Min"
-msgstr ""
+msgstr "5 min"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:83
 msgid "15 Min"
-msgstr ""
+msgstr "15 min"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:104
 msgid "I/O Wait"
-msgstr ""
+msgstr "Attesa I/O"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:105
 msgid "Idle Time"
-msgstr ""
+msgstr "Tempo di inattività"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:106
 msgid "HW Interrupts"
-msgstr ""
+msgstr "Interruzioni HW"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:107
 msgid "Softirqs"
-msgstr ""
+msgstr "Softirqs"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:132
 #: serverStatus/templates/serverStatus/topProcesses.html:156
 msgid "Free"
-msgstr ""
+msgstr "Libero"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:133
 #: serverStatus/templates/serverStatus/topProcesses.html:157
 msgid "Used"
-msgstr ""
+msgstr "Utilizzato"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:134
 #: serverStatus/templates/serverStatus/topProcesses.html:158
 msgid "buff/cache"
-msgstr ""
+msgstr "buff/cache"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:155
 msgid "SWAP"
-msgstr ""
+msgstr "SWAP"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:192
-#, fuzzy
-#| msgid "ID"
 msgid "PID"
-msgstr "ID"
+msgstr "PID"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:194
 msgid "VIRT"
-msgstr ""
+msgstr "VIRT"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:195
 msgid "RES"
-msgstr ""
+msgstr "RES"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:196
-#, fuzzy
-#| msgid "Status"
 msgid "State"
 msgstr "Stato"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:197
 #, python-format
 msgid "%%CPU"
-msgstr ""
+msgstr "%%CPU"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:198
 #, python-format
 msgid "%%MEM"
-msgstr ""
+msgstr "%%MEM"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:199
 msgid "Time"
-msgstr ""
+msgstr "Tempo"
 
 #: serverStatus/templates/serverStatus/topProcesses.html:200
 #: websiteFunctions/templates/websiteFunctions/listCron.html:51
@@ -5710,11 +5476,11 @@ msgstr "Comando"
 
 #: tuning/templates/tuning/index.html:3
 msgid "Server Tuning - CyberPanel"
-msgstr "Server Tuning - CyberPanel"
+msgstr "Ottimizzazione del server - CyberPanel"
 
 #: tuning/templates/tuning/index.html:12
 msgid "Server Tuning"
-msgstr "Server Tuning"
+msgstr "Ottimizzazione del server"
 
 #: tuning/templates/tuning/index.html:13
 msgid ""
@@ -5722,33 +5488,34 @@ msgid ""
 "hardware."
 msgstr ""
 "In questa pagina puoi impostare i parametri di esecuzione per il tuo webserver in base "
-"a il tuo hardware."
+"al tuo hardware."
 
 #: tuning/templates/tuning/liteSpeedTuning.html:3
 msgid "LiteSpeed Tuning - CyberPanel"
-msgstr "LiteSpeed Tuning - CyberPanel"
+msgstr "Ottimizzazione di LiteSpeed - CyberPanel"
 
 #: tuning/templates/tuning/liteSpeedTuning.html:13
 msgid "You can use this page to tweak your server according to your website requirments."
 msgstr ""
-"Puoi usare questa pagina per modificare il tuo server in base al tuo sito webrequisiti."
+"Puoi usare questa pagina per ottimizzare il tuo server in base ai requisiti del tuo "
+"sito web."
 
 #: tuning/templates/tuning/liteSpeedTuning.html:18
 msgid "Tuning Details"
-msgstr "Dettagli Sintonizzazione"
+msgstr "Dettagli ottimizzazione"
 
 #: tuning/templates/tuning/liteSpeedTuning.html:28
 #: tuning/templates/tuning/phpTuning.html:52 tuning/templates/tuning/phpTuning.html:192
 msgid "Max Connections"
-msgstr "Max Connessioni"
+msgstr "Connessioni massime"
 
 #: tuning/templates/tuning/liteSpeedTuning.html:36
 msgid "Max SSL Connections"
-msgstr "Connessioni Massime SSL"
+msgstr "Connessioni SSL massime"
 
 #: tuning/templates/tuning/liteSpeedTuning.html:44
 msgid "Connection Timeout"
-msgstr "Connessione SCaduta"
+msgstr "Connessione scaduta"
 
 #: tuning/templates/tuning/liteSpeedTuning.html:52
 msgid "Keep Alive Timeout"
@@ -5760,7 +5527,7 @@ msgstr "Dimensione cache in memoria"
 
 #: tuning/templates/tuning/liteSpeedTuning.html:67
 msgid "Enable GZIP Compression"
-msgstr "Abilita compressione GZIP"
+msgstr "Attiva compressione GZIP"
 
 #: tuning/templates/tuning/liteSpeedTuning.html:74
 #: tuning/templates/tuning/phpTuning.html:97 tuning/templates/tuning/phpTuning.html:237
@@ -5769,7 +5536,7 @@ msgstr "Attualmente:"
 
 #: tuning/templates/tuning/liteSpeedTuning.html:82
 msgid "Tune Web Server"
-msgstr "Sintonizza Web Server"
+msgstr "Ottimizza server web"
 
 #: tuning/templates/tuning/liteSpeedTuning.html:92
 msgid ""
@@ -5777,7 +5544,7 @@ msgid ""
 "server:"
 msgstr ""
 "Impossibile recuperare il valore attuale, ma puoi ancora inviare nuove modifiche, "
-"erroresegnalato dal server:"
+"errore segnalato dal server:"
 
 #: tuning/templates/tuning/liteSpeedTuning.html:96
 msgid "Cannot save details, Error Message: "
@@ -5785,15 +5552,15 @@ msgstr "Impossibile salvare i dettagli, messaggio di errore: "
 
 #: tuning/templates/tuning/liteSpeedTuning.html:101
 msgid "Web Server Successfully tuned."
-msgstr "Server Web Sintonizzato con successo."
+msgstr "Server web ottimizzato con successo."
 
 #: tuning/templates/tuning/phpTuning.html:3
 msgid "PHP Tuning - CyberPanel"
-msgstr "PHP Sintonizzatore - CyberPanel"
+msgstr "Ottimizzazione di PHP - CyberPanel"
 
 #: tuning/templates/tuning/phpTuning.html:14 tuning/templates/tuning/phpTuning.html:150
 msgid "Set how each version of PHP behaves in your server here."
-msgstr "Imposta come ciascuna versione di PHP si comporta nel tuo server qui."
+msgstr "Imposta qui come ciascuna versione di PHP si comporta nel tuo server."
 
 #: tuning/templates/tuning/phpTuning.html:45 tuning/templates/tuning/phpTuning.html:185
 msgid "Initial Request Timeout (secs)"
@@ -5801,19 +5568,19 @@ msgstr "Timeout richiesta iniziale (sec)"
 
 #: tuning/templates/tuning/phpTuning.html:60 tuning/templates/tuning/phpTuning.html:200
 msgid "Memory Soft Limit"
-msgstr "Memory Soft Limit"
+msgstr "Limite soft memoria"
 
 #: tuning/templates/tuning/phpTuning.html:67 tuning/templates/tuning/phpTuning.html:207
 msgid "Memory Hard Limit"
-msgstr "Memory Hard Limit"
+msgstr "Limite hard memoria"
 
 #: tuning/templates/tuning/phpTuning.html:75 tuning/templates/tuning/phpTuning.html:215
 msgid "Process Soft Limit"
-msgstr "Process Soft Limit"
+msgstr "Limite soft processo"
 
 #: tuning/templates/tuning/phpTuning.html:82 tuning/templates/tuning/phpTuning.html:222
 msgid "Process Hard Limit"
-msgstr "Process Hard Limit"
+msgstr "Limite hard processo"
 
 #: tuning/templates/tuning/phpTuning.html:90 tuning/templates/tuning/phpTuning.html:230
 msgid "Persistent Connection"
@@ -5821,15 +5588,15 @@ msgstr "Connessione persistente"
 
 #: tuning/templates/tuning/phpTuning.html:106 tuning/templates/tuning/phpTuning.html:246
 msgid "Tune PHP"
-msgstr "Sintonizza PHP"
+msgstr "Ottimizza PHP"
 
 #: tuning/templates/tuning/phpTuning.html:119 tuning/templates/tuning/phpTuning.html:259
 msgid "Cannot tune. Error message:"
-msgstr "Non riesco a sintonizzarti. Messaggio di errore:"
+msgstr "Impossibile ottimizzare. Messaggio di errore:"
 
 #: tuning/templates/tuning/phpTuning.html:124 tuning/templates/tuning/phpTuning.html:264
 msgid "Details Successfully fetched."
-msgstr "Dettagli recuperato con successo."
+msgstr "Dettagli recuperati con successo."
 
 #: tuning/templates/tuning/phpTuning.html:128 tuning/templates/tuning/phpTuning.html:268
 msgid "PHP for "
@@ -5837,110 +5604,89 @@ msgstr "PHP per "
 
 #: tuning/templates/tuning/phpTuning.html:129 tuning/templates/tuning/phpTuning.html:269
 msgid "Successfully tuned."
-msgstr "Sintonizzato con successo."
+msgstr "Ottimizzato con successo."
 
 #: userManagment/templates/userManagment/apiAccess.html:3
-#, fuzzy
-#| msgid "Access Logs - CyberPanel"
 msgid "API Access for User - CyberPanel"
-msgstr "Log Accessi - CyberPanel"
+msgstr "Accesso APi per utente - CyberPanel"
 
 #: userManagment/templates/userManagment/apiAccess.html:14
 msgid ""
 "Allow/Remove API access for account, this effects Cloud Platform Connection and Third "
 "Party Modules."
 msgstr ""
+"Permetti/Revoca l'accesso all'API ad un account, questo influisce sulla connessione "
+"alla piattaforma cloud e ai moduli di terze parti."
 
 #: userManagment/templates/userManagment/apiAccess.html:29
 #: userManagment/templates/userManagment/changeUserACL.html:28
 #: userManagment/templates/userManagment/deleteUser.html:29
 #: userManagment/templates/userManagment/resellerCenter.html:25
 msgid "Select User"
-msgstr "Seleziona Utente"
+msgstr "Seleziona utente"
 
 #: userManagment/templates/userManagment/apiAccess.html:40
-#, fuzzy
-#| msgid "Access Log"
 msgid "Access"
-msgstr "Log di accesso"
+msgstr "Accedi"
 
 #: userManagment/templates/userManagment/changeUserACL.html:3
-#, fuzzy
-#| msgid "Create New User - CyberPanel"
 msgid "Change User ACL - CyberPanel"
-msgstr "Modifica ACL utente - CyberPanel"
+msgstr "Modifica ACL per l'utente - CyberPanel"
 
 #: userManagment/templates/userManagment/changeUserACL.html:12
 #: userManagment/templates/userManagment/changeUserACL.html:19
 #: userManagment/templates/userManagment/createACL.html:100
 #: userManagment/templates/userManagment/modifyACL.html:104
-#, fuzzy
-#| msgid "Create User"
 msgid "Change User ACL"
-msgstr "Cambia ACL Utente"
+msgstr "Modifica ACL per l'utente"
 
 #: userManagment/templates/userManagment/changeUserACL.html:13
-#, fuzzy
-#| msgid "This page can be used to Back up your websites"
 msgid "This page can be used to change ACL for CyberPanel users."
 msgstr ""
-"Questa pagina può essere utilizzata per modificare ACL per gli utenti di CyberPanel."
+"Questa pagina può essere utilizzata per modificare la lista di controllo degli accessi "
+"(ACL) per gli utenti di CyberPanel."
 
 #: userManagment/templates/userManagment/changeUserACL.html:39
 #: userManagment/templates/userManagment/createUser.html:56
 #: userManagment/templates/userManagment/deleteACL.html:26
 #: userManagment/templates/userManagment/listUsers.html:99
 #: userManagment/templates/userManagment/modifyACL.html:28
-#, fuzzy
-#| msgid "Select All"
 msgid "Select ACL"
 msgstr "Seleziona ACL"
 
 #: userManagment/templates/userManagment/changeUserACL.html:55
-#, fuzzy
-#| msgid "Change"
 msgid "Change ACL"
-msgstr "Cambia ACL"
+msgstr "Modifica ACL"
 
 #: userManagment/templates/userManagment/createACL.html:3
-#, fuzzy
-#| msgid "Create New User - CyberPanel"
 msgid "Create new ACL - CyberPanel"
-msgstr "Crea nuovo ACL - CyberPanel"
+msgstr "Crea una nuova ACL - CyberPanel"
 
 #: userManagment/templates/userManagment/createACL.html:13
 msgid ""
 "Create new Access Control defination, that specifies what CyberPanel users can do."
 msgstr ""
-"Crea una nuova definizione di controllo degli accessi, che specifica quali utenti di "
-"CyberPanelpuò fare."
+"Crea una nuova definizione di controllo degli accessi, che specifica cosa possono fare "
+"gli utenti di CyberPanel."
 
 #: userManagment/templates/userManagment/createACL.html:19
 #: userManagment/templates/userManagment/modifyACL.html:19
-#, fuzzy
-#| msgid "Details"
 msgid "ACL Details"
 msgstr "Dattagli ACL"
 
 #: userManagment/templates/userManagment/createACL.html:26
-#, fuzzy
-#| msgid "Last Name"
 msgid "ACL Name"
 msgstr "Nome ACL"
 
 #: userManagment/templates/userManagment/createACL.html:40
 #: userManagment/templates/userManagment/modifyACL.html:44
-#, fuzzy
-#| msgid "Admin"
 msgid "Make Admin"
-msgstr "Rendi Amministratore"
+msgstr "Rendi amministratore"
 
 #: userManagment/templates/userManagment/createACL.html:59
 #: userManagment/templates/userManagment/modifyACL.html:63
-#, fuzzy
-#| msgid "Version Management"
 msgid "User Management"
-msgstr "Gestione Utenti"
+msgstr "Gestione utenti"
 
 #: userManagment/templates/userManagment/createACL.html:91
 #: userManagment/templates/userManagment/deleteUser.html:13
@@ -5950,95 +5696,73 @@ msgstr "Gestione Utenti"
 #: userManagment/templates/userManagment/index.html:81
 #: userManagment/templates/userManagment/modifyACL.html:95
 msgid "Delete User"
-msgstr "Elimina Utente"
+msgstr "Elimina utente"
 
 #: userManagment/templates/userManagment/createACL.html:107
 #: userManagment/templates/userManagment/modifyACL.html:111
-#, fuzzy
-#| msgid "Version Management"
 msgid "Website Management"
-msgstr "Gestione Siti Web"
+msgstr "Gestione sito web"
 
 #: userManagment/templates/userManagment/createACL.html:130
 #: userManagment/templates/userManagment/modifyACL.html:134
-#, fuzzy
-#| msgid "Suspend/Unsuspend Website"
 msgid "Suspend Website"
-msgstr "Sospendi Sito Web"
+msgstr "Sospendi sito web"
 
 #: userManagment/templates/userManagment/createACL.html:147
 #: userManagment/templates/userManagment/modifyACL.html:151
-#, fuzzy
-#| msgid "Package Name"
 msgid "Package Management"
-msgstr "Gestione Pacchetti"
+msgstr "Gestione pacchetti"
 
 #: userManagment/templates/userManagment/createACL.html:186
 #: userManagment/templates/userManagment/modifyACL.html:190
-#, fuzzy
-#| msgid "Database Name"
 msgid "Database Management"
-msgstr "Gestione Database"
+msgstr "Gestione database"
 
 #: userManagment/templates/userManagment/createACL.html:216
 #: userManagment/templates/userManagment/modifyACL.html:220
-#, fuzzy
-#| msgid "Version Management"
 msgid "DNS Management"
 msgstr "Gestione DNS"
 
 #: userManagment/templates/userManagment/createACL.html:249
 #: userManagment/templates/userManagment/modifyACL.html:253
-#, fuzzy
-#| msgid "Add/Delete Rules"
 msgid "Add/Delete"
 msgstr "Aggiungi/Rimuovi"
 
 #: userManagment/templates/userManagment/createACL.html:257
 #: userManagment/templates/userManagment/modifyACL.html:261
-#, fuzzy
-#| msgid "Version Management"
 msgid "Email Management"
-msgstr "Gestione Email"
+msgstr "Gestione email"
 
 #: userManagment/templates/userManagment/createACL.html:317
 #: userManagment/templates/userManagment/modifyACL.html:321
-#, fuzzy
-#| msgid "Version Management"
 msgid "FTP Management"
 msgstr "Gestione FTP"
 
 #: userManagment/templates/userManagment/createACL.html:347
 #: userManagment/templates/userManagment/modifyACL.html:351
-#, fuzzy
-#| msgid "Version Management"
 msgid "Backup Management"
-msgstr "Gestione Backup"
+msgstr "Gestione backup"
 
 #: userManagment/templates/userManagment/createACL.html:399
 #: userManagment/templates/userManagment/modifyACL.html:403
-#, fuzzy
-#| msgid "Version Management"
 msgid "SSL Management"
 msgstr "Gestione SSL"
 
 #: userManagment/templates/userManagment/createACL.html:432
-#, fuzzy
-#| msgid "Create File"
 msgid "Create ACL"
 msgstr "Crea ACL"
 
 #: userManagment/templates/userManagment/createUser.html:3
 msgid "Create New User - CyberPanel"
-msgstr "Crea nuovo utente - CyberPanel"
+msgstr "Crea un nuovo utente - CyberPanel"
 
 #: userManagment/templates/userManagment/createUser.html:13
 msgid "Create root, reseller or normal users on this page."
-msgstr "Crea root, rivenditori o utenti normali su questa pagina."
+msgstr "Crea utenti root, rivenditori o normali in questa pagina."
 
 #: userManagment/templates/userManagment/createUser.html:19
 msgid "User Details"
-msgstr "Dettagli Utente"
+msgstr "Dettagli utente"
 
 #: userManagment/templates/userManagment/createUser.html:25
 #: userManagment/templates/userManagment/modifyUser.html:39
@@ -6062,32 +5786,30 @@ msgstr "Cognome"
 
 #: userManagment/templates/userManagment/createUser.html:41
 msgid "Last Name should contain only alphabetic characters."
-msgstr "Cognome dovrebbe contenere solo caratteri alfabetici."
+msgstr "Il cognome dovrebbe contenere solo caratteri alfabetici."
 
 #: userManagment/templates/userManagment/createUser.html:50
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:66
 msgid "Invalid Email"
-msgstr "E-mail non valido"
+msgstr "Indirizzo email non valido"
 
 #: userManagment/templates/userManagment/createUser.html:68
 #: userManagment/templates/userManagment/listUsers.html:33
 #: userManagment/templates/userManagment/resellerCenter.html:48
 #: userManagment/templates/userManagment/userProfile.html:53
 msgid "Websites Limit"
-msgstr "Limite dei siti Web"
+msgstr "Limite siti web"
 
 #: userManagment/templates/userManagment/createUser.html:107
 #: userManagment/templates/userManagment/modifyUser.html:85
-#, fuzzy
-#| msgid "Security"
 msgid "Security Level"
-msgstr "Sicurezza"
+msgstr "Livello di sicurezza"
 
 #: userManagment/templates/userManagment/createUser.html:120
 #: userManagment/templates/userManagment/index.html:49
 #: userManagment/templates/userManagment/index.html:52
 msgid "Create User"
-msgstr "Crea Utente"
+msgstr "Crea utente"
 
 #: userManagment/templates/userManagment/createUser.html:128
 #: userManagment/templates/userManagment/modifyUser.html:112
@@ -6102,30 +5824,26 @@ msgstr "Impossibile creare l'utente. Messaggio di errore:"
 msgid ""
 "Length of first and last name combined should be less than or equal to 20 characters"
 msgstr ""
-"La lunghezza del nome e del cognome combinati deve essere inferiore o uguale a "
-"20caratteri"
+"La lunghezza del nome e del cognome combinati deve essere inferiore o uguale a 20 "
+"caratteri"
 
 #: userManagment/templates/userManagment/deleteACL.html:3
-#, fuzzy
-#| msgid "Delete User - CyberPanel"
 msgid "Delete ACL - CyberPanel"
 msgstr "Elimina ACL - CyberPanel"
 
 #: userManagment/templates/userManagment/deleteACL.html:13
-#, fuzzy
-#| msgid "This page can be used to suspend/unsuspend website."
 msgid "This page can be used to delete ACL."
 msgstr "Questa pagina può essere utilizzata per eliminare ACL."
 
 #: userManagment/templates/userManagment/deleteUser.html:3
 msgid "Delete User - CyberPanel"
-msgstr "Elimina Utenti - CyberPanel"
+msgstr "Elimina utenti - CyberPanel"
 
 #: userManagment/templates/userManagment/deleteUser.html:14
 msgid "Websites owned by this user will automatically transfer to the root."
 msgstr ""
-"I siti Web di proprietà dell'utente verranno automaticamente trasferiti alla directory "
-"principale."
+"I siti web di proprietà dell'utente verranno automaticamente trasferiti all'utente "
+"root."
 
 #: userManagment/templates/userManagment/deleteUser.html:61
 msgid "Cannot delete user. Error message:"
@@ -6145,48 +5863,40 @@ msgstr "Funzioni utente - CyberPanel"
 
 #: userManagment/templates/userManagment/index.html:14
 msgid "Create, edit and delete users on this page."
-msgstr "Creare, modificare ed eliminare utenti su questa pagina."
+msgstr "Crea, modifica ed elimina utenti in questa pagina."
 
 #: userManagment/templates/userManagment/listUsers.html:3
-#, fuzzy
-#| msgid "List Databases  - CyberPanel"
 msgid "List Users  - CyberPanel"
-msgstr "Elenco Database - CyberPanel"
+msgstr "Elenco utenti - CyberPanel"
 
 #: userManagment/templates/userManagment/listUsers.html:14
 msgid "List Users that you own."
-msgstr ""
+msgstr "Elenca gli utenti che possiedi."
 
 #: userManagment/templates/userManagment/listUsers.html:35
 msgid "ACL"
-msgstr ""
+msgstr "ACL"
 
 #: userManagment/templates/userManagment/listUsers.html:84
 #: userManagment/templates/userManagment/resellerCenter.html:37
-#, fuzzy
-#| msgid "Select Owner"
 msgid "New Owner"
-msgstr "Nuovo Proprietario"
+msgstr "Nuovo proprietario"
 
 #: userManagment/templates/userManagment/modifyACL.html:3
-#, fuzzy
-#| msgid "Modify User - CyberPanel"
 msgid "Modify an ACL - CyberPanel"
-msgstr "Modifica un ACL - CyberPanel"
+msgstr "Modifica un'ACL - CyberPanel"
 
 #: userManagment/templates/userManagment/modifyACL.html:12
 msgid "Modify an ACL"
-msgstr "Modifica un ACL"
+msgstr "Modifica un'ACL"
 
 #: userManagment/templates/userManagment/modifyACL.html:13
-#, fuzzy
-#| msgid "On this page you can set up your Back up destinations. (SFTP)"
 msgid "On this page you can modify an existing ACL."
-msgstr "In questa pagina puoi modificare un ACL esistente."
+msgstr "In questa pagina puoi modificare un'ACL esistente."
 
 #: userManagment/templates/userManagment/modifyUser.html:3
 msgid "Modify User - CyberPanel"
-msgstr "Modifica Utente - CyberPanel"
+msgstr "Modifica utente - CyberPanel"
 
 #: userManagment/templates/userManagment/modifyUser.html:13
 msgid "Modify existing user settings on this page."
@@ -6209,47 +5919,39 @@ msgid "Details fetched."
 msgstr "Dettagli recuperati."
 
 #: userManagment/templates/userManagment/resellerCenter.html:3
-#, fuzzy
-#| msgid "Restore Website - CyberPanel"
 msgid "Reseller Center - CyberPanel"
 msgstr "Centro rivenditori - CyberPanel"
 
 #: userManagment/templates/userManagment/resellerCenter.html:13
 msgid "Change owner of users and change websites limits."
-msgstr "Cambia proprietario degli utenti e modifica dei limiti dei siti web."
+msgstr "Cambia proprietario degli utenti e modifica i limiti dei siti web."
 
 #: userManagment/templates/userManagment/userProfile.html:3
 msgid "Account Details - CyberPanel"
-msgstr "Deattagli Account - CyberPanel"
+msgstr "Dettagli account - CyberPanel"
 
 #: userManagment/templates/userManagment/userProfile.html:12
 #: userManagment/templates/userManagment/userProfile.html:18
 msgid "Account Details"
-msgstr "Deattagli Account"
+msgstr "Dettagli account"
 
 #: userManagment/templates/userManagment/userProfile.html:13
 msgid "List the account details for the currently logged in user."
-msgstr "Elencare i dettagli dell'account per l'utente attualmente connesso."
+msgstr "Elenca i dettagli dell'account dell'utente attualmente connesso."
 
 #: userManagment/templates/userManagment/userProfile.html:48
-#, fuzzy
-#| msgid "Account Level"
 msgid "Account ACL"
-msgstr "Account ACL"
+msgstr "ACL account"
 
 #: userManagment/templates/userManagment/userProfile.html:55
 msgid "( 0 = Unlimited )"
 msgstr "( 0 = Illimitato )"
 
 #: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:3
-#, fuzzy
-#| msgid "Application Installer"
 msgid "Application Installer - CyberPanel"
-msgstr "Programma di installazione dell'applicazione - CyberPanel"
+msgstr "Installer dell'applicazione - CyberPanel"
 
 #: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:15
-#, fuzzy
-#| msgid "Application Installer"
 msgid "One-click application install."
 msgstr "Installazione dell'applicazione con un clic."
 
@@ -6266,12 +5968,12 @@ msgstr "Crea un nuovo sito web - CyberPanel"
 #: websiteFunctions/templates/websiteFunctions/listWebsites.html:21
 msgid "On this page you can launch, list, modify and delete websites from your server."
 msgstr ""
-"In questa pagina puoi avviare, elencare, modificare ed eliminare siti web dal "
-"tuoserver."
+"In questa pagina puoi avviare, elencare, modificare ed eliminare siti web dal tuo "
+"server."
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:20
 msgid "Website Details"
-msgstr "Dettagli Sito Web"
+msgstr "Dettagli sito web"
 
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:54
 msgid "Do not enter WWW, it will be auto created!"
@@ -6284,48 +5986,40 @@ msgstr "Elimina sito web - CyberPanel"
 #: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:13
 msgid "This page can be used to delete website, once deleted it can not be recovered."
 msgstr ""
-"Questa pagina può essere utilizzata per eliminare il sito Web, una volta eliminato non "
-"può essere Recuperato."
+"Questa pagina può essere utilizzata per eliminare il sito web, una volta eliminato non "
+"può essere recuperato."
 
 #: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:61
 msgid "Cannot delete website, Error message: "
-msgstr "Impossibile eliminare il sito Web, messaggio di errore: "
+msgstr "Impossibile eliminare il sito web, messaggio di errore: "
 
 #: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:65
 msgid "Successfully Deleted."
 msgstr "Eliminato con successo."
 
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:3
-#, fuzzy
-#| msgid "Home - CyberPanel"
 msgid "Domain Aliases - CyberPanel"
-msgstr "Alias Dominio - CyberPanel"
+msgstr "Alias del dominio - CyberPanel"
 
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:12
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:19
-#, fuzzy
-#| msgid "Domain Name"
 msgid "Domain Aliases"
-msgstr "Alias Dominio"
+msgstr "Alias del dominio"
 
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:13
 msgid ""
 "With Domain Aliases you can visit example.com using example.net and view the same "
 "content."
 msgstr ""
-"Con Domain Alias puoi visitare example.com utilizzando example.net e visualizzare il "
-"stesso contenuto."
+"Con gli alias del dominio puoi visitare example.com utilizzando example.net e "
+"visualizzare il stesso contenuto."
 
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:29
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:105
-#, fuzzy
-#| msgid "Create File"
 msgid "Create Alias"
-msgstr "Crea Alias"
+msgstr "Crea alias"
 
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:36
-#, fuzzy
-#| msgid "Create Domain"
 msgid "Master Domain"
 msgstr "Dominio principale"
 
@@ -6334,71 +6028,58 @@ msgid "Alias"
 msgstr "Alias"
 
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:38
-#, fuzzy
-#| msgid "System Status"
 msgid "File System Path"
 msgstr "Percorso del file system"
 
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:63
 msgid "Domain Aliases not found."
-msgstr "Alias di dominio non trovato."
+msgstr "Alias del dominio non trovato."
 
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:79
-#, fuzzy
-#| msgid "List Domains"
 msgid "Alias Domain"
-msgstr "Alias Dominio"
+msgstr "Dominio alias"
 
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:93
 msgid ""
 "For SSL to work DNS of domain should point to server, otherwise self signed SSL will "
 "be issued, you can add your own SSL later."
 msgstr ""
-"Affinché SSL funzioni DNS del dominio dovrebbe puntare al server, altrimenti "
-"autofirmatoSarà rilasciato SSL, è possibile aggiungere il proprio SSL in seguito."
+"Affinché SSL funzioni, i DNS del dominio dovrebbero puntare al server, altrimenti "
+"verrà emesso un certificato SSL autofirmato, è possibile aggiungere il proprio SSL in "
+"seguito."
 
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:114
-#, fuzzy
-#| msgid "Action failed. Error message:"
 msgid "Operation failed. Error message:"
 msgstr "Operazione fallita. Messaggio di errore:"
 
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:118
 msgid "Alias successfully created. Refreshing page in 3 seconds..."
-msgstr "Alias creato con successo. Pagina in aggiornamento tra 3 secondi ..."
+msgstr "Alias creato con successo. La pagina si ricaricherà in 3 secondi..."
 
 #: websiteFunctions/templates/websiteFunctions/domainAlias.html:122
-#, fuzzy
-#| msgid "Action successful."
 msgid "Operation Successfull."
 msgstr "Operazione riuscita."
 
 #: websiteFunctions/templates/websiteFunctions/index.html:3
 msgid "Website Functions - CyberPanel"
-msgstr "Funzioni del sito Web - CyberPanel"
+msgstr "Funzioni del sito web - CyberPanel"
 
 #: websiteFunctions/templates/websiteFunctions/index.html:33
 #: websiteFunctions/templates/websiteFunctions/index.html:57
-#, fuzzy
-#| msgid "List Websites"
 msgid "List Website"
-msgstr "Lista Siti Web"
+msgstr "Elenca sito web"
 
 #: websiteFunctions/templates/websiteFunctions/index.html:79
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:13
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:20
 msgid "Suspend/Unsuspend Website"
-msgstr "Sospendi/Non Sospendi il sito web"
+msgstr "Sospendi/Non Sospendere il sito web"
 
 #: websiteFunctions/templates/websiteFunctions/installJoomla.html:3
-#, fuzzy
-#| msgid "Install PHP Extensions - CyberPanel"
 msgid "Install Joomla - CyberPanel"
 msgstr "Installa Joomla - CyberPanel"
 
 #: websiteFunctions/templates/websiteFunctions/installJoomla.html:12
-#, fuzzy
-#| msgid "Install"
 msgid "Install Joomla"
 msgstr "Installa Joomla"
 
@@ -6410,37 +6091,27 @@ msgstr "Installa Joomla con un clic!"
 #: websiteFunctions/templates/websiteFunctions/installMagento.html:20
 #: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:20
 #: websiteFunctions/templates/websiteFunctions/installWordPress.html:20
-#, fuzzy
-#| msgid "Installation failed. Error message:"
 msgid "Installation Details"
-msgstr "Dettagli Installazione"
+msgstr "Dettagli installazione"
 
 #: websiteFunctions/templates/websiteFunctions/installJoomla.html:28
-#, fuzzy
-#| msgid "Site name"
 msgid "Site Name"
-msgstr "Nome Sito"
+msgstr "Nome sito"
 
 #: websiteFunctions/templates/websiteFunctions/installJoomla.html:35
 #: websiteFunctions/templates/websiteFunctions/installWordPress.html:35
-#, fuzzy
-#| msgid "Modify User"
 msgid "Login User"
-msgstr "Accesso Utente"
+msgstr "Accesso utente"
 
 #: websiteFunctions/templates/websiteFunctions/installJoomla.html:42
 #: websiteFunctions/templates/websiteFunctions/installWordPress.html:42
-#, fuzzy
-#| msgid "Admin Password"
 msgid "Login Password"
-msgstr "Password di Accesso"
+msgstr "Password di accesso"
 
 #: websiteFunctions/templates/websiteFunctions/installJoomla.html:49
 #: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:63
-#, fuzzy
-#| msgid "Database prefix"
 msgid "Database Prefix"
-msgstr "Prefisso Database"
+msgstr "Prefisso database"
 
 #: websiteFunctions/templates/websiteFunctions/installJoomla.html:91
 #: websiteFunctions/templates/websiteFunctions/installMagento.html:126
@@ -6453,146 +6124,118 @@ msgstr "Installazione fallita. Messaggio di errore:"
 #: websiteFunctions/templates/websiteFunctions/installMagento.html:130
 #: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:109
 #: websiteFunctions/templates/websiteFunctions/installWordPress.html:95
-#, fuzzy
-#| msgid "Installation successful. To complete the setup visit:"
 msgid "Installation successful. Visit:"
 msgstr "Installazione avvenuta con successo. Visita:"
 
 #: websiteFunctions/templates/websiteFunctions/installMagento.html:3
-#, fuzzy
-#| msgid "Install PHP Extensions - CyberPanel"
 msgid "Install Magento - CyberPanel"
-msgstr "Installa PrestaShop - CyberPanel"
+msgstr "Installa Magento - CyberPanel"
 
 #: websiteFunctions/templates/websiteFunctions/installMagento.html:12
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:724
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:728
 #: websiteFunctions/templates/websiteFunctions/website.html:1029
 #: websiteFunctions/templates/websiteFunctions/website.html:1033
-#, fuzzy
-#| msgid "Packages"
 msgid "Install Magento"
-msgstr "Pacchetti"
+msgstr "Installa Magento"
 
 #: websiteFunctions/templates/websiteFunctions/installMagento.html:13
-#, fuzzy
-#| msgid "Application Installer"
 msgid "One-click Magento Install!"
-msgstr "Installa PrestaShop con un clic!"
+msgstr "Installa Magento con un clic!"
 
 #: websiteFunctions/templates/websiteFunctions/installMagento.html:51
 msgid "Admin Username"
-msgstr "Admin Username"
+msgstr "Nome utente dell'amministratore"
 
 #: websiteFunctions/templates/websiteFunctions/installMagento.html:93
 msgid ""
 "does not work on OpenLiteSpeed. It is highly recommended to use this installer with "
 "LiteSpeed Enterprise only."
 msgstr ""
+"non funziona su OpenLiteSpeed. Si raccomanda vivamente di utilizzare questo programma "
+"di installazione solo con LiteSpeed Enterprise."
 
 #: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:3
-#, fuzzy
-#| msgid "Install PHP Extensions - CyberPanel"
 msgid "Install PrestaShop - CyberPanel"
 msgstr "Installa PrestaShop - CyberPanel"
 
 #: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:12
-#, fuzzy
-#| msgid "Install"
 msgid "Install PrestaShop"
 msgstr "Installa PrestaShop"
 
 #: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:13
-#, fuzzy
-#| msgid "Application Installer"
 msgid "One-click PrestaShop Install!"
 msgstr "Installa PrestaShop con un clic!"
 
 #: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:28
-#, fuzzy
-#| msgid "Site name"
 msgid "Shop Name"
-msgstr "Nome Shop"
+msgstr "Nome del negozio"
 
 #: websiteFunctions/templates/websiteFunctions/installWordPress.html:3
-#, fuzzy
-#| msgid "Install PHP Extensions - CyberPanel"
 msgid "Install WordPress - CyberPanel"
 msgstr "Installa WordPress - CyberPanel"
 
 #: websiteFunctions/templates/websiteFunctions/installWordPress.html:12
-#, fuzzy
-#| msgid "Install"
 msgid "Install WordPress"
 msgstr "Installa WordPress"
 
 #: websiteFunctions/templates/websiteFunctions/installWordPress.html:13
-#, fuzzy
-#| msgid "Install wordpress with LSCache"
 msgid "Install WordPress with LSCache."
-msgstr "Installa WordPress con LSCache"
+msgstr "Installa WordPress con LSCache."
 
 #: websiteFunctions/templates/websiteFunctions/installWordPress.html:28
 msgid "Blog Title"
-msgstr "Titolo Blog"
+msgstr "Titolo blog"
 
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:32
 msgid "Copy/Sync to Master"
-msgstr ""
+msgstr "Copia/Sincronizza con il principale"
 
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:673
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:678
 #: websiteFunctions/templates/websiteFunctions/website.html:990
 msgid "WP + LSCache"
-msgstr ""
+msgstr "WP + LSCache"
 
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:729
 #: websiteFunctions/templates/websiteFunctions/website.html:1034
 msgid "Magento"
-msgstr ""
+msgstr "Magento"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:3
-#, fuzzy
-#| msgid "Version Management - CyberPanel"
 msgid "Cron Management - CyberPanel"
-msgstr "Gestione Cron - CyberPanel"
+msgstr "Gestione cron - CyberPanel"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:12
 #: websiteFunctions/templates/websiteFunctions/listCron.html:19
-#, fuzzy
-#| msgid "Version Management"
 msgid "Cron Management"
-msgstr "Gestione Cron"
+msgstr "Gestione cron"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:12
 msgid "Cron Docs"
-msgstr "Cron Documentazione"
+msgstr "Documentazione cron"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:13
-#, fuzzy
-#| msgid "Create, edit and delete users on this page."
 msgid "Create, edit or delete your cron jobs from this page."
-msgstr "Crea, modifica o cancella i tuoi lavori cron da questa pagina."
+msgstr "Crea, modifica o cancella i tuoi cron job da questa pagina."
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:37
-#, fuzzy
-#| msgid "Add Domains"
 msgid "Add Cron"
-msgstr "Aggiungi Cron"
+msgstr "Aggiungi cron"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:46
 #: websiteFunctions/templates/websiteFunctions/listCron.html:95
 msgid "Minute"
-msgstr "Minuti"
+msgstr "Minuto"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:47
 #: websiteFunctions/templates/websiteFunctions/listCron.html:101
 msgid "Hour"
-msgstr "Ore"
+msgstr "Ora"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:48
 msgid "Day of Month"
-msgstr "Giorno del Mese"
+msgstr "Giorno del mese"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:49
 #: websiteFunctions/templates/websiteFunctions/listCron.html:113
@@ -6609,7 +6252,7 @@ msgstr "Predefinito"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:82
 msgid "Every minute"
-msgstr "Ogni Minuto"
+msgstr "Ogni minuto"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:83
 msgid "Every 5 minutes"
@@ -6617,7 +6260,7 @@ msgstr "Ogni 5 minuti"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:84
 msgid "Every 30 minutes"
-msgstr "Ogni 30 Minuti"
+msgstr "Ogni 30 minuti"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:85
 msgid "Every hour"
@@ -6648,27 +6291,21 @@ msgid "Day of week"
 msgstr "Giorno della settimana"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:135
-#, fuzzy
-#| msgid "Save Rewrite Rules"
 msgid "Save edits"
 msgstr "Salva modifiche"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:142
-#, fuzzy
-#| msgid "Add Records"
 msgid "Add cron"
 msgstr "Aggiungi cron"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:152
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:102
 msgid "Cannot fetch website details. Error message:"
-msgstr "Impossibile recuperare i dettagli del sito Web. Messaggio di errore:"
+msgstr "Impossibile recuperare i dettagli del sito web. Messaggio di errore:"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:156
-#, fuzzy
-#| msgid "Could not save SSL. Error message:"
 msgid "Unable to add/save Cron. Error message:"
-msgstr "Impossibile aggiungere/salvare Cron. Messaggio di errore:"
+msgstr "Impossibile aggiungere/salvare il cron. Messaggio di errore:"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:159
 msgid "Cron job saved"
@@ -6676,37 +6313,33 @@ msgstr "Cron job salvato"
 
 #: websiteFunctions/templates/websiteFunctions/listWebsites.html:3
 msgid "Websites Hosted - CyberPanel"
-msgstr "Siti Web ospitati - CyberPanel"
+msgstr "Siti web ospitati - CyberPanel"
 
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:3
 msgid "Modify Website - CyberPanel"
-msgstr "Modifica Sito Web - CyberPanel"
+msgstr "Modifica sito web - CyberPanel"
 
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:51
 msgid "Current Package:"
-msgstr "Pacchetto Corrente:"
+msgstr "Pacchetto attuale:"
 
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:62
 msgid "Current Owner:"
-msgstr "Attuale proprietario:"
+msgstr "Proprietario attuale:"
 
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:106
 msgid "Cannot modify website. Error message:"
-msgstr "Impossibile modificare il sito Web. Messaggio di errore:"
+msgstr "Impossibile modificare il sito web. Messaggio di errore:"
 
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:110
 msgid "Website Details Successfully fetched"
-msgstr "Dettagli del sito Web Recuperato con successo"
+msgstr "Dettagli del sito web recuperati con successo"
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:3
-#, fuzzy
-#| msgid "Version Management - CyberPanel"
 msgid "Git Management - CyberPanel"
 msgstr "Gestione Git - CyberPanel"
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:12
-#, fuzzy
-#| msgid "Version Management"
 msgid "Git Management"
 msgstr "Gestione Git"
 
@@ -6716,11 +6349,11 @@ msgstr "Allega git ai tuoi siti web."
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:21
 msgid "Attach Git"
-msgstr "Allega Git"
+msgstr "Allega git"
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:29
 msgid "Providers"
-msgstr "Providers"
+msgstr "Fornitori"
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:36
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:161
@@ -6732,12 +6365,10 @@ msgid ""
 "Before attaching repo to your website, make sure to place your Development key in your "
 "GIT repository."
 msgstr ""
-"Prima di allegare repo al tuo sito web, assicurati di posizionare il tuo "
-"sviluppoinserisci il tuo repository GIT."
+"Prima di collegare un repo al tuo sito web, assicurati di mettere la tua chiave di "
+"sviluppo nel tuo repository git."
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:77
-#, fuzzy
-#| msgid "Extension Name"
 msgid "Repository Name"
 msgstr "Nome del repository"
 
@@ -6748,26 +6379,24 @@ msgstr "Ramo"
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:97
 msgid "Attach Now"
-msgstr "Allega ora"
+msgstr "Collega ora"
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:121
 msgid "GIT Successfully attached, refreshing page in 3 seconds... Visit:"
-msgstr "GIT Collegato con successo, pagina di aggiornamento in 3 secondi ... Visita:"
+msgstr "Git collegato con successo, la pagina si ricaricherà in 3 secondi... Visita:"
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:213
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:273
-#, fuzzy
-#| msgid "Change"
 msgid "Change Branch"
-msgstr "Cambia Ramo"
+msgstr "Cambia ramo"
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:222
 msgid "Detach Repo"
-msgstr "Scollega Repo"
+msgstr "Scollega repo"
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:228
 msgid "Webhook URL"
-msgstr "Webhook URL"
+msgstr "URL webhook"
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:229
 msgid ""
@@ -6776,91 +6405,80 @@ msgid ""
 "configuring webhook. This will initiate a pull from your resposity as soon as you "
 "commit some changes."
 msgstr ""
-"Aggiungi questo URL alla sezione Webhook del tuo repository Git, se hai usatohostname "
-"SSL, quindi sostituisci IP con il tuo nome host, altrimenti usa IP edisabilita il "
-"controllo SSL durante la configurazione di webhook. In questo modo avvii un pull dala "
-"tua resposity non appena commetti alcuni cambiamenti."
+"Aggiungi questo URL alla sezione Webhook del tuo repository Git, se hai usato un "
+"hostname SSL allora sostituisci l'indirizzo IP con il tuo nome host, altrimenti usa "
+"l'indirizzo IP e disattiva il controllo SSL durante la configurazione di webhook. In "
+"questo modo avvii un pull dal tuo repository non appena invii un commit con alcuni "
+"cambiamenti."
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:241
-#, fuzzy
-#| msgid "Password successfully changed for :"
 msgid "Repo successfully detached, refreshing in 3 seconds.."
-msgstr "Limiti modificati con successo, aggiornamento in 3 secondi."
+msgstr "Repo scollegato con successo, ricaricamento in 3 secondi.."
 
 #: websiteFunctions/templates/websiteFunctions/setupGit.html:287
-#, fuzzy
-#| msgid "Backup successfully cancelled."
 msgid "Branch successfully changed."
-msgstr "Ramo cambiato con successo"
+msgstr "Ramo modificato con successo."
 
 #: websiteFunctions/templates/websiteFunctions/setupStaging.html:3
-#, fuzzy
-#| msgid "Version Management - CyberPanel"
 msgid "Set up Staging Enviroment - CyberPanel"
-msgstr "Gestione Git - CyberPanel"
+msgstr "Imposta l'ambiente di staging - CyberPanel"
 
 #: websiteFunctions/templates/websiteFunctions/setupStaging.html:12
 msgid "Set up Staging Enviroment"
-msgstr ""
+msgstr "Imposta l'ambiente di staging"
 
 #: websiteFunctions/templates/websiteFunctions/setupStaging.html:13
 #: websiteFunctions/templates/websiteFunctions/setupStaging.html:20
 msgid "Set up staging enviroment for "
-msgstr ""
+msgstr "Imposta l'ambiente di staging per "
 
 #: websiteFunctions/templates/websiteFunctions/setupStaging.html:13
 msgid ""
 ". Any domain that you will choose here will be created as child-domain for this master "
 "site."
 msgstr ""
+". Qualsiasi dominio che sceglierai qui verrà creato come dominio figlio per questo "
+"sito principale."
 
 #: websiteFunctions/templates/websiteFunctions/setupStaging.html:31
 msgid "Domain that you will enter below will be created as child-domain to "
-msgstr ""
+msgstr "Il dominio che inserirete qui sotto verrà creato come dominio figlio di "
 
 #: websiteFunctions/templates/websiteFunctions/setupStaging.html:33
 msgid "."
-msgstr ""
+msgstr "."
 
 #: websiteFunctions/templates/websiteFunctions/setupStaging.html:47
-#, fuzzy
-#| msgid "Start"
 msgid "Start Cloning"
-msgstr "Invia"
+msgstr "Avvia la clonazione"
 
 #: websiteFunctions/templates/websiteFunctions/sshAccess.html:3
-#, fuzzy
-#| msgid "Manage SSL - CyberPanel"
 msgid "SSH and CageFS - CyberPanel"
-msgstr "Gestisci SSL - CyberPanel"
+msgstr "SSL e CageFS - CyberPanel"
 
 #: websiteFunctions/templates/websiteFunctions/sshAccess.html:12
-#, fuzzy
-#| msgid "SSH Keys"
 msgid "SSH Access"
-msgstr "SSH Documentazione"
+msgstr "Accesso SSH"
 
 #: websiteFunctions/templates/websiteFunctions/sshAccess.html:13
 msgid "Set up SSH access and enable/disable CageFS for "
-msgstr ""
+msgstr "Impostare l'accesso SSH e attivare/disattivare CageFS per "
 
 #: websiteFunctions/templates/websiteFunctions/sshAccess.html:13
 msgid " CageFS require CloudLinux OS."
-msgstr ""
+msgstr " CageFS richiede il sistema operativo CloudLinux."
 
 #: websiteFunctions/templates/websiteFunctions/sshAccess.html:20
 msgid "Set up SSH access for "
-msgstr ""
+msgstr "Impostare l'accesso SSH per "
 
 #: websiteFunctions/templates/websiteFunctions/sshAccess.html:29
-#, fuzzy
-#| msgid "SSL Issued for"
 msgid "SSH user for "
-msgstr "SSL emesso per"
+msgstr "Utente SSH per "
 
 #: websiteFunctions/templates/websiteFunctions/sshAccess.html:29
 msgid " is "
-msgstr ""
+msgstr " è "
 
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:3
 msgid "Suspend/Unsuspend Website - CyberPanel"
@@ -6876,7 +6494,7 @@ msgstr "Sospeso"
 
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:45
 msgid "Un-Suspend"
-msgstr "Non Sospeso"
+msgstr "Non sospeso"
 
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:65
 msgid "Cannot suspend website, Error message: "
@@ -6884,61 +6502,59 @@ msgstr "Impossibile sospendere il sito web. Messaggio di errore:: "
 
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:69
 msgid "Cannot unsuspend website. Error message:"
-msgstr "Impossibile sospendere il sito web. Messaggio di errore:"
+msgstr "Impossibile interrompere la sospensione del sito web. Messaggio di errore:"
 
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:73
 msgid "Website "
-msgstr "Sito Web "
+msgstr "Sito web "
 
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:73
 msgid "Successfully "
 msgstr "Con successo "
 
 #: websiteFunctions/templates/websiteFunctions/syncMaster.html:3
-#, fuzzy
-#| msgid "DNS Functions - CyberPanel"
 msgid "Sync to Master - CyberPanel"
-msgstr "Funzioni DNS - CyberPanel"
+msgstr "Sincronizza con principale - CyberPanel"
 
 #: websiteFunctions/templates/websiteFunctions/syncMaster.html:12
 msgid "Sync your site to Master"
-msgstr ""
+msgstr "Sincronizza il tuo sito con il principale"
 
 #: websiteFunctions/templates/websiteFunctions/syncMaster.html:13
 msgid "Right now you can only sync your child domains to master domains."
-msgstr ""
+msgstr "Al momento puoi solo sincronizzare i tuoi domini figli con i domini principali."
 
 #: websiteFunctions/templates/websiteFunctions/syncMaster.html:13
 msgid " will be synced to "
-msgstr ""
+msgstr " verrà sincronizzato con "
 
 #: websiteFunctions/templates/websiteFunctions/syncMaster.html:20
 msgid "Sync "
-msgstr ""
+msgstr "Sincronizza "
 
 #: websiteFunctions/templates/websiteFunctions/syncMaster.html:20
 msgid "to "
-msgstr ""
+msgstr "con "
 
 #: websiteFunctions/templates/websiteFunctions/syncMaster.html:30
 msgid "What to Sync"
-msgstr ""
+msgstr "Cosa sincronizzare"
 
 #: websiteFunctions/templates/websiteFunctions/syncMaster.html:63
 msgid "Start Syncing"
-msgstr ""
+msgstr "Avvia sincronizzazione"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:29
 msgid "Clone/Staging"
-msgstr ""
+msgstr "Clona/Staging"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:30
 msgid "Set up SSH Access"
-msgstr ""
+msgstr "Imposta accesso SSH"
 
 #: websiteFunctions/templates/websiteFunctions/website.html:665
 msgid "It is not required to modify rules if you are using OpenLiteSpeed."
-msgstr ""
+msgstr "Non è necessario modificare le regole se si usa OpenLiteSpeed."
 
 #~ msgid "License Key"
 #~ msgstr "Chiave Licenza"
