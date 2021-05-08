@@ -2406,6 +2406,23 @@ vmail
             writeToFile.write(content)
             writeToFile.close()
 
+        ### Check and remove OLS restart if lsws ent detected
+
+        if not os.path.exists('/usr/local/lsws/bin/openlitespeed'):
+
+            data = open(cronPath, 'r').readlines()
+
+            writeToFile = open(cronPath, 'w')
+
+            for items in data:
+                if items.find('-maxdepth 2 -type f -newer') > -1:
+                    pass
+                else:
+                    writeToFile.writelines(items)
+
+            writeToFile.close()
+
+
         if not os.path.exists(CentOSPath):
             command = 'chmod 600 %s' % (cronPath)
             Upgrade.executioner(command, 0)

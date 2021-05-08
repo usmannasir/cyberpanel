@@ -1685,8 +1685,25 @@ imap_folder_list_limit = 0
 0 0 * * 0 /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py Weekly
 */3 * * * * if ! find /home/*/public_html/ -maxdepth 2 -type f -newer /usr/local/lsws/cgid -name '.htaccess' -exec false {} +; then /usr/local/lsws/bin/lswsctrl restart; fi
 """
+
             cronFile.write(content)
             cronFile.close()
+
+            ### Check and remove OLS restart if lsws ent detected
+
+            if not os.path.exists('/usr/local/lsws/bin/openlitespeed'):
+
+                data = open(cronPath, 'r').readlines()
+
+                writeToFile = open(cronPath, 'w')
+
+                for items in data:
+                    if items.find('-maxdepth 2 -type f -newer') > -1:
+                        pass
+                    else:
+                        writeToFile.writelines(items)
+
+                writeToFile.close()
 
             if not os.path.exists(CentOSPath):
                 command = 'chmod 600 %s' % (cronPath)
