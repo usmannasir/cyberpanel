@@ -197,7 +197,7 @@ class IncJobs(multi.Thread):
 
                     result = ProcessUtilities.outputExecutioner(command)
 
-                    if result.find('removed snapshot') == -1:
+                    if result.find('removed snapshot') == -1 or result.find('deleted') == -1:
                         logging.statusWriter(self.statusPath, 'Failed: %s. [5009]' % (result), 1)
                         return 0
 
@@ -265,7 +265,7 @@ class IncJobs(multi.Thread):
             command = 'restic -r %s forget %s --password-file %s' % (repoLocation, self.jobid.snapshotid, self.passwordFile)
             result = ProcessUtilities.outputExecutioner(command)
 
-            if result.find('removed snapshot') == -1:
+            if result.find('removed snapshot') == -1 or result.find('deleted') == -1:
                 logging.statusWriter(self.statusPath, 'Failed: %s. [5009]' % (result), 1)
                 return 0
 
@@ -322,7 +322,7 @@ class IncJobs(multi.Thread):
             command = 'export PATH=${PATH}:/usr/bin && restic -r %s:%s forget %s --password-file %s' % (
                 self.jobid.destination, repoLocation, self.jobid.snapshotid, self.passwordFile)
             result = ProcessUtilities.outputExecutioner(command)
-            if result.find('removed snapshot') == -1:
+            if result.find('removed snapshot') == -1 or result.find('deleted') == -1:
                 logging.statusWriter(self.statusPath, 'Failed: %s. [5009]' % (result), 1)
                 return 0
 
@@ -889,14 +889,11 @@ Subject: %s
                 self.jobid = job_snapshot
 
                 if self.jobid.destination == 'local':
-                    if self.localFunction('none', 'none', 0, 1) == 0:
-                        return 0
+                    self.localFunction('none', 'none', 0, 1)
                 elif self.jobid.destination[:4] == 'sftp':
-                    if self.sftpFunction('none', 'none', 0, 1) == 0:
-                        return 0
+                    self.sftpFunction('none', 'none', 0, 1)
                 else:
-                    if self.awsFunction('restore', '', self.jobid.snapshotid, None, 1) == 0:
-                        return 0
+                    self.awsFunction('restore', '', self.jobid.snapshotid, None, 1)
 
             return 1
 
