@@ -17,10 +17,7 @@ import stat
 VERSION = '2.1'
 BUILD = 1
 
-char_set = {'small': 'abcdefghijklmnopqrstuvwxyz',
-            'nums': '0123456789',
-            'big': 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
-            }
+char_set = {'small': 'abcdefghijklmnopqrstuvwxyz','nums': '0123456789','big': 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'}
 
 
 def generate_pass(length=14):
