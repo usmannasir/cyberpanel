@@ -3,9 +3,10 @@ import os
 import os.path
 import sys
 import django
-#PACKAGE_PARENT = '..'
-#SCRIPT_DIR = os.path.dirname(os.path.realpath(os.path.join(os.getcwd(), os.path.expanduser(__file__))))
-#sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT)))
+
+# PACKAGE_PARENT = '..'
+# SCRIPT_DIR = os.path.dirname(os.path.realpath(os.path.join(os.getcwd(), os.path.expanduser(__file__))))
+# sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT)))
 
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
@@ -56,10 +57,11 @@ class virtualHostUtilities:
         if mailDomain:
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Creating mail child domain..,80')
             childDomain = 'mail.%s' % (virtualHostName)
-            childPath = '/home/%s/public_html/%s' % (virtualHostName, childDomain)
+            childPath = '/home/%s/%s' % (virtualHostName, childDomain)
 
             result = virtualHostUtilities.createDomain(virtualHostName, childDomain, 'PHP 7.2', childPath, 1, 0, 0,
-                                              admin.userName, 0, "/home/cyberpanel/" + str(randint(1000, 9999)))
+                                                       admin.userName, 0,
+                                                       "/home/cyberpanel/" + str(randint(1000, 9999)))
 
             if result[0] == 0:
                 sslUtilities.issueSSLForDomain(virtualHostName, admin.email, childPath)
@@ -102,7 +104,6 @@ class virtualHostUtilities:
                     postfixMapFileContent = ''
 
                 if postfixMapFileContent.find('/live/%s/' % (childDomain)) == -1:
-
                     mapContent = '%s /etc/letsencrypt/live/%s/privkey.pem /etc/letsencrypt/live/%s/fullchain.pem\n' % (
                         childDomain, childDomain, childDomain)
 
@@ -120,7 +121,7 @@ class virtualHostUtilities:
     @staticmethod
     def createVirtualHost(virtualHostName, administratorEmail, phpVersion, virtualHostUser, ssl,
                           dkimCheck, openBasedir, websiteOwner, packageName, apache,
-                          tempStatusPath='/home/cyberpanel/fakePath', mailDomain = None, LimitsCheck = 1):
+                          tempStatusPath='/home/cyberpanel/fakePath', mailDomain=None, LimitsCheck=1):
         try:
 
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Running some checks..,0')
@@ -132,7 +133,6 @@ class virtualHostUtilities:
             if LimitsCheck:
 
                 if ACLManager.websitesLimitCheck(admin, 1) == 0:
-
                     logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
                                                               'You\'ve reached maximum websites limit as a reseller. [404]')
                     return 0, 'You\'ve reached maximum websites limit as a reseller.'
@@ -262,7 +262,8 @@ class virtualHostUtilities:
             CLPath = '/etc/sysconfig/cloudlinux'
 
             if os.path.exists(CLPath):
-                command = '/usr/share/cloudlinux/hooks/post_modify_user.py create --username %s --owner %s' % (virtualHostUser, admin.userName)
+                command = '/usr/share/cloudlinux/hooks/post_modify_user.py create --username %s --owner %s' % (
+                virtualHostUser, admin.userName)
                 ProcessUtilities.executioner(command)
 
             ### For autodiscover of mail clients.
@@ -319,7 +320,8 @@ class virtualHostUtilities:
 
             groupName = 'nobody'
 
-            numberOfTotalLines = int(ProcessUtilities.outputExecutioner('wc -l %s' % (fileName), groupName).split(" ")[0])
+            numberOfTotalLines = int(
+                ProcessUtilities.outputExecutioner('wc -l %s' % (fileName), groupName).split(" ")[0])
 
             if numberOfTotalLines < 25:
                 data = ProcessUtilities.outputExecutioner('cat %s' % (fileName), groupName)
@@ -458,7 +460,6 @@ class virtualHostUtilities:
             if retValues[0] == 0:
                 print("0," + str(retValues[1]))
                 return 0, retValues[1]
-
 
             ## removing old certs for lscpd
             if os.path.exists(destPrivKey):
@@ -926,7 +927,7 @@ class virtualHostUtilities:
 
     @staticmethod
     def createDomain(masterDomain, virtualHostName, phpVersion, path, ssl, dkimCheck, openBasedir, owner, apache,
-                     tempStatusPath='/home/cyberpanel/fakePath', LimitsCheck = 1):
+                     tempStatusPath='/home/cyberpanel/fakePath', LimitsCheck=1):
         try:
 
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Running some checks..,0')
@@ -953,7 +954,6 @@ class virtualHostUtilities:
                     logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
                                                               'This domain already exists as child domain. [404]')
                     return 0, "This domain already exists as child domain."
-
 
                 if ChildDomains.objects.filter(domain=virtualHostName.lstrip('www.')).count() > 0:
                     logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
@@ -1019,7 +1019,8 @@ class virtualHostUtilities:
             ## Now restart litespeed after initial configurations are done
 
             if LimitsCheck:
-                website = ChildDomains(master=master, domain=virtualHostName, path=path, phpSelection=phpVersion, ssl=ssl)
+                website = ChildDomains(master=master, domain=virtualHostName, path=path, phpSelection=phpVersion,
+                                       ssl=ssl)
                 website.save()
 
             if ssl == 1:
@@ -1175,7 +1176,8 @@ class virtualHostUtilities:
     def getDiskUsage(path, totalAllowed):
         try:
 
-            totalUsageInMB = subprocess.check_output('du -hs %s --block-size=1M' % (path), shell=True).decode("utf-8").split()[0]
+            totalUsageInMB = \
+            subprocess.check_output('du -hs %s --block-size=1M' % (path), shell=True).decode("utf-8").split()[0]
 
             percentage = float(100) / float(totalAllowed)
 
@@ -1328,7 +1330,8 @@ def main():
 
         virtualHostUtilities.createVirtualHost(args.virtualHostName, args.administratorEmail, args.phpVersion,
                                                args.virtualHostUser, int(args.ssl), dkimCheck, openBasedir,
-                                               args.websiteOwner, args.package, apache, tempStatusPath, int(args.mailDomain))
+                                               args.websiteOwner, args.package, apache, tempStatusPath,
+                                               int(args.mailDomain))
     elif args.function == "setupAutoDiscover":
         admin = Administrator.objects.get(userName=args.websiteOwner)
         virtualHostUtilities.setupAutoDiscover(1, '/home/cyberpanel/templogs', args.virtualHostName, admin)

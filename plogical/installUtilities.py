@@ -7,8 +7,8 @@ import os
 import shlex
 from plogical.processUtilities import ProcessUtilities
 
-class installUtilities:
 
+class installUtilities:
     Server_root_path = "/usr/local/lsws"
 
     @staticmethod
@@ -23,7 +23,7 @@ class installUtilities:
 
             if res == 1:
                 print("###############################################")
-                print("         Could not add EPEL repo              " )
+                print("         Could not add EPEL repo              ")
                 print("###############################################")
             else:
                 print("###############################################")
@@ -38,7 +38,6 @@ class installUtilities:
 
         return 1
 
-
     @staticmethod
     def addLiteSpeedRepo():
         try:
@@ -50,7 +49,7 @@ class installUtilities:
             res = subprocess.call(cmd)
             if res == 1:
                 print("###############################################")
-                print("         Could not add Litespeed repo         " )
+                print("         Could not add Litespeed repo         ")
                 print("###############################################")
             else:
                 print("###############################################")
@@ -80,10 +79,9 @@ class installUtilities:
 
             res = subprocess.call(cmd)
 
-
             if res == 1:
                 print("###############################################")
-                print("         Could not install Litespeed          " )
+                print("         Could not install Litespeed          ")
                 print("###############################################")
                 sys.exit()
             else:
@@ -99,7 +97,6 @@ class installUtilities:
             return 0
 
         return 1
-
 
     @staticmethod
     def startLiteSpeed():
@@ -131,7 +128,6 @@ class installUtilities:
             return 0
 
         return 1
-
 
     @staticmethod
     def reStartLiteSpeed():
@@ -188,9 +184,8 @@ class installUtilities:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [reStartLiteSpeed]")
             return 0
 
-
     @staticmethod
-    def reStartOpenLiteSpeed(restart,orestart):
+    def reStartOpenLiteSpeed(restart, orestart):
         try:
 
             if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
@@ -227,7 +222,7 @@ class installUtilities:
 
             for items in data:
                 if (items.find("*:8088") > -1):
-                    writeDataToFile.writelines(items.replace("*:8088","*:80"))
+                    writeDataToFile.writelines(items.replace("*:8088", "*:80"))
                 else:
                     writeDataToFile.writelines(items)
 
@@ -238,7 +233,6 @@ class installUtilities:
             return 0
 
         return installUtilities.reStartLiteSpeed()
-
 
     @staticmethod
     def installAllPHPVersion():
@@ -281,28 +275,31 @@ class installUtilities:
 
         return 1
 
-
     @staticmethod
     def installAllPHPToLitespeed():
         try:
             path = installUtilities.Server_root_path + "/conf/"
             if not os.path.exists(path):
-                shutil.copytree("phpconfigs",path+"phpconfigs")
+                shutil.copytree("phpconfigs", path + "phpconfigs")
 
-            php53 = "include phpconfigs/php53.conf\n"
-            php54 = "include phpconfigs/php54.conf\n"
-            php55 = "include phpconfigs/php55.conf\n"
-            php56 = "include phpconfigs/php56.conf\n"
-            php70 = "include phpconfigs/php70.conf\n"
+            php_versions = [
+                'php53',
+                'php54',
+                'php55',
+                'php56',
+                'php70',
+                'php71',
+                'php72',
+                'php73',
+                'php74',
+                'php80',
+            ]
 
-            writeDataToFile = open(path+"httpd_config.conf", 'a')
+            writeDataToFile = open(path + "httpd_config.conf", 'a')
 
-
-            writeDataToFile.writelines(php53)
-            writeDataToFile.writelines(php54)
-            writeDataToFile.writelines(php55)
-            writeDataToFile.writelines(php56)
-            writeDataToFile.writelines(php70)
+            for version in php_versions:
+                line = f"include phpconfigs/{version}.conf\n"
+                writeDataToFile.writelines(line)
 
             writeDataToFile.close()
 
@@ -364,7 +361,6 @@ class installUtilities:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [removeWebServer]")
             return 0
 
-
         try:
             cmd = []
             cmd.append("yum")
@@ -391,7 +387,6 @@ class installUtilities:
         except ValueError as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [removeWebServer]")
             return 0
-
 
         try:
             shutil.rmtree(installUtilities.Server_root_path)
@@ -475,7 +470,6 @@ class installUtilities:
 
             return 0
 
-
             ############## Start mariadb ######################
 
         installUtilities.startMariaDB()
@@ -519,11 +513,9 @@ class installUtilities:
 
         try:
             expectation = "(enter for none):"
-            securemysql = pexpect.spawn("mysql_secure_installation",maxread=20000)
+            securemysql = pexpect.spawn("mysql_secure_installation", maxread=20000)
             securemysql.expect(expectation)
             securemysql.sendcontrol('j')
-
-
 
             expectation = "password? [Y/n]"
             securemysql.expect(expectation)
@@ -545,12 +537,9 @@ class installUtilities:
             securemysql.expect(expectation)
             securemysql.sendline("Y")
 
-
             expectation = "test database and access to it? [Y/n]"
             securemysql.expect(expectation)
             securemysql.sendline("Y")
-
-
 
             expectation = "Reload privilege tables now? [Y/n]"
             securemysql.expect(expectation)
@@ -558,8 +547,8 @@ class installUtilities:
 
             securemysql.wait()
 
-
-            if (securemysql.before.find("Thanks for using MariaDB!") > -1 or securemysql.after.find("Thanks for using MariaDB!")>-1):
+            if (securemysql.before.find("Thanks for using MariaDB!") > -1 or securemysql.after.find(
+                    "Thanks for using MariaDB!") > -1):
                 return 1
 
         except pexpect.EOF as msg:
@@ -577,8 +566,6 @@ class installUtilities:
             print("########################################################################")
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[installMySQL]")
 
-
         return 0
 
-
-#installUtilities.installAllPHPToLitespeed()
+# installUtilities.installAllPHPToLitespeed()

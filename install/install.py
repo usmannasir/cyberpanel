@@ -13,6 +13,8 @@ import socket
 from os.path import *
 from stat import *
 import stat
+from pathlib import Path
+from filesPermsUtilities import chown, chmod_digit, mkdir_p, touch, symlink, recursive_chown, recursive_permissions
 
 VERSION = '2.1'
 BUILD = 1
@@ -55,6 +57,8 @@ def get_distro():
         data = open('/etc/redhat-release', 'r').read()
 
         if data.find('CentOS Linux release 8') > -1:
+            return cent8
+        if data.find('AlmaLinux release 8') > -1:
             return cent8
 
     else:
@@ -304,9 +308,7 @@ class preFlightsChecks:
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             ###
-
-            command = "mkdir -p /etc/letsencrypt/live/"
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            mkdir_p('/etc/letsencrypt/live/')
 
         except BaseException as msg:
             logging.InstallLog.writeToFile("[ERROR] setup_account_cyberpanel. " + str(msg))
@@ -316,7 +318,7 @@ class preFlightsChecks:
 
         if self.distro == ubuntu:
             try:
-                filename = "enable_lst_debain_repo.sh"
+                filename = "enable_lst_debian_repo.sh"
                 command = "wget http://rpms.litespeedtech.com/debian/" + filename
                 preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
@@ -401,11 +403,10 @@ class preFlightsChecks:
         password="%s"
         """ % password
 
-        with open(mysql_my_root_cnf, 'w') as f:
+        with open(mysql_my_root_cnf, 'w+') as f:
             f.write(mysql_root_cnf_content)
-        os.chmod(mysql_my_root_cnf, 0o600)
-        command = 'chown root:root %s' % mysql_my_root_cnf
-        subprocess.call(shlex.split(command))
+        chmod_digit(mysql_my_root_cnf, 600)
+        chown(mysql_my_root_cnf, 'root', 'root')
 
         logging.InstallLog.writeToFile("Updating /root/.my.cnf!")
 
@@ -509,59 +510,30 @@ class preFlightsChecks:
         command = "usermod -G lscpd,lsadm,nogroup lscpd"
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-        command = "find /usr/local/CyberCP -type d -exec chmod 0755 {} \;"
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+        recursive_permissions('/usr/local/CyberCP', 755, 644)
 
-        command = "find /usr/local/CyberCP -type f -exec chmod 0644 {} \;"
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-        command = "chmod -R 755 /usr/local/CyberCP/bin"
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+        recursive_permissions('/usr/local/CyberCP/bin', 755, 755)
 
         ## change owner
 
-        command = "chown -R root:root /usr/local/CyberCP"
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+        recursive_chown('/usr/local/CyberCP', 'root', 'root')
 
         ########### Fix LSCPD
 
-        command = "find /usr/local/lscp -type d -exec chmod 0755 {} \;"
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-        command = "find /usr/local/lscp -type f -exec chmod 0644 {} \;"
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-        command = "chmod -R 755 /usr/local/lscp/bin"
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-        command = "chmod -R 755 /usr/local/lscp/fcgi-bin"
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-        command = "chown -R lscpd:lscpd /usr/local/CyberCP/public/phpmyadmin/tmp"
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+        recursive_permissions('/usr/local/lscp', 755, 644)
+        recursive_permissions('/usr/local/lscp/bin', 755, 755)
+        recursive_permissions('/usr/local/lscp/fcgi-bin', 755, 755)
+        recursive_chown('/usr/local/CyberCP/public/phpmyadmin/tmp', 'lscpd', 'lscpd')
 
         ## change owner
+        recursive_chown('/usr/local/lscp', 'root', 'root')
+        recursive_chown('/usr/local/lscp/cyberpanel/rainloop/data', 'lscpd', 'lscpd')
 
-        command = "chown -R root:root /usr/local/lscp"
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-        command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-        command = "chmod 700 /usr/local/CyberCP/cli/cyberPanel.py"
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-        command = "chmod 700 /usr/local/CyberCP/plogical/upgradeCritical.py"
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-        command = "chmod 755 /usr/local/CyberCP/postfixSenderPolicy/client.py"
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-        command = "chmod 640 /usr/local/CyberCP/CyberCP/settings.py"
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-        command = "chown root:cyberpanel /usr/local/CyberCP/CyberCP/settings.py"
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+        chmod_digit('/usr/local/CyberCP/cli/cyberPanel.py', 700)
+        chmod_digit('/usr/local/CyberCP/plogical/upgradeCritical.py', 700)
+        chmod_digit('/usr/local/CyberCP/postfixSenderPolicy/client.py', 755)
+        chmod_digit('/usr/local/CyberCP/CyberCP/settings.py', 640)
+        chown('/usr/local/CyberCP/CyberCP/settings.py', 'root', 'cyberpanel')
 
         files = ['/etc/yum.repos.d/MariaDB.repo', '/etc/pdns/pdns.conf', '/etc/systemd/system/lscpd.service',
                  '/etc/pure-ftpd/pure-ftpd.conf', '/etc/pure-ftpd/pureftpd-pgsql.conf',
@@ -570,8 +542,7 @@ class preFlightsChecks:
                  '/usr/local/lsws/conf/modsec.conf', '/usr/local/lsws/conf/httpd.conf']
 
         for items in files:
-            command = 'chmod 644 %s' % (items)
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            chmod_digit(items, 644)
 
         impFile = ['/etc/pure-ftpd/pure-ftpd.conf', '/etc/pure-ftpd/pureftpd-pgsql.conf',
                    '/etc/pure-ftpd/pureftpd-mysql.conf', '/etc/pure-ftpd/pureftpd-ldap.conf',
@@ -579,29 +550,25 @@ class preFlightsChecks:
                    '/etc/powerdns/pdns.conf']
 
         for items in impFile:
-            command = 'chmod 600 %s' % (items)
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            chmod_digit(items, 600)
 
+        # chmod_digit(items, 640) hmm looks like we need to glob for this?
         command = 'chmod 640 /etc/postfix/*.cf'
         subprocess.call(command, shell=True)
 
-        command = 'chmod 644 /etc/postfix/main.cf'
-        subprocess.call(command, shell=True)
+        chmod_digit('/etc/postfix/main.cf', 644)
 
         command = 'chmod 640 /etc/dovecot/*.conf'
         subprocess.call(command, shell=True)
 
-        command = 'chmod 644 /etc/dovecot/dovecot.conf'
-        subprocess.call(command, shell=True)
+        chmod_digit('/etc/dovecot/dovecot.conf', 644)
+        chmod_digit('/etc/dovecot/dovecot-sql.conf.ext', 640)
+        chmod_digit('/etc/postfix/dynamicmaps.cf', 644)
 
-        command = 'chmod 640 /etc/dovecot/dovecot-sql.conf.ext'
-        subprocess.call(command, shell=True)
-
-        command = 'chmod 644 /etc/postfix/dynamicmaps.cf'
-        subprocess.call(command, shell=True)
-
-        fileM = ['/usr/local/lsws/FileManager/', '/usr/local/CyberCP/install/FileManager',
-                 '/usr/local/CyberCP/serverStatus/litespeed/FileManager', '/usr/local/lsws/Example/html/FileManager']
+        fileM = ['/usr/local/lsws/FileManager/',
+                 '/usr/local/CyberCP/install/FileManager',
+                 '/usr/local/CyberCP/serverStatus/litespeed/FileManager',
+                 '/usr/local/lsws/Example/html/FileManager']
 
         for items in fileM:
             try:
@@ -609,46 +576,35 @@ class preFlightsChecks:
             except:
                 pass
 
-        command = 'chmod 755 /etc/pure-ftpd/'
-        subprocess.call(command, shell=True)
+        chmod_digit('/etc/pure-ftpd/', 755)
+        chmod_digit('/usr/local/CyberCP/plogical/renew.py', 775)
+        chmod_digit('/usr/local/CyberCP/CLManager/CLPackages.py', 775)
 
-        command = 'chmod +x /usr/local/CyberCP/plogical/renew.py'
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-        command = 'chmod +x /usr/local/CyberCP/CLManager/CLPackages.py'
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-        clScripts = ['/usr/local/CyberCP/CLScript/panel_info.py', '/usr/local/CyberCP/CLScript/CloudLinuxPackages.py',
+        clScripts = ['/usr/local/CyberCP/CLScript/panel_info.py',
+                     '/usr/local/CyberCP/CLScript/CloudLinuxPackages.py',
                      '/usr/local/CyberCP/CLScript/CloudLinuxUsers.py',
-                     '/usr/local/CyberCP/CLScript/CloudLinuxDomains.py'
-            , '/usr/local/CyberCP/CLScript/CloudLinuxResellers.py', '/usr/local/CyberCP/CLScript/CloudLinuxAdmins.py',
-                     '/usr/local/CyberCP/CLScript/CloudLinuxDB.py', '/usr/local/CyberCP/CLScript/UserInfo.py']
+                     '/usr/local/CyberCP/CLScript/CloudLinuxDomains.py',
+                     '/usr/local/CyberCP/CLScript/CloudLinuxResellers.py',
+                     '/usr/local/CyberCP/CLScript/CloudLinuxAdmins.py',
+                     '/usr/local/CyberCP/CLScript/CloudLinuxDB.py',
+                     '/usr/local/CyberCP/CLScript/UserInfo.py']
 
         for items in clScripts:
-            command = 'chmod +x %s' % (items)
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            chmod_digit(items, 775)
 
-        command = 'chmod 600 /usr/local/CyberCP/plogical/adminPass.py'
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-        command = 'chmod 600 /etc/cagefs/exclude/cyberpanelexclude'
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+        chmod_digit('/usr/local/CyberCP/plogical/adminPass.py', 600)
+        chmod_digit('/etc/cagefs/exclude/cyberpanelexclude', 600)
 
         command = "find /usr/local/CyberCP/ -name '*.pyc' -delete"
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
         if self.distro == cent8 or self.distro == centos:
-            command = 'chown root:pdns /etc/pdns/pdns.conf'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            chown('/etc/pdns/pdns.conf', 'root', 'pdns')
+            chmod_digit('/etc/pdns/pdns.conf', 640)
 
-            command = 'chmod 640 /etc/pdns/pdns.conf'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+        chmod_digit('/usr/local/lscp/cyberpanel/logs/access.log', 640)
 
-        command = 'chmod 640 /usr/local/lscp/cyberpanel/logs/access.log'
-        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-        command = 'mkdir -p/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/'
-
+        mkdir_p('/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/')
         rainloopinipath = '/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/application.ini'
 
         ###
@@ -805,46 +761,39 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             ##
 
             if self.distro == centos:
-                command = 'yum --enablerepo=gf-plus -y install dovecot23 dovecot23-mysql'
+                command = 'yum --enablerepo=gf-plus -y install dovecot23 dovecot23-mysql net-tools dovecot-pigeonhole postfix-perl-scripts'
             elif self.distro == cent8:
-                command = 'dnf install --enablerepo=gf-plus dovecot23 dovecot23-mysql -y'
+                command = 'dnf install --enablerepo=gf-plus -y dovecot23* dovecot23-pigeonhole dovecot23-mysql net-tools postfix-perl-scripts'
             else:
-                command = 'apt-get -y install dovecot-mysql dovecot-imapd dovecot-pop3d'
+                command = 'apt-get -y install dovecot-mysql dovecot-imapd dovecot-pop3d dovecot-managesieved dovecot-sieve dovecot-lmtpd net-tools pflogsumm'
 
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
-            # if self.distro != centos:
-            #     command = 'curl https://repo.dovecot.org/DOVECOT-REPO-GPG | gpg --import'
-            #     subprocess.call(command, shell=True)
-            #
-            #     command = 'gpg --export ED409DA1 > /etc/apt/trusted.gpg.d/dovecot.gpg'
-            #     subprocess.call(command, shell=True)
-            #
-            #     debPath = '/etc/apt/sources.list.d/dovecot.list'
-            #     writeToFile = open(debPath, 'w')
-            #     writeToFile.write('deb https://repo.dovecot.org/ce-2.3-latest/ubuntu/bionic bionic main\n')
-            #     writeToFile.close()
-            #
-            #     try:
-            #         command = 'apt update -y'
-            #         subprocess.call(command, shell=True)
-            #     except:
-            #         pass
-            #
-            #     try:
-            #         command = 'DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical sudo apt-get -q -y -o "Dpkg::Options::=--force-confdef" -o "Dpkg::Options::=--force-confold" --only-upgrade install dovecot-mysql -y'
-            #         subprocess.call(command, shell=True)
-            #
-            #         command = 'dpkg --configure -a'
-            #         subprocess.call(command, shell=True)
-            #
-            #         command = 'apt --fix-broken install -y'
-            #         subprocess.call(command, shell=True)
-            #
-            #         command = 'DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical sudo apt-get -q -y -o "Dpkg::Options::=--force-confdef" -o "Dpkg::Options::=--force-confold" --only-upgrade install dovecot-mysql -y'
-            #         subprocess.call(command, shell=True)
-            #     except:
-            #         pass
+            # Create Sieve files and paths
+            os.makedirs("/etc/dovecot/sieve/global", exist_ok=True)
+
+            sievefiles = [
+                '/var/log/dovecot-lda.log'
+                '/var/log/dovecot-lda-errors.log',
+                '/var/log/dovecot-sieve.log',
+                '/var/log/dovecot-sieve-errors.log',
+                '/var/log/dovecot-lmtp.log',
+                '/var/log/dovecot-lmtp-errors.log',
+            ]
+
+            sieve_default = """require "fileinto";
+if header :contains "X-Spam-Flag" "YES" {
+  fileinto "INBOX.Junk E-mail";
+}"""
+
+            with open('/etc/dovecot/sieve/default.sieve', 'w') as f:
+                f.write(sieve_default)
+
+            for file in sievefiles:
+                touch(file, 666)
+                chown(file, 'vmail', 'mail')
+
+            recursive_chown('/etc/dovecot/sieve', 'vmail')
 
         except BaseException as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [install_postfix_dovecot]")
@@ -1014,31 +963,23 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             dovecot = "/etc/dovecot/dovecot.conf"
             dovecotmysql = "/etc/dovecot/dovecot-sql.conf.ext"
 
-            if os.path.exists(mysql_virtual_domains):
-                os.remove(mysql_virtual_domains)
+            email_configs = [
+                mysql_virtual_domains,
+                mysql_virtual_forwardings,
+                mysql_virtual_mailboxes,
+                mysql_virtual_email2email,
+                main,
+                master,
+                dovecot,
+                dovecotmysql,
+            ]
 
-            if os.path.exists(mysql_virtual_forwardings):
-                os.remove(mysql_virtual_forwardings)
+            # Remove stock configs so we can replace with our copy later
+            for config in email_configs:
+                if os.path.exists(config):
+                    os.remove(config)
 
-            if os.path.exists(mysql_virtual_mailboxes):
-                os.remove(mysql_virtual_mailboxes)
-
-            if os.path.exists(mysql_virtual_email2email):
-                os.remove(mysql_virtual_email2email)
-
-            if os.path.exists(main):
-                os.remove(main)
-
-            if os.path.exists(master):
-                os.remove(master)
-
-            if os.path.exists(dovecot):
-                os.remove(dovecot)
-
-            if os.path.exists(dovecotmysql):
-                os.remove(dovecotmysql)
-
-            ###############Getting SSL
+            ############### Getting SSL
 
             command = 'openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout /etc/postfix/key.pem -out /etc/postfix/cert.pem'
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
@@ -1052,93 +993,60 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             if self.distro == ubuntu:
                 preFlightsChecks.stdOut("Cleanup postfix/dovecot config files", 1)
 
-                self.centos_lib_dir_to_ubuntu("email-configs-one/master.cf", "/usr/libexec/", "/usr/lib/")
-                self.centos_lib_dir_to_ubuntu("email-configs-one/main.cf", "/usr/libexec/postfix",
+                self.centos_lib_dir_to_ubuntu("email-configs-one/postfix/master.cf", "/usr/libexec/", "/usr/lib/")
+                self.centos_lib_dir_to_ubuntu("email-configs-one/postfix/main.cf", "/usr/libexec/postfix",
                                               "/usr/lib/postfix/sbin")
 
             ########### Copy config files
 
-            shutil.copy("email-configs-one/mysql-virtual_domains.cf", "/etc/postfix/mysql-virtual_domains.cf")
-            shutil.copy("email-configs-one/mysql-virtual_forwardings.cf",
-                        "/etc/postfix/mysql-virtual_forwardings.cf")
-            shutil.copy("email-configs-one/mysql-virtual_mailboxes.cf", "/etc/postfix/mysql-virtual_mailboxes.cf")
-            shutil.copy("email-configs-one/mysql-virtual_email2email.cf",
-                        "/etc/postfix/mysql-virtual_email2email.cf")
-            shutil.copy("email-configs-one/main.cf", main)
-            shutil.copy("email-configs-one/master.cf", master)
-            shutil.copy("email-configs-one/dovecot.conf", dovecot)
-            shutil.copy("email-configs-one/dovecot-sql.conf.ext", dovecotmysql)
-            
+            shutil.copy("email-configs-one/postfix/mysql-virtual_domains.cf", mysql_virtual_domains)
+            shutil.copy("email-configs-one/postfix/mysql-virtual_forwardings.cf", mysql_virtual_forwardings)
+            shutil.copy("email-configs-one/postfix/mysql-virtual_mailboxes.cf", mysql_virtual_mailboxes)
+            shutil.copy("email-configs-one/postfix/mysql-virtual_email2email.cf", mysql_virtual_email2email)
+            shutil.copy("email-configs-one/postfix/main.cf", main)
+            shutil.copy("email-configs-one/postfix/master.cf", master)
+            shutil.copy("email-configs-one/dovecot/dovecot.conf", dovecot)
+            shutil.copy("email-configs-one/dovecot/dovecot-sql.conf.ext", dovecotmysql)
+
             ########### Set custom settings
+            hostname = str(socket.getfqdn())
 
             # We are going to leverage postconfig -e to edit the settings for hostname
-            command = "postconf -e 'myhostname = %s'" % (str(socket.getfqdn()))
+            command = "postconf -e 'myhostname = %s'" % (hostname)
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             # We are explicitly going to use sed to set the hostname default from "myhostname = server.example.com"
             # to the fqdn from socket if the default is still found
-            command = "sed -i 's|server.example.com|%s|g' %s" % (str(socket.getfqdn()), main)
+            command = "sed -i 's|server.example.com|%s|g' %s" % (hostname, main)
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-            ######################################## Permissions
-
-            command = 'chmod o= /etc/postfix/mysql-virtual_domains.cf'
+            # dovecot conf replace postmaster email/hostname
+            command = "sed -i 's|server.example.com|%s|g' %s" % (hostname, dovecot)
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-            ##
+            ######################################## Postfix Permissions/Ownership
 
-            command = 'chmod o= /etc/postfix/mysql-virtual_forwardings.cf'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            postfix_configs = [
+                mysql_virtual_domains,
+                mysql_virtual_domains,
+                mysql_virtual_forwardings,
+                mysql_virtual_mailboxes,
+                mysql_virtual_email2email,
+                main,
+                master,
+            ]
 
-            ##
+            for conf in postfix_configs:
+                # Setting chmod o= aka 640
+                chmod_digit(conf, 640)
+                # We want to leave user untouched hence -1 and group to postfix
+                chown(conf, -1, 'postfix')
 
-            command = 'chmod o= /etc/postfix/mysql-virtual_mailboxes.cf'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            ######################################## Dovecot Permissions
 
-            ##
-
-            command = 'chmod o= /etc/postfix/mysql-virtual_email2email.cf'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            ##
-
-            command = 'chmod o= ' + main
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            ##
-
-            command = 'chmod o= ' + master
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            #######################################
-
-            command = 'chgrp postfix /etc/postfix/mysql-virtual_domains.cf'
-
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            ##
-
-            command = 'chgrp postfix /etc/postfix/mysql-virtual_forwardings.cf'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-            ##
-
-            command = 'chgrp postfix /etc/postfix/mysql-virtual_mailboxes.cf'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            ##
-
-            command = 'chgrp postfix /etc/postfix/mysql-virtual_email2email.cf'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            ##
-
-            command = 'chgrp postfix ' + main
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            ##
-
-            command = 'chgrp postfix ' + master
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            # chgrp dovecot and set chmod o= /etc/dovecot/dovecot-sql.conf.ext
+            chmod_digit(dovecotmysql, 640)
+            chown(dovecotmysql, -1, 'dovecot')
 
             ######################################## users and groups
 
@@ -1152,9 +1060,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             ######################################## Further configurations
 
-            # hostname = socket.gethostname()
-
-            ################################### Restart postix
+            ################################### Restart postfix
 
             command = 'systemctl enable postfix.service'
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
@@ -1162,16 +1068,6 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             ##
 
             command = 'systemctl start postfix.service'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            ######################################## Permissions
-
-            command = 'chgrp dovecot /etc/dovecot/dovecot-sql.conf.ext'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            ##
-
-            command = 'chmod o= /etc/dovecot/dovecot-sql.conf.ext'
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             ################################### Restart dovecot
@@ -1189,20 +1085,16 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             command = 'systemctl restart  postfix.service'
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-            ## chaging permissions for main.cf
-
-            command = "chmod 755 " + main
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
+            # For Ubuntu create paths for keys gracefully that may not exist
             if self.distro == ubuntu:
-                command = "mkdir -p /etc/pki/dovecot/private/"
-                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                email_dirs = [
+                    '/etc/pki/dovecot/private/',
+                    '/etc/pki/dovecot/certs/',
+                    '/etc/opendkim/keys/',
+                ]
 
-                command = "mkdir -p /etc/pki/dovecot/certs/"
-                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-                command = "mkdir -p /etc/opendkim/keys/"
-                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                for dir in email_dirs:
+                    os.makedirs(dir, exist_ok=True)
 
                 command = "sed -i 's/auth_mechanisms = plain/#auth_mechanisms = plain/g' /etc/dovecot/conf.d/10-auth.conf"
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
@@ -1210,10 +1102,9 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                 ## Ubuntu 18.10 ssl_dh for dovecot 2.3.2.1
 
                 if get_Ubuntu_release() == 18.10:
-                    dovecotConf = '/etc/dovecot/dovecot.conf'
 
-                    data = open(dovecotConf, 'r').readlines()
-                    writeToFile = open(dovecotConf, 'w')
+                    data = open(dovecot, 'r').readlines()
+                    writeToFile = open(dovecot, 'w')
                     for items in data:
                         if items.find('ssl_key = <key.pem') > -1:
                             writeToFile.writelines(items)
@@ -1232,7 +1123,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
         return 1
 
-    def downoad_and_install_raindloop(self):
+    def download_and_install_rainloop(self):
         try:
             #######
 
@@ -1256,25 +1147,19 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             #######
 
+            rainloop_dir = '/usr/local/CyberCP/public/rainloop'
+
             os.chdir("/usr/local/CyberCP/public/rainloop")
 
-            command = 'find . -type d -exec chmod 755 {} \;'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            #############
-
-            command = 'find . -type f -exec chmod 644 {} \;'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            recursive_permissions(rainloop_dir, 755, 644)
 
             ######
 
-            command = "mkdir -p /usr/local/lscp/cyberpanel/rainloop/data"
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            os.makedirs('/usr/local/lscp/cyberpanel/rainloop/data', exist_ok=True)
 
             ### Enable sub-folders
 
-            command = "mkdir -p /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/"
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            os.makedirs('/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/', exist_ok=True)
 
             labsPath = '/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/application.ini'
 
@@ -1303,7 +1188,7 @@ imap_folder_list_limit = 0
             writeToFile.close()
 
         except BaseException as msg:
-            logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [downoad_and_install_rainloop]")
+            logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [download_and_install_rainloop]")
             return 0
 
         return 1
@@ -1431,8 +1316,7 @@ imap_folder_list_limit = 0
             command = 'mv /usr/local/lscp/bin/lscpd-0.2.7 /usr/local/lscp/bin/lscpd'
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
-            command = 'chmod 755 %s' % (lscpdPath)
-            preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+            chmod_digit(lscpdPath, 755)
 
             ##
 
@@ -1484,8 +1368,7 @@ imap_folder_list_limit = 0
 
             extractLocation = "/usr/local/lscp/modsec"
 
-            command = "mkdir -p /usr/local/lscp/modsec"
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            mkdir_p('/usr/local/lscp/modsec')
 
             try:
                 if os.path.exists('comodo.tar.gz'):
@@ -1556,8 +1439,7 @@ imap_folder_list_limit = 0
 
             ###
 
-            command = "chown -R lscpd:lscpd /usr/local/lscp/modsec"
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            recursive_chown('/usr/local/lscp/modsec', 'lscpd', 'lscpd')
 
             return 1
 
@@ -1617,28 +1499,19 @@ imap_folder_list_limit = 0
             shutil.copy("lscpd/lscpdctrl", "/usr/local/lscp/bin/lscpdctrl")
 
             ##
-
-            command = 'chmod +x /usr/local/lscp/bin/lscpdctrl'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            chmod_digit('/usr/local/lscp/bin/lscpdctrl', 775)
 
             ##
 
-            path = "/usr/local/lscpd/admin/"
-
-            command = "mkdir -p " + path
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            path = "/usr/local/CyberCP/conf/"
-            command = "mkdir -p " + path
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            mkdir_p('/usr/local/lscpd/admin/')
+            mkdir_p('/usr/local/CyberCP/conf/')
 
             path = "/usr/local/CyberCP/conf/token_env"
             writeToFile = open(path, "w")
             writeToFile.write("abc\n")
             writeToFile.close()
 
-            command = "chmod 600 " + path
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            chmod_digit(path, 600)
 
             ##
             command = 'systemctl enable lscpd.service'
@@ -1649,13 +1522,12 @@ imap_folder_list_limit = 0
 
             # In Ubuntu, the library that lscpd looks for is libpcre.so.1, but the one it installs is libpcre.so.3...
             if self.distro == ubuntu:
-                command = 'ln -s /lib/x86_64-linux-gnu/libpcre.so.3 /lib/x86_64-linux-gnu/libpcre.so.1'
-                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                symlink('/lib/x86_64-linux-gnu/libpcre.so.3', '/lib/x86_64-linux-gnu/libpcre.so.1')
 
             ##
 
             command = 'systemctl start lscpd'
-            # preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             preFlightsChecks.stdOut("LSCPD Daemon Set!")
 
@@ -1720,8 +1592,7 @@ imap_folder_list_limit = 0
             cronFile.close()
 
             if not os.path.exists(CentOSPath):
-                command = 'chmod 600 %s' % (cronPath)
-                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                chmod_digit(cronPath, 600)
 
             if self.distro == centos or self.distro == cent8:
                 command = 'systemctl restart crond.service'
@@ -1819,8 +1690,14 @@ imap_folder_list_limit = 0
                 command = 'apt install opendkim-tools -y'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-                command = 'mkdir -p /etc/opendkim/keys/'
-                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                mkdir_p('/etc/opendkim/keys/')
+                chown('/etc/opendkim/keys/', 'opendkim', 'opendkim')
+
+            chmod_digit('/etc/opendkim/', 755)
+            chown('/etc/opendkim/', 'root', 'opendkim')
+
+            chmod_digit('/etc/opendkim.conf', 644)
+            chown('/etc/opendkim.conf', 'root', 'root')
 
         except BaseException as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [installOpenDKIM]")
@@ -1905,21 +1782,29 @@ milter_default_action = accept
             if self.distro == ubuntu:
                 if not os.access('/usr/local/lsws/lsphp70/bin/php', os.R_OK):
                     if os.access('/usr/local/lsws/lsphp70/bin/php7.0', os.R_OK):
-                        os.symlink('/usr/local/lsws/lsphp70/bin/php7.0', '/usr/local/lsws/lsphp70/bin/php')
+                        symlink('/usr/local/lsws/lsphp70/bin/php7.0', '/usr/local/lsws/lsphp70/bin/php')
                 if not os.access('/usr/local/lsws/lsphp71/bin/php', os.R_OK):
                     if os.access('/usr/local/lsws/lsphp71/bin/php7.1', os.R_OK):
-                        os.symlink('/usr/local/lsws/lsphp71/bin/php7.1', '/usr/local/lsws/lsphp71/bin/php')
+                        symlink('/usr/local/lsws/lsphp71/bin/php7.1', '/usr/local/lsws/lsphp71/bin/php')
                 if not os.access('/usr/local/lsws/lsphp72/bin/php', os.R_OK):
                     if os.access('/usr/local/lsws/lsphp72/bin/php7.2', os.R_OK):
-                        os.symlink('/usr/local/lsws/lsphp72/bin/php7.2', '/usr/local/lsws/lsphp72/bin/php')
+                        symlink('/usr/local/lsws/lsphp72/bin/php7.2', '/usr/local/lsws/lsphp72/bin/php')
+                if not os.access('/usr/local/lsws/lsphp73/bin/php', os.R_OK):
+                    if os.access('/usr/local/lsws/lsphp73/bin/php7.3', os.R_OK):
+                        symlink('/usr/local/lsws/lsphp73/bin/php7.3', '/usr/local/lsws/lsphp73/bin/php')
+                if not os.access('/usr/local/lsws/lsphp74/bin/php', os.R_OK):
+                    if os.access('/usr/local/lsws/lsphp74/bin/php7.4', os.R_OK):
+                        symlink('/usr/local/lsws/lsphp74/bin/php7.4', '/usr/local/lsws/lsphp74/bin/php')
+                if not os.access('/usr/local/lsws/lsphp80/bin/php', os.R_OK):
+                    if os.access('/usr/local/lsws/lsphp80/bin/php8.0', os.R_OK):
+                        symlink('/usr/local/lsws/lsphp74/bin/php8.0', '/usr/local/lsws/lsphp80/bin/php')
 
-            command = "cp /usr/local/lsws/lsphp71/bin/php /usr/bin/"
+            command = "cp /usr/local/lsws/lsphp73/bin/php /usr/bin/"
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             os.chdir(self.cwd)
 
-            command = "chmod +x composer.sh"
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            chmod_digit(os.path.join(self.cwd, 'composer.sh'), 775)
 
             command = "./composer.sh"
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
@@ -1933,7 +1818,8 @@ milter_default_action = accept
         res = subprocess.call(shlex.split('apt-get -y install ' + package))
         if res != 0:
             preFlightsChecks.stdOut("Error #" + str(res) + ' installing:' + package + '.  This may not be an issue ' \
-                                                                                      'but may affect installation of something later',
+                                                                                      'but may affect installation of '
+                                                                                      'something later',
                                     1)
 
         return res  # Though probably not used
@@ -2030,26 +1916,12 @@ milter_default_action = accept
             CentOSPath = '/etc/redhat-release'
 
             if os.path.exists(CentOSPath):
-
-                if self.distro == centos:
-                    command = 'yum install restic -y'
-                    preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-                elif self.distro == cent8:
-
-                    command = 'cat /proc/cpuinfo'
-
-                    result = subprocess.check_output(shlex.split(command)).decode("utf-8")
-
-                    if result.find('ARM') > -1 or result.find('arm') > -1:
-                        command = 'wget -O /usr/bin/restic https://rep.cyberpanel.net/restic_0.9.6_linux_arm64'
-                        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-                    else:
-                        command = 'wget -O /usr/bin/restic https://rep.cyberpanel.net/restic_0.9.6_linux_amd64'
-                        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-                    command = 'chmod +x /usr/bin/restic'
-                    preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                command = 'yum install -y yum-plugin-copr'
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                command = 'yum copr enable -y copart/restic'
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                command = 'yum install -y restic'
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             else:
                 command = 'apt-get update -y'
@@ -2067,8 +1939,7 @@ milter_default_action = accept
             CentOSPath = '/etc/redhat-release'
 
             if os.path.exists(CentOSPath):
-                command = 'mkdir -p /opt/cpvendor/etc/'
-                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                mkdir_p('/opt/cpvendor/etc/')
 
                 content = """[integration_scripts]
 
@@ -2091,8 +1962,7 @@ service_port = 9000
                 writeToFile.write(content)
                 writeToFile.close()
 
-                command = 'mkdir -p /etc/cagefs/exclude'
-                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                mkdir_p('/etc/cagefs/exclude')
 
                 content = """cyberpanel
 docker
@@ -2292,7 +2162,7 @@ def main():
     checks.install_default_keys()
 
     checks.download_install_CyberPanel(installCyberPanel.InstallCyberPanel.mysqlPassword, mysql)
-    checks.downoad_and_install_raindloop()
+    checks.download_and_install_rainloop()
     checks.download_install_phpmyadmin()
     checks.setupCLI()
     checks.setup_cron()
@@ -2374,8 +2244,8 @@ echo $oConfig->Save() ? 'Done' : 'Error';
         command = '/usr/local/lsws/lsphp72/bin/php /usr/local/CyberCP/public/rainloop.php'
         subprocess.call(shlex.split(command))
 
-        command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
-        subprocess.call(shlex.split(command))
+        recursive_chown('/usr/local/lscp/cyberpanel/rainloop/data', 'lscpd', 'lscpd')
+
     except:
         pass
 

@@ -1,8 +1,9 @@
 #!/usr/local/CyberCP/bin/python
 import os
 import os.path
+import shlex
+import subprocess
 import sys
-
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 
@@ -138,9 +139,16 @@ class IncJobs(multi.Thread):
             if fType == 'backup':
                 key, secret = self.getAWSData()
 
+                # Define our excludes file for use with restic
+                backupExcludesFile = '/home/%s/backup-exclude.conf' % (self.website.domain)
+                resticBackupExcludeCMD = ' --exclude-file=%s' % (backupExcludesFile)
+
                 command = 'export AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s  && restic -r s3:s3.amazonaws.com/%s backup %s --password-file %s' % (
                     key, secret, self.website.domain, backupPath, self.passwordFile)
 
+                # If /home/%s/backup-exclude.conf file exists lets pass this to restic by appending the command to end.
+                if os.path.isfile(backupExcludesFile):
+                    command = command + resticBackupExcludeCMD
                 result = ProcessUtilities.outputExecutioner(command)
 
                 if result.find('saved') == -1:
@@ -198,8 +206,15 @@ class IncJobs(multi.Thread):
 
     def localFunction(self, backupPath, type, restore=None):
         if restore == None:
+            # Define our excludes file for use with restic
+            backupExcludesFile = '/home/%s/backup-exclude.conf' % (self.website.domain)
+            resticBackupExcludeCMD = ' --exclude-file=%s' % (backupExcludesFile)
+
             command = 'restic -r %s backup %s --password-file %s --exclude %s' % (
                 self.repoPath, backupPath, self.passwordFile, self.repoPath)
+            # If /home/%s/backup-exclude.conf file exists lets pass this to restic by appending the command to end.
+            if os.path.isfile(backupExcludesFile):
+                command = command + resticBackupExcludeCMD
             result = ProcessUtilities.outputExecutioner(command)
 
             if result.find('saved') == -1:
@@ -233,9 +248,15 @@ class IncJobs(multi.Thread):
 
     def sftpFunction(self, backupPath, type, restore=None):
         if restore == None:
+            # Define our excludes file for use with restic
+            backupExcludesFile = '/home/%s/backup-exclude.conf' % (self.website.domain)
+            resticBackupExcludeCMD = ' --exclude-file=%s' % (backupExcludesFile)
             remotePath = '/home/backup/%s' % (self.website.domain)
             command = 'export PATH=${PATH}:/usr/bin && restic -r %s:%s backup %s --password-file %s --exclude %s' % (
                 self.backupDestinations, remotePath, backupPath, self.passwordFile, self.repoPath)
+            # If /home/%s/backup-exclude.conf file exists lets pass this to restic by appending the command to end.
+            if os.path.isfile(backupExcludesFile):
+                command = command + resticBackupExcludeCMD
             result = ProcessUtilities.outputExecutioner(command)
 
             if result.find('saved') == -1:
@@ -840,9 +861,32 @@ Subject: %s
 
         command = 'restic'
         if ProcessUtilities.outputExecutioner(command).find('restic is a backup program which') == -1:
-            logging.statusWriter(self.statusPath, 'It seems restic is not installed, for incremental backups to work '
-                                                  'restic must be installed. You can manually install restic using this '
-                                                  'guide -> http://go.cyberpanel.net/restic. [5009]', 1)
+            try:
+
+                CentOSPath = '/etc/redhat-release'
+
+                if os.path.exists(CentOSPath):
+                        command = 'yum install -y yum-plugin-copr'
+                        ProcessUtilities.executioner(command)
+                        command = 'yum copr enable -y copart/restic'
+                        ProcessUtilities.executioner(command)
+                        command = 'yum install -y restic'
+                        ProcessUtilities.executioner(command)
+
+                else:
+                    command = 'apt-get update -y'
+                    ProcessUtilities.executioner(command)
+
+                    command = 'apt-get install restic -y'
+                    ProcessUtilities.executioner(command)
+
+            except:
+                logging.statusWriter(self.statusPath,
+                                     'It seems restic is not installed, for incremental backups to work '
+                                     'restic must be installed. You can manually install restic using this '
+                                     'guide -> https://go.cyberpanel.net/restic. [5009]', 1)
+                pass
+
             return 0
 
         ## Restic check completed.

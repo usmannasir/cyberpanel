@@ -1,6 +1,7 @@
 import subprocess
 import shlex
 
+
 class FirewallUtilities:
 
     @staticmethod
@@ -22,9 +23,8 @@ class FirewallUtilities:
 
         return 1
 
-
     @staticmethod
-    def addRule(proto,port):
+    def addRule(proto, port):
 
         print('Adding port: %s' % (port))
 
@@ -60,7 +60,7 @@ class FirewallUtilities:
     @staticmethod
     def deleteRule(proto, port):
 
-        if port=="21":
+        if port == "21":
             command = "sudo firewall-cmd --remove-service=ftp --permanent"
         else:
             ipAddress = "0.0.0.0/0"

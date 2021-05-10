@@ -13,6 +13,8 @@ import MySQLdb as mysql
 from CyberCP import settings
 import random
 import string
+# from filesPermsUtilities import chmod_digit, chown, recursive_permissions, recursive_chown, mkdir_p
+from plogical.filesPermsUtilities import chmod_digit, chown, recursive_permissions, recursive_chown, mkdir_p
 
 VERSION = '2.1'
 BUILD = 1
@@ -43,22 +45,22 @@ class Upgrade:
                '"hostnameSSL": 1, "mailServerSSL": 1 }'
 
     ResellerACL = '{"adminStatus":0, "versionManagement": 1, "createNewUser": 1, "listUsers": 1, "deleteUser": 1 , "resellerCenter": 1, ' \
-               '"changeUserACL": 0, "createWebsite": 1, "modifyWebsite": 1, "suspendWebsite": 1, "deleteWebsite": 1, ' \
-               '"createPackage": 1, "listPackages": 1, "deletePackage": 1, "modifyPackage": 1, "createDatabase": 1, "deleteDatabase": 1, ' \
-               '"listDatabases": 1, "createNameServer": 1, "createDNSZone": 1, "deleteZone": 1, "addDeleteRecords": 1, ' \
-               '"createEmail": 1, "listEmails": 1, "deleteEmail": 1, "emailForwarding": 1, "changeEmailPassword": 1, ' \
-               '"dkimManager": 1, "createFTPAccount": 1, "deleteFTPAccount": 1, "listFTPAccounts": 1, "createBackup": 1,' \
-               ' "restoreBackup": 1, "addDeleteDestinations": 0, "scheduleBackups": 0, "remoteBackups": 0, "googleDriveBackups": 1, "manageSSL": 1, ' \
-               '"hostnameSSL": 0, "mailServerSSL": 0 }'
-
-    UserACL = '{"adminStatus":0, "versionManagement": 1, "createNewUser": 0, "listUsers": 0, "deleteUser": 0 , "resellerCenter": 0, ' \
-                  '"changeUserACL": 0, "createWebsite": 0, "modifyWebsite": 0, "suspendWebsite": 0, "deleteWebsite": 0, ' \
-                  '"createPackage": 0, "listPackages": 0, "deletePackage": 0, "modifyPackage": 0, "createDatabase": 1, "deleteDatabase": 1, ' \
-                  '"listDatabases": 1, "createNameServer": 0, "createDNSZone": 1, "deleteZone": 1, "addDeleteRecords": 1, ' \
+                  '"changeUserACL": 0, "createWebsite": 1, "modifyWebsite": 1, "suspendWebsite": 1, "deleteWebsite": 1, ' \
+                  '"createPackage": 1, "listPackages": 1, "deletePackage": 1, "modifyPackage": 1, "createDatabase": 1, "deleteDatabase": 1, ' \
+                  '"listDatabases": 1, "createNameServer": 1, "createDNSZone": 1, "deleteZone": 1, "addDeleteRecords": 1, ' \
                   '"createEmail": 1, "listEmails": 1, "deleteEmail": 1, "emailForwarding": 1, "changeEmailPassword": 1, ' \
                   '"dkimManager": 1, "createFTPAccount": 1, "deleteFTPAccount": 1, "listFTPAccounts": 1, "createBackup": 1,' \
-                  ' "restoreBackup": 0, "addDeleteDestinations": 0, "scheduleBackups": 0, "remoteBackups": 0, "googleDriveBackups": 1, "manageSSL": 1, ' \
+                  ' "restoreBackup": 1, "addDeleteDestinations": 0, "scheduleBackups": 0, "remoteBackups": 0, "googleDriveBackups": 1, "manageSSL": 1, ' \
                   '"hostnameSSL": 0, "mailServerSSL": 0 }'
+
+    UserACL = '{"adminStatus":0, "versionManagement": 1, "createNewUser": 0, "listUsers": 0, "deleteUser": 0 , "resellerCenter": 0, ' \
+              '"changeUserACL": 0, "createWebsite": 0, "modifyWebsite": 0, "suspendWebsite": 0, "deleteWebsite": 0, ' \
+              '"createPackage": 0, "listPackages": 0, "deletePackage": 0, "modifyPackage": 0, "createDatabase": 1, "deleteDatabase": 1, ' \
+              '"listDatabases": 1, "createNameServer": 0, "createDNSZone": 1, "deleteZone": 1, "addDeleteRecords": 1, ' \
+              '"createEmail": 1, "listEmails": 1, "deleteEmail": 1, "emailForwarding": 1, "changeEmailPassword": 1, ' \
+              '"dkimManager": 1, "createFTPAccount": 1, "deleteFTPAccount": 1, "listFTPAccounts": 1, "createBackup": 1,' \
+              ' "restoreBackup": 0, "addDeleteDestinations": 0, "scheduleBackups": 0, "remoteBackups": 0, "googleDriveBackups": 1, "manageSSL": 1, ' \
+              '"hostnameSSL": 0, "mailServerSSL": 0 }'
 
     @staticmethod
     def decideCentosVersion():
@@ -85,7 +87,6 @@ class Upgrade:
                 return Ubuntu20
             else:
                 return Ubuntu18
-
 
     @staticmethod
     def stdOut(message, do_exit=0):
@@ -356,7 +357,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
         Upgrade.executioner(command, 0)
 
     @staticmethod
-    def downoad_and_install_raindloop():
+    def download_and_install_rainloop():
         try:
             #######
 
@@ -492,7 +493,7 @@ imap_folder_list_limit = 0
             os.chdir(cwd)
 
         except BaseException as msg:
-            Upgrade.stdOut(str(msg) + " [downoad_and_install_raindloop]", 0)
+            Upgrade.stdOut(str(msg) + " [download_and_install_rainloop]", 0)
 
         return 1
 
@@ -684,7 +685,8 @@ imap_folder_list_limit = 0
                 sleep(10)
 
             try:
-                cursor.execute("UPDATE loginSystem_acl SET config = '%s' where name = 'reseller'" % (Upgrade.ResellerACL))
+                cursor.execute(
+                    "UPDATE loginSystem_acl SET config = '%s' where name = 'reseller'" % (Upgrade.ResellerACL))
             except:
                 pass
 
@@ -1517,9 +1519,7 @@ imap_folder_list_limit = 0
             except:
                 pass
 
-
             query = 'ALTER TABLE IncBackups_backupjob ADD retention integer DEFAULT 0'
-
 
             try:
                 cursor.execute(query)
@@ -1704,6 +1704,21 @@ imap_folder_list_limit = 0
             rootdbName = settings.DATABASES['rootdb']['NAME']
             rootdbdbUser = settings.DATABASES['rootdb']['USER']
             rootdbpassword = settings.DATABASES['rootdb']['PASSWORD']
+
+            # This allows root/sudo users to be able to work with MySQL/MariaDB without hunting down the password like
+            # all the other control panels allow
+            # reference: https://oracle-base.com/articles/mysql/mysql-password-less-logins-using-option-files
+            mysql_my_root_cnf = '/root/.my.cnf'
+            mysql_root_cnf_content = """
+                    [client]
+                    user=root
+                    password="%s"
+                    """ % password
+
+            with open(mysql_my_root_cnf, 'w+') as f:
+                f.write(mysql_root_cnf_content)
+            chmod_digit(mysql_my_root_cnf, 600)
+            chown(mysql_my_root_cnf, 'root', 'root')
 
             ## Complete db string
 
@@ -1919,62 +1934,31 @@ echo $oConfig->Save() ? 'Done' : 'Error';
 
             ###### fix Core CyberPanel permissions
 
-            command = "find /usr/local/CyberCP -type d -exec chmod 0755 {} \;"
-            Upgrade.executioner(command, 'chown core code', 0)
+            recursive_permissions('/usr/local/CyberCP', 755, 644)
 
-            command = "find /usr/local/CyberCP -type f -exec chmod 0644 {} \;"
-            Upgrade.executioner(command, 'chown core code', 0)
-
-            command = "chmod -R 755 /usr/local/CyberCP/bin"
-            Upgrade.executioner(command, 'chown core code', 0)
+            recursive_permissions('/usr/local/CyberCP/bin', 755, 755)
 
             ## change owner
 
-            command = "chown -R root:root /usr/local/CyberCP"
-            Upgrade.executioner(command, 'chown core code', 0)
+            recursive_chown('/usr/local/CyberCP', 'root', 'root')
 
             ########### Fix LSCPD
 
-            command = "find /usr/local/lscp -type d -exec chmod 0755 {} \;"
-            Upgrade.executioner(command, 'chown core code', 0)
-
-            command = "find /usr/local/lscp -type f -exec chmod 0644 {} \;"
-            Upgrade.executioner(command, 'chown core code', 0)
-
-            command = "chmod -R 755 /usr/local/lscp/bin"
-            Upgrade.executioner(command, 'chown core code', 0)
-
-            command = "chmod -R 755 /usr/local/lscp/fcgi-bin"
-            Upgrade.executioner(command, 'chown core code', 0)
-
-            command = "chown -R lscpd:lscpd /usr/local/CyberCP/public/phpmyadmin/tmp"
-            Upgrade.executioner(command, 'chown core code', 0)
+            recursive_permissions('/usr/local/lscp', 755, 644)
+            recursive_permissions('/usr/local/lscp/bin', 755, 755)
+            recursive_permissions('/usr/local/lscp/fcgi-bin', 755, 755)
+            recursive_chown('/usr/local/CyberCP/public/phpmyadmin/tmp', 'lscpd', 'lscpd')
 
             ## change owner
 
-            command = "chown -R root:root /usr/local/lscp"
-            Upgrade.executioner(command, 'chown core code', 0)
+            recursive_chown('/usr/local/lscp', 'root', 'root')
+            recursive_chown('/usr/local/lscp/cyberpanel/rainloop/data', 'lscpd', 'lscpd')
 
-            command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
-            Upgrade.executioner(command, 'chown core code', 0)
-
-            command = "chmod 700 /usr/local/CyberCP/cli/cyberPanel.py"
-            Upgrade.executioner(command, 'chown core code', 0)
-
-            command = "chmod 700 /usr/local/CyberCP/plogical/upgradeCritical.py"
-            Upgrade.executioner(command, 'chown core code', 0)
-
-            command = "chmod 755 /usr/local/CyberCP/postfixSenderPolicy/client.py"
-            Upgrade.executioner(command, 'chown core code', 0)
-
-            command = "chmod 640 /usr/local/CyberCP/CyberCP/settings.py"
-            Upgrade.executioner(command, 'chown core code', 0)
-
-            command = "chown root:cyberpanel /usr/local/CyberCP/CyberCP/settings.py"
-            Upgrade.executioner(command, 'chown core code', 0)
-
-            command = 'chmod +x /usr/local/CyberCP/CLManager/CLPackages.py'
-            Upgrade.executioner(command, 'chmod CLPackages', 0)
+            chmod_digit('/usr/local/CyberCP/cli/cyberPanel.py', 700)
+            chmod_digit('/usr/local/CyberCP/plogical/upgradeCritical.py', 700)
+            chmod_digit('/usr/local/CyberCP/postfixSenderPolicy/client.py', 755)
+            chmod_digit('/usr/local/CyberCP/CyberCP/settings.py', 640)
+            chown('/usr/local/CyberCP/CyberCP/settings.py', 'root', 'cyberpanel')
 
             files = ['/etc/yum.repos.d/MariaDB.repo', '/etc/pdns/pdns.conf', '/etc/systemd/system/lscpd.service',
                      '/etc/pure-ftpd/pure-ftpd.conf', '/etc/pure-ftpd/pureftpd-pgsql.conf',
@@ -1983,8 +1967,7 @@ echo $oConfig->Save() ? 'Done' : 'Error';
                      '/usr/local/lsws/conf/modsec.conf', '/usr/local/lsws/conf/httpd.conf']
 
             for items in files:
-                command = 'chmod 644 %s' % (items)
-                Upgrade.executioner(command, 'chown core code', 0)
+                chmod_digit(items, 644)
 
             impFile = ['/etc/pure-ftpd/pure-ftpd.conf', '/etc/pure-ftpd/pureftpd-pgsql.conf',
                        '/etc/pure-ftpd/pureftpd-mysql.conf', '/etc/pure-ftpd/pureftpd-ldap.conf',
@@ -1992,17 +1975,19 @@ echo $oConfig->Save() ? 'Done' : 'Error';
                        '/etc/powerdns/pdns.conf']
 
             for items in impFile:
-                command = 'chmod 600 %s' % (items)
-                Upgrade.executioner(command, 'chown core code', 0)
+                chmod_digit(items, 600)
 
             command = 'chmod 640 /etc/postfix/*.cf'
             subprocess.call(command, shell=True)
 
+            chmod_digit('/etc/postfix/main.cf', 644)
+
             command = 'chmod 640 /etc/dovecot/*.conf'
             subprocess.call(command, shell=True)
 
-            command = 'chmod 640 /etc/dovecot/dovecot-sql.conf.ext'
-            subprocess.call(command, shell=True)
+            chmod_digit('/etc/dovecot/dovecot.conf', 644)
+            chmod_digit('/etc/dovecot/dovecot-sql.conf.ext', 640)
+            chmod_digit('/etc/postfix/dynamicmaps.cf', 644)
 
             fileM = ['/usr/local/lsws/FileManager/', '/usr/local/CyberCP/install/FileManager',
                      '/usr/local/CyberCP/serverStatus/litespeed/FileManager',
@@ -2014,54 +1999,33 @@ echo $oConfig->Save() ? 'Done' : 'Error';
                 except:
                     pass
 
-            command = 'chmod 755 /etc/pure-ftpd/'
-            subprocess.call(command, shell=True)
-
-            command = 'chmod 644 /etc/dovecot/dovecot.conf'
-            subprocess.call(command, shell=True)
-
-            command = 'chmod 644 /etc/postfix/main.cf'
-            subprocess.call(command, shell=True)
-
-            command = 'chmod 644 /etc/postfix/dynamicmaps.cf'
-            subprocess.call(command, shell=True)
-
-            command = 'chmod +x /usr/local/CyberCP/plogical/renew.py'
-            Upgrade.executioner(command, command, 0)
-
-            command = 'chmod +x /usr/local/CyberCP/CLManager/CLPackages.py'
-            Upgrade.executioner(command, command, 0)
+            chmod_digit('/etc/pure-ftpd/', 755)
+            chmod_digit('/usr/local/CyberCP/plogical/renew.py', 775)
+            chmod_digit('/usr/local/CyberCP/CLManager/CLPackages.py', 775)
 
             clScripts = ['/usr/local/CyberCP/CLScript/panel_info.py',
                          '/usr/local/CyberCP/CLScript/CloudLinuxPackages.py',
                          '/usr/local/CyberCP/CLScript/CloudLinuxUsers.py',
-                         '/usr/local/CyberCP/CLScript/CloudLinuxDomains.py'
-                , '/usr/local/CyberCP/CLScript/CloudLinuxResellers.py',
+                         '/usr/local/CyberCP/CLScript/CloudLinuxDomains.py',
+                         '/usr/local/CyberCP/CLScript/CloudLinuxResellers.py',
                          '/usr/local/CyberCP/CLScript/CloudLinuxAdmins.py',
-                         '/usr/local/CyberCP/CLScript/CloudLinuxDB.py', '/usr/local/CyberCP/CLScript/UserInfo.py']
+                         '/usr/local/CyberCP/CLScript/CloudLinuxDB.py',
+                         '/usr/local/CyberCP/CLScript/UserInfo.py']
 
             for items in clScripts:
-                command = 'chmod +x %s' % (items)
-                Upgrade.executioner(command, 0)
+                chmod_digit(items, 775)
 
-            command = 'chmod 600 /usr/local/CyberCP/plogical/adminPass.py'
-            Upgrade.executioner(command, 0)
-
-            command = 'chmod 600 /etc/cagefs/exclude/cyberpanelexclude'
-            Upgrade.executioner(command, 0)
+            chmod_digit('/usr/local/CyberCP/plogical/adminPass.py', 600)
+            chmod_digit('/etc/cagefs/exclude/cyberpanelexclude', 600)
 
             command = "find /usr/local/CyberCP/ -name '*.pyc' -delete"
             Upgrade.executioner(command, 0)
 
             if os.path.exists(Upgrade.CentOSPath):
-                command = 'chown root:pdns /etc/pdns/pdns.conf'
-                Upgrade.executioner(command, 0)
+                chown('/etc/pdns/pdns.conf', 'root', 'pdns')
+                chmod_digit('/etc/pdns/pdns.conf', 640)
 
-                command = 'chmod 640 /etc/pdns/pdns.conf'
-                Upgrade.executioner(command, 0)
-
-            command = 'chmod 640 /usr/local/lscp/cyberpanel/logs/access.log'
-            Upgrade.executioner(command, 0)
+            chmod_digit('/usr/local/lscp/cyberpanel/logs/access.log', 640)
 
             command = '/usr/local/lsws/lsphp72/bin/php /usr/local/CyberCP/public/rainloop.php'
             Upgrade.executioner(command, 0)
@@ -2111,16 +2075,13 @@ echo $oConfig->Save() ? 'Done' : 'Error';
         CentOSPath = '/etc/redhat-release'
 
         if not os.path.exists(CentOSPath):
-            command = 'cp /usr/local/lsws/lsphp71/bin/php /usr/bin/'
-            Upgrade.executioner(command, 'Set default PHP 7.0, 0')
+            command = 'cp /usr/local/lsws/lsphp73/bin/php /usr/bin/'
+            Upgrade.executioner(command, 'Set default PHP 7.3, 0')
 
     @staticmethod
     def someDirectories():
-        command = "mkdir -p /usr/local/lscpd/admin/"
-        Upgrade.executioner(command, 0)
-
-        command = "mkdir -p /usr/local/lscp/cyberpanel/logs"
-        Upgrade.executioner(command, 0)
+        mkdir_p('/usr/local/lscpd/admin/')
+        mkdir_p('/usr/local/lscp/cyberpanel/logs')
 
     @staticmethod
     def upgradeDovecot():
@@ -2134,9 +2095,7 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             ## Take backup of configurations
 
             configbackups = '/home/cyberpanel/configbackups'
-
-            command = 'mkdir %s' % (configbackups)
-            Upgrade.executioner(command, 0)
+            mkdir_p(configbackups)
 
             command = 'cp -pR %s %s' % (dovecotConfPath, configbackups)
             Upgrade.executioner(command, 0)
@@ -2228,7 +2187,6 @@ echo $oConfig->Save() ? 'Done' : 'Error';
                 # command = 'DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical apt -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" upgrade -y'
                 # subprocess.call(command, shell=True)
 
-
             dovecotConf = '/etc/dovecot/dovecot.conf'
 
             dovecotContent = open(dovecotConf, 'r').read()
@@ -2295,8 +2253,7 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             CentOSPath = '/etc/redhat-release'
 
             if os.path.exists(CentOSPath):
-                command = 'mkdir -p /opt/cpvendor/etc/'
-                Upgrade.executioner(command, 0)
+                mkdir_p('/opt/cpvendor/etc/')
 
                 content = """[integration_scripts]
 
@@ -2316,12 +2273,11 @@ service_port = 9000
 """
 
                 if not os.path.exists('/opt/cpvendor/etc/integration.ini'):
-                    writeToFile = open('/opt/cpvendor/etc/integration.ini', 'w')
+                    writeToFile = open('/opt/cpvendor/etc/integration.ini', 'w+')
                     writeToFile.write(content)
                     writeToFile.close()
 
-                command = 'mkdir -p /etc/cagefs/exclude'
-                Upgrade.executioner(command, command, 0)
+                mkdir_p('/etc/cagefs/exclude')
 
                 content = """cyberpanel
 docker
@@ -2407,8 +2363,7 @@ vmail
             writeToFile.close()
 
         if not os.path.exists(CentOSPath):
-            command = 'chmod 600 %s' % (cronPath)
-            Upgrade.executioner(command, 0)
+            chmod_digit(cronPath, 600)
 
     @staticmethod
     def UpdateConfigOfCustomACL():
@@ -2423,14 +2378,22 @@ vmail
             elif acl.config == '{}':
                 acl.config = '{"adminStatus":%s, "versionManagement": %s, "createNewUser": %s, "listUsers": %s, "deleteUser": %s, "resellerCenter": %s, "changeUserACL": %s, "createWebsite": %s, "modifyWebsite": %s, "suspendWebsite": %s, "deleteWebsite": %s, "createPackage": %s, "listPackages": %s, "deletePackage": %s, "modifyPackage": %s, "createDatabase": %s, "deleteDatabase": %s, "listDatabases": %s, "createNameServer": %s, "createDNSZone": %s, "deleteZone": %s, "addDeleteRecords": %s, "createEmail": %s, "listEmails": %s, "deleteEmail": %s, "emailForwarding": %s, "changeEmailPassword": %s, "dkimManager": %s, "createFTPAccount": %s, "deleteFTPAccount": %s, "listFTPAccounts": %s, "createBackup": %s, "restoreBackup": %s, "addDeleteDestinations": %s, "scheduleBackups": %s, "remoteBackups": %s, "googleDriveBackups": %s, "manageSSL": %s, "hostnameSSL": %s, "mailServerSSL": %s }' \
                              % (str(acl.adminStatus), str(acl.versionManagement), str(acl.createNewUser),
-                                str(acl.listUsers), str(acl.deleteUser), str(acl.resellerCenter), str(acl.changeUserACL),
-                                str(acl.createWebsite), str(acl.modifyWebsite), str(acl.suspendWebsite), str(acl.deleteWebsite),
-                                str(acl.createPackage), str(acl.listPackages), str(acl.deletePackage), str(acl.modifyPackage),
-                                str(acl.createDatabase), str(acl.deleteDatabase), str(acl.listDatabases), str(acl.createNameServer),
-                                str(acl.createDNSZone), str(acl.deleteZone), str(acl.addDeleteRecords), str(acl.createEmail),
-                                str(acl.listEmails), str(acl.deleteEmail), str(acl.emailForwarding), str(acl.changeEmailPassword),
-                                str(acl.dkimManager), str(acl.createFTPAccount), str(acl.deleteFTPAccount), str(acl.listFTPAccounts),
-                                str(acl.createBackup), str(acl.restoreBackup), str(acl.addDeleteDestinations), str(acl.scheduleBackups), str(acl.remoteBackups), '1',
+                                str(acl.listUsers), str(acl.deleteUser), str(acl.resellerCenter),
+                                str(acl.changeUserACL),
+                                str(acl.createWebsite), str(acl.modifyWebsite), str(acl.suspendWebsite),
+                                str(acl.deleteWebsite),
+                                str(acl.createPackage), str(acl.listPackages), str(acl.deletePackage),
+                                str(acl.modifyPackage),
+                                str(acl.createDatabase), str(acl.deleteDatabase), str(acl.listDatabases),
+                                str(acl.createNameServer),
+                                str(acl.createDNSZone), str(acl.deleteZone), str(acl.addDeleteRecords),
+                                str(acl.createEmail),
+                                str(acl.listEmails), str(acl.deleteEmail), str(acl.emailForwarding),
+                                str(acl.changeEmailPassword),
+                                str(acl.dkimManager), str(acl.createFTPAccount), str(acl.deleteFTPAccount),
+                                str(acl.listFTPAccounts),
+                                str(acl.createBackup), str(acl.restoreBackup), str(acl.addDeleteDestinations),
+                                str(acl.scheduleBackups), str(acl.remoteBackups), '1',
                                 str(acl.manageSSL), str(acl.hostnameSSL), str(acl.mailServerSSL))
                 acl.save()
 
@@ -2494,7 +2457,7 @@ vmail
 
         Upgrade.downloadAndUpgrade(versionNumbring, branch)
         Upgrade.download_install_phpmyadmin()
-        Upgrade.downoad_and_install_raindloop()
+        Upgrade.download_and_install_rainloop()
 
         ##
 
@@ -2586,8 +2549,9 @@ vmail
 
         Upgrade.stdOut("Upgrade Completed.")
 
+
 def main():
-    parser = argparse.ArgumentParser(description='CyberPanel Installer')
+    parser = argparse.ArgumentParser(description='CyberPanel Upgrader')
     parser.add_argument('branch', help='Install from branch name.')
 
     args = parser.parse_args()
