@@ -23,8 +23,11 @@ class UpgradeCyberPanel:
 
     def PostStatus(self, message):
         finalData = json.dumps({'ipAddress': self.ipAddress, "UpgradeCyberPanelStatus": message})
-        resp = requests.post(UpgradeCyberPanel.LogURL, data=finalData, verify=False)
-        print (resp.text)
+
+        try:
+            resp = requests.post(UpgradeCyberPanel.LogURL, data=finalData, verify=False, timeout=10)
+        except:
+            pass
 
     def RestoreOldCP(self):
 

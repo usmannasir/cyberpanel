@@ -19,10 +19,7 @@ from filesPermsUtilities import chown, chmod_digit, mkdir_p, touch, symlink, rec
 VERSION = '2.1'
 BUILD = 1
 
-char_set = {'small': 'abcdefghijklmnopqrstuvwxyz',
-            'nums': '0123456789',
-            'big': 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
-            }
+char_set = {'small': 'abcdefghijklmnopqrstuvwxyz','nums': '0123456789','big': 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'}
 
 
 def generate_pass(length=14):
@@ -1588,8 +1585,25 @@ imap_folder_list_limit = 0
 0 0 * * 0 /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py Weekly
 */3 * * * * if ! find /home/*/public_html/ -maxdepth 2 -type f -newer /usr/local/lsws/cgid -name '.htaccess' -exec false {} +; then /usr/local/lsws/bin/lswsctrl restart; fi
 """
+
             cronFile.write(content)
             cronFile.close()
+
+            ### Check and remove OLS restart if lsws ent detected
+
+            if not os.path.exists('/usr/local/lsws/bin/openlitespeed'):
+
+                data = open(cronPath, 'r').readlines()
+
+                writeToFile = open(cronPath, 'w')
+
+                for items in data:
+                    if items.find('-maxdepth 2 -type f -newer') > -1:
+                        pass
+                    else:
+                        writeToFile.writelines(items)
+
+                writeToFile.close()
 
             if not os.path.exists(CentOSPath):
                 chmod_digit(cronPath, 600)

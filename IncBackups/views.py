@@ -405,7 +405,12 @@ def delete_backup(request):
 
         backup_id = data['backupID']
 
-        IncJob.objects.get(id=backup_id).delete()
+        inc_job = IncJob.objects.get(id=backup_id)
+
+        job = IncJobs(None, None)
+        job.DeleteSnapShot(inc_job)
+
+        inc_job.delete()
 
         final_dic = {'status': 1, 'error_message': 'None'}
         final_json = json.dumps(final_dic)
@@ -449,7 +454,6 @@ def fetch_restore_points(request):
         final_dic = {'status': 0, 'error_message': str(msg)}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
-
 
 def restore_point(request):
     try:

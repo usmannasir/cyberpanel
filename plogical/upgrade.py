@@ -2362,6 +2362,23 @@ vmail
             writeToFile.write(content)
             writeToFile.close()
 
+        ### Check and remove OLS restart if lsws ent detected
+
+        if not os.path.exists('/usr/local/lsws/bin/openlitespeed'):
+
+            data = open(cronPath, 'r').readlines()
+
+            writeToFile = open(cronPath, 'w')
+
+            for items in data:
+                if items.find('-maxdepth 2 -type f -newer') > -1:
+                    pass
+                else:
+                    writeToFile.writelines(items)
+
+            writeToFile.close()
+
+
         if not os.path.exists(CentOSPath):
             chmod_digit(cronPath, 600)
 
@@ -2491,12 +2508,18 @@ vmail
         Upgrade.setupCLI()
         Upgrade.someDirectories()
         Upgrade.installLSCPD(branch)
-        Upgrade.GeneralMigrations()
+
+        ### General migrations are not needed any more
+
+        # Upgrade.GeneralMigrations()
+
         # Upgrade.p3()
 
-        if os.path.exists(postfixPath):
-            Upgrade.upgradeDovecot()
-        time.sleep(3)
+        ## Also disable email service upgrade
+
+        # if os.path.exists(postfixPath):
+        #     Upgrade.upgradeDovecot()
+
 
         ## Upgrade version
 
@@ -2504,7 +2527,10 @@ vmail
 
         ##
 
-        Upgrade.upgradeVersion()
+        ### Disable version upgrade too
+
+        # Upgrade.upgradeVersion()
+
         Upgrade.UpdateMaxSSLCons()
 
         ## Update LSCPD PHP
@@ -2551,6 +2577,7 @@ vmail
 
 
 def main():
+
     parser = argparse.ArgumentParser(description='CyberPanel Upgrader')
     parser.add_argument('branch', help='Install from branch name.')
 

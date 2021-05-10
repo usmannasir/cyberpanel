@@ -1492,7 +1492,7 @@ class CloudManager:
             writeToFile.write('Starting..,0')
             writeToFile.close()
 
-            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/mailServer/mailserverManager.py"
+            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
             execPath = execPath + ' ResetEmailConfigurations --tempStatusPath %s' % (tempStatusPath)
 
             ProcessUtilities.popenExecutioner(execPath)
@@ -2843,6 +2843,9 @@ class CloudManager:
 
             zones = cf.zones.get(params = {'per_page':100})
 
+            command = 'chown cyberpanel:cyberpanel -R /usr/local/CyberCP/lib/python3.6/site-packages/tldextract/.suffix_cache'
+            ProcessUtilities.executioner(command)
+
             for website in Websites.objects.all():
                 import tldextract
                 extractDomain = tldextract.extract(website.domain)
@@ -2881,6 +2884,9 @@ class CloudManager:
                             pass
 
             ### For child domainsa
+
+            command = 'chown cyberpanel:cyberpanel -R /usr/local/CyberCP/lib/python3.6/site-packages/tldextract/.suffix_cache'
+            ProcessUtilities.executioner(command)
 
             from websiteFunctions.models import ChildDomains
             for website in ChildDomains.objects.all():
@@ -2962,6 +2968,38 @@ class CloudManager:
 
             execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/ClusterManager.py --function UptimeMonitor --type All"
             ProcessUtilities.executioner(execPath)
+
+            final_json = json.dumps({'status': 1})
+            return HttpResponse(final_json)
+
+        except BaseException as msg:
+            final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+    def CheckMasterNode(self):
+        try:
+
+            command = 'systemctl status mysql'
+            result = ProcessUtilities.outputExecutioner(command)
+
+            if result.find('active (running)') > -1:
+                final_json = json.dumps({'status': 1})
+            else:
+                final_json = json.dumps({'status': 0, 'error_message': 'MySQL on Main node is not running.'})
+
+            return HttpResponse(final_json)
+
+        except BaseException as msg:
+            final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+    def SyncToMaster(self):
+        try:
+
+            command = '/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/ClusterManager.py --function SyncToMaster --type Failover'
+            ProcessUtilities.executioner(command)
 
             final_json = json.dumps({'status': 1})
             return HttpResponse(final_json)

@@ -1494,6 +1494,8 @@ app.controller('listTableUsers', function ($scope, $http) {
 
     $scope.cyberpanelLoading = true;
 
+    var UserToDelete;
+
     $scope.populateCurrentRecords = function () {
         $scope.cyberpanelLoading = false;
 
@@ -1547,13 +1549,18 @@ app.controller('listTableUsers', function ($scope, $http) {
     $scope.populateCurrentRecords();
 
 
-    $scope.deleteUserFinal = function (name) {
+    $scope.deleteUserInitial = function (name){
+        UserToDelete = name;
+        $scope.UserToDelete = name;
+    };
+
+    $scope.deleteUserFinal = function () {
         $scope.cyberpanelLoading = false;
 
         var url = "/users/submitUserDeletion";
 
         var data = {
-            accountUsername: name,
+            accountUsername: UserToDelete,
         };
 
         var config = {

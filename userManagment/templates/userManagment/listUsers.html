@@ -51,17 +51,52 @@
                                     <td>
                                         <a ng-show="record.state=='ACTIVE'"
                                            class="btn btn-border btn-alt border-red btn-link font-red" href="#"
-                                           ng-click="controlUserState(record.name, 'SUSPEND')" title=""><span>{% trans 'Suspend' %}</span></a>
+                                           ng-click="controlUserState(record.name, 'SUSPEND')"
+                                           title=""><span>{% trans 'Suspend' %}</span></a>
                                         <a ng-show="record.state=='SUSPENDED'"
                                            class="btn btn-border btn-alt border-green btn-link font-green" href="#"
-                                           ng-click="controlUserState(record.name, 'ACTIVATE')" title=""><span>{% trans 'Activate' %}</span></a>
+                                           ng-click="controlUserState(record.name, 'ACTIVATE')"
+                                           title=""><span>{% trans 'Activate' %}</span></a>
                                         <a data-toggle="modal" data-target="#settings"
                                            ng-click="editInitial(record.name)"
                                            class="btn btn-border btn-alt border-purple btn-link font-purple" href="#"
                                            title=""><span>{% trans 'Edit' %}</span></a>
-                                        <a ng-click="deleteUserFinal(record.name)"
+                                        <a data-toggle="modal" data-target="#DeleteUserModal"
+                                           ng-click="deleteUserInitial(record.name)"
                                            class="btn btn-border btn-alt border-red btn-link font-red" href="#"
                                            title=""><span>{% trans 'Delete' %}</span></a>
+
+                                        <!--- Delete User Modal --->
+                                        <div id="DeleteUserModal" class="modal fade" role="dialog">
+                                            <div class="modal-dialog">
+
+                                                <!-- Modal content-->
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <button type="button" class="close" data-dismiss="modal">&times;
+                                                        </button>
+                                                        <h4 class="modal-title">Deleting user {$ UserToDelete $}
+                                                            <img ng-hide="cyberpanelLoading"
+                                                                 src="{% static 'images/loading.gif' %}">
+                                                        </h4>
+                                                    </div>
+                                                    <div class="modal-body">
+
+                                                        <p style="color: red; font-size: larger">This will delete all sites
+                                                            owned by this user and this
+                                                            process can not be reversed.</p>
+
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-default"
+                                                                data-dismiss="modal">Close
+                                                        </button>
+                                                        <button ng-click="deleteUserFinal()" type="button" class="btn btn-primary">Delete Now</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!--- Delete User Modal End--->
 
                                         <!--- Modal --->
                                         <div id="settings" class="modal fade" role="dialog">

@@ -166,7 +166,6 @@ class WebsiteManager:
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-
             try:
                 HA = data['HA']
                 externalApp = 'nobody'

@@ -104,7 +104,7 @@ echo -e "\n${1}=${2}\n" >> /tmp/cyberpanel_debug.log
 Debug_Log2() {
 Check_Server_IP "$@" >/dev/null 2>&1
 echo -e "\n${1}" >> /var/log/installLogs.txt
-curl -d '{"ipAddress": "'"$Server_IP"'", "InstallCyberPanelStatus": "'"$1"'"}' -H "Content-Type: application/json" -X POST https://cloud.cyberpanel.net/servers/RecvData  >/dev/null 2>&1
+curl --max-time 20 -d '{"ipAddress": "'"$Server_IP"'", "InstallCyberPanelStatus": "'"$1"'"}' -H "Content-Type: application/json" -X POST https://cloud.cyberpanel.net/servers/RecvData  >/dev/null 2>&1
 }
 
 Branch_Check() {
@@ -1786,7 +1786,6 @@ fi
 
 # If valid hostname is set that resolves externally we can issue an ssl. This will create the hostname as a website so we can issue the SSL and do our first login without SSL warnings or exceptions needed.
 HostName=$(hostname --fqdn); [ -n "$(dig @1.1.1.1 +short "$HostName")" ]  &&  echo "$HostName resolves to valid IP. Setting up hostname SSL" && cyberpanel createWebsite --package Default --owner admin --domainName $(hostname --fqdn) --email root@localhost --php 7.4 && cyberpanel hostNameSSL --domainName $(hostname --fqdn)
-
 
 }
 

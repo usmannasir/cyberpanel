@@ -13,36 +13,42 @@ class httpProc:
 
     def render(self):
         try:
-            from loginSystem.models import Administrator
-            from plogical.acl import ACLManager
             userID = self.request.session['userID']
-            currentACL = ACLManager.loadedACL(userID)
+            try:
+                from loginSystem.models import Administrator
+                from plogical.acl import ACLManager
 
-            ### Permissions Check
+                currentACL = ACLManager.loadedACL(userID)
 
-            if self.function != None:
-                if not currentACL['admin']:
-                    if not currentACL[self.function]:
-                        templateName = 'baseTemplate/error.html'
-                        return render(self.request, templateName, {'error_message': 'You are not authorized to access %s' % (self.function)})
+                ### Permissions Check
 
-            ###
+                if self.function != None:
+                    if not currentACL['admin']:
+                        if not currentACL[self.function]:
+                            templateName = 'baseTemplate/error.html'
+                            return render(self.request, templateName, {'error_message': 'You are not authorized to access %s' % (self.function)})
 
-            if self.data == None:
-                self.data = {}
+                ###
 
-            ipFile = "/etc/cyberpanel/machineIP"
-            f = open(ipFile)
-            ipData = f.read()
-            ipAddress = ipData.split('\n', 1)[0]
-            self.data['ipAddress'] = ipAddress
+                if self.data == None:
+                    self.data = {}
 
-            self.data.update(currentACL)
+                ipFile = "/etc/cyberpanel/machineIP"
+                f = open(ipFile)
+                ipData = f.read()
+                ipAddress = ipData.split('\n', 1)[0]
+                self.data['ipAddress'] = ipAddress
 
-            return render(self.request, self.templateName, self.data)
-        except BaseException as msg:
-            templateName = 'baseTemplate/error.html'
-            return render(self.request, templateName, {'error_message': str(msg)})
+                self.data.update(currentACL)
+
+                return render(self.request, self.templateName, self.data)
+            except BaseException as msg:
+                templateName = 'baseTemplate/error.html'
+                return render(self.request, templateName, {'error_message': str(msg)})
+        except:
+            from loginSystem.views import loadLoginPage
+            from django.shortcuts import redirect
+            return redirect(loadLoginPage)
 
     def renderPre(self):
         if self.data == None:
