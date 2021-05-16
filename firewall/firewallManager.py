@@ -14,7 +14,7 @@ from plogical.acl import ACLManager
 import plogical.CyberCPLogFileWriter as logging
 from plogical.virtualHostUtilities import virtualHostUtilities
 import subprocess
-from django.shortcuts import HttpResponse, render
+from django.shortcuts import HttpResponse, render, redirect
 from random import randint
 import time
 from plogical.firewallUtilities import FirewallUtilities
@@ -39,9 +39,14 @@ class FirewallManager:
         return proc.render()
 
     def firewallHome(self, request = None, userID = None):
-        proc = httpProc(request, 'firewall/firewall.html',
-                        None, 'admin')
-        return proc.render()
+        csfPath = '/etc/csf'
+
+        if os.path.exists(csfPath):
+            return redirect('/configservercsf/')
+        else:
+            proc = httpProc(request, 'firewall/firewall.html',
+                            None, 'admin')
+            return proc.render()
 
     def getCurrentRules(self, userID = None):
         try:
