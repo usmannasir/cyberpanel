@@ -242,10 +242,10 @@
                     <div class="content-box-wrapper">
                         <div class="row mx-10">
                             <div class="col-md-3 panel-body">
-                                <a href="" ng-click="showCreateDomainForm()" title="{% trans 'Add Domains' %}" href="">
+                                <a href="{% url 'CreateNewDomain' %}" title="{% trans 'Add Domains' %}" href="">
                                     <img src="{% static 'images/icons/domains.png' %}" width="65" class="mr-10">
                                 </a>
-                                <a ng-click="showCreateDomainForm()" title="{% trans 'Add Domains' %}" href=""
+                                <a href="{% url 'CreateNewDomain' %}" title="{% trans 'Add Domains' %}" href=""
                                    title="{% trans 'Add Domains' %}">
                                     <span class="h4">{% trans "Add Domains" %}</span>
                                 </a>
@@ -275,7 +275,7 @@
 
                             <div class="col-md-3 panel-body">
                                 <a href="{% url 'listCron' %}?domain={{ domain }}" target="_self" title="{% trans 'Add new Cron Job' %}"
-                                   href="" title="{% trans 'List Domains' %}">
+                                   href="" title="{% trans 'Add new Cron Job' %}">
                                     <img src="{% static 'images/icons/repeat.png' %}" width="65" class="mr-10">
                                 </a>
                                 <a href="{% url 'listCron' %}?domain={{ domain }}" target="_self" title="{% trans 'Add new Cron Job' %}"
@@ -314,7 +314,6 @@
                                              class="current-pack">{% trans "Invalid Domain (Note: You don't need to add 'http' or 'https')" %}</div>
                                     </div>
 
-
                                     <div ng-hide="installationDetailsForm" class="form-group">
                                         <label class="col-sm-3 control-label">{% trans "Select PHP" %}</label>
                                         <div class="col-sm-6">
@@ -325,7 +324,6 @@
                                             </select>
                                         </div>
                                     </div>
-
 
                                     <div ng-hide="installationDetailsForm" ng-hide="installationDetailsForm"
                                          class="form-group">
@@ -358,7 +356,6 @@
                                         </div>
                                     </div>
 
-
                                     <div ng-hide="installationDetailsForm" class="form-group">
                                         <label class="col-sm-3 control-label"></label>
                                         <div class="col-sm-4">
@@ -367,7 +364,6 @@
 
                                         </div>
                                     </div>
-
 
                                     <div ng-hide="installationProgress" class="form-group">
                                         <label class="col-sm-2 control-label"></label>

@@ -46,6 +46,14 @@ def deleteWebsite(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+def CreateNewDomain(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.CreateNewDomain(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
 def siteState(request):
     try:
         userID = request.session['userID']

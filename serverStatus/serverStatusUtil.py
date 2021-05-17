@@ -14,7 +14,7 @@ from websiteFunctions.models import Websites
 from plogical.virtualHostUtilities import virtualHostUtilities
 from plogical.sslUtilities import sslUtilities
 from plogical.vhost import vhost
-from shutil import copytree, ignore_patterns
+from shutil import ignore_patterns
 
 
 class ServerStatusUtil:
