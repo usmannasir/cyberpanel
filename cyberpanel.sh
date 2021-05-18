@@ -1094,6 +1094,12 @@ if ! grep -q "pid_max" /etc/rc.local 2>/dev/null ; then
     echo 1 > /sys/kernel/mm/ksm/run" >>/etc/rc.local
     chmod +x /etc/rc.local
   fi
+    if grep -q "nf_conntrack_max" /etc/sysctl.conf ; then
+        sysctl -w net.netfilter.nf_conntrack_max=2097152 > /dev/null
+        sysctl -w net.nf_conntrack_max=2097152 > /dev/null
+        echo "net.netfilter.nf_conntrack_max=2097152" >> /etc/sysctl.conf
+        echo "net.nf_conntrack_max=2097152" >> /etc/sysctl.conf
+    fi
     echo "fs.file-max = 65535" >>/etc/sysctl.conf
     sysctl -p >/dev/null
     echo "*                soft    nofile          65535
