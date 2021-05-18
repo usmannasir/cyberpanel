@@ -73,6 +73,15 @@ Panel_Version=${Temp_Value:12:3}
 Panel_Build=${Temp_Value:25:1}
 
 Branch_Name="v${Panel_Version}.${Panel_Build}"
+
+if [[ $Branch_Name = v*.*.* ]] ; then
+  echo -e  "\nBranch name fetched...$Branch_Name"
+else
+  echo -e "\nUnable to fetch Branch name..."
+  echo -e "\nPlease try again in few moments, if this error still happens, please contact support"
+  exit
+fi
+
 Base_Number="1.9.3"
 
 Total_RAM=$(free -m | awk '/Mem:/ { print $2 }')
