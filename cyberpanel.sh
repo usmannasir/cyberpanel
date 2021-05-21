@@ -165,7 +165,12 @@ Retry_Command() {
 # shellcheck disable=SC2034
 for i in {1..50};
 do
-  $1  && break || echo -e "\n$1 has failed for $i times\nWait for 3 seconds and try again...\n"; sleep 3;
+  if [[ "$i" = "50" ]] ; then 
+    echo "command $1 failed for 50 times, exit..."
+    exit 2
+  else
+    $1  && break || echo -e "\n$1 has failed for $i times\nWait for 3 seconds and try again...\n"; sleep 3;
+  fi 
 done
 }
 
@@ -1085,6 +1090,12 @@ if ! grep -q "pid_max" /etc/rc.local 2>/dev/null ; then
     echo 1 > /sys/kernel/mm/ksm/run" >>/etc/rc.local
     chmod +x /etc/rc.local
   fi
+  if grep -q "nf_conntrack_max" /etc/sysctl.conf ; then
+    sysctl -w net.netfilter.nf_conntrack_max=2097152 > /dev/null
+    sysctl -w net.nf_conntrack_max=2097152 > /dev/null
+    echo "net.netfilter.nf_conntrack_max=2097152" >> /etc/sysctl.conf
+    echo "net.nf_conntrack_max=2097152" >> /etc/sysctl.conf
+  fi
     echo "fs.file-max = 65535" >>/etc/sysctl.conf
     sysctl -p >/dev/null
     echo "*                soft    nofile          65535
@@ -1733,7 +1744,29 @@ if [[ "$Server_OS" = "CentOS" ]] ; then
 
   if [[ "$Server_OS_Version" = "7" ]] ; then
   #all centos 7 specific post change goes here
-  :
+    if ! yum list installed lsphp74-devel ; then
+      yum install -y lsphp74-devel
+    fi
+    if [[ ! -f /usr/local/lsws/lsphp74/lib64/php/modules/zip.so ]] ; then
+      if yum list installed libzip-devel >/dev/null 2>&1 ; then
+        yum remove -y libzip-devel
+      fi
+      yum install -y https://cyberpanel.sh/misc/libzip-0.11.2-6.el7.psychotic.x86_64.rpm
+      yum install -y https://cyberpanel.sh/misc/libzip-devel-0.11.2-6.el7.psychotic.x86_64.rpm
+      yum install lsphp74-devel
+      if [[ ! -d /usr/local/lsws/lsphp74/tmp ]]; then
+        mkdir /usr/local/lsws/lsphp74/tmp
+      fi
+      /usr/local/lsws/lsphp74/bin/pecl channel-update pecl.php.net
+      /usr/local/lsws/lsphp74/bin/pear config-set temp_dir /usr/local/lsws/lsphp74/tmp
+      if /usr/local/lsws/lsphp74/bin/pecl install zip ; then
+        echo "extension=zip.so" >/usr/local/lsws/lsphp74/etc/php.d/20-zip.ini
+        chmod 755 /usr/local/lsws/lsphp74/lib64/php/modules/zip.so
+      else
+        echo -e "\nlsphp74-zip compilation failed..."
+      fi
+    #fix compile lsphp74-zip on centos 7
+    fi
   fi
 
   if [[ "$Server_OS_Version" = "8" ]] ; then
