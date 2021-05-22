@@ -102,8 +102,6 @@ class InstallCyberPanel:
                     writeSerial.close()
 
 
-                time.sleep(50)
-
                 shutil.copy('litespeed/install.sh', 'lsws-6.0/')
                 shutil.copy('litespeed/functions.sh', 'lsws-6.0/')
 
