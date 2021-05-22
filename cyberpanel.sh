@@ -1449,6 +1449,7 @@ fi
 
 if pgrep "redis" ; then
   echo -e "\n\nRedis installed and running..."
+  touch /home/cyberpanel/redis
 fi
 }
 
