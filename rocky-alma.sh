@@ -15,7 +15,7 @@ elif echo $OUTPUT | grep -q "AlmaLinux 8" ; then
         SERVER_OS="CentOS8"
 yum install curl wget -y 1> /dev/null
 yum update curl wget ca-certificates -y 1> /dev/null
-elif echo $OUTPUT | grep -q "RockyLinux 8" ; then
+elif echo $OUTPUT | grep -q "Rocky Linux 8" ; then
         echo -e "\nDetecting Centos 8...\n"
         SERVER_OS="CentOS8"
 yum install curl wget -y 1> /dev/null
