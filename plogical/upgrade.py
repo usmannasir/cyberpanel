@@ -455,7 +455,8 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                     count = count + 1
                     if count == 3:
                         break
-                else:
+                    else:
+                        break
             ######
 
             iPath = os.listdir('/usr/local/CyberCP/public/rainloop/rainloop/v/')
