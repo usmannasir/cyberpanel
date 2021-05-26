@@ -457,7 +457,6 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                     if count == 3:
                         break
                 else:
-                    break
             ######
 
             iPath = os.listdir('/usr/local/CyberCP/public/rainloop/rainloop/v/')
@@ -1839,13 +1838,13 @@ imap_folder_list_limit = 0
             if os.path.exists(lscpdPath):
                 os.remove(lscpdPath)
 
-            command = 'cp -f /usr/local/CyberCP/lscpd-0.2.7 /usr/local/lscp/bin/lscpd-0.2.7'
+            command = 'cp -f /usr/local/CyberCP/lscpd-0.3.1 /usr/local/lscp/bin/lscpd-0.3.1'
             Upgrade.executioner(command, command, 0)
 
             command = 'rm -f /usr/local/lscp/bin/lscpd'
             Upgrade.executioner(command, command, 0)
 
-            command = 'mv /usr/local/lscp/bin/lscpd-0.2.7 /usr/local/lscp/bin/lscpd'
+            command = 'mv /usr/local/lscp/bin/lscpd-0.3.1 /usr/local/lscp/bin/lscpd'
             Upgrade.executioner(command, command, 0)
 
             command = 'chmod 755 %s' % (lscpdPath)
