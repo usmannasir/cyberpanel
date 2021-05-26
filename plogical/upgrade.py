@@ -448,7 +448,6 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             count = 0
 
             while (1):
-
                 command = 'find . -type f -exec chmod 644 {} \;'
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
