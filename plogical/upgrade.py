@@ -2495,7 +2495,7 @@ vmail
         Upgrade.executioner(command, 'stop lscpd', 0)
 
         Upgrade.fixSudoers()
-        #Upgrade.mountTemp()
+        Upgrade.mountTemp()
         Upgrade.dockerUsers()
         Upgrade.setupComposer()
 

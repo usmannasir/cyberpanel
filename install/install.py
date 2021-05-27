@@ -2212,7 +2212,7 @@ def main():
     distro = get_distro()
     checks = preFlightsChecks("/usr/local/lsws/", args.publicip, "/usr/local", cwd, "/usr/local/CyberCP", distro,
                               remotemysql, mysqlhost, mysqldb, mysqluser, mysqlpassword, mysqlport)
-    #checks.mountTemp()
+    checks.mountTemp()
 
     if args.port == None:
         port = "8090"
