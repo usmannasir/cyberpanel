@@ -19,6 +19,7 @@ class httpProc:
                 from plogical.acl import ACLManager
 
                 currentACL = ACLManager.loadedACL(userID)
+                admin = Administrator.objects.get(pk=userID)
 
                 ### Permissions Check
 
@@ -38,6 +39,7 @@ class httpProc:
                 ipData = f.read()
                 ipAddress = ipData.split('\n', 1)[0]
                 self.data['ipAddress'] = ipAddress
+                self.data['fullName'] = '%s %s' % (admin.firstName, admin.lastName)
 
                 self.data.update(currentACL)
 
