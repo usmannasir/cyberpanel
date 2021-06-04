@@ -21,7 +21,7 @@ class BackupJob(models.Model):
     websiteData = models.IntegerField()
     websiteDatabases = models.IntegerField()
     websiteDataEmails = models.IntegerField()
-    retention = models.IntegerField(default=0) # 0 being unlimited retention
+    retention = models.IntegerField(default=0)  # 0 being unlimited retention
 
 
 class JobSites(models.Model):

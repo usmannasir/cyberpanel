@@ -4,6 +4,7 @@ import os.path
 import shlex
 import subprocess
 import sys
+
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 
@@ -53,6 +54,8 @@ class IncJobs(multi.Thread):
         self.metaPath = ''
         self.path = ''
         self.reconstruct = ''
+        self.frequency = ''
+        self.retention = ''
 
     def run(self):
 
@@ -71,8 +74,7 @@ class IncJobs(multi.Thread):
             return ProcessUtilities.outputExecutioner(command).split('\n')
         else:
             key, secret = self.getAWSData()
-            command = 'export RESTIC_PASSWORD=%s AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s  && restic -r s3:s3.amazonaws.com/%s snapshots' % (
-                self.passwordFile, key, secret, self.website)
+            command = f'export RESTIC_PASSWORD={self.passwordFile} AWS_ACCESS_KEY_ID={key} AWS_SECRET_ACCESS_KEY={secret} && restic -r s3:s3.amazonaws.com/{self.website} snapshots'
             return ProcessUtilities.outputExecutioner(command).split('\n')
 
     def fetchCurrentBackups(self):
@@ -142,16 +144,22 @@ class IncJobs(multi.Thread):
                 key, secret = self.getAWSData()
 
                 # Define our excludes file for use with restic
-                backupExcludesFile = '/home/%s/backup-exclude.conf' % (self.website.domain)
-                resticBackupExcludeCMD = ' --exclude-file=%s' % (backupExcludesFile)
+                backupExcludesFile = f'/home/{self.website.domain}/backup-exclude.conf'
+                resticBackupExcludeCMD = f' --exclude-file={backupExcludesFile}'
 
-                command = 'export AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s  && restic -r s3:s3.amazonaws.com/%s backup %s --password-file %s --exclude /home/%s/backup --exclude /home/%s/incbackup' % (
-                    key, secret, self.website.domain, backupPath, self.passwordFile, self.website.domain, self.website.domain)
+                command = f'export AWS_ACCESS_KEY_ID={key} AWS_SECRET_ACCESS_KEY={secret} && restic -r s3:s3.amazonaws.com/{self.website.domain} backup {backupPath} --password-file {self.passwordFile} --exclude /home/{self.website.domain}/backup --exclude /home/{self.website.domain}/incbackup'
 
                 # If /home/%s/backup-exclude.conf file exists lets pass this to restic by appending the command to end.
                 if os.path.isfile(backupExcludesFile):
                     command = command + resticBackupExcludeCMD
                 result = ProcessUtilities.outputExecutioner(command)
+
+                # If there is a retention extraArgs['retention'] not set to False lets run a restic prune afterwards with the scheduled retention and frequency
+                if self.extraArgs['retention']:
+                    self.retention = self.extraArgs['retention']
+                    self.frequency = self.extraArgs['frequency']
+                    command = f'export AWS_ACCESS_KEY_ID={key} AWS_SECRET_ACCESS_KEY={secret} && restic -r s3:s3.amazonaws.com/{self.website.domain} --password-file {self.passwordFile} forget --keep-{self.frequency} {self.retention}'
+                    result = ProcessUtilities.outputExecutioner(command)
 
                 if result.find('saved') == -1:
                     logging.statusWriter(self.statusPath, '%s. [5009].' % (result), 1)
@@ -176,10 +184,7 @@ class IncJobs(multi.Thread):
 
                     key, secret = self.getAWSData()
 
-                    command = 'export RESTIC_PASSWORD=%s AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s  && restic -r s3:s3.amazonaws.com/%s restore %s --target %s' % (
-                        self.passwordFile,
-                        key, secret, self.website, snapshotID, self.restoreTarget)
-
+                    command = f'export RESTIC_PASSWORD={self.passwordFile} AWS_ACCESS_KEY_ID={key} AWS_SECRET_ACCESS_KEY={secret} && restic -r s3:s3.amazonaws.com/{self.website} restore {snapshotID} --target {self.restoreTarget}'
                     result = ProcessUtilities.outputExecutioner(command)
 
                     if result.find('restoring') == -1:
@@ -191,9 +196,7 @@ class IncJobs(multi.Thread):
 
                     key, secret = self.getAWSData()
 
-                    command = 'export AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s  && restic -r s3:s3.amazonaws.com/%s forget %s --password-file %s' % (
-                        key, secret, self.website, snapshotID, self.passwordFile)
-
+                    command = f'export AWS_ACCESS_KEY_ID={key} AWS_SECRET_ACCESS_KEY={secret} && restic -r s3:s3.amazonaws.com/{self.website} forget {snapshotID} --password-file {self.passwordFile}'
                     result = ProcessUtilities.outputExecutioner(command)
 
                     if result.find('removed snapshot') > -1 or result.find('deleted') > -1:
@@ -202,8 +205,7 @@ class IncJobs(multi.Thread):
                         logging.statusWriter(self.statusPath, 'Failed: %s. [5009]' % (result), 1)
                         return 0
 
-                    command = 'export AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s  && restic -r s3:s3.amazonaws.com/%s prune --password-file %s' % (
-                        key, secret, self.website, self.passwordFile)
+                    command = f'export AWS_ACCESS_KEY_ID={key} AWS_SECRET_ACCESS_KEY={secret} && restic -r s3:s3.amazonaws.com/{self.website} prune --password-file {self.passwordFile}'
 
                     ProcessUtilities.outputExecutioner(command)
                 else:
@@ -211,9 +213,7 @@ class IncJobs(multi.Thread):
 
                     key, secret = self.getAWSData()
 
-                    command = 'export AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s  && restic -r s3:s3.amazonaws.com/%s restore %s --password-file %s --target %s' % (
-                        key, secret, self.website, snapshotID, self.passwordFile, self.restoreTarget)
-
+                    command = f'export AWS_ACCESS_KEY_ID={key} AWS_SECRET_ACCESS_KEY={secret} && restic -r s3:s3.amazonaws.com/{self.website} restore {snapshotID} --password-file {self.passwordFile} --target {self.restoreTarget}'
                     result = ProcessUtilities.outputExecutioner(command)
 
                     if result.find('restoring') == -1:
@@ -233,15 +233,22 @@ class IncJobs(multi.Thread):
 
         if restore == None:
             # Define our excludes file for use with restic
-            backupExcludesFile = '/home/%s/backup-exclude.conf' % (self.website.domain)
-            resticBackupExcludeCMD = ' --exclude-file=%s' % (backupExcludesFile)
+            backupExcludesFile = f'/home/{self.website.domain}/backup-exclude.conf'
+            resticBackupExcludeCMD = f' --exclude-file={backupExcludesFile}'
 
-            command = 'restic -r %s backup %s --password-file %s --exclude %s --exclude /home/%s/backup' % (
-                self.repoPath, backupPath, self.passwordFile, self.repoPath, self.website.domain)
+            command = f'restic -r {self.repoPath} backup {backupPath} --password-file {self.passwordFile} --exclude {self.repoPath} --exclude /home/{self.website.domain}/backup'
             # If /home/%s/backup-exclude.conf file exists lets pass this to restic by appending the command to end.
             if os.path.isfile(backupExcludesFile):
                 command = command + resticBackupExcludeCMD
             result = ProcessUtilities.outputExecutioner(command)
+
+            # If there is a retention extraArgs['retention'] not set to False lets run a restic prune afterwards with the scheduled retention and frequency
+            if self.extraArgs['retention']:
+                self.retention = self.extraArgs['retention']
+                self.frequency = self.extraArgs['frequency']
+                command = f'restic -r {self.repoPath} --password-file {self.passwordFile} forget --keep-{self.frequency} {self.retention}'
+                result = ProcessUtilities.outputExecutioner(command)
+
 
             if result.find('saved') == -1:
                 logging.statusWriter(self.statusPath, '%s. [5009].' % (result), 1)
@@ -261,9 +268,9 @@ class IncJobs(multi.Thread):
             return 1
         elif delete:
 
-            repoLocation = '/home/%s/incbackup' % (self.website)
+            repoLocation = f'/home/{self.website}/incbackup'
 
-            command = 'restic -r %s forget %s --password-file %s' % (repoLocation, self.jobid.snapshotid, self.passwordFile)
+            command = f'restic -r {repoLocation} forget {self.jobid.snapshotid} --password-file {self.passwordFile}'
             result = ProcessUtilities.outputExecutioner(command)
 
             if result.find('removed snapshot') > -1 or result.find('deleted') > -1:
@@ -272,15 +279,13 @@ class IncJobs(multi.Thread):
                 logging.statusWriter(self.statusPath, 'Failed: %s. [5009]' % (result), 1)
                 return 0
 
-            command = 'restic -r %s prune --password-file %s' % (repoLocation, self.passwordFile)
+            command = f'restic -r {repoLocation} prune --password-file {self.passwordFile}'
             ProcessUtilities.outputExecutioner(command)
 
             return 1
         else:
-            repoLocation = '/home/%s/incbackup' % (self.website)
-            command = 'restic -r %s restore %s --target %s --password-file %s' % (
-                repoLocation, self.jobid.snapshotid, self.restoreTarget, self.passwordFile)
-
+            repoLocation = f'/home/{self.website}/incbackup'
+            command = f'restic -r {repoLocation} restore {self.jobid.snapshotid} --target {self.restoreTarget} --password-file {self.passwordFile}'
             result = ProcessUtilities.outputExecutioner(command)
 
             if result.find('restoring') == -1:
@@ -294,15 +299,23 @@ class IncJobs(multi.Thread):
     def sftpFunction(self, backupPath, type, restore=None, delete=None):
         if restore == None:
             # Define our excludes file for use with restic
-            backupExcludesFile = '/home/%s/backup-exclude.conf' % (self.website.domain)
-            resticBackupExcludeCMD = ' --exclude-file=%s' % (backupExcludesFile)
-            remotePath = '/home/backup/%s' % (self.website.domain)
+            backupExcludesFile = f'/home/{self.website.domain}/backup-exclude.conf'
+            resticBackupExcludeCMD = f' --exclude-file={backupExcludesFile}'
+            remotePath = f'/home/backup/{self.website.domain}'
             command = 'export PATH=${PATH}:/usr/bin && restic -r %s:%s backup %s --password-file %s --exclude %s --exclude /home/%s/backup' % (
                 self.backupDestinations, remotePath, backupPath, self.passwordFile, self.repoPath, self.website.domain)
             # If /home/%s/backup-exclude.conf file exists lets pass this to restic by appending the command to end.
             if os.path.isfile(backupExcludesFile):
                 command = command + resticBackupExcludeCMD
             result = ProcessUtilities.outputExecutioner(command)
+
+            # If there is a retention extraArgs['retention'] not set to False lets run a restic prune afterwards with the scheduled retention and frequency
+            if self.extraArgs['retention']:
+                self.retention = self.extraArgs['retention']
+                self.frequency = self.extraArgs['frequency']
+                command = f'restic -r {self.backupDestinations}:{remotePath} --password-file {self.passwordFile} forget --keep-{self.frequency} {self.retention}'
+                result = ProcessUtilities.outputExecutioner(command)
+
 
             if result.find('saved') == -1:
                 logging.statusWriter(self.statusPath, '%s. [5009].' % (result), 1)
@@ -332,7 +345,8 @@ class IncJobs(multi.Thread):
                 logging.statusWriter(self.statusPath, 'Failed: %s. [5009]' % (result), 1)
                 return 0
 
-            command = 'export PATH=${PATH}:/usr/bin && restic -r %s:%s prune --password-file %s' % (self.jobid.destination, repoLocation, self.passwordFile)
+            command = 'export PATH=${PATH}:/usr/bin && restic -r %s:%s prune --password-file %s' % (
+            self.jobid.destination, repoLocation, self.passwordFile)
             ProcessUtilities.outputExecutioner(command)
         else:
             if self.reconstruct == 'remote':
@@ -587,7 +601,6 @@ class IncJobs(multi.Thread):
 
             ## Use the meta function from backup utils for future improvements.
 
-
             if os.path.exists(ProcessUtilities.debugPath):
                 logging.writeToFile('Creating meta for %s. [IncBackupsControl.py]' % (self.website.domain))
 
@@ -793,12 +806,12 @@ Subject: %s
                 CentOSPath = '/etc/redhat-release'
 
                 if os.path.exists(CentOSPath):
-                        command = 'yum install -y yum-plugin-copr'
-                        ProcessUtilities.executioner(command)
-                        command = 'yum copr enable -y copart/restic'
-                        ProcessUtilities.executioner(command)
-                        command = 'yum install -y restic'
-                        ProcessUtilities.executioner(command)
+                    command = 'yum install -y yum-plugin-copr'
+                    ProcessUtilities.executioner(command)
+                    command = 'yum copr enable -y copart/restic'
+                    ProcessUtilities.executioner(command)
+                    command = 'yum install -y restic'
+                    ProcessUtilities.executioner(command)
 
                 else:
                     command = 'apt-get update -y'
@@ -841,8 +854,6 @@ Subject: %s
 
         if self.initiateRepo() == 0:
             return 0
-
-
 
         if self.prepareBackupMeta() == 0:
             return 0
@@ -906,5 +917,3 @@ Subject: %s
         except BaseException as msg:
             logging.statusWriter(self.statusPath, "%s [903:DeleteSnapShot][5009]" % (str(msg)), 1)
             return 0
-
-

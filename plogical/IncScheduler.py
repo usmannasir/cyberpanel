@@ -77,6 +77,13 @@ class IncScheduler():
 
                         extraArgs['websiteSSLs'] = False
 
+                        # let's let the backup job know to prune and the frequency/retention settings. 0 means unlimited
+                        if job.retention > 0:
+                            extraArgs['retention'] = job.retention
+                            extraArgs['frequency'] = job.frequency
+                        else:
+                            extraArgs['retention'] = False
+
                         startJob = IncJobs('createBackup', extraArgs)
                         startJob.start()
 
