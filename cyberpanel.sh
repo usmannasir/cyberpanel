@@ -73,6 +73,15 @@ Panel_Version=${Temp_Value:12:3}
 Panel_Build=${Temp_Value:25:1}
 
 Branch_Name="v${Panel_Version}.${Panel_Build}"
+
+if [[ $Branch_Name = v*.*.* ]] ; then
+  echo -e  "\nBranch name fetched...$Branch_Name"
+else
+  echo -e "\nUnable to fetch Branch name..."
+  echo -e "\nPlease try again in few moments, if this error still happens, please contact support"
+  exit
+fi
+
 Base_Number="1.9.3"
 
 Total_RAM=$(free -m | awk '/Mem:/ { print $2 }')
@@ -228,6 +237,16 @@ if [[ ! -f /etc/os-release ]] ; then
   echo -e "Unable to detect the operating system...\n"
   exit
 fi
+
+# Reference: https://unix.stackexchange.com/questions/116539/how-to-detect-the-desktop-environment-in-a-bash-script
+if [ -z "$XDG_CURRENT_DESKTOP" ]; then
+    echo "Desktop OS not detected. Proceeding"
+else
+    echo "$XDG_CURRENT_DESKTOP defined appears to be a desktop OS. Bailing as CyberPanel is incompatible."
+    echo -e "\nCyberPanel is supported on server OS types only. Such as Ubuntu 18.04 x86_64, Ubuntu 20.04 x86_64, Ubuntu 20.10 x86_64, CentOS 7.x, CentOS 8.x, AlmaLinux 8.x and CloudLinux 7.x...\n"
+    exit
+fi
+
 
 if ! uname -m | grep -q 64 ; then
   echo -e "x64 system is required...\n"
@@ -455,7 +474,7 @@ else
         Admin_Pass="1234567"
       else
         if [[ ${#1} -lt 8 ]]; then
-          echo -e "\nPassword lenth less than 8 digital, please choose a more complicated password.\n"
+          echo -e "\nPassword length less than 8 digital, please choose a more complicated password.\n"
           exit
         fi
         Admin_Pass="${1}"
@@ -1786,6 +1805,7 @@ fi
 
 # If valid hostname is set that resolves externally we can issue an ssl. This will create the hostname as a website so we can issue the SSL and do our first login without SSL warnings or exceptions needed.
 HostName=$(hostname --fqdn); [ -n "$(dig @1.1.1.1 +short "$HostName")" ]  &&  echo "$HostName resolves to valid IP. Setting up hostname SSL" && cyberpanel createWebsite --package Default --owner admin --domainName $(hostname --fqdn) --email root@localhost --php 7.4 && cyberpanel hostNameSSL --domainName $(hostname --fqdn)
+
 
 }
 
