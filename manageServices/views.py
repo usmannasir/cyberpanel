@@ -18,7 +18,11 @@ def managePowerDNS(request):
     data = {}
     data['status'] = 1
 
-    pdnsStatus = PDNSStatus.objects.get(pk=1)
+    try:
+        pdnsStatus = PDNSStatus.objects.get(pk=1)
+    except:
+        pdnsStatus = PDNSStatus(type='NATIVE', serverStatus=1)
+        pdnsStatus.save()
 
     if pdnsStatus.type == 'MASTER':
         counter = 1
