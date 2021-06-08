@@ -113,7 +113,7 @@ echo -e "\n${1}=${2}\n" >> /tmp/cyberpanel_debug.log
 Debug_Log2() {
 Check_Server_IP "$@" >/dev/null 2>&1
 echo -e "\n${1}" >> /var/log/installLogs.txt
-curl -d '{"ipAddress": "'"$Server_IP"'", "InstallCyberPanelStatus": "'"$1"'"}' -H "Content-Type: application/json" -X POST https://cloud.cyberpanel.net/servers/RecvData  >/dev/null 2>&1
+curl --max-time 20 -d '{"ipAddress": "'"$Server_IP"'", "InstallCyberPanelStatus": "'"$1"'"}' -H "Content-Type: application/json" -X POST https://cloud.cyberpanel.net/servers/RecvData  >/dev/null 2>&1
 }
 
 Branch_Check() {
@@ -474,7 +474,7 @@ else
         Admin_Pass="1234567"
       else
         if [[ ${#1} -lt 8 ]]; then
-          echo -e "\nPassword lenth less than 8 digital, please choose a more complicated password.\n"
+          echo -e "\nPassword length less than 8 digital, please choose a more complicated password.\n"
           exit
         fi
         Admin_Pass="${1}"
@@ -732,7 +732,7 @@ elif [[ $Tmp_Input =~ ^(s|S) ]]; then
     exit
   fi
   if [[ ${#Tmp_Input} -lt 8 ]]; then
-    echo -e "\nPassword lenth less than 8 digital, please choose a more complicated password.\n"
+    echo -e "\nPassword length less than 8 digital, please choose a more complicated password.\n"
     exit
   fi
   Tmp_Input1=$Tmp_Input
@@ -1004,7 +1004,7 @@ else
   update-locale LC_ALL="en_US.UTF-8"
 fi
 
-Debug_Log2 "Installing required virtual enviroment,3"
+Debug_Log2 "Installing required virtual environment,3"
 
 export LC_CTYPE=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
@@ -1051,7 +1051,7 @@ Debug_Log2 "Necessary components installed..,5"
 }
 
 Pre_Install_System_Tweak() {
-Debug_Log2 "Setting up sytem tweak...,20"
+Debug_Log2 "Setting up system tweak...,20"
 Line_Number=$(grep -n "127.0.0.1" /etc/hosts | cut -d: -f 1)
 My_Hostname=$(hostname)
 
@@ -1211,8 +1211,8 @@ else
 fi
 
 if ./lshttpd -V |& grep "ERROR" || ./lshttpd -V |& grep "expire in 0 days" ; then
-  echo -e "\n\nIt apeears to have some issue with license , please check above result..."
-  Debug_Log2 "It appears to have some issue with LiteSpeed License, make sure you are using correct serial key. [404]"
+  echo -e "\n\nThere appears to be an issue with license , please check above result..."
+  Debug_Log2 "There appears to be an issue with LiteSpeed License, make sure you are using correct serial key. [404]"
   exit
 fi
 
