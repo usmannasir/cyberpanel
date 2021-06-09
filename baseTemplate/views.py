@@ -66,6 +66,8 @@ def getAdminStatus(request):
 
 def getSystemStatus(request):
     try:
+        val = request.session['userID']
+        currentACL = ACLManager.loadedACL(val)
         HTTPData = SystemInformation.getSystemInformation()
         json_data = json.dumps(HTTPData)
         return HttpResponse(json_data)
