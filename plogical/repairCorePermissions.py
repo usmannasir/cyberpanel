@@ -94,9 +94,8 @@ chmod_digit('/usr/local/lscp/cyberpanel/logs/access.log', 640)
 mkdir_p('/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/')
 rainloopinipath = '/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/application.ini'
 
-os.mkdir('/usr/local/CyberCP/public/phpmyadmin/tmp')
-
-command = 'chown -R lscpd:lscpd /usr/local/CyberCP/public/phpmyadmin'
+mkdir_p('/usr/local/CyberCP/public/phpmyadmin/tmp')
+recursive_chown('/usr/local/CyberCP/public/phpmyadmin', 'lscpd', 'lscpd')
 
 # Create Sieve files and paths
 os.makedirs("/etc/dovecot/sieve/global", exist_ok=True)
@@ -111,8 +110,9 @@ sievefiles = [
 ]
 
 for file in sievefiles:
-    touch(file, 666)
-    chown(file, 'vmail', 'mail')
+   if not os.access(file, os.R_OK):
+         touch(file, 666)
+   chown(file, 'vmail', 'mail')
 
 recursive_chown('/etc/dovecot/sieve', 'vmail')
 
@@ -161,13 +161,10 @@ chmod_digit(dovecotmysql, 640)
 chown(dovecotmysql, -1, 'dovecot')
 
 rainloop_dir = '/usr/local/CyberCP/public/rainloop'
-
-os.chdir("/usr/local/CyberCP/public/rainloop")
-
 recursive_permissions(rainloop_dir, 755, 644)
+recursive_chown('/usr/local/lscp/cyberpanel/rainloop/data', 'lscpd', 'lscpd')
 
 recursive_chown('/usr/local/lscp/modsec', 'lscpd', 'lscpd')
-
 chmod_digit('/usr/local/lscp/bin/lscpdctrl', 775)
 
 ##
@@ -208,4 +205,4 @@ command = "chmod +x /usr/local/CyberCP/cli/cyberPanel.py"
 #
 # chmod_digit(os.path.join(self.cwd, 'composer.sh'), 775)
 
-recursive_chown('/usr/local/lscp/cyberpanel/rainloop/data', 'lscpd', 'lscpd')
+
