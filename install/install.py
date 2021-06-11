@@ -58,6 +58,8 @@ def get_distro():
             return cent8
         if data.find('AlmaLinux release 8') > -1:
             return cent8
+        if data.find('Rocky Linux release 8') > -1:
+            return cent8
 
     else:
         logging.InstallLog.writeToFile("Can't find linux release file - fatal error")
