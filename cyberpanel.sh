@@ -5,7 +5,7 @@
 #set -u
 
 
-#CyberPanel installer script for CentOS 7.X, CentOS 8.X, CloudLinux 7.X, Ubuntu 18.04, Ubuntu 20.04 , Ubuntu 20.10 and AlmaLinux 8.X
+#CyberPanel installer script for CentOS 7.X, CentOS 8.X, CloudLinux 7.X, RockyLinux 8.X, Ubuntu 18.04, Ubuntu 20.04 , Ubuntu 20.10 and AlmaLinux 8.X
 #For whoever may edit this script, please follow :
 #Please use Pre_Install_xxx() and Post_Install_xxx() if you want to something respectively before or after the panel installation
 #and update below accordingly
@@ -16,7 +16,7 @@
 #Set_Default_Variables() --->  set some default variable for later use
 #Check_Root()  ---> check for root
 #Check_Server_IP()  ---> check for server IP and geolocation at country level
-#Check_OS() ---> check system , support on centos7/8 ubutnu18/20 and cloudlinux 7 , 8 is untested.
+#Check_OS() ---> check system , support on centos7/8, rockylinux 8.x , almalinux 8.x ubutnu18/20 and cloudlinux 7 , 8 is untested.
 #Check_Virtualization()  ---> check for virtualizaon , #LXC not supported# , some edit needed on OVZ
 #Check_Panel() --->  check to make sure no other panel is installed
 #Check_Process() ---> check no other process like Apache is running
@@ -174,7 +174,12 @@ Retry_Command() {
 # shellcheck disable=SC2034
 for i in {1..50};
 do
-  $1  && break || echo -e "\n$1 has failed for $i times\nWait for 3 seconds and try again...\n"; sleep 3;
+  if [[ "$i" = "50" ]] ; then 
+    echo "command $1 failed for 50 times, exit..."
+    exit 2
+  else
+    $1  && break || echo -e "\n$1 has failed for $i times\nWait for 3 seconds and try again...\n"; sleep 3;
+  fi 
 done
 }
 
@@ -240,7 +245,7 @@ fi
 
 # Reference: https://unix.stackexchange.com/questions/116539/how-to-detect-the-desktop-environment-in-a-bash-script
 if [ -z "$XDG_CURRENT_DESKTOP" ]; then
-    echo "Desktop OS not detected. Proceeding"
+    echo -e "Desktop OS not detected. Proceeding\n"
 else
     echo "$XDG_CURRENT_DESKTOP defined appears to be a desktop OS. Bailing as CyberPanel is incompatible."
     echo -e "\nCyberPanel is supported on server OS types only. Such as Ubuntu 18.04 x86_64, Ubuntu 20.04 x86_64, Ubuntu 20.10 x86_64, CentOS 7.x, CentOS 8.x, AlmaLinux 8.x and CloudLinux 7.x...\n"
@@ -261,10 +266,12 @@ elif grep -q -E "CloudLinux 7|CloudLinux 8" /etc/os-release ; then
   Server_OS="CloudLinux"
 elif grep -q -E "Ubuntu 18.04|Ubuntu 20.04|Ubuntu 20.10" /etc/os-release ; then
   Server_OS="Ubuntu"
+elif grep -q -E "Rocky Linux" /etc/os-release ; then
+  Server_OS="RockyLinux"
 else
   echo -e "Unable to detect your system..."
-  echo -e "\nCyberPanel is supported on Ubuntu 18.04 x86_64, Ubuntu 20.04 x86_64, Ubuntu 20.10 x86_64, CentOS 7.x, CentOS 8.x, AlmaLinux 8.x and CloudLinux 7.x...\n"
-  Debug_Log2 "CyberPanel is supported on Ubuntu 18.04 x86_64, Ubuntu 20.04 x86_64, Ubuntu 20.10 x86_64, CentOS 7.x, CentOS 8.x, AlmaLinux 8.x and CloudLinux 7.x... [404]"
+  echo -e "\nCyberPanel is supported on Ubuntu 18.04 x86_64, Ubuntu 20.04 x86_64, Ubuntu 20.10 x86_64, CentOS 7.x, CentOS 8.x, AlmaLinux 8.x, RockyLinux 8.x, CloudLinux 7.x, CloudLinux 8.x...\n"
+  Debug_Log2 "CyberPanel is supported on Ubuntu 18.04 x86_64, Ubuntu 20.04 x86_64, Ubuntu 20.10 x86_64, CentOS 7.x, CentOS 8.x, AlmaLinux 8.x, RockyLinux 8.x, CloudLinux 7.x, CloudLinux 8.x... [404]"
   exit
 fi
 
@@ -273,10 +280,10 @@ Server_OS_Version=$(grep VERSION_ID /etc/os-release | awk -F[=,] '{print $2}' | 
 
 echo -e "System: $Server_OS $Server_OS_Version detected...\n"
 
-if [[ $Server_OS = "CloudLinux" ]] || [[ "$Server_OS" = "AlmaLinux" ]] ; then
+if [[ $Server_OS = "CloudLinux" ]] || [[ "$Server_OS" = "AlmaLinux" ]] || [[ "$Server_OS" = "RockyLinux" ]] ; then
   Server_OS="CentOS"
   #CloudLinux gives version id like 7.8 , 7.9 , so cut it to show first number only
-  #treat CL and Alma as CentOS
+  #treat CL , Rocky and Alma as CentOS
 fi
 
 if [[ "$Debug" = "On" ]] ; then
@@ -426,7 +433,7 @@ echo -e "\nThis will install LiteSpeed Enterise , replace LICENSE_KEY to actual 
 
 Check_Argument() {
 if  [[ "$#" = "0" ]] || [[ "$#" = "1" && "$1" = "--debug" ]] || [[ "$#" = "1" && "$1" = "--mirror" ]]; then
-  echo -e "\nInitializing...\n"
+  echo -e "\nInitialized...\n"
 else
   if [[ $1 = "help" ]]; then
     Show_Help
@@ -573,25 +580,20 @@ echo -e "		CyberPanel Installer v$Panel_Version.$Panel_Build
 
 1. Install CyberPanel.
 
-2. Addons and Miscellaneous
-
-3. Exit.
+2. Exit.
 
 "
-read -r -p "  Please enter the number[1-3]: " Input_Number
+read -r -p "  Please enter the number[1-2]: " Input_Number
 echo ""
 case "$Input_Number" in
   1)
   Interactive_Mode_Set_Parameter
   ;;
   2)
-  Interactive_Mode_Addon
-  ;;
-  3)
   exit
   ;;
   *)
-  echo -e "  Please enter the right number [1-3]\n"
+  echo -e "  Please enter the right number [1-2]\n"
   exit
   ;;
 esac
@@ -976,7 +978,7 @@ if [[ "$Server_OS" = "CentOS" ]] ; then
     yum -y groupinstall development
       Check_Return
   elif [[ "$Server_OS_Version" = "8" ]] ; then
-    dnf install -y zip wget strace net-tools curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-devel curl-devel git platform-python-devel tar socat python3 zip unzip bind-utils
+    dnf install -y libnsl zip wget strace net-tools curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-devel curl-devel git platform-python-devel tar socat python3 zip unzip bind-utils
       Check_Return
     dnf install -y gpgme-devel
       Check_Return
@@ -985,6 +987,9 @@ if [[ "$Server_OS" = "CentOS" ]] ; then
 else
   apt update -y
   DEBIAN_FRONTEND=noninteractive apt upgrade -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold"
+	if [[ "$Server_Provider" = "Alibaba Cloud" ]] ; then 
+    apt install -y --allow-downgrades libgnutls30=3.6.13-2ubuntu1.3
+  fi 
   DEBIAN_FRONTEND=noninteracitve apt install -y dnsutils net-tools htop telnet libcurl4-gnutls-dev libgnutls28-dev libgcrypt20-dev libattr1 libattr1-dev liblzma-dev libgpgme-dev libmariadbclient-dev libcurl4-gnutls-dev libssl-dev nghttp2 libnghttp2-dev idn2 libidn2-dev libidn2-0-dev librtmp-dev libpsl-dev nettle-dev libgnutls28-dev libldap2-dev libgssapi-krb5-2 libk5crypto3 libkrb5-dev libcomerr2 libldap2-dev virtualenv git socat vim unzip zip
     Check_Return
 
@@ -1078,7 +1083,13 @@ if [[ "$Server_OS" = "CentOS" ]] ; then
     fi
     #CentOS 7 specific change
     if [[ "$Server_OS_Version" = "8" ]] ; then
-    :
+	      if grep -q -E "Rocky Linux" /etc/os-release ; then 
+        if [[ "$Server_Country" = "CN" ]] ; then 
+          sed -i 's|rpm -Uvh http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el8.noarch.rpm|curl -o /etc/yum.repos.d/litespeed.repo https://cyberpanel.sh/litespeed/litespeed_cn.repo|g' install.py
+        else
+          sed -i 's|rpm -Uvh http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el8.noarch.rpm|curl -o /etc/yum.repos.d/litespeed.repo https://cyberpanel.sh/litespeed/litespeed.repo|g' install.py
+        fi 
+      fi
     fi
     #CentOS 8 specific change
 
@@ -1103,6 +1114,12 @@ if ! grep -q "pid_max" /etc/rc.local 2>/dev/null ; then
     echo "echo 1000000 > /proc/sys/kernel/pid_max
     echo 1 > /sys/kernel/mm/ksm/run" >>/etc/rc.local
     chmod +x /etc/rc.local
+  fi
+	if grep -q "nf_conntrack_max" /etc/sysctl.conf ; then
+    sysctl -w net.netfilter.nf_conntrack_max=2097152 > /dev/null
+    sysctl -w net.nf_conntrack_max=2097152 > /dev/null
+    echo "net.netfilter.nf_conntrack_max=2097152" >> /etc/sysctl.conf
+    echo "net.nf_conntrack_max=2097152" >> /etc/sysctl.conf
   fi
     echo "fs.file-max = 65535" >>/etc/sysctl.conf
     sysctl -p >/dev/null
@@ -1448,6 +1465,7 @@ fi
 
 if pgrep "redis" ; then
   echo -e "\n\nRedis installed and running..."
+  touch /home/cyberpanel/redis
 fi
 }
 
