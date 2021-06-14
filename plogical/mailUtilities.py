@@ -1238,6 +1238,15 @@ class MailServerManagerUtils(multi.Thread):
 
                 command = "systemctl restart dovecot"
                 ProcessUtilities.executioner(command)
+
+            ## For ubuntu 20
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
+
+                command = "sed -i 's|daemon_directory = /usr/libexec/postfix|daemon_directory = /usr/lib/postfix/sbin|g' /etc/postfix/main.cf"
+                ProcessUtilities.executioner(command)
+
+
         except BaseException as msg:
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
                                                       '%s [setup_postfix_dovecot_config][404]' % (
@@ -1572,7 +1581,6 @@ milter_default_action = accept
             return 0, 'No valid SSL on port 993.'
         else:
             return 1, 'All checks are OK.'
-
 
 
 def main():
