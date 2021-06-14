@@ -2074,6 +2074,8 @@ echo $oConfig->Save() ? 'Done' : 'Error';
     def AutoUpgradeAcme():
         command = '/root/.acme.sh/acme.sh --upgrade --auto-upgrade'
         Upgrade.executioner(command, command, 0)
+        command = '/root/.acme.sh/acme.sh --set-default-ca  --server  letsencrypt'
+        Upgrade.executioner(command, command, 0)
 
     @staticmethod
     def installPHP73():
