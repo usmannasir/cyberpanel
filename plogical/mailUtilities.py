@@ -818,6 +818,29 @@ class MailServerManagerUtils(multi.Thread):
                 command = 'apt-get -y remove postfix'
                 ProcessUtilities.executioner(command)
 
+            ### On Ubuntu 18 find if old dovecot and remove
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+                try:
+
+                    command = 'apt-get purge dovecot* -y'
+                    os.system(command)
+
+                    command = 'apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 18A348AEED409DA1'
+                    ProcessUtilities.executioner(command)
+
+                    writeToFile = open('/etc/apt/sources.list.d/dovecot.list', 'a')
+                    writeToFile.writelines('deb [arch=amd64] https://repo.dovecot.org/ce-2.3-latest/ubuntu/bionic bionic main\n')
+                    writeToFile.close()
+
+                    command = 'apt update'
+                    ProcessUtilities.executioner(command)
+
+                except:
+                    pass
+
+            ##
+
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Re-installing postfix..,10')
 
             if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
@@ -834,6 +857,8 @@ class MailServerManagerUtils(multi.Thread):
                 command = 'dnf install --enablerepo=gf-plus postfix3 postfix3-mysql -y'
                 ProcessUtilities.executioner(command)
             else:
+
+
                 import socket
                 command = 'apt-get install -y debconf-utils'
                 ProcessUtilities.executioner(command)
@@ -856,12 +881,13 @@ class MailServerManagerUtils(multi.Thread):
 
             if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
                 command = 'yum --enablerepo=gf-plus -y install dovecot23 dovecot23-mysql'
+                ProcessUtilities.executioner(command)
             elif ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 command = 'dnf install --enablerepo=gf-plus dovecot23 dovecot23-mysql -y'
+                ProcessUtilities.executioner(command)
             else:
-                command = 'apt-get -y install dovecot-mysql dovecot-imapd dovecot-pop3d'
-
-            ProcessUtilities.executioner(command)
+                command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install dovecot-mysql dovecot-imapd dovecot-pop3d'
+                os.system(command)
 
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
                                                       'Postfix/dovecot reinstalled.,40')
