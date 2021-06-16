@@ -696,7 +696,7 @@ class BackupManager:
                     finalDic['port'] = "22"
 
                 try:
-                    finalDic['user'] = data['user']
+                    finalDic['user'] = data['userName']
                 except:
                     finalDic['user'] = "root"
 
