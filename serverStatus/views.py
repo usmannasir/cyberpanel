@@ -33,7 +33,6 @@ def serverStatusHome(request):
                     None, 'admin')
     return proc.render()
 
-
 def litespeedStatus(request):
     try:
         userID = request.session['userID']
@@ -151,7 +150,6 @@ def getFurtherDataFromLogFile(request):
                   "error": "Could not fetch data from log file, please see CyberCP main log file through command line."}
         logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[getFurtherDataFromLogFile]")
         return HttpResponse("Not Logged in as admin")
-
 
 def services(request):
     data = {}
