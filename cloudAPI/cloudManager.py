@@ -1061,7 +1061,7 @@ class CloudManager:
             if currentACL['admin'] == 0:
                 return self.ajaxPre(0, 'Only administrators can see MySQL status.')
 
-            finalData = mysqlUtilities.shfetchRamowStatus()
+            finalData = mysqlUtilities.showStatus()
 
             finalData = json.dumps(finalData)
             return HttpResponse(finalData)
