@@ -23,7 +23,7 @@ elif [ "$OS" = "NAME=\"CloudLinux\"" ]; then
 
 fi
 
-sed -i '/\/^Received:\/ HOLD/d' /etc/postfix/header_checks
+sed -i 's/\/^Received:\/ HOLD/\/^Received:\/ IGNORE/g' /etc/postfix/header_checks
 rm -rf /etc/MailScanner
 rm -rf /usr/share/MailScanner
 rm -rf /usr/local/CyberCP/public/mailwatch
