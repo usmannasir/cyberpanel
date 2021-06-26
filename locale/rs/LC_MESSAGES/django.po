@@ -448,12 +448,12 @@ msgstr "ID"
 #: mailServer/templates/mailServer/emailForwarding.html:101
 #: mailServer/templates/mailServer/emailForwarding.html:119
 msgid "Destination"
-msgstr "Дестинация"
+msgstr "Дестинациja"
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:152
 #: backup/templates/backup/backupSchedule.html:104
 msgid "Frequency"
-msgstr "Честота"
+msgstr "Учесталост"
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:153
 #: IncBackups/templates/IncBackups/createBackup.html:130
@@ -479,13 +479,13 @@ msgstr "Честота"
 #: websiteFunctions/templates/websiteFunctions/listCron.html:65
 #: websiteFunctions/templates/websiteFunctions/website.html:497
 msgid "Delete"
-msgstr "Изтрий"
+msgstr "Обриши"
 
 #: IncBackups/templates/IncBackups/createBackup.html:3
 #, fuzzy
 #| msgid "Cancel Backup"
 msgid "Create Incremental Backup"
-msgstr "Откажи Архив"
+msgstr "Откажи Архивирање"
 
 #: IncBackups/templates/IncBackups/createBackup.html:13
 #: IncBackups/templates/IncBackups/createBackup.html:23
@@ -493,20 +493,20 @@ msgstr "Откажи Архив"
 #: backup/templates/backup/backup.html:4 backup/templates/backup/backup.html:14
 #: backup/templates/backup/backup.html:21
 msgid "Back up Website"
-msgstr "Архивирай Страница"
+msgstr "Архивирај Сајт"
 
 #: IncBackups/templates/IncBackups/createBackup.html:15
 #: IncBackups/templates/IncBackups/restoreRemoteBackups.html:17
 #: backup/templates/backup/backup.html:14
 #: backup/templates/backup/restore.html:14
 msgid "Backup Docs"
-msgstr "Архив"
+msgstr "Документација о Архивирању"
 
 #: IncBackups/templates/IncBackups/createBackup.html:17
 #, fuzzy
 #| msgid "This page can be used to Back up your websites"
 msgid "This page can be used to create incremental backups for your websites."
-msgstr "От тази страница може да направите архив на Вашите страници"
+msgstr "На овој страници можете направити Архиве ваших сајтова"
 
 #: IncBackups/templates/IncBackups/createBackup.html:33
 #: IncBackups/templates/IncBackups/restoreRemoteBackups.html:35
@@ -528,7 +528,7 @@ msgstr "От тази страница може да направите архи
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:28
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:29
 msgid "Select Website"
-msgstr "Избери Страница"
+msgstr "Избери Сајт"
 
 #: IncBackups/templates/IncBackups/createBackup.html:113
 #: backup/templates/backup/backup.html:81
@@ -537,20 +537,20 @@ msgstr "Избери Страница"
 #: userManagment/templates/userManagment/createACL.html:352
 #: userManagment/templates/userManagment/modifyACL.html:356
 msgid "Create Back up"
-msgstr "Създай Архив"
+msgstr "Направи Архиву"
 
 #: IncBackups/templates/IncBackups/createBackup.html:128
 #: IncBackups/templates/IncBackups/restoreRemoteBackups.html:98
 #: backup/templates/backup/backup.html:104
 #: emailMarketing/templates/emailMarketing/sendEmails.html:152
 msgid "Date"
-msgstr "Дата"
+msgstr "Датум"
 
 #: IncBackups/templates/IncBackups/createBackup.html:129
 #: backup/templates/backup/index.html:46
 #: backup/templates/backup/restore.html:45
 msgid "Restore"
-msgstr "Възстанови"
+msgstr "Враћање података"
 
 #: IncBackups/templates/IncBackups/createBackup.html:161
 #: emailMarketing/templates/emailMarketing/sendEmails.html:151
@@ -566,42 +566,42 @@ msgstr ""
 #: dns/templates/dns/addDeleteDNSRecords.html:327
 #: pluginHolder/templates/pluginHolder/plugins.html:29
 msgid "Type"
-msgstr "Вид"
+msgstr "Тип"
 
 #: IncBackups/templates/IncBackups/createBackup.html:165
 #: websiteFunctions/templates/websiteFunctions/listCron.html:52
 msgid "Action"
-msgstr "Действие"
+msgstr "Акција"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:3
 #: backup/templates/backup/backupDestinations.html:3
 #: backup/templates/backup/backupDestinations.html:14
 msgid "Set up Back up Destinations"
-msgstr "Постави дестинация за Архив"
+msgstr "Постави одредиште за Архивирање"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:14
 #, fuzzy
 #| msgid "Set up Back up Destinations"
 msgid "Set up Incremental Back up Destinations"
-msgstr "Постави дестинация за Архив"
+msgstr "Постави одредиште за Архивирање"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:20
 #, fuzzy
 #| msgid "On this page you can set up your Back up destinations. (SFTP)"
 msgid "On this page you can set up your Back up destinations. (SFTP and AWS)"
-msgstr "От тази страница може да настройте дестинацията за архивите (SFTP)"
+msgstr "На овој страни можете подесити одредиште за Архиве (SFTP)"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:26
 #, fuzzy
 #| msgid "Set up Back up Destinations"
 msgid "Set up Back up Destinations."
-msgstr "Постави дестинация за Архив"
+msgstr "Постави одредиште за Архиве."
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:35
 #, fuzzy
 #| msgid "Select Website"
 msgid "Select Type"
-msgstr "Избери Страница"
+msgstr "Избери Сајт"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:47
 #: backup/templates/backup/backupDestinations.html:30
@@ -611,7 +611,7 @@ msgstr "Избери Страница"
 #: dns/templates/dns/createNameServer.html:71
 #: firewall/templates/firewall/firewall.html:122
 msgid "IP Address"
-msgstr "IP Адрес"
+msgstr "IP Адреса"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:54
 #: IncBackups/templates/IncBackups/restoreRemoteBackups.html:58
@@ -630,7 +630,7 @@ msgstr "IP Адрес"
 #: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:56
 #: websiteFunctions/templates/websiteFunctions/sshAccess.html:33
 msgid "Password"
-msgstr "Парола"
+msgstr "Лозинка"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:61
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:92
@@ -666,7 +666,7 @@ msgstr ""
 #, fuzzy
 #| msgid "Cancel Backup"
 msgid "Restore Remote Incremental Backups"
-msgstr "Откажи Архив"
+msgstr "Откажи Архивирање"
 
 #: IncBackups/templates/IncBackups/restoreRemoteBackups.html:19
 #, fuzzy
@@ -674,8 +674,8 @@ msgstr "Откажи Архив"
 msgid ""
 "This page can be used to restore remote incremental backups for your "
 "websites."
-msgstr "От тази страница може да направите архив на Вашите страници"
-
+msgstr "На овој страни можете вратити предашње стање из Архива за ваше "
+"сајтове."
 #: IncBackups/templates/IncBackups/restoreRemoteBackups.html:69
 msgid "Fetch Restore Points"
 msgstr ""
@@ -695,7 +695,7 @@ msgstr ""
 #: websiteFunctions/templates/websiteFunctions/installWordPress.html:56
 #: websiteFunctions/templates/websiteFunctions/website.html:293
 msgid "Path"
-msgstr "Път"
+msgstr "Путања"
 
 #: IncBackups/templates/IncBackups/restoreRemoteBackups.html:101
 #: dockerManager/templates/dockerManager/viewContainer.html:108
@@ -709,19 +709,19 @@ msgstr "Път"
 #: serverStatus/templates/serverStatus/topProcesses.html:201
 #: userManagment/templates/userManagment/listUsers.html:37
 msgid "Actions"
-msgstr "Действия"
+msgstr "Акције"
 
 #: WebTerminal/templates/WebTerminal/WebTerminal.html:3
 #, fuzzy
 #| msgid "Domains - CyberPanel"
 msgid "Terminal - CyberPanel"
-msgstr "Домейни - CyberPanel"
+msgstr "Домени - CyberPanel"
 
 #: WebTerminal/templates/WebTerminal/WebTerminal.html:16
 #: baseTemplate/templates/baseTemplate/index.html:641
 #: baseTemplate/templates/baseTemplate/index.html:650
 msgid "Terminal"
-msgstr ""
+msgstr "Терминал"
 
 #: WebTerminal/templates/WebTerminal/WebTerminal.html:18
 msgid "Web Terminal Docs"
@@ -729,16 +729,16 @@ msgstr ""
 
 #: WebTerminal/templates/WebTerminal/WebTerminal.html:19
 msgid "Execute your terminal commands."
-msgstr ""
+msgstr "Изврши команде у терминалу."
 
 #: WebTerminal/templates/WebTerminal/WebTerminal.html:26
 #: baseTemplate/templates/baseTemplate/index.html:643
 msgid "Web Terminal"
-msgstr ""
+msgstr "Web Терминал"
 
 #: WebTerminal/templates/WebTerminal/WebTerminal.html:28
 msgid "Reboot SSH Server"
-msgstr ""
+msgstr "Рестарт SSH Сервиса"
 
 #: backup/templates/backup/backup.html:15
 msgid "This page can be used to Back up your websites"
@@ -748,13 +748,13 @@ msgstr "От тази страница може да направите архи
 #: baseTemplate/templates/baseTemplate/homePage.html:12
 #: filemanager/templates/filemanager/index.html:135
 msgid "Home"
-msgstr "Начало"
+msgstr "Почетна"
 
 #: backup/templates/backup/backup.html:60
 #: backup/templates/backup/restore.html:62
 #: filemanager/templates/filemanager/index.html:158
 msgid "File Name"
-msgstr "Първо Име"
+msgstr "Назив Фајла"
 
 #: backup/templates/backup/backup.html:61
 #: backup/templates/backup/backup.html:106
@@ -772,46 +772,46 @@ msgstr "Статус"
 #: backup/templates/backup/backup.html:66
 #: serverStatus/templates/serverStatus/topProcesses.html:52
 msgid "Running"
-msgstr "Активен"
+msgstr "У току"
 
 #: backup/templates/backup/backup.html:88
 msgid "Cancel Backup"
-msgstr "Откажи Архив"
+msgstr "Откажи Архивирање"
 
 #: backup/templates/backup/backup.html:103
 msgid "File"
-msgstr "Файл"
+msgstr "Фајл"
 
 #: backup/templates/backup/backup.html:105
 #: filemanager/templates/filemanager/index.html:204
 #: ftp/templates/ftp/listFTPAccounts.html:125
 msgid "Size"
-msgstr "Размер"
+msgstr "Величина"
 
 #: backup/templates/backup/backup.html:131
 msgid "Cannot delete website, Error message:  "
-msgstr "Страницата не може да бъде премахната. Съобщение за грешка:"
+msgstr "Сајт не може бити обрисан, Грешка: "
 
 #: backup/templates/backup/backup.html:135
 msgid "Successfully Deleted"
-msgstr "Успешно изтрита"
+msgstr "Успешно Обрисано"
 
 #: backup/templates/backup/backupDestinations.html:15
 msgid "On this page you can set up your Back up destinations. (SFTP)"
-msgstr "От тази страница може да настройте дестинацията за архивите (SFTP)"
+msgstr "На овој страници можете подесити локације за Архивирање (SFTP)"
 
 #: backup/templates/backup/backupDestinations.html:21
 msgid "Set up Back up Destinations (SSH port should be 22 on backup server)"
-msgstr "Добави дестинация ( SSH порт трябва да бъде 22)"
+msgstr "Постави дестинацију за архиве ( SSH порт треба бити 22)"
 
 #: backup/templates/backup/backupDestinations.html:68
 #: backup/templates/backup/backupDestinations.html:72
 msgid "Connection to"
-msgstr "Връзка към"
+msgstr "Повезивање на"
 
 #: backup/templates/backup/backupDestinations.html:68
 msgid "failed. Please delete and re-add. "
-msgstr "неуспешно. Моля премахнете и добавете отново."
+msgstr "неуспешно. Молимо вас обришите и покушајте поново."
 
 #: backup/templates/backup/backupDestinations.html:72
 msgid "successful."
@@ -819,11 +819,11 @@ msgstr "успешно"
 
 #: backup/templates/backup/backupDestinations.html:76
 msgid "Cannot add destination. Error message:"
-msgstr "Дестинацията не е добавена, защото:"
+msgstr "Дестинација није додата. Грешка:"
 
 #: backup/templates/backup/backupDestinations.html:80
 msgid "Destination Added."
-msgstr "Дестинацията е добавена"
+msgstr "Дестинација је успешно додата"
 
 #: backup/templates/backup/backupDestinations.html:84
 #: backup/templates/backup/backupSchedule.html:90
@@ -879,12 +879,12 @@ msgstr "Дестинацията е добавена"
 #: websiteFunctions/templates/websiteFunctions/website.html:778
 #: websiteFunctions/templates/websiteFunctions/website.html:884
 msgid "Could not connect to server. Please refresh this page."
-msgstr "Връзката е неуспешна. Моля презаредете страницата."
+msgstr "Неуспешно повезивање на сервер. Молимо вас освежите страницу."
 
 #: backup/templates/backup/backupDestinations.html:98
 #: backup/templates/backup/backupDestinations.html:106
 msgid "Check Connection"
-msgstr "Провери връзката"
+msgstr "Провери повезивање"
 
 #: backup/templates/backup/backupSchedule.html:54
 msgid "Local Path"
@@ -892,19 +892,19 @@ msgstr ""
 
 #: backup/templates/backup/backupSchedule.html:57
 msgid "Local directory where backups will be moved after creation."
-msgstr ""
+msgstr "Локална путања на којој ће архиве бити смештене након прављења."
 
 #: backup/templates/backup/backupSchedule.html:82
 msgid "Cannot add schedule. Error message:"
-msgstr "Планирането не е добавено. Съобщение за грешка: "
+msgstr "Заказивање није успело. Грешка: "
 
 #: backup/templates/backup/backupSchedule.html:86
 msgid "Schedule Added"
-msgstr "Планирането е добавено"
+msgstr "Заказивање је успешно додато"
 
 #: backup/templates/backup/index.html:3
 msgid "Back up Home - CyberPanel"
-msgstr "Архив - CyberPanel"
+msgstr "Архивирање - CyberPanel"
 
 #: backup/templates/backup/index.html:13 backup/templates/backup/index.html:30
 #: baseTemplate/templates/baseTemplate/homePage.html:95
@@ -913,11 +913,11 @@ msgstr "Архив - CyberPanel"
 #: baseTemplate/templates/baseTemplate/index.html:563
 #: baseTemplate/templates/baseTemplate/index.html:616
 msgid "Back up"
-msgstr "Архив"
+msgstr "Архивирање"
 
 #: backup/templates/backup/index.html:14
 msgid "Back up and restore sites."
-msgstr "Архивирай и възстанови сайтове."
+msgstr "Архивирање и враћање стања сајтова."
 
 #: backup/templates/backup/index.html:19
 #: baseTemplate/templates/baseTemplate/homePage.html:23
@@ -934,11 +934,11 @@ msgstr "Архивирай и възстанови сайтове."
 #: userManagment/templates/userManagment/index.html:19
 #: websiteFunctions/templates/websiteFunctions/index.html:21
 msgid "Available Functions"
-msgstr "Налични Функции"
+msgstr "Доступне опције"
 
 #: backup/templates/backup/index.html:28
 msgid "Back up Site"
-msgstr "Архивирай Страница"
+msgstr "Архивирање Сајта"
 
 #: backup/templates/backup/index.html:44
 #: baseTemplate/templates/baseTemplate/index.html:572
@@ -946,40 +946,40 @@ msgstr "Архивирай Страница"
 #: userManagment/templates/userManagment/createACL.html:361
 #: userManagment/templates/userManagment/modifyACL.html:365
 msgid "Restore Back up"
-msgstr "Възстанови Архив"
+msgstr "Враћање стања Сајта"
 
 #: backup/templates/backup/index.html:60 backup/templates/backup/index.html:62
 #, fuzzy
 #| msgid "Add/Delete Destination"
 msgid "Add/Delete Destinations"
-msgstr "Добави/Премахни Дестинация"
+msgstr "Додавање/Брисање Дестинација"
 
 #: backup/templates/backup/index.html:90 backup/templates/backup/index.html:92
 #: baseTemplate/templates/baseTemplate/index.html:581
 #: userManagment/templates/userManagment/createACL.html:391
 #: userManagment/templates/userManagment/modifyACL.html:395
 msgid "Remote Back ups"
-msgstr "Отдалечени Архиви"
+msgstr "Удаљене Архиве"
 
 #: backup/templates/backup/remoteBackups.html:3
 msgid "Transfer Websites from Remote Server - CyberPanel"
-msgstr "Премести страница от отдалечен сървър - CyberPanel"
+msgstr "Пребацивање сајтова са удаљеног сервера - CyberPanel"
 
 #: backup/templates/backup/remoteBackups.html:14
 msgid "Remote Transfer"
-msgstr "Отдалечен трансфер"
+msgstr "Удаљени Трансфер"
 
 #: backup/templates/backup/remoteBackups.html:15
 msgid "This feature can import website(s) from remote server"
-msgstr "Тази функция може да постави страница/и от отдалечен сървър"
+msgstr "Ова опција вам омогућава увоз сајт(ова) са удањеног сервера"
 
 #: backup/templates/backup/remoteBackups.html:46
 msgid "Fetch Accounts"
-msgstr "Извлечи акаунти"
+msgstr "Преузми Налоге"
 
 #: backup/templates/backup/remoteBackups.html:55
 msgid "Start Transfer"
-msgstr "Стартирай трансфер"
+msgstr "Започни Трансфер"
 
 #: backup/templates/backup/remoteBackups.html:59
 #: emailMarketing/templates/emailMarketing/website.html:324
@@ -999,24 +999,24 @@ msgstr "Откажи"
 
 #: backup/templates/backup/remoteBackups.html:72
 msgid "Could not connect, please refresh this page."
-msgstr "Не можем да се свържем, моля презаредете страницата."
+msgstr "Повезивање неуспешно, молимо вас освежите страницу."
 
 #: backup/templates/backup/remoteBackups.html:76
 msgid "Accounts Successfully Fetched from remote server."
-msgstr "Акаунтите са успешно извлечени от отдалечения сървър."
+msgstr "Налози су успешно преузети са удаљеног сервера."
 
 #: backup/templates/backup/remoteBackups.html:80
 msgid "Backup Process successfully started."
-msgstr "Процеса по архивиранее успешно стартиран."
+msgstr "Процес Архивирања је успешно започет."
 
 #: backup/templates/backup/remoteBackups.html:84
 msgid "Backup successfully cancelled."
-msgstr "Архивирането е успешно спряно."
+msgstr "Архивирање је обустављено."
 
 #: backup/templates/backup/remoteBackups.html:107
 #: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:65
 msgid "Website"
-msgstr "Страница"
+msgstr "Сајт"
 
 #: backup/templates/backup/remoteBackups.html:108
 #: baseTemplate/templates/baseTemplate/homePage.html:143
@@ -1051,12 +1051,12 @@ msgstr "Email"
 
 #: backup/templates/backup/restore.html:3
 msgid "Restore Website - CyberPanel"
-msgstr "Възстанови Страница - CyberPanel"
+msgstr "Враћање стања Сајта - CyberPanel"
 
 #: backup/templates/backup/restore.html:14
 #: backup/templates/backup/restore.html:21
 msgid "Restore Website"
-msgstr "Възстанови Страница"
+msgstr "Враћање стања Сајта"
 
 #: backup/templates/backup/restore.html:15
 msgid ""
@@ -1064,17 +1064,17 @@ msgid ""
 "from CyberPanel Back up generation tool, it will detect all Back ups under "
 "<strong>/home/backup</strong>."
 msgstr ""
-"От тази страница може да възстановявате Ваши страници. Архивите трябва да "
-"бъдат генерирани от CyberPanel. Архивите автоматично са засечени от  "
+"На овој страници можете вратити предашње стање сајтова, Архиве се генеришу "
+"из CyberPanel алата за Архивирање, који детектује све архиве унутар фолдера  "
 "<strong>/home/backup</strong>."
 
 #: backup/templates/backup/restore.html:30
 msgid "Select Back up"
-msgstr "Избери Архив"
+msgstr "Избери Архиву"
 
 #: backup/templates/backup/restore.html:61
 msgid "Condition"
-msgstr "Състояние"
+msgstr "Услов"
 
 #: backup/templates/backup/restore.html:86
 #: databases/templates/databases/deleteDatabase.html:60
@@ -1093,15 +1093,15 @@ msgstr "Състояние"
 #: websiteFunctions/templates/websiteFunctions/website.html:374
 #: websiteFunctions/templates/websiteFunctions/website.html:876
 msgid "Error message:"
-msgstr "Съобщение за Грешка"
+msgstr "Грешка"
 
 #: backup/templates/backup/restore.html:90
 msgid "Site related to this Back up already exists."
-msgstr "Страницата, която е в този архив е вече налична."
+msgstr "Сајт из ове архиве већ постоји."
 
 #: baseTemplate/templates/baseTemplate/homePage.html:3
 msgid "Home - CyberPanel"
-msgstr "Начало - CyberPanel"
+msgstr "Почетна - CyberPanel"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:13
 msgid "Use the tabs to navigate through the control panel."
