@@ -1,7 +1,7 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# CyberPanel Translation File.
+# Copyright (C) 2017 LiteSpeedTech
+# This file is distributed under the same license as the CyberPanel package.
+# Stefan Pejcic <pejcha1994@gmail.com>, 2021.
 #
 #: baseTemplate/templates/baseTemplate/index.html:219
 #: baseTemplate/templates/baseTemplate/index.html:272
