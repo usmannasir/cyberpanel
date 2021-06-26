@@ -29,13 +29,13 @@ msgstr ""
 #, fuzzy
 #| msgid "Create Package - CyberPanel"
 msgid "Create Cloud Linux Package - CyberPanel"
-msgstr "Създай Пакет - CyberPanel"
+msgstr "Направите Пакет - CyberPanel"
 
 #: CLManager/templates/CLManager/createPackage.html:9
 #, fuzzy
 #| msgid "Create Package"
 msgid "Create CloudLinux Package."
-msgstr "Създай Пакет"
+msgstr "Направи Пакет"
 
 #: CLManager/templates/CLManager/createPackage.html:10
 msgid ""
@@ -55,7 +55,7 @@ msgstr ""
 #: userManagment/templates/userManagment/createACL.html:152
 #: userManagment/templates/userManagment/modifyACL.html:156
 msgid "Create Package"
-msgstr "Създай Пакет"
+msgstr "Направи Пакет"
 
 #: CLManager/templates/CLManager/createPackage.html:24
 #: packages/templates/packages/deletePackage.html:26
@@ -63,12 +63,12 @@ msgstr "Създай Пакет"
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:29
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:45
 msgid "Select Package"
-msgstr "Избери Пакет"
+msgstr "Изабери Пакет"
 
 #: CLManager/templates/CLManager/createPackage.html:40
 #: packages/templates/packages/createPackage.html:27
 msgid "Package Name"
-msgstr "Име на Пакет"
+msgstr "Име Пакета"
 
 #: CLManager/templates/CLManager/createPackage.html:47
 #: CLManager/templates/CLManager/listPackages.html:87
@@ -127,11 +127,11 @@ msgstr "Промени Пакет - CyberPanel"
 #, fuzzy
 #| msgid "Manage Services"
 msgid "Manage CloudLinux Packages"
-msgstr "Manage Services"
+msgstr "Управљање Пакетима"
 
 #: CLManager/templates/CLManager/listPackages.html:15
 msgid "Manage/Delete CloudLinux Packages."
-msgstr ""
+msgstr "Управљање/Брисање Пакета"
 
 #: CLManager/templates/CLManager/listPackages.html:76
 #: dns/templates/dns/addDeleteDNSRecords.html:74
@@ -166,7 +166,7 @@ msgstr "Име"
 #: pluginHolder/templates/pluginHolder/plugins.html:51
 #: websiteFunctions/templates/websiteFunctions/listWebsites.html:133
 msgid "Cannot list websites. Error message:"
-msgstr "Страниците не са извлечени. Съобщение за грешка:"
+msgstr "Сајт се не приказује. Грешка:"
 
 #: CLManager/templates/CLManager/listWebsites.html:3
 #, fuzzy
@@ -182,11 +182,11 @@ msgstr "SSL - CyberPanel"
 #: websiteFunctions/templates/websiteFunctions/index.html:55
 #: websiteFunctions/templates/websiteFunctions/listWebsites.html:19
 msgid "List Websites"
-msgstr "Преглед на Страници"
+msgstr "Листа Сајтова"
 
 #: CLManager/templates/CLManager/listWebsites.html:15
 msgid "Enable/Disable and view CageFS status for websites."
-msgstr ""
+msgstr "Укључи/Искључи и прегледај CageFS статус за сајтове"
 
 #: CLManager/templates/CLManager/listWebsites.html:28
 msgid "Default: "
@@ -196,13 +196,13 @@ msgstr ""
 #, fuzzy
 #| msgid "Modify User - CyberPanel"
 msgid "Monitor Usage - CyberPanel"
-msgstr "Промени Потребител - CyberPanel"
+msgstr "Преглед Искоришћености - CyberPanel"
 
 #: CLManager/templates/CLManager/monitorUsage.html:15
 #, fuzzy
 #| msgid "Attach git to your websites."
 msgid "Monitor usage of your websites."
-msgstr "Прикачи Git за тази страница."
+msgstr "Додајте  git на ваш сајт."
 
 #: CLManager/templates/CLManager/monitorUsage.html:21
 #: baseTemplate/templates/baseTemplate/homePage.html:42
@@ -212,7 +212,7 @@ msgstr "Прикачи Git за тази страница."
 #: baseTemplate/templates/baseTemplate/index.html:402
 #: containerization/templates/containerization/listWebsites.html:21
 msgid "Websites"
-msgstr "Страница"
+msgstr "Сајт"
 
 #: CLManager/templates/CLManager/notAvailable.html:3
 #: containerization/templates/containerization/notAvailable.html:3
@@ -224,20 +224,20 @@ msgstr "Паркирани Домейни - CyberPanel"
 #: CLManager/templates/CLManager/notAvailable.html:13
 #: containerization/templates/containerization/notAvailable.html:13
 msgid "Not available"
-msgstr ""
+msgstr "Није доступно"
 
 #: CLManager/templates/CLManager/notAvailable.html:14
 msgid "Either CageFS is not installed or you are not on CloudLinux OS."
-msgstr ""
+msgstr "CageFS није инсталиран или не користите CloudLinux OS."
 
 #: CLManager/templates/CLManager/notAvailable.html:22
 msgid "CageFS is only available with CloudLinux OS. "
-msgstr ""
+msgstr "CageFS је доступан само уз CloudLinux OS."
 
 #: CLManager/templates/CLManager/notAvailable.html:24
 #: containerization/templates/containerization/notAvailable.html:24
 msgid " for conversion details."
-msgstr ""
+msgstr " за више детаља око преласка."
 
 #: CLManager/templates/CLManager/notAvailable.html:34
 #: containerization/templates/containerization/notAvailable.html:34
@@ -248,7 +248,7 @@ msgstr "Пакети"
 
 #: CLManager/templates/CLManager/notAvailable.html:39
 msgid "CageFS is not installed on this server. Please proceed to installation."
-msgstr ""
+msgstr "CageFS није инсталиран на овај сервер. Молимо вас наставите са инсталацијом."
 
 #: CLManager/templates/CLManager/websiteContainerLimit.html:3
 #, fuzzy
@@ -261,7 +261,7 @@ msgstr "Пакети - CyberPanel"
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:43
 #: websiteFunctions/templates/websiteFunctions/website.html:43
 msgid "Usage"
-msgstr "Използване"
+msgstr "Искоришћеност"
 
 #: CLManager/templates/CLManager/websiteContainerLimit.html:15
 msgid "View CPU, Memory and Disk usage for "
@@ -272,33 +272,33 @@ msgstr ""
 #, fuzzy
 #| msgid "CPU Usage"
 msgid "CPU Usage of"
-msgstr "CPU Използване"
+msgstr "CPU Искоришћеност"
 
 #: CLManager/templates/CLManager/websiteContainerLimit.html:30
 #: containerization/templates/containerization/websiteContainerLimit.html:164
 #, fuzzy
 #| msgid "Resource Usage"
 msgid "Memory Usage of"
-msgstr "Използвани ресурси"
+msgstr "Потрошња Ресурса"
 
 #: CLManager/templates/CLManager/websiteContainerLimit.html:39
 #: containerization/templates/containerization/websiteContainerLimit.html:173
 #, fuzzy
 #| msgid "Disk Usage"
 msgid "Disk Usage of"
-msgstr "Използван диск"
+msgstr "Искоришћеност Диска"
 
 #: CyberCP/settings.py:175
 msgid "English"
-msgstr "Английски"
+msgstr "Енглески"
 
 #: CyberCP/settings.py:176
 msgid "Chinese"
-msgstr "Китайски"
+msgstr "Кинески"
 
 #: CyberCP/settings.py:177
 msgid "Bulgarian"
-msgstr "Български"
+msgstr "Бугарски"
 
 #: CyberCP/settings.py:178
 msgid "Portuguese"
@@ -306,15 +306,15 @@ msgstr "Португалски"
 
 #: CyberCP/settings.py:179
 msgid "Japanese"
-msgstr "Японски"
+msgstr "Јапански"
 
 #: CyberCP/settings.py:180
 msgid "Bosnian"
-msgstr "Босненски"
+msgstr "Босански"
 
 #: CyberCP/settings.py:181
 msgid "Greek"
-msgstr "Гръцки"
+msgstr "Грчки"
 
 #: CyberCP/settings.py:182
 msgid "Russian"
@@ -326,36 +326,36 @@ msgstr "Турски"
 
 #: CyberCP/settings.py:184
 msgid "Spanish"
-msgstr "Испански"
+msgstr "Шпански"
 
 #: CyberCP/settings.py:185
 msgid "French"
-msgstr "Френски"
+msgstr "франсуски"
 
 #: CyberCP/settings.py:186
 #, fuzzy
 #| msgid "Policy"
 msgid "Polish"
-msgstr "Политика"
+msgstr "Пољски"
 
 #: CyberCP/settings.py:187
 #, fuzzy
 #| msgid "Filename"
 msgid "Vietnamese"
-msgstr "Име"
+msgstr "Вијетнамски"
 
 #: CyberCP/settings.py:188
 msgid "Italian"
-msgstr ""
+msgstr "Италијански"
 
 #: CyberCP/settings.py:189
 msgid "Deutsch"
-msgstr ""
+msgstr "Немачки"
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:3
 #: backup/templates/backup/backupSchedule.html:3
 msgid "Schedule Back up - CyberPanel"
-msgstr "Планирано Архивиране - CyberPanel"
+msgstr "Планирано Архивирање - CyberPanel"
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:13
 #: IncBackups/templates/IncBackups/backupSchedule.html:23
@@ -366,7 +366,7 @@ msgstr "Планирано Архивиране - CyberPanel"
 #: userManagment/templates/userManagment/createACL.html:381
 #: userManagment/templates/userManagment/modifyACL.html:385
 msgid "Schedule Back up"
-msgstr "Планирано Архивиране "
+msgstr "Заказивање Архивирања "
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:16
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:18
@@ -375,7 +375,7 @@ msgstr "Планирано Архивиране "
 #: backup/templates/backup/remoteBackups.html:14
 #: backup/templates/backup/remoteBackups.html:21
 msgid "Remote Backups"
-msgstr "Отдалечени архиви"
+msgstr "Удаљена Архива"
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:17
 #: backup/templates/backup/backupSchedule.html:17
@@ -383,25 +383,25 @@ msgid ""
 "On this page you can schedule Back ups to localhost or remote server (If you "
 "have added one)."
 msgstr ""
-"От тази страница може да планирате архивите на локален или отдалечен сървър "
-"(ако има добавен)."
+"На овој страници можете заказати Архивирање на овом или неком удљеном серверу "
+""
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:33
 #: backup/templates/backup/backupSchedule.html:33
 msgid "Select Destination"
-msgstr "избери дестинация"
+msgstr "Изаберите Одредиште"
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:44
 #: backup/templates/backup/backupSchedule.html:44
 msgid "Select Frequency"
-msgstr "Избери кога"
+msgstr "Изберите Учесталост"
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:54
 #: IncBackups/templates/IncBackups/createBackup.html:56
 #, fuzzy
 #| msgid "Git Management"
 msgid "Backup Content"
-msgstr "Git Мениджър"
+msgstr "Git Употреба"
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:98
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:72
@@ -410,16 +410,16 @@ msgstr "Git Мениджър"
 #: backup/templates/backup/backupSchedule.html:67
 #: baseTemplate/templates/baseTemplate/index.html:575
 msgid "Add Destination"
-msgstr "Добави дестинация"
+msgstr "Додај Одредиште"
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:112
 #: backup/templates/backup/remoteBackups.html:96
 msgid "Search Accounts.."
-msgstr "Търси Акаунти"
+msgstr "Претражи Налоге.."
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:124
 msgid "Select sites to be included in this job"
-msgstr ""
+msgstr "Изаберите сајтове које желите укључити у ово архивирање"
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:150
 #: IncBackups/templates/IncBackups/createBackup.html:127
