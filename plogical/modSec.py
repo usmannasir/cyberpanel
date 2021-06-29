@@ -493,25 +493,42 @@ include {pathToOWASFolderNew}/rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf
                 print('0, Unable to download OWASP Rules.')
                 return
 
-            owaspRulesConf = """
+            if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+                owaspRulesConf = """
 modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp-modsecurity-crs-3.0-master/owasp-master.conf
 """
 
-            confFile = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
+                confFile = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
 
-            confData = open(confFile).readlines()
+                confData = open(confFile).readlines()
 
-            conf = open(confFile, 'w')
+                conf = open(confFile, 'w')
 
-            for items in confData:
-                if items.find('/usr/local/lsws/conf/modsec/rules.conf') > -1:
-                    conf.writelines(items)
-                    conf.write(owaspRulesConf)
-                    continue
-                else:
-                    conf.writelines(items)
+                for items in confData:
+                    if items.find('/usr/local/lsws/conf/modsec/rules.conf') > -1:
+                        conf.writelines(items)
+                        conf.write(owaspRulesConf)
+                        continue
+                    else:
+                        conf.writelines(items)
 
-            conf.close()
+                conf.close()
+            else:
+                confFile = os.path.join('/usr/local/lsws/conf/modsec.conf')
+                confData = open(confFile).readlines()
+
+                conf = open(confFile, 'w')
+
+                for items in confData:
+                    if items.find('/conf/comodo_litespeed/') > -1:
+                        conf.writelines(items)
+                        conf.write('Include /usr/local/lsws/conf/modsec/owasp-modsecurity-crs-3.0-master/*.conf\n')
+                        continue
+                    else:
+                        conf.writelines(items)
+
+                conf.close()
+
             installUtilities.reStartLiteSpeed()
 
             print("1,None")
@@ -549,26 +566,17 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp-modsecurity-crs-3.0-mas
     def disableRuleFile(fileName, packName):
         try:
 
-            if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
-                confFile = os.path.join('/usr/local/lsws/conf/modsec/owasp-modsecurity-crs-3.0-master/owasp-master.conf')
-                confData = open(confFile).readlines()
-                conf = open(confFile, 'w')
+            confFile = os.path.join('/usr/local/lsws/conf/modsec/owasp-modsecurity-crs-3.0-master/owasp-master.conf')
+            confData = open(confFile).readlines()
+            conf = open(confFile, 'w')
 
-                for items in confData:
-                    if items.find('modsec/'+packName) > -1 and items.find(fileName) > -1:
-                        conf.write("#" + items)
-                    else:
-                        conf.writelines(items)
+            for items in confData:
+                if items.find('modsec/' + packName) > -1 and items.find(fileName) > -1:
+                    conf.write("#" + items)
+                else:
+                    conf.writelines(items)
 
-                conf.close()
-
-            else:
-                path = '/usr/local/lsws/conf/comodo_litespeed/'
-                completePath = path + fileName
-                completePathBak = path + fileName + '.bak'
-
-                command = 'mv ' + completePath + ' ' + completePathBak
-                ProcessUtilities.executioner(command)
+            conf.close()
 
             installUtilities.reStartLiteSpeed()
 
@@ -583,25 +591,37 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp-modsecurity-crs-3.0-mas
     def enableRuleFile(fileName, packName):
         try:
 
-            if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
-                confFile = os.path.join('/usr/local/lsws/conf/modsec/owasp-modsecurity-crs-3.0-master/owasp-master.conf')
-                confData = open(confFile).readlines()
-                conf = open(confFile, 'w')
+            confFile = os.path.join('/usr/local/lsws/conf/modsec/owasp-modsecurity-crs-3.0-master/owasp-master.conf')
+            confData = open(confFile).readlines()
+            conf = open(confFile, 'w')
 
-                for items in confData:
-                    if items.find('modsec/' + packName) > -1 and items.find(fileName) > -1:
-                        conf.write(items.lstrip('#'))
-                    else:
-                        conf.writelines(items)
+            for items in confData:
+                if items.find('modsec/' + packName) > -1 and items.find(fileName) > -1:
+                    conf.write(items.lstrip('#'))
+                else:
+                    conf.writelines(items)
 
-                conf.close()
-            else:
-                path = '/usr/local/lsws/conf/comodo_litespeed/'
-                completePath = path + fileName
-                completePathBak = path + fileName + '.bak'
+            conf.close()
 
-                command = 'mv ' + completePathBak + ' ' + completePath
-                ProcessUtilities.executioner(command)
+            # if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+            #     confFile = os.path.join('/usr/local/lsws/conf/modsec/owasp-modsecurity-crs-3.0-master/owasp-master.conf')
+            #     confData = open(confFile).readlines()
+            #     conf = open(confFile, 'w')
+            #
+            #     for items in confData:
+            #         if items.find('modsec/' + packName) > -1 and items.find(fileName) > -1:
+            #             conf.write(items.lstrip('#'))
+            #         else:
+            #             conf.writelines(items)
+            #
+            #     conf.close()
+            # else:
+            #     path = '/usr/local/lsws/conf/comodo_litespeed/'
+            #     completePath = path + fileName
+            #     completePathBak = path + fileName + '.bak'
+            #
+            #     command = 'mv ' + completePathBak + ' ' + completePath
+            #     ProcessUtilities.executioner(command)
 
             installUtilities.reStartLiteSpeed()
 
