@@ -455,8 +455,8 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                     count = count + 1
                     if count == 3:
                         break
-                    else:
-                        break
+                else:
+                    break
             ######
 
             iPath = os.listdir('/usr/local/CyberCP/public/rainloop/rainloop/v/')
@@ -2074,6 +2074,8 @@ echo $oConfig->Save() ? 'Done' : 'Error';
     def AutoUpgradeAcme():
         command = '/root/.acme.sh/acme.sh --upgrade --auto-upgrade'
         Upgrade.executioner(command, command, 0)
+        command = '/root/.acme.sh/acme.sh --set-default-ca  --server  letsencrypt'
+        Upgrade.executioner(command, command, 0)
 
     @staticmethod
     def installPHP73():
@@ -2398,7 +2400,7 @@ vmail
 0 2 * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/upgradeCritical.py >/dev/null 2>&1
 0 2 * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/renew.py >/dev/null 2>&1
 7 0 * * * "/root/.acme.sh"/acme.sh --cron --home "/root/.acme.sh" > /dev/null
-0 12 * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py Daily
+0 0 * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py Daily
 0 0 * * 0 /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py Weekly
 """
             writeToFile = open(cronPath, 'w')

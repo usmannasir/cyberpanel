@@ -82,10 +82,3 @@ urllib3==1.25.11
 validators==0.18.1
 wcwidth==0.2.5
 websocket-client==0.57.0
-zope.component==4.6.2
-zope.deferredimport==4.3.1
-zope.deprecation==4.4.0
-zope.event==4.5.0
-zope.hookable==5.0.1
-zope.interface==5.2.0
-zope.proxy==4.3.5

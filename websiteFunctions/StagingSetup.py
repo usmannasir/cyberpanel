@@ -252,15 +252,6 @@ class StagingSetup(multi.Thread):
 
             logging.statusWriter(tempStatusPath, 'Completed,[200]')
 
-            http = []
-            finalHTTP = []
-
-            for items in http:
-                if items.find('x-litespeed-cache') > -1 or items.find('x-lsadc-cache') > -1 or items.find('x-qc-cache') > -1:
-                    finalHTTP.append('<strong>%s</strong>' % (items))
-                else:
-                    finalHTTP.append(items)
-
             return 0
         except BaseException as msg:
             mesg = '%s. [404]' % (str(msg))
