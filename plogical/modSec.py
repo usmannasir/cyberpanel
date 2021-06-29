@@ -402,7 +402,12 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
             pathTOOWASPFolder = os.path.join(virtualHostUtilities.Server_root, "conf/modsec/owasp")
             pathToOWASFolderNew = '%s/modsec/owasp-modsecurity-crs-3.0-master' % (virtualHostUtilities.vhostConfPath)
 
-            if os.path.join(pathToOWASFolderNew):
+            command = 'mkdir -p /usr/local/lsws/conf/modsec'
+            result = subprocess.call(shlex.split(command))
+            if result != 0:
+                return 0
+
+            if os.path.exists(pathToOWASFolderNew):
                 shutil.rmtree(pathToOWASFolderNew)
 
             if os.path.exists(pathTOOWASPFolder):
@@ -414,32 +419,32 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
             command = "wget https://github.com/SpiderLabs/owasp-modsecurity-crs/archive/v3.0/master.zip -O /usr/local/lsws/conf/modsec/owasp.zip"
             result = subprocess.call(shlex.split(command))
 
-            if result == 1:
+            if result != 0:
                 return 0
 
-            command = "unzip /usr/local/lsws/conf/modsec/owasp.zip /usr/local/lsws/conf/modsec/"
+            command = "unzip /usr/local/lsws/conf/modsec/owasp.zip -d /usr/local/lsws/conf/modsec/"
             result = subprocess.call(shlex.split(command))
 
-            if result == 1:
+            if result != 0:
                 return 0
 
             command = 'mv %s/crs-setup.conf.example %s/crs-setup.conf' % (pathToOWASFolderNew, pathToOWASFolderNew)
             result = subprocess.call(shlex.split(command))
 
-            if result == 1:
+            if result != 0:
                 return 0
 
             command = 'mv %s/rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf.example %s/rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf' % (pathToOWASFolderNew, pathToOWASFolderNew)
             result = subprocess.call(shlex.split(command))
 
-            if result == 1:
+            if result != 0:
                 return 0
 
             command = 'mv %s/rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf.example %s/rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf' % (
             pathToOWASFolderNew, pathToOWASFolderNew)
             result = subprocess.call(shlex.split(command))
 
-            if result == 1:
+            if result != 0:
                 return 0
 
             content = """include {pathToOWASFolderNew}/crs-setup.conf
@@ -469,13 +474,14 @@ include {pathToOWASFolderNew}/rules/RESPONSE-959-BLOCKING-EVALUATION.conf
 include {pathToOWASFolderNew}/rules/RESPONSE-980-CORRELATION.conf
 include {pathToOWASFolderNew}/rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf
 """
-            writeToFile = open('%s/owasp-master.conf', 'w')
+            writeToFile = open('%s/owasp-master.conf' % (pathToOWASFolderNew), 'w')
             writeToFile.write(content.replace('{pathToOWASFolderNew}', pathToOWASFolderNew))
             writeToFile.close()
 
             return 1
 
         except BaseException as msg:
+            print(str(msg))
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "  [setupOWASPRules]")
             return 0
@@ -487,7 +493,9 @@ include {pathToOWASFolderNew}/rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf
                 print('0, Unable to download OWASP Rules.')
                 return
 
-            owaspRulesConf = """modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp-modsecurity-crs-3.0-master/owasp-master.conf"""
+            owaspRulesConf = """
+modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp-modsecurity-crs-3.0-master/owasp-master.conf
+"""
 
             confFile = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
 
