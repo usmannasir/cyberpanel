@@ -550,7 +550,7 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp-modsecurity-crs-3.0-mas
         try:
 
             if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
-                confFile = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
+                confFile = os.path.join('/usr/local/lsws/conf/modsec/owasp-modsecurity-crs-3.0-master/owasp-master.conf')
                 confData = open(confFile).readlines()
                 conf = open(confFile, 'w')
 
@@ -584,7 +584,7 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp-modsecurity-crs-3.0-mas
         try:
 
             if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
-                confFile = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
+                confFile = os.path.join('/usr/local/lsws/conf/modsec/owasp-modsecurity-crs-3.0-master/owasp-master.conf')
                 confData = open(confFile).readlines()
                 conf = open(confFile, 'w')
 

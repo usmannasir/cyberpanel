@@ -1123,7 +1123,7 @@ class FirewallManager:
             packName = data['packName']
 
             if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
-                confPath = os.path.join(virtualHostUtilities.Server_root, 'conf/httpd_config.conf')
+                confPath = os.path.join('/usr/local/lsws/conf/modsec/owasp-modsecurity-crs-3.0-master/owasp-master.conf')
 
                 command = "sudo cat " + confPath
                 httpdConfig = ProcessUtilities.outputExecutioner(command).splitlines()
