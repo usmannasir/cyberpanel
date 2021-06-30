@@ -59,12 +59,12 @@
                                     <h2 style="display: inline; color: #414C59;" ng-bind="web.domain"></h2>
                                 </a>
                                 <a target="_self" href="/filemanager/{$ web.domain $}" title="Open File Manager"> --
-                                    File Manager</a>
+                                    {% trans "File Manager" %}</a>
                             </div>
                             <div class="col-md-2 content-box-header" style="text-transform: none;">
                                 <a href="/websites/{$ web.domain $}" target="_self" title="Manage Website">
                                     <i class="p fa fa-external-link btn-icon">&emsp;</i>
-                                    <span>Manage</span>
+                                    <span>{% trans "Manage" %}</span>
                                 </a>
                             </div>
                         </div>
@@ -83,7 +83,7 @@
                                 <i class="p fa fa-lock btn-icon text-muted" data-toggle="tooltip" data-placement="right"
                                    title="SSL">&emsp;</i>
                                 <span><a ng-click="issueSSL(web.domain)" href=""
-                                         style="text-transform: none">Issue SSL</a></span>
+                                         style="text-transform: none">{% trans "Issue SSL" %}</a></span>
                             </div>
                         </div>
                         <div class="col-md-12">
