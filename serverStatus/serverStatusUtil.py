@@ -116,7 +116,7 @@ class ServerStatusUtil:
                 pass
 
 
-            files = ['/usr/local/lsws/conf/httpd_config.xml', '/usr/local/lsws/conf/modsec.conf', '/usr/local/lsws/conf/httpd.conf']
+            files = ['/usr/local/lsws/conf/httpd_config.xml', '/usr/local/lsws/conf/modsec.conf', '/usr/local/lsws/conf/httpd_config.conf']
             for items in files:
                 command = 'chmod 644 %s' % (items)
                 ServerStatusUtil.executioner(command, statusFile)

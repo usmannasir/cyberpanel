@@ -1979,7 +1979,7 @@ echo $oConfig->Save() ? 'Done' : 'Error';
                      '/etc/pure-ftpd/pure-ftpd.conf', '/etc/pure-ftpd/pureftpd-pgsql.conf',
                      '/etc/pure-ftpd/pureftpd-mysql.conf', '/etc/pure-ftpd/pureftpd-ldap.conf',
                      '/etc/dovecot/dovecot.conf', '/usr/local/lsws/conf/httpd_config.xml',
-                     '/usr/local/lsws/conf/modsec.conf', '/usr/local/lsws/conf/httpd.conf']
+                     '/usr/local/lsws/conf/modsec.conf', '/usr/local/lsws/conf/httpd_config.conf']
 
             for items in files:
                 command = 'chmod 644 %s' % (items)
@@ -2347,8 +2347,8 @@ vmail
         command = """sed -i '/CyberCP/d' /etc/crontab"""
         subprocess.call(command, shell=True)
 
-        # Setup /usr/local/lsws/conf/httpd.conf to use new Logformat standard for better stats and accesslogs
-        command = """sed -i "s|^LogFormat.*|LogFormat '%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"' combined|g" /usr/local/lsws/conf/httpd.conf"""
+        # Setup /usr/local/lsws/conf/httpd_config.conf to use new Logformat standard for better stats and accesslogs
+        command = """sed -i "s|^LogFormat.*|LogFormat '%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"' combined|g" /usr/local/lsws/conf/httpd_config.conf"""
         subprocess.call(command, shell=True)
 
         # Fix all existing vhost confs to use new Logformat standard for better stats and accesslogs

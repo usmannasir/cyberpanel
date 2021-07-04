@@ -354,7 +354,7 @@ class vhost:
                 return [0,"223 [IO Error with main config file [createConfigInMainVirtualHostFile]]"]
         else:
             try:
-                writeDataToFile = open("/usr/local/lsws/conf/httpd.conf", 'a')
+                writeDataToFile = open("/usr/local/lsws/conf/httpd_config.conf", 'a')
                 configFile = 'Include /usr/local/lsws/conf/vhosts/' + virtualHostName + '/vhost.conf\n'
                 writeDataToFile.writelines(configFile)
                 writeDataToFile.close()
@@ -579,9 +579,9 @@ class vhost:
                         str(msg) + " [Not able to remove virtual host configuration directory from /conf ]")
 
                 try:
-                    data = open("/usr/local/lsws/conf/httpd.conf").readlines()
+                    data = open("/usr/local/lsws/conf/httpd_config.conf").readlines()
 
-                    writeDataToFile = open("/usr/local/lsws/conf/httpd.conf", 'w')
+                    writeDataToFile = open("/usr/local/lsws/conf/httpd_config.conf", 'w')
 
                     for items in data:
                         if items.find('/' + virtualHostName + '/') > -1:
@@ -1039,7 +1039,7 @@ class vhost:
                 return [0, "223 [IO Error with main config file [createConfigInMainDomainHostFile]]"]
         else:
             try:
-                writeDataToFile = open("/usr/local/lsws/conf/httpd.conf", 'a')
+                writeDataToFile = open("/usr/local/lsws/conf/httpd_config.conf", 'a')
                 configFile = 'Include /usr/local/lsws/conf/vhosts/' + domain + '/vhost.conf\n'
                 writeDataToFile.writelines(configFile)
                 writeDataToFile.close()

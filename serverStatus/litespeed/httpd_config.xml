@@ -11,7 +11,7 @@
   <autoFix503>1</autoFix503>
   <loadApacheConf>1</loadApacheConf>
   <autoReloadApacheConf>0</autoReloadApacheConf>
-  <apacheConfFile>/usr/local/lsws/conf/httpd.conf</apacheConfFile>
+  <apacheConfFile>/usr/local/lsws/conf/httpd_config.conf</apacheConfFile>
   <apachePortOffset>0</apachePortOffset>
   <apacheIpOffset>0</apacheIpOffset>
   <phpSuExec>1</phpSuExec>

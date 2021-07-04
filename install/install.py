@@ -566,7 +566,7 @@ class preFlightsChecks:
                  '/etc/pure-ftpd/pure-ftpd.conf', '/etc/pure-ftpd/pureftpd-pgsql.conf',
                  '/etc/pure-ftpd/pureftpd-mysql.conf', '/etc/pure-ftpd/pureftpd-ldap.conf',
                  '/etc/dovecot/dovecot.conf', '/usr/local/lsws/conf/httpd_config.xml',
-                 '/usr/local/lsws/conf/modsec.conf', '/usr/local/lsws/conf/httpd.conf']
+                 '/usr/local/lsws/conf/modsec.conf', '/usr/local/lsws/conf/httpd_config.conf']
 
         for items in files:
             command = 'chmod 644 %s' % (items)
