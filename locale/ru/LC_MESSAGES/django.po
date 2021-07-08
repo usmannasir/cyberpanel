@@ -65,7 +65,7 @@ msgstr "Создать пакет"
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:29
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:45
 msgid "Select Package"
-msgstr "Вибрать пакет"
+msgstr "Выбрать пакет"
 
 #: CLManager/templates/CLManager/createPackage.html:40
 #: packages/templates/packages/createPackage.html:27
