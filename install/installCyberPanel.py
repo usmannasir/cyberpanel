@@ -93,6 +93,8 @@ class InstallCyberPanel:
                 command = 'tar zxf lsws-6.0-ent-x86_64-linux.tar.gz'
                 install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
+                if str.lower(self.serial) == 'trial':
+                    command = 'wget -q --output-document=lsws-6.0/trial.key http://license.litespeedtech.com/reseller/trial.key'
                 if self.serial == '1111-2222-3333-4444':
                     command = 'wget -q --output-document=/root/cyberpanel/install/lsws-6.0/trial.key http://license.litespeedtech.com/reseller/trial.key'
                     install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
@@ -100,7 +102,6 @@ class InstallCyberPanel:
                     writeSerial = open('lsws-6.0/serial.no', 'w')
                     writeSerial.writelines(self.serial)
                     writeSerial.close()
-
 
                 shutil.copy('litespeed/install.sh', 'lsws-6.0/')
                 shutil.copy('litespeed/functions.sh', 'lsws-6.0/')

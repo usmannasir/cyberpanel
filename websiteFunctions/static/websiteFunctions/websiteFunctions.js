@@ -2730,6 +2730,16 @@ RewriteRule ^/?(.*) https://%{SERVER_NAME}/$1 [R,L]
 ### End CyberPanel Generated Rules.
 
 `;
+    
+    const WWWToNonWWW = `### Rewrite Rules Added by CyberPanel Rewrite Rule Generator
+
+RewriteEngine On
+RewriteCond %{HTTP_HOST} ^www\.(.*)$
+RewriteRule ^(.*)$ http://%1/$1 [L,R=301]
+
+### End CyberPanel Generated Rules.
+
+`;
 
     const nonWWWToWWW = `### Rewrite Rules Added by CyberPanel Rewrite Rule Generator
 
@@ -2747,6 +2757,9 @@ RewriteRule ^(.*)$ http://www.%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
             $scope.rewriteRules = httpToHTTPS + $scope.rewriteRules;
         } else if ($scope.rewriteTemplate === "Force NON-WWW -> WWW") {
             $scope.rewriteRules = nonWWWToWWW + $scope.rewriteRules;
+        }
+        else if ($scope.rewriteTemplate === "Force WWW -> NON-WWW") {
+            $scope.rewriteRules = WWWToNonWWW + $scope.rewriteRules;
         }
     };
 
