@@ -448,7 +448,6 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             count = 0
 
             while (1):
-
                 command = 'find . -type f -exec chmod 644 {} \;'
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
@@ -1839,13 +1838,13 @@ imap_folder_list_limit = 0
             if os.path.exists(lscpdPath):
                 os.remove(lscpdPath)
 
-            command = 'cp -f /usr/local/CyberCP/lscpd-0.2.7 /usr/local/lscp/bin/lscpd-0.2.7'
+            command = 'cp -f /usr/local/CyberCP/lscpd-0.3.1 /usr/local/lscp/bin/lscpd-0.3.1'
             Upgrade.executioner(command, command, 0)
 
             command = 'rm -f /usr/local/lscp/bin/lscpd'
             Upgrade.executioner(command, command, 0)
 
-            command = 'mv /usr/local/lscp/bin/lscpd-0.2.7 /usr/local/lscp/bin/lscpd'
+            command = 'mv /usr/local/lscp/bin/lscpd-0.3.1 /usr/local/lscp/bin/lscpd'
             Upgrade.executioner(command, command, 0)
 
             command = 'chmod 755 %s' % (lscpdPath)
@@ -2074,6 +2073,8 @@ echo $oConfig->Save() ? 'Done' : 'Error';
     @staticmethod
     def AutoUpgradeAcme():
         command = '/root/.acme.sh/acme.sh --upgrade --auto-upgrade'
+        Upgrade.executioner(command, command, 0)
+        command = '/root/.acme.sh/acme.sh --set-default-ca  --server  letsencrypt'
         Upgrade.executioner(command, command, 0)
 
     @staticmethod
@@ -2406,6 +2407,23 @@ vmail
             writeToFile.write(content)
             writeToFile.close()
 
+        ### Check and remove OLS restart if lsws ent detected
+
+        if not os.path.exists('/usr/local/lsws/bin/openlitespeed'):
+
+            data = open(cronPath, 'r').readlines()
+
+            writeToFile = open(cronPath, 'w')
+
+            for items in data:
+                if items.find('-maxdepth 2 -type f -newer') > -1:
+                    pass
+                else:
+                    writeToFile.writelines(items)
+
+            writeToFile.close()
+
+
         if not os.path.exists(CentOSPath):
             command = 'chmod 600 %s' % (cronPath)
             Upgrade.executioner(command, 0)
@@ -2528,12 +2546,18 @@ vmail
         Upgrade.setupCLI()
         Upgrade.someDirectories()
         Upgrade.installLSCPD(branch)
-        Upgrade.GeneralMigrations()
+
+        ### General migrations are not needed any more
+
+        # Upgrade.GeneralMigrations()
+
         # Upgrade.p3()
 
-        if os.path.exists(postfixPath):
-            Upgrade.upgradeDovecot()
-        time.sleep(3)
+        ## Also disable email service upgrade
+
+        # if os.path.exists(postfixPath):
+        #     Upgrade.upgradeDovecot()
+
 
         ## Upgrade version
 
@@ -2541,7 +2565,10 @@ vmail
 
         ##
 
-        Upgrade.upgradeVersion()
+        ### Disable version upgrade too
+
+        # Upgrade.upgradeVersion()
+
         Upgrade.UpdateMaxSSLCons()
 
         ## Update LSCPD PHP
@@ -2587,6 +2614,7 @@ vmail
         Upgrade.stdOut("Upgrade Completed.")
 
 def main():
+
     parser = argparse.ArgumentParser(description='CyberPanel Installer')
     parser.add_argument('branch', help='Install from branch name.')
 

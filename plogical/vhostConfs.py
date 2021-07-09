@@ -227,7 +227,6 @@ rewrite  {
 
 </VirtualHost>
 """
-
     apacheConfChild = """<VirtualHost *:8081>
 
         ServerName {virtualHostName}
@@ -282,7 +281,6 @@ rewrite  {
 
 </VirtualHost>
 """
-
     proxyApacheBackend = """extprocessor apachebackend {
   type                    proxy
   address                 http://127.0.0.1:8081
@@ -303,7 +301,6 @@ retryTimeout            0
 respBuffer              0
 }
 """
-
     OLSLBConf = """docRoot                   $VH_ROOT/public_html
 vhDomain                  $VH_NAME
 vhAliases                 www.$VH_NAME
@@ -343,7 +340,6 @@ REWRITERULE ^(.*)$ HTTP://proxyApacheBackendSSL/$1 [P,L]
 }
 
 """
-
     phpFpmPool = """[{www}]
 listen = /var/run/php-fpm/{Sock}.sock
 listen.owner = nobody
@@ -370,7 +366,6 @@ pm.start_servers = {pmStartServers}
 pm.min_spare_servers = {pmMinSpareServers}
 pm.max_spare_servers = {pmMaxSpareServers}
 """
-
     lswsRediConfMaster = """"vhost:{virtualHostName}" '{
    "username": "{externalApp}",
    "documentRoot": "/home/{virtualHostName}/public_html",
@@ -401,7 +396,6 @@ pm.max_spare_servers = {pmMaxSpareServers}
     </IfModule>
    }
 }'"""
-
     lswsRediConfChild = """"vhost:{virtualHostName}" '{
     "username": "{externalApp}",
     "documentRoot": "{path}",
@@ -417,7 +411,6 @@ pm.max_spare_servers = {pmMaxSpareServers}
     </IfModule>
     }
 }'"""
-
     lswsRediConfChildWWW = """"vhost:{virtualHostName}" '{
     "username": "{externalApp}",
     "documentRoot": "{path}",

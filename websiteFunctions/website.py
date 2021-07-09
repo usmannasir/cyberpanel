@@ -75,6 +75,12 @@ class WebsiteManager:
                         {'websiteList': websitesName}, 'deleteWebsite')
         return proc.render()
 
+    def CreateNewDomain(self, request=None, userID=None, data=None):
+        currentACL = ACLManager.loadedACL(userID)
+        websitesName = ACLManager.findAllSites(currentACL, userID)
+        proc = httpProc(request, 'websiteFunctions/createDomain.html', {'websiteList': websitesName, 'phps': PHPManager.findPHPVersions()})
+        return proc.render()
+
     def siteState(self, request=None, userID=None, data=None):
         currentACL = ACLManager.loadedACL(userID)
 

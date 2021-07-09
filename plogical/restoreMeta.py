@@ -1,6 +1,7 @@
 #!/usr/local/CyberCP/bin/python
 import os.path
 import sys
+
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 import django
@@ -15,8 +16,10 @@ import argparse
 try:
     from plogical.virtualHostUtilities import virtualHostUtilities
     from plogical.mailUtilities import mailUtilities
+    from plogical.processUtilities import ProcessUtilities
 except:
     pass
+
 
 class restoreMeta():
 
@@ -104,37 +107,65 @@ class restoreMeta():
             website = Websites.objects.get(domain=masterDomain)
 
             for database in databases:
+
                 dbName = database.find('dbName').text
-                dbUser = database.find('dbUser').text
-                dbPassword = database.find('password').text
 
-                try:
-                    dbExist = Databases.objects.get(dbName=dbName)
-                    logging.statusWriter(statusPath, 'Database exists, changing Database password.. %s' % (dbName))
-                    mysqlUtilities.mysqlUtilities.changePassword(dbUser, dbPassword, 1)
-                    if mysqlUtilities.mysqlUtilities.changePassword(dbUser, dbPassword, 1) == 0:
-                        logging.statusWriter(statusPath, 'Failed changing password for database: %s' % (dbName))
-                    else:
-                        logging.statusWriter(statusPath, 'Password successfully changed for database: %s.' % (dbName))
-                except:
-                    logging.statusWriter(statusPath, 'Database did not exist, creating new.. %s' % (dbName))
-                    if mysqlUtilities.mysqlUtilities.createDatabase(dbName, dbUser, "cyberpanel") == 0:
-                        logging.statusWriter(statusPath, 'Failed the creation of database: %s' % (dbName))
-                    else:
-                        logging.statusWriter(statusPath, 'Database: %s successfully created.' % (dbName))
+                logging.writeToFile('Backup version 2.1.1 detected..')
 
-                    mysqlUtilities.mysqlUtilities.changePassword(dbUser, dbPassword, 1)
-                    if mysqlUtilities.mysqlUtilities.changePassword(dbUser, dbPassword, 1) == 0:
-                        logging.statusWriter(statusPath, 'Failed changing password for database: %s' % (dbName))
-                    else:
-                        logging.statusWriter(statusPath, 'Password successfully changed for database: %s.' % (dbName))
+                first = 1
 
+                databaseUsers = database.findall('databaseUsers')
 
-                    try:
-                        newDB = Databases(website=website, dbName=dbName, dbUser=dbUser)
-                        newDB.save()
-                    except:
-                        pass
+                for databaseUser in databaseUsers:
+
+                    dbUser = databaseUser.find('dbUser').text
+                    dbHost = databaseUser.find('dbHost').text
+                    password = databaseUser.find('password').text
+
+                    if os.path.exists(ProcessUtilities.debugPath):
+                        logging.writeToFile('Database user: %s' % (dbUser))
+                        logging.writeToFile('Database host: %s' % (dbHost))
+                        logging.writeToFile('Database password: %s' % (password))
+
+                    if first:
+
+                        first = 0
+
+                        try:
+                            dbExist = Databases.objects.get(dbName=dbName)
+                            logging.statusWriter(statusPath, 'Database exists, changing Database password.. %s' % (dbName))
+
+                            if mysqlUtilities.mysqlUtilities.changePassword(dbUser, password, 1, dbHost) == 0:
+                                logging.statusWriter(statusPath, 'Failed changing password for database: %s' % (dbName))
+                            else:
+                                logging.statusWriter(statusPath, 'Password successfully changed for database: %s.' % (dbName))
+
+                        except:
+
+                            logging.statusWriter(statusPath, 'Database did not exist, creating new.. %s' % (dbName))
+
+                            if mysqlUtilities.mysqlUtilities.createDatabase(dbName, dbUser, "cyberpanel") == 0:
+                                logging.statusWriter(statusPath, 'Failed the creation of database: %s' % (dbName))
+                            else:
+                                logging.statusWriter(statusPath, 'Database: %s successfully created.' % (dbName))
+
+                            mysqlUtilities.mysqlUtilities.changePassword(dbUser, password, 1)
+
+                            if mysqlUtilities.mysqlUtilities.changePassword(dbUser, password, 1) == 0:
+                                logging.statusWriter(statusPath, 'Failed changing password for database: %s' % (dbName))
+                            else:
+                                logging.statusWriter(statusPath, 'Password successfully changed for database: %s.' % (dbName))
+
+                            try:
+                                newDB = Databases(website=website, dbName=dbName, dbUser=dbUser)
+                                newDB.save()
+                            except:
+                                pass
+
+                    ## This function will not create database, only database user is created as third value is 0 for createDB
+
+                    mysqlUtilities.mysqlUtilities.createDatabase(dbName, dbUser, password, 0, dbHost)
+                    mysqlUtilities.mysqlUtilities.changePassword(dbUser, password, 1, dbHost)
 
 
             ## Databases restored

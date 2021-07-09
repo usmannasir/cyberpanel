@@ -3,13 +3,10 @@
 import os.path
 import sys
 import django
-
 from plogical.httpProc import httpProc
-
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
-from django.shortcuts import render,redirect
 from django.http import HttpResponse
 try:
     from .models import Domains,EUsers
@@ -61,7 +58,6 @@ class MailServerManager(multi.Thread):
         proc = httpProc(self.request, 'mailServer/index.html',
                         None, 'createEmail')
         return proc.render()
-
 
     def createEmailAccount(self):
         userID = self.request.session['userID']
@@ -663,6 +659,9 @@ class MailServerManager(multi.Thread):
 
             try:
 
+                command = 'chown cyberpanel:cyberpanel -R /usr/local/CyberCP/lib/python3.6/site-packages/tldextract/.suffix_cache'
+                ProcessUtilities.executioner(command)
+
                 import tldextract
 
                 extractDomain = tldextract.extract(domainName)
@@ -721,6 +720,10 @@ class MailServerManager(multi.Thread):
             DNS.dnsTemplate(domainName, admin)
 
             if output.find("1,None") > -1:
+
+                command = 'chown cyberpanel:cyberpanel -R /usr/local/CyberCP/lib/python3.6/site-packages/tldextract/.suffix_cache'
+                ProcessUtilities.executioner(command)
+
                 import tldextract
 
                 extractDomain = tldextract.extract(domainName)

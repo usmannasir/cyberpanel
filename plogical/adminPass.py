@@ -42,9 +42,10 @@ def main():
 
         numberOfAdministrator = Administrator.objects.count()
         if numberOfAdministrator == 0:
+
             ACLManager.createDefaultACLs()
             acl = ACL.objects.get(name='admin')
-            token = hashPassword.generateToken('admin', '1234567')
+            token = hashPassword.generateToken('admin', adminPass)
 
             email = 'usman@cyberpersons.com'
             admin = Administrator(userName="admin", password=hashPassword.hash_password(adminPass), type=1, email=email,

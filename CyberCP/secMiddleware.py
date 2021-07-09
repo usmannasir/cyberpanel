@@ -10,6 +10,12 @@ class secMiddleware:
     HIGH = 0
     LOW = 1
 
+    def get_client_ip(request):
+        ip = request.META.get('HTTP_CF_CONNECTING_IP')
+        if ip is None:
+            ip = request.META.get('REMOTE_ADDR')
+        return ip
+
     def __init__(self, get_response):
         self.get_response = get_response
 
@@ -17,7 +23,7 @@ class secMiddleware:
         try:
             uID = request.session['userID']
             admin = Administrator.objects.get(pk=uID)
-            ipAddr = request.META.get('REMOTE_ADDR')
+            ipAddr = get_client_ip(request)
 
             if ipAddr.find('.') > -1:
                 if request.session['ipAddr'] == ipAddr or admin.securityLevel == secMiddleware.LOW:
@@ -25,20 +31,19 @@ class secMiddleware:
                 else:
                     del request.session['userID']
                     del request.session['ipAddr']
-                    logging.writeToFile(request.META.get('REMOTE_ADDR'))
+                    logging.writeToFile(get_client_ip(request))
                     final_dic = {'error_message': "Session reuse detected, IPAddress logged.",
                                  "errorMessage": "Session reuse detected, IPAddress logged."}
                     final_json = json.dumps(final_dic)
                     return HttpResponse(final_json)
             else:
-                ipAddr = request.META.get('REMOTE_ADDR').split(':')[:3]
-
+                ipAddr = get_client_ip(request).split(':')[:3]
                 if request.session['ipAddr'] == ipAddr or admin.securityLevel == secMiddleware.LOW:
                     pass
                 else:
                     del request.session['userID']
                     del request.session['ipAddr']
-                    logging.writeToFile(request.META.get('REMOTE_ADDR'))
+                    logging.writeToFile(get_client_ip(request))
                     final_dic = {'error_message': "Session reuse detected, IPAddress logged.",
                                  "errorMessage": "Session reuse detected, IPAddress logged."}
                     final_json = json.dumps(final_dic)

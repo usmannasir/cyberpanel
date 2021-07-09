@@ -76,7 +76,7 @@
 
     <!-- HELPERS -->
 
-    {% with version="2.1.1.1" %}
+    {% with version="2.1.2" %}
 
         <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/finalBase/finalBase.css' %}">
 
@@ -90,7 +90,8 @@
         <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/custom-js/pnotify.custom.min.css' %}">
         <link rel="stylesheet" type="text/css" href="{% static 'websiteFunctions/websiteFunctions.css' %}">
         <link rel="icon" type="image/png" href="{% static 'baseTemplate/assets/finalBase/favicon.png' %}">
-        <link type="text/css" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
+        <link type="text/css" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css"
+              rel="stylesheet"/>
         {% block styles %}
         {% endblock %}
 
@@ -115,11 +116,6 @@
 
 
         <body>
-        <div id="sb-site">
-
-
-        <!------- ng-controller="systemStatusInfo" ------------>
-
 
         <div class="sb-slidebar bg-black sb-right sb-style-overlay">
             <div class="scrollable-content scrollable-slim-sidebar">
@@ -174,7 +170,6 @@
             </div>
         </div>
 
-
         <div id="loading">
             <div class="spinner">
                 <div class="bounce1"></div>
@@ -203,60 +198,20 @@
                         <i class="glyph-icon icon-angle-left"></i>
                     </a>
                 </div>
-                <div id="header-nav-left">
-                    <div ng-controller="adminController" class="user-account-btn dropdown">
-                        <a href="#" title="{% trans 'My Account' %}" class="user-profile clearfix"
-                           data-toggle="dropdown">
-                            <img width="28" src="{% static 'baseTemplate/assets/image-resources/gravatar.png' %}"
-                                 alt="Profile image">
-                            <span>{$ currentAdmin $}</span>
-                            <i class="glyph-icon icon-angle-down"></i>
-                        </a>
-                        <div class="dropdown-menu float-left">
-                            <div class="box-sm">
-                                <div class="login-box clearfix">
-                                    <div class="user-img">
-                                        <a href="#" title="{% trans '' %}" class="change-img">Change photo</a>
-                                        <img src="{% static 'baseTemplate/assets/image-resources/gravatar.png' %}"
-                                             alt="">
-                                    </div>
-                                    <div class="user-info">
-                            <span>
-                                {$ currentAdmin $}
-                                <i>{$ admin_type $}</i>
-                            </span>
-                                        <a href="{% url 'modifyUsers' %}"
-                                           title="{% trans 'Edit profile' %}">{% trans "Edit profile" %}</a>
-                                        <a href="{% url 'viewProfile' %}"
-                                           title="{% trans 'View Profile' %}">{% trans "View Profile" %}</a>
-                                    </div>
-                                </div>
-                                <div class="divider"></div>
-                                <div class="pad5A button-pane button-pane-alt text-center">
-                                    <a href="{% url 'logout' %}" class="btn display-block font-normal btn-danger">
-                                        <i class="glyph-icon icon-power-off"></i>
-                                        {% trans "Logout" %}
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div><!-- #header-nav-left -->
-
 
                 <div ng-controller="loadAvg" id="header-nav-right">
 
-                    <a class="hide-on-phone" style="background-color: none;width: 33px" href="#" class="hdr-btn"
+                    <a class="hide-on-phone" style="background-color: unset;width: 33px" href="#" class="hdr-btn"
                        title="{% trans 'CPU Load Average' %}" data-placement="bottom">
                         <span class="badge bg-yellow">{$ one $}</span>
                     </a>
 
-                    <a class="hide-on-phone" style="background-color: none;width: 33px" href="#" class="hdr-btn"
+                    <a class="hide-on-phone" style="background-color: unset;width: 33px" href="#" class="hdr-btn"
                        title="{% trans 'CPU Load Average' %}" data-placement="bottom">
                         <span class="badge bg-yellow">{$ two $}</span>
                     </a>
 
-                    <a class="hide-on-phone" style="background-color: none;width: 33px" href="#" class="hdr-btn"
+                    <a class="hide-on-phone" style="background-color: unset;width: 33px" href="#" class="hdr-btn"
                        title="{% trans 'CPU Load Average' %}" data-placement="bottom">
                         <span class="badge bg-yellow">{$ three $}</span>
                     </a>
@@ -324,20 +279,19 @@
                     </a>
 
 
-                </div><!-- #header-nav-right -->
+                </div>
+                <!-- #header-nav-right -->
 
             </div>
             <div id="page-sidebar">
                 <div class="scroll-sidebar">
-
-
                     <ul id="sidebar-menu">
                         <li class="header"><span>{% trans "Overview" %}</span></li>
                         <li>
                             <a href="#" title="{% trans 'Server IP Address' %}">
                                 <i class="glyph-icon tooltip-button icon-laptop" title="{% trans 'Server IP Address' %}"
                                    data-original-title=".icon-laptop"></i>
-                                <span style="color: #db6868;font-weight: bold;" id="serverIPAddress"></span>
+                                <span style="color: #db6868;font-weight: bold;">{{ ipAddress }}</span>
                             </a>
                             <a href="{% url 'index' %}" title="{% trans 'Dashboard' %}">
                                 <i class="glyph-icon icon-dashboard"></i>
@@ -428,8 +382,11 @@
                                     <li><a href="{% url 'listWebsites' %}"
                                            title="{% trans 'List Websites' %}"><span>{% trans "List Websites" %}</span></a>
                                     </li>
+                                    <li><a href="{% url 'CreateNewDomain' %}"
+                                           title="{% trans 'Create New Domain' %}"><span>{% trans "Create New Domain" %}</span></a>
+                                    </li>
                                     <li><a href="{% url 'listChildDomains' %}"
-                                           title="{% trans 'List Child Domains' %}"><span>{% trans "List Child Domains" %}</span></a>
+                                           title="{% trans 'List Domains' %}"><span>{% trans "List Domains" %}</span></a>
                                     </li>
                                     {% if admin or modifyWebsite %}
                                         <li><a href="{% url 'modifyWebsite' %}"
@@ -708,7 +665,7 @@
                                     {% endif %}
                                 </ul>
 
-                            </div><!-- .sidebar-submenu -->
+                            </div>
                         </li>
 
 
@@ -737,7 +694,7 @@
                                     {% endif %}
                                 </ul>
 
-                            </div><!-- .sidebar-submenu -->
+                            </div>
                         </li>
 
                         {% if admin %}
@@ -1044,10 +1001,8 @@
                         {% endif %}
 
                     </ul><!-- #sidebar-menu -->
-
                 </div>
             </div>
-
             <div id="page-content-wrapper">
                 <div id="page-content">
 
@@ -1058,13 +1013,8 @@
                 </div>
 
             </div>
-
         </div>
 
-
-        <!-- WIDGETS -->
-
-        <!-- Sparklines charts -->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
         <script src="{% static 'baseTemplate/custom-js/pnotify.custom.min.js' %}"></script>
@@ -1081,7 +1031,6 @@
         <script src="{% static 'serverLogs/serverLogs.js' %}?ver={{ version }}"></script>
         <script src="{% static 'emailPremium/emailPremium.js' %}?ver={{ version }}"></script>
         <script src="{% static 'emailMarketing/emailMarketing.js' %}?ver={{ version }}"></script>
-
         <script type="text/javascript" src="{% static 'baseTemplate/assets/finalJS/final.js' %}"></script>
         <script src="{% static 'backup/backup.js' %}?ver={{ version }}"></script>
         <script src="{% static 'managePHP/managePHP.js' %}?ver={{ version }}"></script>

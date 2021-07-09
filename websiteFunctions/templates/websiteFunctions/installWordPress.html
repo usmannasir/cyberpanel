@@ -17,7 +17,7 @@
 <div ng-controller="installWordPressCTRL" class="panel">
     <div class="panel-body">
         <h3 class="title-hero">
-            <span id="domainNamePage">{{ domainName }}</span> -  {% trans "Installation Details" %} <img ng-hide="wpInstallLoading" src="{% static 'images/loading.gif' %}">
+            <span id="domainNamePage">{{ domainName }}</span> -  {% trans "Installation Details" %} - <a href="https://go.cyberpanel.net/StessTest">Stress Test</a></strong> <img ng-hide="wpInstallLoading" src="{% static 'images/loading.gif' %}">
         </h3>
         <div class="example-box-wrapper">
 
@@ -84,18 +84,13 @@
                           </div>
                         </div>
 
-
-
-
                             <div ng-hide="installationFailed" class="alert alert-danger">
                                         <p>{% trans "Installation failed. Error message:" %} {$ errorMessage $}</p>
                             </div>
 
                             <div ng-hide="installationSuccessfull" class="alert alert-success">
-                                <p>{% trans "Installation successful. Visit:" %} {$ installationURL $}</p>
+                                <p>{% trans "Installation successful. Visit:" %} {$ installationURL $} or perform <strong><a href="https://go.cyberpanel.net/StessTest">stress test</a></strong>.</p>
                             </div>
-
-
 
                             <div ng-hide="couldNotConnect" class="alert alert-danger">
                                         <p>{% trans "Could not connect to server. Please refresh this page." %}</p>

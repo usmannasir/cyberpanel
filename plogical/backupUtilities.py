@@ -67,14 +67,20 @@ class backupUtilities:
         self.extraArgs = extraArgs
 
     @staticmethod
-    def prepareBackupMeta(backupDomain, backupName, tempStoragePath, backupPath):
+    def prepareBackupMeta(backupDomain, backupName, tempStoragePath, backupPath, FromInner = 1):
         try:
+
 
             connection, cursor = mysqlUtilities.mysqlUtilities.setupConnection()
 
-            status = os.path.join(backupPath, 'status')
+            if FromInner:
+                status = os.path.join(backupPath, 'status')
+                logging.CyberCPLogFileWriter.statusWriter(status, 'Setting up meta data..')
+            else:
+                status = '/home/cyberpanel/dummy'
 
-            logging.CyberCPLogFileWriter.statusWriter(status, 'Setting up meta data..')
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.CyberCPLogFileWriter.writeToFile('Creating meta for %s.' % (backupDomain))
 
             website = Websites.objects.get(domain=backupDomain)
 
@@ -278,6 +284,9 @@ class backupUtilities:
 
             metaPath = '/tmp/%s' % (str(randint(1000, 9999)))
 
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.CyberCPLogFileWriter.writeToFile('Path to meta file %s' % (metaPath))
+
             xmlpretty = prettify(metaFileXML).encode('ascii', 'ignore')
             metaFile = open(metaPath, 'w')
             metaFile.write(xmlpretty.decode())
@@ -286,19 +295,21 @@ class backupUtilities:
 
             ## meta generated
 
-            newBackup = Backups(website=website, fileName=backupName, date=time.strftime("%m.%d.%Y_%H-%M-%S"),
-                                size=0, status=1)
-            newBackup.save()
+            if FromInner:
+                newBackup = Backups(website=website, fileName=backupName, date=time.strftime("%m.%d.%Y_%H-%M-%S"),
+                                    size=0, status=1)
+                newBackup.save()
 
-            logging.CyberCPLogFileWriter.statusWriter(status, 'Meta data is ready..')
+                logging.CyberCPLogFileWriter.statusWriter(status, 'Meta data is ready..')
 
             return 1, 'None', metaPath
 
-
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile("%s [207][5009]" % (str(msg)))
-            logging.CyberCPLogFileWriter.statusWriter(status, "%s [207][5009]" % (str(msg)))
-            return 0, str(msg)
+            if FromInner:
+                logging.CyberCPLogFileWriter.statusWriter(status, "%s [207][5009]" % (str(msg)))
+            return 0, str(msg), 'None'
+
 
     @staticmethod
     def startBackup(tempStoragePath, backupName, backupPath, metaPath=None):
@@ -610,13 +621,10 @@ class backupUtilities:
                 if VERSION == '2.1' and BUILD == '1':
 
                     logging.CyberCPLogFileWriter.writeToFile('Backup version 2.1.1 detected..')
-
                     databaseUsers = database.findall('databaseUsers')
-
                     for databaseUser in databaseUsers:
 
                         dbUser = databaseUser.find('dbUser').text
-
                         if mysqlUtilities.mysqlUtilities.createDatabase(dbName, dbUser, 'cyberpanel') == 0:
                             raise BaseException
 

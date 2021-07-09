@@ -14,7 +14,7 @@ from websiteFunctions.models import Websites
 from plogical.virtualHostUtilities import virtualHostUtilities
 from plogical.sslUtilities import sslUtilities
 from plogical.vhost import vhost
-from shutil import copytree, ignore_patterns
+from shutil import ignore_patterns
 
 
 class ServerStatusUtil:
@@ -348,6 +348,28 @@ class ServerStatusUtil:
             ProcessUtilities.stopLitespeed()
             ProcessUtilities.restartLitespeed()
 
+            ### Check and remove OLS restart if lsws ent detected
+
+            CentOSPath = '/etc/redhat-release'
+
+            if os.path.exists(CentOSPath):
+                cronPath = '/var/spool/cron/root'
+            else:
+                cronPath = '/var/spool/cron/crontabs/root'
+
+            data = open(cronPath, 'r').readlines()
+
+            writeToFile = open(cronPath, 'w')
+
+            for items in data:
+                if items.find('-maxdepth 2 -type f -newer') > -1:
+                    pass
+                else:
+                    writeToFile.writelines(items)
+
+            writeToFile.close()
+
+            ###
 
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,"Successfully switched to LITESPEED ENTERPRISE WEB SERVER. [200]\n", 1)
 

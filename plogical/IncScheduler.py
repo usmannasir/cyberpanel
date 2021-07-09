@@ -348,6 +348,7 @@ class IncScheduler():
 
     @staticmethod
     def startNormalBackups(type):
+
         from plogical.processUtilities import ProcessUtilities
         from plogical.backupSchedule import backupSchedule
         import socket

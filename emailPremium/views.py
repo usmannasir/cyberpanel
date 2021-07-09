@@ -1129,6 +1129,16 @@ def installMailScanner(request):
             return ACLManager.loadErrorJson()
         try:
 
+            ### Check selinux
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                command = 'sestatus'
+                result = ProcessUtilities.outputExecutioner(command)
+
+                if result.find('disabled') == -1:
+                    final_json = json.dumps({'status': 0, 'error_message': "Disable selinux before installing MailScanner."})
+                    return HttpResponse(final_json)
+
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
             execPath = execPath + " installMailScanner"
             ProcessUtilities.popenExecutioner(execPath)

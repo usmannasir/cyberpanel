@@ -17,10 +17,7 @@ import stat
 VERSION = '2.1'
 BUILD = 1
 
-char_set = {'small': 'abcdefghijklmnopqrstuvwxyz',
-            'nums': '0123456789',
-            'big': 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
-            }
+char_set = {'small': 'abcdefghijklmnopqrstuvwxyz','nums': '0123456789','big': 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'}
 
 
 def generate_pass(length=14):
@@ -817,39 +814,6 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
-            # if self.distro != centos:
-            #     command = 'curl https://repo.dovecot.org/DOVECOT-REPO-GPG | gpg --import'
-            #     subprocess.call(command, shell=True)
-            #
-            #     command = 'gpg --export ED409DA1 > /etc/apt/trusted.gpg.d/dovecot.gpg'
-            #     subprocess.call(command, shell=True)
-            #
-            #     debPath = '/etc/apt/sources.list.d/dovecot.list'
-            #     writeToFile = open(debPath, 'w')
-            #     writeToFile.write('deb https://repo.dovecot.org/ce-2.3-latest/ubuntu/bionic bionic main\n')
-            #     writeToFile.close()
-            #
-            #     try:
-            #         command = 'apt update -y'
-            #         subprocess.call(command, shell=True)
-            #     except:
-            #         pass
-            #
-            #     try:
-            #         command = 'DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical sudo apt-get -q -y -o "Dpkg::Options::=--force-confdef" -o "Dpkg::Options::=--force-confold" --only-upgrade install dovecot-mysql -y'
-            #         subprocess.call(command, shell=True)
-            #
-            #         command = 'dpkg --configure -a'
-            #         subprocess.call(command, shell=True)
-            #
-            #         command = 'apt --fix-broken install -y'
-            #         subprocess.call(command, shell=True)
-            #
-            #         command = 'DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical sudo apt-get -q -y -o "Dpkg::Options::=--force-confdef" -o "Dpkg::Options::=--force-confold" --only-upgrade install dovecot-mysql -y'
-            #         subprocess.call(command, shell=True)
-            #     except:
-            #         pass
-
         except BaseException as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [install_postfix_dovecot]")
             return 0
@@ -1426,13 +1390,13 @@ imap_folder_list_limit = 0
 
             lscpdPath = '/usr/local/lscp/bin/lscpd'
 
-            command = 'cp -f /usr/local/CyberCP/lscpd-0.2.7 /usr/local/lscp/bin/lscpd-0.2.7'
+            command = 'cp -f /usr/local/CyberCP/lscpd-0.3.1 /usr/local/lscp/bin/lscpd-0.3.1'
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
             command = 'rm -f /usr/local/lscp/bin/lscpd'
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
-            command = 'mv /usr/local/lscp/bin/lscpd-0.2.7 /usr/local/lscp/bin/lscpd'
+            command = 'mv /usr/local/lscp/bin/lscpd-0.3.1 /usr/local/lscp/bin/lscpd'
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
             command = 'chmod 755 %s' % (lscpdPath)
@@ -1720,8 +1684,25 @@ imap_folder_list_limit = 0
 0 0 * * 0 /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py Weekly
 */3 * * * * if ! find /home/*/public_html/ -maxdepth 2 -type f -newer /usr/local/lsws/cgid -name '.htaccess' -exec false {} +; then /usr/local/lsws/bin/lswsctrl restart; fi
 """
+
             cronFile.write(content)
             cronFile.close()
+
+            ### Check and remove OLS restart if lsws ent detected
+
+            if not os.path.exists('/usr/local/lsws/bin/openlitespeed'):
+
+                data = open(cronPath, 'r').readlines()
+
+                writeToFile = open(cronPath, 'w')
+
+                for items in data:
+                    if items.find('-maxdepth 2 -type f -newer') > -1:
+                        pass
+                    else:
+                        writeToFile.writelines(items)
+
+                writeToFile.close()
 
             if not os.path.exists(CentOSPath):
                 command = 'chmod 600 %s' % (cronPath)

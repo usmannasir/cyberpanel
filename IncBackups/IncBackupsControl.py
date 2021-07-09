@@ -135,7 +135,9 @@ class IncJobs(multi.Thread):
         secret = open(path, 'r').read()
         return key, secret
 
-    def awsFunction(self, fType, backupPath=None, snapshotID=None, bType=None):
+    ## Last argument delete is set when the snapshot is to be deleted from this repo, when this argument is set, any preceding argument is not used
+
+    def awsFunction(self, fType, backupPath=None, snapshotID=None, bType=None, delete=None):
         try:
             if fType == 'backup':
                 key, secret = self.getAWSData()
@@ -144,8 +146,8 @@ class IncJobs(multi.Thread):
                 backupExcludesFile = '/home/%s/backup-exclude.conf' % (self.website.domain)
                 resticBackupExcludeCMD = ' --exclude-file=%s' % (backupExcludesFile)
 
-                command = 'export AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s  && restic -r s3:s3.amazonaws.com/%s backup %s --password-file %s' % (
-                    key, secret, self.website.domain, backupPath, self.passwordFile)
+                command = 'export AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s  && restic -r s3:s3.amazonaws.com/%s backup %s --password-file %s --exclude /home/%s/backup --exclude /home/%s/incbackup' % (
+                    key, secret, self.website.domain, backupPath, self.passwordFile, self.website.domain, self.website.domain)
 
                 # If /home/%s/backup-exclude.conf file exists lets pass this to restic by appending the command to end.
                 if os.path.isfile(backupExcludesFile):
@@ -184,6 +186,27 @@ class IncJobs(multi.Thread):
                     if result.find('restoring') == -1:
                         logging.statusWriter(self.statusPath, 'Failed: %s. [5009]' % (result), 1)
                         return 0
+                elif delete:
+
+                    self.backupDestinations = self.jobid.destination
+
+                    key, secret = self.getAWSData()
+
+                    command = 'export AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s  && restic -r s3:s3.amazonaws.com/%s forget %s --password-file %s' % (
+                        key, secret, self.website, snapshotID, self.passwordFile)
+
+                    result = ProcessUtilities.outputExecutioner(command)
+
+                    if result.find('removed snapshot') > -1 or result.find('deleted') > -1:
+                        pass
+                    else:
+                        logging.statusWriter(self.statusPath, 'Failed: %s. [5009]' % (result), 1)
+                        return 0
+
+                    command = 'export AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s  && restic -r s3:s3.amazonaws.com/%s prune --password-file %s' % (
+                        key, secret, self.website, self.passwordFile)
+
+                    ProcessUtilities.outputExecutioner(command)
                 else:
                     self.backupDestinations = self.jobid.destination
 
@@ -205,14 +228,17 @@ class IncJobs(multi.Thread):
             logging.statusWriter(self.statusPath, "%s [88][5009]" % (str(msg)), 1)
             return 0
 
-    def localFunction(self, backupPath, type, restore=None):
+    ## Last argument delete is set when the snapshot is to be deleted from this repo, when this argument is set, any preceding argument is not used
+
+    def localFunction(self, backupPath, type, restore=None, delete=None):
+
         if restore == None:
             # Define our excludes file for use with restic
             backupExcludesFile = '/home/%s/backup-exclude.conf' % (self.website.domain)
             resticBackupExcludeCMD = ' --exclude-file=%s' % (backupExcludesFile)
 
-            command = 'restic -r %s backup %s --password-file %s --exclude %s' % (
-                self.repoPath, backupPath, self.passwordFile, self.repoPath)
+            command = 'restic -r %s backup %s --password-file %s --exclude %s --exclude /home/%s/backup' % (
+                self.repoPath, backupPath, self.passwordFile, self.repoPath, self.website.domain)
             # If /home/%s/backup-exclude.conf file exists lets pass this to restic by appending the command to end.
             if os.path.isfile(backupExcludesFile):
                 command = command + resticBackupExcludeCMD
@@ -233,6 +259,23 @@ class IncJobs(multi.Thread):
                 newSnapshot = JobSnapshots(job=self.jobid, type='%s:%s' % (type, backupPath), snapshotid=snapShotid,
                                            destination=self.backupDestinations)
             newSnapshot.save()
+            return 1
+        elif delete:
+
+            repoLocation = '/home/%s/incbackup' % (self.website)
+
+            command = 'restic -r %s forget %s --password-file %s' % (repoLocation, self.jobid.snapshotid, self.passwordFile)
+            result = ProcessUtilities.outputExecutioner(command)
+
+            if result.find('removed snapshot') > -1 or result.find('deleted') > -1:
+                pass
+            else:
+                logging.statusWriter(self.statusPath, 'Failed: %s. [5009]' % (result), 1)
+                return 0
+
+            command = 'restic -r %s prune --password-file %s' % (repoLocation, self.passwordFile)
+            ProcessUtilities.outputExecutioner(command)
+
             return 1
         else:
             repoLocation = '/home/%s/incbackup' % (self.website)
@@ -247,14 +290,16 @@ class IncJobs(multi.Thread):
 
             return 1
 
-    def sftpFunction(self, backupPath, type, restore=None):
+    ## Last argument delete is set when the snapshot is to be deleted from this repo, when this argument is set, any preceding argument is not used
+
+    def sftpFunction(self, backupPath, type, restore=None, delete=None):
         if restore == None:
             # Define our excludes file for use with restic
             backupExcludesFile = '/home/%s/backup-exclude.conf' % (self.website.domain)
             resticBackupExcludeCMD = ' --exclude-file=%s' % (backupExcludesFile)
             remotePath = '/home/backup/%s' % (self.website.domain)
-            command = 'export PATH=${PATH}:/usr/bin && restic -r %s:%s backup %s --password-file %s --exclude %s' % (
-                self.backupDestinations, remotePath, backupPath, self.passwordFile, self.repoPath)
+            command = 'export PATH=${PATH}:/usr/bin && restic -r %s:%s backup %s --password-file %s --exclude %s --exclude /home/%s/backup' % (
+                self.backupDestinations, remotePath, backupPath, self.passwordFile, self.repoPath, self.website.domain)
             # If /home/%s/backup-exclude.conf file exists lets pass this to restic by appending the command to end.
             if os.path.isfile(backupExcludesFile):
                 command = command + resticBackupExcludeCMD
@@ -276,6 +321,20 @@ class IncJobs(multi.Thread):
                                            destination=self.backupDestinations)
             newSnapshot.save()
             return 1
+        elif delete:
+            repoLocation = '/home/backup/%s' % (self.website)
+            command = 'export PATH=${PATH}:/usr/bin && restic -r %s:%s forget %s --password-file %s' % (
+                self.jobid.destination, repoLocation, self.jobid.snapshotid, self.passwordFile)
+            result = ProcessUtilities.outputExecutioner(command)
+
+            if result.find('removed snapshot') > -1 or result.find('deleted') > -1:
+                pass
+            else:
+                logging.statusWriter(self.statusPath, 'Failed: %s. [5009]' % (result), 1)
+                return 0
+
+            command = 'export PATH=${PATH}:/usr/bin && restic -r %s:%s prune --password-file %s' % (self.jobid.destination, repoLocation, self.passwordFile)
+            ProcessUtilities.outputExecutioner(command)
         else:
             if self.reconstruct == 'remote':
                 repoLocation = '/home/backup/%s' % (self.website)
@@ -437,6 +496,7 @@ class IncJobs(multi.Thread):
 
     def restorePoint(self):
         try:
+
             self.statusPath = self.extraArgs['tempPath']
             self.website = self.extraArgs['website']
             jobid = self.extraArgs['jobid']
@@ -526,177 +586,29 @@ class IncJobs(multi.Thread):
     def prepareBackupMeta(self):
         try:
 
-            ######### Generating meta
-
-            ## XML Generation
-
-            metaFileXML = Element('metaFile')
-
-            child = SubElement(metaFileXML, 'masterDomain')
-            child.text = self.website.domain
-
-            child = SubElement(metaFileXML, 'phpSelection')
-            child.text = self.website.phpSelection
-
-            child = SubElement(metaFileXML, 'externalApp')
-            child.text = self.website.externalApp
-
-            childDomains = self.website.childdomains_set.all()
-
-            databases = self.website.databases_set.all()
-
-            ## Child domains XML
-
-            childDomainsXML = Element('ChildDomains')
-
-            for items in childDomains:
-                childDomainXML = Element('domain')
-
-                child = SubElement(childDomainXML, 'domain')
-                child.text = items.domain
-                child = SubElement(childDomainXML, 'phpSelection')
-                child.text = items.phpSelection
-                child = SubElement(childDomainXML, 'path')
-                child.text = items.path
-
-                childDomainsXML.append(childDomainXML)
-
-            metaFileXML.append(childDomainsXML)
-
-            ## Databases XML
-
-            databasesXML = Element('Databases')
-
-            for items in databases:
-                try:
-                    dbuser = DBUsers.objects.get(user=items.dbUser)
-                    userToTry = items.dbUser
-                except:
-                    dbusers = DBUsers.objects.all().filter(user=items.dbUser)
-                    for it in dbusers:
-                        dbuser = it
-                        break
-
-                    userToTry = mysqlUtilities.mysqlUtilities.fetchuser(items.dbName)
-
-                    if userToTry == 0 or userToTry == 1:
-                        continue
-
-                    try:
-                        dbuser = DBUsers.objects.get(user=userToTry)
-                    except:
-                        dbusers = DBUsers.objects.all().filter(user=userToTry)
-                        for it in dbusers:
-                            dbuser = it
-                            break
+            ## Use the meta function from backup utils for future improvements.
 
 
-                databaseXML = Element('database')
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.writeToFile('Creating meta for %s. [IncBackupsControl.py]' % (self.website.domain))
 
-                child = SubElement(databaseXML, 'dbName')
-                child.text = items.dbName
-                child = SubElement(databaseXML, 'dbUser')
-                child.text = userToTry
-                child = SubElement(databaseXML, 'password')
-                child.text = dbuser.password
-
-                databasesXML.append(databaseXML)
-
-            metaFileXML.append(databasesXML)
-
-            ## Get Aliases
-
-            aliasesXML = Element('Aliases')
-
-            aliases = backupUtilities.getAliases(self.website.domain)
-
-            for items in aliases:
-                child = SubElement(aliasesXML, 'alias')
-                child.text = items
-
-            metaFileXML.append(aliasesXML)
-
-            ## Finish Alias
-
-            ## DNS Records XML
-
-            try:
-
-                dnsRecordsXML = Element("dnsrecords")
-                dnsRecords = DNS.getDNSRecords(self.website.domain)
-
-                for items in dnsRecords:
-                    dnsRecordXML = Element('dnsrecord')
-
-                    child = SubElement(dnsRecordXML, 'type')
-                    child.text = items.type
-                    child = SubElement(dnsRecordXML, 'name')
-                    child.text = items.name
-                    child = SubElement(dnsRecordXML, 'content')
-                    child.text = items.content
-                    child = SubElement(dnsRecordXML, 'priority')
-                    child.text = str(items.prio)
-
-                    dnsRecordsXML.append(dnsRecordXML)
-
-                metaFileXML.append(dnsRecordsXML)
-
-            except BaseException as msg:
-                logging.statusWriter(self.statusPath, '%s. [158:prepMeta]' % (str(msg)), 1)
-
-            ## Email accounts XML
-
-            try:
-                emailRecordsXML = Element('emails')
-                eDomain = eDomains.objects.get(domain=self.website.domain)
-                emailAccounts = eDomain.eusers_set.all()
-
-                for items in emailAccounts:
-                    emailRecordXML = Element('emailAccount')
-
-                    child = SubElement(emailRecordXML, 'email')
-                    child.text = items.email
-                    child = SubElement(emailRecordXML, 'password')
-                    child.text = items.password
-
-                    emailRecordsXML.append(emailRecordXML)
-
-                metaFileXML.append(emailRecordsXML)
-            except BaseException as msg:
-                pass
-                #logging.statusWriter(self.statusPath, '%s. [warning:179:prepMeta]' % (str(msg)), 1)
-
-            ## Email meta generated!
-
-            def prettify(elem):
-                """Return a pretty-printed XML string for the Element.
-                """
-                rough_string = ElementTree.tostring(elem, 'utf-8')
-                reparsed = minidom.parseString(rough_string)
-                return reparsed.toprettyxml(indent="  ")
-
-            ## /home/example.com/backup/backup-example-06-50-03-Thu-Feb-2018/meta.xml -- metaPath
-
-            metaPath = '/home/cyberpanel/%s' % (str(randint(1000, 9999)))
-
-            xmlpretty = prettify(metaFileXML).encode('ascii', 'ignore')
-            metaFile = open(metaPath, 'w')
-            metaFile.write(xmlpretty.decode('utf-8'))
-            metaFile.close()
-            os.chmod(metaPath, 0o640)
+            from plogical.backupUtilities import backupUtilities
+            status, message, metaPath = backupUtilities.prepareBackupMeta(self.website.domain, None, None, None, 0)
 
             ## meta generated
 
-            logging.statusWriter(self.statusPath, 'Meta data is ready..', 1)
-
-            metaPathNew = '/home/%s/meta.xml' % (self.website.domain)
-            command = 'mv %s %s' % (metaPath, metaPathNew)
-            ProcessUtilities.executioner(command)
-
-            return 1
+            if status == 1:
+                logging.statusWriter(self.statusPath, 'Meta data is ready..', 1)
+                metaPathNew = '/home/%s/meta.xml' % (self.website.domain)
+                command = 'mv %s %s' % (metaPath, metaPathNew)
+                ProcessUtilities.executioner(command)
+                return 1
+            else:
+                logging.statusWriter(self.statusPath, "%s [544][5009]" % (message), 1)
+                return 0
 
         except BaseException as msg:
-            logging.statusWriter(self.statusPath, "%s [207][5009]" % (str(msg)), 1)
+            logging.statusWriter(self.statusPath, "%s [548][5009]" % (str(msg)), 1)
             return 0
 
     def backupData(self):
@@ -728,6 +640,7 @@ class IncJobs(multi.Thread):
             databases = self.website.databases_set.all()
 
             for items in databases:
+
                 if mysqlUtilities.mysqlUtilities.createDatabaseBackup(items.dbName, '/home/cyberpanel') == 0:
                     return 0
 
@@ -760,6 +673,7 @@ class IncJobs(multi.Thread):
             backupPath = '/home/vmail/%s' % (self.website.domain)
 
             if os.path.exists(backupPath):
+
                 if self.backupDestinations == 'local':
                     if self.localFunction(backupPath, 'email') == 0:
                         return 0
@@ -807,6 +721,10 @@ class IncJobs(multi.Thread):
             if self.backupDestinations == 'local':
                 command = 'restic init --repo %s --password-file %s' % (self.repoPath, self.passwordFile)
                 result = ProcessUtilities.outputExecutioner(command)
+
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.writeToFile(result)
+
                 if result.find('config file already exists') == -1:
                     logging.statusWriter(self.statusPath, result, 1)
 
@@ -815,6 +733,10 @@ class IncJobs(multi.Thread):
                 command = 'export PATH=${PATH}:/usr/bin && restic init --repo %s:%s --password-file %s' % (
                     self.backupDestinations, remotePath, self.passwordFile)
                 result = ProcessUtilities.outputExecutioner(command)
+
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.writeToFile(result)
+
                 if result.find('config file already exists') == -1:
                     logging.statusWriter(self.statusPath, result, 1)
             else:
@@ -822,9 +744,12 @@ class IncJobs(multi.Thread):
                 command = 'export AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s  && restic -r s3:s3.amazonaws.com/%s init --password-file %s' % (
                     key, secret, self.website.domain, self.passwordFile)
                 result = ProcessUtilities.outputExecutioner(command)
+
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.writeToFile(result)
+
                 if result.find('config file already exists') == -1:
                     logging.statusWriter(self.statusPath, result, 1)
-                return 1
 
             logging.statusWriter(self.statusPath,
                                  'Repo %s initiated for %s.' % (self.backupDestinations, self.website.domain), 1)
@@ -851,6 +776,7 @@ Subject: %s
         mailUtilities.SendEmail(sender, TO, message)
 
     def createBackup(self):
+
         self.statusPath = self.extraArgs['tempPath']
         website = self.extraArgs['website']
         self.backupDestinations = self.extraArgs['backupDestinations']
@@ -861,6 +787,7 @@ Subject: %s
         ### Checking if restic is installed before moving on
 
         command = 'restic'
+
         if ProcessUtilities.outputExecutioner(command).find('restic is a backup program which') == -1:
             try:
 
@@ -916,6 +843,8 @@ Subject: %s
         if self.initiateRepo() == 0:
             return 0
 
+
+
         if self.prepareBackupMeta() == 0:
             return 0
 
@@ -945,3 +874,38 @@ Subject: %s
                                  'Failed to delete meta file: %s. [IncJobs.createBackup.591]' % str(msg), 1)
 
         logging.statusWriter(self.statusPath, 'Completed', 1)
+
+    ### Delete Snapshot
+
+    def DeleteSnapShot(self, inc_job):
+        try:
+
+            self.statusPath = logging.fileName
+
+            job_snapshots = inc_job.jobsnapshots_set.all()
+
+            ### Fetch the website name from JobSnapshot object and set these variable as they are needed in called functions below
+
+            self.website = job_snapshots[0].job.website.domain
+            self.passwordFile = '/home/%s/%s' % (self.website, self.website)
+
+            for job_snapshot in job_snapshots:
+
+                ## Functions above use the self.jobid varilable to extract information about this snapshot, so this below variable needs to be set
+
+                self.jobid = job_snapshot
+
+                if self.jobid.destination == 'local':
+                    self.localFunction('none', 'none', 0, 1)
+                elif self.jobid.destination[:4] == 'sftp':
+                    self.sftpFunction('none', 'none', 0, 1)
+                else:
+                    self.awsFunction('restore', '', self.jobid.snapshotid, None, 1)
+
+            return 1
+
+        except BaseException as msg:
+            logging.statusWriter(self.statusPath, "%s [903:DeleteSnapShot][5009]" % (str(msg)), 1)
+            return 0
+
+

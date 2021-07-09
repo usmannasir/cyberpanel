@@ -1896,7 +1896,7 @@ app.controller('websitePages', function ($scope, $http, $timeout, $window) {
 
         function ListInitialDatas(response) {
 
-            if (response.data.sslStatus == 1) {
+            if (response.data.sslStatus === 1) {
 
                 $scope.sslSaved = false;
                 $scope.couldNotSaveSSL = true;
@@ -2040,8 +2040,13 @@ app.controller('websitePages', function ($scope, $http, $timeout, $window) {
     $scope.success = true;
     $scope.couldNotConnect = true;
     $scope.goBackDisable = true;
+    $scope.DomainCreateForm = true;
 
     var statusFile;
+
+    $scope.WebsiteSelection = function (){
+        $scope.DomainCreateForm = false;
+    };
 
     $scope.createDomain = function () {
 
@@ -2053,6 +2058,7 @@ app.controller('websitePages', function ($scope, $http, $timeout, $window) {
         $scope.couldNotConnect = true;
         $scope.goBackDisable = true;
         $scope.currentStatus = "Starting creation..";
+        $scope.DomainCreateForm = true;
 
         var ssl, dkimCheck, openBasedir;
 
@@ -2091,7 +2097,7 @@ app.controller('websitePages', function ($scope, $http, $timeout, $window) {
             phpSelection: phpSelection,
             ssl: ssl,
             path: path,
-            masterDomain: $("#domainNamePage").text(),
+            masterDomain: $scope.masterDomain,
             dkimCheck: dkimCheck,
             openBasedir: openBasedir
         };
@@ -2114,6 +2120,7 @@ app.controller('websitePages', function ($scope, $http, $timeout, $window) {
 
                 $scope.domainLoading = true;
                 $scope.installationDetailsForm = true;
+                $scope.DomainCreateForm = true;
                 $scope.installationProgress = false;
                 $scope.errorMessageBox = false;
                 $scope.success = true;
@@ -2130,6 +2137,7 @@ app.controller('websitePages', function ($scope, $http, $timeout, $window) {
 
             $scope.domainLoading = true;
             $scope.installationDetailsForm = true;
+            $scope.DomainCreateForm = true;
             $scope.installationProgress = false;
             $scope.errorMessageBox = true;
             $scope.success = true;
@@ -2144,11 +2152,13 @@ app.controller('websitePages', function ($scope, $http, $timeout, $window) {
     $scope.goBack = function () {
         $scope.domainLoading = true;
         $scope.installationDetailsForm = false;
+        $scope.DomainCreateForm = true;
         $scope.installationProgress = true;
         $scope.errorMessageBox = true;
         $scope.success = true;
         $scope.couldNotConnect = true;
         $scope.goBackDisable = true;
+        $scope.DomainCreateForm = true;
         $("#installProgress").css("width", "0%");
     };
 
@@ -2194,6 +2204,7 @@ app.controller('websitePages', function ($scope, $http, $timeout, $window) {
 
                     $scope.domainLoading = true;
                     $scope.installationDetailsForm = true;
+                    $scope.DomainCreateForm = true;
                     $scope.installationProgress = false;
                     $scope.errorMessageBox = false;
                     $scope.success = true;
@@ -2221,6 +2232,7 @@ app.controller('websitePages', function ($scope, $http, $timeout, $window) {
 
             $scope.domainLoading = true;
             $scope.installationDetailsForm = true;
+            $scope.DomainCreateForm = true;
             $scope.installationProgress = false;
             $scope.errorMessageBox = true;
             $scope.success = true;
