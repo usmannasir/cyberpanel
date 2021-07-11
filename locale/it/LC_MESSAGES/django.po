@@ -2122,7 +2122,7 @@ msgstr "Gestisci FTP"
 #: pluginHolder/templates/pluginHolder/plugins.html:14
 #: pluginHolder/templates/pluginHolder/plugins.html:21
 msgid "Plugins"
-msgstr "Pugin"
+msgstr "Plugins"
 
 #: baseTemplate/templates/baseTemplate/index.html:898
 #, fuzzy
