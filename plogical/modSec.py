@@ -416,7 +416,7 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
             if os.path.exists('owasp.tar.gz'):
                 os.remove('owasp.tar.gz')
 
-            command = "wget https://github.com/SpiderLabs/owasp-modsecurity-crs/archive/v3.0/master.zip -O /usr/local/lsws/conf/modsec/owasp.zip"
+            command = "wget https://github.com/SpiderLabs/owasp-modsecurity-crs/archive/v3.2/master.zip -O /usr/local/lsws/conf/modsec/owasp.zip"
             result = subprocess.call(shlex.split(command))
 
             if result != 0:
