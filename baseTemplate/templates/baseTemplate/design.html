@@ -16,10 +16,10 @@
         <div class="panel">
             <div class="panel-body">
                 <h3 class="content-box-header">
-                    {% trans "Package Details" %}
+                    {% trans "Custom CSS" %}
                 </h3>
+                <p>Any CSS added here will apply to whole dashboard design.</p>
                 <div class="example-box-wrapper">
-
                     <form action="{% url 'design' %}" method="POST" class="form-horizontal bordered-row panel-body">
                         {% csrf_token %}
 
@@ -35,9 +35,9 @@
                         {% endif %}
 
                         <div ng-hide="keyBox" class="form-group">
-                            <label class="col-sm-3 control-label">{% trans "Custom CSS" %}</label>
                             <div class="col-sm-12">
-                                <textarea value="{{ cosmetic.MainDashboardCSS }}" name="MainDashboardCSS" rows="6" class="form-control ng-pristine ng-untouched ng-valid ng-empty"></textarea>
+                                <textarea name="MainDashboardCSS" rows="6"
+                                          class="form-control ng-pristine ng-untouched ng-valid ng-empty">{{ cosmetic.MainDashboardCSS }}</textarea>
                             </div>
                         </div>
 
@@ -49,12 +49,8 @@
                         </div>
 
                     </form>
-
-
                 </div>
             </div>
         </div>
-
-
     </div>
 {% endblock %}
