@@ -1,0 +1,60 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Design - CyberPanel" %}{% endblock %}
+{% block content %}
+
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
+
+
+    <div class="container">
+        <div id="page-title">
+            <h2>{% trans "Design" %}</h2>
+            <p>{% trans "" %}</p>
+        </div>
+        <div class="panel">
+            <div class="panel-body">
+                <h3 class="content-box-header">
+                    {% trans "Package Details" %}
+                </h3>
+                <div class="example-box-wrapper">
+
+                    <form action="{% url 'design' %}" method="POST" class="form-horizontal bordered-row panel-body">
+                        {% csrf_token %}
+
+                        {% if saved %}
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label"></label>
+                                <div class="col-sm-4">
+                                    <div class="alert alert-success">
+                                        <p>{% trans "Changes saved." %}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <div ng-hide="keyBox" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Custom CSS" %}</label>
+                            <div class="col-sm-12">
+                                <textarea value="{{ cosmetic.MainDashboardCSS }}" name="MainDashboardCSS" rows="6" class="form-control ng-pristine ng-untouched ng-valid ng-empty"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-4">
+                                <button type="submit" class="btn btn-primary btn-lg">{% trans "Save Changes" %}</button>
+                            </div>
+                        </div>
+
+                    </form>
+
+
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+{% endblock %}

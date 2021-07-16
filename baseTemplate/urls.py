@@ -7,6 +7,7 @@ urlpatterns = [
     url(r'^getAdminStatus',views.getAdminStatus, name='getSystemInformation'),
     url(r'^getLoadAverage',views.getLoadAverage, name='getLoadAverage'),
     url(r'^versionManagment',views.versionManagment, name='versionManagment'),
+    url(r'^design', views.design, name='design'),
 
     #url(r'^upgrade',views.upgrade, name='upgrade'),
 

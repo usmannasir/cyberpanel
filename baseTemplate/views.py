@@ -198,3 +198,28 @@ def upgradeVersion(request):
     except BaseException as msg:
         logging.CyberCPLogFileWriter.writeToFile(str(msg))
         return HttpResponse(str(msg))
+
+@ensure_csrf_cookie
+def design(request):
+    ### Load Custom CSS
+    try:
+        from baseTemplate.models import CyberPanelCosmetic
+        cosmetic = CyberPanelCosmetic.objects.get(pk=1)
+    except:
+        from baseTemplate.models import CyberPanelCosmetic
+        cosmetic = CyberPanelCosmetic()
+        cosmetic.save()
+
+    finalData = {}
+
+    if request.method == 'POST':
+        MainDashboardCSS = request.POST.get('MainDashboardCSS', '')
+        cosmetic.MainDashboardCSS = MainDashboardCSS
+        cosmetic.save()
+        finalData['saved'] = 1
+
+    template = 'baseTemplate/design.html'
+    finalData['cosmetic'] = cosmetic
+
+    proc = httpProc(request, template, finalData, 'versionManagement')
+    return proc.render()
