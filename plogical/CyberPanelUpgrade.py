@@ -25,7 +25,7 @@ class UpgradeCyberPanel:
         finalData = json.dumps({'ipAddress': self.ipAddress, "UpgradeCyberPanelStatus": message})
 
         try:
-            resp = requests.post(UpgradeCyberPanel.LogURL, data=finalData, verify=False, timeout=10)
+            resp = requests.post(UpgradeCyberPanel.LogURL, data=finalData, timeout=10)
         except:
             pass
 
