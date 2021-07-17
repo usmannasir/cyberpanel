@@ -625,8 +625,10 @@ class backupUtilities:
                     for databaseUser in databaseUsers:
 
                         dbUser = databaseUser.find('dbUser').text
-                        if mysqlUtilities.mysqlUtilities.createDatabase(dbName, dbUser, 'cyberpanel') == 0:
-                            raise BaseException
+                        res = mysqlUtilities.mysqlUtilities.createDatabase(dbName, dbUser, 'cyberpanel')
+                        if res == 0:
+                            logging.CyberCPLogFileWriter.writeToFile(
+                                'Failed to restore database %s. But it can be false positive, moving on..' % (dbName))
 
                         newDB = Databases(website=website, dbName=dbName, dbUser=dbUser)
                         newDB.save()
@@ -903,10 +905,14 @@ class backupUtilities:
                             logging.CyberCPLogFileWriter.writeToFile('Database host: %s' % (dbHost))
                             logging.CyberCPLogFileWriter.writeToFile('Database password: %s' % (password))
 
+                        ## Future ref, this logic can be further refactored to improve restore backup logic
                         if first:
                             first = 0
-                            if mysqlUtilities.mysqlUtilities.restoreDatabaseBackup(dbName, completPath, password, 1) == 0:
-                                raise BaseException
+                            res = mysqlUtilities.mysqlUtilities.restoreDatabaseBackup(dbName, completPath, password, 1)
+                            if res == 0:
+                                logging.CyberCPLogFileWriter.writeToFile(
+                                    'Failed to restore database %s. But it can be false positive, moving on..' % (
+                                        dbName))
 
 
                         ### This function will not create database, only database user is created as third value is 0 for createDB
