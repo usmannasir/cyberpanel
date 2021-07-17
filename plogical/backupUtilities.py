@@ -2044,14 +2044,11 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
         databases = backupMetaData.findall('Databases/database')
 
         for database in databases:
-
             dbName = database.find('dbName').text
-
-            if mysqlUtilities.mysqlUtilities.createDatabaseBackup(dbName, '/home/cyberpanel') == 0:
-                writeToFile = open(schedulerPath, 'w')
-                writeToFile.writelines('1358')
-                writeToFile.close()
-                return 0
+            res = mysqlUtilities.mysqlUtilities.createDatabaseBackup(dbName, '/home/cyberpanel')
+            if res == 0:
+                ## This login can be further improved later.
+                logging.CyberCPLogFileWriter.writeToFile('Failed to create database backup for %s. This could be false positive, moving on.' % (dbName))
 
             command = 'mv /home/cyberpanel/%s.sql %s/%s.sql' % (dbName, tempStoragePath, dbName)
             ProcessUtilities.executioner(command, 'root')
