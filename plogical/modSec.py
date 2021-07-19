@@ -422,7 +422,7 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
             if result != 0:
                 return 0
 
-            command = "unzip /usr/local/lsws/conf/modsec/owasp.zip -d /usr/local/lsws/conf/modsec/"
+            command = "unzip -o /usr/local/lsws/conf/modsec/owasp.zip -d /usr/local/lsws/conf/modsec/"
             result = subprocess.call(shlex.split(command))
 
             if result != 0:
