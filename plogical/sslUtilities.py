@@ -294,7 +294,7 @@ class sslUtilities:
 
                     command = acmePath + " --issue -d " + virtualHostName + " -d www." + virtualHostName \
                               + ' --cert-file ' + existingCertPath + '/cert.pem' + ' --key-file ' + existingCertPath + '/privkey.pem' \
-                              + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w ' + sslpath + ' --server letsencrypt --force'
+                              + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w ' + sslpath + ' -k ec-256 --force'
 
                     logging.CyberCPLogFileWriter.writeToFile(command, 0)
 
@@ -315,7 +315,7 @@ class sslUtilities:
                         logging.CyberCPLogFileWriter.writeToFile("Trying to obtain SSL for: " + virtualHostName, 0)
                         command = acmePath + " --issue -d " + virtualHostName + ' --cert-file ' + existingCertPath \
                                   + '/cert.pem' + ' --key-file ' + existingCertPath + '/privkey.pem' \
-                                  + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w ' + sslpath + ' --server letsencrypt --force'
+                                  + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w ' + sslpath + ' -k ec-256 --force'
                         output = subprocess.check_output(shlex.split(command)).decode("utf-8")
                         logging.CyberCPLogFileWriter.writeToFile("Successfully obtained SSL for: " + virtualHostName, 0)
                         finalText = '%s\nSuccessfully obtained SSL for: %s.' % (finalText, virtualHostName)
@@ -340,7 +340,7 @@ class sslUtilities:
                     command = acmePath + " --issue -d " + virtualHostName + " -d www." + virtualHostName \
                               + ' -d ' + aliasDomain + ' -d www.' + aliasDomain\
                               + ' --cert-file ' + existingCertPath + '/cert.pem' + ' --key-file ' + existingCertPath + '/privkey.pem' \
-                              + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w ' + sslpath + ' --force'
+                              + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w ' + sslpath + ' -k ec-256 --force'
 
                     output = subprocess.check_output(shlex.split(command)).decode("utf-8")
                     logging.CyberCPLogFileWriter.writeToFile(
@@ -376,7 +376,7 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain = None):
             pathToStoreSSLPrivKey = "/etc/letsencrypt/live/%s/privkey.pem" % (domain)
             pathToStoreSSLFullChain = "/etc/letsencrypt/live/%s/fullchain.pem" % (domain)
 
-            command = 'openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout ' + pathToStoreSSLPrivKey + ' -out ' + pathToStoreSSLFullChain
+            command = 'openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=' + domain + '" -keyout ' + pathToStoreSSLPrivKey + ' -out ' + pathToStoreSSLFullChain
             cmd = shlex.split(command)
             subprocess.call(cmd)
 
