@@ -1130,7 +1130,7 @@ class FirewallManager:
 
             packName = data['packName']
 
-            confPath = os.path.join('/usr/local/lsws/conf/modsec/owasp-modsecurity-crs-3.0-master/owasp-master.conf')
+            confPath = os.path.join('/usr/local/lsws/conf/modsec/coreruleset-3.3.2/owasp-master.conf')
 
             command = "sudo cat " + confPath
             httpdConfig = ProcessUtilities.outputExecutioner(command).splitlines()
@@ -1170,7 +1170,7 @@ class FirewallManager:
             return HttpResponse(final_json)
 
             # if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
-            #     confPath = os.path.join('/usr/local/lsws/conf/modsec/owasp-modsecurity-crs-3.0-master/owasp-master.conf')
+            #     confPath = os.path.join('/usr/local/lsws/conf/modsec/coreruleset-3.3.2/owasp-master.conf')
             #
             #     command = "sudo cat " + confPath
             #     httpdConfig = ProcessUtilities.outputExecutioner(command).splitlines()
@@ -1210,7 +1210,7 @@ class FirewallManager:
             #     return HttpResponse(final_json)
             # else:
             #
-            #     command = 'cat /usr/local/lsws/conf/modsec/owasp-modsecurity-crs-3.0-master/owasp-master.conf'
+            #     command = 'cat /usr/local/lsws/conf/modsec/coreruleset-3.3.2/owasp-master.conf'
             #     files = ProcessUtilities.outputExecutioner(command).splitlines()
             #
             #     json_data = "["
