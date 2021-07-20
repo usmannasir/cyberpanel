@@ -400,7 +400,7 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
     def setupOWASPRules():
         try:
             pathTOOWASPFolder = os.path.join(virtualHostUtilities.Server_root, "conf/modsec/owasp")
-            pathToOWASFolderNew = '%s/modsec/coreruleset-3.3.2' % (virtualHostUtilities.vhostConfPath)
+            pathToOWASFolderNew = '%s/modsec/owasp-modsecurity-crs-3.0-master' % (virtualHostUtilities.vhostConfPath)
 
             command = 'mkdir -p /usr/local/lsws/conf/modsec'
             result = subprocess.call(shlex.split(command))
@@ -423,6 +423,12 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
                 return 0
 
             command = "unzip -o /usr/local/lsws/conf/modsec/owasp.zip -d /usr/local/lsws/conf/modsec/"
+            result = subprocess.call(shlex.split(command))
+
+            if result != 0:
+                return 0
+
+            command = 'mv /usr/local/lsws/conf/modsec/coreruleset-3.3.2 /usr/local/lsws/conf/modsec/owasp-modsecurity-crs-3.0-master'
             result = subprocess.call(shlex.split(command))
 
             if result != 0:
@@ -495,7 +501,7 @@ include {pathToOWASFolderNew}/rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf
 
             if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
                 owaspRulesConf = """
-modsecurity_rules_file /usr/local/lsws/conf/modsec/coreruleset-3.3.2/owasp-master.conf
+modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp-modsecurity-crs-3.0-master/owasp-master.conf
 """
 
                 confFile = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
@@ -522,7 +528,7 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/coreruleset-3.3.2/owasp-maste
                 for items in confData:
                     if items.find('/conf/comodo_litespeed/') > -1:
                         conf.writelines(items)
-                        conf.write('Include /usr/local/lsws/conf/modsec/coreruleset-3.3.2/*.conf\n')
+                        conf.write('Include /usr/local/lsws/conf/modsec/owasp-modsecurity-crs-3.0-master/*.conf\n')
                         continue
                     else:
                         conf.writelines(items)
@@ -566,7 +572,7 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/coreruleset-3.3.2/owasp-maste
     def disableRuleFile(fileName, packName):
         try:
 
-            confFile = os.path.join('/usr/local/lsws/conf/modsec/coreruleset-3.3.2/owasp-master.conf')
+            confFile = os.path.join('/usr/local/lsws/conf/modsec/owasp-modsecurity-crs-3.0-master/owasp-master.conf')
             confData = open(confFile).readlines()
             conf = open(confFile, 'w')
 
@@ -591,7 +597,7 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/coreruleset-3.3.2/owasp-maste
     def enableRuleFile(fileName, packName):
         try:
 
-            confFile = os.path.join('/usr/local/lsws/conf/modsec/coreruleset-3.3.2/owasp-master.conf')
+            confFile = os.path.join('/usr/local/lsws/conf/modsec/owasp-modsecurity-crs-3.0-master/owasp-master.conf')
             confData = open(confFile).readlines()
             conf = open(confFile, 'w')
 
@@ -604,7 +610,7 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/coreruleset-3.3.2/owasp-maste
             conf.close()
 
             # if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
-            #     confFile = os.path.join('/usr/local/lsws/conf/modsec/coreruleset-3.3.2/owasp-master.conf')
+            #     confFile = os.path.join('/usr/local/lsws/conf/modsec/owasp-modsecurity-crs-3.0-master/owasp-master.conf')
             #     confData = open(confFile).readlines()
             #     conf = open(confFile, 'w')
             #
