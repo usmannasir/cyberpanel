@@ -17,7 +17,7 @@ msgstr ""
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2019-11-21 19:54+0500\n"
 "PO-Revision-Date: 2019-04-16 17:52+0700\n"
-"Last-Translator: mr614ck <fsteamcyber@gmail.com>\n"
+"Last-Translator: mr614ck <habibulilalbaab@intprism.com>\n"
 "Language-Team: LANGUAGE <unasir@litespeedtech.com>\n"
 "Language: id\n"
 "MIME-Version: 1.0\n"
@@ -26,16 +26,12 @@ msgstr ""
 "X-Generator: Poedit 2.0.6\n"
 
 #: CLManager/templates/CLManager/createPackage.html:3
-#, fuzzy
-#| msgid "Create Package - CyberPanel"
 msgid "Create Cloud Linux Package - CyberPanel"
-msgstr "Buat Paket - CyberPanel"
+msgstr "Buat Paket Cloud Linux - CyberPanel"
 
 #: CLManager/templates/CLManager/createPackage.html:9
-#, fuzzy
-#| msgid "Create Package"
 msgid "Create CloudLinux Package."
-msgstr "Buat Paket"
+msgstr "Buat Paket CloudLinux"
 
 #: CLManager/templates/CLManager/createPackage.html:10
 msgid ""
@@ -43,6 +39,9 @@ msgid ""
 "During website creation associated CloudLinux package will be assigned to "
 "website user."
 msgstr ""
+"Setiap paket CloudLinux memiliki satu paket CyberPanel (pemilik) terkait."
+"Selama pembuatan situs web, paket CloudLinux terkait akan ditetapkan ke "
+"pengguna situs web." 
 
 #: CLManager/templates/CLManager/createPackage.html:15
 #: CLManager/templates/CLManager/createPackage.html:130
@@ -78,12 +77,12 @@ msgstr "KECEPATAN"
 #: CLManager/templates/CLManager/createPackage.html:56
 #: CLManager/templates/CLManager/listPackages.html:98
 msgid "VMEM"
-msgstr ""
+msgstr "VMEM"
 
 #: CLManager/templates/CLManager/createPackage.html:64
 #: CLManager/templates/CLManager/listPackages.html:109
 msgid "PMEM"
-msgstr ""
+msgstr "PMEM"
 
 #: CLManager/templates/CLManager/createPackage.html:73
 #: CLManager/templates/CLManager/listPackages.html:120
@@ -102,34 +101,30 @@ msgstr "IOPS"
 #: CLManager/templates/CLManager/createPackage.html:89
 #: CLManager/templates/CLManager/listPackages.html:142
 msgid "EP"
-msgstr ""
+msgstr "EP"
 
 #: CLManager/templates/CLManager/createPackage.html:97
 #: CLManager/templates/CLManager/listPackages.html:153
 msgid "NPROC"
-msgstr ""
+msgstr "NPROC"
 
 #: CLManager/templates/CLManager/createPackage.html:105
 #: CLManager/templates/CLManager/listPackages.html:164
 msgid "INODES soft"
-msgstr ""
+msgstr "INODES soft"
 
 #: CLManager/templates/CLManager/createPackage.html:113
 #: CLManager/templates/CLManager/listPackages.html:175
 msgid "INODES hard"
-msgstr ""
+msgstr "INODES hard"
 
 #: CLManager/templates/CLManager/listPackages.html:3
-#, fuzzy
-#| msgid "Modify Package - CyberPanel"
 msgid "Manage CloudLinux Packages - CyberPanel"
-msgstr "Ubah Paket - CyberPanel"
+msgstr "Kelola Paket CloudLinux - CyberPanel"
 
 #: CLManager/templates/CLManager/listPackages.html:14
-#, fuzzy
-#| msgid "Manage Docker Images"
 msgid "Manage CloudLinux Packages"
-msgstr "Kelola Citra Docker"
+msgstr "Kelola Paket CloudLinux"
 
 #: CLManager/templates/CLManager/listPackages.html:15
 msgid "Manage/Delete CloudLinux Packages."
@@ -171,10 +166,8 @@ msgid "Cannot list websites. Error message:"
 msgstr "Tidak bisa melihat daftar situs. Pesan kesalahan:"
 
 #: CLManager/templates/CLManager/listWebsites.html:3
-#, fuzzy
-#| msgid "Manage SSL - CyberPanel"
 msgid "CageFS - CyberPanel"
-msgstr "Kelola SSL - CyberPanel"
+msgstr "CageFS - CyberPanel"
 
 #: CLManager/templates/CLManager/listWebsites.html:14
 #: CLManager/templates/CLManager/monitorUsage.html:14
@@ -188,23 +181,19 @@ msgstr "Daftar Situs"
 
 #: CLManager/templates/CLManager/listWebsites.html:15
 msgid "Enable/Disable and view CageFS status for websites."
-msgstr ""
+msgstr "Aktifkan/Nonaktifkan dan lihat status CageFS untuk situs web."
 
 #: CLManager/templates/CLManager/listWebsites.html:28
 msgid "Default: "
-msgstr "Bawaan"
+msgstr "Bawaan: "
 
 #: CLManager/templates/CLManager/monitorUsage.html:3
-#, fuzzy
-#| msgid "Modify User - CyberPanel"
 msgid "Monitor Usage - CyberPanel"
-msgstr "Ubah User - CyberPanel"
+msgstr "Pantau Penggunaan - CyberPanel"
 
 #: CLManager/templates/CLManager/monitorUsage.html:15
-#, fuzzy
-#| msgid "Attach git to your websites."
 msgid "Monitor usage of your websites."
-msgstr "Sisipkan git pada situs anda."
+msgstr "Pantau penggunaan situs web Anda."
 
 #: CLManager/templates/CLManager/monitorUsage.html:21
 #: baseTemplate/templates/baseTemplate/homePage.html:42
@@ -214,7 +203,7 @@ msgstr "Sisipkan git pada situs anda."
 #: baseTemplate/templates/baseTemplate/index.html:402
 #: containerization/templates/containerization/listWebsites.html:21
 msgid "Websites"
-msgstr "Situs"
+msgstr "Situs Web"
 
 #: CLManager/templates/CLManager/notAvailable.html:3
 #: containerization/templates/containerization/notAvailable.html:3
@@ -245,20 +234,12 @@ msgid "Install Packages"
 msgstr "Pasang Paket"
 
 #: CLManager/templates/CLManager/notAvailable.html:39
-#, fuzzy
-#| msgid ""
-#| "Required packages are not installed on this server. Please proceed to "
-#| "installation."
 msgid "CageFS is not installed on this server. Please proceed to installation."
-msgstr ""
-"Paket yang dibutuhkan tidak terpasang di server. Silakan lanjutkan untuk "
-"memasang."
+msgstr "CageFS tidak diinstal di server ini. Silakan lanjutkan ke instalasi."
 
 #: CLManager/templates/CLManager/websiteContainerLimit.html:3
-#, fuzzy
-#| msgid "Packages - CyberPanel"
 msgid " usage - CyberPanel"
-msgstr "Paket - CyberPanel"
+msgstr " penggunaan - CyberPanel"
 
 #: CLManager/templates/CLManager/websiteContainerLimit.html:14
 #: emailMarketing/templates/emailMarketing/website.html:40
@@ -268,10 +249,8 @@ msgid "Usage"
 msgstr "Penggunaan"
 
 #: CLManager/templates/CLManager/websiteContainerLimit.html:15
-#, fuzzy
-#| msgid "Set limits and view usage for "
 msgid "View CPU, Memory and Disk usage for "
-msgstr "Tentukan batasan dan lihat penggunaan "
+msgstr "Lihat penggunaan CPU, Memori, dan Disk "
 
 #: CLManager/templates/CLManager/websiteContainerLimit.html:21
 #: containerization/templates/containerization/websiteContainerLimit.html:155
@@ -342,11 +321,11 @@ msgstr "Vietnam"
 
 #: CyberCP/settings.py:188
 msgid "Italian"
-msgstr ""
+msgstr "Italia"
 
 #: CyberCP/settings.py:189
 msgid "Deutsch"
-msgstr ""
+msgstr "Jerman"
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:3
 #: backup/templates/backup/backupSchedule.html:3
@@ -394,10 +373,8 @@ msgstr "Pilih Frekuensi"
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:54
 #: IncBackups/templates/IncBackups/createBackup.html:56
-#, fuzzy
-#| msgid "Backup Management"
 msgid "Backup Content"
-msgstr "Pengelolaan Cadangan"
+msgstr "Cadangkan Konten"
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:98
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:72
@@ -478,10 +455,8 @@ msgid "Delete"
 msgstr "Hapus"
 
 #: IncBackups/templates/IncBackups/createBackup.html:3
-#, fuzzy
-#| msgid "Cancel Backup"
 msgid "Create Incremental Backup"
-msgstr "Batalkan Cadangan"
+msgstr "Buat Pencadangan Inkremental"
 
 #: IncBackups/templates/IncBackups/createBackup.html:13
 #: IncBackups/templates/IncBackups/createBackup.html:23
@@ -489,7 +464,7 @@ msgstr "Batalkan Cadangan"
 #: backup/templates/backup/backup.html:4 backup/templates/backup/backup.html:14
 #: backup/templates/backup/backup.html:21
 msgid "Back up Website"
-msgstr "Cadangan Situs"
+msgstr "Cadangan Situs Web"
 
 #: IncBackups/templates/IncBackups/createBackup.html:15
 #: IncBackups/templates/IncBackups/restoreRemoteBackups.html:17
@@ -499,10 +474,8 @@ msgid "Backup Docs"
 msgstr "Panduan Cadangan"
 
 #: IncBackups/templates/IncBackups/createBackup.html:17
-#, fuzzy
-#| msgid "This page can be used to Back up your websites"
 msgid "This page can be used to create incremental backups for your websites."
-msgstr "Halaman ini bisa digunakan untuk membuat cadangan situs anda"
+msgstr "Halaman ini bisa digunakan untuk membuat cadangan inkremental situs web anda"
 
 #: IncBackups/templates/IncBackups/createBackup.html:33
 #: IncBackups/templates/IncBackups/restoreRemoteBackups.html:35
@@ -546,7 +519,7 @@ msgstr "Tanggal"
 #: backup/templates/backup/index.html:46
 #: backup/templates/backup/restore.html:45
 msgid "Restore"
-msgstr "Mengembalikan"
+msgstr "Memulihkan"
 
 #: IncBackups/templates/IncBackups/createBackup.html:161
 #: emailMarketing/templates/emailMarketing/sendEmails.html:151
@@ -556,7 +529,7 @@ msgstr "ID Tugas"
 #: IncBackups/templates/IncBackups/createBackup.html:162
 #: IncBackups/templates/IncBackups/restoreRemoteBackups.html:97
 msgid "Snapshot ID"
-msgstr ""
+msgstr "ID Snapshot"
 
 #: IncBackups/templates/IncBackups/createBackup.html:163
 #: dns/templates/dns/addDeleteDNSRecords.html:327
@@ -573,31 +546,23 @@ msgstr "Aksi"
 #: backup/templates/backup/backupDestinations.html:3
 #: backup/templates/backup/backupDestinations.html:14
 msgid "Set up Back up Destinations"
-msgstr "Pengaturan  Tujuan Cadangan"
+msgstr "Pengaturan Tujuan Cadangan"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:14
-#, fuzzy
-#| msgid "Set up Back up Destinations"
 msgid "Set up Incremental Back up Destinations"
-msgstr "Pengaturan  Tujuan Cadangan"
+msgstr "Pengaturan Tujuan Cadangan Inkremental"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:20
-#, fuzzy
-#| msgid "On this page you can set up your Back up destinations. (SFTP)"
 msgid "On this page you can set up your Back up destinations. (SFTP and AWS)"
-msgstr "Pada halaman ini, anda bisa mengatur tujuan Cadangan (SFTP)"
+msgstr "Pada halaman ini, anda bisa mengatur tujuan Cadangan (SFTP) dan AWS"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:26
-#, fuzzy
-#| msgid "Set up Back up Destinations"
 msgid "Set up Back up Destinations."
-msgstr "Pengaturan  Tujuan Cadangan"
+msgstr "Pengaturan Tujuan Cadangan"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:35
-#, fuzzy
-#| msgid "Select Template"
 msgid "Select Type"
-msgstr "Pilih Templat"
+msgstr "Pilih Tipe"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:47
 #: backup/templates/backup/backupDestinations.html:30
@@ -641,7 +606,7 @@ msgstr "Port"
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:63
 #: backup/templates/backup/backupDestinations.html:47
 msgid "Backup server SSH Port, leave empty for 22."
-msgstr "Port SSH server nackup, kosongkan jika 22."
+msgstr "Port SSH server backup, kosongkan jika 22."
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:91
 #: backup/templates/backup/backupDestinations.html:97
@@ -651,30 +616,28 @@ msgstr "IP"
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:117
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:153
 msgid "AWS_ACCESS_KEY_ID"
-msgstr ""
+msgstr "AWS_ACCESS_KEY_ID"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:124
 msgid "AWS_SECRET_ACCESS_KEY"
-msgstr ""
+msgstr "AWS_SECRET_ACCESS_KEY"
 
 #: IncBackups/templates/IncBackups/restoreRemoteBackups.html:3
 #: IncBackups/templates/IncBackups/restoreRemoteBackups.html:13
-#, fuzzy
-#| msgid "Cancel Backup"
 msgid "Restore Remote Incremental Backups"
-msgstr "Batalkan Cadangan"
+msgstr "Pulihkan Cadangan Inkremental Jarak Jauh"
 
 #: IncBackups/templates/IncBackups/restoreRemoteBackups.html:19
-#, fuzzy
-#| msgid "This page can be used to Back up your websites"
 msgid ""
 "This page can be used to restore remote incremental backups for your "
 "websites."
-msgstr "Halaman ini bisa digunakan untuk membuat Cadangan situs anda"
+msgstr ""
+"Halaman ini dapat digunakan untuk memulihkan cadangan inkremental jarak jauh untuk "
+"situs web."
 
 #: IncBackups/templates/IncBackups/restoreRemoteBackups.html:69
 msgid "Fetch Restore Points"
-msgstr ""
+msgstr "Ambil Poin Pemulihan"
 
 #: IncBackups/templates/IncBackups/restoreRemoteBackups.html:99
 #: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:76
@@ -705,23 +668,21 @@ msgstr "Path"
 #: serverStatus/templates/serverStatus/topProcesses.html:201
 #: userManagment/templates/userManagment/listUsers.html:37
 msgid "Actions"
-msgstr "Perintah"
+msgstr "Aksi"
 
 #: WebTerminal/templates/WebTerminal/WebTerminal.html:3
-#, fuzzy
-#| msgid "Domains - CyberPanel"
 msgid "Terminal - CyberPanel"
-msgstr "Domain - CyberPanel"
+msgstr "Terminal - CyberPanel"
 
 #: WebTerminal/templates/WebTerminal/WebTerminal.html:16
 #: baseTemplate/templates/baseTemplate/index.html:641
 #: baseTemplate/templates/baseTemplate/index.html:650
 msgid "Terminal"
-msgstr ""
+msgstr "Terminal"
 
 #: WebTerminal/templates/WebTerminal/WebTerminal.html:18
 msgid "Web Terminal Docs"
-msgstr "Dokumen Web Terminal"
+msgstr "Dokumentasiumen Web Terminal"
 
 #: WebTerminal/templates/WebTerminal/WebTerminal.html:19
 msgid "Execute your terminal commands."
@@ -819,7 +780,7 @@ msgstr "Tidak bisa menambah tujuan. Pesan kesalahan:"
 
 #: backup/templates/backup/backupDestinations.html:80
 msgid "Destination Added."
-msgstr "Tujuan Sudah Ditambahkan."
+msgstr "Tujuan Berhasil Ditambahkan."
 
 #: backup/templates/backup/backupDestinations.html:84
 #: backup/templates/backup/backupSchedule.html:90
@@ -884,7 +845,7 @@ msgstr "Periksa Koneksi"
 
 #: backup/templates/backup/backupSchedule.html:54
 msgid "Local Path"
-msgstr ""
+msgstr "Path Lokal"
 
 #: backup/templates/backup/backupSchedule.html:57
 msgid "Local directory where backups will be moved after creation."
@@ -896,7 +857,7 @@ msgstr "Tidak bisa menambah jadwal. Pesan kesalahan:"
 
 #: backup/templates/backup/backupSchedule.html:86
 msgid "Schedule Added"
-msgstr "Jadwal Sudah Ditambahkan"
+msgstr "Jadwal Berhasil Ditambahkan"
 
 #: backup/templates/backup/index.html:3
 msgid "Back up Home - CyberPanel"
@@ -942,7 +903,7 @@ msgstr "Cadangakan Situs"
 #: userManagment/templates/userManagment/createACL.html:361
 #: userManagment/templates/userManagment/modifyACL.html:365
 msgid "Restore Back up"
-msgstr "Mengembalikan Cadangan"
+msgstr "Memulihkan Cadangan"
 
 #: backup/templates/backup/index.html:60 backup/templates/backup/index.html:62
 msgid "Add/Delete Destinations"
@@ -957,7 +918,7 @@ msgstr "Cadangan Jarak jauh"
 
 #: backup/templates/backup/remoteBackups.html:3
 msgid "Transfer Websites from Remote Server - CyberPanel"
-msgstr "Transfer Situs dan Server Lain  - CyberPanel"
+msgstr "Transfer Situs dan Server Lain - CyberPanel"
 
 #: backup/templates/backup/remoteBackups.html:14
 msgid "Remote Transfer"
@@ -1045,12 +1006,12 @@ msgstr "Email"
 
 #: backup/templates/backup/restore.html:3
 msgid "Restore Website - CyberPanel"
-msgstr "Mengembalikan Situs - CyberPanel"
+msgstr "Memulihkan Situs Web - CyberPanel"
 
 #: backup/templates/backup/restore.html:14
 #: backup/templates/backup/restore.html:21
 msgid "Restore Website"
-msgstr "Mengembalikan Situs"
+msgstr "Memulihkan Situs Web"
 
 #: backup/templates/backup/restore.html:15
 msgid ""
@@ -1058,9 +1019,9 @@ msgid ""
 "from CyberPanel Back up generation tool, it will detect all Back ups under "
 "<strong>/home/backup</strong>."
 msgstr ""
-"Halaman ini bisa digunakan untuk mengembalikan situs anda dari cadangan "
-"(restore). Cadangan dibuat dari fasilitas pembuatan cadangan CyberPanel, yang "
-"memeriksa cadangan yang ada di <strong>/home/backup</strong>."
+"Halaman ini dapat digunakan untuk memulihkan situs web Anda, Cadangan harus dibuat"
+"dari alat pembuat Cadangan CyberPanel, ia akan mendeteksi semua Cadangan di folder "
+"<strong>/home/backup</strong>."
 
 #: backup/templates/backup/restore.html:30
 msgid "Select Back up"
@@ -1111,7 +1072,7 @@ msgstr "Fungsi User"
 #: baseTemplate/templates/baseTemplate/index.html:362
 #: baseTemplate/templates/baseTemplate/index.html:363
 msgid "Users"
-msgstr "User"
+msgstr "Pengguna"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:40
 #: websiteFunctions/templates/websiteFunctions/index.html:13
@@ -1133,7 +1094,7 @@ msgstr "Paket"
 #: baseTemplate/templates/baseTemplate/homePage.html:62
 #: databases/templates/databases/index.html:12
 msgid "Database Functions"
-msgstr "Fungsi Database"
+msgstr "Fungsi Basis Data"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:64
 #: baseTemplate/templates/baseTemplate/index.html:452
@@ -1147,7 +1108,7 @@ msgstr "Fungsi Database"
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:54
 #: websiteFunctions/templates/websiteFunctions/website.html:54
 msgid "Databases"
-msgstr "Database"
+msgstr "Basis Data"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:73
 msgid "Control DNS"
@@ -1261,7 +1222,7 @@ msgstr "CyberPanel"
 #: baseTemplate/templates/baseTemplate/index.html:197
 #: baseTemplate/templates/baseTemplate/index.html:201
 msgid "Web Hosting Control Panel"
-msgstr "Panel Kontrol Web Hosting"
+msgstr "Panel Kontrol Hosting Web"
 
 #: baseTemplate/templates/baseTemplate/index.html:203
 msgid "Close sidebar"
@@ -1291,7 +1252,7 @@ msgstr "Keluar"
 #: baseTemplate/templates/baseTemplate/index.html:254
 #: baseTemplate/templates/baseTemplate/index.html:259
 msgid "CPU Load Average"
-msgstr "Rerata Load CPU"
+msgstr "Rata-rata Beban CPU"
 
 #: baseTemplate/templates/baseTemplate/index.html:265
 msgid "Dashboard Quick Menu"
@@ -1301,7 +1262,7 @@ msgstr "Menu Ringkas Dashboard"
 #: baseTemplate/templates/baseTemplate/index.html:725
 #: baseTemplate/templates/baseTemplate/index.html:727
 msgid "Tuning"
-msgstr "Tuning"
+msgstr "Penyetelan"
 
 #: baseTemplate/templates/baseTemplate/index.html:332
 msgid "Overview"
@@ -1336,7 +1297,7 @@ msgstr "Sambungkan"
 
 #: baseTemplate/templates/baseTemplate/index.html:358
 msgid "Main"
-msgstr "Depan"
+msgstr "Utama"
 
 #: baseTemplate/templates/baseTemplate/index.html:372
 #: userManagment/templates/userManagment/createACL.html:64
@@ -1352,10 +1313,8 @@ msgstr "Buat User Baru"
 #: userManagment/templates/userManagment/listUsers.html:13
 #: userManagment/templates/userManagment/listUsers.html:19
 #: userManagment/templates/userManagment/modifyACL.html:77
-#, fuzzy
-#| msgid "Login User"
 msgid "List Users"
-msgstr "Nama User"
+msgstr "Daftar User"
 
 #: baseTemplate/templates/baseTemplate/index.html:378
 #: userManagment/templates/userManagment/index.html:61
@@ -1391,10 +1350,8 @@ msgstr "Ubah ACL"
 #: baseTemplate/templates/baseTemplate/index.html:392
 #: userManagment/templates/userManagment/apiAccess.html:13
 #: userManagment/templates/userManagment/apiAccess.html:20
-#, fuzzy
-#| msgid "Access Log"
 msgid "API Access"
-msgstr "Log Akses"
+msgstr "Akses API"
 
 #: baseTemplate/templates/baseTemplate/index.html:408
 #: userManagment/templates/userManagment/createACL.html:112
@@ -1421,7 +1378,7 @@ msgstr "Edit Situs"
 #: websiteFunctions/templates/websiteFunctions/index.html:81
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:41
 msgid "Suspend/Unsuspend"
-msgstr "Suspend/Unsuspend"
+msgstr "Tangguhkan/Batalkan penangguhan"
 
 #: baseTemplate/templates/baseTemplate/index.html:420
 #: userManagment/templates/userManagment/createACL.html:139
@@ -1441,10 +1398,8 @@ msgstr "Hapus Situs"
 #: packages/templates/packages/listPackages.html:19
 #: userManagment/templates/userManagment/createACL.html:161
 #: userManagment/templates/userManagment/modifyACL.html:165
-#, fuzzy
-#| msgid "Packages"
 msgid "List Packages"
-msgstr "Paket"
+msgstr "Daftar Paket"
 
 #: baseTemplate/templates/baseTemplate/index.html:441
 #: packages/templates/packages/deletePackage.html:12
@@ -1519,16 +1474,12 @@ msgid "Create Nameserver"
 msgstr "Buat Nameserver"
 
 #: baseTemplate/templates/baseTemplate/index.html:488
-#, fuzzy
-#| msgid "Create Nameserver"
 msgid "Configure Default Nameservers"
-msgstr "Buat Nameserver"
+msgstr "Konfigurasi Default Nameserver"
 
 #: baseTemplate/templates/baseTemplate/index.html:488
-#, fuzzy
-#| msgid "Create Nameserver"
 msgid "Config Default Nameservers"
-msgstr "Buat Nameserver"
+msgstr "Konfigurasi Default Nameserver"
 
 #: baseTemplate/templates/baseTemplate/index.html:491
 #: dns/templates/dns/createDNSZone.html:12
@@ -1569,10 +1520,8 @@ msgstr "Buat Email"
 #: baseTemplate/templates/baseTemplate/index.html:516
 #: userManagment/templates/userManagment/createACL.html:271
 #: userManagment/templates/userManagment/modifyACL.html:275
-#, fuzzy
-#| msgid "List Domains"
 msgid "List Emails"
-msgstr "Daftar Domain"
+msgstr "Daftar Email"
 
 #: baseTemplate/templates/baseTemplate/index.html:519
 #: mailServer/templates/mailServer/deleteEmailAccount.html:12
@@ -1667,43 +1616,31 @@ msgstr "Tambah/Hapus Tujuan"
 
 #: baseTemplate/templates/baseTemplate/index.html:590
 msgid "Incremental Back up - Beta"
-msgstr ""
+msgstr "Cadangan Inkremental - Beta"
 
 #: baseTemplate/templates/baseTemplate/index.html:592
-#, fuzzy
-#| msgid "Cancel Backup"
 msgid "Incremental Back up"
-msgstr "Batalkan Cadangan"
+msgstr "Batalkan Cadangan Inkremental"
 
 #: baseTemplate/templates/baseTemplate/index.html:598
-#, fuzzy
-#| msgid "Restore Back up"
 msgid "Create/Restore Back up"
-msgstr "Mengembalikan Cadangan"
+msgstr "Buat/Pulihkan Cadangan"
 
 #: baseTemplate/templates/baseTemplate/index.html:601
-#, fuzzy
-#| msgid "Add/Delete Destinations"
 msgid "Add/Remove Destinations"
 msgstr "Tambah/Hapus Tujuan"
 
 #: baseTemplate/templates/baseTemplate/index.html:604
-#, fuzzy
-#| msgid "Schedule Back up"
 msgid "Schedule Back ups"
-msgstr "Jadwal Backup"
+msgstr "Jadwal Cadangan"
 
 #: baseTemplate/templates/baseTemplate/index.html:607
-#, fuzzy
-#| msgid "Transfer Websites from Remote Server - CyberPanel"
 msgid "Restore from Remote Server"
-msgstr "Transfer Situs dan Server Lain  - CyberPanel"
+msgstr "Pulihkan dari Server Remot  - CyberPanel"
 
 #: baseTemplate/templates/baseTemplate/index.html:607
-#, fuzzy
-#| msgid "Restore Website"
 msgid "Restore from Remote"
-msgstr "Mengembalikan Situs"
+msgstr "Pulihkan dari Server Remot"
 
 #: baseTemplate/templates/baseTemplate/index.html:624
 #: manageSSL/templates/manageSSL/index.html:29
@@ -1745,7 +1682,7 @@ msgstr "BARU"
 
 #: baseTemplate/templates/baseTemplate/index.html:650
 msgid "Web Based Terminal"
-msgstr ""
+msgstr "Terminal Berbasis Web"
 
 #: baseTemplate/templates/baseTemplate/index.html:657
 #: baseTemplate/templates/baseTemplate/index.html:659
@@ -1753,24 +1690,18 @@ msgid "CloudLinux"
 msgstr "CloudLinux"
 
 #: baseTemplate/templates/baseTemplate/index.html:666
-#, fuzzy
-#| msgid "Create Package"
 msgid "Create Cloud Linux Package"
-msgstr "Buat Paket"
+msgstr "Buat Paket Cloud Linux"
 
 #: baseTemplate/templates/baseTemplate/index.html:671
 msgid "List Cloud Linux Package"
 msgstr "Daftar Paket Cloud Linux"
 
 #: baseTemplate/templates/baseTemplate/index.html:676
-#, fuzzy
-#| msgid "Attach git to your websites."
 msgid "Monitor Usage of your Websites"
-msgstr "Sisipkan git pada situs anda."
+msgstr "Pantau Penggunaan Situs Web Anda"
 
 #: baseTemplate/templates/baseTemplate/index.html:676
-#, fuzzy
-#| msgid "Memory Usage"
 msgid "Monitor Usage"
 msgstr "Penggunaan Memori"
 
@@ -1974,10 +1905,8 @@ msgid "CSF"
 msgstr "CSF"
 
 #: baseTemplate/templates/baseTemplate/index.html:835
-#, fuzzy
-#| msgid "Configurations"
 msgid "CageFS Configurations"
-msgstr "Konfigurasi"
+msgstr "Konfigurasi CageFS"
 
 #: baseTemplate/templates/baseTemplate/index.html:835
 msgid "CageFS"
@@ -2182,8 +2111,6 @@ msgstr "Username"
 #: mailServer/templates/mailServer/createEmailAccount.html:74
 #: userManagment/templates/userManagment/createUser.html:90
 #: userManagment/templates/userManagment/modifyUser.html:68
-#, fuzzy
-#| msgid "Generate Now"
 msgid "Generate"
 msgstr "Buat Sekarang"
 
@@ -2195,8 +2122,6 @@ msgstr "Buat Sekarang"
 #: mailServer/templates/mailServer/createEmailAccount.html:79
 #: userManagment/templates/userManagment/createUser.html:95
 #: userManagment/templates/userManagment/modifyUser.html:73
-#, fuzzy
-#| msgid "Change Password"
 msgid "Generated Password"
 msgstr "Ganti Password"
 
@@ -2208,10 +2133,8 @@ msgstr "Ganti Password"
 #: mailServer/templates/mailServer/createEmailAccount.html:86
 #: userManagment/templates/userManagment/createUser.html:101
 #: userManagment/templates/userManagment/modifyUser.html:79
-#, fuzzy
-#| msgid "User"
 msgid "Use"
-msgstr "User"
+msgstr "Pengguna"
 
 #: databases/templates/databases/createDatabase.html:89
 #: databases/templates/databases/phpMyAdmin.html:41
@@ -2294,10 +2217,8 @@ msgid "Change"
 msgstr "Ganti"
 
 #: databases/templates/databases/phpMyAdmin.html:3
-#, fuzzy
-#| msgid "Domains - CyberPanel"
 msgid "phpMyAdmin - CyberPanel"
-msgstr "Domain - CyberPanel"
+msgstr "phpMyAdmin - CyberPanel"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:3
 msgid "Add/Modify DNS Records - CyberPanel"
@@ -2313,7 +2234,7 @@ msgstr "Tambah/Edit Zona DNS"
 #: dns/templates/dns/createNameServer.html:12
 #: dns/templates/dns/deleteDNSZone.html:12
 msgid "DNS Docs"
-msgstr "Dok DNS"
+msgstr "Dokumentasi DNS"
 
 #: dns/templates/dns/addDeleteDNSRecords.html:14
 msgid ""
@@ -2443,15 +2364,11 @@ msgid "Record Successfully Added."
 msgstr "Rekor Berhasil Ditambahkan."
 
 #: dns/templates/dns/configureDefaultNameServers.html:3
-#, fuzzy
-#| msgid "Create Nameserver - CyberPanel"
-msgid "Configure Default Nameserver - CyberPanel"
+msgid "Konfigurasikan Default Nameserver - CyberPanel"
 msgstr "Buat Nameserver - CyberPanel"
 
 #: dns/templates/dns/configureDefaultNameServers.html:12
-#, fuzzy
-#| msgid "Create Nameserver"
-msgid "Configure Default Nameserver"
+msgid "Konfigurasikan Default Nameserver"
 msgstr "Buat Nameserver"
 
 #: dns/templates/dns/configureDefaultNameServers.html:13
@@ -2473,25 +2390,19 @@ msgstr "Detail"
 #: dns/templates/dns/configureDefaultNameServers.html:36
 #: dns/templates/dns/createNameServer.html:46
 msgid "First Nameserver"
-msgstr "Nameserver Primer"
+msgstr "Nameserver Utama"
 
 #: dns/templates/dns/configureDefaultNameServers.html:45
-#, fuzzy
-#| msgid "Second Nameserver (Back up)"
 msgid "Second Nameserver"
-msgstr "Nameserver Sekunder (Cadangan)"
+msgstr "Nameserver Kedua"
 
 #: dns/templates/dns/configureDefaultNameServers.html:52
-#, fuzzy
-#| msgid "First Nameserver"
 msgid "Third Nameserver"
-msgstr "Nameserver Primer"
+msgstr "Nameserver Ketiga"
 
 #: dns/templates/dns/configureDefaultNameServers.html:59
-#, fuzzy
-#| msgid "First Nameserver"
 msgid "Forth Nameserver"
-msgstr "Nameserver Primer"
+msgstr "Nameserver Keempat"
 
 #: dns/templates/dns/configureDefaultNameServers.html:68
 #: emailMarketing/templates/emailMarketing/website.html:656
@@ -3699,7 +3610,7 @@ msgstr "Konfigurasi SpamAssassin!"
 
 #: emailPremium/templates/emailPremium/SpamAssassin.html:17
 msgid "SpamAssassin Docs"
-msgstr "Dok SpamAssassin"
+msgstr "Dokumentasiumentasi SpamAssassin"
 
 #: emailPremium/templates/emailPremium/SpamAssassin.html:19
 #: firewall/templates/firewall/spamassassin.html:14
@@ -3786,10 +3697,8 @@ msgstr "Konfigurasi SpamAssassin berhasil disimpan."
 #: emailPremium/templates/emailPremium/emailLimits.html:13
 #: emailPremium/templates/emailPremium/listDomains.html:14
 #: emailPremium/templates/emailPremium/policyServer.html:13
-#, fuzzy
-#| msgid "Emai Limits Docs"
 msgid "Email Limits Docs"
-msgstr "Dok Batasan Email"
+msgstr "Dokumentasiumentasi Batasan Email"
 
 #: emailPremium/templates/emailPremium/emailLimits.html:14
 msgid "View and change email limits for a domain name."
@@ -3851,7 +3760,7 @@ msgstr "Penggunaan Sumberdaya Email"
 
 #: emailPremium/templates/emailPremium/emailLimits.html:133
 msgid "Search Emails.."
-msgstr "Cari Email."
+msgstr "Cari Email.."
 
 #: emailPremium/templates/emailPremium/emailLimits.html:164
 #: emailPremium/templates/emailPremium/listDomains.html:67
@@ -3861,7 +3770,7 @@ msgstr "Kelola"
 
 #: emailPremium/templates/emailPremium/emailPage.html:13
 msgid "Emai Limits Docs"
-msgstr "Dok Batasan Email"
+msgstr "Dokumentasi Batasan Email"
 
 #: emailPremium/templates/emailPremium/emailPage.html:14
 msgid "View and change limits for an Email Address."
@@ -3910,8 +3819,7 @@ msgstr "Konfigurasi Server Kebijakan Email!"
 
 #: emailPremium/templates/emailPremium/policyServer.html:14
 msgid "Turn ON Email Policy Server to use Email Limits Feature. "
-msgstr ""
-"Aktifkan Server Kebijakan Email untuk menggunakan Fitur Pembatasan Email. "
+msgstr "Aktifkan Server Kebijakan Email untuk menggunakan Fitur Pembatasan Email. "
 
 #: emailPremium/templates/emailPremium/policyServer.html:40
 #: manageServices/templates/manageServices/managePostfix.html:41
@@ -4403,7 +4311,7 @@ msgstr "Konfigurasi ModSecurity!"
 #: firewall/templates/firewall/modSecurityRules.html:13
 #: firewall/templates/firewall/modSecurityRulesPacks.html:13
 msgid "ModSec Docs"
-msgstr "Dok ModSec"
+msgstr "Dokumentasi ModSec"
 
 #: firewall/templates/firewall/modSecurity.html:20
 #: firewall/templates/firewall/modSecurity.html:214
@@ -4512,7 +4420,7 @@ msgstr "Secure SSH - CyberPanel"
 
 #: firewall/templates/firewall/secureSSH.html:13
 msgid "SSH Docs"
-msgstr "Dok SSH"
+msgstr "Dokumentasi SSH"
 
 #: firewall/templates/firewall/secureSSH.html:14
 msgid "Secure or harden SSH Configurations."
@@ -4746,7 +4654,7 @@ msgstr "DKIM Manager- CyberPanel"
 
 #: mailServer/templates/mailServer/dkimManager.html:13
 msgid "DKIM Docs"
-msgstr "Dok DKIM"
+msgstr "Dokumentasi DKIM"
 
 #: mailServer/templates/mailServer/dkimManager.html:14
 msgid "This page can be used to generate and view DKIM keys for Domains"
@@ -4802,17 +4710,15 @@ msgstr "Setel Pengalihan Email"
 
 #: mailServer/templates/mailServer/emailForwarding.html:12
 msgid "Forwarding Docs"
-msgstr "Dok Pengalihan"
+msgstr "Opsi Penerusan"
 
 #: mailServer/templates/mailServer/emailForwarding.html:13
 msgid "This page help you setup email forwarding for your emails."
 msgstr "Halaman ini membantu menyiapkan pengalihan untuk email anda."
 
 #: mailServer/templates/mailServer/emailForwarding.html:61
-#, fuzzy
-#| msgid "Forwarding Docs"
 msgid "Forwarding Options"
-msgstr "Dok Pengalihan"
+msgstr "Opsi Penerusan"
 
 #: mailServer/templates/mailServer/emailForwarding.html:97
 #: mailServer/templates/mailServer/emailForwarding.html:118
@@ -4840,23 +4746,17 @@ msgid "Manage email accounts on this page."
 msgstr "Mengelola akun email di halaman ini."
 
 #: mailServer/templates/mailServer/listEmails.html:3
-#, fuzzy
-#| msgid "List FTP Accounts - CyberPanel"
 msgid "List Email Accounts - CyberPanel"
 msgstr "Daftar Akun FTP - CyberPanel"
 
 #: mailServer/templates/mailServer/listEmails.html:13
 #: mailServer/templates/mailServer/listEmails.html:19
-#, fuzzy
-#| msgid "List FTP Accounts"
 msgid "List Email Accounts"
 msgstr "Daftar Akun FTP"
 
 #: mailServer/templates/mailServer/listEmails.html:14
-#, fuzzy
-#| msgid "List FTP Accounts or change their passwords."
 msgid "List Emails Accounts. Change their passwords or delete them."
-msgstr "Daftar Akun FTP atau hapus password-nya."
+msgstr "Daftar Akun Email. Ubah kata sandi atau hapus."
 
 #: managePHP/templates/managePHP/editPHPConfig.html:3
 msgid "Edit PHP Configurations - CyberPanel"
@@ -4996,7 +4896,7 @@ msgstr "Kelola SSL - CyberPanel"
 #: manageSSL/templates/manageSSL/sslForHostName.html:13
 #: manageSSL/templates/manageSSL/sslForMailServer.html:13
 msgid "SSL Docs"
-msgstr "Dok SSL"
+msgstr "Dokumentasi SSL"
 
 #: manageSSL/templates/manageSSL/manageSSL.html:14
 msgid ""
@@ -5075,7 +4975,7 @@ msgstr "Kelola Server Email (Postfix)"
 #: manageServices/templates/manageServices/managePowerDNS.html:16
 #: manageServices/templates/manageServices/managePureFtpd.html:13
 msgid "Services Docs"
-msgstr "Dok Servis"
+msgstr "Dokumentasi Servis"
 
 #: manageServices/templates/manageServices/managePostfix.html:14
 msgid "Enable or disable Email services. "
@@ -5100,50 +5000,42 @@ msgid "Enable or disable DNS services. "
 msgstr "Aktif/nonaktifkan servis DNS. "
 
 #: manageServices/templates/manageServices/managePowerDNS.html:42
-#, fuzzy
-#| msgid "Security Functions"
 msgid "Select Function Mode"
-msgstr "Fungsi Keamanan"
+msgstr "Pilih mode fungsi"
 
 #: manageServices/templates/manageServices/managePowerDNS.html:53
-#, fuzzy
-#| msgid "Name server"
 msgid "Slave Server"
-msgstr "Nameserver"
+msgstr "Slave Server"
 
 #: manageServices/templates/manageServices/managePowerDNS.html:60
-#, fuzzy
-#| msgid "MailServer SSL"
 msgid "Master Server IP"
-msgstr "SSL MailServer"
+msgstr "Master Server IP"
 
 #: manageServices/templates/manageServices/managePowerDNS.html:67
 #, fuzzy
 #| msgid "Name server"
 msgid "Slave Server 1"
-msgstr "Nameserver"
+msgstr "Slave Server 1"
 
 #: manageServices/templates/manageServices/managePowerDNS.html:74
-#, fuzzy
-#| msgid "Name server"
 msgid "Slave Server IP"
-msgstr "Nameserver"
+msgstr "Slave Server IP"
 
 #: manageServices/templates/manageServices/managePowerDNS.html:81
 msgid "Slave Server 2 (Optional)"
-msgstr ""
+msgstr "Slave Server 2 (Optional)"
 
 #: manageServices/templates/manageServices/managePowerDNS.html:88
 msgid "Slave Server IP 2 (Optional)"
-msgstr ""
+msgstr "Slave Server IP 2 (Optional)"
 
 #: manageServices/templates/manageServices/managePowerDNS.html:95
 msgid "Slave Server 3 (Optional)"
-msgstr ""
+msgstr "Slave Server 3 (Optional)"
 
 #: manageServices/templates/manageServices/managePowerDNS.html:102
 msgid "Slave Server IP 3 (Optional)"
-msgstr ""
+msgstr "Slave Server IP 3 (Optional)"
 
 #: manageServices/templates/manageServices/managePureFtpd.html:3
 msgid "Manage FTP Server (Pure FTPD) - CyberPanel"
@@ -5232,8 +5124,6 @@ msgid "Cannot delete package. Error message:"
 msgstr "Tidak bisa menghapus paket. Pesan kesalahan:"
 
 #: packages/templates/packages/deletePackage.html:60
-#, fuzzy
-#| msgid " Successfully Deleted"
 msgid " Successfully Deleted."
 msgstr " Berhasil Dihapus"
 
@@ -5242,46 +5132,36 @@ msgid "Packages - CyberPanel"
 msgstr "Paket - CyberPanel"
 
 #: packages/templates/packages/listPackages.html:3
-#, fuzzy
-#| msgid "Packages - CyberPanel"
 msgid "List Packages  - CyberPanel"
-msgstr "Paket - CyberPanel"
+msgstr "List Paket - CyberPanel"
 
 #: packages/templates/packages/listPackages.html:14
 msgid "List Packages and delete or edit them."
-msgstr ""
+msgstr "Daftar Paket dan hapus atau edit."
 
 #: packages/templates/packages/listPackages.html:34
-#, fuzzy
-#| msgid "Disk Space"
 msgid "Diskspace"
-msgstr "Ruang Simpan"
+msgstr "Ruang Pnyimpanan"
 
 #: packages/templates/packages/listPackages.html:36
-#, fuzzy
-#| msgid "Create Email Account"
 msgid "Email Accounts"
-msgstr "Buat Akun Email"
+msgstr "Akun Email"
 
 #: packages/templates/packages/listPackages.html:38
 msgid "FTPs"
-msgstr ""
+msgstr "FTPs"
 
 #: packages/templates/packages/listPackages.html:39
-#, fuzzy
-#| msgid "Add Domains"
 msgid "Child Domains"
-msgstr "Tambah Domain"
+msgstr "Domain Turunan"
 
 #: packages/templates/packages/listPackages.html:40
 msgid "Allow FQDN as Childs"
-msgstr ""
+msgstr "Ijinkan FQDN menjadi turunan"
 
 #: packages/templates/packages/listPackages.html:152
-#, fuzzy
-#| msgid "Additional Features"
 msgid "Additional"
-msgstr "Fitur Tambahan"
+msgstr "Tambahan"
 
 #: packages/templates/packages/modifyPackage.html:3
 msgid "Modify Package - CyberPanel"
@@ -5486,10 +5366,8 @@ msgid "Switch to LiteSpeed Enterprise Web Server"
 msgstr "Ganti ke LiteSpeed Enterprise Web Server"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:149
-#, fuzzy
-#| msgid "LiteSpeed Processes"
 msgid "LiteSpeed Serial No. (License Key)"
-msgstr "Proses LiteSpeed"
+msgstr "Kunci Lisensi LiteSpeed"
 
 #: serverStatus/templates/serverStatus/litespeedStatus.html:160
 msgid "Switch"
@@ -5818,10 +5696,8 @@ msgid "Successfully tuned."
 msgstr "Berhasil Di-tuning."
 
 #: userManagment/templates/userManagment/apiAccess.html:3
-#, fuzzy
-#| msgid "Access Logs - CyberPanel"
 msgid "API Access for User - CyberPanel"
-msgstr "Log Akses - CyberPanel"
+msgstr "Akses API untuk Pengguna - CyberPanel"
 
 #: userManagment/templates/userManagment/apiAccess.html:14
 msgid ""
@@ -5837,8 +5713,6 @@ msgid "Select User"
 msgstr "Pilih User"
 
 #: userManagment/templates/userManagment/apiAccess.html:40
-#, fuzzy
-#| msgid "Access Log"
 msgid "Access"
 msgstr "Log Akses"
 
@@ -6014,10 +5888,8 @@ msgstr "Jumlah Situs"
 
 #: userManagment/templates/userManagment/createUser.html:107
 #: userManagment/templates/userManagment/modifyUser.html:85
-#, fuzzy
-#| msgid "Security"
 msgid "Security Level"
-msgstr "Keamanan"
+msgstr "Level Keamanan"
 
 #: userManagment/templates/userManagment/createUser.html:120
 #: userManagment/templates/userManagment/index.html:49
@@ -6078,18 +5950,16 @@ msgid "Create, edit and delete users on this page."
 msgstr "Buat, edit dan hapus user di halaman ini."
 
 #: userManagment/templates/userManagment/listUsers.html:3
-#, fuzzy
-#| msgid "List Databases  - CyberPanel"
 msgid "List Users  - CyberPanel"
-msgstr "Daftar Database - CyberPanel"
+msgstr "Daftar Pengguna - CyberPanel"
 
 #: userManagment/templates/userManagment/listUsers.html:14
 msgid "List Users that you own."
-msgstr ""
+msgstr "Daftar Pengguna yang Anda miliki."
 
 #: userManagment/templates/userManagment/listUsers.html:35
 msgid "ACL"
-msgstr ""
+msgstr "ACL"
 
 #: userManagment/templates/userManagment/listUsers.html:84
 #: userManagment/templates/userManagment/resellerCenter.html:37
@@ -6284,10 +6154,8 @@ msgstr "Fungsi Situs - CyberPanel"
 
 #: websiteFunctions/templates/websiteFunctions/index.html:33
 #: websiteFunctions/templates/websiteFunctions/index.html:57
-#, fuzzy
-#| msgid "List Websites"
 msgid "List Website"
-msgstr "Daftar Situs"
+msgstr "Daftar Situs Web"
 
 #: websiteFunctions/templates/websiteFunctions/index.html:79
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:13
@@ -6348,38 +6216,32 @@ msgid "Installation successful. Visit:"
 msgstr "Pemasangan berhasil. Kunjungi:"
 
 #: websiteFunctions/templates/websiteFunctions/installMagento.html:3
-#, fuzzy
-#| msgid "Install PrestaShop - CyberPanel"
 msgid "Install Magento - CyberPanel"
-msgstr "Pasang PrestaShop - CyberPanel"
+msgstr "Pasang Magento - CyberPanel"
 
 #: websiteFunctions/templates/websiteFunctions/installMagento.html:12
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:724
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:728
 #: websiteFunctions/templates/websiteFunctions/website.html:1029
 #: websiteFunctions/templates/websiteFunctions/website.html:1033
-#, fuzzy
-#| msgid "Install Packages"
 msgid "Install Magento"
-msgstr "Pasang Paket"
+msgstr "Pasang Magento"
 
 #: websiteFunctions/templates/websiteFunctions/installMagento.html:13
-#, fuzzy
-#| msgid "One-click PrestaShop Install!"
 msgid "One-click Magento Install!"
 msgstr "Pasang PrestaShop dengan Satu-klik!"
 
 #: websiteFunctions/templates/websiteFunctions/installMagento.html:51
-#, fuzzy
-#| msgid "Username"
 msgid "Admin Username"
-msgstr "Nome de Utilizador"
+msgstr "Username Admin"
 
 #: websiteFunctions/templates/websiteFunctions/installMagento.html:93
 msgid ""
 "does not work on OpenLiteSpeed. It is highly recommended to use this "
 "installer with LiteSpeed Enterprise only."
 msgstr ""
+"tidak bekerja pada OpenLiteSpeed. Sangat disarankan untuk menggunakan ini "
+"pemasang dengan LiteSpeed Enterprise saja."
 
 #: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:3
 msgid "Install PrestaShop - CyberPanel"
@@ -6415,7 +6277,7 @@ msgstr "Judul Blog"
 
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:32
 msgid "Copy/Sync to Master"
-msgstr ""
+msgstr "Salin/Sinkronkan ke Master"
 
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:673
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:678
@@ -6426,7 +6288,7 @@ msgstr "WP + LSCache"
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:729
 #: websiteFunctions/templates/websiteFunctions/website.html:1034
 msgid "Magento"
-msgstr ""
+msgstr "Magento"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:3
 msgid "Cron Management - CyberPanel"
@@ -6439,7 +6301,7 @@ msgstr "Pengelolaan Cron"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:12
 msgid "Cron Docs"
-msgstr "Dok Cron"
+msgstr "Dokumentasi Cron"
 
 #: websiteFunctions/templates/websiteFunctions/listCron.html:13
 msgid "Create, edit or delete your cron jobs from this page."
@@ -6645,73 +6507,65 @@ msgid "Branch successfully changed."
 msgstr "Cabang berhasil diubah."
 
 #: websiteFunctions/templates/websiteFunctions/setupStaging.html:3
-#, fuzzy
-#| msgid "Git Management - CyberPanel"
 msgid "Set up Staging Enviroment - CyberPanel"
-msgstr "Pengelolaan Git - CyberPanel"
+msgstr "Siapkan Lingkungan Git - CyberPanel"
 
 #: websiteFunctions/templates/websiteFunctions/setupStaging.html:12
 msgid "Set up Staging Enviroment"
-msgstr ""
+msgstr "Siapkan Lingkungan Git"
 
 #: websiteFunctions/templates/websiteFunctions/setupStaging.html:13
 #: websiteFunctions/templates/websiteFunctions/setupStaging.html:20
 msgid "Set up staging enviroment for "
-msgstr ""
+msgstr "Siapkan Lingkungan"
 
 #: websiteFunctions/templates/websiteFunctions/setupStaging.html:13
 msgid ""
 ". Any domain that you will choose here will be created as child-domain for "
 "this master site."
 msgstr ""
+". Domain apa pun yang Anda pilih di sini akan dibuat sebagai domain turunan "
+"situs induk ini."
 
 #: websiteFunctions/templates/websiteFunctions/setupStaging.html:31
 msgid "Domain that you will enter below will be created as child-domain to "
-msgstr ""
+msgstr "Domain yang akan Anda masukkan di bawah ini akan dibuat sebagai domain turunan"
 
 #: websiteFunctions/templates/websiteFunctions/setupStaging.html:33
 msgid "."
-msgstr ""
+msgstr "."
 
 #: websiteFunctions/templates/websiteFunctions/setupStaging.html:47
-#, fuzzy
-#| msgid "Start Job"
 msgid "Start Cloning"
-msgstr "Jalankan Tugas"
+msgstr "Jalankan Klon"
 
 #: websiteFunctions/templates/websiteFunctions/sshAccess.html:3
-#, fuzzy
-#| msgid "Manage SSL - CyberPanel"
 msgid "SSH and CageFS - CyberPanel"
-msgstr "Kelola SSL - CyberPanel"
+msgstr "SSH dan CageFS - CyberPanel"
 
 #: websiteFunctions/templates/websiteFunctions/sshAccess.html:12
-#, fuzzy
-#| msgid "SSH Docs"
 msgid "SSH Access"
-msgstr "Dok SSH"
+msgstr "Akses SSH"
 
 #: websiteFunctions/templates/websiteFunctions/sshAccess.html:13
 msgid "Set up SSH access and enable/disable CageFS for "
-msgstr ""
+msgstr "Siapkan akses SSH dan aktifkan/nonaktifkan CageFS"
 
 #: websiteFunctions/templates/websiteFunctions/sshAccess.html:13
 msgid " CageFS require CloudLinux OS."
-msgstr ""
+msgstr "CageFS membutuhkan CloudLinux OS."
 
 #: websiteFunctions/templates/websiteFunctions/sshAccess.html:20
 msgid "Set up SSH access for "
-msgstr ""
+msgstr "Siapkan akses SSH"
 
 #: websiteFunctions/templates/websiteFunctions/sshAccess.html:29
-#, fuzzy
-#| msgid "SSL Issued for"
 msgid "SSH user for "
 msgstr "SSL Diterbitkan untuk"
 
 #: websiteFunctions/templates/websiteFunctions/sshAccess.html:29
 msgid " is "
-msgstr ""
+msgstr " adalah "
 
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:3
 msgid "Suspend/Unsuspend Website - CyberPanel"
@@ -6723,7 +6577,7 @@ msgstr "Halaman ini bisa digunakan untuk melakukan suspen/unsuspen situs."
 
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:44
 msgid "Suspend"
-msgstr "Menangguhkan"
+msgstr "Tangguhkan"
 
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:45
 msgid "Un-Suspend"
@@ -6739,17 +6593,15 @@ msgstr "Tidak bisa batalkan penangguhan situs. Pesan kesalahan:"
 
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:73
 msgid "Website "
-msgstr "Situs "
+msgstr "Situs Web "
 
 #: websiteFunctions/templates/websiteFunctions/suspendWebsite.html:73
 msgid "Successfully "
 msgstr "Berhasil "
 
 #: websiteFunctions/templates/websiteFunctions/syncMaster.html:3
-#, fuzzy
-#| msgid "DNS Functions - CyberPanel"
 msgid "Sync to Master - CyberPanel"
-msgstr "Fungsi  DNS - CyberPanel"
+msgstr "Sinkron ke Master - CyberPanel"
 
 #: websiteFunctions/templates/websiteFunctions/syncMaster.html:12
 msgid "Sync your site to Master"
@@ -6768,10 +6620,8 @@ msgid "Sync "
 msgstr "Sikronkan"
 
 #: websiteFunctions/templates/websiteFunctions/syncMaster.html:20
-#, fuzzy
-#| msgid "to"
 msgid "to "
-msgstr "ke"
+msgstr "ke "
 
 #: websiteFunctions/templates/websiteFunctions/syncMaster.html:30
 msgid "What to Sync"
@@ -6792,112 +6642,3 @@ msgstr "Siapkan Akses SSH"
 #: websiteFunctions/templates/websiteFunctions/website.html:665
 msgid "It is not required to modify rules if you are using OpenLiteSpeed."
 msgstr "Tidak perlu mengubah aturan jika Anda menggunakan OpenLiteSpeed."
-
-#~ msgid "List"
-#~ msgstr "Lihat"
-
-#~ msgid ""
-#~ "Could not fetch details, either LiteSpeed is not running or some error "
-#~ "occurred, please see CyberPanel Main log file."
-#~ msgstr ""
-#~ "Tidak bisa mengambil detailnya, mungkin LiteSpeed tidak berjalan atau ada "
-#~ "beberapa kesalahan terjadi, silakan lihat berkas log utama CyberPanel."
-
-#~ msgid "License Key"
-#~ msgstr "Kunci Lisensi"
-
-#~ msgid "Achedule Back up"
-#~ msgstr "Jadwalkan Backup"
-
-#~ msgid "Modify"
-#~ msgstr "Ubah"
-
-#~ msgid "Start"
-#~ msgstr "Mulai"
-
-#~ msgid "Reload"
-#~ msgstr "Muat Ulang"
-
-#~ msgid "CPU Status"
-#~ msgstr "Status CPU"
-
-#, fuzzy
-#~| msgid "Server Status"
-#~ msgid "System Status"
-#~ msgstr "Status Sistem"
-
-#~ msgid "Update started..."
-#~ msgstr "Pembaruan dimulai..."
-
-#~ msgid "Update finished..."
-#~ msgstr "Pembaharuan Selesai..."
-
-#~ msgid "Account Type"
-#~ msgstr "Tipe Akun"
-
-#~ msgid "User Accounts Limit"
-#~ msgstr "Batas Akun Pengguna"
-
-#~ msgid "Only Numbers"
-#~ msgstr "Hanya Angka"
-
-#~ msgid "Username should be lowercase alphanumeric."
-#~ msgstr "Nama pengguna harus berupa alfanumerik huruf kecil."
-
-#~ msgid "Must contain one number and one special character."
-#~ msgstr "Harus mengandung satu angka dan satu karakter khusus."
-
-#~ msgid "Cannot create website. Error message:"
-#~ msgstr "Tidak dapat membuat situs web. Pesan eror:"
-
-#~ msgid "Website with domain"
-#~ msgstr "Situs web dengan domain"
-
-#~ msgid " is Successfully Created"
-#~ msgstr " berhasil dibuat"
-
-#~ msgid "Installation successful. To complete the setup visit:"
-#~ msgstr "Instalasi berhasil. Untuk menyelesaikan kunjungan pengaturan:"
-
-#, fuzzy
-#~| msgid "Password"
-#~ msgid "Admin Password"
-#~ msgstr "Kata Sandi Admin"
-
-#, fuzzy
-#~| msgid "Database Name"
-#~ msgid "Database prefix"
-#~ msgstr "Database prefix"
-
-#~ msgid "Daily"
-#~ msgstr "Setiap hari"
-
-#~ msgid "Weekly"
-#~ msgstr "Setiap minggu"
-
-#~ msgid "HTTP Statistics"
-#~ msgstr "Statistik HTTP"
-
-#~ msgid "Available/Max Connections"
-#~ msgstr "Koneksi Tersedia/Maksimum"
-
-#~ msgid "Available/Max SSL Connections"
-#~ msgstr "Koneksi SSL Tersedia/Maksimum"
-
-#~ msgid "Requests Processing"
-#~ msgstr "Pemrosesan pesanan"
-
-#~ msgid "Total Requests"
-#~ msgstr "Total Permintaan"
-
-#~ msgid "Normal User"
-#~ msgstr "Pengguna Normal"
-
-#, fuzzy
-#~| msgid "Edit vHost Main Configurations"
-#~ msgid "Edit Virtual Host Main Configurations"
-#~ msgstr "Edit Konfigurasi Utama Host Virtual"
-
-#~ msgid "Configuration saved. Restart LiteSpeed put them in effect."
-#~ msgstr "Konfigurasi disimpan. Restart LiteSpeed ​​menerapkannya."
-#~ "Configuração guardada. Reinicie o LiteSpeed para coloca-las em efeito."
