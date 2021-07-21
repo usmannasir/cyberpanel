@@ -90,7 +90,6 @@ class sslUtilities:
                     certFile = "  certFile                 /etc/letsencrypt/live/" + virtualHostName + "/fullchain.pem\n"
                     certChain = "  certChain               1" + "\n"
                     sslProtocol = "  sslProtocol             24" + "\n"
-                    ciphers = "  ciphers                 EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH:ECDHE-RSA-AES128-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA128:DHE-RSA-AES128-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES128-GCM-SHA128:ECDHE-RSA-AES128-SHA384:ECDHE-RSA-AES128-SHA128:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES128-SHA:DHE-RSA-AES128-SHA128:DHE-RSA-AES128-SHA128:DHE-RSA-AES128-SHA:DHE-RSA-AES128-SHA:ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES128-GCM-SHA384:AES128-GCM-SHA128:AES128-SHA128:AES128-SHA128:AES128-SHA:AES128-SHA:DES-CBC3-SHA:HIGH:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4" + "\n"
                     enableECDHE = "  enableECDHE             1" + "\n"
                     renegProtection = "  renegProtection         1" + "\n"
                     sslSessionCache = "  sslSessionCache         1" + "\n"
@@ -108,7 +107,6 @@ class sslUtilities:
                     writeDataToFile.writelines(certFile)
                     writeDataToFile.writelines(certChain)
                     writeDataToFile.writelines(sslProtocol)
-                    writeDataToFile.writelines(ciphers)
                     writeDataToFile.writelines(enableECDHE) 
                     writeDataToFile.writelines(renegProtection)
                     writeDataToFile.writelines(sslSessionCache)
@@ -161,7 +159,6 @@ class sslUtilities:
                         certFile = "  certFile                /etc/letsencrypt/live/" + virtualHostName + "/fullchain.pem\n"
                         certChain = "  certChain               1" + "\n"
                         sslProtocol = "  sslProtocol             24" + "\n"
-                        ciphers = "  ciphers                 EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH:ECDHE-RSA-AES128-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA128:DHE-RSA-AES128-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES128-GCM-SHA128:ECDHE-RSA-AES128-SHA384:ECDHE-RSA-AES128-SHA128:ECDHE-RSA-AES128-SHA:ECDHE-RSA-AES128-SHA:DHE-RSA-AES128-SHA128:DHE-RSA-AES128-SHA128:DHE-RSA-AES128-SHA:DHE-RSA-AES128-SHA:ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES128-GCM-SHA384:AES128-GCM-SHA128:AES128-SHA128:AES128-SHA128:AES128-SHA:AES128-SHA:DES-CBC3-SHA:HIGH:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4" + "\n"
                         enableECDHE = "  enableECDHE             1" + "\n"
                         renegProtection = "  renegProtection         1" + "\n"
                         sslSessionCache = "  sslSessionCache         1" + "\n"
@@ -177,7 +174,6 @@ class sslUtilities:
                         writeSSLConfig.writelines(certFile)
                         writeSSLConfig.writelines(certChain)
                         writeSSLConfig.writelines(sslProtocol)
-                        writeSSLConfig.writelines(ciphers)
                         writeSSLConfig.writelines(enableECDHE)
                         writeSSLConfig.writelines(renegProtection)
                         writeSSLConfig.writelines(sslSessionCache)
@@ -298,7 +294,7 @@ class sslUtilities:
 
                     command = acmePath + " --issue -d " + virtualHostName + " -d www." + virtualHostName \
                               + ' --cert-file ' + existingCertPath + '/cert.pem' + ' --key-file ' + existingCertPath + '/privkey.pem' \
-                              + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w ' + sslpath + ' --server letsencrypt --force'
+                              + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w ' + sslpath + ' -k ec-256 --force'
 
                     logging.CyberCPLogFileWriter.writeToFile(command, 0)
 
@@ -319,7 +315,7 @@ class sslUtilities:
                         logging.CyberCPLogFileWriter.writeToFile("Trying to obtain SSL for: " + virtualHostName, 0)
                         command = acmePath + " --issue -d " + virtualHostName + ' --cert-file ' + existingCertPath \
                                   + '/cert.pem' + ' --key-file ' + existingCertPath + '/privkey.pem' \
-                                  + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w ' + sslpath + ' --server letsencrypt --force'
+                                  + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w ' + sslpath + ' -k ec-256 --force'
                         output = subprocess.check_output(shlex.split(command)).decode("utf-8")
                         logging.CyberCPLogFileWriter.writeToFile("Successfully obtained SSL for: " + virtualHostName, 0)
                         finalText = '%s\nSuccessfully obtained SSL for: %s.' % (finalText, virtualHostName)
@@ -344,7 +340,7 @@ class sslUtilities:
                     command = acmePath + " --issue -d " + virtualHostName + " -d www." + virtualHostName \
                               + ' -d ' + aliasDomain + ' -d www.' + aliasDomain\
                               + ' --cert-file ' + existingCertPath + '/cert.pem' + ' --key-file ' + existingCertPath + '/privkey.pem' \
-                              + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w ' + sslpath + ' --force'
+                              + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w ' + sslpath + ' -k ec-256 --force'
 
                     output = subprocess.check_output(shlex.split(command)).decode("utf-8")
                     logging.CyberCPLogFileWriter.writeToFile(
@@ -380,7 +376,7 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain = None):
             pathToStoreSSLPrivKey = "/etc/letsencrypt/live/%s/privkey.pem" % (domain)
             pathToStoreSSLFullChain = "/etc/letsencrypt/live/%s/fullchain.pem" % (domain)
 
-            command = 'openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout ' + pathToStoreSSLPrivKey + ' -out ' + pathToStoreSSLFullChain
+            command = 'openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=' + domain + '" -keyout ' + pathToStoreSSLPrivKey + ' -out ' + pathToStoreSSLFullChain
             cmd = shlex.split(command)
             subprocess.call(cmd)
 
