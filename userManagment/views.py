@@ -802,8 +802,14 @@ def fetchTableUsers(request):
                 DiskUsage, DiskUsagePercentage, bwInMB, bwUsage = virtualHostUtilities.FindStats(webs)
                 diskUsageCurrent = DiskUsage + diskUsageCurrent
 
+            try:
+                owner = Administrator.objects.get(pk=items.owner)
+            except:
+                ### If user owner is deleted then owner is admin
+                items.owner = 1
+                items.save()
+                owner = Administrator.objects.get(pk=1)
 
-            owner = Administrator.objects.get(pk=items.owner)
 
             dic = {'id': items.pk,
                    'name': items.userName,
