@@ -1,14 +1,11 @@
 # -*- coding: utf-8 -*-
-
-
 from django.shortcuts import render
 from plogical.mailUtilities import mailUtilities
 import os
 from xml.etree import ElementTree
-
+from plogical.httpProc import httpProc
 
 def installed(request):
-
     mailUtilities.checkHome()
     pluginPath = '/home/cyberpanel/plugins'
     pluginList = []
@@ -26,5 +23,6 @@ def installed(request):
 
             pluginList.append(data)
 
-
-    return render(request, 'pluginHolder/plugins.html',{'plugins': pluginList})
+    proc = httpProc(request, 'pluginHolder/plugins.html',
+                    {'plugins': pluginList}, 'admin')
+    return proc.render()

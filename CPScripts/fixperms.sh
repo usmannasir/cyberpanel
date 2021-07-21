@@ -194,7 +194,7 @@ fixperms_cyberpanel () {
     echo "Fixing public_html...."
     tput sgr0
     #Fix perms of public_html itself
-    chown "$verbose" "$account":"$account" "$HOMEDIR"/public_html
+    chown "$verbose" "$account":nobody "$HOMEDIR"/public_html
     chmod "$verbose" 755 "$HOMEDIR"/public_html
 
     tput bold

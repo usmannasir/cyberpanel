@@ -98,6 +98,23 @@ app.filter('getwebsitename', function () {
     };
 });
 
+function getWebsiteName(domain){
+    if (domain !== undefined) {
+
+            domain = domain.replace(/-/g, '');
+
+            var domainName = domain.split(".");
+
+            var finalDomainName = domainName[0];
+
+            if (finalDomainName.length > 5) {
+                finalDomainName = finalDomainName.substring(0, 4);
+            }
+
+            return finalDomainName;
+        }
+}
+
 app.controller('systemStatusInfo', function ($scope, $http, $timeout) {
 
     //getStuff();
@@ -300,8 +317,8 @@ app.controller('adminController', function ($scope, $http, $timeout) {
                 $('.addDeleteDestinations').hide();
             }
 
-            if (!Boolean(response.data.scheDuleBackups)) {
-                $('.scheDuleBackups').hide();
+            if (!Boolean(response.data.scheduleBackups)) {
+                $('.scheduleBackups').hide();
             }
 
             if (!Boolean(response.data.remoteBackups)) {

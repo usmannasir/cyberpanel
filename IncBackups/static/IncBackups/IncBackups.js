@@ -101,7 +101,7 @@ app.controller('createIncrementalBackups', function ($scope, $http, $timeout) {
 
         function ListInitialDatas(response) {
             if (response.data.status === 1) {
-                $scope.records = JSON.parse(response.data.data);
+                $scope.records = response.data.data;
             } else {
                 new PNotify({
                     title: 'Error!',
@@ -240,7 +240,7 @@ app.controller('createIncrementalBackups', function ($scope, $http, $timeout) {
         function ListInitialDatas(response) {
             $scope.cyberpanelLoading = true;
             if (response.data.status === 1) {
-                $scope.jobs = JSON.parse(response.data.data);
+                $scope.jobs = response.data.data;
             } else {
                 new PNotify({
                     title: 'Operation Failed!',
@@ -358,7 +358,7 @@ app.controller('incrementalDestinations', function ($scope, $http) {
         function ListInitialDatas(response) {
             $scope.cyberpanelLoading = true;
             if (response.data.status === 1) {
-                $scope.records = JSON.parse(response.data.data);
+                $scope.records = response.data.data;
             } else {
                 new PNotify({
                     title: 'Operation Failed!',
@@ -599,6 +599,7 @@ app.controller('scheduleBackupInc', function ($scope, $http) {
         var data = {
             backupDestinations: $scope.backupDest,
             backupFreq: $scope.backupFreq,
+            backupRetention: $scope.backupRetention,
             websiteData: $scope.websiteData,
             websiteEmails: $scope.websiteEmails,
             websiteDatabases: $scope.websiteDatabases,
@@ -621,7 +622,7 @@ app.controller('scheduleBackupInc', function ($scope, $http) {
             if (response.data.status === 1) {
                 new PNotify({
                     title: 'Success!',
-                    text: 'Destination successfully removed.',
+                    text: 'Operation successful.',
                     type: 'success'
                 });
             } else {
@@ -668,12 +669,11 @@ app.controller('scheduleBackupInc', function ($scope, $http) {
         function ListInitialDatas(response) {
             $scope.cyberpanelLoading = true;
             if (response.data.status === 1) {
-                $scope.records = JSON.parse(response.data.data);
-                var parsed = JSON.parse(response.data.data);
-
-                for (var j = 0; j < parsed.length; j++) {
-                    websitesToBeBackedTemp.push(parsed[j].website);
-                }
+                let data = response.data.data;
+                $scope.records = data;
+                data.forEach(item => {
+                    websitesToBeBackedTemp.push(item.website)
+                })
             } else {
                 new PNotify({
                     title: 'Operation Failed!',
@@ -766,7 +766,7 @@ app.controller('scheduleBackupInc', function ($scope, $http) {
         function ListInitialDatas(response) {
             $scope.cyberpanelLoading = true;
             if (response.data.status === 1) {
-                $scope.websites = JSON.parse(response.data.data);
+                $scope.websites = response.data.data;
 
                 if(response.data.websiteData === 1){
                     $scope.websiteData = true;
@@ -1074,7 +1074,7 @@ app.controller('restoreRemoteBackupsInc', function ($scope, $http, $timeout) {
         function ListInitialDatas(response) {
             $scope.cyberpanelLoading = true;
             if (response.data.status === 1) {
-                $scope.records = JSON.parse(response.data.data);
+                $scope.records = response.data.data;
             } else {
                 new PNotify({
                     title: 'Error!',

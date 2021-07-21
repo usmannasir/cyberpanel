@@ -1934,6 +1934,7 @@ msgstr "Gestisci FTP"
 msgid "Plugins"
 msgstr "Componenti aggiuntivi"
 
+
 #: baseTemplate/templates/baseTemplate/index.html:898
 msgid "Installed Plugins"
 msgstr "Componenti aggiuntivi installati"

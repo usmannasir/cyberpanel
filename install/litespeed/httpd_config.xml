@@ -139,6 +139,8 @@ SecFilterSelective ARGS &quot;or.+1[[:space:]]*=[[:space:]]1|or 1=1--'|'.+--&quo
 
 SecFilterSelective ARGS &quot;into[[:space:]]+outfile|load[[:space:]]+data|/\*.+\*/&quot;</ruleSet>
     </censorshipRuleSet>
+    <bubbleWrap>1</bubbleWrap>
+    <bubbleWrapCmd>/bin/bwrap --ro-bind /usr /usr --ro-bind /lib /lib --ro-bind-try /lib64 /lib64 --ro-bind /bin /bin --ro-bind /sbin /sbin --dir /var --ro-bind-try /var/www /var/www --dir /tmp --proc /proc --symlink../tmp var/tmp --dev /dev --ro-bind-try /etc/localtime /etc/localtime --ro-bind-try /etc/ld.so.cache /etc/ld.so.cache --ro-bind-try /etc/resolv.conf /etc/resolv.conf --ro-bind-try /etc/ssl /etc/ssl --ro-bind-try /etc/pki /etc/pki --ro-bind-try /etc/man_db.conf /etc/man_db.conf --ro-bind-try /usr/local/bin/msmtp /etc/alternatives/mta --ro-bind-try /usr/local/bin/msmtp /usr/sbin/exim --bind-try $HOMEDIR $HOMEDIR --bind-try /var/lib/mysql/mysql.sock /var/lib/mysql/mysql.sock --bind-try /home/mysql/mysql.sock /home/mysql/mysql.sock --bind-try /tmp/mysql.sock /tmp/mysql.sock --bind-try /run/mysqld/mysqld.sock /run/mysqld/mysqld.sock --bind-try /var/run/mysqld/mysqld.sock /var/run/mysqld/mysqld.sock '$COPY-TRY /etc/exim.jail/$USER.conf $HOMEDIR/.msmtprc' --unshare-all --share-net --die-with-parent --dir /run/user/$UID ‘$PASSWD 65534’ ‘$GROUP 65534’</bubbleWrapCmd>
     <accessDenyDir>
       <dir>/</dir>
       <dir>/etc/*</dir>
@@ -147,7 +149,7 @@ SecFilterSelective ARGS &quot;into[[:space:]]+outfile|load[[:space:]]+data|/\*.+
       <dir>$SERVER_ROOT/admin/conf/*</dir>
     </accessDenyDir>
     <accessControl>
-      <allow>ALL, 127.0.0.1T, 103.21.244.0/22T, 103.22.200.0/22T, 103.31.4.0/22T, 104.16.0.0/12T, 108.162.192.0/18T, 131.0.72.0/22T, 141.101.64.0/18T, 162.158.0.0/15T, 172.64.0.0/13T, 173.245.48.0/20T, 188.114.96.0/20T, 190.93.240.0/20T, 197.234.240.0/22T, 198.41.128.0/17T, 2400:cb00::/32T, 2405:8100::/32T, 2405:b500::/32T, 2606:4700::/32T, 2803:f800::/32T, 2a06:98c0::/29T, 2c0f:f248::/32T, 192.88.134.0/23T, 185.93.228.0/22, 66.248.200.0/22T, 208.109.0.0/22T, 2a02:fe80::/29T</allow>
+      <allow>ALL, 127.0.0.1T, 103.21.244.0/22T, 103.22.200.0/22T, 103.31.4.0/22T, 104.16.0.0/13T, 104.24.0.0/14T, 108.162.192.0/18T, 131.0.72.0/22T, 141.101.64.0/18T, 162.158.0.0/15T, 172.64.0.0/13T, 173.245.48.0/20T, 188.114.96.0/20T, 190.93.240.0/20T, 197.234.240.0/22T, 198.41.128.0/17T, 2400:cb00::/32T, 2405:8100::/32T, 2405:b500::/32T, 2606:4700::/32T, 2803:f800::/32T, 2a06:98c0::/29T, 2c0f:f248::/32T, 192.88.134.0/23T, 185.93.228.0/22, 66.248.200.0/22T, 208.109.0.0/22T, 2a02:fe80::/29T</allow>
     </accessControl>
   </security>
   <extProcessorList>
@@ -351,6 +353,26 @@ SecFilterSelective ARGS &quot;into[[:space:]]+outfile|load[[:space:]]+data|/\*.+
       <procSoftLimit>400</procSoftLimit>
       <procHardLimit>500</procHardLimit>
     </extProcessor>
+    <extProcessor>
+      <type>lsapi</type>
+      <name>lsphp80</name>
+      <address>uds://tmp/lshttpd/lsphp80.sock</address>
+      <maxConns>35</maxConns>
+      <env>PHP_LSAPI_CHILDREN=35</env>
+      <initTimeout>60</initTimeout>
+      <retryTimeout>0</retryTimeout>
+      <persistConn>1</persistConn>
+      <respBuffer>0</respBuffer>
+      <autoStart>3</autoStart>
+      <path>$SERVER_ROOT/lsphp80/bin/lsphp</path>
+      <backlog>100</backlog>
+      <instances>1</instances>
+      <priority>0</priority>
+      <memSoftLimit>2047M</memSoftLimit>
+      <memHardLimit>2047M</memHardLimit>
+      <procSoftLimit>400</procSoftLimit>
+      <procHardLimit>500</procHardLimit>
+    </extProcessor>
   </extProcessorList>
   <scriptHandlerList>
     <scriptHandler>
@@ -407,6 +429,11 @@ SecFilterSelective ARGS &quot;into[[:space:]]+outfile|load[[:space:]]+data|/\*.+
       <suffix>php74</suffix>
       <type>lsapi</type>
       <handler>lsphp74</handler>
+    </scriptHandler>
+    <scriptHandler>
+      <suffix>php80</suffix>
+      <type>lsapi</type>
+      <handler>lsphp80</handler>
     </scriptHandler>
   </scriptHandlerList>
   <phpConfig>

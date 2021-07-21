@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 
-from django.shortcuts import render
 from django.shortcuts import HttpResponse, redirect
 import plogical.CyberCPLogFileWriter as logging
 from loginSystem.views import loadLoginPage
 import os
 import json
+
+from plogical.httpProc import httpProc
 from plogical.mailUtilities import mailUtilities
 from plogical.acl import ACLManager
 from .models import PDNSStatus, SlaveServers
@@ -14,84 +15,45 @@ from plogical.processUtilities import ProcessUtilities
 # Create your views here.
 
 def managePowerDNS(request):
+    data = {}
+    data['status'] = 1
+
     try:
-        userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
+        pdnsStatus = PDNSStatus.objects.get(pk=1)
+    except:
+        pdnsStatus = PDNSStatus(type='NATIVE', serverStatus=1)
+        pdnsStatus.save()
 
+    if pdnsStatus.type == 'MASTER':
+        counter = 1
 
-        if currentACL['admin'] == 1:
-            pass
-        else:
-            return ACLManager.loadError()
-        try:
+        for items in SlaveServers.objects.all():
 
-            data = {}
-            data['status'] = 1
-
-            pdnsStatus = PDNSStatus.objects.get(pk=1)
-
-            if pdnsStatus.type == 'MASTER':
-                counter = 1
-
-                for items in SlaveServers.objects.all():
-
-                    if counter == 1:
-                        data['slaveServer'] = items.slaveServer
-                        data['slaveServerIP'] = items.slaveServerIP
-                    else:
-                        data['slaveServer%s' % (str(counter))] = items.slaveServer
-                        data['slaveServerIP%s' % (str(counter))] = items.slaveServerIP
-
-                    counter = counter + 1
+            if counter == 1:
+                data['slaveServer'] = items.slaveServer
+                data['slaveServerIP'] = items.slaveServerIP
             else:
-                data['slaveServerNS'] = pdnsStatus.masterServer
-                data['masterServerIP'] = pdnsStatus.masterIP
+                data['slaveServer%s' % (str(counter))] = items.slaveServer
+                data['slaveServerIP%s' % (str(counter))] = items.slaveServerIP
 
-            return render(request, 'manageServices/managePowerDNS.html', data)
-        except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg))
-            return HttpResponse("See CyberCP main log file.")
+            counter = counter + 1
+    else:
+        data['slaveServerNS'] = pdnsStatus.masterServer
+        data['masterServerIP'] = pdnsStatus.masterIP
 
-    except KeyError:
-        return redirect(loadLoginPage)
+    proc = httpProc(request, 'manageServices/managePowerDNS.html',
+                    data, 'admin')
+    return proc.render()
 
 def managePostfix(request):
-    try:
-        userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
-
-        if currentACL['admin'] == 1:
-            pass
-        else:
-            return ACLManager.loadError()
-        try:
-
-            return render(request, 'manageServices/managePostfix.html', {"status": 1})
-
-        except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg))
-            return HttpResponse("See CyberCP main log file.")
-
-    except KeyError:
-        return redirect(loadLoginPage)
+    proc = httpProc(request, 'manageServices/managePostfix.html',
+                    {"status": 1}, 'admin')
+    return proc.render()
 
 def managePureFtpd(request):
-    try:
-        userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
-
-        if currentACL['admin'] == 1:
-            pass
-        else:
-            return ACLManager.loadError()
-        try:
-            return render(request, 'manageServices/managePureFtpd.html', {"status": 1})
-        except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg))
-            return HttpResponse("See CyberCP main log file.")
-
-    except KeyError:
-        return redirect(loadLoginPage)
+    proc = httpProc(request, 'manageServices/managePureFtpd.html',
+                    {"status": 1}, 'admin')
+    return proc.render()
 
 def fetchStatus(request):
     try:
@@ -145,7 +107,6 @@ def fetchStatus(request):
                         data_ret = {'status': 1, 'error_message': 'None', 'installCheck': 0}
                         json_data = json.dumps(data_ret)
                         return HttpResponse(json_data)
-
         except BaseException as msg:
             data_ret = {'status': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
@@ -301,46 +262,33 @@ def saveStatus(request):
         return HttpResponse(json_data)
 
 def manageApplications(request):
-    try:
-        userID = request.session['userID']
-        currentACL = ACLManager.loadedACL(userID)
+    services = []
 
-        if currentACL['admin'] == 1:
-            pass
-        else:
-            return ACLManager.loadError()
+    ## ElasticSearch
 
-        services = []
+    esPath = '/home/cyberpanel/elasticsearch'
+    rPath = '/home/cyberpanel/redis'
 
-        ## ElasticSearch
+    if os.path.exists(esPath):
+        installed = 'Installed'
+    else:
+        installed = 'Not-Installed'
 
-        esPath = '/home/cyberpanel/elasticsearch'
-        rPath = '/home/cyberpanel/redis'
+    if os.path.exists(rPath):
+        rInstalled = 'Installed'
+    else:
+        rInstalled = 'Not-Installed'
 
-        if os.path.exists(esPath):
-            installed = 'Installed'
-        else:
-            installed = 'Not-Installed'
+    elasticSearch = {'image': '/static/manageServices/images/elastic-search.png', 'name': 'Elasticsearch',
+                     'installed': installed}
+    redis = {'image': '/static/manageServices/images/redis.png', 'name': 'Redis',
+             'installed': rInstalled}
+    services.append(elasticSearch)
+    services.append(redis)
 
-        if os.path.exists(rPath):
-            rInstalled = 'Installed'
-        else:
-            rInstalled = 'Not-Installed'
-
-        elasticSearch = {'image': '/static/manageServices/images/elastic-search.png', 'name': 'Elastic Search', 'installed': installed}
-        redis = {'image': '/static/manageServices/images/redis.png', 'name': 'Redis',
-                         'installed': rInstalled}
-        services.append(elasticSearch)
-        services.append(redis)
-
-        try:
-            return render(request, 'manageServices/applications.html', {'services': services})
-        except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg))
-            return HttpResponse("See CyberCP main log file.")
-
-    except KeyError:
-        return redirect(loadLoginPage)
+    proc = httpProc(request, 'manageServices/applications.html',
+                    {'services': services}, 'admin')
+    return proc.render()
 
 def removeInstall(request):
     try:
@@ -357,7 +305,7 @@ def removeInstall(request):
             status = data['status']
             appName = data['appName']
 
-            if appName == 'Elastic Search':
+            if appName == 'Elasticsearch':
                 if status == 'Installing':
                     command = '/usr/local/CyberCP/bin/python /usr/local/CyberCP/manageServices/serviceManager.py --function InstallElasticSearch'
                 else:

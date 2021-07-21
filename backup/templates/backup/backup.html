@@ -22,14 +22,13 @@
         </h3>
         <div  class="example-box-wrapper">
 
-
             <form  action="/" class="form-horizontal bordered-row">
 
 
                  <div class="form-group">
                     <label class="col-sm-3 control-label">{% trans "Select Website" %} </label>
                     <div class="col-sm-6">
-                        <select ng-change="fetchDetails()" ng-model="websiteToBeBacked" class="form-control">
+                        <select id="create-backup-select" ng-model="websiteToBeBacked" class="form-control">
                             {% for items in websiteList %}
                                 <option>{{ items }}</option>
                             {% endfor %}
@@ -37,7 +36,7 @@
                     </div>
                 </div>
 
-                <div ng-hide="destination" class="form-group">
+                <div class="form-group destinationHide">
                     <label class="col-sm-3 control-label">{% trans "Destination" %}</label>
                     <div class="col-sm-6">
                         <select ng-change="destinationSelection()" ng-model="backupDestinations" class="form-control">
@@ -75,7 +74,7 @@
 
             <!---- if Back up is running------>
 
-            <div ng-hide="backupButton" class="form-group">
+            <div class="form-group destinationHide">
                     <label class="col-sm-3 control-label"></label>
                     <div class="col-sm-4">
                          <button type="button" ng-click="createBackup()" class="btn btn-primary btn-lg btn-block">{% trans "Create Back up" %}</button>

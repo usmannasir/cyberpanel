@@ -3,6 +3,9 @@ import os
 import os.path
 import sys
 import django
+
+from plogical.httpProc import httpProc
+
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
@@ -11,7 +14,7 @@ from plogical.acl import ACLManager
 import plogical.CyberCPLogFileWriter as logging
 from plogical.virtualHostUtilities import virtualHostUtilities
 import subprocess
-from django.shortcuts import HttpResponse, render
+from django.shortcuts import HttpResponse, render, redirect
 from random import randint
 import time
 from plogical.firewallUtilities import FirewallUtilities
@@ -31,30 +34,19 @@ class FirewallManager:
         self.request = request
 
     def securityHome(self, request = None, userID = None):
-        try:
-            currentACL = ACLManager.loadedACL(userID)
-
-            if currentACL['admin'] == 1:
-                pass
-            else:
-                return ACLManager.loadError()
-
-            return render(request, 'firewall/index.html')
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+        proc = httpProc(request, 'firewall/index.html',
+                        None, 'admin')
+        return proc.render()
 
     def firewallHome(self, request = None, userID = None):
-        try:
-            currentACL = ACLManager.loadedACL(userID)
+        csfPath = '/etc/csf'
 
-            if currentACL['admin'] == 1:
-                pass
-            else:
-                return ACLManager.loadError()
-
-            return render(request, 'firewall/firewall.html')
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+        if os.path.exists(csfPath):
+            return redirect('/configservercsf/')
+        else:
+            proc = httpProc(request, 'firewall/firewall.html',
+                            None, 'admin')
+            return proc.render()
 
     def getCurrentRules(self, userID = None):
         try:
@@ -265,17 +257,9 @@ class FirewallManager:
             return HttpResponse(final_json)
 
     def secureSSH(self, request = None, userID = None):
-        try:
-            currentACL = ACLManager.loadedACL(userID)
-
-            if currentACL['admin'] == 1:
-                pass
-            else:
-                return ACLManager.loadError()
-
-            return render(request, 'firewall/secureSSH.html')
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+        proc = httpProc(request, 'firewall/secureSSH.html',
+                        None, 'admin')
+        return proc.render()
 
     def getSSHConfigs(self, userID = None, data = None):
         try:
@@ -487,34 +471,26 @@ class FirewallManager:
             return HttpResponse(final_json)
 
     def loadModSecurityHome(self, request = None, userID = None):
-        try:
-            currentACL = ACLManager.loadedACL(userID)
+        if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+            OLS = 1
+            confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
 
-            if currentACL['admin'] == 1:
-                pass
-            else:
-                return ACLManager.loadError()
+            command = "sudo cat " + confPath
+            httpdConfig = ProcessUtilities.outputExecutioner(command).splitlines()
 
-            if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
-                OLS = 1
-                confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
+            modSecInstalled = 0
 
-                command = "sudo cat " + confPath
-                httpdConfig = ProcessUtilities.outputExecutioner(command).splitlines()
+            for items in httpdConfig:
+                if items.find('module mod_security') > -1:
+                    modSecInstalled = 1
+                    break
+        else:
+            OLS = 0
+            modSecInstalled = 1
 
-                modSecInstalled = 0
-
-                for items in httpdConfig:
-                    if items.find('module mod_security') > -1:
-                        modSecInstalled = 1
-                        break
-            else:
-                OLS = 0
-                modSecInstalled = 1
-
-            return render(request, 'firewall/modSecurity.html', {'modSecInstalled': modSecInstalled, 'OLS': OLS})
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+        proc = httpProc(request, 'firewall/modSecurity.html',
+                        {'modSecInstalled': modSecInstalled, 'OLS': OLS}, 'admin')
+        return proc.render()
 
     def installModSec(self, userID = None, data = None):
         try:
@@ -549,7 +525,6 @@ class FirewallManager:
             if installStatus.find("[200]") > -1:
 
                 execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
-
                 execPath = execPath + " installModSecConfigs"
 
                 output = ProcessUtilities.outputExecutioner(execPath)
@@ -870,34 +845,24 @@ class FirewallManager:
             return HttpResponse(json_data)
 
     def modSecRules(self, request = None, userID = None):
-        try:
+        if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+            confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
 
-            currentACL = ACLManager.loadedACL(userID)
+            command = "sudo cat " + confPath
+            httpdConfig = ProcessUtilities.outputExecutioner(command).split('\n')
 
-            if currentACL['admin'] == 1:
-                pass
-            else:
-                return ACLManager.loadError()
+            modSecInstalled = 0
 
-            if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
-                confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
+            for items in httpdConfig:
+                if items.find('module mod_security') > -1:
+                    modSecInstalled = 1
+                    break
+        else:
+            modSecInstalled = 1
 
-                command = "sudo cat " + confPath
-                httpdConfig = ProcessUtilities.outputExecutioner(command).split('\n')
-
-                modSecInstalled = 0
-
-                for items in httpdConfig:
-                    if items.find('module mod_security') > -1:
-                        modSecInstalled = 1
-                        break
-            else:
-                modSecInstalled = 1
-
-            return render(request, 'firewall/modSecurityRules.html', {'modSecInstalled': modSecInstalled})
-
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+        proc = httpProc(request, 'firewall/modSecurityRules.html',
+                        {'modSecInstalled': modSecInstalled}, 'admin')
+        return proc.render()
 
     def fetchModSecRules(self, userID = None, data = None):
         try:
@@ -994,35 +959,25 @@ class FirewallManager:
             return HttpResponse(json_data)
 
     def modSecRulesPacks(self, request = None, userID = None):
-        try:
+        if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
 
-            currentACL = ACLManager.loadedACL(userID)
+            confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
 
-            if currentACL['admin'] == 1:
-                pass
-            else:
-                return ACLManager.loadError()
+            command = "sudo cat " + confPath
+            httpdConfig = ProcessUtilities.outputExecutioner(command).split('\n')
 
-            if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+            modSecInstalled = 0
 
-                confPath = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
+            for items in httpdConfig:
+                if items.find('module mod_security') > -1:
+                    modSecInstalled = 1
+                    break
+        else:
+            modSecInstalled = 1
 
-                command = "sudo cat " + confPath
-                httpdConfig = ProcessUtilities.outputExecutioner(command).split('\n')
-
-                modSecInstalled = 0
-
-                for items in httpdConfig:
-                    if items.find('module mod_security') > -1:
-                        modSecInstalled = 1
-                        break
-            else:
-                modSecInstalled = 1
-
-            return render(request, 'firewall/modSecurityRulesPacks.html', {'modSecInstalled': modSecInstalled})
-
-        except BaseException as msg:
-            return HttpResponse(msg)
+        proc = httpProc(request, 'firewall/modSecurityRulesPacks.html',
+                        {'modSecInstalled': modSecInstalled}, 'admin')
+        return proc.render()
 
     def getOWASPAndComodoStatus(self, userID = None, data = None):
         try:
@@ -1299,26 +1254,18 @@ class FirewallManager:
             return HttpResponse(json_data)
 
     def csf(self):
+        csfInstalled = 1
         try:
-            userID = self.request.session['userID']
-            currentACL = ACLManager.loadedACL(userID)
-
-            if currentACL['admin'] == 1:
-                pass
-            else:
-                return ACLManager.loadError()
-
-            csfInstalled = 1
-            try:
-                command = 'csf -h'
-                output = ProcessUtilities.outputExecutioner(command)
-                if output.find("command not found") > -1:
-                    csfInstalled = 0
-            except subprocess.CalledProcessError:
+            command = 'csf -h'
+            output = ProcessUtilities.outputExecutioner(command)
+            if output.find("command not found") > -1:
                 csfInstalled = 0
-            return render(self.request,'firewall/csf.html', {'csfInstalled' : csfInstalled})
-        except BaseException as msg:
-                return HttpResponse(str(msg))
+        except subprocess.CalledProcessError:
+            csfInstalled = 0
+
+        proc = httpProc(self.request, 'firewall/csf.html',
+                        {'csfInstalled': csfInstalled}, 'admin')
+        return proc.render()
 
     def installCSF(self):
         try:
@@ -1349,7 +1296,6 @@ class FirewallManager:
     def installStatusCSF(self):
         try:
             userID = self.request.session['userID']
-            currentACL = ACLManager.loadedACL(userID)
 
             installStatus = ProcessUtilities.outputExecutioner("sudo cat " + CSF.installLogPath)
 
@@ -1548,45 +1494,35 @@ class FirewallManager:
             return HttpResponse(final_json)
 
     def imunify(self):
-        try:
-            userID = self.request.session['userID']
-            currentACL = ACLManager.loadedACL(userID)
+        ipFile = "/etc/cyberpanel/machineIP"
+        f = open(ipFile)
+        ipData = f.read()
+        ipAddress = ipData.split('\n', 1)[0]
 
-            if currentACL['admin'] == 1:
-                pass
-            else:
-                return ACLManager.loadError()
+        fullAddress = '%s:%s' % (ipAddress, ProcessUtilities.fetchCurrentPort())
 
-            ipFile = "/etc/cyberpanel/machineIP"
-            f = open(ipFile)
-            ipData = f.read()
-            ipAddress = ipData.split('\n', 1)[0]
+        data = {}
+        data['ipAddress'] = fullAddress
 
-            fullAddress = '%s:%s' % (ipAddress, ProcessUtilities.fetchCurrentPort())
+        data['CL'] = 1
 
-            data = {}
-            data['ipAddress'] = fullAddress
+        if os.path.exists(FirewallManager.imunifyPath):
+            data['imunify'] = 1
+        else:
+            data['imunify'] = 0
 
-            if os.path.exists(FirewallManager.CLPath):
-                data['CL'] = 1
-            else:
-                data['CL'] = 0
-
-            if os.path.exists(FirewallManager.imunifyPath):
-                data['imunify'] = 1
-            else:
-                data['imunify'] = 0
-
-            if data['CL'] == 0:
-                return render(self.request, 'firewall/notAvailable.html', data)
-            elif data['imunify'] == 0:
-                return render(self.request, 'firewall/notAvailable.html', data)
-            else:
-                return render(self.request, 'firewall/imunify.html', data)
-
-
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+        if data['CL'] == 0:
+            proc = httpProc(self.request, 'firewall/notAvailable.html',
+                            data, 'admin')
+            return proc.render()
+        elif data['imunify'] == 0:
+            proc = httpProc(self.request, 'firewall/notAvailable.html',
+                            data, 'admin')
+            return proc.render()
+        else:
+            proc = httpProc(self.request, 'firewall/imunify.html',
+                            data, 'admin')
+            return proc.render()
 
     def submitinstallImunify(self):
         try:
@@ -1615,40 +1551,29 @@ class FirewallManager:
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath, str(msg) + ' [404].', 1)
 
     def imunifyAV(self):
-        try:
-            userID = self.request.session['userID']
-            currentACL = ACLManager.loadedACL(userID)
+        ipFile = "/etc/cyberpanel/machineIP"
+        f = open(ipFile)
+        ipData = f.read()
+        ipAddress = ipData.split('\n', 1)[0]
 
-            if currentACL['admin'] == 1:
-                pass
-            else:
-                return ACLManager.loadError()
+        fullAddress = '%s:%s' % (ipAddress, ProcessUtilities.fetchCurrentPort())
 
-            ipFile = "/etc/cyberpanel/machineIP"
-            f = open(ipFile)
-            ipData = f.read()
-            ipAddress = ipData.split('\n', 1)[0]
+        data = {}
+        data['ipAddress'] = fullAddress
 
-            fullAddress = '%s:%s' % (ipAddress, ProcessUtilities.fetchCurrentPort())
+        if os.path.exists(FirewallManager.imunifyAVPath):
+            data['imunify'] = 1
+        else:
+            data['imunify'] = 0
 
-            data = {}
-            data['ipAddress'] = fullAddress
-
-
-
-            if os.path.exists(FirewallManager.imunifyAVPath):
-                data['imunify'] = 1
-            else:
-                data['imunify'] = 0
-
-            if data['imunify'] == 0:
-                return render(self.request, 'firewall/notAvailableAV.html', data)
-            else:
-                return render(self.request, 'firewall/imunifyAV.html', data)
-
-
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+        if data['imunify'] == 0:
+            proc = httpProc(self.request, 'firewall/notAvailableAV.html',
+                            data, 'admin')
+            return proc.render()
+        else:
+            proc = httpProc(self.request, 'firewall/imunifyAV.html',
+                            data, 'admin')
+            return proc.render()
 
     def submitinstallImunifyAV(self):
         try:

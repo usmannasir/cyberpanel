@@ -458,6 +458,7 @@ app.controller('deleteUser', function ($scope, $http) {
 
 
 /* Java script code to create acl */
+
 app.controller('createACLCTRL', function ($scope, $http) {
 
     $scope.aclLoading = true;
@@ -520,10 +521,12 @@ app.controller('createACLCTRL', function ($scope, $http) {
     // Backup Management
 
     $scope.createBackup = true;
+    $scope.googleDriveBackups = true;
     $scope.restoreBackup = false;
     $scope.addDeleteDestinations = false;
-    $scope.scheDuleBackups = false;
+    $scope.scheduleBackups = false;
     $scope.remoteBackups = false;
+
 
     // SSL Management
 
@@ -599,9 +602,10 @@ app.controller('createACLCTRL', function ($scope, $http) {
             // Backup Management
 
             createBackup: $scope.createBackup,
+            googleDriveBackups: $scope.googleDriveBackups,
             restoreBackup: $scope.restoreBackup,
             addDeleteDestinations: $scope.addDeleteDestinations,
-            scheDuleBackups: $scope.scheDuleBackups,
+            scheduleBackups: $scope.scheduleBackups,
             remoteBackups: $scope.remoteBackups,
 
             // SSL Management
@@ -723,7 +727,7 @@ app.controller('createACLCTRL', function ($scope, $http) {
             $scope.createBackup = true;
             $scope.restoreBackup = true;
             $scope.addDeleteDestinations = true;
-            $scope.scheDuleBackups = true;
+            $scope.scheduleBackups = true;
             $scope.remoteBackups = true;
 
             // SSL Management
@@ -794,7 +798,7 @@ app.controller('createACLCTRL', function ($scope, $http) {
             $scope.createBackup = true;
             $scope.restoreBackup = false;
             $scope.addDeleteDestinations = false;
-            $scope.scheDuleBackups = false;
+            $scope.scheduleBackups = false;
             $scope.remoteBackups = false;
 
             // SSL Management
@@ -976,9 +980,10 @@ app.controller('modifyACLCtrl', function ($scope, $http) {
                 // Backup Management
 
                 $scope.createBackup = Boolean(response.data.createBackup);
+                $scope.googleDriveBackups = Boolean(response.data.googleDriveBackups);
                 $scope.restoreBackup = Boolean(response.data.restoreBackup);
                 $scope.addDeleteDestinations = Boolean(response.data.addDeleteDestinations);
-                $scope.scheDuleBackups = Boolean(response.data.scheDuleBackups);
+                $scope.scheduleBackups = Boolean(response.data.scheduleBackups);
                 $scope.remoteBackups = Boolean(response.data.remoteBackups);
 
                 // SSL Management
@@ -1076,9 +1081,10 @@ app.controller('modifyACLCtrl', function ($scope, $http) {
             // Backup Management
 
             createBackup: $scope.createBackup,
+            googleDriveBackups: $scope.googleDriveBackups,
             restoreBackup: $scope.restoreBackup,
             addDeleteDestinations: $scope.addDeleteDestinations,
-            scheDuleBackups: $scope.scheDuleBackups,
+            scheduleBackups: $scope.scheduleBackups,
             remoteBackups: $scope.remoteBackups,
 
             // SSL Management
@@ -1200,7 +1206,7 @@ app.controller('modifyACLCtrl', function ($scope, $http) {
             $scope.createBackup = true;
             $scope.restoreBackup = true;
             $scope.addDeleteDestinations = true;
-            $scope.scheDuleBackups = true;
+            $scope.scheduleBackups = true;
             $scope.remoteBackups = true;
 
             // SSL Management
@@ -1271,7 +1277,7 @@ app.controller('modifyACLCtrl', function ($scope, $http) {
             $scope.createBackup = true;
             $scope.restoreBackup = false;
             $scope.addDeleteDestinations = false;
-            $scope.scheDuleBackups = false;
+            $scope.scheduleBackups = false;
             $scope.remoteBackups = false;
 
             // SSL Management
@@ -1488,6 +1494,8 @@ app.controller('listTableUsers', function ($scope, $http) {
 
     $scope.cyberpanelLoading = true;
 
+    var UserToDelete;
+
     $scope.populateCurrentRecords = function () {
         $scope.cyberpanelLoading = false;
 
@@ -1541,13 +1549,18 @@ app.controller('listTableUsers', function ($scope, $http) {
     $scope.populateCurrentRecords();
 
 
-    $scope.deleteUserFinal = function (name) {
+    $scope.deleteUserInitial = function (name){
+        UserToDelete = name;
+        $scope.UserToDelete = name;
+    };
+
+    $scope.deleteUserFinal = function () {
         $scope.cyberpanelLoading = false;
 
         var url = "/users/submitUserDeletion";
 
         var data = {
-            accountUsername: name,
+            accountUsername: UserToDelete,
         };
 
         var config = {
@@ -1710,6 +1723,7 @@ app.controller('listTableUsers', function ($scope, $http) {
     };
 
     $scope.controlUserState = function (userName, state) {
+
         $scope.cyberpanelLoading = false;
 
         var url = "/users/controlUserState";

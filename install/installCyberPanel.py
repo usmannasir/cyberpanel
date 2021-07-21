@@ -87,20 +87,26 @@ class InstallCyberPanel:
                 except:
                     pass
 
-                command = 'wget https://www.litespeedtech.com/packages/5.0/lsws-5.4.2-ent-x86_64-linux.tar.gz'
+                command = 'wget https://www.litespeedtech.com/packages/6.0/lsws-6.0-ent-x86_64-linux.tar.gz'
                 install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
-                command = 'tar zxf lsws-5.4.2-ent-x86_64-linux.tar.gz'
+                command = 'tar zxf lsws-6.0-ent-x86_64-linux.tar.gz'
                 install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
-                writeSerial = open('lsws-5.4.2/serial.no', 'w')
-                writeSerial.writelines(self.serial)
-                writeSerial.close()
+                if str.lower(self.serial) == 'trial':
+                    command = 'wget -q --output-document=lsws-6.0/trial.key http://license.litespeedtech.com/reseller/trial.key'
+                if self.serial == '1111-2222-3333-4444':
+                    command = 'wget -q --output-document=/root/cyberpanel/install/lsws-6.0/trial.key http://license.litespeedtech.com/reseller/trial.key'
+                    install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+                else:
+                    writeSerial = open('lsws-6.0/serial.no', 'w')
+                    writeSerial.writelines(self.serial)
+                    writeSerial.close()
 
-                shutil.copy('litespeed/install.sh', 'lsws-5.3.5/')
-                shutil.copy('litespeed/functions.sh', 'lsws-5.3.5/')
+                shutil.copy('litespeed/install.sh', 'lsws-6.0/')
+                shutil.copy('litespeed/functions.sh', 'lsws-6.0/')
 
-                os.chdir('lsws-5.3.5')
+                os.chdir('lsws-6.0')
 
                 command = 'chmod +x install.sh'
                 install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
@@ -274,7 +280,6 @@ class InstallCyberPanel:
 
     def changeMYSQLRootPassword(self):
         if self.remotemysql == 'OFF':
-
             if self.distro == ubuntu:
                 passwordCMD = "use mysql;DROP DATABASE IF EXISTS test;DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%%';GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' IDENTIFIED BY '%s';UPDATE user SET plugin='' WHERE User='root';flush privileges;" % (InstallCyberPanel.mysql_Root_password)
             else:
@@ -656,13 +661,16 @@ def Main(cwd, mysql, distro, ent, serial = None, port = "8090", ftp = None, dns 
 
     installer = InstallCyberPanel("/usr/local/lsws/",cwd, distro, ent, serial, port, ftp, dns, publicip, remotemysql, mysqlhost, mysqldb, mysqluser, mysqlpassword, mysqlport)
 
+    logging.InstallLog.writeToFile('Installing LiteSpeed Web server,40')
     installer.installLiteSpeed()
     if ent == 0:
         installer.changePortTo80()
+    logging.InstallLog.writeToFile('Installing Optimized PHPs..,50')
     installer.installAllPHPVersions()
     if ent == 0:
         installer.fix_ols_configs()
 
+    logging.InstallLog.writeToFile('Installing MySQL,60')
     installer.installMySQL(mysql)
     installer.changeMYSQLRootPassword()
 

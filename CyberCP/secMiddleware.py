@@ -1,7 +1,7 @@
 # coding=utf-8
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 import json
-from django.shortcuts import HttpResponse
+from django.shortcuts import HttpResponse, render
 import re
 from loginSystem.models import Administrator
 
@@ -10,6 +10,12 @@ class secMiddleware:
     HIGH = 0
     LOW = 1
 
+    def get_client_ip(request):
+        ip = request.META.get('HTTP_CF_CONNECTING_IP')
+        if ip is None:
+            ip = request.META.get('REMOTE_ADDR')
+        return ip
+
     def __init__(self, get_response):
         self.get_response = get_response
 
@@ -17,7 +23,7 @@ class secMiddleware:
         try:
             uID = request.session['userID']
             admin = Administrator.objects.get(pk=uID)
-            ipAddr = request.META.get('REMOTE_ADDR')
+            ipAddr = get_client_ip(request)
 
             if ipAddr.find('.') > -1:
                 if request.session['ipAddr'] == ipAddr or admin.securityLevel == secMiddleware.LOW:
@@ -25,20 +31,19 @@ class secMiddleware:
                 else:
                     del request.session['userID']
                     del request.session['ipAddr']
-                    logging.writeToFile(request.META.get('REMOTE_ADDR'))
+                    logging.writeToFile(get_client_ip(request))
                     final_dic = {'error_message': "Session reuse detected, IPAddress logged.",
                                  "errorMessage": "Session reuse detected, IPAddress logged."}
                     final_json = json.dumps(final_dic)
                     return HttpResponse(final_json)
             else:
-                ipAddr = request.META.get('REMOTE_ADDR').split(':')[:3]
-
+                ipAddr = get_client_ip(request).split(':')[:3]
                 if request.session['ipAddr'] == ipAddr or admin.securityLevel == secMiddleware.LOW:
                     pass
                 else:
                     del request.session['userID']
                     del request.session['ipAddr']
-                    logging.writeToFile(request.META.get('REMOTE_ADDR'))
+                    logging.writeToFile(get_client_ip(request))
                     final_dic = {'error_message': "Session reuse detected, IPAddress logged.",
                                  "errorMessage": "Session reuse detected, IPAddress logged."}
                     final_json = json.dumps(final_dic)
@@ -67,7 +72,7 @@ class secMiddleware:
                             final_json = json.dumps(final_dic)
                             return HttpResponse(final_json)
 
-                    if request.build_absolute_uri().find('webhook') > -1 or request.build_absolute_uri().find('saveSpamAssassinConfigurations') > -1 or request.build_absolute_uri().find('docker') > -1 or request.build_absolute_uri().find('cloudAPI') > -1 or request.build_absolute_uri().find('filemanager') > -1 or request.build_absolute_uri().find('verifyLogin') > -1 or request.build_absolute_uri().find('submitUserCreation') > -1:
+                    if request.build_absolute_uri().find('api/verifyConn') > -1 or request.build_absolute_uri().find('webhook') > -1 or request.build_absolute_uri().find('saveSpamAssassinConfigurations') > -1 or request.build_absolute_uri().find('docker') > -1 or request.build_absolute_uri().find('cloudAPI') > -1 or request.build_absolute_uri().find('filemanager') > -1 or request.build_absolute_uri().find('verifyLogin') > -1 or request.build_absolute_uri().find('submitUserCreation') > -1:
                         continue
                     if key == 'recordContentAAAA' or key == 'backupDestinations' or key == 'ports' \
                             or key == 'imageByPass' or key == 'passwordByPass' or key == 'cronCommand' \
@@ -96,17 +101,24 @@ class secMiddleware:
                 logging.writeToFile(str(msg))
                 response = self.get_response(request)
                 return response
-
+        # else:
+        #     try:
+        #         if request.path.find('cloudAPI/') > -1 or request.path.find('api/') > -1:
+        #             pass
+        #         else:
+        #             uID = request.session['userID']
+        #     except:
+        #         return render(request, 'loginSystem/login.html', {})
 
         response = self.get_response(request)
 
         response['X-XSS-Protection'] = "1; mode=block"
-        #response['Strict-Transport-Security'] = "max-age=31536000; includeSubDomains; preload"
         response['X-Frame-Options'] = "sameorigin"
         response['Content-Security-Policy'] = "script-src 'self' https://www.jsdelivr.com"
         response['Content-Security-Policy'] = "connect-src *;"
         response['Content-Security-Policy'] = "font-src 'self' 'unsafe-inline' https://www.jsdelivr.com https://fonts.googleapis.com"
         response['Content-Security-Policy'] = "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://www.jsdelivr.com https://cdnjs.cloudflare.com https://maxcdn.bootstrapcdn.com https://cdn.jsdelivr.net"
+        #response['Content-Security-Policy'] = "default-src 'self' cyberpanel.cloud *.cyberpanel.cloud"
         response['X-Content-Type-Options'] = "nosniff"
         response['Referrer-Policy'] = "same-origin"
 

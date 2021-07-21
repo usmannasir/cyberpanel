@@ -10,6 +10,10 @@ class Databases(models.Model):
     dbName = models.CharField(max_length=50,unique=True)
     dbUser = models.CharField(max_length=50)
 
+class DatabasesUsers(models.Model):
+    owner = models.ForeignKey(Databases, on_delete=models.CASCADE)
+    username = models.CharField(max_length=50,unique=True)
+
 class DBMeta(models.Model):
     database = models.ForeignKey(Databases, on_delete=models.CASCADE)
     key = models.CharField(max_length=200)

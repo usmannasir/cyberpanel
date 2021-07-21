@@ -16,3 +16,4 @@ class Package(models.Model):
     ftpAccounts = models.IntegerField(default=0)
     allowedDomains = models.IntegerField(default=0)
     allowFullDomain = models.IntegerField(default=1)
+    enforceDiskLimits = models.IntegerField(default=0)

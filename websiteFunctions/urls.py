@@ -11,6 +11,10 @@ urlpatterns = [
     url(r'^deleteWebsite$', views.deleteWebsite, name='deleteWebsite'),
     url(r'^siteState$', views.siteState, name='siteState'),
 
+    ##
+
+    url(r'^CreateNewDomain$', views.CreateNewDomain, name='CreateNewDomain'),
+
 
     # Website modification url
 

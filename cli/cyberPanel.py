@@ -1,7 +1,9 @@
 #!/usr/local/CyberCP/bin/python
-import os,sys
+import os, sys
+
 sys.path.append('/usr/local/CyberCP')
 import django
+
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
 from inspect import stack
@@ -27,12 +29,19 @@ from plogical.backupSchedule import backupSchedule
 
 # All that we see or seem is but a dream within a dream.
 
+def get_cyberpanel_version():
+    with open('/usr/local/CyberCP/version.txt') as version:
+        version_file = version.read()
+        version = json.loads(str(version_file))
+    return f"{version['version']}.{version['build']}"
+
+
 class cyberPanel:
 
     def printStatus(self, operationStatus, errorMessage):
         data = json.dumps({'success': operationStatus,
                            'errorMessage': errorMessage
-                        })
+                           })
         print(data)
 
     ## Website Functions
@@ -42,10 +51,10 @@ class cyberPanel:
             from random import randint
             externalApp = "".join(re.findall("[a-zA-Z]+", domainName))[:5] + str(randint(1000, 9999))
             phpSelection = 'PHP ' + php
-            
+
             try:
                 counter = 0
-                _externalApp=externalApp
+                _externalApp = externalApp
                 while True:
                     tWeb = Websites.objects.get(externalApp=externalApp)
                     externalApp = '%s%s' % (_externalApp, str(counter))
@@ -55,10 +64,10 @@ class cyberPanel:
                 time.sleep(2)
 
             result = virtualHostUtilities.createVirtualHost(domainName, email, phpSelection, externalApp, ssl, dkim,
-                              openBasedir, owner, package, 0)
+                                                            openBasedir, owner, package, 0)
 
             if result[0] == 1:
-                self.printStatus(1,'None')
+                self.printStatus(1, 'None')
             else:
                 self.printStatus(0, result[1])
 
@@ -72,10 +81,11 @@ class cyberPanel:
             path = '/home/' + masterDomain + '/public_html/' + domainName
             phpSelection = 'PHP ' + php
 
-            result = virtualHostUtilities.createDomain(masterDomain, domainName, phpSelection, path, ssl, dkim, openBasedir, owner, 0)
+            result = virtualHostUtilities.createDomain(masterDomain, domainName, phpSelection, path, ssl, dkim,
+                                                       openBasedir, owner, 0)
 
             if result[0] == 1:
-                self.printStatus(1,'None')
+                self.printStatus(1, 'None')
             else:
                 self.printStatus(0, result[1])
 
@@ -98,7 +108,7 @@ class cyberPanel:
             result = virtualHostUtilities.deleteDomain(childDomain)
 
             if result[0] == 1:
-                self.printStatus(1,'None')
+                self.printStatus(1, 'None')
             else:
                 self.printStatus(0, result[1])
 
@@ -123,13 +133,14 @@ class cyberPanel:
                     state = "Suspended"
                 else:
                     state = "Active"
-                dic = {'domain': items.domain, 'adminEmail': items.adminEmail,'ipAddress':ipAddress,'admin': items.admin.userName,'package': items.package.packageName,'state':state}
+                dic = {'domain': items.domain, 'adminEmail': items.adminEmail, 'ipAddress': ipAddress,
+                       'admin': items.admin.userName, 'package': items.package.packageName, 'state': state}
 
                 if checker == 0:
                     json_data = json_data + json.dumps(dic)
                     checker = 1
                 else:
-                    json_data = json_data +',' + json.dumps(dic)
+                    json_data = json_data + ',' + json.dumps(dic)
 
             json_data = json_data + ']'
             final_json = json.dumps(json_data)
@@ -149,14 +160,16 @@ class cyberPanel:
             ipData = f.read()
             ipAddress = ipData.split('\n', 1)[0]
 
-            table = PrettyTable(['ID','Domain', 'IP Address', 'Package', 'Owner', 'State', 'Email'])
+            table = PrettyTable(['ID', 'Domain', 'IP Address', 'Package', 'Owner', 'State', 'Email'])
 
             for items in websites:
                 if items.state == 0:
                     state = "Suspended"
                 else:
                     state = "Active"
-                table.add_row([items.id, items.domain, ipAddress, items.package.packageName, items.admin.userName, state, items.adminEmail])
+                table.add_row(
+                    [items.id, items.domain, ipAddress, items.package.packageName, items.admin.userName, state,
+                     items.adminEmail])
             print(table)
 
         except BaseException as msg:
@@ -174,7 +187,7 @@ class cyberPanel:
             result = vhost.changePHP(completePathToConfigFile, phpVersion)
 
             if result[0] == 1:
-                self.printStatus(1,'None')
+                self.printStatus(1, 'None')
             else:
                 self.printStatus(0, result[1])
 
@@ -333,13 +346,22 @@ class cyberPanel:
 
     ## Backup Functions
 
-    def createBackup(self, virtualHostName):
+    def createBackup(self, virtualHostName, backupPath=None):
         try:
-            backupLogPath = "/usr/local/lscp/logs/backup_log."+time.strftime("%I-%M-%S-%a-%b-%Y")
+            # Setup default backup path to /home/<domain name>/backup if not passed in
+            if backupPath is None:
+                backupPath = '/home/' + virtualHostName + '/backup'
+
+            # remove trailing slash in path
+            backupPath = backupPath.rstrip("/")
+            backuptime = time.strftime("%m.%d.%Y_%H-%M-%S")
+            backupLogPath = "/usr/local/lscp/logs/backup_log." + backuptime
 
             print('Backup logs to be generated in %s' % (backupLogPath))
-
-            backupSchedule.createLocalBackup(virtualHostName, backupLogPath)
+            tempStoragePath = backupPath + '/backup-' + virtualHostName + '-' + backuptime
+            backupName = 'backup-' + virtualHostName + '-' + backuptime
+            backupDomain = virtualHostName
+            backupUtilities.submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain)
 
         except BaseException as msg:
             logger.writeforCLI(str(msg), "Error", stack()[0][3])
@@ -378,7 +400,8 @@ class cyberPanel:
 
     ## Packages
 
-    def createPackage(self, owner, packageName, diskSpace, bandwidth, emailAccounts, dataBases, ftpAccounts, allowedDomains):
+    def createPackage(self, owner, packageName, diskSpace, bandwidth, emailAccounts, dataBases, ftpAccounts,
+                      allowedDomains):
         try:
 
             admin = Administrator.objects.get(userName=owner)
@@ -422,7 +445,7 @@ class cyberPanel:
                        'bandwidth': items.bandwidth,
                        'ftpAccounts ': items.ftpAccounts,
                        'dataBases': items.dataBases,
-                       'emailAccounts':items.emailAccounts
+                       'emailAccounts': items.emailAccounts
                        }
 
                 if checker == 0:
@@ -445,10 +468,13 @@ class cyberPanel:
 
             records = Package.objects.all()
 
-            table = PrettyTable(['Name', 'Domains', 'Disk Space', 'Bandwidth', 'FTP Accounts', 'Databases', 'Email Accounts'])
+            table = PrettyTable(
+                ['Name', 'Domains', 'Disk Space', 'Bandwidth', 'FTP Accounts', 'Databases', 'Email Accounts'])
 
             for items in records:
-                table.add_row([items.packageName, items.allowedDomains, items.diskSpace, items.bandwidth, items.ftpAccounts, items.dataBases, items.emailAccounts])
+                table.add_row(
+                    [items.packageName, items.allowedDomains, items.diskSpace, items.bandwidth, items.ftpAccounts,
+                     items.dataBases, items.emailAccounts])
             print(table)
 
         except BaseException as msg:
@@ -575,8 +601,8 @@ class cyberPanel:
 
             for items in records:
                 dic = {
-                       'email': items.email,
-                       }
+                    'email': items.email,
+                }
 
                 if checker == 0:
                     json_data = json_data + json.dumps(dic)
@@ -848,7 +874,8 @@ def main():
         else:
             openBasedir = 0
 
-        cyberpanel.createWebsite(args.package, args.owner, args.domainName, args.email, args.php, ssl, dkim, openBasedir)
+        cyberpanel.createWebsite(args.package, args.owner, args.domainName, args.email, args.php, ssl, dkim,
+                                 openBasedir)
     elif args.function == "deleteWebsite":
 
         completeCommandExample = 'cyberpanel deleteWebsite --domainName cyberpanel.net'
@@ -1076,8 +1103,6 @@ def main():
         if not args.allowedDomains:
             print("\n\nPlease enter value for Allowed Child Domains. For example:\n\n" + completeCommandExample + "\n\n")
             return
-
-
 
         cyberpanel.createPackage(args.owner, args.packageName, args.diskSpace, args.bandwidth, args.emailAccounts,
                                  args.dataBases, args.ftpAccounts, args.allowedDomains)
@@ -1325,14 +1350,7 @@ def main():
         ProcessUtilities.executioner(command)
     elif args.function == 'version' or args.function == 'v' or args.function == 'V':
         ## Get CurrentVersion
-        with open('/usr/local/CyberCP/version.txt') as file:
-            file_contents = file.read()
-            version = re.search('\d.\d', file_contents)
-            version = version.group()
-            build = file_contents[-2:]
-            build = build[0:1]
-            currentversion = version + '.' + build
-            print (currentversion)
+        print(get_cyberpanel_version())
 
     ### User Functions
 
@@ -1563,7 +1581,6 @@ def main():
 
         wm = WebsiteManager()
         wm.installJoomla(1, data)
-
 
 
 if __name__ == "__main__":

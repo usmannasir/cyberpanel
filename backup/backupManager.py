@@ -4,6 +4,8 @@ import os.path
 import sys
 import django
 
+from plogical.httpProc import httpProc
+
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
@@ -39,43 +41,28 @@ class BackupManager:
     def loadBackupHome(self, request=None, userID=None, data=None):
         try:
             currentACL = ACLManager.loadedACL(userID)
-            return render(request, 'backup/index.html', currentACL)
+            proc = httpProc(request, 'backup/index.html', currentACL)
+            return proc.render()
         except BaseException as msg:
             return HttpResponse(str(msg))
 
     def backupSite(self, request=None, userID=None, data=None):
-        try:
-            currentACL = ACLManager.loadedACL(userID)
-
-            if ACLManager.currentContextPermission(currentACL, 'createBackup') == 0:
-                return ACLManager.loadError()
-
-            websitesName = ACLManager.findAllSites(currentACL, userID)
-            return render(request, 'backup/backup.html', {'websiteList': websitesName})
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+        currentACL = ACLManager.loadedACL(userID)
+        websitesName = ACLManager.findAllSites(currentACL, userID)
+        proc = httpProc(request, 'backup/backup.html', {'websiteList': websitesName}, 'createBackup')
+        return proc.render()
 
     def gDrive(self, request=None, userID=None, data=None):
-        try:
-            currentACL = ACLManager.loadedACL(userID)
-
-            admin = Administrator.objects.get(pk=userID)
-
-            if ACLManager.currentContextPermission(currentACL, 'createBackup') == 0:
-                return ACLManager.loadError()
-
-            gDriveAcctsList = []
-
-            gDriveAccts = admin.gdrive_set.all()
-
-            for items in gDriveAccts:
-                gDriveAcctsList.append(items.name)
-
-            websitesName = ACLManager.findAllSites(currentACL, userID)
-
-            return render(request, 'backup/googleDrive.html', {'accounts': gDriveAcctsList, 'websites': websitesName})
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+        currentACL = ACLManager.loadedACL(userID)
+        admin = Administrator.objects.get(pk=userID)
+        gDriveAcctsList = []
+        gDriveAccts = admin.gdrive_set.all()
+        for items in gDriveAccts:
+            gDriveAcctsList.append(items.name)
+        websitesName = ACLManager.findAllSites(currentACL, userID)
+        proc = httpProc(request, 'backup/googleDrive.html', {'accounts': gDriveAcctsList, 'websites': websitesName},
+                        'createBackup')
+        return proc.render()
 
     def gDriveSetup(self, userID=None, request=None):
         try:
@@ -356,32 +343,23 @@ class BackupManager:
             return HttpResponse(json_data)
 
     def restoreSite(self, request=None, userID=None, data=None):
-        try:
-            currentACL = ACLManager.loadedACL(userID)
+        path = os.path.join("/home", "backup")
+        if not os.path.exists(path):
+            proc = httpProc(request, 'backup/restore.html', None, 'restoreBackup')
+            return proc.render()
+        else:
+            all_files = []
+            ext = ".tar.gz"
 
-            if ACLManager.currentContextPermission(currentACL, 'restoreBackup') == 0:
-                return ACLManager.loadError()
+            command = 'sudo chown -R  cyberpanel:cyberpanel ' + path
+            ACLManager.executeCall(command)
 
-            path = os.path.join("/home", "backup")
-
-            if not os.path.exists(path):
-                return render(request, 'backup/restore.html')
-            else:
-                all_files = []
-                ext = ".tar.gz"
-
-                command = 'sudo chown -R  cyberpanel:cyberpanel ' + path
-                ACLManager.executeCall(command)
-
-                files = os.listdir(path)
-                for filename in files:
-                    if filename.endswith(ext):
-                        all_files.append(filename)
-
-                return render(request, 'backup/restore.html', {'backups': all_files})
-
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+            files = os.listdir(path)
+            for filename in files:
+                if filename.endswith(ext):
+                    all_files.append(filename)
+            proc = httpProc(request, 'backup/restore.html', {'backups': all_files}, 'restoreBackup')
+            return proc.render()
 
     def getCurrentBackups(self, userID=None, data=None):
         try:
@@ -695,16 +673,8 @@ class BackupManager:
             return HttpResponse(final_json)
 
     def backupDestinations(self, request=None, userID=None, data=None):
-        try:
-            currentACL = ACLManager.loadedACL(userID)
-
-            if ACLManager.currentContextPermission(currentACL, 'addDeleteDestinations') == 0:
-                return ACLManager.loadError()
-
-            return render(request, 'backup/backupDestinations.html', {})
-
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+        proc = httpProc(request, 'backup/backupDestinations.html', {}, 'addDeleteDestinations')
+        return proc.render()
 
     def submitDestinationCreation(self, userID=None, data=None):
         try:
@@ -726,7 +696,7 @@ class BackupManager:
                     finalDic['port'] = "22"
 
                 try:
-                    finalDic['user'] = data['user']
+                    finalDic['user'] = data['userName']
                 except:
                     finalDic['user'] = "root"
 
@@ -868,31 +838,21 @@ class BackupManager:
             return HttpResponse(final_json)
 
     def scheduleBackup(self, request, userID=None, data=None):
-        try:
-            currentACL = ACLManager.loadedACL(userID)
-
-            if ACLManager.currentContextPermission(currentACL, 'scheDuleBackups') == 0:
-                return ACLManager.loadError()
-
-            destinations = NormalBackupDests.objects.all()
-
-            dests = []
-
-            for dest in destinations:
-                dests.append(dest.name)
-
-            websitesName = ACLManager.findAllSites(currentACL, userID)
-
-            return render(request, 'backup/backupSchedule.html', {'destinations': dests, 'websites': websitesName})
-
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+        currentACL = ACLManager.loadedACL(userID)
+        destinations = NormalBackupDests.objects.all()
+        dests = []
+        for dest in destinations:
+            dests.append(dest.name)
+        websitesName = ACLManager.findAllSites(currentACL, userID)
+        proc = httpProc(request, 'backup/backupSchedule.html', {'destinations': dests, 'websites': websitesName},
+                        'scheduleBackups')
+        return proc.render()
 
     def getCurrentBackupSchedules(self, userID=None, data=None):
         try:
             currentACL = ACLManager.loadedACL(userID)
 
-            if ACLManager.currentContextPermission(currentACL, 'scheDuleBackups') == 0:
+            if ACLManager.currentContextPermission(currentACL, 'scheduleBackups') == 0:
                 return ACLManager.loadErrorJson('fetchStatus', 0)
 
             records = backupSchedules.objects.all()
@@ -926,15 +886,17 @@ class BackupManager:
             selectedAccount = data['selectedAccount']
             name = data['name']
             backupFrequency = data['backupFrequency']
+            backupRetention = data['backupRetention']
 
             currentACL = ACLManager.loadedACL(userID)
 
-            if ACLManager.currentContextPermission(currentACL, 'scheDuleBackups') == 0:
+            if ACLManager.currentContextPermission(currentACL, 'scheduleBackups') == 0:
                 return ACLManager.loadErrorJson('scheduleStatus', 0)
 
             nbd = NormalBackupDests.objects.get(name=selectedAccount)
 
-            config = {'frequency': backupFrequency}
+            config = {'frequency': backupFrequency,
+                      'retention': backupRetention}
 
             nbj = NormalBackupJobs(owner=nbd, name=name, config=json.dumps(config))
             nbj.save()
@@ -950,7 +912,7 @@ class BackupManager:
         try:
             currentACL = ACLManager.loadedACL(userID)
 
-            if ACLManager.currentContextPermission(currentACL, 'scheDuleBackups') == 0:
+            if ACLManager.currentContextPermission(currentACL, 'scheduleBackups') == 0:
                 return ACLManager.loadErrorJson('scheduleStatus', 0)
 
             backupDest = data['destLoc']
@@ -1009,16 +971,8 @@ class BackupManager:
             return HttpResponse(final_json)
 
     def remoteBackups(self, request, userID=None, data=None):
-        try:
-            currentACL = ACLManager.loadedACL(userID)
-
-            if ACLManager.currentContextPermission(currentACL, 'remoteBackups') == 0:
-                return ACLManager.loadError()
-
-            return render(request, 'backup/remoteBackups.html')
-
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+        proc = httpProc(request, 'backup/remoteBackups.html', None, 'remoteBackups')
+        return proc.render()
 
     def submitRemoteBackups(self, userID=None, data=None):
         try:
@@ -1371,25 +1325,12 @@ class BackupManager:
             return HttpResponse(json_data)
 
     def backupLogs(self, request=None, userID=None, data=None):
-        try:
-            currentACL = ACLManager.loadedACL(userID)
-
-            if currentACL['admin'] == 1:
-                pass
-            else:
-                return ACLManager.loadError()
-
-            all_files = []
-
-            logFiles = BackupJob.objects.all().order_by('-id')
-
-            for logFile in logFiles:
-                all_files.append(logFile.logFile)
-
-            return render(request, 'backup/backupLogs.html', {'backups': all_files})
-
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+        all_files = []
+        logFiles = BackupJob.objects.all().order_by('-id')
+        for logFile in logFiles:
+            all_files.append(logFile.logFile)
+        proc = httpProc(request, 'backup/backupLogs.html', {'backups': all_files}, 'admin')
+        return proc.render()
 
     def fetchLogs(self, userID=None, data=None):
         try:
@@ -1474,7 +1415,7 @@ class BackupManager:
             page = int(str(data['page']).strip('\n'))
 
 
-            if ACLManager.currentContextPermission(currentACL, 'scheDuleBackups') == 0:
+            if ACLManager.currentContextPermission(currentACL, 'scheduleBackups') == 0:
                 return ACLManager.loadErrorJson('scheduleStatus', 0)
 
             nbd = NormalBackupJobs.objects.get(name=selectedAccount)
@@ -1527,6 +1468,11 @@ class BackupManager:
                 frequency = 'Never'
 
             try:
+                retention = config[IncScheduler.retention]
+            except:
+                retention = 'Never'
+
+            try:
                 currentStatus = config[IncScheduler.currentStatus]
             except:
                 currentStatus = 'Not running'
@@ -1560,7 +1506,7 @@ class BackupManager:
 
             nbd = NormalBackupDests.objects.get(name=selectedAccount)
 
-            if ACLManager.currentContextPermission(currentACL, 'scheDuleBackups') == 0:
+            if ACLManager.currentContextPermission(currentACL, 'scheduleBackups') == 0:
                 return ACLManager.loadErrorJson('scheduleStatus', 0)
 
             allJobs = nbd.normalbackupjobs_set.all()
@@ -1587,7 +1533,7 @@ class BackupManager:
 
             data = json.loads(request.body)
 
-            if ACLManager.currentContextPermission(currentACL, 'scheDuleBackups') == 0:
+            if ACLManager.currentContextPermission(currentACL, 'scheduleBackups') == 0:
                 return ACLManager.loadErrorJson('scheduleStatus', 0)
 
             selectedJob = data['selectedJob']
@@ -1648,7 +1594,7 @@ class BackupManager:
             nbj = NormalBackupJobs.objects.get(name=selectedJob)
             website = Websites.objects.get(domain=selectedWebsite)
 
-            if ACLManager.currentContextPermission(currentACL, 'scheDuleBackups') == 0:
+            if ACLManager.currentContextPermission(currentACL, 'scheduleBackups') == 0:
                 return ACLManager.loadErrorJson('scheduleStatus', 0)
 
             try:
@@ -1676,14 +1622,16 @@ class BackupManager:
 
             selectedJob = data['selectedJob']
             backupFrequency = data['backupFrequency']
+            backupRetention = data['backupRetention']
 
             nbj = NormalBackupJobs.objects.get(name=selectedJob)
 
-            if ACLManager.currentContextPermission(currentACL, 'scheDuleBackups') == 0:
+            if ACLManager.currentContextPermission(currentACL, 'scheduleBackups') == 0:
                 return ACLManager.loadErrorJson('scheduleStatus', 0)
 
             config = json.loads(nbj.config)
             config[IncScheduler.frequency] = backupFrequency
+            config[IncScheduler.retention] = backupRetention
 
             nbj.config = json.dumps(config)
             nbj.save()
@@ -1710,7 +1658,7 @@ class BackupManager:
 
             nbj = NormalBackupJobs.objects.get(name=selectedJob)
 
-            if ACLManager.currentContextPermission(currentACL, 'scheDuleBackups') == 0:
+            if ACLManager.currentContextPermission(currentACL, 'scheduleBackups') == 0:
                 return ACLManager.loadErrorJson('scheduleStatus', 0)
 
             nbj.delete()
@@ -1737,7 +1685,7 @@ class BackupManager:
             recordsToShow = int(data['recordsToShow'])
             page = int(str(data['page']).strip('\n'))
 
-            if ACLManager.currentContextPermission(currentACL, 'scheDuleBackups') == 0:
+            if ACLManager.currentContextPermission(currentACL, 'scheduleBackups') == 0:
                 return ACLManager.loadErrorJson('scheduleStatus', 0)
 
             nbj = NormalBackupJobs.objects.get(name=selectedJob)

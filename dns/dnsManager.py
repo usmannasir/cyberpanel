@@ -4,10 +4,10 @@ import errno
 import os.path
 import sys
 import django
+
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
-from django.shortcuts import render
 from django.http import HttpResponse
 import json
 try:
@@ -24,6 +24,7 @@ import CloudFlare
 import re
 import plogical.CyberCPLogFileWriter as logging
 from plogical.processUtilities import ProcessUtilities
+from plogical.httpProc import httpProc
 
 class DNSManager:
     defaultNameServersPath = '/home/cyberpanel/defaultNameservers'
@@ -37,29 +38,23 @@ class DNSManager:
         self.email = data[0].rstrip('\n')
         self.key = data[1].rstrip('\n')
 
-
     def loadDNSHome(self, request = None, userID = None):
-        try:
-            admin = Administrator.objects.get(pk=userID)
-            return render(request, 'dns/index.html', {"type": admin.type})
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+        admin = Administrator.objects.get(pk=userID)
+        template = 'dns/index.html'
+        proc = httpProc(request, template, {"type": admin.type}, 'createDNSZone')
+        return proc.render()
 
     def createNameserver(self, request = None, userID = None):
-        try:
-            currentACL = ACLManager.loadedACL(userID)
-            if ACLManager.currentContextPermission(currentACL, 'createNameServer') == 0:
-                return ACLManager.loadError()
+        mailUtilities.checkHome()
 
-            mailUtilities.checkHome()
+        if os.path.exists('/home/cyberpanel/powerdns'):
+            finalData = {"status": 1}
+        else:
+            finalData = {"status": 0}
 
-            if os.path.exists('/home/cyberpanel/powerdns'):
-                return render(request, "dns/createNameServer.html", {"status": 1})
-            else:
-                return render(request, "dns/createNameServer.html", {"status": 0})
-
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+        template = 'dns/createNameServer.html'
+        proc = httpProc(request, template, finalData, 'createNameServer')
+        return proc.render()
 
     def NSCreation(self, userID = None, data = None):
         try:
@@ -118,17 +113,15 @@ class DNSManager:
             return HttpResponse(final_json)
 
     def createDNSZone(self, request = None, userID = None):
-        try:
-            currentACL = ACLManager.loadedACL(userID)
-            if ACLManager.currentContextPermission(currentACL, 'createDNSZone') == 0:
-                return ACLManager.loadError()
 
-            if os.path.exists('/home/cyberpanel/powerdns'):
-                return render(request, 'dns/createDNSZone.html', {"status": 1})
-            else:
-                return render(request, 'dns/createDNSZone.html', {"status": 0})
-        except BaseException as msg:
-                return HttpResponse(str(msg))
+        if os.path.exists('/home/cyberpanel/powerdns'):
+            finalData = {'status': 1}
+        else:
+            finalData = {'status': 0}
+
+        template = 'dns/createDNSZone.html'
+        proc = httpProc(request, template, finalData, 'createDNSZone')
+        return proc.render()
 
     def zoneCreation(self, userID = None, data = None):
         try:
@@ -140,7 +133,7 @@ class DNSManager:
 
             zoneDomain = data['zoneDomain']
 
-            newZone = Domains(admin=admin, name=zoneDomain, type="NATIVE")
+            newZone = Domains(admin=admin, name=zoneDomain, type="MASTER")
             newZone.save()
 
             content = "ns1." + zoneDomain + " hostmaster." + zoneDomain + " 1 10800 3600 604800 3600"
@@ -166,21 +159,17 @@ class DNSManager:
             return HttpResponse(final_json)
 
     def addDeleteDNSRecords(self, request = None, userID = None):
-        try:
+        currentACL = ACLManager.loadedACL(userID)
 
-            currentACL = ACLManager.loadedACL(userID)
-            if ACLManager.currentContextPermission(currentACL, 'addDeleteRecords') == 0:
-                return ACLManager.loadError()
+        if not os.path.exists('/home/cyberpanel/powerdns'):
+            finalData = {"status": 0}
+        else:
+            finalData = {"status": 1}
 
-            if not os.path.exists('/home/cyberpanel/powerdns'):
-                return render(request, 'dns/addDeleteDNSRecords.html', {"status": 0})
-
-            domainsList = ACLManager.findAllDomains(currentACL, userID)
-
-            return render(request, 'dns/addDeleteDNSRecords.html', {"domainsList": domainsList, "status": 1})
-
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+        finalData['domainsList'] = ACLManager.findAllDomains(currentACL, userID)
+        template = 'dns/addDeleteDNSRecords.html'
+        proc = httpProc(request, template, finalData, 'addDeleteRecords')
+        return proc.render()
 
     def getCurrentRecordsForDomain(self, userID = None, data = None):
         try:
@@ -280,7 +269,7 @@ class DNSManager:
 
             if recordType == "A":
 
-                recordContentA = data['recordContentA']  ## IP or ponting value
+                recordContentA = data['recordContentA']  ## IP or pointing value
 
                 if recordName == "@":
                     value = zoneDomain
@@ -320,7 +309,7 @@ class DNSManager:
                 else:
                     value = recordName + "." + zoneDomain
 
-                recordContentAAAA = data['recordContentAAAA']  ## IP or ponting value
+                recordContentAAAA = data['recordContentAAAA']  ## IP or pointing value
 
                 DNS.createDNSRecord(zone, value, recordType, recordContentAAAA, 0, ttl)
 
@@ -335,7 +324,7 @@ class DNSManager:
                 else:
                     value = recordName + "." + zoneDomain
 
-                recordContentCNAME = data['recordContentCNAME']  ## IP or ponting value
+                recordContentCNAME = data['recordContentCNAME']  ## IP or pointing value
 
                 DNS.createDNSRecord(zone, value, recordType, recordContentCNAME, 0, ttl)
 
@@ -350,7 +339,7 @@ class DNSManager:
                 else:
                     value = recordName + "." + zoneDomain
 
-                recordContentSPF = data['recordContentSPF']  ## IP or ponting value
+                recordContentSPF = data['recordContentSPF']  ## IP or pointing value
 
                 DNS.createDNSRecord(zone, value, recordType, recordContentSPF, 0, ttl)
 
@@ -365,7 +354,7 @@ class DNSManager:
                 else:
                     value = recordName + "." + zoneDomain
 
-                recordContentTXT = data['recordContentTXT']  ## IP or ponting value
+                recordContentTXT = data['recordContentTXT']  ## IP or pointing value
 
                 DNS.createDNSRecord(zone, value, recordType, recordContentTXT, 0, ttl)
 
@@ -415,7 +404,7 @@ class DNSManager:
                     value = recordName
                 else:
                     value = recordName + "." + zoneDomain
-                recordContentCAA = data['recordContentCAA']  ## IP or ponting value
+                recordContentCAA = data['recordContentCAA']  ## IP or pointing value
                 DNS.createDNSRecord(zone, value, recordType, recordContentCAA, 0, ttl)
 
             final_dic = {'status': 1, 'add_status': 1, 'error_message': "None"}
@@ -499,22 +488,16 @@ class DNSManager:
             return HttpResponse(final_json)
 
     def deleteDNSZone(self, request = None, userID = None):
+        currentACL = ACLManager.loadedACL(userID)
+        if not os.path.exists('/home/cyberpanel/powerdns'):
+            finalData = {"status": 0}
+        else:
+            finalData = {"status": 1}
 
-        try:
-            currentACL = ACLManager.loadedACL(userID)
-
-            if ACLManager.currentContextPermission(currentACL, 'deleteZone') == 0:
-                return ACLManager.loadError()
-
-            if not os.path.exists('/home/cyberpanel/powerdns'):
-                return render(request, 'dns/addDeleteDNSRecords.html', {"status": 0})
-
-            domainsList = ACLManager.findAllDomains(currentACL, userID)
-
-            return render(request, 'dns/deleteDNSZone.html', {"domainsList": domainsList, "status": 1})
-
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+        finalData['domainsList'] = ACLManager.findAllDomains(currentACL, userID)
+        template = 'dns/deleteDNSZone.html'
+        proc = httpProc(request, template, finalData, 'deleteZone')
+        return proc.render()
 
     def submitZoneDeletion(self, userID = None, data = None):
         try:
@@ -549,46 +532,36 @@ class DNSManager:
             return HttpResponse(final_json)
 
     def configureDefaultNameServers(self, request=None, userID=None):
+        currentACL = ACLManager.loadedACL(userID)
 
-        try:
-            currentACL = ACLManager.loadedACL(userID)
+        if not os.path.exists('/home/cyberpanel/powerdns'):
+            data = {"status": 0}
+        else:
+            data = {"status": 1}
 
-            if currentACL['admin'] == 1:
+        data['domainsList'] = ACLManager.findAllDomains(currentACL, userID)
+        if os.path.exists(DNSManager.defaultNameServersPath):
+            nsData = open(DNSManager.defaultNameServersPath, 'r').readlines()
+            try:
+                data['firstNS'] = nsData[0].rstrip('\n')
+            except:
                 pass
-            else:
-                return ACLManager.loadError()
+            try:
+                data['secondNS'] = nsData[1].rstrip('\n')
+            except:
+                pass
+            try:
+                data['thirdNS'] = nsData[2].rstrip('\n')
+            except:
+                pass
+            try:
+                data['forthNS'] = nsData[3].rstrip('\n')
+            except:
+                pass
 
-            if not os.path.exists('/home/cyberpanel/powerdns'):
-                return render(request, 'dns/addDeleteDNSRecords.html', {"status": 0})
-
-            data = {}
-            data['domainsList'] = ACLManager.findAllDomains(currentACL, userID)
-            data['status'] = 1
-
-            if os.path.exists(DNSManager.defaultNameServersPath):
-                nsData = open(DNSManager.defaultNameServersPath, 'r').readlines()
-                try:
-                    data['firstNS'] = nsData[0].rstrip('\n')
-                except:
-                    pass
-                try:
-                    data['secondNS'] = nsData[1].rstrip('\n')
-                except:
-                    pass
-                try:
-                    data['thirdNS'] = nsData[2].rstrip('\n')
-                except:
-                    pass
-                try:
-                    data['forthNS'] = nsData[3].rstrip('\n')
-                except:
-                    pass
-
-            return render(request, 'dns/configureDefaultNameServers.html', data)
-
-        except BaseException as msg:
-            return HttpResponse(str(msg))
-
+        template = 'dns/configureDefaultNameServers.html'
+        proc = httpProc(request, template, data, 'admin')
+        return proc.render()
 
     def saveNSConfigurations(self, userID = None, data = None):
         try:
@@ -615,7 +588,6 @@ class DNSManager:
                         except:
                             pass
 
-
             writeToFile = open(DNSManager.defaultNameServersPath, 'w')
             writeToFile.write(nsContent.rstrip('\n'))
             writeToFile.close()
@@ -631,35 +603,30 @@ class DNSManager:
             return HttpResponse(final_json)
 
     def addDeleteDNSRecordsCloudFlare(self, request = None, userID = None):
-        try:
+        currentACL = ACLManager.loadedACL(userID)
+        if not os.path.exists('/home/cyberpanel/powerdns'):
+            status = 0
+        else:
+            status = 1
+        admin = Administrator.objects.get(pk=userID)
 
-            currentACL = ACLManager.loadedACL(userID)
-            if ACLManager.currentContextPermission(currentACL, 'addDeleteRecords') == 0:
-                return ACLManager.loadError()
+        CloudFlare = 0
 
-            if not os.path.exists('/home/cyberpanel/powerdns'):
-                return render(request, 'dns/addDeleteDNSRecordsCloudFlare.html', {"status": 0})
+        cfPath = '%s%s' % (DNS.CFPath, admin.userName)
 
-            admin = Administrator.objects.get(pk=userID)
+        if os.path.exists(cfPath):
+            CloudFlare = 1
+            domainsList = ACLManager.findAllDomains(currentACL, userID)
+            self.admin = admin
+            self.loadCFKeys()
+            data = {"domainsList": domainsList, "status": status, 'CloudFlare': CloudFlare, 'cfEmail': self.email,
+                    'cfToken': self.key}
+        else:
+            data = {"status": status, 'CloudFlare': CloudFlare}
 
-            CloudFlare = 0
-
-            cfPath = '%s%s' %(DNS.CFPath, admin.userName)
-
-            if os.path.exists(cfPath):
-                CloudFlare = 1
-                domainsList = ACLManager.findAllDomains(currentACL, userID)
-
-                self.admin = admin
-                self.loadCFKeys()
-
-                return render(request, 'dns/addDeleteDNSRecordsCloudFlare.html',
-                              {"domainsList": domainsList, "status": 1, 'CloudFlare': CloudFlare, 'cfEmail': self.email, 'cfToken': self.key})
-            else:
-                return render(request, 'dns/addDeleteDNSRecordsCloudFlare.html', {"status": 1, 'CloudFlare': CloudFlare})
-
-        except BaseException as msg:
-            return HttpResponse(str(msg))
+        template = 'dns/addDeleteDNSRecordsCloudFlare.html'
+        proc = httpProc(request, template, data, 'addDeleteRecords')
+        return proc.render()
 
     def saveCFConfigs(self, userID = None, data = None):
         try:
@@ -882,7 +849,7 @@ class DNSManager:
 
                 if recordType == "A":
 
-                    recordContentA = data['recordContentA']  ## IP or ponting value
+                    recordContentA = data['recordContentA']  ## IP or pointing value
 
                     if recordName == "@":
                         value = zoneDomain
@@ -922,7 +889,7 @@ class DNSManager:
                     else:
                         value = recordName + "." + zoneDomain
 
-                    recordContentAAAA = data['recordContentAAAA']  ## IP or ponting value
+                    recordContentAAAA = data['recordContentAAAA']  ## IP or pointing value
 
                     DNS.createDNSRecordCloudFlare(cf, zone, value, recordType, recordContentAAAA, 0, ttl)
 
@@ -937,7 +904,7 @@ class DNSManager:
                     else:
                         value = recordName + "." + zoneDomain
 
-                    recordContentCNAME = data['recordContentCNAME']  ## IP or ponting value
+                    recordContentCNAME = data['recordContentCNAME']  ## IP or pointing value
 
                     DNS.createDNSRecordCloudFlare(cf, zone, value, recordType, recordContentCNAME, 0, ttl)
 
@@ -952,7 +919,7 @@ class DNSManager:
                     else:
                         value = recordName + "." + zoneDomain
 
-                    recordContentSPF = data['recordContentSPF']  ## IP or ponting value
+                    recordContentSPF = data['recordContentSPF']  ## IP or pointing value
 
                     DNS.createDNSRecordCloudFlare(cf, zone, value, recordType, recordContentSPF, 0, ttl)
 
@@ -967,7 +934,7 @@ class DNSManager:
                     else:
                         value = recordName + "." + zoneDomain
 
-                    recordContentTXT = data['recordContentTXT']  ## IP or ponting value
+                    recordContentTXT = data['recordContentTXT']  ## IP or pointing value
 
                     DNS.createDNSRecordCloudFlare(cf, zone, value, recordType, recordContentTXT, 0, ttl)
 
@@ -1017,7 +984,7 @@ class DNSManager:
                         value = recordName
                     else:
                         value = recordName + "." + zoneDomain
-                    recordContentCAA = data['recordContentCAA']  ## IP or ponting value
+                    recordContentCAA = data['recordContentCAA']  ## IP or pointing value
                     DNS.createDNSRecordCloudFlare(cf, zone, value, recordType, recordContentCAA, 0, ttl)
 
                 final_dic = {'status': 1, 'add_status': 1, 'error_message': "None"}

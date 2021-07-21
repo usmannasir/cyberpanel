@@ -148,15 +148,21 @@ class S3Backups(multi.Thread):
             if currentACL['admin'] == 0:
                 return proc.ajax(0, 'Only administrators can use AWS S3 Backups.')
 
-
             aws_access_key_id, aws_secret_access_key, region = self.fetchAWSKeys()
 
-            s3 = boto3.resource(
-                's3',
-                aws_access_key_id = aws_access_key_id,
-                aws_secret_access_key = aws_secret_access_key,
-                region_name=region
-            )
+            if region.find('http') > -1:
+                s3 = boto3.resource(
+                    's3',
+                    aws_access_key_id=aws_access_key_id,
+                    aws_secret_access_key=aws_secret_access_key,
+                    endpoint_url=region,
+                )
+            else:
+                s3 = boto3.resource(
+                    's3',
+                    aws_access_key_id=aws_access_key_id,
+                    aws_secret_access_key=aws_secret_access_key,
+                )
 
             json_data = "["
             checker = 0

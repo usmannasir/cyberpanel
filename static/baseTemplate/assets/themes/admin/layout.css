@@ -528,9 +528,9 @@ body #nav-toggle.collapsed span {
     width: 100px;
 }
 .closed-sidebar #header-logo .logo-content-small {
-    width: 62px;
+    width: 50px;
     margin-left: 0;
-    left: 0px;
+    left: 15px;
     display: block;
 }
 .closed-sidebar #header-logo .logo-content-big {

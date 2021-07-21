@@ -11,12 +11,13 @@ from datetime import datetime
 class Websites(models.Model):
     admin = models.ForeignKey(Administrator, on_delete=models.PROTECT)
     package = models.ForeignKey(Package, on_delete=models.PROTECT)
-    domain = models.CharField(max_length=50,unique=True)
-    adminEmail = models.CharField(max_length=50)
+    domain = models.CharField(max_length=255,unique=True)
+    adminEmail = models.CharField(max_length=255)
     phpSelection = models.CharField(max_length=10)
     ssl = models.IntegerField()
     state = models.IntegerField(default=1)
     externalApp = models.CharField(max_length=30, default=None)
+    config = models.TextField(default='')
 
 class ChildDomains(models.Model):
     master = models.ForeignKey(Websites,on_delete=models.CASCADE)

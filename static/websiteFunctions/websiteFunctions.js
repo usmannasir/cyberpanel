@@ -20,6 +20,7 @@ function getCookie(name) {
     return cookieValue;
 }
 
+
 /* Java script code to create account */
 app.controller('createWebsite', function ($scope, $http, $timeout, $window) {
 
@@ -388,7 +389,6 @@ app.controller('listWebsites', function ($scope, $http) {
 
 app.controller('listChildDomainsMain', function ($scope, $http, $timeout) {
 
-
     $scope.currentPage = 1;
     $scope.recordsToShow = 10;
 
@@ -700,7 +700,57 @@ app.controller('listChildDomainsMain', function ($scope, $http, $timeout) {
 
 
     }
+    var DeleteDomain;
+    $scope.deleteDomainInit = function (childDomainForDeletion){
+        DeleteDomain = childDomainForDeletion;
+    };
 
+    $scope.deleteChildDomain = function () {
+        $scope.cyberPanelLoading = false;
+        url = "/websites/submitDomainDeletion";
+
+        var data = {
+            websiteName: DeleteDomain,
+            DeleteDocRoot: $scope.DeleteDocRoot
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+            $scope.cyberPanelLoading = true;
+            if (response.data.websiteDeleteStatus === 1) {
+                new PNotify({
+                    title: 'Success!',
+                    text: 'Child Domain successfully deleted.',
+                    type: 'success'
+                });
+                $scope.getFurtherWebsitesFromDB();
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberPanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+
+        }
+
+    };
 
 });
 
@@ -1846,7 +1896,7 @@ app.controller('websitePages', function ($scope, $http, $timeout, $window) {
 
         function ListInitialDatas(response) {
 
-            if (response.data.sslStatus == 1) {
+            if (response.data.sslStatus === 1) {
 
                 $scope.sslSaved = false;
                 $scope.couldNotSaveSSL = true;
@@ -1990,8 +2040,13 @@ app.controller('websitePages', function ($scope, $http, $timeout, $window) {
     $scope.success = true;
     $scope.couldNotConnect = true;
     $scope.goBackDisable = true;
+    $scope.DomainCreateForm = true;
 
     var statusFile;
+
+    $scope.WebsiteSelection = function (){
+        $scope.DomainCreateForm = false;
+    };
 
     $scope.createDomain = function () {
 
@@ -2003,6 +2058,7 @@ app.controller('websitePages', function ($scope, $http, $timeout, $window) {
         $scope.couldNotConnect = true;
         $scope.goBackDisable = true;
         $scope.currentStatus = "Starting creation..";
+        $scope.DomainCreateForm = true;
 
         var ssl, dkimCheck, openBasedir;
 
@@ -2041,7 +2097,7 @@ app.controller('websitePages', function ($scope, $http, $timeout, $window) {
             phpSelection: phpSelection,
             ssl: ssl,
             path: path,
-            masterDomain: $("#domainNamePage").text(),
+            masterDomain: $scope.masterDomain,
             dkimCheck: dkimCheck,
             openBasedir: openBasedir
         };
@@ -2064,6 +2120,7 @@ app.controller('websitePages', function ($scope, $http, $timeout, $window) {
 
                 $scope.domainLoading = true;
                 $scope.installationDetailsForm = true;
+                $scope.DomainCreateForm = true;
                 $scope.installationProgress = false;
                 $scope.errorMessageBox = false;
                 $scope.success = true;
@@ -2080,6 +2137,7 @@ app.controller('websitePages', function ($scope, $http, $timeout, $window) {
 
             $scope.domainLoading = true;
             $scope.installationDetailsForm = true;
+            $scope.DomainCreateForm = true;
             $scope.installationProgress = false;
             $scope.errorMessageBox = true;
             $scope.success = true;
@@ -2094,11 +2152,13 @@ app.controller('websitePages', function ($scope, $http, $timeout, $window) {
     $scope.goBack = function () {
         $scope.domainLoading = true;
         $scope.installationDetailsForm = false;
+        $scope.DomainCreateForm = true;
         $scope.installationProgress = true;
         $scope.errorMessageBox = true;
         $scope.success = true;
         $scope.couldNotConnect = true;
         $scope.goBackDisable = true;
+        $scope.DomainCreateForm = true;
         $("#installProgress").css("width", "0%");
     };
 
@@ -2144,6 +2204,7 @@ app.controller('websitePages', function ($scope, $http, $timeout, $window) {
 
                     $scope.domainLoading = true;
                     $scope.installationDetailsForm = true;
+                    $scope.DomainCreateForm = true;
                     $scope.installationProgress = false;
                     $scope.errorMessageBox = false;
                     $scope.success = true;
@@ -2171,6 +2232,7 @@ app.controller('websitePages', function ($scope, $http, $timeout, $window) {
 
             $scope.domainLoading = true;
             $scope.installationDetailsForm = true;
+            $scope.DomainCreateForm = true;
             $scope.installationProgress = false;
             $scope.errorMessageBox = true;
             $scope.success = true;
@@ -2668,6 +2730,15 @@ RewriteRule ^/?(.*) https://%{SERVER_NAME}/$1 [R,L]
 ### End CyberPanel Generated Rules.
 
 `;
+    const WWWToNonWWW = `### Rewrite Rules Added by CyberPanel Rewrite Rule Generator
+
+RewriteEngine On
+RewriteCond %{HTTP_HOST} ^www\.(.*)$
+RewriteRule ^(.*)$ http://%1/$1 [L,R=301]
+
+### End CyberPanel Generated Rules.
+
+`;
 
     const nonWWWToWWW = `### Rewrite Rules Added by CyberPanel Rewrite Rule Generator
 
@@ -2685,6 +2756,9 @@ RewriteRule ^(.*)$ http://www.%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
             $scope.rewriteRules = httpToHTTPS + $scope.rewriteRules;
         } else if ($scope.rewriteTemplate === "Force NON-WWW -> WWW") {
             $scope.rewriteRules = nonWWWToWWW + $scope.rewriteRules;
+        }
+        else if ($scope.rewriteTemplate === "Force WWW -> NON-WWW") {
+            $scope.rewriteRules = WWWToNonWWW + $scope.rewriteRules;
         }
     };
 
@@ -2830,6 +2904,8 @@ app.controller('manageCronController', function ($scope, $http) {
     $("#cronEditSuccess").hide();
     $("#fetchCronFailure").hide();
 
+    $scope.websiteToBeModified = $("#domain").text();
+
     $scope.fetchWebsites = function () {
 
         $("#manageCronLoading").show();
@@ -2880,6 +2956,7 @@ app.controller('manageCronController', function ($scope, $http) {
             $("#cronEditSuccess").hide();
         }
     };
+    $scope.fetchWebsites();
 
     $scope.fetchCron = function (cronLine) {
 
@@ -3032,7 +3109,6 @@ app.controller('manageCronController', function ($scope, $http) {
             $("#fetchCronFailure").hide();
         }
     };
-
 
     $scope.removeCron = function (line) {
 

@@ -1,39 +1,220 @@
 #!/bin/bash
 
-#CyberPanel Upgrade script
+#set -e -o pipefail
+#set -x
+#set -u
+
+#CyberPanel installer script for CentOS 7.X, CentOS 8.X, CloudLinux 7.X, Ubuntu 18.04 and Ubuntu 20.04
+#For whoever may edit this script, please follow :
+#Please use Pre_Install_xxx() and Post_Install_xxx() if you want to something respectively before or after the panel installation
+#and update below accordingly
+#Please use variable/functions name as MySomething or My_Something, and please try not to use too-short abbreviation :)
+#Please use On/Off,  True/False, Yes/No.
+
+Sudo_Test=$(set)
+#for SUDO check
+
+Set_Default_Variables() {
 
 export LC_CTYPE=en_US.UTF-8
-SUDO_TEST=$(set)
-SERVER_OS='Undefined'
-OUTPUT=$(cat /etc/*release)
-MYSQLCurrentVersion=$(systemctl status mysql)
-MYSQLPassword=$(cat /etc/cyberpanel/mysqlPassword)
-TEMP=$(curl --silent https://cyberpanel.net/version.txt)
-BRANCH_NAME=v${TEMP:12:3}.${TEMP:25:1}
-GIT_URL="github.com/usmannasir/cyberpanel"
-GIT_CONTENT_URL="raw.githubusercontent.com/usmannasir/cyberpanel"
-SERVER_COUNTRY="unknow"
-SERVER_COUNTRY=$(curl --silent --max-time 5 https://cyberpanel.sh/?country)
-UBUNTU_20="False"
+echo -e "\nFetching latest data from CyberPanel server...\n"
+echo -e "This may take few seconds..."
 
-##
+Server_Country="Unknow"
+Server_OS=""
+Server_OS_Version=""
+Server_Provider='Undefined'
 
-if [[ ${#SERVER_COUNTRY} == "2" ]] || [[ ${#SERVER_COUNTRY} == "6" ]]; then
-  echo -e "\nChecking server..."
+Temp_Value=$(curl --silent --max-time 30 -4 https://cyberpanel.net/version.txt)
+Panel_Version=${Temp_Value:12:3}
+Panel_Build=${Temp_Value:25:1}
+
+Branch_Name="v${Panel_Version}.${Panel_Build}"
+Base_Number="1.9.3"
+
+Git_User=""
+Git_Content_URL=""
+Git_Clone_URL=""
+
+MySQL_Version=$(mysql -V | grep -P '\d+.\d+.\d+' -o)
+MySQL_Password=$(cat /etc/cyberpanel/mysqlPassword)
+
+
+LSWS_Latest_URL="https://cyberpanel.sh/update.litespeedtech.com/ws/latest.php"
+curl --silent --max-time 30 -4  -o /tmp/lsws_latest "$LSWS_Latest_URL" 2>/dev/null
+LSWS_Stable_Line=$(grep "LSWS_STABLE" /tmp/lsws_latest)
+LSWS_Stable_Version=$(expr "$LSWS_Stable_Line" : '.*LSWS_STABLE=\(.*\) BUILD .*')
+#grab the LSWS latest stable version.
+
+Debug_Log2 "Starting Upgrade...1"
+
+rm -rf /root/cyberpanel_upgrade_tmp
+mkdir -p /root/cyberpanel_upgrade_tmp
+cd /root/cyberpanel_upgrade_tmp || exit
+}
+
+Debug_Log() {
+echo -e "\n${1}=${2}\n" >> /tmp/cyberpanel_debug_upgrade.log
+}
+
+Debug_Log2() {
+echo -e "\n${1}" >> /var/log/upgradeLogs.txt
+}
+
+Check_Root() {
+echo -e "\nChecking root privileges..."
+  if echo "$Sudo_Test" | grep SUDO >/dev/null; then
+    echo -e "\nYou are using SUDO , please run as root user...\n"
+    echo -e "\nIf you don't have direct access to root user, please run \e[31msudo su -\e[39m command (do NOT miss the \e[31m-\e[39m at end or it will fail) and then run installation command again."
+    exit
+  fi
+
+  if [[ $(id -u) != 0 ]] >/dev/null; then
+    echo -e "\nYou must run on root user to install CyberPanel...\n"
+    echo -e "or run following command: (do NOT miss the quotes)"
+    echo -e "\e[31msudo su -c \"sh <(curl https://cyberpanel.sh || wget -O - https://cyberpanel.sh)\"\e[39m"
+    exit 1
+  else
+    echo -e "\nYou are runing as root...\n"
+  fi
+}
+
+Check_Server_IP() {
+echo -e "Checking server location...\n"
+
+Server_Country=$(curl --silent --max-time 10 -4 https://cyberpanel.sh/?country)
+if [[ ${#Server_Country} != "2" ]] ; then
+  Server_Country="Unknow"
+fi
+
+if [[ "$Debug" = "On" ]] ; then
+  Debug_Log "Server_Country" "$Server_Country"
+fi
+
+if [[ "$*" = *"--mirror"* ]] ; then
+  Server_Country="CN"
+  echo -e "Force to use mirror server due to --mirror argument...\n"
+fi
+
+if [[ "$Server_Country" = *"CN"* ]] ; then
+  Server_Country="CN"
+  echo -e "Setting up to use mirror server...\n"
+fi
+}
+
+Check_OS() {
+if [[ ! -f /etc/os-release ]] ; then
+  echo -e "Unable to detect the operating system...\n"
+  exit
+fi
+
+if ! uname -m | grep -q 64 ; then
+  echo -e "x64 system is required...\n"
+  exit
+fi
+
+if grep -q -E "CentOS Linux 7|CentOS Linux 8" /etc/os-release ; then
+  Server_OS="CentOS"
+elif grep -q -E "CloudLinux 7|CloudLinux 8" /etc/os-release ; then
+  Server_OS="CloudLinux"
+elif grep -q "AlmaLinux-8" /etc/os-release ; then
+  Server_OS="AlmaLinux"
+elif grep -q -E "Ubuntu 18.04|Ubuntu 20.04|Ubuntu 20.10" /etc/os-release ; then
+  Server_OS="Ubuntu"
 else
-  echo -e "\nChecking server..."
-  SERVER_COUNTRY="unknow"
+  echo -e "Unable to detect your system..."
+  echo -e "\nCyberPanel is supported on Ubuntu 18.04 x86_64, Ubuntu 20.04 x86_64, Ubuntu 20.10 x86_64, CentOS 7.x, CentOS 8.x, CloudLinux 7.x and AlmaLinux 8.x...\n"
+  Debug_Log2 "CyberPanel is supported on Ubuntu 18.04 x86_64, Ubuntu 20.04 x86_64, Ubuntu 20.10 x86_64, CentOS 7.x, CentOS 8.x, AlmaLinux 8.x... [404]"
+  exit
 fi
 
-#SERVER_COUNTRY="CN"
-#for test
+Server_OS_Version=$(grep VERSION_ID /etc/os-release | awk -F[=,] '{print $2}' | tr -d \" | head -c2 | tr -d . )
+#to make 20.04 display as 20
 
-if [[ $SERVER_COUNTRY == "CN" ]]; then
-  GIT_URL="gitee.com/qtwrk/cyberpanel"
-  GIT_CONTENT_URL="gitee.com/qtwrk/cyberpanel/raw"
+echo -e "System: $Server_OS $Server_OS_Version detected...\n"
+
+if [[ $Server_OS = "CloudLinux" ]] || [[ "$Server_OS" = "AlmaLinux" ]] ; then
+  Server_OS="CentOS"
+  #CloudLinux gives version id like 7.8 , 7.9 , so cut it to show first number only
+  #treat CL and Alma as CentOS
 fi
 
-regenerate_cert() {
+if [[ "$Debug" = "On" ]] ; then
+  Debug_Log "Server_OS" "$Server_OS $Server_OS_Version"
+fi
+
+}
+
+Check_Provider() {
+if hash dmidecode >/dev/null 2>&1; then
+  if [[ "$(dmidecode -s bios-vendor)" = "Google" ]]; then
+    Server_Provider="Google Cloud Platform"
+  elif [[ "$(dmidecode -s bios-vendor)" = "DigitalOcean" ]]; then
+    Server_Provider="Digital Ocean"
+  elif [[ "$(dmidecode -s system-product-name | cut -c 1-7)" = "Alibaba" ]]; then
+    Server_Provider="Alibaba Cloud"
+  elif [[ "$(dmidecode -s system-manufacturer)" = "Microsoft Corporation" ]]; then
+    Server_Provider="Microsoft Azure"
+  elif [[ -d /usr/local/qcloud ]]; then
+    Server_Provider="Tencent Cloud"
+  else
+    Server_Provider="Undefined"
+  fi
+else
+  Server_Provider='Undefined'
+fi
+
+if [[ -f /sys/devices/virtual/dmi/id/product_uuid ]]; then
+  if [[ "$(cut -c 1-3 /sys/devices/virtual/dmi/id/product_uuid)" = 'EC2' ]] && [[ -d /home/ubuntu ]]; then
+    Server_Provider='Amazon Web Service'
+  fi
+fi
+
+if [[ "$Debug" = "On" ]] ; then
+  Debug_Log "Server_Provider" "$Server_Provider"
+fi
+}
+
+Branch_Check() {
+if [[ "$1" = *.*.* ]]; then
+  #check input if it's valid format as X.Y.Z
+  Output=$(awk -v num1="$Base_Number" -v num2="${1//[[:space:]]/}" '
+  BEGIN {
+    print "num1", (num1 < num2 ? "<" : ">="), "num2"
+  }
+  ')
+  if [[ $Output = *">="* ]]; then
+    echo -e "\nYou must use version number higher than 1.9.4"
+    exit
+  else
+    Branch_Name="v${1//[[:space:]]/}"
+    echo -e "\nSet branch name to $Branch_Name...\n"
+  fi
+else
+  echo -e "\nPlease input a valid format version number."
+  exit
+fi
+}
+
+Check_Return() {
+  #check previous command result , 0 = ok ,  non-0 = something wrong.
+# shellcheck disable=SC2181
+if [[ $? != "0" ]]; then
+  if [[ -n "$1" ]] ; then
+    echo -e "\n\n\n$1"
+  fi
+  echo -e  "above command failed..."
+  Debug_Log2 "command failed, exiting. For more information read /var/log/installLogs.txt [404]"
+  if [[ "$2" = "no_exit" ]] ; then
+    echo -e"\nRetrying..."
+  else
+    exit
+  fi
+fi
+}
+# check command success or not
+
+Regenerate_Cert() {
   cat <<EOF >/usr/local/CyberCP/cert_conf
 [req]
 prompt=no
@@ -69,161 +250,112 @@ EOF
     openssl req -x509 -config /usr/local/CyberCP/cert_conf -extensions 'server_exts' -nodes -days 820 -newkey rsa:2048 -keyout $key_path -out $cert_path
   fi
   rm -f /usr/local/CyberCP/cert_conf
-
 }
 
-input_branch() {
-  echo -e "\nPress Enter key to continue with latest version or Enter specific version such as: \e[31m1.9.4\e[39m , \e[31m1.9.5\e[39m ...etc"
-  echo -e "\nIf nothing is input in 10 seconds , script will proceed with latest stable. "
-  echo -e "\nPlease press Enter key , or specify a version number ,or wait for 10 seconds timeout: "
-  printf "%s" ""
-  read -t 10 TMP_YN
+Retry_Command() {
+# shellcheck disable=SC2034
+for i in {1..50};
+do
+  $1  && break || echo -e "\n$1 has failed for $i times\nWait for 3 seconds and try again...\n"; sleep 3;
+done
+}
 
-  if [[ $TMP_YN == "" ]]; then
-    BRANCH_NAME="v${TEMP:12:3}.${TEMP:25:1}"
-    echo -e "\nBranch name set to $BRANCH_NAME"
+Check_Argument() {
+if [[ "$*" = *"--branch "* ]] || [[ "$*" = *"-b "* ]]; then
+  Branch_Name=$(echo "$*" | sed -e "s/--branch //" -e "s/--mirror//" -e "s/-b //")
+  Branch_Check "$Branch_Name"
+fi
+}
+
+Pre_Upgrade_Setup_Git_URL() {
+  if [[ $Server_Country != "CN" ]] ; then
+    Git_User="usmannasir"
+    Git_Content_URL="https://raw.githubusercontent.com/${Git_User}/cyberpanel"
+    Git_Clone_URL="https://github.com/${Git_User}/cyberpanel.git"
   else
-    base_number="1.9.3"
-    if [[ $TMP_YN == *.*.* ]]; then
-      #check input if it's valid format as X.Y.Z
-      output=$(awk -v num1="$base_number" -v num2="$TMP_YN" '
-				BEGIN {
-					print "num1", (num1 < num2 ? "<" : ">="), "num2"
-				}
-				')
-      if [[ $output == *">="* ]]; then
-        echo -e "\nYou must use version number higher than 1.9.4"
-        exit
-      else
-        BRANCH_NAME="v$TMP_YN"
-        echo "set branch name to $BRANCH_NAME"
-      fi
-    else
-      echo -e "\nPlease input a valid format version number."
-      exit
-    fi
+    Git_User="qtwrk"
+    Git_Content_URL="https://gitee.com/${Git_User}/cyberpanel/raw"
+    Git_Clone_URL="https://gitee.com/${Git_User}/cyberpanel.git"
+  fi
+
+  if [[ "$Debug" = "On" ]] ; then
+    Debug_Log "Git_URL" "$Git_Content_URL"
   fi
 }
 
-install_utility() {
-  if [[ ! -f /usr/bin/cyberpanel_utility ]]; then
-    wget -q -O /usr/bin/cyberpanel_utility https://cyberpanel.sh/misc/cyberpanel_utility.sh
-    chmod 700 /usr/bin/cyberpanel_utility
-  fi
-}
+Pre_Upgrade_CentOS7_MySQL() {
+if [[ "$MySQL_Version" = "10.1" ]]; then
+  cp /etc/my.cnf /etc/my.cnf.bak
+  mkdir /etc/cnfbackup
+  cp -R /etc/my.cnf.d/ /etc/cnfbackup/
 
-check_root() {
-  echo -e "\nChecking root privileges...\n"
-  if echo $SUDO_TEST | grep SUDO >/dev/null; then
-    echo -e "\nYou are using SUDO , please run as root user...\n"
-    echo -e "\nIf you don't have direct access to root user, please run \e[31msudo su -\e[39m command (do NOT miss the \e[31m-\e[39m at end or it will fail) and then run upgrade command again."
-    exit
-  fi
+  yum remove MariaDB-server MariaDB-client galera -y
+  yum --enablerepo=mariadb -y install MariaDB-server MariaDB-client galera
 
-  if [[ $(id -u) != 0 ]] >/dev/null; then
-    echo -e "\nYou must use root user to upgrade CyberPanel...\n"
-    exit
-  else
-    echo -e "\nYou are runing as root...\n"
-  fi
-}
+  cp -f /etc/my.cnf.bak /etc/my.cnf
+  rm -rf /etc/my.cnf.d/
+  mv /etc/cnfbackup/my.cnf.d /etc/
 
-check_return() {
-  #check previous command result , 0 = ok ,  non-0 = something wrong.
-  if [[ $? -eq "0" ]]; then
-    :
-  else
-    echo -e "\ncommand failed, exiting..."
-    exit
-  fi
-}
+  systemctl enable mysql
+  systemctl start mysql
 
-input_branch
+  mysql_upgrade -uroot -p"$MySQL_Password"
 
-check_root
-
-echo -e "\nChecking OS..."
-OUTPUT=$(cat /etc/*release)
-
-if echo $OUTPUT | grep -q "CentOS Linux 7"; then
-  echo -e "\nDetecting CentOS 7.X...\n"
-  SERVER_OS="CentOS7"
-elif echo $OUTPUT | grep -q "CloudLinux 7"; then
-  echo -e "\nDetecting CloudLinux 7.X...\n"
-  SERVER_OS="CentOS7"
-elif echo $OUTPUT | grep -q "CentOS Linux 8"; then
-  rm -f /etc/yum.repos.d/CyberPanel.repo
-  dnf --nogpg install -y https://mirror.ghettoforge.org/distributions/gf/el/8/gf/x86_64/gf-release-8-11.gf.el8.noarch.rpm
-  echo -e "\nDetecting CentOS 8.X...\n"
-  SERVER_OS="CentOS8"
-  yum clean all
-  yum update -y
-  yum autoremove epel-release -y
-  rm -f /etc/yum.repos.d/epel.repo
-  rm -f /etc/yum.repos.d/epel.repo.rpmsave
-  yum autoremove epel-release -y
-  dnf install epel-release -y
-elif echo $OUTPUT | grep -q "CloudLinux 8"; then
-  rm -f /etc/yum.repos.d/CyberPanel.repo
-  dnf --nogpg install -y https://mirror.ghettoforge.org/distributions/gf/el/8/gf/x86_64/gf-release-8-11.gf.el8.noarch.rpm
-  echo -e "\nDetecting Cloudlinux 8.X...\n"
-  SERVER_OS="CentOS8"
-  yum clean all
-  yum update -y
-  yum autoremove epel-release -y
-  rm -f /etc/yum.repos.d/epel.repo
-  rm -f /etc/yum.repos.d/epel.repo.rpmsave
-  yum autoremove epel-release -y
-  dnf install epel-release -y
-elif echo $OUTPUT | grep -q "Ubuntu 18.04"; then
-  echo -e "\nDetecting Ubuntu 18.04...\n"
-  SERVER_OS="Ubuntu"
-elif echo $OUTPUT | grep -q "Ubuntu 20.04"; then
-  echo -e "\nDetecting Ubuntu 20.04...\n"
-  SERVER_OS="Ubuntu"
-  UBUNTU_20="True"
-else
-  cat /etc/*release
-  echo -e "\nUnable to detect your OS...\n"
-  echo -e "\nCyberPanel is supported on Ubuntu 18.04, CentOS 7.x, CentOS 8.x and CloudLinux 7.x...\n"
-  exit 1
 fi
 
-if [ $SERVER_OS = "CentOS7" ]; then
+mysql -uroot -p"$MySQL_Password" -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' IDENTIFIED BY '$MySQL_Password';flush privileges"
+}
 
+Pre_Upgrade_Setup_Repository() {
+if [[ "$Server_OS" = "CentOS" ]] ; then
   rm -f /etc/yum.repos.d/CyberPanel.repo
+  rm -f /etc/yum.repos.d/litespeed.repo
+  if [[ "$Server_Country" = "CN" ]] ; then
+    curl -o /etc/yum.repos.d/litespeed.repo https://cyberpanel.sh/litespeed/litespeed_cn.repo
+  else
+    curl -o /etc/yum.repos.d/litespeed.repo https://cyberpanel.sh/litespeed/litespeed.repo
+  fi
   yum clean all
   yum update -y
   yum autoremove epel-release -y
   rm -f /etc/yum.repos.d/epel.repo
   rm -f /etc/yum.repos.d/epel.repo.rpmsave
+  yum autoremove epel-release -y
+#all pre-upgrade operation for CentOS both 7/8
 
-  yum install epel-release -y
-  yum -y install yum-utils
-  yum -y groupinstall development
+  if [[ "$Server_OS_Version" = "7" ]] ; then
+    yum install epel-release -y
+    yum -y install yum-utils
+    yum -y groupinstall development
+    rm -f /etc/yum.repos.d/dovecot.repo
+    rm -f /etc/yum.repos.d/frank.repo
+    rm -f /etc/yum.repos.d/ius-archive.repo
+    rm -f /etc/yum.repos.d/ius.repo
+    rm -f /etc/yum.repos.d/ius-testing.repo
+    #rm -f /etc/yum.repos.d/lux.repo
+    rm -f /etc/yum.repos.d/powerdns-auth-*
 
-  ###### Setup Required Repos
+    rm -f /etc/yum.repos.d/MariaDB.repo
+    rm -f /etc/yum.repos.d/MariaDB.repo.rpmsave
 
-  rm -f /etc/yum.repos.d/dovecot.repo
-  rm -f /etc/yum.repos.d/frank.repo
-  rm -f /etc/yum.repos.d/ius-archive.repo
-  rm -f /etc/yum.repos.d/ius.repo
-  rm -f /etc/yum.repos.d/ius-testing.repo
-#  rm -f /etc/yum.repos.d/lux.repo
+    yum erase gf-* -y
 
-  ## Start with PDNS
+    rm -f /etc/yum.repos.d/gf.repo
+    rm -f /etc/yum.repos.d/gf.repo.rpmsave
 
-  rm -rf /etc/yum.repos.d/powerdns-auth-*
+    rm -f /etc/yum.repos.d/copart-restic-epel-7.repo.repo
+    rm -f /etc/yum.repos.d/copart-restic-epel-7.repo.rpmsave
 
-  yum install yum-plugin-priorities -y
-  curl -o /etc/yum.repos.d/powerdns-auth-43.repo https://repo.powerdns.com/repo-files/centos-auth-43.repo
+    rm -f /etc/yum.repos.d/ius-archive.repo
+    rm -f /etc/yum.repos.d/ius.repo
+    rm -f /etc/yum.repos.d/ius-testing.repo
 
-  ## MariaDB
+    yum clean all
 
-  rm -f /etc/yum.repos.d/MariaDB.repo
-  rm -f /etc/yum.repos.d/MariaDB.repo.rpmsave
+    curl -o /etc/yum.repos.d/powerdns-auth-43.repo https://cyberpanel.sh/repo.powerdns.com/repo-files/centos-auth-43.repo
+      Check_Return "yum repo" "no_exit"
 
-  cat << EOF > /etc/yum.repos.d/MariaDB.repo
+    cat << EOF > /etc/yum.repos.d/MariaDB.repo
 # MariaDB 10.5 CentOS repository list - created 2020-09-08 14:54 UTC
 # http://downloads.mariadb.org/mariadb/repositories/
 [mariadb]
@@ -233,206 +365,312 @@ gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
 gpgcheck=1
 EOF
 
-  ## Lets upgrade mariadb on spot
+    yum install yum-plugin-copr -y
+    yum copr enable copart/restic -y
+    rpm -ivh https://cyberpanel.sh/repo.ius.io/ius-release-el7.rpm
 
-  if echo $MYSQLCurrentVersion | grep -q "MariaDB 10.1"; then
+    if [[ "$Server_Country" = "CN" ]] ; then
+      sed -i 's|http://yum.mariadb.org|https://cyberpanel.sh/yum.mariadb.org|g' /etc/yum.repos.d/MariaDB.repo
+      sed -i 's|https://yum.mariadb.org/RPM-GPG-KEY-MariaDB|https://cyberpanel.sh/yum.mariadb.org/RPM-GPG-KEY-MariaDB|g' /etc/yum.repos.d/MariaDB.repo
+      # use MariaDB Mirror
+      sed -i 's|https://download.copr.fedorainfracloud.org|https://cyberpanel.sh/download.copr.fedorainfracloud.org|g' /etc/yum.repos.d/_copr_copart-restic.repo
+      sed -i 's|http://repo.iotti.biz|https://cyberpanel.sh/repo.iotti.biz|g' /etc/yum.repos.d/frank.repo
+      sed -i "s|mirrorlist=http://mirrorlist.ghettoforge.org/el/7/gf/\$basearch/mirrorlist|baseurl=https://cyberpanel.sh/mirror.ghettoforge.org/distributions/gf/el/7/gf/x86_64/|g" /etc/yum.repos.d/gf.repo
+      sed -i "s|mirrorlist=http://mirrorlist.ghettoforge.org/el/7/plus/\$basearch/mirrorlist|baseurl=https://cyberpanel.sh/mirror.ghettoforge.org/distributions/gf/el/7/plus/x86_64/|g" /etc/yum.repos.d/gf.repo
+      sed -i 's|https://repo.ius.io|https://cyberpanel.sh/repo.ius.io|g' /etc/yum.repos.d/ius.repo
+      sed -i 's|http://repo.iotti.biz|https://cyberpanel.sh/repo.iotti.biz|g' /etc/yum.repos.d/lux.repo
+      sed -i 's|http://repo.powerdns.com|https://cyberpanel.sh/repo.powerdns.com|g' /etc/yum.repos.d/powerdns-auth-43.repo
+      sed -i 's|https://repo.powerdns.com|https://cyberpanel.sh/repo.powerdns.com|g' /etc/yum.repos.d/powerdns-auth-43.repo
+    fi
+    yum install yum-plugin-priorities -y
 
-    cp /etc/my.cnf /etc/my.cnf.bak
-    mkdir /etc/cnfbackup
-    cp -R /etc/my.cnf.d/ /etc/cnfbackup/
+    yum update -y
 
-    yum remove MariaDB-server MariaDB-client galera -y
-    yum --enablerepo=mariadb -y install MariaDB-server MariaDB-client galera
+    yum install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel gpgme-devel curl-devel git socat openssl-devel MariaDB-shared mariadb-devel python36u python36u-pip python36u-devel bind-utils
 
-    cp -f /etc/my.cnf.bak /etc/my.cnf
-    rm -rf /etc/my.cnf.d/
-    mv /etc/cnfbackup/my.cnf.d /etc/
+    Pre_Upgrade_CentOS7_MySQL
 
-    systemctl enable mysql
-    systemctl start mysql
+    #all pre-upgrade operation for CentOS 7
+  elif [[ "$Server_OS_Version" = "8" ]] ; then
+    cat <<EOF >/etc/yum.repos.d/CentOS-PowerTools-CyberPanel.repo
+[powertools-for-cyberpanel]
+name=CentOS Linux \$releasever - PowerTools
+mirrorlist=http://mirrorlist.centos.org/?release=\$releasever&arch=\$basearch&repo=PowerTools&infra=\$infra
+baseurl=http://mirror.centos.org/\$contentdir/\$releasever/PowerTools/\$basearch/os/
+gpgcheck=1
+enabled=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
+EOF
 
-    mysql_upgrade -uroot -p$MYSQLPassword
-
+  if [[ "$Server_Country" = "CN" ]] ; then
+    dnf --nogpg install -y https://cyberpanel.sh/mirror.ghettoforge.org/distributions/gf/el/8/gf/x86_64/gf-release-8-11.gf.el8.noarch.rpm
+  else
+    dnf --nogpg install -y https://mirror.ghettoforge.org/distributions/gf/el/8/gf/x86_64/gf-release-8-11.gf.el8.noarch.rpm
   fi
 
-  mysql -uroot -p$MYSQLPassword -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' IDENTIFIED BY '$MYSQLPassword';flush privileges"
+  dnf install epel-release -y
 
-
-  ## Ghetoo Repo for Postfix/Dovecot
-
-  yum erase gf-* -y
-
-  rm -f /etc/yum.repos.d/gf.repo
-  rm -f /etc/yum.repos.d/gf.repo.rpmsave
-
-  yum --nogpg install https://mirror.ghettoforge.org/distributions/gf/gf-release-latest.gf.el7.noarch.rpm -y
-
-  ## Copr for restic
-
-  rm -f /etc/yum.repos.d/copart-restic-epel-7.repo.repo
-  rm -f /etc/yum.repos.d/copart-restic-epel-7.repo.rpmsave
-
-  yum install yum-plugin-copr -y
-  yum copr enable copart/restic -y
-
-  ## IUS Repo for python 3
-
-  rm -f /etc/yum.repos.d/ius-archive.repo
-  rm -f /etc/yum.repos.d/ius.repo
-  rm -f /etc/yum.repos.d/ius-testing.repo
-
-  yum install https://repo.ius.io/ius-release-el7.rpm -y
-
-  ###
-
-  yum clean all
-  yum update -y
-
-  yum install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel gpgme-devel curl-devel git socat openssl-devel MariaDB-shared mariadb-devel python36u python36u-pip python36u-devel
-
-elif [ $SERVER_OS = "CentOS8" ]; then
-  dnf install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-devel curl-devel git platform-python-devel tar socat
-  dnf --enablerepo=powertools install gpgme-devel -y
-  dnf --enablerepo=PowerTools install gpgme-devel -y
+  dnf install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-devel curl-devel git platform-python-devel tar socat bind-utils
+  dnf install gpgme-devel -y
   dnf install python3 -y
-else
+  fi
+  #all pre-upgrade operation for CentOS 8
+elif [[ "$Server_OS" = "Ubuntu" ]] ; then
+
   apt update -y
   DEBIAN_FRONTEND=noninteractive apt upgrade -y
-  DEBIAN_FRONTEND=noninteracitve apt install -y htop telnet libcurl4-gnutls-dev libgnutls28-dev libgcrypt20-dev libattr1 libattr1-dev liblzma-dev libgpgme-dev libmariadbclient-dev libcurl4-gnutls-dev libssl-dev nghttp2 libnghttp2-dev idn2 libidn2-dev libidn2-0-dev librtmp-dev libpsl-dev nettle-dev libgnutls28-dev libldap2-dev libgssapi-krb5-2 libk5crypto3 libkrb5-dev libcomerr2 libldap2-dev virtualenv git
+  DEBIAN_FRONTEND=noninteracitve apt install -y htop telnet libcurl4-gnutls-dev libgnutls28-dev libgcrypt20-dev libattr1 libattr1-dev liblzma-dev libgpgme-dev libmariadbclient-dev libcurl4-gnutls-dev libssl-dev nghttp2 libnghttp2-dev idn2 libidn2-dev libidn2-0-dev librtmp-dev libpsl-dev nettle-dev libgnutls28-dev libldap2-dev libgssapi-krb5-2 libk5crypto3 libkrb5-dev libcomerr2 libldap2-dev virtualenv git dnsutils
   DEBIAN_FRONTEND=noninteractive apt install -y python3-pip
   DEBIAN_FRONTEND=noninteractive apt install -y build-essential libssl-dev libffi-dev python3-dev
   DEBIAN_FRONTEND=noninteractive apt install -y python3-venv
-fi
 
-if [ $SERVER_OS = "Ubuntu" ]; then
-  pip3 install virtualenv==16.7.9
-  check_return
+  if [[ "$Server_OS_Version" = "18" ]] ; then
+    :
+#all pre-upgrade operation for Ubuntu 18
+  elif [[ "$Server_OS_Version" = "20" ]] ; then
+#    if ! grep -q "focal" /etc/apt/sources.list.d/dovecot.list ; then
+#      sed -i 's|ce-2.3-latest/ubuntu/bionic bionic main|ce-2.3-latest/ubuntu/focal focal main|g' /etc/apt/sources.list.d/dovecot.list
+#      rm -rf /etc/dovecot-backup
+#      cp -r /etc/dovecot /etc/dovecot-backup
+#      apt update
+#      DEBIAN_FRONTEND=noninteractive apt -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" remove -y dovecot-mysql dovecot-pop3d dovecot-imapd
+#      DEBIAN_FRONTEND=noninteractive apt -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" install -y dovecot-mysql dovecot-pop3d dovecot-imapd
+#      systemctl restart dovecot
+#    fi
+    #fix ubuntu 20 webmail login issue
+
+    rm -f /etc/apt/sources.list.d/dovecot.list
+    apt update
+    DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical apt -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" upgrade -y
+  fi
+#all pre-upgrade operation for Ubuntu 20
+fi
+}
+
+Download_Requirement() {
+for i in {1..50};
+  do
+  wget -O /usr/local/requirments.txt "${Git_Content_URL}/${Branch_Name}/requirments.txt"
+  if grep -q "Django==" /usr/local/requirments.txt ; then
+    break
+  else
+    echo -e "\n Requirement list has failed to download for $i times..."
+    echo -e "Wait for 30 seconds and try again...\n"
+    sleep 30
+  fi
+done
+#special made function for Gitee.com , for whatever reason , sometimes it fails to download this file
+}
+
+
+
+Pre_Upgrade_Required_Components() {
+
+if [ "$Server_OS" = "Ubuntu" ]; then
+  pip3 install --default-timeout=3600 virtualenv==16.7.9
+    Check_Return
 else
-  pip3.6 install virtualenv==16.7.9
-  check_return
+  pip3.6 install --default-timeout=3600 virtualenv==16.7.9
+    Check_Return
 fi
 
 if [[ -f /usr/local/CyberPanel/bin/python2 ]]; then
   echo -e "\nPython 2 dectected, doing resetup...\n"
   rm -rf /usr/local/CyberPanel/bin
   virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberPanel
-  check_return
+  Check_Return
 elif [[ -d /usr/local/CyberPanel/bin/ ]]; then
   echo -e "\nNo need to resetup virtualenv at /usr/local/CyberPanel...\n"
 else
   echo -e "\nNothing found, need fresh setup...\n"
   virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberPanel
-  check_return
+  Check_Return
 fi
 
-rm -f requirments.txt
-wget https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
-
-#if [[ $UBUNTU_20 == "False" ]]; then
-#  wget -O /usr/local/cyberpanel-pip.zip https://rep.cyberpanel.net/cyberpanel-pip-3.zip
-#else
-#  wget -O /usr/local/cyberpanel-pip.zip https://rep.cyberpanel.net/ubuntu-pip-3.zip
-#fi
-#
-#check_return
-#rm -rf /usr/local/pip-packs/
-#rm -rf /usr/local/packages
-#
-#unzip /usr/local/cyberpanel-pip.zip -d /usr/local
-#check_return
+# shellcheck disable=SC1091
 . /usr/local/CyberPanel/bin/activate
-check_return
 
-if [ $SERVER_OS = "Ubuntu" ]; then
+Download_Requirement
+
+if [[ "$Server_OS" = "CentOS" ]] ; then
+  pip3.6 install --default-timeout=3600 virtualenv==16.7.9
+    Check_Return
+  pip3.6 install --default-timeout=3600 --ignore-installed -r /usr/local/requirments.txt
+    Check_Return
+elif [[ "$Server_OS" = "Ubuntu" ]] ; then
+  # shellcheck disable=SC1091
   . /usr/local/CyberPanel/bin/activate
-  check_return
-  if [[ $UBUNTU_20 == "False" ]]; then
-    pip3 install --ignore-installed -r requirments.txt
-  else
-    pip3 install --ignore-installed -r requirments.txt
-  fi
-  check_return
+    Check_Return
+  pip3 install --default-timeout=3600 virtualenv==16.7.9
+    Check_Return
+  pip3 install --default-timeout=3600 --ignore-installed -r /usr/local/requirments.txt
+    Check_Return
+fi
+
+#virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberPanel
+#  Check_Return
+
+wget "${Git_Content_URL}/${Branch_Name}/plogical/upgrade.py"
+
+if [[ "$Server_Country" = "CN" ]] ; then
+  sed -i 's|git clone https://github.com/usmannasir/cyberpanel|echo git cloned|g' upgrade.py
+
+  Retry_Command "git clone ${Git_Clone_URL}"
+    Check_Return "git clone ${Git_Clone_URL}"
+
+  # shellcheck disable=SC2086
+  sed -i 's|https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/install/litespeed/httpd_config.xml|'${Git_Content_URL}/${Branch_Name}'//install/litespeed/httpd_config.xml|g' upgrade.py
+  sed -i 's|https://cyberpanel.sh/composer.sh|https://gitee.com/qtwrk/cyberpanel/raw/stable/install/composer_cn.sh|g' upgrade.py
+fi
+
+}
+
+Pre_Upgrade_Setup_Git_URL() {
+if [[ $Server_Country != "CN" ]] ; then
+  Git_User="usmannasir"
+  Git_Content_URL="https://raw.githubusercontent.com/${Git_User}/cyberpanel"
+  Git_Clone_URL="https://github.com/${Git_User}/cyberpanel.git"
 else
-  #source /usr/local/CyberPanel/bin/activate
-  #check_return
-  pip3.6 install --ignore-installed -r requirments.txt
-  check_return
+  Git_User="qtwrk"
+  Git_Content_URL="https://gitee.com/${Git_User}/cyberpanel/raw"
+  Git_Clone_URL="https://gitee.com/${Git_User}/cyberpanel.git"
 fi
 
-## Doing again to prevent an error - dont confuse later
-
-virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberPanel
-check_return
-
-##
-
-rm -rf upgrade.py
-wget https://$GIT_CONTENT_URL/${BRANCH_NAME}/plogical/upgrade.py
-
-if [[ $SERVER_COUNTRY == "CN" ]]; then
-  sed -i 's|wget  https://raw.githubusercontent.com/usmannasir/cyberpanel/v1.9.4/lscpd-0.2.4 -P /usr/local/lscp/bin/|cp -f /usr/local/CyberCP/lscpd-0.2.4 /usr/local/lscp/bin/lscpd-0.2.4|g' upgrade.py
-  sed -i 's|wget  https://raw.githubusercontent.com/usmannasir/cyberpanel/%s/lscpd-0.2.4 -P /usr/local/lscp/bin/|cp -f /usr/local/CyberCP/lscpd-0.2.4 /usr/local/lscp/bin/lscpd-0.2.4|g' upgrade.py
-  #sed -i $'s/0.2.4\' % (branch)/0.2.4\'/' upgrade.py
-  sed -i 's|raw.githubusercontent.com/usmannasir/cyberpanel|'${GIT_CONTENT_URL}'|g' upgrade.py
-  sed -i 's|git clone https://github.com/usmannasir/cyberpanel|git clone https://'${GIT_URL}'|g' upgrade.py
+if [[ "$Debug" = "On" ]] ; then
+  Debug_Log "Git_URL" "$Git_Content_URL"
 fi
+}
 
-/usr/local/CyberPanel/bin/python upgrade.py $BRANCH_NAME
-check_return
+Pre_Upgrade_Branch_Input() {
+  echo -e "\nPress Enter key to continue with latest version or Enter specific version such as: \e[31m1.9.4\e[39m , \e[31m1.9.5\e[39m ...etc"
+  echo -e "\nIf nothing is input in 10 seconds , script will proceed with latest stable. "
+  echo -e "\nPlease press Enter key , or specify a version number ,or wait for 10 seconds timeout: "
+  printf "%s" ""
+  read -r -t 10 Tmp_Input
+  if [[ $Tmp_Input = "" ]]; then
+    echo -e "Branch name set to $Branch_Name"
+  else
+    Branch_Check "$Tmp_Input"
+  fi
+}
+
+Main_Upgrade() {
+/usr/local/CyberPanel/bin/python upgrade.py "$Branch_Name"
+  Check_Return
 
 if [[ -f /usr/local/CyberCP/bin/python2 ]]; then
   rm -rf /usr/local/CyberCP/bin
   virtualenv -p /usr/bin/python3 /usr/local/CyberCP
+    Check_Return
 elif [[ -d /usr/local/CyberCP/bin/ ]]; then
   echo -e "\nNo need to resetup virtualenv at /usr/local/CyberCP...\n"
 else
   virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberCP
-  check_return
+    Check_Return
 fi
 
-check_return
+rm -f /usr/local/requirments.txt
 
-rm -f requirments.txt
-wget https://raw.githubusercontent.com/usmannasir/cyberpanel/$BRANCH_NAME/requirments.txt
+Download_Requirement
 
-if [ $SERVER_OS = "Ubuntu" ]; then
+if [ "$Server_OS" = "Ubuntu" ]; then
+  # shellcheck disable=SC1091
   . /usr/local/CyberCP/bin/activate
-  check_return
-  if [[ $UBUNTU_20 == "False" ]]; then
-    pip3 install --ignore-installed -r requirments.txt
-  else
-    pip3 install --ignore-installed -r requirments.txt
-  fi
-  check_return
+    Check_Return
+  pip3 install --default-timeout=3600 --ignore-installed -r /usr/local/requirments.txt
+    Check_Return
 else
+  # shellcheck disable=SC1091
   source /usr/local/CyberCP/bin/activate
-  check_return
-  pip3.6 install --ignore-installed -r requirments.txt
-  check_return
+    Check_Return
+  pip3.6 install --default-timeout=3600 --ignore-installed -r /usr/local/requirments.txt
+    Check_Return
 fi
 
-##
-
-rm -f wsgi-lsapi-1.4.tgz
-rm -f wsgi-lsapi-1.5.tgz
-rm -f wsgi-lsapi-1.6.tgz
-rm -rf wsgi-lsapi-1.4
-rm -rf wsgi-lsapi-1.5
-rm -rf wsgi-lsapi-1.6
-wget http://www.litespeedtech.com/packages/lsapi/wsgi-lsapi-1.6.tgz
-tar xf wsgi-lsapi-1.6.tgz
-cd wsgi-lsapi-1.6
+wget https://cyberpanel.sh/www.litespeedtech.com/packages/lsapi/wsgi-lsapi-1.7.tgz
+tar xf wsgi-lsapi-1.7.tgz
+cd wsgi-lsapi-1.7 || exit
 /usr/local/CyberPanel/bin/python ./configure.py
 make
 
+rm -f /usr/local/CyberCP/bin/lswsgi
 cp lswsgi /usr/local/CyberCP/bin/
+
+}
+
+Post_Upgrade_System_Tweak() {
+  if [[ "$Server_OS" = "CentOS" ]] ; then
+
+  #for cenots 7/8
+    if [[ "$Server_OS_Version" = "7" ]] ; then
+      sed -i 's|error_reporting = E_ALL \&amp; ~E_DEPRECATED \&amp; ~E_STRICT|error_reporting = E_ALL \& ~E_DEPRECATED \& ~E_STRICT|g' /usr/local/lsws/{lsphp72,lsphp73}/etc/php.ini
+    #fix php.ini &amp; issue
+        if ! yum list installed lsphp74-devel ; then
+          yum install -y lsphp74-devel
+        fi
+        if [[ ! -f /usr/local/lsws/lsphp74/lib64/php/modules/zip.so ]] ; then
+        if yum list installed libzip-devel >/dev/null 2>&1 ; then
+          yum remove -y libzip-devel
+        fi
+        yum install -y https://cyberpanel.sh/misc/libzip-0.11.2-6.el7.psychotic.x86_64.rpm
+        yum install -y https://cyberpanel.sh/misc/libzip-devel-0.11.2-6.el7.psychotic.x86_64.rpm
+        yum install lsphp74-devel
+        if [[ ! -d /usr/local/lsws/lsphp74/tmp ]]; then
+          mkdir /usr/local/lsws/lsphp74/tmp
+        fi
+        /usr/local/lsws/lsphp74/bin/pecl channel-update pecl.php.net
+        /usr/local/lsws/lsphp74/bin/pear config-set temp_dir /usr/local/lsws/lsphp74/tmp
+        if /usr/local/lsws/lsphp74/bin/pecl install zip ; then
+          echo "extension=zip.so" >/usr/local/lsws/lsphp74/etc/php.d/20-zip.ini
+          chmod 755 /usr/local/lsws/lsphp74/lib64/php/modules/zip.so
+        else
+          echo -e "\nlsphp74-zip compilation failed..."
+        fi
+        #fix old legacy lsphp74-zip issue on centos 7
+      fi
+
+
+    #for centos 7
+    elif [[ "$Server_OS_Version" = "8" ]] ; then
+    :
+    #for centos 8
+    fi
+  fi
+
+  if [[ "$Server_OS" = "Ubuntu" ]] ; then
+
+  if ! dpkg -l lsphp74-dev >/dev/null 2>&1 ; then
+    apt install -y lsphp74-dev
+  fi
+
+    if [[ ! -f /usr/sbin/ipset ]] ; then
+    ln -s /sbin/ipset /usr/sbin/ipset
+    fi
+
+  #for ubuntu 18/20
+    if [[ "$Server_OS_Version" = "18" ]] ; then
+    :
+    #for ubuntu 18
+    elif [[ "$Server_OS_Version" = "20" ]] ; then
+    :
+    #for ubuntu 20
+    fi
+  fi
+
+sed -i "s|lsws-5.3.8|lsws-$LSWS_Stable_Version|g" /usr/local/CyberCP/serverStatus/serverStatusUtil.py
+sed -i "s|lsws-5.4.2|lsws-$LSWS_Stable_Version|g" /usr/local/CyberCP/serverStatus/serverStatusUtil.py
+sed -i "s|lsws-5.3.5|lsws-$LSWS_Stable_Version|g" /usr/local/CyberCP/serverStatus/serverStatusUtil.py
+
+if [[ "$Server_Country" = "CN" ]] ; then
+  sed -i 's|https://www.litespeedtech.com/|https://cyberpanel.sh/www.litespeedtech.com/|g' /usr/local/CyberCP/serverStatus/serverStatusUtil.py
+  sed -i 's|http://license.litespeedtech.com/|https://cyberpanel.sh/license.litespeedtech.com/|g' /usr/local/CyberCP/serverStatus/serverStatusUtil.py
+fi
 
 sed -i 's|python2|python|g' /usr/bin/adminPass
 chmod 700 /usr/bin/adminPass
 
-if [[ ! -f /usr/sbin/ipset ]] && [[ $SERVER_OS == "Ubuntu" ]]; then
-  ln -s /sbin/ipset /usr/sbin/ipset
-fi
+rm -f /usr/bin/php
+ln -s /usr/local/lsws/lsphp74/bin/php /usr/bin/php
 
 if [[ -f /etc/cyberpanel/webadmin_passwd ]]; then
   chmod 600 /etc/cyberpanel/webadmin_passwd
@@ -442,107 +680,94 @@ if [[ -f /etc/pure-ftpd/pure-ftpd.conf ]]; then
   sed -i 's|NoAnonymous                 no|NoAnonymous                 yes|g' /etc/pure-ftpd/pure-ftpd.conf
 fi
 
-install_utility
-
-output=$(timeout 3 openssl s_client -connect 127.0.0.1:8090 2>/dev/null)
-echo $output | grep -q "mail@example.com"
-if [[ $? == "0" ]]; then
+Tmp_Output=$(timeout 3 openssl s_client -connect 127.0.0.1:8090 2>/dev/null)
+if echo "$Tmp_Output" | grep -q "mail@example.com" ; then
   # it is using default installer generated cert
-  regenerate_cert 8090
-fi
-output=$(timeout 3 openssl s_client -connect 127.0.0.1:7080 2>/dev/null)
-echo $output | grep -q "mail@example.com"
-if [[ $? == "0" ]]; then
-  regenerate_cert 7080
+  Regenerate_Cert 8090
 fi
 
-if [[ $SERVER_OS == "CentOS7" ]]; then
 
-  sed -i 's|error_reporting = E_ALL \&amp; ~E_DEPRECATED \&amp; ~E_STRICT|error_reporting = E_ALL \& ~E_DEPRECATED \& ~E_STRICT|g' /usr/local/lsws/{lsphp72,lsphp73}/etc/php.ini
-  #fix php.ini &amp; issue
-
-  yum list installed lsphp74-devel
-  if [[ $? != "0" ]]; then
-    yum install -y lsphp74-devel
-  fi
+Tmp_Output=$(timeout 3 openssl s_client -connect 127.0.0.1:7080 2>/dev/null)
+if echo "$Tmp_Output" | grep -q "mail@example.com" ; then
+  Regenerate_Cert 7080
 fi
 
-if [[ $SERVER_OS == "Ubuntu" ]]; then
-  dpkg -l lsphp74-dev >/dev/null 2>&1
-  if [[ $? != "0" ]]; then
-    apt install -y lsphp74-dev
-  fi
+if [[ ! -f /usr/bin/cyberpanel_utility ]]; then
+  wget -q -O /usr/bin/cyberpanel_utility https://cyberpanel.sh/misc/cyberpanel_utility.sh
+  chmod 700 /usr/bin/cyberpanel_utility
 fi
-
-if [[ ! -f /usr/local/lsws/lsphp74/lib64/php/modules/zip.so ]] && [[ $SERVER_OS == "CentOS7" ]]; then
-  yum list installed libzip-devel >/dev/null 2>&1
-  if [[ $? == "0" ]]; then
-    yum remove -y libzip-devel
-  fi
-
-  yum install -y https://cdn.cyberpanel.sh/misc/libzip-0.11.2-6.el7.psychotic.x86_64.rpm
-  yum install -y https://cdn.cyberpanel.sh/misc/libzip-devel-0.11.2-6.el7.psychotic.x86_64.rpm
-  yum install lsphp74-devel
-
-  if [[ ! -d /usr/local/lsws/lsphp74/tmp ]]; then
-    mkdir /usr/local/lsws/lsphp74/tmp
-  fi
-
-  /usr/local/lsws/lsphp74/bin/pecl channel-update pecl.php.net
-  /usr/local/lsws/lsphp74/bin/pear config-set temp_dir /usr/local/lsws/lsphp74/tmp
-  /usr/local/lsws/lsphp74/bin/pecl install zip
-  if [[ $? == 0 ]]; then
-    echo "extension=zip.so" >/usr/local/lsws/lsphp74/etc/php.d/20-zip.ini
-    chmod 755 /usr/local/lsws/lsphp74/lib64/php/modules/zip.so
-  else
-    echo -e "\nlsphp74-zip compilation failed..."
-  fi
-fi
-#fix the lsphp74-zip missing issue.
-
-##
-chown -R cyberpanel:cyberpanel /usr/local/CyberCP/lib
-chown -R cyberpanel:cyberpanel /usr/local/CyberCP/lib64
-systemctl restart lscpd
-
-rm -f requirements.txt
-rm -f requirments.txt
-rm -f upgrade.py
-rm -rf wsgi-lsapi-1.5
-rm -f wsgi-lsapi-1.5.tgz
-rm -f /usr/local/composer.sh
-
-# clean up
 
 if [[ -f /etc/cyberpanel/watchdog.sh ]] ; then
-	watchdog kill 
+	watchdog kill
 	rm -f /etc/cyberpanel/watchdog.sh
 	rm -f /usr/local/bin/watchdog
-	wget -O /etc/cyberpanel/watchdog.sh https://$GIT_CONTENT_URL/$BRANCH_NAME/CPScripts/watchdog.sh
+	wget -O /etc/cyberpanel/watchdog.sh "${Git_Content_URL}/${Branch_Name}/CPScripts/watchdog.sh"
 	chmod 700 /etc/cyberpanel/watchdog.sh
 	ln -s /etc/cyberpanel/watchdog.sh /usr/local/bin/watchdog
 	watchdog status
 fi
-#update and restart watchdog
 
-### Disable Centos Default Repos
 
-disable_repos() {
+rm -f /usr/local/composer.sh
+rm -f /usr/local/requirments.txt
 
-  if [[ $SERVER_OS == "CentOS" ]]; then
-    sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-Base.repo
-    sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-Debuginfo.repo
-    sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-Media.repo
-    sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-Vault.repo
-    sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-CR.repo
-    sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-fasttrack.repo
-    sed -i 's|enabled=1|enabled=0|g' /etc/yum.repos.d/CentOS-Sources.repo
-  fi
+chown -R cyberpanel:cyberpanel /usr/local/CyberCP/lib
+chown -R cyberpanel:cyberpanel /usr/local/CyberCP/lib64
+systemctl restart lscpd
 
 }
 
-disable_repos
+Post_Install_Display_Final_Info() {
+Panel_Port=$(cat /usr/local/lscp/conf/bind.conf)
+if [[ $Panel_Port = "" ]] ; then
+  Panel_Port="8090"
+fi
 
-echo "###################################################################"
-echo "                CyberPanel Upgraded                                "
-echo "###################################################################"
+if curl -I -XGET -k "https://127.0.0.1:${Panel_Port#*:}" | grep -q "200 OK" ; then
+  echo "###################################################################"
+  echo "                CyberPanel Upgraded                                "
+  echo "###################################################################"
+else
+  echo -e "\nSeems something wrong with upgarde, please check...\n"
+fi
+rm -rf /root/cyberpanel_upgrade_tmp
+}
+
+if [[ ! -d /etc/cyberpanel ]] ; then
+  echo -e "\n\nCan not detect CyberCP..."
+  exit
+fi
+
+if [[ "$*" = *"--debug"* ]] ; then
+  Debug="On"
+  rm -f /tmp/cyberpanel_debug_upgrade.log
+  echo -e "$(date)" > /tmp/cyberpanel_debug_upgrade.log
+fi
+
+Set_Default_Variables
+
+Check_Root
+
+Check_Server_IP "$@"
+
+Check_OS
+
+Check_Provider
+
+Check_Argument "$@"
+
+if [[ "$*" != *"--branch "* ]] && [[ "$*" != *"-b "* ]] ; then
+  Pre_Upgrade_Branch_Input
+fi
+
+Pre_Upgrade_Setup_Repository
+
+Pre_Upgrade_Setup_Git_URL
+
+Pre_Upgrade_Required_Components
+
+Main_Upgrade
+
+Post_Upgrade_System_Tweak
+
+Post_Install_Display_Final_Info

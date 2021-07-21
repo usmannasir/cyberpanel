@@ -14,7 +14,7 @@ from websiteFunctions.models import Websites
 from plogical.virtualHostUtilities import virtualHostUtilities
 from plogical.sslUtilities import sslUtilities
 from plogical.vhost import vhost
-from shutil import copytree, ignore_patterns
+from shutil import ignore_patterns
 
 
 class ServerStatusUtil:
@@ -57,35 +57,34 @@ class ServerStatusUtil:
             except:
                 pass
 
-            command = 'wget https://www.litespeedtech.com/packages/5.0/lsws-5.4.2-ent-x86_64-linux.tar.gz'
+            command = 'wget https://www.litespeedtech.com/packages/6.0/lsws-6.0-ent-x86_64-linux.tar.gz'
             if ServerStatusUtil.executioner(command, statusFile) == 0:
                 return 0
 
-            if os.path.exists('/usr/local/CyberCP/lsws-5.3.8/'):
-                shutil.rmtree('/usr/local/CyberCP/lsws-5.3.8')
+            if os.path.exists('/usr/local/CyberCP/lsws-6.0/'):
+                shutil.rmtree('/usr/local/CyberCP/lsws-6.0')
+
+            if os.path.exists('/usr/local/CyberCP/lsws-6.0/'):
+                shutil.rmtree('/usr/local/CyberCP/lsws-6.0/')
 
 
-            if os.path.exists('/usr/local/CyberCP/lsws-5.4.2/'):
-                shutil.rmtree('/usr/local/CyberCP/lsws-5.4.2/')
-
-
-            command = 'tar zxf lsws-5.4.2-ent-x86_64-linux.tar.gz -C /usr/local/CyberCP'
+            command = 'tar zxf lsws-6.0-ent-x86_64-linux.tar.gz -C /usr/local/CyberCP'
             if ServerStatusUtil.executioner(command, statusFile) == 0:
                 return 0
 
             if licenseKey == 'trial':
-                command = 'wget -q --output-document=/usr/local/CyberCP/lsws-5.4.2/trial.key http://license.litespeedtech.com/reseller/trial.key'
+                command = 'wget -q --output-document=/usr/local/CyberCP/lsws-6.0/trial.key http://license.litespeedtech.com/reseller/trial.key'
                 if ServerStatusUtil.executioner(command, statusFile) == 0:
                     return 0
             else:
-                writeSerial = open('/usr/local/CyberCP/lsws-5.4.2/serial.no', 'w')
+                writeSerial = open('/usr/local/CyberCP/lsws-6.0/serial.no', 'w')
                 writeSerial.writelines(licenseKey)
                 writeSerial.close()
 
-            shutil.copy('/usr/local/CyberCP/serverStatus/litespeed/install.sh', '/usr/local/CyberCP/lsws-5.4.2/')
-            shutil.copy('/usr/local/CyberCP/serverStatus/litespeed/functions.sh', '/usr/local/CyberCP/lsws-5.4.2/')
+            shutil.copy('/usr/local/CyberCP/serverStatus/litespeed/install.sh', '/usr/local/CyberCP/lsws-6.0/')
+            shutil.copy('/usr/local/CyberCP/serverStatus/litespeed/functions.sh', '/usr/local/CyberCP/lsws-6.0/')
 
-            os.chdir('/usr/local/CyberCP/lsws-5.4.2/')
+            os.chdir('/usr/local/CyberCP/lsws-6.0/')
 
             command = 'chmod +x install.sh'
             if ServerStatusUtil.executioner(command, statusFile) == 0:
@@ -112,7 +111,7 @@ class ServerStatusUtil:
                 pass
 
             try:
-                os.rmdir("/usr/local/CyberCP/lsws-5.4.2")
+                os.rmdir("/usr/local/CyberCP/lsws-6.0")
             except:
                 pass
 
@@ -349,6 +348,28 @@ class ServerStatusUtil:
             ProcessUtilities.stopLitespeed()
             ProcessUtilities.restartLitespeed()
 
+            ### Check and remove OLS restart if lsws ent detected
+
+            CentOSPath = '/etc/redhat-release'
+
+            if os.path.exists(CentOSPath):
+                cronPath = '/var/spool/cron/root'
+            else:
+                cronPath = '/var/spool/cron/crontabs/root'
+
+            data = open(cronPath, 'r').readlines()
+
+            writeToFile = open(cronPath, 'w')
+
+            for items in data:
+                if items.find('-maxdepth 2 -type f -newer') > -1:
+                    pass
+                else:
+                    writeToFile.writelines(items)
+
+            writeToFile.close()
+
+            ###
 
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,"Successfully switched to LITESPEED ENTERPRISE WEB SERVER. [200]\n", 1)
 

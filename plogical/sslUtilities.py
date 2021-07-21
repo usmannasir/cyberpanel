@@ -64,6 +64,14 @@ class sslUtilities:
 
     @staticmethod
     def installSSLForDomain(virtualHostName, adminEmail='usman@cyberpersons.com'):
+
+        try:
+            website = Websites.objects.get(domain=virtualHostName)
+            adminEmail = website.adminEmail
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile('%s [installSSLForDomain:72]' % (str(msg)))
+
+
         if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
             confPath = sslUtilities.Server_root + "/conf/vhosts/" + virtualHostName
             completePathToConfigFile = confPath + "/vhost.conf"
@@ -290,7 +298,7 @@ class sslUtilities:
 
                     command = acmePath + " --issue -d " + virtualHostName + " -d www." + virtualHostName \
                               + ' --cert-file ' + existingCertPath + '/cert.pem' + ' --key-file ' + existingCertPath + '/privkey.pem' \
-                              + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w ' + sslpath + ' --force'
+                              + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w ' + sslpath + ' --server letsencrypt --force'
 
                     logging.CyberCPLogFileWriter.writeToFile(command, 0)
 
@@ -311,7 +319,7 @@ class sslUtilities:
                         logging.CyberCPLogFileWriter.writeToFile("Trying to obtain SSL for: " + virtualHostName, 0)
                         command = acmePath + " --issue -d " + virtualHostName + ' --cert-file ' + existingCertPath \
                                   + '/cert.pem' + ' --key-file ' + existingCertPath + '/privkey.pem' \
-                                  + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w ' + sslpath + ' --force'
+                                  + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w ' + sslpath + ' --server letsencrypt --force'
                         output = subprocess.check_output(shlex.split(command)).decode("utf-8")
                         logging.CyberCPLogFileWriter.writeToFile("Successfully obtained SSL for: " + virtualHostName, 0)
                         finalText = '%s\nSuccessfully obtained SSL for: %s.' % (finalText, virtualHostName)

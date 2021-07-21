@@ -22,6 +22,7 @@ class cliParser:
         parser.add_argument('--dkim', help='DKIM Signing')
         parser.add_argument('--openBasedir', help='To enable or disable open_basedir protection for domain.')
         parser.add_argument('--fileName', help='Complete path to a file that needs to be restored.')
+        parser.add_argument('--backupPath', help='Backup path to use when generating a backup.')
 
         ## Package Arguments.
 

@@ -6,25 +6,31 @@
 /* Java script code to create database */
 app.controller('createDatabase', function ($scope, $http) {
 
-    $scope.createDatabaseLoading = true;
-    $scope.dbDetails = true;
-    $scope.databaseCreationFailed = true;
-    $scope.databaseCreated = true;
-    $scope.couldNotConnect = true;
-    $scope.generatedPasswordView = true;
+    $(document).ready(function () {
+        $(".dbDetails").hide();
+        $(".generatedPasswordDetails").hide();
+        $('#create-database-select').select2();
+    });
+
+    $('#create-database-select').on('select2:select', function (e) {
+        var data = e.params.data;
+        $scope.databaseWebsite = data.text;
+        $(".dbDetails").show();
+        $("#domainDatabase").text(getWebsiteName(data.text));
+        $("#domainUsername").text(getWebsiteName(data.text));
+    });
 
 
     $scope.showDetailsBoxes = function () {
         $scope.dbDetails = false;
-    };
+    }
+
+    $scope.createDatabaseLoading = true;
 
     $scope.createDatabase = function () {
 
         $scope.createDatabaseLoading = false;
         $scope.dbDetails = false;
-        $scope.databaseCreationFailed = true;
-        $scope.databaseCreated = true;
-        $scope.couldNotConnect = true;
 
 
         var databaseWebsite = $scope.databaseWebsite;
@@ -65,26 +71,24 @@ app.controller('createDatabase', function ($scope, $http) {
         function ListInitialDatas(response) {
 
 
-            if (response.data.createDBStatus == 1) {
+            if (response.data.createDBStatus === 1) {
 
                 $scope.createDatabaseLoading = true;
                 $scope.dbDetails = false;
-                $scope.databaseCreationFailed = true;
-                $scope.databaseCreated = false;
-                $scope.couldNotConnect = true;
-
-
-            }
-
-            else {
-
+                new PNotify({
+                    title: 'Success!',
+                    text: 'Database successfully created.',
+                    type: 'success'
+                });
+            } else {
 
                 $scope.createDatabaseLoading = true;
                 $scope.dbDetails = false;
-                $scope.databaseCreationFailed = false;
-                $scope.databaseCreated = true;
-                $scope.couldNotConnect = true;
-                $scope.errorMessage = response.data.error_message;
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
 
 
             }
@@ -96,21 +100,23 @@ app.controller('createDatabase', function ($scope, $http) {
 
             $scope.createDatabaseLoading = true;
             $scope.dbDetails = true;
-            $scope.databaseCreationFailed = true;
-            $scope.databaseCreated = true;
-            $scope.couldNotConnect = false;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
         }
 
 
     };
 
     $scope.generatePassword = function () {
-        $scope.generatedPasswordView = false;
+        $(".generatedPasswordDetails").show();
         $scope.dbPassword = randomPassword(16);
     };
 
     $scope.usePassword = function () {
-        $scope.generatedPasswordView = true;
+        $(".generatedPasswordDetails").hide();
     };
 
 });
@@ -170,9 +176,7 @@ app.controller('deleteDatabase', function ($scope, $http) {
                 $scope.couldNotConnect = true;
 
 
-            }
-
-            else {
+            } else {
                 $scope.deleteDatabaseLoading = true;
                 $scope.fetchedDatabases = true;
                 $scope.databaseDeletionFailed = false;
@@ -240,9 +244,7 @@ app.controller('deleteDatabase', function ($scope, $http) {
                 $scope.couldNotConnect = true;
 
 
-            }
-
-            else {
+            } else {
                 $scope.deleteDatabaseLoading = true;
                 $scope.fetchedDatabases = true;
                 $scope.databaseDeletionFailed = false;
@@ -344,8 +346,7 @@ app.controller('listDBs', function ($scope, $http) {
                 $scope.dbLoading = true;
                 $scope.domainFeteched = $scope.selectedDomain;
 
-            }
-            else {
+            } else {
                 $scope.notificationsBox = false;
                 $scope.canNotChangePassword = false;
                 $scope.dbLoading = true;
@@ -411,8 +412,7 @@ app.controller('listDBs', function ($scope, $http) {
 
                 $scope.domainFeteched = $scope.selectedDomain;
 
-            }
-            else {
+            } else {
                 $scope.recordsFetched = true;
                 $scope.passwordChanged = true;
                 $scope.canNotChangePassword = true;
@@ -481,8 +481,7 @@ app.controller('listDBs', function ($scope, $http) {
 
                 $scope.dbHost = response.data.dbHost;
 
-            }
-            else {
+            } else {
                 new PNotify({
                     title: 'Operation Failed!',
                     text: response.data.error_message,
@@ -537,8 +536,7 @@ app.controller('listDBs', function ($scope, $http) {
                     type: 'success'
                 });
 
-            }
-            else {
+            } else {
                 new PNotify({
                     title: 'Operation Failed!',
                     text: response.data.error_message,
@@ -570,7 +568,7 @@ app.controller('listDBs', function ($scope, $http) {
 app.controller('phpMyAdmin', function ($scope, $http, $window) {
     $scope.cyberPanelLoading = true;
 
-    $scope.generateAccess = function() {
+    $scope.generateAccess = function () {
 
         $scope.cyberPanelLoading = false;
 
@@ -593,12 +591,14 @@ app.controller('phpMyAdmin', function ($scope, $http, $window) {
             if (response.data.status === 1) {
                 var rUrl = '/phpmyadmin/phpmyadminsignin.php?username=' + response.data.username + '&token=' + response.data.token;
                 $window.location.href = rUrl;
+            } else {
             }
-            else {}
 
         }
 
-        function cantLoadInitialDatas(response) {$scope.cyberPanelLoading = true;}
+        function cantLoadInitialDatas(response) {
+            $scope.cyberPanelLoading = true;
+        }
 
     }
 
