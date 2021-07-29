@@ -2073,6 +2073,17 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             command = 'chmod 600 /usr/local/CyberCP/public/rainloop.php'
             Upgrade.executioner(command, 0)
 
+            ###
+
+            WriteToFile = open('/etc/fstab', 'a')
+            WriteToFile.write('proc    /proc        proc        defaults,hidepid=2    0 0\n')
+            WriteToFile.close()
+
+            command = 'mount -o remount,rw,hidepid=2 /proc'
+            Upgrade.executioner(command, 0)
+
+            ###
+
             Upgrade.stdOut("Permissions updated.")
 
         except BaseException as msg:

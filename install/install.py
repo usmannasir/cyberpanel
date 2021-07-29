@@ -657,6 +657,15 @@ class preFlightsChecks:
 
         ###
 
+        WriteToFile = open('/etc/fstab', 'a')
+        WriteToFile.write('proc    /proc        proc        defaults,hidepid=2    0 0\n')
+        WriteToFile.close()
+
+        command = 'mount -o remount,rw,hidepid=2 /proc'
+        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+        ###
+
     def install_unzip(self):
         self.stdOut("Install unzip")
         try:
