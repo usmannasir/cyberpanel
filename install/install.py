@@ -652,6 +652,9 @@ class preFlightsChecks:
 
         rainloopinipath = '/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/application.ini'
 
+        command = 'chmod 600 /usr/local/CyberCP/public/rainloop.php'
+        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
         ###
 
     def install_unzip(self):
@@ -2289,8 +2292,6 @@ def main():
     if args.redis != None:
         checks.installRedis()
 
-    checks.fixCyberPanelPermissions()
-
     if args.postfix != None:
         checks.enableDisableEmail(args.postfix.lower())
     else:
@@ -2349,6 +2350,8 @@ echo $oConfig->Save() ? 'Done' : 'Error';
         subprocess.call(shlex.split(command))
     except:
         pass
+
+    checks.fixCyberPanelPermissions()
 
     logging.InstallLog.writeToFile("CyberPanel installation successfully completed!,80")
 

@@ -2070,6 +2070,9 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             command = '/usr/local/lsws/lsphp72/bin/php /usr/local/CyberCP/public/rainloop.php'
             Upgrade.executioner(command, 0)
 
+            command = 'chmod 600 /usr/local/CyberCP/public/rainloop.php'
+            Upgrade.executioner(command, 0)
+
             Upgrade.stdOut("Permissions updated.")
 
         except BaseException as msg:
