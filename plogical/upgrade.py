@@ -2084,6 +2084,19 @@ echo $oConfig->Save() ? 'Done' : 'Error';
 
             ###
 
+            CentOSPath = '/etc/redhat-release'
+
+            if not os.path.exists(CentOSPath):
+                group = 'nobody'
+            else:
+                group = 'nogroup'
+
+            command = 'chown root:%s /usr/local/lsws/logs' % (group)
+            Upgrade.executioner(command, 0)
+
+            command = 'chmod 750 /usr/local/lsws/logs'
+            Upgrade.executioner(command, 0)
+
             Upgrade.stdOut("Permissions updated.")
 
         except BaseException as msg:
