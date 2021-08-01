@@ -137,7 +137,7 @@ elif [[ $1 == "web" ]] || [[ $1 == "lsws" ]] || [[ $1 == "litespeed" ]] || [[ $1
 	NAME="lsws"
 	echo "Watchdog on LiteSpeed is started up ..."
 elif [[ $1 == "powerdns" ]] || [[ $1 == "dns" ]] ; then
-	NAME="powerdns"
+	NAME="pdns"
 	echo "Watchdog on PowerDNS is starting up ..."
 elif [[ $1 == "dovecot" ]] || [[ $1 == "imap" ]] || [[ $1 == "pop3" ]]; then
 	NAME="dovecot"
