@@ -574,6 +574,12 @@ class WebsiteManager:
 
             website = Websites.objects.get(domain=websiteName)
 
+            admin = Administrator.objects.get(pk=userID)
+            if ACLManager.checkOwnership(websiteName, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson('websiteStatus', 0)
+
             if state == "Suspend":
                 confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + websiteName
                 command = "mv " + confPath + " " + confPath + "-suspended"
