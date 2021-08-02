@@ -1,83 +1,54 @@
 #!/bin/bash
 
+# Add any services to be watched by the watchdog to the SERVICE_LIST
+# Format of the service list: "Display Name" "Service Name" "semicolon delimited list of watchdog arguments"
+SERVICE_LIST=(
+	"LiteSpeed" "lsws" "lsws;web;litespeed;openlitespeed"
+	"MariaDB" "mariadb" "mariadb;database;mysql"
+	"PowerDNS" "pdns" "powerdns;dns"
+	"Dovecot" "dovecot" "dovecot;imap;pop3"
+	"PostFix" "postfix" "postfix;smtp"
+	"Pure-FTPd" "pure-ftpd" "pureftpd;pure-ftpd;ftp"
+)
+
+SERVICE_COUNT=$((${#SERVICE_LIST[@]}/3))
+
 show_help() {
-echo -e "\nrun command: \e[31mnohup bash /etc/cyberpanel/watchdog.sh SERVICE_NAME >/dev/null 2>&1 &\e[39m"
-echo -e "\nreplace \e[31mSERVICE_NAME\e[39m to the service name, acceptable word: \e[31mmariadb\e[39m, \e[31mlsws\e[39m, \e[31mpowerdns\e[39m, \e[31mdovecot\e[39m, \e[31mpostfix\e[39m, or \e[31mpureftpd\e[39m"
-echo -e "\nWatchdog will check service status every 60 seconds and tries to restart if it is not running and also send an email to designated address"
-echo -e "\nto exit watchdog , run command \e[31mbash /etc/cyberpanel/watchdog.sh kill\e[39m"
-echo -e "\n\nplease also create \e[31m/etc/cyberpanel/watchdog.flag\e[39m file with following format:"
-echo -e "TO=address@email.com"
-echo -e "SENDER=sender name"
-echo -e "FROM=sender@email.com"
-echo -e "You may proceed without flag file , but that will make email sending failed."
+	echo -e "\nrun command: \e[31mnohup bash /etc/cyberpanel/watchdog.sh SERVICE_NAME >/dev/null 2>&1 &\e[39m"
+	echo -e "\nreplace \e[31mSERVICE_NAME\e[39m to the service name, acceptable word:"
+
+	for ((x=0; x<SERVICE_COUNT; x++)) ; do
+		IFS=';' read -ra SERVICE_ARGS <<< "${SERVICE_LIST[(x*3)+2]}"
+		echo -e "  \e[31m${SERVICE_ARGS[0]}\e[39m"
+	done
+
+	echo -e "\nWatchdog will check service status every 60 seconds and tries to restart if it is not running and also send an email to designated address"
+	echo -e "\nto exit watchdog , run command \e[31mbash /etc/cyberpanel/watchdog.sh kill\e[39m"
+	echo -e "\n\nplease also create \e[31m/etc/cyberpanel/watchdog.flag\e[39m file with following format:"
+	echo -e "TO=address@email.com"
+	echo -e "SENDER=sender name"
+	echo -e "FROM=sender@email.com"
+	echo -e "You may proceed without flag file , but that will make email sending failed."
 }
 
 watchdog_check() {
-echo -e "\nChecking LiteSpeed ..."
-pid=$(ps aux | grep "watchdog lsws"  | grep -v grep | awk '{print $2}')
+for ((x=0; x<SERVICE_COUNT; x++)) ; do
+	DISPLAY_NAME=${SERVICE_LIST[x*3]}
+	SERVICE_NAME=${SERVICE_LIST[(x*3)+1]}
+	IFS=';' read -ra SERVICE_ARGS <<< "${SERVICE_LIST[(x*3)+2]}"
+	SERVICE_ARG=${SERVICE_ARGS[0]}
+	
+	echo -e "\nChecking ${DISPLAY_NAME}..."
+	pid=$(ps aux | grep "watchdog ${SERVICE_ARG}" | grep -v grep | awk '{print $2}')
 	if [[ "$pid" == "" ]] ; then
-		echo -e "\nWatchDog for LSWS is gone , restarting..."
-		nohup watchdog lsws > /dev/null 2>&1 &
-		echo -e "\nWatchDog for LSWS has been started..."
+		echo -e "\nWatchDog for ${DISPLAY_NAME} is gone , restarting..."
+		nohup watchdog ${SERVICE_ARG} > /dev/null 2>&1 &
+		echo -e "\nWatchDog for ${DISPLAY_NAME} has been started..."
 	else
-		echo -e "\nWatchDog for LSWS is running...\n"
-		echo $(ps aux | grep "watchdog lsws"  | grep -v grep)
+		echo -e "\nWatchDog for ${DISPLAY_NAME} is running...\n"
+		echo $(ps aux | grep "watchdog ${SERVICE_ARG}" | grep -v grep)
 	fi
-
-echo -e "\nChecking MariaDB ..."
-pid=$(ps aux | grep "watchdog mariadb"  | grep -v grep | awk '{print $2}')
-	if [[ "$pid" == "" ]] ; then
-		echo -e "\nWatchDog for MariaDB is gone , restarting..."
-		nohup watchdog mariadb > /dev/null 2>&1 &
-		echo -e "\nWatchDog for MariaDB has been started..."
-	else
-		echo -e "\nWatchDog for MariaDB is running...\n"
-		echo $(ps aux | grep "watchdog mariadb"  | grep -v grep)
-	fi
-
-echo -e "\nChecking PowerDNS ..."
-pid=$(ps aux | grep "watchdog powerdns"  | grep -v grep | awk '{print $2}')
-	if [[ "$pid" == "" ]] ; then
-		echo -e "\nWatchDog for PowerDNS is gone , restarting..."
-		nohup watchdog powerdns > /dev/null 2>&1 &
-		echo -e "\nWatchDog for PowerDNS has been started..."
-	else
-		echo -e "\nWatchDog for PowerDNS is running...\n"
-		echo $(ps aux | grep "watchdog powerdns"  | grep -v grep)
-	fi
-
-echo -e "\nChecking Dovecot ..."
-pid=$(ps aux | grep "watchdog dovecot"  | grep -v grep | awk '{print $2}')
-	if [[ "$pid" == "" ]] ; then
-		echo -e "\nWatchDog for Dovecot is gone , restarting..."
-		nohup watchdog dovecot > /dev/null 2>&1 &
-		echo -e "\nWatchDog for Dovecot has been started..."
-	else
-		echo -e "\nWatchDog for Dovecot is running...\n"
-		echo $(ps aux | grep "watchdog dovecot"  | grep -v grep)
-	fi
-
-echo -e "\nChecking Postfix ..."
-pid=$(ps aux | grep "watchdog postfix"  | grep -v grep | awk '{print $2}')
-	if [[ "$pid" == "" ]] ; then
-		echo -e "\nWatchDog for Postfix is gone , restarting..."
-		nohup watchdog postfix > /dev/null 2>&1 &
-		echo -e "\nWatchDog for Postfix has been started..."
-	else
-		echo -e "\nWatchDog for Postfix is running...\n"
-		echo $(ps aux | grep "watchdog postfix"  | grep -v grep)
-	fi
-
-echo -e "\nChecking Pure-FTPd ..."
-pid=$(ps aux | grep "watchdog pureftpd"  | grep -v grep | awk '{print $2}')
-	if [[ "$pid" == "" ]] ; then
-		echo -e "\nWatchDog for Pure-FTPd is gone , restarting..."
-		nohup watchdog pureftpd > /dev/null 2>&1 &
-		echo -e "\nWatchDog for Pure-FTPd has been started..."
-	else
-		echo -e "\nWatchDog for Pure-FTPd is running...\n"
-		echo $(ps aux | grep "watchdog pureftpd"  | grep -v grep)
-	fi
+done
 }
 
 check_service() {
@@ -130,62 +101,49 @@ MAIL_END
 		fi
 }
 
-if [[ $1 == "mariadb" ]] || [[ $1 == "database" ]] || [[ $1 == "mysql" ]] ; then
-	NAME="mariadb"
-	echo "Watchdog on MariaDB is started up ..."
-elif [[ $1 == "web" ]] || [[ $1 == "lsws" ]] || [[ $1 == "litespeed" ]] || [[ $1 == "openlitespeed" ]] ; then
-	NAME="lsws"
-	echo "Watchdog on LiteSpeed is started up ..."
-elif [[ $1 == "powerdns" ]] || [[ $1 == "dns" ]] ; then
-	NAME="pdns"
-	echo "Watchdog on PowerDNS is starting up ..."
-elif [[ $1 == "dovecot" ]] || [[ $1 == "imap" ]] || [[ $1 == "pop3" ]]; then
-	NAME="dovecot"
-	echo "Watchdog on Dovecot is starting up ..."
-elif [[ $1 == "postfix" ]] || [[ $1 == "smtp" ]] ; then
-	NAME="postfix"
-	echo "Watchdog on PostFix is starting up ..."
-elif [[ $1 == "pureftpd" ]] || [[ $1 == "ftp" ]] || [[ $1 == "pure-ftpd" ]]; then
-	NAME="pure-ftpd"
-	echo "Watchdog on Pure-FTPd is starting up ..."
-elif [[ $1 == "help" ]] || [[ $1 == "-h" ]] || [[ $1 == "--help" ]] || [[ $1 == "" ]] ; then
+
+if [[ $1 == "help" ]] || [[ $1 == "-h" ]] || [[ $1 == "--help" ]] || [[ $1 == "" ]] ; then
 	show_help
-exit
+	exit
 elif [[ $1 == "check" ]] || [[ $1 == "status" ]] ; then
 	watchdog_check
 	exit
 elif [[ $1 == "kill" ]] ; then
-pid=$(ps aux | grep "watchdog lsws"  | grep -v grep | awk '{print $2}')
-if [[ "$pid" != "" ]] ; then
-kill -15 $pid
+	for ((x=0; x<SERVICE_COUNT; x++)); do
+		IFS=';' read -ra SERVICE_ARGS <<< "${SERVICE_LIST[(x*3)+2]}"
+		SERVICE_ARG=${SERVICE_ARGS[0]}
+		
+		pid=$(ps aux | grep "watchdog ${SERVICE_ARG}" | grep -v grep | awk '{print $2}')
+		if [[ "$pid" != "" ]] ; then
+			kill -15 $pid
+		fi
+	done
+	echo "watchdog has been killed..."
+	exit
 fi
-pid=$(ps aux | grep "watchdog mariadb"  | grep -v grep | awk '{print $2}')
-if [[ "$pid" != "" ]] ; then
-kill -15 $pid
-fi
-pid=$(ps aux | grep "watchdog powerdns"  | grep -v grep | awk '{print $2}')
-if [[ "$pid" != "" ]] ; then
-kill -15 $pid
-fi
-pid=$(ps aux | grep "watchdog dovecot"  | grep -v grep | awk '{print $2}')
-if [[ "$pid" != "" ]] ; then
-kill -15 $pid
-fi
-pid=$(ps aux | grep "watchdog postfix"  | grep -v grep | awk '{print $2}')
-if [[ "$pid" != "" ]] ; then
-kill -15 $pid
-fi
-pid=$(ps aux | grep "watchdog pureftpd"  | grep -v grep | awk '{print $2}')
-if [[ "$pid" != "" ]] ; then
-kill -15 $pid
-fi
-echo "watchdog has been killed..."
-exit
-else
-show_help
 
-echo -e "\n\n\nunknown service name..."
-exit
+# Check if $1 matches any service argument names
+SERVICE_FOUND=0
+for ((x=0; x<SERVICE_COUNT; x++)) ; do
+	DISPLAY_NAME=${SERVICE_LIST[x*3]}
+	SERVICE_NAME=${SERVICE_LIST[(x*3)+1]}
+	IFS=';' read -ra SERVICE_ARGS <<< "${SERVICE_LIST[(x*3)+2]}"
+	SERVICE_ARG=${SERVICE_ARGS[0]}
+
+	for arg in "${SERVICE_ARGS[@]}" ; do
+		if [[ $1 == "$arg" ]] ; then
+			SERVICE_FOUND=1
+			NAME=$SERVICE_NAME
+			echo "Watchdog on ${DISPLAY_NAME} is starting up ..."
+		fi
+	done
+done
+
+if [[ $SERVICE_FOUND == 0 ]] ; then
+	echo -e "unknown service name \e[31m$1\e[39m..."
+
+	show_help
+	exit
 fi
 
 
