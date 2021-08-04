@@ -40,5 +40,6 @@ sh <(curl https://cyberpanel.net/install.sh || wget -O - https://cyberpanel.net/
 * [Official Site.](https://cyberpanel.net)
 * [Documentation.](https://docs.cyberpanel.net)
 * [Forums.](https://forums.cyberpanel.net)
-
+* [Discord.](https://discord.gg/g8k8Db3)
+* [Facebook Group.](https://www.facebook.com/groups/cyberpanel)
 
