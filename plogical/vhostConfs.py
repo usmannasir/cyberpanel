@@ -23,7 +23,7 @@ index  {
 
 errorlog $VH_ROOT/logs/$VH_NAME.error_log {
   useServer               0
-  logLevel                ERROR
+  logLevel                WARN
   rollingSize             10M
 }
 
@@ -93,7 +93,7 @@ index  {
 
 errorlog $VH_ROOT/logs/{masterDomain}.error_log {
   useServer               0
-  logLevel                ERROR
+  logLevel                WARN
   rollingSize             10M
 }
 
@@ -315,7 +315,7 @@ index  {
 
 errorlog $VH_ROOT/logs/$VH_NAME.error_log {
   useServer               0
-  logLevel                ERROR
+  logLevel                WARN
   rollingSize             10M
 }
 
