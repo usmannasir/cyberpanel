@@ -62,8 +62,7 @@
 
 
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <!--[if IE]>
-    <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'><![endif]-->
+    <!--[if IE]><meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'><![endif]-->
     <title>{% block title %}Page Title{% endblock %}</title>
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -83,15 +82,12 @@
         <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/finalBase/finalBaseTheme.css' %}">
 
         <link rel="stylesheet" type="text/css" href="/static/baseTemplate/assets/themes/admin/layout.css">
-        <link rel="stylesheet" type="text/css"
-              href="/static/baseTemplate/assets/themes/admin/color-schemes/default.css">
-        <link rel="stylesheet" type="text/css"
-              href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css">
+        <link rel="stylesheet" type="text/css" href="/static/baseTemplate/assets/themes/admin/color-schemes/default.css">
+        <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css">
         <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/custom-js/pnotify.custom.min.css' %}">
         <link rel="stylesheet" type="text/css" href="{% static 'websiteFunctions/websiteFunctions.css' %}">
         <link rel="icon" type="image/png" href="{% static 'baseTemplate/assets/finalBase/favicon.png' %}">
-        <link type="text/css" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css"
-              rel="stylesheet"/>
+        <link type="text/css" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
         {% block styles %}
         {% endblock %}
 
@@ -146,7 +142,6 @@
                                 <b class="pull-right">{$ ramUsage $}%</b>
                                 <div class="progress-title">
                                     {% trans "Ram Usage" %}
-
                                 </div>
                                 <div class="progressbar-small progressbar" data-value="{$ ramUsage $}">
                                     <div class="progressbar-value bg-red tooltip-button" title="{$ ramUsage $}%"></div>
@@ -186,14 +181,14 @@
                 <div id="mobile-navigation">
                     <button id="nav-toggle" class="collapsed" data-toggle="collapse" data-target="#page-sidebar">
                         <span></span></button>
-                    <a href="{% url "index" %}" class="logo-content-small" title="{% trans 'CyberPanel' %}"></a>
+                    <a href="{% url 'index' %}" class="logo-content-small" title="{% trans 'CyberPanel' %}"></a>
                 </div>
                 <div id="header-logo" class="logo-bg">
-                    <a href="{% url "index" %}" class="logo-content-big" title="{% trans 'CyberPanel' %}">
+                    <a href="{% url 'index' %}" class="logo-content-big" title="{% trans 'CyberPanel' %}">
                         Cyber <i>Panel</i>
                         <span>{% trans "Web Hosting Control Panel" %}</span>
                     </a>
-                    <a href="{% url "index" %}" class="logo-content-small" title="{% trans 'CyberPanel' %}">
+                    <a href="{% url 'index' %}" class="logo-content-small" title="{% trans 'CyberPanel' %}">
                         Cyber <i>Panel</i>
                         <span>{% trans "Web Hosting Control Panel" %}</span>
                     </a>
@@ -203,20 +198,19 @@
                 </div>
 
                 <div ng-controller="loadAvg" id="header-nav-right">
-
-                    <a class="hide-on-phone" style="background-color: unset;width: 33px" href="#" class="hdr-btn"
+                    <a class="hide-on-phone hdr-btn" style="background-color: unset;width: 33px" href="#"
                        title="{% trans 'CPU Load Average' %}" data-placement="bottom">
-                        <span class="badge bg-yellow">{$ one $}</span>
+                        <span class="badge bg-yellow" id="load1">{$ one $}</span>
                     </a>
 
-                    <a class="hide-on-phone" style="background-color: unset;width: 33px" href="#" class="hdr-btn"
+                    <a class="hide-on-phone hdr-btn" style="background-color: unset;width: 33px" href="#"
                        title="{% trans 'CPU Load Average' %}" data-placement="bottom">
-                        <span class="badge bg-yellow">{$ two $}</span>
+                        <span class="badge bg-yellow" id="load2">{$ two $}</span>
                     </a>
 
-                    <a class="hide-on-phone" style="background-color: unset;width: 33px" href="#" class="hdr-btn"
+                    <a class="hide-on-phone hdr-btn" style="background-color: unset;width: 33px" href="#"
                        title="{% trans 'CPU Load Average' %}" data-placement="bottom">
-                        <span class="badge bg-yellow">{$ three $}</span>
+                        <span class="badge bg-yellow" id="load3">{$ three $}</span>
                     </a>
 
                     <div class="dropdown" id="dashnav-btn">
@@ -750,6 +744,11 @@
                                                title="{% trans 'Monitor Usage of your Websites' %}"><span>{% trans "Monitor Usage" %}</span></a>
                                         </li>
                                     </ul>
+                                    <ul>
+                                        <li><a href="{% url 'CageFS' %}"
+                                               title="{% trans 'CageFS Configurations' %}"><span>{% trans "CageFS" %}</span></a>
+                                        </li>
+                                    </ul>
 
                                 </div><!-- .sidebar-submenu -->
                             </li>
@@ -827,12 +826,6 @@
                                         <li><a href="{% url 'litespeedStatus' %}"
                                                title="{% trans 'LiteSpeed Status' %}"><span>{% trans "LiteSpeed Status" %}</span></a>
                                         </li>
-                                        <li><a href="{% url 'cyberCPMainLogFile' %}"
-                                               title="{% trans 'CyberPanel Main Log File' %}"><span>{% trans "CyberPanel Main Log File" %}</span></a>
-                                        </li>
-                                        <li><a href="{% url 'services' %}"
-                                               title="{% trans 'Services Status' %}"><span>{% trans "Services Status" %}</span></a>
-                                        </li>
                                         <li><a href="{% url 'CyberPanelPort' %}"
                                                title="{% trans 'Change CyberPanel Port' %}"><span>{% trans "Change Port" %}</span></a>
                                         </li>
@@ -873,6 +866,9 @@
                                     <ul>
                                         <li><a href="{% url 'serverMail' %}"
                                                title="{% trans 'Server Mail' %}"><span>{% trans "Server Mail" %}</span></a>
+                                        </li>
+                                        <li><a href="{% url 'cyberCPMainLogFile' %}"
+                                               title="{% trans 'CyberPanel Main Log File' %}"><span>{% trans "CyberPanel Main Log File" %}</span></a>
                                         </li>
                                         <li><a href="{% url 'accessLogs' %}"
                                                title="{% trans 'Access Log' %}"><span>{% trans "Access Log" %}</span></a>
@@ -919,9 +915,6 @@
                                         </li>
                                         <li><a href="{% url 'csf' %}"
                                                title="{% trans 'ConfigServer Security & Firewall (CSF)' %}"><span>{% trans "CSF" %}</span></a>
-                                        </li>
-                                        <li><a href="{% url 'CageFS' %}"
-                                               title="{% trans 'CageFS Configurations' %}"><span>{% trans "CageFS" %}</span></a>
                                         </li>
                                         <li><a href="{% url 'imunify' %}"
                                                title="{% trans 'Imunify 360' %}"><span>{% trans "Imunify 360" %}</span></a>
@@ -976,6 +969,9 @@
                                     <ul>
                                         <li><a href="{% url 'manageApplications' %}"
                                                title="{% trans 'Manage Applications' %}"><span>{% trans "Applications" %}</span></a>
+                                        </li>
+                                        <li><a href="{% url 'services' %}"
+                                               title="{% trans 'Services Status' %}"><span>{% trans "Services Status" %}</span></a>
                                         </li>
                                         <li><a href="{% url 'managePowerDNS' %}"
                                                title="{% trans 'Manage PowerDNS' %}"><span>{% trans "Manage PowerDNS" %}</span></a>
