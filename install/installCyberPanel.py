@@ -262,7 +262,7 @@ class InstallCyberPanel:
                 command = "apt-key adv --fetch-keys 'https://mariadb.org/mariadb_release_signing_key.asc'"
                 install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
-                command = "add-apt-repository 'deb [arch=amd64,arm64,ppc64el] https://mirror.yongbok.net/mariadb/repo/10.5/ubuntu bionic main'"
+                command = "add-apt-repository 'deb [arch=amd64,arm64,ppc64el] https://mirror.yongbok.net/mariadb/repo/10.4/ubuntu bionic main'"
                 install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
             command = "apt-get -y install mariadb-server"
