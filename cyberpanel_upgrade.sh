@@ -356,11 +356,11 @@ if [[ "$Server_OS" = "CentOS" ]] ; then
       Check_Return "yum repo" "no_exit"
 
     cat << EOF > /etc/yum.repos.d/MariaDB.repo
-# MariaDB 10.5 CentOS repository list - created 2020-09-08 14:54 UTC
+# MariaDB 10.4 CentOS repository list - created 2021-08-06 02:01 UTC
 # http://downloads.mariadb.org/mariadb/repositories/
 [mariadb]
 name = MariaDB
-baseurl = http://yum.mariadb.org/10.5/centos7-amd64
+baseurl = http://yum.mariadb.org/10.4/centos7-amd64
 gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
 gpgcheck=1
 EOF
