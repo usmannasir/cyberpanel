@@ -291,7 +291,7 @@ class backupUtilities:
             metaFile = open(metaPath, 'w')
             metaFile.write(xmlpretty.decode())
             metaFile.close()
-            os.chmod(metaPath, 0o777)
+            os.chmod(metaPath, 0o600)
 
             ## meta generated
 
@@ -2023,6 +2023,9 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
         command = 'chown %s:%s %s' % (website.externalApp, website.externalApp, status)
         ProcessUtilities.executioner(command)
 
+        command = 'chown %s:%s %s' % (website.externalApp, website.externalApp, result[2])
+        ProcessUtilities.executioner(command)
+
         execPath = "sudo nice -n 10 /usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
         execPath = execPath + " startBackup --tempStoragePath " + tempStoragePath + " --backupName " \
                    + backupName + " --backupPath " + backupPath + ' --backupDomain ' + backupDomain + ' --metaPath %s' % (
@@ -2038,6 +2041,9 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
             return 0
 
         ## Backing up databases
+
+        command = 'chown cyberpanel:cyberpanel %s' % (result[2])
+        ProcessUtilities.executioner(command)
 
         backupMetaData = ElementTree.parse(result[2])
 
