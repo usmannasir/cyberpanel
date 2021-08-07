@@ -148,6 +148,11 @@ class PackagesManager:
 
             modifyPack = Package.objects.get(packageName=packageName)
 
+            ## Check package ownership
+            admin = Administrator.objects.get(pk=userID)
+            if ACLManager.CheckPackageOwnership(modifyPack, admin, currentACL) == 0:
+                return ACLManager.loadErrorJson('deleteStatus', 0)
+
             diskSpace = modifyPack.diskSpace
             bandwidth = modifyPack.bandwidth
             ftpAccounts = modifyPack.ftpAccounts
