@@ -1954,62 +1954,21 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
 
         schedulerPath = '/home/cyberpanel/%s-backup.txt' % (backupDomain)
 
-        if not os.path.exists(backupPath) or not os.path.islink(backupPath):
-            command = 'mkdir -p %s' % (backupPath)
-            ProcessUtilities.executioner(command)
-        else:
-            writeToFile = open(schedulerPath, 'w')
-            writeToFile.writelines('1269')
-            writeToFile.close()
-            return 0
+        command = 'mkdir -p %s' % (backupPath)
+        ProcessUtilities.executioner(command, website.externalApp)
 
-        if not os.path.exists(backupPath) or not os.path.islink(backupPath):
-            command = 'chown -R %s:%s %s' % (website.externalApp, website.externalApp, backupPath)
-            ProcessUtilities.executioner(command)
-        else:
-            writeToFile = open(schedulerPath, 'w')
-            writeToFile.writelines('1278')
-            writeToFile.close()
-            return 0
 
         ##
 
-        if not os.path.exists(tempStoragePath) or not os.path.islink(tempStoragePath):
-            command = 'mkdir -p %s' % (tempStoragePath)
-            ProcessUtilities.executioner(command)
-        else:
-            writeToFile = open(schedulerPath, 'w')
-            writeToFile.writelines('1289')
-            writeToFile.close()
-            return 0
+        command = 'mkdir -p %s' % (tempStoragePath)
+        ProcessUtilities.executioner(command, website.externalApp)
 
-        if not os.path.exists(tempStoragePath) or not os.path.islink(tempStoragePath):
-            command = 'chown -R %s:%s %s' % (website.externalApp, website.externalApp, tempStoragePath)
-            ProcessUtilities.executioner(command)
-        else:
-            writeToFile = open(schedulerPath, 'w')
-            writeToFile.writelines('1298')
-            writeToFile.close()
-            return 0
+        command = 'chown -R %s:%s %s' % (website.externalApp, website.externalApp, tempStoragePath)
+        ProcessUtilities.executioner(command, website.externalApp)
 
         ##
-        if not os.path.exists(status) or not os.path.islink(status):
-            command = 'touch %s' % (status)
-            ProcessUtilities.executioner(command)
-        else:
-            writeToFile = open(schedulerPath, 'w')
-            writeToFile.writelines('1308')
-            writeToFile.close()
-            return 0
-
-        if not os.path.exists(status) or not os.path.islink(status):
-            command = 'chown cyberpanel:cyberpanel %s' % (status)
-            ProcessUtilities.executioner(command)
-        else:
-            writeToFile = open(schedulerPath, 'w')
-            writeToFile.writelines('1317')
-            writeToFile.close()
-            return 0
+        command = 'touch %s' % (status)
+        ProcessUtilities.executioner(command, website.externalApp)
 
         result = backupUtilities.prepareBackupMeta(backupDomain, backupName, tempStoragePath, backupPath)
 
