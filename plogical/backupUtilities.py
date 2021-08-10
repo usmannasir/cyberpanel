@@ -1967,17 +1967,30 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
         ProcessUtilities.executioner(command, website.externalApp)
 
         ##
+
         command = 'touch %s' % (status)
         ProcessUtilities.executioner(command, website.externalApp)
 
-        result = backupUtilities.prepareBackupMeta(backupDomain, backupName, tempStoragePath, backupPath)
+        execPath = "sudo nice -n 10 /usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
+        execPath = execPath + " prepareBackupMeta --backupDomain %s --backupName %s --tempStoragePath %s --backupPath %s" % (backupDomain,backupName, tempStoragePath, backupPath)
 
-        if result[0] == 0:
+        output = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
+
+        if output.find('0,') > -1:
             writeToFile = open(schedulerPath, 'w')
             writeToFile.writelines('1325')
             writeToFile.close()
-            logging.CyberCPLogFileWriter.statusWriter(status, str(result[1]) + ' [1084][5009]')
+            logging.CyberCPLogFileWriter.statusWriter(status, str(output + ' [1084][5009]'))
             return 0
+
+        # result = backupUtilities.prepareBackupMeta(backupDomain, backupName, tempStoragePath, backupPath)
+        #
+        # if result[0] == 0:
+        #     writeToFile = open(schedulerPath, 'w')
+        #     writeToFile.writelines('1325')
+        #     writeToFile.close()
+        #     logging.CyberCPLogFileWriter.statusWriter(status, str(result[1]) + ' [1084][5009]')
+        #     return 0
 
         command = 'chown %s:%s %s' % (website.externalApp, website.externalApp, status)
         ProcessUtilities.executioner(command)
@@ -2168,6 +2181,8 @@ def main():
         backupUtilities.startBackup(args.tempStoragePath, args.backupName, args.backupPath, args.metaPath)
     elif args.function == "BackupRoot":
         backupUtilities.BackupRoot(args.tempStoragePath, args.backupName, args.backupPath, args.metaPath)
+    elif args.function == 'prepareBackupMeta':
+        backupUtilities.prepareBackupMeta(args.backupDomain, args.backupName, args.tempStoragePath, args.backupPath)
     elif args.function == 'CloudBackup':
         extraArgs = {}
         extraArgs['domain'] = args.backupDomain
@@ -2181,7 +2196,6 @@ def main():
         extraArgs['destinationDomain'] = args.destinationDomain
         bu = backupUtilities(extraArgs)
         bu.CloudBackups()
-
     elif args.function == 'SubmitCloudBackupRestore':
         extraArgs = {}
         extraArgs['domain'] = args.backupDomain
