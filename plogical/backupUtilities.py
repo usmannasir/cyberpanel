@@ -2013,10 +2013,11 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
 
         ## Backing up databases
 
-        command = 'chown cyberpanel:cyberpanel %s' % (result[2])
-        ProcessUtilities.executioner(command)
+        if not os.path.islink(finalMetaPath):
+            command = 'chown cyberpanel:cyberpanel %s' % (finalMetaPath)
+            ProcessUtilities.executioner(command)
 
-        backupMetaData = ElementTree.parse(result[2])
+        backupMetaData = ElementTree.parse(finalMetaPath)
 
         databases = backupMetaData.findall('Databases/database')
 
@@ -2038,7 +2039,7 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
             execPath = "sudo nice -n 10 /usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
             execPath = execPath + " BackupRoot --tempStoragePath " + tempStoragePath + " --backupName " \
                        + backupName + " --backupPath " + backupPath + ' --backupDomain ' + backupDomain + ' --metaPath %s' % (
-                           result[2])
+                           finalMetaPath)
 
             ProcessUtilities.executioner(execPath, 'root')
         else:
@@ -2047,7 +2048,7 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
         command = 'chown -R %s:%s %s' % (website.externalApp, website.externalApp, backupPath)
         ProcessUtilities.executioner(command)
 
-        command = 'rm -f %s' % (result[2])
+        command = 'rm -f %s' % (finalMetaPath)
         ProcessUtilities.executioner(command, 'cyberpanel')
 
     except BaseException as msg:
