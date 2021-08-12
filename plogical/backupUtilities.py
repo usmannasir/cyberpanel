@@ -302,12 +302,14 @@ class backupUtilities:
 
                 logging.CyberCPLogFileWriter.statusWriter(status, 'Meta data is ready..')
 
+            print('1,%s' % (metaPath))
             return 1, 'None', metaPath
 
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile("%s [207][5009]" % (str(msg)))
             if FromInner:
                 logging.CyberCPLogFileWriter.statusWriter(status, "%s [207][5009]" % (str(msg)))
+            print('0,%s' % (str(msg)))
             return 0, str(msg), 'None'
 
 
@@ -1982,6 +1984,8 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
             writeToFile.close()
             logging.CyberCPLogFileWriter.statusWriter(status, str(output + ' [1084][5009]'))
             return 0
+        else:
+            finalMetaPath = output.split(',')[1]
 
         # result = backupUtilities.prepareBackupMeta(backupDomain, backupName, tempStoragePath, backupPath)
         #
@@ -1992,16 +1996,11 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
         #     logging.CyberCPLogFileWriter.statusWriter(status, str(result[1]) + ' [1084][5009]')
         #     return 0
 
-        command = 'chown %s:%s %s' % (website.externalApp, website.externalApp, status)
-        ProcessUtilities.executioner(command)
-
-        command = 'chown %s:%s %s' % (website.externalApp, website.externalApp, result[2])
-        ProcessUtilities.executioner(command)
 
         execPath = "sudo nice -n 10 /usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
         execPath = execPath + " startBackup --tempStoragePath " + tempStoragePath + " --backupName " \
                    + backupName + " --backupPath " + backupPath + ' --backupDomain ' + backupDomain + ' --metaPath %s' % (
-                       result[2])
+                       finalMetaPath)
 
         output = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
 
