@@ -70,19 +70,20 @@ class backupUtilities:
     def prepareBackupMeta(backupDomain, backupName, tempStoragePath, backupPath, FromInner = 1):
         try:
 
+            website = Websites.objects.get(domain=backupDomain)
 
             connection, cursor = mysqlUtilities.mysqlUtilities.setupConnection()
 
             if FromInner:
                 status = os.path.join(backupPath, 'status')
-                logging.CyberCPLogFileWriter.statusWriter(status, 'Setting up meta data..')
+                #logging.CyberCPLogFileWriter.statusWriter(status, 'Setting up meta data..')
+                command = "echo 'Setting up meta data..' > %s" % (status)
+                ProcessUtilities.executioner(command, website.externalApp)
             else:
                 status = '/home/cyberpanel/dummy'
 
             if os.path.exists(ProcessUtilities.debugPath):
                 logging.CyberCPLogFileWriter.writeToFile('Creating meta for %s.' % (backupDomain))
-
-            website = Websites.objects.get(domain=backupDomain)
 
             ######### Generating meta
 
@@ -221,7 +222,9 @@ class backupUtilities:
 
                 metaFileXML.append(aliasesXML)
             except BaseException as msg:
-                logging.CyberCPLogFileWriter.statusWriter(status, '%s. [167:prepMeta]' % (str(msg)))
+                #logging.CyberCPLogFileWriter.statusWriter(status, '%s. [167:prepMeta]' % (str(msg)))
+                command = "echo '%s. [167:prepMeta]' > %s" % (str(msg),status)
+                ProcessUtilities.executioner(command, website.externalApp)
 
             ## Finish Alias
 
@@ -248,7 +251,9 @@ class backupUtilities:
 
                 metaFileXML.append(dnsRecordsXML)
             except BaseException as msg:
-                logging.CyberCPLogFileWriter.statusWriter(status, '%s. [158:prepMeta]' % (str(msg)))
+                #logging.CyberCPLogFileWriter.statusWriter(status, '%s. [158:prepMeta]' % (str(msg)))
+                command = "echo '%s. [158:prepMeta]' > %s" % (str(msg), status)
+                ProcessUtilities.executioner(command, website.externalApp)
 
             ## Email accounts XML
 
@@ -269,7 +274,9 @@ class backupUtilities:
 
                 metaFileXML.append(emailRecordsXML)
             except BaseException as msg:
-                logging.CyberCPLogFileWriter.statusWriter(status, '%s. [179:prepMeta]' % (str(msg)))
+                #logging.CyberCPLogFileWriter.statusWriter(status, '%s. [179:prepMeta]' % (str(msg)))
+                command = "echo '%s. [179:prepMeta]' > %s" % (str(msg), status)
+                ProcessUtilities.executioner(command, website.externalApp)
 
             ## Email meta generated!
 
@@ -301,17 +308,18 @@ class backupUtilities:
                 newBackup.save()
 
                 logging.CyberCPLogFileWriter.statusWriter(status, 'Meta data is ready..')
+                command = "echo 'Meta data is ready..' > %s" % (status)
+                ProcessUtilities.executioner(command, website.externalApp)
 
-            print('1,%s' % (metaPath))
             return 1, 'None', metaPath
 
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile("%s [207][5009]" % (str(msg)))
             if FromInner:
-                logging.CyberCPLogFileWriter.statusWriter(status, "%s [207][5009]" % (str(msg)))
-            print('0,%s' % (str(msg)))
+                #logging.CyberCPLogFileWriter.statusWriter(status, "%s [207][5009]" % (str(msg)), status)
+                command = "echo '%s [207][5009]' > %s" % (status)
+                ProcessUtilities.executioner(command, website.externalApp)
             return 0, str(msg), 'None'
-
 
     @staticmethod
     def startBackup(tempStoragePath, backupName, backupPath, metaPath=None):
@@ -1959,48 +1967,34 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
         command = 'mkdir -p %s' % (backupPath)
         ProcessUtilities.executioner(command, website.externalApp)
 
-
         ##
 
         command = 'mkdir -p %s' % (tempStoragePath)
         ProcessUtilities.executioner(command, website.externalApp)
 
-        command = 'chown -R %s:%s %s' % (website.externalApp, website.externalApp, tempStoragePath)
-        ProcessUtilities.executioner(command, website.externalApp)
 
         ##
 
         command = 'touch %s' % (status)
         ProcessUtilities.executioner(command, website.externalApp)
 
-        execPath = "sudo nice -n 10 /usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
-        execPath = execPath + " prepareBackupMeta --backupDomain %s --backupName %s --tempStoragePath %s --backupPath %s" % (backupDomain,backupName, tempStoragePath, backupPath)
+        result = backupUtilities.prepareBackupMeta(backupDomain, backupName, tempStoragePath, backupPath)
 
-        output = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
-
-        if output.find('0,') > -1:
+        if result[0] == 0:
             writeToFile = open(schedulerPath, 'w')
             writeToFile.writelines('1325')
             writeToFile.close()
-            logging.CyberCPLogFileWriter.statusWriter(status, str(output + ' [1084][5009]'))
+            logging.CyberCPLogFileWriter.statusWriter(status, str(result[1]) + ' [1084][5009]')
             return 0
-        else:
-            finalMetaPath = output.split(',')[1]
 
-        # result = backupUtilities.prepareBackupMeta(backupDomain, backupName, tempStoragePath, backupPath)
-        #
-        # if result[0] == 0:
-        #     writeToFile = open(schedulerPath, 'w')
-        #     writeToFile.writelines('1325')
-        #     writeToFile.close()
-        #     logging.CyberCPLogFileWriter.statusWriter(status, str(result[1]) + ' [1084][5009]')
-        #     return 0
 
+        command = 'chown %s:%s %s' % (website.externalApp, website.externalApp, result[2])
+        ProcessUtilities.executioner(command)
 
         execPath = "sudo nice -n 10 /usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
         execPath = execPath + " startBackup --tempStoragePath " + tempStoragePath + " --backupName " \
                    + backupName + " --backupPath " + backupPath + ' --backupDomain ' + backupDomain + ' --metaPath %s' % (
-                       finalMetaPath)
+                       result[2])
 
         output = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
 
@@ -2013,11 +2007,10 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
 
         ## Backing up databases
 
-        if not os.path.islink(finalMetaPath):
-            command = 'chown cyberpanel:cyberpanel %s' % (finalMetaPath)
-            ProcessUtilities.executioner(command)
+        command = 'chown cyberpanel:cyberpanel %s' % (result[2])
+        ProcessUtilities.executioner(command)
 
-        backupMetaData = ElementTree.parse(finalMetaPath)
+        backupMetaData = ElementTree.parse(result[2])
 
         databases = backupMetaData.findall('Databases/database')
 
@@ -2039,7 +2032,7 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
             execPath = "sudo nice -n 10 /usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
             execPath = execPath + " BackupRoot --tempStoragePath " + tempStoragePath + " --backupName " \
                        + backupName + " --backupPath " + backupPath + ' --backupDomain ' + backupDomain + ' --metaPath %s' % (
-                           finalMetaPath)
+                           result[2])
 
             ProcessUtilities.executioner(execPath, 'root')
         else:
@@ -2048,7 +2041,7 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
         command = 'chown -R %s:%s %s' % (website.externalApp, website.externalApp, backupPath)
         ProcessUtilities.executioner(command)
 
-        command = 'rm -f %s' % (finalMetaPath)
+        command = 'rm -f %s' % (result[2])
         ProcessUtilities.executioner(command, 'cyberpanel')
 
     except BaseException as msg:
@@ -2181,8 +2174,6 @@ def main():
         backupUtilities.startBackup(args.tempStoragePath, args.backupName, args.backupPath, args.metaPath)
     elif args.function == "BackupRoot":
         backupUtilities.BackupRoot(args.tempStoragePath, args.backupName, args.backupPath, args.metaPath)
-    elif args.function == 'prepareBackupMeta':
-        backupUtilities.prepareBackupMeta(args.backupDomain, args.backupName, args.tempStoragePath, args.backupPath)
     elif args.function == 'CloudBackup':
         extraArgs = {}
         extraArgs['domain'] = args.backupDomain
@@ -2196,6 +2187,7 @@ def main():
         extraArgs['destinationDomain'] = args.destinationDomain
         bu = backupUtilities(extraArgs)
         bu.CloudBackups()
+
     elif args.function == 'SubmitCloudBackupRestore':
         extraArgs = {}
         extraArgs['domain'] = args.backupDomain
