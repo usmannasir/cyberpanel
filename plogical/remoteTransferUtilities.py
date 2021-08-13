@@ -69,6 +69,9 @@ class remoteTransferUtilities:
             if not os.path.exists(destination):
                 os.makedirs(destination)
 
+            command = 'chmod 600 %s' % (destination)
+            ProcessUtilities.executioner(command)
+
             writeToFile = open(backupLogPath, "w+")
 
             writeToFile.writelines("############################\n")
@@ -143,6 +146,11 @@ class remoteTransferUtilities:
                                 "%m.%d.%Y_%H-%M-%S") + "]" + " Local Backup Completed for: " + virtualHost + "\n")
 
                             completePathToBackupFile = retValue[1] + '.tar.gz'
+
+                            ### change permissions of backup file
+
+                            command = 'chmod 600 %s' % (completePathToBackupFile)
+                            ProcessUtilities.executioner(command)
 
                             ## move the generated backup file to specified destination
 
