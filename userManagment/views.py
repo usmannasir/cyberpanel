@@ -131,6 +131,23 @@ def submitUserCreation(request):
             websitesLimit = data['websitesLimit']
             selectedACL = data['selectedACL']
 
+            if ACLManager.CheckRegEx("^[\w'\-,.][^0-9_!¡?÷?¿/\\+=@#$%ˆ&*(){}|~<>;:[\]]{2,}$", firstName) == 0:
+                data_ret = {'status': 0, 'createStatus': 0, 'error_message': 'First Name can only contain Alphabets and should be more then 2 characters..'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+            if ACLManager.CheckRegEx("^[\w'\-,.][^0-9_!¡?÷?¿/\\+=@#$%ˆ&*(){}|~<>;:[\]]{2,}$", lastName) == 0:
+                data_ret = {'status': 0, 'createStatus': 0, 'error_message': 'First Name can only contain Alphabets and should be more then 2 characters..'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+            import validators
+            if not validators.email(email):
+                data_ret = {'status': 0, 'createStatus': 0,
+                            'error_message': 'Invalid email address.'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
             try:
                 securityLevel = data['securityLevel']
             except:

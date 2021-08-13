@@ -53,6 +53,14 @@ class ACLManager:
         else:
             return 0
 
+    @staticmethod
+    def CheckRegEx(RegexCheck, value):
+        import re
+        if re.match(RegexCheck, value):
+            return 1
+        else:
+            return 0
+
 
 
     @staticmethod
