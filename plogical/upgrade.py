@@ -106,7 +106,7 @@ class Upgrade:
             FNULL = open(os.devnull, 'w')
             count = 0
             while True:
-                res = subprocess.call(shlex.split(command), stdout=FNULL, stderr=subprocess.STDOUT)
+                res = subprocess.call(shlex.split(command), stderr=subprocess.STDOUT)
                 if res != 0:
                     count = count + 1
                     Upgrade.stdOut(component + ' failed, trying again, try number: ' + str(count), 0)
