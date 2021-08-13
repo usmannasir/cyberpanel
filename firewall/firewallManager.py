@@ -1485,6 +1485,9 @@ class FirewallManager:
             writeToFile.write(ports)
             writeToFile.close()
 
+            command = 'chmod 600 %s' % (portsPath)
+            ProcessUtilities.executioner(command)
+
             execPath = "sudo /usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/csf.py"
             execPath = execPath + " modifyPorts --protocol " + protocol + " --ports " + portsPath
             output = ProcessUtilities.outputExecutioner(execPath)
