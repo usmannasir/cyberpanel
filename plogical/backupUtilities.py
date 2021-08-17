@@ -378,15 +378,15 @@ class backupUtilities:
             print('1,None')
 
         except BaseException as msg:
-            try:
-                os.remove(os.path.join(backupPath, backupName + ".tar.gz"))
-            except:
-                pass
-
-            try:
-                rmtree(tempStoragePath)
-            except:
-                pass
+            # try:
+            #     os.remove(os.path.join(backupPath, backupName + ".tar.gz"))
+            # except:
+            #     pass
+            #
+            # try:
+            #     rmtree(tempStoragePath)
+            # except:
+            #     pass
 
             status = os.path.join(backupPath, 'status')
             logging.CyberCPLogFileWriter.statusWriter(status, "Aborted, " + str(msg) + ".[365] [5009]")
