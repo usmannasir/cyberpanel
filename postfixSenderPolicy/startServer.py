@@ -1,15 +1,15 @@
 #!/usr/local/CyberCP/bin/python
-import os,sys
+import os
+import sys
 sys.path.append('/usr/local/CyberCP')
 import django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
 import socket
-import os
-from . import accept_traffic as handle
+from postfixSenderPolicy.accept_traffic import HandleRequest
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from signal import *
-from .cacheManager import cacheManager
+from postfixSenderPolicy.cacheManager import cacheManager
 import pwd
 import grp
 
@@ -18,7 +18,6 @@ class SetupConn:
     cleaningPath = '/home/cyberpanel/purgeCache'
     applicationPath = '/usr/local/CyberCP/postfixSenderPolicy/pid'
     serverAddress = '/var/log/policyServerSocket'
-
 
     def __init__(self, serv_addr):
         self.server_addr = serv_addr
@@ -61,7 +60,7 @@ class SetupConn:
                     pass
 
                 connection, client_address = self.sock.accept()
-                background = handle.HandleRequest(connection)
+                background = HandleRequest(connection)
                 background.start()
         except BaseException as msg:
             logging.writeToFile(str(msg) + ' [SetupConn.start_listening]')
@@ -88,4 +87,3 @@ def Main():
 
 if __name__ == "__main__":
     Main()
-
