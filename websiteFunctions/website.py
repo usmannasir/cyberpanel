@@ -1813,7 +1813,7 @@ class WebsiteManager:
             statusFile = data['statusFile']
 
             if (statusFile[:16] == "/home/cyberpanel" or statusFile[:4] == '/tmp' or statusFile[:18] == '/usr/local/CyberCP') \
-                    and statusFile != '/usr/local/CyberCP/CyberCP/settings.py' and statusFile.find('..') == -1:
+                    and statusFile != '/usr/local/CyberCP/CyberCP/settings.py' and statusFile.find('..') == -1 and statusFile != '/home/cyberpanel/.my.cnf':
                 pass
             else:
                 data_ret = {'abort': 1, 'installStatus': 0, 'installationProgress': "100",

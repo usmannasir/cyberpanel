@@ -80,7 +80,7 @@ class secMiddleware:
                             or key == 'modSecRules' or key == 'recordContentTXT' or key == 'SecAuditLogRelevantStatus' \
                             or key == 'fileContent' or key == 'commands' or key == 'gitHost' or key == 'ipv6' or key == 'contentNow':
                         continue
-                    if value.find(';') > -1 or value.find('&&') > -1 or value.find('|') > -1 or value.find('...') > -1 \
+                    if value.find('- -') > -1 or value.find('\n') > -1 or  value.find(';') > -1 or value.find('&&') > -1 or value.find('|') > -1 or value.find('...') > -1 \
                             or value.find("`") > -1 or value.find("$") > -1 or value.find("(") > -1 or value.find(")") > -1 \
                             or value.find("'") > -1 or value.find("[") > -1 or value.find("]") > -1 or value.find("{") > -1 or value.find("}") > -1\
                             or value.find(":") > -1 or value.find("<") > -1 or value.find(">") > -1:
