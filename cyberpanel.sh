@@ -1321,7 +1321,24 @@ sed -i 's|mirror.cyberpanel.net|cyberpanel.sh|g' install.py
 
 if [[ $Server_Country = "CN" ]] ; then
   Pre_Install_CN_Replacement
-fi
+else
+  sed -i 's|wget -O -  https://get.acme.sh \| sh|echo acme|g' install.py
+  sed -i 's|/root/.acme.sh/acme.sh --upgrade --auto-upgrade|echo acme2|g' install.py
+
+  Current_Dir=$(pwd)
+  Retry_Command "git clone https://github.com/acmesh-official/acme.sh.git"
+  cd acme.sh || exit
+  ./acme.sh --install
+  cd "$Current_Dir" || exit
+  rm -rf acme.sh
+
+  # shellcheck disable=SC2016
+  sed -i 's|$PROJECT/archive/$BRANCH.tar.gz|https://cyberpanel.sh/codeload.github.com/acmesh-official/acme.sh/tar.gz/master|g' /root/.acme.sh/acme.sh
+
+  Retry_Command "/root/.acme.sh/acme.sh --upgrade --auto-upgrade"
+  #install acme and upgrade it beforehand, to prevent gitee fail
+fi 
+  #install acme.sh before main installation for issues #705 #707 #708 #709
 
 echo -e "Preparing...\n"
 
