@@ -1674,6 +1674,11 @@ class WebsiteManager:
             else:
                 return ACLManager.loadErrorJson('sslStatus', 0)
 
+            if ACLManager.AliasDomainCheck(currentACL, aliasDomain, self.domain) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson('sslStatus', 0)
+
             sslpath = "/home/" + self.domain + "/public_html"
 
             ## Create Configurations
@@ -1707,6 +1712,11 @@ class WebsiteManager:
             aliasDomain = data['aliasDomain']
 
             if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson('deleteAlias', 0)
+
+            if ACLManager.AliasDomainCheck(currentACL, aliasDomain, self.domain) == 1:
                 pass
             else:
                 return ACLManager.loadErrorJson('deleteAlias', 0)
