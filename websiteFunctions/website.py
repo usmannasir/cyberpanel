@@ -766,6 +766,12 @@ class WebsiteManager:
             else:
                 return ACLManager.loadErrorJson('websiteDeleteStatus', 0)
 
+            newOwner = Administrator.objects.get(userName=newUser)
+            if ACLManager.checkUserOwnerShip(currentACL, admin, newOwner) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson('websiteDeleteStatus', 0)
+
             confPath = virtualHostUtilities.Server_root + "/conf/vhosts/" + domain
             completePathToConfigFile = confPath + "/vhost.conf"
 
