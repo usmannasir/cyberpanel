@@ -2097,6 +2097,16 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             command = 'chmod 750 /usr/local/lsws/logs'
             Upgrade.executioner(command, 0)
 
+            ## symlink protection
+
+            writeToFile = open('/usr/lib/sysctl.d/50-default.conf', 'a')
+            writeToFile.writelines('fs.protected_hardlinks = 1\n')
+            writeToFile.writelines('fs.protected_symlinks = 1\n')
+            writeToFile.close()
+
+            command = 'sysctl --system'
+            Upgrade.executioner(command, 0)
+
             Upgrade.stdOut("Permissions updated.")
 
         except BaseException as msg:

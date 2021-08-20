@@ -664,6 +664,16 @@ class preFlightsChecks:
         command = 'mount -o remount,rw,hidepid=2 /proc'
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
+        ## symlink protection
+
+        writeToFile = open('/usr/lib/sysctl.d/50-default.conf', 'a')
+        writeToFile.writelines('fs.protected_hardlinks = 1\n')
+        writeToFile.writelines('fs.protected_symlinks = 1\n')
+        writeToFile.close()
+
+        command = 'sysctl --system'
+        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
         ###
 
     def install_unzip(self):
