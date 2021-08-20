@@ -1332,9 +1332,6 @@ else
   cd "$Current_Dir" || exit
   rm -rf acme.sh
 
-  # shellcheck disable=SC2016
-  sed -i 's|$PROJECT/archive/$BRANCH.tar.gz|https://cyberpanel.sh/codeload.github.com/acmesh-official/acme.sh/tar.gz/master|g' /root/.acme.sh/acme.sh
-
   Retry_Command "/root/.acme.sh/acme.sh --upgrade --auto-upgrade"
   #install acme and upgrade it beforehand, to prevent gitee fail
 fi 
