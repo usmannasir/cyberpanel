@@ -75,14 +75,19 @@ def getSystemStatus(request):
         return HttpResponse("Can not get admin Status")
 
 def getLoadAverage(request):
-    loadAverage = SystemInformation.cpuLoad()
-    loadAverage = list(loadAverage)
-    one = loadAverage[0]
-    two = loadAverage[1]
-    three = loadAverage[2]
-    loadAvg = {"one": one, "two": two,"three": three}
-    json_data = json.dumps(loadAvg)
-    return HttpResponse(json_data)
+    try:
+        val = request.session['userID']
+        currentACL = ACLManager.loadedACL(val)
+        loadAverage = SystemInformation.cpuLoad()
+        loadAverage = list(loadAverage)
+        one = loadAverage[0]
+        two = loadAverage[1]
+        three = loadAverage[2]
+        loadAvg = {"one": one, "two": two,"three": three}
+        json_data = json.dumps(loadAvg)
+        return HttpResponse(json_data)
+    except KeyError:
+        return HttpResponse("Not allowed.")
 
 @ensure_csrf_cookie
 def versionManagment(request):
