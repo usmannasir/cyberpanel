@@ -34,7 +34,7 @@ httplib2==0.18.1
 idna==2.10
 ipaddress==1.0.23
 IPy==1.0
-Jinja2==2.11.2
+Jinja2==2.11.3
 jmespath==0.10.0
 josepy==1.5.0
 jsonlines==1.2.0
@@ -78,7 +78,7 @@ sqlparse==0.4.1
 tldextract==3.0.2
 tornado==6.1
 uritemplate==3.0.1
-urllib3==1.25.11
+urllib3==1.26.5
 validators==0.18.1
 wcwidth==0.2.5
 websocket-client==0.57.0
