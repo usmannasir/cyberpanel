@@ -1252,10 +1252,10 @@ if [[ "$Server_OS" = "CentOS" ]] ; then
   sed -i 's|https://mirror.ghettoforge.org/distributions|https://cyberpanel.sh/mirror.ghettoforge.org/distributions|g' install.py
 
   if [[ "$Server_OS_Version" = "8" ]] ; then
-  sed -i 's|dnf --nogpg install -y https://mirror.ghettoforge.org/distributions/gf/el/8/gf/x86_64/gf-release-8-11.gf.el8.noarch.rpm|echo gf8|g' install.py
-  sed -i 's|dnf --nogpg install -y https://cyberpanel.sh/mirror.ghettoforge.org/distributions/gf/el/8/gf/x86_64/gf-release-8-11.gf.el8.noarch.rpm|echo gf8|g' install.py
+  sed -i 's|dnf --nogpg install -y https://mirror.ghettoforge.org/distributions/gf/el/8/gf/x86_64/gf-release-8-12.gf.el8.noarch.rpm|echo gf8|g' install.py
+  sed -i 's|dnf --nogpg install -y https://cyberpanel.sh/mirror.ghettoforge.org/distributions/gf/el/8/gf/x86_64/gf-release-8-12.gf.el8.noarch.rpm|echo gf8|g' install.py
 
-  Retry_Command "dnf --nogpg install -y https://cyberpanel.sh/mirror.ghettoforge.org/distributions/gf/el/8/gf/x86_64/gf-release-8-11.gf.el8.noarch.rpm"
+  Retry_Command "dnf --nogpg install -y https://cyberpanel.sh/mirror.ghettoforge.org/distributions/gf/el/8/gf/x86_64/gf-release-8-12.gf.el8.noarch.rpm"
   sed -i "s|mirrorlist=http://mirrorlist.ghettoforge.org/el/8/gf/\$basearch/mirrorlist|baseurl=https://cyberpanel.sh/mirror.ghettoforge.org/distributions/gf/el/8/gf/x86_64/|g" /etc/yum.repos.d/gf.repo
   sed -i "s|mirrorlist=http://mirrorlist.ghettoforge.org/el/8/plus/\$basearch/mirrorlist|baseurl=https://cyberpanel.sh/mirror.ghettoforge.org/distributions/gf/el/8/plus/x86_64/|g" /etc/yum.repos.d/gf.repo
   #get this set up beforehand.
