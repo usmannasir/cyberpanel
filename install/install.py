@@ -781,7 +781,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
             elif self.distro == cent8:
 
-                command = 'dnf --nogpg install -y https://mirror.ghettoforge.org/distributions/gf/el/8/gf/x86_64/gf-release-8-11.gf.el8.noarch.rpm'
+                command = 'dnf --nogpg install -y https://mirror.ghettoforge.org/distributions/gf/el/8/gf/x86_64/gf-release-8-12.gf.el8.noarch.rpm'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
                 command = 'dnf install --enablerepo=gf-plus postfix3 postfix3-mysql -y'
