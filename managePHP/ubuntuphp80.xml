@@ -122,4 +122,10 @@
          <status>0</status>
      </extension>
 
+    <extension>
+         <extensionName>lsphp80-sodium</extensionName>
+         <extensionDescription>The php-sodium extension provides strong encryption capabilities in an easy and consistent way.</extensionDescription>
+         <status>0</status>
+    </extension>
+
 </php>
