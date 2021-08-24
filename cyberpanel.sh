@@ -1212,7 +1212,7 @@ tar xzvf "lsws-$LSWS_Stable_Version-ent-x86_64-linux.tar.gz" >/dev/null
 cd "/root/cyberpanel-tmp/lsws-$LSWS_Stable_Version/conf"  || exit
 if [[ "$License_Key" = "Trial" ]]; then
   Retry_Command "wget -q https://cyberpanel.sh/license.litespeedtech.com/reseller/trial.key"
-  sed -i "s|writeSerial = open('lsws-5.4.2/serial.no', 'w')|command = 'wget -q --output-document=./lsws-$LSWS_Stable_Version/trial.key https://cyberpanel.sh/license.litespeedtech.com/reseller/trial.key'|g" "$Current_Dir/installCyberPanel.py"
+  sed -i "s|writeSerial = open('lsws-6.0/serial.no', 'w')|command = 'wget -q --output-document=./lsws-$LSWS_Stable_Version/trial.key https://cyberpanel.sh/license.litespeedtech.com/reseller/trial.key'|g" "$Current_Dir/installCyberPanel.py"
   sed -i 's|writeSerial.writelines(self.serial)|subprocess.call(command, shell=True)|g' "$Current_Dir/installCyberPanel.py"
   sed -i 's|writeSerial.close()||g' "$Current_Dir/installCyberPanel.py"
 else
@@ -1310,6 +1310,7 @@ if [[ $Server_Edition = "Enterprise" ]] ; then
 
   sed -i "s|lsws-5.4.2|lsws-$LSWS_Stable_Version|g" installCyberPanel.py
   sed -i "s|lsws-5.3.5|lsws-$LSWS_Stable_Version|g" installCyberPanel.py
+  sed -i "s|lsws-6.0|lsws-$LSWS_Stable_Version|g" installCyberPanel.py
   #this sed must be done after license validation
 
   Enterprise_Flag="--ent ent --serial "
