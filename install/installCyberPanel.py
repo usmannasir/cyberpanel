@@ -10,10 +10,11 @@ import install
 from os.path import exists
 import time
 
-#distros
-centos=0
-ubuntu=1
-cent8=2
+# distros
+centos = 0
+ubuntu = 1
+cent8 = 2
+
 
 def get_Ubuntu_release():
     release = -1
@@ -34,12 +35,13 @@ def get_Ubuntu_release():
 
     return release
 
-class InstallCyberPanel:
 
+class InstallCyberPanel:
     mysql_Root_password = ""
     mysqlPassword = ""
 
-    def __init__(self, rootPath, cwd, distro, ent, serial = None, port = None, ftp = None, dns = None, publicip = None, remotemysql = None , mysqlhost = None, mysqldb = None, mysqluser = None, mysqlpassword = None, mysqlport = None):
+    def __init__(self, rootPath, cwd, distro, ent, serial=None, port=None, ftp=None, dns=None, publicip=None,
+                 remotemysql=None, mysqlhost=None, mysqldb=None, mysqluser=None, mysqlpassword=None, mysqlport=None):
         self.server_root_path = rootPath
         self.cwd = cwd
         self.distro = distro
@@ -101,7 +103,6 @@ class InstallCyberPanel:
                     writeSerial.writelines(self.serial)
                     writeSerial.close()
 
-
                 shutil.copy('litespeed/install.sh', 'lsws-6.0/')
                 shutil.copy('litespeed/functions.sh', 'lsws-6.0/')
 
@@ -132,7 +133,7 @@ class InstallCyberPanel:
             return 1
 
     def reStartLiteSpeed(self):
-        command = self.server_root_path+"bin/lswsctrl restart"
+        command = self.server_root_path + "bin/lswsctrl restart"
         install.preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
     def fix_ols_configs(self):
@@ -142,7 +143,7 @@ class InstallCyberPanel:
 
             ## remove example virtual host
 
-            data = open(self.server_root_path+"conf/httpd_config.conf",'r').readlines()
+            data = open(self.server_root_path + "conf/httpd_config.conf", 'r').readlines()
 
             writeDataToFile = open(self.server_root_path + "conf/httpd_config.conf", 'w')
 
@@ -165,13 +166,13 @@ class InstallCyberPanel:
         try:
             InstallCyberPanel.stdOut("Changing default port to 80..", 1)
 
-            data = open(self.server_root_path+"conf/httpd_config.conf").readlines()
+            data = open(self.server_root_path + "conf/httpd_config.conf").readlines()
 
-            writeDataToFile = open(self.server_root_path+"conf/httpd_config.conf", 'w')
+            writeDataToFile = open(self.server_root_path + "conf/httpd_config.conf", 'w')
 
             for items in data:
                 if (items.find("*:8088") > -1):
-                    writeDataToFile.writelines(items.replace("*:8088","*:80"))
+                    writeDataToFile.writelines(items.replace("*:8088", "*:80"))
                 else:
                     writeDataToFile.writelines(items)
 
@@ -191,7 +192,7 @@ class InstallCyberPanel:
             command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install ' \
                       'lsphp7? lsphp7?-common lsphp7?-curl lsphp7?-dev lsphp7?-imap lsphp7?-intl lsphp7?-json ' \
                       'lsphp7?-ldap lsphp7?-mysql lsphp7?-opcache lsphp7?-pspell lsphp7?-recode ' \
-                      'lsphp7?-sqlite3 lsphp7?-tidy lsphp7?-sodium'
+                      'lsphp7?-sqlite3 lsphp7?-tidy'
 
             os.system(command)
 
@@ -207,7 +208,6 @@ class InstallCyberPanel:
 
         ## only php 71
         if self.distro == centos:
-
             command = 'yum install lsphp71 lsphp71-json lsphp71-xmlrpc lsphp71-xml lsphp71-soap lsphp71-snmp ' \
                       'lsphp71-recode lsphp71-pspell lsphp71-process lsphp71-pgsql lsphp71-pear lsphp71-pdo lsphp71-opcache ' \
                       'lsphp71-odbc lsphp71-mysqlnd lsphp71-mcrypt lsphp71-mbstring lsphp71-ldap lsphp71-intl lsphp71-imap ' \
@@ -218,16 +218,15 @@ class InstallCyberPanel:
             command = 'yum install -y lsphp72 lsphp72-json lsphp72-xmlrpc lsphp72-xml lsphp72-soap lsphp72-snmp ' \
                       'lsphp72-recode lsphp72-pspell lsphp72-process lsphp72-pgsql lsphp72-pear lsphp72-pdo lsphp72-opcache ' \
                       'lsphp72-odbc lsphp72-mysqlnd lsphp72-mcrypt lsphp72-mbstring lsphp72-ldap lsphp72-intl lsphp72-imap ' \
-                      'lsphp72-gmp lsphp72-gd lsphp72-enchant lsphp72-dba  lsphp72-common  lsphp72-bcmath lsphp72-sodium'
+                      'lsphp72-gmp lsphp72-gd lsphp72-enchant lsphp72-dba  lsphp72-common  lsphp72-bcmath'
 
             install.preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
 
             ## only php 73
             command = 'yum install -y lsphp73 lsphp73-json lsphp73-xmlrpc lsphp73-xml lsphp73-tidy lsphp73-soap lsphp73-snmp ' \
                       'lsphp73-recode lsphp73-pspell lsphp73-process lsphp73-pgsql lsphp73-pear lsphp73-pdo lsphp73-opcache ' \
                       'lsphp73-odbc lsphp73-mysqlnd lsphp73-mcrypt lsphp73-mbstring lsphp73-ldap lsphp73-intl lsphp73-imap ' \
-                      'lsphp73-gmp lsphp73-gd lsphp73-enchant lsphp73-dba  lsphp73-common  lsphp73-bcmath lsphp73-sodium'
+                      'lsphp73-gmp lsphp73-gd lsphp73-enchant lsphp73-dba  lsphp73-common  lsphp73-bcmath'
 
             install.preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
@@ -235,7 +234,7 @@ class InstallCyberPanel:
             command = 'yum install -y lsphp74 lsphp74-json lsphp74-xmlrpc lsphp74-xml lsphp74-tidy lsphp74-soap lsphp74-snmp ' \
                       'lsphp74-recode lsphp74-pspell lsphp74-process lsphp74-pgsql lsphp74-pear lsphp74-pdo lsphp74-opcache ' \
                       'lsphp74-odbc lsphp74-mysqlnd lsphp74-mcrypt lsphp74-mbstring lsphp74-ldap lsphp74-intl lsphp74-imap ' \
-                      'lsphp74-gmp lsphp74-gd lsphp74-enchant lsphp74-dba lsphp74-common  lsphp74-bcmath lsphp74-sodium'
+                      'lsphp74-gmp lsphp74-gd lsphp74-enchant lsphp74-dba lsphp74-common  lsphp74-bcmath'
 
             install.preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
@@ -276,13 +275,14 @@ class InstallCyberPanel:
 
         self.startMariaDB()
 
-
     def changeMYSQLRootPassword(self):
         if self.remotemysql == 'OFF':
             if self.distro == ubuntu:
-                passwordCMD = "use mysql;DROP DATABASE IF EXISTS test;DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%%';GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' IDENTIFIED BY '%s';UPDATE user SET plugin='' WHERE User='root';flush privileges;" % (InstallCyberPanel.mysql_Root_password)
+                passwordCMD = "use mysql;DROP DATABASE IF EXISTS test;DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%%';GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' IDENTIFIED BY '%s';UPDATE user SET plugin='' WHERE User='root';flush privileges;" % (
+                    InstallCyberPanel.mysql_Root_password)
             else:
-                passwordCMD = "use mysql;DROP DATABASE IF EXISTS test;DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%%';GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' IDENTIFIED BY '%s';flush privileges;" % (InstallCyberPanel.mysql_Root_password)
+                passwordCMD = "use mysql;DROP DATABASE IF EXISTS test;DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%%';GRANT ALL PRIVILEGES ON *.* TO 'root'@'localhost' IDENTIFIED BY '%s';flush privileges;" % (
+                    InstallCyberPanel.mysql_Root_password)
 
             command = 'mysql -u root -e "' + passwordCMD + '"'
 
@@ -366,7 +366,6 @@ class InstallCyberPanel:
             command = 'dnf install pure-ftpd -y'
             install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
-
         ####### Install pureftpd to system startup
 
         command = "systemctl enable " + install.preFlightsChecks.pureFTPDServiceName(self.distro)
@@ -379,7 +378,7 @@ class InstallCyberPanel:
 
         command = 'useradd -u 2001 -s /bin/false -d /bin/null -c "pureftpd user" -g ftpgroup ftpuser'
         install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-        
+
     def startPureFTPD(self):
         ############## Start pureftpd ######################
         if self.distro == ubuntu:
@@ -399,7 +398,8 @@ class InstallCyberPanel:
             except:
                 logging.InstallLog.writeToFile("[ERROR] Could not create directory for FTP SSL")
 
-            if (self.distro == centos or self.distro == cent8) or (self.distro == ubuntu and get_Ubuntu_release() == 18.14):
+            if (self.distro == centos or self.distro == cent8) or (
+                    self.distro == ubuntu and get_Ubuntu_release() == 18.14):
                 command = 'openssl req -newkey rsa:1024 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout /etc/ssl/private/pure-ftpd.pem -out /etc/ssl/private/pure-ftpd.pem'
             else:
                 command = 'openssl req -x509 -nodes -days 7300 -newkey rsa:2048 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout /etc/ssl/private/pure-ftpd.pem -out /etc/ssl/private/pure-ftpd.pem'
@@ -417,7 +417,7 @@ class InstallCyberPanel:
                     shutil.copytree("pure-ftpd-one", ftpdPath)
             else:
                 if mysql == 'Two':
-                    shutil.copytree("pure-ftpd",ftpdPath)
+                    shutil.copytree("pure-ftpd", ftpdPath)
                 else:
                     shutil.copytree("pure-ftpd-one", ftpdPath)
 
@@ -429,17 +429,16 @@ class InstallCyberPanel:
                 except OSError as err:
                     self.stdOut("[ERROR] Error creating extra pure-ftpd directories: " + str(err), ".  Should be ok", 1)
 
-            data = open(ftpdPath+"/pureftpd-mysql.conf","r").readlines()
+            data = open(ftpdPath + "/pureftpd-mysql.conf", "r").readlines()
 
-            writeDataToFile = open(ftpdPath+"/pureftpd-mysql.conf","w")
+            writeDataToFile = open(ftpdPath + "/pureftpd-mysql.conf", "w")
 
-            dataWritten = "MYSQLPassword "+InstallCyberPanel.mysqlPassword+'\n'
+            dataWritten = "MYSQLPassword " + InstallCyberPanel.mysqlPassword + '\n'
             for items in data:
-                if items.find("MYSQLPassword")>-1:
+                if items.find("MYSQLPassword") > -1:
                     writeDataToFile.writelines(dataWritten)
                 else:
                     writeDataToFile.writelines(items)
-
 
             writeDataToFile.close()
 
@@ -459,7 +458,7 @@ class InstallCyberPanel:
 
                 if os.path.exists('/etc/pure-ftpd/db/mysql.conf'):
                     os.remove('/etc/pure-ftpd/db/mysql.conf')
-                    shutil.copy(ftpdPath+"/pureftpd-mysql.conf", '/etc/pure-ftpd/db/mysql.conf')
+                    shutil.copy(ftpdPath + "/pureftpd-mysql.conf", '/etc/pure-ftpd/db/mysql.conf')
                 else:
                     shutil.copy(ftpdPath + "/pureftpd-mysql.conf", '/etc/pure-ftpd/db/mysql.conf')
 
@@ -477,7 +476,6 @@ class InstallCyberPanel:
 
                 command = 'echo "/etc/pure-ftpd/db/mysql.conf" > /etc/pure-ftpd/conf/MySQLConfigFile'
                 subprocess.call(command, shell=True)
-
 
                 command = 'ln -s /etc/pure-ftpd/conf/MySQLConfigFile /etc/pure-ftpd/auth/30mysql'
                 install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
@@ -503,7 +501,6 @@ class InstallCyberPanel:
                 command = 'systemctl disable systemd-resolved.service'
                 install.preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-
                 try:
                     os.rename('/etc/resolv.conf', 'etc/resolved.conf')
                 except OSError as e:
@@ -513,10 +510,9 @@ class InstallCyberPanel:
                     try:
                         os.remove('/etc/resolv.conf')
                     except OSError as e1:
-                        InstallCyberPanel.stdOut("[ERROR] Unable to remove existing /etc/resolv.conf to install PowerDNS: " +
-                                                 str(e1), 1, 1, os.EX_OSERR)
-
-
+                        InstallCyberPanel.stdOut(
+                            "[ERROR] Unable to remove existing /etc/resolv.conf to install PowerDNS: " +
+                            str(e1), 1, 1, os.EX_OSERR)
 
                 # try:
                 #     f = open('/etc/resolv.conf', 'a')
@@ -581,11 +577,10 @@ class InstallCyberPanel:
                 else:
                     writeDataToFile.writelines(items)
 
-            #if self.distro == ubuntu:
+            # if self.distro == ubuntu:
             #    os.fchmod(writeDataToFile.fileno(), stat.S_IRUSR | stat.S_IWUSR)
 
             writeDataToFile.close()
-
 
             if self.remotemysql == 'ON':
                 command = "sed -i 's|gmysql-host=localhost|gmysql-host=%s|g' %s" % (self.mysqlhost, dnsPath)
@@ -612,8 +607,8 @@ class InstallCyberPanel:
         install.preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
 
-def Main(cwd, mysql, distro, ent, serial = None, port = "8090", ftp = None, dns = None, publicip = None, remotemysql = None , mysqlhost = None, mysqldb = None, mysqluser = None, mysqlpassword = None, mysqlport = None):
-
+def Main(cwd, mysql, distro, ent, serial=None, port="8090", ftp=None, dns=None, publicip=None, remotemysql=None,
+         mysqlhost=None, mysqldb=None, mysqluser=None, mysqlpassword=None, mysqlport=None):
     InstallCyberPanel.mysqlPassword = randomPassword.generate_pass()
     InstallCyberPanel.mysql_Root_password = randomPassword.generate_pass()
 
@@ -629,7 +624,8 @@ def Main(cwd, mysql, distro, ent, serial = None, port = "8090", ftp = None, dns 
             password.writelines(InstallCyberPanel.mysql_Root_password)
             password.close()
     else:
-        mysqlData = {'remotemysql': remotemysql, 'mysqlhost': mysqlhost, 'mysqldb':mysqldb, 'mysqluser': mysqluser, 'mysqlpassword': mysqlpassword, 'mysqlport': mysqlport}
+        mysqlData = {'remotemysql': remotemysql, 'mysqlhost': mysqlhost, 'mysqldb': mysqldb, 'mysqluser': mysqluser,
+                     'mysqlpassword': mysqlpassword, 'mysqlport': mysqlport}
         from json import dumps
         writeToFile = open(file_name, 'w')
         writeToFile.write(dumps(mysqlData))
@@ -638,8 +634,6 @@ def Main(cwd, mysql, distro, ent, serial = None, port = "8090", ftp = None, dns 
         if install.preFlightsChecks.debug:
             print(open(file_name, 'r').read())
             time.sleep(10)
-
-
 
     try:
         command = 'chmod 640 %s' % (file_name)
@@ -658,7 +652,8 @@ def Main(cwd, mysql, distro, ent, serial = None, port = "8090", ftp = None, dns 
     else:
         InstallCyberPanel.mysqlPassword = InstallCyberPanel.mysql_Root_password
 
-    installer = InstallCyberPanel("/usr/local/lsws/",cwd, distro, ent, serial, port, ftp, dns, publicip, remotemysql, mysqlhost, mysqldb, mysqluser, mysqlpassword, mysqlport)
+    installer = InstallCyberPanel("/usr/local/lsws/", cwd, distro, ent, serial, port, ftp, dns, publicip, remotemysql,
+                                  mysqlhost, mysqldb, mysqluser, mysqlpassword, mysqlport)
 
     logging.InstallLog.writeToFile('Installing LiteSpeed Web server,40')
     installer.installLiteSpeed()
@@ -679,7 +674,7 @@ def Main(cwd, mysql, distro, ent, serial = None, port = "8090", ftp = None, dns 
         if distro == ubuntu:
             installer.fixMariaDB()
 
-    mysqlUtilities.createDatabase("cyberpanel","cyberpanel", InstallCyberPanel.mysqlPassword, publicip)
+    mysqlUtilities.createDatabase("cyberpanel", "cyberpanel", InstallCyberPanel.mysqlPassword, publicip)
 
     if ftp == None:
         installer.installPureFTPD()
