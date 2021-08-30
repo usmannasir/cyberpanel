@@ -41,8 +41,8 @@ MySQL_Password=$(cat /etc/cyberpanel/mysqlPassword)
 
 
 LSWS_Latest_URL="https://cyberpanel.sh/update.litespeedtech.com/ws/latest.php"
-curl --silent --max-time 30 -4  -o /tmp/lsws_latest "$LSWS_Latest_URL" 2>/dev/null
-LSWS_Stable_Line=$(grep "LSWS_STABLE" /tmp/lsws_latest)
+LSWS_Tmp=$(curl --silent --max-time 30 -4 "$LSWS_Latest_URL")
+LSWS_Stable_Line=$(echo "$LSWS_Tmp" | grep "LSWS_STABLE")
 LSWS_Stable_Version=$(expr "$LSWS_Stable_Line" : '.*LSWS_STABLE=\(.*\) BUILD .*')
 #grab the LSWS latest stable version.
 
@@ -54,7 +54,7 @@ cd /root/cyberpanel_upgrade_tmp || exit
 }
 
 Debug_Log() {
-echo -e "\n${1}=${2}\n" >> /tmp/cyberpanel_debug_upgrade.log
+echo -e "\n${1}=${2}\n" >>  "/var/log/cyberpanel_debug_upgrade_$(date +"%Y-%m-%d")_${Random_Log_Name}.log"
 }
 
 Debug_Log2() {
@@ -676,6 +676,9 @@ if [[ -f /etc/cyberpanel/webadmin_passwd ]]; then
   chmod 600 /etc/cyberpanel/webadmin_passwd
 fi
 
+chown lsadm:lsadm /usr/local/lsws/admin/conf/htpasswd
+chmod 600 /usr/local/lsws/admin/conf/htpasswd
+
 if [[ -f /etc/pure-ftpd/pure-ftpd.conf ]]; then
   sed -i 's|NoAnonymous                 no|NoAnonymous                 yes|g' /etc/pure-ftpd/pure-ftpd.conf
 fi
@@ -740,8 +743,10 @@ fi
 
 if [[ "$*" = *"--debug"* ]] ; then
   Debug="On"
-  rm -f /tmp/cyberpanel_debug_upgrade.log
-  echo -e "$(date)" > /tmp/cyberpanel_debug_upgrade.log
+  Random_Log_Name=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 5)
+  find /var/log -name 'cyberpanel_debug_upgrade_*' -exec rm {} +
+  echo -e "$(date)" > "/var/log/cyberpanel_debug_upgrade_$(date +"%Y-%m-%d")_${Random_Log_Name}.log"
+  chmod 600 "/var/log/cyberpanel_debug_upgrade_$(date +"%Y-%m-%d")_${Random_Log_Name}.log"
 fi
 
 Set_Default_Variables
