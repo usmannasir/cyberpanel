@@ -3012,17 +3012,18 @@ StrictHostKeyChecking no
             gitPath = '%s/.git' % (self.folder)
             command = 'ls -la %s' % (gitPath)
 
-            if ProcessUtilities.outputExecutioner(command).find('No such file or directory') > -1:
+
+            if ProcessUtilities.outputExecutioner(command, self.externalAppLocal).find('No such file or directory') > -1:
 
                 command = 'cat /home/%s/.ssh/%s.pub' % (self.masterDomain, self.externalAppLocal)
-                deploymentKey = ProcessUtilities.outputExecutioner(command)
+                deploymentKey = ProcessUtilities.outputExecutioner(command, self.externalAppLocal)
 
                 if deploymentKey.find('No such file or directory') > -1:
                     command = "ssh-keygen -f /home/%s/.ssh/%s -t rsa -N ''" % (self.masterDomain, self.externalAppLocal)
                     ProcessUtilities.executioner(command, self.externalAppLocal)
 
                     command = 'cat /home/%s/.ssh/%s.pub' % (self.masterDomain, self.externalAppLocal)
-                    deploymentKey = ProcessUtilities.outputExecutioner(command)
+                    deploymentKey = ProcessUtilities.outputExecutioner(command, self.externalAppLocal)
 
                 data_ret = {'status': 1, 'repo': 0, 'deploymentKey': deploymentKey, 'home': self.home}
                 json_data = json.dumps(data_ret)
@@ -3032,24 +3033,24 @@ StrictHostKeyChecking no
                 ## Find git branches
 
                 command = 'git -C %s branch' % (self.folder)
-                branches = ProcessUtilities.outputExecutioner(command).split('\n')[:-1]
+                branches = ProcessUtilities.outputExecutioner(command, self.externalAppLocal).split('\n')[:-1]
 
                 ## Fetch key
 
                 command = 'cat /home/%s/.ssh/%s.pub' % (self.domain, self.externalAppLocal)
-                deploymentKey = ProcessUtilities.outputExecutioner(command)
+                deploymentKey = ProcessUtilities.outputExecutioner(command, self.externalAppLocal)
 
                 if deploymentKey.find('No such file or directory') > -1:
                     command = "ssh-keygen -f /home/%s/.ssh/%s -t rsa -N ''" % (self.masterDomain, self.externalAppLocal)
                     ProcessUtilities.executioner(command, self.externalAppLocal)
 
                     command = 'cat /home/%s/.ssh/%s.pub' % (self.masterDomain, self.externalAppLocal)
-                    deploymentKey = ProcessUtilities.outputExecutioner(command)
+                    deploymentKey = ProcessUtilities.outputExecutioner(command, self.externalAppLocal)
 
                 ## Find Remote if any
 
                 command = 'git -C %s remote -v' % (self.folder)
-                remoteResult = ProcessUtilities.outputExecutioner(command)
+                remoteResult = ProcessUtilities.outputExecutioner(command, self.externalAppLocal)
 
                 remote = 1
                 if remoteResult.find('origin') == -1:
@@ -3059,7 +3060,7 @@ StrictHostKeyChecking no
                 ## Find Total commits on current branch
 
                 command = 'git -C %s rev-list --count HEAD' % (self.folder)
-                totalCommits = ProcessUtilities.outputExecutioner(command)
+                totalCommits = ProcessUtilities.outputExecutioner(command, self.externalAppLocal)
 
                 if totalCommits.find('fatal') > -1:
                     totalCommits = '0'
