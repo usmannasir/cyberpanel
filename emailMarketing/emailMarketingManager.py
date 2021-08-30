@@ -690,6 +690,9 @@ class EmailMarketingManager:
             replyTo = data['replyTo']
             emailMessage = data['emailMessage']
 
+            if ACLManager.CheckRegEx('[\w\d\s]+$', name) == 0:
+                return ACLManager.loadErrorJson()
+
             admin = Administrator.objects.get(pk=userID)
             newTemplate = EmailTemplate(owner=admin, name=name.replace(' ', ''), subject=subject, fromName=fromName, fromEmail=fromEmail,
                                         replyTo=replyTo, emailMessage=emailMessage)
