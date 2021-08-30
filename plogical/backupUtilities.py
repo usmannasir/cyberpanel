@@ -222,9 +222,7 @@ class backupUtilities:
 
                 metaFileXML.append(aliasesXML)
             except BaseException as msg:
-                #logging.CyberCPLogFileWriter.statusWriter(status, '%s. [167:prepMeta]' % (str(msg)))
-                command = "echo '%s. [167:prepMeta]' > %s" % (str(msg),status)
-                ProcessUtilities.executioner(command, website.externalApp)
+                logging.CyberCPLogFileWriter.writeToFile('%s. [167:prepMeta]' % (str(msg)))
 
             ## Finish Alias
 
@@ -251,9 +249,7 @@ class backupUtilities:
 
                 metaFileXML.append(dnsRecordsXML)
             except BaseException as msg:
-                #logging.CyberCPLogFileWriter.statusWriter(status, '%s. [158:prepMeta]' % (str(msg)))
-                command = "echo '%s. [158:prepMeta]' > %s" % (str(msg), status)
-                ProcessUtilities.executioner(command, website.externalApp)
+                logging.CyberCPLogFileWriter.writeToFile('%s. [158:prepMeta]' % (str(msg)))
 
             ## Email accounts XML
 
@@ -274,9 +270,7 @@ class backupUtilities:
 
                 metaFileXML.append(emailRecordsXML)
             except BaseException as msg:
-                #logging.CyberCPLogFileWriter.statusWriter(status, '%s. [179:prepMeta]' % (str(msg)))
-                command = "echo '%s. [179:prepMeta]' > %s" % (str(msg), status)
-                ProcessUtilities.executioner(command, website.externalApp)
+                logging.CyberCPLogFileWriter.writeToFile('%s. [179:prepMeta]' % (str(msg)))
 
             ## Email meta generated!
 
@@ -1964,14 +1958,10 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
 
         schedulerPath = '/home/cyberpanel/%s-backup.txt' % (backupDomain)
 
-        command = 'mkdir -p %s' % (backupPath)
-        ProcessUtilities.executioner(command, website.externalApp)
-
         ##
 
         command = 'mkdir -p %s' % (tempStoragePath)
         ProcessUtilities.executioner(command, website.externalApp)
-
 
         ##
 
@@ -1984,12 +1974,16 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
             writeToFile = open(schedulerPath, 'w')
             writeToFile.writelines('1325')
             writeToFile.close()
-            logging.CyberCPLogFileWriter.statusWriter(status, str(result[1]) + ' [1084][5009]')
+            command = "echo '%s [1084][5009]' > %s" % (str(result[1]), status)
+            ProcessUtilities.executioner(command, website.externalApp)
             return 0
 
 
         command = 'chown %s:%s %s' % (website.externalApp, website.externalApp, result[2])
         ProcessUtilities.executioner(command)
+
+        logging.CyberCPLogFileWriter.writeToFile(backupPath)
+        logging.CyberCPLogFileWriter.writeToFile(tempStoragePath)
 
         execPath = "sudo nice -n 10 /usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
         execPath = execPath + " startBackup --tempStoragePath " + tempStoragePath + " --backupName " \
@@ -2028,15 +2022,12 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
 
         #output = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
 
-        if output.find('1,None') > -1:
-            execPath = "sudo nice -n 10 /usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
-            execPath = execPath + " BackupRoot --tempStoragePath " + tempStoragePath + " --backupName " \
-                       + backupName + " --backupPath " + backupPath + ' --backupDomain ' + backupDomain + ' --metaPath %s' % (
-                           result[2])
+        execPath = "sudo nice -n 10 /usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
+        execPath = execPath + " BackupRoot --tempStoragePath " + tempStoragePath + " --backupName " \
+                   + backupName + " --backupPath " + backupPath + ' --backupDomain ' + backupDomain + ' --metaPath %s' % (
+                       result[2])
 
-            ProcessUtilities.executioner(execPath, 'root')
-        else:
-            logging.CyberCPLogFileWriter.writeToFile(output)
+        ProcessUtilities.executioner(execPath, 'root')
 
         command = 'chown -R %s:%s %s' % (website.externalApp, website.externalApp, backupPath)
         ProcessUtilities.executioner(command)
