@@ -54,6 +54,16 @@ class ACLManager:
             return 0
 
     @staticmethod
+    def VerifyRecordOwner(currentACL, record, domain):
+        if currentACL['admin'] == 1:
+            return 1
+        elif record.domainOwner.name == domain:
+            return 1
+        else:
+            return 0
+
+
+    @staticmethod
     def AliasDomainCheck(currentACL, aliasDomain, master):
         aliasOBJ = aliasDomains.objects.get(aliasDomain=aliasDomain)
         masterOBJ = Websites.objects.get(domain=master)

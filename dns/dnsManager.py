@@ -434,6 +434,11 @@ class DNSManager:
 
             record = Records.objects.get(pk=data['id'])
 
+            if ACLManager.VerifyRecordOwner(currentACL, record, zoneDomain) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson()
+
             if data['nameNow'] != None:
                 record.name = data['nameNow']
 
