@@ -43,6 +43,16 @@ class ACLManager:
               '"dkimManager": 1, "createFTPAccount": 1, "deleteFTPAccount": 1, "listFTPAccounts": 1, "createBackup": 1,' \
               ' "restoreBackup": 0, "addDeleteDestinations": 0, "scheduleBackups": 0, "remoteBackups": 0, "googleDriveBackups": 1, "manageSSL": 1, ' \
               '"hostnameSSL": 0, "mailServerSSL": 0 }'
+
+    @staticmethod
+    def VerifySMTPHost(currentACL, owner, user):
+        if currentACL['admin'] == 1:
+            return 1
+        elif owner == user:
+            return 1
+        else:
+            return 0
+
     @staticmethod
     def AliasDomainCheck(currentACL, aliasDomain, master):
         aliasOBJ = aliasDomains.objects.get(aliasDomain=aliasDomain)
