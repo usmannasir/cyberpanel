@@ -1,10 +1,14 @@
 import os
 import sys
-import time
-
 sys.path.append('/usr/local/CyberCP')
 import argparse
 from plogical.processUtilities import ProcessUtilities
+from random import randint, seed
+import time
+try:
+    seed(time.perf_counter())
+except:
+    pass
 
 class CronUtil:
 
@@ -90,27 +94,26 @@ class CronUtil:
             else:
                 cronPath = "/var/spool/cron/crontabs/" + externalApp
 
-            from random import randint, seed
-            try:
-                seed(time.perf_counter())
-            except:
-                pass
+            print(cronPath)
 
             TempFile = '/tmp/' + str(randint(1000, 9999))
+
+            print(TempFile)
 
             if os.path.exists(cronPath):
                 FullCrons = open(cronPath, 'r').read()
                 finalCron = '%s%s\n' % (FullCrons, finalCron)
                 with open(TempFile, "w") as file:
                     file.write(finalCron)
+                print(finalCron)
             else:
                 with open(TempFile, "w") as file:
                     file.write(finalCron + '\n')
 
             command = 'cp %s %s' % (TempFile, cronPath)
-            ProcessUtilities.executioner(command)
+            ProcessUtilities.normalExecutioner(command)
 
-            os.read(TempFile)
+            os.remove(TempFile)
 
             print("1,None")
         except BaseException as msg:
