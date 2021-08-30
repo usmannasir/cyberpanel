@@ -1,4 +1,7 @@
+import os
 import sys
+import time
+
 sys.path.append('/usr/local/CyberCP')
 import argparse
 from plogical.processUtilities import ProcessUtilities
@@ -81,13 +84,33 @@ class CronUtil:
     @staticmethod
     def addNewCron(externalApp, finalCron):
         try:
+
             if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 cronPath = "/var/spool/cron/" + externalApp
             else:
                 cronPath = "/var/spool/cron/crontabs/" + externalApp
 
-            with open(cronPath, "a") as file:
-                file.write(finalCron + "\n")
+            from random import randint, seed
+            try:
+                seed(time.perf_counter())
+            except:
+                pass
+
+            TempFile = '/tmp/' + str(randint(1000, 9999))
+
+            if os.path.exists(cronPath):
+                FullCrons = open(cronPath, 'r').read()
+                finalCron = '%s%s\n' % (FullCrons, finalCron)
+                with open(TempFile, "w") as file:
+                    file.write(finalCron)
+            else:
+                with open(TempFile, "w") as file:
+                    file.write(finalCron + '\n')
+
+            command = 'cp %s %s' % (TempFile, cronPath)
+            ProcessUtilities.executioner(command)
+
+            os.read(TempFile)
 
             print("1,None")
         except BaseException as msg:
