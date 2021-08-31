@@ -174,6 +174,10 @@ class StagingSetup(multi.Thread):
 
             child = ChildDomains.objects.get(domain=childDomain)
 
+            from managePHP.phpManager import PHPManager
+            php = PHPManager.getPHPString(child.master.phpSelection)
+            FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
+
             try:
                 import json
                 from cloudAPI.models import WPDeployments
@@ -198,7 +202,7 @@ class StagingSetup(multi.Thread):
 
             logging.statusWriter(tempStatusPath, 'Syncing databases..,10')
 
-            command = 'wp --allow-root --skip-plugins --skip-themes --path=%s db export %s/dbexport-stage.sql' % (child.path, masterPath)
+            command = '%s -d error_reporting=0 /usr/bin/wp --allow-root --skip-plugins --skip-themes --path=%s db export %s/dbexport-stage.sql' % (FinalPHPPath, child.path, masterPath)
             result = ProcessUtilities.outputExecutioner(command)
 
             if os.path.exists(ProcessUtilities.debugPath):
@@ -206,7 +210,7 @@ class StagingSetup(multi.Thread):
 
             ## Restore to master domain
 
-            command = 'wp --allow-root --skip-plugins --skip-themes --path=%s --quiet db import %s/dbexport-stage.sql' % (masterPath, masterPath)
+            command = '%s -d error_reporting=0 /usr/bin/wp --allow-root --skip-plugins --skip-themes --path=%s --quiet db import %s/dbexport-stage.sql' % (FinalPHPPath, masterPath, masterPath)
             result = ProcessUtilities.outputExecutioner(command)
 
             if os.path.exists(ProcessUtilities.debugPath):
@@ -222,7 +226,7 @@ class StagingSetup(multi.Thread):
 
             logging.statusWriter(tempStatusPath, 'Syncing data..,50')
 
-            command = 'wp theme path --allow-root --skip-plugins --skip-themes --path=%s' % (masterPath)
+            command = '%s -d error_reporting=0 /usr/bin/wp theme path --allow-root --skip-plugins --skip-themes --path=%s' % (FinalPHPPath, masterPath)
             WpContentPath = ProcessUtilities.outputExecutioner(command).splitlines()[-1].replace('wp-content/themes', '')
 
             if os.path.exists(ProcessUtilities.debugPath):
@@ -238,13 +242,20 @@ class StagingSetup(multi.Thread):
 
             ## Search and replace url
 
-            command = 'wp search-replace --allow-root --skip-plugins --skip-themes --path=%s "%s" "%s"' % (masterPath, child.domain, replaceDomain)
+            command = '%s -d error_reporting=0 /usr/bin/wp search-replace --allow-root --skip-plugins --skip-themes --path=%s "%s" "%s"' % (FinalPHPPath, masterPath, child.domain, replaceDomain)
             result = ProcessUtilities.outputExecutioner(command)
 
             if os.path.exists(ProcessUtilities.debugPath):
                 logging.writeToFile(result)
 
-            command = 'wp search-replace --allow-root --skip-plugins --skip-themes --path=%s "www.%s" "%s"' % (masterPath, child.domain, replaceDomain)
+            command = '%s -d error_reporting=0 /usr/bin/wp search-replace --allow-root --skip-plugins --skip-themes --path=%s "www.%s" "%s"' % (FinalPHPPath,masterPath, child.domain, replaceDomain)
+            result = ProcessUtilities.outputExecutioner(command)
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.writeToFile(result)
+
+            command = '%s -d error_reporting=0 /usr/bin/wp search-replace --allow-root --skip-plugins --skip-themes --path=%s "https://%s" "http://%s"' % (FinalPHPPath,
+            masterPath, replaceDomain, replaceDomain)
             result = ProcessUtilities.outputExecutioner(command)
 
             if os.path.exists(ProcessUtilities.debugPath):
