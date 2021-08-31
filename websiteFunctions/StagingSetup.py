@@ -1,4 +1,5 @@
 #!/usr/local/CyberCP/bin/python
+import subprocess
 import threading as multi
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from plogical.virtualHostUtilities import virtualHostUtilities
@@ -50,6 +51,21 @@ class StagingSetup(multi.Thread):
             except:
                 masterPath = '/home/%s/public_html' % (masterDomain)
                 replaceDomain = masterDomain
+
+            ### Check WP CLI
+
+            try:
+                command = 'wp --info'
+                outout = ProcessUtilities.outputExecutioner(command)
+
+                if not outout.find('WP-CLI root dir:') > -1:
+                    from plogical.applicationInstaller import ApplicationInstaller
+                    ai = ApplicationInstaller(None, None)
+                    ai.installWPCLI()
+            except subprocess.CalledProcessError:
+                from plogical.applicationInstaller import ApplicationInstaller
+                ai = ApplicationInstaller(None, None)
+                ai.installWPCLI()
 
             configPath = '%s/wp-config.php' % (masterPath)
 
