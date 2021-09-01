@@ -743,17 +743,39 @@ class FileManager:
         else:
             groupName = 'nogroup'
 
+        ### symlink checks
+
+        command = 'ls -la /home/%s' % domainName
+        result = ProcessUtilities.outputExecutioner(command)
+
+        if result.find('->') > -1:
+            final_json = json.dumps(
+                {'status': 0, 'logstatus': 0,
+                 'error_message': "Symlink attack."})
+            return HttpResponse(final_json)
+
         command = 'chown %s:%s /home/%s' % (website.externalApp, website.externalApp, domainName)
         ProcessUtilities.popenExecutioner(command)
 
-        command = 'chown -R %s:%s /home/%s/public_html/*' % (externalApp, externalApp, domainName)
+        ### Sym link checks
+
+        command = 'ls -la /home/%s/public_html/' % domainName
+        result = ProcessUtilities.outputExecutioner(command)
+
+        if result.find('->') > -1:
+            final_json = json.dumps(
+                {'status': 0, 'logstatus': 0,
+                 'error_message': "Symlink attack."})
+            return HttpResponse(final_json)
+
+        command = 'chown -R -P %s:%s /home/%s/public_html/*' % (externalApp, externalApp, domainName)
         ProcessUtilities.popenExecutioner(command)
 
-        command = 'chown -R %s:%s /home/%s/public_html/.[^.]*' % (externalApp, externalApp, domainName)
+        command = 'chown -R -P %s:%s /home/%s/public_html/.[^.]*' % (externalApp, externalApp, domainName)
         ProcessUtilities.popenExecutioner(command)
 
-        command = "chown root:%s /home/" % (groupName) + domainName + "/logs"
-        ProcessUtilities.popenExecutioner(command)
+        # command = "chown root:%s /home/" % (groupName) + domainName + "/logs"
+        # ProcessUtilities.popenExecutioner(command)
 
         command = "find %s -type d -exec chmod 0755 {} \;" % ("/home/" + domainName + "/public_html")
         ProcessUtilities.popenExecutioner(command)
@@ -768,16 +790,26 @@ class FileManager:
         ProcessUtilities.executioner(command)
 
         for childs in website.childdomains_set.all():
+            command = 'ls -la %s' % childs.path
+            result = ProcessUtilities.outputExecutioner(command)
+
+            if result.find('->') > -1:
+                final_json = json.dumps(
+                    {'status': 0, 'logstatus': 0,
+                     'error_message': "Symlink attack."})
+                return HttpResponse(final_json)
+
+
             command = "find %s -type d -exec chmod 0755 {} \;" % (childs.path)
             ProcessUtilities.popenExecutioner(command)
 
             command = "find %s -type f -exec chmod 0644 {} \;" % (childs.path)
             ProcessUtilities.popenExecutioner(command)
 
-            command = 'chown -R %s:%s %s/*' % (externalApp, externalApp, childs.path)
+            command = 'chown -R -P %s:%s %s/*' % (externalApp, externalApp, childs.path)
             ProcessUtilities.popenExecutioner(command)
 
-            command = 'chown -R %s:%s %s/.[^.]*' % (externalApp, externalApp, childs.path)
+            command = 'chown -R -P %s:%s %s/.[^.]*' % (externalApp, externalApp, childs.path)
             ProcessUtilities.popenExecutioner(command)
 
             command = 'chmod 755 %s' % (childs.path)
