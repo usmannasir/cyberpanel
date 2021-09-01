@@ -604,6 +604,15 @@ class FileManager:
 
             pathCheck = '/home/%s' % (self.data['domainName'])
 
+            domainName = self.data['domainName']
+            website = Websites.objects.get(domain=domainName)
+
+            command = 'ls -la %s' % (self.data['completePath'])
+            result = ProcessUtilities.outputExecutioner(command, website.externalApp)
+
+            if result.find('->') > -1:
+                return self.ajaxPre(0, "Symlink attack.")
+
             if ACLManager.commandInjectionCheck(self.data['completePath'] + '/' + myfile.name) == 1:
                 return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
@@ -615,9 +624,6 @@ class FileManager:
                 '/home/cyberpanel/media/' + myfile.name) + ' ' + self.returnPathEnclosed(
                 self.data['completePath'] + '/' + myfile.name)
             ProcessUtilities.executioner(command)
-
-            domainName = self.data['domainName']
-            website = Websites.objects.get(domain=domainName)
 
             command = 'chown %s:%s %s' % (website.externalApp, website.externalApp,
                                           self.returnPathEnclosed(self.data['completePath'] + '/' + myfile.name))

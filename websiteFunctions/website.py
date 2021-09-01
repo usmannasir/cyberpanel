@@ -1000,6 +1000,15 @@ class WebsiteManager:
         else:
             fileName = "/home/" + self.domain + "/logs/" + self.domain + ".error_log"
 
+        command = 'ls -la %s' % fileName
+        result = ProcessUtilities.outputExecutioner(command)
+
+        if result.find('->') > -1:
+            final_json = json.dumps(
+                {'status': 0, 'logstatus': 0,
+                 'error_message': "Symlink attack."})
+            return HttpResponse(final_json)
+
         ## get Logs
         website = Websites.objects.get(domain=self.domain)
 
@@ -1058,6 +1067,15 @@ class WebsiteManager:
             return ACLManager.loadErrorJson('logstatus', 0)
 
         fileName = "/home/" + self.domain + "/logs/" + self.domain + ".error_log"
+
+        command = 'ls -la %s' % fileName
+        result = ProcessUtilities.outputExecutioner(command)
+
+        if result.find('->') > -1:
+            final_json = json.dumps(
+                {'status': 0, 'logstatus': 0,
+                 'error_message': "Symlink attack."})
+            return HttpResponse(final_json)
 
         ## get Logs
         website = Websites.objects.get(domain=self.domain)
