@@ -78,7 +78,8 @@ class WebsiteManager:
     def CreateNewDomain(self, request=None, userID=None, data=None):
         currentACL = ACLManager.loadedACL(userID)
         websitesName = ACLManager.findAllSites(currentACL, userID)
-        proc = httpProc(request, 'websiteFunctions/createDomain.html', {'websiteList': websitesName, 'phps': PHPManager.findPHPVersions()})
+        proc = httpProc(request, 'websiteFunctions/createDomain.html',
+                        {'websiteList': websitesName, 'phps': PHPManager.findPHPVersions()})
         return proc.render()
 
     def siteState(self, request=None, userID=None, data=None):
@@ -183,8 +184,6 @@ class WebsiteManager:
             except:
                 externalApp = "".join(re.findall("[a-zA-Z]+", domain))[:5] + str(randint(1000, 9999))
 
-
-
             try:
                 counter = 0
                 while 1:
@@ -216,7 +215,8 @@ class WebsiteManager:
                        " --administratorEmail " + adminEmail + " --phpVersion '" + phpSelection + \
                        "' --virtualHostUser " + externalApp + " --ssl " + str(data['ssl']) + " --dkimCheck " \
                        + str(data['dkimCheck']) + " --openBasedir " + str(data['openBasedir']) + \
-                       ' --websiteOwner "' + websiteOwner + '" --package "' + packageName + '" --tempStatusPath ' + tempStatusPath + " --apache " + apacheBackend  + " --mailDomain %s" % (mailDomain)
+                       ' --websiteOwner "' + websiteOwner + '" --package "' + packageName + '" --tempStatusPath ' + tempStatusPath + " --apache " + apacheBackend + " --mailDomain %s" % (
+                           mailDomain)
 
             ProcessUtilities.popenExecutioner(execPath)
             time.sleep(2)
@@ -243,7 +243,6 @@ class WebsiteManager:
             phpSelection = data['phpSelection']
             path = data['path']
             tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
-
 
             if not validators.domain(domain):
                 data_ret = {'status': 0, 'createWebSiteStatus': 0, 'error_message': "Invalid domain."}
@@ -441,9 +440,9 @@ class WebsiteManager:
             DiskUsage, DiskUsagePercentage, bwInMB, bwUsage = virtualHostUtilities.FindStats(items)
             diskUsed = "%sMB" % str(DiskUsage)
 
-
             dic = {'domain': items.domain, 'adminEmail': items.adminEmail, 'ipAddress': ipAddress,
-                   'admin': items.admin.userName, 'package': items.package.packageName, 'state': state, 'diskUsed': diskUsed}
+                   'admin': items.admin.userName, 'package': items.package.packageName, 'state': state,
+                   'diskUsed': diskUsed}
 
             if checker == 0:
                 json_data = json_data + json.dumps(dic)
@@ -471,8 +470,10 @@ class WebsiteManager:
 
         for items in childs:
 
-            dic = {'domain': items.domain, 'masterDomain': items.master.domain, 'adminEmail': items.master.adminEmail, 'ipAddress': ipAddress,
-                   'admin': items.master.admin.userName, 'package': items.master.package.packageName, 'path': items.path}
+            dic = {'domain': items.domain, 'masterDomain': items.master.domain, 'adminEmail': items.master.adminEmail,
+                   'ipAddress': ipAddress,
+                   'admin': items.master.admin.userName, 'package': items.master.package.packageName,
+                   'path': items.path}
 
             if checker == 0:
                 json_data = json_data + json.dumps(dic)
@@ -556,7 +557,8 @@ class WebsiteManager:
                 return ACLManager.loadErrorJson('websiteDeleteStatus', 0)
 
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-            execPath = execPath + " deleteDomain --virtualHostName " + websiteName + ' --DeleteDocRoot %s' % (str(DeleteDocRoot))
+            execPath = execPath + " deleteDomain --virtualHostName " + websiteName + ' --DeleteDocRoot %s' % (
+                str(DeleteDocRoot))
             ProcessUtilities.outputExecutioner(execPath)
 
             data_ret = {'status': 1, 'websiteDeleteStatus': 1, 'error_message': "None"}
@@ -891,7 +893,7 @@ class WebsiteManager:
             return proc.render()
         else:
             proc = httpProc(request, 'websiteFunctions/website.html',
-                          {"error": 1, "domain": "This domain does not exists."})
+                            {"error": 1, "domain": "This domain does not exists."})
             return proc.render()
 
     def launchChild(self, request=None, userID=None, data=None):
@@ -972,12 +974,11 @@ class WebsiteManager:
                 Data['viewSSL'] = 0
                 logging.CyberCPLogFileWriter.writeToFile(str(msg))
 
-
             proc = httpProc(request, 'websiteFunctions/launchChild.html', Data)
             return proc.render()
         else:
             proc = httpProc(request, 'websiteFunctions/launchChild.html',
-                          {"error": 1, "domain": "This child domain does not exists"})
+                            {"error": 1, "domain": "This child domain does not exists"})
             return proc.render()
 
     def getDataFromLogFile(self, userID=None, data=None):
@@ -1006,7 +1007,8 @@ class WebsiteManager:
 
         if output.find("1,None") > -1:
             final_json = json.dumps(
-                {'status': 0, 'logstatus': 0, 'error_message': "Not able to fetch logs, see CyberPanel main log file, Error: %s" % (output)})
+                {'status': 0, 'logstatus': 0,
+                 'error_message': "Not able to fetch logs, see CyberPanel main log file, Error: %s" % (output)})
             return HttpResponse(final_json)
 
         ## get log ends here.
@@ -1100,7 +1102,8 @@ class WebsiteManager:
         else:
             command = 'redis-cli get "vhost:%s"' % (self.domain)
             configData = ProcessUtilities.outputExecutioner(command)
-            configData = '#### This configuration is fetched from redis as Redis-Mass Hosting is being used.\n%s' % (configData)
+            configData = '#### This configuration is fetched from redis as Redis-Mass Hosting is being used.\n%s' % (
+                configData)
 
         status = {'status': 1, "configstatus": 1, "configData": configData}
         final_json = json.dumps(status)
@@ -1153,14 +1156,14 @@ class WebsiteManager:
 
                 ## save configuration data ends
         else:
-            command = "redis-cli set vhost:%s '%s'" % (self.domain, configData.replace('#### This configuration is fetched from redis as Redis-Mass Hosting is being used.\n', ''))
+            command = "redis-cli set vhost:%s '%s'" % (self.domain, configData.replace(
+                '#### This configuration is fetched from redis as Redis-Mass Hosting is being used.\n', ''))
             ProcessUtilities.executioner(command)
 
             status = {"configstatus": 1}
 
             final_json = json.dumps(status)
             return HttpResponse(final_json)
-
 
     def getRewriteRules(self, userID=None, data=None):
 
@@ -1586,7 +1589,6 @@ class WebsiteManager:
             execPath = execPath + " addNewCron --externalApp " + website.externalApp + " --finalCron '" + finalCron + "'"
             output = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
 
-
             if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
                 command = 'chmod 600 %s' % (cronPath)
                 ProcessUtilities.executioner(command)
@@ -1833,8 +1835,10 @@ class WebsiteManager:
         try:
             statusFile = data['statusFile']
 
-            if (statusFile[:16] == "/home/cyberpanel" or statusFile[:4] == '/tmp' or statusFile[:18] == '/usr/local/CyberCP') \
-                    and statusFile != '/usr/local/CyberCP/CyberCP/settings.py' and statusFile.find('..') == -1 and statusFile != '/home/cyberpanel/.my.cnf':
+            if (statusFile[:18] != "/home/cyberpanel/." or statusFile[:16] == "/home/cyberpanel" or statusFile[:4] == '/tmp' or statusFile[
+                                                                                     :18] == '/usr/local/CyberCP') \
+                    and statusFile != '/usr/local/CyberCP/CyberCP/settings.py' and statusFile.find(
+                '..') == -1 and statusFile != '/home/cyberpanel/.my.cnf' and statusFile != '/home/cyberpanel/.bashrc' and statusFile != '/home/cyberpanel/.bash_logout' and statusFile != '/home/cyberpanel/.profile':
                 pass
             else:
                 data_ret = {'abort': 1, 'installStatus': 0, 'installationProgress': "100",
@@ -2364,7 +2368,8 @@ StrictHostKeyChecking no
 
             diskUsed = "%sMB" % str(DiskUsage)
             dic = {'domain': items.domain, 'adminEmail': items.adminEmail, 'ipAddress': ipAddress,
-                   'admin': items.admin.userName, 'package': items.package.packageName, 'state': state, 'diskUsed': diskUsed}
+                   'admin': items.admin.userName, 'package': items.package.packageName, 'state': state,
+                   'diskUsed': diskUsed}
 
             if checker == 0:
                 json_data = json_data + json.dumps(dic)
@@ -2404,7 +2409,8 @@ StrictHostKeyChecking no
             diskUsed = "%sMB" % str(DiskUsage)
 
             dic = {'domain': items.domain, 'adminEmail': items.adminEmail, 'ipAddress': ipAddress,
-                   'admin': items.admin.userName, 'package': items.package.packageName, 'state': state, 'diskUsed': diskUsed}
+                   'admin': items.admin.userName, 'package': items.package.packageName, 'state': state,
+                   'diskUsed': diskUsed}
 
             if checker == 0:
                 json_data = json_data + json.dumps(dic)
@@ -2653,7 +2659,6 @@ StrictHostKeyChecking no
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-
     def setupStaging(self, request=None, userID=None, data=None):
         currentACL = ACLManager.loadedACL(userID)
         admin = Administrator.objects.get(pk=userID)
@@ -2683,7 +2688,6 @@ StrictHostKeyChecking no
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-
             if not validators.domain(data['domainName']):
                 data_ret = {'status': 0, 'createWebSiteStatus': 0, 'error_message': "Invalid domain."}
                 json_data = json.dumps(data_ret)
@@ -2693,7 +2697,6 @@ StrictHostKeyChecking no
                 pass
             else:
                 return ACLManager.loadErrorJson('status', 0)
-
 
             extraArgs = {}
             extraArgs['domain'] = data['domainName']
@@ -2720,7 +2723,7 @@ StrictHostKeyChecking no
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-    def syncToMaster(self, request=None, userID=None, data=None, childDomain = None):
+    def syncToMaster(self, request=None, userID=None, data=None, childDomain=None):
         currentACL = ACLManager.loadedACL(userID)
         admin = Administrator.objects.get(pk=userID)
 
@@ -2742,7 +2745,6 @@ StrictHostKeyChecking no
             currentACL = ACLManager.loadedACL(userID)
             admin = Administrator.objects.get(pk=userID)
 
-
             if not validators.domain(data['childDomain']):
                 data_ret = {'status': 0, 'createWebSiteStatus': 0, 'error_message': "Invalid domain."}
                 json_data = json.dumps(data_ret)
@@ -2754,7 +2756,6 @@ StrictHostKeyChecking no
                 pass
             else:
                 return ACLManager.loadErrorJson('status', 0)
-
 
             extraArgs = {}
             extraArgs['childDomain'] = data['childDomain']
@@ -2772,7 +2773,6 @@ StrictHostKeyChecking no
                 extraArgs['copyChanged'] = False
 
             extraArgs['admin'] = admin
-
 
             tempStatusPath = "/tmp/" + str(randint(1000, 9999))
             writeToFile = open(tempStatusPath, 'a')
@@ -2991,7 +2991,6 @@ StrictHostKeyChecking no
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile('%s. [folderCheck:3002]' % (str(msg)))
 
-
         return 0
 
     def fetchFolderDetails(self, userID=None, data=None):
@@ -3013,12 +3012,11 @@ StrictHostKeyChecking no
             else:
                 return ACLManager.loadErrorJson()
 
-
             gitPath = '%s/.git' % (self.folder)
             command = 'ls -la %s' % (gitPath)
 
-
-            if ProcessUtilities.outputExecutioner(command, self.externalAppLocal).find('No such file or directory') > -1:
+            if ProcessUtilities.outputExecutioner(command, self.externalAppLocal).find(
+                    'No such file or directory') > -1:
 
                 command = 'cat /home/%s/.ssh/%s.pub' % (self.masterDomain, self.externalAppLocal)
                 deploymentKey = ProcessUtilities.outputExecutioner(command, self.externalAppLocal)
@@ -3077,9 +3075,11 @@ StrictHostKeyChecking no
                 webHookURL = 'https://%s:%s/websites/%s/webhook' % (ACLManager.fetchIP(), port, self.domain)
 
                 data_ret = {'status': 1, 'repo': 1, 'finalBranches': branches, 'deploymentKey': deploymentKey,
-                            'remote': remote, 'remoteResult': remoteResult, 'totalCommits': totalCommits, 'home': self.home,
+                            'remote': remote, 'remoteResult': remoteResult, 'totalCommits': totalCommits,
+                            'home': self.home,
                             'webHookURL': webHookURL, 'autoCommitCurrent': self.autoCommitCurrent,
-                            'autoPushCurrent':self.autoPushCurrent, 'emailLogsCurrent': self.emailLogsCurrent, 'commands': self.commands, "webhookCommandCurrent": self.webhookCommandCurrent}
+                            'autoPushCurrent': self.autoPushCurrent, 'emailLogsCurrent': self.emailLogsCurrent,
+                            'commands': self.commands, "webhookCommandCurrent": self.webhookCommandCurrent}
 
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
@@ -3108,7 +3108,6 @@ StrictHostKeyChecking no
             else:
                 return ACLManager.loadErrorJson()
 
-
             command = 'git -C %s init' % (self.folder)
             result = ProcessUtilities.outputExecutioner(command)
 
@@ -3118,7 +3117,7 @@ StrictHostKeyChecking no
                 ProcessUtilities.executioner(command)
 
                 command = 'git -C %s config --local user.name "%s %s"' % (
-                self.folder, self.firstName, self.lastName)
+                    self.folder, self.firstName, self.lastName)
                 ProcessUtilities.executioner(command)
 
                 ## Fix permissions
@@ -3188,7 +3187,8 @@ StrictHostKeyChecking no
 
             ### set default ssh key
 
-            command = 'git -C %s config --local core.sshCommand "ssh -i /home/%s/.ssh/%s -o "StrictHostKeyChecking=no""' % (self.folder, self.masterDomain, self.externalAppLocal)
+            command = 'git -C %s config --local core.sshCommand "ssh -i /home/%s/.ssh/%s -o "StrictHostKeyChecking=no""' % (
+            self.folder, self.masterDomain, self.externalAppLocal)
             ProcessUtilities.executioner(command)
 
             ## Check if remote exists
@@ -3199,9 +3199,11 @@ StrictHostKeyChecking no
             ## Set new remote
 
             if remoteResult.find('origin') == -1:
-                command = 'git -C %s remote add origin git@%s:%s/%s.git' % (self.folder, self.gitHost, self.gitUsername, self.gitReponame)
+                command = 'git -C %s remote add origin git@%s:%s/%s.git' % (
+                self.folder, self.gitHost, self.gitUsername, self.gitReponame)
             else:
-                command = 'git -C %s remote set-url origin git@%s:%s/%s.git' % (self.folder, self.gitHost, self.gitUsername, self.gitReponame)
+                command = 'git -C %s remote set-url origin git@%s:%s/%s.git' % (
+                self.folder, self.gitHost, self.gitUsername, self.gitReponame)
 
             possibleError = ProcessUtilities.outputExecutioner(command)
 
@@ -3259,9 +3261,9 @@ StrictHostKeyChecking no
             else:
                 return ACLManager.loadErrorJson('status', 'Invalid characters in your input.')
 
-
             if self.branchName.find('*') > -1:
-                data_ret = {'status': 0, 'commandStatus': 'Already on this branch.', 'error_message': 'Already on this branch.'}
+                data_ret = {'status': 0, 'commandStatus': 'Already on this branch.',
+                            'error_message': 'Already on this branch.'}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
@@ -3331,7 +3333,6 @@ StrictHostKeyChecking no
                 fm = FileManager(None, None)
                 fm.fixPermissions(self.masterDomain)
 
-
                 data_ret = {'status': 1, 'commandStatus': commandStatus}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
@@ -3365,20 +3366,17 @@ StrictHostKeyChecking no
             else:
                 return ACLManager.loadErrorJson('status', 0)
 
-
             # security check
-
 
             if ACLManager.validateInput(self.commitMessage):
                 pass
             else:
                 return ACLManager.loadErrorJson()
 
-
             ## Check if remote exists
 
             command = 'git -C %s add -A' % (self.folder)
-            ProcessUtilities.outputExecutioner(command )
+            ProcessUtilities.outputExecutioner(command)
 
             command = 'git -C %s commit -m "%s"' % (self.folder, self.commitMessage.replace('"', ''))
             commandStatus = ProcessUtilities.outputExecutioner(command)
@@ -3388,7 +3386,8 @@ StrictHostKeyChecking no
                 try:
                     if self.commands != 'NONE':
 
-                        GitLogs(owner=self.masterWebsite, type='INFO', message='Running commands after successful git commit..').save()
+                        GitLogs(owner=self.masterWebsite, type='INFO',
+                                message='Running commands after successful git commit..').save()
 
                         if self.commands.find('\n') > -1:
                             commands = self.commands.split('\n')
@@ -3442,7 +3441,6 @@ StrictHostKeyChecking no
             self.domain = data['domain']
             self.folder = data['folder']
 
-
             if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
                 pass
             else:
@@ -3455,10 +3453,9 @@ StrictHostKeyChecking no
 
             ### set default ssh key
 
-
             command = 'git -C %s config --local core.sshCommand "ssh -i /home/%s/.ssh/%s -o "StrictHostKeyChecking=no""' % (
-            self.folder, self.masterDomain, self.externalAppLocal)
-            ProcessUtilities.executioner(command )
+                self.folder, self.masterDomain, self.externalAppLocal)
+            ProcessUtilities.executioner(command)
 
             ## Check if remote exists
 
@@ -3496,7 +3493,6 @@ StrictHostKeyChecking no
             self.domain = data['domain']
             self.folder = data['folder']
 
-
             if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
                 pass
             else:
@@ -3510,7 +3506,7 @@ StrictHostKeyChecking no
             ### set default ssh key
 
             command = 'git -C %s config --local core.sshCommand "ssh -i /home/%s/.ssh/%s -o "StrictHostKeyChecking=no""' % (
-                    self.folder, self.masterDomain, self.externalAppLocal)
+                self.folder, self.masterDomain, self.externalAppLocal)
             ProcessUtilities.executioner(command)
 
             ##
@@ -3523,14 +3519,16 @@ StrictHostKeyChecking no
                 currentBranch = ProcessUtilities.outputExecutioner(command, 'root', False).rstrip('\n')
 
                 if currentBranch.find('fatal: ambiguous argument') > -1:
-                    data_ret = {'status': 0, 'error_message': 'You need to commit first.', 'commandStatus': 'You need to commit first.'}
+                    data_ret = {'status': 0, 'error_message': 'You need to commit first.',
+                                'commandStatus': 'You need to commit first.'}
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
 
                 command = 'git -C %s push --set-upstream origin %s' % (self.folder, currentBranch)
                 commandStatus = ProcessUtilities.outputExecutioner(command, 'root', False)
 
-            if commandStatus.find('Everything up-to-date') == -1 and commandStatus.find('rejected') == -1 and commandStatus.find('Permission denied') == -1:
+            if commandStatus.find('Everything up-to-date') == -1 and commandStatus.find(
+                    'rejected') == -1 and commandStatus.find('Permission denied') == -1:
                 data_ret = {'status': 1, 'commandStatus': commandStatus}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
@@ -3561,7 +3559,6 @@ StrictHostKeyChecking no
             except:
                 self.overrideData = False
 
-
             if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
                 pass
             else:
@@ -3587,7 +3584,6 @@ StrictHostKeyChecking no
                 if not validators.domain(self.gitHost):
                     return ACLManager.loadErrorJson('status', 'Invalid characters in your input.')
 
-
             ## Security check
 
             if ACLManager.validateInput(self.gitUsername) and ACLManager.validateInput(self.gitReponame):
@@ -3597,14 +3593,14 @@ StrictHostKeyChecking no
 
             ##
 
-
             if self.overrideData:
                 command = 'rm -rf %s' % (self.folder)
                 ProcessUtilities.executioner(command)
 
             ## Set defauly key
 
-            command = 'git config --global core.sshCommand "ssh -i /home/%s/.ssh/%s -o "StrictHostKeyChecking=no""' % (self.masterDomain, self.externalAppLocal)
+            command = 'git config --global core.sshCommand "ssh -i /home/%s/.ssh/%s -o "StrictHostKeyChecking=no""' % (
+            self.masterDomain, self.externalAppLocal)
             ProcessUtilities.executioner(command)
 
             ##
@@ -3654,7 +3650,6 @@ StrictHostKeyChecking no
             self.domain = data['domain']
             self.folder = data['folder']
 
-
             if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
                 pass
             else:
@@ -3700,7 +3695,6 @@ StrictHostKeyChecking no
             self.domain = data['domain']
             self.folder = data['folder']
 
-
             if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
                 pass
             else:
@@ -3737,7 +3731,6 @@ StrictHostKeyChecking no
             self.gitIgnoreContent = data['gitIgnoreContent']
 
             tempPath = "/home/cyberpanel/" + str(randint(1000, 9999))
-
 
             if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
                 pass
@@ -3807,7 +3800,7 @@ StrictHostKeyChecking no
             for commit in commits:
                 cm = commit.split('|')
 
-                dic = {'id': str(id),'commit': cm[0], 'message': cm[1].replace('"', "'"), 'name': cm[2], 'date': cm[3]}
+                dic = {'id': str(id), 'commit': cm[0], 'message': cm[1].replace('"', "'"), 'name': cm[2], 'date': cm[3]}
                 id = id + 1
 
                 if checker == 0:
@@ -3901,9 +3894,9 @@ StrictHostKeyChecking no
             else:
                 return ACLManager.loadErrorJson('status', 'Invalid characters in your input.')
 
-            command = 'git -C %s show %s -- %s/%s' % (self.folder, self.commit, self.folder, self.file.strip('\n').strip(' '))
+            command = 'git -C %s show %s -- %s/%s' % (
+            self.folder, self.commit, self.folder, self.file.strip('\n').strip(' '))
             fileChangedContent = ProcessUtilities.outputExecutioner(command).split('\n')
-
 
             initialNumber = 0
             ## Find initial line numbers
@@ -3921,26 +3914,33 @@ StrictHostKeyChecking no
                 lineNumber = int(fileChangedContent[initialNumber].split('+')[1].split(' ')[0])
 
             fileLen = len(fileChangedContent)
-            finalConent = '<tr><td style="border-top: none;color:blue">%s</td><td style="border-top: none;"><p style="color:blue">%s</p></td></tr>' % ('#', fileChangedContent[initialNumber])
+            finalConent = '<tr><td style="border-top: none;color:blue">%s</td><td style="border-top: none;"><p style="color:blue">%s</p></td></tr>' % (
+            '#', fileChangedContent[initialNumber])
 
-            for i in range(initialNumber + 1, fileLen-1):
+            for i in range(initialNumber + 1, fileLen - 1):
                 if fileChangedContent[i][0] == '@':
                     lineNumber = int(fileChangedContent[i].split('+')[1].split(',')[0])
-                    finalConent = finalConent + '<tr><td style="border-top: none;color:blue">%s</td><td style="border-top: none;"><p style="color:blue">%s</p></td></tr>' % ('#', fileChangedContent[i])
+                    finalConent = finalConent + '<tr><td style="border-top: none;color:blue">%s</td><td style="border-top: none;"><p style="color:blue">%s</p></td></tr>' % (
+                    '#', fileChangedContent[i])
                     continue
 
                 else:
                     if fileChangedContent[i][0] == '+':
-                        content = '<p style="color:green">%s</p>' % (fileChangedContent[i].replace('<', "&lt;").replace('>', "&gt;"))
-                        finalConent = finalConent + '<tr style="color:green"><td style="border-top: none;">%s</td><td style="border-top: none;">%s</td></tr>' % (str(lineNumber), content)
+                        content = '<p style="color:green">%s</p>' % (
+                            fileChangedContent[i].replace('<', "&lt;").replace('>', "&gt;"))
+                        finalConent = finalConent + '<tr style="color:green"><td style="border-top: none;">%s</td><td style="border-top: none;">%s</td></tr>' % (
+                        str(lineNumber), content)
                         lineNumber = lineNumber + 1
                     elif fileChangedContent[i][0] == '-':
-                        content = '<p style="color:red">%s</p>' % (fileChangedContent[i].replace('<', "&lt;").replace('>', "&gt;"))
-                        finalConent = finalConent + '<tr style="color:red"><td style="border-top: none;">%s</td><td style="border-top: none;">%s</td></tr>' % (str(lineNumber), content)
+                        content = '<p style="color:red">%s</p>' % (
+                            fileChangedContent[i].replace('<', "&lt;").replace('>', "&gt;"))
+                        finalConent = finalConent + '<tr style="color:red"><td style="border-top: none;">%s</td><td style="border-top: none;">%s</td></tr>' % (
+                        str(lineNumber), content)
                         lineNumber = lineNumber + 1
                     else:
                         content = '<p>%s</p>' % (fileChangedContent[i].replace('<', "&lt;").replace('>', "&gt;"))
-                        finalConent = finalConent + '<tr><td style="border-top: none;">%s</td><td style="border-top: none;">%s</td></tr>' % (str(lineNumber), content)
+                        finalConent = finalConent + '<tr><td style="border-top: none;">%s</td><td style="border-top: none;">%s</td></tr>' % (
+                        str(lineNumber), content)
                         lineNumber = lineNumber + 1
 
             data_ret = {'status': 1, 'fileChangedContent': finalConent}
@@ -4087,7 +4087,7 @@ StrictHostKeyChecking no
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-    def webhook(self,domain, data=None):
+    def webhook(self, domain, data=None):
         try:
 
             self.domain = domain
@@ -4142,7 +4142,8 @@ StrictHostKeyChecking no
                         if gitConf['webhookCommand']:
                             if gitConf['commands'] != 'NONE':
 
-                                GitLogs(owner=self.web, type='INFO', message='Running commands after successful git commit..').save()
+                                GitLogs(owner=self.web, type='INFO',
+                                        message='Running commands after successful git commit..').save()
 
                                 if gitConf['commands'].find('\n') > -1:
                                     commands = gitConf['commands'].split('\n')
@@ -4151,14 +4152,16 @@ StrictHostKeyChecking no
                                         GitLogs(owner=self.web, type='INFO',
                                                 message='Running: %s' % (command)).save()
 
-                                        result = ProcessUtilities.outputExecutioner(command, self.web.externalApp, None, self.folder)
+                                        result = ProcessUtilities.outputExecutioner(command, self.web.externalApp, None,
+                                                                                    self.folder)
                                         GitLogs(owner=self.web, type='INFO',
                                                 message='Result: %s' % (result)).save()
                                 else:
                                     GitLogs(owner=self.web, type='INFO',
                                             message='Running: %s' % (gitConf['commands'])).save()
 
-                                    result = ProcessUtilities.outputExecutioner(gitConf['commands'], self.web.externalApp, None, self.folder)
+                                    result = ProcessUtilities.outputExecutioner(gitConf['commands'],
+                                                                                self.web.externalApp, None, self.folder)
                                     GitLogs(owner=self.web, type='INFO',
                                             message='Result: %s' % (result)).save()
 
@@ -4189,7 +4192,7 @@ StrictHostKeyChecking no
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-    def getSSHConfigs(self, userID = None, data = None):
+    def getSSHConfigs(self, userID=None, data=None):
         try:
 
             currentACL = ACLManager.loadedACL(userID)
@@ -4245,7 +4248,7 @@ StrictHostKeyChecking no
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-    def deleteSSHKey(self, userID = None, data = None):
+    def deleteSSHKey(self, userID=None, data=None):
         try:
 
             currentACL = ACLManager.loadedACL(userID)
@@ -4280,7 +4283,7 @@ StrictHostKeyChecking no
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-    def addSSHKey(self, userID = None, data = None):
+    def addSSHKey(self, userID=None, data=None):
         try:
             currentACL = ACLManager.loadedACL(userID)
             admin = Administrator.objects.get(pk=userID)
