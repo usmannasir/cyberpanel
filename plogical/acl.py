@@ -786,4 +786,14 @@ class ACLManager:
         else:
             return 0
 
+    @staticmethod
+    def CheckDomainBlackList(domain):
+        BlackList = ['hotmail.com', 'gmail.com', 'yandex.com', 'yahoo.com', 'localhost']
+
+        for black in BlackList:
+            if domain.endswith(black):
+                return 0
+
+        return 1
+
 

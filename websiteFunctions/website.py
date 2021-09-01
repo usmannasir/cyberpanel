@@ -162,6 +162,11 @@ class WebsiteManager:
             if ACLManager.checkOwnerProtection(currentACL, loggedUser, newOwner) == 0:
                 return ACLManager.loadErrorJson('createWebSiteStatus', 0)
 
+            if ACLManager.CheckDomainBlackList(domain) == 0:
+                data_ret = {'status': 0, 'createWebSiteStatus': 0, 'error_message': "Blacklisted domain."}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
             if not validators.domain(domain):
                 data_ret = {'status': 0, 'createWebSiteStatus': 0, 'error_message': "Invalid domain."}
                 json_data = json.dumps(data_ret)
