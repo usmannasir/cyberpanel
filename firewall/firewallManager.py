@@ -1476,7 +1476,7 @@ class FirewallManager:
             protocol = data['protocol']
             ports = data['ports']
 
-            portsPath = '/tmp/ports'
+            portsPath = '/home/cyberpanel/' + str(randint(1000, 9999))
 
             if os.path.exists(portsPath):
                 os.remove(portsPath)
