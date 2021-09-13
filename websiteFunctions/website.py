@@ -173,7 +173,8 @@ class WebsiteManager:
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-            if not validators.email(adminEmail):
+
+            if not validators.email(adminEmail) or adminEmail.find('--') > -1:
                 data_ret = {'status': 0, 'createWebSiteStatus': 0, 'error_message': "Invalid email."}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
