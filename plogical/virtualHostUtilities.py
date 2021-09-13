@@ -917,6 +917,9 @@ class virtualHostUtilities:
             cmd = shlex.split(command)
             subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
+            command = 'chmod 600 %s' % (pathToStoreSSLPrivKey)
+            ProcessUtilities.normalExecutioner(command)
+
             print("1,None")
 
         except BaseException as msg:
