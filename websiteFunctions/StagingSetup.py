@@ -28,6 +28,7 @@ class StagingSetup(multi.Thread):
             logging.writeToFile(str(msg) + ' [StagingSetup.run]')
 
     def startCloning(self):
+        global ApplicationInstaller
         try:
             tempStatusPath = self.extraArgs['tempStatusPath']
             self.tempStatusPath = tempStatusPath
@@ -155,7 +156,7 @@ class StagingSetup(multi.Thread):
             command = '%s -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --allow-root --path=%s "%s" "%s"' % (FinalPHPPath, path, replaceDomain, domain)
             ProcessUtilities.executioner(command)
 
-            command = '%s -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --allow-root --path=%s "www.%s" "%s"' % (FinalPHPPath, path, replaceDomain, domain)
+            command = '%s -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --allow-root --path=%s "www.%s" "%s"' % (FinalPHPPath, path, domain, domain)
             ProcessUtilities.executioner(command)
 
             command = '%s -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --allow-root --path=%s "https://%s" "http://%s"' % (
