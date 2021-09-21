@@ -76,8 +76,12 @@ phpIniOverride  {
 {open_basedir}
 }
 
+module cache {
+ storagePath $VH_ROOT/lscache
+}
+
 rewrite  {
-  enable                  1
+ enable                  1
   autoLoadHtaccess        1
 }
 """
@@ -120,6 +124,10 @@ accesslog $VH_ROOT/logs/{masterDomain}.access_log {
 
 phpIniOverride  {
 {open_basedir}
+}
+
+module cache {
+ storagePath $VH_ROOT/lscache
 }
 
 errorpage 403 {
