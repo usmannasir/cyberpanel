@@ -279,6 +279,11 @@ class sslUtilities:
         try:
             acmePath = '/root/.acme.sh/acme.sh'
 
+            ### register account for zero ssl
+
+            command = '%s --register-account -m %s' % (acmePath, adminEmail)
+            subprocess.call(shlex.split(command))
+
             # if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
             #     acmePath = '/home/cyberpanel/.acme.sh/acme.sh'
 
