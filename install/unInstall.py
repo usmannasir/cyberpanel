@@ -14,7 +14,7 @@ class unInstallCyberPanel:
     def unInstallCyberPanelRepo(self):
 
         try:
-            copyPath = "/etc/yum.repos.d/cyberpanel.repo"
+            copyPath = "/etc/yum.repos.d/CyberPanel.repo"
             os.remove(copyPath)
 
         except OSError as msg:
