@@ -39,10 +39,10 @@ def changePermissions(request):
 
             currentACL = ACLManager.loadedACL(userID)
 
-            if ACLManager.checkOwnership(domainName, admin, currentACL) == 1:
+            if currentACL['admin'] == 1:
                 pass
             else:
-                return ACLManager.loadErrorJson('permissionsChanged', 0)
+                return ACLManager.loadError()
 
             fm = FM(request, data)
             fm.fixPermissions(domainName)
