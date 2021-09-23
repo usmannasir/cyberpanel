@@ -706,10 +706,10 @@ $parameters = array(
 
             ##
 
-            from filemanager.filemanager import FileManager
-
-            fm = FileManager(None, None)
-            fm.fixPermissions(self.masterDomain)
+            # from filemanager.filemanager import FileManager
+            #
+            # fm = FileManager(None, None)
+            # fm.fixPermissions(self.masterDomain)
 
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines("Successfully Installed. [200]")
