@@ -292,6 +292,16 @@ class IncScheduler():
                     GDriveJobLogs(owner=items, status=backupSchedule.INFO, message='Starting backup job..').save()
 
                     for website in items.gdrivesites_set.all():
+
+                        ### If  this website dont exists continue
+
+                        try:
+                            Websites.objects.get(domain=website.domain)
+                        except:
+                            continue
+
+                        ##
+
                         try:
                             GDriveJobLogs(owner=items, status=backupSchedule.INFO, message='Local backup creation started for %s..' % (website.domain)).save()
 
@@ -539,6 +549,15 @@ Automatic backup failed for %s on %s.
                             domain = site.domain
                         else:
                             domain = site.domain.domain
+
+                        ### If  this website dont exists continue
+
+                        try:
+                            Websites.objects.get(domain=domain)
+                        except:
+                            continue
+
+                        ##
 
                         ## Save currently backing domain in db, so that i can restart from here when prematurely killed
 
