@@ -11,7 +11,6 @@ from .filemanager import FileManager as FM
 from plogical.processUtilities import ProcessUtilities
 # Create your views here.
 
-
 def loadFileManagerHome(request,domain):
     try:
         userID = request.session['userID']

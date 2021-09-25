@@ -1,3 +1,5 @@
+import os
+
 from django.shortcuts import HttpResponse
 import json
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
@@ -609,7 +611,7 @@ class FileManager:
 
             command = 'ls -la %s' % (self.data['completePath'])
             result = ProcessUtilities.outputExecutioner(command, website.externalApp)
-
+            #
             if result.find('->') > -1:
                 return self.ajaxPre(0, "Symlink attack.")
 
@@ -620,21 +622,26 @@ class FileManager:
                     (self.data['completePath'] + '/' + myfile.name)).find('..') > -1:
                 return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
-            command = 'mv ' + self.returnPathEnclosed(
+            command = 'cp ' + self.returnPathEnclosed(
                 '/home/cyberpanel/media/' + myfile.name) + ' ' + self.returnPathEnclosed(
                 self.data['completePath'] + '/' + myfile.name)
-            ProcessUtilities.executioner(command)
-
-            command = 'chown %s:%s %s' % (website.externalApp, website.externalApp,
-                                          self.returnPathEnclosed(self.data['completePath'] + '/' + myfile.name))
-            ProcessUtilities.executioner(command)
+            ProcessUtilities.executioner(command, website.externalApp)
 
             self.changeOwner(self.returnPathEnclosed(self.data['completePath'] + '/' + myfile.name))
+
+            try:
+                os.remove(self.returnPathEnclosed('/home/cyberpanel/media/' + myfile.name))
+            except:
+                pass
 
             json_data = json.dumps(finalData)
             return HttpResponse(json_data)
 
         except BaseException as msg:
+            try:
+                os.remove(self.returnPathEnclosed('/home/cyberpanel/media/' + myfile.name))
+            except:
+                pass
             return self.ajaxPre(0, str(msg))
 
     def extract(self):
