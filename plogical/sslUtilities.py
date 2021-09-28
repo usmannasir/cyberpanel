@@ -387,7 +387,7 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain = None):
 
             if sslUtilities.installSSLForDomain(domain) == 1:
                 logging.CyberCPLogFileWriter.writeToFile("Self signed SSL issued for " + domain + ".")
-                return [1, "None"]
+                return [0, "Self signed certificate was issued. [issueSSLForDomain]"]
             else:
                 return [0, "210 Failed to install SSL for domain. [issueSSLForDomain]"]
 
