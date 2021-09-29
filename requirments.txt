@@ -74,7 +74,7 @@ rsa==4.6
 s3transfer==0.5.0
 six==1.15.0
 soupsieve==2.0.1
-sqlparse==0.4.1
+sqlparse==0.4.2
 tldextract==3.0.2
 tornado==6.1
 uritemplate==3.0.1
