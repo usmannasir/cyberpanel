@@ -63,3 +63,4 @@ virtual_transport = dovecot
 dovecot_destination_recipient_limit = 1
 inet_interfaces = all
 smtp_tls_security_level = may
+disable_vrfy_command = yes
