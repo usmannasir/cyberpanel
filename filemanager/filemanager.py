@@ -648,7 +648,7 @@ class FileManager:
             self.changeOwner(self.returnPathEnclosed(self.data['completePath'] + '/' + myfile.name))
 
             try:
-                os.remove(self.returnPathEnclosed(UploadPath + RanddomFileName))
+                os.remove(UploadPath + RanddomFileName)
             except:
                 pass
 
@@ -657,7 +657,7 @@ class FileManager:
 
         except BaseException as msg:
             try:
-                os.remove(self.returnPathEnclosed(UploadPath + RanddomFileName))
+                os.remove(UploadPath + RanddomFileName)
             except:
                 pass
             return self.ajaxPre(0, str(msg))
