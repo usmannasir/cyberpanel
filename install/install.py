@@ -674,6 +674,9 @@ class preFlightsChecks:
         command = 'sysctl --system'
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
+        command = 'chmod 700 %s' % ('/home/cyberpanel')
+        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
         ###
 
     def install_unzip(self):

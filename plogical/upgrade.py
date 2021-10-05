@@ -2107,6 +2107,9 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             command = 'sysctl --system'
             Upgrade.executioner(command, 0)
 
+            command = 'chmod 700 %s' % ('/home/cyberpanel')
+            Upgrade.executioner(command, 0)
+
             Upgrade.stdOut("Permissions updated.")
 
         except BaseException as msg:

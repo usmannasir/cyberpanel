@@ -595,11 +595,29 @@ class FileManager:
             finalData['uploadStatus'] = 1
             finalData['answer'] = 'File transfer completed.'
 
+            ### Check if upload path tmp dir is not available
+
+            UploadPath = '/usr/local/CyberCP/tmp/'
+
+            if not os.path.exists(UploadPath):
+                command = 'mkdir %s' % (UploadPath)
+                ProcessUtilities.executioner(command)
+
+            command = 'chown cyberpanel:cyberpanel %s' % (UploadPath)
+            ProcessUtilities.executioner(command)
+
+            command = 'chmod 711 %s' % (UploadPath)
+            ProcessUtilities.executioner(command)
+
+            ## Random file name
+
+            RanddomFileName = str(randint(1000, 9999))
+
             myfile = self.request.FILES['file']
             fs = FileSystemStorage()
 
             try:
-                filename = fs.save(myfile.name, myfile)
+                filename = fs.save(RanddomFileName, myfile)
                 finalData['fileName'] = fs.url(filename)
             except BaseException as msg:
                 logging.writeToFile('%s. [375:upload]' % (str(msg)))
@@ -623,14 +641,14 @@ class FileManager:
                 return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
             command = 'cp ' + self.returnPathEnclosed(
-                '/home/cyberpanel/media/' + myfile.name) + ' ' + self.returnPathEnclosed(
+                '/home/cyberpanel/media/' + RanddomFileName) + ' ' + self.returnPathEnclosed(
                 self.data['completePath'] + '/' + myfile.name)
             ProcessUtilities.executioner(command, website.externalApp)
 
             self.changeOwner(self.returnPathEnclosed(self.data['completePath'] + '/' + myfile.name))
 
             try:
-                os.remove(self.returnPathEnclosed('/home/cyberpanel/media/' + myfile.name))
+                os.remove(self.returnPathEnclosed(UploadPath + RanddomFileName))
             except:
                 pass
 
@@ -639,7 +657,7 @@ class FileManager:
 
         except BaseException as msg:
             try:
-                os.remove(self.returnPathEnclosed('/home/cyberpanel/media/' + myfile.name))
+                os.remove(self.returnPathEnclosed(UploadPath + RanddomFileName))
             except:
                 pass
             return self.ajaxPre(0, str(msg))
