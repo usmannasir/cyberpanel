@@ -662,7 +662,7 @@ class MailServerManager(multi.Thread):
                 command = 'chown cyberpanel:cyberpanel -R /usr/local/CyberCP/lib/python3.6/site-packages/tldextract/.suffix_cache'
                 ProcessUtilities.executioner(command)
 
-                command = 'chown cyberpanel:cyberpanel /usr/local/CyberCP/lib/python3.8/site-packages/tldextract/.suffix_cache/publicsuffix.org-tlds/'
+                command = 'chown cyberpanel:cyberpanel -R /usr/local/CyberCP/lib/python3.8/site-packages/tldextract/.suffix_cache'
                 ProcessUtilities.executioner(command)
 
                 import tldextract
@@ -727,7 +727,7 @@ class MailServerManager(multi.Thread):
                 command = 'chown cyberpanel:cyberpanel -R /usr/local/CyberCP/lib/python3.6/site-packages/tldextract/.suffix_cache'
                 ProcessUtilities.executioner(command)
 
-                command = 'chown cyberpanel:cyberpanel /usr/local/CyberCP/lib/python3.8/site-packages/tldextract/.suffix_cache/publicsuffix.org-tlds/'
+                command = 'chown cyberpanel:cyberpanel -R /usr/local/CyberCP/lib/python3.8/site-packages/tldextract/.suffix_cache'
                 ProcessUtilities.executioner(command)
 
                 import tldextract
