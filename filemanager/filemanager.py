@@ -641,7 +641,7 @@ class FileManager:
                 return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
             command = 'cp ' + self.returnPathEnclosed(
-                '/home/cyberpanel/media/' + RanddomFileName) + ' ' + self.returnPathEnclosed(
+                UploadPath + RanddomFileName) + ' ' + self.returnPathEnclosed(
                 self.data['completePath'] + '/' + myfile.name)
             ProcessUtilities.executioner(command, website.externalApp)
 
