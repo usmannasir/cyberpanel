@@ -18,6 +18,7 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 from plogical.backupSchedule import backupSchedule
 import requests
+import socket
 from websiteFunctions.models import NormalBackupJobs, NormalBackupJobLogs
 from boto3.s3.transfer import TransferConfig
 
@@ -30,6 +31,7 @@ try:
     from plogical.processUtilities import ProcessUtilities
 except:
     pass
+
 
 class IncScheduler():
     logPath = '/home/cyberpanel/incbackuplogs'
@@ -116,7 +118,7 @@ class IncScheduler():
 
                 message = '[%s Cron] Checking if %s has any pending commits on %s.' % (type, website, time.strftime("%m.%d.%Y_%H-%M-%S"))
                 finalText = '%s\n' % (message)
-                GitLogs(owner=web, type='INFO', message = message).save()
+                GitLogs(owner=web, type='INFO', message=message).save()
 
                 finalPathInside = '%s/%s' % (IncScheduler.gitFolder, website)
 
@@ -165,7 +167,6 @@ class IncScheduler():
                         message = 'File: %s, Status: %s' % (file, str(msg))
                         finalText = '%s\n%s' % (finalText, message)
 
-
                 message = '[%s Cron] Finished checking for %s on %s.' % (type, website, time.strftime("%m.%d.%Y_%H-%M-%S"))
                 finalText = '%s\n%s' % (finalText, message)
                 logging.SendEmail(web.adminEmail, web.adminEmail, finalText, 'Git report for %s.' % (web.domain))
@@ -176,6 +177,7 @@ class IncScheduler():
 
     @staticmethod
     def checkDiskUsage():
+        sender_email = 'root@%s' % (socket.gethostname())
 
         try:
 
@@ -188,21 +190,21 @@ class IncScheduler():
             from plogical.acl import ACLManager
             message = '%s - Disk Usage Warning - CyberPanel' % (ACLManager.fetchIP())
 
-            if diskUsage >= 50 and diskUsage <= 60 :
+            if diskUsage >= 50 and diskUsage <= 60:
 
                 finalText = 'Current disk usage at "/" is %s percent. No action required.' % (str(diskUsage))
-                logging.SendEmail(admin.email, admin.email, finalText, message)
+                logging.SendEmail(sender_email, admin.email, finalText, message)
 
             elif diskUsage >= 60 and diskUsage <= 80:
 
                 finalText = 'Current disk usage at "/" is %s percent. We recommend clearing log directory by running \n\n rm -rf /usr/local/lsws/logs/*. \n\n When disk usage go above 80 percent we will automatically run this command.' % (str(diskUsage))
-                logging.SendEmail(admin.email, admin.email, finalText, message)
+                logging.SendEmail(sender_email, admin.email, finalText, message)
 
             elif diskUsage > 80:
 
                 finalText = 'Current disk usage at "/" is %s percent. We are going to run below command to free up space, If disk usage is still high, manual action is required by the system administrator. \n\n rm -rf /usr/local/lsws/logs/*.' % (
                     str(diskUsage))
-                logging.SendEmail(admin.email, admin.email, finalText, message)
+                logging.SendEmail(sender_email, admin.email, finalText, message)
 
                 command = 'rm -rf /usr/local/lsws/logs/*'
                 import subprocess
@@ -224,7 +226,6 @@ class IncScheduler():
                     try:
                         credentials = google.oauth2.credentials.Credentials(gDriveData['token'], gDriveData['refresh_token'],
                                                                 gDriveData['token_uri'], None, None, gDriveData['scopes'])
-
 
                         drive = build('drive', 'v3', credentials=credentials)
                         drive.files().list(pageSize=10, fields="files(id, name)").execute()
@@ -349,7 +350,6 @@ class IncScheduler():
                             GDriveJobLogs(owner=items, status=backupSchedule.ERROR,
                                           message='[Site] Site backup failed, Error message: %s.' % (str(msg))).save()
 
-
                     GDriveJobLogs(owner=items, status=backupSchedule.INFO,
                                   message='Job Completed').save()
             except BaseException as msg:
@@ -373,7 +373,6 @@ class IncScheduler():
 
         ## {"frequency": "Daily", "allSites": "Selected Only"}
         ## {"frequency": "Daily"}
-
 
         for backupjob in NormalBackupJobs.objects.all():
 
@@ -435,7 +434,6 @@ class IncScheduler():
                             domain = site.domain
                         else:
                             domain = site.domain.domain
-
 
                         ## Save currently backing domain in db, so that i can restart from here when prematurely killed
 
@@ -634,7 +632,6 @@ Automatic backup failed for %s on %s.
     def forceRunAWSBackup(planName):
         try:
 
-
             plan = BackupPlan.objects.get(name=planName)
             bucketName = plan.bucket.strip('\n').strip(' ')
             runTime = time.strftime("%d:%m:%Y")
@@ -685,8 +682,8 @@ Automatic backup failed for %s on %s.
             else:
                 client = boto3.client(
                     's3',
-                    aws_access_key_id = aws_access_key_id,
-                    aws_secret_access_key = aws_secret_access_key,
+                    aws_access_key_id=aws_access_key_id,
+                    aws_secret_access_key=aws_secret_access_key,
                 )
 
             ##
@@ -739,7 +736,6 @@ Automatic backup failed for %s on %s.
 
             BackupLogs(owner=plan, level='INFO', timeStamp=time.strftime("%b %d %Y, %H:%M:%S"),
                        msg='Backup Process Finished.').save()
-
 
         except BaseException as msg:
             logging.writeToFile(str(msg) + ' [S3Backups.runBackupPlan]')

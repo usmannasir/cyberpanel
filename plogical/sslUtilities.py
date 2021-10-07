@@ -9,6 +9,7 @@ try:
 except:
     pass
 
+
 class sslUtilities:
 
     Server_root = "/usr/local/lsws"
@@ -22,7 +23,7 @@ class sslUtilities:
             sslCheck = 0
 
             for items in data:
-                if items.find("listener") >-1 and items.find("SSL") > -1:
+                if items.find("listener") > - 1 and items.find("SSL") > -1:
                     sslCheck = 1
                     continue
                 if sslCheck == 1:
@@ -71,7 +72,6 @@ class sslUtilities:
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile('%s [installSSLForDomain:72]' % (str(msg)))
 
-
         if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
             confPath = sslUtilities.Server_root + "/conf/vhosts/" + virtualHostName
             completePathToConfigFile = confPath + "/vhost.conf"
@@ -117,7 +117,6 @@ class sslUtilities:
                     writeDataToFile.writelines(final)
                     writeDataToFile.writelines("\n")
                     writeDataToFile.close()
-
 
                 else:
 
@@ -273,9 +272,10 @@ class sslUtilities:
                 ProcessUtilities.executioner(command)
                 return 1
 
-
     @staticmethod
-    def obtainSSLForADomain(virtualHostName,adminEmail,sslpath, aliasDomain = None):
+    def obtainSSLForADomain(virtualHostName, adminEmail, sslpath, aliasDomain=None):
+        sender_email = 'root@%s' % (socket.gethostname())
+
         try:
             acmePath = '/root/.acme.sh/acme.sh'
 
@@ -287,7 +287,7 @@ class sslUtilities:
             # if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
             #     acmePath = '/home/cyberpanel/.acme.sh/acme.sh'
 
-            if aliasDomain == None:
+            if aliasDomain is None:
 
                 existingCertPath = '/etc/letsencrypt/live/' + virtualHostName
                 if not os.path.exists(existingCertPath):
@@ -306,8 +306,7 @@ class sslUtilities:
                     output = subprocess.check_output(shlex.split(command)).decode("utf-8")
                     logging.CyberCPLogFileWriter.writeToFile("Successfully obtained SSL for: " + virtualHostName + " and: www." + virtualHostName, 0)
 
-                    logging.CyberCPLogFileWriter.SendEmail(adminEmail, adminEmail, output, 'SSL Notification for %s.' % (virtualHostName))
-
+                    logging.CyberCPLogFileWriter.SendEmail(sender_email, adminEmail, output, 'SSL Notification for %s.' % (virtualHostName))
 
                 except subprocess.CalledProcessError:
                     logging.CyberCPLogFileWriter.writeToFile(
@@ -324,11 +323,11 @@ class sslUtilities:
                         output = subprocess.check_output(shlex.split(command)).decode("utf-8")
                         logging.CyberCPLogFileWriter.writeToFile("Successfully obtained SSL for: " + virtualHostName, 0)
                         finalText = '%s\nSuccessfully obtained SSL for: %s.' % (finalText, virtualHostName)
-                        logging.CyberCPLogFileWriter.SendEmail(adminEmail, adminEmail, finalText,
+                        logging.CyberCPLogFileWriter.SendEmail(sender_email, adminEmail, finalText,
                                                                'SSL Notification for %s.' % (virtualHostName))
                     except subprocess.CalledProcessError:
                         logging.CyberCPLogFileWriter.writeToFile('Failed to obtain SSL, issuing self-signed SSL for: ' + virtualHostName, 0)
-                        logging.CyberCPLogFileWriter.SendEmail(adminEmail, adminEmail, 'Failed to obtain SSL, issuing self-signed SSL for: ' + virtualHostName,
+                        logging.CyberCPLogFileWriter.SendEmail(sender_email, adminEmail, 'Failed to obtain SSL, issuing self-signed SSL for: ' + virtualHostName,
                                                                'SSL Notification for %s.' % (virtualHostName))
                         return 0
             else:
@@ -351,7 +350,6 @@ class sslUtilities:
                     logging.CyberCPLogFileWriter.writeToFile(
                         "Successfully obtained SSL for: " + virtualHostName + ", www." + virtualHostName + ", " + aliasDomain + "and www." + aliasDomain + ",")
 
-
                 except subprocess.CalledProcessError:
                     logging.CyberCPLogFileWriter.writeToFile(
                         "Failed to obtain SSL for: " + virtualHostName + ", www." + virtualHostName + ", " + aliasDomain + "and www." + aliasDomain + ",")
@@ -369,7 +367,7 @@ class sslUtilities:
             return 0
 
 
-def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain = None):
+def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain=None):
     try:
         if sslUtilities.obtainSSLForADomain(domain, adminEmail, sslpath, aliasDomain) == 1:
             if sslUtilities.installSSLForDomain(domain, adminEmail) == 1:
@@ -392,5 +390,4 @@ def issueSSLForDomain(domain, adminEmail, sslpath, aliasDomain = None):
                 return [0, "210 Failed to install SSL for domain. [issueSSLForDomain]"]
 
     except BaseException as msg:
-        return [0, "347 "+ str(msg)+ " [issueSSLForDomain]"]
-
+        return [0, "347 " + str(msg) + " [issueSSLForDomain]"]
