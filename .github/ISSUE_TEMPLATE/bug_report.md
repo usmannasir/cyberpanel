@@ -6,6 +6,8 @@ labels: ''
 assignees: ''
 
 ---
+**Important**
+Do not create a new issue if there is already an issue similar(even if nearly) to yours already posted by someone. Just post an update of your issue in that old issue. At this moment CyberPanel only have few contributors. Please do not create any maintenance burden.
 
 **Describe the bug**
 A clear and concise description of what the bug is. Please include as much information as possible in your issue report, such as the configuration of your server and any troubleshooting steps that you've already performed.
