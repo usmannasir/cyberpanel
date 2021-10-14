@@ -8,30 +8,39 @@ GIT_URL="github.com/usmannasir/cyberpanel"
 GIT_CONTENT_URL="raw.githubusercontent.com/usmannasir/cyberpanel"
 
 check_OS() {
-echo -e "\nChecking OS..."
-OUTPUT=$(cat /etc/*release)
-if  echo $OUTPUT | grep -q "CentOS Linux 7" ; then
-	echo -e "\nDetecting CentOS 7.X...\n"
-	SERVER_OS="CentOS"
-elif echo $OUTPUT | grep -q "CloudLinux 7" ; then
-	echo -e "\nDetecting CloudLinux 7.X...\n"
-	SERVER_OS="CentOS"
-elif  echo $OUTPUT | grep -q "CentOS Linux 8" ; then
-	echo -e "\nDetecting CentOS 8.X...\n"
-	SERVER_OS="CentOS"
-	CENTOS_8="True"
-elif echo $OUTPUT | grep -q "Ubuntu 18.04" ; then
-	echo -e "\nDetecting Ubuntu 18.04...\n"
-	SERVER_OS="Ubuntu"
-elif echo $OUTPUT | grep -q "Ubuntu 20.04" ; then
-	echo -e "\nDetecting Ubuntu 20.04...\n"
-	SERVER_OS="Ubuntu"
-else
-	cat /etc/*release
-	echo -e "\nUnable to detect your OS...\n"
-	echo -e "\nCyberPanel is supported on Ubuntu 18.04, Ubuntu 20.04, CentOS 7.x, CentOS 8.x and CloudLinux 7.x...\n"
-	exit 1
-fi
+	if [[ ! -f /etc/os-release ]] ; then
+	  echo -e "Unable to detect the operating system...\n"
+	  exit
+	fi
+
+	if grep -q -E "CentOS Linux 7|CentOS Linux 8" /etc/os-release ; then
+	  Server_OS="CentOS"
+	elif grep -q "AlmaLinux-8" /etc/os-release ; then
+	  Server_OS="AlmaLinux"
+	elif grep -q -E "CloudLinux 7|CloudLinux 8" /etc/os-release ; then
+	  Server_OS="CloudLinux"
+	elif grep -q -E "Ubuntu 18.04|Ubuntu 20.04|Ubuntu 20.10" /etc/os-release ; then
+	  Server_OS="Ubuntu"
+	elif grep -q -E "Rocky Linux" /etc/os-release ; then
+	  Server_OS="RockyLinux"
+	else
+	  echo -e "Unable to detect your system..."
+	  echo -e "\nCyberPanel is supported on Ubuntu 18.04 x86_64, Ubuntu 20.04 x86_64, Ubuntu 20.10 x86_64, CentOS 7.x, CentOS 8.x, AlmaLinux 8.x, RockyLinux 8.x, CloudLinux 7.x, CloudLinux 8.x...\n"
+	  Debug_Log2 "CyberPanel is supported on Ubuntu 18.04 x86_64, Ubuntu 20.04 x86_64, Ubuntu 20.10 x86_64, CentOS 7.x, CentOS 8.x, AlmaLinux 8.x, RockyLinux 8.x, CloudLinux 7.x, CloudLinux 8.x... [404]"
+	  exit
+	fi
+
+	Server_OS_Version=$(grep VERSION_ID /etc/os-release | awk -F[=,] '{print $2}' | tr -d \" | head -c2 | tr -d . )
+	#to make 20.04 display as 20
+
+	echo -e "System: $Server_OS $Server_OS_Version detected...\n"
+
+	if [[ $Server_OS = "CloudLinux" ]] || [[ "$Server_OS" = "AlmaLinux" ]] || [[ "$Server_OS" = "RockyLinux" ]] ; then
+	  Server_OS="CentOS"
+	  #CloudLinux gives version id like 7.8 , 7.9 , so cut it to show first number only
+	  #treat CL , Rocky and Alma as CentOS
+	fi
+
 }
 
 set_watchdog() {
@@ -97,11 +106,11 @@ SUM=$(md5sum /usr/bin/cyberpanel_utility)
 SUM1=${SUM:0:32}
 #get md5sum of local file
 
-rm -f /tmp/cyberpanel_utility.sh
-wget -q -O /tmp/cyberpanel_utility.sh https://cyberpanel.sh/misc/cyberpanel_utility.sh
+rm -f /usr/local/CyberPanel/cyberpanel_utility.sh
+wget -q -O /usr/local/CyberPanel/cyberpanel_utility.sh https://cyberpanel.sh/misc/cyberpanel_utility.sh
+chmod 600 /usr/local/CyberPanel/cyberpanel_utility.sh
 
-
-SUM=$(md5sum /tmp/cyberpanel_utility.sh)
+SUM=$(md5sum /usr/local/CyberPanel/cyberpanel_utility.sh)
 SUM2=${SUM:0:32}
 #get md5sum of remote file.
 
@@ -109,12 +118,12 @@ if [[ $SUM1 == $SUM2 ]] ; then
 	echo -e "\nCyberPanel Utility Script is up to date...\n"
 else
 	local_string=$(head -2 /usr/bin/cyberpanel_utility)
-	remote_string=$(head -2 /tmp/cyberpanel_utility.sh)
+	remote_string=$(head -2 /usr/local/CyberPanel/cyberpanel_utility.sh)
 	#check file content before replacing itself in case failed to download the file.
 	if [[ $local_string == $remote_string ]] ; then
 	echo -e "\nUpdating CyberPanel Utility Script..."
 	rm -f /usr/bin/cyberpanel_utility
-	mv /tmp/cyberpanel_utility.sh /usr/bin/cyberpanel_utility
+	mv /usr/local/CyberPanel/cyberpanel_utility.sh /usr/bin/cyberpanel_utility
 	chmod 700 /usr/bin/cyberpanel_utility
 	echo -e "\nCyberPanel Utility update compelted..."
 	echo -e "\nPlease execute it again..."
@@ -125,7 +134,7 @@ else
 	fi
 fi
 
-rm -f /tmp/cyberpanel_utility.sh
+rm -f /usr/local/CyberPanel/cyberpanel_utility.sh
 
 }
 
@@ -200,25 +209,25 @@ phpmyadmin_limits() {
 	echo -e "\nPlease note this will also apply to all sites use PHP 7.3"
 	printf "%s" "Please confirm to proceed: [Y/n]: "
 	read TMP_YN
-	if [[ $TMP_YN == "Y" ]] || [[ $TMP_YN == "y" ]] ; then 
-	
-		if [[ "$SERVER_OS" == "CentOS" ]] ; then 
-			php_ini_path="/usr/local/lsws/lsphp73/etc/php.ini"
-		fi 
+	if [[ $TMP_YN == "Y" ]] || [[ $TMP_YN == "y" ]] ; then
 
-		if [[ "$SERVER_OS" == "Ubuntu" ]] ; then 
+		if [[ "$SERVER_OS" == "CentOS" ]] ; then
+			php_ini_path="/usr/local/lsws/lsphp73/etc/php.ini"
+		fi
+
+		if [[ "$SERVER_OS" == "Ubuntu" ]] ; then
 			php_ini_path="/usr/local/lsws/lsphp73/etc/php/7.3/litespeed/php.ini"
-		fi 
+		fi
 			sed -i 's|post_max_size = 8M|post_max_size = 500M|g' $php_ini_path
 			sed -i 's|upload_max_filesize = 2M|upload_max_filesize = 500M |g' $php_ini_path
 			sed -i 's|memory_limit = 128M|memory_limit = 768M|g' $php_ini_path
 			sed -i 's|max_execution_time = 30|max_execution_time = 600|g' $php_ini_path
 			systemctl restart lscpd
 			echo "Change applied..."
-  else 
+  else
 		echo -e "Please enter Y or n."
-		exit 
-	fi 
+		exit
+	fi
 }
 
 install_php_redis() {
