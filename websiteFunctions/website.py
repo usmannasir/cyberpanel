@@ -152,7 +152,7 @@ class WebsiteManager:
             adminEmail = data['adminEmail']
             phpSelection = data['phpSelection']
             packageName = data['package']
-            websiteOwner = data['websiteOwner']
+            websiteOwner = data['websiteOwner'].lower()
 
             loggedUser = Administrator.objects.get(pk=userID)
             newOwner = Administrator.objects.get(userName=websiteOwner)
