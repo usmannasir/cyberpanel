@@ -352,7 +352,7 @@ msgstr ""
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:3
 #: backup/templates/backup/backupSchedule.html:3
-msgid "Schedule Back up - CyberPanel"
+msgid "Schedule Backup - CyberPanel"
 msgstr "Zakazivanje Backupa - CyberPanel"
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:13
@@ -363,7 +363,7 @@ msgstr "Zakazivanje Backupa - CyberPanel"
 #: baseTemplate/templates/baseTemplate/index.html:578
 #: userManagment/templates/userManagment/createACL.html:381
 #: userManagment/templates/userManagment/modifyACL.html:385
-msgid "Schedule Back up"
+msgid "Schedule Backup"
 msgstr "Zakazivanje backupa"
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:16
@@ -373,14 +373,14 @@ msgstr "Zakazivanje backupa"
 #: backup/templates/backup/remoteBackups.html:14
 #: backup/templates/backup/remoteBackups.html:21
 #, fuzzy
-#| msgid "Restore Back up"
+#| msgid "Restore Backup"
 msgid "Remote Backups"
 msgstr "Vrati backup"
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:17
 #: backup/templates/backup/backupSchedule.html:17
 msgid ""
-"On this page you can schedule Back ups to localhost or remote server (If you "
+"On this page you can schedule Backups to localhost or remote server (If you "
 "have added one)."
 msgstr ""
 "Ovdje možete zakazati backupe na localhost ili remote server (ako ste dodali "
@@ -485,7 +485,7 @@ msgstr "Briši"
 
 #: IncBackups/templates/IncBackups/createBackup.html:3
 #, fuzzy
-#| msgid "Create Back up"
+#| msgid "Create Backup"
 msgid "Create Incremental Backup"
 msgstr "Kreiraj backup"
 
@@ -494,7 +494,7 @@ msgstr "Kreiraj backup"
 #: IncBackups/templates/IncBackups/restoreRemoteBackups.html:25
 #: backup/templates/backup/backup.html:4 backup/templates/backup/backup.html:14
 #: backup/templates/backup/backup.html:21
-msgid "Back up Website"
+msgid "Backup Website"
 msgstr "Nazad na sajt"
 
 #: IncBackups/templates/IncBackups/createBackup.html:15
@@ -502,13 +502,13 @@ msgstr "Nazad na sajt"
 #: backup/templates/backup/backup.html:14
 #: backup/templates/backup/restore.html:14
 #, fuzzy
-#| msgid "Back up"
+#| msgid "Backup"
 msgid "Backup Docs"
 msgstr "Backup"
 
 #: IncBackups/templates/IncBackups/createBackup.html:17
 #, fuzzy
-#| msgid "This page can be used to Back up your websites"
+#| msgid "This page can be used to Backup your websites"
 msgid "This page can be used to create incremental backups for your websites."
 msgstr "Ova stranica može poslužiti da napravite Backup vašeg sajta"
 
@@ -540,7 +540,7 @@ msgstr "Odabir sajta"
 #: baseTemplate/templates/baseTemplate/index.html:598
 #: userManagment/templates/userManagment/createACL.html:352
 #: userManagment/templates/userManagment/modifyACL.html:356
-msgid "Create Back up"
+msgid "Create Backup"
 msgstr "Kreiraj backup"
 
 #: IncBackups/templates/IncBackups/createBackup.html:128
@@ -582,25 +582,25 @@ msgstr "FTP funkcije"
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:3
 #: backup/templates/backup/backupDestinations.html:3
 #: backup/templates/backup/backupDestinations.html:14
-msgid "Set up Back up Destinations"
+msgid "Set up Backup Destinations"
 msgstr "Destinacija Backupa"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:14
 #, fuzzy
-#| msgid "Set up Back up Destinations"
-msgid "Set up Incremental Back up Destinations"
+#| msgid "Set up Backup Destinations"
+msgid "Set up Incremental Backup Destinations"
 msgstr "Destinacija Backupa"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:20
 #, fuzzy
-#| msgid "On this page you can set up your Back up destinations. (SFTP)"
-msgid "On this page you can set up your Back up destinations. (SFTP and AWS)"
+#| msgid "On this page you can set up your Backup destinations. (SFTP)"
+msgid "On this page you can set up your Backup destinations. (SFTP and AWS)"
 msgstr "Na ovoj stranici možete podesiti Backup destinacije (SFTP)"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:26
 #, fuzzy
-#| msgid "Set up Back up Destinations"
-msgid "Set up Back up Destinations."
+#| msgid "Set up Backup Destinations"
+msgid "Set up Backup Destinations."
 msgstr "Destinacija Backupa"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:35
@@ -670,13 +670,13 @@ msgstr ""
 #: IncBackups/templates/IncBackups/restoreRemoteBackups.html:3
 #: IncBackups/templates/IncBackups/restoreRemoteBackups.html:13
 #, fuzzy
-#| msgid "Create Back up"
+#| msgid "Create Backup"
 msgid "Restore Remote Incremental Backups"
 msgstr "Kreiraj backup"
 
 #: IncBackups/templates/IncBackups/restoreRemoteBackups.html:19
 #, fuzzy
-#| msgid "This page can be used to Back up your websites"
+#| msgid "This page can be used to Backup your websites"
 msgid ""
 "This page can be used to restore remote incremental backups for your "
 "websites."
@@ -749,7 +749,7 @@ msgid "Reboot SSH Server"
 msgstr ""
 
 #: backup/templates/backup/backup.html:15
-msgid "This page can be used to Back up your websites"
+msgid "This page can be used to Backup your websites"
 msgstr "Ova stranica može poslužiti da napravite Backup vašeg sajta"
 
 #: backup/templates/backup/backup.html:44
@@ -784,7 +784,7 @@ msgstr "Pokrenuto"
 
 #: backup/templates/backup/backup.html:88
 #, fuzzy
-#| msgid "Create Back up"
+#| msgid "Create Backup"
 msgid "Cancel Backup"
 msgstr "Kreiraj backup"
 
@@ -807,11 +807,11 @@ msgid "Successfully Deleted"
 msgstr "Uspješno izbrisan"
 
 #: backup/templates/backup/backupDestinations.html:15
-msgid "On this page you can set up your Back up destinations. (SFTP)"
+msgid "On this page you can set up your Backup destinations. (SFTP)"
 msgstr "Na ovoj stranici možete podesiti Backup destinacije (SFTP)"
 
 #: backup/templates/backup/backupDestinations.html:21
-msgid "Set up Back up Destinations (SSH port should be 22 on backup server)"
+msgid "Set up Backup Destinations (SSH port should be 22 on backup server)"
 msgstr ""
 
 #: backup/templates/backup/backupDestinations.html:68
@@ -915,7 +915,7 @@ msgid "Schedule Added"
 msgstr "Uspješno ste zakazali backup"
 
 #: backup/templates/backup/index.html:3
-msgid "Back up Home - CyberPanel"
+msgid "Backup Home - CyberPanel"
 msgstr "Backup naslovna "
 
 #: backup/templates/backup/index.html:13 backup/templates/backup/index.html:30
@@ -924,11 +924,11 @@ msgstr "Backup naslovna "
 #: baseTemplate/templates/baseTemplate/index.html:561
 #: baseTemplate/templates/baseTemplate/index.html:563
 #: baseTemplate/templates/baseTemplate/index.html:616
-msgid "Back up"
+msgid "Backup"
 msgstr "Backup"
 
 #: backup/templates/backup/index.html:14
-msgid "Back up and restore sites."
+msgid "Backup and restore sites."
 msgstr "Backup i vrati sajtove"
 
 #: backup/templates/backup/index.html:19
@@ -950,8 +950,8 @@ msgstr "Dostupne funkcije"
 
 #: backup/templates/backup/index.html:28
 #, fuzzy
-#| msgid "Back up Website"
-msgid "Back up Site"
+#| msgid "Backup Website"
+msgid "Backup Site"
 msgstr "Nazad na sajt"
 
 #: backup/templates/backup/index.html:44
@@ -959,7 +959,7 @@ msgstr "Nazad na sajt"
 #: baseTemplate/templates/baseTemplate/index.html:601
 #: userManagment/templates/userManagment/createACL.html:361
 #: userManagment/templates/userManagment/modifyACL.html:365
-msgid "Restore Back up"
+msgid "Restore Backup"
 msgstr "Vrati backup"
 
 #: backup/templates/backup/index.html:60 backup/templates/backup/index.html:62
@@ -973,8 +973,8 @@ msgstr "Dodaj / izbriši destinaciju"
 #: userManagment/templates/userManagment/createACL.html:391
 #: userManagment/templates/userManagment/modifyACL.html:395
 #, fuzzy
-#| msgid "Restore Back up"
-msgid "Remote Back ups"
+#| msgid "Restore Backup"
+msgid "Remote Backups"
 msgstr "Vrati backup"
 
 #: backup/templates/backup/remoteBackups.html:3
@@ -985,7 +985,7 @@ msgstr "Kreiraj Nameserver - CyberPanel"
 
 #: backup/templates/backup/remoteBackups.html:14
 #, fuzzy
-#| msgid "Restore Back up"
+#| msgid "Restore Backup"
 msgid "Remote Transfer"
 msgstr "Vrati backup"
 
@@ -1090,8 +1090,8 @@ msgstr "Povrat sajta"
 
 #: backup/templates/backup/restore.html:15
 msgid ""
-"This page can be used to restore your websites, Back up should be generated "
-"from CyberPanel Back up generation tool, it will detect all Back ups under "
+"This page can be used to restore your websites, Backup should be generated "
+"from CyberPanel Backup generation tool, it will detect all Backups under "
 "<strong>/home/backup</strong>."
 msgstr ""
 "Ovdje možete izvršiti povrat sajta nakon backupa, backupovanje je generisano "
@@ -1099,7 +1099,7 @@ msgstr ""
 "strong>"
 
 #: backup/templates/backup/restore.html:30
-msgid "Select Back up"
+msgid "Select Backup"
 msgstr "Odabir backupa"
 
 #: backup/templates/backup/restore.html:61
@@ -1128,7 +1128,7 @@ msgid "Error message:"
 msgstr "Greška: "
 
 #: backup/templates/backup/restore.html:90
-msgid "Site related to this Back up already exists."
+msgid "Site related to this Backup already exists."
 msgstr "Sajt povezan sa backupom već psotoji"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:3
@@ -1732,19 +1732,19 @@ msgid "Add/Delete Destination"
 msgstr "Dodaj / izbriši destinaciju"
 
 #: baseTemplate/templates/baseTemplate/index.html:590
-msgid "Incremental Back up - Beta"
+msgid "Incremental Backup - Beta"
 msgstr ""
 
 #: baseTemplate/templates/baseTemplate/index.html:592
 #, fuzzy
-#| msgid "Create Back up"
-msgid "Incremental Back up"
+#| msgid "Create Backup"
+msgid "Incremental Backup"
 msgstr "Kreiraj backup"
 
 #: baseTemplate/templates/baseTemplate/index.html:598
 #, fuzzy
-#| msgid "Restore Back up"
-msgid "Create/Restore Back up"
+#| msgid "Restore Backup"
+msgid "Create/Restore Backup"
 msgstr "Vrati backup"
 
 #: baseTemplate/templates/baseTemplate/index.html:601
@@ -1755,8 +1755,8 @@ msgstr "Dodaj / izbriši destinaciju"
 
 #: baseTemplate/templates/baseTemplate/index.html:604
 #, fuzzy
-#| msgid "Schedule Back up"
-msgid "Schedule Back ups"
+#| msgid "Schedule Backup"
+msgid "Schedule Backups"
 msgstr "Zakazivanje backupa"
 
 #: baseTemplate/templates/baseTemplate/index.html:607
@@ -2610,9 +2610,9 @@ msgstr "Prvi nameserver"
 
 #: dns/templates/dns/configureDefaultNameServers.html:45
 #, fuzzy
-#| msgid "Second Nameserver (Back up)"
+#| msgid "Second Nameserver (Backup)"
 msgid "Second Nameserver"
-msgstr "Drugi Nameserver (Back up)"
+msgstr "Drugi Nameserver (Backup)"
 
 #: dns/templates/dns/configureDefaultNameServers.html:52
 #, fuzzy
@@ -2663,8 +2663,8 @@ msgid "Create Nameserver - CyberPanel"
 msgstr "Kreiraj Nameserver - CyberPanel"
 
 #: dns/templates/dns/createNameServer.html:62
-msgid "Second Nameserver (Back up)"
-msgstr "Drugi Nameserver (Back up)"
+msgid "Second Nameserver (Backup)"
+msgstr "Drugi Nameserver (Backup)"
 
 #: dns/templates/dns/createNameServer.html:89
 msgid "Nameserver cannot be created. Error message:"
@@ -2863,7 +2863,7 @@ msgstr "Vlasnik"
 
 #: dockerManager/templates/dockerManager/manageImages.html:17
 #, fuzzy
-#| msgid "On this page you can set up your Back up destinations. (SFTP)"
+#| msgid "On this page you can set up your Backup destinations. (SFTP)"
 msgid "On this page you can manage docker images."
 msgstr "Na ovoj stranici možete podesiti Backup destinacije (SFTP)"
 
@@ -3032,7 +3032,7 @@ msgstr ""
 
 #: emailMarketing/templates/emailMarketing/composeMessages.html:14
 #, fuzzy
-#| msgid "On this page you can set up your Back up destinations. (SFTP)"
+#| msgid "On this page you can set up your Backup destinations. (SFTP)"
 msgid "On this page you can compose email message to be sent out later."
 msgstr "Na ovoj stranici možete podesiti Backup destinacije (SFTP)"
 
@@ -4002,7 +4002,7 @@ msgstr ""
 #: emailPremium/templates/emailPremium/SpamAssassin.html:19
 #: firewall/templates/firewall/spamassassin.html:14
 #, fuzzy
-#| msgid "On this page you can set up your Back up destinations. (SFTP)"
+#| msgid "On this page you can set up your Backup destinations. (SFTP)"
 msgid "On this page you can configure SpamAssassin settings."
 msgstr "Na ovoj stranici možete podesiti Backup destinacije (SFTP)"
 
@@ -4354,7 +4354,7 @@ msgstr "Sadašnji paket:"
 
 #: filemanager/templates/filemanager/index.html:138
 #, fuzzy
-#| msgid "Back up"
+#| msgid "Backup"
 msgid "Back"
 msgstr "Backup"
 
@@ -4447,7 +4447,7 @@ msgstr ""
 
 #: filemanager/templates/filemanager/index.html:259
 #, fuzzy
-#| msgid "Create Back up"
+#| msgid "Create Backup"
 msgid "Cancel all"
 msgstr "Kreiraj backup"
 
@@ -4679,7 +4679,7 @@ msgstr ""
 
 #: firewall/templates/firewall/csf.html:14
 #, fuzzy
-#| msgid "On this page you can set up your Back up destinations. (SFTP)"
+#| msgid "On this page you can set up your Backup destinations. (SFTP)"
 msgid ""
 "On this page you can configure CSF (ConfigServer Security and Firewall) "
 "settings."
@@ -4824,7 +4824,7 @@ msgstr ""
 #: firewall/templates/firewall/modSecurity.html:20
 #: firewall/templates/firewall/modSecurity.html:214
 #, fuzzy
-#| msgid "On this page you can set up your Back up destinations. (SFTP)"
+#| msgid "On this page you can set up your Backup destinations. (SFTP)"
 msgid "On this page you can configure ModSecurity settings."
 msgstr "Na ovoj stranici možete podesiti Backup destinacije (SFTP)"
 
@@ -5201,7 +5201,7 @@ msgstr ""
 
 #: mailServer/templates/mailServer/dkimManager.html:14
 #, fuzzy
-#| msgid "This page can be used to Back up your websites"
+#| msgid "This page can be used to Backup your websites"
 msgid "This page can be used to generate and view DKIM keys for Domains"
 msgstr "Ova stranica može poslužiti da napravite Backup vašeg sajta"
 
@@ -6376,7 +6376,7 @@ msgstr "Novi korisnik"
 
 #: userManagment/templates/userManagment/changeUserACL.html:13
 #, fuzzy
-#| msgid "This page can be used to Back up your websites"
+#| msgid "This page can be used to Backup your websites"
 msgid "This page can be used to change ACL for CyberPanel users."
 msgstr "Ova stranica može poslužiti da napravite Backup vašeg sajta"
 
@@ -6605,7 +6605,7 @@ msgstr "Brisanje paketa"
 
 #: userManagment/templates/userManagment/deleteACL.html:13
 #, fuzzy
-#| msgid "This page can be used to Back up your websites"
+#| msgid "This page can be used to Backup your websites"
 msgid "This page can be used to delete ACL."
 msgstr "Ova stranica može poslužiti da napravite Backup vašeg sajta"
 
@@ -6670,7 +6670,7 @@ msgstr ""
 
 #: userManagment/templates/userManagment/modifyACL.html:13
 #, fuzzy
-#| msgid "On this page you can set up your Back up destinations. (SFTP)"
+#| msgid "On this page you can set up your Backup destinations. (SFTP)"
 msgid "On this page you can modify an existing ACL."
 msgstr "Na ovoj stranici možete podesiti Backup destinacije (SFTP)"
 
@@ -7432,8 +7432,8 @@ msgstr ""
 #~ msgstr "Prezime"
 
 #, fuzzy
-#~| msgid "Schedule Back up"
-#~ msgid "Achedule Back up"
+#~| msgid "Schedule Backup"
+#~ msgid "Achedule Backup"
 #~ msgstr "Zakazivanje backupa"
 
 #, fuzzy

@@ -329,7 +329,7 @@ msgstr ""
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:3
 #: backup/templates/backup/backupSchedule.html:3
-msgid "Schedule Back up - CyberPanel"
+msgid "Schedule Backup - CyberPanel"
 msgstr "Agendar Backup - CyberPanel"
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:13
@@ -340,7 +340,7 @@ msgstr "Agendar Backup - CyberPanel"
 #: baseTemplate/templates/baseTemplate/index.html:578
 #: userManagment/templates/userManagment/createACL.html:381
 #: userManagment/templates/userManagment/modifyACL.html:385
-msgid "Schedule Back up"
+msgid "Schedule Backup"
 msgstr "Agendar Backup"
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:16
@@ -355,7 +355,7 @@ msgstr "Backups remotos"
 #: IncBackups/templates/IncBackups/backupSchedule.html:17
 #: backup/templates/backup/backupSchedule.html:17
 msgid ""
-"On this page you can schedule Back ups to localhost or remote server (If you "
+"On this page you can schedule Backups to localhost or remote server (If you "
 "have added one)."
 msgstr ""
 "Nesta página poderá agendar backups para o servidor local ou remoto (Se "
@@ -467,7 +467,7 @@ msgstr "Cancelar Backup"
 #: IncBackups/templates/IncBackups/restoreRemoteBackups.html:25
 #: backup/templates/backup/backup.html:4 backup/templates/backup/backup.html:14
 #: backup/templates/backup/backup.html:21
-msgid "Back up Website"
+msgid "Backup Website"
 msgstr "Fazer backup do Website"
 
 #: IncBackups/templates/IncBackups/createBackup.html:15
@@ -479,7 +479,7 @@ msgstr "Instruções sobre Backup"
 
 #: IncBackups/templates/IncBackups/createBackup.html:17
 #, fuzzy
-#| msgid "This page can be used to Back up your websites"
+#| msgid "This page can be used to Backup your websites"
 msgid "This page can be used to create incremental backups for your websites."
 msgstr "Esta página pode ser usada para fazer backup dos seus websites"
 
@@ -511,7 +511,7 @@ msgstr "Selecionar website"
 #: baseTemplate/templates/baseTemplate/index.html:598
 #: userManagment/templates/userManagment/createACL.html:352
 #: userManagment/templates/userManagment/modifyACL.html:356
-msgid "Create Back up"
+msgid "Create Backup"
 msgstr "Criar Backup"
 
 #: IncBackups/templates/IncBackups/createBackup.html:128
@@ -553,25 +553,25 @@ msgstr "Funções do FTP"
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:3
 #: backup/templates/backup/backupDestinations.html:3
 #: backup/templates/backup/backupDestinations.html:14
-msgid "Set up Back up Destinations"
+msgid "Set up Backup Destinations"
 msgstr "Configurar destinos dos backups"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:14
 #, fuzzy
-#| msgid "Set up Back up Destinations"
-msgid "Set up Incremental Back up Destinations"
+#| msgid "Set up Backup Destinations"
+msgid "Set up Incremental Backup Destinations"
 msgstr "Configurar destinos dos backups"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:20
 #, fuzzy
-#| msgid "On this page you can set up your Back up destinations. (SFTP)"
-msgid "On this page you can set up your Back up destinations. (SFTP and AWS)"
+#| msgid "On this page you can set up your Backup destinations. (SFTP)"
+msgid "On this page you can set up your Backup destinations. (SFTP and AWS)"
 msgstr "Nesta página, pode definir os seus destinos de backups. (SFTP)"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:26
 #, fuzzy
-#| msgid "Set up Back up Destinations"
-msgid "Set up Back up Destinations."
+#| msgid "Set up Backup Destinations"
+msgid "Set up Backup Destinations."
 msgstr "Configurar destinos dos backups"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:35
@@ -647,7 +647,7 @@ msgstr "Cancelar Backup"
 
 #: IncBackups/templates/IncBackups/restoreRemoteBackups.html:19
 #, fuzzy
-#| msgid "This page can be used to Back up your websites"
+#| msgid "This page can be used to Backup your websites"
 msgid ""
 "This page can be used to restore remote incremental backups for your "
 "websites."
@@ -718,7 +718,7 @@ msgid "Reboot SSH Server"
 msgstr ""
 
 #: backup/templates/backup/backup.html:15
-msgid "This page can be used to Back up your websites"
+msgid "This page can be used to Backup your websites"
 msgstr "Esta página pode ser usada para fazer backup dos seus websites"
 
 #: backup/templates/backup/backup.html:44
@@ -774,11 +774,11 @@ msgid "Successfully Deleted"
 msgstr "Apagado com Sucesso"
 
 #: backup/templates/backup/backupDestinations.html:15
-msgid "On this page you can set up your Back up destinations. (SFTP)"
+msgid "On this page you can set up your Backup destinations. (SFTP)"
 msgstr "Nesta página, pode definir os seus destinos de backups. (SFTP)"
 
 #: backup/templates/backup/backupDestinations.html:21
-msgid "Set up Back up Destinations (SSH port should be 22 on backup server)"
+msgid "Set up Backup Destinations (SSH port should be 22 on backup server)"
 msgstr ""
 "Configurar destinos de backup (a porta SSH deve ser 22 no servidor de backup)"
 
@@ -881,7 +881,7 @@ msgid "Schedule Added"
 msgstr "Agendamento Adicionado"
 
 #: backup/templates/backup/index.html:3
-msgid "Back up Home - CyberPanel"
+msgid "Backup Home - CyberPanel"
 msgstr "Backup da página Inicial - CyberPanel"
 
 #: backup/templates/backup/index.html:13 backup/templates/backup/index.html:30
@@ -890,11 +890,11 @@ msgstr "Backup da página Inicial - CyberPanel"
 #: baseTemplate/templates/baseTemplate/index.html:561
 #: baseTemplate/templates/baseTemplate/index.html:563
 #: baseTemplate/templates/baseTemplate/index.html:616
-msgid "Back up"
+msgid "Backup"
 msgstr "Backup"
 
 #: backup/templates/backup/index.html:14
-msgid "Back up and restore sites."
+msgid "Backup and restore sites."
 msgstr "Faça backup e restaure sites."
 
 #: backup/templates/backup/index.html:19
@@ -915,7 +915,7 @@ msgid "Available Functions"
 msgstr "Funções Disponíveis"
 
 #: backup/templates/backup/index.html:28
-msgid "Back up Site"
+msgid "Backup Site"
 msgstr "Efetuar backup do Website"
 
 #: backup/templates/backup/index.html:44
@@ -923,7 +923,7 @@ msgstr "Efetuar backup do Website"
 #: baseTemplate/templates/baseTemplate/index.html:601
 #: userManagment/templates/userManagment/createACL.html:361
 #: userManagment/templates/userManagment/modifyACL.html:365
-msgid "Restore Back up"
+msgid "Restore Backup"
 msgstr "Restaurar Backup"
 
 #: backup/templates/backup/index.html:60 backup/templates/backup/index.html:62
@@ -934,7 +934,7 @@ msgstr "Adcionar/Apagar Destinos"
 #: baseTemplate/templates/baseTemplate/index.html:581
 #: userManagment/templates/userManagment/createACL.html:391
 #: userManagment/templates/userManagment/modifyACL.html:395
-msgid "Remote Back ups"
+msgid "Remote Backups"
 msgstr "Backups remotos"
 
 #: backup/templates/backup/remoteBackups.html:3
@@ -1036,8 +1036,8 @@ msgstr "Restaurar Website"
 
 #: backup/templates/backup/restore.html:15
 msgid ""
-"This page can be used to restore your websites, Back up should be generated "
-"from CyberPanel Back up generation tool, it will detect all Back ups under "
+"This page can be used to restore your websites, Backup should be generated "
+"from CyberPanel Backup generation tool, it will detect all Backups under "
 "<strong>/home/backup</strong>."
 msgstr ""
 "Esta página pode ser usada para restaurar os seus websites, o backup deve "
@@ -1045,7 +1045,7 @@ msgstr ""
 "detectar todos os backups sobre <strong>/home/backup</strong>."
 
 #: backup/templates/backup/restore.html:30
-msgid "Select Back up"
+msgid "Select Backup"
 msgstr "Selecionar Backup"
 
 #: backup/templates/backup/restore.html:61
@@ -1072,7 +1072,7 @@ msgid "Error message:"
 msgstr "Mensagem de erro:"
 
 #: backup/templates/backup/restore.html:90
-msgid "Site related to this Back up already exists."
+msgid "Site related to this Backup already exists."
 msgstr "Já existe um site relacionado com este backup."
 
 #: baseTemplate/templates/baseTemplate/homePage.html:3
@@ -1640,19 +1640,19 @@ msgid "Add/Delete Destination"
 msgstr "Adcionar/Apagar Destino"
 
 #: baseTemplate/templates/baseTemplate/index.html:590
-msgid "Incremental Back up - Beta"
+msgid "Incremental Backup - Beta"
 msgstr ""
 
 #: baseTemplate/templates/baseTemplate/index.html:592
 #, fuzzy
 #| msgid "Cancel Backup"
-msgid "Incremental Back up"
+msgid "Incremental Backup"
 msgstr "Cancelar Backup"
 
 #: baseTemplate/templates/baseTemplate/index.html:598
 #, fuzzy
-#| msgid "Restore Back up"
-msgid "Create/Restore Back up"
+#| msgid "Restore Backup"
+msgid "Create/Restore Backup"
 msgstr "Restaurar Backup"
 
 #: baseTemplate/templates/baseTemplate/index.html:601
@@ -1663,8 +1663,8 @@ msgstr "Adcionar/Apagar Destinos"
 
 #: baseTemplate/templates/baseTemplate/index.html:604
 #, fuzzy
-#| msgid "Schedule Back up"
-msgid "Schedule Back ups"
+#| msgid "Schedule Backup"
+msgid "Schedule Backups"
 msgstr "Agendar Backup"
 
 #: baseTemplate/templates/baseTemplate/index.html:607
@@ -2445,7 +2445,7 @@ msgstr "Primeiro Nameserver"
 
 #: dns/templates/dns/configureDefaultNameServers.html:45
 #, fuzzy
-#| msgid "Second Nameserver (Back up)"
+#| msgid "Second Nameserver (Backup)"
 msgid "Second Nameserver"
 msgstr "Segundo Nameserver (Backup)"
 
@@ -2498,7 +2498,7 @@ msgid "Create Nameserver - CyberPanel"
 msgstr "Criar Nameserver - CyberPanel"
 
 #: dns/templates/dns/createNameServer.html:62
-msgid "Second Nameserver (Back up)"
+msgid "Second Nameserver (Backup)"
 msgstr "Segundo Nameserver (Backup)"
 
 #: dns/templates/dns/createNameServer.html:89
@@ -3759,7 +3759,7 @@ msgstr ""
 #: emailPremium/templates/emailPremium/SpamAssassin.html:19
 #: firewall/templates/firewall/spamassassin.html:14
 #, fuzzy
-#| msgid "On this page you can set up your Back up destinations. (SFTP)"
+#| msgid "On this page you can set up your Backup destinations. (SFTP)"
 msgid "On this page you can configure SpamAssassin settings."
 msgstr "Nesta página, pode definir os seus destinos de backups. (SFTP)"
 
@@ -4085,7 +4085,7 @@ msgstr "Caminho Atual"
 
 #: filemanager/templates/filemanager/index.html:138
 #, fuzzy
-#| msgid "Back up"
+#| msgid "Backup"
 msgid "Back"
 msgstr "Backup"
 
@@ -4174,7 +4174,7 @@ msgstr ""
 
 #: filemanager/templates/filemanager/index.html:259
 #, fuzzy
-#| msgid "Create Back up"
+#| msgid "Create Backup"
 msgid "Cancel all"
 msgstr "Criar Backup"
 
@@ -4392,7 +4392,7 @@ msgstr ""
 
 #: firewall/templates/firewall/csf.html:14
 #, fuzzy
-#| msgid "On this page you can set up your Back up destinations. (SFTP)"
+#| msgid "On this page you can set up your Backup destinations. (SFTP)"
 msgid ""
 "On this page you can configure CSF (ConfigServer Security and Firewall) "
 "settings."
@@ -4533,7 +4533,7 @@ msgstr ""
 #: firewall/templates/firewall/modSecurity.html:20
 #: firewall/templates/firewall/modSecurity.html:214
 #, fuzzy
-#| msgid "On this page you can set up your Back up destinations. (SFTP)"
+#| msgid "On this page you can set up your Backup destinations. (SFTP)"
 msgid "On this page you can configure ModSecurity settings."
 msgstr "Nesta página, pode definir os seus destinos de backups. (SFTP)"
 
@@ -4902,7 +4902,7 @@ msgstr ""
 
 #: mailServer/templates/mailServer/dkimManager.html:14
 #, fuzzy
-#| msgid "This page can be used to Back up your websites"
+#| msgid "This page can be used to Backup your websites"
 msgid "This page can be used to generate and view DKIM keys for Domains"
 msgstr "Esta página pode ser usada para fazer backup dos seus websites"
 
@@ -6371,7 +6371,7 @@ msgstr ""
 
 #: userManagment/templates/userManagment/modifyACL.html:13
 #, fuzzy
-#| msgid "On this page you can set up your Back up destinations. (SFTP)"
+#| msgid "On this page you can set up your Backup destinations. (SFTP)"
 msgid "On this page you can modify an existing ACL."
 msgstr "Nesta página, pode definir os seus destinos de backups. (SFTP)"
 
@@ -7135,8 +7135,8 @@ msgstr ""
 #~ "ocorreu, por favir veja o ficheiro de log principal do CyberPanel."
 
 #, fuzzy
-#~| msgid "Schedule Back up"
-#~ msgid "Achedule Back up"
+#~| msgid "Schedule Backup"
+#~ msgid "Achedule Backup"
 #~ msgstr "Agendar Backup"
 
 #, fuzzy

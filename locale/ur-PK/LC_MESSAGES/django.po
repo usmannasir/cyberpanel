@@ -74,11 +74,11 @@ msgstr ""
 
 #: backup/templates/backup/backup.html:4 backup/templates/backup/backup.html:14
 #: backup/templates/backup/backup.html:21
-msgid "Back up Website"
+msgid "Backup Website"
 msgstr ""
 
 #: backup/templates/backup/backup.html:15
-msgid "This page can be used to Back up your websites"
+msgid "This page can be used to Backup your websites"
 msgstr ""
 
 #: backup/templates/backup/backup.html:30
@@ -135,7 +135,7 @@ msgstr ""
 #: backup/templates/backup/backup.html:81
 #: baseTemplate/templates/baseTemplate/index.html:432
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:552
-msgid "Create Back up"
+msgid "Create Backup"
 msgstr ""
 
 #: backup/templates/backup/backup.html:88
@@ -192,15 +192,15 @@ msgstr ""
 
 #: backup/templates/backup/backupDestinations.html:3
 #: backup/templates/backup/backupDestinations.html:14
-msgid "Set up Back up Destinations"
+msgid "Set up Backup Destinations"
 msgstr ""
 
 #: backup/templates/backup/backupDestinations.html:15
-msgid "On this page you can set up your Back up destinations. (SFTP)"
+msgid "On this page you can set up your Backup destinations. (SFTP)"
 msgstr ""
 
 #: backup/templates/backup/backupDestinations.html:21
-msgid "Set up Back up Destinations (SSH port should be 22 on backup server)"
+msgid "Set up Backup Destinations (SSH port should be 22 on backup server)"
 msgstr ""
 
 #: backup/templates/backup/backupDestinations.html:30
@@ -301,19 +301,19 @@ msgid "Check Connection"
 msgstr ""
 
 #: backup/templates/backup/backupSchedule.html:3
-msgid "Schedule Back up - CyberPanel"
+msgid "Schedule Backup - CyberPanel"
 msgstr ""
 
 #: backup/templates/backup/backupSchedule.html:13
 #: backup/templates/backup/backupSchedule.html:20
 #: baseTemplate/templates/baseTemplate/index.html:435
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:555
-msgid "Schedule Back up"
+msgid "Schedule Backup"
 msgstr ""
 
 #: backup/templates/backup/backupSchedule.html:14
 msgid ""
-"On this page you can schedule Back ups to localhost or remote server (If you "
+"On this page you can schedule Backups to localhost or remote server (If you "
 "have added one)."
 msgstr ""
 
@@ -338,7 +338,7 @@ msgid "Frequency"
 msgstr ""
 
 #: backup/templates/backup/index.html:3
-msgid "Back up Home - CyberPanel"
+msgid "Backup Home - CyberPanel"
 msgstr ""
 
 #: backup/templates/backup/index.html:13 backup/templates/backup/index.html:29
@@ -353,11 +353,11 @@ msgstr ""
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:545
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:547
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:564
-msgid "Back up"
+msgid "Backup"
 msgstr ""
 
 #: backup/templates/backup/index.html:14
-msgid "Back up and restore sites."
+msgid "Backup and restore sites."
 msgstr ""
 
 #: backup/templates/backup/index.html:19
@@ -377,13 +377,13 @@ msgid "Available Functions"
 msgstr ""
 
 #: backup/templates/backup/index.html:27 backup/templates/backup/index.html:43
-msgid "Back up Site"
+msgid "Backup Site"
 msgstr ""
 
 #: backup/templates/backup/index.html:55
 #: baseTemplate/templates/baseTemplate/index.html:433
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:553
-msgid "Restore Back up"
+msgid "Restore Backup"
 msgstr ""
 
 #: backup/templates/backup/index.html:57
@@ -485,13 +485,13 @@ msgstr ""
 
 #: backup/templates/backup/restore.html:15
 msgid ""
-"This page can be used to restore your websites, Back up should be generated "
-"from CyberPanel Back up generation tool, it will detect all Back ups under "
+"This page can be used to restore your websites, Backup should be generated "
+"from CyberPanel Backup generation tool, it will detect all Backups under "
 "<strong>/home/backup</strong>."
 msgstr ""
 
 #: backup/templates/backup/restore.html:30
-msgid "Select Back up"
+msgid "Select Backup"
 msgstr ""
 
 #: backup/templates/backup/restore.html:61
@@ -507,7 +507,7 @@ msgid "Error message:"
 msgstr ""
 
 #: backup/templates/backup/restore.html:90
-msgid "Site related to this Back up already exists."
+msgid "Site related to this Backup already exists."
 msgstr ""
 
 #: baseTemplate/templates/baseTemplate/homePage.html:3
@@ -1059,7 +1059,7 @@ msgstr ""
 
 #: baseTemplate/templates/baseTemplate/index.html:436
 #: baseTemplate/templates/baseTemplate/indexJavaFixed.html:556
-msgid "Remote Back ups"
+msgid "Remote Backups"
 msgstr ""
 
 #: baseTemplate/templates/baseTemplate/index.html:445
@@ -1568,7 +1568,7 @@ msgid "First Nameserver"
 msgstr ""
 
 #: dns/templates/dns/createNameServer.html:55
-msgid "Second Nameserver (Back up)"
+msgid "Second Nameserver (Backup)"
 msgstr ""
 
 #: dns/templates/dns/createNameServer.html:87
