@@ -48,20 +48,20 @@ class vhost:
 
             FNULL = open(os.devnull, 'w')
             if os.path.exists("/etc/lsb-release"):
-                command = '/usr/sbin/adduser --no-create-home --home ' + path + ' --disabled-login --gecos "" ' + virtualHostUser
+                command = f'/usr/sbin/adduser --no-create-home --home {path} --disabled-login --gecos "" {virtualHostUser}'
             else:
-                command = "/usr/sbin/adduser " + virtualHostUser + " -M -d " + path
+                command = f"/usr/sbin/adduser {virtualHostUser} -M -d {path}"
 
             ProcessUtilities.executioner(command)
 
-            command = "/usr/sbin/groupadd " + virtualHostUser
+            command = f"/usr/sbin/groupadd {virtualHostUser}"
             ProcessUtilities.executioner(command)
 
-            command = "/usr/sbin/usermod -a -G " + virtualHostUser + " " + virtualHostUser
+            command = f"/usr/sbin/usermod -a -G {virtualHostUser} {virtualHostUser}"
             ProcessUtilities.executioner(command)
 
         except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [addingUsers]")
+            logging.CyberCPLogFileWriter.writeToFile(f"{str(msg)} [addingUsers]")
 
     @staticmethod
     def createDirectories(path, virtualHostUser, pathHTML, pathLogs, confPath, completePathToConfigFile):
@@ -78,11 +78,11 @@ class vhost:
             try:
                 os.makedirs(path)
 
-                command = "chown " + virtualHostUser + ":" + virtualHostUser + " " + path
+                command = f"chown {virtualHostUser}:{virtualHostUser} {path}"
                 cmd = shlex.split(command)
                 subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
-                command = "chmod 711 " + path
+                command = f"chmod 711 {path}"
                 cmd = shlex.split(command)
                 subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
@@ -99,11 +99,11 @@ class vhost:
                 else:
                     groupName = 'nogroup'
 
-                command = "chown " + virtualHostUser + ":%s " % (groupName) + pathHTML
+                command = f"chown {virtualHostUser}:{groupName} {pathHTML}"
                 cmd = shlex.split(command)
                 subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
-                command = "chmod 750 %s" % (pathHTML)
+                command = f"chmod 750 {pathHTML}"
                 cmd = shlex.split(command)
                 subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
@@ -126,9 +126,9 @@ class vhost:
 
 
                 if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
-                    command = "chmod -R 750 " + pathLogs
+                    command = f"chmod -R 750 {pathLogs}"
                 else:
-                    command = "chmod -R 750 " + pathLogs
+                    command = f"chmod -R 750 {pathLogs}"
 
                 cmd = shlex.split(command)
                 subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
@@ -155,7 +155,7 @@ class vhost:
                 cmd = shlex.split(command)
                 subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
-                command = 'chmod 600 %s' % (completePathToConfigFile)
+                command = f'chmod 600 {completePathToConfigFile}'
                 cmd = shlex.split(command)
                 subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
@@ -175,15 +175,15 @@ class vhost:
 
             FNULL = open(os.devnull, 'w')
 
-            shutil.copy("/usr/local/CyberCP/index.html", "/home/" + virtualHostName + "/public_html/index.html")
+            shutil.copy("/usr/local/CyberCP/index.html", f"/home/{virtualHostName}/public_html/index.html")
 
-            command = "chown " + virtualHostUser + ":" + virtualHostUser + " " + "/home/" + virtualHostName + "/public_html/index.html"
+            command = f"chown {virtualHostUser}:{virtualHostUser} /home/{virtualHostName}/public_html/index.html"
             cmd = shlex.split(command)
             subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
-            vhostPath = vhost.Server_root + "/conf/vhosts"
+            vhostPath = f"{vhost.Server_root}/conf/vhosts"
 
-            command = "chown -R " + "lsadm" + ":" + "lsadm" + " " + vhostPath
+            command = f"chown -R lsadm:lsadm {vhostPath}"
             cmd = shlex.split(command)
             subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
