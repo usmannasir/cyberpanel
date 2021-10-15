@@ -23,6 +23,7 @@ from userManagment.views import submitUserCreation as suc
 from userManagment.views import submitUserDeletion as duc
 # Create your views here.
 
+
 @csrf_exempt
 def verifyConn(request):
     try:
@@ -53,6 +54,7 @@ def verifyConn(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
+
 @csrf_exempt
 def createWebsite(request):
     data = json.loads(request.body)
@@ -68,6 +70,7 @@ def createWebsite(request):
     wm = WebsiteManager()
     return wm.createWebsiteAPI(json.loads(request.body))
 
+
 @csrf_exempt
 def getPackagesListAPI(request):
     data = json.loads(request.body)
@@ -82,9 +85,10 @@ def getPackagesListAPI(request):
         pm = PackagesManager()
         return pm.listPackagesAPI(data)
     else:
-        data_ret = {"status": 0,'error_message': "Could not authorize access to API"}
+        data_ret = {"status": 0, 'error_message': "Could not authorize access to API"}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
+
 
 @csrf_exempt
 def getUserInfo(request):
@@ -132,6 +136,7 @@ def getUserInfo(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
+
 @csrf_exempt
 def changeUserPassAPI(request):
     try:
@@ -160,7 +165,6 @@ def changeUserPassAPI(request):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-
             websiteOwn = Administrator.objects.get(userName=websiteOwner)
             websiteOwn.password = hashPassword.hash_password(ownerPassword)
             websiteOwn.save()
@@ -173,6 +177,7 @@ def changeUserPassAPI(request):
         data_ret = {'changeStatus': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
+
 
 @csrf_exempt
 def submitUserDeletion(request):
@@ -205,6 +210,7 @@ def submitUserDeletion(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
+
 @csrf_exempt
 def changePackageAPI(request):
     try:
@@ -232,7 +238,6 @@ def changePackageAPI(request):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-
             website = Websites.objects.get(domain=websiteName)
             pack = Package.objects.get(packageName=packageName)
 
@@ -247,6 +252,7 @@ def changePackageAPI(request):
         data_ret = {'changePackage': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
+
 
 @csrf_exempt
 def deleteWebsite(request):
@@ -293,6 +299,7 @@ def deleteWebsite(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
+
 @csrf_exempt
 def submitWebsiteStatus(request):
     try:
@@ -324,6 +331,7 @@ def submitWebsiteStatus(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
+
 @csrf_exempt
 def loginAPI(request):
     try:
@@ -348,6 +356,7 @@ def loginAPI(request):
         json_data = json.dumps(data)
         return HttpResponse(json_data)
 
+
 @csrf_exempt
 def fetchSSHkey(request):
     try:
@@ -365,7 +374,7 @@ def fetchSSHkey(request):
 
             if hashPassword.check_password(admin.password, password):
 
-                pubKey = os.path.join("/root",".ssh",'cyberpanel.pub')
+                pubKey = os.path.join("/root", ".ssh", 'cyberpanel.pub')
                 execPath = "cat " + pubKey
                 data = ProcessUtilities.outputExecutioner(execPath)
 
@@ -373,13 +382,13 @@ def fetchSSHkey(request):
                             'status': 1,
                             'pubKeyStatus': 1,
                             'error_message': "None",
-                            'pubKey':data
+                            'pubKey': data
                             }
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
             else:
                 data_ret = {
-                            'status' : 0,
+                            'status': 0,
                             'pubKeyStatus': 0,
                             'error_message': "Could not authorize access to API."
                             }
@@ -387,9 +396,10 @@ def fetchSSHkey(request):
                 return HttpResponse(json_data)
 
     except BaseException as msg:
-        data = {'status' : 0, 'pubKeyStatus': 0,'error_message': str(msg)}
+        data = {'status': 0, 'pubKeyStatus': 0, 'error_message': str(msg)}
         json_data = json.dumps(data)
         return HttpResponse(json_data)
+
 
 @csrf_exempt
 def remoteTransfer(request):
@@ -399,7 +409,6 @@ def remoteTransfer(request):
             data = json.loads(request.body)
             username = data['username']
             password = data['password']
-
 
             admin = Administrator.objects.get(userName=username)
 
@@ -418,7 +427,7 @@ def remoteTransfer(request):
 
                 mailUtilities.checkHome()
                 path = "/home/cyberpanel/accounts-" + str(randint(1000, 9999))
-                writeToFile = open(path,'w')
+                writeToFile = open(path, 'w')
 
                 for items in accountsToTransfer:
                     writeToFile.writelines(items + "\n")
@@ -439,9 +448,10 @@ def remoteTransfer(request):
                 return HttpResponse(json_data)
 
     except BaseException as msg:
-        data = {'transferStatus': 0,'error_message': str(msg)}
+        data = {'transferStatus': 0, 'error_message': str(msg)}
         json_data = json.dumps(data)
         return HttpResponse(json_data)
+
 
 @csrf_exempt
 def fetchAccountsFromRemoteServer(request):
@@ -489,9 +499,10 @@ def fetchAccountsFromRemoteServer(request):
                 return HttpResponse(json_data)
 
     except BaseException as msg:
-        data = {'fetchStatus': 0,'error_message': str(msg)}
+        data = {'fetchStatus': 0, 'error_message': str(msg)}
         json_data = json.dumps(data)
         return HttpResponse(json_data)
+
 
 @csrf_exempt
 def FetchRemoteTransferStatus(request):
@@ -511,9 +522,8 @@ def FetchRemoteTransferStatus(request):
             dir = "/home/backup/transfer-"+str(data['dir'])+"/backup_log"
 
             try:
-                command = "cat "+ dir
+                command = f"cat {dir}"
                 status = ProcessUtilities.outputExecutioner(command)
-
 
                 if hashPassword.check_password(admin.password, password):
 
@@ -527,12 +537,11 @@ def FetchRemoteTransferStatus(request):
                 final_json = json.dumps({'fetchStatus': 1, 'error_message': "None", "status": "Just started.."})
                 return HttpResponse(final_json)
 
-
-
     except BaseException as msg:
-        data = {'fetchStatus': 0,'error_message': str(msg)}
+        data = {'fetchStatus': 0, 'error_message': str(msg)}
         json_data = json.dumps(data)
         return HttpResponse(json_data)
+
 
 @csrf_exempt
 def cancelRemoteTransfer(request):
@@ -550,8 +559,6 @@ def cancelRemoteTransfer(request):
                 return HttpResponse(json_data)
 
             dir = "/home/backup/transfer-"+str(data['dir'])
-
-
 
             if hashPassword.check_password(admin.password, password):
 
@@ -575,11 +582,11 @@ def cancelRemoteTransfer(request):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-
     except BaseException as msg:
         data = {'cancelStatus': 1, 'error_message': str(msg)}
         json_data = json.dumps(data)
         return HttpResponse(json_data)
+
 
 @csrf_exempt
 def cyberPanelVersion(request):
@@ -590,7 +597,6 @@ def cyberPanelVersion(request):
 
             adminUser = data['username']
             adminPass = data['password']
-
 
             admin = Administrator.objects.get(userName=adminUser)
 
@@ -606,8 +612,8 @@ def cyberPanelVersion(request):
                 data_ret = {
                             "getVersion": 1,
                             'error_message': "none",
-                            'currentVersion':Version.currentVersion,
-                            'build':Version.build
+                            'currentVersion': Version.currentVersion,
+                            'build': Version.build
                             }
 
                 json_data = json.dumps(data_ret)
@@ -628,6 +634,7 @@ def cyberPanelVersion(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
+
 @csrf_exempt
 def runAWSBackups(request):
     try:
@@ -640,6 +647,7 @@ def runAWSBackups(request):
             s3.start()
     except BaseException as msg:
         logging.writeToFile(str(msg) + ' [API.runAWSBackups]')
+
 
 @csrf_exempt
 def submitUserCreation(request):
@@ -671,6 +679,7 @@ def submitUserCreation(request):
         data_ret = {'changeStatus': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
+
 
 @csrf_exempt
 def addFirewallRule(request):
@@ -704,6 +713,7 @@ def addFirewallRule(request):
         data_ret = {'submitUserDeletion': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
+
 
 @csrf_exempt
 def deleteFirewallRule(request):

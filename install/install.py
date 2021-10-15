@@ -17,7 +17,7 @@ import stat
 VERSION = '2.1'
 BUILD = 1
 
-char_set = {'small': 'abcdefghijklmnopqrstuvwxyz','nums': '0123456789','big': 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'}
+char_set = {'small': 'abcdefghijklmnopqrstuvwxyz', 'nums': '0123456789', 'big': 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'}
 
 
 def generate_pass(length=14):
@@ -621,8 +621,8 @@ class preFlightsChecks:
 
         clScripts = ['/usr/local/CyberCP/CLScript/panel_info.py', '/usr/local/CyberCP/CLScript/CloudLinuxPackages.py',
                      '/usr/local/CyberCP/CLScript/CloudLinuxUsers.py',
-                     '/usr/local/CyberCP/CLScript/CloudLinuxDomains.py'
-            , '/usr/local/CyberCP/CLScript/CloudLinuxResellers.py', '/usr/local/CyberCP/CLScript/CloudLinuxAdmins.py',
+                     '/usr/local/CyberCP/CLScript/CloudLinuxDomains.py',
+                     '/usr/local/CyberCP/CLScript/CloudLinuxResellers.py', '/usr/local/CyberCP/CLScript/CloudLinuxAdmins.py',
                      '/usr/local/CyberCP/CLScript/CloudLinuxDB.py', '/usr/local/CyberCP/CLScript/UserInfo.py']
 
         for items in clScripts:
@@ -1374,7 +1374,6 @@ imap_folder_list_limit = 0
             logging.InstallLog.writeToFile("FirewallD installed and configured!")
             preFlightsChecks.stdOut("FirewallD installed and configured!")
 
-
         except OSError as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [installFirewalld]")
             return 0
@@ -1654,7 +1653,6 @@ imap_folder_list_limit = 0
 
             logging.InstallLog.writeToFile("LSCPD Daemon Set!")
 
-
         except BaseException as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [setupLSCPDDaemon]")
             return 0
@@ -1895,7 +1893,6 @@ milter_default_action = accept
             command = "systemctl start postfix"
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-
         except BaseException as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [configureOpenDKIM]")
             return 0
@@ -2040,12 +2037,12 @@ milter_default_action = accept
             CentOSPath = '/etc/redhat-release'
 
             if os.path.exists(CentOSPath):
-                    command = 'yum install -y yum-plugin-copr'
-                    preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-                    command = 'yum copr enable -y copart/restic'
-                    preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-                    command = 'yum install -y restic'
-                    preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                command = 'yum install -y yum-plugin-copr'
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                command = 'yum copr enable -y copart/restic'
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                command = 'yum install -y restic'
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             else:
                 command = 'apt-get update -y'
@@ -2185,7 +2182,7 @@ def main():
     logging.InstallLog.writeToFile("Starting CyberPanel installation..,10")
     preFlightsChecks.stdOut("Starting CyberPanel installation..")
 
-    if args.ent == None:
+    if args.ent is None:
         ent = 0
         preFlightsChecks.stdOut("OpenLiteSpeed web server will be installed.")
     else:
@@ -2195,7 +2192,7 @@ def main():
         else:
             preFlightsChecks.stdOut("LiteSpeed Enterprise web server will be installed.")
             ent = 1
-            if args.serial != None:
+            if args.serial is not None:
                 serial = args.serial
                 preFlightsChecks.stdOut("LiteSpeed Enterprise Serial detected: " + serial)
             else:
@@ -2241,12 +2238,12 @@ def main():
                               remotemysql, mysqlhost, mysqldb, mysqluser, mysqlpassword, mysqlport)
     checks.mountTemp()
 
-    if args.port == None:
+    if args.port is None:
         port = "8090"
     else:
         port = args.port
 
-    if args.mysql == None:
+    if args.mysql is None:
         mysql = 'One'
         preFlightsChecks.stdOut("Single MySQL instance version will be installed.")
     else:
@@ -2270,7 +2267,7 @@ def main():
     checks.fix_selinux_issue()
     checks.install_psmisc()
 
-    if args.postfix == None:
+    if args.postfix is None:
         checks.install_postfix_dovecot()
         checks.setup_email_Passwords(installCyberPanel.InstallCyberPanel.mysqlPassword, mysql)
         checks.setup_postfix_dovecot_config(mysql)
@@ -2297,7 +2294,7 @@ def main():
 
     ## Install and Configure OpenDKIM.
 
-    if args.postfix == None:
+    if args.postfix is None:
         checks.installOpenDKIM()
         checks.configureOpenDKIM()
     else:
@@ -2311,22 +2308,22 @@ def main():
     checks.setupPythonWSGI()
     checks.setupLSCPDDaemon()
 
-    if args.redis != None:
+    if args.redis is not None:
         checks.installRedis()
 
-    if args.postfix != None:
+    if args.postfix is not None:
         checks.enableDisableEmail(args.postfix.lower())
     else:
         preFlightsChecks.stdOut("Postfix will be installed and enabled.")
         checks.enableDisableEmail('on')
 
-    if args.powerdns != None:
+    if args.powerdns is not None:
         checks.enableDisableDNS(args.powerdns.lower())
     else:
         preFlightsChecks.stdOut("PowerDNS will be installed and enabled.")
         checks.enableDisableDNS('on')
 
-    if args.ftp != None:
+    if args.ftp is not None:
         checks.enableDisableFTP(args.ftp.lower(), distro)
     else:
         preFlightsChecks.stdOut("Pure-FTPD will be installed and enabled.")

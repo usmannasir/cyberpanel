@@ -21,10 +21,11 @@ from django.utils import translation
 VERSION = '2.1'
 BUILD = 1
 
+
 def verifyLogin(request):
     try:
         userID = request.session['userID']
-        data = {'userID' : userID, 'loginStatus': 1, 'error_message':"None"}
+        data = {'userID': userID, 'loginStatus': 1, 'error_message': "None"}
         json_data = json.dumps(data)
         return HttpResponse(json_data)
     except KeyError:
@@ -83,7 +84,6 @@ def verifyLogin(request):
                     response = HttpResponse()
                     response.set_cookie(settings.LANGUAGE_COOKIE_NAME, user_Language)
 
-
             admin = Administrator.objects.get(userName=username)
 
             if admin.state == 'SUSPENDED':
@@ -100,8 +100,6 @@ def verifyLogin(request):
                     json_data = json.dumps(data)
                     response.write(json_data)
                     return response
-
-
 
             if hashPassword.check_password(admin.password, password):
                 if admin.twoFA:
@@ -142,6 +140,7 @@ def verifyLogin(request):
             data = {'userID': 0, 'loginStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data)
             return HttpResponse(json_data)
+
 
 @ensure_csrf_cookie
 def loadLoginPage(request):
@@ -219,20 +218,20 @@ def loadLoginPage(request):
             token = hashPassword.generateToken('admin', '1234567')
 
             email = 'usman@cyberpersons.com'
-            admin = Administrator(userName="admin", password=password, type=1,email=email,
-                                  firstName="Cyber",lastName="Panel", acl=acl, token=token)
+            admin = Administrator(userName="admin", password=password, type=1, email=email,
+                                  firstName="Cyber", lastName="Panel", acl=acl, token=token)
             admin.save()
 
             vers = version(currentVersion=VERSION, build=BUILD)
             vers.save()
 
-            package = Package(admin=admin, packageName="Default", diskSpace=1000,
-                                  bandwidth=1000, ftpAccounts=1000, dataBases=1000,
-                                  emailAccounts=1000,allowedDomains=20)
+            package = Package(admin=admin, packageName="Default", diskSpace=1000, bandwidth=1000, ftpAccounts=1000,
+                              dataBases=1000, emailAccounts=1000, allowedDomains=20)
             package.save()
             return render(request, 'loginSystem/login.html', {})
         else:
             return render(request, 'loginSystem/login.html', {})
+
 
 @ensure_csrf_cookie
 def logout(request):
@@ -240,4 +239,4 @@ def logout(request):
         del request.session['userID']
         return render(request, 'loginSystem/login.html', {})
     except:
-        return render(request,'loginSystem/login.html',{})
+        return render(request, 'loginSystem/login.html', {})

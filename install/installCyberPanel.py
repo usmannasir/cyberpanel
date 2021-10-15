@@ -74,7 +74,6 @@ class InstallCyberPanel:
                 command = 'yum install -y openlitespeed'
                 install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
-
         else:
             try:
                 try:
@@ -200,7 +199,6 @@ class InstallCyberPanel:
 
             command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp80*'
             os.system(command)
-
 
         elif self.distro == centos:
             command = 'yum -y groupinstall lsphp-all'
@@ -678,7 +676,7 @@ def Main(cwd, mysql, distro, ent, serial=None, port="8090", ftp=None, dns=None, 
 
     mysqlUtilities.createDatabase("cyberpanel", "cyberpanel", InstallCyberPanel.mysqlPassword, publicip)
 
-    if ftp == None:
+    if ftp is None:
         installer.installPureFTPD()
         installer.installPureFTPDConfigurations(mysql)
         installer.startPureFTPD()
@@ -688,7 +686,7 @@ def Main(cwd, mysql, distro, ent, serial=None, port="8090", ftp=None, dns=None, 
             installer.installPureFTPDConfigurations(mysql)
             installer.startPureFTPD()
 
-    if dns == None:
+    if dns is None:
         installer.installPowerDNS()
         installer.installPowerDNSConfigurations(InstallCyberPanel.mysqlPassword, mysql)
         installer.startPowerDNS()
