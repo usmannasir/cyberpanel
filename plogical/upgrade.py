@@ -2,6 +2,8 @@ import os
 import os.path
 import sys
 import argparse
+import pwd
+import grp
 
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
@@ -195,12 +197,17 @@ class Upgrade:
     @staticmethod
     def dockerUsers():
         ### Docker User/group
+        try:
+            pwd.getpwnam('docker')
+        except KeyError:
+            command = "adduser docker"
+            Upgrade.executioner(command, 'adduser docker', 0)
 
-        command = "adduser docker"
-        Upgrade.executioner(command, 'adduser docker', 0)
-
-        command = 'groupadd docker'
-        Upgrade.executioner(command, 'adduser docker', 0)
+        try:
+            grp.getgrnam('docker')
+        except KeyError:
+            command = 'groupadd docker'
+            Upgrade.executioner(command, 'adduser docker', 0)
 
         command = 'usermod -aG docker docker'
         Upgrade.executioner(command, 'adduser docker', 0)
@@ -1852,17 +1859,23 @@ imap_folder_list_limit = 0
             command = 'mv /usr/local/lscp/bin/lscpd-0.3.1 /usr/local/lscp/bin/lscpd'
             Upgrade.executioner(command, command, 0)
 
-            command = 'chmod 755 %s' % (lscpdPath)
+            command = f'chmod 755 {lscpdPath}'
             Upgrade.executioner(command, 'LSCPD Download.', 0)
 
             command = 'yum -y install pcre-devel openssl-devel expat-devel geoip-devel zlib-devel udns-devel which curl'
             Upgrade.executioner(command, 'LSCPD Pre-reqs [two]', 0)
 
-            command = 'adduser lscpd -M -d /usr/local/lscp'
-            Upgrade.executioner(command, 'Add user LSCPD', 0)
+            try:
+                pwd.getpwnam('lscpd')
+            except KeyError:
+                command = 'adduser lscpd -M -d /usr/local/lscp'
+                Upgrade.executioner(command, 'Add user LSCPD', 0)
 
-            command = 'groupadd lscpd'
-            Upgrade.executioner(command, 'Add group LSCPD', 0)
+            try:
+                grp.getgrnam('lscpd')
+            except KeyError:
+                command = 'groupadd lscpd'
+                Upgrade.executioner(command, 'Add group LSCPD', 0)
 
             command = 'usermod -a -G lscpd lscpd'
             Upgrade.executioner(command, 'Add group LSCPD', 0)
