@@ -274,7 +274,7 @@ class Upgrade:
                 Upgrade.cdn)
             Upgrade.executioner(command, 0)
 
-            command = 'unzip /usr/local/CyberCP/public/phpmyadmin.zip -d /usr/local/CyberCP/public/'
+            command = 'unzip -q /usr/local/CyberCP/public/phpmyadmin.zip -d /usr/local/CyberCP/public/'
             Upgrade.executioner(command, 0)
 
             command = 'mv /usr/local/CyberCP/public/phpMyAdmin-*-all-languages /usr/local/CyberCP/public/phpmyadmin'
@@ -525,9 +525,9 @@ imap_folder_list_limit = 0
     @staticmethod
     def setupCLI():
         try:
-
-            command = "ln -s /usr/local/CyberCP/cli/cyberPanel.py /usr/bin/cyberpanel"
-            Upgrade.executioner(command, 'CLI Symlink', 0)
+            if not os.path.exists("/usr/bin/cyberpanel"):
+                command = "ln -s /usr/local/CyberCP/cli/cyberPanel.py /usr/bin/cyberpanel"
+                Upgrade.executioner(command, 'CLI Symlink', 0)
 
             command = "chmod +x /usr/local/CyberCP/cli/cyberPanel.py"
             Upgrade.executioner(command, 'CLI Permissions', 0)
@@ -2000,8 +2000,9 @@ echo $oConfig->Save() ? 'Done' : 'Error';
                      '/usr/local/lsws/conf/modsec.conf', '/usr/local/lsws/conf/httpd.conf']
 
             for items in files:
-                command = 'chmod 644 %s' % (items)
-                Upgrade.executioner(command, 'chown core code', 0)
+                if os.path.exists(items):
+                    command = f'chmod 644 {items}'
+                    Upgrade.executioner(command, 'chmod core code', 0)
 
             impFile = ['/etc/pure-ftpd/pure-ftpd.conf', '/etc/pure-ftpd/pureftpd-pgsql.conf',
                        '/etc/pure-ftpd/pureftpd-mysql.conf', '/etc/pure-ftpd/pureftpd-ldap.conf',
@@ -2009,8 +2010,8 @@ echo $oConfig->Save() ? 'Done' : 'Error';
                        '/etc/powerdns/pdns.conf']
 
             for items in impFile:
-                command = 'chmod 600 %s' % (items)
-                Upgrade.executioner(command, 'chown core code', 0)
+                command = f'chmod 600 {items}'
+                Upgrade.executioner(command, 'chmod core code', 0)
 
             command = 'chmod 640 /etc/postfix/*.cf'
             subprocess.call(command, shell=True)
