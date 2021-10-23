@@ -564,11 +564,9 @@ class preFlightsChecks:
         command = "chown root:cyberpanel /usr/local/CyberCP/CyberCP/settings.py"
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-        files = ['/etc/yum.repos.d/MariaDB.repo', '/etc/pdns/pdns.conf', '/etc/systemd/system/lscpd.service',
-                 '/etc/pure-ftpd/pure-ftpd.conf', '/etc/pure-ftpd/pureftpd-pgsql.conf',
-                 '/etc/pure-ftpd/pureftpd-mysql.conf', '/etc/pure-ftpd/pureftpd-ldap.conf',
-                 '/etc/dovecot/dovecot.conf', '/usr/local/lsws/conf/httpd_config.xml',
-                 '/usr/local/lsws/conf/modsec.conf', '/usr/local/lsws/conf/httpd.conf']
+        files = ['/etc/yum.repos.d/MariaDB.repo', '/etc/systemd/system/lscpd.service',
+                 '/usr/local/lsws/conf/httpd_config.xml', '/usr/local/lsws/conf/modsec.conf',
+                 '/usr/local/lsws/conf/httpd.conf']
 
         for items in files:
             command = 'chmod 644 %s' % (items)
