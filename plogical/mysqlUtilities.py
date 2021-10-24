@@ -596,7 +596,7 @@ password=%s
     @staticmethod
     def restartMySQL():
         try:
-            command = 'sudo systemctl restart mysql'
+            command = 'sudo systemctl restart mariadb'
             ProcessUtilities.executioner(command)
 
             return 1, None

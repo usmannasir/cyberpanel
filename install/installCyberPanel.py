@@ -295,7 +295,8 @@ class InstallCyberPanel:
             if self.distro == cent8 or self.distro == ubuntu:
                 command = 'systemctl start mariadb'
             else:
-                command = "systemctl start mysql"
+                command = "systemctl start mariadb"
+
             install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
             ############## Enable mariadb at system startup ######################
@@ -337,7 +338,7 @@ class InstallCyberPanel:
         except IOError as err:
             self.stdOut("[ERROR] Error in setting: " + fileName + ": " + str(err), 1, 1, os.EX_OSERR)
 
-        os.system('systemctl restart mysql')
+        os.system('systemctl restart mariadb')
 
         self.stdOut("MariaDB is now setup so it can support Cyberpanel's needs")
 
