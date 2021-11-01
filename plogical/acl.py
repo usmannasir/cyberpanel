@@ -796,9 +796,16 @@ class ACLManager:
                      'localhost4.localdomain4', 'localhost6.localdomain6','mail.com', 'mail.ru', 'me.com',
                      'microsoft.com', 'mxlogic.net', 'outlook.com', 'protonmail.com', 'twitter.com', 'yandex.ru']
 
+        DotsCounter = domain.count('.')
+
         for black in BlackList:
-            if domain.endswith(black):
-                return 0
+            if DotsCounter == 1:
+                if domain == black:
+                    return 0
+            else:
+                if domain.endswith(black):
+                    logging.writeToFile(black)
+                    return 0
 
         return 1
 
