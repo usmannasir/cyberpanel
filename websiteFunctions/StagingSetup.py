@@ -110,6 +110,14 @@ class StagingSetup(multi.Thread):
 
             logging.statusWriter(tempStatusPath, 'Domain successfully created..,15')
 
+            ### Get table prefix of master site
+
+            command = '%s -d error_reporting=0 /usr/bin/wp config get table_prefix --allow-root --skip-plugins --skip-themes --path=%s' % (
+            FinalPHPPath, masterPath)
+            TablePrefix = ProcessUtilities.outputExecutioner(command).rstrip('\n')
+
+            ###
+
             ## Creating WP Site and setting Database
 
             command = '%s -d error_reporting=0 /usr/bin/wp core download --path=%s' % (FinalPHPPath, path)
@@ -122,6 +130,11 @@ class StagingSetup(multi.Thread):
             command = '%s -d error_reporting=0 /usr/bin/wp core config --dbname=%s --dbuser=%s --dbpass=%s --dbhost=%s:%s --path=%s' % (FinalPHPPath, dbNameRestore, dbUser, dbPassword, ApplicationInstaller.LOCALHOST, ApplicationInstaller.PORT, path)
             ProcessUtilities.executioner(command, website.externalApp)
 
+            ### Set table prefix
+
+            command = '%s -d error_reporting=0 /usr/bin/wp config set table_prefix %s --path=%s' % (FinalPHPPath, TablePrefix , path)
+            ProcessUtilities.executioner(command, website.externalApp)
+
             ## Exporting and importing database
 
             command = '%s -d error_reporting=0 /usr/bin/wp --allow-root --skip-plugins --skip-themes --path=%s db export %s/dbexport-stage.sql' % (FinalPHPPath, masterPath, path)
@@ -131,6 +144,7 @@ class StagingSetup(multi.Thread):
 
             command = '%s -d error_reporting=0 /usr/bin/wp --allow-root --skip-plugins --skip-themes --path=%s --quiet db import %s/dbexport-stage.sql' % (FinalPHPPath, path, path)
             ProcessUtilities.executioner(command)
+
 
             try:
                 command = 'rm -f %s/dbexport-stage.sql' % (path)
