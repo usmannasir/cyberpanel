@@ -892,7 +892,7 @@ class backupUtilities:
 
                 if VERSION == '2.1' and int(BUILD) >= 1:
 
-                    logging.CyberCPLogFileWriter.writeToFile('Backup version 2.1.1 detected..')
+                    logging.CyberCPLogFileWriter.writeToFile('Backup version 2.1.1+ detected..')
 
                     first = 1
 
