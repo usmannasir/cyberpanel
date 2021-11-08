@@ -228,9 +228,27 @@ def loadLoginPage(request):
             package = Package(admin=admin, packageName="Default", diskSpace=1000, bandwidth=1000, ftpAccounts=1000,
                               dataBases=1000, emailAccounts=1000, allowedDomains=20)
             package.save()
-            return render(request, 'loginSystem/login.html', {})
+
+            ### Load Custom CSS
+            try:
+                from baseTemplate.models import CyberPanelCosmetic
+                cosmetic = CyberPanelCosmetic.objects.get(pk=1)
+            except:
+                from baseTemplate.models import CyberPanelCosmetic
+                cosmetic = CyberPanelCosmetic()
+                cosmetic.save()
+
+            return render(request, 'loginSystem/login.html', {'cosmetic': cosmetic})
         else:
-            return render(request, 'loginSystem/login.html', {})
+            ### Load Custom CSS
+            try:
+                from baseTemplate.models import CyberPanelCosmetic
+                cosmetic = CyberPanelCosmetic.objects.get(pk=1)
+            except:
+                from baseTemplate.models import CyberPanelCosmetic
+                cosmetic = CyberPanelCosmetic()
+                cosmetic.save()
+            return render(request, 'loginSystem/login.html', {'cosmetic': cosmetic})
 
 
 @ensure_csrf_cookie
