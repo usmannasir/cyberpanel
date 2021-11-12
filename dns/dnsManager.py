@@ -277,6 +277,9 @@ class DNSManager:
 
             json_data = json_data + ']'
             final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": json_data})
+
+            updateSoaSerial(zoneDomain=zoneDomain, userID=userID)
+
             return HttpResponse(final_json)
 
         except BaseException as msg:
