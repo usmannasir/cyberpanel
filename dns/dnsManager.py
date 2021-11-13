@@ -174,6 +174,9 @@ class DNSManager:
 
             record = Records.objects.get(name=zoneDomain, type='SOA')
 
+            if(not bool(record)):
+                raise OtherException('No SOA record found')
+
             serialPattern = re.compile('(.*?\s.*?)\s(.*?\s)(.*)')
             currentSerial = serialPattern.match(record.content).group(2)
             currentSerial = int(currentSerial)
@@ -277,8 +280,6 @@ class DNSManager:
 
             json_data = json_data + ']'
             final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": json_data})
-
-            updateSoaSerial(zoneDomain=zoneDomain, userID=userID)
 
             return HttpResponse(final_json)
 
@@ -451,6 +452,9 @@ class DNSManager:
 
             final_dic = {'status': 1, 'add_status': 1, 'error_message': "None"}
             final_json = json.dumps(final_dic)
+            
+            self.updateSoaSerial(zoneDomain=zoneDomain, userID=userID)
+
             return HttpResponse(final_json)
 
         except BaseException as msg:
@@ -497,6 +501,9 @@ class DNSManager:
 
             final_dic = {'status': 1, 'error_message': "None"}
             final_json = json.dumps(final_dic)
+
+            self.updateSoaSerial(zoneDomain=zoneDomain, userID=userID)
+
             return HttpResponse(final_json)
 
         except BaseException as msg:
@@ -527,6 +534,10 @@ class DNSManager:
 
             final_dic = {'status': 1, 'delete_status': 1, 'error_message': "None"}
             final_json = json.dumps(final_dic)
+
+            self.updateSoaSerial(zoneDomain=zoneDomain, userID=userID)
+            
+
             return HttpResponse(final_json)
 
         except BaseException as msg:
