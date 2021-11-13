@@ -1,5 +1,17 @@
 name: sync2gitee
-on: [push, pull_request,create,delete]
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - '**'
+  create:
+    branches:
+      - '**'
+  delete:
+    branches:    
+      - '**' 
 jobs:
   repo-sync:
     env:
