@@ -1854,10 +1854,7 @@ class WebsiteManager:
         try:
             statusFile = data['statusFile']
 
-            if (statusFile[:18] != "/home/cyberpanel/." or statusFile[:16] == "/home/cyberpanel" or statusFile[:4] == '/tmp' or statusFile[
-                                                                                     :18] == '/usr/local/CyberCP') \
-                    and statusFile != '/usr/local/CyberCP/CyberCP/settings.py' and statusFile.find(
-                '..') == -1 and statusFile != '/home/cyberpanel/.my.cnf' and statusFile != '/home/cyberpanel/.bashrc' and statusFile != '/home/cyberpanel/.bash_logout' and statusFile != '/home/cyberpanel/.profile':
+            if ACLManager.CheckStatusFilleLoc(statusFile):
                 pass
             else:
                 data_ret = {'abort': 1, 'installStatus': 0, 'installationProgress': "100",

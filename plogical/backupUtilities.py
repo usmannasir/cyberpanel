@@ -284,18 +284,16 @@ class backupUtilities:
 
             ## /home/example.com/backup/backup-example.com-02.13.2018_10-24-52/meta.xml -- metaPath
 
-            metaPath = '%s/%s' % (tempStoragePath, str(randint(1000, 9999)))
+            metaPath = '/tmp/%s' % (str(randint(1000, 9999)))
 
             if os.path.exists(ProcessUtilities.debugPath):
                 logging.CyberCPLogFileWriter.writeToFile(f'Path to meta file {metaPath}')
 
             xmlpretty = prettify(metaFileXML).encode('ascii', 'ignore')
-            # metaFile = open(metaPath, 'w')
-            # metaFile.write(xmlpretty.decode())
-            # metaFile.close()
-            #os.chmod(metaPath, 0o600)
-
-            MetaContent = xmlpretty.decode()
+            metaFile = open(metaPath, 'w')
+            metaFile.write(xmlpretty.decode())
+            metaFile.close()
+            os.chmod(metaPath, 0o600)
 
             ## meta generated
 
@@ -1999,11 +1997,11 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
             return 0
 
 
-        # command = 'chown %s:%s %s' % (website.externalApp, website.externalApp, result[2])
-        # ProcessUtilities.executioner(command)
+        command = 'chown %s:%s %s' % (website.externalApp, website.externalApp, result[2])
+        ProcessUtilities.executioner(command)
 
-        #logging.CyberCPLogFileWriter.writeToFile(backupPath)
-        #logging.CyberCPLogFileWriter.writeToFile(tempStoragePath)
+        logging.CyberCPLogFileWriter.writeToFile(backupPath)
+        logging.CyberCPLogFileWriter.writeToFile(tempStoragePath)
 
         execPath = "sudo nice -n 10 /usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
         execPath = execPath + " startBackup --tempStoragePath " + tempStoragePath + " --backupName " \

@@ -340,8 +340,7 @@ def get_backup_status(request):
         else:
             return ACLManager.loadErrorJson('fetchStatus', 0)
 
-        if (status[:16] == "/home/cyberpanel" or status[:4] == '/tmp' or status[:18] == '/usr/local/CyberCP') \
-                and status != '/usr/local/CyberCP/CyberCP/settings.py' and status.find('..') == -1:
+        if ACLManager.CheckStatusFilleLoc(status):
             pass
         else:
             data_ret = {'abort': 1, 'installStatus': 0, 'installationProgress': "100",
