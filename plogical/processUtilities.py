@@ -102,17 +102,29 @@ class ProcessUtilities(multi.Thread):
             logging.writeToFile(str(msg) + "[stopLitespeed]")
 
     @staticmethod
-    def normalExecutioner(command, shell=False):
+    def normalExecutioner(command, shell=False, User=None):
         try:
-            if os.path.exists(ProcessUtilities.debugPath):
-                logging.writeToFile(command)
 
             f = open(os.devnull, 'w')
 
-            if shell == False:
-                res = subprocess.call(shlex.split(command), stdout=f, stderr=f)
+            if User == None:
+                if shell == False:
+                    res = subprocess.call(shlex.split(command), stdout=f, stderr=f)
+                else:
+                    res = subprocess.call(command, shell=shell, stdout=f, stderr=f)
             else:
-                res = subprocess.call(command, shell=shell, stdout=f, stderr=f)
+                if command.find('export') > -1:
+                    pass
+                elif command.find('sudo') == -1:
+                    command = 'sudo -u %s %s' % (User, command)
+
+                if shell == False:
+                    res = subprocess.call(shlex.split(command), stdout=f, stderr=f)
+                else:
+                    res = subprocess.call(command, shell=shell, stdout=f, stderr=f)
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.writeToFile(command)
 
             if res == 0:
                 return 1
@@ -254,7 +266,7 @@ class ProcessUtilities(multi.Thread):
     def executioner(command, user=None, shell=False):
         try:
             if getpass.getuser() == 'root':
-                ProcessUtilities.normalExecutioner(command, shell)
+                ProcessUtilities.normalExecutioner(command, shell, user)
                 return 1
 
             ret = ProcessUtilities.sendCommand(command, user)

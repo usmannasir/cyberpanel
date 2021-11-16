@@ -284,16 +284,18 @@ class backupUtilities:
 
             ## /home/example.com/backup/backup-example.com-02.13.2018_10-24-52/meta.xml -- metaPath
 
-            metaPath = '/tmp/%s' % (str(randint(1000, 9999)))
+            metaPath = '%s/%s' % (tempStoragePath, str(randint(1000, 9999)))
 
             if os.path.exists(ProcessUtilities.debugPath):
                 logging.CyberCPLogFileWriter.writeToFile(f'Path to meta file {metaPath}')
 
             xmlpretty = prettify(metaFileXML).encode('ascii', 'ignore')
-            metaFile = open(metaPath, 'w')
-            metaFile.write(xmlpretty.decode())
-            metaFile.close()
-            os.chmod(metaPath, 0o600)
+            # metaFile = open(metaPath, 'w')
+            # metaFile.write(xmlpretty.decode())
+            # metaFile.close()
+            #os.chmod(metaPath, 0o600)
+
+            MetaContent = xmlpretty.decode()
 
             ## meta generated
 
@@ -302,7 +304,6 @@ class backupUtilities:
                                     size=0, status=1)
                 newBackup.save()
 
-                logging.CyberCPLogFileWriter.statusWriter(status, 'Meta data is ready..')
                 command = f"echo 'Meta data is ready..' > {status}"
                 ProcessUtilities.executioner(command, website.externalApp)
 
@@ -400,7 +401,7 @@ class backupUtilities:
         os.remove(pidFile)
 
     @staticmethod
-    def BackupRoot(tempStoragePath, backupName, backupPath, metaPath=None):
+    def BackupRoot(tempStoragePath, backupName, backupPath, metaPath=None, externalApp = None):
 
         pidFile = '%sBackupRoot' % (backupPath)
 
@@ -473,12 +474,16 @@ class backupUtilities:
         if os.path.islink(status) or os.path.islink(tempStoragePath or os.path.islink(backupPath)) or os.path.islink(
                 metaPath):
             logging.CyberCPLogFileWriter.writeToFile('symlinked.')
-            logging.CyberCPLogFileWriter.statusWriter(status, 'Symlink attack. [365][5009]')
+            #logging.CyberCPLogFileWriter.statusWriter(status, 'Symlink attack. [365][5009]')
             return 0
 
         ## backup email accounts
 
-        logging.CyberCPLogFileWriter.statusWriter(status, "Backing up email accounts..\n")
+        if externalApp == None:
+            logging.CyberCPLogFileWriter.statusWriter(status, "Backing up email accounts..\n")
+        else:
+            command = f"echo 'Backing up email accounts..' > {status}"
+            ProcessUtilities.executioner(command, externalApp)
 
         try:
 
@@ -491,7 +496,11 @@ class backupUtilities:
 
             ## shutil.make_archive. Creating final package.
 
-            logging.CyberCPLogFileWriter.statusWriter(status, "Preparing final compressed package..\n")
+            if externalApp == None:
+                logging.CyberCPLogFileWriter.statusWriter(status, "Preparing final compressed package..\n")
+            else:
+                command = f"echo 'Preparing final compressed package..' > {status}"
+                ProcessUtilities.executioner(command, externalApp, True)
 
             make_archive(os.path.join(backupPath, backupName), 'gztar', tempStoragePath)
             rmtree(tempStoragePath)
@@ -518,10 +527,20 @@ class backupUtilities:
             command = 'chmod 600 %s' % (os.path.join(backupPath, backupName + ".tar.gz"))
             ProcessUtilities.executioner(command)
 
-            logging.CyberCPLogFileWriter.statusWriter(status, "Completed\n")
+            if externalApp == None:
+                logging.CyberCPLogFileWriter.statusWriter(status, "Completed\n")
+            else:
+                command = f"echo 'Completed' > {status}"
+                ProcessUtilities.executioner(command, externalApp, True)
+
             os.remove(pidFile)
         except BaseException as msg:
             logging.CyberCPLogFileWriter.statusWriter(status, '%s. [511:BackupRoot][[5009]]\n' % str(msg))
+            if externalApp == None:
+                logging.CyberCPLogFileWriter.statusWriter(status, '%s. [511:BackupRoot][[5009]]\n')
+            else:
+                command = f"echo '%s. [511:BackupRoot][[5009]]' > {status}"
+                ProcessUtilities.executioner(command, externalApp)
 
     @staticmethod
     def initiateBackup(tempStoragePath, backupName, backupPath):
@@ -1980,11 +1999,11 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
             return 0
 
 
-        command = 'chown %s:%s %s' % (website.externalApp, website.externalApp, result[2])
-        ProcessUtilities.executioner(command)
+        # command = 'chown %s:%s %s' % (website.externalApp, website.externalApp, result[2])
+        # ProcessUtilities.executioner(command)
 
-        logging.CyberCPLogFileWriter.writeToFile(backupPath)
-        logging.CyberCPLogFileWriter.writeToFile(tempStoragePath)
+        #logging.CyberCPLogFileWriter.writeToFile(backupPath)
+        #logging.CyberCPLogFileWriter.writeToFile(tempStoragePath)
 
         execPath = "sudo nice -n 10 /usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
         execPath = execPath + " startBackup --tempStoragePath " + tempStoragePath + " --backupName " \
@@ -2025,8 +2044,8 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
 
         execPath = "sudo nice -n 10 /usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
         execPath = execPath + " BackupRoot --tempStoragePath " + tempStoragePath + " --backupName " \
-                   + backupName + " --backupPath " + backupPath + ' --backupDomain ' + backupDomain + ' --metaPath %s' % (
-                       result[2])
+                   + backupName + " --backupPath " + backupPath + ' --backupDomain ' + backupDomain + ' --metaPath %s --externalApp %s' % (
+                       result[2], website.externalApp)
 
         ProcessUtilities.executioner(execPath, 'root')
 
@@ -2148,6 +2167,7 @@ def main():
     ## FOR S3
 
     parser.add_argument('--planName', help='')
+    parser.add_argument('--externalApp', help='')
 
 
     args = parser.parse_args()
@@ -2165,7 +2185,7 @@ def main():
     elif args.function == "startBackup":
         backupUtilities.startBackup(args.tempStoragePath, args.backupName, args.backupPath, args.metaPath)
     elif args.function == "BackupRoot":
-        backupUtilities.BackupRoot(args.tempStoragePath, args.backupName, args.backupPath, args.metaPath)
+        backupUtilities.BackupRoot(args.tempStoragePath, args.backupName, args.backupPath, args.metaPath, args.externalApp)
     elif args.function == 'CloudBackup':
         extraArgs = {}
         extraArgs['domain'] = args.backupDomain

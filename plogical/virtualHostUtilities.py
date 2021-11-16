@@ -273,6 +273,8 @@ class virtualHostUtilities:
 
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Website successfully created. [200]')
 
+            logging.CyberCPLogFileWriter.writeToFile ("hello world [createVirtualHost]")
+
             return 1, 'None'
 
         except BaseException as msg:
