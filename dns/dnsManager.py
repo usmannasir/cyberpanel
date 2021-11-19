@@ -158,6 +158,48 @@ class DNSManager:
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
+    def updateSoaSerial(self, userID = None, zoneDomain = None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+
+            if ACLManager.currentContextPermission(currentACL, 'addDeleteRecords') == 0:
+                return ACLManager.loadErrorJson('add_status', 0)
+
+            admin = Administrator.objects.get(pk=userID)
+            if ACLManager.checkOwnershipZone(zoneDomain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson()
+
+            record = Records.objects.get(name=zoneDomain, type='SOA')
+
+            if(not bool(record)):
+                raise OtherException('No SOA record found')
+
+            serialPattern = re.compile('(.*?\s.*?)\s(.*?\s)(.*)')
+            currentSerial = serialPattern.match(record.content).group(2)
+            currentSerial = int(currentSerial)
+            currentSerial += 1
+
+            record.content = serialPattern.sub(f"\\1 {currentSerial} \\3", record.content)
+
+            if ACLManager.VerifyRecordOwner(currentACL, record, zoneDomain) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson()
+
+            record.save()
+
+            final_dic = {'status': 1, 'error_message': "None"}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+        except BaseException as msg:
+            final_dic = {'status': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
     def addDeleteDNSRecords(self, request = None, userID = None):
         currentACL = ACLManager.loadedACL(userID)
 
@@ -409,6 +451,9 @@ class DNSManager:
 
             final_dic = {'status': 1, 'add_status': 1, 'error_message': "None"}
             final_json = json.dumps(final_dic)
+            
+            self.updateSoaSerial(zoneDomain=zoneDomain, userID=userID)
+
             return HttpResponse(final_json)
 
         except BaseException as msg:
@@ -455,6 +500,9 @@ class DNSManager:
 
             final_dic = {'status': 1, 'error_message': "None"}
             final_json = json.dumps(final_dic)
+
+            self.updateSoaSerial(zoneDomain=zoneDomain, userID=userID)
+
             return HttpResponse(final_json)
 
         except BaseException as msg:
@@ -485,6 +533,9 @@ class DNSManager:
 
             final_dic = {'status': 1, 'delete_status': 1, 'error_message': "None"}
             final_json = json.dumps(final_dic)
+
+            self.updateSoaSerial(zoneDomain=zoneDomain, userID=userID)
+
             return HttpResponse(final_json)
 
         except BaseException as msg:
