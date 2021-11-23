@@ -212,7 +212,6 @@ def populate_current_records(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
-
 def remove_destination(request):
     try:
         user_id, current_acl = _get_user_acl(request)
@@ -239,7 +238,6 @@ def remove_destination(request):
         final_dic = {'destStatus': 0, 'error_message': str(msg)}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
-
 
 def fetch_current_backups(request):
     try:
@@ -286,7 +284,6 @@ def fetch_current_backups(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
-
 def submit_backup_creation(request):
     try:
         user_id, current_acl = _get_user_acl(request)
@@ -324,7 +321,6 @@ def submit_backup_creation(request):
         final_dic = {'status': 0, 'metaStatus': 0, 'error_message': str(msg)}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
-
 
 def get_backup_status(request):
     try:
@@ -389,7 +385,6 @@ def get_backup_status(request):
         logging.writeToFile(str(msg) + " [backupStatus]")
         return HttpResponse(final_json)
 
-
 def delete_backup(request):
     try:
         user_id, current_acl = _get_user_acl(request)
@@ -418,7 +413,6 @@ def delete_backup(request):
         final_dic = {'destStatus': 0, 'error_message': str(msg)}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
-
 
 def fetch_restore_points(request):
     try:

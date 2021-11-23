@@ -69,12 +69,12 @@ class IncJobs(multi.Thread):
             path = '/home/backup/%s' % (self.website)
             command = 'export RESTIC_PASSWORD=%s PATH=${PATH}:/usr/bin && restic -r %s:%s snapshots' % (
                 self.passwordFile, self.backupDestinations, path)
-            return ProcessUtilities.outputExecutioner(command).split('\n')
+            return ProcessUtilities.outputExecutioner(command, self.externalApp).split('\n')
         else:
             key, secret = self.getAWSData()
             command = 'export RESTIC_PASSWORD=%s AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s  && restic -r s3:s3.amazonaws.com/%s snapshots' % (
                 self.passwordFile, key, secret, self.website)
-            return ProcessUtilities.outputExecutioner(command).split('\n')
+            return ProcessUtilities.outputExecutioner(command, self.externalApp).split('\n')
 
     def fetchCurrentBackups(self):
         try:
@@ -152,7 +152,7 @@ class IncJobs(multi.Thread):
                 # If /home/%s/backup-exclude.conf file exists lets pass this to restic by appending the command to end.
                 if os.path.isfile(backupExcludesFile):
                     command = command + resticBackupExcludeCMD
-                result = ProcessUtilities.outputExecutioner(command)
+                result = ProcessUtilities.outputExecutioner(command, self.externalApp)
 
                 if result.find('saved') == -1:
                     logging.statusWriter(self.statusPath, '%s. [5009].' % (result), 1)
@@ -181,7 +181,7 @@ class IncJobs(multi.Thread):
                         self.passwordFile,
                         key, secret, self.website, snapshotID, self.restoreTarget)
 
-                    result = ProcessUtilities.outputExecutioner(command)
+                    result = ProcessUtilities.outputExecutioner(command, self.externalApp)
 
                     if result.find('restoring') == -1:
                         logging.statusWriter(self.statusPath, 'Failed: %s. [5009]' % (result), 1)
@@ -195,7 +195,7 @@ class IncJobs(multi.Thread):
                     command = 'export AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s  && restic -r s3:s3.amazonaws.com/%s forget %s --password-file %s' % (
                         key, secret, self.website, snapshotID, self.passwordFile)
 
-                    result = ProcessUtilities.outputExecutioner(command)
+                    result = ProcessUtilities.outputExecutioner(command, self.externalApp)
 
                     if result.find('removed snapshot') > -1 or result.find('deleted') > -1:
                         pass
@@ -206,7 +206,7 @@ class IncJobs(multi.Thread):
                     command = 'export AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s  && restic -r s3:s3.amazonaws.com/%s prune --password-file %s' % (
                         key, secret, self.website, self.passwordFile)
 
-                    ProcessUtilities.outputExecutioner(command)
+                    ProcessUtilities.outputExecutioner(command, self.externalApp)
                 else:
                     self.backupDestinations = self.jobid.destination
 
@@ -215,15 +215,13 @@ class IncJobs(multi.Thread):
                     command = 'export AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s  && restic -r s3:s3.amazonaws.com/%s restore %s --password-file %s --target %s' % (
                         key, secret, self.website, snapshotID, self.passwordFile, self.restoreTarget)
 
-                    result = ProcessUtilities.outputExecutioner(command)
+                    result = ProcessUtilities.outputExecutioner(command, self.externalApp)
 
                     if result.find('restoring') == -1:
                         logging.statusWriter(self.statusPath, 'Failed: %s. [5009]' % (result), 1)
                         return 0
 
                 return 1
-
-
         except BaseException as msg:
             logging.statusWriter(self.statusPath, "%s [88][5009]" % (str(msg)), 1)
             return 0
@@ -242,7 +240,7 @@ class IncJobs(multi.Thread):
             # If /home/%s/backup-exclude.conf file exists lets pass this to restic by appending the command to end.
             if os.path.isfile(backupExcludesFile):
                 command = command + resticBackupExcludeCMD
-            result = ProcessUtilities.outputExecutioner(command)
+            result = ProcessUtilities.outputExecutioner(command, self.externalApp)
 
             if result.find('saved') == -1:
                 logging.statusWriter(self.statusPath, '%s. [5009].' % (result), 1)
@@ -265,7 +263,7 @@ class IncJobs(multi.Thread):
             repoLocation = '/home/%s/incbackup' % (self.website)
 
             command = 'restic -r %s forget %s --password-file %s' % (repoLocation, self.jobid.snapshotid, self.passwordFile)
-            result = ProcessUtilities.outputExecutioner(command)
+            result = ProcessUtilities.outputExecutioner(command, self.externalApp)
 
             if result.find('removed snapshot') > -1 or result.find('deleted') > -1:
                 pass
@@ -274,7 +272,7 @@ class IncJobs(multi.Thread):
                 return 0
 
             command = 'restic -r %s prune --password-file %s' % (repoLocation, self.passwordFile)
-            ProcessUtilities.outputExecutioner(command)
+            ProcessUtilities.outputExecutioner(command, self.externalApp)
 
             return 1
         else:
@@ -282,7 +280,7 @@ class IncJobs(multi.Thread):
             command = 'restic -r %s restore %s --target %s --password-file %s' % (
                 repoLocation, self.jobid.snapshotid, self.restoreTarget, self.passwordFile)
 
-            result = ProcessUtilities.outputExecutioner(command)
+            result = ProcessUtilities.outputExecutioner(command, self.externalApp)
 
             if result.find('restoring') == -1:
                 logging.statusWriter(self.statusPath, 'Failed: %s. [5009]' % (result), 1)
@@ -303,7 +301,7 @@ class IncJobs(multi.Thread):
             # If /home/%s/backup-exclude.conf file exists lets pass this to restic by appending the command to end.
             if os.path.isfile(backupExcludesFile):
                 command = command + resticBackupExcludeCMD
-            result = ProcessUtilities.outputExecutioner(command)
+            result = ProcessUtilities.outputExecutioner(command, self.externalApp)
 
             if result.find('saved') == -1:
                 logging.statusWriter(self.statusPath, '%s. [5009].' % (result), 1)
@@ -325,7 +323,7 @@ class IncJobs(multi.Thread):
             repoLocation = '/home/backup/%s' % (self.website)
             command = 'export PATH=${PATH}:/usr/bin && restic -r %s:%s forget %s --password-file %s' % (
                 self.jobid.destination, repoLocation, self.jobid.snapshotid, self.passwordFile)
-            result = ProcessUtilities.outputExecutioner(command)
+            result = ProcessUtilities.outputExecutioner(command, self.externalApp)
 
             if result.find('removed snapshot') > -1 or result.find('deleted') > -1:
                 pass
@@ -334,14 +332,14 @@ class IncJobs(multi.Thread):
                 return 0
 
             command = 'export PATH=${PATH}:/usr/bin && restic -r %s:%s prune --password-file %s' % (self.jobid.destination, repoLocation, self.passwordFile)
-            ProcessUtilities.outputExecutioner(command)
+            ProcessUtilities.outputExecutioner(command, self.externalApp)
         else:
             if self.reconstruct == 'remote':
                 repoLocation = '/home/backup/%s' % (self.website)
                 command = 'export RESTIC_PASSWORD=%s PATH=${PATH}:/usr/bin && restic -r %s:%s restore %s --target %s' % (
                     self.passwordFile,
                     self.backupDestinations, repoLocation, self.jobid, self.restoreTarget)
-                result = ProcessUtilities.outputExecutioner(command)
+                result = ProcessUtilities.outputExecutioner(command, self.externalApp)
                 if result.find('restoring') == -1:
                     logging.statusWriter(self.statusPath, 'Failed: %s. [5009]' % (result), 1)
                     return 0
@@ -349,7 +347,7 @@ class IncJobs(multi.Thread):
                 repoLocation = '/home/backup/%s' % (self.website)
                 command = 'export PATH=${PATH}:/usr/bin && restic -r %s:%s restore %s --target %s --password-file %s' % (
                     self.jobid.destination, repoLocation, self.jobid.snapshotid, self.restoreTarget, self.passwordFile)
-                result = ProcessUtilities.outputExecutioner(command)
+                result = ProcessUtilities.outputExecutioner(command, self.externalApp)
                 if result.find('restoring') == -1:
                     logging.statusWriter(self.statusPath, 'Failed: %s. [5009]' % (result), 1)
                     return 0
@@ -502,6 +500,10 @@ class IncJobs(multi.Thread):
             jobid = self.extraArgs['jobid']
             self.reconstruct = self.extraArgs['reconstruct']
 
+            WebsiteObject = Websites.objects.get(domain=self.website)
+
+            self.externalApp = WebsiteObject.externalApp
+
             if self.reconstruct == 'remote':
 
                 self.findRestorePath()
@@ -588,7 +590,6 @@ class IncJobs(multi.Thread):
 
             ## Use the meta function from backup utils for future improvements.
 
-
             if os.path.exists(ProcessUtilities.debugPath):
                 logging.writeToFile('Creating meta for %s. [IncBackupsControl.py]' % (self.website.domain))
 
@@ -600,8 +601,12 @@ class IncJobs(multi.Thread):
             if status == 1:
                 logging.statusWriter(self.statusPath, 'Meta data is ready..', 1)
                 metaPathNew = '/home/%s/meta.xml' % (self.website.domain)
-                command = 'mv %s %s' % (metaPath, metaPathNew)
+
+                command = 'chown %s:%s %s' % (self.externalApp, self.externalApp, metaPath)
                 ProcessUtilities.executioner(command)
+
+                command = 'mv %s %s' % (metaPath, metaPathNew)
+                ProcessUtilities.executioner(command, self.externalApp)
                 return 1
             else:
                 logging.statusWriter(self.statusPath, "%s [544][5009]" % (message), 1)
@@ -720,7 +725,7 @@ class IncJobs(multi.Thread):
 
             if self.backupDestinations == 'local':
                 command = 'restic init --repo %s --password-file %s' % (self.repoPath, self.passwordFile)
-                result = ProcessUtilities.outputExecutioner(command)
+                result = ProcessUtilities.outputExecutioner(command, self.externalApp)
 
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.writeToFile(result)
@@ -732,7 +737,7 @@ class IncJobs(multi.Thread):
                 remotePath = '/home/backup/%s' % (self.website.domain)
                 command = 'export PATH=${PATH}:/usr/bin && restic init --repo %s:%s --password-file %s' % (
                     self.backupDestinations, remotePath, self.passwordFile)
-                result = ProcessUtilities.outputExecutioner(command)
+                result = ProcessUtilities.outputExecutioner(command, self.externalApp)
 
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.writeToFile(result)
@@ -743,7 +748,7 @@ class IncJobs(multi.Thread):
                 key, secret = self.getAWSData()
                 command = 'export AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s  && restic -r s3:s3.amazonaws.com/%s init --password-file %s' % (
                     key, secret, self.website.domain, self.passwordFile)
-                result = ProcessUtilities.outputExecutioner(command)
+                result = ProcessUtilities.outputExecutioner(command, self.externalApp)
 
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.writeToFile(result)
@@ -820,6 +825,7 @@ Subject: %s
         ## Restic check completed.
 
         self.website = Websites.objects.get(domain=website)
+        self.externalApp = self.website.externalApp
 
         self.jobid = IncJob(website=self.website)
         self.jobid.save()
@@ -828,13 +834,16 @@ Subject: %s
 
         self.repoPath = '/home/%s/incbackup' % (self.website.domain)
 
-        if not os.path.exists(self.passwordFile):
+        command = 'ls -la %s' % (self.passwordFile)
+        output = ProcessUtilities.outputExecutioner(command, self.externalApp)
+
+        if output.find('No such file or directory') > -1:
             password = randomPassword.generate_pass()
             command = 'echo "%s" > %s' % (password, self.passwordFile)
-            ProcessUtilities.executioner(command, self.website.externalApp, True)
+            ProcessUtilities.executioner(command, self.externalApp, True)
 
             command = 'chmod 600 %s' % (self.passwordFile)
-            ProcessUtilities.executioner(command)
+            ProcessUtilities.executioner(command, self.externalApp)
 
             self.sendEmail(password)
 
@@ -868,7 +877,7 @@ Subject: %s
 
         try:
             command = 'rm -f %s' % (metaPathNew)
-            ProcessUtilities.executioner(command)
+            #ProcessUtilities.executioner(command)
         except BaseException as msg:
             logging.statusWriter(self.statusPath,
                                  'Failed to delete meta file: %s. [IncJobs.createBackup.591]' % str(msg), 1)
@@ -887,6 +896,7 @@ Subject: %s
             ### Fetch the website name from JobSnapshot object and set these variable as they are needed in called functions below
 
             self.website = job_snapshots[0].job.website.domain
+            self.externalApp = job_snapshots[0].job.website.externalApp
             self.passwordFile = '/home/%s/%s' % (self.website, self.website)
 
             for job_snapshot in job_snapshots:
