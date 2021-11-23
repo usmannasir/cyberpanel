@@ -119,7 +119,7 @@ class IncJobs(multi.Thread):
             return 1
         else:
             if self.jobid.type[:8] == 'database':
-                self.restoreTarget = '/home/cyberpanel/'
+                self.restoreTarget = '/usr/local/CyberCP/tmp/'
             elif self.jobid.type[:4] == 'data':
                 self.restoreTarget = '/home/'
             elif self.jobid.type[:5] == 'email':
@@ -399,7 +399,7 @@ class IncJobs(multi.Thread):
                 ##
 
                 if mysqlUtilities.mysqlUtilities.restoreDatabaseBackup(self.path.split('/')[-1].rstrip('.sql'),
-                                                                       '/home/cyberpanel', 'dummy', 'dummy') == 0:
+                                                                       '/usr/local/CyberCP/tmp', 'dummy', 'dummy') == 0:
                     raise BaseException
             else:
 
@@ -413,15 +413,17 @@ class IncJobs(multi.Thread):
                     if self.awsFunction('restore', '', self.jobid.snapshotid) == 0:
                         return 0
 
+
                 if mysqlUtilities.mysqlUtilities.restoreDatabaseBackup(self.jobid.type.split(':')[1].rstrip('.sql'),
-                                                                       '/home/cyberpanel', 'dummy', 'dummy') == 0:
+                                                                       '/home/%s' % (self.website), 'dummy', 'dummy') == 0:
                     raise BaseException('Can not restore database backup.')
 
             try:
                 if self.reconstruct == 'remote':
-                    os.remove('/home/cyberpanel/%s' % (self.path.split('/')[-1]))
+                    os.remove('/usr/local/CyberCP/tmp/%s' % (self.path.split('/')[-1]))
                 else:
-                    os.remove('/home/cyberpanel/%s.sql' % (self.jobid.type.split(':')[1]))
+                    os.remove('/usr/local/CyberCP/tmp/%s.sql' % (self.jobid.type.split(':')[1]))
+                    os.remove('/home/%s/%s.sql' % (self.website.domain, self.jobid.type.split(':')[1]))
             except BaseException as msg:
                 logging.writeToFile(str(msg))
 
@@ -646,23 +648,44 @@ class IncJobs(multi.Thread):
 
             for items in databases:
 
-                if mysqlUtilities.mysqlUtilities.createDatabaseBackup(items.dbName, '/home/cyberpanel') == 0:
+                ###
+
+                UploadPath = '/usr/local/CyberCP/tmp'
+
+                if not os.path.exists(UploadPath):
+                    command = 'mkdir %s' % (UploadPath)
+                    ProcessUtilities.executioner(command)
+
+                command = 'chown cyberpanel:cyberpanel %s' % (UploadPath)
+                ProcessUtilities.executioner(command)
+
+                command = 'chmod 711 %s' % (UploadPath)
+                ProcessUtilities.executioner(command)
+
+                ###
+
+                if mysqlUtilities.mysqlUtilities.createDatabaseBackup(items.dbName, UploadPath) == 0:
                     return 0
 
-                dbPath = '/home/cyberpanel/%s.sql' % (items.dbName)
+                dbPath = '%s/%s.sql' % (UploadPath, items.dbName)
+                dbPathNew = '/home/%s/%s.sql' % (self.website.domain, items.dbName)
+
+                command = 'cp %s %s' % (dbPath, dbPathNew)
+                ProcessUtilities.executioner(command, self.externalApp)
 
                 if self.backupDestinations == 'local':
-                    if self.localFunction(dbPath, 'database') == 0:
+                    if self.localFunction(dbPathNew, 'database') == 0:
                         return 0
                 elif self.backupDestinations[:4] == 'sftp':
-                    if self.sftpFunction(dbPath, 'database') == 0:
+                    if self.sftpFunction(dbPathNew, 'database') == 0:
                         return 0
                 else:
-                    if self.awsFunction('backup', dbPath, '', 'database') == 0:
+                    if self.awsFunction('backup', dbPathNew, '', 'database') == 0:
                         return 0
 
                 try:
-                    os.remove('/home/cyberpanel/%s.sql' % (items.dbName))
+                    os.remove('/usr/local/CyberCP/tmp/%s.sql' % (items.dbName))
+                    os.remove(dbPathNew)
                 except BaseException as msg:
                     logging.statusWriter(self.statusPath,
                                          'Failed to delete database: %s. [IncJobs.backupDatabases.456]' % str(msg), 1)
@@ -851,8 +874,6 @@ Subject: %s
 
         if self.initiateRepo() == 0:
             return 0
-
-
 
         if self.prepareBackupMeta() == 0:
             return 0
