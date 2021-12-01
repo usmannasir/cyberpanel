@@ -457,6 +457,8 @@ class cPanelImporter:
                         zone = Domains(admin=admin, name=topLevelDomain, type="NATIVE")
                         zone.save()
                 except:
+                    zone = Domains(admin=admin, name=topLevelDomain, type="NATIVE")
+                    zone.save()
                     pass
 
                 content = "ns1." + topLevelDomain + " hostmaster." + topLevelDomain + " 1 10800 3600 604800 3600"
