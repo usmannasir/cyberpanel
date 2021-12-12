@@ -1112,9 +1112,16 @@ if ! grep -q "pid_max" /etc/rc.local 2>/dev/null ; then
     echo 1 > /sys/kernel/mm/ksm/run" >>/etc/rc.d/rc.local
     chmod +x /etc/rc.d/rc.local
   else
+    if [[ -f /etc/rc.local ]] ; then 
+      echo -e "#!/bin/bash\n$(cat /etc/rc.local)" > /etc/rc.local
+    else 
+      echo "#!/bin/bash" > /etc/rc.local
+    fi 
     echo "echo 1000000 > /proc/sys/kernel/pid_max
     echo 1 > /sys/kernel/mm/ksm/run" >>/etc/rc.local
     chmod +x /etc/rc.local
+    systemctl enable rc-local  >/dev/null 2>&1
+    systemctl start rc-local  >/dev/null 2>&1
   fi
 	if grep -q "nf_conntrack_max" /etc/sysctl.conf ; then
     sysctl -w net.netfilter.nf_conntrack_max=2097152 > /dev/null
