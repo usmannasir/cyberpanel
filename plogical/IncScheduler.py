@@ -764,8 +764,21 @@ Automatic backup failed for %s on %s.
 
                 if website.package.enforceDiskLimits:
                     if config['DiskUsagePercentage'] >= 100:
-                        command = 'chattr -R +i /home/%s/public_html/' % (website.domain)
+                        command = 'chattr -R +i /home/%s/' % (website.domain)
                         ProcessUtilities.executioner(command)
+                        
+                        command = 'chattr -R -i /home/%s/logs/' % (website.domain)
+                        ProcessUtilities.executioner(command)
+                        
+                        command = 'chattr -R -i /home/%s/.trash/' % (website.domain)
+                        ProcessUtilities.executioner(command)
+                        
+                        command = 'chattr -R -i /home/%s/backup/' % (website.domain)
+                        ProcessUtilities.executioner(command)
+                        
+                        command = 'chattr -R -i /home/%s/incbackup/' % (website.domain)
+                        ProcessUtilities.executioner(command)
+                        
                     else:
                         command = 'chattr -R -i /home/%s/public_html/' % (website.domain)
                         ProcessUtilities.executioner(command)
