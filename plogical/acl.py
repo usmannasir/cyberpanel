@@ -820,4 +820,16 @@ class ACLManager:
         else:
             return 0
 
+    @staticmethod
+    def FetchExternalApp(domain):
+        try:
+            childDomain = ChildDomains.objects.get(domain=domain)
+
+            return childDomain.master.externalApp
+
+        except:
+            domainName = Websites.objects.get(domain=domain)
+            return domainName.externalApp
+
+
 
