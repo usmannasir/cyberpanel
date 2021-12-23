@@ -387,6 +387,7 @@ def get_backup_status(request):
 
 def delete_backup(request):
     try:
+
         user_id, current_acl = _get_user_acl(request)
         admin = Administrator.objects.get(pk=user_id)
         data = json.loads(request.body)
