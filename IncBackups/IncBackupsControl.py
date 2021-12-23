@@ -291,6 +291,7 @@ class IncJobs(multi.Thread):
     ## Last argument delete is set when the snapshot is to be deleted from this repo, when this argument is set, any preceding argument is not used
 
     def sftpFunction(self, backupPath, type, restore=None, delete=None):
+        return 0
         if restore == None:
             # Define our excludes file for use with restic
             backupExcludesFile = '/home/%s/backup-exclude.conf' % (self.website.domain)
