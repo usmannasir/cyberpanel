@@ -77,7 +77,7 @@ phpIniOverride  {
 }
 
 module cache {
- storagePath $VH_ROOT/lscache
+ storagePath /usr/local/lsws/cachedata/$VH_NAME
 }
 
 rewrite  {
@@ -127,7 +127,7 @@ phpIniOverride  {
 }
 
 module cache {
- storagePath $VH_ROOT/lscache
+ storagePath /usr/local/lsws/cachedata/$VH_NAME
 }
 
 errorpage 403 {
