@@ -2156,6 +2156,10 @@ echo $oConfig->Save() ? 'Done' : 'Error';
                 command = 'yum install lsphp80* -y'
                 subprocess.call(command, shell=True)
 
+            if Upgrade.installedOutput.find('lsphp80') == -1:
+                command = 'yum install lsphp81* -y'
+                subprocess.call(command, shell=True)
+
         except:
             command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install ' \
                       'lsphp7? lsphp7?-common lsphp7?-curl lsphp7?-dev lsphp7?-imap lsphp7?-intl lsphp7?-json ' \
@@ -2164,6 +2168,9 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             Upgrade.executioner(command, 'Install PHP 73, 0')
 
             command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp80*'
+            os.system(command)
+
+            command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp81*'
             os.system(command)
 
         CentOSPath = '/etc/redhat-release'
