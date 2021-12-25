@@ -2156,7 +2156,7 @@ echo $oConfig->Save() ? 'Done' : 'Error';
                 command = 'yum install lsphp80* -y'
                 subprocess.call(command, shell=True)
 
-            if Upgrade.installedOutput.find('lsphp80') == -1:
+            if Upgrade.installedOutput.find('lsphp81') == -1:
                 command = 'yum install lsphp81* -y'
                 subprocess.call(command, shell=True)
 
