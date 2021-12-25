@@ -20,15 +20,7 @@ from .models import IncJob, JobSnapshots
 from websiteFunctions.models import Websites
 import plogical.randomPassword as randomPassword
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
-from xml.etree.ElementTree import Element, SubElement
-from xml.etree import ElementTree
-from xml.dom import minidom
-from backup.models import DBUsers
 import plogical.mysqlUtilities as mysqlUtilities
-from plogical.backupUtilities import backupUtilities
-from plogical.dnsUtilities import DNS
-from mailServer.models import Domains as eDomains
-from random import randint
 import json
 from django.shortcuts import HttpResponse
 
@@ -806,105 +798,112 @@ Subject: %s
 
     def createBackup(self):
 
-        self.statusPath = self.extraArgs['tempPath']
-        website = self.extraArgs['website']
-        self.backupDestinations = self.extraArgs['backupDestinations']
-        websiteData = self.extraArgs['websiteData']
-        websiteEmails = self.extraArgs['websiteEmails']
-        websiteDatabases = self.extraArgs['websiteDatabases']
-
-        ### Checking if restic is installed before moving on
-
-        command = 'restic'
-
-        if ProcessUtilities.outputExecutioner(command).find('restic is a backup program which') == -1:
-            try:
-
-                CentOSPath = '/etc/redhat-release'
-
-                if os.path.exists(CentOSPath):
-                        command = 'yum install -y yum-plugin-copr'
-                        ProcessUtilities.executioner(command)
-                        command = 'yum copr enable -y copart/restic'
-                        ProcessUtilities.executioner(command)
-                        command = 'yum install -y restic'
-                        ProcessUtilities.executioner(command)
-
-                else:
-                    command = 'apt-get update -y'
-                    ProcessUtilities.executioner(command)
-
-                    command = 'apt-get install restic -y'
-                    ProcessUtilities.executioner(command)
-
-            except:
-                logging.statusWriter(self.statusPath,
-                                     'It seems restic is not installed, for incremental backups to work '
-                                     'restic must be installed. You can manually install restic using this '
-                                     'guide -> https://go.cyberpanel.net/restic. [5009]', 1)
-                pass
-
-            return 0
-
-        ## Restic check completed.
-
-        self.website = Websites.objects.get(domain=website)
-        self.externalApp = self.website.externalApp
-
-        self.jobid = IncJob(website=self.website)
-        self.jobid.save()
-
-        self.passwordFile = '/home/%s/%s' % (self.website.domain, self.website.domain)
-
-        self.repoPath = '/home/%s/incbackup' % (self.website.domain)
-
-        command = 'ls -la %s' % (self.passwordFile)
-        output = ProcessUtilities.outputExecutioner(command, self.externalApp)
-
-        if output.find('No such file or directory') > -1:
-            password = randomPassword.generate_pass()
-            command = 'echo "%s" > %s' % (password, self.passwordFile)
-            ProcessUtilities.executioner(command, self.externalApp, True)
-
-            command = 'chmod 600 %s' % (self.passwordFile)
-            ProcessUtilities.executioner(command, self.externalApp)
-
-            self.sendEmail(password)
-
-        ## Completed password generation
-
-        if self.initiateRepo() == 0:
-            return 0
-
-        if self.prepareBackupMeta() == 0:
-            return 0
-
-        if websiteData:
-            if self.backupData() == 0:
-                return 0
-
-        if websiteDatabases:
-            if self.backupDatabases() == 0:
-                return 0
-
-        if websiteEmails:
-            if self.emailBackup() == 0:
-                return 0
-
-        ## Backup job done
-
-        self.metaBackup()
-
-        metaPathNew = '/home/%s/meta.xml' % (self.website.domain)
-
         try:
-            command = 'rm -f %s' % (metaPathNew)
-            #ProcessUtilities.executioner(command)
+
+            self.statusPath = self.extraArgs['tempPath']
+            website = self.extraArgs['website']
+            self.backupDestinations = self.extraArgs['backupDestinations']
+            websiteData = self.extraArgs['websiteData']
+            websiteEmails = self.extraArgs['websiteEmails']
+            websiteDatabases = self.extraArgs['websiteDatabases']
+
+            ### Checking if restic is installed before moving on
+
+            command = 'restic'
+
+            if ProcessUtilities.outputExecutioner(command).find('restic is a backup program which') == -1:
+                try:
+
+                    CentOSPath = '/etc/redhat-release'
+
+                    if os.path.exists(CentOSPath):
+                            command = 'yum install -y yum-plugin-copr'
+                            ProcessUtilities.executioner(command)
+                            command = 'yum copr enable -y copart/restic'
+                            ProcessUtilities.executioner(command)
+                            command = 'yum install -y restic'
+                            ProcessUtilities.executioner(command)
+
+                    else:
+                        command = 'apt-get update -y'
+                        ProcessUtilities.executioner(command)
+
+                        command = 'apt-get install restic -y'
+                        ProcessUtilities.executioner(command)
+
+                except:
+                    logging.statusWriter(self.statusPath,
+                                         'It seems restic is not installed, for incremental backups to work '
+                                         'restic must be installed. You can manually install restic using this '
+                                         'guide -> https://go.cyberpanel.net/restic. [5009]', 1)
+                    pass
+
+                return 0
+
+            ## Restic check completed.
+
+            self.website = Websites.objects.get(domain=website)
+            self.externalApp = self.website.externalApp
+
+            self.jobid = IncJob(website=self.website)
+            self.jobid.save()
+
+            self.passwordFile = '/home/%s/%s' % (self.website.domain, self.website.domain)
+
+            self.repoPath = '/home/%s/incbackup' % (self.website.domain)
+
+            command = 'ls -la %s' % (self.passwordFile)
+            output = ProcessUtilities.outputExecutioner(command, self.externalApp)
+
+            if output.find('No such file or directory') > -1:
+                password = randomPassword.generate_pass()
+                command = 'echo "%s" > %s' % (password, self.passwordFile)
+                ProcessUtilities.executioner(command, self.externalApp, True)
+
+                command = 'chmod 600 %s' % (self.passwordFile)
+                ProcessUtilities.executioner(command, self.externalApp)
+
+                self.sendEmail(password)
+
+            ## Completed password generation
+
+            if self.initiateRepo() == 0:
+                return 0
+
+            if self.prepareBackupMeta() == 0:
+                return 0
+
+            if websiteData:
+                if self.backupData() == 0:
+                    return 0
+
+            if websiteDatabases:
+                if self.backupDatabases() == 0:
+                    return 0
+
+            if websiteEmails:
+                if self.emailBackup() == 0:
+                    return 0
+
+            ## Backup job done
+
+            self.metaBackup()
+
+            metaPathNew = '/home/%s/meta.xml' % (self.website.domain)
+
+            try:
+                command = 'rm -f %s' % (metaPathNew)
+                ProcessUtilities.executioner(command)
+            except BaseException as msg:
+                logging.statusWriter(self.statusPath,
+                                     'Failed to delete meta file: %s. [IncJobs.createBackup.591]' % str(msg), 1)
+
+            logging.statusWriter(self.statusPath, 'Completed', 1)
+
         except BaseException as msg:
             logging.statusWriter(self.statusPath,
-                                 'Failed to delete meta file: %s. [IncJobs.createBackup.591]' % str(msg), 1)
+                                 'Failed to create incremental backup: %s. [5009][IncJobs.createBackup.913]' % str(msg), 1)
 
-        logging.statusWriter(self.statusPath, 'Completed', 1)
 
     ### Delete Snapshot
 

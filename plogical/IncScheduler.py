@@ -31,9 +31,9 @@ try:
     from plogical.processUtilities import ProcessUtilities
 except:
     pass
+import threading as multi
 
-
-class IncScheduler():
+class IncScheduler(multi.Thread):
     logPath = '/home/cyberpanel/incbackuplogs'
     gitFolder = '/home/cyberpanel/git'
 
@@ -45,6 +45,15 @@ class IncScheduler():
     allSites = 'allSites'
     currentStatus = 'currentStatus'
     lastRun = 'lastRun'
+
+    def __init__(self, function, extraArgs):
+        multi.Thread.__init__(self)
+        self.function = function
+        self.data = extraArgs
+
+    def run(self):
+        if self.function == 'startBackup':
+            IncScheduler.startBackup(self.data['freq'])
 
     @staticmethod
     def startBackup(type):
@@ -828,7 +837,6 @@ Automatic backup failed for %s on %s.
             except BaseException as msg:
                 logging.writeToFile('%s. [WPUpdates:767]' % (str(msg)))
 
-
 def main():
 
     parser = argparse.ArgumentParser(description='CyberPanel Installer')
@@ -842,6 +850,14 @@ def main():
 
     IncScheduler.CalculateAndUpdateDiskUsage()
     IncScheduler.WPUpdates()
+
+    ### Run incremental backups in sep thread
+
+    ib = IncScheduler('startBackup', {'freq': args.function})
+    ib.start()
+
+    ###
+
     IncScheduler.startBackup(args.function)
     IncScheduler.runGoogleDriveBackups(args.function)
     IncScheduler.git(args.function)
