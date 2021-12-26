@@ -3895,7 +3895,13 @@ StrictHostKeyChecking no
             command = 'git -C %s diff-tree --no-commit-id --name-only -r %s' % (self.folder, self.commit)
             files = ProcessUtilities.outputExecutioner(command, self.externalApp).split('\n')
 
-            data_ret = {'status': 1, 'files': files}
+            FinalFiles = []
+
+            for items in files:
+                if items != '':
+                    FinalFiles.append(items.rstrip('\n').lstrip('\n'))
+
+            data_ret = {'status': 1, 'files': FinalFiles}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 

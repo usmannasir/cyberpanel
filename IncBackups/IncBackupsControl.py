@@ -683,6 +683,7 @@ class IncJobs(multi.Thread):
                 except BaseException as msg:
                     logging.statusWriter(self.statusPath,
                                          'Failed to delete database: %s. [IncJobs.backupDatabases.456]' % str(msg), 1)
+
             return 1
         except BaseException as msg:
             logging.statusWriter(self.statusPath, '%s. [IncJobs.backupDatabases.269][5009]' % str(msg), 1)
