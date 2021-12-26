@@ -677,8 +677,9 @@ class IncJobs(multi.Thread):
                         return 0
 
                 try:
-                    os.remove('/usr/local/CyberCP/tmp/%s.sql' % (items.dbName))
-                    os.remove(dbPathNew)
+                    dbPath = '/usr/local/CyberCP/tmp/%s.sql' % (items.dbName)
+                    command = 'rm -f %s' % (dbPath)
+                    ProcessUtilities.executioner(command, self.externalApp)
                 except BaseException as msg:
                     logging.statusWriter(self.statusPath,
                                          'Failed to delete database: %s. [IncJobs.backupDatabases.456]' % str(msg), 1)
