@@ -414,7 +414,7 @@ echo -e "\n\e[31m-v\e[39m or \e[31m--version\e[39m : choose to install CyberPane
 echo -e "Please be aware, this serial number must be obtained from LiteSpeed Store."
 echo -e "And if this serial number has been used before, it must be released/migrated in Store first, otherwise it will fail to start."
 echo -e "\n\e[31m-a\e[39m or \e[31m--addons\e[39m : install addons: memcached, redis, PHP extension for memcached and redis"
-echo -e "\n\e[31m-p\e[39m or \e[31m--password\e[39m : set password of new installation, empty for default 1234567, [r] or [random] for randomly generated 16 digital password, any other value besides [d] and [r(andom)] will be accept as password, default use 1234567."
+echo -e "\n\e[31m-p\e[39m or \e[31m--password\e[39m : set password of new installation, empty for default "$Admin_Pass", [r] or [random] for randomly generated 16 digital password, any other value besides [d] and [r(andom)] will be accept as password, default use "$Admin_Pass"."
 echo -e "e.g. \e[31m-p r\e[39m will generate a random password"
 echo -e "     \e[31m-p 123456789\e[39m will set password to 123456789"
 echo -e "\n\e[31m-m\e[39m or \e[31m--minimal\e[39m : set to minimal mode which will not install PowerDNS, Pure-FTPd and Postfix"
@@ -446,7 +446,7 @@ else
     PowerDNS_Switch="On"
     PureFTPd_Switch="On"
     Server_Edition="OLS"
-    Admin_Pass="1234567"
+    Admin_Pass="$Admin_Pass"
     Memcached="On"
     Redis="On"
   else
@@ -472,14 +472,14 @@ else
       -p | --password)
       shift
       if [[ ${1} = "" ]]; then
-        Admin_Pass="1234567"
+        Admin_Pass="$Admin_Pass"
       elif [[ ${1} = "r" ]] || [[ $1 = "random" ]]; then
         Admin_Pass=$(
         head /dev/urandom | tr -dc A-Za-z0-9 | head -c 16
         echo ''
         )
       elif [[ ${1} = "d" ]]; then
-        Admin_Pass="1234567"
+        Admin_Pass="$Admin_Pass"
       else
         if [[ ${#1} -lt 8 ]]; then
           echo -e "\nPassword length less than 8 digital, please choose a more complicated password.\n"
@@ -561,7 +561,7 @@ else
 fi
 
 if [[ $Admin_Pass = "d" ]]; then
-  Admin_Pass="1234567"
+  Admin_Pass="$Admin_Pass"
   echo -e "\nSet to default password..."
   echo -e "\nAdmin password will be set to \e[31m$Admin_Pass\e[39m\n"
 elif [[ $Admin_Pass = "r" ]]; then
@@ -717,7 +717,7 @@ printf "%s" "Choose [d]fault, [r]andom or [s]et password: [d/r/s] "
 read -r Tmp_Input
 
 if [[ $Tmp_Input =~ ^(d|D| ) ]] || [[ -z $Tmp_Input ]]; then
-  Admin_Pass="1234567"
+  Admin_Pass="$Admin_Pass"
   echo -e "\nAdmin password will be set to $Admin_Pass\n"
 elif [[ $Tmp_Input =~ ^(r|R) ]]; then
   Admin_Pass=$(
@@ -751,7 +751,7 @@ elif [[ $Tmp_Input =~ ^(s|S) ]]; then
     exit
   fi
 else
-  Admin_Pass="1234567"
+  Admin_Pass="$Admin_Pass"
   echo -e "\nAdmin password will be set to $Admin_Pass\n"
 fi
 
