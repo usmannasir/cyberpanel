@@ -677,6 +677,11 @@ class preFlightsChecks:
         command = 'chmod 700 %s' % ('/home/cyberpanel')
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
+        destPrivKey = "/usr/local/lscp/conf/key.pem"
+
+        command = 'chmod 600 %s' % (destPrivKey)
+        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
         ###
 
     def install_unzip(self):

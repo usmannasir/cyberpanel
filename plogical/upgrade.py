@@ -2122,6 +2122,11 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             command = 'chmod 700 %s' % ('/home/cyberpanel')
             Upgrade.executioner(command, 0)
 
+            destPrivKey = "/usr/local/lscp/conf/key.pem"
+
+            command = 'chmod 600 %s' % (destPrivKey)
+            Upgrade.executioner(command, 0)
+
             Upgrade.stdOut("Permissions updated.")
 
         except BaseException as msg:

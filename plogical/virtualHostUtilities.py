@@ -460,6 +460,10 @@ class virtualHostUtilities:
                 return 0, retValues[1]
 
 
+            command = 'chmod 600 %s' % (destPrivKey)
+            ProcessUtilities.normalExecutioner(command)
+
+
             ## removing old certs for lscpd
             if os.path.exists(destPrivKey):
                 os.remove(destPrivKey)
