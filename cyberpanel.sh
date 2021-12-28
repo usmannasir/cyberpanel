@@ -51,7 +51,9 @@ echo -e "This may take few seconds..."
 
 Silent="Off"
 Server_Edition="OLS"
-Admin_Pass="1234567"
+PASSRANDOM="$(tr -cd '[:alnum:]' < /dev/urandom | fold -w10 | head -n 1)"
+Admin_Pass="$PASSRANDOM" # To randomly generate on first install.
+echo "$Admin_Pass"
 
 Memcached="Off"
 Redis="Off"
@@ -444,10 +446,7 @@ else
     PowerDNS_Switch="On"
     PureFTPd_Switch="On"
     Server_Edition="OLS"
-    PASSRANDOM="$(tr -cd '[:alnum:]' < /dev/urandom | fold -w10 | head -n 1)"
-    Admin_Pass="$PASSRANDOM" # To randomly generate on first install.
-  
-    echo "$Admin_Pass"
+    Admin_Pass="1234567"
     Memcached="On"
     Redis="On"
   else
