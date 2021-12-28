@@ -75,8 +75,8 @@ Panel_Build=${Temp_Value:25:1}
 
 Branch_Name="v${Panel_Version}.${Panel_Build}"
 
-if [[ $Branch_Name = v*.*.* ]] ; then
-  echo -e  "\nBranch name fetched...$Branch_Name"
+if [[ $Branch_Name-dev = v*.*.* ]] ; then
+  echo -e  "\nBranch name fetched...$Branch_Name-dev-dev"
 else
   echo -e "\nUnable to fetch Branch name..."
   echo -e "\nPlease try again in few moments, if this error still happens, please contact support"
@@ -130,7 +130,7 @@ if [[ "$1" = *.*.* ]]; then
     exit
   else
     Branch_Name="v${1//[[:space:]]/}"
-    echo -e "\nSet branch name to $Branch_Name..."
+    echo -e "\nSet branch name to $Branch_Name-dev..."
   fi
 else
   echo -e "\nPlease input a valid format version number."
@@ -707,7 +707,7 @@ printf "%s" ""
 read -r Tmp_Input
 
 if [[ $Tmp_Input = "" ]]; then
-  echo -e "Branch name set to $Branch_Name"
+  echo -e "Branch name set to $Branch_Name-dev"
 else
   Branch_Check "$Tmp_Input"
 fi
@@ -1048,7 +1048,7 @@ Retry_Command "git clone ${Git_Clone_URL}"
 echo -e "\nCyberPanel source code downloaded...\n"
 
 cd cyberpanel || exit
-git checkout "$Branch_Name"
+git checkout "$Branch_Name-dev"
   Check_Return "git checkout"
 cd - || exit
 cp -r cyberpanel /usr/local/cyberpanel
