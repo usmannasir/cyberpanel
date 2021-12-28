@@ -416,7 +416,7 @@ echo -e "And if this serial number has been used before, it must be released/mig
 echo -e "\n\e[31m-a\e[39m or \e[31m--addons\e[39m : install addons: memcached, redis, PHP extension for memcached and redis"
 echo -e "\n\e[31m-p\e[39m or \e[31m--password\e[39m : set password of new installation, empty for default $PASSRANDOM, [r] or [random] for randomly generated 16 digital password, any other value besides [d] and [r(andom)] will be accept as password, default use $PASSRANDOM."
 echo -e "e.g. \e[31m-p r\e[39m will generate a random password"
-echo -e "     \e[31m-p 123456789\e[39m will set password to 123456789"
+echo -e "     \e[31m-p $PASSRANDOM\e[39m will set password to $PASSRANDOM"
 echo -e "\n\e[31m-m\e[39m or \e[31m--minimal\e[39m : set to minimal mode which will not install PowerDNS, Pure-FTPd and Postfix"
 echo -e "\n\e[31m-m postfix/pureftpd/powerdns\e[39m will do minimal install also with compoenent given"
 echo -e "e.g.  \e[31m-m postfix\e[39m will do minimal install also with Postfix"
@@ -715,7 +715,7 @@ else
   Branch_Check "$Tmp_Input"
 fi
 
-echo -e "\nPlease choose to use default admin password \e[31m1234567\e[39m, randomly generate one \e[31m(recommended)\e[39m or specify the admin password?"
+echo -e "\nPlease choose to use default admin password \e[31m$PASSRANDOM\e[39m, randomly generate one \e[31m(recommended)\e[39m or specify the admin password?"
 printf "%s" "Choose [d]fault, [r]andom or [s]et password: [d/r/s] "
 read -r Tmp_Input
 
