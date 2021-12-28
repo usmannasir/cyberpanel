@@ -73,7 +73,7 @@ Temp_Value=$(curl --silent --max-time 30 -4 https://cyberpanel.net/version.txt)
 Panel_Version=${Temp_Value:12:3}
 Panel_Build=${Temp_Value:25:1}
 
-Branch_Name="v${Panel_Version}.${Panel_Build}-dev"
+Branch_Name="v${Panel_Version}.${Panel_Build}"
 
 if [[ $Branch_Name = v*.*.* ]] ; then
   echo -e  "\nBranch name fetched...$Branch_Name"
