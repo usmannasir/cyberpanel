@@ -12,6 +12,7 @@ import argparse
 from serverStatus.serverStatusUtil import ServerStatusUtil
 from plogical import CyberCPLogFileWriter as logging
 import subprocess
+import os
 
 class ServiceManager:
 
@@ -31,6 +32,8 @@ class ServiceManager:
         data = ProcessUtilities.outputExecutioner('sudo cat ' + path).splitlines()
         #data = subprocess.check_output(shlex.split('sudo cat ' + path)).decode("utf-8").splitlines()
 
+        path = os.system("chmod 666 /etc/powerdns/pdns.conf")
+        path = os.system("chown cyberpanel:cyberpanel /etc/powerdns/pdns.conf")
 
         if type == 'MASTER':
             counter = 0
@@ -256,6 +259,8 @@ type=rpm-md
                                                   "ElasticSearch successfully removed.[200]\n", 1)
         return 0
 
+     #Redis Install and Remove   
+
     @staticmethod
     def InstallRedis():
 
@@ -303,6 +308,56 @@ type=rpm-md
         logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
                                                   "Redis successfully removed.[200]\n", 1)
         return 0
+    
+    # Postgresql install and remove
+
+    @staticmethod
+    def InstallPostgresql():
+
+        statusFile = open(ServerStatusUtil.lswsInstallStatusPath, 'w')
+
+        if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+            command = 'yum install postgresql -y'
+            ServerStatusUtil.executioner(command, statusFile)
+        else:
+
+            command = 'apt-get install postgresql -y'
+            ServerStatusUtil.executioner(command, statusFile)
+
+
+        command = 'systemctl enable postgresql'
+        ServerStatusUtil.executioner(command, statusFile)
+
+        command = 'systemctl start postgresql'
+        ServerStatusUtil.executioner(command, statusFile)
+
+        command = 'touch /home/cyberpanel/postgresql'
+        ServerStatusUtil.executioner(command, statusFile)
+
+        logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
+                                                  "Postgresql successfully installed.[200]\n", 1)
+        return 0
+
+    @staticmethod
+    def RemovePostgresql():
+
+        statusFile = open(ServerStatusUtil.lswsInstallStatusPath, 'w')
+
+        if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+            command = 'yum erase postgresql -y'
+            ServerStatusUtil.executioner(command, statusFile)
+        else:
+
+            command = 'apt-get remove postgresql -y'
+            ServerStatusUtil.executioner(command, statusFile)
+
+
+        command = 'rm -f /home/cyberpanel/postgresql'
+        ServerStatusUtil.executioner(command, statusFile)
+
+        logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
+                                                  "Postgresql successfully removed.[200]\n", 1)
+        return 0
 
 def main():
 
@@ -320,8 +375,10 @@ def main():
         ServiceManager.InstallRedis()
     elif args["function"] == "RemoveRedis":
         ServiceManager.RemoveRedis()
-
-
+    elif args["function"] == "InstallPostgresql":
+        ServiceManager.InstallPostgresql()
+    elif args["function"] == "RemovePostgresql":
+        ServiceManager.RemovePostgresql()
 
 if __name__ == "__main__":
     main()
