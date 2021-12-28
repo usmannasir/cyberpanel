@@ -53,7 +53,6 @@ Silent="Off"
 Server_Edition="OLS"
 PASSRANDOM="$(tr -cd '[:alnum:]' < /dev/urandom | fold -w10 | head -n 1)"
 Admin_Pass="$PASSRANDOM" # To randomly generate on first install.
-#echo "$Admin_Pass"
 
 Memcached="Off"
 Redis="Off"
@@ -71,7 +70,8 @@ Server_Provider='Undefined'
 Watchdog="On"
 Redis_Hosting="No"
 Temp_Value=$(curl --silent --max-time 30 -4 https://cyberpanel.net/version.txt)
-Panel_Version=${Temp_Value:12:3}_b${Temp_Value:25:1} # I thought it would be more understandable if the major and minor versions were adjacent.
+Panel_Version=${Temp_Value:12:3}
+Panel_Build=${Temp_Value:25:1}
 
 Branch_Name="v${Panel_Version}.${Panel_Build}"
 
@@ -302,7 +302,7 @@ echo -e "Checking virtualization type..."
 #  Debug_Log2 "CyberPanel does not support LXC.. [404]"
 #  exit
 #fi
-#remove per https://github.com/usmannasir/cyberpanel/issues/589
+#remove per https://github.com/erselbey/cyberpanel/issues/589
 
 if hostnamectl | grep -q "Virtualization: openvz"; then
   echo -e "OpenVZ detected...\n"
@@ -446,10 +446,7 @@ else
     PowerDNS_Switch="On"
     PureFTPd_Switch="On"
     Server_Edition="OLS"
-    PASSRANDOM="$(tr -cd '[:alnum:]' < /dev/urandom | fold -w10 | head -n 1)"
-    Admin_Pass="$PASSRANDOM" # To randomly generate on first install.
-    echo "$Admin_Pass"
-
+    Admin_Pass="$PASSRANDOM"
     Memcached="On"
     Redis="On"
   else
@@ -958,7 +955,7 @@ Debug_Log2 "Setting up repositories for CN server...,1"
 Download_Requirement() {
 for i in {1..50} ;
   do
-  wget -O /usr/local/requirments.txt "${Git_Content_URL}/v2.1.2-dev/requirments.txt"
+  wget -O /usr/local/requirments.txt "${Git_Content_URL}/${Branch_Name}-dev/requirments.txt"
   if grep -q "Django==" /usr/local/requirments.txt ; then
     break
   else
