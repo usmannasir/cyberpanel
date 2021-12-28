@@ -51,7 +51,9 @@ echo -e "This may take few seconds..."
 
 Silent="Off"
 Server_Edition="OLS"
-Admin_Pass="1234567"
+PASSRANDOM="$(tr -cd '[:alnum:]' < /dev/urandom | fold -w10 | head -n 1)"
+Admin_Pass="$PASSRANDOM" # To randomly generate on first install.
+echo "$Admin_Pass"
 
 Memcached="Off"
 Redis="Off"
@@ -69,8 +71,7 @@ Server_Provider='Undefined'
 Watchdog="On"
 Redis_Hosting="No"
 Temp_Value=$(curl --silent --max-time 30 -4 https://cyberpanel.net/version.txt)
-Panel_Version=${Temp_Value:12:3}
-Panel_Build=${Temp_Value:25:1}
+Panel_Version=${Temp_Value:12:3}_b${Temp_Value:25:1} # I thought it would be more understandable if the major and minor versions were adjacent.
 
 Branch_Name="v${Panel_Version}.${Panel_Build}"
 
