@@ -73,10 +73,10 @@ Temp_Value=$(curl --silent --max-time 30 -4 https://cyberpanel.net/version.txt)
 Panel_Version=${Temp_Value:12:3}
 Panel_Build=${Temp_Value:25:1}
 
-Branch_Name="v${Panel_Version}.${Panel_Build}"
+Branch_Name="v${Panel_Version}.${Panel_Build}-dev"
 
-if [[ $Branch_Name-dev = v*.*.* ]] ; then
-  echo -e  "\nBranch name fetched...$Branch_Name-dev-dev"
+if [[ $Branch_Name = v*.*.* ]] ; then
+  echo -e  "\nBranch name fetched...$Branch_Name"
 else
   echo -e "\nUnable to fetch Branch name..."
   echo -e "\nPlease try again in few moments, if this error still happens, please contact support"
@@ -130,7 +130,7 @@ if [[ "$1" = *.*.* ]]; then
     exit
   else
     Branch_Name="v${1//[[:space:]]/}"
-    echo -e "\nSet branch name to $Branch_Name-dev..."
+    echo -e "\nSet branch name to $Branch_Name..."
   fi
 else
   echo -e "\nPlease input a valid format version number."
@@ -707,7 +707,7 @@ printf "%s" ""
 read -r Tmp_Input
 
 if [[ $Tmp_Input = "" ]]; then
-  echo -e "Branch name set to $Branch_Name-dev"
+  echo -e "Branch name set to $Branch_Name"
 else
   Branch_Check "$Tmp_Input"
 fi
@@ -955,7 +955,7 @@ Debug_Log2 "Setting up repositories for CN server...,1"
 Download_Requirement() {
 for i in {1..50} ;
   do
-  wget -O /usr/local/requirments.txt "${Git_Content_URL}/${Branch_Name}-dev/requirments.txt"
+  wget -O /usr/local/requirments.txt "${Git_Content_URL}/${Branch_Name}/requirments.txt"
   if grep -q "Django==" /usr/local/requirments.txt ; then
     break
   else
@@ -1048,7 +1048,7 @@ Retry_Command "git clone ${Git_Clone_URL}"
 echo -e "\nCyberPanel source code downloaded...\n"
 
 cd cyberpanel || exit
-git checkout "$Branch_Name-dev"
+git checkout "$Branch_Name"
   Check_Return "git checkout"
 cd - || exit
 cp -r cyberpanel /usr/local/cyberpanel
