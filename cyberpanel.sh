@@ -53,7 +53,7 @@ Silent="Off"
 Server_Edition="OLS"
 PASSRANDOM="$(tr -cd '[:alnum:]' < /dev/urandom | fold -w10 | head -n 1)"
 Admin_Pass="$PASSRANDOM" # To randomly generate on first install.
-echo "$Admin_Pass"
+#echo "$Admin_Pass"
 
 Memcached="Off"
 Redis="Off"
