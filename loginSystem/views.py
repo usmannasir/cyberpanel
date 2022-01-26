@@ -141,7 +141,6 @@ def verifyLogin(request):
             json_data = json.dumps(data)
             return HttpResponse(json_data)
 
-
 @ensure_csrf_cookie
 def loadLoginPage(request):
     try:

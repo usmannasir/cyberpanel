@@ -852,13 +852,26 @@ class vhost:
     def finalizeDomainCreation(virtualHostUser, path):
         try:
 
+            ACLManager.CreateSecureDir()
+
+            RanddomFileName = str(randint(1000, 9999))
+
+            FullPath = '%s/%s' % ('/usr/local/CyberCP/tmp', RanddomFileName)
+
             FNULL = open(os.devnull, 'w')
 
-            shutil.copy("/usr/local/CyberCP/index.html", path + "/index.html")
+            #shutil.copy("/usr/local/CyberCP/index.html", path + "/index.html")
 
-            command = "chown " + virtualHostUser + ":" + virtualHostUser + " " + path + "/index.html"
+            shutil.copy("/usr/local/CyberCP/index.html", FullPath)
+
+            command = "chown " + virtualHostUser + ":" + virtualHostUser + " " + FullPath
             cmd = shlex.split(command)
             subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+
+            command = 'sudo -u %s cp %s %s/index.html' % (virtualHostUser, FullPath, path)
+            ProcessUtilities.normalExecutioner(command)
+
+            os.remove(FullPath)
 
             vhostPath = vhost.Server_root + "/conf/vhosts"
             command = "chown -R " + "lsadm" + ":" + "lsadm" + " " + vhostPath

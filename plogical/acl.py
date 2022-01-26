@@ -1,5 +1,8 @@
 #!/usr/local/CyberCP/bin/python
 import os,sys
+
+from .processUtilities import ProcessUtilities
+
 sys.path.append('/usr/local/CyberCP')
 import django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
@@ -831,5 +834,20 @@ class ACLManager:
             domainName = Websites.objects.get(domain=domain)
             return domainName.externalApp
 
+    @staticmethod
+    def CreateSecureDir():
+        ### Check if upload path tmp dir is not available
+
+        UploadPath = '/usr/local/CyberCP/tmp/'
+
+        if not os.path.exists(UploadPath):
+            command = 'mkdir %s' % (UploadPath)
+            ProcessUtilities.executioner(command)
+
+        command = 'chown cyberpanel:cyberpanel %s' % (UploadPath)
+        ProcessUtilities.executioner(command)
+
+        command = 'chmod 711 %s' % (UploadPath)
+        ProcessUtilities.executioner(command)
 
 
