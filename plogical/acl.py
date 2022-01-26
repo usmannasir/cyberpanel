@@ -595,12 +595,18 @@ class ACLManager:
             domains = Websites.objects.all().order_by('domain')
             for items in domains:
                 domainsList.append(items.domain)
+
+                for childs in items.childdomains_set.all():
+                    domainsList.append(childs.domain)
+
         else:
             admin = Administrator.objects.get(pk=userID)
             domains = admin.websites_set.all().order_by('domain')
 
             for items in domains:
                 domainsList.append(items.domain)
+                for childs in items.childdomains_set.all():
+                    domainsList.append(childs.domain)
 
             admins = Administrator.objects.filter(owner=admin.pk)
 
@@ -608,6 +614,8 @@ class ACLManager:
                 doms = items.websites_set.all().order_by('domain')
                 for dom in doms:
                     domainsList.append(dom.domain)
+                    for childs in items.childdomains_set.all():
+                        domainsList.append(childs.domain)
 
         return domainsList
 
@@ -679,7 +687,11 @@ class ACLManager:
 
     @staticmethod
     def checkOwnershipZone(domain, admin, currentACL):
-        domain = Websites.objects.get(domain=domain)
+        try:
+            domain = Websites.objects.get(domain=domain)
+        except:
+            domain = ChildDomains.objects.get(domain=domain)
+            domain = domain.master
 
         if currentACL['admin'] == 1:
             return 1
