@@ -24,6 +24,7 @@ class ApplicationInstaller(multi.Thread):
     LOCALHOST = 'localhost'
     REMOTE = 0
     PORT = '3306'
+    MauticVersion = '4.1.2'
 
     def __init__(self, installApp, extraArgs):
         multi.Thread.__init__(self)
@@ -148,14 +149,14 @@ class ApplicationInstaller(multi.Thread):
             statusFile.writelines('Downloading Mautic Core,30')
             statusFile.close()
 
-            command = "wget https://github.com/mautic/mautic/releases/download/3.1.0/3.1.0.zip"
+            command = "wget https://github.com/mautic/mautic/releases/download/%s/%s.zip" % (ApplicationInstaller.MauticVersion, ApplicationInstaller.MauticVersion)
             ProcessUtilities.outputExecutioner(command, externalApp, None, finalPath)
 
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines('Extracting Mautic Core,50')
             statusFile.close()
 
-            command = "unzip 3.1.0.zip"
+            command = "unzip %s.zip" % (ApplicationInstaller.MauticVersion)
             ProcessUtilities.outputExecutioner(command, externalApp, None, finalPath)
 
             ##
@@ -206,7 +207,7 @@ $parameters = array(
             command = 'mv %s %s/app/config/local.php' % (localDB, finalPath)
             ProcessUtilities.executioner(command)
 
-            command = "/usr/local/lsws/lsphp72/bin/php bin/console mautic:install http://%s" % (finalURL)
+            command = "/usr/local/lsws/lsphp74/bin/php bin/console mautic:install http://%s -f" % (finalURL)
             result = ProcessUtilities.outputExecutioner(command, 'root', None, finalPath)
 
             if result.find('Install complete') == -1:
