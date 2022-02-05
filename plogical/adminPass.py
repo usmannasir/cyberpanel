@@ -47,7 +47,7 @@ def main():
             acl = ACL.objects.get(name='admin')
             token = hashPassword.generateToken('admin', adminPass)
 
-            email = 'usman@cyberpersons.com'
+            email = 'example@example.org'
             admin = Administrator(userName="admin", password=hashPassword.hash_password(adminPass), type=1, email=email,
                                   firstName="Cyber", lastName="Panel", acl=acl, token=token)
             admin.save()

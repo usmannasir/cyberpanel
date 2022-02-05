@@ -64,7 +64,7 @@ class sslUtilities:
             return [0, "347 " + str(msg) + " [issueSSLForDomain]"]
 
     @staticmethod
-    def installSSLForDomain(virtualHostName, adminEmail='usman@cyberpersons.com'):
+    def installSSLForDomain(virtualHostName, adminEmail='example@example.org'):
 
         try:
             website = Websites.objects.get(domain=virtualHostName)

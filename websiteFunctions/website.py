@@ -2333,7 +2333,7 @@ StrictHostKeyChecking no
             if hashPassword.check_password(admin.password, adminPass):
 
                 if adminEmail is None:
-                    data['adminEmail'] = "usman@cyberpersons.com"
+                    data['adminEmail'] = "example@example.org"
 
                 try:
                     acl = ACL.objects.get(name=apiACL)
