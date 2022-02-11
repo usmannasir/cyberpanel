@@ -612,6 +612,10 @@ class vhost:
 
     @staticmethod
     def changePHP(vhFile, phpVersion):
+
+        from pathlib import Path
+        HomePath = Path("/home/%s" % (vhFile.split('/')[-2]))
+        virtualHostUser = HomePath.owner()
         phpDetachUpdatePath = '/home/%s/.lsphp_restart.txt' % (vhFile.split('/')[-2])
         if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
             try:
@@ -636,12 +640,13 @@ class vhost:
 
                     writeDataToFile.close()
 
-                    writeToFile = open(phpDetachUpdatePath, 'w')
-                    writeToFile.close()
+                    command = 'sudo -u %s touch %s' % (virtualHostUser, phpDetachUpdatePath)
+                    ProcessUtilities.normalExecutioner(command)
 
                     installUtilities.installUtilities.reStartLiteSpeed()
                     try:
-                        os.remove(phpDetachUpdatePath)
+                        command = 'sudo -u %s rm -f %s' % (virtualHostUser, phpDetachUpdatePath)
+                        ProcessUtilities.normalExecutioner(command)
                     except:
                         pass
                 else:
