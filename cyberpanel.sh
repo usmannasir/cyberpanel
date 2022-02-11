@@ -790,7 +790,7 @@ fi
 Interactive_Mode_License_Input() {
 Server_Edition="Enterprise"
 echo -e "\nPlease note that your server has \e[31m$Total_RAM MB\e[39m RAM"
-echo -e "If you are using \e[31mFree Start\e[39m license, It will not start due to \e[31m2GB RAM limit\e[39m.\n"
+echo -e "REMINDER: The \e[31mFree Start\e[39m license requires \e[31m2GB or less\e[39m of RAM and the \e[31mSite Owner\e[39m and \e[31mWeb Host Lite\e[39m licenses require \e[31m8GB or less\e[39m.\n"
 echo -e "If you do not have any license, you can also use trial license (if server has not used trial license before), type \e[31mTRIAL\e[39m\n"
 
 printf "%s" "Please input your serial number for LiteSpeed WebServer Enterprise: "
@@ -842,15 +842,22 @@ if [[ $Server_OS = "CentOS" ]] ; then
     yum install -y https://cyberpanel.sh/dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
       Check_Return "yum repo" "no_exit"
 
-    cat <<EOF >/etc/yum.repos.d/CentOS-PowerTools-CyberPanel.repo
-[powertools-for-cyberpanel]
-name=CentOS Linux \$releasever - PowerTools
-mirrorlist=http://mirrorlist.centos.org/?release=\$releasever&arch=\$basearch&repo=PowerTools&infra=\$infra
-baseurl=http://mirror.centos.org/\$contentdir/\$releasever/PowerTools/\$basearch/os/
-gpgcheck=1
-enabled=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
-EOF
+    sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-* > /dev/null 2>&1
+    sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-* > /dev/null 2>&1
+    # ref: https://stackoverflow.com/questions/70926799/centos-through-vm-no-urls-in-mirrorlist
+
+    dnf config-manager --set-enabled PowerTools > /dev/null 2>&1
+    dnf config-manager --set-enabled powertools > /dev/null 2>&1
+  
+#    cat <<EOF >/etc/yum.repos.d/CentOS-PowerTools-CyberPanel.repo
+#[powertools-for-cyberpanel]
+#name=CentOS Linux \$releasever - PowerTools
+#mirrorlist=http://mirrorlist.centos.org/?release=\$releasever&arch=\$basearch&repo=PowerTools&infra=\$infra
+#baseurl=http://mirror.centos.org/\$contentdir/\$releasever/PowerTools/\$basearch/os/
+#gpgcheck=1
+#enabled=1
+#gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
+#EOF
   fi
 
   if [[ "$Server_OS_Version" = "7" ]]; then
