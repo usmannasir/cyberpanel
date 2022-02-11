@@ -397,10 +397,10 @@ class preFlightsChecks:
         # reference: https://oracle-base.com/articles/mysql/mysql-password-less-logins-using-option-files
         mysql_my_root_cnf = '/root/.my.cnf'
         mysql_root_cnf_content = """
-        [client]
-        user=root
-        password="%s"
-        """ % password
+[client]
+user=root
+password="%s"
+""" % password
 
         with open(mysql_my_root_cnf, 'w') as f:
             f.write(mysql_root_cnf_content)
