@@ -1001,6 +1001,7 @@ class virtualHostUtilities:
 
             postFixPath = '/home/cyberpanel/postfix'
 
+
             if os.path.exists(postFixPath):
                 retValues = mailUtilities.setupDKIM(virtualHostName)
                 if retValues[0] == 0:

@@ -378,6 +378,7 @@ class vhost:
                 delWebsite = Websites.objects.get(domain=virtualHostName)
                 externalApp = delWebsite.externalApp
 
+
                 ##
 
                 databases = Databases.objects.filter(website=delWebsite)
@@ -891,18 +892,19 @@ class vhost:
         completePathToConfigFile = confPath + "/vhost.conf"
 
         try:
-            os.makedirs(path)
+
+            command = 'sudo -u %s mkdir %s' % (virtualHostUser, path)
+            ProcessUtilities.normalExecutioner(command)
 
             if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 groupName = 'nobody'
             else:
                 groupName = 'nogroup'
 
-            command = "chown " + virtualHostUser + ":%s " % (groupName) + path
-            cmd = shlex.split(command)
-            subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+            command = 'sudo -u %s chown %s:%s %s' % (virtualHostUser, virtualHostUser, groupName, path)
+            ProcessUtilities.normalExecutioner(command)
 
-            command = "chmod 750 %s" % (path)
+            command = "sudo -u %s chmod 750 %s" % (virtualHostUser, path)
             cmd = shlex.split(command)
             subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
