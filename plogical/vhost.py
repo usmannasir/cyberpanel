@@ -193,8 +193,9 @@ class vhost:
     @staticmethod
     def createDirectoryForVirtualHost(virtualHostName,administratorEmail,virtualHostUser, phpVersion, openBasedir):
 
-        if not os.path.exists('/usr/local/lsws/Example/html'):
-            os.mkdir('/usr/local/lsws/Example/html')
+        if not os.path.exists('/usr/local/lsws/Example/html/.well-known/acme-challenge'):
+            command = 'mkdir -p /usr/local/lsws/Example/html/.well-known/acme-challenge'
+            ProcessUtilities.normalExecutioner(command)
 
         path = "/home/" + virtualHostName
         pathHTML = "/home/" + virtualHostName + "/public_html"
