@@ -299,7 +299,7 @@ class sslUtilities:
 
                     command = acmePath + " --issue -d " + virtualHostName + " -d www." + virtualHostName \
                               + ' --cert-file ' + existingCertPath + '/cert.pem' + ' --key-file ' + existingCertPath + '/privkey.pem' \
-                              + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w ' + sslpath + ' -k ec-256 --force --server letsencrypt'
+                              + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w /usr/local/lsws/Example/html -k ec-256 --force --server letsencrypt'
 
                     logging.CyberCPLogFileWriter.writeToFile(command, 0)
 
@@ -319,7 +319,7 @@ class sslUtilities:
                         logging.CyberCPLogFileWriter.writeToFile("Trying to obtain SSL for: " + virtualHostName, 0)
                         command = acmePath + " --issue -d " + virtualHostName + ' --cert-file ' + existingCertPath \
                                   + '/cert.pem' + ' --key-file ' + existingCertPath + '/privkey.pem' \
-                                  + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w ' + sslpath + ' -k ec-256 --force --server letsencrypt'
+                                  + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w /usr/local/lsws/Example/html -k ec-256 --force --server letsencrypt'
                         output = subprocess.check_output(shlex.split(command)).decode("utf-8")
                         logging.CyberCPLogFileWriter.writeToFile("Successfully obtained SSL for: " + virtualHostName, 0)
                         finalText = '%s\nSuccessfully obtained SSL for: %s.' % (finalText, virtualHostName)
@@ -344,7 +344,7 @@ class sslUtilities:
                     command = acmePath + " --issue -d " + virtualHostName + " -d www." + virtualHostName \
                               + ' -d ' + aliasDomain + ' -d www.' + aliasDomain\
                               + ' --cert-file ' + existingCertPath + '/cert.pem' + ' --key-file ' + existingCertPath + '/privkey.pem' \
-                              + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w ' + sslpath + ' -k ec-256 --force --server letsencrypt'
+                              + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w /usr/local/lsws/Example/html -k ec-256 --force --server letsencrypt'
 
                     output = subprocess.check_output(shlex.split(command)).decode("utf-8")
                     logging.CyberCPLogFileWriter.writeToFile(
