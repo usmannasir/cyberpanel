@@ -2,6 +2,8 @@
 import argparse
 import os, sys
 
+from plogical.acl import ACLManager
+
 sys.path.append('/usr/local/CyberCP')
 import django
 
@@ -128,8 +130,8 @@ class ApplicationInstaller(multi.Thread):
 
             ## Security Check
 
-            command = 'chmod 755 %s' % (self.permPath)
-            ProcessUtilities.executioner(command)
+            #command = 'chmod 755 %s' % (self.permPath)
+            #ProcessUtilities.executioner(command, externalApp)
 
             if finalPath.find("..") > -1:
                 raise BaseException("Specified path must be inside virtual host home.")
@@ -171,7 +173,8 @@ class ApplicationInstaller(multi.Thread):
             else:
                 finalURL = domainName
 
-            localDB = "/home/cyberpanel/" + str(randint(1000, 9999))
+            ACLManager.CreateSecureDir()
+            localDB = '%s/%s' % ('/usr/local/CyberCP/tmp', str(randint(1000, 9999)))
 
             localDBContent = """<?php
 // Example local.php to test install (to adapt of course)
@@ -202,25 +205,21 @@ $parameters = array(
             writeToFile.close()
 
             command = 'rm -rf %s/app/config/local.php' % (finalPath)
+            ProcessUtilities.executioner(command, externalApp)
+
+            command = 'chown %s:%s %s' % (externalApp, externalApp, localDB)
             ProcessUtilities.executioner(command)
 
-            command = 'mv %s %s/app/config/local.php' % (localDB, finalPath)
-            ProcessUtilities.executioner(command)
+            command = 'cp %s %s/app/config/local.php' % (localDB, finalPath)
+            ProcessUtilities.executioner(command, externalApp)
 
             command = "/usr/local/lsws/lsphp74/bin/php bin/console mautic:install http://%s -f" % (finalURL)
-            result = ProcessUtilities.outputExecutioner(command, 'root', None, finalPath)
+            result = ProcessUtilities.outputExecutioner(command, externalApp, None, finalPath)
 
             if result.find('Install complete') == -1:
                 raise BaseException(result)
 
-
-            ##
-
-            from filemanager.filemanager import FileManager
-
-            fm = FileManager(None, None)
-            fm.fixPermissions(self.masterDomain)
-
+            os.remove(localDB)
             installUtilities.reStartLiteSpeedSocket()
 
             statusFile = open(tempStatusPath, 'w')
@@ -250,10 +249,6 @@ $parameters = array(
                 db.delete()
             except:
                 pass
-
-            command = 'chmod 750 %s' % (self.permPath)
-            ProcessUtilities.executioner(command)
-
 
             statusFile = open(self.tempStatusPath, 'w')
             statusFile.writelines(str(msg) + " [404]")

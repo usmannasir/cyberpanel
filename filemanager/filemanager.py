@@ -596,6 +596,7 @@ class FileManager:
             finalData['answer'] = 'File transfer completed.'
 
             ACLManager.CreateSecureDir()
+            UploadPath = '/usr/local/CyberCP/tmp/'
 
             ## Random file name
 
