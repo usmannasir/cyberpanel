@@ -392,18 +392,25 @@ EOF
 
     #all pre-upgrade operation for CentOS 7
   elif [[ "$Server_OS_Version" = "8" ]] ; then
-    cat <<EOF >/etc/yum.repos.d/CentOS-PowerTools-CyberPanel.repo
-[powertools-for-cyberpanel]
-name=CentOS Linux \$releasever - PowerTools
-mirrorlist=http://mirrorlist.centos.org/?release=\$releasever&arch=\$basearch&repo=PowerTools&infra=\$infra
-baseurl=http://mirror.centos.org/\$contentdir/\$releasever/PowerTools/\$basearch/os/
-gpgcheck=1
-enabled=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
-EOF
+     rm -f /etc/yum.repos.d/CentOS-PowerTools-CyberPanel.repo
+     dnf config-manager --set-enabled PowerTools > /dev/null 2>&1
+     dnf config-manager --set-enabled powertools > /dev/null 2>&1
+#    cat <<EOF >/etc/yum.repos.d/CentOS-PowerTools-CyberPanel.repo
+#[powertools-for-cyberpanel]
+#name=CentOS Linux \$releasever - PowerTools
+#mirrorlist=http://mirrorlist.centos.org/?release=\$releasever&arch=\$basearch&repo=PowerTools&infra=\$infra
+#baseurl=http://mirror.centos.org/\$contentdir/\$releasever/PowerTools/\$basearch/os/
+#gpgcheck=1
+#enabled=1
+#gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
+#EOF
 
   if [[ "$Server_Country" = "CN" ]] ; then
     dnf --nogpg install -y https://cyberpanel.sh/mirror.ghettoforge.org/distributions/gf/gf-release-latest.gf.el8.noarch.rpm
+    sed -i 's|# baseurl=https://repo.almalinux.org|baseurl=https://cyberpanel.sh/repo.almalinux.org|g' /etc/yum.repos.d/almalinux-powertools.repo
+    sed -i 's|mirrorlist=|# mirrorlist=|g' /etc/yum.repos.d/almalinux-powertools.repo
+    sed -i 's|#baseurl=http://dl.rockylinux.org|baseurl=https://cyberpanel.sh/dl.rockylinux.org|g' /etc/yum.repos.d/Rocky-PowerTools.repo
+    sed -i 's|mirrorlist=|# mirrorlist=|g' /etc/yum.repos.d/Rocky-PowerTools.repo
   else
     dnf --nogpg install -y https://mirror.ghettoforge.org/distributions/gf/gf-release-latest.gf.el8.noarch.rpm
   fi
