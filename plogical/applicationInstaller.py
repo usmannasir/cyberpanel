@@ -27,6 +27,7 @@ class ApplicationInstaller(multi.Thread):
     REMOTE = 0
     PORT = '3306'
     MauticVersion = '4.1.2'
+    PrestaVersion = '1.7.8.3'
 
     def __init__(self, installApp, extraArgs):
         multi.Thread.__init__(self)
@@ -142,7 +143,7 @@ class ApplicationInstaller(multi.Thread):
 
             ## checking for directories/files
 
-            if self.dataLossCheck(finalPath, tempStatusPath) == 0:
+            if self.dataLossCheck(finalPath, tempStatusPath, externalApp) == 0:
                 raise BaseException('Directory is not empty.')
 
             ####
@@ -392,13 +393,23 @@ $parameters = array(
         except BaseException as msg:
             logging.writeToFile(str(msg) + ' [ApplicationInstaller.installWPCLI]')
 
-    def dataLossCheck(self, finalPath, tempStatusPath):
-        dirFiles = os.listdir(finalPath)
+    def dataLossCheck(self, finalPath, tempStatusPath, user=None):
 
-        if len(dirFiles) <= 3:
-            return 1
+        if user == None:
+            dirFiles = os.listdir(finalPath)
+
+            if len(dirFiles) <= 3:
+                return 1
+            else:
+                return 0
         else:
-            return 0
+            command = 'ls %s | wc -l' % (finalPath)
+            result = ProcessUtilities.outputExecutioner(command, user, True).rstrip('\n')
+
+            if int(result) <= 3:
+                return 1
+            else:
+                return 0
 
     def installGit(self):
         try:
@@ -544,19 +555,19 @@ $parameters = array(
 
             ## Security Check
 
-            command = 'chmod 755 %s' % (self.permPath)
-            ProcessUtilities.executioner(command)
+            # command = 'chmod 755 %s' % (self.permPath)
+            # ProcessUtilities.executioner(command)
 
             if finalPath.find("..") > -1:
                 raise BaseException("Specified path must be inside virtual host home.")
 
-            if not os.path.exists(finalPath):
-                command = 'mkdir -p ' + finalPath
-                ProcessUtilities.executioner(command, externalApp)
+            ### if directory already exists no issues.
+            command = 'mkdir -p ' + finalPath
+            ProcessUtilities.executioner(command, externalApp)
 
             ## checking for directories/files
 
-            if self.dataLossCheck(finalPath, tempStatusPath) == 0:
+            if self.dataLossCheck(finalPath, tempStatusPath, externalApp) == 0:
                 raise BaseException('Directory is not empty.')
 
             ####
@@ -717,9 +728,6 @@ $parameters = array(
             # remove the downloaded files
 
             if not os.path.exists(ProcessUtilities.debugPath):
-                from filemanager.filemanager import FileManager
-                fm = FileManager(None, None)
-                fm.fixPermissions(self.masterDomain)
 
                 try:
                     mysqlUtilities.deleteDatabase(dbName, dbUser)
@@ -807,19 +815,19 @@ $parameters = array(
 
             ## Security Check
 
-            command = 'chmod 755 %s' % (self.permPath)
-            ProcessUtilities.executioner(command)
+            #command = 'chmod 755 %s' % (self.permPath)
+            #ProcessUtilities.executioner(command)
 
             if finalPath.find("..") > -1:
                 raise BaseException('Specified path must be inside virtual host home.')
 
-            if not os.path.exists(finalPath):
-                command = 'mkdir -p ' + finalPath
-                ProcessUtilities.executioner(command, externalApp)
+            ### create folder if exists then move on
+            command = 'mkdir -p ' + finalPath
+            ProcessUtilities.executioner(command, externalApp)
 
             ## checking for directories/files
 
-            if self.dataLossCheck(finalPath, tempStatusPath) == 0:
+            if self.dataLossCheck(finalPath, tempStatusPath, externalApp) == 0:
                 raise BaseException('Directory is not empty.')
 
             ####
@@ -828,11 +836,11 @@ $parameters = array(
             statusFile.writelines('Downloading and extracting PrestaShop Core..,30')
             statusFile.close()
 
-            command = "wget https://download.prestashop.com/download/releases/prestashop_1.7.4.2.zip -P %s" % (
+            command = "wget https://download.prestashop.com/download/releases/prestashop_%s.zip -P %s" % (ApplicationInstaller.PrestaVersion,
                 finalPath)
             ProcessUtilities.executioner(command, externalApp)
 
-            command = "unzip -o %sprestashop_1.7.4.2.zip -d " % (finalPath) + finalPath
+            command = "unzip -o %sprestashop_%s.zip -d " % (finalPath, ApplicationInstaller.PrestaVersion) + finalPath
             ProcessUtilities.executioner(command, externalApp)
 
             command = "unzip -o %sprestashop.zip -d " % (finalPath) + finalPath
@@ -866,13 +874,6 @@ $parameters = array(
             command = "rm -rf " + finalPath + "install"
             ProcessUtilities.executioner(command, externalApp)
 
-            ##
-
-            from filemanager.filemanager import FileManager
-
-            fm = FileManager(None, None)
-            fm.fixPermissions(self.masterDomain)
-
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines("Successfully Installed. [200]")
             statusFile.close()
@@ -900,16 +901,13 @@ $parameters = array(
             except:
                 pass
 
-            command = 'chmod 750 %s' % (self.permPath)
-            ProcessUtilities.executioner(command)
-
             statusFile = open(self.tempStatusPath, 'w')
             statusFile.writelines(str(msg) + " [404]")
             statusFile.close()
             return 0
 
     def installJoomla(self):
-
+        return 0
         try:
 
             domainName = self.extraArgs['domain']
@@ -922,8 +920,8 @@ $parameters = array(
             self.tempStatusPath = tempStatusPath
 
             permPath = '/home/%s/public_html' % (domainName)
-            command = 'chmod 755 %s' % (permPath)
-            ProcessUtilities.executioner(command)
+            #command = 'chmod 755 %s' % (permPath)
+            #ProcessUtilities.executioner(command)
 
             ## Get Joomla
 
@@ -982,7 +980,7 @@ $parameters = array(
                 command = 'mkdir %s' % (finalPath)
                 ProcessUtilities.executioner(command, externalApp)
 
-            if self.dataLossCheck(finalPath, tempStatusPath) == 0:
+            if self.dataLossCheck(finalPath, tempStatusPath, externalApp) == 0:
                 raise BaseException('Directory is not empty.')
 
 

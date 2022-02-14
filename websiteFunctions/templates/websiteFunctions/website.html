@@ -1003,7 +1003,7 @@
                                 </a>
                             </div>
 
-                            <div class="col-md-3 panel-body">
+                            {% comment %}<div class="col-md-3 panel-body">
                                 <a href="{$ joomlaInstallURL $}" target="_self"
                                    title="{% trans 'Install Joomla with LSCache' %}">
                                     <img src="{% static 'images/icons/joomla-logo.png' %}" width="65" class="mr-10">
@@ -1012,7 +1012,7 @@
                                    title="{% trans 'Install Joomla with LSCache' %}">
                                     <span class="h4">{% trans "Joomla" %}</span>
                                 </a>
-                            </div>
+                            </div>{% endcomment %}
 
                             <div class="col-md-3 panel-body">
                                 <a href="/websites/{{ domain }}/manageGIT" target="_self"
@@ -1036,16 +1036,16 @@
                                 </a>
                             </div>
 
-                            <div class="col-md-3 panel-body">
-                                <a href="{$ installMagentoURL $}" target="_self"
-                                   title="{% trans 'Install Magento' %}">
-                                    <img src="{% static 'images/icons/magento.png' %}" width="65" class="mr-10">
-                                </a>
-                                <a href="{$ installMagentoURL $}" target="_self"
-                                   title="{% trans 'Install Magento' %}">
-                                    <span class="h4">{% trans "Magento" %}</span>
-                                </a>
-                            </div>
+{#                            <div class="col-md-3 panel-body">#}
+{#                                <a href="{$ installMagentoURL $}" target="_self"#}
+{#                                   title="{% trans 'Install Magento' %}">#}
+{#                                    <img src="{% static 'images/icons/magento.png' %}" width="65" class="mr-10">#}
+{#                                </a>#}
+{#                                <a href="{$ installMagentoURL $}" target="_self"#}
+{#                                   title="{% trans 'Install Magento' %}">#}
+{#                                    <span class="h4">{% trans "Magento" %}</span>#}
+{#                                </a>#}
+{#                            </div>#}
 
                             <div class="col-md-3 panel-body">
                                 <a href="{$ installMauticURL $}" target="_self"
