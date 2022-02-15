@@ -5,7 +5,7 @@ Webhosting control panel that uses OpenLiteSpeed as web server.
 ## Features
 
 * Different Level Of users.
-* Auto SSL.
+* Let's Encrypt Auto SSL.
 * FTP Server.
 * Light weight DNS Server (PowerDNS).
 * PHPMYAdmin.
@@ -14,13 +14,12 @@ Webhosting control panel that uses OpenLiteSpeed as web server.
 * PHP Managment.
 * Firewall (FirewallD & ConfigServer Firewall Intregration).
 * One click Backup and Restore.
+* Redis
+* ElastichSearch
+* PostgreSQL
 
 # Supported PHPs
 
-* PHP 5.3
-* PHP 5.4
-* PHP 5.5
-* PHP 5.6
 * PHP 7.0
 * PHP 7.1
 * PHP 7.2
@@ -49,4 +48,3 @@ sh <(curl https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/preUpgr
 * [Forums.](https://forums.cyberpanel.net)
 * [Discord.](https://discord.gg/g8k8Db3)
 * [Facebook Group.](https://www.facebook.com/groups/cyberpanel)
-
