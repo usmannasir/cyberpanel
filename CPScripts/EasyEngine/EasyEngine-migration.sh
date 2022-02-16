@@ -16,7 +16,7 @@ owner_group=""
 
 set_header() {
 if [[ -d /opt/easyengine/sites/${domains[$i]}/app/htdocs/wp-content ]] ; then
-ssh -o StrictHostKeyChecking=no root@$server_ip -p$server_port -i /root/.ssh/cyberpanel_migration_key "$sudoer wget -q -O /root/header.sh https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/CPScripts/EasyEngine/header.sh ; $sudoer bash /root/header.sh ${domains[$i]}"
+ssh -o StrictHostKeyChecking=no root@$server_ip -p$server_port -i /root/.ssh/cyberpanel_migration_key "$sudoer wget -q -O /root/header.sh https://raw.githubusercontent.com/erselbey/cyberpanel/stable/CPScripts/EasyEngine/header.sh ; $sudoer bash /root/header.sh ${domains[$i]}"
 fi
 }
 
@@ -113,7 +113,7 @@ create_database() {
 clean_up() {
 #remove all the files created during operation
 echo -e "\nstarting clean up process..."
-ssh -o StrictHostKeyChecking=no root@$server_ip -p$server_port -i /root/.ssh/cyberpanel_migration_key "$sudoer wget -q -O /root/key.sh https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/CPScripts/EasyEngine/key.sh ; $sudoer bash /root/key.sh disable"
+ssh -o StrictHostKeyChecking=no root@$server_ip -p$server_port -i /root/.ssh/cyberpanel_migration_key "$sudoer wget -q -O /root/key.sh https://raw.githubusercontent.com/erselbey/cyberpanel/stable/CPScripts/EasyEngine/key.sh ; $sudoer bash /root/key.sh disable"
 rm -f /root/.ssh/cyberpanel_migration_key
 rm -rf /opt/easyengine/tmp
 echo -e "\nclean up successful..."
@@ -282,7 +282,7 @@ fi
 
 if [[ -f $password ]] ; then
 #check the input , if it's a file , consider it as key.
-  ssh -o StrictHostKeyChecking=no $user_name@$server_ip -p$server_port -i $password "$sudoer wget -q -O /root/key.sh https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/CPScripts/EasyEngine/key.sh ; $sudoer bash /root/key.sh enable"
+  ssh -o StrictHostKeyChecking=no $user_name@$server_ip -p$server_port -i $password "$sudoer wget -q -O /root/key.sh https://raw.githubusercontent.com/erselbey/cyberpanel/stable/CPScripts/EasyEngine/key.sh ; $sudoer bash /root/key.sh enable"
   if [[ $? == "0" ]] ; then
     ssh -o StrictHostKeyChecking=no $user_name@$server_ip -p$server_port -i $password "$sudoer cat /root/.ssh/cyberpanel_migration_key" > /root/.ssh/cyberpanel_migration_key
       if [[ $? == "0" ]] ; then
@@ -307,7 +307,7 @@ if [[ -f $password ]] ; then
   fi
 else
 #if it's not file , consider it as password
-  sshpass -p "${password}" ssh -o StrictHostKeyChecking=no $user_name@$server_ip -p$server_port "$sudoer wget -q -O /root/key.sh https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/CPScripts/EasyEngine/key.sh ; $sudoer bash /root/key.sh enable"
+  sshpass -p "${password}" ssh -o StrictHostKeyChecking=no $user_name@$server_ip -p$server_port "$sudoer wget -q -O /root/key.sh https://raw.githubusercontent.com/erselbey/cyberpanel/stable/CPScripts/EasyEngine/key.sh ; $sudoer bash /root/key.sh enable"
   if [[ $? == "0" ]] ; then
     sshpass -p "${password}" ssh -o StrictHostKeyChecking=no $user_name@$server_ip -p$server_port "$sudoer cat /root/.ssh/cyberpanel_migration_key" > /root/.ssh/cyberpanel_migration_key
     chmod 400 /root/.ssh/cyberpanel_migration_key
@@ -481,7 +481,7 @@ for (( i=0; i<${tLen}; i++ ));
   done
 #for loop to run each function for each domain.
 
-ssh -o StrictHostKeyChecking=no root@$server_ip -p$server_port -i /root/.ssh/cyberpanel_migration_key "$sudoer wget -q -O /root/ext.sh https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/CPScripts/EasyEngine/ext.sh ; $sudoer bash /root/ext.sh"
+ssh -o StrictHostKeyChecking=no root@$server_ip -p$server_port -i /root/.ssh/cyberpanel_migration_key "$sudoer wget -q -O /root/ext.sh https://raw.githubusercontent.com/erselbey/cyberpanel/stable/CPScripts/EasyEngine/ext.sh ; $sudoer bash /root/ext.sh"
 #install some php ext
 
 show_cyberpanel_site

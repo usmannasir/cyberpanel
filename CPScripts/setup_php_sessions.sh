@@ -2,7 +2,7 @@
 ## Author: Michael Ramsey
 ## Objective Fix session issues on CyberPanel and standardized session paths.
 # Fixes #430
-# https://github.com/usmannasir/cyberpanel/issues/430
+# https://github.com/erselbey/cyberpanel/issues/430
 
 
 # Create the session path directories and chmod it for security to 1733 like the existing one is.
