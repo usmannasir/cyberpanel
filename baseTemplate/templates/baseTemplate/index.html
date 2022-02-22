@@ -62,7 +62,8 @@
 
 
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <!--[if IE]><meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'><![endif]-->
+    <!--[if IE]>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'><![endif]-->
     <title>{% block title %}Page Title{% endblock %}</title>
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -82,12 +83,15 @@
         <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/finalBase/finalBaseTheme.css' %}">
 
         <link rel="stylesheet" type="text/css" href="/static/baseTemplate/assets/themes/admin/layout.css">
-        <link rel="stylesheet" type="text/css" href="/static/baseTemplate/assets/themes/admin/color-schemes/default.css">
-        <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css">
+        <link rel="stylesheet" type="text/css"
+              href="/static/baseTemplate/assets/themes/admin/color-schemes/default.css">
+        <link rel="stylesheet" type="text/css"
+              href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css">
         <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/custom-js/pnotify.custom.min.css' %}">
         <link rel="stylesheet" type="text/css" href="{% static 'websiteFunctions/websiteFunctions.css' %}">
         <link rel="icon" type="image/png" href="{% static 'baseTemplate/assets/finalBase/favicon.png' %}">
-        <link type="text/css" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet"/>
+        <link type="text/css" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css"
+              rel="stylesheet"/>
         {% block styles %}
         {% endblock %}
 
@@ -198,7 +202,7 @@
                 </div>
 
                 <div ng-controller="loadAvg" id="header-nav-right">
-                    <a class="hide-on-phone hdr-btn" style="background-color: unset;width: 33px" href="#"
+                    {% comment %}<a class="hide-on-phone hdr-btn" style="background-color: unset;width: 33px" href="#"
                        title="{% trans 'CPU Load Average' %}" data-placement="bottom">
                         <span class="badge bg-red" id="load1">{$ one $}</span>
                     </a>
@@ -211,69 +215,76 @@
                     <a class="hide-on-phone hdr-btn" style="background-color: unset;width: 33px" href="#"
                        title="{% trans 'CPU Load Average' %}" data-placement="bottom">
                         <span class="badge bg-red" id="load3">{$ three $}</span>
+                    </a>{% endcomment %}
+
+{#                    <div class="dropdown" id="dashnav-btn">#}
+{#                        <a href="#" data-toggle="dropdown" data-placement="bottom"#}
+{#                           class="popover-button-header tooltip-button" title="{% trans 'Dashboard Quick Menu' %}">#}
+{#                            <i class="glyph-icon icon-linecons-cog"></i>#}
+{#                        </a>#}
+{#                        <div class="dropdown-menu float-right">#}
+{#                            <div class="box-sm">#}
+{#                                <div class="pad5T pad5B pad10L pad10R dashboard-buttons clearfix">#}
+{#                                    <a href="{% url 'loadWebsitesHome' %}"#}
+{#                                       class="btn vertical-button remove-border btn-info" title="{% trans '' %}">#}
+{#                            <span class="glyph-icon icon-separator-vertical pad0A medium">#}
+{#                                <i class="glyph-icon icon-dashboard opacity-80 font-size-20"></i>#}
+{#                            </span>#}
+{#                                        {% trans "Websites" %}#}
+{#                                    </a>#}
+{#                                    <a href="{% url 'packagesHome' %}"#}
+{#                                       class="btn vertical-button remove-border btn-danger"#}
+{#                                       title="{% trans '' %}">#}
+{#                            <span class="glyph-icon icon-separator-vertical pad0A medium">#}
+{#                                <i class="glyph-icon icon-tags opacity-80 font-size-20"></i>#}
+{#                            </span>#}
+{#                                        {% trans "Packages" %}#}
+{#                                    </a>#}
+{#                                    <a href="{% url 'dnsHome' %}" class="btn vertical-button remove-border btn-purple"#}
+{#                                       title="{% trans '' %}">#}
+{#                            <span class="glyph-icon icon-separator-vertical pad0A medium">#}
+{#                                <i class="glyph-icon icon-fire opacity-80 font-size-20"></i>#}
+{#                            </span>#}
+{#                                        {% trans "DNS" %}#}
+{#                                    </a>#}
+{#                                    <a href="{% url 'loadFTPHome' %}"#}
+{#                                       class="btn vertical-button remove-border btn-azure"#}
+{#                                       title="{% trans '' %}">#}
+{#                            <span class="glyph-icon icon-separator-vertical pad0A medium">#}
+{#                                <i class="glyph-icon icon-bar-chart-o opacity-80 font-size-20"></i>#}
+{#                            </span>#}
+{#                                        {% trans "FTP" %}#}
+{#                                    </a>#}
+{#                                    <a href="{% url 'loadTuningHome' %}"#}
+{#                                       class="btn vertical-button remove-border btn-yellow" title="{% trans '' %}">#}
+{#                            <span class="glyph-icon icon-separator-vertical pad0A medium">#}
+{#                                <i class="glyph-icon icon-laptop opacity-80 font-size-20"></i>#}
+{#                            </span>#}
+{#                                        {% trans "Tuning" %}#}
+{#                                    </a>#}
+{#                                    <a href="{% url 'serverStatusHome' %}"#}
+{#                                       class="btn vertical-button remove-border btn-warning" title="{% trans '' %}">#}
+{#                            <span class="glyph-icon icon-separator-vertical pad0A medium">#}
+{#                                <i class="glyph-icon icon-code opacity-80 font-size-20"></i>#}
+{#                            </span>#}
+{#                                        {% trans "Status" %}#}
+{#                                    </a>#}
+{##}
+{#                                </div>#}
+{##}
+{#                            </div>#}
+{#                        </div>#}
+{#                    </div>#}
+                    <a class="header-btn" target="_blank" href="https://go.cyberpanel.net/community" title="{% trans 'Community' %}">
+                        <i class="glyph-icon icon-comments"></i>
                     </a>
-
-                    <div class="dropdown" id="dashnav-btn">
-                        <a href="#" data-toggle="dropdown" data-placement="bottom"
-                           class="popover-button-header tooltip-button" title="{% trans 'Dashboard Quick Menu' %}">
-                            <i class="glyph-icon icon-linecons-cog"></i>
-                        </a>
-                        <div class="dropdown-menu float-right">
-                            <div class="box-sm">
-                                <div class="pad5T pad5B pad10L pad10R dashboard-buttons clearfix">
-                                    <a href="{% url 'loadWebsitesHome' %}"
-                                       class="btn vertical-button remove-border btn-info" title="{% trans '' %}">
-                            <span class="glyph-icon icon-separator-vertical pad0A medium">
-                                <i class="glyph-icon icon-dashboard opacity-80 font-size-20"></i>
-                            </span>
-                                        {% trans "Websites" %}
-                                    </a>
-                                    <a href="{% url 'packagesHome' %}"
-                                       class="btn vertical-button remove-border btn-danger"
-                                       title="{% trans '' %}">
-                            <span class="glyph-icon icon-separator-vertical pad0A medium">
-                                <i class="glyph-icon icon-tags opacity-80 font-size-20"></i>
-                            </span>
-                                        {% trans "Packages" %}
-                                    </a>
-                                    <a href="{% url 'dnsHome' %}" class="btn vertical-button remove-border btn-purple"
-                                       title="{% trans '' %}">
-                            <span class="glyph-icon icon-separator-vertical pad0A medium">
-                                <i class="glyph-icon icon-fire opacity-80 font-size-20"></i>
-                            </span>
-                                        {% trans "DNS" %}
-                                    </a>
-                                    <a href="{% url 'loadFTPHome' %}"
-                                       class="btn vertical-button remove-border btn-azure"
-                                       title="{% trans '' %}">
-                            <span class="glyph-icon icon-separator-vertical pad0A medium">
-                                <i class="glyph-icon icon-bar-chart-o opacity-80 font-size-20"></i>
-                            </span>
-                                        {% trans "FTP" %}
-                                    </a>
-                                    <a href="{% url 'loadTuningHome' %}"
-                                       class="btn vertical-button remove-border btn-yellow" title="{% trans '' %}">
-                            <span class="glyph-icon icon-separator-vertical pad0A medium">
-                                <i class="glyph-icon icon-laptop opacity-80 font-size-20"></i>
-                            </span>
-                                        {% trans "Tuning" %}
-                                    </a>
-                                    <a href="{% url 'serverStatusHome' %}"
-                                       class="btn vertical-button remove-border btn-warning" title="{% trans '' %}">
-                            <span class="glyph-icon icon-separator-vertical pad0A medium">
-                                <i class="glyph-icon icon-code opacity-80 font-size-20"></i>
-                            </span>
-                                        {% trans "Status" %}
-                                    </a>
-
-                                </div>
-
-                            </div>
-                        </div>
-                    </div>
+                    <a class="header-btn" target="_blank" href="https://go.cyberpanel.net/support" title="{% trans 'Support' %}">
+                        <i class="glyph-icon icon-support"></i>
+                    </a>
                     <a class="header-btn" id="logout-btn" href="{% url 'logout' %}" title="{% trans 'Logout' %}">
                         <i class="glyph-icon icon-power-off"></i>
                     </a>
+
 
 
                 </div>
@@ -315,6 +326,13 @@
                                        data-original-title=".icon-cloud-upload" aria-describedby="tooltip896208"></i>
                                     <span>{% trans "Connect" %}</span>
                                 </a>
+                                <a target="_blank" href="https://go.cyberpanel.net/community"
+                                   title="{% trans 'Connect' %}">
+                                    <i class="glyph-icon tooltip-button icon-comments-o" title="{% trans 'Community' %}"
+                                       data-original-title=".icon-comments-alt" aria-describedby="tooltip896208"></i>
+                                    <span>{% trans "Community" %}</span>
+                                </a>
+
                             {% endif %}
                         </li>
                         <li class="divider"></li>

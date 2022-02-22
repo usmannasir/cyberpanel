@@ -395,8 +395,10 @@ class backupUtilities:
             status = os.path.join(backupPath, 'status')
             logging.CyberCPLogFileWriter.statusWriter(status, "Aborted, " + str(msg) + ".[365] [5009]")
             print(f"Aborted, {str(msg)}.[365] [5009]")
-
-        os.remove(pidFile)
+        try:
+            os.remove(pidFile)
+        except:
+            pass
 
     @staticmethod
     def BackupRoot(tempStoragePath, backupName, backupPath, metaPath=None, externalApp = None):
