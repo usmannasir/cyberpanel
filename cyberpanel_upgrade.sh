@@ -715,7 +715,7 @@ rm -f /usr/local/composer.sh
 rm -f /usr/local/requirments.txt
 
 chown -R cyberpanel:cyberpanel /usr/local/CyberCP/lib
-chown -R cyberpanel:cyberpanel /usr/local/CyberCP/lib64
+chown -R cyberpanel:cyberpanel /usr/local/CyberCP/lib64 || true
 systemctl restart lscpd
 
 }
