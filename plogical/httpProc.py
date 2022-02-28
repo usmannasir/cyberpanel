@@ -55,6 +55,8 @@ class httpProc:
                     except:
                         pass
 
+                ACLManager.GetServiceStatus(self.data)
+
                 self.data.update(currentACL)
 
                 return render(self.request, self.templateName, self.data)

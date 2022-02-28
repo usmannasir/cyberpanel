@@ -1,6 +1,7 @@
 #!/usr/local/CyberCP/bin/python
 import os,sys
 
+from manageServices.models import PDNSStatus
 from .processUtilities import ProcessUtilities
 
 sys.path.append('/usr/local/CyberCP')
@@ -861,5 +862,33 @@ class ACLManager:
 
         command = 'chmod 711 %s' % (UploadPath)
         ProcessUtilities.executioner(command)
+
+
+    @staticmethod
+    def GetServiceStatus(dic):
+        if os.path.exists('/home/cyberpanel/postfix'):
+            dic['emailAsWhole'] = 1
+        else:
+            dic['emailAsWhole'] = 0
+
+        if os.path.exists('/home/cyberpanel/pureftpd'):
+            dic['ftpAsWhole'] = 1
+        else:
+            dic['ftpAsWhole'] = 0
+
+        try:
+            pdns = PDNSStatus.objects.get(pk=1)
+            dic['dnsAsWhole'] = pdns.serverStatus
+        except:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
+                pdnsPath = '/etc/powerdns'
+            else:
+                pdnsPath = '/etc/pdns'
+
+            if os.path.exists(pdnsPath):
+                PDNSStatus(serverStatus=1).save()
+                dic['dnsAsWhole'] = 1
+            else:
+                dic['dnsAsWhole'] = 0
 
 
