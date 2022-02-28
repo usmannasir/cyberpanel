@@ -200,6 +200,9 @@ class InstallCyberPanel:
             command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp80*'
             os.system(command)
 
+            command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp81*'
+            os.system(command)
+
         elif self.distro == centos:
             command = 'yum -y groupinstall lsphp-all'
             install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
@@ -239,6 +242,9 @@ class InstallCyberPanel:
             install.preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             command = 'yum install lsphp80* -y'
+            subprocess.call(command, shell=True)
+
+            command = 'yum install lsphp81* -y'
             subprocess.call(command, shell=True)
 
         if self.distro == cent8:

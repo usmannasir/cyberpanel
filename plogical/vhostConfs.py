@@ -77,13 +77,28 @@ phpIniOverride  {
 }
 
 module cache {
- storagePath $VH_ROOT/lscache
+ storagePath /usr/local/lsws/cachedata/$VH_NAME
 }
 
 rewrite  {
  enable                  1
   autoLoadHtaccess        1
 }
+
+context /.well-known/acme-challenge {
+  location                /usr/local/lsws/Example/html/.well-known/acme-challenge
+  allowBrowse             1
+
+  rewrite  {
+
+  }
+  addDefaultCharset       off
+
+  phpIniOverride  {
+
+  }
+}
+
 """
 
     olsChildMainConf = """virtualHost {virtualHostName} {
@@ -127,7 +142,7 @@ phpIniOverride  {
 }
 
 module cache {
- storagePath $VH_ROOT/lscache
+ storagePath /usr/local/lsws/cachedata/$VH_NAME
 }
 
 errorpage 403 {
@@ -170,6 +185,21 @@ rewrite  {
   enable                  1
   autoLoadHtaccess        1
 }
+
+context /.well-known/acme-challenge {
+  location                /usr/local/lsws/Example/html/.well-known/acme-challenge
+  allowBrowse             1
+
+  rewrite  {
+
+  }
+  addDefaultCharset       off
+
+  phpIniOverride  {
+
+  }
+}
+
 """
 
     lswsMasterConf = """<VirtualHost *:80>
@@ -179,6 +209,7 @@ rewrite  {
     ServerAdmin {administratorEmail}
     SuexecUserGroup {externalApp} {externalApp}
     DocumentRoot /home/{virtualHostName}/public_html
+    Alias /.well-known/acme-challenge /usr/local/lsws/Example/html/.well-known/acme-challenge
     CustomLog /home/{virtualHostName}/logs/{virtualHostName}.access_log combined
     AddHandler application/x-httpd-php{php} .php .php7 .phtml
     <IfModule LiteSpeed>
@@ -188,6 +219,7 @@ rewrite  {
 
 </VirtualHost>
 """
+
 
     lswsChildConf = """<VirtualHost *:80>
 

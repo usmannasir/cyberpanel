@@ -1,5 +1,9 @@
 #!/usr/local/CyberCP/bin/python
 import os,sys
+
+from manageServices.models import PDNSStatus
+from .processUtilities import ProcessUtilities
+
 sys.path.append('/usr/local/CyberCP')
 import django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
@@ -592,12 +596,18 @@ class ACLManager:
             domains = Websites.objects.all().order_by('domain')
             for items in domains:
                 domainsList.append(items.domain)
+
+                for childs in items.childdomains_set.all():
+                    domainsList.append(childs.domain)
+
         else:
             admin = Administrator.objects.get(pk=userID)
             domains = admin.websites_set.all().order_by('domain')
 
             for items in domains:
                 domainsList.append(items.domain)
+                for childs in items.childdomains_set.all():
+                    domainsList.append(childs.domain)
 
             admins = Administrator.objects.filter(owner=admin.pk)
 
@@ -605,6 +615,8 @@ class ACLManager:
                 doms = items.websites_set.all().order_by('domain')
                 for dom in doms:
                     domainsList.append(dom.domain)
+                    for childs in items.childdomains_set.all():
+                        domainsList.append(childs.domain)
 
         return domainsList
 
@@ -676,7 +688,11 @@ class ACLManager:
 
     @staticmethod
     def checkOwnershipZone(domain, admin, currentACL):
-        domain = Websites.objects.get(domain=domain)
+        try:
+            domain = Websites.objects.get(domain=domain)
+        except:
+            domain = ChildDomains.objects.get(domain=domain)
+            domain = domain.master
 
         if currentACL['admin'] == 1:
             return 1
@@ -819,5 +835,60 @@ class ACLManager:
             return 1
         else:
             return 0
+
+    @staticmethod
+    def FetchExternalApp(domain):
+        try:
+            childDomain = ChildDomains.objects.get(domain=domain)
+
+            return childDomain.master.externalApp
+
+        except:
+            domainName = Websites.objects.get(domain=domain)
+            return domainName.externalApp
+
+    @staticmethod
+    def CreateSecureDir():
+        ### Check if upload path tmp dir is not available
+
+        UploadPath = '/usr/local/CyberCP/tmp/'
+
+        if not os.path.exists(UploadPath):
+            command = 'mkdir %s' % (UploadPath)
+            ProcessUtilities.executioner(command)
+
+        command = 'chown cyberpanel:cyberpanel %s' % (UploadPath)
+        ProcessUtilities.executioner(command)
+
+        command = 'chmod 711 %s' % (UploadPath)
+        ProcessUtilities.executioner(command)
+
+
+    @staticmethod
+    def GetServiceStatus(dic):
+        if os.path.exists('/home/cyberpanel/postfix'):
+            dic['emailAsWhole'] = 1
+        else:
+            dic['emailAsWhole'] = 0
+
+        if os.path.exists('/home/cyberpanel/pureftpd'):
+            dic['ftpAsWhole'] = 1
+        else:
+            dic['ftpAsWhole'] = 0
+
+        try:
+            pdns = PDNSStatus.objects.get(pk=1)
+            dic['dnsAsWhole'] = pdns.serverStatus
+        except:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
+                pdnsPath = '/etc/powerdns'
+            else:
+                pdnsPath = '/etc/pdns'
+
+            if os.path.exists(pdnsPath):
+                PDNSStatus(serverStatus=1).save()
+                dic['dnsAsWhole'] = 1
+            else:
+                dic['dnsAsWhole'] = 0
 
 

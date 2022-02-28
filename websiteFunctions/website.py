@@ -2333,7 +2333,7 @@ StrictHostKeyChecking no
             if hashPassword.check_password(admin.password, adminPass):
 
                 if adminEmail is None:
-                    data['adminEmail'] = "usman@cyberpersons.com"
+                    data['adminEmail'] = "example@example.org"
 
                 try:
                     acl = ACL.objects.get(name=apiACL)
@@ -2839,14 +2839,14 @@ StrictHostKeyChecking no
 
         try:
             website = Websites.objects.get(domain=self.domain)
-            folders = ['/home/%s/public_html' % (self.domain), '/home/%s' % (self.domain),
-                       '/home/vmail/%s' % (self.domain)]
+            folders = ['/home/%s/public_html' % (self.domain)]
+
 
             databases = website.databases_set.all()
 
-            for database in databases:
-                basePath = '/var/lib/mysql/'
-                folders.append('%s%s' % (basePath, database.dbName))
+            # for database in databases:
+            #     basePath = '/var/lib/mysql/'
+            #     folders.append('%s%s' % (basePath, database.dbName))
         except:
 
             self.childWebsite = ChildDomains.objects.get(domain=self.domain)
@@ -2855,9 +2855,9 @@ StrictHostKeyChecking no
 
             databases = self.childWebsite.master.databases_set.all()
 
-            for database in databases:
-                basePath = '/var/lib/mysql/'
-                folders.append('%s%s' % (basePath, database.dbName))
+            # for database in databases:
+            #     basePath = '/var/lib/mysql/'
+            #     folders.append('%s%s' % (basePath, database.dbName))
 
         proc = httpProc(request, 'websiteFunctions/manageGIT.html',
                         {'domainName': self.domain, 'folders': folders})
@@ -3124,24 +3124,26 @@ StrictHostKeyChecking no
             else:
                 return ACLManager.loadErrorJson()
 
+            website = Websites.objects.get(domain=self.masterDomain)
+
             command = 'git -C %s init' % (self.folder)
-            result = ProcessUtilities.outputExecutioner(command)
+            result = ProcessUtilities.outputExecutioner(command, website.externalApp)
 
             if result.find('Initialized empty Git repository in') > -1:
 
                 command = 'git -C %s config --local user.email %s' % (self.folder, self.adminEmail)
-                ProcessUtilities.executioner(command)
+                ProcessUtilities.executioner(command, website.externalApp)
 
                 command = 'git -C %s config --local user.name "%s %s"' % (
                     self.folder, self.firstName, self.lastName)
-                ProcessUtilities.executioner(command)
+                ProcessUtilities.executioner(command, website.externalApp)
 
                 ## Fix permissions
 
-                from filemanager.filemanager import FileManager
-
-                fm = FileManager(None, None)
-                fm.fixPermissions(self.masterDomain)
+                # from filemanager.filemanager import FileManager
+                #
+                # fm = FileManager(None, None)
+                # fm.fixPermissions(self.masterDomain)
 
                 data_ret = {'status': 1}
                 json_data = json.dumps(data_ret)
@@ -3205,12 +3207,12 @@ StrictHostKeyChecking no
 
             command = 'git -C %s config --local core.sshCommand "ssh -i /home/%s/.ssh/%s -o "StrictHostKeyChecking=no""' % (
             self.folder, self.masterDomain, self.externalAppLocal)
-            ProcessUtilities.executioner(command)
+            ProcessUtilities.executioner(command, self.externalAppLocal)
 
             ## Check if remote exists
 
             command = 'git -C %s remote -v' % (self.folder)
-            remoteResult = ProcessUtilities.outputExecutioner(command)
+            remoteResult = ProcessUtilities.outputExecutioner(command, self.externalAppLocal)
 
             ## Set new remote
 
@@ -3221,21 +3223,21 @@ StrictHostKeyChecking no
                 command = 'git -C %s remote set-url origin git@%s:%s/%s.git' % (
                 self.folder, self.gitHost, self.gitUsername, self.gitReponame)
 
-            possibleError = ProcessUtilities.outputExecutioner(command)
+            possibleError = ProcessUtilities.outputExecutioner(command, self.externalAppLocal)
 
             ## Check if set correctly.
 
             command = 'git -C %s remote -v' % (self.folder)
-            remoteResult = ProcessUtilities.outputExecutioner(command)
+            remoteResult = ProcessUtilities.outputExecutioner(command, self.externalAppLocal)
 
             if remoteResult.find(self.gitUsername) > -1:
 
-                ## Fix permissions
-
-                from filemanager.filemanager import FileManager
-
-                fm = FileManager(None, None)
-                fm.fixPermissions(self.masterDomain)
+                # ## Fix permissions
+                #
+                # from filemanager.filemanager import FileManager
+                #
+                # fm = FileManager(None, None)
+                # fm.fixPermissions(self.masterDomain)
 
                 data_ret = {'status': 1}
                 json_data = json.dumps(data_ret)
@@ -3283,17 +3285,19 @@ StrictHostKeyChecking no
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
+            self.externalApp = ACLManager.FetchExternalApp(self.domain)
+
             command = 'git -C %s checkout %s' % (self.folder, self.branchName.strip(' '))
-            commandStatus = ProcessUtilities.outputExecutioner(command)
+            commandStatus = ProcessUtilities.outputExecutioner(command, self.externalApp)
 
             if commandStatus.find('Switched to branch') > -1:
 
-                ## Fix permissions
-
-                from filemanager.filemanager import FileManager
-
-                fm = FileManager(None, None)
-                fm.fixPermissions(self.masterDomain)
+                # ## Fix permissions
+                #
+                # from filemanager.filemanager import FileManager
+                #
+                # fm = FileManager(None, None)
+                # fm.fixPermissions(self.masterDomain)
 
                 data_ret = {'status': 1, 'commandStatus': commandStatus + 'Refreshing page in 3 seconds..'}
                 json_data = json.dumps(data_ret)
@@ -3337,17 +3341,19 @@ StrictHostKeyChecking no
 
             ##
 
+            self.externalApp = ACLManager.FetchExternalApp(self.domain)
+
             command = 'git -C %s checkout -b "%s"' % (self.folder, self.newBranchName)
-            commandStatus = ProcessUtilities.outputExecutioner(command)
+            commandStatus = ProcessUtilities.outputExecutioner(command, self.externalApp)
 
             if commandStatus.find(self.newBranchName) > -1:
 
-                ## Fix permissions
-
-                from filemanager.filemanager import FileManager
-
-                fm = FileManager(None, None)
-                fm.fixPermissions(self.masterDomain)
+                # ## Fix permissions
+                #
+                # from filemanager.filemanager import FileManager
+                #
+                # fm = FileManager(None, None)
+                # fm.fixPermissions(self.masterDomain)
 
                 data_ret = {'status': 1, 'commandStatus': commandStatus}
                 json_data = json.dumps(data_ret)
@@ -3389,13 +3395,15 @@ StrictHostKeyChecking no
             else:
                 return ACLManager.loadErrorJson()
 
+            self.externalApp = ACLManager.FetchExternalApp(self.domain)
+
             ## Check if remote exists
 
             command = 'git -C %s add -A' % (self.folder)
-            ProcessUtilities.outputExecutioner(command)
+            ProcessUtilities.outputExecutioner(command, self.externalApp)
 
             command = 'git -C %s commit -m "%s"' % (self.folder, self.commitMessage.replace('"', ''))
-            commandStatus = ProcessUtilities.outputExecutioner(command)
+            commandStatus = ProcessUtilities.outputExecutioner(command, self.externalApp)
 
             if commandStatus.find('nothing to commit') == -1:
 
@@ -3430,10 +3438,10 @@ StrictHostKeyChecking no
 
                 ## Fix permissions
 
-                from filemanager.filemanager import FileManager
-
-                fm = FileManager(None, None)
-                fm.fixPermissions(self.masterDomain)
+                # from filemanager.filemanager import FileManager
+                #
+                # fm = FileManager(None, None)
+                # fm.fixPermissions(self.masterDomain)
 
                 data_ret = {'status': 1, 'commandStatus': commandStatus}
                 json_data = json.dumps(data_ret)
@@ -3467,25 +3475,27 @@ StrictHostKeyChecking no
             else:
                 return ACLManager.loadErrorJson()
 
+            self.externalApp = ACLManager.FetchExternalApp(self.domain)
+
             ### set default ssh key
 
             command = 'git -C %s config --local core.sshCommand "ssh -i /home/%s/.ssh/%s -o "StrictHostKeyChecking=no""' % (
                 self.folder, self.masterDomain, self.externalAppLocal)
-            ProcessUtilities.executioner(command)
+            ProcessUtilities.executioner(command, self.externalApp)
 
             ## Check if remote exists
 
             command = 'git -C %s pull' % (self.folder)
-            commandStatus = ProcessUtilities.outputExecutioner(command)
+            commandStatus = ProcessUtilities.outputExecutioner(command, self.externalApp)
 
             if commandStatus.find('Already up to date') == -1:
 
                 ## Fix permissions
 
-                from filemanager.filemanager import FileManager
-
-                fm = FileManager(None, None)
-                fm.fixPermissions(self.masterDomain)
+                # from filemanager.filemanager import FileManager
+                #
+                # fm = FileManager(None, None)
+                # fm.fixPermissions(self.masterDomain)
 
                 data_ret = {'status': 1, 'commandStatus': commandStatus}
                 json_data = json.dumps(data_ret)
@@ -3519,20 +3529,22 @@ StrictHostKeyChecking no
             else:
                 return ACLManager.loadErrorJson()
 
+            self.externalApp = ACLManager.FetchExternalApp(self.domain)
+
             ### set default ssh key
 
             command = 'git -C %s config --local core.sshCommand "ssh -i /home/%s/.ssh/%s -o "StrictHostKeyChecking=no""' % (
                 self.folder, self.masterDomain, self.externalAppLocal)
-            ProcessUtilities.executioner(command)
+            ProcessUtilities.executioner(command, self.externalApp)
 
             ##
 
             command = 'git -C %s push' % (self.folder)
-            commandStatus = ProcessUtilities.outputExecutioner(command, 'root', False)
+            commandStatus = ProcessUtilities.outputExecutioner(command, self.externalApp, False)
 
             if commandStatus.find('has no upstream branch') > -1:
                 command = 'git -C %s rev-parse --abbrev-ref HEAD' % (self.folder)
-                currentBranch = ProcessUtilities.outputExecutioner(command, 'root', False).rstrip('\n')
+                currentBranch = ProcessUtilities.outputExecutioner(command, self.externalApp, False).rstrip('\n')
 
                 if currentBranch.find('fatal: ambiguous argument') > -1:
                     data_ret = {'status': 0, 'error_message': 'You need to commit first.',
@@ -3541,7 +3553,7 @@ StrictHostKeyChecking no
                     return HttpResponse(json_data)
 
                 command = 'git -C %s push --set-upstream origin %s' % (self.folder, currentBranch)
-                commandStatus = ProcessUtilities.outputExecutioner(command, 'root', False)
+                commandStatus = ProcessUtilities.outputExecutioner(command, self.externalApp, False)
 
             if commandStatus.find('Everything up-to-date') == -1 and commandStatus.find(
                     'rejected') == -1 and commandStatus.find('Permission denied') == -1:
@@ -3609,33 +3621,35 @@ StrictHostKeyChecking no
 
             ##
 
+            self.externalApp = ACLManager.FetchExternalApp(self.domain)
+
             if self.overrideData:
                 command = 'rm -rf %s' % (self.folder)
-                ProcessUtilities.executioner(command)
+                ProcessUtilities.executioner(command, self.externalApp)
 
             ## Set defauly key
 
             command = 'git config --global core.sshCommand "ssh -i /home/%s/.ssh/%s -o "StrictHostKeyChecking=no""' % (
             self.masterDomain, self.externalAppLocal)
-            ProcessUtilities.executioner(command)
+            ProcessUtilities.executioner(command, self.externalApp)
 
             ##
 
             command = 'git clone git@%s:%s/%s.git %s' % (self.gitHost, self.gitUsername, self.gitReponame, self.folder)
-            commandStatus = ProcessUtilities.outputExecutioner(command)
+            commandStatus = ProcessUtilities.outputExecutioner(command, self.externalApp)
 
             if commandStatus.find('already exists') == -1 and commandStatus.find('Permission denied') == -1:
 
-                from filemanager.filemanager import FileManager
-
-                fm = FileManager(None, None)
-                fm.fixPermissions(self.masterDomain)
+                # from filemanager.filemanager import FileManager
+                #
+                # fm = FileManager(None, None)
+                # fm.fixPermissions(self.masterDomain)
 
                 command = 'git -C %s config --local user.email %s' % (self.folder, self.adminEmail)
-                ProcessUtilities.executioner(command)
+                ProcessUtilities.executioner(command, self.externalApp)
 
                 command = 'git -C %s config --local user.name "%s %s"' % (self.folder, self.firstName, self.lastName)
-                ProcessUtilities.executioner(command)
+                ProcessUtilities.executioner(command, self.externalApp)
 
                 data_ret = {'status': 1, 'commandStatus': commandStatus}
                 json_data = json.dumps(data_ret)
@@ -3643,10 +3657,10 @@ StrictHostKeyChecking no
 
             else:
 
-                from filemanager.filemanager import FileManager
-
-                fm = FileManager(None, None)
-                fm.fixPermissions(self.masterDomain)
+                # from filemanager.filemanager import FileManager
+                #
+                # fm = FileManager(None, None)
+                # fm.fixPermissions(self.masterDomain)
 
                 data_ret = {'status': 0, 'error_message': 'Failed to clone.', 'commandStatus': commandStatus}
                 json_data = json.dumps(data_ret)
@@ -3676,22 +3690,24 @@ StrictHostKeyChecking no
             else:
                 return ACLManager.loadErrorJson()
 
+            self.externalApp = ACLManager.FetchExternalApp(self.domain)
+
             command = 'rm -rf %s/.git' % (self.folder)
-            ProcessUtilities.executioner(command)
+            ProcessUtilities.executioner(command, self.externalApp)
 
             gitConfFolder = '/home/cyberpanel/git'
             gitConFile = '%s/%s' % (gitConfFolder, self.masterDomain)
             finalFile = '%s/%s' % (gitConFile, self.folder.split('/')[-1])
 
             command = 'rm -rf %s' % (finalFile)
-            ProcessUtilities.outputExecutioner(command)
+            ProcessUtilities.outputExecutioner(command, self.externalApp)
 
             ## Fix permissions
 
-            from filemanager.filemanager import FileManager
-
-            fm = FileManager(None, None)
-            fm.fixPermissions(self.masterDomain)
+            # from filemanager.filemanager import FileManager
+            #
+            # fm = FileManager(None, None)
+            # fm.fixPermissions(self.masterDomain)
 
             data_ret = {'status': 1}
             json_data = json.dumps(data_ret)
@@ -3766,15 +3782,17 @@ StrictHostKeyChecking no
 
             ## Move to original file
 
+            self.externalApp = ACLManager.FetchExternalApp(self.domain)
+
             command = 'mv %s %s/.gitignore' % (tempPath, self.folder)
-            ProcessUtilities.executioner(command)
+            ProcessUtilities.executioner(command, self.externalApp)
 
             ## Fix permissions
 
-            from filemanager.filemanager import FileManager
-
-            fm = FileManager(None, None)
-            fm.fixPermissions(self.masterDomain)
+            # from filemanager.filemanager import FileManager
+            #
+            # fm = FileManager(None, None)
+            # fm.fixPermissions(self.masterDomain)
 
             data_ret = {'status': 1}
             json_data = json.dumps(data_ret)
@@ -3806,8 +3824,10 @@ StrictHostKeyChecking no
 
             initCommand = """log --pretty=format:"%h|%s|%cn|%cd" -50"""
 
+            self.externalApp = ACLManager.FetchExternalApp(self.domain)
+
             command = 'git -C %s %s' % (self.folder, initCommand)
-            commits = ProcessUtilities.outputExecutioner(command).split('\n')
+            commits = ProcessUtilities.outputExecutioner(command, self.externalApp).split('\n')
 
             json_data = "["
             checker = 0
@@ -3870,10 +3890,18 @@ StrictHostKeyChecking no
 
             ##
 
-            command = 'git -C %s diff-tree --no-commit-id --name-only -r %s' % (self.folder, self.commit)
-            files = ProcessUtilities.outputExecutioner(command).split('\n')
+            self.externalApp = ACLManager.FetchExternalApp(self.domain)
 
-            data_ret = {'status': 1, 'files': files}
+            command = 'git -C %s diff-tree --no-commit-id --name-only -r %s' % (self.folder, self.commit)
+            files = ProcessUtilities.outputExecutioner(command, self.externalApp).split('\n')
+
+            FinalFiles = []
+
+            for items in files:
+                if items != '':
+                    FinalFiles.append(items.rstrip('\n').lstrip('\n'))
+
+            data_ret = {'status': 1, 'files': FinalFiles}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -3910,9 +3938,11 @@ StrictHostKeyChecking no
             else:
                 return ACLManager.loadErrorJson('status', 'Invalid characters in your input.')
 
+            self.externalApp = ACLManager.FetchExternalApp(self.domain)
+
             command = 'git -C %s show %s -- %s/%s' % (
             self.folder, self.commit, self.folder, self.file.strip('\n').strip(' '))
-            fileChangedContent = ProcessUtilities.outputExecutioner(command).split('\n')
+            fileChangedContent = ProcessUtilities.outputExecutioner(command, self.externalApp).split('\n')
 
             initialNumber = 0
             ## Find initial line numbers
@@ -4123,8 +4153,10 @@ StrictHostKeyChecking no
 
             ## Check if remote exists
 
+            self.externalApp = ACLManager.FetchExternalApp(self.domain)
+
             command = 'git -C %s pull' % (self.folder)
-            commandStatus = ProcessUtilities.outputExecutioner(command)
+            commandStatus = ProcessUtilities.outputExecutioner(command, self.externalApp)
 
             if commandStatus.find('Already up to date') == -1:
                 message = '[Webhook Fired] Status: %s.' % (commandStatus)
@@ -4188,10 +4220,10 @@ StrictHostKeyChecking no
 
                 ## Fix permissions
 
-                from filemanager.filemanager import FileManager
-
-                fm = FileManager(None, None)
-                fm.fixPermissions(self.masterDomain)
+                # from filemanager.filemanager import FileManager
+                #
+                # fm = FileManager(None, None)
+                # fm.fixPermissions(self.masterDomain)
 
                 data_ret = {'status': 1, 'commandStatus': commandStatus}
                 json_data = json.dumps(data_ret)

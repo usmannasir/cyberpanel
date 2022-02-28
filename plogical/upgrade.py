@@ -2122,6 +2122,11 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             command = 'chmod 700 %s' % ('/home/cyberpanel')
             Upgrade.executioner(command, 0)
 
+            destPrivKey = "/usr/local/lscp/conf/key.pem"
+
+            command = 'chmod 600 %s' % (destPrivKey)
+            Upgrade.executioner(command, 0)
+
             Upgrade.stdOut("Permissions updated.")
 
         except BaseException as msg:
@@ -2156,6 +2161,10 @@ echo $oConfig->Save() ? 'Done' : 'Error';
                 command = 'yum install lsphp80* -y'
                 subprocess.call(command, shell=True)
 
+            if Upgrade.installedOutput.find('lsphp81') == -1:
+                command = 'yum install lsphp81* -y'
+                subprocess.call(command, shell=True)
+
         except:
             command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install ' \
                       'lsphp7? lsphp7?-common lsphp7?-curl lsphp7?-dev lsphp7?-imap lsphp7?-intl lsphp7?-json ' \
@@ -2164,6 +2173,9 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             Upgrade.executioner(command, 'Install PHP 73, 0')
 
             command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp80*'
+            os.system(command)
+
+            command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp81*'
             os.system(command)
 
         CentOSPath = '/etc/redhat-release'

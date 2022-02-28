@@ -193,6 +193,10 @@ class vhost:
     @staticmethod
     def createDirectoryForVirtualHost(virtualHostName,administratorEmail,virtualHostUser, phpVersion, openBasedir):
 
+        if not os.path.exists('/usr/local/lsws/Example/html/.well-known/acme-challenge'):
+            command = 'mkdir -p /usr/local/lsws/Example/html/.well-known/acme-challenge'
+            ProcessUtilities.normalExecutioner(command)
+
         path = "/home/" + virtualHostName
         pathHTML = "/home/" + virtualHostName + "/public_html"
         pathLogs = "/home/" + virtualHostName + "/logs"
@@ -377,6 +381,7 @@ class vhost:
 
                 delWebsite = Websites.objects.get(domain=virtualHostName)
                 externalApp = delWebsite.externalApp
+
 
                 ##
 
@@ -611,6 +616,10 @@ class vhost:
 
     @staticmethod
     def changePHP(vhFile, phpVersion):
+
+        from pathlib import Path
+        HomePath = Path("/home/%s" % (vhFile.split('/')[-2]))
+        virtualHostUser = HomePath.owner()
         phpDetachUpdatePath = '/home/%s/.lsphp_restart.txt' % (vhFile.split('/')[-2])
         if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
             try:
@@ -635,12 +644,13 @@ class vhost:
 
                     writeDataToFile.close()
 
-                    writeToFile = open(phpDetachUpdatePath, 'w')
-                    writeToFile.close()
+                    command = 'sudo -u %s touch %s' % (virtualHostUser, phpDetachUpdatePath)
+                    ProcessUtilities.normalExecutioner(command)
 
                     installUtilities.installUtilities.reStartLiteSpeed()
                     try:
-                        os.remove(phpDetachUpdatePath)
+                        command = 'sudo -u %s rm -f %s' % (virtualHostUser, phpDetachUpdatePath)
+                        ProcessUtilities.normalExecutioner(command)
                     except:
                         pass
                 else:
@@ -852,13 +862,26 @@ class vhost:
     def finalizeDomainCreation(virtualHostUser, path):
         try:
 
+            ACLManager.CreateSecureDir()
+
+            RanddomFileName = str(randint(1000, 9999))
+
+            FullPath = '%s/%s' % ('/usr/local/CyberCP/tmp', RanddomFileName)
+
             FNULL = open(os.devnull, 'w')
 
-            shutil.copy("/usr/local/CyberCP/index.html", path + "/index.html")
+            #shutil.copy("/usr/local/CyberCP/index.html", path + "/index.html")
 
-            command = "chown " + virtualHostUser + ":" + virtualHostUser + " " + path + "/index.html"
+            shutil.copy("/usr/local/CyberCP/index.html", FullPath)
+
+            command = "chown " + virtualHostUser + ":" + virtualHostUser + " " + FullPath
             cmd = shlex.split(command)
             subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+
+            command = 'sudo -u %s cp %s %s/index.html' % (virtualHostUser, FullPath, path)
+            ProcessUtilities.normalExecutioner(command)
+
+            os.remove(FullPath)
 
             vhostPath = vhost.Server_root + "/conf/vhosts"
             command = "chown -R " + "lsadm" + ":" + "lsadm" + " " + vhostPath
@@ -878,18 +901,19 @@ class vhost:
         completePathToConfigFile = confPath + "/vhost.conf"
 
         try:
-            os.makedirs(path)
+
+            command = 'sudo -u %s mkdir %s' % (virtualHostUser, path)
+            ProcessUtilities.normalExecutioner(command)
 
             if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 groupName = 'nobody'
             else:
                 groupName = 'nogroup'
 
-            command = "chown " + virtualHostUser + ":%s " % (groupName) + path
-            cmd = shlex.split(command)
-            subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+            command = 'sudo -u %s chown %s:%s %s' % (virtualHostUser, virtualHostUser, groupName, path)
+            ProcessUtilities.normalExecutioner(command)
 
-            command = "chmod 750 %s" % (path)
+            command = "sudo -u %s chmod 750 %s" % (virtualHostUser, path)
             cmd = shlex.split(command)
             subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 

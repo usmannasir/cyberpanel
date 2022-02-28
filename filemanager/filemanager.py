@@ -595,19 +595,8 @@ class FileManager:
             finalData['uploadStatus'] = 1
             finalData['answer'] = 'File transfer completed.'
 
-            ### Check if upload path tmp dir is not available
-
+            ACLManager.CreateSecureDir()
             UploadPath = '/usr/local/CyberCP/tmp/'
-
-            if not os.path.exists(UploadPath):
-                command = 'mkdir %s' % (UploadPath)
-                ProcessUtilities.executioner(command)
-
-            command = 'chown cyberpanel:cyberpanel %s' % (UploadPath)
-            ProcessUtilities.executioner(command)
-
-            command = 'chmod 711 %s' % (UploadPath)
-            ProcessUtilities.executioner(command)
 
             ## Random file name
 
