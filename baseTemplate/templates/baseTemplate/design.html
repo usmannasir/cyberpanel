@@ -8,7 +8,7 @@
     <!-- Current language: {{ LANGUAGE_CODE }} -->
 
 
-    <div class="container">
+    <div class="container" ng-controller="designtheme">
         <div id="page-title">
             <h2>{% trans "Design" %}</h2>
             <p>{% trans "" %}</p>
@@ -16,9 +16,11 @@
         <div class="panel">
             <div class="panel-body">
                 <h3 class="content-box-header">
-                    {% trans "Custom CSS" %}
+                    {% trans "Custom CSS" %}<img ng-hide="themeloading"
+                                                       src="{% static 'images/loading.gif' %}">
                 </h3>
                 <p>Any CSS added here will apply to whole dashboard design.</p>
+
                 <div class="example-box-wrapper">
                     <form action="{% url 'design' %}" method="POST" class="form-horizontal bordered-row panel-body">
                         {% csrf_token %}
@@ -34,9 +36,19 @@
                             </div>
                         {% endif %}
 
+                        <select ng-change="getthemedata()" ng-model="stheme" id="stheme"
+                                style="width: 49%; padding: 8px; margin-top: 5px; margin-bottom: 10px"
+
+                                class="form-control form-select form-select-lg"
+                                aria-label=".form-select-lg example">
+                            {% for key in tree %}
+                                <option value="{{ key }}">{{ key }}</option>
+                            {% endfor %}
+                        </select>
+
                         <div ng-hide="keyBox" class="form-group">
                             <div class="col-sm-12">
-                                <textarea name="MainDashboardCSS" rows="12"
+                                <textarea id="appendthemedata" name="MainDashboardCSS" rows="12"
                                           class="form-control ng-pristine ng-untouched ng-valid ng-empty">{{ cosmetic.MainDashboardCSS }}</textarea>
                             </div>
                         </div>
