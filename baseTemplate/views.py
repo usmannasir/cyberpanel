@@ -262,6 +262,11 @@ def getthemedata(request):
         currentACL = ACLManager.loadedACL(val)
         data = json.loads(request.body)
 
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('reboot', 0)
+
         #logging.CyberCPLogFileWriter.writeToFile(str(data) + "  [themedata]")
 
         url = "https://raw.githubusercontent.com/usmannasir/CyberPanel-Themes/main/%s/design.css" % data['Themename']
