@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from django.shortcuts import render,redirect
+from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from plogical.getSystemInformation import SystemInformation
 import json
@@ -15,10 +15,12 @@ from manageServices.models import PDNSStatus
 from django.views.decorators.csrf import ensure_csrf_cookie
 from plogical.processUtilities import ProcessUtilities
 from plogical.httpProc import httpProc
+
 # Create your views here.
 
 VERSION = '2.1'
 BUILD = 2
+
 
 @ensure_csrf_cookie
 def renderBase(request):
@@ -28,6 +30,7 @@ def renderBase(request):
                 'diskUsage': cpuRamDisk['diskUsage']}
     proc = httpProc(request, template, finaData)
     return proc.render()
+
 
 def getAdminStatus(request):
     try:
@@ -65,6 +68,7 @@ def getAdminStatus(request):
     except KeyError:
         return HttpResponse("Can not get admin Status")
 
+
 def getSystemStatus(request):
     try:
         val = request.session['userID']
@@ -75,6 +79,7 @@ def getSystemStatus(request):
     except KeyError:
         return HttpResponse("Can not get admin Status")
 
+
 def getLoadAverage(request):
     try:
         val = request.session['userID']
@@ -84,11 +89,12 @@ def getLoadAverage(request):
         one = loadAverage[0]
         two = loadAverage[1]
         three = loadAverage[2]
-        loadAvg = {"one": one, "two": two,"three": three}
+        loadAvg = {"one": one, "two": two, "three": three}
         json_data = json.dumps(loadAvg)
         return HttpResponse(json_data)
     except KeyError:
         return HttpResponse("Not allowed.")
+
 
 @ensure_csrf_cookie
 def versionManagment(request):
@@ -111,6 +117,7 @@ def versionManagment(request):
     proc = httpProc(request, template, finalData, 'versionManagement')
     return proc.render()
 
+
 def upgrade(request):
     try:
         admin = request.session['userID']
@@ -130,9 +137,9 @@ def upgrade(request):
 
         from upgrade import Upgrade
 
-        Upgrade.initiateUpgrade(vers.currentVersion,vers.build)
+        Upgrade.initiateUpgrade(vers.currentVersion, vers.build)
 
-        adminData = {"upgrade":1}
+        adminData = {"upgrade": 1}
 
         json_data = json.dumps(adminData)
 
@@ -140,9 +147,10 @@ def upgrade(request):
 
 
     except KeyError:
-        adminData = {"upgrade": 1,"error_message":"Please login or refresh this page."}
+        adminData = {"upgrade": 1, "error_message": "Please login or refresh this page."}
         json_data = json.dumps(adminData)
         return HttpResponse(json_data)
+
 
 def upgradeStatus(request):
     try:
@@ -160,8 +168,7 @@ def upgradeStatus(request):
                                              'upgradeLog': "Upgrade Just started.."})
                     return HttpResponse(final_json)
 
-
-                if upgradeLog.find("Upgrade Completed")>-1:
+                if upgradeLog.find("Upgrade Completed") > -1:
 
                     vers = version.objects.get(pk=1)
                     getVersion = requests.get('https://cyberpanel.net/version.txt')
@@ -192,6 +199,7 @@ def upgradeStatus(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
+
 def upgradeVersion(request):
     try:
         vers = version.objects.get(pk=1)
@@ -204,6 +212,7 @@ def upgradeVersion(request):
     except BaseException as msg:
         logging.CyberCPLogFileWriter.writeToFile(str(msg))
         return HttpResponse(str(msg))
+
 
 @ensure_csrf_cookie
 def design(request):
@@ -224,8 +233,46 @@ def design(request):
         cosmetic.save()
         finalData['saved'] = 1
 
+    ####### Fetch sha...
+
+    sha_url = "https://api.github.com/repos/usmannasir/CyberPanel-Themes/commits"
+
+    sha_res = requests.get(sha_url)
+
+    sha = sha_res.json()[0]['sha']
+
+    l = "https://api.github.com/repos/usmannasir/CyberPanel-Themes/git/trees/%s" % sha
+    fres = requests.get(l)
+    tott = len(fres.json()['tree'])
+    finalData['tree'] = []
+    for i in range(tott):
+        if (fres.json()['tree'][i]['type'] == "tree"):
+            finalData['tree'].append(fres.json()['tree'][i]['path'])
+
     template = 'baseTemplate/design.html'
     finalData['cosmetic'] = cosmetic
 
     proc = httpProc(request, template, finalData, 'versionManagement')
     return proc.render()
+
+
+def getthemedata(request):
+    try:
+        val = request.session['userID']
+        currentACL = ACLManager.loadedACL(val)
+        data = json.loads(request.body)
+
+        #logging.CyberCPLogFileWriter.writeToFile(str(data) + "  [themedata]")
+
+        url = "https://raw.githubusercontent.com/usmannasir/CyberPanel-Themes/main/%s/design.css" % data['Themename']
+
+        res = requests.get(url)
+
+        rsult = res.text
+        final_dic = {'status': 1, 'csscontent': rsult}
+        final_json = json.dumps(final_dic)
+        return HttpResponse(final_json)
+    except BaseException as msg:
+        final_dic = {'status': 0, 'error_message': str(msg)}
+        final_json = json.dumps(final_dic)
+        return HttpResponse(final_json)

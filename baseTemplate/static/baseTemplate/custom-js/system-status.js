@@ -98,21 +98,21 @@ app.filter('getwebsitename', function () {
     };
 });
 
-function getWebsiteName(domain){
+function getWebsiteName(domain) {
     if (domain !== undefined) {
 
-            domain = domain.replace(/-/g, '');
+        domain = domain.replace(/-/g, '');
 
-            var domainName = domain.split(".");
+        var domainName = domain.split(".");
 
-            var finalDomainName = domainName[0];
+        var finalDomainName = domainName[0];
 
-            if (finalDomainName.length > 5) {
-                finalDomainName = finalDomainName.substring(0, 4);
-            }
-
-            return finalDomainName;
+        if (finalDomainName.length > 5) {
+            finalDomainName = finalDomainName.substring(0, 4);
         }
+
+        return finalDomainName;
+    }
 }
 
 app.controller('systemStatusInfo', function ($scope, $http, $timeout) {
@@ -654,4 +654,51 @@ app.controller('versionManagment', function ($scope, $http, $timeout) {
     };
 
 });
+
+
+app.controller('designtheme', function ($scope, $http, $timeout) {
+
+    $scope.themeloading = true;
+
+
+    $scope.getthemedata = function () {
+        $scope.themeloading = false;
+
+        url = "/base/getthemedata";
+
+        var data = {
+            package: "helo world",
+            Themename: $('#stheme').val(),
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(Listgetthemedata, cantgetthemedata);
+
+
+        function Listgetthemedata(response) {
+            $scope.themeloading = true;
+
+            if (response.data.status === 1) {
+                document.getElementById('appendthemedata').innerHTML = "";
+                $("#appendthemedata").val(response.data.csscontent)
+            } else {
+                alert(response.data.error_message)
+            }
+        }
+
+        function cantgetthemedata(response) {
+            $scope.themeloading = true;
+            console.log(response);
+        }
+
+        //$timeout(getStuff, 2000);
+
+    };
+});
+
 
