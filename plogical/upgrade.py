@@ -2660,7 +2660,7 @@ vmail
 
         command = 'csf -uf'
         Upgrade.executioner(command, 'fix csf if there', 0)
-        command = 'systemctl start cpssh'
+        command = 'systemctl stop cpssh'
         Upgrade.executioner(command, 'fix csf if there', 0)
         Upgrade.AutoUpgradeAcme()
         Upgrade.installCLScripts()
