@@ -34,6 +34,7 @@ def getAdminStatus(request):
         val = request.session['userID']
         currentACL = ACLManager.loadedACL(val)
 
+
         if os.path.exists('/home/cyberpanel/postfix'):
             currentACL['emailAsWhole'] = 1
         else:
