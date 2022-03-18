@@ -368,11 +368,14 @@ class backupUtilities:
 
             ## Stop making archive of document_root and copy instead
 
-            # copy_tree('/home/%s/public_html' % domainName, '%s/%s' % (tempStoragePath, 'public_html'))
-            command = f'cp -R /home/{domainName}/public_html {tempStoragePath}/public_html'
+            from shutil import copytree
 
-            if ProcessUtilities.normalExecutioner(command) == 0:
-                raise BaseException(f'Failed to run {command}.')
+
+            copytree('/home/%s/public_html' % domainName, '%s/%s' % (tempStoragePath, 'public_html'))
+            #command = f'cp -R /home/{domainName}/public_html {tempStoragePath}/public_html'
+
+            # if ProcessUtilities.normalExecutioner(command) == 0:
+            #     raise BaseException(f'Failed to run {command}.')
 
             # make_archive(os.path.join(tempStoragePath,"public_html"), 'gztar', os.path.join("/home",domainName,"public_html"))
 
