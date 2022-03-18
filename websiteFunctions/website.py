@@ -2316,7 +2316,7 @@ StrictHostKeyChecking no
             data['dkimCheck'] = 0
             data['openBasedir'] = 1
             data['adminEmail'] = data['ownerEmail']
-            data['phpSelection'] = "PHP 7.0"
+            data['phpSelection'] = "PHP 7.4"
             data['package'] = data['packageName']
             try:
                 websitesLimit = data['websitesLimit']
