@@ -291,7 +291,7 @@ def submit_backup_creation(request):
 
         data = json.loads(request.body)
         backup_domain = data['websiteToBeBacked']
-        backup_destinations = data['backupDestinations']
+        backup_destinations = 'onedrive'
 
         if ACLManager.checkOwnership(backup_domain, admin, current_acl) == 1:
             pass
