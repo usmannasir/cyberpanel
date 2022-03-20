@@ -279,7 +279,19 @@ class cPanelImporter:
             message = 'Restoring document root files for %s.' % (DomainName)
             logging.statusWriter(self.logFile, message, 1)
 
-            self.homeDir = self.MainSite[4].replace('/home/%s/' % (self.MainSite[0]), '')
+            message = 'self.MainSite[4] %s.' % (self.MainSite[4])
+            logging.statusWriter(self.logFile, message, 1)
+
+            message = 'self.MainSite[0] %s.' % (self.MainSite[0])
+            logging.statusWriter(self.logFile, message, 1)
+
+            if self.MainSite[4].find('home/') > -1:
+                self.homeDir = self.MainSite[4].replace('/home/%s/' % (self.MainSite[0]), '')
+            else:
+                self.homeDir = self.MainSite[4].replace('/home2/%s/' % (self.MainSite[0]), '')
+
+            message = 'self.homeDir %s.' % (self.homeDir)
+            logging.statusWriter(self.logFile, message, 1)
 
             nowPath = '/home/%s/public_html' % (DomainName)
             if os.path.exists(nowPath):
@@ -387,7 +399,23 @@ class cPanelImporter:
                     message = 'Restoring document root files for %s.' % (items)
                     logging.statusWriter(self.logFile, message, 1)
 
-                    ChildDocRoot = self.OtherDomains[counter][4].replace('/home/%s/' % (self.MainSite[0]), '')
+
+                    message = 'self.OtherDomains[counter][4] %s.' % (self.OtherDomains[counter][4])
+                    logging.statusWriter(self.logFile, message, 1)
+
+                    message = 'self.MainSite[0] %s.' % (self.MainSite[0])
+                    logging.statusWriter(self.logFile, message, 1)
+
+                    if self.OtherDomains[counter][4].find('home/') > -1:
+                        ChildDocRoot = self.OtherDomains[counter][4].replace('/home/%s/' % (self.MainSite[0]), '')
+                    else:
+                        ChildDocRoot = self.OtherDomains[counter][4].replace('/home2/%s/' % (self.MainSite[0]), '')
+
+
+                    #ChildDocRoot = self.OtherDomains[counter][4].replace('/home/%s/' % (self.MainSite[0]), '')
+
+                    message = 'ChildDocRoot %s.' % (ChildDocRoot)
+                    logging.statusWriter(self.logFile, message, 1)
 
                     if os.path.exists(path):
                         shutil.rmtree(path)
@@ -863,7 +891,7 @@ class cPanelImporter:
         if self.createCronJobs():
             pass
         else:
-            return 0
+            pass
 
         self.RestoreEmails()
         self.FixPermissions()

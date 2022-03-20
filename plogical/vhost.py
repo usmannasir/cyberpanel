@@ -910,8 +910,9 @@ class vhost:
             else:
                 groupName = 'nogroup'
 
-            command = 'sudo -u %s chown %s:%s %s' % (virtualHostUser, virtualHostUser, groupName, path)
+            command = 'sudo -g %s -u %s chown %s:%s %s' % (groupName, virtualHostUser, virtualHostUser, groupName, path)
             ProcessUtilities.normalExecutioner(command)
+
 
             command = "sudo -u %s chmod 750 %s" % (virtualHostUser, path)
             cmd = shlex.split(command)
