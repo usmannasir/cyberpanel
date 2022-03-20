@@ -297,31 +297,31 @@
                     <ul id="sidebar-menu">
                         <li class="header"><span>{% trans "Overview" %}</span></li>
                         <li>
-                            <a href="#" title="{% trans 'Server IP Address' %}">
+                            <a id="sidebar-menu-item-server-ip-address" href="#" title="{% trans 'Server IP Address' %}">
                                 <i class="glyph-icon tooltip-button icon-laptop" title="{% trans 'Server IP Address' %}"
                                    data-original-title=".icon-laptop"></i>
                                 <span style="color: #db6868;font-weight: bold;">{{ ipAddress }}</span>
                             </a>
-                            <a href="{% url 'index' %}" title="{% trans 'Dashboard' %}">
+                            <a id="sidebar-menu-item-dashboard" href="{% url 'index' %}" title="{% trans 'Dashboard' %}">
                                 <i class="glyph-icon icon-dashboard"></i>
                                 <span>{% trans "Dashboard" %}</span>
                             </a>
                             {% if admin or versionManagement %}
-                                <a href="{% url 'versionManagment' %}"
+                                <a id="sidebar-menu-item-version-management" href="{% url 'versionManagment' %}"
                                    title="{% trans 'Version Management' %}">
                                     <i class="glyph-icon tooltip-button icon-info"
                                        title="{% trans 'Version Management' %}" data-original-title=".icon-cloud-upload"
                                        aria-describedby="tooltip896208"></i>
                                     <span>{% trans "Version Management" %}</span>
                                 </a>
-                                <a href="{% url 'design' %}"
+                                <a id="sidebar-menu-item-design" href="{% url 'design' %}"
                                    title="{% trans 'Design' %}">
                                     <i class="glyph-icon tooltip-button icon-cog"
                                        title="{% trans 'Design' %}" data-original-title=".icon-cloud-upload"
                                        aria-describedby="tooltip896208"></i>
                                     <span>{% trans "Design" %}</span>
                                 </a>
-                                <a href="https://go.cyberpanel.net/cloud"
+                                <a id="sidebar-menu-item-connect" href="https://go.cyberpanel.net/cloud"
                                    title="{% trans 'Connect' %}">
                                     <i class="glyph-icon tooltip-button icon-link" title="{% trans 'Connect' %}"
                                        data-original-title=".icon-cloud-upload" aria-describedby="tooltip896208"></i>
@@ -339,7 +339,7 @@
                         <li class="divider"></li>
                         <li class="header"><span>{% trans "Main" %}</span></li>
 
-                        <li>
+                        <li id="sidebar-menu-item-users">
                             <a href="{% url 'loadUsersHome' %}" title="{% trans 'Users' %}">
                                 <i class="glyph-icon icon-users" title="{% trans 'Users' %}"></i>
                                 <span>{% trans "Users" %}</span>
@@ -389,7 +389,7 @@
                             </div><!-- .sidebar-submenu -->
                         </li>
 
-                        <li>
+                        <li id="sidebar-menu-item-websites">
                             <a href="{% url 'loadWebsitesHome' %}" title="{% trans 'Websites' %}">
                                 <div class="glyph-icon icon-globe" title="{% trans 'Websites' %}"></div>
                                 <span>{% trans "Websites" %}</span>
@@ -430,7 +430,7 @@
 
                             </div><!-- .sidebar-submenu -->
                         </li>
-                        <li>
+                        <li id="sidebar-menu-item-packages">
                             <a id="packageHome" href="{% url 'packagesHome' %}" title="{% trans 'Packages' %}">
                                 <i class="glyph-icon icon-cubes"></i>
                                 <span>{% trans "Packages" %}</span>
@@ -462,7 +462,7 @@
 
                             </div><!-- .sidebar-submenu -->
                         </li>
-                        <li>
+                        <li id="sidebar-menu-item-databases">
                             <a title="{% trans 'Databases' %}">
                                 <i class="glyph-icon icon-database" title="{% trans 'Databases' %}"></i>
                                 <span>{% trans "Databases" %}</span>
@@ -497,7 +497,7 @@
 
                         {% if dnsAsWhole %}
 
-                            <li class="dnsAsWhole">
+                            <li id="sidebar-menu-item-dns" class="dnsAsWhole">
                                 <a title="{% trans 'DNS' %}">
                                     <i class="glyph-icon icon-sitemap"></i>
                                     <span>{% trans "DNS" %}</span>
@@ -545,7 +545,7 @@
 
                         {% if emailAsWhole %}
 
-                            <li class="emailAsWhole">
+                            <li id="sidebar-menu-item-email" class="emailAsWhole">
                                 <a href="{% url 'loadEmailHome' %}" title="{% trans 'Email' %}">
                                     <i class="glyph-icon icon-paper-plane"></i>
                                     <span>{% trans "Email" %}</span>
@@ -596,7 +596,7 @@
                         {% endif %}
                         {% if ftpAsWhole %}
 
-                            <li class="ftpAsWhole">
+                            <li id="sidebar-menu-item-ftp" class="ftpAsWhole">
                                 <a href="{% url 'ftpHome' %}" title="{% trans 'FTP' %}">
                                     <i class="glyph-icon icon-cloud-upload"></i>
                                     <span>{% trans "FTP" %}</span>
@@ -626,7 +626,7 @@
 
                         {% endif %}
 
-                        <li>
+                        <li id="sidebar-menu-item-backup">
                             <a href="{% url 'loadBackupHome' %}" title="{% trans 'Backup' %}">
                                 <i class="glyph-icon tooltip-button icon-copy" title=".icon-folder"></i>
                                 <span>{% trans "Backup" %}</span>
@@ -670,7 +670,7 @@
                         </li>
 
 
-                        <li>
+                        <li id="sidebar-menu-item-incremental-backup">
                             <a href="{% url 'loadBackupHome' %}" title="{% trans 'Incremental Backup - Beta' %}">
                                 <i class="glyph-icon tooltip-button icon-save" title="Incremental Backup"></i>
                                 <span>{% trans "Incremental Backup" %}</span>
@@ -704,7 +704,7 @@
                         </li>
 
 
-                        <li>
+                        <li id="sidebar-menu-item-ssl">
                             <a href="{% url 'loadSSLHome' %}" title="{% trans 'Backup' %}">
                                 <i class="glyph-icon tooltip-button icon-lock" title="{% trans 'SSL' %}"></i>
                                 <span>{% trans "SSL" %}</span>
@@ -736,7 +736,7 @@
 
                             <li class="header"><span>{% trans "Server" %}</span></li>
 
-                            <li>
+                            <li id="sidebar-menu-item-terminal">
                                 <a href="#" title="{% trans 'Terminal' %}">
                                     <i class="glyph-icon icon-linecons-fire"></i>
                                     <span>{% trans "Web Terminal" %}</span>
@@ -752,7 +752,7 @@
                                 </div><!-- .sidebar-submenu -->
                             </li>
 
-                            <li>
+                            <li id="sidebar-menu-item-cloudlinux">
                                 <a href="#" title="{% trans 'CloudLinux' %}">
                                     <i class="glyph-icon icon-linecons-fire"></i>
                                     <span>{% trans "CloudLinux" %}</span>
@@ -784,7 +784,7 @@
                                 </div><!-- .sidebar-submenu -->
                             </li>
 
-                            <li>
+                            <li id="sidebar-menu-item-containerization">
                                 <a href="#" title="{% trans 'Containerization' %}">
                                     <i class="glyph-icon icon-linecons-fire"></i>
                                     <span>{% trans "Containerization" %}</span>
@@ -801,7 +801,7 @@
                                 </div><!-- .sidebar-submenu -->
                             </li>
 
-                            <li>
+                            <li id="sidebar-menu-item-docker">
                                 <a href="#" title="{% trans 'Docker' %}">
                                     <i class="glyph-icon icon-cogs"></i>
                                     <span>{% trans "Docker Manager" %}</span>
@@ -824,7 +824,7 @@
                                 </div><!-- .sidebar-submenu -->
                             </li>
 
-                            <li>
+                            <li id="sidebar-menu-item-tuning">
                                 <a href="#" title="{% trans 'Tuning' %}">
                                     <i class="glyph-icon icon-adjust"></i>
                                     <span>{% trans "Tuning" %}</span>
@@ -843,7 +843,7 @@
                                 </div><!-- .sidebar-submenu -->
                             </li>
 
-                            <li>
+                            <li id="sidebar-menu-item-server-status">
                                 <a href="#" title="{% trans 'Server Status' %}">
                                     <i class="glyph-icon icon-cog"></i>
                                     <span>{% trans "Server Status" %}</span>
@@ -868,7 +868,7 @@
                                 </div><!-- .sidebar-submenu -->
                             </li>
 
-                            <li>
+                            <li id="sidebar-menu-item-php">
                                 <a href="{% url 'loadPHPHome' %}" title="{% trans 'PHP' %}">
                                     <i class="glyph-icon icon-code"></i>
                                     <span>{% trans "PHP" %}</span>
@@ -887,7 +887,7 @@
                                 </div><!-- .sidebar-submenu -->
                             </li>
 
-                            <li>
+                            <li id="sidebar-menu-item-server-status">
                                 <a href="{% url 'logsHome' %}" title="{% trans 'Server Status' %}">
                                     <i class="glyph-icon icon-file"></i>
                                     <span>{% trans "Logs" %}</span>
@@ -921,7 +921,7 @@
                                 </div><!-- .sidebar-submenu -->
                             </li>
 
-                            <li>
+                            <li id="sidebar-menu-item-security">
                                 <a href="{% url 'securityHome' %}" title="{% trans 'Security' %}">
                                     <i class="glyph-icon icon-shield"></i>
                                     <span>{% trans "Security" %}</span>
@@ -958,7 +958,7 @@
                                 </div><!-- .sidebar-submenu -->
                             </li>
 
-                            <li class="emailAsWhole">
+                            <li id="sidebar-menu-item-mail-settings" class="emailAsWhole">
                                 <a href="#" title="{% trans 'Mail Settings' %}">
                                     <i class="glyph-icon icon-envelope"></i>
                                     <span>{% trans "Mail Settings" %}</span>
@@ -990,7 +990,7 @@
                                 </div><!-- .sidebar-submenu -->
                             </li>
 
-                            <li>
+                            <li id="sidebar-menu-item-manage-services">
                                 <a href="#" title="{% trans 'Manage Services' %}">
                                     <i class="glyph-icon icon-folder-open"></i>
                                     <span>{% trans "Manage Services" %}</span>
@@ -1018,7 +1018,7 @@
                                 </div><!-- .sidebar-submenu -->
                             </li>
 
-                            <li>
+                            <li id="sidebar-menu-item-plugins">
                                 <a href="#" title="{% trans 'Plugins' %}">
                                     <i class="glyph-icon icon-plug"></i>
                                     <span>{% trans "Plugins" %}</span>
