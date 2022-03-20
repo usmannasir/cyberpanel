@@ -141,8 +141,8 @@ class EmailMarketingManager:
             if emACL.checkIfEMEnabled(admin.userName) == 0:
                 return ACLManager.loadErrorJson()
 
-            em = EM('createEmailList', extraArgs)
-            em.start()
+            # em = EM('createEmailList', extraArgs)
+            # em.start()
 
             time.sleep(2)
 

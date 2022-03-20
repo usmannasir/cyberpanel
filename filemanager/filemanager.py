@@ -546,8 +546,10 @@ class FileManager:
 
             finalData = {}
             finalData['status'] = 1
-            tempPath = "/home/cyberpanel/" + str(randint(1000, 9999))
             self.data['home'] = '/home/%s' % (self.data['domainName'])
+
+            ACLManager.CreateSecureDir()
+            tempPath = '%s/%s' % ('/usr/local/CyberCP/tmp', str(randint(1000, 9999)))
 
             domainName = self.data['domainName']
             website = Websites.objects.get(domain=domainName)
@@ -556,31 +558,13 @@ class FileManager:
             writeToFile.write(self.data['fileContent'].encode('utf-8'))
             writeToFile.close()
 
-            command = 'ls -la %s' % (self.data['fileName'])
-            output = ProcessUtilities.outputExecutioner(command)
-
-            if output.find('lrwxrwxrwx') > -1 and output.find('->') > -1:
-                return self.ajaxPre(0, 'File exists and is symlink.')
-
-            if ACLManager.commandInjectionCheck(self.data['fileName']) == 1:
-                return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
-
-            if self.data['fileName'].find(self.data['home']) == -1 or self.data['fileName'].find('..') > -1:
-                return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
-
-            command = 'stat -c "%%a" %s' % (self.returnPathEnclosed(self.data['fileName']))
-            currentMode = ProcessUtilities.outputExecutioner(command).strip('\n')
-
-            command = 'mv ' + tempPath + ' ' + self.returnPathEnclosed(self.data['fileName'])
+            command = 'chown %s:%s %s' % (website.externalApp, website.externalApp, tempPath)
             ProcessUtilities.executioner(command)
 
-            command = 'chown %s:%s %s' % (website.externalApp, website.externalApp, self.data['fileName'])
-            ProcessUtilities.executioner(command)
+            command = 'cp %s %s' % (tempPath, self.returnPathEnclosed(self.data['fileName']))
+            ProcessUtilities.executioner(command, website.externalApp)
 
-            command = 'chmod %s %s' % (currentMode, self.returnPathEnclosed(self.data['fileName']))
-            ProcessUtilities.executioner(command)
-
-            self.changeOwner(self.data['fileName'])
+            os.remove(tempPath)
 
             json_data = json.dumps(finalData)
             return HttpResponse(json_data)

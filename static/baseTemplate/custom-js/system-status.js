@@ -654,3 +654,4 @@ app.controller('versionManagment', function ($scope, $http, $timeout) {
     };
 
 });
+
