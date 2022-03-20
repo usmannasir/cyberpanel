@@ -371,11 +371,11 @@ class backupUtilities:
             from shutil import copytree
 
 
-            copytree('/home/%s/public_html' % domainName, '%s/%s' % (tempStoragePath, 'public_html'))
-            #command = f'cp -R /home/{domainName}/public_html {tempStoragePath}/public_html'
+            #copytree('/home/%s/public_html' % domainName, '%s/%s' % (tempStoragePath, 'public_html'))
+            command = f'cp -R /home/{domainName}/public_html {tempStoragePath}/public_html'
 
-            # if ProcessUtilities.normalExecutioner(command) == 0:
-            #     raise BaseException(f'Failed to run {command}.')
+            if ProcessUtilities.normalExecutioner(command) == 0:
+                 raise BaseException(f'Failed to run cp command during backup generation.')
 
             # make_archive(os.path.join(tempStoragePath,"public_html"), 'gztar', os.path.join("/home",domainName,"public_html"))
 
