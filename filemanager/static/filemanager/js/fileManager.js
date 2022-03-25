@@ -543,6 +543,9 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
                 if (result[0] === "gz") {
                     extractFileNode.style.pointerEvents = "auto";
                     extractNodeRight.style.display = "Block";
+                } else if (result[0] === "xz") {
+                    extractFileNode.style.pointerEvents = "auto";
+                    extractNodeRight.style.display = "Block";
                 } else if (result[0] === "zip") {
                     extractFileNode.style.pointerEvents = "auto";
                     extractNodeRight.style.display = "Block";
@@ -1131,6 +1134,8 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
 
         if (findFileExtension(completeFileToExtract) == "gz") {
             extractionType = "tar.gz";
+        } else if (findFileExtension(completeFileToExtract) == "xz") {
+            extractionType = "tar.xz";
         } else {
             extractionType = "zip";
         }
