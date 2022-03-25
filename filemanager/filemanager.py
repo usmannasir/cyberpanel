@@ -681,6 +681,10 @@ class FileManager:
                 compressedFileName = self.returnPathEnclosed(
                     self.data['basePath'] + '/' + self.data['compressedFileName'] + '.zip')
                 command = 'zip -r ' + compressedFileName + ' '
+            elif self.data['compressionType'] == 'tar.xz':
+                compressedFileName = self.returnPathEnclosed(
+                    self.data['basePath'] + '/' + self.data['compressedFileName'] + '.tar.xz')
+                command = 'tar -cJvf ' + compressedFileName + ' '
             else:
                 compressedFileName = self.returnPathEnclosed(
                     self.data['basePath'] + '/' + self.data['compressedFileName'] + '.tar.gz')
