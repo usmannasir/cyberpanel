@@ -3,6 +3,7 @@
  */
 
 
+
 /* Java script code to start/stop litespeed */
 app.controller('litespeedStatus', function ($scope, $http) {
 
@@ -595,6 +596,10 @@ app.controller('lswsSwitch', function ($scope, $http, $timeout, $window) {
 
     $scope.cyberPanelLoading = true;
     $scope.installBoxGen = true;
+
+    $scope.confrimtril = function () {
+        $('#confrimtril').show();
+    }
 
     $scope.switchTOLSWS = function () {
 
