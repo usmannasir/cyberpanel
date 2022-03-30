@@ -654,6 +654,8 @@ class vhost:
                     except:
                         pass
                 else:
+                    logging.CyberCPLogFileWriter.writeToFile('apache vhost 1')
+
                     php = PHPManager.getPHPString(phpVersion)
                     command = "systemctl restart php%s-php-fpm" % (php)
                     ProcessUtilities.normalExecutioner(command)
