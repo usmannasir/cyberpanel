@@ -362,23 +362,6 @@ class IncScheduler(multi.Thread):
                     GDriveJobLogs(owner=items, status=backupSchedule.INFO,
                                   message='Job Completed').save()
 
-                    print("job com[leted")
-
-                    logging.writeToFile('job completed')
-
-                    page_token = None
-                    while True:
-                        response = drive.files().list(spaces='drive',
-                                                              fields='nextPageToken, files(id, name)',
-                                                              pageToken=page_token).execute()
-                        for file in response.get('files', []):
-                            # Process change
-                            print('Found file: %s (%s)' % (file.get('name'), file.get('id')))
-                            logging.writeToFile('Found file: %s (%s)' % (file.get('name'), file.get('id')))
-                        page_token = response.get('nextPageToken', None)
-                        if page_token is None:
-                            break
-
             except BaseException as msg:
                 GDriveJobLogs(owner=items, status=backupSchedule.ERROR,
                               message='[Completely] Job failed, Error message: %s.' % (str(msg))).save()
