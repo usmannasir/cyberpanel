@@ -308,6 +308,48 @@ class BackupManager:
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
+
+    def changeFileRetention(self, request=None, userID=None, data=None):
+        try:
+
+            userID = request.session['userID']
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            data = json.loads(request.body)
+
+            selectedAccount = data['selectedAccount']
+            Retentiontime = data['Retentiontime']
+            # logging.CyberCPLogFileWriter.writeToFile("...... FileRetentiontime...%s "%Retentiontime)
+
+            gD = GDrive.objects.get(name=selectedAccount)
+            # logging.CyberCPLogFileWriter.writeToFile("...... GDrive obj...%s " % GDrive)
+
+            if ACLManager.checkGDriveOwnership(gD, admin, currentACL):
+                pass
+            else:
+                return ACLManager.loadErrorJson('status', 0)
+
+
+
+            conf = gD.auth
+            # logging.CyberCPLogFileWriter.writeToFile("...... conf...%s " % conf)
+            config = json.loads(conf)
+            # logging.CyberCPLogFileWriter.writeToFile("...... config...%s " % config)
+            config['FileRetentiontime'] = Retentiontime
+
+            gD.auth=json.dumps(config)
+            gD.save()
+
+            data_ret = {'status': 1}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
     def deleteSitegDrive(self, request=None, userID=None, data=None):
         try:
 

@@ -78,6 +78,14 @@ def changeAccountFrequencygDrive(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+def changeFileRetention(request):
+    try:
+        userID = request.session['userID']
+        wm = BackupManager()
+        return wm.changeFileRetention(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
 def deleteSitegDrive(request):
     try:
         userID = request.session['userID']

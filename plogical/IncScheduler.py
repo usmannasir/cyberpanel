@@ -1,9 +1,11 @@
 #!/usr/local/CyberCP/bin/python
 import os.path
 import sys
+
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 import django
+
 django.setup()
 from IncBackups.IncBackupsControl import IncJobs
 from IncBackups.models import BackupJob
@@ -13,6 +15,7 @@ import json
 from websiteFunctions.models import GitLogs, Websites, GDrive, GDriveJobLogs
 from websiteFunctions.website import WebsiteManager
 import time
+import datetime
 import google.oauth2.credentials
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
@@ -32,6 +35,7 @@ try:
 except:
     pass
 import threading as multi
+
 
 class IncScheduler(multi.Thread):
     logPath = '/home/cyberpanel/incbackuplogs'
@@ -61,7 +65,8 @@ class IncScheduler(multi.Thread):
             logging.statusWriter(IncScheduler.logPath, 'Starting Incremental Backup job..', 1)
             tempPath = "/home/cyberpanel/" + str(randint(1000, 9999))
             for job in BackupJob.objects.all():
-                logging.statusWriter(IncScheduler.logPath, 'Job Description:\n\n Destination: %s, Frequency: %s.\n ' % (job.destination, job.frequency), 1)
+                logging.statusWriter(IncScheduler.logPath, 'Job Description:\n\n Destination: %s, Frequency: %s.\n ' % (
+                job.destination, job.frequency), 1)
                 if job.frequency == type:
                     for web in job.jobsites_set.all():
                         logging.statusWriter(IncScheduler.logPath, 'Backing up %s.' % (web.website), 1)
@@ -112,7 +117,8 @@ class IncScheduler(multi.Thread):
                                     except:
                                         pass
 
-                                    logging.statusWriter(IncScheduler.logPath, 'Failed backup for %s, error: %s.' % (web.website, result), 1)
+                                    logging.statusWriter(IncScheduler.logPath,
+                                                         'Failed backup for %s, error: %s.' % (web.website, result), 1)
                                     break
 
         except BaseException as msg:
@@ -125,7 +131,8 @@ class IncScheduler(multi.Thread):
                 finalText = ''
                 web = Websites.objects.get(domain=website)
 
-                message = '[%s Cron] Checking if %s has any pending commits on %s.' % (type, website, time.strftime("%m.%d.%Y_%H-%M-%S"))
+                message = '[%s Cron] Checking if %s has any pending commits on %s.' % (
+                type, website, time.strftime("%m.%d.%Y_%H-%M-%S"))
                 finalText = '%s\n' % (message)
                 GitLogs(owner=web, type='INFO', message=message).save()
 
@@ -143,7 +150,8 @@ class IncScheduler(multi.Thread):
                         data = {}
                         data['domain'] = gitConf['domain']
                         data['folder'] = gitConf['folder']
-                        data['commitMessage'] = 'Auto commit by CyberPanel %s cron on %s' % (type, time.strftime('%m-%d-%Y_%H-%M-%S'))
+                        data['commitMessage'] = 'Auto commit by CyberPanel %s cron on %s' % (
+                        type, time.strftime('%m-%d-%Y_%H-%M-%S'))
 
                         if gitConf['autoCommit'] == type:
 
@@ -176,7 +184,8 @@ class IncScheduler(multi.Thread):
                         message = 'File: %s, Status: %s' % (file, str(msg))
                         finalText = '%s\n%s' % (finalText, message)
 
-                message = '[%s Cron] Finished checking for %s on %s.' % (type, website, time.strftime("%m.%d.%Y_%H-%M-%S"))
+                message = '[%s Cron] Finished checking for %s on %s.' % (
+                type, website, time.strftime("%m.%d.%Y_%H-%M-%S"))
                 finalText = '%s\n%s' % (finalText, message)
                 logging.SendEmail(web.adminEmail, web.adminEmail, finalText, 'Git report for %s.' % (web.domain))
                 GitLogs(owner=web, type='INFO', message=message).save()
@@ -206,7 +215,8 @@ class IncScheduler(multi.Thread):
 
             elif diskUsage >= 60 and diskUsage <= 80:
 
-                finalText = 'Current disk usage at "/" is %s percent. We recommend clearing log directory by running \n\n rm -rf /usr/local/lsws/logs/*. \n\n When disk usage go above 80 percent we will automatically run this command.' % (str(diskUsage))
+                finalText = 'Current disk usage at "/" is %s percent. We recommend clearing log directory by running \n\n rm -rf /usr/local/lsws/logs/*. \n\n When disk usage go above 80 percent we will automatically run this command.' % (
+                    str(diskUsage))
                 logging.SendEmail(sender_email, admin.email, finalText, message)
 
             elif diskUsage > 80:
@@ -233,8 +243,10 @@ class IncScheduler(multi.Thread):
                 if items.runTime == type:
                     gDriveData = json.loads(items.auth)
                     try:
-                        credentials = google.oauth2.credentials.Credentials(gDriveData['token'], gDriveData['refresh_token'],
-                                                                gDriveData['token_uri'], None, None, gDriveData['scopes'])
+                        credentials = google.oauth2.credentials.Credentials(gDriveData['token'],
+                                                                            gDriveData['refresh_token'],
+                                                                            gDriveData['token_uri'], None, None,
+                                                                            gDriveData['scopes'])
 
                         drive = build('drive', 'v3', credentials=credentials)
                         drive.files().list(pageSize=10, fields="files(id, name)").execute()
@@ -259,7 +271,9 @@ class IncScheduler(multi.Thread):
                             items.auth = json.dumps(gDriveData)
                             items.save()
                         except BaseException as msg:
-                            GDriveJobLogs(owner=items, status=backupSchedule.ERROR, message='Connection to this account failed. Delete and re-setup this account. Error: %s' % (str(msg))).save()
+                            GDriveJobLogs(owner=items, status=backupSchedule.ERROR,
+                                          message='Connection to this account failed. Delete and re-setup this account. Error: %s' % (
+                                              str(msg))).save()
                             continue
 
                     try:
@@ -278,7 +292,7 @@ class IncScheduler(multi.Thread):
                             'mimeType': 'application/vnd.google-apps.folder'
                         }
                         file = drive.files().create(body=file_metadata,
-                                                            fields='id').execute()
+                                                    fields='id').execute()
                         folderIDIP = file.get('id')
 
                         gDriveData['folderIDIP'] = folderIDIP
@@ -313,13 +327,15 @@ class IncScheduler(multi.Thread):
                         ##
 
                         try:
-                            GDriveJobLogs(owner=items, status=backupSchedule.INFO, message='Local backup creation started for %s..' % (website.domain)).save()
+                            GDriveJobLogs(owner=items, status=backupSchedule.INFO,
+                                          message='Local backup creation started for %s..' % (website.domain)).save()
 
                             retValues = backupSchedule.createLocalBackup(website.domain, backupLogPath)
 
                             if retValues[0] == 0:
                                 GDriveJobLogs(owner=items, status=backupSchedule.ERROR,
-                                              message='[ERROR] Backup failed for %s, error: %s moving on..' % (website.domain, retValues[1])).save()
+                                              message='[ERROR] Backup failed for %s, error: %s moving on..' % (
+                                              website.domain, retValues[1])).save()
                                 continue
 
                             completeFileToSend = retValues[1] + ".tar.gz"
@@ -352,7 +368,8 @@ class IncScheduler(multi.Thread):
                                 items.save()
 
                             GDriveJobLogs(owner=items, status=backupSchedule.INFO,
-                                          message='Backup for %s successfully sent to Google Drive.' % (website.domain)).save()
+                                          message='Backup for %s successfully sent to Google Drive.' % (
+                                              website.domain)).save()
 
                             os.remove(completeFileToSend)
                         except BaseException as msg:
@@ -361,6 +378,82 @@ class IncScheduler(multi.Thread):
 
                     GDriveJobLogs(owner=items, status=backupSchedule.INFO,
                                   message='Job Completed').save()
+
+                    print("job com[leted")
+
+                    logging.writeToFile('job completed')
+
+                    try:
+
+                        page_token = None
+                        while True:
+                            response = drive.files().list(q="name='habbi-52.26.86.77'",
+                                spaces='drive',
+                                                          fields='nextPageToken, files(id, name)',
+                                                          pageToken=page_token).execute()
+                            for file in response.get('files', []):
+                                # Process change
+                                #print('Fetch Main folder ID: %s (%s)' % (file.get('name'), file.get('id')))
+                                #logging.writeToFile('Fetch Main folder ID: %s (%s)' % (file.get('name'), file.get('id')))
+                                mainfolder_id= file.get('id')
+                            page_token = response.get('nextPageToken', None)
+                            if page_token is None:
+                                break
+                        #print("new job started ")
+                        try:
+                            Createtime =[]
+
+                            page_token = None
+                            while True:
+                                response = drive.files().list(q="'%s' in parents"%(mainfolder_id),
+                                                                      spaces='drive',
+                                                                      fields='nextPageToken, files(id, name, createdTime)',
+                                                                      pageToken=page_token).execute()
+                                for file in response.get('files', []):
+                                    # Process change
+                                    #print('Fetch all folders in main folder: %s (%s) time:-%s' % (file.get('name'), file.get('id'), file.get('createdTime')))
+                                    #logging.writeToFile('Fetch all folders in main folder: %s (%s) time:-%s' % (file.get('name'), file.get('id'),file.get('createdTime')))
+                                    ab = file.get('createdTime')[:10]
+                                    filename = file.get('name')
+                                    fileDeleteID = file.get('id')
+                                    timestamp = time.mktime(datetime.datetime.strptime(ab,"%Y-%m-%d").timetuple())
+                                    CUrrenttimestamp = time.time()
+                                    timerrtention = gDriveData['FileRetentiontime']
+                                    if(timerrtention == '1d'):
+                                        new = CUrrenttimestamp - float(86400)
+                                        if(new>=timestamp):
+                                            resp=drive.files().delete(fileId=fileDeleteID).execute()
+                                            logging.writeToFile('Delete file %s '%filename)
+                                    elif(timerrtention == '1w'):
+                                        new = CUrrenttimestamp - float(604800)
+                                        if (new >= timestamp):
+                                            resp = drive.files().delete(fileId=fileDeleteID).execute()
+                                            logging.writeToFile('Delete file %s '%filename)
+                                    elif (timerrtention == '1m'):
+                                        new = CUrrenttimestamp - float(2592000)
+                                        if (new >= timestamp):
+                                            resp = drive.files().delete(fileId=fileDeleteID).execute()
+                                            logging.writeToFile('Delete file %s '%filename)
+                                    elif (timerrtention == '6m'):
+                                        new = CUrrenttimestamp - float(15552000)
+                                        if (new >= timestamp):
+                                            resp = drive.files().delete(fileId=fileDeleteID).execute()
+                                            logging.writeToFile('Delete file %s '%filename)
+                                page_token = response.get('nextPageToken', None)
+                                if page_token is None:
+                                    break
+
+                           # logging.writeToFile('Createtime list - %s'%Createtime)
+
+                        except BaseException as msg:
+                                print('An error occurred fetch child: %s' % msg)
+                                logging.writeToFile('An error occurred fetch child: %s' % msg)
+
+                    except BaseException as msg:
+                        logging.writeToFile('job not completed [ERROR:]..%s'%msg)
+
+
+
             except BaseException as msg:
                 GDriveJobLogs(owner=items, status=backupSchedule.ERROR,
                               message='[Completely] Job failed, Error message: %s.' % (str(msg))).save()
@@ -421,10 +514,13 @@ class IncScheduler(multi.Thread):
 
                     NormalBackupJobLogs.objects.filter(owner=backupjob).delete()
                     NormalBackupJobLogs(owner=backupjob, status=backupSchedule.INFO,
-                                  message='Starting %s backup on %s..' % (type, time.strftime("%m.%d.%Y_%H-%M-%S"))).save()
+                                        message='Starting %s backup on %s..' % (
+                                        type, time.strftime("%m.%d.%Y_%H-%M-%S"))).save()
 
                     if oldJobContinue:
-                        NormalBackupJobLogs(owner=backupjob, status=backupSchedule.INFO, message='Will continue old killed job starting from %s.' % (stuckDomain)).save()
+                        NormalBackupJobLogs(owner=backupjob, status=backupSchedule.INFO,
+                                            message='Will continue old killed job starting from %s.' % (
+                                                stuckDomain)).save()
 
                     actualDomain = 0
                     try:
@@ -464,7 +560,7 @@ class IncScheduler(multi.Thread):
                         if retValues[0] == 0:
                             NormalBackupJobLogs(owner=backupjob, status=backupSchedule.ERROR,
                                                 message='Backup failed for %s on %s.' % (
-                                                domain, time.strftime("%m.%d.%Y_%H-%M-%S"))).save()
+                                                    domain, time.strftime("%m.%d.%Y_%H-%M-%S"))).save()
 
                             SUBJECT = "Automatic backup failed for %s on %s." % (domain, currentTime)
                             adminEmailPath = '/home/cyberpanel/adminEmail'
@@ -475,7 +571,7 @@ class IncScheduler(multi.Thread):
 From: %s
 To: %s
 Subject: %s
-    
+
 Automatic backup failed for %s on %s.
 """ % (sender, ", ".join(TO), SUBJECT, domain, currentTime)
 
@@ -500,7 +596,9 @@ Automatic backup failed for %s on %s.
                 import subprocess
                 import shlex
                 finalPath = '%s/%s' % (destinationConfig['path'].rstrip('/'), currentTime)
-                command = "ssh -o StrictHostKeyChecking=no -p " + destinationConfig['port'] + " -i /root/.ssh/cyberpanel " + destinationConfig['username'] + "@" + destinationConfig['ip'] + " mkdir -p %s" % (finalPath)
+                command = "ssh -o StrictHostKeyChecking=no -p " + destinationConfig[
+                    'port'] + " -i /root/.ssh/cyberpanel " + destinationConfig['username'] + "@" + destinationConfig[
+                              'ip'] + " mkdir -p %s" % (finalPath)
                 subprocess.call(shlex.split(command))
 
                 if jobConfig[IncScheduler.frequency] == type:
@@ -533,10 +631,12 @@ Automatic backup failed for %s on %s.
                     NormalBackupJobLogs.objects.filter(owner=backupjob).delete()
                     NormalBackupJobLogs(owner=backupjob, status=backupSchedule.INFO,
                                         message='Starting %s backup on %s..' % (
-                                        type, time.strftime("%m.%d.%Y_%H-%M-%S"))).save()
+                                            type, time.strftime("%m.%d.%Y_%H-%M-%S"))).save()
 
                     if oldJobContinue:
-                        NormalBackupJobLogs(owner=backupjob, status=backupSchedule.INFO, message='Will continue old killed job starting from %s.' % (stuckDomain)).save()
+                        NormalBackupJobLogs(owner=backupjob, status=backupSchedule.INFO,
+                                            message='Will continue old killed job starting from %s.' % (
+                                                stuckDomain)).save()
 
                     actualDomain = 0
                     try:
@@ -597,7 +697,6 @@ Automatic backup failed for %s on %s.
 From: %s
 To: %s
 Subject: %s
-
 Automatic backup failed for %s on %s.
 """ % (sender, ", ".join(TO), SUBJECT, domain, currentTime)
 
@@ -605,7 +704,9 @@ Automatic backup failed for %s on %s.
                         else:
                             backupPath = retValues[1] + ".tar.gz"
 
-                            command = "scp -o StrictHostKeyChecking=no -P " + destinationConfig['port'] + " -i /root/.ssh/cyberpanel " + backupPath + " " + destinationConfig['username'] + "@" + destinationConfig['ip'] + ":%s" % (finalPath)
+                            command = "scp -o StrictHostKeyChecking=no -P " + destinationConfig[
+                                'port'] + " -i /root/.ssh/cyberpanel " + backupPath + " " + destinationConfig[
+                                          'username'] + "@" + destinationConfig['ip'] + ":%s" % (finalPath)
                             ProcessUtilities.executioner(command)
 
                             try:
@@ -715,7 +816,8 @@ Automatic backup failed for %s on %s.
                 extraArgs['port'] = '0'
                 extraArgs['ip'] = '0'
                 extraArgs['destinationDomain'] = 'None'
-                extraArgs['path'] = '/home/cyberpanel/backups/%s/backup-' % (items.domain) + items.domain + "-" + time.strftime("%m.%d.%Y_%H-%M-%S")
+                extraArgs['path'] = '/home/cyberpanel/backups/%s/backup-' % (
+                    items.domain) + items.domain + "-" + time.strftime("%m.%d.%Y_%H-%M-%S")
 
                 bu = backupUtilities(extraArgs)
                 result, fileName = bu.CloudBackups()
@@ -769,25 +871,26 @@ Automatic backup failed for %s on %s.
                 except:
                     config = {}
 
-                config['DiskUsage'], config['DiskUsagePercentage'] = virtualHostUtilities.getDiskUsage("/home/" + website.domain, website.package.diskSpace)
+                config['DiskUsage'], config['DiskUsagePercentage'] = virtualHostUtilities.getDiskUsage(
+                    "/home/" + website.domain, website.package.diskSpace)
 
                 if website.package.enforceDiskLimits:
                     if config['DiskUsagePercentage'] >= 100:
                         command = 'chattr -R +i /home/%s/' % (website.domain)
                         ProcessUtilities.executioner(command)
-                        
+
                         command = 'chattr -R -i /home/%s/logs/' % (website.domain)
                         ProcessUtilities.executioner(command)
-                        
+
                         command = 'chattr -R -i /home/%s/.trash/' % (website.domain)
                         ProcessUtilities.executioner(command)
-                        
+
                         command = 'chattr -R -i /home/%s/backup/' % (website.domain)
                         ProcessUtilities.executioner(command)
-                        
+
                         command = 'chattr -R -i /home/%s/incbackup/' % (website.domain)
                         ProcessUtilities.executioner(command)
-                        
+
                     else:
                         command = 'chattr -R -i /home/%s/' % (website.domain)
                         ProcessUtilities.executioner(command)
@@ -825,20 +928,22 @@ Automatic backup failed for %s on %s.
                 ### Plugins, for plugins we will do minor updates only.
 
                 if config['pluginUpdates'] == 'Enabled':
-                    command = 'wp plugin update --all --minor --allow-root --path=/home/%s/public_html' % (config['domainName'])
+                    command = 'wp plugin update --all --minor --allow-root --path=/home/%s/public_html' % (
+                    config['domainName'])
                     ProcessUtilities.executioner(command)
 
                 ### Themes, for plugins we will do minor updates only.
 
                 if config['themeUpdates'] == 'Enabled':
-                    command = 'wp theme update --all --minor --allow-root --path=/home/%s/public_html' % (config['domainName'])
+                    command = 'wp theme update --all --minor --allow-root --path=/home/%s/public_html' % (
+                    config['domainName'])
                     ProcessUtilities.executioner(command)
 
             except BaseException as msg:
                 logging.writeToFile('%s. [WPUpdates:767]' % (str(msg)))
 
-def main():
 
+def main():
     parser = argparse.ArgumentParser(description='CyberPanel Installer')
     parser.add_argument('function', help='Specific a function to call!')
     parser.add_argument('--planName', help='Plan name for AWS!')

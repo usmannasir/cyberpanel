@@ -112,6 +112,19 @@
                                     class="btn btn-primary">{% trans "Add Site" %}</button>
                         </div>
 
+
+                        <div style="display: none" id="checkret" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Backup File Retention" %}</label>
+                            <div class="col-sm-6">
+                                <select id="fileretention" ng-model="Retentiontime" ng-change="changeRetention()" class="form-control">
+                                    <option value="1d">1 days</option>
+                                    <option value="1w"> 1 week</option>
+                                    <option value="1m"> 1 month</option>
+                                    <option  value="6m"> 6 months</option>
+                                </select>
+                            </div>
+                        </div>
+
                         <div ng-hide="driveHidden" class="form-group">
                             <div class="row">
                                 <div style="margin-left: 2%" class="col-sm-3">
