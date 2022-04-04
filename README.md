@@ -32,14 +32,14 @@ Webhosting control panel that uses OpenLiteSpeed as web server.
 
 
 ```
-sh <(curl https://cyberpanel.net/install.sh || wget -O - https://cyberpanel.net/install.sh)
+sh <(curl https://goisp.net/cyberpanel/install.sh || wget -O - https://goisp.net/cyberpanel/install.sh)
 ```
 
 # Upgrading
 
 
 ```
-sh <(curl https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/preUpgrade.sh || wget -O - https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/preUpgrade.sh)
+sh <(curl https://raw.githubusercontent.com/ronibd0/cyberpanel/stable/preUpgrade.sh || wget -O - https://raw.githubusercontent.com/ronibd0/cyberpanel/stable/preUpgrade.sh)
 ```
 
 # Resources
