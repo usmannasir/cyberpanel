@@ -38,6 +38,10 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
     var domainName = $("#domainNameInitial").text();
     var domainRandomSeed = "";
 
+    $scope.currentRPath = "/";
+     var homeRPathBack = "";
+
+
     var homePathBack = "/home/" + domainName;
     $scope.currentPath = "/home/" + domainName;
     $scope.startingPath = domainName;
@@ -631,23 +635,50 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
         url = "/filemanager/controller";
         var completePathToFile = "";
 
-        if (functionName === "startPoint") {
-            completePathToFile = $scope.currentPath;
-        } else if (functionName === "doubleClick") {
-            completePathToFile = $scope.currentPath + "/" + node.innerHTML;
-        } else if (functionName === "homeFetch") {
-            completePathToFile = homePathBack;
-        } else if (functionName === "goBackOnPath") {
-            var pos = $scope.currentPath.lastIndexOf("/");
-            completePathToFile = $scope.currentPath.slice(0, pos);
-        } else if (functionName === "refresh") {
-            completePathToFile = $scope.currentPath;
-            var rightClickNode = document.getElementById("rightClick");
-        } else if (functionName === "fromTree") {
-            completePathToFile = arguments[2];
+        if (domainName === "")
+        {
+            completePathToFile = "/";
+            if (functionName === "startPoint") {
+                completePathToFile = $scope.currentRPath;
+            } else if (functionName === "doubleClick") {
+                $scope.currentRPath = ""
+                completePathToFile = $scope.currentRPath + "/" + node.innerHTML;
+            } else if (functionName === "homeFetch") {
+                completePathToFile = homeRPathBack;
+            } else if (functionName === "goBackOnPath") {
+                var pos = $scope.currentRPath.lastIndexOf("/");
+                completePathToFile = $scope.currentRPath.slice(0, pos);
+            } else if (functionName === "refresh") {
+                completePathToFile = $scope.currentRPath;
+                var rightClickNode = document.getElementById("rightClick");
+            } else if (functionName === "fromTree") {
+                completePathToFile = arguments[2];
+            }
+            $scope.currentRPath = completePathToFile;
+
+        }else {
+            if (functionName === "startPoint") {
+                completePathToFile = $scope.currentPath;
+            } else if (functionName === "doubleClick") {
+                completePathToFile = $scope.currentPath + "/" + node.innerHTML;
+            } else if (functionName === "homeFetch") {
+                completePathToFile = homePathBack;
+            } else if (functionName === "goBackOnPath") {
+                var pos = $scope.currentPath.lastIndexOf("/");
+                completePathToFile = $scope.currentPath.slice(0, pos);
+            } else if (functionName === "refresh") {
+                completePathToFile = $scope.currentPath;
+                var rightClickNode = document.getElementById("rightClick");
+            } else if (functionName === "fromTree") {
+                completePathToFile = arguments[2];
+        }
+        $scope.currentPath = completePathToFile;
         }
 
-        $scope.currentPath = completePathToFile;
+
+
+
+
 
         var data = {
             completeStartingPath: completePathToFile,
@@ -951,9 +982,17 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
     };
 
     $scope.createNewFile = function () {
-
-        var completePathForFile = $scope.currentPath + "/" + $scope.newFileName;
+        if(domainName === "")
+        {
+            var completePathForFile = $scope.currentRPath + "/" + $scope.newFileName;
         $scope.errorMessageFile = true;
+        }
+        else {
+            var completePathForFile = $scope.currentPath + "/" + $scope.newFileName;
+            $scope.errorMessageFile = true;
+        }
+
+
 
         if ($scope.newFileName.length === 0) {
             $scope.errorMessageFile = false;

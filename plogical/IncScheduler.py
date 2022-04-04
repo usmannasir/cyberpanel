@@ -401,8 +401,6 @@ class IncScheduler(multi.Thread):
                                 break
                         #print("new job started ")
                         try:
-                            Createtime =[]
-
                             page_token = None
                             while True:
                                 response = drive.files().list(q="'%s' in parents"%(mainfolder_id),

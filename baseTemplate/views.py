@@ -281,3 +281,24 @@ def getthemedata(request):
         final_dic = {'status': 0, 'error_message': str(msg)}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
+
+
+def FileManager(request):
+    ### Load Custom CSS
+    try:
+        from baseTemplate.models import CyberPanelCosmetic
+        cosmetic = CyberPanelCosmetic.objects.get(pk=1)
+    except:
+        from baseTemplate.models import CyberPanelCosmetic
+        cosmetic = CyberPanelCosmetic()
+        cosmetic.save()
+
+
+
+
+    template = 'baseTemplate/FileManager.html'
+
+
+    proc = httpProc(request, template,)
+    return proc.render()
+

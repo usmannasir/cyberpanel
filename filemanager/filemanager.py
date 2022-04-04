@@ -175,18 +175,31 @@ class FileManager:
             finalData = {}
             finalData['status'] = 1
 
-            domainName = self.data['domainName']
-            website = Websites.objects.get(domain=domainName)
+            try:
 
-            pathCheck = '/home/%s' % (domainName)
+                domainName = self.data['domainName']
+                website = Websites.objects.get(domain=domainName)
 
-            if self.data['completeStartingPath'].find(pathCheck) == -1 or self.data['completeStartingPath'].find(
-                    '..') > -1:
-                return self.ajaxPre(0, 'Not allowed to browse this path, going back home!')
+                pathCheck = '/home/%s' % (domainName)
 
-            command = "ls -la --group-directories-first " + self.returnPathEnclosed(
-                self.data['completeStartingPath'])
-            output = ProcessUtilities.outputExecutioner(command, website.externalApp).splitlines()
+                if self.data['completeStartingPath'].find(pathCheck) == -1 or self.data['completeStartingPath'].find(
+                        '..') > -1:
+                    return self.ajaxPre(0, 'Not allowed to browse this path, going back home!')
+
+                command = "ls -la --group-directories-first " + self.returnPathEnclosed(
+                    self.data['completeStartingPath'])
+                output = ProcessUtilities.outputExecutioner(command, website.externalApp).splitlines()
+
+            except:
+                pathCheck = '/'
+
+                if self.data['completeStartingPath'].find(pathCheck) == -1 or self.data['completeStartingPath'].find(
+                        '..') > -1:
+                    return self.ajaxPre(0, 'Not allowed to browse this path, going back home!')
+
+                command = "ls -la --group-directories-first " + self.returnPathEnclosed(
+                    self.data['completeStartingPath'])
+                output = ProcessUtilities.outputExecutioner(command).splitlines()
 
             counter = 0
             for items in output:
@@ -264,15 +277,25 @@ class FileManager:
             finalData = {}
             finalData['status'] = 1
 
-            domainName = self.data['domainName']
-            website = Websites.objects.get(domain=domainName)
-            homePath = '/home/%s' % (domainName)
+            try:
 
-            if self.data['fileName'].find('..') > -1 or self.data['fileName'].find(homePath) == -1:
-                return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
+                domainName = self.data['domainName']
+                website = Websites.objects.get(domain=domainName)
+                homePath = '/home/%s' % (domainName)
 
-            command = "touch " + self.returnPathEnclosed(self.data['fileName'])
-            ProcessUtilities.executioner(command, website.externalApp)
+                if self.data['fileName'].find('..') > -1 or self.data['fileName'].find(homePath) == -1:
+                    return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
+
+                command = "touch " + self.returnPathEnclosed(self.data['fileName'])
+                ProcessUtilities.executioner(command, website.externalApp)
+            except:
+                homePath = '/'
+
+                if self.data['fileName'].find('..') > -1 or self.data['fileName'].find(homePath) == -1:
+                    return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
+
+                command = "touch " + self.returnPathEnclosed(self.data['fileName'])
+                ProcessUtilities.executioner(command)
 
             self.changeOwner(self.returnPathEnclosed(self.data['fileName']))
 
@@ -280,7 +303,7 @@ class FileManager:
             return HttpResponse(json_data)
 
         except BaseException as msg:
-            return self.ajaxPre(0, str(msg))
+            return self.ajaxPre(0, str("......."+msg))
 
     def createNewFolder(self):
         try:

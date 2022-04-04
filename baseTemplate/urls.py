@@ -8,6 +8,7 @@ urlpatterns = [
     url(r'^getLoadAverage',views.getLoadAverage, name='getLoadAverage'),
     url(r'^versionManagment',views.versionManagment, name='versionManagment'),
     url(r'^design', views.design, name='design'),
+    url('^Filemanager', views.FileManager,  name='Filemanager'),
     url(r'^getthemedata', views.getthemedata, name='getthemedata'),
 
     #url(r'^upgrade',views.upgrade, name='upgrade'),

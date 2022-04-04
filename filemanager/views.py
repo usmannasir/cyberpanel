@@ -95,18 +95,21 @@ def downloadFile(request):
 def controller(request):
     try:
         data = json.loads(request.body)
-        domainName = data['domainName']
-        method = data['method']
 
-        userID = request.session['userID']
-        admin = Administrator.objects.get(pk=userID)
-        currentACL = ACLManager.loadedACL(userID)
+        try:
+            domainName = data['domainName']
+            method = data['method']
 
-        if ACLManager.checkOwnership(domainName, admin, currentACL) == 1:
-            pass
-        else:
-            return ACLManager.loadErrorJson()
+            userID = request.session['userID']
+            admin = Administrator.objects.get(pk=userID)
+            currentACL = ACLManager.loadedACL(userID)
 
+            if ACLManager.checkOwnership(domainName, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson()
+        except:
+            print("habbi")
         fm = FM(request, data)
 
         if method == 'listForTable':
