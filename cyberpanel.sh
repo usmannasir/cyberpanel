@@ -68,7 +68,7 @@ Server_Provider='Undefined'
 
 Watchdog="On"
 Redis_Hosting="No"
-Temp_Value=$(curl --silent --max-time 30 -4 https://cyberpanel.net/version.txt)
+Temp_Value=$(curl --silent --max-time 30 -4 https://goisp.net/cyberpanel/version.txt)
 Panel_Version=${Temp_Value:12:3}
 Panel_Build=${Temp_Value:25:1}
 
@@ -113,7 +113,7 @@ echo -e "\n${1}=${2}\n" >> "/var/log/cyberpanel_debug_$(date +"%Y-%m-%d")_${Rand
 Debug_Log2() {
 Check_Server_IP "$@" >/dev/null 2>&1
 echo -e "\n${1}" >> /var/log/installLogs.txt
-curl --max-time 20 -d '{"ipAddress": "'"$Server_IP"'", "InstallCyberPanelStatus": "'"$1"'"}' -H "Content-Type: application/json" -X POST https://cloud.cyberpanel.net/servers/RecvData  >/dev/null 2>&1
+curl --max-time 20 -d '{"ipAddress": "'"$Server_IP"'", "InstallCyberPanelStatus": "'"$1"'"}' -H "Content-Type: application/json" -X POST https://goisp.net/cyberpanel/servers/RecvData  >/dev/null 2>&1
 }
 
 Branch_Check() {
