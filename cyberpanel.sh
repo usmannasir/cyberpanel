@@ -1187,6 +1187,10 @@ if ! grep -q "pid_max" /etc/rc.local 2>/dev/null ; then
     systemctl mask systemd-resolved  >/dev/null 2>&1
   fi
 
+  # Backup previous resolv.conf file
+  cp /etc/resolv.conf /etc/resolv.conf_bak
+
+  # Delete resolv.conf file
   rm -f /etc/resolv.conf
 
   if [[ "$Server_Provider" = "Tencent Cloud" ]] ; then
@@ -1203,6 +1207,21 @@ if ! grep -q "pid_max" /etc/rc.local 2>/dev/null ; then
   systemctl restart systemd-networkd >/dev/null 2>&1
   sleep 3
   #take a break ,or installer will break
+
+  # Check Connectivity
+  if ping -q -c 1 -W 1 cyberpanel.sh >/dev/null; then
+    echo -e "\nSuccessfully set up nameservers..\n"
+    echo -e "\nThe network is up.. :)\n"
+    echo -e "\nContinue installation..\n"
+  else
+    echo -e "\nThe network is down.. :(\n"
+    rm -f /etc/resolv.conf
+    mv /etc/resolv.conf_bak /etc/resolv.conf
+    systemctl restart systemd-networkd >/dev/null 2>&1
+    echo -e "\nReturns the nameservers settings to default..\n"
+    echo -e "\nContinue installation..\n"
+    sleep 3
+  fi
 
 cp /etc/resolv.conf /etc/resolv.conf-tmp
 
