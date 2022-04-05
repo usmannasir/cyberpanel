@@ -100,157 +100,157 @@ LSWS_Stable_Line=$(echo "$LSWS_Tmp" | grep "LSWS_STABLE")
 LSWS_Stable_Version=$(expr "$LSWS_Stable_Line" : '.*LSWS_STABLE=\(.*\) BUILD .*')
 #grab the LSWS latest stable version.
 
-Enterprise_Flag=""
-License_Key=""
-Debug_Log2 "Starting installation..,1"
+#Enterprise_Flag="false"
+#License_Key="false"
+#Debug_Log2 "Starting installation..,1"
 
-}
+#}
 
-Debug_Log() {
-echo -e "\n${1}=${2}\n" >> "/var/log/cyberpanel_debug_$(date +"%Y-%m-%d")_${Random_Log_Name}.log"
-}
+#Debug_Log() {
+#echo -e "\n${1}=${2}\n" >> "/var/log/cyberpanel_debug_$(date +"%Y-%m-%d")_${Random_Log_Name}.log"
+#}
 
-Debug_Log2() {
-Check_Server_IP "$@" >/dev/null 2>&1
-echo -e "\n${1}" >> /var/log/installLogs.txt
-curl --max-time 20 -d '{"ipAddress": "'"$Server_IP"'", "InstallCyberPanelStatus": "'"$1"'"}' -H "Content-Type: application/json" -X POST https://goisp.net/cyberpanel/servers/RecvData  >/dev/null 2>&1
-}
+#Debug_Log2() {
+#Check_Server_IP "$@" >/dev/null 2>&1
+#echo -e "\n${1}" >> /var/log/installLogs.txt
+#curl --max-time 20 -d '{"ipAddress": "'"$Server_IP"'", "InstallCyberPanelStatus": "'"$1"'"}' -H "Content-Type: application/json" -X POST https://goisp.net/cyberpanel/servers/RecvData  >/dev/null 2>&1
+#}
 
-Branch_Check() {
-if [[ "$1" = *.*.* ]]; then
-  #check input if it's valid format as X.Y.Z
-  Output=$(awk -v num1="$Base_Number" -v num2="${1//[[:space:]]/}" '
-  BEGIN {
-    print "num1", (num1 < num2 ? "<" : ">="), "num2"
-  }
-  ')
-  if [[ $Output = *">="* ]]; then
-    echo -e "\nYou must use version number higher than 1.9.4"
-    exit
-  else
-    Branch_Name="v${1//[[:space:]]/}"
-    echo -e "\nSet branch name to $Branch_Name..."
-  fi
-else
-  echo -e "\nPlease input a valid format version number."
-  exit
-fi
-}
+#Branch_Check() {
+#if [[ "$1" = *.*.* ]]; then
+#  #check input if it's valid format as X.Y.Z
+#  Output=$(awk -v num1="$Base_Number" -v num2="${1//[[:space:]]/}" '
+#  BEGIN {
+#    print "num1", (num1 < num2 ? "<" : ">="), "num2"
+# }
+#  ')
+ # if [[ $Output = *">="* ]]; then
+#   echo -e "\nYou must use version number higher than 1.9.4"
+#  exit
+#  else
+#    Branch_Name="v${1//[[:space:]]/}"
+#    echo -e "\nSet branch name to $Branch_Name..."
+#  fi
+#else
+#  echo -e "\nPlease input a valid format version number."
+#  exit
+#fi
+#}
 
-License_Check() {
-License_Key="$1"
-echo -e "\nChecking LiteSpeed Enterprise license key..."
-if echo "$License_Key" | grep -q "^....-....-....-....$" && [[ ${#License_Key} = "19" ]]; then
-  echo -e "\nLicense key set...\n"
-elif [[ ${License_Key,,} = "trial" ]] ; then
-  echo -e "\nTrial license set..."
-  License_Key="Trial"
-else
-  echo -e "\nLicense key seems incorrect, please verify"
-  echo -e "\nIf you are copying/pasting, please make sure you didn't paste blank space...\n"
-  exit
-fi
-}
+#License_Check() {
+#License_Key="$1"
+#echo -e "\nChecking LiteSpeed Enterprise license key..."
+#if echo "$License_Key" | grep -q "^....-....-....-....$" && [[ ${#License_Key} = "19" ]]; then
+#  echo -e "\nLicense key set...\n"
+#elif [[ ${License_Key,,} = "trial" ]] ; then
+# echo -e "\nTrial license set..."
+#  License_Key="Trial"
+#else
+#  echo -e "\nLicense key seems incorrect, please verify"
+#  echo -e "\nIf you are copying/pasting, please make sure you didn't paste blank space...\n"
+#  exit
+#fi
+#}
 
-Check_Return() {
+#Check_Return() {
   #check previous command result , 0 = ok ,  non-0 = something wrong.
 # shellcheck disable=SC2181
-if [[ $? != "0" ]]; then
-  if [[ -n "$1" ]] ; then
-    echo -e "\n\n\n$1"
-  fi
-  echo -e  "above command failed..."
-  Debug_Log2 "command failed, exiting. For more information read /var/log/installLogs.txt [404]"
-  if [[ "$2" = "no_exit" ]] ; then
-    echo -e"\nRetrying..."
-  else
-    exit
-  fi
-fi
-}
+#if [[ $? != "0" ]]; then
+#  if [[ -n "$1" ]] ; then
+ #   echo -e "\n\n\n$1"
+ # fi
+ # echo -e  "above command failed..."
+ # Debug_Log2 "command failed, exiting. For more information read /var/log/installLogs.txt [404]"
+ # if [[ "$2" = "no_exit" ]] ; then
+ #   echo -e"\nRetrying..."
+ # else
+ #   exit
+ # fi
+#fi
+#}
 # check command success or not
 
-Retry_Command() {
+#Retry_Command() {
 # shellcheck disable=SC2034
-for i in {1..50};
-do
-  if [[ "$i" = "50" ]] ; then
-    echo "command $1 failed for 50 times, exit..."
-    exit 2
-  else
-    $1  && break || echo -e "\n$1 has failed for $i times\nWait for 3 seconds and try again...\n"; sleep 3;
-  fi
-done
-}
+#for i in {1..50};
+#do
+#  if [[ "$i" = "50" ]] ; then
+#    echo "command $1 failed for 50 times, exit..."
+#    exit 2
+#  else
+#    $1  && break || echo -e "\n$1 has failed for $i times\nWait for 3 seconds and try again...\n"; sleep 3;
+ # fi
+#done
+#}
 
-Check_Root() {
-echo -e "\nChecking root privileges..."
-  if echo "$Sudo_Test" | grep SUDO >/dev/null; then
-    echo -e "\nYou are using SUDO , please run as root user...\n"
-    echo -e "\nIf you don't have direct access to root user, please run \e[31msudo su -\e[39m command (do NOT miss the \e[31m-\e[39m at end or it will fail) and then run installation command again."
-    exit
-  fi
+#Check_Root() {
+#echo -e "\nChecking root privileges..."
+#  if echo "$Sudo_Test" | grep SUDO >/dev/null; then
+#    echo -e "\nYou are using SUDO , please run as root user...\n"
+#    echo -e "\nIf you don't have direct access to root user, please run \e[31msudo su -\e[39m command (do NOT miss the \e[31m-\e[39m at end or it will fail) and then run installation command again."
+#    exit
+#  fi
 
-  if [[ $(id -u) != 0 ]] >/dev/null; then
-    echo -e "\nYou must run on root user to install CyberPanel...\n"
-    echo -e "or run following command: (do NOT miss the quotes)"
-    echo -e "\e[31msudo su -c \"sh <(curl https://cyberpanel.sh || wget -O - https://cyberpanel.sh)\"\e[39m"
-    exit 1
-  else
-    echo -e "\nYou are runing as root...\n"
-  fi
-}
+#  if [[ $(id -u) != 0 ]] >/dev/null; then
+#    echo -e "\nYou must run on root user to install CyberPanel...\n"
+#    echo -e "or run following command: (do NOT miss the quotes)"
+#    echo -e "\e[31msudo su -c \"sh <(curl https://cyberpanel.sh || wget -O - https://cyberpanel.sh)\"\e[39m"
+#    exit 1
+#  else
+#    echo -e "\nYou are runing as root...\n"
+#  fi
+#}
 
-Check_Server_IP() {
-Server_IP=$(curl --silent --max-time 30 -4 https://cyberpanel.sh/?ip)
-  if [[ $Server_IP =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-    echo -e "Valid IP detected..."
-  else
-    echo -e "Can not detect IP, exit..."
-    Debug_Log2 "Can not detect IP. [404]"
-    exit
-  fi
+#Check_Server_IP() {
+#Server_IP=$(curl --silent --max-time 30 -4 https://cyberpanel.sh/?ip)
+#  if [[ $Server_IP =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+#    echo -e "Valid IP detected..."
+#  else
+#    echo -e "Can not detect IP, exit..."
+#    Debug_Log2 "Can not detect IP. [404]"
+#    exit
+#  fi
 
-echo -e "\nChecking server location...\n"
+#echo -e "\nChecking server location...\n"
+#
+#if [[ "$Server_Country" != "CN" ]] ; then
+#  Server_Country=$(curl --silent --max-time 10 -4 https://cyberpanel.sh/?country)
+#  if [[ ${#Server_Country} != "2" ]] ; then
+#   Server_Country="Unknow"
+#  fi
+#fi
+##to avoid repeated check_ip called by debug_log2 to break force mirror for CN servers.
 
-if [[ "$Server_Country" != "CN" ]] ; then
-  Server_Country=$(curl --silent --max-time 10 -4 https://cyberpanel.sh/?country)
-  if [[ ${#Server_Country} != "2" ]] ; then
-   Server_Country="Unknow"
-  fi
-fi
-#to avoid repeated check_ip called by debug_log2 to break force mirror for CN servers.
+#if [[ "$Debug" = "On" ]] ; then
+ # Debug_Log "Server_IP" "$Server_IP"
+ # Debug_Log "Server_Country" "$Server_Country"
+#fi
 
-if [[ "$Debug" = "On" ]] ; then
-  Debug_Log "Server_IP" "$Server_IP"
-  Debug_Log "Server_Country" "$Server_Country"
-fi
+#if [[ "$*" = *"--mirror"* ]] ; then
+#  Server_Country="CN"
+#  echo -e "Force to use mirror server due to --mirror argument...\n"
+#fi
 
-if [[ "$*" = *"--mirror"* ]] ; then
-  Server_Country="CN"
-  echo -e "Force to use mirror server due to --mirror argument...\n"
-fi
+#if [[ "$Server_Country" = *"CN"* ]] ; then
+#  Server_Country="CN"
+#  echo -e "Setting up to use mirror server...\n"
+#fi
+#}
 
-if [[ "$Server_Country" = *"CN"* ]] ; then
-  Server_Country="CN"
-  echo -e "Setting up to use mirror server...\n"
-fi
-}
-
-Check_OS() {
-if [[ ! -f /etc/os-release ]] ; then
-  echo -e "Unable to detect the operating system...\n"
-  exit
-fi
+#Check_OS() {
+#if [[ ! -f /etc/os-release ]] ; then
+#  echo -e "Unable to detect the operating system...\n"
+ # exit
+#fi
 
 # Reference: https://unix.stackexchange.com/questions/116539/how-to-detect-the-desktop-environment-in-a-bash-script
-if [ -z "$XDG_CURRENT_DESKTOP" ]; then
-    echo -e "Desktop OS not detected. Proceeding\n"
-else
-    echo "$XDG_CURRENT_DESKTOP defined appears to be a desktop OS. Bailing as CyberPanel is incompatible."
-    echo -e "\nCyberPanel is supported on server OS types only. Such as Ubuntu 18.04 x86_64, Ubuntu 20.04 x86_64, Ubuntu 20.10 x86_64, CentOS 7.x, CentOS 8.x, AlmaLinux 8.x and CloudLinux 7.x...\n"
-    exit
-fi
+#if [ -z "$XDG_CURRENT_DESKTOP" ]; then
+#    echo -e "Desktop OS not detected. Proceeding\n"
+#else
+#    echo "$XDG_CURRENT_DESKTOP defined appears to be a desktop OS. Bailing as CyberPanel is incompatible."
+#    echo -e "\nCyberPanel is supported on server OS types only. Such as Ubuntu 18.04 x86_64, Ubuntu 20.04 x86_64, Ubuntu 20.10 x86_64, CentOS 7.x, CentOS 8.x, AlmaLinux 8.x and CloudLinux 7.x...\n"
+ #   exit
+#fi
 
 
 if ! uname -m | grep -q x86_64 ; then
