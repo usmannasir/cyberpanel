@@ -409,7 +409,9 @@ fi
 }
 
 Check_Organization() {
-if [[ "$(curl --silent --max-time 10 -4 curl ipinfo.io/org)" = "AS17451 BIZNET NETWORKS" ]]; then
+if [[ "$(curl --silent --max-time 10 -4 curl ipinfo.io/org)" = "AS7713 PT Telekomunikasi Indonesia" ]]; then
+  Server_Organization="Telkom Indonesia"
+elif [[ "$(curl --silent --max-time 10 -4 curl ipinfo.io/org)" = "AS17451 BIZNET NETWORKS" ]]; then
   Server_Organization="Biznet Networks"
 else
   Server_Organization="Undefined"
@@ -1203,20 +1205,17 @@ if ! grep -q "pid_max" /etc/rc.local 2>/dev/null ; then
 
   rm -f /etc/resolv.conf
 
-  if [[ "$Server_Provider" = "Tencent Cloud" ]] ; then
-    echo -e "nameserver 183.60.83.19" > /etc/resolv.conf
-    echo -e "nameserver 183.60.82.98" >> /etc/resolv.conf
-  elif [[ "$Server_Provider" = "Alibaba Cloud" ]] ; then
-    echo -e "nameserver 100.100.2.136" > /etc/resolv.conf
-    echo -e "nameserver 100.100.2.138" >> /etc/resolv.conf
-  else
-    # Avoid blocking DNS at several ISPs in Indonesia.
-    if [[ "$Server_Organization" = "Biznet Networks" ]] ; then
-      echo -e "nameserver 203.142.82.222" > /etc/resolv.conf
-      echo -e "nameserver 203.142.84.222" >> /etc/resolv.conf
+  # Avoid blocking DNS at several ISPs in Indonesia.
+  if [[ "$Server_Organization" != "Biznet Networks" || "$Server_Organization" != "Telkom Indonesia" ]] ; then
+    if [[ "$Server_Provider" = "Tencent Cloud" ]] ; then
+      echo -e "nameserver 183.60.83.19" > /etc/resolv.conf
+      echo -e "nameserver 183.60.82.98" >> /etc/resolv.conf
+    elif [[ "$Server_Provider" = "Alibaba Cloud" ]] ; then
+      echo -e "nameserver 100.100.2.136" > /etc/resolv.conf
+      echo -e "nameserver 100.100.2.138" >> /etc/resolv.conf
     else
-      echo -e "nameserver 1.1.1.1" > /etc/resolv.conf
-      echo -e "nameserver 8.8.8.8" >> /etc/resolv.conf
+        echo -e "nameserver 1.1.1.1" > /etc/resolv.conf
+        echo -e "nameserver 8.8.8.8" >> /etc/resolv.conf
     fi
   fi
 
