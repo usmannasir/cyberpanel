@@ -21,7 +21,6 @@
 #Check_Panel() --->  check to make sure no other panel is installed
 #Check_Process() ---> check no other process like Apache is running
 #Check_Provider() ---> check the provider, certain provider like Alibaba or Tencent Yun may need some special change
-#Check_Organization() ---> check the organization, certain provider or organization like Telkom Indonesia or Biznet Networks Indonesia may need some special change
 #Check_Argument() ---> parse argument and go to Argument_Mode() or Interactive_Mode() respectively
 #Pre_Install_Setup_Repository() ---> setup/install repositories for centos system.
 #go to Pre_Install_Setup_CN_Repository() if server is within China.
@@ -66,7 +65,6 @@ Server_Country="Unknow"
 Server_OS=""
 Server_OS_Version=""
 Server_Provider='Undefined'
-Server_Organization='Undefined'
 
 Watchdog="On"
 Redis_Hosting="No"
@@ -405,18 +403,6 @@ fi
 
 if [[ "$Debug" = "On" ]] ; then
   Debug_Log "Server_Provider" "$Server_Provider"
-fi
-}
-
-Check_Organization() {
-if [[ "$(curl --silent --max-time 10 -4 curl ipinfo.io/org)" = "AS17451 BIZNET NETWORKS" ]]; then
-  Server_Organization="Biznet Networks"
-else
-  Server_Organization="Undefined"
-fi
-
-if [[ "$Debug" = "On" ]] ; then
-  Debug_Log "Server_Organization" "$Server_Organization"
 fi
 }
 
@@ -1210,14 +1196,8 @@ if ! grep -q "pid_max" /etc/rc.local 2>/dev/null ; then
     echo -e "nameserver 100.100.2.136" > /etc/resolv.conf
     echo -e "nameserver 100.100.2.138" >> /etc/resolv.conf
   else
-    # Avoid blocking DNS at several ISPs in Indonesia.
-    if [[ "$Server_Organization" = "Biznet Networks" ]] ; then
-      echo -e "nameserver 203.142.82.222" > /etc/resolv.conf
-      echo -e "nameserver 203.142.84.222" >> /etc/resolv.conf
-    else
-      echo -e "nameserver 1.1.1.1" > /etc/resolv.conf
-      echo -e "nameserver 8.8.8.8" >> /etc/resolv.conf
-    fi
+    echo -e "nameserver 1.1.1.1" > /etc/resolv.conf
+    echo -e "nameserver 8.8.8.8" >> /etc/resolv.conf
   fi
 
   systemctl restart systemd-networkd >/dev/null 2>&1
