@@ -1935,6 +1935,8 @@ Check_Process
 
 Check_Provider
 
+Check_Organization
+
 Check_Argument "$@"
 
 if [[ $Silent = "On" ]]; then
