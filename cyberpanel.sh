@@ -90,11 +90,11 @@ Remote_MySQL="Off"
 
 Final_Flags=()
 
-Git_User=""
-Git_Content_URL=""
-Git_Clone_URL=""
+Git_User="ronibd0"
+Git_Content_URL="https://github.com/ronibd0/cyberpanel/"
+Git_Clone_URL="https://github.com/ronibd0/cyberpanel.git"
 
-LSWS_Latest_URL="https://cyberpanel.sh/update.litespeedtech.com/ws/latest.php"
+LSWS_Latest_URL="https://goisp.net/cyberpanel/ws/latest.php"
 LSWS_Tmp=$(curl --silent --max-time 30 -4 "$LSWS_Latest_URL")
 LSWS_Stable_Line=$(echo "$LSWS_Tmp" | grep "LSWS_STABLE")
 LSWS_Stable_Version=$(expr "$LSWS_Stable_Line" : '.*LSWS_STABLE=\(.*\) BUILD .*')
