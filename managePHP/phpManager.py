@@ -47,6 +47,10 @@ class PHPManager:
         elif phpVersion == "PHP 8.1":
             php = "81"
 
+        # Ex: "PHP 5.3" type string, return Ex: "53" type string
+        phpVersion = phpVersion.split()
+        php = phpVersion[1].replace(".", "")
+        
         return php
 
     @staticmethod
