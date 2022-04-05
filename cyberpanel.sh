@@ -1197,16 +1197,18 @@ if ! grep -q "pid_max" /etc/rc.local 2>/dev/null ; then
   fi
   #add internal repo server to host file before systemd-resolved is disabled
 
-  if grep -i -q "systemd-resolve" /etc/resolv.conf ; then
-    systemctl stop systemd-resolved  >/dev/null 2>&1
-    systemctl disable systemd-resolved  >/dev/null 2>&1
-    systemctl mask systemd-resolved  >/dev/null 2>&1
-  fi
-
-  rm -f /etc/resolv.conf
-
   # Avoid blocking DNS at several ISPs in Indonesia.
-  if [[ "$Server_Organization" != "Biznet Networks" || "$Server_Organization" != "Telkom Indonesia" ]] ; then
+  if [[ "$Server_Organization" != "Biznet Networks" && "$Server_Organization" != "Telkom Indonesia" ]] ; then
+
+    if grep -i -q "systemd-resolve" /etc/resolv.conf ; then
+      systemctl stop systemd-resolved  >/dev/null 2>&1
+      systemctl disable systemd-resolved  >/dev/null 2>&1
+      systemctl mask systemd-resolved  >/dev/null 2>&1
+    fi
+
+    rm -f /etc/resolv.conf
+
+
     if [[ "$Server_Provider" = "Tencent Cloud" ]] ; then
       echo -e "nameserver 183.60.83.19" > /etc/resolv.conf
       echo -e "nameserver 183.60.82.98" >> /etc/resolv.conf
@@ -1217,18 +1219,21 @@ if ! grep -q "pid_max" /etc/rc.local 2>/dev/null ; then
         echo -e "nameserver 1.1.1.1" > /etc/resolv.conf
         echo -e "nameserver 8.8.8.8" >> /etc/resolv.conf
     fi
+
+
+    systemctl restart systemd-networkd >/dev/null 2>&1
+    sleep 3
+
+    #take a break ,or installer will break
+
+    cp /etc/resolv.conf /etc/resolv.conf-tmp
+
+    Line1="$(grep -n "f.write('nameserver 8.8.8.8')" installCyberPanel.py | head -n 1 | cut -d: -f1)"
+    sed -i "${Line1}i\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ subprocess.call\(command, shell=True)" installCyberPanel.py
+    sed -i "${Line1}i\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ command = 'cat /etc/resolv.conf-tmp > /etc/resolv.conf'" installCyberPanel.py
   fi
-
-  systemctl restart systemd-networkd >/dev/null 2>&1
-  sleep 3
-  #take a break ,or installer will break
-
-cp /etc/resolv.conf /etc/resolv.conf-tmp
-
-Line1="$(grep -n "f.write('nameserver 8.8.8.8')" installCyberPanel.py | head -n 1 | cut -d: -f1)"
-sed -i "${Line1}i\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ subprocess.call\(command, shell=True)" installCyberPanel.py
-sed -i "${Line1}i\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ command = 'cat /etc/resolv.conf-tmp > /etc/resolv.conf'" installCyberPanel.py
 }
+
 
 License_Validation() {
 Debug_Log2 "Validating LiteSpeed license...,40"
