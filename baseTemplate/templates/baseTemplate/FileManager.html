@@ -81,9 +81,7 @@
                 <li id="extractFile" class="nav-item">
                     <a onclick="return false;" ng-click="showExtractionModal()" class="nav-link point-events" href="#"><i class="fa fa-expand" aria-hidden="true"></i>  {% trans "Extract" %}</a>
                 </li>
-                <li id="fixPermissions" class="nav-item">
-                    <a onclick="return false;" ng-click="fixPermissions()" class="nav-link point-events" href="#"><i class="fa fa-wrench" aria-hidden="true"></i>  {% trans "Fix Permissions" %}</a>
-                </li>
+
             </ul>
         </div>
     </div>
@@ -113,7 +111,7 @@
             </div>
             <ul class="list-group list-group-flush">
                 <li  class="list-group-item">
-                    <a href="#" onclick="return false;" ng-click="fetchChilds($event,completeStartingPath,'primary')">
+                    <a href="#" onclick="return false;" ng-click="fetchChilds($event,currentRPath,'primary')">
                         <i class="fa fa-plus" aria-hidden="true" ></i>
                     </a>
                     <a onclick="return false;" ng-click="fetchForTableSecondary($event,'fromTree',completeStartingPath)" href="#">
@@ -597,97 +595,8 @@
 
 <!--- rename modal -->
 
-<!-- Permissions modal -->
-
-<div id="showPermissions" class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div id="htmlEditorLable" class="modal-header">
-                <h5 class="modal-title">{% trans "Changing permissions for" %} {$ permissionsPath $} <img ng-hide="changePermissionsLoading" src="{% static 'filemanager/images/loadingSmall.gif' %}"></h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <table class="table text-center">
-                    <thead id="tableHead">
-                    <tr>
-                        <th scope="col">{% trans "Mode" %}</th>
-                        <th scope="col">{% trans "User" %}</th>
-                        <th scope="col">{% trans "Group" %}</th>
-                        <th scope="col">{% trans "World" %}</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>{% trans "Read" %}</td>
-                            <td><input ng-click="updateReadPermissions('userRead')" ng-model="userRead" type="checkbox" class="form-check-input" value=""></td>
-                            <td><input ng-click="updateReadPermissions('groupRead')" ng-model="groupRead" type="checkbox" class="form-check-input" value=""></td>
-                            <td><input ng-click="updateReadPermissions('worldRead')" ng-model="worldRead" type="checkbox" class="form-check-input" value=""></td>
-                        </tr>
-                        <tr>
-                            <td>{% trans "Write" %}</td>
-                            <td><input ng-click="updateWritePermissions('userWrite')" ng-model="userWrite" type="checkbox" class="form-check-input" value=""></td>
-                            <td><input ng-click="updateWritePermissions('groupWrite')" ng-model="groupWrite" type="checkbox" class="form-check-input" value=""></td>
-                            <td><input ng-click="updateWritePermissions('worldWrite')" ng-model="worldWrite" type="checkbox" class="form-check-input" value=""></td>
-                        </tr>
-                        <tr>
-                            <td>{% trans "Execute" %}</td>
-                            <td><input ng-click="updateExecutePermissions('userExecute')" ng-model="userExecute" type="checkbox" class="form-check-input" value=""></td>
-                            <td><input ng-click="updateExecutePermissions('groupExecute')" ng-model="groupExecute" type="checkbox" class="form-check-input" value=""></td>
-                            <td><input ng-click="updateExecutePermissions('worldExecute')" ng-model="worldExecute" type="checkbox" class="form-check-input" value=""></td>
-                        </tr>
-                        <tr>
-                            <td></td>
-                            <td><input ng-model="userPermissions" type="number" class="form-control" readonly></td>
-                            <td><input ng-model="groupPermissions" type="number" class="form-control" readonly></td>
-                            <td><input ng-model="wordlPermissions" type="number" class="form-control" readonly></td>
-                        </tr>
-                    </tbody>
-                </table>
-
-            </div>
-            <div class="modal-footer">
-                <button ng-click="changePermissions(0)" type="button" class="btn btn-primary">{% trans "Change Permissions" %}</button>
-                <button ng-click="changePermissionsRecursively()" type="button" class="btn btn-primary">{% trans "Change Recursively" %}</button>
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">{% trans "Close" %}</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!--- Permissions modal -->
 
 
-<!--- Restore modal -->
-
-<div id="showRestore" class="modal fade bd-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
-        <div class="modal-content">
-            <div id="htmlEditorLable" class="modal-header">
-                <h5 class="modal-title" >{% trans "Confirm Restore!" %} <img ng-hide="cyberPanelLoading" src="{% static 'filemanager/images/loadingSmall.gif' %}"></h5>
-
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <form action="/">
-                    <div class="form-group">
-                        <small class="form-text text-muted">{% trans "This will restore file to its original location." %}</small>
-                    </div>
-                </form>
-                <p>Are you sure?</p>
-            </div>
-            <div class="modal-footer">
-                <button ng-click="restoreFinal()" type="button" class="btn btn-primary">{% trans "Restore" %}</button>
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">{% trans "Close" %}</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!--- Restore modal -->
 
 
 

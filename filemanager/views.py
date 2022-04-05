@@ -153,14 +153,18 @@ def upload(request):
 
         data = request.POST
 
-        userID = request.session['userID']
-        admin = Administrator.objects.get(pk=userID)
-        currentACL = ACLManager.loadedACL(userID)
+        try:
 
-        if ACLManager.checkOwnership(data['domainName'], admin, currentACL) == 1:
+            userID = request.session['userID']
+            admin = Administrator.objects.get(pk=userID)
+            currentACL = ACLManager.loadedACL(userID)
+
+            if ACLManager.checkOwnership(data['domainName'], admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson()
+        except:
             pass
-        else:
-            return ACLManager.loadErrorJson()
 
         fm = FM(request, data)
         return fm.upload()

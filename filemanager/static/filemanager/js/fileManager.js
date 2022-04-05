@@ -39,7 +39,7 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
     var domainRandomSeed = "";
 
     $scope.currentRPath = "/";
-     var homeRPathBack = "";
+    var homeRPathBack = "/";
 
 
     var homePathBack = "/home/" + domainName;
@@ -443,8 +443,7 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
 
             var fileOrFolderNode = document.createTextNode("Folder");
             fifthTDNode.appendChild(fileOrFolderNode)
-        }
-        else {
+        } else {
             thNode.appendChild(iNodeFile);
             trNode.appendChild(thNode);
             trNode.addEventListener("click", function () {
@@ -476,10 +475,10 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
     $scope.buttonActivator = function () {
 
         // for restore button
-        if($scope.currentPath === trashPath) {
+        if ($scope.currentPath === trashPath) {
             var restoreBTN = document.getElementById("restoreRight");
             restoreBTN.style.display = "block";
-        }else{
+        } else {
             var restoreBTN = document.getElementById("restoreRight");
             restoreBTN.style.display = "none";
         }
@@ -506,12 +505,10 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
                 } else if (result[0] === "php") {
                     aceEditorMode = "ace/mode/php";
                     editNotRight.style.display = "Block";
-                }
-                else if (result[0] === "py") {
+                } else if (result[0] === "py") {
                     aceEditorMode = "ace/mode/python";
                     editNotRight.style.display = "Block";
-                }
-                else if (result[0] === "txt") {
+                } else if (result[0] === "txt") {
                     aceEditorMode = "";
                     editNotRight.style.display = "Block";
                 } else if (result[0] === "htaccess") {
@@ -527,8 +524,7 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
                 editNode.style.pointerEvents = "none";
                 editNotRight.style.display = "None";
             }
-        }
-        else {
+        } else {
             var editNode = document.getElementById("editFile");
             editNode.style.pointerEvents = "none";
         }
@@ -635,13 +631,12 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
         url = "/filemanager/controller";
         var completePathToFile = "";
 
-        if (domainName === "")
-        {
-            completePathToFile = "/";
+        if (domainName === "") {
+
             if (functionName === "startPoint") {
                 completePathToFile = $scope.currentRPath;
             } else if (functionName === "doubleClick") {
-                $scope.currentRPath = ""
+
                 completePathToFile = $scope.currentRPath + "/" + node.innerHTML;
             } else if (functionName === "homeFetch") {
                 completePathToFile = homeRPathBack;
@@ -656,7 +651,7 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
             }
             $scope.currentRPath = completePathToFile;
 
-        }else {
+        } else {
             if (functionName === "startPoint") {
                 completePathToFile = $scope.currentPath;
             } else if (functionName === "doubleClick") {
@@ -671,13 +666,9 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
                 var rightClickNode = document.getElementById("rightClick");
             } else if (functionName === "fromTree") {
                 completePathToFile = arguments[2];
+            }
+            $scope.currentPath = completePathToFile;
         }
-        $scope.currentPath = completePathToFile;
-        }
-
-
-
-
 
 
         var data = {
@@ -847,7 +838,7 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
 
     /// code mirror open
 
-    $scope.editWithCodeMirror = function(){
+    $scope.editWithCodeMirror = function () {
         var completePathForFile = $scope.currentPath + "/" + allFilesAndFolders[0];
         var finalURL = 'https://' + window.location.hostname + ':' + window.location.port + '/filemanager/editFile?domainName=' + domainName + '&fileName=' + completePathForFile;
         window.open(finalURL);
@@ -857,17 +848,32 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
     // uploads
 
     $scope.errorMessage = true;
+    var uploader;
+    if (domainName == "") {
+        uploader = $scope.uploader = new FileUploader({
+            url: "/filemanager/upload",
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken') // X-CSRF-TOKEN is used for Ruby on Rails Tokens
+            },
+            formData: [{
+                "method": "upload",
+                "home": homeRPathBack
+            }]
+        });
+    } else {
+        uploader = $scope.uploader = new FileUploader({
+            url: "/filemanager/upload",
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken') // X-CSRF-TOKEN is used for Ruby on Rails Tokens
+            },
+            formData: [{
+                "method": "upload",
+                "home": homePathBack
+            }]
+        });
 
-    var uploader = $scope.uploader = new FileUploader({
-        url: "/filemanager/upload",
-        headers: {
-            'X-CSRFToken': getCookie('csrftoken') // X-CSRF-TOKEN is used for Ruby on Rails Tokens
-        },
-        formData: [{
-            "method": "upload",
-            "home": homePathBack
-        }]
-    });
+    }
+
 
     uploader.onCompleteItem = function (fileItem, response, status, headers) {
         if (response.uploadStatus === 1) {
@@ -881,10 +887,16 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
     };
 
     uploader.onAfterAddingFile = function (fileItem) {
+        var basepath;
+        if (domainName == "") {
+            basepath = $scope.currentRPath;
+        } else {
+            basepath = $scope.currentPath
+        }
         $scope.errorMessage = true;
         fileItem.formData.push(
             {
-                "completePath": $scope.currentPath,
+                "completePath": basepath,
                 domainRandomSeed: domainRandomSeed,
                 domainName: domainName
 
@@ -914,9 +926,14 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
 
     $scope.createNewFolder = function () {
 
-        $scope.errorMessageFolder = true;
-
-        var completePathForFolder = $scope.currentPath + "/" + $scope.newFolderName;
+        var completePathForFolder;
+        if (domainName === "") {
+            completePathForFolder = $scope.currentRPath + "/" + $scope.newFolderName;
+            $scope.errorMessageFile = true;
+        } else {
+            completePathForFolder = $scope.currentPath + "/" + $scope.newFolderName;
+            $scope.errorMessageFile = true;
+        }
 
         if ($scope.newFolderName.length === 0) {
             $scope.errorMessageFolder = false;
@@ -982,16 +999,14 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
     };
 
     $scope.createNewFile = function () {
-        if(domainName === "")
-        {
-            var completePathForFile = $scope.currentRPath + "/" + $scope.newFileName;
-        $scope.errorMessageFile = true;
-        }
-        else {
-            var completePathForFile = $scope.currentPath + "/" + $scope.newFileName;
+        var completePathForFile;
+        if (domainName === "") {
+            completePathForFile = $scope.currentRPath + "/" + $scope.newFileName;
+            $scope.errorMessageFile = true;
+        } else {
+            completePathForFile = $scope.currentPath + "/" + $scope.newFileName;
             $scope.errorMessageFile = true;
         }
-
 
 
         if ($scope.newFileName.length === 0) {
@@ -1047,16 +1062,26 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
     };
 
     $scope.deleteFolderOrFile = function () {
+        var pth;
+        var trash;
+        if (domainName === "") {
+            pth = $scope.currentRPath;
+            trash = true;
+
+        } else {
+            pth = $scope.currentPath;
+            trash = $scope.skipTrash
+        }
 
         $scope.deleteLoading = false;
 
         var data = {
-            path: $scope.currentPath,
+            path: pth,
             method: "deleteFolderOrFile",
             fileAndFolders: allFilesAndFolders,
             domainRandomSeed: domainRandomSeed,
             domainName: domainName,
-            skipTrash: $scope.skipTrash
+            skipTrash: trash
         };
 
 
@@ -1106,12 +1131,19 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
     };
 
     $scope.startCompression = function () {
+        var basepathh;
+        if (domainName === "") {
+            basepathh = $scope.currentRPath;
+        } else {
+            basepathh = $scope.currentPath;
+        }
+
 
         $scope.compressionLoading = false;
 
         var data = {
             home: homePathBack,
-            basePath: $scope.currentPath,
+            basePath: basepathh,
             listOfFiles: allFilesAndFolders,
             compressedFileName: $scope.compressedFileName,
             compressionType: $scope.compressionType,
@@ -1162,10 +1194,16 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
 
     $scope.startExtraction = function () {
 
+        var pathbase;
+        if (domainName === "") {
+            pathbase = $scope.currentRPath;
+        } else {
+            pathbase = $scope.currentPath;
+        }
+
         $scope.extractionLoading = false;
 
-        var basePath = $scope.currentPath;
-        var completeFileToExtract = $scope.currentPath + "/" + allFilesAndFolders[0];
+        var completeFileToExtract = $scope.currentRPath + "/" + allFilesAndFolders[0];
         var extractionType = "";
 
         if (findFileExtension(completeFileToExtract) == "gz") {
@@ -1176,7 +1214,7 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
 
         var data = {
             home: homePathBack,
-            basePath: basePath,
+            basePath: pathbase,
             fileToExtract: completeFileToExtract,
             extractionType: extractionType,
             extractionLocation: $scope.extractionLocation,
@@ -1236,11 +1274,18 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
 
     $scope.startMoving = function () {
 
+        var basepth;
+        if (domainName == "") {
+            basepth = $scope.currentRPath;
+        } else {
+            basepth = $scope.currentPath;
+        }
+
         $scope.moveLoading = false;
 
         var data = {
             home: homePathBack,
-            basePath: $scope.currentPath,
+            basePath: basepth,
             newPath: $scope.pathToMoveTo,
             fileAndFolders: allFilesAndFolders,
             method: 'move',
@@ -1297,12 +1342,19 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
 
 
     $scope.startCopying = function () {
+        var basepath;
+
+        if (domainName == "") {
+            basepath = $scope.currentRPath;
+        } else {
+            basepath = $scope.currentPath;
+        }
 
         $scope.copyLoading = false;
 
         var data = {
             home: homePathBack,
-            basePath: $scope.currentPath,
+            basePath: basepath,
             newPath: $scope.pathToCopyTo,
             fileAndFolders: allFilesAndFolders,
             method: 'copy',
@@ -1432,10 +1484,17 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
 
     $scope.renameFile = function () {
 
+        var bpath;
+        if (domainName === "") {
+            bpath = $scope.currentRPath;
+        } else {
+            bpath = $scope.currentPath;
+        }
+
         $scope.renameLoading = false;
 
         var data = {
-            basePath: $scope.currentPath,
+            basePath: bpath,
             existingName: $scope.fileToRename,
             newFileName: $scope.newFileName,
             method: 'rename',
