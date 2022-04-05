@@ -100,6 +100,8 @@ class phpUtilities:
     def savePHPConfigBasic(phpVers,allow_url_fopen,display_errors,file_uploads,allow_url_include,memory_limit,max_execution_time,upload_max_filesize,max_input_time,post_max_size):
         try:
             serverLevelPHPRestart = '/usr/local/lsws/admin/tmp/.lsphp_restart.txt'
+
+
             command = 'touch %s' % (serverLevelPHPRestart)
             ProcessUtilities.executioner(command)
 

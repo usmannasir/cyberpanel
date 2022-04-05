@@ -354,7 +354,7 @@ msgstr ""
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:3
 #: backup/templates/backup/backupSchedule.html:3
-msgid "Schedule Back up - CyberPanel"
+msgid "Schedule Backup - CyberPanel"
 msgstr "Планирано Архивиране - CyberPanel"
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:13
@@ -365,7 +365,7 @@ msgstr "Планирано Архивиране - CyberPanel"
 #: baseTemplate/templates/baseTemplate/index.html:578
 #: userManagment/templates/userManagment/createACL.html:381
 #: userManagment/templates/userManagment/modifyACL.html:385
-msgid "Schedule Back up"
+msgid "Schedule Backup"
 msgstr "Планирано Архивиране "
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:16
@@ -380,7 +380,7 @@ msgstr "Отдалечени архиви"
 #: IncBackups/templates/IncBackups/backupSchedule.html:17
 #: backup/templates/backup/backupSchedule.html:17
 msgid ""
-"On this page you can schedule Back ups to localhost or remote server (If you "
+"On this page you can schedule Backups to localhost or remote server (If you "
 "have added one)."
 msgstr ""
 "От тази страница може да планирате архивите на локален или отдалечен сървър "
@@ -492,7 +492,7 @@ msgstr "Откажи Архив"
 #: IncBackups/templates/IncBackups/restoreRemoteBackups.html:25
 #: backup/templates/backup/backup.html:4 backup/templates/backup/backup.html:14
 #: backup/templates/backup/backup.html:21
-msgid "Back up Website"
+msgid "Backup Website"
 msgstr "Архивирай Страница"
 
 #: IncBackups/templates/IncBackups/createBackup.html:15
@@ -504,7 +504,7 @@ msgstr "Архив"
 
 #: IncBackups/templates/IncBackups/createBackup.html:17
 #, fuzzy
-#| msgid "This page can be used to Back up your websites"
+#| msgid "This page can be used to Backup your websites"
 msgid "This page can be used to create incremental backups for your websites."
 msgstr "От тази страница може да направите архив на Вашите страници"
 
@@ -536,7 +536,7 @@ msgstr "Избери Страница"
 #: baseTemplate/templates/baseTemplate/index.html:598
 #: userManagment/templates/userManagment/createACL.html:352
 #: userManagment/templates/userManagment/modifyACL.html:356
-msgid "Create Back up"
+msgid "Create Backup"
 msgstr "Създай Архив"
 
 #: IncBackups/templates/IncBackups/createBackup.html:128
@@ -576,25 +576,25 @@ msgstr "Действие"
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:3
 #: backup/templates/backup/backupDestinations.html:3
 #: backup/templates/backup/backupDestinations.html:14
-msgid "Set up Back up Destinations"
+msgid "Set up Backup Destinations"
 msgstr "Постави дестинация за Архив"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:14
 #, fuzzy
-#| msgid "Set up Back up Destinations"
-msgid "Set up Incremental Back up Destinations"
+#| msgid "Set up Backup Destinations"
+msgid "Set up Incremental Backup Destinations"
 msgstr "Постави дестинация за Архив"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:20
 #, fuzzy
-#| msgid "On this page you can set up your Back up destinations. (SFTP)"
-msgid "On this page you can set up your Back up destinations. (SFTP and AWS)"
+#| msgid "On this page you can set up your Backup destinations. (SFTP)"
+msgid "On this page you can set up your Backup destinations. (SFTP and AWS)"
 msgstr "От тази страница може да настройте дестинацията за архивите (SFTP)"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:26
 #, fuzzy
-#| msgid "Set up Back up Destinations"
-msgid "Set up Back up Destinations."
+#| msgid "Set up Backup Destinations"
+msgid "Set up Backup Destinations."
 msgstr "Постави дестинация за Архив"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:35
@@ -670,7 +670,7 @@ msgstr "Откажи Архив"
 
 #: IncBackups/templates/IncBackups/restoreRemoteBackups.html:19
 #, fuzzy
-#| msgid "This page can be used to Back up your websites"
+#| msgid "This page can be used to Backup your websites"
 msgid ""
 "This page can be used to restore remote incremental backups for your "
 "websites."
@@ -741,7 +741,7 @@ msgid "Reboot SSH Server"
 msgstr ""
 
 #: backup/templates/backup/backup.html:15
-msgid "This page can be used to Back up your websites"
+msgid "This page can be used to Backup your websites"
 msgstr "От тази страница може да направите архив на Вашите страници"
 
 #: backup/templates/backup/backup.html:44
@@ -797,11 +797,11 @@ msgid "Successfully Deleted"
 msgstr "Успешно изтрита"
 
 #: backup/templates/backup/backupDestinations.html:15
-msgid "On this page you can set up your Back up destinations. (SFTP)"
+msgid "On this page you can set up your Backup destinations. (SFTP)"
 msgstr "От тази страница може да настройте дестинацията за архивите (SFTP)"
 
 #: backup/templates/backup/backupDestinations.html:21
-msgid "Set up Back up Destinations (SSH port should be 22 on backup server)"
+msgid "Set up Backup Destinations (SSH port should be 22 on backup server)"
 msgstr "Добави дестинация ( SSH порт трябва да бъде 22)"
 
 #: backup/templates/backup/backupDestinations.html:68
@@ -903,7 +903,7 @@ msgid "Schedule Added"
 msgstr "Планирането е добавено"
 
 #: backup/templates/backup/index.html:3
-msgid "Back up Home - CyberPanel"
+msgid "Backup Home - CyberPanel"
 msgstr "Архив - CyberPanel"
 
 #: backup/templates/backup/index.html:13 backup/templates/backup/index.html:30
@@ -912,11 +912,11 @@ msgstr "Архив - CyberPanel"
 #: baseTemplate/templates/baseTemplate/index.html:561
 #: baseTemplate/templates/baseTemplate/index.html:563
 #: baseTemplate/templates/baseTemplate/index.html:616
-msgid "Back up"
+msgid "Backup"
 msgstr "Архив"
 
 #: backup/templates/backup/index.html:14
-msgid "Back up and restore sites."
+msgid "Backup and restore sites."
 msgstr "Архивирай и възстанови сайтове."
 
 #: backup/templates/backup/index.html:19
@@ -937,7 +937,7 @@ msgid "Available Functions"
 msgstr "Налични Функции"
 
 #: backup/templates/backup/index.html:28
-msgid "Back up Site"
+msgid "Backup Site"
 msgstr "Архивирай Страница"
 
 #: backup/templates/backup/index.html:44
@@ -945,7 +945,7 @@ msgstr "Архивирай Страница"
 #: baseTemplate/templates/baseTemplate/index.html:601
 #: userManagment/templates/userManagment/createACL.html:361
 #: userManagment/templates/userManagment/modifyACL.html:365
-msgid "Restore Back up"
+msgid "Restore Backup"
 msgstr "Възстанови Архив"
 
 #: backup/templates/backup/index.html:60 backup/templates/backup/index.html:62
@@ -958,7 +958,7 @@ msgstr "Добави/Премахни Дестинация"
 #: baseTemplate/templates/baseTemplate/index.html:581
 #: userManagment/templates/userManagment/createACL.html:391
 #: userManagment/templates/userManagment/modifyACL.html:395
-msgid "Remote Back ups"
+msgid "Remote Backups"
 msgstr "Отдалечени Архиви"
 
 #: backup/templates/backup/remoteBackups.html:3
@@ -1060,8 +1060,8 @@ msgstr "Възстанови Страница"
 
 #: backup/templates/backup/restore.html:15
 msgid ""
-"This page can be used to restore your websites, Back up should be generated "
-"from CyberPanel Back up generation tool, it will detect all Back ups under "
+"This page can be used to restore your websites, Backup should be generated "
+"from CyberPanel Backup generation tool, it will detect all Backups under "
 "<strong>/home/backup</strong>."
 msgstr ""
 "От тази страница може да възстановявате Ваши страници. Архивите трябва да "
@@ -1069,7 +1069,7 @@ msgstr ""
 "<strong>/home/backup</strong>."
 
 #: backup/templates/backup/restore.html:30
-msgid "Select Back up"
+msgid "Select Backup"
 msgstr "Избери Архив"
 
 #: backup/templates/backup/restore.html:61
@@ -1096,7 +1096,7 @@ msgid "Error message:"
 msgstr "Съобщение за Грешка"
 
 #: backup/templates/backup/restore.html:90
-msgid "Site related to this Back up already exists."
+msgid "Site related to this Backup already exists."
 msgstr "Страницата, която е в този архив е вече налична."
 
 #: baseTemplate/templates/baseTemplate/homePage.html:3
@@ -1684,19 +1684,19 @@ msgid "Add/Delete Destination"
 msgstr "Добави/Премахни Дестинация"
 
 #: baseTemplate/templates/baseTemplate/index.html:590
-msgid "Incremental Back up - Beta"
+msgid "Incremental Backup - Beta"
 msgstr ""
 
 #: baseTemplate/templates/baseTemplate/index.html:592
 #, fuzzy
 #| msgid "Cancel Backup"
-msgid "Incremental Back up"
+msgid "Incremental Backup"
 msgstr "Откажи Архив"
 
 #: baseTemplate/templates/baseTemplate/index.html:598
 #, fuzzy
-#| msgid "Restore Back up"
-msgid "Create/Restore Back up"
+#| msgid "Restore Backup"
+msgid "Create/Restore Backup"
 msgstr "Възстанови Архив"
 
 #: baseTemplate/templates/baseTemplate/index.html:601
@@ -1707,8 +1707,8 @@ msgstr "Добави/Премахни Дестинация"
 
 #: baseTemplate/templates/baseTemplate/index.html:604
 #, fuzzy
-#| msgid "Schedule Back up"
-msgid "Schedule Back ups"
+#| msgid "Schedule Backup"
+msgid "Schedule Backups"
 msgstr "Планирано Архивиране "
 
 #: baseTemplate/templates/baseTemplate/index.html:607
@@ -2528,7 +2528,7 @@ msgstr "Първи Nameserver"
 
 #: dns/templates/dns/configureDefaultNameServers.html:45
 #, fuzzy
-#| msgid "Second Nameserver (Back up)"
+#| msgid "Second Nameserver (Backup)"
 msgid "Second Nameserver"
 msgstr "Втори Nameserver"
 
@@ -2581,7 +2581,7 @@ msgid "Create Nameserver - CyberPanel"
 msgstr "Създай Nameserver - CyberPanel"
 
 #: dns/templates/dns/createNameServer.html:62
-msgid "Second Nameserver (Back up)"
+msgid "Second Nameserver (Backup)"
 msgstr "Втори Nameserver"
 
 #: dns/templates/dns/createNameServer.html:89
@@ -6055,7 +6055,7 @@ msgstr "Създай Потребител"
 
 #: userManagment/templates/userManagment/changeUserACL.html:13
 #, fuzzy
-#| msgid "This page can be used to Back up your websites"
+#| msgid "This page can be used to Backup your websites"
 msgid "This page can be used to change ACL for CyberPanel users."
 msgstr "От тази страница може да направите архив на Вашите страници"
 
@@ -7061,8 +7061,8 @@ msgstr ""
 #~ "критична грешка. Разгледайте главния Cyberpanel лог за повече информация."
 
 #, fuzzy
-#~| msgid "Schedule Back up"
-#~ msgid "Achedule Back up"
+#~| msgid "Schedule Backup"
+#~ msgid "Achedule Backup"
 #~ msgstr "Планирано Архивиране "
 
 #, fuzzy

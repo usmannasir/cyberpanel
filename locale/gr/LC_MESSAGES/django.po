@@ -352,7 +352,7 @@ msgstr ""
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:3
 #: backup/templates/backup/backupSchedule.html:3
-msgid "Schedule Back up - CyberPanel"
+msgid "Schedule Backup - CyberPanel"
 msgstr "Προγραμματίσετε αντίγραφα ασφαλείας - CyberPanel"
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:13
@@ -363,7 +363,7 @@ msgstr "Προγραμματίσετε αντίγραφα ασφαλείας - C
 #: baseTemplate/templates/baseTemplate/index.html:578
 #: userManagment/templates/userManagment/createACL.html:381
 #: userManagment/templates/userManagment/modifyACL.html:385
-msgid "Schedule Back up"
+msgid "Schedule Backup"
 msgstr "Προγραμματίσετε αντίγραφα ασφαλείας"
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:16
@@ -373,17 +373,17 @@ msgstr "Προγραμματίσετε αντίγραφα ασφαλείας"
 #: backup/templates/backup/remoteBackups.html:14
 #: backup/templates/backup/remoteBackups.html:21
 #, fuzzy
-#| msgid "Restore Back up"
+#| msgid "Restore Backup"
 msgid "Remote Backups"
 msgstr "Επαναφορά Αντιγράφου ασφαλείας"
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:17
 #: backup/templates/backup/backupSchedule.html:17
 msgid ""
-"On this page you can schedule Back ups to localhost or remote server (If you "
+"On this page you can schedule Backups to localhost or remote server (If you "
 "have added one)."
 msgstr ""
-"Σε αυτή τη σελίδα μπορείτε να προγραμματίσετε Back ups localhost ή "
+"Σε αυτή τη σελίδα μπορείτε να προγραμματίσετε Backups localhost ή "
 "απομακρυσμένο διακομιστή (αν έχετε προσθέσει)."
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:33
@@ -494,7 +494,7 @@ msgstr "Ακύρωση της δημιουργίας αντιγράφων ασφ
 #: IncBackups/templates/IncBackups/restoreRemoteBackups.html:25
 #: backup/templates/backup/backup.html:4 backup/templates/backup/backup.html:14
 #: backup/templates/backup/backup.html:21
-msgid "Back up Website"
+msgid "Backup Website"
 msgstr "Δημιουργία αντιγράφων ασφαλείας"
 
 #: IncBackups/templates/IncBackups/createBackup.html:15
@@ -502,13 +502,13 @@ msgstr "Δημιουργία αντιγράφων ασφαλείας"
 #: backup/templates/backup/backup.html:14
 #: backup/templates/backup/restore.html:14
 #, fuzzy
-#| msgid "Back up"
+#| msgid "Backup"
 msgid "Backup Docs"
 msgstr "Αντίγραφο ασφαλείας"
 
 #: IncBackups/templates/IncBackups/createBackup.html:17
 #, fuzzy
-#| msgid "This page can be used to Back up your websites"
+#| msgid "This page can be used to Backup your websites"
 msgid "This page can be used to create incremental backups for your websites."
 msgstr ""
 "Αυτή η σελίδα μπορεί να χρησιμοποιηθεί για την δημιουργία αντιγράφων "
@@ -542,7 +542,7 @@ msgstr "Επιλέξτε ιστοσελίδα"
 #: baseTemplate/templates/baseTemplate/index.html:598
 #: userManagment/templates/userManagment/createACL.html:352
 #: userManagment/templates/userManagment/modifyACL.html:356
-msgid "Create Back up"
+msgid "Create Backup"
 msgstr "Δημιουργία αντιγράφων ασφαλείας"
 
 #: IncBackups/templates/IncBackups/createBackup.html:128
@@ -584,27 +584,27 @@ msgstr "Λειτουργίες FTP"
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:3
 #: backup/templates/backup/backupDestinations.html:3
 #: backup/templates/backup/backupDestinations.html:14
-msgid "Set up Back up Destinations"
+msgid "Set up Backup Destinations"
 msgstr "Ρυθμίστε τους προορισμούς δημιουργίας αντιγράφων ασφαλείας"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:14
 #, fuzzy
-#| msgid "Set up Back up Destinations"
-msgid "Set up Incremental Back up Destinations"
+#| msgid "Set up Backup Destinations"
+msgid "Set up Incremental Backup Destinations"
 msgstr "Ρυθμίστε τους προορισμούς δημιουργίας αντιγράφων ασφαλείας"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:20
 #, fuzzy
-#| msgid "On this page you can set up your Back up destinations. (SFTP)"
-msgid "On this page you can set up your Back up destinations. (SFTP and AWS)"
+#| msgid "On this page you can set up your Backup destinations. (SFTP)"
+msgid "On this page you can set up your Backup destinations. (SFTP and AWS)"
 msgstr ""
 "Σε αυτή τη σελίδα μπορείτε να ρυθμίσετε τα αντίγραφα ασφαλείας των "
 "προορισμοί. (SFTP)"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:26
 #, fuzzy
-#| msgid "Set up Back up Destinations"
-msgid "Set up Back up Destinations."
+#| msgid "Set up Backup Destinations"
+msgid "Set up Backup Destinations."
 msgstr "Ρυθμίστε τους προορισμούς δημιουργίας αντιγράφων ασφαλείας"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:35
@@ -680,7 +680,7 @@ msgstr "Ακύρωση της δημιουργίας αντιγράφων ασφ
 
 #: IncBackups/templates/IncBackups/restoreRemoteBackups.html:19
 #, fuzzy
-#| msgid "This page can be used to Back up your websites"
+#| msgid "This page can be used to Backup your websites"
 msgid ""
 "This page can be used to restore remote incremental backups for your "
 "websites."
@@ -755,7 +755,7 @@ msgid "Reboot SSH Server"
 msgstr ""
 
 #: backup/templates/backup/backup.html:15
-msgid "This page can be used to Back up your websites"
+msgid "This page can be used to Backup your websites"
 msgstr ""
 "Αυτή η σελίδα μπορεί να χρησιμοποιηθεί για την δημιουργία αντιγράφων "
 "ασφαλείας των ιστότοπων σας"
@@ -813,13 +813,13 @@ msgid "Successfully Deleted"
 msgstr "Διαγράφηκε με επιτυχία!"
 
 #: backup/templates/backup/backupDestinations.html:15
-msgid "On this page you can set up your Back up destinations. (SFTP)"
+msgid "On this page you can set up your Backup destinations. (SFTP)"
 msgstr ""
 "Σε αυτή τη σελίδα μπορείτε να ρυθμίσετε τα αντίγραφα ασφαλείας των "
 "προορισμοί. (SFTP)"
 
 #: backup/templates/backup/backupDestinations.html:21
-msgid "Set up Back up Destinations (SSH port should be 22 on backup server)"
+msgid "Set up Backup Destinations (SSH port should be 22 on backup server)"
 msgstr ""
 
 #: backup/templates/backup/backupDestinations.html:68
@@ -925,7 +925,7 @@ msgid "Schedule Added"
 msgstr "Χρονοδιάγραμμα που προστέθηκε"
 
 #: backup/templates/backup/index.html:3
-msgid "Back up Home - CyberPanel"
+msgid "Backup Home - CyberPanel"
 msgstr "Δημιουργία αντιγράφων ασφαλείας Home - CyberPanel"
 
 #: backup/templates/backup/index.html:13 backup/templates/backup/index.html:30
@@ -934,11 +934,11 @@ msgstr "Δημιουργία αντιγράφων ασφαλείας Home - Cybe
 #: baseTemplate/templates/baseTemplate/index.html:561
 #: baseTemplate/templates/baseTemplate/index.html:563
 #: baseTemplate/templates/baseTemplate/index.html:616
-msgid "Back up"
+msgid "Backup"
 msgstr "Αντίγραφο ασφαλείας"
 
 #: backup/templates/backup/index.html:14
-msgid "Back up and restore sites."
+msgid "Backup and restore sites."
 msgstr " Αντιγράφο Ασφαλείας και Επαναφοράς ιστοσελίδων"
 
 #: backup/templates/backup/index.html:19
@@ -959,7 +959,7 @@ msgid "Available Functions"
 msgstr "Οι διαθέσιμες λειτουργίες"
 
 #: backup/templates/backup/index.html:28
-msgid "Back up Site"
+msgid "Backup Site"
 msgstr "Αντίγραφο ασφαλείας Ιστοσελίδας "
 
 #: backup/templates/backup/index.html:44
@@ -967,7 +967,7 @@ msgstr "Αντίγραφο ασφαλείας Ιστοσελίδας "
 #: baseTemplate/templates/baseTemplate/index.html:601
 #: userManagment/templates/userManagment/createACL.html:361
 #: userManagment/templates/userManagment/modifyACL.html:365
-msgid "Restore Back up"
+msgid "Restore Backup"
 msgstr "Επαναφορά Αντιγράφου ασφαλείας"
 
 #: backup/templates/backup/index.html:60 backup/templates/backup/index.html:62
@@ -981,8 +981,8 @@ msgstr "Προσθήκη/Διαγραφή Προορισμού"
 #: userManagment/templates/userManagment/createACL.html:391
 #: userManagment/templates/userManagment/modifyACL.html:395
 #, fuzzy
-#| msgid "Restore Back up"
-msgid "Remote Back ups"
+#| msgid "Restore Backup"
+msgid "Remote Backups"
 msgstr "Επαναφορά Αντιγράφου ασφαλείας"
 
 #: backup/templates/backup/remoteBackups.html:3
@@ -993,7 +993,7 @@ msgstr "Φιλοξενία ιστοσελίδων - CyberPanel"
 
 #: backup/templates/backup/remoteBackups.html:14
 #, fuzzy
-#| msgid "Restore Back up"
+#| msgid "Restore Backup"
 msgid "Remote Transfer"
 msgstr "Επαναφορά Αντιγράφου ασφαλείας"
 
@@ -1100,8 +1100,8 @@ msgstr "Επαναφορά ιστοσελίδας"
 
 #: backup/templates/backup/restore.html:15
 msgid ""
-"This page can be used to restore your websites, Back up should be generated "
-"from CyberPanel Back up generation tool, it will detect all Back ups under "
+"This page can be used to restore your websites, Backup should be generated "
+"from CyberPanel Backup generation tool, it will detect all Backups under "
 "<strong>/home/backup</strong>."
 msgstr ""
 "Αυτή η σελίδα μπορεί να χρησιμοποιηθεί για την αποκατάσταση των ιστότοπων "
@@ -1110,7 +1110,7 @@ msgstr ""
 "όλα τα αντίγραφα ασφαλείας <strong>/home/backup</strong>."
 
 #: backup/templates/backup/restore.html:30
-msgid "Select Back up"
+msgid "Select Backup"
 msgstr "Επιλέξτε Αντίγραφο ασφαλείας"
 
 #: backup/templates/backup/restore.html:61
@@ -1139,7 +1139,7 @@ msgid "Error message:"
 msgstr "Μήνυμα λάθους:"
 
 #: backup/templates/backup/restore.html:90
-msgid "Site related to this Back up already exists."
+msgid "Site related to this Backup already exists."
 msgstr "Ο ιστότοπος που σχετίζεται με αυτό το αντίγραφο ασφαλείας υπάρχει ήδη."
 
 #: baseTemplate/templates/baseTemplate/homePage.html:3
@@ -1733,19 +1733,19 @@ msgid "Add/Delete Destination"
 msgstr "Προσθήκη/Διαγραφή Προορισμού"
 
 #: baseTemplate/templates/baseTemplate/index.html:590
-msgid "Incremental Back up - Beta"
+msgid "Incremental Backup - Beta"
 msgstr ""
 
 #: baseTemplate/templates/baseTemplate/index.html:592
 #, fuzzy
 #| msgid "Cancel Backup"
-msgid "Incremental Back up"
+msgid "Incremental Backup"
 msgstr "Ακύρωση της δημιουργίας αντιγράφων ασφαλείας"
 
 #: baseTemplate/templates/baseTemplate/index.html:598
 #, fuzzy
-#| msgid "Restore Back up"
-msgid "Create/Restore Back up"
+#| msgid "Restore Backup"
+msgid "Create/Restore Backup"
 msgstr "Επαναφορά Αντιγράφου ασφαλείας"
 
 #: baseTemplate/templates/baseTemplate/index.html:601
@@ -1756,8 +1756,8 @@ msgstr "Προσθήκη/Διαγραφή Προορισμού"
 
 #: baseTemplate/templates/baseTemplate/index.html:604
 #, fuzzy
-#| msgid "Schedule Back up"
-msgid "Schedule Back ups"
+#| msgid "Schedule Backup"
+msgid "Schedule Backups"
 msgstr "Προγραμματίσετε αντίγραφα ασφαλείας"
 
 #: baseTemplate/templates/baseTemplate/index.html:607
@@ -2615,7 +2615,7 @@ msgstr "Πρώτος Nameserver"
 
 #: dns/templates/dns/configureDefaultNameServers.html:45
 #, fuzzy
-#| msgid "Second Nameserver (Back up)"
+#| msgid "Second Nameserver (Backup)"
 msgid "Second Nameserver"
 msgstr "Δεύτερος Nameserver (Δημιουργία αντιγράφων ασφαλείας)"
 
@@ -2669,7 +2669,7 @@ msgid "Create Nameserver - CyberPanel"
 msgstr "Δημιουργία Nameserver - CyberPanel"
 
 #: dns/templates/dns/createNameServer.html:62
-msgid "Second Nameserver (Back up)"
+msgid "Second Nameserver (Backup)"
 msgstr "Δεύτερος Nameserver (Δημιουργία αντιγράφων ασφαλείας)"
 
 #: dns/templates/dns/createNameServer.html:89
@@ -2867,7 +2867,7 @@ msgstr "Επιλέξτε Κάτοχο"
 
 #: dockerManager/templates/dockerManager/manageImages.html:17
 #, fuzzy
-#| msgid "On this page you can set up your Back up destinations. (SFTP)"
+#| msgid "On this page you can set up your Backup destinations. (SFTP)"
 msgid "On this page you can manage docker images."
 msgstr ""
 "Σε αυτή τη σελίδα μπορείτε να ρυθμίσετε τα αντίγραφα ασφαλείας των "
@@ -3040,7 +3040,7 @@ msgstr ""
 
 #: emailMarketing/templates/emailMarketing/composeMessages.html:14
 #, fuzzy
-#| msgid "On this page you can set up your Back up destinations. (SFTP)"
+#| msgid "On this page you can set up your Backup destinations. (SFTP)"
 msgid "On this page you can compose email message to be sent out later."
 msgstr ""
 "Σε αυτή τη σελίδα μπορείτε να ρυθμίσετε τα αντίγραφα ασφαλείας των "
@@ -4019,7 +4019,7 @@ msgstr ""
 #: emailPremium/templates/emailPremium/SpamAssassin.html:19
 #: firewall/templates/firewall/spamassassin.html:14
 #, fuzzy
-#| msgid "On this page you can set up your Back up destinations. (SFTP)"
+#| msgid "On this page you can set up your Backup destinations. (SFTP)"
 msgid "On this page you can configure SpamAssassin settings."
 msgstr ""
 "Σε αυτή τη σελίδα μπορείτε να ρυθμίσετε τα αντίγραφα ασφαλείας των "
@@ -4377,7 +4377,7 @@ msgstr "Τρέχον Πακέτο"
 
 #: filemanager/templates/filemanager/index.html:138
 #, fuzzy
-#| msgid "Back up"
+#| msgid "Backup"
 msgid "Back"
 msgstr "Αντίγραφο ασφαλείας"
 
@@ -4702,7 +4702,7 @@ msgstr ""
 
 #: firewall/templates/firewall/csf.html:14
 #, fuzzy
-#| msgid "On this page you can set up your Back up destinations. (SFTP)"
+#| msgid "On this page you can set up your Backup destinations. (SFTP)"
 msgid ""
 "On this page you can configure CSF (ConfigServer Security and Firewall) "
 "settings."
@@ -4850,7 +4850,7 @@ msgstr ""
 #: firewall/templates/firewall/modSecurity.html:20
 #: firewall/templates/firewall/modSecurity.html:214
 #, fuzzy
-#| msgid "On this page you can set up your Back up destinations. (SFTP)"
+#| msgid "On this page you can set up your Backup destinations. (SFTP)"
 msgid "On this page you can configure ModSecurity settings."
 msgstr ""
 "Σε αυτή τη σελίδα μπορείτε να ρυθμίσετε τα αντίγραφα ασφαλείας των "
@@ -5248,7 +5248,7 @@ msgstr ""
 
 #: mailServer/templates/mailServer/dkimManager.html:14
 #, fuzzy
-#| msgid "This page can be used to Back up your websites"
+#| msgid "This page can be used to Backup your websites"
 msgid "This page can be used to generate and view DKIM keys for Domains"
 msgstr ""
 "Αυτή η σελίδα μπορεί να χρησιμοποιηθεί για την δημιουργία αντιγράφων "
@@ -6450,7 +6450,7 @@ msgstr "Δημουργία Χρήστη"
 
 #: userManagment/templates/userManagment/changeUserACL.html:13
 #, fuzzy
-#| msgid "This page can be used to Back up your websites"
+#| msgid "This page can be used to Backup your websites"
 msgid "This page can be used to change ACL for CyberPanel users."
 msgstr ""
 "Αυτή η σελίδα μπορεί να χρησιμοποιηθεί για την δημιουργία αντιγράφων "
@@ -6752,7 +6752,7 @@ msgstr ""
 
 #: userManagment/templates/userManagment/modifyACL.html:13
 #, fuzzy
-#| msgid "On this page you can set up your Back up destinations. (SFTP)"
+#| msgid "On this page you can set up your Backup destinations. (SFTP)"
 msgid "On this page you can modify an existing ACL."
 msgstr ""
 "Σε αυτή τη σελίδα μπορείτε να ρυθμίσετε τα αντίγραφα ασφαλείας των "
@@ -7535,8 +7535,8 @@ msgstr ""
 #~ "CyberPanel."
 
 #, fuzzy
-#~| msgid "Schedule Back up"
-#~ msgid "Achedule Back up"
+#~| msgid "Schedule Backup"
+#~ msgid "Achedule Backup"
 #~ msgstr "Προγραμματίσετε αντίγραφα ασφαλείας"
 
 #, fuzzy

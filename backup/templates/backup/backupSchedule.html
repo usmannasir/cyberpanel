@@ -1,6 +1,6 @@
 {% extends "baseTemplate/index.html" %}
 {% load i18n %}
-{% block title %}{% trans "Schedule Back up - CyberPanel" %}{% endblock %}
+{% block title %}{% trans "Schedule Backup - CyberPanel" %}{% endblock %}
 {% block content %}
 
     {% load static %}
@@ -11,13 +11,13 @@
 
     <div ng-controller="scheduleBackup" class="container">
         <div id="page-title">
-            <h2>{% trans "Schedule Back up" %} - <a target="_blank"
+            <h2>{% trans "Schedule Backup" %} - <a target="_blank"
                                                     href="https://go.cyberpanel.net/remote-backup"
                                                     style="height: 23px;line-height: 21px; text-decoration: underline"
                                                     class="btn btn-border btn-alt border-red btn-link font-red"
                                                     title=""><span>{% trans "Remote Backups" %}</span></a>
             </h2>
-            <p>{% trans "On this page you can schedule Back ups to localhost or remote server (If you have added one)" %}</p>
+            <p>{% trans "On this page you can schedule Backups to localhost or remote server (If you have added one)" %}</p>
         </div>
 
         <div class="panel">
@@ -90,7 +90,7 @@
         <div class="panel">
             <div class="panel-body">
                 <h3 class="title-hero">
-                    {% trans "Manage Existing Back up Schedules" %} <img ng-hide="cyberPanelLoading"
+                    {% trans "Manage Existing Backup Schedules" %} <img ng-hide="cyberPanelLoading"
                                                                          src="{% static 'images/loading.gif' %}" alt="cyberPanelLoading">
                 </h3>
                 <div class="example-box-wrapper">

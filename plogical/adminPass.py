@@ -13,7 +13,7 @@ from packages.models import Package
 from baseTemplate.models import version
 
 VERSION = '2.1'
-BUILD = 1
+BUILD = 2
 
 if not os.geteuid() == 0:
     sys.exit("\nOnly root can run this script\n")
@@ -47,7 +47,7 @@ def main():
             acl = ACL.objects.get(name='admin')
             token = hashPassword.generateToken('admin', adminPass)
 
-            email = 'usman@cyberpersons.com'
+            email = 'example@example.org'
             admin = Administrator(userName="admin", password=hashPassword.hash_password(adminPass), type=1, email=email,
                                   firstName="Cyber", lastName="Panel", acl=acl, token=token)
             admin.save()

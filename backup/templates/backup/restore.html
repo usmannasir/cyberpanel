@@ -12,7 +12,7 @@
 <div class="container">
 <div id="page-title">
    <h2>{% trans "Restore Website" %} - <a  target="_blank" href="http://go.cyberpanel.net/backup" style="height: 23px;line-height: 21px;" class="btn btn-border btn-alt border-red btn-link font-red" title=""><span>{% trans "Backup Docs" %}</span></a></h2>
-    <p>{% trans "This page can be used to restore your websites, Back up should be generated from CyberPanel Back up generation tool, it will detect all Back ups under <strong>/home/backup</strong>." %}</p>
+    <p>{% trans "This page can be used to restore your websites, Backup should be generated from CyberPanel Backup generation tool, it will detect all Backups under <strong>/home/backup</strong>." %}</p>
 </div>
 
 <div ng-controller="restoreWebsiteControl" class="panel">
@@ -27,7 +27,7 @@
 
 
                  <div class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "Select Back up" %}</label>
+                    <label class="col-sm-3 control-label">{% trans "Select Backup" %}</label>
                     <div class="col-sm-6">
                         <select ng-change="fetchDetails()" ng-model="backupFile" class="form-control">
                             {% for items in backups %}
@@ -87,7 +87,7 @@
                             </div>
 
                             <div ng-hide="siteExists" class="alert alert-danger">
-                                        <p>{% trans "Site related to this Back up already exists." %}</p>
+                                        <p>{% trans "Site related to this Backup already exists." %}</p>
                             </div>
 
 

@@ -1,6 +1,6 @@
 {% extends "baseTemplate/index.html" %}
 {% load i18n %}
-{% block title %}{% trans "Back up Home - CyberPanel" %}{% endblock %}
+{% block title %}{% trans "Backup Home - CyberPanel" %}{% endblock %}
 {% block content %}
 
 {% load static %}
@@ -10,8 +10,8 @@
 
 <div class="container">
 <div id="page-title">
-   <h2>{% trans "Back up" %}</h2>
-   <p>{% trans "Back up and restore sites." %}</p>
+   <h2>{% trans "Backup" %}</h2>
+   <p>{% trans "Backup and restore sites." %}</p>
 </div>
     <div class="panel col-md-11">
         <div class="panel-body">
@@ -25,9 +25,9 @@
                     {% if createBackup or admin %}
 
                         <div class="col-md-3 btn-min-width">
-                                        <a href="{% url 'backupSite' %}" title="{% trans 'Back up Site' %}" class="tile-box tile-box-shortcut btn-primary">
+                                        <a href="{% url 'backupSite' %}" title="{% trans 'Backup Site' %}" class="tile-box tile-box-shortcut btn-primary">
                                             <div class="tile-header">
-                                                {% trans "Back up" %}
+                                                {% trans "Backup" %}
                                             </div>
                                             <div class="tile-content-wrapper">
                                                 <i class="fa fa-clone"></i>
@@ -41,7 +41,7 @@
 
 
                         <div class="col-md-3 btn-min-width">
-                                        <a href="{% url 'restoreSite' %}" title="{% trans 'Restore Back up' %}" class="tile-box tile-box-shortcut btn-primary">
+                                        <a href="{% url 'restoreSite' %}" title="{% trans 'Restore Backup' %}" class="tile-box tile-box-shortcut btn-primary">
                                             <div class="tile-header">
                                                 {% trans "Restore" %}
                                             </div>
@@ -72,9 +72,9 @@
                     {% if scheduleBackups or admin %}
 
                         <div class="col-md-3 btn-min-width">
-                                        <a href="{% url 'scheduleBackup' %}" title="{% trans 'Schedule Back up' %}" class="tile-box tile-box-shortcut btn-primary">
+                                        <a href="{% url 'scheduleBackup' %}" title="{% trans 'Schedule Backup' %}" class="tile-box tile-box-shortcut btn-primary">
                                             <div class="tile-header">
-                                                {% trans "Schedule Back up" %}
+                                                {% trans "Schedule Backup" %}
                                             </div>
                                             <div class="tile-content-wrapper">
                                                 <i class="fa fa-refresh"></i>
@@ -87,9 +87,9 @@
                     {% if remoteBackups or admin %}
 
                         <div class="col-md-3 btn-min-width">
-                                        <a href="{% url 'remoteBackups' %}" title="{% trans 'Remote Back ups' %}" class="tile-box tile-box-shortcut btn-primary">
+                                        <a href="{% url 'remoteBackups' %}" title="{% trans 'Remote Backups' %}" class="tile-box tile-box-shortcut btn-primary">
                                             <div class="tile-header">
-                                                {% trans "Remote Back ups" %}
+                                                {% trans "Remote Backups" %}
                                             </div>
                                             <div class="tile-content-wrapper">
                                                 <i class="fa fa-cloud-upload"></i>

@@ -190,8 +190,8 @@ def main():
     parser.add_argument('--backupFile', help='')
     parser.add_argument('--dir', help='')
 
-
     args = parser.parse_args()
+
 
     if args.function == "submitRestore":
         restoreMeta.startRestore(args.metaPath,args.statusFile)

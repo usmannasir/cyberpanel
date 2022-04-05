@@ -15,9 +15,9 @@ from stat import *
 import stat
 
 VERSION = '2.1'
-BUILD = 1
+BUILD = 2
 
-char_set = {'small': 'abcdefghijklmnopqrstuvwxyz','nums': '0123456789','big': 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'}
+char_set = {'small': 'abcdefghijklmnopqrstuvwxyz', 'nums': '0123456789', 'big': 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'}
 
 
 def generate_pass(length=14):
@@ -55,7 +55,7 @@ def get_distro():
             return cent8
         if data.find('AlmaLinux release 8') > -1:
             return cent8
-        if data.find('Rocky Linux release 8') > -1:
+        if data.find('Rocky Linux release 8') > -1 or data.find('Rocky Linux 8') > -1 or data.find('rocky:8') > -1:
             return cent8
 
     else:
@@ -397,10 +397,10 @@ class preFlightsChecks:
         # reference: https://oracle-base.com/articles/mysql/mysql-password-less-logins-using-option-files
         mysql_my_root_cnf = '/root/.my.cnf'
         mysql_root_cnf_content = """
-        [client]
-        user=root
-        password="%s"
-        """ % password
+[client]
+user=root
+password="%s"
+""" % password
 
         with open(mysql_my_root_cnf, 'w') as f:
             f.write(mysql_root_cnf_content)
@@ -621,8 +621,8 @@ class preFlightsChecks:
 
         clScripts = ['/usr/local/CyberCP/CLScript/panel_info.py', '/usr/local/CyberCP/CLScript/CloudLinuxPackages.py',
                      '/usr/local/CyberCP/CLScript/CloudLinuxUsers.py',
-                     '/usr/local/CyberCP/CLScript/CloudLinuxDomains.py'
-            , '/usr/local/CyberCP/CLScript/CloudLinuxResellers.py', '/usr/local/CyberCP/CLScript/CloudLinuxAdmins.py',
+                     '/usr/local/CyberCP/CLScript/CloudLinuxDomains.py',
+                     '/usr/local/CyberCP/CLScript/CloudLinuxResellers.py', '/usr/local/CyberCP/CLScript/CloudLinuxAdmins.py',
                      '/usr/local/CyberCP/CLScript/CloudLinuxDB.py', '/usr/local/CyberCP/CLScript/UserInfo.py']
 
         for items in clScripts:
@@ -651,6 +651,36 @@ class preFlightsChecks:
         command = 'mkdir -p/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/'
 
         rainloopinipath = '/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/application.ini'
+
+        command = 'chmod 600 /usr/local/CyberCP/public/rainloop.php'
+        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+        ###
+
+        WriteToFile = open('/etc/fstab', 'a')
+        WriteToFile.write('proc    /proc        proc        defaults,hidepid=2    0 0\n')
+        WriteToFile.close()
+
+        command = 'mount -o remount,rw,hidepid=2 /proc'
+        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+        ## symlink protection
+
+        writeToFile = open('/usr/lib/sysctl.d/50-default.conf', 'a')
+        writeToFile.writelines('fs.protected_hardlinks = 1\n')
+        writeToFile.writelines('fs.protected_symlinks = 1\n')
+        writeToFile.close()
+
+        command = 'sysctl --system'
+        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+        command = 'chmod 700 %s' % ('/home/cyberpanel')
+        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+        destPrivKey = "/usr/local/lscp/conf/key.pem"
+
+        command = 'chmod 600 %s' % (destPrivKey)
+        preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
         ###
 
@@ -684,8 +714,7 @@ class preFlightsChecks:
             if not os.path.exists("/usr/local/CyberCP/public"):
                 os.mkdir("/usr/local/CyberCP/public")
 
-            command = 'wget -O /usr/local/CyberCP/public/phpmyadmin.zip https://%s/misc/phpmyadmin.zip' % (
-                preFlightsChecks.cdn)
+            command = 'wget -O /usr/local/CyberCP/public/phpmyadmin.zip https://github.com/usmannasir/cyberpanel/raw/stable/phpmyadmin.zip'
 
             preFlightsChecks.call(command, self.distro, '[download_install_phpmyadmin]',
                                   command, 1, 0, os.EX_OSERR)
@@ -781,7 +810,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
             elif self.distro == cent8:
 
-                command = 'dnf --nogpg install -y https://mirror.ghettoforge.org/distributions/gf/el/8/gf/x86_64/gf-release-8-11.gf.el8.noarch.rpm'
+                command = 'dnf --nogpg install -y https://mirror.ghettoforge.org/distributions/gf/gf-release-latest.gf.el8.noarch.rpm'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
                 command = 'dnf install --enablerepo=gf-plus postfix3 postfix3-mysql -y'
@@ -1349,7 +1378,6 @@ imap_folder_list_limit = 0
             logging.InstallLog.writeToFile("FirewallD installed and configured!")
             preFlightsChecks.stdOut("FirewallD installed and configured!")
 
-
         except OSError as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [installFirewalld]")
             return 0
@@ -1629,7 +1657,6 @@ imap_folder_list_limit = 0
 
             logging.InstallLog.writeToFile("LSCPD Daemon Set!")
 
-
         except BaseException as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [setupLSCPDDaemon]")
             return 0
@@ -1870,7 +1897,6 @@ milter_default_action = accept
             command = "systemctl start postfix"
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-
         except BaseException as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [configureOpenDKIM]")
             return 0
@@ -2015,12 +2041,12 @@ milter_default_action = accept
             CentOSPath = '/etc/redhat-release'
 
             if os.path.exists(CentOSPath):
-                    command = 'yum install -y yum-plugin-copr'
-                    preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-                    command = 'yum copr enable -y copart/restic'
-                    preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-                    command = 'yum install -y restic'
-                    preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                command = 'yum install -y yum-plugin-copr'
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                command = 'yum copr enable -y copart/restic'
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                command = 'yum install -y restic'
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             else:
                 command = 'apt-get update -y'
@@ -2160,7 +2186,7 @@ def main():
     logging.InstallLog.writeToFile("Starting CyberPanel installation..,10")
     preFlightsChecks.stdOut("Starting CyberPanel installation..")
 
-    if args.ent == None:
+    if args.ent is None:
         ent = 0
         preFlightsChecks.stdOut("OpenLiteSpeed web server will be installed.")
     else:
@@ -2170,7 +2196,7 @@ def main():
         else:
             preFlightsChecks.stdOut("LiteSpeed Enterprise web server will be installed.")
             ent = 1
-            if args.serial != None:
+            if args.serial is not None:
                 serial = args.serial
                 preFlightsChecks.stdOut("LiteSpeed Enterprise Serial detected: " + serial)
             else:
@@ -2216,12 +2242,12 @@ def main():
                               remotemysql, mysqlhost, mysqldb, mysqluser, mysqlpassword, mysqlport)
     checks.mountTemp()
 
-    if args.port == None:
+    if args.port is None:
         port = "8090"
     else:
         port = args.port
 
-    if args.mysql == None:
+    if args.mysql is None:
         mysql = 'One'
         preFlightsChecks.stdOut("Single MySQL instance version will be installed.")
     else:
@@ -2245,7 +2271,7 @@ def main():
     checks.fix_selinux_issue()
     checks.install_psmisc()
 
-    if args.postfix == None:
+    if args.postfix is None:
         checks.install_postfix_dovecot()
         checks.setup_email_Passwords(installCyberPanel.InstallCyberPanel.mysqlPassword, mysql)
         checks.setup_postfix_dovecot_config(mysql)
@@ -2272,7 +2298,7 @@ def main():
 
     ## Install and Configure OpenDKIM.
 
-    if args.postfix == None:
+    if args.postfix is None:
         checks.installOpenDKIM()
         checks.configureOpenDKIM()
     else:
@@ -2286,24 +2312,22 @@ def main():
     checks.setupPythonWSGI()
     checks.setupLSCPDDaemon()
 
-    if args.redis != None:
+    if args.redis is not None:
         checks.installRedis()
 
-    checks.fixCyberPanelPermissions()
-
-    if args.postfix != None:
+    if args.postfix is not None:
         checks.enableDisableEmail(args.postfix.lower())
     else:
         preFlightsChecks.stdOut("Postfix will be installed and enabled.")
         checks.enableDisableEmail('on')
 
-    if args.powerdns != None:
+    if args.powerdns is not None:
         checks.enableDisableDNS(args.powerdns.lower())
     else:
         preFlightsChecks.stdOut("PowerDNS will be installed and enabled.")
         checks.enableDisableDNS('on')
 
-    if args.ftp != None:
+    if args.ftp is not None:
         checks.enableDisableFTP(args.ftp.lower(), distro)
     else:
         preFlightsChecks.stdOut("Pure-FTPD will be installed and enabled.")
@@ -2349,6 +2373,8 @@ echo $oConfig->Save() ? 'Done' : 'Error';
         subprocess.call(shlex.split(command))
     except:
         pass
+
+    checks.fixCyberPanelPermissions()
 
     logging.InstallLog.writeToFile("CyberPanel installation successfully completed!,80")
 

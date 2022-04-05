@@ -20,15 +20,7 @@ from .models import IncJob, JobSnapshots
 from websiteFunctions.models import Websites
 import plogical.randomPassword as randomPassword
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
-from xml.etree.ElementTree import Element, SubElement
-from xml.etree import ElementTree
-from xml.dom import minidom
-from backup.models import DBUsers
 import plogical.mysqlUtilities as mysqlUtilities
-from plogical.backupUtilities import backupUtilities
-from plogical.dnsUtilities import DNS
-from mailServer.models import Domains as eDomains
-from random import randint
 import json
 from django.shortcuts import HttpResponse
 
@@ -69,12 +61,12 @@ class IncJobs(multi.Thread):
             path = '/home/backup/%s' % (self.website)
             command = 'export RESTIC_PASSWORD=%s PATH=${PATH}:/usr/bin && restic -r %s:%s snapshots' % (
                 self.passwordFile, self.backupDestinations, path)
-            return ProcessUtilities.outputExecutioner(command).split('\n')
+            return ProcessUtilities.outputExecutioner(command, self.externalApp).split('\n')
         else:
             key, secret = self.getAWSData()
             command = 'export RESTIC_PASSWORD=%s AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s  && restic -r s3:s3.amazonaws.com/%s snapshots' % (
                 self.passwordFile, key, secret, self.website)
-            return ProcessUtilities.outputExecutioner(command).split('\n')
+            return ProcessUtilities.outputExecutioner(command, self.externalApp).split('\n')
 
     def fetchCurrentBackups(self):
         try:
@@ -119,7 +111,7 @@ class IncJobs(multi.Thread):
             return 1
         else:
             if self.jobid.type[:8] == 'database':
-                self.restoreTarget = '/home/cyberpanel/'
+                self.restoreTarget = '/usr/local/CyberCP/tmp/'
             elif self.jobid.type[:4] == 'data':
                 self.restoreTarget = '/home/'
             elif self.jobid.type[:5] == 'email':
@@ -152,7 +144,7 @@ class IncJobs(multi.Thread):
                 # If /home/%s/backup-exclude.conf file exists lets pass this to restic by appending the command to end.
                 if os.path.isfile(backupExcludesFile):
                     command = command + resticBackupExcludeCMD
-                result = ProcessUtilities.outputExecutioner(command)
+                result = ProcessUtilities.outputExecutioner(command, self.externalApp)
 
                 if result.find('saved') == -1:
                     logging.statusWriter(self.statusPath, '%s. [5009].' % (result), 1)
@@ -181,7 +173,7 @@ class IncJobs(multi.Thread):
                         self.passwordFile,
                         key, secret, self.website, snapshotID, self.restoreTarget)
 
-                    result = ProcessUtilities.outputExecutioner(command)
+                    result = ProcessUtilities.outputExecutioner(command, self.externalApp)
 
                     if result.find('restoring') == -1:
                         logging.statusWriter(self.statusPath, 'Failed: %s. [5009]' % (result), 1)
@@ -195,7 +187,7 @@ class IncJobs(multi.Thread):
                     command = 'export AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s  && restic -r s3:s3.amazonaws.com/%s forget %s --password-file %s' % (
                         key, secret, self.website, snapshotID, self.passwordFile)
 
-                    result = ProcessUtilities.outputExecutioner(command)
+                    result = ProcessUtilities.outputExecutioner(command, self.externalApp)
 
                     if result.find('removed snapshot') > -1 or result.find('deleted') > -1:
                         pass
@@ -206,7 +198,7 @@ class IncJobs(multi.Thread):
                     command = 'export AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s  && restic -r s3:s3.amazonaws.com/%s prune --password-file %s' % (
                         key, secret, self.website, self.passwordFile)
 
-                    ProcessUtilities.outputExecutioner(command)
+                    ProcessUtilities.outputExecutioner(command, self.externalApp)
                 else:
                     self.backupDestinations = self.jobid.destination
 
@@ -215,15 +207,13 @@ class IncJobs(multi.Thread):
                     command = 'export AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s  && restic -r s3:s3.amazonaws.com/%s restore %s --password-file %s --target %s' % (
                         key, secret, self.website, snapshotID, self.passwordFile, self.restoreTarget)
 
-                    result = ProcessUtilities.outputExecutioner(command)
+                    result = ProcessUtilities.outputExecutioner(command, self.externalApp)
 
                     if result.find('restoring') == -1:
                         logging.statusWriter(self.statusPath, 'Failed: %s. [5009]' % (result), 1)
                         return 0
 
                 return 1
-
-
         except BaseException as msg:
             logging.statusWriter(self.statusPath, "%s [88][5009]" % (str(msg)), 1)
             return 0
@@ -242,7 +232,7 @@ class IncJobs(multi.Thread):
             # If /home/%s/backup-exclude.conf file exists lets pass this to restic by appending the command to end.
             if os.path.isfile(backupExcludesFile):
                 command = command + resticBackupExcludeCMD
-            result = ProcessUtilities.outputExecutioner(command)
+            result = ProcessUtilities.outputExecutioner(command, self.externalApp)
 
             if result.find('saved') == -1:
                 logging.statusWriter(self.statusPath, '%s. [5009].' % (result), 1)
@@ -265,7 +255,7 @@ class IncJobs(multi.Thread):
             repoLocation = '/home/%s/incbackup' % (self.website)
 
             command = 'restic -r %s forget %s --password-file %s' % (repoLocation, self.jobid.snapshotid, self.passwordFile)
-            result = ProcessUtilities.outputExecutioner(command)
+            result = ProcessUtilities.outputExecutioner(command, self.externalApp)
 
             if result.find('removed snapshot') > -1 or result.find('deleted') > -1:
                 pass
@@ -274,7 +264,7 @@ class IncJobs(multi.Thread):
                 return 0
 
             command = 'restic -r %s prune --password-file %s' % (repoLocation, self.passwordFile)
-            ProcessUtilities.outputExecutioner(command)
+            ProcessUtilities.outputExecutioner(command, self.externalApp)
 
             return 1
         else:
@@ -282,7 +272,7 @@ class IncJobs(multi.Thread):
             command = 'restic -r %s restore %s --target %s --password-file %s' % (
                 repoLocation, self.jobid.snapshotid, self.restoreTarget, self.passwordFile)
 
-            result = ProcessUtilities.outputExecutioner(command)
+            result = ProcessUtilities.outputExecutioner(command, self.externalApp)
 
             if result.find('restoring') == -1:
                 logging.statusWriter(self.statusPath, 'Failed: %s. [5009]' % (result), 1)
@@ -293,6 +283,7 @@ class IncJobs(multi.Thread):
     ## Last argument delete is set when the snapshot is to be deleted from this repo, when this argument is set, any preceding argument is not used
 
     def sftpFunction(self, backupPath, type, restore=None, delete=None):
+        return 0
         if restore == None:
             # Define our excludes file for use with restic
             backupExcludesFile = '/home/%s/backup-exclude.conf' % (self.website.domain)
@@ -303,7 +294,7 @@ class IncJobs(multi.Thread):
             # If /home/%s/backup-exclude.conf file exists lets pass this to restic by appending the command to end.
             if os.path.isfile(backupExcludesFile):
                 command = command + resticBackupExcludeCMD
-            result = ProcessUtilities.outputExecutioner(command)
+            result = ProcessUtilities.outputExecutioner(command, self.externalApp)
 
             if result.find('saved') == -1:
                 logging.statusWriter(self.statusPath, '%s. [5009].' % (result), 1)
@@ -325,7 +316,7 @@ class IncJobs(multi.Thread):
             repoLocation = '/home/backup/%s' % (self.website)
             command = 'export PATH=${PATH}:/usr/bin && restic -r %s:%s forget %s --password-file %s' % (
                 self.jobid.destination, repoLocation, self.jobid.snapshotid, self.passwordFile)
-            result = ProcessUtilities.outputExecutioner(command)
+            result = ProcessUtilities.outputExecutioner(command, self.externalApp)
 
             if result.find('removed snapshot') > -1 or result.find('deleted') > -1:
                 pass
@@ -334,14 +325,14 @@ class IncJobs(multi.Thread):
                 return 0
 
             command = 'export PATH=${PATH}:/usr/bin && restic -r %s:%s prune --password-file %s' % (self.jobid.destination, repoLocation, self.passwordFile)
-            ProcessUtilities.outputExecutioner(command)
+            ProcessUtilities.outputExecutioner(command, self.externalApp)
         else:
             if self.reconstruct == 'remote':
                 repoLocation = '/home/backup/%s' % (self.website)
                 command = 'export RESTIC_PASSWORD=%s PATH=${PATH}:/usr/bin && restic -r %s:%s restore %s --target %s' % (
                     self.passwordFile,
                     self.backupDestinations, repoLocation, self.jobid, self.restoreTarget)
-                result = ProcessUtilities.outputExecutioner(command)
+                result = ProcessUtilities.outputExecutioner(command, self.externalApp)
                 if result.find('restoring') == -1:
                     logging.statusWriter(self.statusPath, 'Failed: %s. [5009]' % (result), 1)
                     return 0
@@ -349,7 +340,7 @@ class IncJobs(multi.Thread):
                 repoLocation = '/home/backup/%s' % (self.website)
                 command = 'export PATH=${PATH}:/usr/bin && restic -r %s:%s restore %s --target %s --password-file %s' % (
                     self.jobid.destination, repoLocation, self.jobid.snapshotid, self.restoreTarget, self.passwordFile)
-                result = ProcessUtilities.outputExecutioner(command)
+                result = ProcessUtilities.outputExecutioner(command, self.externalApp)
                 if result.find('restoring') == -1:
                     logging.statusWriter(self.statusPath, 'Failed: %s. [5009]' % (result), 1)
                     return 0
@@ -401,7 +392,7 @@ class IncJobs(multi.Thread):
                 ##
 
                 if mysqlUtilities.mysqlUtilities.restoreDatabaseBackup(self.path.split('/')[-1].rstrip('.sql'),
-                                                                       '/home/cyberpanel', 'dummy', 'dummy') == 0:
+                                                                       '/usr/local/CyberCP/tmp', 'dummy', 'dummy') == 0:
                     raise BaseException
             else:
 
@@ -415,15 +406,17 @@ class IncJobs(multi.Thread):
                     if self.awsFunction('restore', '', self.jobid.snapshotid) == 0:
                         return 0
 
+
                 if mysqlUtilities.mysqlUtilities.restoreDatabaseBackup(self.jobid.type.split(':')[1].rstrip('.sql'),
-                                                                       '/home/cyberpanel', 'dummy', 'dummy') == 0:
+                                                                       '/home/%s' % (self.website), 'dummy', 'dummy') == 0:
                     raise BaseException('Can not restore database backup.')
 
             try:
                 if self.reconstruct == 'remote':
-                    os.remove('/home/cyberpanel/%s' % (self.path.split('/')[-1]))
+                    os.remove('/usr/local/CyberCP/tmp/%s' % (self.path.split('/')[-1]))
                 else:
-                    os.remove('/home/cyberpanel/%s.sql' % (self.jobid.type.split(':')[1]))
+                    os.remove('/usr/local/CyberCP/tmp/%s.sql' % (self.jobid.type.split(':')[1]))
+                    os.remove('/home/%s/%s.sql' % (self.website.domain, self.jobid.type.split(':')[1]))
             except BaseException as msg:
                 logging.writeToFile(str(msg))
 
@@ -501,6 +494,10 @@ class IncJobs(multi.Thread):
             self.website = self.extraArgs['website']
             jobid = self.extraArgs['jobid']
             self.reconstruct = self.extraArgs['reconstruct']
+
+            WebsiteObject = Websites.objects.get(domain=self.website)
+
+            self.externalApp = WebsiteObject.externalApp
 
             if self.reconstruct == 'remote':
 
@@ -588,7 +585,6 @@ class IncJobs(multi.Thread):
 
             ## Use the meta function from backup utils for future improvements.
 
-
             if os.path.exists(ProcessUtilities.debugPath):
                 logging.writeToFile('Creating meta for %s. [IncBackupsControl.py]' % (self.website.domain))
 
@@ -600,8 +596,12 @@ class IncJobs(multi.Thread):
             if status == 1:
                 logging.statusWriter(self.statusPath, 'Meta data is ready..', 1)
                 metaPathNew = '/home/%s/meta.xml' % (self.website.domain)
-                command = 'mv %s %s' % (metaPath, metaPathNew)
+
+                command = 'chown %s:%s %s' % (self.externalApp, self.externalApp, metaPath)
                 ProcessUtilities.executioner(command)
+
+                command = 'mv %s %s' % (metaPath, metaPathNew)
+                ProcessUtilities.executioner(command, self.externalApp)
                 return 1
             else:
                 logging.statusWriter(self.statusPath, "%s [544][5009]" % (message), 1)
@@ -641,26 +641,49 @@ class IncJobs(multi.Thread):
 
             for items in databases:
 
-                if mysqlUtilities.mysqlUtilities.createDatabaseBackup(items.dbName, '/home/cyberpanel') == 0:
+                ###
+
+                UploadPath = '/usr/local/CyberCP/tmp'
+
+                if not os.path.exists(UploadPath):
+                    command = 'mkdir %s' % (UploadPath)
+                    ProcessUtilities.executioner(command)
+
+                command = 'chown cyberpanel:cyberpanel %s' % (UploadPath)
+                ProcessUtilities.executioner(command)
+
+                command = 'chmod 711 %s' % (UploadPath)
+                ProcessUtilities.executioner(command)
+
+                ###
+
+                if mysqlUtilities.mysqlUtilities.createDatabaseBackup(items.dbName, UploadPath) == 0:
                     return 0
 
-                dbPath = '/home/cyberpanel/%s.sql' % (items.dbName)
+                dbPath = '%s/%s.sql' % (UploadPath, items.dbName)
+                dbPathNew = '/home/%s/%s.sql' % (self.website.domain, items.dbName)
+
+                command = 'cp %s %s' % (dbPath, dbPathNew)
+                ProcessUtilities.executioner(command, self.externalApp)
 
                 if self.backupDestinations == 'local':
-                    if self.localFunction(dbPath, 'database') == 0:
+                    if self.localFunction(dbPathNew, 'database') == 0:
                         return 0
                 elif self.backupDestinations[:4] == 'sftp':
-                    if self.sftpFunction(dbPath, 'database') == 0:
+                    if self.sftpFunction(dbPathNew, 'database') == 0:
                         return 0
                 else:
-                    if self.awsFunction('backup', dbPath, '', 'database') == 0:
+                    if self.awsFunction('backup', dbPathNew, '', 'database') == 0:
                         return 0
 
                 try:
-                    os.remove('/home/cyberpanel/%s.sql' % (items.dbName))
+                    dbPath = '/usr/local/CyberCP/tmp/%s.sql' % (items.dbName)
+                    command = 'rm -f %s' % (dbPath)
+                    ProcessUtilities.executioner(command, self.externalApp)
                 except BaseException as msg:
                     logging.statusWriter(self.statusPath,
                                          'Failed to delete database: %s. [IncJobs.backupDatabases.456]' % str(msg), 1)
+
             return 1
         except BaseException as msg:
             logging.statusWriter(self.statusPath, '%s. [IncJobs.backupDatabases.269][5009]' % str(msg), 1)
@@ -720,7 +743,7 @@ class IncJobs(multi.Thread):
 
             if self.backupDestinations == 'local':
                 command = 'restic init --repo %s --password-file %s' % (self.repoPath, self.passwordFile)
-                result = ProcessUtilities.outputExecutioner(command)
+                result = ProcessUtilities.outputExecutioner(command, self.externalApp)
 
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.writeToFile(result)
@@ -732,7 +755,7 @@ class IncJobs(multi.Thread):
                 remotePath = '/home/backup/%s' % (self.website.domain)
                 command = 'export PATH=${PATH}:/usr/bin && restic init --repo %s:%s --password-file %s' % (
                     self.backupDestinations, remotePath, self.passwordFile)
-                result = ProcessUtilities.outputExecutioner(command)
+                result = ProcessUtilities.outputExecutioner(command, self.externalApp)
 
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.writeToFile(result)
@@ -743,7 +766,7 @@ class IncJobs(multi.Thread):
                 key, secret = self.getAWSData()
                 command = 'export AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s  && restic -r s3:s3.amazonaws.com/%s init --password-file %s' % (
                     key, secret, self.website.domain, self.passwordFile)
-                result = ProcessUtilities.outputExecutioner(command)
+                result = ProcessUtilities.outputExecutioner(command, self.externalApp)
 
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.writeToFile(result)
@@ -777,103 +800,112 @@ Subject: %s
 
     def createBackup(self):
 
-        self.statusPath = self.extraArgs['tempPath']
-        website = self.extraArgs['website']
-        self.backupDestinations = self.extraArgs['backupDestinations']
-        websiteData = self.extraArgs['websiteData']
-        websiteEmails = self.extraArgs['websiteEmails']
-        websiteDatabases = self.extraArgs['websiteDatabases']
-
-        ### Checking if restic is installed before moving on
-
-        command = 'restic'
-
-        if ProcessUtilities.outputExecutioner(command).find('restic is a backup program which') == -1:
-            try:
-
-                CentOSPath = '/etc/redhat-release'
-
-                if os.path.exists(CentOSPath):
-                        command = 'yum install -y yum-plugin-copr'
-                        ProcessUtilities.executioner(command)
-                        command = 'yum copr enable -y copart/restic'
-                        ProcessUtilities.executioner(command)
-                        command = 'yum install -y restic'
-                        ProcessUtilities.executioner(command)
-
-                else:
-                    command = 'apt-get update -y'
-                    ProcessUtilities.executioner(command)
-
-                    command = 'apt-get install restic -y'
-                    ProcessUtilities.executioner(command)
-
-            except:
-                logging.statusWriter(self.statusPath,
-                                     'It seems restic is not installed, for incremental backups to work '
-                                     'restic must be installed. You can manually install restic using this '
-                                     'guide -> https://go.cyberpanel.net/restic. [5009]', 1)
-                pass
-
-            return 0
-
-        ## Restic check completed.
-
-        self.website = Websites.objects.get(domain=website)
-
-        self.jobid = IncJob(website=self.website)
-        self.jobid.save()
-
-        self.passwordFile = '/home/%s/%s' % (self.website.domain, self.website.domain)
-
-        self.repoPath = '/home/%s/incbackup' % (self.website.domain)
-
-        if not os.path.exists(self.passwordFile):
-            password = randomPassword.generate_pass()
-            command = 'echo "%s" > %s' % (password, self.passwordFile)
-            ProcessUtilities.executioner(command, self.website.externalApp, True)
-
-            command = 'chmod 600 %s' % (self.passwordFile)
-            ProcessUtilities.executioner(command)
-
-            self.sendEmail(password)
-
-        ## Completed password generation
-
-        if self.initiateRepo() == 0:
-            return 0
-
-
-
-        if self.prepareBackupMeta() == 0:
-            return 0
-
-        if websiteData:
-            if self.backupData() == 0:
-                return 0
-
-        if websiteDatabases:
-            if self.backupDatabases() == 0:
-                return 0
-
-        if websiteEmails:
-            if self.emailBackup() == 0:
-                return 0
-
-        ## Backup job done
-
-        self.metaBackup()
-
-        metaPathNew = '/home/%s/meta.xml' % (self.website.domain)
-
         try:
-            command = 'rm -f %s' % (metaPathNew)
-            ProcessUtilities.executioner(command)
+
+            self.statusPath = self.extraArgs['tempPath']
+            website = self.extraArgs['website']
+            self.backupDestinations = self.extraArgs['backupDestinations']
+            websiteData = self.extraArgs['websiteData']
+            websiteEmails = self.extraArgs['websiteEmails']
+            websiteDatabases = self.extraArgs['websiteDatabases']
+
+            ### Checking if restic is installed before moving on
+
+            command = 'restic'
+
+            if ProcessUtilities.outputExecutioner(command).find('restic is a backup program which') == -1:
+                try:
+
+                    CentOSPath = '/etc/redhat-release'
+
+                    if os.path.exists(CentOSPath):
+                            command = 'yum install -y yum-plugin-copr'
+                            ProcessUtilities.executioner(command)
+                            command = 'yum copr enable -y copart/restic'
+                            ProcessUtilities.executioner(command)
+                            command = 'yum install -y restic'
+                            ProcessUtilities.executioner(command)
+
+                    else:
+                        command = 'apt-get update -y'
+                        ProcessUtilities.executioner(command)
+
+                        command = 'apt-get install restic -y'
+                        ProcessUtilities.executioner(command)
+
+                except:
+                    logging.statusWriter(self.statusPath,
+                                         'It seems restic is not installed, for incremental backups to work '
+                                         'restic must be installed. You can manually install restic using this '
+                                         'guide -> https://go.cyberpanel.net/restic. [5009]', 1)
+                    pass
+
+                return 0
+
+            ## Restic check completed.
+
+            self.website = Websites.objects.get(domain=website)
+            self.externalApp = self.website.externalApp
+
+            self.jobid = IncJob(website=self.website)
+            self.jobid.save()
+
+            self.passwordFile = '/home/%s/%s' % (self.website.domain, self.website.domain)
+
+            self.repoPath = '/home/%s/incbackup' % (self.website.domain)
+
+            command = 'ls -la %s' % (self.passwordFile)
+            output = ProcessUtilities.outputExecutioner(command, self.externalApp)
+
+            if output.find('No such file or directory') > -1:
+                password = randomPassword.generate_pass()
+                command = 'echo "%s" > %s' % (password, self.passwordFile)
+                ProcessUtilities.executioner(command, self.externalApp, True)
+
+                command = 'chmod 600 %s' % (self.passwordFile)
+                ProcessUtilities.executioner(command, self.externalApp)
+
+                self.sendEmail(password)
+
+            ## Completed password generation
+
+            if self.initiateRepo() == 0:
+                return 0
+
+            if self.prepareBackupMeta() == 0:
+                return 0
+
+            if websiteData:
+                if self.backupData() == 0:
+                    return 0
+
+            if websiteDatabases:
+                if self.backupDatabases() == 0:
+                    return 0
+
+            if websiteEmails:
+                if self.emailBackup() == 0:
+                    return 0
+
+            ## Backup job done
+
+            self.metaBackup()
+
+            metaPathNew = '/home/%s/meta.xml' % (self.website.domain)
+
+            try:
+                command = 'rm -f %s' % (metaPathNew)
+                ProcessUtilities.executioner(command)
+            except BaseException as msg:
+                logging.statusWriter(self.statusPath,
+                                     'Failed to delete meta file: %s. [IncJobs.createBackup.591]' % str(msg), 1)
+
+            logging.statusWriter(self.statusPath, 'Completed', 1)
+
         except BaseException as msg:
             logging.statusWriter(self.statusPath,
-                                 'Failed to delete meta file: %s. [IncJobs.createBackup.591]' % str(msg), 1)
+                                 'Failed to create incremental backup: %s. [5009][IncJobs.createBackup.913]' % str(msg), 1)
 
-        logging.statusWriter(self.statusPath, 'Completed', 1)
 
     ### Delete Snapshot
 
@@ -887,6 +919,7 @@ Subject: %s
             ### Fetch the website name from JobSnapshot object and set these variable as they are needed in called functions below
 
             self.website = job_snapshots[0].job.website.domain
+            self.externalApp = job_snapshots[0].job.website.externalApp
             self.passwordFile = '/home/%s/%s' % (self.website, self.website)
 
             for job_snapshot in job_snapshots:

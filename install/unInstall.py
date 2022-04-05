@@ -8,7 +8,6 @@ import shlex
 import socket
 
 
-
 class unInstallCyberPanel:
 
     def unInstallCyberPanelRepo(self):
@@ -18,7 +17,7 @@ class unInstallCyberPanel:
             os.remove(copyPath)
 
         except OSError as msg:
-            logging.InstallLog.writeToFile(str(msg)+ " [unInstallCyberPanelRepo]")
+            logging.InstallLog.writeToFile(f"{str(msg)} [unInstallCyberPanelRepo]")
 
     def removeGunicorn(self):
         try:
@@ -32,7 +31,6 @@ class unInstallCyberPanel:
             os.remove(service)
             os.remove(socket)
             os.remove(conf)
-
 
         except BaseException as msg:
             logging.InstallLog.writeToFile(str(msg) + " [removeGunicorn]")
@@ -71,7 +69,6 @@ class unInstallCyberPanel:
             shutil.rmtree("/var/lib/mysql")
             os.remove("/etc/my.cnf")
 
-
         except OSError as msg:
             logging.InstallLog.writeToFile(str(msg) + " [removeMysql]")
             return 0
@@ -84,13 +81,13 @@ class unInstallCyberPanel:
     def removeLiteSpeed(self):
         try:
 
-           command = 'yum -y remove openlitespeed'
+            command = 'yum -y remove openlitespeed'
 
-           cmd = shlex.split(command)
+            cmd = shlex.split(command)
 
-           res = subprocess.call(cmd)
+            res = subprocess.call(cmd)
 
-           shutil.rmtree("/usr/local/lsws")
+            shutil.rmtree("/usr/local/lsws")
 
         except OSError as msg:
             logging.InstallLog.writeToFile(str(msg) + " [removeLiteSpeed]")

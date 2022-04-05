@@ -39,7 +39,7 @@ class ClusterManager:
     def PostStatus(self, message):
         try:
             finalData = {'name': self.config['name'], 'type': self.type, 'message': message, 'token': self.config['token']}
-            resp = requests.post(ClusterManager.LogURL, data=json.dumps(finalData), verify=False)
+            resp = requests.post(ClusterManager.LogURL, data=json.dumps(finalData))
             if os.path.exists(ProcessUtilities.debugPath):
                 logging.writeToFile(resp.text + '[info]')
         except BaseException as msg:
@@ -418,7 +418,7 @@ password=%s""" % (rootdbpassword, rootdbpassword)
     def Uptime(self):
         try:
             finalData = {'name': self.config['name'], 'token': self.config['token']}
-            resp = requests.post(ClusterManager.UptimeURL, data=json.dumps(finalData), verify=False)
+            resp = requests.post(ClusterManager.UptimeURL, data=json.dumps(finalData))
             if os.path.exists(ProcessUtilities.debugPath):
                 logging.writeToFile(resp.text + '[Uptime:info]')
         except BaseException as msg:

@@ -36,11 +36,9 @@ class TestLogin(TestCase):
         json_data = json.loads(response.content)
         self.assertEqual(json_data['loginStatus'], 1)
 
-
         ## Verify
 
         response = self.client.get(self.adminLogin)
         self.assertTemplateUsed(response, 'baseTemplate/homePage.html')
         ##logging.writeToFile(result.content)
         self.assertEqual(response.status_code, 200)
-

@@ -1,4 +1,5 @@
 #!/usr/local/CyberCP/bin/python
+import subprocess
 import threading as multi
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from plogical.virtualHostUtilities import virtualHostUtilities
@@ -27,6 +28,7 @@ class StagingSetup(multi.Thread):
             logging.writeToFile(str(msg) + ' [StagingSetup.run]')
 
     def startCloning(self):
+        global ApplicationInstaller
         try:
             tempStatusPath = self.extraArgs['tempStatusPath']
             self.tempStatusPath = tempStatusPath
@@ -35,6 +37,10 @@ class StagingSetup(multi.Thread):
             admin = self.extraArgs['admin']
 
             website = Websites.objects.get(domain=masterDomain)
+
+            from managePHP.phpManager import PHPManager
+            php = PHPManager.getPHPString(website.phpSelection)
+            FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
 
             try:
                 import json
@@ -46,6 +52,21 @@ class StagingSetup(multi.Thread):
             except:
                 masterPath = '/home/%s/public_html' % (masterDomain)
                 replaceDomain = masterDomain
+
+            ### Check WP CLI
+
+            try:
+                command = 'wp --info'
+                outout = ProcessUtilities.outputExecutioner(command)
+
+                if not outout.find('WP-CLI root dir:') > -1:
+                    from plogical.applicationInstaller import ApplicationInstaller
+                    ai = ApplicationInstaller(None, None)
+                    ai.installWPCLI()
+            except subprocess.CalledProcessError:
+                from plogical.applicationInstaller import ApplicationInstaller
+                ai = ApplicationInstaller(None, None)
+                ai.installWPCLI()
 
             configPath = '%s/wp-config.php' % (masterPath)
 
@@ -89,27 +110,41 @@ class StagingSetup(multi.Thread):
 
             logging.statusWriter(tempStatusPath, 'Domain successfully created..,15')
 
+            ### Get table prefix of master site
+
+            command = '%s -d error_reporting=0 /usr/bin/wp config get table_prefix --allow-root --skip-plugins --skip-themes --path=%s' % (
+            FinalPHPPath, masterPath)
+            TablePrefix = ProcessUtilities.outputExecutioner(command).rstrip('\n')
+
+            ###
+
             ## Creating WP Site and setting Database
 
-            command = 'wp core download --path=%s' % (path)
+            command = '%s -d error_reporting=0 /usr/bin/wp core download --path=%s' % (FinalPHPPath, path)
             ProcessUtilities.executioner(command, website.externalApp)
 
             logging.statusWriter(tempStatusPath, 'Creating and copying database..,50')
 
             dbNameRestore, dbUser, dbPassword = ApplicationInstaller(None, None).dbCreation(tempStatusPath, website)
 
-            command = 'wp core config --dbname=%s --dbuser=%s --dbpass=%s --dbhost=%s:%s --path=%s' % (dbNameRestore, dbUser, dbPassword, ApplicationInstaller.LOCALHOST, ApplicationInstaller.PORT, path)
+            command = '%s -d error_reporting=0 /usr/bin/wp core config --dbname=%s --dbuser=%s --dbpass=%s --dbhost=%s:%s --path=%s' % (FinalPHPPath, dbNameRestore, dbUser, dbPassword, ApplicationInstaller.LOCALHOST, ApplicationInstaller.PORT, path)
+            ProcessUtilities.executioner(command, website.externalApp)
+
+            ### Set table prefix
+
+            command = '%s -d error_reporting=0 /usr/bin/wp config set table_prefix %s --path=%s' % (FinalPHPPath, TablePrefix , path)
             ProcessUtilities.executioner(command, website.externalApp)
 
             ## Exporting and importing database
 
-            command = 'wp --allow-root --skip-plugins --skip-themes --path=%s db export %s/dbexport-stage.sql' % (masterPath, path)
+            command = '%s -d error_reporting=0 /usr/bin/wp --allow-root --skip-plugins --skip-themes --path=%s db export %s/dbexport-stage.sql' % (FinalPHPPath, masterPath, path)
             ProcessUtilities.executioner(command)
 
             ## Import
 
-            command = 'wp --allow-root --skip-plugins --skip-themes --path=%s --quiet db import %s/dbexport-stage.sql' % (path, path)
+            command = '%s -d error_reporting=0 /usr/bin/wp --allow-root --skip-plugins --skip-themes --path=%s --quiet db import %s/dbexport-stage.sql' % (FinalPHPPath, path, path)
             ProcessUtilities.executioner(command)
+
 
             try:
                 command = 'rm -f %s/dbexport-stage.sql' % (path)
@@ -119,7 +154,7 @@ class StagingSetup(multi.Thread):
 
             ## Sync WP-Content Folder
 
-            command = 'wp theme path --skip-plugins --skip-themes --allow-root --path=%s' % (masterPath)
+            command = '%s -d error_reporting=0 /usr/bin/wp theme path --skip-plugins --skip-themes --allow-root --path=%s' % (FinalPHPPath, masterPath)
             WpContentPath = ProcessUtilities.outputExecutioner(command).splitlines()[-1].replace('themes', '')
 
             command = 'cp -R %s %s/' % (WpContentPath, path)
@@ -132,10 +167,14 @@ class StagingSetup(multi.Thread):
 
             ## Search and replace url
 
-            command = 'wp search-replace --skip-plugins --skip-themes --allow-root --path=%s "%s" "%s"' % (path, replaceDomain, domain)
+            command = '%s -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --allow-root --path=%s "%s" "%s"' % (FinalPHPPath, path, replaceDomain, domain)
             ProcessUtilities.executioner(command)
 
-            command = 'wp search-replace --skip-plugins --skip-themes --allow-root --path=%s "www.%s" "%s"' % (path, replaceDomain, domain)
+            command = '%s -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --allow-root --path=%s "www.%s" "%s"' % (FinalPHPPath, path, domain, domain)
+            ProcessUtilities.executioner(command)
+
+            command = '%s -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --allow-root --path=%s "https://%s" "http://%s"' % (
+            FinalPHPPath, path, domain, domain)
             ProcessUtilities.executioner(command)
 
             logging.statusWriter(tempStatusPath, 'Fixing permissions..,90')
@@ -166,6 +205,10 @@ class StagingSetup(multi.Thread):
 
             child = ChildDomains.objects.get(domain=childDomain)
 
+            from managePHP.phpManager import PHPManager
+            php = PHPManager.getPHPString(child.master.phpSelection)
+            FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
+
             try:
                 import json
                 from cloudAPI.models import WPDeployments
@@ -190,7 +233,7 @@ class StagingSetup(multi.Thread):
 
             logging.statusWriter(tempStatusPath, 'Syncing databases..,10')
 
-            command = 'wp --allow-root --skip-plugins --skip-themes --path=%s db export %s/dbexport-stage.sql' % (child.path, masterPath)
+            command = '%s -d error_reporting=0 /usr/bin/wp --allow-root --skip-plugins --skip-themes --path=%s db export %s/dbexport-stage.sql' % (FinalPHPPath, child.path, masterPath)
             result = ProcessUtilities.outputExecutioner(command)
 
             if os.path.exists(ProcessUtilities.debugPath):
@@ -198,7 +241,7 @@ class StagingSetup(multi.Thread):
 
             ## Restore to master domain
 
-            command = 'wp --allow-root --skip-plugins --skip-themes --path=%s --quiet db import %s/dbexport-stage.sql' % (masterPath, masterPath)
+            command = '%s -d error_reporting=0 /usr/bin/wp --allow-root --skip-plugins --skip-themes --path=%s --quiet db import %s/dbexport-stage.sql' % (FinalPHPPath, masterPath, masterPath)
             result = ProcessUtilities.outputExecutioner(command)
 
             if os.path.exists(ProcessUtilities.debugPath):
@@ -214,7 +257,7 @@ class StagingSetup(multi.Thread):
 
             logging.statusWriter(tempStatusPath, 'Syncing data..,50')
 
-            command = 'wp theme path --allow-root --skip-plugins --skip-themes --path=%s' % (masterPath)
+            command = '%s -d error_reporting=0 /usr/bin/wp theme path --allow-root --skip-plugins --skip-themes --path=%s' % (FinalPHPPath, masterPath)
             WpContentPath = ProcessUtilities.outputExecutioner(command).splitlines()[-1].replace('wp-content/themes', '')
 
             if os.path.exists(ProcessUtilities.debugPath):
@@ -230,13 +273,20 @@ class StagingSetup(multi.Thread):
 
             ## Search and replace url
 
-            command = 'wp search-replace --allow-root --skip-plugins --skip-themes --path=%s "%s" "%s"' % (masterPath, child.domain, replaceDomain)
+            command = '%s -d error_reporting=0 /usr/bin/wp search-replace --allow-root --skip-plugins --skip-themes --path=%s "%s" "%s"' % (FinalPHPPath, masterPath, child.domain, replaceDomain)
             result = ProcessUtilities.outputExecutioner(command)
 
             if os.path.exists(ProcessUtilities.debugPath):
                 logging.writeToFile(result)
 
-            command = 'wp search-replace --allow-root --skip-plugins --skip-themes --path=%s "www.%s" "%s"' % (masterPath, child.domain, replaceDomain)
+            command = '%s -d error_reporting=0 /usr/bin/wp search-replace --allow-root --skip-plugins --skip-themes --path=%s "www.%s" "%s"' % (FinalPHPPath,masterPath, child.domain, replaceDomain)
+            result = ProcessUtilities.outputExecutioner(command)
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.writeToFile(result)
+
+            command = '%s -d error_reporting=0 /usr/bin/wp search-replace --allow-root --skip-plugins --skip-themes --path=%s "https://%s" "http://%s"' % (FinalPHPPath,
+            masterPath, replaceDomain, replaceDomain)
             result = ProcessUtilities.outputExecutioner(command)
 
             if os.path.exists(ProcessUtilities.debugPath):

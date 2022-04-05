@@ -212,7 +212,6 @@ def populate_current_records(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
-
 def remove_destination(request):
     try:
         user_id, current_acl = _get_user_acl(request)
@@ -239,7 +238,6 @@ def remove_destination(request):
         final_dic = {'destStatus': 0, 'error_message': str(msg)}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
-
 
 def fetch_current_backups(request):
     try:
@@ -286,7 +284,6 @@ def fetch_current_backups(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
-
 def submit_backup_creation(request):
     try:
         user_id, current_acl = _get_user_acl(request)
@@ -325,7 +322,6 @@ def submit_backup_creation(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
-
 def get_backup_status(request):
     try:
         data = json.loads(request.body)
@@ -340,8 +336,7 @@ def get_backup_status(request):
         else:
             return ACLManager.loadErrorJson('fetchStatus', 0)
 
-        if (status[:16] == "/home/cyberpanel" or status[:4] == '/tmp' or status[:18] == '/usr/local/CyberCP') \
-                and status != '/usr/local/CyberCP/CyberCP/settings.py' and status.find('..') == -1:
+        if ACLManager.CheckStatusFilleLoc(status):
             pass
         else:
             data_ret = {'abort': 1, 'installStatus': 0, 'installationProgress': "100",
@@ -390,9 +385,9 @@ def get_backup_status(request):
         logging.writeToFile(str(msg) + " [backupStatus]")
         return HttpResponse(final_json)
 
-
 def delete_backup(request):
     try:
+
         user_id, current_acl = _get_user_acl(request)
         admin = Administrator.objects.get(pk=user_id)
         data = json.loads(request.body)
@@ -419,7 +414,6 @@ def delete_backup(request):
         final_dic = {'destStatus': 0, 'error_message': str(msg)}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
-
 
 def fetch_restore_points(request):
     try:

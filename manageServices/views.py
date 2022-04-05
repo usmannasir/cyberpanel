@@ -139,7 +139,10 @@ def saveStatus(request):
 
                 if service == 'powerdns':
 
+                    servicePath = '/home/cyberpanel/powerdns'
                     if status == True:
+                        writeToFile = open(servicePath, 'w+')
+                        writeToFile.close()
 
                         pdns = PDNSStatus.objects.get(pk=1)
                         pdns.serverStatus = 1
@@ -199,6 +202,11 @@ def saveStatus(request):
 
                         command = 'sudo systemctl disable pdns'
                         ProcessUtilities.executioner(command)
+
+                        try:
+                            os.remove(servicePath)
+                        except:
+                            pass
 
 
                 elif service == 'postfix':

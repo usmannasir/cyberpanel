@@ -7,6 +7,7 @@ from .models import *
 from xml.etree import ElementTree
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 
+
 class PHPManager:
 
     @staticmethod
@@ -140,22 +141,22 @@ class PHPManager:
         max_input_time = data['max_input_time']
         post_max_size = data['post_max_size']
 
-        if allow_url_fopen == True:
+        if allow_url_fopen:
             allow_url_fopen = "allow_url_fopen = On"
         else:
             allow_url_fopen = "allow_url_fopen = Off"
 
-        if display_errors == True:
+        if display_errors:
             display_errors = "display_errors = On"
         else:
             display_errors = "display_errors = Off"
 
-        if file_uploads == True:
+        if file_uploads:
             file_uploads = "file_uploads = On"
         else:
             file_uploads = "file_uploads = Off"
 
-        if allow_url_include == True:
+        if allow_url_include:
             allow_url_include = "allow_url_include = On"
         else:
             allow_url_include = "allow_url_include = Off"
@@ -309,7 +310,3 @@ class PHPManager:
         json_data = json_data + ']'
         final_json = json.dumps({'status': 1, 'error_message': "None", "data": json_data})
         return HttpResponse(final_json)
-
-
-
-

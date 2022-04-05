@@ -117,6 +117,9 @@ class DNS:
             command = 'chown cyberpanel:cyberpanel -R /usr/local/CyberCP/lib/python3.6/site-packages/tldextract/.suffix_cache'
             ProcessUtilities.executioner(command)
 
+            command = 'chown cyberpanel:cyberpanel -R /usr/local/CyberCP/lib/python3.8/site-packages/tldextract/.suffix_cache'
+            ProcessUtilities.executioner(command)
+
             import tldextract
 
             extractDomain = tldextract.extract(domain)
@@ -519,6 +522,9 @@ class DNS:
         try:
 
             command = 'chown cyberpanel:cyberpanel -R /usr/local/CyberCP/lib/python3.6/site-packages/tldextract/.suffix_cache'
+            ProcessUtilities.executioner(command)
+
+            command = 'chown cyberpanel:cyberpanel -R /usr/local/CyberCP/lib/python3.8/site-packages/tldextract/.suffix_cache'
             ProcessUtilities.executioner(command)
 
             import tldextract

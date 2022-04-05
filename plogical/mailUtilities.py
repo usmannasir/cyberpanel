@@ -221,6 +221,9 @@ class mailUtilities:
             command = 'chown cyberpanel:cyberpanel -R /usr/local/CyberCP/lib/python3.6/site-packages/tldextract/.suffix_cache'
             ProcessUtilities.executioner(command)
 
+            command = 'chown cyberpanel:cyberpanel -R /usr/local/CyberCP/lib/python3.8/site-packages/tldextract/.suffix_cache'
+            ProcessUtilities.executioner(command)
+
             import tldextract
 
             actualDomain = virtualHostName

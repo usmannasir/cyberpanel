@@ -1,8 +1,10 @@
 import smtplib
 import time
 import argparse
-import subprocess, shlex
+import subprocess
+import shlex
 import os
+
 
 class BackupUtil:
 
@@ -51,8 +53,6 @@ class BackupUtil:
             completePath = "/home/%s/backup/" % (virtualHost)
             command = "mv %s %s" % (completePath + '*.tar.gz', '/home/backup/')
             subprocess.call(command, shell=True)
-
-
 
 
 def main():

@@ -41,8 +41,8 @@ MySQL_Password=$(cat /etc/cyberpanel/mysqlPassword)
 
 
 LSWS_Latest_URL="https://cyberpanel.sh/update.litespeedtech.com/ws/latest.php"
-curl --silent --max-time 30 -4  -o /tmp/lsws_latest "$LSWS_Latest_URL" 2>/dev/null
-LSWS_Stable_Line=$(grep "LSWS_STABLE" /tmp/lsws_latest)
+LSWS_Tmp=$(curl --silent --max-time 30 -4 "$LSWS_Latest_URL")
+LSWS_Stable_Line=$(echo "$LSWS_Tmp" | grep "LSWS_STABLE")
 LSWS_Stable_Version=$(expr "$LSWS_Stable_Line" : '.*LSWS_STABLE=\(.*\) BUILD .*')
 #grab the LSWS latest stable version.
 
@@ -54,7 +54,7 @@ cd /root/cyberpanel_upgrade_tmp || exit
 }
 
 Debug_Log() {
-echo -e "\n${1}=${2}\n" >> /tmp/cyberpanel_debug_upgrade.log
+echo -e "\n${1}=${2}\n" >>  "/var/log/cyberpanel_debug_upgrade_$(date +"%Y-%m-%d")_${Random_Log_Name}.log"
 }
 
 Debug_Log2() {
@@ -108,8 +108,8 @@ if [[ ! -f /etc/os-release ]] ; then
   exit
 fi
 
-if ! uname -m | grep -q 64 ; then
-  echo -e "x64 system is required...\n"
+if ! uname -m | grep -q x86_64 ; then
+  echo -e "x86_64 system is required...\n"
   exit
 fi
 
@@ -356,11 +356,11 @@ if [[ "$Server_OS" = "CentOS" ]] ; then
       Check_Return "yum repo" "no_exit"
 
     cat << EOF > /etc/yum.repos.d/MariaDB.repo
-# MariaDB 10.5 CentOS repository list - created 2020-09-08 14:54 UTC
+# MariaDB 10.4 CentOS repository list - created 2021-08-06 02:01 UTC
 # http://downloads.mariadb.org/mariadb/repositories/
 [mariadb]
 name = MariaDB
-baseurl = http://yum.mariadb.org/10.5/centos7-amd64
+baseurl = http://yum.mariadb.org/10.4/centos7-amd64
 gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
 gpgcheck=1
 EOF
@@ -403,9 +403,9 @@ gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 EOF
 
   if [[ "$Server_Country" = "CN" ]] ; then
-    dnf --nogpg install -y https://cyberpanel.sh/mirror.ghettoforge.org/distributions/gf/el/8/gf/x86_64/gf-release-8-11.gf.el8.noarch.rpm
+    dnf --nogpg install -y https://cyberpanel.sh/mirror.ghettoforge.org/distributions/gf/gf-release-latest.gf.el8.noarch.rpm
   else
-    dnf --nogpg install -y https://mirror.ghettoforge.org/distributions/gf/el/8/gf/x86_64/gf-release-8-11.gf.el8.noarch.rpm
+    dnf --nogpg install -y https://mirror.ghettoforge.org/distributions/gf/gf-release-latest.gf.el8.noarch.rpm
   fi
 
   dnf install epel-release -y
@@ -676,6 +676,9 @@ if [[ -f /etc/cyberpanel/webadmin_passwd ]]; then
   chmod 600 /etc/cyberpanel/webadmin_passwd
 fi
 
+chown lsadm:lsadm /usr/local/lsws/admin/conf/htpasswd
+chmod 600 /usr/local/lsws/admin/conf/htpasswd
+
 if [[ -f /etc/pure-ftpd/pure-ftpd.conf ]]; then
   sed -i 's|NoAnonymous                 no|NoAnonymous                 yes|g' /etc/pure-ftpd/pure-ftpd.conf
 fi
@@ -740,8 +743,10 @@ fi
 
 if [[ "$*" = *"--debug"* ]] ; then
   Debug="On"
-  rm -f /tmp/cyberpanel_debug_upgrade.log
-  echo -e "$(date)" > /tmp/cyberpanel_debug_upgrade.log
+  Random_Log_Name=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 5)
+  find /var/log -name 'cyberpanel_debug_upgrade_*' -exec rm {} +
+  echo -e "$(date)" > "/var/log/cyberpanel_debug_upgrade_$(date +"%Y-%m-%d")_${Random_Log_Name}.log"
+  chmod 600 "/var/log/cyberpanel_debug_upgrade_$(date +"%Y-%m-%d")_${Random_Log_Name}.log"
 fi
 
 Set_Default_Variables

@@ -191,6 +191,6 @@ LANGUAGES = (
     ('bn', _('Bangla')),
 )
 
-MEDIA_URL = '/home/cyberpanel/media/'
+MEDIA_URL = '/usr/local/CyberCP/tmp/'
 MEDIA_ROOT = MEDIA_URL
 DATA_UPLOAD_MAX_MEMORY_SIZE = 52428800

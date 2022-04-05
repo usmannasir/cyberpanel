@@ -365,18 +365,17 @@ app.controller('adminController', function ($scope, $http, $timeout) {
 
 app.controller('loadAvg', function ($scope, $http, $timeout) {
 
-    //getStuff();
+    getLoadAvg();
 
-    function getStuff() {
+    function getLoadAvg() {
 
 
         url = "/base/getLoadAverage";
 
-        $http.get(url).then(ListInitialData, cantLoadInitialData);
+        $http.get(url).then(ListLoadAvgData, cantGetLoadAvgData);
 
 
-        function ListInitialData(response) {
-
+        function ListLoadAvgData(response) {
 
             $scope.one = response.data.one;
             $scope.two = response.data.two;
@@ -384,8 +383,8 @@ app.controller('loadAvg', function ($scope, $http, $timeout) {
 
         }
 
-        function cantLoadInitialData(response) {
-            console.log("not good");
+        function cantGetLoadAvgData(response) {
+            console.log("Can't get load average data");
         }
 
         //$timeout(getStuff, 2000);
@@ -398,6 +397,7 @@ app.controller('loadAvg', function ($scope, $http, $timeout) {
 app.controller('homePageStatus', function ($scope, $http, $timeout) {
 
     getStuff();
+    getLoadAvg();
 
     function getStuff() {
 
@@ -498,6 +498,32 @@ app.controller('homePageStatus', function ($scope, $http, $timeout) {
         }
 
         $timeout(getStuff, 2000);
+
+    }
+
+    function getLoadAvg() {
+
+        url = "/base/getLoadAverage";
+
+        $http.get(url).then(ListLoadAvgData, cantGetLoadAvgData);
+
+
+        function ListLoadAvgData(response) {
+
+            $scope.one = response.data.one;
+            $scope.two = response.data.two;
+            $scope.three = response.data.three;
+
+            document.getElementById("load1").innerHTML = $scope.one;
+            document.getElementById("load2").innerHTML = $scope.two;
+            document.getElementById("load3").innerHTML = $scope.three;
+        }
+
+        function cantGetLoadAvgData(response) {
+            console.log("Can't get load average data");
+        }
+
+        $timeout(getLoadAvg, 2000);
 
     }
 });
@@ -628,3 +654,4 @@ app.controller('versionManagment', function ($scope, $http, $timeout) {
     };
 
 });
+
