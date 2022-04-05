@@ -1142,6 +1142,9 @@ class BackupManager:
                     command = "sudo mkdir " + localStoragePath
                     ProcessUtilities.executioner(command)
 
+                    command = 'chmod 600 %s' % (localStoragePath)
+                    ProcessUtilities.executioner(command)
+
                     final_json = json.dumps(
                         {'remoteTransferStatus': 1, 'error_message': "None", "dir": data['dir']})
                     return HttpResponse(final_json)

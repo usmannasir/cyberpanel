@@ -329,7 +329,7 @@ msgstr "Jerman"
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:3
 #: backup/templates/backup/backupSchedule.html:3
-msgid "Schedule Back up - CyberPanel"
+msgid "Schedule Backup - CyberPanel"
 msgstr "Jadwal Cadangan - CyberPanel"
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:13
@@ -340,7 +340,7 @@ msgstr "Jadwal Cadangan - CyberPanel"
 #: baseTemplate/templates/baseTemplate/index.html:578
 #: userManagment/templates/userManagment/createACL.html:381
 #: userManagment/templates/userManagment/modifyACL.html:385
-msgid "Schedule Back up"
+msgid "Schedule Backup"
 msgstr "Jadwal Cadangan"
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:16
@@ -355,7 +355,7 @@ msgstr "Cadangan Jauh"
 #: IncBackups/templates/IncBackups/backupSchedule.html:17
 #: backup/templates/backup/backupSchedule.html:17
 msgid ""
-"On this page you can schedule Back ups to localhost or remote server (If you "
+"On this page you can schedule Backups to localhost or remote server (If you "
 "have added one)."
 msgstr ""
 "Pada halaman ini anda bisa membuat jadwal cadangan ke server ini atau yang "
@@ -463,7 +463,7 @@ msgstr "Buat Pencadangan Inkremental"
 #: IncBackups/templates/IncBackups/restoreRemoteBackups.html:25
 #: backup/templates/backup/backup.html:4 backup/templates/backup/backup.html:14
 #: backup/templates/backup/backup.html:21
-msgid "Back up Website"
+msgid "Backup Website"
 msgstr "Cadangan Situs Web"
 
 #: IncBackups/templates/IncBackups/createBackup.html:15
@@ -505,7 +505,7 @@ msgstr "Pilih Situs"
 #: baseTemplate/templates/baseTemplate/index.html:598
 #: userManagment/templates/userManagment/createACL.html:352
 #: userManagment/templates/userManagment/modifyACL.html:356
-msgid "Create Back up"
+msgid "Create Backup"
 msgstr "Buat Cadangan"
 
 #: IncBackups/templates/IncBackups/createBackup.html:128
@@ -545,19 +545,19 @@ msgstr "Aksi"
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:3
 #: backup/templates/backup/backupDestinations.html:3
 #: backup/templates/backup/backupDestinations.html:14
-msgid "Set up Back up Destinations"
+msgid "Set up Backup Destinations"
 msgstr "Pengaturan Tujuan Cadangan"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:14
-msgid "Set up Incremental Back up Destinations"
+msgid "Set up Incremental Backup Destinations"
 msgstr "Pengaturan Tujuan Cadangan Inkremental"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:20
-msgid "On this page you can set up your Back up destinations. (SFTP and AWS)"
+msgid "On this page you can set up your Backup destinations. (SFTP and AWS)"
 msgstr "Pada halaman ini, anda bisa mengatur tujuan Cadangan (SFTP) dan AWS"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:26
-msgid "Set up Back up Destinations."
+msgid "Set up Backup Destinations."
 msgstr "Pengaturan Tujuan Cadangan"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:35
@@ -698,7 +698,7 @@ msgid "Reboot SSH Server"
 msgstr "Mulai ulang Server SSH"
 
 #: backup/templates/backup/backup.html:15
-msgid "This page can be used to Back up your websites"
+msgid "This page can be used to Backup your websites"
 msgstr "Halaman ini bisa digunakan untuk membuat cadangan situs anda"
 
 #: backup/templates/backup/backup.html:44
@@ -754,11 +754,11 @@ msgid "Successfully Deleted"
 msgstr "Berhasil Dihapus"
 
 #: backup/templates/backup/backupDestinations.html:15
-msgid "On this page you can set up your Back up destinations. (SFTP)"
+msgid "On this page you can set up your Backup destinations. (SFTP)"
 msgstr "Pada halaman ini, anda bisa mengatur tujuan Cadangan (SFTP)"
 
 #: backup/templates/backup/backupDestinations.html:21
-msgid "Set up Back up Destinations (SSH port should be 22 on backup server)"
+msgid "Set up Backup Destinations (SSH port should be 22 on backup server)"
 msgstr "Tentukan Tujuan Backup (port SSH harus 22 pada server Cadangan)"
 
 #: backup/templates/backup/backupDestinations.html:68
@@ -860,7 +860,7 @@ msgid "Schedule Added"
 msgstr "Jadwal Berhasil Ditambahkan"
 
 #: backup/templates/backup/index.html:3
-msgid "Back up Home - CyberPanel"
+msgid "Backup Home - CyberPanel"
 msgstr "Cadangan - CyberPanel"
 
 #: backup/templates/backup/index.html:13 backup/templates/backup/index.html:30
@@ -869,11 +869,11 @@ msgstr "Cadangan - CyberPanel"
 #: baseTemplate/templates/baseTemplate/index.html:561
 #: baseTemplate/templates/baseTemplate/index.html:563
 #: baseTemplate/templates/baseTemplate/index.html:616
-msgid "Back up"
+msgid "Backup"
 msgstr "Cadangankan"
 
 #: backup/templates/backup/index.html:14
-msgid "Back up and restore sites."
+msgid "Backup and restore sites."
 msgstr "Cadangkan dan pulihkan situs."
 
 #: backup/templates/backup/index.html:19
@@ -894,7 +894,7 @@ msgid "Available Functions"
 msgstr "Fungsi Tersedia"
 
 #: backup/templates/backup/index.html:28
-msgid "Back up Site"
+msgid "Backup Site"
 msgstr "Cadangakan Situs"
 
 #: backup/templates/backup/index.html:44
@@ -902,7 +902,7 @@ msgstr "Cadangakan Situs"
 #: baseTemplate/templates/baseTemplate/index.html:601
 #: userManagment/templates/userManagment/createACL.html:361
 #: userManagment/templates/userManagment/modifyACL.html:365
-msgid "Restore Back up"
+msgid "Restore Backup"
 msgstr "Memulihkan Cadangan"
 
 #: backup/templates/backup/index.html:60 backup/templates/backup/index.html:62
@@ -913,7 +913,7 @@ msgstr "Tambah/Hapus Tujuan"
 #: baseTemplate/templates/baseTemplate/index.html:581
 #: userManagment/templates/userManagment/createACL.html:391
 #: userManagment/templates/userManagment/modifyACL.html:395
-msgid "Remote Back ups"
+msgid "Remote Backups"
 msgstr "Cadangan Jarak jauh"
 
 #: backup/templates/backup/remoteBackups.html:3
@@ -1015,8 +1015,8 @@ msgstr "Memulihkan Situs Web"
 
 #: backup/templates/backup/restore.html:15
 msgid ""
-"This page can be used to restore your websites, Back up should be generated "
-"from CyberPanel Back up generation tool, it will detect all Back ups under "
+"This page can be used to restore your websites, Backup should be generated "
+"from CyberPanel Backup generation tool, it will detect all Backups under "
 "<strong>/home/backup</strong>."
 msgstr ""
 "Halaman ini dapat digunakan untuk memulihkan situs web Anda, Cadangan harus dibuat"
@@ -1024,7 +1024,7 @@ msgstr ""
 "<strong>/home/backup</strong>."
 
 #: backup/templates/backup/restore.html:30
-msgid "Select Back up"
+msgid "Select Backup"
 msgstr "Pilih Cadangan"
 
 #: backup/templates/backup/restore.html:61
@@ -1051,7 +1051,7 @@ msgid "Error message:"
 msgstr "Pesan kesalahan:"
 
 #: backup/templates/backup/restore.html:90
-msgid "Site related to this Back up already exists."
+msgid "Site related to this Backup already exists."
 msgstr "Situs yang terkait dengan Cadangan ini sudah ada."
 
 #: baseTemplate/templates/baseTemplate/homePage.html:3
@@ -1615,15 +1615,15 @@ msgid "Add/Delete Destination"
 msgstr "Tambah/Hapus Tujuan"
 
 #: baseTemplate/templates/baseTemplate/index.html:590
-msgid "Incremental Back up - Beta"
+msgid "Incremental Backup - Beta"
 msgstr "Cadangan Inkremental - Beta"
 
 #: baseTemplate/templates/baseTemplate/index.html:592
-msgid "Incremental Back up"
+msgid "Incremental Backup"
 msgstr "Batalkan Cadangan Inkremental"
 
 #: baseTemplate/templates/baseTemplate/index.html:598
-msgid "Create/Restore Back up"
+msgid "Create/Restore Backup"
 msgstr "Buat/Pulihkan Cadangan"
 
 #: baseTemplate/templates/baseTemplate/index.html:601
@@ -1631,7 +1631,7 @@ msgid "Add/Remove Destinations"
 msgstr "Tambah/Hapus Tujuan"
 
 #: baseTemplate/templates/baseTemplate/index.html:604
-msgid "Schedule Back ups"
+msgid "Schedule Backups"
 msgstr "Jadwal Cadangan"
 
 #: baseTemplate/templates/baseTemplate/index.html:607
@@ -2441,7 +2441,7 @@ msgid "Create Nameserver - CyberPanel"
 msgstr "Buat Nameserver - CyberPanel"
 
 #: dns/templates/dns/createNameServer.html:62
-msgid "Second Nameserver (Back up)"
+msgid "Second Nameserver (Backup)"
 msgstr "Nameserver Sekunder (Backup)"
 
 #: dns/templates/dns/createNameServer.html:89

@@ -109,6 +109,12 @@ class PackagesManager:
             packageName = data['packageName']
 
             delPackage = Package.objects.get(packageName=packageName)
+
+            ## Check package ownership
+            admin = Administrator.objects.get(pk=userID)
+            if ACLManager.CheckPackageOwnership(delPackage, admin, currentACL) == 0:
+                return ACLManager.loadErrorJson('deleteStatus', 0)
+
             delPackage.delete()
 
             data_ret = {'status': 1, 'deleteStatus': 1, 'error_message': "None"}
@@ -141,6 +147,11 @@ class PackagesManager:
                 return ACLManager.loadErrorJson('modifyStatus', 0)
 
             modifyPack = Package.objects.get(packageName=packageName)
+
+            ## Check package ownership
+            admin = Administrator.objects.get(pk=userID)
+            if ACLManager.CheckPackageOwnership(modifyPack, admin, currentACL) == 0:
+                return ACLManager.loadErrorJson('deleteStatus', 0)
 
             diskSpace = modifyPack.diskSpace
             bandwidth = modifyPack.bandwidth

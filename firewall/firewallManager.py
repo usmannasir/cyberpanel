@@ -1048,6 +1048,14 @@ class FirewallManager:
                 except subprocess.CalledProcessError:
                     pass
 
+                try:
+                    command = 'cat /usr/local/lsws/conf/modsec.conf'
+                    output = ProcessUtilities.outputExecutioner(command)
+                    if output.find('modsec/owasp') > -1:
+                        owaspInstalled = 1
+                except:
+                    pass
+
                 final_dic = {
                     'modSecInstalled': 1,
                     'owaspInstalled': owaspInstalled,
@@ -1089,9 +1097,9 @@ class FirewallManager:
                     json_data = json.dumps(data_ret)
                     return HttpResponse(json_data)
             else:
-                if packName == 'disableOWASP' or packName == 'installOWASP':
-                    final_json = json.dumps({'installStatus': 0, 'error_message': "OWASP will be available later.", })
-                    return HttpResponse(final_json)
+                # if packName == 'disableOWASP' or packName == 'installOWASP':
+                #     final_json = json.dumps({'installStatus': 0, 'error_message': "OWASP will be available later.", })
+                #     return HttpResponse(final_json)
 
                 execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
                 execPath = execPath + " " + packName
@@ -1122,70 +1130,26 @@ class FirewallManager:
 
             packName = data['packName']
 
-            if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
-                confPath = os.path.join(virtualHostUtilities.Server_root, 'conf/httpd_config.conf')
+            confPath = os.path.join('/usr/local/lsws/conf/modsec/owasp-modsecurity-crs-3.0-master/owasp-master.conf')
 
-                command = "sudo cat " + confPath
-                httpdConfig = ProcessUtilities.outputExecutioner(command).splitlines()
+            command = "sudo cat " + confPath
+            httpdConfig = ProcessUtilities.outputExecutioner(command).splitlines()
 
-                json_data = "["
-                checker = 0
-                counter = 0
+            json_data = "["
+            checker = 0
+            counter = 0
 
-                for items in httpdConfig:
+            for items in httpdConfig:
 
-                    if items.find('modsec/' + packName) > -1:
-                        counter = counter + 1
-                        if items[0] == '#':
-                            status = False
-                        else:
-                            status = True
-
-                        fileName = items.lstrip('#')
-                        fileName = fileName.split('/')[-1]
-
-                        dic = {
-                            'id': counter,
-                            'fileName': fileName,
-                            'packName': packName,
-                            'status': status,
-
-                        }
-
-                        if checker == 0:
-                            json_data = json_data + json.dumps(dic)
-                            checker = 1
-                        else:
-                            json_data = json_data + ',' + json.dumps(dic)
-
-                json_data = json_data + ']'
-                final_json = json.dumps({'fetchStatus': 1, 'error_message': "None", "data": json_data})
-                return HttpResponse(final_json)
-            else:
-                if packName == 'owasp':
-                    final_json = json.dumps({'fetchStatus': 0, 'error_message': "OWASP will be available later.", })
-                    return HttpResponse(final_json)
-
-                comodoPath = '/usr/local/lsws/conf/comodo_litespeed'
-                command = 'sudo chown -R cyberpanel:cyberpanel /usr/local/lsws/conf'
-                ProcessUtilities.executioner(command)
-
-                json_data = "["
-
-                counter = 0
-                checker = 0
-                for fileName in os.listdir(comodoPath):
-
-                    if fileName == 'categories.conf':
-                        continue
-
-                    if fileName.endswith('bak'):
-                        status = 0
-                        fileName = fileName.rstrip('.bak')
-                    elif fileName.endswith('conf'):
-                        status = 1
+                if items.find('modsec/' + packName) > -1:
+                    counter = counter + 1
+                    if items[0] == '#':
+                        status = False
                     else:
-                        continue
+                        status = True
+
+                    fileName = items.lstrip('#')
+                    fileName = fileName.split('/')[-1]
 
                     dic = {
                         'id': counter,
@@ -1195,20 +1159,96 @@ class FirewallManager:
 
                     }
 
-                    counter = counter + 1
-
                     if checker == 0:
                         json_data = json_data + json.dumps(dic)
                         checker = 1
                     else:
                         json_data = json_data + ',' + json.dumps(dic)
 
-                command = 'sudo chown -R lsadm:lsadm /usr/local/lsws/conf'
-                ProcessUtilities.executioner(command)
+            json_data = json_data + ']'
+            final_json = json.dumps({'fetchStatus': 1, 'error_message': "None", "data": json_data})
+            return HttpResponse(final_json)
 
-                json_data = json_data + ']'
-                final_json = json.dumps({'fetchStatus': 1, 'error_message': "None", "data": json_data})
-                return HttpResponse(final_json)
+            # if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+            #     confPath = os.path.join('/usr/local/lsws/conf/modsec/owasp-modsecurity-crs-3.0-master/owasp-master.conf')
+            #
+            #     command = "sudo cat " + confPath
+            #     httpdConfig = ProcessUtilities.outputExecutioner(command).splitlines()
+            #
+            #     json_data = "["
+            #     checker = 0
+            #     counter = 0
+            #
+            #     for items in httpdConfig:
+            #
+            #         if items.find('modsec/' + packName) > -1:
+            #             counter = counter + 1
+            #             if items[0] == '#':
+            #                 status = False
+            #             else:
+            #                 status = True
+            #
+            #             fileName = items.lstrip('#')
+            #             fileName = fileName.split('/')[-1]
+            #
+            #             dic = {
+            #                 'id': counter,
+            #                 'fileName': fileName,
+            #                 'packName': packName,
+            #                 'status': status,
+            #
+            #             }
+            #
+            #             if checker == 0:
+            #                 json_data = json_data + json.dumps(dic)
+            #                 checker = 1
+            #             else:
+            #                 json_data = json_data + ',' + json.dumps(dic)
+            #
+            #     json_data = json_data + ']'
+            #     final_json = json.dumps({'fetchStatus': 1, 'error_message': "None", "data": json_data})
+            #     return HttpResponse(final_json)
+            # else:
+            #
+            #     command = 'cat /usr/local/lsws/conf/modsec/owasp-modsecurity-crs-3.0-master/owasp-master.conf'
+            #     files = ProcessUtilities.outputExecutioner(command).splitlines()
+            #
+            #     json_data = "["
+            #
+            #     counter = 0
+            #     checker = 0
+            #     for fileName in files:
+            #
+            #         if fileName == 'categories.conf':
+            #             continue
+            #
+            #         if fileName.endswith('bak'):
+            #             status = 0
+            #             fileName = fileName.rstrip('.bak')
+            #         elif fileName.endswith('conf'):
+            #             status = 1
+            #         else:
+            #             continue
+            #
+            #         dic = {
+            #             'id': counter,
+            #             'fileName': fileName,
+            #             'packName': packName,
+            #             'status': status,
+            #
+            #         }
+            #
+            #         counter = counter + 1
+            #
+            #         if checker == 0:
+            #             json_data = json_data + json.dumps(dic)
+            #             checker = 1
+            #         else:
+            #             json_data = json_data + ',' + json.dumps(dic)
+            #
+            #     json_data = json_data + ']'
+            #     final_json = json.dumps({'fetchStatus': 1, 'error_message': "None", "data": json_data})
+            #     return HttpResponse(final_json)
 
         except BaseException as msg:
             final_dic = {'fetchStatus': 0, 'error_message': str(msg)}
@@ -1235,7 +1275,7 @@ class FirewallManager:
 
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/modSec.py"
 
-            execPath = execPath + " " + functionName + ' --packName ' + packName + ' --fileName ' + fileName
+            execPath = execPath + " " + functionName + ' --packName ' + packName + ' --fileName "%s"' % (fileName)
 
             output = ProcessUtilities.outputExecutioner(execPath)
 
@@ -1436,7 +1476,7 @@ class FirewallManager:
             protocol = data['protocol']
             ports = data['ports']
 
-            portsPath = '/tmp/ports'
+            portsPath = '/home/cyberpanel/' + str(randint(1000, 9999))
 
             if os.path.exists(portsPath):
                 os.remove(portsPath)
@@ -1444,6 +1484,9 @@ class FirewallManager:
             writeToFile = open(portsPath, 'w')
             writeToFile.write(ports)
             writeToFile.close()
+
+            command = 'chmod 600 %s' % (portsPath)
+            ProcessUtilities.executioner(command)
 
             execPath = "sudo /usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/csf.py"
             execPath = execPath + " modifyPorts --protocol " + protocol + " --ports " + portsPath

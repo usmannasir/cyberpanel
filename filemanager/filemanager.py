@@ -1,3 +1,5 @@
+import os
+
 from django.shortcuts import HttpResponse
 import json
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
@@ -544,8 +546,10 @@ class FileManager:
 
             finalData = {}
             finalData['status'] = 1
-            tempPath = "/home/cyberpanel/" + str(randint(1000, 9999))
             self.data['home'] = '/home/%s' % (self.data['domainName'])
+
+            ACLManager.CreateSecureDir()
+            tempPath = '%s/%s' % ('/usr/local/CyberCP/tmp', str(randint(1000, 9999)))
 
             domainName = self.data['domainName']
             website = Websites.objects.get(domain=domainName)
@@ -554,31 +558,13 @@ class FileManager:
             writeToFile.write(self.data['fileContent'].encode('utf-8'))
             writeToFile.close()
 
-            command = 'ls -la %s' % (self.data['fileName'])
-            output = ProcessUtilities.outputExecutioner(command)
-
-            if output.find('lrwxrwxrwx') > -1 and output.find('->') > -1:
-                return self.ajaxPre(0, 'File exists and is symlink.')
-
-            if ACLManager.commandInjectionCheck(self.data['fileName']) == 1:
-                return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
-
-            if self.data['fileName'].find(self.data['home']) == -1 or self.data['fileName'].find('..') > -1:
-                return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
-
-            command = 'stat -c "%%a" %s' % (self.returnPathEnclosed(self.data['fileName']))
-            currentMode = ProcessUtilities.outputExecutioner(command).strip('\n')
-
-            command = 'mv ' + tempPath + ' ' + self.returnPathEnclosed(self.data['fileName'])
+            command = 'chown %s:%s %s' % (website.externalApp, website.externalApp, tempPath)
             ProcessUtilities.executioner(command)
 
-            command = 'chown %s:%s %s' % (website.externalApp, website.externalApp, self.data['fileName'])
-            ProcessUtilities.executioner(command)
+            command = 'cp %s %s' % (tempPath, self.returnPathEnclosed(self.data['fileName']))
+            ProcessUtilities.executioner(command, website.externalApp)
 
-            command = 'chmod %s %s' % (currentMode, self.returnPathEnclosed(self.data['fileName']))
-            ProcessUtilities.executioner(command)
-
-            self.changeOwner(self.data['fileName'])
+            os.remove(tempPath)
 
             json_data = json.dumps(finalData)
             return HttpResponse(json_data)
@@ -593,16 +579,32 @@ class FileManager:
             finalData['uploadStatus'] = 1
             finalData['answer'] = 'File transfer completed.'
 
+            ACLManager.CreateSecureDir()
+            UploadPath = '/usr/local/CyberCP/tmp/'
+
+            ## Random file name
+
+            RanddomFileName = str(randint(1000, 9999))
+
             myfile = self.request.FILES['file']
             fs = FileSystemStorage()
 
             try:
-                filename = fs.save(myfile.name, myfile)
+                filename = fs.save(RanddomFileName, myfile)
                 finalData['fileName'] = fs.url(filename)
             except BaseException as msg:
                 logging.writeToFile('%s. [375:upload]' % (str(msg)))
 
             pathCheck = '/home/%s' % (self.data['domainName'])
+
+            domainName = self.data['domainName']
+            website = Websites.objects.get(domain=domainName)
+
+            command = 'ls -la %s' % (self.data['completePath'])
+            result = ProcessUtilities.outputExecutioner(command, website.externalApp)
+            #
+            if result.find('->') > -1:
+                return self.ajaxPre(0, "Symlink attack.")
 
             if ACLManager.commandInjectionCheck(self.data['completePath'] + '/' + myfile.name) == 1:
                 return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
@@ -611,24 +613,26 @@ class FileManager:
                     (self.data['completePath'] + '/' + myfile.name)).find('..') > -1:
                 return self.ajaxPre(0, 'Not allowed to move in this path, please choose location inside home!')
 
-            command = 'mv ' + self.returnPathEnclosed(
-                '/home/cyberpanel/media/' + myfile.name) + ' ' + self.returnPathEnclosed(
+            command = 'cp ' + self.returnPathEnclosed(
+                UploadPath + RanddomFileName) + ' ' + self.returnPathEnclosed(
                 self.data['completePath'] + '/' + myfile.name)
-            ProcessUtilities.executioner(command)
-
-            domainName = self.data['domainName']
-            website = Websites.objects.get(domain=domainName)
-
-            command = 'chown %s:%s %s' % (website.externalApp, website.externalApp,
-                                          self.returnPathEnclosed(self.data['completePath'] + '/' + myfile.name))
-            ProcessUtilities.executioner(command)
+            ProcessUtilities.executioner(command, website.externalApp)
 
             self.changeOwner(self.returnPathEnclosed(self.data['completePath'] + '/' + myfile.name))
+
+            try:
+                os.remove(UploadPath + RanddomFileName)
+            except:
+                pass
 
             json_data = json.dumps(finalData)
             return HttpResponse(json_data)
 
         except BaseException as msg:
+            try:
+                os.remove(UploadPath + RanddomFileName)
+            except:
+                pass
             return self.ajaxPre(0, str(msg))
 
     def extract(self):
@@ -737,17 +741,39 @@ class FileManager:
         else:
             groupName = 'nogroup'
 
+        ### symlink checks
+
+        command = 'ls -la /home/%s' % domainName
+        result = ProcessUtilities.outputExecutioner(command)
+
+        if result.find('->') > -1:
+            final_json = json.dumps(
+                {'status': 0, 'logstatus': 0,
+                 'error_message': "Symlink attack."})
+            return HttpResponse(final_json)
+
         command = 'chown %s:%s /home/%s' % (website.externalApp, website.externalApp, domainName)
         ProcessUtilities.popenExecutioner(command)
 
-        command = 'chown -R %s:%s /home/%s/public_html/*' % (externalApp, externalApp, domainName)
+        ### Sym link checks
+
+        command = 'ls -la /home/%s/public_html/' % domainName
+        result = ProcessUtilities.outputExecutioner(command)
+
+        if result.find('->') > -1:
+            final_json = json.dumps(
+                {'status': 0, 'logstatus': 0,
+                 'error_message': "Symlink attack."})
+            return HttpResponse(final_json)
+
+        command = 'chown -R -P %s:%s /home/%s/public_html/*' % (externalApp, externalApp, domainName)
         ProcessUtilities.popenExecutioner(command)
 
-        command = 'chown -R %s:%s /home/%s/public_html/.[^.]*' % (externalApp, externalApp, domainName)
+        command = 'chown -R -P %s:%s /home/%s/public_html/.[^.]*' % (externalApp, externalApp, domainName)
         ProcessUtilities.popenExecutioner(command)
 
-        command = "chown root:%s /home/" % (groupName) + domainName + "/logs"
-        ProcessUtilities.popenExecutioner(command)
+        # command = "chown root:%s /home/" % (groupName) + domainName + "/logs"
+        # ProcessUtilities.popenExecutioner(command)
 
         command = "find %s -type d -exec chmod 0755 {} \;" % ("/home/" + domainName + "/public_html")
         ProcessUtilities.popenExecutioner(command)
@@ -762,16 +788,26 @@ class FileManager:
         ProcessUtilities.executioner(command)
 
         for childs in website.childdomains_set.all():
+            command = 'ls -la %s' % childs.path
+            result = ProcessUtilities.outputExecutioner(command)
+
+            if result.find('->') > -1:
+                final_json = json.dumps(
+                    {'status': 0, 'logstatus': 0,
+                     'error_message': "Symlink attack."})
+                return HttpResponse(final_json)
+
+
             command = "find %s -type d -exec chmod 0755 {} \;" % (childs.path)
             ProcessUtilities.popenExecutioner(command)
 
             command = "find %s -type f -exec chmod 0644 {} \;" % (childs.path)
             ProcessUtilities.popenExecutioner(command)
 
-            command = 'chown -R %s:%s %s/*' % (externalApp, externalApp, childs.path)
+            command = 'chown -R -P %s:%s %s/*' % (externalApp, externalApp, childs.path)
             ProcessUtilities.popenExecutioner(command)
 
-            command = 'chown -R %s:%s %s/.[^.]*' % (externalApp, externalApp, childs.path)
+            command = 'chown -R -P %s:%s %s/.[^.]*' % (externalApp, externalApp, childs.path)
             ProcessUtilities.popenExecutioner(command)
 
             command = 'chmod 755 %s' % (childs.path)

@@ -319,7 +319,7 @@ msgstr "德国"
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:3
 #: backup/templates/backup/backupSchedule.html:3
-msgid "Schedule Back up - CyberPanel"
+msgid "Schedule Backup - CyberPanel"
 msgstr "计划备份 - Cyberpanel"
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:13
@@ -330,7 +330,7 @@ msgstr "计划备份 - Cyberpanel"
 #: baseTemplate/templates/baseTemplate/index.html:578
 #: userManagment/templates/userManagment/createACL.html:381
 #: userManagment/templates/userManagment/modifyACL.html:385
-msgid "Schedule Back up"
+msgid "Schedule Backup"
 msgstr "计划备份"
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:16
@@ -345,7 +345,7 @@ msgstr "远程备份"
 #: IncBackups/templates/IncBackups/backupSchedule.html:17
 #: backup/templates/backup/backupSchedule.html:17
 msgid ""
-"On this page you can schedule Back ups to localhost or remote server (If you "
+"On this page you can schedule Backups to localhost or remote server (If you "
 "have added one)."
 msgstr ""
 "在此页面您可以设置计划任务备份到本地或远程目录 (如果您已经添加了一个远程目"
@@ -453,7 +453,7 @@ msgstr "创建增量备份"
 #: IncBackups/templates/IncBackups/restoreRemoteBackups.html:25
 #: backup/templates/backup/backup.html:4 backup/templates/backup/backup.html:14
 #: backup/templates/backup/backup.html:21
-msgid "Back up Website"
+msgid "Backup Website"
 msgstr "备份网站"
 
 #: IncBackups/templates/IncBackups/createBackup.html:15
@@ -495,7 +495,7 @@ msgstr "选择网站"
 #: baseTemplate/templates/baseTemplate/index.html:598
 #: userManagment/templates/userManagment/createACL.html:352
 #: userManagment/templates/userManagment/modifyACL.html:356
-msgid "Create Back up"
+msgid "Create Backup"
 msgstr "创建备份"
 
 #: IncBackups/templates/IncBackups/createBackup.html:128
@@ -535,19 +535,19 @@ msgstr "操作"
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:3
 #: backup/templates/backup/backupDestinations.html:3
 #: backup/templates/backup/backupDestinations.html:14
-msgid "Set up Back up Destinations"
+msgid "Set up Backup Destinations"
 msgstr "设置远程目录"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:14
-msgid "Set up Incremental Back up Destinations"
+msgid "Set up Incremental Backup Destinations"
 msgstr "设置增量备份目的地"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:20
-msgid "On this page you can set up your Back up destinations. (SFTP and AWS)"
+msgid "On this page you can set up your Backup destinations. (SFTP and AWS)"
 msgstr "在此页面上，您可以设置备份目的地。（SFTP 和 AWS）"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:26
-msgid "Set up Back up Destinations."
+msgid "Set up Backup Destinations."
 msgstr "设置备份目的地。"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:35
@@ -686,7 +686,7 @@ msgid "Reboot SSH Server"
 msgstr "重新启动SSH服务器"
 
 #: backup/templates/backup/backup.html:15
-msgid "This page can be used to Back up your websites"
+msgid "This page can be used to Backup your websites"
 msgstr "这里是网站备份界面"
 
 #: backup/templates/backup/backup.html:44
@@ -742,11 +742,11 @@ msgid "Successfully Deleted"
 msgstr "删除成功"
 
 #: backup/templates/backup/backupDestinations.html:15
-msgid "On this page you can set up your Back up destinations. (SFTP)"
+msgid "On this page you can set up your Backup destinations. (SFTP)"
 msgstr "这里是远程备份页面(SFTP)"
 
 #: backup/templates/backup/backupDestinations.html:21
-msgid "Set up Back up Destinations (SSH port should be 22 on backup server)"
+msgid "Set up Backup Destinations (SSH port should be 22 on backup server)"
 msgstr "设置备份目的地（备份服务器上的SSH端口应为22）"
 
 #: backup/templates/backup/backupDestinations.html:68
@@ -848,7 +848,7 @@ msgid "Schedule Added"
 msgstr "计划任务已添加"
 
 #: backup/templates/backup/index.html:3
-msgid "Back up Home - CyberPanel"
+msgid "Backup Home - CyberPanel"
 msgstr "备份 - CyberPanel"
 
 #: backup/templates/backup/index.html:13 backup/templates/backup/index.html:30
@@ -857,11 +857,11 @@ msgstr "备份 - CyberPanel"
 #: baseTemplate/templates/baseTemplate/index.html:561
 #: baseTemplate/templates/baseTemplate/index.html:563
 #: baseTemplate/templates/baseTemplate/index.html:616
-msgid "Back up"
+msgid "Backup"
 msgstr "备份"
 
 #: backup/templates/backup/index.html:14
-msgid "Back up and restore sites."
+msgid "Backup and restore sites."
 msgstr "备份与还原网站。"
 
 #: backup/templates/backup/index.html:19
@@ -882,7 +882,7 @@ msgid "Available Functions"
 msgstr "可用功能"
 
 #: backup/templates/backup/index.html:28
-msgid "Back up Site"
+msgid "Backup Site"
 msgstr "备份网站"
 
 #: backup/templates/backup/index.html:44
@@ -890,7 +890,7 @@ msgstr "备份网站"
 #: baseTemplate/templates/baseTemplate/index.html:601
 #: userManagment/templates/userManagment/createACL.html:361
 #: userManagment/templates/userManagment/modifyACL.html:365
-msgid "Restore Back up"
+msgid "Restore Backup"
 msgstr "还原备份"
 
 #: backup/templates/backup/index.html:60 backup/templates/backup/index.html:62
@@ -901,7 +901,7 @@ msgstr "添加/删除远程目录"
 #: baseTemplate/templates/baseTemplate/index.html:581
 #: userManagment/templates/userManagment/createACL.html:391
 #: userManagment/templates/userManagment/modifyACL.html:395
-msgid "Remote Back ups"
+msgid "Remote Backups"
 msgstr "远程备份"
 
 #: backup/templates/backup/remoteBackups.html:3
@@ -1003,15 +1003,15 @@ msgstr "还原网站"
 
 #: backup/templates/backup/restore.html:15
 msgid ""
-"This page can be used to restore your websites, Back up should be generated "
-"from CyberPanel Back up generation tool, it will detect all Back ups under "
+"This page can be used to restore your websites, Backup should be generated "
+"from CyberPanel Backup generation tool, it will detect all Backups under "
 "<strong>/home/backup</strong>."
 msgstr ""
 "在此页面可以从备份中还原网站, 备份文件应当由CyberPanel备份工具创建 并且会自动"
 "检测所有在<strong>/home/backup</strong>的备份。"
 
 #: backup/templates/backup/restore.html:30
-msgid "Select Back up"
+msgid "Select Backup"
 msgstr "选择备份"
 
 #: backup/templates/backup/restore.html:61
@@ -1038,7 +1038,7 @@ msgid "Error message:"
 msgstr "错误信息："
 
 #: backup/templates/backup/restore.html:90
-msgid "Site related to this Back up already exists."
+msgid "Site related to this Backup already exists."
 msgstr "此备份中的网站已存在。"
 
 #: baseTemplate/templates/baseTemplate/homePage.html:3
@@ -1602,15 +1602,15 @@ msgid "Add/Delete Destination"
 msgstr "添加/删除远程目录"
 
 #: baseTemplate/templates/baseTemplate/index.html:590
-msgid "Incremental Back up - Beta"
+msgid "Incremental Backup - Beta"
 msgstr "增量备份 - Beta"
 
 #: baseTemplate/templates/baseTemplate/index.html:592
-msgid "Incremental Back up"
+msgid "Incremental Backup"
 msgstr "增量式备份"
 
 #: baseTemplate/templates/baseTemplate/index.html:598
-msgid "Create/Restore Back up"
+msgid "Create/Restore Backup"
 msgstr "创建/恢复备份"
 
 #: baseTemplate/templates/baseTemplate/index.html:601
@@ -1618,7 +1618,7 @@ msgid "Add/Remove Destinations"
 msgstr "添加/删除远程目标"
 
 #: baseTemplate/templates/baseTemplate/index.html:604
-msgid "Schedule Back ups"
+msgid "Schedule Backups"
 msgstr "计划备份"
 
 #: baseTemplate/templates/baseTemplate/index.html:607
@@ -2417,7 +2417,7 @@ msgid "Create Nameserver - CyberPanel"
 msgstr "创建名称服务器(NS) - CyberPanel"
 
 #: dns/templates/dns/createNameServer.html:62
-msgid "Second Nameserver (Back up)"
+msgid "Second Nameserver (Backup)"
 msgstr "第二名称服务器(备用)"
 
 #: dns/templates/dns/createNameServer.html:89
@@ -6566,8 +6566,8 @@ msgstr "如果您使用的是OpenLiteSpeed，则无需修改规则。"
 #~ msgstr "无法获取详情, LiteSpeed没有运行或者有错误发生 请检查CyberPnael日志."
 
 #, fuzzy
-#~| msgid "Schedule Back up"
-#~ msgid "Achedule Back up"
+#~| msgid "Schedule Backup"
+#~ msgid "Achedule Backup"
 #~ msgstr "备份计划"
 
 #, fuzzy

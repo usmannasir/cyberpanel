@@ -10,14 +10,12 @@ from plogical.acl import ACLManager
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 
 
-
 class UserManager(multi.Thread):
 
     def __init__(self, function, extraArgs):
         multi.Thread.__init__(self)
         self.function = function
         self.extraArgs = extraArgs
-
 
     def run(self):
         try:
@@ -28,7 +26,7 @@ class UserManager(multi.Thread):
 
     def controlUserState(self):
         try:
-            websites = ACLManager.findAllSites(self.extraArgs['currentACL'],self.extraArgs['user'].pk)
+            websites = ACLManager.findAllSites(self.extraArgs['currentACL'], self.extraArgs['user'].pk)
             from websiteFunctions.website import WebsiteManager
 
             wm = WebsiteManager()
@@ -41,7 +39,6 @@ class UserManager(multi.Thread):
                 for items in websites:
                     data = {'websiteName': items, 'state': 'UN-Suspend'}
                     wm.submitWebsiteStatus(self.extraArgs['user'].pk, data)
-
 
         except BaseException as msg:
             logging.writeToFile(str(msg) + '[Error:UserManager:32]')

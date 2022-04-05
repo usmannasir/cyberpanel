@@ -82,6 +82,9 @@ class mysqlUtilities:
 
                 mysqlUtilities.LOCALHOST = ipAddressLocal
 
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.CyberCPLogFileWriter.writeToFile('Local IP for MySQL: %s' % (mysqlUtilities.LOCALHOST))
+
                 conn = mysql.connect(host=mysqlhost ,user=mysqluser, passwd=mysqlpassword, port=int(mysqlport), cursorclass=cursors.SSCursor)
                 cursor = conn.cursor()
 
@@ -109,18 +112,15 @@ class mysqlUtilities:
     @staticmethod
     def createDatabase(dbname,dbuser,dbpassword, dbcreate = 1, host = None):
         try:
-
-            if dbcreate:
-                HostToUse = mysqlUtilities.LOCALHOST
-            else:
-                HostToUse = host
-
             connection, cursor = mysqlUtilities.setupConnection()
 
             if connection == 0:
                 return 0
 
-
+            if dbcreate == 1:
+                HostToUse = mysqlUtilities.LOCALHOST
+            else:
+                HostToUse = host
             ## Create db
 
             if dbcreate:
@@ -596,7 +596,7 @@ password=%s
     @staticmethod
     def restartMySQL():
         try:
-            command = 'sudo systemctl restart mysql'
+            command = 'sudo systemctl restart mariadb'
             ProcessUtilities.executioner(command)
 
             return 1, None

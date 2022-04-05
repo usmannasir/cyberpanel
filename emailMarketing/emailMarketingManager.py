@@ -141,8 +141,8 @@ class EmailMarketingManager:
             if emACL.checkIfEMEnabled(admin.userName) == 0:
                 return ACLManager.loadErrorJson()
 
-            em = EM('createEmailList', extraArgs)
-            em.start()
+            # em = EM('createEmailList', extraArgs)
+            # em.start()
 
             time.sleep(2)
 
@@ -599,6 +599,7 @@ class EmailMarketingManager:
 
             userID = self.request.session['userID']
             admin = Administrator.objects.get(pk=userID)
+            currentACL = ACLManager.loadedACL(userID)
 
             if emACL.checkIfEMEnabled(admin.userName) == 0:
                 return ACLManager.loadErrorJson()
@@ -610,6 +611,10 @@ class EmailMarketingManager:
 
             if operation == 'delete':
                 delHost = SMTPHosts.objects.get(id=id)
+
+                if ACLManager.VerifySMTPHost(currentACL, delHost.owner, admin) == 0:
+                    return ACLManager.loadErrorJson()
+
                 currentACL = ACLManager.loadedACL(userID)
                 if currentACL['admin'] == 1:
                     pass
@@ -622,6 +627,10 @@ class EmailMarketingManager:
             else:
                 try:
                     verifyHost = SMTPHosts.objects.get(id=id)
+
+                    if ACLManager.VerifySMTPHost(currentACL, verifyHost.owner, admin) == 0:
+                        return ACLManager.loadErrorJson()
+
                     verifyLogin = smtplib.SMTP(str(verifyHost.host), int(verifyHost.port))
 
                     if int(verifyHost.port) == 587:
@@ -680,6 +689,9 @@ class EmailMarketingManager:
             fromEmail = data['fromEmail']
             replyTo = data['replyTo']
             emailMessage = data['emailMessage']
+
+            if ACLManager.CheckRegEx('[\w\d\s]+$', name) == 0:
+                return ACLManager.loadErrorJson()
 
             admin = Administrator.objects.get(pk=userID)
             newTemplate = EmailTemplate(owner=admin, name=name.replace(' ', ''), subject=subject, fromName=fromName, fromEmail=fromEmail,

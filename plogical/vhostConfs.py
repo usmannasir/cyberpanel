@@ -23,7 +23,7 @@ index  {
 
 errorlog $VH_ROOT/logs/$VH_NAME.error_log {
   useServer               0
-  logLevel                ERROR
+  logLevel                WARN
   rollingSize             10M
 }
 
@@ -34,6 +34,18 @@ accesslog $VH_ROOT/logs/$VH_NAME.access_log {
   rollingSize             10M
   keepDays                10  
   compressArchive         1
+}
+
+errorpage 403 {
+  url                     403.html
+}
+
+errorpage 404 {
+  url                     404.html
+}
+
+errorpage 500 {
+  url                     500.html
 }
 
 scripthandler  {
@@ -64,10 +76,29 @@ phpIniOverride  {
 {open_basedir}
 }
 
+module cache {
+ storagePath /usr/local/lsws/cachedata/$VH_NAME
+}
+
 rewrite  {
-  enable                  1
+ enable                  1
   autoLoadHtaccess        1
 }
+
+context /.well-known/acme-challenge {
+  location                /usr/local/lsws/Example/html/.well-known/acme-challenge
+  allowBrowse             1
+
+  rewrite  {
+
+  }
+  addDefaultCharset       off
+
+  phpIniOverride  {
+
+  }
+}
+
 """
 
     olsChildMainConf = """virtualHost {virtualHostName} {
@@ -93,7 +124,7 @@ index  {
 
 errorlog $VH_ROOT/logs/{masterDomain}.error_log {
   useServer               0
-  logLevel                ERROR
+  logLevel                WARN
   rollingSize             10M
 }
 
@@ -109,6 +140,23 @@ accesslog $VH_ROOT/logs/{masterDomain}.access_log {
 phpIniOverride  {
 {open_basedir}
 }
+
+module cache {
+ storagePath /usr/local/lsws/cachedata/$VH_NAME
+}
+
+errorpage 403 {
+  url                     403.html
+}
+
+errorpage 404 {
+  url                     404.html
+}
+
+errorpage 500 {
+  url                     500.html
+}
+
 scripthandler  {
   add                     lsapi:{externalApp} php
 }
@@ -137,6 +185,21 @@ rewrite  {
   enable                  1
   autoLoadHtaccess        1
 }
+
+context /.well-known/acme-challenge {
+  location                /usr/local/lsws/Example/html/.well-known/acme-challenge
+  allowBrowse             1
+
+  rewrite  {
+
+  }
+  addDefaultCharset       off
+
+  phpIniOverride  {
+
+  }
+}
+
 """
 
     lswsMasterConf = """<VirtualHost *:80>
@@ -146,6 +209,7 @@ rewrite  {
     ServerAdmin {administratorEmail}
     SuexecUserGroup {externalApp} {externalApp}
     DocumentRoot /home/{virtualHostName}/public_html
+    Alias /.well-known/acme-challenge /usr/local/lsws/Example/html/.well-known/acme-challenge
     CustomLog /home/{virtualHostName}/logs/{virtualHostName}.access_log combined
     AddHandler application/x-httpd-php{php} .php .php7 .phtml
     <IfModule LiteSpeed>
@@ -155,6 +219,7 @@ rewrite  {
 
 </VirtualHost>
 """
+
 
     lswsChildConf = """<VirtualHost *:80>
 
@@ -315,7 +380,7 @@ index  {
 
 errorlog $VH_ROOT/logs/$VH_NAME.error_log {
   useServer               0
-  logLevel                ERROR
+  logLevel                WARN
   rollingSize             10M
 }
 

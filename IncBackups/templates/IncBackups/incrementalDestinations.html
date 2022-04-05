@@ -1,6 +1,6 @@
 {% extends "baseTemplate/index.html" %}
 {% load i18n %}
-{% block title %}{% trans "Set up Back up Destinations" %}{% endblock %}
+{% block title %}{% trans "Set up Backup Destinations" %}{% endblock %}
 {% block content %}
 
     {% load static %}
@@ -11,19 +11,19 @@
 
     <div class="container">
         <div id="page-title">
-            <h2>{% trans "Set up Incremental Back up Destinations" %} - <a target="_blank"
+            <h2>{% trans "Set up Incremental Backup Destinations" %} - <a target="_blank"
                                                                            href="https://cyberpanel.net/docs/1-add-remove-destinations-for-incremental-backups/"
                                                                            style="height: 23px;line-height: 21px;"
                                                                            class="btn btn-border btn-alt border-red btn-link font-red"
                                                                            title=""><span>{% trans "Remote Backups" %}</span></a>
             </h2>
-            <p>{% trans "On this page you can set up your Back up destinations. (SFTP and AWS)" %}</p>
+            <p>{% trans "On this page you can set up your Backup destinations. (SFTP and AWS)" %}</p>
         </div>
 
         <div ng-controller="incrementalDestinations" class="panel">
             <div class="panel-body">
                 <h3 class="title-hero">
-                    {% trans "Set up Back up Destinations." %} <img ng-hide="cyberpanelLoading"
+                    {% trans "Set up Backup Destinations." %} <img ng-hide="cyberpanelLoading"
                                                                     src="{% static 'images/loading.gif' %}">
                 </h3>
                 <div class="example-box-wrapper">
@@ -35,7 +35,7 @@
                             <label class="col-sm-3 control-label">{% trans "Select Type" %} </label>
                             <div class="col-sm-6">
                                 <select ng-change="fetchDetails()" ng-model="destinationType" class="form-control">
-                                    <option>SFTP</option>
+{#                                    <option>SFTP</option>#}
                                     <option>AWS</option>
                                 </select>
                             </div>
@@ -75,8 +75,6 @@
                         </div>
 
                         <!--- SFTP --->
-
-
 
 
                         <!------ List of Destinations --------------->

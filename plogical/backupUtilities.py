@@ -1,4 +1,5 @@
-import os, sys
+import os
+import sys
 
 sys.path.append('/usr/local/CyberCP')
 import django
@@ -48,7 +49,7 @@ except:
     pass
 
 VERSION = '2.1'
-BUILD = 1
+BUILD = 2
 
 
 ## I am not the monster that you think I am..
@@ -67,22 +68,23 @@ class backupUtilities:
         self.extraArgs = extraArgs
 
     @staticmethod
-    def prepareBackupMeta(backupDomain, backupName, tempStoragePath, backupPath, FromInner = 1):
+    def prepareBackupMeta(backupDomain, backupName, tempStoragePath, backupPath, FromInner=1):
         try:
 
+            website = Websites.objects.get(domain=backupDomain)
 
             connection, cursor = mysqlUtilities.mysqlUtilities.setupConnection()
 
             if FromInner:
                 status = os.path.join(backupPath, 'status')
-                logging.CyberCPLogFileWriter.statusWriter(status, 'Setting up meta data..')
+                #logging.CyberCPLogFileWriter.statusWriter(status, 'Setting up meta data..')
+                command = f"echo 'Setting up meta data..' > {status}"
+                ProcessUtilities.executioner(command, website.externalApp)
             else:
                 status = '/home/cyberpanel/dummy'
 
             if os.path.exists(ProcessUtilities.debugPath):
-                logging.CyberCPLogFileWriter.writeToFile('Creating meta for %s.' % (backupDomain))
-
-            website = Websites.objects.get(domain=backupDomain)
+                logging.CyberCPLogFileWriter.writeToFile(f'Creating meta for {backupDomain}.')
 
             ######### Generating meta
 
@@ -183,7 +185,7 @@ class backupUtilities:
                 child = SubElement(databaseXML, 'dbName')
                 child.text = str(items.dbName)
 
-                cursor.execute("select user,host from mysql.db where db='%s'" % (items.dbName))
+                cursor.execute(f"select user,host from mysql.db where db='{items.dbName}'")
                 databaseUsers = cursor.fetchall()
 
                 for databaseUser in databaseUsers:
@@ -221,7 +223,7 @@ class backupUtilities:
 
                 metaFileXML.append(aliasesXML)
             except BaseException as msg:
-                logging.CyberCPLogFileWriter.statusWriter(status, '%s. [167:prepMeta]' % (str(msg)))
+                logging.CyberCPLogFileWriter.writeToFile('%s. [167:prepMeta]' % (str(msg)))
 
             ## Finish Alias
 
@@ -248,7 +250,7 @@ class backupUtilities:
 
                 metaFileXML.append(dnsRecordsXML)
             except BaseException as msg:
-                logging.CyberCPLogFileWriter.statusWriter(status, '%s. [158:prepMeta]' % (str(msg)))
+                logging.CyberCPLogFileWriter.writeToFile('%s. [158:prepMeta]' % (str(msg)))
 
             ## Email accounts XML
 
@@ -269,7 +271,7 @@ class backupUtilities:
 
                 metaFileXML.append(emailRecordsXML)
             except BaseException as msg:
-                logging.CyberCPLogFileWriter.statusWriter(status, '%s. [179:prepMeta]' % (str(msg)))
+                logging.CyberCPLogFileWriter.writeToFile('%s. [179:prepMeta]' % (str(msg)))
 
             ## Email meta generated!
 
@@ -285,13 +287,13 @@ class backupUtilities:
             metaPath = '/tmp/%s' % (str(randint(1000, 9999)))
 
             if os.path.exists(ProcessUtilities.debugPath):
-                logging.CyberCPLogFileWriter.writeToFile('Path to meta file %s' % (metaPath))
+                logging.CyberCPLogFileWriter.writeToFile(f'Path to meta file {metaPath}')
 
             xmlpretty = prettify(metaFileXML).encode('ascii', 'ignore')
             metaFile = open(metaPath, 'w')
             metaFile.write(xmlpretty.decode())
             metaFile.close()
-            os.chmod(metaPath, 0o777)
+            os.chmod(metaPath, 0o600)
 
             ## meta generated
 
@@ -300,16 +302,18 @@ class backupUtilities:
                                     size=0, status=1)
                 newBackup.save()
 
-                logging.CyberCPLogFileWriter.statusWriter(status, 'Meta data is ready..')
+                command = f"echo 'Meta data is ready..' > {status}"
+                ProcessUtilities.executioner(command, website.externalApp)
 
             return 1, 'None', metaPath
 
         except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile("%s [207][5009]" % (str(msg)))
+            logging.CyberCPLogFileWriter.writeToFile(f"{str(msg)} [207][5009]")
             if FromInner:
-                logging.CyberCPLogFileWriter.statusWriter(status, "%s [207][5009]" % (str(msg)))
+                #logging.CyberCPLogFileWriter.statusWriter(status, "%s [207][5009]" % (str(msg)), status)
+                command = f"echo '{status} [207][5009]' > {status}"
+                ProcessUtilities.executioner(command, website.externalApp)
             return 0, str(msg), 'None'
-
 
     @staticmethod
     def startBackup(tempStoragePath, backupName, backupPath, metaPath=None):
@@ -321,7 +325,7 @@ class backupUtilities:
             ##### Writing the name of backup file.
 
             ## /home/example.com/backup/backupFileName
-            pidFile = '%sstartBackup' % (backupPath)
+            pidFile = f'{backupPath}startBackup'
             writeToFile = open(pidFile, 'w')
             writeToFile.writelines(str(os.getpid()))
             writeToFile.close()
@@ -354,7 +358,7 @@ class backupUtilities:
 
             ## Saving original vhost conf file
 
-            completPathToConf = backupUtilities.Server_root + '/conf/vhosts/' + domainName + '/vhost.conf'
+            completPathToConf = f'{backupUtilities.Server_root}/conf/vhosts/{domainName}/vhost.conf'
 
             if os.path.exists(backupUtilities.licenseKey):
                 copy(completPathToConf, tempStoragePath + '/vhost.conf')
@@ -365,10 +369,10 @@ class backupUtilities:
             ## Stop making archive of document_root and copy instead
 
             # copy_tree('/home/%s/public_html' % domainName, '%s/%s' % (tempStoragePath, 'public_html'))
-            command = 'cp -R /home/%s/public_html %s/public_html' % (domainName, tempStoragePath)
+            command = f'cp -R /home/{domainName}/public_html {tempStoragePath}/public_html'
 
             if ProcessUtilities.normalExecutioner(command) == 0:
-                raise BaseException('Failed to run %s.' % (command))
+                raise BaseException(f'Failed to run {command}.')
 
             # make_archive(os.path.join(tempStoragePath,"public_html"), 'gztar', os.path.join("/home",domainName,"public_html"))
 
@@ -378,24 +382,26 @@ class backupUtilities:
             print('1,None')
 
         except BaseException as msg:
-            try:
-                os.remove(os.path.join(backupPath, backupName + ".tar.gz"))
-            except:
-                pass
-
-            try:
-                rmtree(tempStoragePath)
-            except:
-                pass
+            # try:
+            #     os.remove(os.path.join(backupPath, backupName + ".tar.gz"))
+            # except:
+            #     pass
+            #
+            # try:
+            #     rmtree(tempStoragePath)
+            # except:
+            #     pass
 
             status = os.path.join(backupPath, 'status')
             logging.CyberCPLogFileWriter.statusWriter(status, "Aborted, " + str(msg) + ".[365] [5009]")
-            print(("Aborted, " + str(msg) + ".[365] [5009]"))
-
-        os.remove(pidFile)
+            print(f"Aborted, {str(msg)}.[365] [5009]")
+        try:
+            os.remove(pidFile)
+        except:
+            pass
 
     @staticmethod
-    def BackupRoot(tempStoragePath, backupName, backupPath, metaPath=None):
+    def BackupRoot(tempStoragePath, backupName, backupPath, metaPath=None, externalApp = None):
 
         pidFile = '%sBackupRoot' % (backupPath)
 
@@ -420,7 +426,7 @@ class backupUtilities:
                 copy(os.path.join(sslStoragePath, "privkey.pem"),
                      os.path.join(tempStoragePath, domainName + ".privkey.pem"))
             except BaseException as msg:
-                logging.CyberCPLogFileWriter.writeToFile('%s. [283:startBackup]' % (str(msg)))
+                logging.CyberCPLogFileWriter.writeToFile(f'{str(msg)}. [283:startBackup]')
 
         ## Child Domains SSL.
 
@@ -433,12 +439,12 @@ class backupUtilities:
                 childPath = childDomain.find('path').text
 
                 if os.path.exists(backupUtilities.licenseKey):
-                    completPathToConf = backupUtilities.Server_root + '/conf/vhosts/' + actualChildDomain + '/vhost.conf'
-                    copy(completPathToConf, tempStoragePath + '/' + actualChildDomain + '.vhost.conf')
+                    completPathToConf = f'{backupUtilities.Server_root}/conf/vhosts/{actualChildDomain}/vhost.conf'
+                    copy(completPathToConf, f'{tempStoragePath}/{actualChildDomain}.vhost.conf')
 
                     ### Storing SSL for child domainsa
 
-                sslStoragePath = '/etc/letsencrypt/live/' + actualChildDomain
+                sslStoragePath = f'/etc/letsencrypt/live/{actualChildDomain}'
 
                 if os.path.exists(sslStoragePath):
                     try:
@@ -453,9 +459,9 @@ class backupUtilities:
                     except:
                         pass
 
-                if childPath.find('/home/%s/public_html' % domainName) == -1:
+                if childPath.find(f'/home/{domainName}/public_html') == -1:
                     # copy_tree(childPath, '%s/%s-docroot' % (tempStoragePath, actualChildDomain))
-                    command = 'cp -R %s %s/%s-docroot' % (childPath, tempStoragePath, actualChildDomain)
+                    command = f'cp -R {childPath} {tempStoragePath}/{actualChildDomain}-docroot'
                     ProcessUtilities.executioner(command)
 
         except BaseException as msg:
@@ -468,25 +474,33 @@ class backupUtilities:
         if os.path.islink(status) or os.path.islink(tempStoragePath or os.path.islink(backupPath)) or os.path.islink(
                 metaPath):
             logging.CyberCPLogFileWriter.writeToFile('symlinked.')
-            logging.CyberCPLogFileWriter.statusWriter(status, 'Symlink attack. [365][5009]')
+            #logging.CyberCPLogFileWriter.statusWriter(status, 'Symlink attack. [365][5009]')
             return 0
 
         ## backup email accounts
 
-        logging.CyberCPLogFileWriter.statusWriter(status, "Backing up email accounts..\n")
+        if externalApp == None:
+            logging.CyberCPLogFileWriter.statusWriter(status, "Backing up email accounts..\n")
+        else:
+            command = f"echo 'Backing up email accounts..' > {status}"
+            ProcessUtilities.executioner(command, externalApp)
 
         try:
 
-            emailPath = '/home/vmail/%s' % (domainName)
+            emailPath = f'/home/vmail/{domainName}'
 
             if os.path.exists(emailPath):
                 # copy_tree(emailPath, '%s/vmail' % (tempStoragePath), preserve_symlinks=True)
-                command = 'cp -R %s %s/vmail' % (emailPath, tempStoragePath)
+                command = f'cp -R {emailPath} {tempStoragePath}/vmail'
                 ProcessUtilities.executioner(command)
 
             ## shutil.make_archive. Creating final package.
 
-            logging.CyberCPLogFileWriter.statusWriter(status, "Preparing final compressed package..\n")
+            if externalApp == None:
+                logging.CyberCPLogFileWriter.statusWriter(status, "Preparing final compressed package..\n")
+            else:
+                command = f"echo 'Preparing final compressed package..' > {status}"
+                ProcessUtilities.executioner(command, externalApp, True)
 
             make_archive(os.path.join(backupPath, backupName), 'gztar', tempStoragePath)
             rmtree(tempStoragePath)
@@ -495,7 +509,7 @@ class backupUtilities:
 
             backupObs = Backups.objects.filter(fileName=backupName)
 
-            filePath = '%s/%s.tar.gz' % (backupPath, backupName)
+            filePath = f'{backupPath}/{backupName}.tar.gz'
             totalSize = '%sMB' % (str(int(os.path.getsize(filePath) / 1048576)))
 
             try:
@@ -513,10 +527,20 @@ class backupUtilities:
             command = 'chmod 600 %s' % (os.path.join(backupPath, backupName + ".tar.gz"))
             ProcessUtilities.executioner(command)
 
-            logging.CyberCPLogFileWriter.statusWriter(status, "Completed\n")
+            if externalApp == None:
+                logging.CyberCPLogFileWriter.statusWriter(status, "Completed\n")
+            else:
+                command = f"echo 'Completed' > {status}"
+                ProcessUtilities.executioner(command, externalApp, True)
+
             os.remove(pidFile)
         except BaseException as msg:
             logging.CyberCPLogFileWriter.statusWriter(status, '%s. [511:BackupRoot][[5009]]\n' % str(msg))
+            if externalApp == None:
+                logging.CyberCPLogFileWriter.statusWriter(status, '%s. [511:BackupRoot][[5009]]\n')
+            else:
+                command = f"echo '%s. [511:BackupRoot][[5009]]' > {status}"
+                ProcessUtilities.executioner(command, externalApp)
 
     @staticmethod
     def initiateBackup(tempStoragePath, backupName, backupPath):
@@ -533,7 +557,7 @@ class backupUtilities:
     def createWebsiteFromBackup(backupFileOrig, dir):
         try:
             backupFile = backupFileOrig.strip(".tar.gz")
-            originalFile = "/home/backup/" + backupFileOrig
+            originalFile = f"/home/backup/{backupFileOrig}"
 
             if os.path.exists(backupFileOrig):
                 path = backupFile
@@ -541,7 +565,7 @@ class backupUtilities:
                 dir = dir
                 path = "/home/backup/transfer-" + str(dir) + "/" + backupFile
             else:
-                path = "/home/backup/" + backupFile
+                path = f"/home/backup/{backupFile}"
 
             admin = Administrator.objects.get(userName='admin')
 
@@ -618,15 +642,17 @@ class backupUtilities:
 
                 dbName = database.find('dbName').text
 
-                if VERSION == '2.1' and BUILD == '1':
+                if VERSION == '2.1' and int(BUILD) >= 1:
 
-                    logging.CyberCPLogFileWriter.writeToFile('Backup version 2.1.1 detected..')
+                    logging.CyberCPLogFileWriter.writeToFile('Backup version 2.1.1+ detected..')
                     databaseUsers = database.findall('databaseUsers')
                     for databaseUser in databaseUsers:
 
                         dbUser = databaseUser.find('dbUser').text
-                        if mysqlUtilities.mysqlUtilities.createDatabase(dbName, dbUser, 'cyberpanel') == 0:
-                            raise BaseException
+                        res = mysqlUtilities.mysqlUtilities.createDatabase(dbName, dbUser, 'cyberpanel')
+                        if res == 0:
+                            logging.CyberCPLogFileWriter.writeToFile(
+                                'Failed to restore database %s. But it can be false positive, moving on..' % (dbName))
 
                         newDB = Databases(website=website, dbName=dbName, dbUser=dbUser)
                         newDB.save()
@@ -883,9 +909,9 @@ class backupUtilities:
 
                 dbName = database.find('dbName').text
 
-                if VERSION == '2.1' and BUILD == '1':
+                if VERSION == '2.1' and int(BUILD) >= 1:
 
-                    logging.CyberCPLogFileWriter.writeToFile('Backup version 2.1.1 detected..')
+                    logging.CyberCPLogFileWriter.writeToFile('Backup version 2.1.1+ detected..')
 
                     first = 1
 
@@ -903,10 +929,14 @@ class backupUtilities:
                             logging.CyberCPLogFileWriter.writeToFile('Database host: %s' % (dbHost))
                             logging.CyberCPLogFileWriter.writeToFile('Database password: %s' % (password))
 
+                        ## Future ref, this logic can be further refactored to improve restore backup logic
                         if first:
                             first = 0
-                            if mysqlUtilities.mysqlUtilities.restoreDatabaseBackup(dbName, completPath, password, 1) == 0:
-                                raise BaseException
+                            res = mysqlUtilities.mysqlUtilities.restoreDatabaseBackup(dbName, completPath, password, 1)
+                            if res == 0:
+                                logging.CyberCPLogFileWriter.writeToFile(
+                                    'Failed to restore database %s. But it can be false positive, moving on..' % (
+                                        dbName))
 
 
                         ### This function will not create database, only database user is created as third value is 0 for createDB
@@ -1890,7 +1920,7 @@ class backupUtilities:
 
                         EmailsHome = '/home/vmail/%s' % (self.website.domain)
 
-                        command = 'rm -rf %s' % (EmailsHome)
+                        command = f'rm -rf {EmailsHome}'
                         ProcessUtilities.executioner(command)
 
                         command = 'mv %s/%s /home/vmail' % (self.emailsPath, self.website.domain)
@@ -1946,64 +1976,17 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
 
         ##
 
-        schedulerPath = '/home/cyberpanel/%s-backup.txt' % (backupDomain)
-
-        if not os.path.exists(backupPath) or not os.path.islink(backupPath):
-            command = 'mkdir -p %s' % (backupPath)
-            ProcessUtilities.executioner(command)
-        else:
-            writeToFile = open(schedulerPath, 'w')
-            writeToFile.writelines('1269')
-            writeToFile.close()
-            return 0
-
-        if not os.path.exists(backupPath) or not os.path.islink(backupPath):
-            command = 'chown -R %s:%s %s' % (website.externalApp, website.externalApp, backupPath)
-            ProcessUtilities.executioner(command)
-        else:
-            writeToFile = open(schedulerPath, 'w')
-            writeToFile.writelines('1278')
-            writeToFile.close()
-            return 0
+        schedulerPath = f'/home/cyberpanel/{backupDomain}-backup.txt'
 
         ##
 
-        if not os.path.exists(tempStoragePath) or not os.path.islink(tempStoragePath):
-            command = 'mkdir -p %s' % (tempStoragePath)
-            ProcessUtilities.executioner(command)
-        else:
-            writeToFile = open(schedulerPath, 'w')
-            writeToFile.writelines('1289')
-            writeToFile.close()
-            return 0
-
-        if not os.path.exists(tempStoragePath) or not os.path.islink(tempStoragePath):
-            command = 'chown -R %s:%s %s' % (website.externalApp, website.externalApp, tempStoragePath)
-            ProcessUtilities.executioner(command)
-        else:
-            writeToFile = open(schedulerPath, 'w')
-            writeToFile.writelines('1298')
-            writeToFile.close()
-            return 0
+        command = f'mkdir -p {tempStoragePath}'
+        ProcessUtilities.executioner(command, website.externalApp)
 
         ##
-        if not os.path.exists(status) or not os.path.islink(status):
-            command = 'touch %s' % (status)
-            ProcessUtilities.executioner(command)
-        else:
-            writeToFile = open(schedulerPath, 'w')
-            writeToFile.writelines('1308')
-            writeToFile.close()
-            return 0
 
-        if not os.path.exists(status) or not os.path.islink(status):
-            command = 'chown cyberpanel:cyberpanel %s' % (status)
-            ProcessUtilities.executioner(command)
-        else:
-            writeToFile = open(schedulerPath, 'w')
-            writeToFile.writelines('1317')
-            writeToFile.close()
-            return 0
+        command = f'touch {status}'
+        ProcessUtilities.executioner(command, website.externalApp)
 
         result = backupUtilities.prepareBackupMeta(backupDomain, backupName, tempStoragePath, backupPath)
 
@@ -2011,11 +1994,16 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
             writeToFile = open(schedulerPath, 'w')
             writeToFile.writelines('1325')
             writeToFile.close()
-            logging.CyberCPLogFileWriter.statusWriter(status, str(result[1]) + ' [1084][5009]')
+            command = "echo '%s [1084][5009]' > %s" % (str(result[1]), status)
+            ProcessUtilities.executioner(command, website.externalApp)
             return 0
 
-        command = 'chown %s:%s %s' % (website.externalApp, website.externalApp, status)
+
+        command = 'chown %s:%s %s' % (website.externalApp, website.externalApp, result[2])
         ProcessUtilities.executioner(command)
+
+        logging.CyberCPLogFileWriter.writeToFile(backupPath)
+        logging.CyberCPLogFileWriter.writeToFile(tempStoragePath)
 
         execPath = "sudo nice -n 10 /usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
         execPath = execPath + " startBackup --tempStoragePath " + tempStoragePath + " --backupName " \
@@ -2033,19 +2021,19 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
 
         ## Backing up databases
 
+        command = f'chown cyberpanel:cyberpanel {result[2]}'
+        ProcessUtilities.executioner(command)
+
         backupMetaData = ElementTree.parse(result[2])
 
         databases = backupMetaData.findall('Databases/database')
 
         for database in databases:
-
             dbName = database.find('dbName').text
-
-            if mysqlUtilities.mysqlUtilities.createDatabaseBackup(dbName, '/home/cyberpanel') == 0:
-                writeToFile = open(schedulerPath, 'w')
-                writeToFile.writelines('1358')
-                writeToFile.close()
-                return 0
+            res = mysqlUtilities.mysqlUtilities.createDatabaseBackup(dbName, '/home/cyberpanel')
+            if res == 0:
+                ## This login can be further improved later.
+                logging.CyberCPLogFileWriter.writeToFile('Failed to create database backup for %s. This could be false positive, moving on.' % (dbName))
 
             command = 'mv /home/cyberpanel/%s.sql %s/%s.sql' % (dbName, tempStoragePath, dbName)
             ProcessUtilities.executioner(command, 'root')
@@ -2054,59 +2042,56 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
 
         #output = ProcessUtilities.outputExecutioner(execPath, website.externalApp)
 
-        if output.find('1,None') > -1:
-            execPath = "sudo nice -n 10 /usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
-            execPath = execPath + " BackupRoot --tempStoragePath " + tempStoragePath + " --backupName " \
-                       + backupName + " --backupPath " + backupPath + ' --backupDomain ' + backupDomain + ' --metaPath %s' % (
-                           result[2])
+        execPath = "sudo nice -n 10 /usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
+        execPath = execPath + " BackupRoot --tempStoragePath " + tempStoragePath + " --backupName " \
+                   + backupName + " --backupPath " + backupPath + ' --backupDomain ' + backupDomain + ' --metaPath %s --externalApp %s' % (
+                       result[2], website.externalApp)
 
-            ProcessUtilities.executioner(execPath, 'root')
-        else:
-            logging.CyberCPLogFileWriter.writeToFile(output)
+        ProcessUtilities.executioner(execPath, 'root')
 
         command = 'chown -R %s:%s %s' % (website.externalApp, website.externalApp, backupPath)
         ProcessUtilities.executioner(command)
 
-        command = 'rm -f %s' % (result[2])
+        command = f'rm -f {result[2]}'
         ProcessUtilities.executioner(command, 'cyberpanel')
 
     except BaseException as msg:
         logging.CyberCPLogFileWriter.writeToFile(
-            str(msg) + "  [submitBackupCreation]")
+            f"{str(msg)}  [submitBackupCreation]")
 
 def cancelBackupCreation(backupCancellationDomain, fileName):
     try:
 
-        path = "/home/" + backupCancellationDomain + "/backup/pid"
+        path = f"/home/{backupCancellationDomain}/backup/pid"
 
         pid = open(path, "r").readlines()[0]
 
         try:
             os.kill(int(pid), signal.SIGKILL)
         except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [cancelBackupCreation]")
+            logging.CyberCPLogFileWriter.writeToFile(f"{str(msg)} [cancelBackupCreation]")
 
-        backupPath = "/home/" + backupCancellationDomain + "/backup/"
+        backupPath = f"/home/{backupCancellationDomain}/backup/"
 
         tempStoragePath = backupPath + fileName
 
         try:
-            os.remove(tempStoragePath + ".tar.gz")
+            os.remove(f"{tempStoragePath}.tar.gz")
         except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [cancelBackupCreation]")
+            logging.CyberCPLogFileWriter.writeToFile(f"{str(msg)} [cancelBackupCreation]")
 
         try:
             rmtree(tempStoragePath)
         except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [cancelBackupCreation]")
+            logging.CyberCPLogFileWriter.writeToFile(f"{str(msg)} [cancelBackupCreation]")
 
         status = open(backupPath + 'status', "w")
         status.write("Aborted manually. [1165][5009]")
         status.close()
     except BaseException as msg:
         logging.CyberCPLogFileWriter.writeToFile(
-            str(msg) + "  [cancelBackupCreation]")
-        print("0," + str(msg))
+            f"{str(msg)}  [cancelBackupCreation]")
+        print(f"0, {str(msg)}")
 
 def submitRestore(backupFile, dir):
     try:
@@ -2119,7 +2104,7 @@ def submitRestore(backupFile, dir):
     except BaseException as msg:
         logging.CyberCPLogFileWriter.writeToFile(
             str(msg) + "  [cancelBackupCreation]")
-        print("0," + str(msg))
+        print(f"0, {str(msg)}")
 
 def submitDestinationCreation(ipAddress, password, port='22', user='root'):
     setupKeys = backupUtilities.setupSSHKeys(ipAddress, password, port, user)
@@ -2182,6 +2167,7 @@ def main():
     ## FOR S3
 
     parser.add_argument('--planName', help='')
+    parser.add_argument('--externalApp', help='')
 
 
     args = parser.parse_args()
@@ -2199,7 +2185,7 @@ def main():
     elif args.function == "startBackup":
         backupUtilities.startBackup(args.tempStoragePath, args.backupName, args.backupPath, args.metaPath)
     elif args.function == "BackupRoot":
-        backupUtilities.BackupRoot(args.tempStoragePath, args.backupName, args.backupPath, args.metaPath)
+        backupUtilities.BackupRoot(args.tempStoragePath, args.backupName, args.backupPath, args.metaPath, args.externalApp)
     elif args.function == 'CloudBackup':
         extraArgs = {}
         extraArgs['domain'] = args.backupDomain

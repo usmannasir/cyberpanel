@@ -1,0 +1,68 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Design - CyberPanel" %}{% endblock %}
+{% block content %}
+
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
+
+
+    <div class="container" ng-controller="designtheme">
+        <div id="page-title">
+            <h2>{% trans "Design" %}</h2>
+            <p>{% trans "" %}</p>
+        </div>
+        <div class="panel">
+            <div class="panel-body">
+                <h3 class="content-box-header">
+                    {% trans "Custom CSS" %}<img ng-hide="themeloading"
+                                                       src="{% static 'images/loading.gif' %}">
+                </h3>
+                <p>Any CSS added here will apply to whole dashboard design.</p>
+
+                <div class="example-box-wrapper">
+                    <form action="{% url 'design' %}" method="POST" class="form-horizontal bordered-row panel-body">
+                        {% csrf_token %}
+
+                        {% if saved %}
+                            <div class="form-group">
+                                <label class="col-sm-12 control-label"></label>
+                                <div class="col-sm-12">
+                                    <div class="alert alert-success">
+                                        <p>{% trans "Changes saved." %}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <select ng-change="getthemedata()" ng-model="stheme" id="stheme"
+                                style="width: 49%; padding: 8px; margin-top: 5px; margin-bottom: 10px"
+
+                                class="form-control form-select form-select-lg"
+                                aria-label=".form-select-lg example">
+                            {% for key in tree %}
+                                <option value="{{ key }}">{{ key }}</option>
+                            {% endfor %}
+                        </select>
+
+                        <div ng-hide="keyBox" class="form-group">
+                            <div class="col-sm-12">
+                                <textarea id="appendthemedata" name="MainDashboardCSS" rows="12"
+                                          class="form-control ng-pristine ng-untouched ng-valid ng-empty">{{ cosmetic.MainDashboardCSS }}</textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-4">
+                                <button type="submit" class="btn btn-primary btn-lg">{% trans "Save Changes" %}</button>
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

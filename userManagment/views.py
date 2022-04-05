@@ -13,7 +13,6 @@ from plogical.virtualHostUtilities import virtualHostUtilities
 from CyberCP.secMiddleware import secMiddleware
 from CyberCP.SecurityLevel import SecurityLevel
 
-# Create your views here.
 
 def loadUserHome(request):
 
@@ -29,6 +28,7 @@ def loadUserHome(request):
     proc = httpProc(request, 'userManagment/index.html',
                     {"type": admin.type, 'listUsers': listUsers}, 'listUsers')
     return proc.render()
+
 
 def viewProfile(request):
     userID = request.session['userID']
@@ -46,6 +46,7 @@ def viewProfile(request):
     proc = httpProc(request, 'userManagment/userProfile.html',
                     AdminData)
     return proc.render()
+
 
 def createUser(request):
     userID = request.session['userID']
@@ -69,6 +70,7 @@ def createUser(request):
     else:
         return ACLManager.loadError()
 
+
 def apiAccess(request):
     userID = request.session['userID']
     currentACL = ACLManager.loadedACL(userID)
@@ -77,6 +79,7 @@ def apiAccess(request):
     proc = httpProc(request, 'userManagment/apiAccess.html',
                     {'acctNames': adminNames}, 'admin')
     return proc.render()
+
 
 def saveChangesAPIAccess(request):
     try:
@@ -109,6 +112,7 @@ def saveChangesAPIAccess(request):
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
 
+
 def submitUserCreation(request):
     try:
 
@@ -122,7 +126,6 @@ def submitUserCreation(request):
                 data = request
                 currentACL = ACLManager.loadedACL(userID)
 
-
             firstName = data['firstName']
             lastName = data['lastName']
             email = data['email']
@@ -130,6 +133,23 @@ def submitUserCreation(request):
             password = data['password']
             websitesLimit = data['websitesLimit']
             selectedACL = data['selectedACL']
+
+            if ACLManager.CheckRegEx("^[\w'\-,.][^0-9_!¡?÷?¿/\\+=@#$%ˆ&*(){}|~<>;:[\]]{2,}$", firstName) == 0:
+                data_ret = {'status': 0, 'createStatus': 0, 'error_message': 'First Name can only contain Alphabets and should be more then 2 characters..'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+            if ACLManager.CheckRegEx("^[\w'\-,.][^0-9_!¡?÷?¿/\\+=@#$%ˆ&*(){}|~<>;:[\]]{2,}$", lastName) == 0:
+                data_ret = {'status': 0, 'createStatus': 0, 'error_message': 'First Name can only contain Alphabets and should be more then 2 characters..'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+            import validators
+            if not validators.email(email):
+                data_ret = {'status': 0, 'createStatus': 0,
+                            'error_message': 'Invalid email address.'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
 
             try:
                 securityLevel = data['securityLevel']
@@ -242,6 +262,7 @@ def modifyUsers(request):
                     {"acctNames": userNames, 'securityLevels': SecurityLevel.list()})
     return proc.render()
 
+
 def fetchUserDetails(request):
     try:
         val = request.session['userID']
@@ -305,6 +326,7 @@ def fetchUserDetails(request):
         data_ret = {'fetchStatus': 0, 'error_message': "Not logged in as admin", }
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
+
 
 def saveModifications(request):
     try:
@@ -377,7 +399,6 @@ def saveModifications(request):
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-
         except BaseException as msg:
             data_ret = {'status': 0, 'saveStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
@@ -387,6 +408,7 @@ def saveModifications(request):
         data_ret = {'status': 0, 'saveStatus': 0, 'error_message': "Not logged in as admin", }
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
+
 
 def deleteUser(request):
     userID = request.session['userID']
@@ -404,6 +426,7 @@ def deleteUser(request):
         return proc.render()
     else:
         return ACLManager.loadError()
+
 
 def submitUserDeletion(request):
 
@@ -426,15 +449,12 @@ def submitUserDeletion(request):
             except:
                 force = 0
 
-
             currentACL = ACLManager.loadedACL(userID)
 
             currentUser = Administrator.objects.get(pk=userID)
             userInQuestion = Administrator.objects.get(userName=accountUsername)
 
-
             if ACLManager.checkUserOwnerShip(currentACL, currentUser, userInQuestion):
-
 
                 if force:
                     userACL = ACLManager.loadedACL(userInQuestion.pk)
@@ -463,7 +483,6 @@ def submitUserDeletion(request):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-
         except BaseException as msg:
             data_ret = {'status': 0, 'deleteStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
@@ -474,10 +493,12 @@ def submitUserDeletion(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
+
 def createNewACL(request):
     proc = httpProc(request, 'userManagment/createACL.html',
                     None, 'admin')
     return proc.render()
+
 
 def createACLFunc(request):
     try:
@@ -495,7 +516,7 @@ def createACLFunc(request):
             else:
                 data['adminStatus'] = 0
 
-            newACL = ACL(name=data['aclName'],config=json.dumps(data))
+            newACL = ACL(name=data['aclName'], config=json.dumps(data))
             newACL.save()
 
             finalResponse = {'status': 1}
@@ -509,11 +530,13 @@ def createACLFunc(request):
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
 
+
 def deleteACL(request):
     aclNames = ACLManager.findAllACLs()
     proc = httpProc(request, 'userManagment/deleteACL.html',
                     {'aclNames': aclNames}, 'admin')
     return proc.render()
+
 
 def deleteACLFunc(request):
     try:
@@ -541,11 +564,13 @@ def deleteACLFunc(request):
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
 
+
 def modifyACL(request):
     aclNames = ACLManager.findAllACLs()
     proc = httpProc(request, 'userManagment/modifyACL.html',
                     {'aclNames': aclNames}, 'admin')
     return proc.render()
+
 
 def fetchACLDetails(request):
     try:
@@ -571,6 +596,7 @@ def fetchACLDetails(request):
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
 
+
 def submitACLModifications(request):
     try:
         val = request.session['userID']
@@ -583,7 +609,7 @@ def submitACLModifications(request):
             ## Version Management
 
             acl = ACL.objects.get(name=data['aclToModify'])
-            acl.config=json.dumps(data)
+            acl.config = json.dumps(data)
             acl.save()
 
             if int(data['adminStatus']) == 1:
@@ -629,6 +655,7 @@ def changeUserACL(request):
     else:
         return ACLManager.loadError()
 
+
 def changeACLFunc(request):
     try:
         val = request.session['userID']
@@ -669,6 +696,7 @@ def changeACLFunc(request):
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
 
+
 def resellerCenter(request):
     userID = request.session['userID']
     currentACL = ACLManager.loadedACL(userID)
@@ -687,6 +715,7 @@ def resellerCenter(request):
         return proc.render()
     else:
         return ACLManager.loadError()
+
 
 def saveResellerChanges(request):
     try:
@@ -743,6 +772,7 @@ def saveResellerChanges(request):
         finalResponse = {'status': 0, 'errorMessage': str(msg), 'error_message': str(msg)}
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
+
 
 def listUsers(request):
     userID = request.session['userID']
@@ -802,8 +832,13 @@ def fetchTableUsers(request):
                 DiskUsage, DiskUsagePercentage, bwInMB, bwUsage = virtualHostUtilities.FindStats(webs)
                 diskUsageCurrent = DiskUsage + diskUsageCurrent
 
-
-            owner = Administrator.objects.get(pk=items.owner)
+            try:
+                owner = Administrator.objects.get(pk=items.owner)
+            except:
+                ### If user owner is deleted then owner is admin
+                items.owner = 1
+                items.save()
+                owner = Administrator.objects.get(pk=1)
 
             dic = {'id': items.pk,
                    'name': items.userName,
@@ -827,6 +862,7 @@ def fetchTableUsers(request):
 
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def controlUserState(request):
     try:
@@ -879,7 +915,6 @@ def controlUserState(request):
             data_ret = {'status': 1}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
-
 
         except BaseException as msg:
             data_ret = {'status': 0, 'saveStatus': 0, 'error_message': str(msg)}

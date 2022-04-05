@@ -41,6 +41,22 @@ class httpProc:
                 self.data['ipAddress'] = ipAddress
                 self.data['fullName'] = '%s %s' % (admin.firstName, admin.lastName)
 
+                ### Load Custom CSS
+                try:
+                    from baseTemplate.models import CyberPanelCosmetic
+                    cosmetic = CyberPanelCosmetic.objects.get(pk=1)
+                    self.data['cosmetic'] = cosmetic
+                except:
+                    try:
+                        from baseTemplate.models import CyberPanelCosmetic
+                        cosmetic = CyberPanelCosmetic()
+                        cosmetic.save()
+                        self.data['cosmetic'] = cosmetic
+                    except:
+                        pass
+
+                ACLManager.GetServiceStatus(self.data)
+
                 self.data.update(currentACL)
 
                 return render(self.request, self.templateName, self.data)

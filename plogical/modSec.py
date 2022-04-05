@@ -400,7 +400,15 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
     def setupOWASPRules():
         try:
             pathTOOWASPFolder = os.path.join(virtualHostUtilities.Server_root, "conf/modsec/owasp")
-            extractLocation = os.path.join(virtualHostUtilities.Server_root, "conf/modsec")
+            pathToOWASFolderNew = '%s/modsec/owasp-modsecurity-crs-3.0-master' % (virtualHostUtilities.vhostConfPath)
+
+            command = 'mkdir -p /usr/local/lsws/conf/modsec'
+            result = subprocess.call(shlex.split(command))
+            if result != 0:
+                return 0
+
+            if os.path.exists(pathToOWASFolderNew):
+                shutil.rmtree(pathToOWASFolderNew)
 
             if os.path.exists(pathTOOWASPFolder):
                 shutil.rmtree(pathTOOWASPFolder)
@@ -408,19 +416,78 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
             if os.path.exists('owasp.tar.gz'):
                 os.remove('owasp.tar.gz')
 
-            command = "wget https://" + modSec.mirrorPath + "/modsec/owasp.tar.gz"
+            command = "wget https://github.com/coreruleset/coreruleset/archive/v3.3.2/master.zip -O /usr/local/lsws/conf/modsec/owasp.zip"
             result = subprocess.call(shlex.split(command))
 
-            if result == 1:
+            if result != 0:
                 return 0
 
-            tar = tarfile.open('owasp.tar.gz')
-            tar.extractall(extractLocation)
-            tar.close()
+            command = "unzip -o /usr/local/lsws/conf/modsec/owasp.zip -d /usr/local/lsws/conf/modsec/"
+            result = subprocess.call(shlex.split(command))
+
+            if result != 0:
+                return 0
+
+            command = 'mv /usr/local/lsws/conf/modsec/coreruleset-3.3.2 /usr/local/lsws/conf/modsec/owasp-modsecurity-crs-3.0-master'
+            result = subprocess.call(shlex.split(command))
+
+            if result != 0:
+                return 0
+
+            command = 'mv %s/crs-setup.conf.example %s/crs-setup.conf' % (pathToOWASFolderNew, pathToOWASFolderNew)
+            result = subprocess.call(shlex.split(command))
+
+            if result != 0:
+                return 0
+
+            command = 'mv %s/rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf.example %s/rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf' % (pathToOWASFolderNew, pathToOWASFolderNew)
+            result = subprocess.call(shlex.split(command))
+
+            if result != 0:
+                return 0
+
+            command = 'mv %s/rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf.example %s/rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf' % (
+            pathToOWASFolderNew, pathToOWASFolderNew)
+            result = subprocess.call(shlex.split(command))
+
+            if result != 0:
+                return 0
+
+            content = """include {pathToOWASFolderNew}/crs-setup.conf
+include {pathToOWASFolderNew}/rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf
+include {pathToOWASFolderNew}/rules/REQUEST-901-INITIALIZATION.conf
+include {pathToOWASFolderNew}/rules/REQUEST-905-COMMON-EXCEPTIONS.conf
+include {pathToOWASFolderNew}/rules/REQUEST-910-IP-REPUTATION.conf
+include {pathToOWASFolderNew}/rules/REQUEST-911-METHOD-ENFORCEMENT.conf
+include {pathToOWASFolderNew}/rules/REQUEST-912-DOS-PROTECTION.conf
+include {pathToOWASFolderNew}/rules/REQUEST-913-SCANNER-DETECTION.conf
+include {pathToOWASFolderNew}/rules/REQUEST-920-PROTOCOL-ENFORCEMENT.conf
+include {pathToOWASFolderNew}/rules/REQUEST-921-PROTOCOL-ATTACK.conf
+include {pathToOWASFolderNew}/rules/REQUEST-930-APPLICATION-ATTACK-LFI.conf
+include {pathToOWASFolderNew}/rules/REQUEST-931-APPLICATION-ATTACK-RFI.conf
+include {pathToOWASFolderNew}/rules/REQUEST-932-APPLICATION-ATTACK-RCE.conf
+include {pathToOWASFolderNew}/rules/REQUEST-933-APPLICATION-ATTACK-PHP.conf
+include {pathToOWASFolderNew}/rules/REQUEST-941-APPLICATION-ATTACK-XSS.conf
+include {pathToOWASFolderNew}/rules/REQUEST-942-APPLICATION-ATTACK-SQLI.conf
+include {pathToOWASFolderNew}/rules/REQUEST-943-APPLICATION-ATTACK-SESSION-FIXATION.conf
+include {pathToOWASFolderNew}/rules/REQUEST-949-BLOCKING-EVALUATION.conf
+include {pathToOWASFolderNew}/rules/RESPONSE-950-DATA-LEAKAGES.conf
+include {pathToOWASFolderNew}/rules/RESPONSE-951-DATA-LEAKAGES-SQL.conf
+include {pathToOWASFolderNew}/rules/RESPONSE-952-DATA-LEAKAGES-JAVA.conf
+include {pathToOWASFolderNew}/rules/RESPONSE-953-DATA-LEAKAGES-PHP.conf
+include {pathToOWASFolderNew}/rules/RESPONSE-954-DATA-LEAKAGES-IIS.conf
+include {pathToOWASFolderNew}/rules/RESPONSE-959-BLOCKING-EVALUATION.conf
+include {pathToOWASFolderNew}/rules/RESPONSE-980-CORRELATION.conf
+include {pathToOWASFolderNew}/rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf
+"""
+            writeToFile = open('%s/owasp-master.conf' % (pathToOWASFolderNew), 'w')
+            writeToFile.write(content.replace('{pathToOWASFolderNew}', pathToOWASFolderNew))
+            writeToFile.close()
 
             return 1
 
         except BaseException as msg:
+            print(str(msg))
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "  [setupOWASPRules]")
             return 0
@@ -432,50 +499,42 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
                 print('0, Unable to download OWASP Rules.')
                 return
 
-            owaspRulesConf = """modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/modsecurity.conf
-modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/crs-setup.conf
-modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/REQUEST-900-EXCLUSION-RULES-BEFORE-CRS.conf
-modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/REQUEST-901-INITIALIZATION.conf
-modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/REQUEST-905-COMMON-EXCEPTIONS.conf
-modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/REQUEST-910-IP-REPUTATION.conf
-modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/REQUEST-911-METHOD-ENFORCEMENT.conf
-modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/REQUEST-912-DOS-PROTECTION.conf
-modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/REQUEST-913-SCANNER-DETECTION.conf
-#modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/REQUEST-920-PROTOCOL-ENFORCEMENT.conf
-modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/REQUEST-921-PROTOCOL-ATTACK.conf
-modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/REQUEST-930-APPLICATION-ATTACK-LFI.conf
-modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/REQUEST-931-APPLICATION-ATTACK-RFI.conf
-modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/REQUEST-932-APPLICATION-ATTACK-RCE.conf
-modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/REQUEST-933-APPLICATION-ATTACK-PHP.conf
-modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/REQUEST-941-APPLICATION-ATTACK-XSS.conf
-modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/REQUEST-942-APPLICATION-ATTACK-SQLI.conf
-modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/REQUEST-943-APPLICATION-ATTACK-SESSION-FIXATION.conf
-modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/REQUEST-949-BLOCKING-EVALUATION.conf
-modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/RESPONSE-950-DATA-LEAKAGES.conf
-modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/RESPONSE-951-DATA-LEAKAGES-SQL.conf
-modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/RESPONSE-952-DATA-LEAKAGES-JAVA.conf
-modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/RESPONSE-953-DATA-LEAKAGES-PHP.conf
-modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/RESPONSE-954-DATA-LEAKAGES-IIS.conf
-modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/RESPONSE-959-BLOCKING-EVALUATION.conf
-modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/RESPONSE-980-CORRELATION.conf
-modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/RESPONSE-999-EXCLUSION-RULES-AFTER-CRS.conf
+            if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+                owaspRulesConf = """
+modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp-modsecurity-crs-3.0-master/owasp-master.conf
 """
 
-            confFile = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
+                confFile = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
 
-            confData = open(confFile).readlines()
+                confData = open(confFile).readlines()
 
-            conf = open(confFile, 'w')
+                conf = open(confFile, 'w')
 
-            for items in confData:
-                if items.find('/usr/local/lsws/conf/modsec/rules.conf') > -1:
-                    conf.writelines(items)
-                    conf.write(owaspRulesConf)
-                    continue
-                else:
-                    conf.writelines(items)
+                for items in confData:
+                    if items.find('/usr/local/lsws/conf/modsec/rules.conf') > -1:
+                        conf.writelines(items)
+                        conf.write(owaspRulesConf)
+                        continue
+                    else:
+                        conf.writelines(items)
 
-            conf.close()
+                conf.close()
+            else:
+                confFile = os.path.join('/usr/local/lsws/conf/modsec.conf')
+                confData = open(confFile).readlines()
+
+                conf = open(confFile, 'w')
+
+                for items in confData:
+                    if items.find('/conf/comodo_litespeed/') > -1:
+                        conf.writelines(items)
+                        conf.write('Include /usr/local/lsws/conf/modsec/owasp-modsecurity-crs-3.0-master/*.conf\n')
+                        continue
+                    else:
+                        conf.writelines(items)
+
+                conf.close()
+
             installUtilities.reStartLiteSpeed()
 
             print("1,None")
@@ -513,26 +572,17 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/RESPONSE-999-EXCL
     def disableRuleFile(fileName, packName):
         try:
 
-            if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
-                confFile = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
-                confData = open(confFile).readlines()
-                conf = open(confFile, 'w')
+            confFile = os.path.join('/usr/local/lsws/conf/modsec/owasp-modsecurity-crs-3.0-master/owasp-master.conf')
+            confData = open(confFile).readlines()
+            conf = open(confFile, 'w')
 
-                for items in confData:
-                    if items.find('modsec/'+packName) > -1 and items.find(fileName) > -1:
-                        conf.write("#" + items)
-                    else:
-                        conf.writelines(items)
+            for items in confData:
+                if items.find('modsec/' + packName) > -1 and items.find(fileName) > -1:
+                    conf.write("#" + items)
+                else:
+                    conf.writelines(items)
 
-                conf.close()
-
-            else:
-                path = '/usr/local/lsws/conf/comodo_litespeed/'
-                completePath = path + fileName
-                completePathBak = path + fileName + '.bak'
-
-                command = 'mv ' + completePath + ' ' + completePathBak
-                ProcessUtilities.executioner(command)
+            conf.close()
 
             installUtilities.reStartLiteSpeed()
 
@@ -547,25 +597,37 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp/rules/RESPONSE-999-EXCL
     def enableRuleFile(fileName, packName):
         try:
 
-            if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
-                confFile = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
-                confData = open(confFile).readlines()
-                conf = open(confFile, 'w')
+            confFile = os.path.join('/usr/local/lsws/conf/modsec/owasp-modsecurity-crs-3.0-master/owasp-master.conf')
+            confData = open(confFile).readlines()
+            conf = open(confFile, 'w')
 
-                for items in confData:
-                    if items.find('modsec/' + packName) > -1 and items.find(fileName) > -1:
-                        conf.write(items.lstrip('#'))
-                    else:
-                        conf.writelines(items)
+            for items in confData:
+                if items.find('modsec/' + packName) > -1 and items.find(fileName) > -1:
+                    conf.write(items.lstrip('#'))
+                else:
+                    conf.writelines(items)
 
-                conf.close()
-            else:
-                path = '/usr/local/lsws/conf/comodo_litespeed/'
-                completePath = path + fileName
-                completePathBak = path + fileName + '.bak'
+            conf.close()
 
-                command = 'mv ' + completePathBak + ' ' + completePath
-                ProcessUtilities.executioner(command)
+            # if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+            #     confFile = os.path.join('/usr/local/lsws/conf/modsec/owasp-modsecurity-crs-3.0-master/owasp-master.conf')
+            #     confData = open(confFile).readlines()
+            #     conf = open(confFile, 'w')
+            #
+            #     for items in confData:
+            #         if items.find('modsec/' + packName) > -1 and items.find(fileName) > -1:
+            #             conf.write(items.lstrip('#'))
+            #         else:
+            #             conf.writelines(items)
+            #
+            #     conf.close()
+            # else:
+            #     path = '/usr/local/lsws/conf/comodo_litespeed/'
+            #     completePath = path + fileName
+            #     completePathBak = path + fileName + '.bak'
+            #
+            #     command = 'mv ' + completePathBak + ' ' + completePath
+            #     ProcessUtilities.executioner(command)
 
             installUtilities.reStartLiteSpeed()
 

@@ -18,6 +18,7 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 from plogical.backupSchedule import backupSchedule
 import requests
+import socket
 from websiteFunctions.models import NormalBackupJobs, NormalBackupJobLogs
 from boto3.s3.transfer import TransferConfig
 
@@ -30,8 +31,9 @@ try:
     from plogical.processUtilities import ProcessUtilities
 except:
     pass
+import threading as multi
 
-class IncScheduler():
+class IncScheduler(multi.Thread):
     logPath = '/home/cyberpanel/incbackuplogs'
     gitFolder = '/home/cyberpanel/git'
 
@@ -43,6 +45,15 @@ class IncScheduler():
     allSites = 'allSites'
     currentStatus = 'currentStatus'
     lastRun = 'lastRun'
+
+    def __init__(self, function, extraArgs):
+        multi.Thread.__init__(self)
+        self.function = function
+        self.data = extraArgs
+
+    def run(self):
+        if self.function == 'startBackup':
+            IncScheduler.startBackup(self.data['freq'])
 
     @staticmethod
     def startBackup(type):
@@ -116,7 +127,7 @@ class IncScheduler():
 
                 message = '[%s Cron] Checking if %s has any pending commits on %s.' % (type, website, time.strftime("%m.%d.%Y_%H-%M-%S"))
                 finalText = '%s\n' % (message)
-                GitLogs(owner=web, type='INFO', message = message).save()
+                GitLogs(owner=web, type='INFO', message=message).save()
 
                 finalPathInside = '%s/%s' % (IncScheduler.gitFolder, website)
 
@@ -165,7 +176,6 @@ class IncScheduler():
                         message = 'File: %s, Status: %s' % (file, str(msg))
                         finalText = '%s\n%s' % (finalText, message)
 
-
                 message = '[%s Cron] Finished checking for %s on %s.' % (type, website, time.strftime("%m.%d.%Y_%H-%M-%S"))
                 finalText = '%s\n%s' % (finalText, message)
                 logging.SendEmail(web.adminEmail, web.adminEmail, finalText, 'Git report for %s.' % (web.domain))
@@ -176,6 +186,7 @@ class IncScheduler():
 
     @staticmethod
     def checkDiskUsage():
+        sender_email = 'root@%s' % (socket.gethostname())
 
         try:
 
@@ -188,21 +199,21 @@ class IncScheduler():
             from plogical.acl import ACLManager
             message = '%s - Disk Usage Warning - CyberPanel' % (ACLManager.fetchIP())
 
-            if diskUsage >= 50 and diskUsage <= 60 :
+            if diskUsage >= 50 and diskUsage <= 60:
 
                 finalText = 'Current disk usage at "/" is %s percent. No action required.' % (str(diskUsage))
-                logging.SendEmail(admin.email, admin.email, finalText, message)
+                logging.SendEmail(sender_email, admin.email, finalText, message)
 
             elif diskUsage >= 60 and diskUsage <= 80:
 
                 finalText = 'Current disk usage at "/" is %s percent. We recommend clearing log directory by running \n\n rm -rf /usr/local/lsws/logs/*. \n\n When disk usage go above 80 percent we will automatically run this command.' % (str(diskUsage))
-                logging.SendEmail(admin.email, admin.email, finalText, message)
+                logging.SendEmail(sender_email, admin.email, finalText, message)
 
             elif diskUsage > 80:
 
                 finalText = 'Current disk usage at "/" is %s percent. We are going to run below command to free up space, If disk usage is still high, manual action is required by the system administrator. \n\n rm -rf /usr/local/lsws/logs/*.' % (
                     str(diskUsage))
-                logging.SendEmail(admin.email, admin.email, finalText, message)
+                logging.SendEmail(sender_email, admin.email, finalText, message)
 
                 command = 'rm -rf /usr/local/lsws/logs/*'
                 import subprocess
@@ -224,7 +235,6 @@ class IncScheduler():
                     try:
                         credentials = google.oauth2.credentials.Credentials(gDriveData['token'], gDriveData['refresh_token'],
                                                                 gDriveData['token_uri'], None, None, gDriveData['scopes'])
-
 
                         drive = build('drive', 'v3', credentials=credentials)
                         drive.files().list(pageSize=10, fields="files(id, name)").execute()
@@ -292,6 +302,16 @@ class IncScheduler():
                     GDriveJobLogs(owner=items, status=backupSchedule.INFO, message='Starting backup job..').save()
 
                     for website in items.gdrivesites_set.all():
+
+                        ### If  this website dont exists continue
+
+                        try:
+                            Websites.objects.get(domain=website.domain)
+                        except:
+                            continue
+
+                        ##
+
                         try:
                             GDriveJobLogs(owner=items, status=backupSchedule.INFO, message='Local backup creation started for %s..' % (website.domain)).save()
 
@@ -339,7 +359,6 @@ class IncScheduler():
                             GDriveJobLogs(owner=items, status=backupSchedule.ERROR,
                                           message='[Site] Site backup failed, Error message: %s.' % (str(msg))).save()
 
-
                     GDriveJobLogs(owner=items, status=backupSchedule.INFO,
                                   message='Job Completed').save()
             except BaseException as msg:
@@ -363,7 +382,6 @@ class IncScheduler():
 
         ## {"frequency": "Daily", "allSites": "Selected Only"}
         ## {"frequency": "Daily"}
-
 
         for backupjob in NormalBackupJobs.objects.all():
 
@@ -425,7 +443,6 @@ class IncScheduler():
                             domain = site.domain
                         else:
                             domain = site.domain.domain
-
 
                         ## Save currently backing domain in db, so that i can restart from here when prematurely killed
 
@@ -540,6 +557,15 @@ Automatic backup failed for %s on %s.
                         else:
                             domain = site.domain.domain
 
+                        ### If  this website dont exists continue
+
+                        try:
+                            Websites.objects.get(domain=domain)
+                        except:
+                            continue
+
+                        ##
+
                         ## Save currently backing domain in db, so that i can restart from here when prematurely killed
 
                         jobConfig['website'] = domain
@@ -615,7 +641,6 @@ Automatic backup failed for %s on %s.
     def forceRunAWSBackup(planName):
         try:
 
-
             plan = BackupPlan.objects.get(name=planName)
             bucketName = plan.bucket.strip('\n').strip(' ')
             runTime = time.strftime("%d:%m:%Y")
@@ -666,8 +691,8 @@ Automatic backup failed for %s on %s.
             else:
                 client = boto3.client(
                     's3',
-                    aws_access_key_id = aws_access_key_id,
-                    aws_secret_access_key = aws_secret_access_key,
+                    aws_access_key_id=aws_access_key_id,
+                    aws_secret_access_key=aws_secret_access_key,
                 )
 
             ##
@@ -721,7 +746,6 @@ Automatic backup failed for %s on %s.
             BackupLogs(owner=plan, level='INFO', timeStamp=time.strftime("%b %d %Y, %H:%M:%S"),
                        msg='Backup Process Finished.').save()
 
-
         except BaseException as msg:
             logging.writeToFile(str(msg) + ' [S3Backups.runBackupPlan]')
             plan = BackupPlan.objects.get(name=planName)
@@ -749,10 +773,23 @@ Automatic backup failed for %s on %s.
 
                 if website.package.enforceDiskLimits:
                     if config['DiskUsagePercentage'] >= 100:
-                        command = 'chattr -R +i /home/%s' % (website.domain)
+                        command = 'chattr -R +i /home/%s/' % (website.domain)
                         ProcessUtilities.executioner(command)
+                        
+                        command = 'chattr -R -i /home/%s/logs/' % (website.domain)
+                        ProcessUtilities.executioner(command)
+                        
+                        command = 'chattr -R -i /home/%s/.trash/' % (website.domain)
+                        ProcessUtilities.executioner(command)
+                        
+                        command = 'chattr -R -i /home/%s/backup/' % (website.domain)
+                        ProcessUtilities.executioner(command)
+                        
+                        command = 'chattr -R -i /home/%s/incbackup/' % (website.domain)
+                        ProcessUtilities.executioner(command)
+                        
                     else:
-                        command = 'chattr -R -i /home/%s' % (website.domain)
+                        command = 'chattr -R -i /home/%s/' % (website.domain)
                         ProcessUtilities.executioner(command)
 
                 ## Calculate bw usage
@@ -800,7 +837,6 @@ Automatic backup failed for %s on %s.
             except BaseException as msg:
                 logging.writeToFile('%s. [WPUpdates:767]' % (str(msg)))
 
-
 def main():
 
     parser = argparse.ArgumentParser(description='CyberPanel Installer')
@@ -814,6 +850,14 @@ def main():
 
     IncScheduler.CalculateAndUpdateDiskUsage()
     IncScheduler.WPUpdates()
+
+    ### Run incremental backups in sep thread
+
+    ib = IncScheduler('startBackup', {'freq': args.function})
+    ib.start()
+
+    ###
+
     IncScheduler.startBackup(args.function)
     IncScheduler.runGoogleDriveBackups(args.function)
     IncScheduler.git(args.function)

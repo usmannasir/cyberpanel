@@ -39,8 +39,7 @@ def createDatabase(request):
             return result
 
         return coreResult
-
-
+    
     except KeyError:
         return redirect(loadLoginPage)
 

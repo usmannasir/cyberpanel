@@ -2829,6 +2829,9 @@ class CloudManager:
             command = 'chown -R cyberpanel:cyberpanel /usr/local/CyberCP/lib/python3.8/site-packages/tldextract/.suffix_cache/'
             ProcessUtilities.executioner(command)
 
+            command = 'chown cyberpanel:cyberpanel -R /usr/local/CyberCP/lib/python3.8/site-packages/tldextract/.suffix_cache'
+            ProcessUtilities.executioner(command)
+
             ##
 
             ipFile = "/etc/cyberpanel/machineIP"
@@ -2844,6 +2847,9 @@ class CloudManager:
             zones = cf.zones.get(params = {'per_page':100})
 
             command = 'chown cyberpanel:cyberpanel -R /usr/local/CyberCP/lib/python3.6/site-packages/tldextract/.suffix_cache'
+            ProcessUtilities.executioner(command)
+
+            command = 'chown cyberpanel:cyberpanel -R /usr/local/CyberCP/lib/python3.8/site-packages/tldextract/.suffix_cache'
             ProcessUtilities.executioner(command)
 
             for website in Websites.objects.all():
@@ -2886,6 +2892,9 @@ class CloudManager:
             ### For child domainsa
 
             command = 'chown cyberpanel:cyberpanel -R /usr/local/CyberCP/lib/python3.6/site-packages/tldextract/.suffix_cache'
+            ProcessUtilities.executioner(command)
+
+            command = 'chown cyberpanel:cyberpanel -R /usr/local/CyberCP/lib/python3.8/site-packages/tldextract/.suffix_cache'
             ProcessUtilities.executioner(command)
 
             from websiteFunctions.models import ChildDomains

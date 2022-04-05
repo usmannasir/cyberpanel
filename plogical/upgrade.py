@@ -2,6 +2,8 @@ import os
 import os.path
 import sys
 import argparse
+import pwd
+import grp
 
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
@@ -15,7 +17,7 @@ import random
 import string
 
 VERSION = '2.1'
-BUILD = 1
+BUILD = 2
 
 CENTOS7 = 0
 CENTOS8 = 1
@@ -106,7 +108,7 @@ class Upgrade:
             FNULL = open(os.devnull, 'w')
             count = 0
             while True:
-                res = subprocess.call(shlex.split(command), stdout=FNULL, stderr=subprocess.STDOUT)
+                res = subprocess.call(shlex.split(command), stderr=subprocess.STDOUT)
                 if res != 0:
                     count = count + 1
                     Upgrade.stdOut(component + ' failed, trying again, try number: ' + str(count), 0)
@@ -195,12 +197,17 @@ class Upgrade:
     @staticmethod
     def dockerUsers():
         ### Docker User/group
+        try:
+            pwd.getpwnam('docker')
+        except KeyError:
+            command = "adduser docker"
+            Upgrade.executioner(command, 'adduser docker', 0)
 
-        command = "adduser docker"
-        Upgrade.executioner(command, 'adduser docker', 0)
-
-        command = 'groupadd docker'
-        Upgrade.executioner(command, 'adduser docker', 0)
+        try:
+            grp.getgrnam('docker')
+        except KeyError:
+            command = 'groupadd docker'
+            Upgrade.executioner(command, 'adduser docker', 0)
 
         command = 'usermod -aG docker docker'
         Upgrade.executioner(command, 'adduser docker', 0)
@@ -263,8 +270,7 @@ class Upgrade:
             except:
                 pass
 
-            command = 'wget -O /usr/local/CyberCP/public/phpmyadmin.zip https://%s/misc/phpmyadmin.zip' % (
-                Upgrade.cdn)
+            command = 'wget -O /usr/local/CyberCP/public/phpmyadmin.zip https://github.com/usmannasir/cyberpanel/raw/stable/phpmyadmin.zip'
             Upgrade.executioner(command, 0)
 
             command = 'unzip /usr/local/CyberCP/public/phpmyadmin.zip -d /usr/local/CyberCP/public/'
@@ -598,6 +604,11 @@ imap_folder_list_limit = 0
         try:
 
             connection, cursor = Upgrade.setupConnection('cyberpanel')
+
+            try:
+                cursor.execute('CREATE TABLE `baseTemplate_cyberpanelcosmetic` (`id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY, `MainDashboardCSS` longtext NOT NULL)')
+            except:
+                pass
 
             try:
                 cursor.execute(
@@ -1847,17 +1858,23 @@ imap_folder_list_limit = 0
             command = 'mv /usr/local/lscp/bin/lscpd-0.3.1 /usr/local/lscp/bin/lscpd'
             Upgrade.executioner(command, command, 0)
 
-            command = 'chmod 755 %s' % (lscpdPath)
+            command = f'chmod 755 {lscpdPath}'
             Upgrade.executioner(command, 'LSCPD Download.', 0)
 
             command = 'yum -y install pcre-devel openssl-devel expat-devel geoip-devel zlib-devel udns-devel which curl'
             Upgrade.executioner(command, 'LSCPD Pre-reqs [two]', 0)
 
-            command = 'adduser lscpd -M -d /usr/local/lscp'
-            Upgrade.executioner(command, 'Add user LSCPD', 0)
+            try:
+                pwd.getpwnam('lscpd')
+            except KeyError:
+                command = 'adduser lscpd -M -d /usr/local/lscp'
+                Upgrade.executioner(command, 'Add user LSCPD', 0)
 
-            command = 'groupadd lscpd'
-            Upgrade.executioner(command, 'Add group LSCPD', 0)
+            try:
+                grp.getgrnam('lscpd')
+            except KeyError:
+                command = 'groupadd lscpd'
+                Upgrade.executioner(command, 'Add group LSCPD', 0)
 
             command = 'usermod -a -G lscpd lscpd'
             Upgrade.executioner(command, 'Add group LSCPD', 0)
@@ -2065,6 +2082,51 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             command = '/usr/local/lsws/lsphp72/bin/php /usr/local/CyberCP/public/rainloop.php'
             Upgrade.executioner(command, 0)
 
+            command = 'chmod 600 /usr/local/CyberCP/public/rainloop.php'
+            Upgrade.executioner(command, 0)
+
+            ###
+
+            WriteToFile = open('/etc/fstab', 'a')
+            WriteToFile.write('proc    /proc        proc        defaults,hidepid=2    0 0\n')
+            WriteToFile.close()
+
+            command = 'mount -o remount,rw,hidepid=2 /proc'
+            Upgrade.executioner(command, 0)
+
+            ###
+
+            CentOSPath = '/etc/redhat-release'
+
+            if not os.path.exists(CentOSPath):
+                group = 'nobody'
+            else:
+                group = 'nogroup'
+
+            command = 'chown root:%s /usr/local/lsws/logs' % (group)
+            Upgrade.executioner(command, 0)
+
+            command = 'chmod 750 /usr/local/lsws/logs'
+            Upgrade.executioner(command, 0)
+
+            ## symlink protection
+
+            writeToFile = open('/usr/lib/sysctl.d/50-default.conf', 'a')
+            writeToFile.writelines('fs.protected_hardlinks = 1\n')
+            writeToFile.writelines('fs.protected_symlinks = 1\n')
+            writeToFile.close()
+
+            command = 'sysctl --system'
+            Upgrade.executioner(command, 0)
+
+            command = 'chmod 700 %s' % ('/home/cyberpanel')
+            Upgrade.executioner(command, 0)
+
+            destPrivKey = "/usr/local/lscp/conf/key.pem"
+
+            command = 'chmod 600 %s' % (destPrivKey)
+            Upgrade.executioner(command, 0)
+
             Upgrade.stdOut("Permissions updated.")
 
         except BaseException as msg:
@@ -2099,6 +2161,10 @@ echo $oConfig->Save() ? 'Done' : 'Error';
                 command = 'yum install lsphp80* -y'
                 subprocess.call(command, shell=True)
 
+            if Upgrade.installedOutput.find('lsphp81') == -1:
+                command = 'yum install lsphp81* -y'
+                subprocess.call(command, shell=True)
+
         except:
             command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install ' \
                       'lsphp7? lsphp7?-common lsphp7?-curl lsphp7?-dev lsphp7?-imap lsphp7?-intl lsphp7?-json ' \
@@ -2107,6 +2173,9 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             Upgrade.executioner(command, 'Install PHP 73, 0')
 
             command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp80*'
+            os.system(command)
+
+            command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp81*'
             os.system(command)
 
         CentOSPath = '/etc/redhat-release'
@@ -2591,7 +2660,7 @@ vmail
 
         command = 'csf -uf'
         Upgrade.executioner(command, 'fix csf if there', 0)
-        command = 'systemctl start cpssh'
+        command = 'systemctl stop cpssh'
         Upgrade.executioner(command, 'fix csf if there', 0)
         Upgrade.AutoUpgradeAcme()
         Upgrade.installCLScripts()

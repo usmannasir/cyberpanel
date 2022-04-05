@@ -10,7 +10,7 @@
 
     <div class="container">
         <div id="page-title">
-            <h2>{% trans "Back up Website" %} - <a target="_blank" href="https://cyberpanel.net/docs/2-create-restore-incremental-backups/"
+            <h2>{% trans "Backup Website" %} - <a target="_blank" href="https://cyberpanel.net/docs/2-create-restore-incremental-backups/"
                                                    style="height: 23px;line-height: 21px;"
                                                    class="btn btn-border btn-alt border-red btn-link font-red" title=""><span>{% trans "Backup Docs" %}</span></a>
             </h2>
@@ -20,7 +20,7 @@
         <div ng-controller="createIncrementalBackups" class="panel">
             <div class="panel-body">
                 <h3 class="title-hero">
-                    {% trans "Back up Website" %} <img ng-hide="cyberpanelLoading"
+                    {% trans "Backup Website" %} <img ng-hide="cyberpanelLoading"
                                                        src="{% static 'images/loading.gif' %}">
                 </h3>
                 <div class="example-box-wrapper">
@@ -93,7 +93,7 @@
                         </div>
 
 
-                        <!---- if Back up is running ----->
+                        <!---- if Backup is running ----->
 
                         <div ng-hide="runningBackup" class="form-group">
                             <div class="col-sm-12">
@@ -104,13 +104,13 @@
                         </div>
 
 
-                        <!---- if Back up is running------>
+                        <!---- if Backup is running------>
 
                         <div ng-hide="backupButton" class="form-group">
                             <label class="col-sm-3 control-label"></label>
                             <div class="col-sm-4">
                                 <button type="button" ng-click="createBackup()"
-                                        class="btn btn-primary btn-lg btn-block">{% trans "Create Back up" %}</button>
+                                        class="btn btn-primary btn-lg btn-block">{% trans "Create Backup" %}</button>
                             </div>
                         </div>
 

@@ -1,7 +1,7 @@
 
 {% extends "baseTemplate/index.html" %}
 {% load i18n %}
-{% block title %}{% trans "Back up Website" %}{% endblock %}
+{% block title %}{% trans "Backup Website" %}{% endblock %}
 {% block content %}
 
 {% load static %}
@@ -11,14 +11,14 @@
 
 <div class="container">
 <div id="page-title">
-   <h2>{% trans "Back up Website" %} - <a  target="_blank" href="http://go.cyberpanel.net/backup" style="height: 23px;line-height: 21px;" class="btn btn-border btn-alt border-red btn-link font-red" title=""><span>{% trans "Backup Docs" %}</span></a></h2>
-   <p>{% trans "This page can be used to Back up your websites" %}</p>
+   <h2>{% trans "Backup Website" %} - <a  target="_blank" href="http://go.cyberpanel.net/backup" style="height: 23px;line-height: 21px;" class="btn btn-border btn-alt border-red btn-link font-red" title=""><span>{% trans "Backup Docs" %}</span></a></h2>
+   <p>{% trans "This page can be used to Backup your websites" %}</p>
 </div>
 
 <div ng-controller="backupWebsiteControl" class="panel">
     <div class="panel-body">
         <h3 class="title-hero">
-            {% trans "Back up Website" %} <img ng-hide="backupLoading" src="{% static 'images/loading.gif' %}">
+            {% trans "Backup Website" %} <img ng-hide="backupLoading" src="{% static 'images/loading.gif' %}">
         </h3>
         <div  class="example-box-wrapper">
 
@@ -46,7 +46,7 @@
                 </div>
 
 
-            <!---- if Back up is running ----->
+            <!---- if Backup is running ----->
 
             <div ng-hide="runningBackup" class="form-group">
 
@@ -72,12 +72,12 @@
                 </div>
 
 
-            <!---- if Back up is running------>
+            <!---- if Backup is running------>
 
             <div class="form-group destinationHide">
                     <label class="col-sm-3 control-label"></label>
                     <div class="col-sm-4">
-                         <button type="button" ng-click="createBackup()" class="btn btn-primary btn-lg btn-block">{% trans "Create Back up" %}</button>
+                         <button type="button" ng-click="createBackup()" class="btn btn-primary btn-lg btn-block">{% trans "Create Backup" %}</button>
                     </div>
             </div>
 

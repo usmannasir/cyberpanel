@@ -56,9 +56,9 @@ class virtualHostUtilities:
         if mailDomain:
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Creating mail child domain..,80')
             childDomain = 'mail.%s' % (virtualHostName)
-            childPath = '/home/%s/public_html/%s' % (virtualHostName, childDomain)
+            childPath = '/home/%s/%s' % (virtualHostName, childDomain)
 
-            result = virtualHostUtilities.createDomain(virtualHostName, childDomain, 'PHP 7.2', childPath, 1, 0, 0,
+            result = virtualHostUtilities.createDomain(virtualHostName, childDomain, 'PHP 7.3', childPath, 1, 0, 0,
                                               admin.userName, 0, "/home/cyberpanel/" + str(randint(1000, 9999)))
 
             if result[0] == 0:
@@ -120,7 +120,7 @@ class virtualHostUtilities:
     @staticmethod
     def createVirtualHost(virtualHostName, administratorEmail, phpVersion, virtualHostUser, ssl,
                           dkimCheck, openBasedir, websiteOwner, packageName, apache,
-                          tempStatusPath='/home/cyberpanel/fakePath', mailDomain = None, LimitsCheck = 1):
+                          tempStatusPath='/home/cyberpanel/fakePath', mailDomain=None, LimitsCheck=1):
         try:
 
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Running some checks..,0')
@@ -460,6 +460,10 @@ class virtualHostUtilities:
                 return 0, retValues[1]
 
 
+            command = 'chmod 600 %s' % (destPrivKey)
+            ProcessUtilities.normalExecutioner(command)
+
+
             ## removing old certs for lscpd
             if os.path.exists(destPrivKey):
                 os.remove(destPrivKey)
@@ -504,7 +508,6 @@ class virtualHostUtilities:
 
             print("1,None")
             return 1, 'None'
-
 
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "  [issueSSLForHostName]")
@@ -917,6 +920,9 @@ class virtualHostUtilities:
             cmd = shlex.split(command)
             subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
 
+            command = 'chmod 600 %s' % (pathToStoreSSLPrivKey)
+            ProcessUtilities.normalExecutioner(command)
+
             print("1,None")
 
         except BaseException as msg:
@@ -926,7 +932,7 @@ class virtualHostUtilities:
 
     @staticmethod
     def createDomain(masterDomain, virtualHostName, phpVersion, path, ssl, dkimCheck, openBasedir, owner, apache,
-                     tempStatusPath='/home/cyberpanel/fakePath', LimitsCheck = 1):
+                     tempStatusPath='/home/cyberpanel/fakePath', LimitsCheck=1):
         try:
 
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Running some checks..,0')
@@ -953,7 +959,6 @@ class virtualHostUtilities:
                     logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
                                                               'This domain already exists as child domain. [404]')
                     return 0, "This domain already exists as child domain."
-
 
                 if ChildDomains.objects.filter(domain=virtualHostName.lstrip('www.')).count() > 0:
                     logging.CyberCPLogFileWriter.statusWriter(tempStatusPath,
@@ -995,6 +1000,7 @@ class virtualHostUtilities:
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'DKIM Setup..,30')
 
             postFixPath = '/home/cyberpanel/postfix'
+
 
             if os.path.exists(postFixPath):
                 retValues = mailUtilities.setupDKIM(virtualHostName)

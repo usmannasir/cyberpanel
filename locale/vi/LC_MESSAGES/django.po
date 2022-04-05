@@ -349,7 +349,7 @@ msgstr ""
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:3
 #: backup/templates/backup/backupSchedule.html:3
-msgid "Schedule Back up - CyberPanel"
+msgid "Schedule Backup - CyberPanel"
 msgstr "Lên lịch Sao lưu - CyberPanel"
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:13
@@ -360,7 +360,7 @@ msgstr "Lên lịch Sao lưu - CyberPanel"
 #: baseTemplate/templates/baseTemplate/index.html:578
 #: userManagment/templates/userManagment/createACL.html:381
 #: userManagment/templates/userManagment/modifyACL.html:385
-msgid "Schedule Back up"
+msgid "Schedule Backup"
 msgstr "Lên lịch Sao lưu"
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:16
@@ -375,10 +375,10 @@ msgstr "Sao lưu từ xa"
 #: IncBackups/templates/IncBackups/backupSchedule.html:17
 #: backup/templates/backup/backupSchedule.html:17
 msgid ""
-"On this page you can schedule Back ups to localhost or remote server (If you "
+"On this page you can schedule Backups to localhost or remote server (If you "
 "have added one)."
 msgstr ""
-"Tại đây, bạn có thể lên lịch Back up cho máy chủ cục bộ hoặc máy chủ từ xa "
+"Tại đây, bạn có thể lên lịch Backup cho máy chủ cục bộ hoặc máy chủ từ xa "
 "(Nếu bạn đã thêm)."
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:33
@@ -480,14 +480,14 @@ msgstr "Xóa bỏ"
 #, fuzzy
 #| msgid "Cancel Backup"
 msgid "Create Incremental Backup"
-msgstr "Hủy Back up"
+msgstr "Hủy Backup"
 
 #: IncBackups/templates/IncBackups/createBackup.html:13
 #: IncBackups/templates/IncBackups/createBackup.html:23
 #: IncBackups/templates/IncBackups/restoreRemoteBackups.html:25
 #: backup/templates/backup/backup.html:4 backup/templates/backup/backup.html:14
 #: backup/templates/backup/backup.html:21
-msgid "Back up Website"
+msgid "Backup Website"
 msgstr "Sao lưu trang web"
 
 #: IncBackups/templates/IncBackups/createBackup.html:15
@@ -499,7 +499,7 @@ msgstr "Hướng dẫn sao lưu"
 
 #: IncBackups/templates/IncBackups/createBackup.html:17
 #, fuzzy
-#| msgid "This page can be used to Back up your websites"
+#| msgid "This page can be used to Backup your websites"
 msgid "This page can be used to create incremental backups for your websites."
 msgstr "Trang này có thể được sử dụng để Sao lưu các trang web của bạn"
 
@@ -531,8 +531,8 @@ msgstr "Chọn website"
 #: baseTemplate/templates/baseTemplate/index.html:598
 #: userManagment/templates/userManagment/createACL.html:352
 #: userManagment/templates/userManagment/modifyACL.html:356
-msgid "Create Back up"
-msgstr "Tạo Back up"
+msgid "Create Backup"
+msgstr "Tạo Backup"
 
 #: IncBackups/templates/IncBackups/createBackup.html:128
 #: IncBackups/templates/IncBackups/restoreRemoteBackups.html:98
@@ -571,26 +571,26 @@ msgstr "Hành động"
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:3
 #: backup/templates/backup/backupDestinations.html:3
 #: backup/templates/backup/backupDestinations.html:14
-msgid "Set up Back up Destinations"
+msgid "Set up Backup Destinations"
 msgstr "Thiết lập vị trí Sao lưu"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:14
 #, fuzzy
-#| msgid "Set up Back up Destinations"
-msgid "Set up Incremental Back up Destinations"
+#| msgid "Set up Backup Destinations"
+msgid "Set up Incremental Backup Destinations"
 msgstr "Thiết lập vị trí Sao lưu"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:20
 #, fuzzy
-#| msgid "On this page you can set up your Back up destinations. (SFTP)"
-msgid "On this page you can set up your Back up destinations. (SFTP and AWS)"
+#| msgid "On this page you can set up your Backup destinations. (SFTP)"
+msgid "On this page you can set up your Backup destinations. (SFTP and AWS)"
 msgstr ""
-"Trên trang này, bạn có thể thiết lập các vị trí Back up của mình. (SFTP)"
+"Trên trang này, bạn có thể thiết lập các vị trí Backup của mình. (SFTP)"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:26
 #, fuzzy
-#| msgid "Set up Back up Destinations"
-msgid "Set up Back up Destinations."
+#| msgid "Set up Backup Destinations"
+msgid "Set up Backup Destinations."
 msgstr "Thiết lập vị trí Sao lưu"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:35
@@ -662,11 +662,11 @@ msgstr ""
 #, fuzzy
 #| msgid "Cancel Backup"
 msgid "Restore Remote Incremental Backups"
-msgstr "Hủy Back up"
+msgstr "Hủy Backup"
 
 #: IncBackups/templates/IncBackups/restoreRemoteBackups.html:19
 #, fuzzy
-#| msgid "This page can be used to Back up your websites"
+#| msgid "This page can be used to Backup your websites"
 msgid ""
 "This page can be used to restore remote incremental backups for your "
 "websites."
@@ -737,7 +737,7 @@ msgid "Reboot SSH Server"
 msgstr ""
 
 #: backup/templates/backup/backup.html:15
-msgid "This page can be used to Back up your websites"
+msgid "This page can be used to Backup your websites"
 msgstr "Trang này có thể được sử dụng để Sao lưu các trang web của bạn"
 
 #: backup/templates/backup/backup.html:44
@@ -772,7 +772,7 @@ msgstr "Đang chạy"
 
 #: backup/templates/backup/backup.html:88
 msgid "Cancel Backup"
-msgstr "Hủy Back up"
+msgstr "Hủy Backup"
 
 #: backup/templates/backup/backup.html:103
 msgid "File"
@@ -793,14 +793,14 @@ msgid "Successfully Deleted"
 msgstr "Đã xóa thành công"
 
 #: backup/templates/backup/backupDestinations.html:15
-msgid "On this page you can set up your Back up destinations. (SFTP)"
+msgid "On this page you can set up your Backup destinations. (SFTP)"
 msgstr ""
-"Trên trang này, bạn có thể thiết lập các vị trí Back up của mình. (SFTP)"
+"Trên trang này, bạn có thể thiết lập các vị trí Backup của mình. (SFTP)"
 
 #: backup/templates/backup/backupDestinations.html:21
-msgid "Set up Back up Destinations (SSH port should be 22 on backup server)"
+msgid "Set up Backup Destinations (SSH port should be 22 on backup server)"
 msgstr ""
-"Thiết lập điểm đến vi trí Back up (cổng SSH phải là 22 trên máy chủ dự phòng)"
+"Thiết lập điểm đến vi trí Backup (cổng SSH phải là 22 trên máy chủ dự phòng)"
 
 #: backup/templates/backup/backupDestinations.html:68
 #: backup/templates/backup/backupDestinations.html:72
@@ -901,7 +901,7 @@ msgid "Schedule Added"
 msgstr "Đã thêm lịch biểu"
 
 #: backup/templates/backup/index.html:3
-msgid "Back up Home - CyberPanel"
+msgid "Backup Home - CyberPanel"
 msgstr "Trang Sao lưu - CyberPanel"
 
 #: backup/templates/backup/index.html:13 backup/templates/backup/index.html:30
@@ -910,11 +910,11 @@ msgstr "Trang Sao lưu - CyberPanel"
 #: baseTemplate/templates/baseTemplate/index.html:561
 #: baseTemplate/templates/baseTemplate/index.html:563
 #: baseTemplate/templates/baseTemplate/index.html:616
-msgid "Back up"
-msgstr "Back up"
+msgid "Backup"
+msgstr "Backup"
 
 #: backup/templates/backup/index.html:14
-msgid "Back up and restore sites."
+msgid "Backup and restore sites."
 msgstr "Sao lưu và khôi phục trang web."
 
 #: backup/templates/backup/index.html:19
@@ -935,7 +935,7 @@ msgid "Available Functions"
 msgstr "Chức năng có sẵn"
 
 #: backup/templates/backup/index.html:28
-msgid "Back up Site"
+msgid "Backup Site"
 msgstr "Sao lưu trang web"
 
 #: backup/templates/backup/index.html:44
@@ -943,7 +943,7 @@ msgstr "Sao lưu trang web"
 #: baseTemplate/templates/baseTemplate/index.html:601
 #: userManagment/templates/userManagment/createACL.html:361
 #: userManagment/templates/userManagment/modifyACL.html:365
-msgid "Restore Back up"
+msgid "Restore Backup"
 msgstr "Khôi phục lại bản sao lưu"
 
 #: backup/templates/backup/index.html:60 backup/templates/backup/index.html:62
@@ -954,7 +954,7 @@ msgstr "Thêm / xóa điểm đến"
 #: baseTemplate/templates/baseTemplate/index.html:581
 #: userManagment/templates/userManagment/createACL.html:391
 #: userManagment/templates/userManagment/modifyACL.html:395
-msgid "Remote Back ups"
+msgid "Remote Backups"
 msgstr "Sao lưu từ xa"
 
 #: backup/templates/backup/remoteBackups.html:3
@@ -1056,8 +1056,8 @@ msgstr "Khôi phục trang web"
 
 #: backup/templates/backup/restore.html:15
 msgid ""
-"This page can be used to restore your websites, Back up should be generated "
-"from CyberPanel Back up generation tool, it will detect all Back ups under "
+"This page can be used to restore your websites, Backup should be generated "
+"from CyberPanel Backup generation tool, it will detect all Backups under "
 "<strong>/home/backup</strong>."
 msgstr ""
 "Trang này có thể được sử dụng để khôi phục trang web của bạn, Sao lưu sẽ "
@@ -1065,7 +1065,7 @@ msgstr ""
 "trong <strong> / home / backup </ strong>."
 
 #: backup/templates/backup/restore.html:30
-msgid "Select Back up"
+msgid "Select Backup"
 msgstr "Chọn Sao lưu"
 
 #: backup/templates/backup/restore.html:61
@@ -1092,7 +1092,7 @@ msgid "Error message:"
 msgstr "Lỗi:"
 
 #: backup/templates/backup/restore.html:90
-msgid "Site related to this Back up already exists."
+msgid "Site related to this Backup already exists."
 msgstr "Bản sao lưu này đã tồn tại."
 
 #: baseTemplate/templates/baseTemplate/homePage.html:3
@@ -1672,19 +1672,19 @@ msgid "Add/Delete Destination"
 msgstr "Thêm / xóa đích"
 
 #: baseTemplate/templates/baseTemplate/index.html:590
-msgid "Incremental Back up - Beta"
+msgid "Incremental Backup - Beta"
 msgstr ""
 
 #: baseTemplate/templates/baseTemplate/index.html:592
 #, fuzzy
 #| msgid "Cancel Backup"
-msgid "Incremental Back up"
-msgstr "Hủy Back up"
+msgid "Incremental Backup"
+msgstr "Hủy Backup"
 
 #: baseTemplate/templates/baseTemplate/index.html:598
 #, fuzzy
-#| msgid "Restore Back up"
-msgid "Create/Restore Back up"
+#| msgid "Restore Backup"
+msgid "Create/Restore Backup"
 msgstr "Khôi phục lại bản sao lưu"
 
 #: baseTemplate/templates/baseTemplate/index.html:601
@@ -1695,8 +1695,8 @@ msgstr "Thêm / xóa điểm đến"
 
 #: baseTemplate/templates/baseTemplate/index.html:604
 #, fuzzy
-#| msgid "Schedule Back up"
-msgid "Schedule Back ups"
+#| msgid "Schedule Backup"
+msgid "Schedule Backups"
 msgstr "Lên lịch Sao lưu"
 
 #: baseTemplate/templates/baseTemplate/index.html:607
@@ -2517,7 +2517,7 @@ msgstr "Nameserver đầu tiên"
 
 #: dns/templates/dns/configureDefaultNameServers.html:45
 #, fuzzy
-#| msgid "Second Nameserver (Back up)"
+#| msgid "Second Nameserver (Backup)"
 msgid "Second Nameserver"
 msgstr "Nameserver thứ hai (Sao lưu)"
 
@@ -2570,7 +2570,7 @@ msgid "Create Nameserver - CyberPanel"
 msgstr "Tạo máy chủ tên - CyberPanel"
 
 #: dns/templates/dns/createNameServer.html:62
-msgid "Second Nameserver (Back up)"
+msgid "Second Nameserver (Backup)"
 msgstr "Nameserver thứ hai (Sao lưu)"
 
 #: dns/templates/dns/createNameServer.html:89
@@ -6985,7 +6985,7 @@ msgstr ""
 #~ "Không thể tìm nạp chi tiết, LiteSpeed ​​không được chạy hoặc một số lỗi xảy "
 #~ "ra, vui lòng xem tệp Log chính CyberPanel."
 
-#~ msgid "Achedule Back up"
+#~ msgid "Achedule Backup"
 #~ msgstr "Lên lịch Sao lưu"
 
 #, fuzzy

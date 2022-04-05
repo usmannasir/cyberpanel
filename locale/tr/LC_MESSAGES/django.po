@@ -353,7 +353,7 @@ msgstr ""
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:3
 #: backup/templates/backup/backupSchedule.html:3
-msgid "Schedule Back up - CyberPanel"
+msgid "Schedule Backup - CyberPanel"
 msgstr "Yedekleme Zamanla - CyberPanel"
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:13
@@ -364,7 +364,7 @@ msgstr "Yedekleme Zamanla - CyberPanel"
 #: baseTemplate/templates/baseTemplate/index.html:578
 #: userManagment/templates/userManagment/createACL.html:381
 #: userManagment/templates/userManagment/modifyACL.html:385
-msgid "Schedule Back up"
+msgid "Schedule Backup"
 msgstr "Yedekleme Zamanla"
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:16
@@ -379,7 +379,7 @@ msgstr "Uzak Yedekler"
 #: IncBackups/templates/IncBackups/backupSchedule.html:17
 #: backup/templates/backup/backupSchedule.html:17
 msgid ""
-"On this page you can schedule Back ups to localhost or remote server (If you "
+"On this page you can schedule Backups to localhost or remote server (If you "
 "have added one)."
 msgstr ""
 "Bu sayfada uzak yada yerel sunucu yedeklemelerini zamanlayabilirsiniz (Eğer "
@@ -491,7 +491,7 @@ msgstr "Yedeklemeyi iptal et"
 #: IncBackups/templates/IncBackups/restoreRemoteBackups.html:25
 #: backup/templates/backup/backup.html:4 backup/templates/backup/backup.html:14
 #: backup/templates/backup/backup.html:21
-msgid "Back up Website"
+msgid "Backup Website"
 msgstr "Siteyi yedekle"
 
 #: IncBackups/templates/IncBackups/createBackup.html:15
@@ -499,13 +499,13 @@ msgstr "Siteyi yedekle"
 #: backup/templates/backup/backup.html:14
 #: backup/templates/backup/restore.html:14
 #, fuzzy
-#| msgid "Back up"
+#| msgid "Backup"
 msgid "Backup Docs"
 msgstr "Yedek"
 
 #: IncBackups/templates/IncBackups/createBackup.html:17
 #, fuzzy
-#| msgid "This page can be used to Back up your websites"
+#| msgid "This page can be used to Backup your websites"
 msgid "This page can be used to create incremental backups for your websites."
 msgstr "Bu sayfa web sitelerinizi yedekleme için kullanılır"
 
@@ -537,7 +537,7 @@ msgstr "Web site seçin"
 #: baseTemplate/templates/baseTemplate/index.html:598
 #: userManagment/templates/userManagment/createACL.html:352
 #: userManagment/templates/userManagment/modifyACL.html:356
-msgid "Create Back up"
+msgid "Create Backup"
 msgstr "Yedek Oluştur"
 
 #: IncBackups/templates/IncBackups/createBackup.html:128
@@ -579,25 +579,25 @@ msgstr "Eylemler"
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:3
 #: backup/templates/backup/backupDestinations.html:3
 #: backup/templates/backup/backupDestinations.html:14
-msgid "Set up Back up Destinations"
+msgid "Set up Backup Destinations"
 msgstr "Yedekleme hedeflerini ayarlayın"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:14
 #, fuzzy
-#| msgid "Set up Back up Destinations"
-msgid "Set up Incremental Back up Destinations"
+#| msgid "Set up Backup Destinations"
+msgid "Set up Incremental Backup Destinations"
 msgstr "Yedekleme hedeflerini ayarlayın"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:20
 #, fuzzy
-#| msgid "On this page you can set up your Back up destinations. (SFTP)"
-msgid "On this page you can set up your Back up destinations. (SFTP and AWS)"
+#| msgid "On this page you can set up your Backup destinations. (SFTP)"
+msgid "On this page you can set up your Backup destinations. (SFTP and AWS)"
 msgstr "Bu sayfada yedekleme hedeflerini ayarlayabilirsiniz. (SFTP)"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:26
 #, fuzzy
-#| msgid "Set up Back up Destinations"
-msgid "Set up Back up Destinations."
+#| msgid "Set up Backup Destinations"
+msgid "Set up Backup Destinations."
 msgstr "Yedekleme hedeflerini ayarlayın"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:35
@@ -674,7 +674,7 @@ msgstr "Yedeklemeyi iptal et"
 
 #: IncBackups/templates/IncBackups/restoreRemoteBackups.html:19
 #, fuzzy
-#| msgid "This page can be used to Back up your websites"
+#| msgid "This page can be used to Backup your websites"
 msgid ""
 "This page can be used to restore remote incremental backups for your "
 "websites."
@@ -745,7 +745,7 @@ msgid "Reboot SSH Server"
 msgstr ""
 
 #: backup/templates/backup/backup.html:15
-msgid "This page can be used to Back up your websites"
+msgid "This page can be used to Backup your websites"
 msgstr "Bu sayfa web sitelerinizi yedekleme için kullanılır"
 
 #: backup/templates/backup/backup.html:44
@@ -801,11 +801,11 @@ msgid "Successfully Deleted"
 msgstr "Başarıyla Silindi"
 
 #: backup/templates/backup/backupDestinations.html:15
-msgid "On this page you can set up your Back up destinations. (SFTP)"
+msgid "On this page you can set up your Backup destinations. (SFTP)"
 msgstr "Bu sayfada yedekleme hedeflerini ayarlayabilirsiniz. (SFTP)"
 
 #: backup/templates/backup/backupDestinations.html:21
-msgid "Set up Back up Destinations (SSH port should be 22 on backup server)"
+msgid "Set up Backup Destinations (SSH port should be 22 on backup server)"
 msgstr ""
 "Yedekleme Hedeflerini Ayarlayın (Yedekleme yapılacak sunucuda SSH port'u 22 "
 "olmalıdır)"
@@ -909,7 +909,7 @@ msgid "Schedule Added"
 msgstr "Zamanlandı"
 
 #: backup/templates/backup/index.html:3
-msgid "Back up Home - CyberPanel"
+msgid "Backup Home - CyberPanel"
 msgstr "Yedekleme Merkezi - CyberPanel"
 
 #: backup/templates/backup/index.html:13 backup/templates/backup/index.html:30
@@ -918,11 +918,11 @@ msgstr "Yedekleme Merkezi - CyberPanel"
 #: baseTemplate/templates/baseTemplate/index.html:561
 #: baseTemplate/templates/baseTemplate/index.html:563
 #: baseTemplate/templates/baseTemplate/index.html:616
-msgid "Back up"
+msgid "Backup"
 msgstr "Yedek"
 
 #: backup/templates/backup/index.html:14
-msgid "Back up and restore sites."
+msgid "Backup and restore sites."
 msgstr "Siteleri yedekle ve geri yükle."
 
 #: backup/templates/backup/index.html:19
@@ -943,7 +943,7 @@ msgid "Available Functions"
 msgstr "Kullanılabilir Fonksiyonlar"
 
 #: backup/templates/backup/index.html:28
-msgid "Back up Site"
+msgid "Backup Site"
 msgstr "Siteyi"
 
 #: backup/templates/backup/index.html:44
@@ -951,7 +951,7 @@ msgstr "Siteyi"
 #: baseTemplate/templates/baseTemplate/index.html:601
 #: userManagment/templates/userManagment/createACL.html:361
 #: userManagment/templates/userManagment/modifyACL.html:365
-msgid "Restore Back up"
+msgid "Restore Backup"
 msgstr "Yedeği geri yükle"
 
 #: backup/templates/backup/index.html:60 backup/templates/backup/index.html:62
@@ -964,7 +964,7 @@ msgstr "Hedef Ekle/Sil"
 #: baseTemplate/templates/baseTemplate/index.html:581
 #: userManagment/templates/userManagment/createACL.html:391
 #: userManagment/templates/userManagment/modifyACL.html:395
-msgid "Remote Back ups"
+msgid "Remote Backups"
 msgstr "Uzak Yedekler"
 
 #: backup/templates/backup/remoteBackups.html:3
@@ -1068,8 +1068,8 @@ msgstr "Website yedeğini geri yükle"
 
 #: backup/templates/backup/restore.html:15
 msgid ""
-"This page can be used to restore your websites, Back up should be generated "
-"from CyberPanel Back up generation tool, it will detect all Back ups under "
+"This page can be used to restore your websites, Backup should be generated "
+"from CyberPanel Backup generation tool, it will detect all Backups under "
 "<strong>/home/backup</strong>."
 msgstr ""
 "Bu sayfa yedeklerinizi geri yüklemek için kullanılır, Yedekler CyberPanel  "
@@ -1077,7 +1077,7 @@ msgstr ""
 "strong> altındaki tüm yedekleri tanır."
 
 #: backup/templates/backup/restore.html:30
-msgid "Select Back up"
+msgid "Select Backup"
 msgstr "Yedek seçin"
 
 #: backup/templates/backup/restore.html:61
@@ -1104,7 +1104,7 @@ msgid "Error message:"
 msgstr "Hata mesajı:"
 
 #: backup/templates/backup/restore.html:90
-msgid "Site related to this Back up already exists."
+msgid "Site related to this Backup already exists."
 msgstr "Bu Yedekleme ile ilgili site zaten var."
 
 #: baseTemplate/templates/baseTemplate/homePage.html:3
@@ -1694,19 +1694,19 @@ msgid "Add/Delete Destination"
 msgstr "Hedef Ekle/Sil"
 
 #: baseTemplate/templates/baseTemplate/index.html:590
-msgid "Incremental Back up - Beta"
+msgid "Incremental Backup - Beta"
 msgstr ""
 
 #: baseTemplate/templates/baseTemplate/index.html:592
 #, fuzzy
 #| msgid "Cancel Backup"
-msgid "Incremental Back up"
+msgid "Incremental Backup"
 msgstr "Yedeklemeyi iptal et"
 
 #: baseTemplate/templates/baseTemplate/index.html:598
 #, fuzzy
-#| msgid "Restore Back up"
-msgid "Create/Restore Back up"
+#| msgid "Restore Backup"
+msgid "Create/Restore Backup"
 msgstr "Yedeği geri yükle"
 
 #: baseTemplate/templates/baseTemplate/index.html:601
@@ -1717,8 +1717,8 @@ msgstr "Hedef Ekle/Sil"
 
 #: baseTemplate/templates/baseTemplate/index.html:604
 #, fuzzy
-#| msgid "Schedule Back up"
-msgid "Schedule Back ups"
+#| msgid "Schedule Backup"
+msgid "Schedule Backups"
 msgstr "Yedekleme Zamanla"
 
 #: baseTemplate/templates/baseTemplate/index.html:607
@@ -2567,7 +2567,7 @@ msgstr "Birinci Nameserver"
 
 #: dns/templates/dns/configureDefaultNameServers.html:45
 #, fuzzy
-#| msgid "Second Nameserver (Back up)"
+#| msgid "Second Nameserver (Backup)"
 msgid "Second Nameserver"
 msgstr "İkinci Nameserver (Yedek)"
 
@@ -2620,7 +2620,7 @@ msgid "Create Nameserver - CyberPanel"
 msgstr "Nameserver Oluştur - CyberPanel"
 
 #: dns/templates/dns/createNameServer.html:62
-msgid "Second Nameserver (Back up)"
+msgid "Second Nameserver (Backup)"
 msgstr "İkinci Nameserver (Yedek)"
 
 #: dns/templates/dns/createNameServer.html:89
@@ -2818,7 +2818,7 @@ msgstr "Sahibi Seç"
 
 #: dockerManager/templates/dockerManager/manageImages.html:17
 #, fuzzy
-#| msgid "On this page you can set up your Back up destinations. (SFTP)"
+#| msgid "On this page you can set up your Backup destinations. (SFTP)"
 msgid "On this page you can manage docker images."
 msgstr "Bu sayfada yedekleme hedeflerini ayarlayabilirsiniz. (SFTP)"
 
@@ -2989,7 +2989,7 @@ msgstr ""
 
 #: emailMarketing/templates/emailMarketing/composeMessages.html:14
 #, fuzzy
-#| msgid "On this page you can set up your Back up destinations. (SFTP)"
+#| msgid "On this page you can set up your Backup destinations. (SFTP)"
 msgid "On this page you can compose email message to be sent out later."
 msgstr "Bu sayfada yedekleme hedeflerini ayarlayabilirsiniz. (SFTP)"
 
@@ -3942,7 +3942,7 @@ msgstr ""
 #: emailPremium/templates/emailPremium/SpamAssassin.html:19
 #: firewall/templates/firewall/spamassassin.html:14
 #, fuzzy
-#| msgid "On this page you can set up your Back up destinations. (SFTP)"
+#| msgid "On this page you can set up your Backup destinations. (SFTP)"
 msgid "On this page you can configure SpamAssassin settings."
 msgstr "Bu sayfada yedekleme hedeflerini ayarlayabilirsiniz. (SFTP)"
 
@@ -4569,7 +4569,7 @@ msgstr ""
 
 #: firewall/templates/firewall/csf.html:14
 #, fuzzy
-#| msgid "On this page you can set up your Back up destinations. (SFTP)"
+#| msgid "On this page you can set up your Backup destinations. (SFTP)"
 msgid ""
 "On this page you can configure CSF (ConfigServer Security and Firewall) "
 "settings."
@@ -4716,7 +4716,7 @@ msgstr ""
 #: firewall/templates/firewall/modSecurity.html:20
 #: firewall/templates/firewall/modSecurity.html:214
 #, fuzzy
-#| msgid "On this page you can set up your Back up destinations. (SFTP)"
+#| msgid "On this page you can set up your Backup destinations. (SFTP)"
 msgid "On this page you can configure ModSecurity settings."
 msgstr "Bu sayfada yedekleme hedeflerini ayarlayabilirsiniz. (SFTP)"
 
@@ -5095,7 +5095,7 @@ msgstr ""
 
 #: mailServer/templates/mailServer/dkimManager.html:14
 #, fuzzy
-#| msgid "This page can be used to Back up your websites"
+#| msgid "This page can be used to Backup your websites"
 msgid "This page can be used to generate and view DKIM keys for Domains"
 msgstr "Bu sayfa web sitelerinizi yedekleme için kullanılır"
 
@@ -6270,7 +6270,7 @@ msgstr "Kullanıcı oluştur"
 
 #: userManagment/templates/userManagment/changeUserACL.html:13
 #, fuzzy
-#| msgid "This page can be used to Back up your websites"
+#| msgid "This page can be used to Backup your websites"
 msgid "This page can be used to change ACL for CyberPanel users."
 msgstr "Bu sayfa web sitelerinizi yedekleme için kullanılır"
 
@@ -6567,7 +6567,7 @@ msgstr ""
 
 #: userManagment/templates/userManagment/modifyACL.html:13
 #, fuzzy
-#| msgid "On this page you can set up your Back up destinations. (SFTP)"
+#| msgid "On this page you can set up your Backup destinations. (SFTP)"
 msgid "On this page you can modify an existing ACL."
 msgstr "Bu sayfada yedekleme hedeflerini ayarlayabilirsiniz. (SFTP)"
 
@@ -7339,8 +7339,8 @@ msgstr ""
 #~ "Detaylar için CyberPanel ana günlük dosyasına bakın."
 
 #, fuzzy
-#~| msgid "Schedule Back up"
-#~ msgid "Achedule Back up"
+#~| msgid "Schedule Backup"
+#~ msgid "Achedule Backup"
 #~ msgstr "Yedekleme Zamanla"
 
 #, fuzzy

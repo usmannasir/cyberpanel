@@ -321,7 +321,7 @@ msgstr "Tedesco"
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:3
 #: backup/templates/backup/backupSchedule.html:3
-msgid "Schedule Back up - CyberPanel"
+msgid "Schedule Backup - CyberPanel"
 msgstr "Pianifica backup - CyberPanel"
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:13
@@ -332,7 +332,7 @@ msgstr "Pianifica backup - CyberPanel"
 #: baseTemplate/templates/baseTemplate/index.html:578
 #: userManagment/templates/userManagment/createACL.html:381
 #: userManagment/templates/userManagment/modifyACL.html:385
-msgid "Schedule Back up"
+msgid "Schedule Backup"
 msgstr "Pianifica backup"
 
 #: IncBackups/templates/IncBackups/backupSchedule.html:16
@@ -347,7 +347,7 @@ msgstr "Backup remoti"
 #: IncBackups/templates/IncBackups/backupSchedule.html:17
 #: backup/templates/backup/backupSchedule.html:17
 msgid ""
-"On this page you can schedule Back ups to localhost or remote server (If you have "
+"On this page you can schedule Backups to localhost or remote server (If you have "
 "added one)."
 msgstr ""
 "In questa pagina è possibile pianificare i backup su localhost o su server remoto (se "
@@ -454,7 +454,7 @@ msgstr "Crea backup incrementale"
 #: IncBackups/templates/IncBackups/restoreRemoteBackups.html:25
 #: backup/templates/backup/backup.html:4 backup/templates/backup/backup.html:14
 #: backup/templates/backup/backup.html:21
-msgid "Back up Website"
+msgid "Backup Website"
 msgstr "Effettua il backup del sito web"
 
 #: IncBackups/templates/IncBackups/createBackup.html:15
@@ -496,7 +496,7 @@ msgstr "Seleziona sito web"
 #: baseTemplate/templates/baseTemplate/index.html:598
 #: userManagment/templates/userManagment/createACL.html:352
 #: userManagment/templates/userManagment/modifyACL.html:356
-msgid "Create Back up"
+msgid "Create Backup"
 msgstr "Crea backup"
 
 #: IncBackups/templates/IncBackups/createBackup.html:128
@@ -535,19 +535,19 @@ msgstr "Azione"
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:3
 #: backup/templates/backup/backupDestinations.html:3
 #: backup/templates/backup/backupDestinations.html:14
-msgid "Set up Back up Destinations"
+msgid "Set up Backup Destinations"
 msgstr "Imposta le destinazioni dei backup"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:14
-msgid "Set up Incremental Back up Destinations"
+msgid "Set up Incremental Backup Destinations"
 msgstr "Imposta le destinazioni dei backup incrementali"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:20
-msgid "On this page you can set up your Back up destinations. (SFTP and AWS)"
+msgid "On this page you can set up your Backup destinations. (SFTP and AWS)"
 msgstr "È possibile impostare le destinazioni dei backup su questa pagina. (SFTP e AWS)"
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:26
-msgid "Set up Back up Destinations."
+msgid "Set up Backup Destinations."
 msgstr "Imposta le destinazioni dei backup."
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:35
@@ -683,7 +683,7 @@ msgid "Reboot SSH Server"
 msgstr "Riavvia server SSH"
 
 #: backup/templates/backup/backup.html:15
-msgid "This page can be used to Back up your websites"
+msgid "This page can be used to Backup your websites"
 msgstr "Questa pagina può essere utilizzata per eseguire il backup dei siti web"
 
 #: backup/templates/backup/backup.html:44
@@ -737,11 +737,11 @@ msgid "Successfully Deleted"
 msgstr "Eliminato con successo"
 
 #: backup/templates/backup/backupDestinations.html:15
-msgid "On this page you can set up your Back up destinations. (SFTP)"
+msgid "On this page you can set up your Backup destinations. (SFTP)"
 msgstr "È possibile impostare le destinazioni di backup su questa pagina. (SFTP)"
 
 #: backup/templates/backup/backupDestinations.html:21
-msgid "Set up Back up Destinations (SSH port should be 22 on backup server)"
+msgid "Set up Backup Destinations (SSH port should be 22 on backup server)"
 msgstr ""
 "Impostare le destinazioni di backup (la porta SSH deve essere 22 sul server di backup)"
 
@@ -841,7 +841,7 @@ msgid "Schedule Added"
 msgstr "Pianificazione aggiunta"
 
 #: backup/templates/backup/index.html:3
-msgid "Back up Home - CyberPanel"
+msgid "Backup Home - CyberPanel"
 msgstr "Backup - Home - CyberPanel"
 
 #: backup/templates/backup/index.html:13 backup/templates/backup/index.html:30
@@ -850,11 +850,11 @@ msgstr "Backup - Home - CyberPanel"
 #: baseTemplate/templates/baseTemplate/index.html:561
 #: baseTemplate/templates/baseTemplate/index.html:563
 #: baseTemplate/templates/baseTemplate/index.html:616
-msgid "Back up"
+msgid "Backup"
 msgstr "Backup"
 
 #: backup/templates/backup/index.html:14
-msgid "Back up and restore sites."
+msgid "Backup and restore sites."
 msgstr "Effettua il backup e ripristinare i siti."
 
 #: backup/templates/backup/index.html:19
@@ -874,7 +874,7 @@ msgid "Available Functions"
 msgstr "Funzioni disponibili"
 
 #: backup/templates/backup/index.html:28
-msgid "Back up Site"
+msgid "Backup Site"
 msgstr "Backup siti"
 
 #: backup/templates/backup/index.html:44
@@ -882,7 +882,7 @@ msgstr "Backup siti"
 #: baseTemplate/templates/baseTemplate/index.html:601
 #: userManagment/templates/userManagment/createACL.html:361
 #: userManagment/templates/userManagment/modifyACL.html:365
-msgid "Restore Back up"
+msgid "Restore Backup"
 msgstr "Ripristina backup"
 
 #: backup/templates/backup/index.html:60 backup/templates/backup/index.html:62
@@ -893,7 +893,7 @@ msgstr "Aggiungi/Elimina destinazione"
 #: baseTemplate/templates/baseTemplate/index.html:581
 #: userManagment/templates/userManagment/createACL.html:391
 #: userManagment/templates/userManagment/modifyACL.html:395
-msgid "Remote Back ups"
+msgid "Remote Backups"
 msgstr "Backup remoti"
 
 #: backup/templates/backup/remoteBackups.html:3
@@ -994,8 +994,8 @@ msgstr "Ripristina sito web"
 
 #: backup/templates/backup/restore.html:15
 msgid ""
-"This page can be used to restore your websites, Back up should be generated from "
-"CyberPanel Back up generation tool, it will detect all Back ups under <strong>/home/"
+"This page can be used to restore your websites, Backup should be generated from "
+"CyberPanel Backup generation tool, it will detect all Backups under <strong>/home/"
 "backup</strong>."
 msgstr ""
 "Questa pagina può essere utilizzata per ripristinare i siti web, il backup deve essere "
@@ -1003,7 +1003,7 @@ msgstr ""
 "backup in <strong>/home/backup</strong>."
 
 #: backup/templates/backup/restore.html:30
-msgid "Select Back up"
+msgid "Select Backup"
 msgstr "Seleziona Backup"
 
 #: backup/templates/backup/restore.html:61
@@ -1030,7 +1030,7 @@ msgid "Error message:"
 msgstr "Messaggio di errore:"
 
 #: backup/templates/backup/restore.html:90
-msgid "Site related to this Back up already exists."
+msgid "Site related to this Backup already exists."
 msgstr "Il sito correlato a questo backup esiste già."
 
 #: baseTemplate/templates/baseTemplate/homePage.html:3
@@ -1586,15 +1586,15 @@ msgid "Add/Delete Destination"
 msgstr "Aggiungi/Elimina destinazione"
 
 #: baseTemplate/templates/baseTemplate/index.html:590
-msgid "Incremental Back up - Beta"
+msgid "Incremental Backup - Beta"
 msgstr "Backup incrementale - Beta"
 
 #: baseTemplate/templates/baseTemplate/index.html:592
-msgid "Incremental Back up"
+msgid "Incremental Backup"
 msgstr "Backup incrementale"
 
 #: baseTemplate/templates/baseTemplate/index.html:598
-msgid "Create/Restore Back up"
+msgid "Create/Restore Backup"
 msgstr "Crea/Ripristina backup"
 
 #: baseTemplate/templates/baseTemplate/index.html:601
@@ -1602,7 +1602,7 @@ msgid "Add/Remove Destinations"
 msgstr "Aggiungi/Rimuovi destinazioni"
 
 #: baseTemplate/templates/baseTemplate/index.html:604
-msgid "Schedule Back ups"
+msgid "Schedule Backups"
 msgstr "Pianifica backup"
 
 #: baseTemplate/templates/baseTemplate/index.html:607
@@ -2391,7 +2391,7 @@ msgid "Create Nameserver - CyberPanel"
 msgstr "Crea nameserver - CyberPanel"
 
 #: dns/templates/dns/createNameServer.html:62
-msgid "Second Nameserver (Back up)"
+msgid "Second Nameserver (Backup)"
 msgstr "Secondo nameserver (Backup)"
 
 #: dns/templates/dns/createNameServer.html:89
@@ -6574,8 +6574,8 @@ msgstr "Non è necessario modificare le regole se si usa OpenLiteSpeed."
 #~ "è verificato, consultare il file di registro principale di CyberPanel."
 
 #, fuzzy
-#~| msgid "Schedule Back up"
-#~ msgid "Achedule Back up"
+#~| msgid "Schedule Backup"
+#~ msgid "Achedule Backup"
 #~ msgstr "Pianifica il backup"
 
 #, fuzzy

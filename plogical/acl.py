@@ -1,5 +1,9 @@
 #!/usr/local/CyberCP/bin/python
 import os,sys
+
+from manageServices.models import PDNSStatus
+from .processUtilities import ProcessUtilities
+
 sys.path.append('/usr/local/CyberCP')
 import django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
@@ -7,7 +11,7 @@ django.setup()
 from loginSystem.models import Administrator, ACL
 from django.shortcuts import HttpResponse
 from packages.models import Package
-from websiteFunctions.models import Websites, ChildDomains
+from websiteFunctions.models import Websites, ChildDomains, aliasDomains
 import json
 from subprocess import call, CalledProcessError
 from shlex import split
@@ -43,6 +47,56 @@ class ACLManager:
               '"dkimManager": 1, "createFTPAccount": 1, "deleteFTPAccount": 1, "listFTPAccounts": 1, "createBackup": 1,' \
               ' "restoreBackup": 0, "addDeleteDestinations": 0, "scheduleBackups": 0, "remoteBackups": 0, "googleDriveBackups": 1, "manageSSL": 1, ' \
               '"hostnameSSL": 0, "mailServerSSL": 0 }'
+
+    @staticmethod
+    def VerifySMTPHost(currentACL, owner, user):
+        if currentACL['admin'] == 1:
+            return 1
+        elif owner == user:
+            return 1
+        else:
+            return 0
+
+    @staticmethod
+    def VerifyRecordOwner(currentACL, record, domain):
+        if currentACL['admin'] == 1:
+            return 1
+        elif record.domainOwner.name == domain:
+            return 1
+        else:
+            return 0
+
+
+    @staticmethod
+    def AliasDomainCheck(currentACL, aliasDomain, master):
+        aliasOBJ = aliasDomains.objects.get(aliasDomain=aliasDomain)
+        masterOBJ = Websites.objects.get(domain=master)
+        if currentACL['admin'] == 1:
+            return 1
+        elif aliasOBJ.master == masterOBJ:
+            return 1
+        else:
+            return 0
+
+    @staticmethod
+    def CheckPackageOwnership(package, admin, currentACL):
+        if currentACL['admin'] == 1:
+            return 1
+        elif package.admin == admin:
+            return 1
+        else:
+            return 0
+
+    @staticmethod
+    def CheckRegEx(RegexCheck, value):
+        import re
+        if re.match(RegexCheck, value):
+            return 1
+        else:
+            return 0
+
+
+
     @staticmethod
     def FindIfChild():
         try:
@@ -542,12 +596,18 @@ class ACLManager:
             domains = Websites.objects.all().order_by('domain')
             for items in domains:
                 domainsList.append(items.domain)
+
+                for childs in items.childdomains_set.all():
+                    domainsList.append(childs.domain)
+
         else:
             admin = Administrator.objects.get(pk=userID)
             domains = admin.websites_set.all().order_by('domain')
 
             for items in domains:
                 domainsList.append(items.domain)
+                for childs in items.childdomains_set.all():
+                    domainsList.append(childs.domain)
 
             admins = Administrator.objects.filter(owner=admin.pk)
 
@@ -555,6 +615,8 @@ class ACLManager:
                 doms = items.websites_set.all().order_by('domain')
                 for dom in doms:
                     domainsList.append(dom.domain)
+                    for childs in items.childdomains_set.all():
+                        domainsList.append(childs.domain)
 
         return domainsList
 
@@ -626,7 +688,11 @@ class ACLManager:
 
     @staticmethod
     def checkOwnershipZone(domain, admin, currentACL):
-        domain = Websites.objects.get(domain=domain)
+        try:
+            domain = Websites.objects.get(domain=domain)
+        except:
+            domain = ChildDomains.objects.get(domain=domain)
+            domain = domain.master
 
         if currentACL['admin'] == 1:
             return 1
@@ -735,5 +801,94 @@ class ACLManager:
             return 1
         else:
             return 0
+
+    @staticmethod
+    def CheckDomainBlackList(domain):
+        import socket
+
+        BlackList = [ socket.gethostname(), 'hotmail.com', 'gmail.com', 'yandex.com', 'yahoo.com', 'localhost', 'aol.com', 'apple.com',
+                     'cloudlinux.com', 'email.com', 'facebook.com', 'gmx.de', 'gmx.com', 'google.com',
+                     'hushmail.com', 'icloud.com', 'inbox.com', 'imunify360.com', 'juno.com', 'live.com', 'localhost.localdomain',
+                     'localhost4.localdomain4', 'localhost6.localdomain6','mail.com', 'mail.ru', 'me.com',
+                     'microsoft.com', 'mxlogic.net', 'outlook.com', 'protonmail.com', 'twitter.com', 'yandex.ru']
+
+        DotsCounter = domain.count('.')
+
+        for black in BlackList:
+            if DotsCounter == 1:
+                if domain == black:
+                    return 0
+            else:
+                if domain.endswith(black):
+                    logging.writeToFile(black)
+                    return 0
+
+        return 1
+
+    @staticmethod
+    def CheckStatusFilleLoc(statusFile):
+        if (statusFile[:18] != "/home/cyberpanel/." or statusFile[:16] == "/home/cyberpanel" or statusFile[
+                                                                                                :4] == '/tmp' or statusFile[
+                                                                                                                 :18] == '/usr/local/CyberCP') \
+                and statusFile != '/usr/local/CyberCP/CyberCP/settings.py' and statusFile.find(
+            '..') == -1 and statusFile != '/home/cyberpanel/.my.cnf' and statusFile != '/home/cyberpanel/.bashrc' and statusFile != '/home/cyberpanel/.bash_logout' and statusFile != '/home/cyberpanel/.profile':
+            return 1
+        else:
+            return 0
+
+    @staticmethod
+    def FetchExternalApp(domain):
+        try:
+            childDomain = ChildDomains.objects.get(domain=domain)
+
+            return childDomain.master.externalApp
+
+        except:
+            domainName = Websites.objects.get(domain=domain)
+            return domainName.externalApp
+
+    @staticmethod
+    def CreateSecureDir():
+        ### Check if upload path tmp dir is not available
+
+        UploadPath = '/usr/local/CyberCP/tmp/'
+
+        if not os.path.exists(UploadPath):
+            command = 'mkdir %s' % (UploadPath)
+            ProcessUtilities.executioner(command)
+
+        command = 'chown cyberpanel:cyberpanel %s' % (UploadPath)
+        ProcessUtilities.executioner(command)
+
+        command = 'chmod 711 %s' % (UploadPath)
+        ProcessUtilities.executioner(command)
+
+
+    @staticmethod
+    def GetServiceStatus(dic):
+        if os.path.exists('/home/cyberpanel/postfix'):
+            dic['emailAsWhole'] = 1
+        else:
+            dic['emailAsWhole'] = 0
+
+        if os.path.exists('/home/cyberpanel/pureftpd'):
+            dic['ftpAsWhole'] = 1
+        else:
+            dic['ftpAsWhole'] = 0
+
+        try:
+            pdns = PDNSStatus.objects.get(pk=1)
+            dic['dnsAsWhole'] = pdns.serverStatus
+        except:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
+                pdnsPath = '/etc/powerdns'
+            else:
+                pdnsPath = '/etc/pdns'
+
+            if os.path.exists(pdnsPath):
+                PDNSStatus(serverStatus=1).save()
+                dic['dnsAsWhole'] = 1
+            else:
+                dic['dnsAsWhole'] = 0
 
 
