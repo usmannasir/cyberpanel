@@ -333,12 +333,6 @@
                                        data-original-title=".icon-comments-alt" aria-describedby="tooltip896208"></i>
                                     <span>{% trans "Community" %}</span>
                                 </a>
-                                <a href="{% url 'Filemanager' %}"
-                                   title="{% trans 'FileManager' %}">
-                                    <i class="glyph-icon tooltip-button icon-link" title="{% trans 'FileManager' %}"
-                                       data-original-title=".icon-cloud-upload" aria-describedby="tooltip896208"></i>
-                                    <span>{% trans "FileManager" %}</span>
-                                </a>
 
                             {% endif %}
                         </li>
@@ -741,6 +735,14 @@
                         {% if admin %}
 
                             <li class="header"><span>{% trans "Server" %}</span></li>
+                            <li>
+                                <a href="{% url 'Filemanager' %}"
+                                   title="{% trans 'FileManager' %}">
+                                    <i class="glyph-icon tooltip-button icon-link" title="{% trans 'FileManager' %}"
+                                       data-original-title=".icon-cloud-upload" aria-describedby="tooltip896208"></i>
+                                    <span>{% trans "FileManager" %}</span>
+                                </a>
+                            </li>
 
 
 

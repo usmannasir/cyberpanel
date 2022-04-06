@@ -314,7 +314,6 @@ def FileManager(request):
 
     template = 'baseTemplate/FileManager.html'
 
-
     proc = httpProc(request, template,)
     return proc.render()
 
