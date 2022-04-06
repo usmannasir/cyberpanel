@@ -300,17 +300,13 @@ def getthemedata(request):
 
 
 def FileManager(request):
-    ### Load Custom CSS
-    try:
-        from baseTemplate.models import CyberPanelCosmetic
-        cosmetic = CyberPanelCosmetic.objects.get(pk=1)
-    except:
-        from baseTemplate.models import CyberPanelCosmetic
-        cosmetic = CyberPanelCosmetic()
-        cosmetic.save()
+    val = request.session['userID']
+    currentACL = ACLManager.loadedACL(val)
 
-
-
+    if currentACL['admin'] == 1:
+        pass
+    else:
+        return ACLManager.loadErrorJson('FilemanagerAdmin', 0)
 
     template = 'baseTemplate/FileManager.html'
 
