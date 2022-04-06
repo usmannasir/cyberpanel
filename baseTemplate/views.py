@@ -110,9 +110,25 @@ def versionManagment(request):
     currentVersion = VERSION
     currentBuild = str(BUILD)
 
+    u = "https://api.github.com/repos/usmannasir/cyberpanel/commits?sha=v%s.%s" % (latestVersion, latestBuild)
+    logging.CyberCPLogFileWriter.writeToFile(u)
+    r = requests.get(u)
+    latestcomit = r.json()[0]['sha']
+
+    command ="git -C /usr/local/CyberCP/ rev-parse HEAD"
+    output = ProcessUtilities.outputExecutioner(command)
+
+    Currentcomt = output.rstrip("\n")
+    notechk = True;
+
+    if(Currentcomt == latestcomit):
+        notechk = False;
+
+
     template = 'baseTemplate/versionManagment.html'
     finalData = {'build': currentBuild, 'currentVersion': currentVersion, 'latestVersion': latestVersion,
-                 'latestBuild': latestBuild}
+                 'latestBuild': latestBuild, 'latestcomit': latestcomit, "Currentcomt": Currentcomt, "Notecheck" : notechk }
+
 
     proc = httpProc(request, template, finalData, 'versionManagement')
     return proc.render()

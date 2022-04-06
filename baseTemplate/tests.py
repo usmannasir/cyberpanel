@@ -1,17 +1,25 @@
 import requests
+import json
 
 
 
 ab = {'package': 'helo world', 'Themename': 'blue-green-theme'}
 
-url= "https://raw.githubusercontent.com/usmannasir/CyberPanel-Themes/main/%s/design.css"%ab['Themename']
+url= "http://cyberpanel.net/version.txt"
 #url= "https://api.github.com/repos/usmannasir/CyberPanel-Themes/git/commits/def351a6eb4c103fb2dd2acf52396d4ef6111eee"
 
 
 res=requests.get(url)
 # sha=res.json()[0]['sha']
-print(res.text)
+a= res.json()['version']
 
+print(a)
+print(res)
+
+u = "https://api.github.com/repos/usmannasir/cyberpanel/commits?sha=v%s"%a
+r= requests.get(u)
+
+print(r.text)
 # l ="https://api.github.com/repos/usmannasir/CyberPanel-Themes/git/trees/%s"%sha
 # fres=requests.get(l)
 #
