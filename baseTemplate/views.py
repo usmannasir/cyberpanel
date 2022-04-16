@@ -311,11 +311,16 @@ def FileManager(request):
 
     userID = request.session['userID']
     currentACL = ACLManager.loadedACL(userID)
+    ipFile = "/etc/cyberpanel/machineIP"
+    f = open(ipFile)
+    ipData = f.read()
+    ipAddressLocal = ipData.split('\n', 1)[0]
 
     url = "http://168.119.15.231:2083/CyberpanelAdOns/Adonpermission"
     data = {
         "name": "Filemanager",
-        "IP": "172.105.167.110"
+         "IP": ipAddressLocal
+         #"IP": "207.246.94.217"
     }
 
 
