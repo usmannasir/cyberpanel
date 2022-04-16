@@ -300,6 +300,7 @@ def getthemedata(request):
 
 
 def FileManager(request):
+<<<<<<< HEAD
     ### Load Custom CSS
     try:
         from baseTemplate.models import CyberPanelCosmetic
@@ -330,8 +331,15 @@ def FileManager(request):
         template = 'baseTemplate/FileManager.html'
     else:
       return  redirect("https://cyberpanel.net/adons")
+=======
+    val = request.session['userID']
+    currentACL = ACLManager.loadedACL(val)
+>>>>>>> d4e55339a16ee8d0b686a3699ac95a485364e69b
 
-
+    if currentACL['admin'] == 1:
+        pass
+    else:
+        return ACLManager.loadErrorJson('FilemanagerAdmin', 0)
 
 
     proc = httpProc(request, template,)
