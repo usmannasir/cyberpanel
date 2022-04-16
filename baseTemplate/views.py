@@ -309,10 +309,24 @@ def FileManager(request):
         cosmetic = CyberPanelCosmetic()
         cosmetic.save()
 
+    userID = request.session['userID']
+    currentACL = ACLManager.loadedACL(userID)
+
+    url = "http://168.119.15.231:2083/CyberpanelAdOns/Adonpermission"
+    data = {
+        "name": "Filemanager",
+        "IP": "172.105.167.110"
+    }
 
 
+    response = requests.post(url, data=json.dumps(data))
+    Status = response.json()['status']
+    if(Status == 1):
+        template = 'baseTemplate/FileManager.html'
+    else:
+      return  redirect("https://cyberpanel.net/adons")
 
-    template = 'baseTemplate/FileManager.html'
+
 
 
     proc = httpProc(request, template,)
