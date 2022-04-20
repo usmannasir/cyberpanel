@@ -617,9 +617,9 @@ class FileManager:
                         self.data['newPath'] + '/' + item)
                     ProcessUtilities.executioner(command, website.externalApp)
 
-                self.changeOwner(self.data['newPath'])
+                #self.changeOwner(self.data['newPath'])
 
-                self.fixPermissions(domainName)
+                #self.fixPermissions(domainName)
             except:
 
 
@@ -895,7 +895,7 @@ class FileManager:
 
                 ProcessUtilities.executioner(command, website.externalApp)
 
-                self.fixPermissions(domainName)
+                #self.fixPermissions(domainName)
             except:
 
                 homePath = '/'
