@@ -514,9 +514,9 @@ app.controller('homePageStatus', function ($scope, $http, $timeout) {
             $scope.two = response.data.two;
             $scope.three = response.data.three;
 
-            document.getElementById("load1").innerHTML = $scope.one;
-            document.getElementById("load2").innerHTML = $scope.two;
-            document.getElementById("load3").innerHTML = $scope.three;
+            //document.getElementById("load1").innerHTML = $scope.one;
+            //document.getElementById("load2").innerHTML = $scope.two;
+            //document.getElementById("load3").innerHTML = $scope.three;
         }
 
         function cantGetLoadAvgData(response) {

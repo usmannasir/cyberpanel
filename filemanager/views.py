@@ -104,12 +104,27 @@ def controller(request):
             admin = Administrator.objects.get(pk=userID)
             currentACL = ACLManager.loadedACL(userID)
 
-            if ACLManager.checkOwnership(domainName, admin, currentACL) == 1:
+            if domainName == '':
+                if currentACL['admin'] == 1:
+                    pass
+                else:
+                    return ACLManager.loadErrorJson('FilemanagerAdmin', 0)
+            else:
+                if ACLManager.checkOwnership(domainName, admin, currentACL) == 1:
+                    pass
+                else:
+                    return ACLManager.loadErrorJson()
+        except:
+            method = data['method']
+            userID = request.session['userID']
+            currentACL = ACLManager.loadedACL(userID)
+
+            if currentACL['admin'] == 1:
                 pass
             else:
-                return ACLManager.loadErrorJson()
-        except:
-            print("habbi")
+                return ACLManager.loadErrorJson('FilemanagerAdmin', 0)
+
+
         fm = FM(request, data)
 
         if method == 'listForTable':
