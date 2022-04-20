@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from .models import Administrator
 from plogical import hashPassword
 import json
@@ -157,7 +157,10 @@ def loadLoginPage(request):
         finaData = {"admin": admin, 'ramUsage': cpuRamDisk['ramUsage'], 'cpuUsage': cpuRamDisk['cpuUsage'],
                     'diskUsage': cpuRamDisk['diskUsage']}
 
-        return render(request, 'baseTemplate/homePage.html', finaData)
+        from baseTemplate.views import renderBase
+        return redirect(renderBase)
+
+        #return render(request, 'baseTemplate/homePage.html', finaData)
     except KeyError:
 
         numberOfAdministrator = Administrator.objects.count()
