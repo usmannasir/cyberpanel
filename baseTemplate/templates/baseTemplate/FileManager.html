@@ -633,7 +633,9 @@
 <div style="position: absolute;top: 0;left: 0;"  id="rightClick" class="card" style="width: 20rem;">
     <ul class="list-group list-group-flush">
         <a style="border-bottom: 1px solid #007bff;" onclick="return false;" ng-click="showMoveModal()" href="#"><li  class="list-group-item"><i class="fa fa-arrows-alt" aria-hidden="true"></i>  {% trans "Move" %}</li></a>
-        <a style="border-bottom: 1px solid #007bff;" id="downloadOnRight" onclick="return false;" ng-click="downloadFile()" href="#"><li  class="list-group-item"><i class="fa fa-download" aria-hidden="true"></i>  {% trans "Download" %}</li></a>
+{% comment %}
+        <a style="border-bottom: 1px solid #007bff;" id="downloadOnRight" onclick="return false;" ng-click="RootDownloadFile()" href="#"><li  class="list-group-item"><i class="fa fa-download" aria-hidden="true"></i>  {% trans "Download" %}</li></a>
+{% endcomment %}
         <a style="border-bottom: 1px solid #007bff;" onclick="return false;" ng-click="showCopyModal()" href="#"><li  class="list-group-item"><i class="fa fa-files-o" aria-hidden="true"></i>  {% trans "Copy" %}</li></a>
         <a style="border-bottom: 1px solid #007bff;" onclick="return false;" ng-click="showRenameModal()" href="#"><li  class="list-group-item"><i class="fa fa-file-text-o" aria-hidden="true"></i>  {% trans "Rename" %}</li></a>
         <a style="border-bottom: 1px solid #007bff;" onclick="return false;" ng-click="showPermissionsModal()" href="#"><li  class="list-group-item"><i class="fa fa-lock" aria-hidden="true"></i>  {% trans "Change Permissions" %}</li></a>
@@ -641,7 +643,9 @@
         <a style="border-bottom: 1px solid #007bff;" onclick="return false;" ng-click="showCompressionModal()" href="#"><li class="list-group-item"><i class="fa fa-compress" aria-hidden="true"></i>  {% trans "Compress" %}</li></a>
         <a style="border-bottom: 1px solid #007bff;" id="extractOnRight" onclick="return false;" ng-click="showExtractionModal()" href="#"><li class="list-group-item"><i class="fa fa-expand" aria-hidden="true"></i>  {% trans "Extract" %}</li></a>
         <a style="border-bottom: 1px solid #007bff;" id="editOnRight" onclick="return false;" ng-click="showHTMLEditorModal()" href="#"><li class="list-group-item"><i class="fa fa-pencil-square-o" aria-hidden="true"></i>  {% trans "Edit" %}</li></a>
+{% comment %}
         <a style="border-bottom: 1px solid #007bff;" id="editOnRightCodeMirror" onclick="return false;" ng-click="editWithCodeMirror()" href="#"><li class="list-group-item"><i class="fa fa-pencil-square-o" aria-hidden="true"></i>  {% trans "Edit with CodeMirror" %}</li></a>
+{% endcomment %}
         <a style="border-bottom: 1px solid #007bff;" id="restoreRight" onclick="return false;" ng-click="showRestoreModal()" href="#"><li class="list-group-item"><i class="fa fa-window-restore" aria-hidden="true"></i>  {% trans "Restore" %}</li></a>
     </ul>
 </div>

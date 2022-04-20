@@ -58,39 +58,6 @@ def changePermissions(request):
     except KeyError:
         return redirect(loadLoginPage)
 
-def downloadFile(request):
-    try:
-        userID = request.session['userID']
-        admin = Administrator.objects.get(pk=userID)
-        from urllib.parse import quote
-        from django.utils.encoding import iri_to_uri
-
-        fileToDownload = request.build_absolute_uri().split('fileToDownload')[1][1:]
-        fileToDownload = iri_to_uri(fileToDownload)
-
-        domainName = request.GET.get('domainName')
-
-        currentACL = ACLManager.loadedACL(userID)
-
-        if ACLManager.checkOwnership(domainName, admin, currentACL) == 1:
-            pass
-        else:
-            return ACLManager.loadErrorJson('permissionsChanged', 0)
-
-        homePath = '/home/%s' % (domainName)
-
-        if fileToDownload.find('..') > -1 or fileToDownload.find(homePath) == -1:
-            return HttpResponse("Unauthorized access.")
-
-        response = HttpResponse(content_type='application/force-download')
-        response['Content-Disposition'] = 'attachment; filename=%s' % (fileToDownload.split('/')[-1])
-        response['X-LiteSpeed-Location'] = '%s' % (fileToDownload)
-
-        return response
-
-    except KeyError:
-        return redirect(loadLoginPage)
-
 def controller(request):
     try:
         data = json.loads(request.body)
@@ -270,3 +237,61 @@ def FileManagerRoot(request):
     from plogical.httpProc import httpProc
     proc = httpProc(request, template)
     return proc.render()
+
+def downloadFile(request):
+    try:
+        userID = request.session['userID']
+        admin = Administrator.objects.get(pk=userID)
+        from urllib.parse import quote
+        from django.utils.encoding import iri_to_uri
+
+        fileToDownload = request.build_absolute_uri().split('fileToDownload')[1][1:]
+        fileToDownload = iri_to_uri(fileToDownload)
+
+        domainName = request.GET.get('domainName')
+
+        currentACL = ACLManager.loadedACL(userID)
+
+        if ACLManager.checkOwnership(domainName, admin, currentACL) == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('permissionsChanged', 0)
+
+        homePath = '/home/%s' % (domainName)
+
+        if fileToDownload.find('..') > -1 or fileToDownload.find(homePath) == -1:
+            return HttpResponse("Unauthorized access.")
+
+        response = HttpResponse(content_type='application/force-download')
+        response['Content-Disposition'] = 'attachment; filename=%s' % (fileToDownload.split('/')[-1])
+        response['X-LiteSpeed-Location'] = '%s' % (fileToDownload)
+
+        return response
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def RootDownloadFile(request):
+    try:
+        userID = request.session['userID']
+        from urllib.parse import quote
+        from django.utils.encoding import iri_to_uri
+
+        fileToDownload = request.build_absolute_uri().split('fileToDownload')[1][1:]
+        fileToDownload = iri_to_uri(fileToDownload)
+
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
+
+        response = HttpResponse(content_type='application/force-download')
+        response['Content-Disposition'] = 'attachment; filename=%s' % (fileToDownload.split('/')[-1])
+        response['X-LiteSpeed-Location'] = '%s' % (fileToDownload)
+
+        return response
+        #return HttpResponse(response['X-LiteSpeed-Location'])
+    except KeyError:
+        return redirect(loadLoginPage)

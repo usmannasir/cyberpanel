@@ -1588,6 +1588,12 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
         window.location.href = url + '?domainName=' + domainName + '&fileToDownload=' + downloadURL;
     };
 
+    $scope.RootDownloadFile = function () {
+        url = "/filemanager/RootDownloadFile";
+        var downloadURL = $scope.currentPath + "/" + allFilesAndFolders[0];
+        window.location.href = url + '?fileToDownload=' + downloadURL;
+    };
+
 
     // Change permissions
 
