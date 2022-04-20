@@ -8,7 +8,6 @@ import json
 from websiteFunctions.models import Websites
 from plogical.acl import ACLManager
 from .filemanager import FileManager as FM
-from plogical.processUtilities import ProcessUtilities
 # Create your views here.
 
 def loadFileManagerHome(request,domain):
@@ -31,7 +30,7 @@ def loadFileManagerHome(request,domain):
 def changePermissions(request):
     try:
         userID = request.session['userID']
-        admin = Administrator.objects.get(pk=userID)
+
         try:
             data = json.loads(request.body)
             domainName = data['domainName']
@@ -225,3 +224,49 @@ def editFile(request):
 
     except KeyError:
         return redirect(loadLoginPage)
+
+def FileManagerRoot(request):
+    ### Load Custom CSS
+    try:
+        from baseTemplate.models import CyberPanelCosmetic
+        cosmetic = CyberPanelCosmetic.objects.get(pk=1)
+    except:
+        from baseTemplate.models import CyberPanelCosmetic
+        cosmetic = CyberPanelCosmetic()
+        cosmetic.save()
+
+    userID = request.session['userID']
+    currentACL = ACLManager.loadedACL(userID)
+    ipFile = "/etc/cyberpanel/machineIP"
+    f = open(ipFile)
+    ipData = f.read()
+    ipAddressLocal = ipData.split('\n', 1)[0]
+
+    try:
+
+        url = "http://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
+        data = {
+            "name": "Filemanager",
+             "IP": ipAddressLocal
+        }
+
+        import requests
+        response = requests.post(url, data=json.dumps(data))
+        Status = response.json()['status']
+
+        if(Status == 1):
+            template = 'baseTemplate/FileManager.html'
+        else:
+          return  redirect("https://cyberpanel.net/adons")
+    except BaseException as msg:
+        template = 'baseTemplate/FileManager.html'
+
+
+    if currentACL['admin'] == 1:
+        pass
+    else:
+        return ACLManager.loadErrorJson('FilemanagerAdmin', 0)
+
+    from plogical.httpProc import httpProc
+    proc = httpProc(request, template)
+    return proc.render()
