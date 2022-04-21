@@ -170,7 +170,7 @@ class ProcessUtilities(multi.Thread):
                 return ProcessUtilities.ubuntu20
             return ProcessUtilities.ubuntu
         else:
-            if open('/etc/redhat-release', 'r').read().find('CentOS Linux release 8') > -1:
+            if open('/etc/redhat-release', 'r').read().find('CentOS Linux release 8') > -1 or open('/etc/redhat-release', 'r').read().find('AlmaLinux release 8') > -1:
                 return ProcessUtilities.cent8
             return ProcessUtilities.centos
 
