@@ -211,7 +211,7 @@ def FileManagerRoot(request):
 
     try:
 
-        url = "http://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
+        url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
         data = {
             "name": "Filemanager",
              "IP": ipAddressLocal
