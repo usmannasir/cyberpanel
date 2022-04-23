@@ -1082,7 +1082,7 @@ app.controller('googleDrive', function ($scope, $http) {
     $scope.driveHidden = true;
 
     $scope.setupAccount = function(){
-        window.open("https://cloud.cyberpanel.net/gDrive?name=" + $scope.accountName + '&server=' + window.location.href + 'Setup');
+        window.open("https://platform.cyberpersons.com/gDrive?name=" + $scope.accountName + '&server=' + window.location.href + 'Setup');
     };
 
     $scope.currentPage = 1;

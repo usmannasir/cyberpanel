@@ -228,7 +228,6 @@ def FileManagerRoot(request):
     except BaseException as msg:
         template = 'baseTemplate/FileManager.html'
 
-
     if currentACL['admin'] == 1:
         pass
     else:
