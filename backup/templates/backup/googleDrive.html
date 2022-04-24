@@ -113,7 +113,7 @@
                         </div>
 
 
-                        <div style="display: none" id="checkret" class="form-group">
+                        <div ng-hide="driveHidden" id="checkret" class="form-group">
                             <label class="col-sm-3 control-label">{% trans "Backup File Retention" %}</label>
                             <div class="col-sm-6">
                                 <select id="fileretention" ng-model="Retentiontime" ng-change="changeRetention()" class="form-control">

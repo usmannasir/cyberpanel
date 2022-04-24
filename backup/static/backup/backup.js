@@ -1076,9 +1076,7 @@ app.controller('backupLogsScheduled', function ($scope, $http, $timeout) {
 
 ///** Backup site ends **///
 
-function changeRetention () {
-        alert("habbi");
-    };
+
 
 
 
@@ -1256,6 +1254,9 @@ app.controller('googleDrive', function ($scope, $http) {
             selectedAccount: $scope.selectedAccount,
         };
         dataurl = "/backup/changeFileRetention";
+
+
+        //console.log(data)
 
         $http.post(dataurl, data, config).then(fileretention, cantLoadInitialData);
 
