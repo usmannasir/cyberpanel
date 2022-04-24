@@ -1,11 +1,9 @@
 #!/usr/local/CyberCP/bin/python
 import os.path
 import sys
-
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 import django
-
 django.setup()
 from IncBackups.IncBackupsControl import IncJobs
 from IncBackups.models import BackupJob
@@ -24,7 +22,6 @@ import requests
 import socket
 from websiteFunctions.models import NormalBackupJobs, NormalBackupJobLogs
 from boto3.s3.transfer import TransferConfig
-
 try:
     from s3Backups.models import BackupPlan, BackupLogs
     import boto3
@@ -235,6 +232,11 @@ class IncScheduler(multi.Thread):
     @staticmethod
     def runGoogleDriveBackups(type):
 
+        ipFile = "/etc/cyberpanel/machineIP"
+        f = open(ipFile)
+        ipData = f.read()
+        ipAddress = ipData.split('\n', 1)[0]
+
         backupRunTime = time.strftime("%m.%d.%Y_%H-%M-%S")
         backupLogPath = "/usr/local/lscp/logs/local_backup_log." + backupRunTime
 
@@ -256,6 +258,7 @@ class IncScheduler(multi.Thread):
                             finalData = json.dumps({'refresh_token': gDriveData['refresh_token']})
                             r = requests.post("https://platform.cyberpersons.com/refreshToken", data=finalData
                                               )
+
                             gDriveData['token'] = json.loads(r.text)['access_token']
 
                             credentials = google.oauth2.credentials.Credentials(gDriveData['token'],
@@ -279,11 +282,6 @@ class IncScheduler(multi.Thread):
                     try:
                         folderIDIP = gDriveData['folderIDIP']
                     except:
-
-                        ipFile = "/etc/cyberpanel/machineIP"
-                        f = open(ipFile)
-                        ipData = f.read()
-                        ipAddress = ipData.split('\n', 1)[0]
 
                         ## Create CyberPanel Folder
 
@@ -349,6 +347,7 @@ class IncScheduler(multi.Thread):
                             try:
                                 drive.files().create(body=file_metadata, media_body=media, fields='id').execute()
                             except:
+                                import requests
                                 finalData = json.dumps({'refresh_token': gDriveData['refresh_token']})
                                 r = requests.post("https://platform.cyberpersons.com/refreshToken", data=finalData
                                                   )
@@ -381,7 +380,7 @@ class IncScheduler(multi.Thread):
 
                     print("job com[leted")
 
-                    logging.writeToFile('job completed')
+                    #logging.writeToFile('job completed')
 
                     url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
                     data = {
@@ -460,8 +459,6 @@ class IncScheduler(multi.Thread):
 
                         except BaseException as msg:
                             logging.writeToFile('job not completed [ERROR:]..%s'%msg)
-
-
 
             except BaseException as msg:
                 GDriveJobLogs(owner=items, status=backupSchedule.ERROR,
