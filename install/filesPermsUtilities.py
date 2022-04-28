@@ -119,7 +119,7 @@ def recursive_permissions(path, dir_mode=755, file_mode=644, topdir=True):
 # Set recursive chown for a path
 # recursive_chown(my_path, 'root', 'root')
 # for changing group recursively without affecting user
-# recursive_chown('/usr/local/lscp/cyberpanel/rainloop/data', -1, 'lscpd')
+# recursive_chown('/usr/local/lscp/cyberpanel/snappymail/data', -1, 'lscpd')
 
 # explicitly set permissions for directories/folders to 0755 and files to 0644
 # recursive_permissions(my_path, 755, 644)

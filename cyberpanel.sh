@@ -1282,7 +1282,7 @@ sed -i "s|https://www.litespeedtech.com/|https://cyberpanel.sh/www.litespeedtech
 sed -i 's|composer.sh|composer_cn.sh|g' install.py
 sed -i 's|./composer_cn.sh|COMPOSER_ALLOW_SUPERUSER=1 ./composer_cn.sh|g' install.py
 sed -i 's|http://www.litespeedtech.com|https://cyberpanel.sh/www.litespeedtech.com|g' install.py
-sed -i 's|https://www.rainloop.net/repository/webmail/rainloop-community-latest.zip|https://cyberpanel.sh/www.rainloop.net/repository/webmail/rainloop-community-latest.zip|g' install.py
+sed -i 's|https://snappymail.eu/repository/latest.tar.gz|https://cyberpanel.sh/www.snappymail.eu/repository/latest.tar.gz|g' install.py
 
 sed -i "s|rep.cyberpanel.net|cyberpanel.sh/rep.cyberpanel.net|g" installCyberPanel.py
 sed -i "s|rep.cyberpanel.net|cyberpanel.sh/rep.cyberpanel.net|g" install.py
@@ -1617,7 +1617,7 @@ fi
 }
 
 Post_Install_Display_Final_Info() {
-RainloopAdminPass=$(grep SetPassword /usr/local/CyberCP/public/rainloop.php| sed -e 's|$oConfig->SetPassword(||g' -e "s|');||g" -e "s|'||g")
+snappymailAdminPass=$(grep SetPassword /usr/local/CyberCP/public/snappymail.php| sed -e 's|$oConfig->SetPassword(||g' -e "s|');||g" -e "s|'||g")
 Elapsed_Time="$((Time_Count / 3600)) hrs $(((SECONDS / 60) % 60)) min $((Time_Count % 60)) sec"
 echo "###################################################################"
 echo "                CyberPanel Successfully Installed                  "
@@ -1639,9 +1639,9 @@ fi
 #echo "                WebAdmin console username: admin                   "
 #echo "                WebAdmin console password: $Webadmin_Pass          "
 #echo "                                                                   "
-#echo "                Visit: https://$Server_IP:8090/rainloop/?admin     "
-#echo "                Rainloop Admin username: admin                     "
-#echo "                Rainloop Admin password: $RainloopAdminPass        "
+#echo "                Visit: https://$Server_IP:8090/snappymail/?admin     "
+#echo "                snappymail Admin username: admin                     "
+#echo "                snappymail Admin password: $snappymailAdminPass        "
 echo "                                                                   "
 echo -e "             Run \e[31mcyberpanel help\e[39m to get FAQ info"
 echo -e "             Run \e[31mcyberpanel upgrade\e[39m to upgrade it to latest version."
