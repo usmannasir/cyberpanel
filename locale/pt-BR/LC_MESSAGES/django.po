@@ -62,17 +62,17 @@ msgstr "Nome do Pacote"
 #: CLManager/templates/CLManager/createPackage.html:47
 #: CLManager/templates/CLManager/listPackages.html:87
 msgid "SPEED"
-msgstr ""
+msgstr "Velocidade"
 
 #: CLManager/templates/CLManager/createPackage.html:56
 #: CLManager/templates/CLManager/listPackages.html:98
 msgid "VMEM"
-msgstr ""
+msgstr "Memoria Virtual"
 
 #: CLManager/templates/CLManager/createPackage.html:64
 #: CLManager/templates/CLManager/listPackages.html:109
 msgid "PMEM"
-msgstr ""
+msgstr "Memoria fisica"
 
 #: CLManager/templates/CLManager/createPackage.html:73
 #: CLManager/templates/CLManager/listPackages.html:120
@@ -89,12 +89,12 @@ msgstr ""
 #: CLManager/templates/CLManager/createPackage.html:89
 #: CLManager/templates/CLManager/listPackages.html:142
 msgid "EP"
-msgstr ""
+msgstr "Entrada de processos"
 
 #: CLManager/templates/CLManager/createPackage.html:97
 #: CLManager/templates/CLManager/listPackages.html:153
 msgid "NPROC"
-msgstr ""
+msgstr "Numero de processos"
 
 #: CLManager/templates/CLManager/createPackage.html:105
 #: CLManager/templates/CLManager/listPackages.html:164
@@ -204,7 +204,7 @@ msgstr "Não Disponivel"
 
 #: CLManager/templates/CLManager/notAvailable.html:14
 msgid "Either CageFS is not installed or you are not on CloudLinux OS."
-msgstr ""
+msgstr "O CageFS não está instalado ou você não está no sistema operacional CloudLinux"
 
 #: CLManager/templates/CLManager/notAvailable.html:22
 msgid "CageFS is only available with CloudLinux OS. "
@@ -213,7 +213,7 @@ msgstr "O CageFS não está instalado ou você não está usando CloudLinux OS. 
 #: CLManager/templates/CLManager/notAvailable.html:24
 #: containerization/templates/containerization/notAvailable.html:24
 msgid " for conversion details."
-msgstr " para detalhes da conversão."
+msgstr "para detalhes da conversão."
 
 #: CLManager/templates/CLManager/notAvailable.html:34
 #: containerization/templates/containerization/notAvailable.html:34
@@ -226,7 +226,7 @@ msgstr "O CageFS não está instalado neste servidor. Por favor, prossiga para a
 
 #: CLManager/templates/CLManager/websiteContainerLimit.html:3
 msgid " usage - CyberPanel"
-msgstr " uso - CyberPanel"
+msgstr "Uso - CyberPanel"
 
 #: CLManager/templates/CLManager/websiteContainerLimit.html:14
 #: emailMarketing/templates/emailMarketing/website.html:40
@@ -237,7 +237,7 @@ msgstr "Uso"
 
 #: CLManager/templates/CLManager/websiteContainerLimit.html:15
 msgid "View CPU, Memory and Disk usage for "
-msgstr "Visualização de uso da CPU, memória e disco para "
+msgstr "Veja o uso de CPU, memória e disco para"
 
 #: CLManager/templates/CLManager/websiteContainerLimit.html:21
 #: containerization/templates/containerization/websiteContainerLimit.html:155
@@ -355,7 +355,7 @@ msgstr "Principal"
 #: backup/templates/backup/backup.html:60 backup/templates/backup/restore.html:62
 #: filemanager/templates/filemanager/index.html:158
 msgid "File Name"
-msgstr "Nome do Ficheiro"
+msgstr "Nome do Arquivo"
 
 #: backup/templates/backup/backup.html:61 backup/templates/backup/backup.html:106
 #: backup/templates/backup/restore.html:63
@@ -451,7 +451,7 @@ msgstr "Configurar destinos dos backups"
 #: backup/templates/backup/backupSchedule.html:13
 #: backup/templates/backup/remoteBackups.html:14 backup/templates/backup/remoteBackups.html:21
 msgid "Remote Backups"
-msgstr "Backups remotos"
+msgstr "Backup remoto"
 
 #: backup/templates/backup/backupDestinations.html:15
 msgid "On this page you can set up your Backup destinations. (SFTP)"
@@ -482,7 +482,7 @@ msgstr "Endereço de IP"
 #: websiteFunctions/templates/websiteFunctions/installPrestaShop.html:56
 #: websiteFunctions/templates/websiteFunctions/sshAccess.html:33
 msgid "Password"
-msgstr "Palavra-Chave"
+msgstr "Senha"
 
 #: backup/templates/backup/backupDestinations.html:45
 #: dockerManager/templates/dockerManager/runContainer.html:74
@@ -513,7 +513,7 @@ msgstr "falhou. Por favor apague e reenvie. "
 
 #: backup/templates/backup/backupDestinations.html:72
 msgid "successful."
-msgstr "com sucesso."
+msgstr "Sucesso."
 
 #: backup/templates/backup/backupDestinations.html:76
 msgid "Cannot add destination. Error message:"
@@ -676,7 +676,7 @@ msgstr "Adcionar/Apagar Destinos"
 #: userManagment/templates/userManagment/createACL.html:391
 #: userManagment/templates/userManagment/modifyACL.html:395
 msgid "Remote Backups"
-msgstr "Backups remotos"
+msgstr "Backup remoto"
 
 #: backup/templates/backup/remoteBackups.html:3
 msgid "Transfer Websites from Remote Server - CyberPanel"
@@ -737,7 +737,7 @@ msgstr "Buscar Contas.."
 #: backup/templates/backup/remoteBackups.html:107
 #: websiteFunctions/templates/websiteFunctions/deleteWebsite.html:65
 msgid "Website"
-msgstr "Website"
+msgstr "Site"
 
 #: backup/templates/backup/remoteBackups.html:108
 #: baseTemplate/templates/baseTemplate/homePage.html:143
@@ -984,7 +984,7 @@ msgstr "CyberPanel"
 #: baseTemplate/templates/baseTemplate/index.html:199
 #: baseTemplate/templates/baseTemplate/index.html:203
 msgid "Web Hosting Control Panel"
-msgstr "Painel de Controlo da Hospedagem Web"
+msgstr "Painel de Controle"
 
 #: baseTemplate/templates/baseTemplate/index.html:205
 msgid "Close sidebar"
@@ -1014,7 +1014,7 @@ msgstr "Sair"
 #: baseTemplate/templates/baseTemplate/index.html:256
 #: baseTemplate/templates/baseTemplate/index.html:261
 msgid "CPU Load Average"
-msgstr "CPU Load Average"
+msgstr "Média de carga da CPU"
 
 #: baseTemplate/templates/baseTemplate/index.html:267
 msgid "Dashboard Quick Menu"
@@ -1588,14 +1588,14 @@ msgstr "Configurações ModSecurity"
 #, fuzzy
 #| msgid "Security"
 msgid "ModSecurity Conf"
-msgstr "ModSecurity Conf"
+msgstr "Configuração ModSecurity"
 
 #: baseTemplate/templates/baseTemplate/index.html:788
 #: firewall/templates/firewall/modSecurityRules.html:20
 #, fuzzy
 #| msgid "Security"
 msgid "ModSecurity Rules"
-msgstr "ModSecurity Rules"
+msgstr "Regras ModSecurity"
 
 #: baseTemplate/templates/baseTemplate/index.html:791
 msgid "ModSecurity Rules Packs"
@@ -1810,7 +1810,7 @@ msgstr "Nome de Usuário"
 #: userManagment/templates/userManagment/createUser.html:90
 #: userManagment/templates/userManagment/modifyUser.html:68
 msgid "Generate"
-msgstr "Gerente"
+msgstr "Gerar senha"
 
 #: databases/templates/databases/createDatabase.html:66
 #: databases/templates/databases/listDataBases.html:77
@@ -1820,7 +1820,7 @@ msgstr "Gerente"
 #: userManagment/templates/userManagment/createUser.html:95
 #: userManagment/templates/userManagment/modifyUser.html:73
 msgid "Generated Password"
-msgstr "Gerar Palavra-Chave"
+msgstr "Gerar senha"
 
 #: databases/templates/databases/createDatabase.html:71
 #: databases/templates/databases/listDataBases.html:84
@@ -1889,11 +1889,11 @@ msgstr "Registos obtidos com sucesso para"
 
 #: databases/templates/databases/listDataBases.html:49
 msgid "Password changed for: "
-msgstr "Palavra-chave alterada para: "
+msgstr "Senha alterada para: "
 
 #: databases/templates/databases/listDataBases.html:53
-msgid "Cannot change password for "
-msgstr "Impossível alterar palavra-chave para "
+msgid "Cannot change password for"
+msgstr "Impossível alterar senha para"
 
 #: databases/templates/databases/listDataBases.html:59
 #: firewall/templates/firewall/firewall.html:161 ftp/templates/ftp/listFTPAccounts.html:76
@@ -1902,7 +1902,7 @@ msgstr "Impossível conectar ao servidor. Por favor atualize esta página"
 
 #: databases/templates/databases/listDataBases.html:106
 msgid "Database User"
-msgstr "Utilizador do Banco de Dados"
+msgstr "Usuario do Banco de Dados"
 
 #: databases/templates/databases/listDataBases.html:117
 #: ftp/templates/ftp/listFTPAccounts.html:139
@@ -2227,7 +2227,7 @@ msgid ""
 "install it."
 msgstr ""
 "No momento, o Docker não está instalado neste servidor. Para gerenciar contêineres, "
-"vocêdeve primeiro instalá-lo."
+"você deve primeiro instalá-lo."
 
 #: dockerManager/templates/dockerManager/install.html:53
 msgid ""
@@ -2294,7 +2294,7 @@ msgstr "Pull"
 
 #: dockerManager/templates/dockerManager/runContainer.html:3
 msgid "Run new container - CyberPanel"
-msgstr "Iniciar novo contaminar - CyberPanel"
+msgstr "Iniciar novo contêiner - CyberPanel"
 
 #: dockerManager/templates/dockerManager/runContainer.html:12
 msgid "Run Container"
@@ -2311,7 +2311,7 @@ msgstr "Detalhes de Contêiner"
 #: dockerManager/templates/dockerManager/runContainer.html:36
 #: dockerManager/templates/dockerManager/viewContainer.html:70
 msgid "Image"
-msgstr "Imageem"
+msgstr "Imagem"
 
 #: dockerManager/templates/dockerManager/runContainer.html:44
 msgid "Tag"
@@ -2330,7 +2330,7 @@ msgstr ""
 #: dockerManager/templates/dockerManager/runContainer.html:125
 #: dockerManager/templates/dockerManager/viewContainer.html:283
 msgid "Map Volumes"
-msgstr ""
+msgstr "Mapa de volumes"
 
 #: dockerManager/templates/dockerManager/runContainer.html:153
 #: dockerManager/templates/dockerManager/viewContainer.html:310
@@ -2385,7 +2385,7 @@ msgstr "Uso de Memória "
 
 #: dockerManager/templates/dockerManager/viewContainer.html:68
 msgid "Container ID"
-msgstr ""
+msgstr "ID contêiner"
 
 #: dockerManager/templates/dockerManager/viewContainer.html:77
 msgid "Ports"
@@ -2393,7 +2393,7 @@ msgstr "Porta"
 
 #: dockerManager/templates/dockerManager/viewContainer.html:79
 msgid "to"
-msgstr "parar"
+msgstr "para"
 
 #: dockerManager/templates/dockerManager/viewContainer.html:108
 #: emailMarketing/templates/emailMarketing/manageLists.html:145
@@ -2576,29 +2576,29 @@ msgstr "Você está fazendo para excluir esta lista .."
 #: filemanager/templates/filemanager/index.html:649
 #: websiteFunctions/templates/websiteFunctions/website.html:447
 msgid "Close"
-msgstr ""
+msgstr "Fechar"
 
 #: emailMarketing/templates/emailMarketing/manageLists.html:55
 #: emailMarketing/templates/emailMarketing/sendEmails.html:55
 #: filemanager/templates/filemanager/index.html:416
 msgid "Confirm"
-msgstr ""
+msgstr "Confirma"
 
 #: emailMarketing/templates/emailMarketing/manageLists.html:63
 msgid "Verify This List"
-msgstr ""
+msgstr "Verifique esta lista"
 
 #: emailMarketing/templates/emailMarketing/manageLists.html:66
 #, fuzzy
 #| msgid "Add Destination"
 msgid "Add More Emails"
-msgstr "Adicionar Destino"
+msgstr "Adicionar mais e-mails"
 
 #: emailMarketing/templates/emailMarketing/manageLists.html:83
 #, fuzzy
 #| msgid "Create Email"
 msgid "Load Emails"
-msgstr "Criar E-Mail"
+msgstr "Carregar e-mails"
 
 #: emailMarketing/templates/emailMarketing/manageLists.html:142
 msgid "email"
@@ -2608,17 +2608,17 @@ msgstr "e-mail"
 #, fuzzy
 #| msgid "Server Status"
 msgid "Verification Status"
-msgstr "Estado do Servidor"
+msgstr "Status de verificação"
 
 #: emailMarketing/templates/emailMarketing/manageLists.html:144
 msgid "Date Created"
-msgstr ""
+msgstr "Data Criada"
 
 #: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:3
 #, fuzzy
 #| msgid "Manage SSL - CyberPanel"
 msgid "Manage SMTP Hosts - CyberPanel"
-msgstr "Gerir SSL - CyberPanel"
+msgstr "Gerenciar hosts SMTP - CyberPanel"
 
 #: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:13
 #: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:19
@@ -2638,7 +2638,7 @@ msgstr ""
 #: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:29
 #: emailMarketing/templates/emailMarketing/sendEmails.html:153
 msgid "SMTP Host"
-msgstr ""
+msgstr "Endereço SMTP"
 
 #: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:59
 #, fuzzy
@@ -2659,7 +2659,7 @@ msgstr ""
 
 #: emailMarketing/templates/emailMarketing/manageSMTPHosts.html:91
 msgid "Verify Host"
-msgstr ""
+msgstr "Verificar host"
 
 #: emailMarketing/templates/emailMarketing/sendEmails.html:3
 #, fuzzy
@@ -2694,11 +2694,11 @@ msgstr "Selecionar website"
 
 #: emailMarketing/templates/emailMarketing/sendEmails.html:41
 msgid "Delete This Template"
-msgstr ""
+msgstr "Apagar esse template"
 
 #: emailMarketing/templates/emailMarketing/sendEmails.html:48
 msgid "You are doing to delete this template.."
-msgstr ""
+msgstr "Você está fazendo para excluir este modelo"
 
 #: emailMarketing/templates/emailMarketing/sendEmails.html:63
 #, fuzzy
@@ -2714,11 +2714,11 @@ msgstr "Selecionar Conta de FTP"
 
 #: emailMarketing/templates/emailMarketing/sendEmails.html:98
 msgid "Send to un-verified email addresses."
-msgstr ""
+msgstr "Enviar para endereços de e-mail não verificados"
 
 #: emailMarketing/templates/emailMarketing/sendEmails.html:107
 msgid "Include unsubscribe link."
-msgstr ""
+msgstr "Incluir link de cancelamento de inscrição"
 
 #: emailMarketing/templates/emailMarketing/sendEmails.html:116
 #, fuzzy
@@ -2728,7 +2728,7 @@ msgstr "Iniciar"
 
 #: emailMarketing/templates/emailMarketing/sendEmails.html:151
 msgid "Job ID"
-msgstr ""
+msgstr "ID da tarefa"
 
 #: emailMarketing/templates/emailMarketing/sendEmails.html:154
 #, fuzzy
@@ -2738,11 +2738,11 @@ msgstr "E-Mails"
 
 #: emailMarketing/templates/emailMarketing/sendEmails.html:155
 msgid "Sent"
-msgstr ""
+msgstr "Enviei"
 
 #: emailMarketing/templates/emailMarketing/sendEmails.html:156
 msgid "Failed"
-msgstr ""
+msgstr "Falhou"
 
 #: emailMarketing/templates/emailMarketing/website.html:16
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:17
@@ -2910,22 +2910,22 @@ msgstr "Nome de Domínio"
 #: websiteFunctions/templates/websiteFunctions/website.html:262
 #: websiteFunctions/templates/websiteFunctions/website.html:267
 msgid "Add new Cron Job"
-msgstr ""
+msgstr "Adicionar novo Cron Job"
 
 #: emailMarketing/templates/emailMarketing/website.html:305
 #: websiteFunctions/templates/websiteFunctions/website.html:268
 msgid "Cron Jobs"
-msgstr ""
+msgstr "Cron Jobs"
 
 #: emailMarketing/templates/emailMarketing/website.html:332
 #: websiteFunctions/templates/websiteFunctions/website.html:295
 msgid "This path is relative to: "
-msgstr ""
+msgstr "Este caminho é relativo"
 
 #: emailMarketing/templates/emailMarketing/website.html:332
 #: websiteFunctions/templates/websiteFunctions/website.html:295
 msgid "Leave empty to set default."
-msgstr ""
+msgstr "Deixe em branco para definir o padrão"
 
 #: emailMarketing/templates/emailMarketing/website.html:336
 #: websiteFunctions/templates/websiteFunctions/createWebsite.html:57
@@ -3171,7 +3171,7 @@ msgstr "PHP alterado com sucesso para: "
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:538
 #: websiteFunctions/templates/websiteFunctions/website.html:795
 msgid "Files"
-msgstr "Ficheiros"
+msgstr "Arquivos"
 
 #: emailMarketing/templates/emailMarketing/website.html:863
 #: emailMarketing/templates/emailMarketing/website.html:866
@@ -3183,7 +3183,7 @@ msgstr "Ficheiros"
 #: websiteFunctions/templates/websiteFunctions/website.html:803
 #: websiteFunctions/templates/websiteFunctions/website.html:804
 msgid "File Manager"
-msgstr "Gestor de Ficheiros"
+msgstr "Gerenciador de arquivos"
 
 #: emailMarketing/templates/emailMarketing/website.html:874
 #: emailMarketing/templates/emailMarketing/website.html:877
@@ -3195,13 +3195,13 @@ msgstr "Gestor de Ficheiros"
 #: websiteFunctions/templates/websiteFunctions/website.html:812
 #: websiteFunctions/templates/websiteFunctions/website.html:845
 msgid "open_basedir Protection"
-msgstr ""
+msgstr "Proteção open_basedir"
 
 #: emailMarketing/templates/emailMarketing/website.html:878
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:561
 #: websiteFunctions/templates/websiteFunctions/website.html:813
 msgid "open_basedir"
-msgstr ""
+msgstr "open_basedir"
 
 #: emailMarketing/templates/emailMarketing/website.html:890
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:574
@@ -3225,7 +3225,7 @@ msgstr "Apagar Conta de FTP"
 #, fuzzy
 #| msgid "Save Changes"
 msgid "Apply Changes"
-msgstr "Guardar Alterações"
+msgstr "Salvar alterações"
 
 #: emailMarketing/templates/emailMarketing/website.html:951
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:637
@@ -3264,19 +3264,19 @@ msgstr "Gerir SSL"
 #: websiteFunctions/templates/websiteFunctions/website.html:939
 #: websiteFunctions/templates/websiteFunctions/website.html:940
 msgid "SMTP Hosts"
-msgstr ""
+msgstr "Endereços SMTP"
 
 #: emailMarketing/templates/emailMarketing/website.html:1019
 #: emailMarketing/templates/emailMarketing/website.html:1022
 #: websiteFunctions/templates/websiteFunctions/website.html:945
 #: websiteFunctions/templates/websiteFunctions/website.html:950
 msgid "Compose Message"
-msgstr ""
+msgstr "Compor mensagem"
 
 #: emailMarketing/templates/emailMarketing/website.html:1023
 #: websiteFunctions/templates/websiteFunctions/website.html:951
 msgid "Compose"
-msgstr ""
+msgstr "Compor"
 
 #: emailMarketing/templates/emailMarketing/website.html:1050
 #: websiteFunctions/templates/websiteFunctions/applicationInstaller.html:14
@@ -3322,7 +3322,7 @@ msgstr "Wordpress com LSCache"
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:687
 #: websiteFunctions/templates/websiteFunctions/website.html:1001
 msgid "Joomla"
-msgstr ""
+msgstr "Joomla"
 
 #: emailMarketing/templates/emailMarketing/website.html:1089
 #: emailMarketing/templates/emailMarketing/website.html:1093
@@ -3331,13 +3331,13 @@ msgstr ""
 #: websiteFunctions/templates/websiteFunctions/website.html:1007
 #: websiteFunctions/templates/websiteFunctions/website.html:1011
 msgid "Attach Git with this website!"
-msgstr ""
+msgstr "Anexar Git a este site!"
 
 #: emailMarketing/templates/emailMarketing/website.html:1094
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:699
 #: websiteFunctions/templates/websiteFunctions/website.html:1012
 msgid "Git"
-msgstr ""
+msgstr "Git"
 
 #: emailMarketing/templates/emailMarketing/website.html:1103
 #: emailMarketing/templates/emailMarketing/website.html:1107
@@ -3354,7 +3354,7 @@ msgstr "Instalar"
 #: websiteFunctions/templates/websiteFunctions/launchChild.html:713
 #: websiteFunctions/templates/websiteFunctions/website.html:1023
 msgid "Prestashop"
-msgstr ""
+msgstr "Prestashop"
 
 #: emailPremium/templates/emailPremium/SpamAssassin.html:3
 #: firewall/templates/firewall/spamassassin.html:3
@@ -3381,7 +3381,7 @@ msgstr "Nesta página, pode definir os seus destinos de backups. (SFTP)"
 
 #: emailPremium/templates/emailPremium/SpamAssassin.html:34
 msgid "SpamAssassin is not installed "
-msgstr ""
+msgstr "SpamAssassin não está instalado"
 
 #: emailPremium/templates/emailPremium/SpamAssassin.html:37
 #: firewall/templates/firewall/csf.html:31 firewall/templates/firewall/modSecurity.html:35
@@ -3463,7 +3463,7 @@ msgstr "Logs de E-Mail"
 
 #: emailPremium/templates/emailPremium/emailLimits.html:14
 msgid "View and change email limits for a domain name."
-msgstr ""
+msgstr "Visualizar e alterar os limites de e-mail de um nome de domínio."
 
 #: emailPremium/templates/emailPremium/emailLimits.html:25
 #, fuzzy
@@ -3476,14 +3476,14 @@ msgstr "Uso de Recursos"
 #: emailPremium/templates/emailPremium/emailPage.html:54
 #: emailPremium/templates/emailPremium/listDomains.html:61
 msgid "Limits are being Applied!"
-msgstr ""
+msgstr "Limites estão sendo aplicados!"
 
 #: emailPremium/templates/emailPremium/emailLimits.html:54
 #: emailPremium/templates/emailPremium/emailLimits.html:160
 #: emailPremium/templates/emailPremium/emailPage.html:56
 #: emailPremium/templates/emailPremium/listDomains.html:63
 msgid "Limits are not being applied!"
-msgstr ""
+msgstr "Limites estão sendo aplicados!"
 
 #: emailPremium/templates/emailPremium/emailLimits.html:58
 #: emailPremium/templates/emailPremium/emailPage.html:66
@@ -3493,7 +3493,7 @@ msgstr ""
 #: userManagment/templates/userManagment/listUsers.html:51
 #: websiteFunctions/templates/websiteFunctions/listCron.html:66
 msgid "Edit"
-msgstr ""
+msgstr "Editar"
 
 #: emailPremium/templates/emailPremium/emailLimits.html:70
 #: emailPremium/templates/emailPremium/emailPage.html:78
@@ -3541,15 +3541,15 @@ msgstr "Gerir SSL"
 
 #: emailPremium/templates/emailPremium/emailPage.html:14
 msgid "View and change limits for an Email Address."
-msgstr ""
+msgstr "Visualize e altere os limites de um endereço de e-mail."
 
 #: emailPremium/templates/emailPremium/emailPage.html:60
 msgid "Logging in ON!"
-msgstr ""
+msgstr "Fazendo login LIGADO"
 
 #: emailPremium/templates/emailPremium/emailPage.html:62
 msgid "Logging is Off"
-msgstr ""
+msgstr "Fazendo login DESLIGADO"
 
 #: emailPremium/templates/emailPremium/emailPage.html:88
 #, fuzzy
