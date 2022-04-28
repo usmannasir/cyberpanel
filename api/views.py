@@ -435,9 +435,13 @@ def remoteTransfer(request):
 
                 ## Accounts to transfer is a path to file, containing accounts.
 
+
                 execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/remoteTransferUtilities.py"
-                execPath = execPath + " remoteTransfer --ipAddress " + ipAddress + " --dir " + dir + " --accountsToTransfer " + path
+                execPath = execPath + " remoteTransfer --ipAddress " + ipAddress.rstrip('\n') + " --dir " + dir + " --accountsToTransfer " + path
                 ProcessUtilities.popenExecutioner(execPath)
+
+                if os.path.exists('/usr/local/CyberCP/debug'):
+                    logging.writeToFile('Repor of %s' % repr(execPath))
 
                 return HttpResponse(json.dumps({"transferStatus": 1, "dir": dir}))
 
