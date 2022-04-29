@@ -404,7 +404,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             count = 1
 
             while (1):
-                command = 'wget https://www.snappymail.net/repository/webmail/snappymail-community-latest.zip'
+                command = 'wget https://snappymail.eu/repository/latest.tar.gz'
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
                 if res != 0:
@@ -419,7 +419,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             count = 0
 
             while (1):
-                command = 'unzip snappymail-community-latest.zip -d /usr/local/CyberCP/public/snappymail'
+                command = 'unzip latest.tar.gz -d /usr/local/CyberCP/public/snappymail'
 
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
