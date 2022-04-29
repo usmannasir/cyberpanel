@@ -18,8 +18,8 @@ from django.http import HttpResponse
 from django.utils import translation
 # Create your views here.
 
-VERSION = '2.1'
-BUILD = 2
+VERSION = '2.3'
+BUILD = 1
 
 
 def verifyLogin(request):

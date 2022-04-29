@@ -225,7 +225,8 @@ class ProcessUtilities(multi.Thread):
                     command = 'sudo %s' % (command)
 
                 if os.path.exists(ProcessUtilities.debugPath):
-                    logging.writeToFile(ProcessUtilities.token + command)
+                    if command.find('cat') == -1:
+                        logging.writeToFile(ProcessUtilities.token + command)
 
                 if dir == None:
                     sock.sendall((ProcessUtilities.token + command).encode('utf-8'))
@@ -238,8 +239,11 @@ class ProcessUtilities(multi.Thread):
                 else:
                     command = '%s-u %s -d %s %s' % (ProcessUtilities.token, user, dir, command)
                 command = command.replace('sudo', '')
+
+
                 if os.path.exists(ProcessUtilities.debugPath):
-                    logging.writeToFile(command)
+                    if command.find('cat') == -1:
+                        logging.writeToFile(command)
 
                 sock.sendall(command.encode('utf-8'))
 

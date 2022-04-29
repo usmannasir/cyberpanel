@@ -224,7 +224,8 @@ def FileManagerRoot(request):
         if(Status == 1):
             template = 'baseTemplate/FileManager.html'
         else:
-          return  redirect("https://cyberpanel.net/adons")
+          return  redirect("https://cyberpanel.net/cyberpanel-addons")
+
     except BaseException as msg:
         template = 'baseTemplate/FileManager.html'
 

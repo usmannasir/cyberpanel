@@ -18,8 +18,8 @@ from plogical.httpProc import httpProc
 
 # Create your views here.
 
-VERSION = '2.1'
-BUILD = 2
+VERSION = '2.3'
+BUILD = 1
 
 
 @ensure_csrf_cookie
@@ -120,6 +120,14 @@ def versionManagment(request):
 
     Currentcomt = output.rstrip("\n")
     notechk = True;
+    
+    command ="git fetch"
+    output = ProcessUtilities.outputExecutioner(command)
+    
+    command ="git -C /usr/local/CyberCP/ log %s..%s --pretty=oneline | wc -l" % ( Currentcomt, latestcomit)    
+    output = ProcessUtilities.outputExecutioner(command)    
+    
+    numCommits = output.rstrip("\n")
 
     if(Currentcomt == latestcomit):
         notechk = False;
@@ -127,7 +135,7 @@ def versionManagment(request):
 
     template = 'baseTemplate/versionManagment.html'
     finalData = {'build': currentBuild, 'currentVersion': currentVersion, 'latestVersion': latestVersion,
-                 'latestBuild': latestBuild, 'latestcomit': latestcomit, "Currentcomt": Currentcomt, "Notecheck" : notechk }
+                 'latestBuild': latestBuild, 'latestcomit': latestcomit, "Currentcomt": Currentcomt, "Notecheck" : notechk, "numCommits": numCommits }
 
 
     proc = httpProc(request, template, finalData, 'versionManagement')
