@@ -43,7 +43,6 @@ class IncJobs(multi.Thread):
         self.website = ''
         self.backupDestinations = ''
         self.jobid = 0
-        self.jobids = ''
         self.metaPath = ''
         self.path = ''
         self.reconstruct = ''
@@ -58,9 +57,9 @@ class IncJobs(multi.Thread):
             self.restorePoint()
 
     def getRemoteBackups(self):
-        if self.backupDestinations == 'onedrive':
-            path = '%s' % (self.website)
-            command = 'export RESTIC_PASSWORD=%s PATH=${PATH}:/usr/bin && restic -r rclone:%s:%s snapshots' % (
+        if self.backupDestinations[:4] == 'sftp':
+            path = '/home/backup/%s' % (self.website)
+            command = 'export RESTIC_PASSWORD=%s PATH=${PATH}:/usr/bin && restic -r %s:%s snapshots' % (
                 self.passwordFile, self.backupDestinations, path)
             return ProcessUtilities.outputExecutioner(command, self.externalApp).split('\n')
         else:
@@ -185,8 +184,8 @@ class IncJobs(multi.Thread):
 
                     key, secret = self.getAWSData()
 
-                    command = 'export AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s  && restic -r s3:s3.amazonaws.com/%s forget %s --prune --password-file %s' % (
-                        key, secret, self.website, self.jobids, self.passwordFile)
+                    command = 'export AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s  && restic -r s3:s3.amazonaws.com/%s forget %s --password-file %s' % (
+                        key, secret, self.website, snapshotID, self.passwordFile)
 
                     result = ProcessUtilities.outputExecutioner(command, self.externalApp)
 
@@ -195,6 +194,11 @@ class IncJobs(multi.Thread):
                     else:
                         logging.statusWriter(self.statusPath, 'Failed: %s. [5009]' % (result), 1)
                         return 0
+
+                    command = 'export AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s  && restic -r s3:s3.amazonaws.com/%s prune --password-file %s' % (
+                        key, secret, self.website, self.passwordFile)
+
+                    ProcessUtilities.outputExecutioner(command, self.externalApp)
                 else:
                     self.backupDestinations = self.jobid.destination
 
@@ -250,7 +254,7 @@ class IncJobs(multi.Thread):
 
             repoLocation = '/home/%s/incbackup' % (self.website)
 
-            command = 'restic -r %s forget %s --prune --password-file %s' % (repoLocation, self.jobids, self.passwordFile)
+            command = 'restic -r %s forget %s --password-file %s' % (repoLocation, self.jobid.snapshotid, self.passwordFile)
             result = ProcessUtilities.outputExecutioner(command, self.externalApp)
 
             if result.find('removed snapshot') > -1 or result.find('deleted') > -1:
@@ -258,6 +262,9 @@ class IncJobs(multi.Thread):
             else:
                 logging.statusWriter(self.statusPath, 'Failed: %s. [5009]' % (result), 1)
                 return 0
+
+            command = 'restic -r %s prune --password-file %s' % (repoLocation, self.passwordFile)
+            ProcessUtilities.outputExecutioner(command, self.externalApp)
 
             return 1
         else:
@@ -276,17 +283,17 @@ class IncJobs(multi.Thread):
     ## Last argument delete is set when the snapshot is to be deleted from this repo, when this argument is set, any preceding argument is not used
 
     def sftpFunction(self, backupPath, type, restore=None, delete=None):
-        
+        return 0
         if restore == None:
             # Define our excludes file for use with restic
             backupExcludesFile = '/home/%s/backup-exclude.conf' % (self.website.domain)
             resticBackupExcludeCMD = ' --exclude-file=%s' % (backupExcludesFile)
-            remotePath = '%s' % (self.website.domain) 
-            command = 'export PATH=${PATH}:/usr/bin && restic -r rclone:%s:%s backup %s --password-file %s --exclude %s --exclude /home/%s/backup' % (
+            remotePath = '/home/backup/%s' % (self.website.domain)
+            command = 'export PATH=${PATH}:/usr/bin && restic -r %s:%s backup %s --password-file %s --exclude %s --exclude /home/%s/backup' % (
                 self.backupDestinations, remotePath, backupPath, self.passwordFile, self.repoPath, self.website.domain)
             # If /home/%s/backup-exclude.conf file exists lets pass this to restic by appending the command to end.
             if os.path.isfile(backupExcludesFile):
-                command = command + resticBackupExcludeCMD            
+                command = command + resticBackupExcludeCMD
             result = ProcessUtilities.outputExecutioner(command, self.externalApp)
 
             if result.find('saved') == -1:
@@ -306,9 +313,9 @@ class IncJobs(multi.Thread):
             newSnapshot.save()
             return 1
         elif delete:
-            repoLocation = '%s' % (self.website)            
-            command = 'export PATH=${PATH}:/usr/bin && restic -r rclone:%s:%s forget %s --prune --password-file %s' % (
-                self.jobid.destination, repoLocation, self.jobids, self.passwordFile)
+            repoLocation = '/home/backup/%s' % (self.website)
+            command = 'export PATH=${PATH}:/usr/bin && restic -r %s:%s forget %s --password-file %s' % (
+                self.jobid.destination, repoLocation, self.jobid.snapshotid, self.passwordFile)
             result = ProcessUtilities.outputExecutioner(command, self.externalApp)
 
             if result.find('removed snapshot') > -1 or result.find('deleted') > -1:
@@ -316,10 +323,13 @@ class IncJobs(multi.Thread):
             else:
                 logging.statusWriter(self.statusPath, 'Failed: %s. [5009]' % (result), 1)
                 return 0
+
+            command = 'export PATH=${PATH}:/usr/bin && restic -r %s:%s prune --password-file %s' % (self.jobid.destination, repoLocation, self.passwordFile)
+            ProcessUtilities.outputExecutioner(command, self.externalApp)
         else:
             if self.reconstruct == 'remote':
-                repoLocation = '%s' % (self.website)                
-                command = 'export RESTIC_PASSWORD=%s PATH=${PATH}:/usr/bin && restic -r rclone:%s:%s restore %s --target %s' % (
+                repoLocation = '/home/backup/%s' % (self.website)
+                command = 'export RESTIC_PASSWORD=%s PATH=${PATH}:/usr/bin && restic -r %s:%s restore %s --target %s' % (
                     self.passwordFile,
                     self.backupDestinations, repoLocation, self.jobid, self.restoreTarget)
                 result = ProcessUtilities.outputExecutioner(command, self.externalApp)
@@ -327,8 +337,8 @@ class IncJobs(multi.Thread):
                     logging.statusWriter(self.statusPath, 'Failed: %s. [5009]' % (result), 1)
                     return 0
             else:
-                repoLocation = '%s' % (self.website)
-                command = 'export PATH=${PATH}:/usr/bin && restic -r rclone:%s:%s restore %s --target %s --password-file %s' % (
+                repoLocation = '/home/backup/%s' % (self.website)
+                command = 'export PATH=${PATH}:/usr/bin && restic -r %s:%s restore %s --target %s --password-file %s' % (
                     self.jobid.destination, repoLocation, self.jobid.snapshotid, self.restoreTarget, self.passwordFile)
                 result = ProcessUtilities.outputExecutioner(command, self.externalApp)
                 if result.find('restoring') == -1:
@@ -341,7 +351,7 @@ class IncJobs(multi.Thread):
         try:
 
             if self.reconstruct == 'remote':
-                if self.backupDestinations == 'onedrive':
+                if self.backupDestinations[:4] == 'sftp':
                     self.sftpFunction('none', 'none', 1)
                 else:
                     if self.awsFunction('restore', '', self.jobid) == 0:
@@ -349,7 +359,7 @@ class IncJobs(multi.Thread):
             else:
                 if self.jobid.destination == 'local':
                     return self.localFunction('none', 'none', 1)
-                elif self.jobid.destination == 'onedrive':
+                elif self.jobid.destination[:4] == 'sftp':
                     return self.sftpFunction('none', 'none', 1)
                 else:
                     return self.awsFunction('restore', '', self.jobid.snapshotid)
@@ -364,7 +374,7 @@ class IncJobs(multi.Thread):
         try:
 
             if self.reconstruct == 'remote':
-                if self.backupDestinations == 'onedrive':
+                if self.backupDestinations[:4] == 'sftp':
                     if self.sftpFunction('none', 'none', 1) == 0:
                         return 0
                 else:
@@ -389,7 +399,7 @@ class IncJobs(multi.Thread):
                 if self.jobid.destination == 'local':
                     if self.localFunction('none', 'none', 1) == 0:
                         return 0
-                elif self.jobid.destination == 'onedrive':
+                elif self.jobid.destination[:4] == 'sftp':
                     if self.sftpFunction('none', 'none', 1) == 0:
                         return 0
                 else:
@@ -420,7 +430,7 @@ class IncJobs(multi.Thread):
         try:
 
             if self.reconstruct == 'remote':
-                if self.backupDestinations == 'onedrive':
+                if self.backupDestinations[:4] == 'sftp':
                     if self.sftpFunction('none', 'none', 1) == 0:
                         return 0
                 else:
@@ -429,7 +439,7 @@ class IncJobs(multi.Thread):
             else:
                 if self.jobid.destination == 'local':
                     return self.localFunction('none', 'none', 1)
-                elif self.jobid.destination == 'onedrive':
+                elif self.jobid.destination[:4] == 'sftp':
                     return self.sftpFunction('none', 'none', 1)
                 else:
                     return self.awsFunction('restore', '', self.jobid.snapshotid)
@@ -444,7 +454,7 @@ class IncJobs(multi.Thread):
         try:
 
             if self.reconstruct == 'remote':
-                if self.backupDestinations == 'onedrive':
+                if self.backupDestinations[:4] == 'sftp':
                     if self.sftpFunction('none', 'none', 1) == 0:
                         return 0
                 else:
@@ -454,7 +464,7 @@ class IncJobs(multi.Thread):
                 if self.jobid.destination == 'local':
                     if self.localFunction('none', 'none', 1) == 0:
                         return 0
-                elif self.jobid.destination == 'onedrive':
+                elif self.jobid.destination[:4] == 'sftp':
                     if self.sftpFunction('none', 'none', 1) == 0:
                         return 0
                 else:
@@ -609,7 +619,7 @@ class IncJobs(multi.Thread):
             if self.backupDestinations == 'local':
                 if self.localFunction(backupPath, 'data') == 0:
                     return 0
-            elif self.backupDestinations == 'onedrive':
+            elif self.backupDestinations[:4] == 'sftp':
                 if self.sftpFunction(backupPath, 'data') == 0:
                     return 0
             else:
@@ -659,7 +669,7 @@ class IncJobs(multi.Thread):
                 if self.backupDestinations == 'local':
                     if self.localFunction(dbPathNew, 'database') == 0:
                         return 0
-                elif self.backupDestinations == 'onedrive':
+                elif self.backupDestinations[:4] == 'sftp':
                     if self.sftpFunction(dbPathNew, 'database') == 0:
                         return 0
                 else:
@@ -690,7 +700,7 @@ class IncJobs(multi.Thread):
                 if self.backupDestinations == 'local':
                     if self.localFunction(backupPath, 'email') == 0:
                         return 0
-                elif self.backupDestinations == 'onedrive':
+                elif self.backupDestinations[:4] == 'sftp':
                     if self.sftpFunction(backupPath, 'email') == 0:
                         return 0
                 else:
@@ -713,7 +723,7 @@ class IncJobs(multi.Thread):
             if self.backupDestinations == 'local':
                 if self.localFunction(backupPath, 'meta') == 0:
                     return 0
-            elif self.backupDestinations == 'onedrive':
+            elif self.backupDestinations[:4] == 'sftp':
                 if self.sftpFunction(backupPath, 'meta') == 0:
                     return 0
             else:
@@ -728,42 +738,44 @@ class IncJobs(multi.Thread):
             return 0
 
     def initiateRepo(self):
-        try:            
-            logging.statusWriter(self.statusPath, 'Checking for backup repo..', 1)
+        try:
+            logging.statusWriter(self.statusPath, 'Will first initiate backup repo..', 1)
+
             if self.backupDestinations == 'local':
-                checkcommand = 'restic --repo %s snapshots --password-file %s' % (self.repoPath, self.passwordFile)       
-                checkresult = ProcessUtilities.outputExecutioner(checkcommand)
-                                
-                if checkresult.find('Is there a repository at the following location') > -1:                    
-                    logging.statusWriter(self.statusPath, 'Initiating backup repo..', 1)
-                    command = 'restic init --repo %s --password-file %s' % (self.repoPath, self.passwordFile)
-            elif self.backupDestinations == 'onedrive':                
-                checkcommand = 'restic -r rclone:%s:%s snapshots --password-file %s ' % (self.backupDestinations, self.website.domain, self.passwordFile)                                                
-                checkresult = ProcessUtilities.outputExecutioner(checkcommand)
-                                
-                if checkresult.find('Is there a repository at the following location') > -1:                    
-                    logging.statusWriter(self.statusPath, 'Initiating backup repo..', 1)
-                    command = 'export PATH=${PATH}:/usr/bin && restic init --repo rclone:%s:%s --password-file %s' % ( 
-                        self.backupDestinations, remotePath, self.passwordFile)
-            else:
-                checkcommand = 'export AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s  && restic -r s3:s3.amazonaws.com/%s snapshots --password-file %s' % (
-                        key, secret, self.website.domain, self.passwordFile)
-                checkresult = ProcessUtilities.outputExecutioner(checkcommand, self.externalApp)
-                                
-                if checkresult.find('Is there a repository at the following location') > -1:                    
-                    logging.statusWriter(self.statusPath, 'Initiating backup repo..', 1)
-                    key, secret = self.getAWSData()
-                    command = 'export AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s  && restic -r s3:s3.amazonaws.com/%s init --password-file %s' % (
-                        key, secret, self.website.domain, self.passwordFile)
-                   
-            if checkresult.find('Is there a repository at the following location') > -1:
-                result = ProcessUtilities.outputExecutioner(command, self.externalApp)                                                     
+                command = 'restic init --repo %s --password-file %s' % (self.repoPath, self.passwordFile)
+                result = ProcessUtilities.outputExecutioner(command, self.externalApp)
+
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.writeToFile(result)
-                logging.statusWriter(self.statusPath, 'Repo %s initiated for %s.' % (self.backupDestinations, self.website.domain), 1)
-            else: 
-                logging.statusWriter(self.statusPath, 'OK', 1)
-            
+
+                if result.find('config file already exists') == -1:
+                    logging.statusWriter(self.statusPath, result, 1)
+
+            elif self.backupDestinations[:4] == 'sftp':
+                remotePath = '/home/backup/%s' % (self.website.domain)
+                command = 'export PATH=${PATH}:/usr/bin && restic init --repo %s:%s --password-file %s' % (
+                    self.backupDestinations, remotePath, self.passwordFile)
+                result = ProcessUtilities.outputExecutioner(command, self.externalApp)
+
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.writeToFile(result)
+
+                if result.find('config file already exists') == -1:
+                    logging.statusWriter(self.statusPath, result, 1)
+            else:
+                key, secret = self.getAWSData()
+                command = 'export AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s  && restic -r s3:s3.amazonaws.com/%s init --password-file %s' % (
+                    key, secret, self.website.domain, self.passwordFile)
+                result = ProcessUtilities.outputExecutioner(command, self.externalApp)
+
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.writeToFile(result)
+
+                if result.find('config file already exists') == -1:
+                    logging.statusWriter(self.statusPath, result, 1)
+
+            logging.statusWriter(self.statusPath,
+                                 'Repo %s initiated for %s.' % (self.backupDestinations, self.website.domain), 1)
             return 1
         except BaseException as msg:
             logging.statusWriter(self.statusPath, '%s. [IncJobs.initiateRepo.47][5009]' % str(msg), 1)
@@ -799,9 +811,9 @@ Subject: %s
 
             ### Checking if restic is installed before moving on
 
-            command = 'restic version'
+            command = 'restic'
 
-            if ProcessUtilities.outputExecutioner(command).find('compiled with') == -1:
+            if ProcessUtilities.outputExecutioner(command).find('restic is a backup program which') == -1:
                 try:
 
                     CentOSPath = '/etc/redhat-release'
@@ -858,7 +870,7 @@ Subject: %s
             ## Completed password generation
 
             if self.initiateRepo() == 0:
-               return 0
+                return 0
 
             if self.prepareBackupMeta() == 0:
                 return 0
@@ -909,18 +921,19 @@ Subject: %s
             self.website = job_snapshots[0].job.website.domain
             self.externalApp = job_snapshots[0].job.website.externalApp
             self.passwordFile = '/home/%s/%s' % (self.website, self.website)
+
             for job_snapshot in job_snapshots:
 
-                ## Functions above use the self.jobid variable to extract information about this snapshot, so this below variable needs to be set
-                self.jobid = job_snapshot
-                self.jobids = self.jobids + job_snapshot.snapshotid + ' '
+                ## Functions above use the self.jobid varilable to extract information about this snapshot, so this below variable needs to be set
 
-            if self.jobid.destination == 'local':
-                self.localFunction('none', 'none', 0, 1)
-            elif self.jobid.destination == 'onedrive':
-                self.sftpFunction('none', 'none', 0, 1)
-            else:
-                self.awsFunction('restore', '', 0, None, 1) 
+                self.jobid = job_snapshot
+
+                if self.jobid.destination == 'local':
+                    self.localFunction('none', 'none', 0, 1)
+                elif self.jobid.destination[:4] == 'sftp':
+                    self.sftpFunction('none', 'none', 0, 1)
+                else:
+                    self.awsFunction('restore', '', self.jobid.snapshotid, None, 1)
 
             return 1
 
