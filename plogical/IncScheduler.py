@@ -378,6 +378,7 @@ class IncScheduler(multi.Thread):
                     GDriveJobLogs(owner=items, status=backupSchedule.INFO,
                                   message='Job Completed').save()
 
+
                     print("job com[leted")
 
                     #logging.writeToFile('job completed')
