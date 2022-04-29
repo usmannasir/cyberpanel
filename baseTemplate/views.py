@@ -119,18 +119,18 @@ def versionManagment(request):
     output = ProcessUtilities.outputExecutioner(command)
 
     Currentcomt = output.rstrip("\n")
-    notechk = True;
+    notechk = True
     
-    command ="git fetch"
-    output = ProcessUtilities.outputExecutioner(command)
-    
-    command ="git -C /usr/local/CyberCP/ log %s..%s --pretty=oneline | wc -l" % ( Currentcomt, latestcomit)    
-    output = ProcessUtilities.outputExecutioner(command)    
-    
-    numCommits = output.rstrip("\n")
+    # command ="git fetch -C /usr/local/CyberCP/"
+    # output = ProcessUtilities.outputExecutioner(command)
+    #
+    # command ="git -C /usr/local/CyberCP/ log %s..%s --pretty=oneline | wc -l" % ( Currentcomt, latestcomit)
+    # output = ProcessUtilities.outputExecutioner(command)
+    #
+    # numCommits = output.rstrip("\n")
 
     if(Currentcomt == latestcomit):
-        notechk = False;
+        notechk = False
 
 
     template = 'baseTemplate/versionManagment.html'
