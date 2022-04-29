@@ -2047,12 +2047,17 @@ milter_default_action = accept
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
                 command = 'yum install -y restic'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                command = 'restic self-update'
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             else:
                 command = 'apt-get update -y'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
                 command = 'apt-get install restic -y'
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                
+                command = 'restic self-update'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
         except:
