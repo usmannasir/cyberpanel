@@ -1262,7 +1262,7 @@ msgstr "Apagar Zona"
 
 #: baseTemplate/templates/baseTemplate/index.html:502
 msgid "Add/Delete Records"
-msgstr "Adicionar/Apagar Registos"
+msgstr "Alterar/Apagar Registros"
 
 #: baseTemplate/templates/baseTemplate/index.html:518
 #: mailServer/templates/mailServer/createEmailAccount.html:12
@@ -2311,7 +2311,7 @@ msgstr "Detalhes de Contêiner"
 #: dockerManager/templates/dockerManager/runContainer.html:36
 #: dockerManager/templates/dockerManager/viewContainer.html:70
 msgid "Image"
-msgstr "Imageem"
+msgstr "Imagem"
 
 #: dockerManager/templates/dockerManager/runContainer.html:44
 msgid "Tag"
