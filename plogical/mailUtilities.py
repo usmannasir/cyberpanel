@@ -819,7 +819,7 @@ class MailServerManagerUtils(multi.Thread):
                 command = 'yum remove postfix -y'
                 ProcessUtilities.executioner(command)
             elif ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
-                command = 'apt-get -y purge postfix* dovecot*'
+                command = 'apt-get -y remove postfix* dovecot*'
                 ProcessUtilities.executioner(command, None, True)
 
             ### On Ubuntu 18 find if old dovecot and remove
