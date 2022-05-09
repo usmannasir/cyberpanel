@@ -1039,18 +1039,21 @@ class MailServerManagerUtils(multi.Thread):
 
     def centos_lib_dir_to_ubuntu(self, filename, old, new):
         try:
-            fd = open(filename, 'r')
-            lines = fd.readlines()
-            fd.close()
-            fd = open(filename, 'w')
-            centos_prefix = old
-            ubuntu_prefix = new
-            for line in lines:
-                index = line.find(centos_prefix)
-                if index != -1:
-                    line = line[:index] + ubuntu_prefix + line[index + len(centos_prefix):]
-                fd.write(line)
-            fd.close()
+            command = "sed -i 's|%s|%s|g' %s" % (old, new, filename)
+            ProcessUtilities.executioner(command, None, True)
+
+            # fd = open(filename, 'r')
+            # lines = fd.readlines()
+            # fd.close()
+            # fd = open(filename, 'w')
+            # centos_prefix = old
+            # ubuntu_prefix = new
+            # for line in lines:
+            #     index = line.find(centos_prefix)
+            #     if index != -1:
+            #         line = line[:index] + ubuntu_prefix + line[index + len(centos_prefix):]
+            #     fd.write(line)
+            # fd.close()
         except BaseException as msg:
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
                                                       '%s [centos_lib_dir_to_ubuntu][404]' % (str(msg)), 10)
