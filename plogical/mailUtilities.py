@@ -814,12 +814,13 @@ class MailServerManagerUtils(multi.Thread):
 
     def install_postfix_dovecot(self):
         try:
+
             if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 command = 'yum remove postfix -y'
                 ProcessUtilities.executioner(command)
-            elif ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
-                command = 'apt-get -y remove postfix'
-                ProcessUtilities.executioner(command)
+            elif ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
+                command = 'apt-get -y purge postfix* dovecot*'
+                ProcessUtilities.executioner(command, None, True)
 
             ### On Ubuntu 18 find if old dovecot and remove
 
@@ -827,7 +828,7 @@ class MailServerManagerUtils(multi.Thread):
                 try:
 
                     command = 'apt-get purge dovecot* -y'
-                    os.system(command)
+                    ProcessUtilities.executioner(command, None, True)
 
                     command = 'apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 18A348AEED409DA1'
                     ProcessUtilities.executioner(command)
@@ -1502,6 +1503,8 @@ class MailServerManagerUtils(multi.Thread):
                 virtualHostUtilities.issueSSLForMailServer(self.mailHostName,
                                                            '/home/%s/public_html' % (self.mailHostName))
 
+
+            MailServerSSLCheck = 0
             from websiteFunctions.models import ChildDomains
             from plogical.virtualHostUtilities import virtualHostUtilities
             for websites in Websites.objects.all():
@@ -1512,6 +1515,15 @@ class MailServerManagerUtils(multi.Thread):
                     virtualHostUtilities.setupAutoDiscover(1, '/dev/null', websites.domain, websites.admin)
                 except:
                     pass
+
+                if self.MailSSL == 0 and MailServerSSLCheck == 0:
+                    logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
+                                                              'Setting up Mail Server SSL as no hostname SSL found..,80')
+                    from plogical.virtualHostUtilities import virtualHostUtilities
+                    virtualHostUtilities.issueSSLForMailServer(websites.domain,
+                                                               '/home/%s/public_html' % (websites.domain))
+                    MailServerSSLCheck = 1
+
 
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Fixing permissions..,90')
 
