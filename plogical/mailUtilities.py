@@ -859,7 +859,6 @@ class MailServerManagerUtils(multi.Thread):
                 ProcessUtilities.executioner(command)
 
                 command = 'dnf install --enablerepo=gf-plus postfix3 postfix3-mysql -y'
-                ProcessUtilities.executioner(command)
             else:
 
                 import socket
