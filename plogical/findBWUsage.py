@@ -18,8 +18,8 @@ class findBWUsage:
 
             if not os.path.exists(path):
                 return 0
-
-            logData = open(path, 'r').readlines()
+            from processUtilities import ProcessUtilities
+            logData = ProcessUtilities.outputExecutioner('cat %s' % (path), 'nobody').splitlines()
             logDataLines = len(logData)
 
             if not os.path.exists("/home/"+domainName+"/logs"):
@@ -146,7 +146,6 @@ class findBWUsage:
             return 0
 
         return 1
-
 
 
 findBWUsage.startCalculations()
