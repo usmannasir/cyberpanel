@@ -784,7 +784,7 @@ if [[ $TMP_YN =~ ^(s|S) ]] ; then
 		echo -e "\nRepeated password didn't match , please check...\n"
 		exit
 	fi
-else [[ $TMP_YN =~ ^(r|R) ]] ; then
+else
 	ADMIN_PASS=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 16 ; echo '')
 	echo -e "\nAdmin password will be provided once installation is completed...\n"
 fi
