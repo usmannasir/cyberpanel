@@ -786,7 +786,7 @@ if [[ $TMP_YN =~ ^(s|S) ]] ; then
 	fi
 else
 	ADMIN_PASS=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 16 ; echo '')
-	echo -e "\nAdmin password will be provided once installation is completed...\n"
+	echo -e "\nAdmin password will be set to $ADMIN_PASS\n"
 fi
 
 echo -e "\nDo you wish to install Memcached extension and backend?"
