@@ -561,46 +561,22 @@ else
   License_Check "$License_Key"
 fi
 
-if [[ $Admin_Pass =~ ^(s|S) ]]; then  
-  echo -e "\nPlease enter your password:"
-  printf "%s" ""
-  read -r -s -p "Password: " Tmp_Input
-  if [[ -z "$Tmp_Input" ]]; then
-    echo -e "\nPlease do not use empty string...\n"
-    exit
-  fi
-  if [[ ${#Tmp_Input} -lt 8 ]]; then
-    echo -e "\nPassword length less than 8 digital, please choose a more complicated password.\n"
-    exit
-  fi
-  Tmp_Input1=$Tmp_Input
-  read -r -s -p "Confirm Password:" Tmp_Input
-  if [[ -z "$Tmp_Input" ]]; then
-    echo -e "\nPlease do not use empty string...\n"
-    exit
-  fi
-  if [[ "$Tmp_Input" = "$Tmp_Input1" ]]; then
-    Admin_Pass=$Tmp_Input
-  else
-    echo -e "\nRepeated password didn't match , please check...\n"
-    exit
-  fi
-else 
+if [[ ${1} =~ ^(r|R) ]] || [[ $1 = "random" ]]; then
   Admin_Pass=$(
   head /dev/urandom | tr -dc A-Za-z0-9 | head -c 16
   echo ''
-  )  
+  )
+  echo -e "\nSet to random-generated password..."
+  echo -e "\nAdmin password will be set to \e[31m$Admin_Pass\e[39m"
+else
   echo -e "\nAdmin password will be set to \e[31m$Admin_Pass\e[39m"
 fi
 }
 
 Interactive_Mode() {
 echo -e "		CyberPanel Installer v$Panel_Version.$Panel_Build
-
 1. Install CyberPanel.
-
 2. Exit.
-
 "
 read -r -p "  Please enter the number[1-2]: " Input_Number
 echo ""
@@ -621,17 +597,11 @@ esac
 
 Interactive_Mode_Set_Parameter() {
 echo -e "		CyberPanel Installer v$Panel_Version.$Panel_Build
-
 RAM check : $(free -m | awk 'NR==2{printf "%s/%sMB (%.2f%%)\n", $3,$2,$3*100/$2 }')
-
 Disk check : $(df -h | awk '$NF=="/"{printf "%d/%dGB (%s)\n", $3,$2,$5}') (Minimal \e[31m10GB\e[39m free space)
-
 1. Install CyberPanel with \e[31mOpenLiteSpeed\e[39m.
-
 2. Install Cyberpanel with \e[31mLiteSpeed Enterprise\e[39m.
-
 3. Exit.
-
 "
 read -r -p "  Please enter the number[1-3]: " Input_Number
 echo ""
@@ -759,7 +729,7 @@ if [[ $Tmp_Input =~ ^(s|S) ]]; then
     echo -e "\nRepeated password didn't match , please check...\n"
     exit
   fi
-else
+else 
   Admin_Pass=$(
     head /dev/urandom | tr -dc A-Za-z0-9 | head -c 16
     echo ''
