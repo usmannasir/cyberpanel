@@ -1539,6 +1539,10 @@ class MailServerManagerUtils(multi.Thread):
     def configureOpenDKIM(self):
         try:
 
+            if ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                command = 'dnf install opendkim-tools -y'
+                ProcessUtilities.executioner(command)
+
             ## Configure OpenDKIM specific settings
 
             openDKIMConfigurePath = "/etc/opendkim.conf"

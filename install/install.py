@@ -1827,6 +1827,10 @@ imap_folder_list_limit = 0
 
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
+            if self.distro == cent8:
+                command = 'dnf install opendkim-tools -y'
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
             if self.distro == ubuntu:
                 command = 'apt install opendkim-tools -y'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
