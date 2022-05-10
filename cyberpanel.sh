@@ -712,19 +712,10 @@ else
 fi
 
 echo -e "\nPlease choose to use default admin password \e[31m1234567\e[39m, randomly generate one \e[31m(recommended)\e[39m or specify the admin password?"
-printf "%s" "Choose [d]fault, [r]andom or [s]et password: [d/r/s] "
+printf "%s" "Choose [r]andom or [s]et password: [r/s] "
 read -r Tmp_Input
 
-if [[ $Tmp_Input =~ ^(d|D| ) ]] || [[ -z $Tmp_Input ]]; then
-  Admin_Pass="1234567"
-  echo -e "\nAdmin password will be set to $Admin_Pass\n"
-elif [[ $Tmp_Input =~ ^(r|R) ]]; then
-  Admin_Pass=$(
-    head /dev/urandom | tr -dc A-Za-z0-9 | head -c 16
-    echo ''
-    )
-  echo -e "\nAdmin password will be provided once installation is completed...\n"
-elif [[ $Tmp_Input =~ ^(s|S) ]]; then
+if [[ $Tmp_Input =~ ^(s|S) ]]; then
   Custom_Pass="True"
   echo -e "\nPlease enter your password:"
   printf "%s" ""
@@ -749,9 +740,12 @@ elif [[ $Tmp_Input =~ ^(s|S) ]]; then
     echo -e "\nRepeated password didn't match , please check...\n"
     exit
   fi
-else
-  Admin_Pass="1234567"
-  echo -e "\nAdmin password will be set to $Admin_Pass\n"
+else [[ $Tmp_Input =~ ^(r|R) ]]; then
+  Admin_Pass=$(
+    head /dev/urandom | tr -dc A-Za-z0-9 | head -c 16
+    echo ''
+    )
+  echo -e "\nAdmin password will be provided once installation is completed...\n"
 fi
 
 echo -e "\nDo you wish to install Memcached process and its PHP extension?"
