@@ -753,17 +753,11 @@ echo -e "\nonly use this feature if you are a \e[31mdeveloper\e[39m"
 #fi
 fi
 
-echo -e "\nPlease choose to use default admin password \e[31m1234567\e[39m, randomly generate one \e[31m(recommended)\e[39m or specify the admin password?"
-printf "%s" "Choose [d]fault, [r]andom or [s]et password: [d/r/s] "
+echo -e "\nPlease choose to use a randomly generated password \e[31m(recommended)\e[39m or specify the admin password?"
+printf "%s" "Choose [r]andom or [s]et password: [r/s] "
 read TMP_YN
 
-if [[ $TMP_YN =~ ^(d|D| ) ]] || [[ -z $TMP_YN ]]; then
-	ADMIN_PASS="1234567"
-	echo -e "\nAdmin password will be set to $ADMIN_PASS\n"
-elif [[ $TMP_YN =~ ^(r|R) ]] ; then
-	ADMIN_PASS=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 16 ; echo '')
-	echo -e "\nAdmin password will be provided once installation is completed...\n"
-elif [[ $TMP_YN =~ ^(s|S) ]] ; then
+if [[ $TMP_YN =~ ^(s|S) ]] ; then
 	echo -e "\nPlease enter your password:"
 	printf "%s" ""
 	read TMP_YN
@@ -790,9 +784,9 @@ elif [[ $TMP_YN =~ ^(s|S) ]] ; then
 		echo -e "\nRepeated password didn't match , please check...\n"
 		exit
 	fi
-else
-	ADMIN_PASS="1234567"
-	echo -e "\nAdmin password will be set to $ADMIN_PASS\n"
+else [[ $TMP_YN =~ ^(r|R) ]] ; then
+	ADMIN_PASS=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 16 ; echo '')
+	echo -e "\nAdmin password will be provided once installation is completed...\n"
 fi
 
 echo -e "\nDo you wish to install Memcached extension and backend?"
