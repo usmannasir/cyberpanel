@@ -711,7 +711,7 @@ else
   Branch_Check "$Tmp_Input"
 fi
 
-echo -e "\nPlease choose to use default admin password \e[31m1234567\e[39m, randomly generate one \e[31m(recommended)\e[39m or specify the admin password?"
+echo -e "\nPlease choose to use a randomly generated password \e[31m(recommended)\e[39m or specify the admin password?"
 printf "%s" "Choose [r]andom or [s]et password: [r/s] "
 read -r Tmp_Input
 
