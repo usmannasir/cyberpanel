@@ -575,8 +575,11 @@ fi
 
 Interactive_Mode() {
 echo -e "		CyberPanel Installer v$Panel_Version.$Panel_Build
+
 1. Install CyberPanel.
+
 2. Exit.
+
 "
 read -r -p "  Please enter the number[1-2]: " Input_Number
 echo ""
@@ -597,11 +600,17 @@ esac
 
 Interactive_Mode_Set_Parameter() {
 echo -e "		CyberPanel Installer v$Panel_Version.$Panel_Build
+
 RAM check : $(free -m | awk 'NR==2{printf "%s/%sMB (%.2f%%)\n", $3,$2,$3*100/$2 }')
+
 Disk check : $(df -h | awk '$NF=="/"{printf "%d/%dGB (%s)\n", $3,$2,$5}') (Minimal \e[31m10GB\e[39m free space)
+
 1. Install CyberPanel with \e[31mOpenLiteSpeed\e[39m.
+
 2. Install Cyberpanel with \e[31mLiteSpeed Enterprise\e[39m.
+
 3. Exit.
+
 "
 read -r -p "  Please enter the number[1-3]: " Input_Number
 echo ""
