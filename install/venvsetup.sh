@@ -16,7 +16,7 @@ SERVER_OS="CentOS"
 VERSION="OLS"
 LICENSE_KEY=""
 KEY_SIZE=""
-ADMIN_PASS="1234567"
+ADMIN_PASS=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 16 ; echo '')
 MEMCACHED="ON"
 REDIS="ON"
 TOTAL_RAM=$(free -m | awk '/Mem\:/ { print $2 }')
@@ -1151,11 +1151,7 @@ else
 	exit
 fi
 
-if [[ $ADMIN_PASS == "d" ]] ; then
-	ADMIN_PASS="1234567"
-	echo -e "\nSet to default password..."
-	echo -e "\nAdmin password will be set to \e[31m$ADMIN_PASS\e[39m"
-elif [[ $ADMIN_PASS == "r" ]] ; then
+if [[ $ADMIN_PASS =~ ^(r|R) ]] ; then
 	ADMIN_PASS=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 16 ; echo '')
 	echo -e "\nSet to random-generated password..."
 	echo -e "\nAdmin password will be set to \e[31m$ADMIN_PASS\e[39m"
@@ -1182,7 +1178,7 @@ else
 	POWERDNS_VARIABLE="ON"
 	PUREFTPD_VARIABLE="ON"
 	VERSION="OLS"
-	ADMIN_PASS="1234567"
+	ADMIN_PASS=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 16 ; echo '')
 	MEMCACHED="ON"
 	REDIS="ON"
 	else
@@ -1198,16 +1194,14 @@ else
 						fi
 						;;
 				-p | --password) shift
-						if [[ "${1}" == '' ]]; then
-							ADMIN_PASS="1234567"
-						elif [[ "${1}" == 'r' ]] || [[ $1 == 'random' ]] ; then
-							ADMIN_PASS=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 16 ; echo '')
-						else
+						if [[ "${1}" =~ ^(s|S)  ]] || [[ $1 == 'set' ]; then
 							if [ ${1} -lt 8 ] ; then
 								echo -e "\nPassword lenth less than 8 digital, please choose a more complicated password.\n"
 								exit
 							fi
 							ADMIN_PASS="${1}"
+						else
+							ADMIN_PASS=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 16 ; echo '')
 						fi
         		;;
 				-a | --addons)
