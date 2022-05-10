@@ -51,7 +51,10 @@ echo -e "This may take few seconds..."
 
 Silent="Off"
 Server_Edition="OLS"
-Admin_Pass="1234567"
+Admin_Pass=$(
+        head /dev/urandom | tr -dc A-Za-z0-9 | head -c 16
+        echo ''
+        )
 
 Memcached="Off"
 Redis="Off"
@@ -445,7 +448,10 @@ else
     PowerDNS_Switch="On"
     PureFTPd_Switch="On"
     Server_Edition="OLS"
-    Admin_Pass="1234567"
+    Admin_Pass=$(
+        head /dev/urandom | tr -dc A-Za-z0-9 | head -c 16
+        echo ''
+        )
     Memcached="On"
     Redis="On"
   else
@@ -470,21 +476,17 @@ else
       ;;
       -p | --password)
       shift
-      if [[ ${1} = "" ]]; then
-        Admin_Pass="1234567"
-      elif [[ ${1} = "r" ]] || [[ $1 = "random" ]]; then
-        Admin_Pass=$(
-        head /dev/urandom | tr -dc A-Za-z0-9 | head -c 16
-        echo ''
-        )
-      elif [[ ${1} = "d" ]]; then
-        Admin_Pass="1234567"
-      else
+      if [[ ${1} =~ ^(s|S) ]] || [[ $1 = "set" ]]; then
         if [[ ${#1} -lt 8 ]]; then
           echo -e "\nPassword length less than 8 digital, please choose a more complicated password.\n"
           exit
         fi
         Admin_Pass="${1}"
+      else 
+        Admin_Pass=$(
+        head /dev/urandom | tr -dc A-Za-z0-9 | head -c 16
+        echo ''
+        )
       fi
       echo -e "\nSet to use password ${1}..."
       ;;
@@ -559,18 +561,35 @@ else
   License_Check "$License_Key"
 fi
 
-if [[ $Admin_Pass = "d" ]]; then
-  Admin_Pass="1234567"
-  echo -e "\nSet to default password..."
-  echo -e "\nAdmin password will be set to \e[31m$Admin_Pass\e[39m\n"
-elif [[ $Admin_Pass = "r" ]]; then
+if [[ $Admin_Pass =~ ^(s|S) ]]; then  
+  echo -e "\nPlease enter your password:"
+  printf "%s" ""
+  read -r -s -p "Password: " Tmp_Input
+  if [[ -z "$Tmp_Input" ]]; then
+    echo -e "\nPlease do not use empty string...\n"
+    exit
+  fi
+  if [[ ${#Tmp_Input} -lt 8 ]]; then
+    echo -e "\nPassword length less than 8 digital, please choose a more complicated password.\n"
+    exit
+  fi
+  Tmp_Input1=$Tmp_Input
+  read -r -s -p "Confirm Password:" Tmp_Input
+  if [[ -z "$Tmp_Input" ]]; then
+    echo -e "\nPlease do not use empty string...\n"
+    exit
+  fi
+  if [[ "$Tmp_Input" = "$Tmp_Input1" ]]; then
+    Admin_Pass=$Tmp_Input
+  else
+    echo -e "\nRepeated password didn't match , please check...\n"
+    exit
+  fi
+else 
   Admin_Pass=$(
   head /dev/urandom | tr -dc A-Za-z0-9 | head -c 16
   echo ''
-  )
-  echo -e "\nSet to random-generated password..."
-  echo -e "\nAdmin password will be set to \e[31m$Admin_Pass\e[39m"
-else
+  )  
   echo -e "\nAdmin password will be set to \e[31m$Admin_Pass\e[39m"
 fi
 }
@@ -740,7 +759,7 @@ if [[ $Tmp_Input =~ ^(s|S) ]]; then
     echo -e "\nRepeated password didn't match , please check...\n"
     exit
   fi
-else [[ $Tmp_Input =~ ^(r|R) ]]; then
+else
   Admin_Pass=$(
     head /dev/urandom | tr -dc A-Za-z0-9 | head -c 16
     echo ''
