@@ -25,12 +25,13 @@ class findBWUsage:
             if not os.path.exists("/home/"+domainName+"/logs"):
                 return 0
 
-            bwmeta = "/home/" + domainName + "/logs/bwmeta"
+            bwmeta = "/home/cyberpanel/%s.bwmeta" % (domainName)
 
             if not os.path.exists(path):
                 writeMeta = open(bwmeta, 'w')
                 writeMeta.writelines('0\n0\n')
                 writeMeta.close()
+                os.chmod(bwmeta, 0o600)
                 return 1
 
             if os.path.exists(bwmeta):
@@ -55,6 +56,8 @@ class findBWUsage:
             writeMeta.writelines(str(currentUsed)+"\n")
             writeMeta.writelines(str(currentLinesRead) + "\n")
             writeMeta.close()
+
+            os.chmod(bwmeta, 0o600)
 
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [calculateBandwidth]")
