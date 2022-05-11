@@ -16,8 +16,8 @@ from CyberCP import settings
 import random
 import string
 
-VERSION = '2.1'
-BUILD = 2
+VERSION = '2.3'
+BUILD = 1
 
 CENTOS7 = 0
 CENTOS8 = 1
@@ -2341,6 +2341,8 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             if Upgrade.installedOutput.find('restic') == -1:
                 command = 'yum install restic -y'
                 Upgrade.executioner(command, 'Install Restic')
+                command = 'restic self-update'
+                Upgrade.executioner(command, 'Install Restic')
         else:
 
             if Upgrade.installedOutput.find('restic/bionic,now 0.8') == -1:
@@ -2348,6 +2350,9 @@ echo $oConfig->Save() ? 'Done' : 'Error';
                 Upgrade.executioner(command, 'Install Restic')
 
                 command = 'apt-get install restic -y'
+                Upgrade.executioner(command, 'Install Restic')
+                
+                command = 'restic self-update'
                 Upgrade.executioner(command, 'Install Restic')
 
     @staticmethod
