@@ -249,6 +249,13 @@ def design(request):
         cosmetic = CyberPanelCosmetic()
         cosmetic.save()
 
+    val = request.session['userID']
+    currentACL = ACLManager.loadedACL(val)
+    if currentACL['admin'] == 1:
+        pass
+    else:
+        return ACLManager.loadErrorJson('reboot', 0)
+
     finalData = {}
 
     if request.method == 'POST':
