@@ -266,12 +266,12 @@ elif grep -q -E "CloudLinux 7|CloudLinux 8" /etc/os-release ; then
   Server_OS="CloudLinux"
 elif grep -q -E "Rocky Linux" /etc/os-release ; then
   Server_OS="RockyLinux"
-elif grep -q -E "Ubuntu 18.04|Ubuntu 20.04|Ubuntu 20.10" /etc/os-release ; then
+elif grep -q -E "Ubuntu 18.04|Ubuntu 20.04|Ubuntu 20.10|Ubuntu 22.04" /etc/os-release ; then
   Server_OS="Ubuntu"
 else
   echo -e "Unable to detect your system..."
-  echo -e "\nCyberPanel is supported on Ubuntu 18.04 x86_64, Ubuntu 20.04 x86_64, Ubuntu 20.10 x86_64, CentOS 7.x, CentOS 8.x, AlmaLinux 8.x, RockyLinux 8.x, CloudLinux 7.x, CloudLinux 8.x...\n"
-  Debug_Log2 "CyberPanel is supported on Ubuntu 18.04 x86_64, Ubuntu 20.04 x86_64, Ubuntu 20.10 x86_64, CentOS 7.x, CentOS 8.x, AlmaLinux 8.x, RockyLinux 8.x, CloudLinux 7.x, CloudLinux 8.x... [404]"
+  echo -e "\nCyberPanel is supported on Ubuntu 18.04 x86_64, Ubuntu 20.04 x86_64, Ubuntu 20.10 x86_64, Ubuntu 22.04 x86_64, CentOS 7.x, CentOS 8.x, AlmaLinux 8.x, RockyLinux 8.x, CloudLinux 7.x, CloudLinux 8.x...\n"
+  Debug_Log2 "CyberPanel is supported on Ubuntu 18.04 x86_64, Ubuntu 20.04 x86_64, Ubuntu 20.10 x86_64, Ubuntu 22.04 x86_64, CentOS 7.x, CentOS 8.x, AlmaLinux 8.x, RockyLinux 8.x, CloudLinux 7.x, CloudLinux 8.x... [404]"
   exit
 fi
 
