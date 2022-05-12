@@ -615,7 +615,7 @@ class ACLManager:
                 doms = items.websites_set.all().order_by('domain')
                 for dom in doms:
                     domainsList.append(dom.domain)
-                    for childs in items.childdomains_set.all():
+                    for childs in dom.childdomains_set.all():
                         domainsList.append(childs.domain)
 
         return domainsList
