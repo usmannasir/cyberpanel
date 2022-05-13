@@ -58,6 +58,86 @@ class WebsiteManager:
         proc = httpProc(request, 'websiteFunctions/createWebsite.html',
                         Data, 'createWebsite')
         return proc.render()
+    def WPCreate(self, request=None, userID=None, data=None):
+        currentACL = ACLManager.loadedACL(userID)
+        adminNames = ACLManager.loadAllUsers(userID)
+        packagesName = ACLManager.loadPackages(userID, currentACL)
+        phps = PHPManager.findPHPVersions()
+        FinalVersions = []
+        #logging.CyberCPLogFileWriter.writeToFile("jassssssssss...............")
+
+        counter = 0
+        try:
+            import requests
+            WPVersions = json.loads(requests.get('https://api.wordpress.org/core/version-check/1.7/').text)['offers']
+
+            for versions in WPVersions:
+                if counter == 7:
+                    break
+                if versions['current'] not in FinalVersions:
+                    FinalVersions.append(versions['current'])
+                    counter = counter + 1
+
+        except:
+            FinalVersions = ['5.6', '5.5.3', '5.5.2']
+
+        # logging.CyberCPLogFileWriter.writeToFile("FinalVersions:%s"+str(FinalVersions))
+
+        Data = {'packageList': packagesName, "owernList": adminNames, 'phps': phps, 'WPVersions': FinalVersions}
+        proc = httpProc(request, 'websiteFunctions/WPCreate.html',
+                        Data, 'createWebsite')
+        return proc.render()
+
+    def ConfigurePlugins(self, request=None, userID=None, data=None):
+        currentACL = ACLManager.loadedACL(userID)
+        adminNames = ACLManager.loadAllUsers(userID)
+        packagesName = ACLManager.loadPackages(userID, currentACL)
+        phps = PHPManager.findPHPVersions()
+
+        Data = {'packageList': packagesName, "owernList": adminNames, 'phps': phps}
+        proc = httpProc(request, 'websiteFunctions/WPConfigurePlugins.html',
+                        Data, 'createWebsite')
+        return proc.render()
+
+
+    def Addnewplugin(self, request=None, userID=None, data=None):
+        currentACL = ACLManager.loadedACL(userID)
+        adminNames = ACLManager.loadAllUsers(userID)
+        packagesName = ACLManager.loadPackages(userID, currentACL)
+        phps = PHPManager.findPHPVersions()
+
+        Data = {'packageList': packagesName, "owernList": adminNames, 'phps': phps}
+        proc = httpProc(request, 'websiteFunctions/WPAddNewPlugin.html',
+                        Data, 'createWebsite')
+        return proc.render()
+
+    def SearchOnkeyupPlugin(self, userID=None, data=None):
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+
+            pluginname = data['pluginname']
+            # logging.CyberCPLogFileWriter.writeToFile("Plugin Name ....... %s"%pluginname)
+
+            url = "http://api.wordpress.org/plugins/info/1.1/?action=query_plugins&request[search]=%s" % str(pluginname)
+            import requests
+
+            res = requests.get(url)
+            r = res.json()
+
+            # return proc.ajax(1, 'Done', {'plugins': r})
+
+            data_ret = {'status': 1,'plugns': r,}
+
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'createWebSiteStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+
 
     def modifyWebsite(self, request=None, userID=None, data=None):
         currentACL = ACLManager.loadedACL(userID)

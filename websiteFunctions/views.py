@@ -6,6 +6,8 @@ from django.http import HttpResponse
 from loginSystem.models import Administrator
 from loginSystem.views import loadLoginPage
 import json
+import plogical.CyberCPLogFileWriter as logging
+
 
 from plogical.httpProc import httpProc
 from websiteFunctions.website import WebsiteManager
@@ -26,6 +28,50 @@ def createWebsite(request):
         return wm.createWebsite(request, userID)
     except KeyError:
         return redirect(loadLoginPage)
+def WPCreate(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.WPCreate(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+def ConfigurePlugins(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.ConfigurePlugins(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def Addnewplugin(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.Addnewplugin(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def SearchOnkeyupPlugin(request):
+    try:
+        userID = request.session['userID']
+
+        result = pluginManager.preWebsiteCreation(request)
+
+        if  result != 200:
+            return result
+
+        wm = WebsiteManager()
+        coreResult = wm.SearchOnkeyupPlugin(userID, json.loads(request.body))
+
+        result = pluginManager.postWebsiteCreation(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
 
 def modifyWebsite(request):
     try:

@@ -1,0 +1,21 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "plugin - CyberPanel" %}{% endblock %}
+{% block content %}
+
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
+
+    <div class="container">
+        <div id="page-title">
+            <h2 id="domainNamePage"><h2>{% trans "Configure Plugins" %}</h2>
+                <a class="pull-right btn btn-primary" href="{% url "Addnewplugin" %}">{% trans "Add New Plugin" %}</a>
+
+            </h2>
+        </div>
+
+    </div>
+
+
+{% endblock %}
