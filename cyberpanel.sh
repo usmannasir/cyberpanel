@@ -998,8 +998,13 @@ else
     apt install -y --allow-downgrades libgnutls30=3.6.13-2ubuntu1.3
   fi
 
-  DEBIAN_FRONTEND=noninteracitve apt install -y dnsutils net-tools htop telnet libcurl4-gnutls-dev libgnutls28-dev libgcrypt20-dev libattr1 libattr1-dev liblzma-dev libgpgme-dev libcurl4-gnutls-dev libssl-dev nghttp2 libnghttp2-dev idn2 libidn2-dev libidn2-0-dev librtmp-dev libpsl-dev nettle-dev libgnutls28-dev libldap2-dev libgssapi-krb5-2 libk5crypto3 libkrb5-dev libcomerr2 libldap2-dev virtualenv git socat vim unzip zip
-    Check_Return
+  if [[ "$Server_OS_Version" = "22" ]] ; then
+    DEBIAN_FRONTEND=noninteracitve apt install -y dnsutils net-tools htop telnet libcurl4-gnutls-dev libgnutls28-dev libgcrypt20-dev libattr1 libattr1-dev liblzma-dev libgpgme-dev libcurl4-gnutls-dev libssl-dev nghttp2 libnghttp2-dev idn2 libidn2-dev libidn2-0-dev librtmp-dev libpsl-dev nettle-dev libgnutls28-dev libldap2-dev libgssapi-krb5-2 libk5crypto3 libkrb5-dev libcomerr2 libldap2-dev virtualenv git socat vim unzip zip libmariadb-dev-compat libmariadb-dev
+     Check_Return
+  else
+    DEBIAN_FRONTEND=noninteracitve apt install -y dnsutils net-tools htop telnet libcurl4-gnutls-dev libgnutls28-dev libgcrypt20-dev libattr1 libattr1-dev liblzma-dev libgpgme-dev libmariadbclient-dev libcurl4-gnutls-dev libssl-dev nghttp2 libnghttp2-dev idn2 libidn2-dev libidn2-0-dev librtmp-dev libpsl-dev nettle-dev libgnutls28-dev libldap2-dev libgssapi-krb5-2 libk5crypto3 libkrb5-dev libcomerr2 libldap2-dev virtualenv git socat vim unzip zip
+     Check_Return
+  fi
 
   DEBIAN_FRONTEND=noninteractive apt install -y python3-pip
     Check_Return
@@ -1027,8 +1032,13 @@ Retry_Command "pip install --default-timeout=3600 virtualenv==16.7.9"
 
 Download_Requirement
 
+if [[ "$Server_OS" = "Ubuntu" ]] && [[ "$Server_OS_Version" != "22" ]] ; then
+python3 -m venv /usr/local/CyberPanel
+Check_Return
+else
 virtualenv -p /usr/bin/python3 /usr/local/CyberPanel
   Check_Return
+fi
 
 if [[ "$Server_OS" = "Ubuntu" ]] && [[ "$Server_OS_Version" != "20" ]] ; then
   # shellcheck disable=SC1091
@@ -1723,7 +1733,14 @@ rm -f /root/cyberpanel/cert_conf
 
 Post_Install_Required_Components() {
 Debug_Log2 "Finalization..,80"
-virtualenv -p /usr/bin/python3 /usr/local/CyberCP
+
+if [[ "$Server_OS" = "Ubuntu" ]] && [[ "$Server_OS_Version" != "22" ]] ; then
+python3 -m venv /usr/local/CyberPanel
+Check_Return
+else
+virtualenv -p /usr/bin/python3 /usr/local/CyberPanel
+  Check_Return
+fi
 
 if [[ "$Server_OS" = "Ubuntu" ]] && [[ "$Server_OS_Version" = "20" ]] ; then
   # shellcheck disable=SC1091
