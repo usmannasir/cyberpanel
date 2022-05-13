@@ -19,6 +19,80 @@ function getCookie(name) {
     }
     return cookieValue;
 }
+var arry = []
+
+function selectpluginJs(val)  {
+       $('#mysearch').hide()
+    arry.push(val)
+
+    // console.log(arry)
+    document.getElementById('selJS').innerHTML = "";
+
+    for (var i = 0; i < arry.length; i++) {
+        $('#selJS').show()
+        var mlm = '<span style="background-color: #12207a; color: #FFFFFF; padding: 5px;  border-radius: 30px"> ' + arry[i] + ' </span>&nbsp &nbsp'
+        $('#selJS').append(mlm)
+    }
+
+
+}
+
+app.controller('WPAddNewPlugin', function ($scope, $http, $timeout, $window) {
+
+    $scope.SearchPluginName = function () {
+
+        url = "/websites/SearchOnkeyupPlugin";
+
+        var searchcontent = $scope.searchcontent;
+
+
+
+        var data = {
+            pluginname : searchcontent
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+            if (response.data.status === 1) {
+                // console.log(response.data);
+
+
+                  $('#mysearch').show()
+                document.getElementById('mysearch').innerHTML = "";
+                var res = response.data.plugns.plugins
+                 // console.log(res);
+                for (i = 0; i <= res.length; i++) {
+                    //
+                var tml = '<option onclick="selectpluginJs(\'' + res[i].slug + '\')" style="  border-bottom: 1px solid  rgba(90, 91, 92, 0.5); padding: 5px; " value="' + res[i].slug + '">' + res[i].name + '</option> <br>';
+                $('#mysearch').append(tml);
+
+            }
+            } else {
+
+                // $scope.errorMessage = response.data.error_message;
+                alert("Status not = 1: Error..."+response.data.error_message)
+            }
+
+
+        }
+
+        function cantLoadInitialDatas(response) {
+
+            alert("Error..."+response)
+
+        }
+    }
+
+});
 
 
 /* Java script code to create account */

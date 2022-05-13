@@ -99,3 +99,9 @@ class NormalBackupJobLogs(models.Model):
     owner = models.ForeignKey(NormalBackupJobs, on_delete=models.CASCADE)
     status = models.IntegerField()
     message = models.TextField()
+
+
+class wpplugins(models.Model):
+    owner = models.ForeignKey(Websites, on_delete=models.CASCADE)
+    Name = models.CharField(max_length=255, default='')
+    config = models.TextField()
