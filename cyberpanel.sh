@@ -1032,7 +1032,7 @@ Retry_Command "pip install --default-timeout=3600 virtualenv==16.7.9"
 
 Download_Requirement
 
-if [[ "$Server_OS" = "Ubuntu" ]] && [[ "$Server_OS_Version" != "22" ]] ; then
+if [[ "$Server_OS" = "Ubuntu" ]] && [[ "$Server_OS_Version" = "22" ]] ; then
 python3 -m venv /usr/local/CyberPanel
 Check_Return
 else
@@ -1734,7 +1734,7 @@ rm -f /root/cyberpanel/cert_conf
 Post_Install_Required_Components() {
 Debug_Log2 "Finalization..,80"
 
-if [[ "$Server_OS" = "Ubuntu" ]] && [[ "$Server_OS_Version" != "22" ]] ; then
+if [[ "$Server_OS" = "Ubuntu" ]] && [[ "$Server_OS_Version" = "22" ]] ; then
 python3 -m venv /usr/local/CyberPanel
 Check_Return
 else
