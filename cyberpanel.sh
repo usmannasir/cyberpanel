@@ -1735,10 +1735,10 @@ Post_Install_Required_Components() {
 Debug_Log2 "Finalization..,80"
 
 if [[ "$Server_OS" = "Ubuntu" ]] && [[ "$Server_OS_Version" = "22" ]] ; then
-python3 -m venv /usr/local/CyberPanel
+python3 -m venv /usr/local/CyberCP
 Check_Return
 else
-virtualenv -p /usr/bin/python3 /usr/local/CyberPanel
+virtualenv -p /usr/bin/python3 /usr/local/CyberCP
   Check_Return
 fi
 
