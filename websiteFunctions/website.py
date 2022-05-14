@@ -12,7 +12,7 @@ django.setup()
 import json
 from plogical.acl import ACLManager
 import plogical.CyberCPLogFileWriter as logging
-from websiteFunctions.models import Websites, ChildDomains, GitLogs
+from websiteFunctions.models import Websites, ChildDomains, GitLogs, wpplugins
 from plogical.virtualHostUtilities import virtualHostUtilities
 import subprocess
 import shlex
@@ -89,12 +89,21 @@ class WebsiteManager:
         return proc.render()
 
     def ConfigurePlugins(self, request=None, userID=None, data=None):
+
+        DataPass ={}
         currentACL = ACLManager.loadedACL(userID)
         adminNames = ACLManager.loadAllUsers(userID)
         packagesName = ACLManager.loadPackages(userID, currentACL)
         phps = PHPManager.findPHPVersions()
+        userobj = Administrator.objects.get(pk=userID)
 
-        Data = {'packageList': packagesName, "owernList": adminNames, 'phps': phps}
+
+
+
+        Selectedplugins = wpplugins.objects.filter(owner = userobj)
+        #data['Selectedplugins'] = wpplugins.objects.filter(ProjectOwner=HostingCompany)
+
+        Data = {'packageList': packagesName, "owernList": adminNames, 'phps': phps, 'Selectedplugins' : Selectedplugins,}
         proc = httpProc(request, 'websiteFunctions/WPConfigurePlugins.html',
                         Data, 'createWebsite')
         return proc.render()
@@ -137,6 +146,113 @@ class WebsiteManager:
             return HttpResponse(json_data)
 
 
+    def AddNewpluginAjax(self, userID=None, data=None):
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+
+            userobj = Administrator.objects.get(pk=userID)
+
+            config = data['config']
+            Name = data['Name']
+            # pluginname = data['pluginname']
+            # logging.CyberCPLogFileWriter.writeToFile("config ....... %s"%config)
+            # logging.CyberCPLogFileWriter.writeToFile(" Name ....... %s"%Name)
+
+
+            addpl = wpplugins(Name=Name, config=json.dumps(config), owner=userobj)
+            addpl.save()
+
+            data_ret = {'status': 1}
+
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'AddNewpluginAjax': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+    def EidtPlugin(self,request=None, userID=None, pluginbID=None):
+        Data ={}
+        currentACL = ACLManager.loadedACL(userID)
+        pluginobj = wpplugins.objects.get(pk=pluginbID)
+        lmo = json.loads(pluginobj.config)
+        Data['Selectedplugins'] = lmo
+        Data['pluginbID'] = pluginbID
+
+
+        proc = httpProc(request, 'websiteFunctions/WPEidtPlugin.html',
+                        Data, 'createWebsite')
+        return proc.render()
+
+
+    def deletesPlgin(self, userID=None, data=None,):
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+
+            userobj = Administrator.objects.get(pk=userID)
+            pluginname = data['pluginname']
+            pluginbBucketID = data['pluginbBucketID']
+            # logging.CyberCPLogFileWriter.writeToFile("pluginbID ....... %s" % pluginbBucketID)
+            # logging.CyberCPLogFileWriter.writeToFile("pluginname ....... %s" % pluginname)
+
+
+
+            obj = wpplugins.objects.get(pk=pluginbBucketID, owner=userobj)
+            ab = []
+            ab = json.loads(obj.config)
+            ab.remove(pluginname)
+            obj.config = json.dumps(ab)
+            obj.save()
+
+            data_ret = {'status': 1}
+
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+        except BaseException as msg:
+            data_ret = {'status': 0, 'deletesPlgin': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+    def Addplugineidt(self, userID=None, data=None,):
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+
+            userobj = Administrator.objects.get(pk=userID)
+            pluginname = data['pluginname']
+            pluginbBucketID = data['pluginbBucketID']
+
+            #logging.CyberCPLogFileWriter.writeToFile("pluginbID ....... %s" % pluginbBucketID)
+            #logging.CyberCPLogFileWriter.writeToFile("pluginname ....... %s" % pluginname)
+
+            pObj = wpplugins.objects.get(pk=pluginbBucketID, owner=userobj)
+            listofplugin = json.loads(pObj.config)
+            try:
+                index = listofplugin.index(pluginname)
+                print('index.....%s' % index)
+                if (index >= 0):
+                    data_ret = {'status': 0, 'deletesPlgin': 0, 'error_message': str('Already Save in your Plugin lis')}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+
+            except:
+                ab = []
+                ab = json.loads(pObj.config)
+                ab.append(pluginname)
+                pObj.config = json.dumps(ab)
+                pObj.save()
+
+
+            data_ret = {'status': 1}
+
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+        except BaseException as msg:
+            data_ret = {'status': 0, 'deletesPlgin': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
 
 
     def modifyWebsite(self, request=None, userID=None, data=None):

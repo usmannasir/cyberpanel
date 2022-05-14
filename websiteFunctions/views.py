@@ -10,6 +10,7 @@ import plogical.CyberCPLogFileWriter as logging
 
 
 from plogical.httpProc import httpProc
+from websiteFunctions.models import wpplugins
 from websiteFunctions.website import WebsiteManager
 from websiteFunctions.pluginManager import pluginManager
 from django.views.decorators.csrf import csrf_exempt
@@ -38,6 +39,16 @@ def WPCreate(request):
 def ConfigurePlugins(request):
     try:
         userID = request.session['userID']
+        userobj = Administrator.objects.get(pk=userID)
+        DeleteFileID = request.GET.get('delete', None)
+        if DeleteFileID != None:
+            try:
+                jobobj = wpplugins.objects.get(pk=DeleteFileID, owner=userobj)
+                jobobj.delete()
+                Deleted = 1
+            except BaseException as msg:
+                logging.CyberCPLogFileWriter.writeToFile("DeleteFileID ....... %s....msg.....%s" % (DeleteFileID,msg))
+                Deleted = 0
         wm = WebsiteManager()
         return wm.ConfigurePlugins(request, userID)
     except KeyError:
@@ -71,6 +82,84 @@ def SearchOnkeyupPlugin(request):
 
     except KeyError:
         return redirect(loadLoginPage)
+
+
+def AddNewpluginAjax(request):
+    try:
+        userID = request.session['userID']
+
+        result = pluginManager.preWebsiteCreation(request)
+
+        if  result != 200:
+            return result
+
+        wm = WebsiteManager()
+        coreResult = wm.AddNewpluginAjax(userID, json.loads(request.body))
+
+        result = pluginManager.postWebsiteCreation(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def EidtPlugin(request):
+    try:
+        userID = request.session['userID']
+
+        pluginbID = request.GET.get('ID')
+        wm = WebsiteManager()
+        return wm.EidtPlugin(request, userID, pluginbID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def deletesPlgin(request):
+    try:
+        userID = request.session['userID']
+
+        result = pluginManager.preWebsiteCreation(request)
+
+        if  result != 200:
+            return result
+
+        wm = WebsiteManager()
+        coreResult = wm.deletesPlgin(userID, json.loads(request.body))
+
+        result = pluginManager.postWebsiteCreation(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def Addplugineidt(request):
+    try:
+        userID = request.session['userID']
+
+        result = pluginManager.preWebsiteCreation(request)
+
+        if  result != 200:
+            return result
+
+        wm = WebsiteManager()
+        coreResult = wm.Addplugineidt(userID, json.loads(request.body))
+
+        result = pluginManager.postWebsiteCreation(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
 
 
 def modifyWebsite(request):
