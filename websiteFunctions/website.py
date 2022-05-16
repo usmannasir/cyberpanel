@@ -58,6 +58,7 @@ class WebsiteManager:
         proc = httpProc(request, 'websiteFunctions/createWebsite.html',
                         Data, 'createWebsite')
         return proc.render()
+
     def WPCreate(self, request=None, userID=None, data=None):
         currentACL = ACLManager.loadedACL(userID)
         adminNames = ACLManager.loadAllUsers(userID)
@@ -1923,7 +1924,6 @@ class WebsiteManager:
                         'tempStatusPath': extraArgs['tempStatusPath']}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
-
 
         except BaseException as msg:
             data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
