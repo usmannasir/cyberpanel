@@ -8,8 +8,9 @@
     <!-- Current language: {{ LANGUAGE_CODE }} -->
 
     <div class="container">
+     <span id="pluginbID" style="display: none">{{ pluginbID }}</span>
         <div id="page-title">
-            <h2 id="domainNamePage">{% trans "Add New Plugin" %}
+            <h2 id="domainNamePage">{% trans "Eidt Plugin Bucket" %}
 
             </h2>
         </div>
@@ -20,19 +21,11 @@
                     <form name="websiteCreationForm" action="/" id="createPackages"
                           class="form-horizontal bordered-row panel-body">
 
-                            <label>{% trans "Plugin Bucket Name" %}</label>
-
-                                <input name="PluginbucketName" type="text" class="form-control"
-                                       ng-model="PluginbucketName"
-                                       required>
-
-
-
 
                             <label>{% trans "Search Plugin Name" %}</label>
 
                                 <input name="searchcontent" type="text" class="form-control" ng-model="searchcontent"
-                                       ng-keyup="SearchPluginName('add')"
+                                       ng-keyup="SearchPluginName('eidt')"
                                        placeholder="{% trans "Search Plugin...." %}" required>
 
 
@@ -49,7 +42,24 @@
 
 
                         <h3>Selected Plugin</h3>
-                        <div id="selJS" style="display: none; display: flex; flex-direction: row;">
+                       <div id="sedplugn" style="  display: flex; flex-direction: row;">
+                    {% for plugin in Selectedplugins %}
+                    <div id="selplug"
+                         style="background-color: #12207a; color: #FFFFFF; padding: 5px;  border-radius: 30px">
+                        {{plugin}}
+                        <svg ng-click="deletesPlgin('{{plugin}}')" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"
+                             role="img" width="1em" height="1em"
+                             preserveAspectRatio="xMidYMid meet" viewBox="0 0 16 16">
+                            <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                  stroke-width="1.5" d="m11.25 4.75l-6.5 6.5m0-6.5l6.5 6.5"/>
+                        </svg>
+
+                    </div>
+                    &nbsp &nbsp
+                    {% endfor %}
+
+
+                </div>
 
                         </div>
                         <div ng-hide="installationDetailsForm" class="form-group">
