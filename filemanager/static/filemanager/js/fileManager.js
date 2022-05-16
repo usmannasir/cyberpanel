@@ -674,7 +674,7 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
         var data = {
             completeStartingPath: completePathToFile,
             method: "listForTable",
-            home: "/",
+            home: homePathBack,
             domainRandomSeed: domainRandomSeed,
             domainName: domainName
         };
