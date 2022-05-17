@@ -366,20 +366,20 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
         try:
             #######
 
-            if os.path.exists("/usr/local/CyberCP/public/rainloop"):
+            if os.path.exists("/usr/local/CyberCP/public/snappymail"):
 
-                if os.path.exists("/usr/local/lscp/cyberpanel/rainloop/data"):
+                if os.path.exists("/usr/local/lscp/cyberpanel/snappymail/data"):
                     pass
                 else:
-                    command = "mv /usr/local/CyberCP/public/rainloop/data /usr/local/lscp/cyberpanel/rainloop/data"
+                    command = "mv /usr/local/CyberCP/public/snappymail/data /usr/local/lscp/cyberpanel/snappymail/data"
                     Upgrade.executioner(command, 0)
 
-                    command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
+                    command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail/data"
                     Upgrade.executioner(command, 0)
 
-                iPath = os.listdir('/usr/local/CyberCP/public/rainloop/rainloop/v/')
+                iPath = os.listdir('/usr/local/CyberCP/public/snappymail/snappymail/v/')
 
-                path = "/usr/local/CyberCP/public/rainloop/rainloop/v/%s/include.php" % (iPath[0])
+                path = "/usr/local/CyberCP/public/snappymail/snappymail/v/%s/include.php" % (iPath[0])
 
                 data = open(path, 'r').readlines()
                 writeToFile = open(path, 'w')
@@ -387,7 +387,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                 for items in data:
                     if items.find("$sCustomDataPath = '';") > -1:
                         writeToFile.writelines(
-                            "			$sCustomDataPath = '/usr/local/lscp/cyberpanel/rainloop/data';\n")
+                            "			$sCustomDataPath = '/usr/local/lscp/cyberpanel/snappymail/data';\n")
                     else:
                         writeToFile.writelines(items)
 
@@ -404,7 +404,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             count = 1
 
             while (1):
-                command = 'wget https://www.rainloop.net/repository/webmail/rainloop-community-latest.zip'
+                command = 'wget https://snappymail.eu/repository/latest.tar.gz'
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
                 if res != 0:
@@ -419,7 +419,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             count = 0
 
             while (1):
-                command = 'unzip rainloop-community-latest.zip -d /usr/local/CyberCP/public/rainloop'
+                command = 'unzip latest.tar.gz -d /usr/local/CyberCP/public/snappymail'
 
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
@@ -430,11 +430,11 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                 else:
                     break
 
-            os.remove("rainloop-community-latest.zip")
+            os.remove("snappymail-community-latest.zip")
 
             #######
 
-            os.chdir("/usr/local/CyberCP/public/rainloop")
+            os.chdir("/usr/local/CyberCP/public/snappymail")
 
             count = 0
 
@@ -465,9 +465,9 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                     break
             ######
 
-            iPath = os.listdir('/usr/local/CyberCP/public/rainloop/rainloop/v/')
+            iPath = os.listdir('/usr/local/CyberCP/public/snappymail/snappymail/v/')
 
-            path = "/usr/local/CyberCP/public/rainloop/rainloop/v/%s/include.php" % (iPath[0])
+            path = "/usr/local/CyberCP/public/snappymail/snappymail/v/%s/include.php" % (iPath[0])
 
             data = open(path, 'r').readlines()
             writeToFile = open(path, 'w')
@@ -475,16 +475,16 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             for items in data:
                 if items.find("$sCustomDataPath = '';") > -1:
                     writeToFile.writelines(
-                        "			$sCustomDataPath = '/usr/local/lscp/cyberpanel/rainloop/data';\n")
+                        "			$sCustomDataPath = '/usr/local/lscp/cyberpanel/snappymail/data';\n")
                 else:
                     writeToFile.writelines(items)
 
             writeToFile.close()
 
-            command = "mkdir -p /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/"
-            Upgrade.executioner(command, 'mkdir rainloop configs', 0)
+            command = "mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/configs/"
+            Upgrade.executioner(command, 'mkdir snappymail configs', 0)
 
-            labsPath = '/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/application.ini'
+            labsPath = '/usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/configs/application.ini'
 
             labsData = """[labs]
 imap_folder_list_limit = 0
@@ -1906,20 +1906,20 @@ imap_folder_list_limit = 0
                     return ''.join(random.choice(chars) for x in range(size))
 
                 content = """<?php
-$_ENV['RAINLOOP_INCLUDE_AS_API'] = true;
-include '/usr/local/CyberCP/public/rainloop/index.php';
+$_ENV['snappymail_INCLUDE_AS_API'] = true;
+include '/usr/local/CyberCP/public/snappymail/index.php';
 
-$oConfig = \RainLoop\Api::Config();
+$oConfig = \snappymail\Api::Config();
 $oConfig->SetPassword('%s');
 echo $oConfig->Save() ? 'Done' : 'Error';
 
 ?>""" % (generate_pass())
 
-                writeToFile = open('/usr/local/CyberCP/public/rainloop.php', 'w')
+                writeToFile = open('/usr/local/CyberCP/public/snappymail.php', 'w')
                 writeToFile.write(content)
                 writeToFile.close()
 
-                command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
+                command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail/data"
                 subprocess.call(shlex.split(command))
 
             except:
@@ -1971,7 +1971,7 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             command = "chown -R root:root /usr/local/lscp"
             Upgrade.executioner(command, 'chown core code', 0)
 
-            command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
+            command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail/data"
             Upgrade.executioner(command, 'chown core code', 0)
 
             command = "chmod 700 /usr/local/CyberCP/cli/cyberPanel.py"
@@ -2079,10 +2079,10 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             command = 'chmod 640 /usr/local/lscp/cyberpanel/logs/access.log'
             Upgrade.executioner(command, 0)
 
-            command = '/usr/local/lsws/lsphp72/bin/php /usr/local/CyberCP/public/rainloop.php'
+            command = '/usr/local/lsws/lsphp72/bin/php /usr/local/CyberCP/public/snappymail.php'
             Upgrade.executioner(command, 0)
 
-            command = 'chmod 600 /usr/local/CyberCP/public/rainloop.php'
+            command = 'chmod 600 /usr/local/CyberCP/public/snappymail.php'
             Upgrade.executioner(command, 0)
 
             ###
