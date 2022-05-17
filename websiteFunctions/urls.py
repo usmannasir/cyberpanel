@@ -16,6 +16,21 @@ urlpatterns = [
     url(r'^CreateNewDomain$', views.CreateNewDomain, name='CreateNewDomain'),
 
 
+    ### WordPress
+    url(r'^createWordpress$', views.WPCreate, name='createWordpress'),
+
+    #### AddPlugin
+    url(r'^ConfigurePlugins$', views.ConfigurePlugins, name='ConfigurePlugins'),
+    url(r'^Addnewplugin$', views.Addnewplugin, name='Addnewplugin'),
+    url(r'^EidtPlugin$', views.EidtPlugin, name='EidtPlugin'),
+
+    ## AddPlugin Ajax
+    url(r'^SearchOnkeyupPlugin$', views.SearchOnkeyupPlugin, name='SearchOnkeyupPlugin'),
+    url(r'^AddNewpluginAjax$', views.AddNewpluginAjax, name='AddNewpluginAjax'),
+    url(r'^deletesPlgin', views.deletesPlgin, name='deletesPlgin'),
+    url(r'^Addplugineidt', views.Addplugineidt, name='Addplugineidt'),
+
+
     # Website modification url
 
 

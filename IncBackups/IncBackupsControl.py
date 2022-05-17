@@ -940,5 +940,3 @@ Subject: %s
         except BaseException as msg:
             logging.statusWriter(self.statusPath, "%s [903:DeleteSnapShot][5009]" % (str(msg)), 1)
             return 0
-
-

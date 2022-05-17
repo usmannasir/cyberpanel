@@ -12,7 +12,7 @@ django.setup()
 import json
 from plogical.acl import ACLManager
 import plogical.CyberCPLogFileWriter as logging
-from websiteFunctions.models import Websites, ChildDomains, GitLogs
+from websiteFunctions.models import Websites, ChildDomains, GitLogs, wpplugins
 from plogical.virtualHostUtilities import virtualHostUtilities
 import subprocess
 import shlex
@@ -58,6 +58,203 @@ class WebsiteManager:
         proc = httpProc(request, 'websiteFunctions/createWebsite.html',
                         Data, 'createWebsite')
         return proc.render()
+
+    def WPCreate(self, request=None, userID=None, data=None):
+        currentACL = ACLManager.loadedACL(userID)
+        adminNames = ACLManager.loadAllUsers(userID)
+        packagesName = ACLManager.loadPackages(userID, currentACL)
+        phps = PHPManager.findPHPVersions()
+        FinalVersions = []
+        #logging.CyberCPLogFileWriter.writeToFile("jassssssssss...............")
+
+        counter = 0
+        try:
+            import requests
+            WPVersions = json.loads(requests.get('https://api.wordpress.org/core/version-check/1.7/').text)['offers']
+
+            for versions in WPVersions:
+                if counter == 7:
+                    break
+                if versions['current'] not in FinalVersions:
+                    FinalVersions.append(versions['current'])
+                    counter = counter + 1
+
+        except:
+            FinalVersions = ['5.6', '5.5.3', '5.5.2']
+
+        # logging.CyberCPLogFileWriter.writeToFile("FinalVersions:%s"+str(FinalVersions))
+
+        Data = {'packageList': packagesName, "owernList": adminNames, 'phps': phps, 'WPVersions': FinalVersions}
+        proc = httpProc(request, 'websiteFunctions/WPCreate.html',
+                        Data, 'createWebsite')
+        return proc.render()
+
+    def ConfigurePlugins(self, request=None, userID=None, data=None):
+
+        DataPass ={}
+        currentACL = ACLManager.loadedACL(userID)
+        adminNames = ACLManager.loadAllUsers(userID)
+        packagesName = ACLManager.loadPackages(userID, currentACL)
+        phps = PHPManager.findPHPVersions()
+        userobj = Administrator.objects.get(pk=userID)
+
+
+
+
+        Selectedplugins = wpplugins.objects.filter(owner = userobj)
+        #data['Selectedplugins'] = wpplugins.objects.filter(ProjectOwner=HostingCompany)
+
+        Data = {'packageList': packagesName, "owernList": adminNames, 'phps': phps, 'Selectedplugins' : Selectedplugins,}
+        proc = httpProc(request, 'websiteFunctions/WPConfigurePlugins.html',
+                        Data, 'createWebsite')
+        return proc.render()
+
+
+    def Addnewplugin(self, request=None, userID=None, data=None):
+        currentACL = ACLManager.loadedACL(userID)
+        adminNames = ACLManager.loadAllUsers(userID)
+        packagesName = ACLManager.loadPackages(userID, currentACL)
+        phps = PHPManager.findPHPVersions()
+
+        Data = {'packageList': packagesName, "owernList": adminNames, 'phps': phps}
+        proc = httpProc(request, 'websiteFunctions/WPAddNewPlugin.html',
+                        Data, 'createWebsite')
+        return proc.render()
+
+    def SearchOnkeyupPlugin(self, userID=None, data=None):
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+
+            pluginname = data['pluginname']
+            # logging.CyberCPLogFileWriter.writeToFile("Plugin Name ....... %s"%pluginname)
+
+            url = "http://api.wordpress.org/plugins/info/1.1/?action=query_plugins&request[search]=%s" % str(pluginname)
+            import requests
+
+            res = requests.get(url)
+            r = res.json()
+
+            # return proc.ajax(1, 'Done', {'plugins': r})
+
+            data_ret = {'status': 1,'plugns': r,}
+
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'createWebSiteStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+    def AddNewpluginAjax(self, userID=None, data=None):
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+
+            userobj = Administrator.objects.get(pk=userID)
+
+            config = data['config']
+            Name = data['Name']
+            # pluginname = data['pluginname']
+            # logging.CyberCPLogFileWriter.writeToFile("config ....... %s"%config)
+            # logging.CyberCPLogFileWriter.writeToFile(" Name ....... %s"%Name)
+
+
+            addpl = wpplugins(Name=Name, config=json.dumps(config), owner=userobj)
+            addpl.save()
+
+            data_ret = {'status': 1}
+
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'AddNewpluginAjax': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+    def EidtPlugin(self,request=None, userID=None, pluginbID=None):
+        Data ={}
+        currentACL = ACLManager.loadedACL(userID)
+        pluginobj = wpplugins.objects.get(pk=pluginbID)
+        lmo = json.loads(pluginobj.config)
+        Data['Selectedplugins'] = lmo
+        Data['pluginbID'] = pluginbID
+
+
+        proc = httpProc(request, 'websiteFunctions/WPEidtPlugin.html',
+                        Data, 'createWebsite')
+        return proc.render()
+
+
+    def deletesPlgin(self, userID=None, data=None,):
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+
+            userobj = Administrator.objects.get(pk=userID)
+            pluginname = data['pluginname']
+            pluginbBucketID = data['pluginbBucketID']
+            # logging.CyberCPLogFileWriter.writeToFile("pluginbID ....... %s" % pluginbBucketID)
+            # logging.CyberCPLogFileWriter.writeToFile("pluginname ....... %s" % pluginname)
+
+
+
+            obj = wpplugins.objects.get(pk=pluginbBucketID, owner=userobj)
+            ab = []
+            ab = json.loads(obj.config)
+            ab.remove(pluginname)
+            obj.config = json.dumps(ab)
+            obj.save()
+
+            data_ret = {'status': 1}
+
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+        except BaseException as msg:
+            data_ret = {'status': 0, 'deletesPlgin': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+    def Addplugineidt(self, userID=None, data=None,):
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+
+            userobj = Administrator.objects.get(pk=userID)
+            pluginname = data['pluginname']
+            pluginbBucketID = data['pluginbBucketID']
+
+            #logging.CyberCPLogFileWriter.writeToFile("pluginbID ....... %s" % pluginbBucketID)
+            #logging.CyberCPLogFileWriter.writeToFile("pluginname ....... %s" % pluginname)
+
+            pObj = wpplugins.objects.get(pk=pluginbBucketID, owner=userobj)
+            listofplugin = json.loads(pObj.config)
+            try:
+                index = listofplugin.index(pluginname)
+                print('index.....%s' % index)
+                if (index >= 0):
+                    data_ret = {'status': 0, 'deletesPlgin': 0, 'error_message': str('Already Save in your Plugin lis')}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+
+            except:
+                ab = []
+                ab = json.loads(pObj.config)
+                ab.append(pluginname)
+                pObj.config = json.dumps(ab)
+                pObj.save()
+
+
+            data_ret = {'status': 1}
+
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+        except BaseException as msg:
+            data_ret = {'status': 0, 'deletesPlgin': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
 
     def modifyWebsite(self, request=None, userID=None, data=None):
         currentACL = ACLManager.loadedACL(userID)
@@ -1843,7 +2040,6 @@ class WebsiteManager:
                         'tempStatusPath': extraArgs['tempStatusPath']}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
-
 
         except BaseException as msg:
             data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}

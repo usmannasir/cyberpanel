@@ -20,6 +20,229 @@ function getCookie(name) {
     return cookieValue;
 }
 
+var arry = []
+
+function selectpluginJs(val) {
+    $('#mysearch').hide()
+    arry.push(val)
+
+    // console.log(arry)
+    document.getElementById('selJS').innerHTML = "";
+
+    for (var i = 0; i < arry.length; i++) {
+        $('#selJS').show()
+        var mlm = '<span style="background-color: #12207a; color: #FFFFFF; padding: 5px;  border-radius: 30px"> ' + arry[i] + ' </span>&nbsp &nbsp'
+        $('#selJS').append(mlm)
+    }
+
+
+}
+
+
+var DeletePluginURL;
+
+function DeletePluginBuucket(url) {
+    DeletePluginURL = url;
+}
+
+function FinalDeletePluginBuucket() {
+    window.location.href = DeletePluginURL;
+}
+
+var SPVal;
+app.controller('WPAddNewPlugin', function ($scope, $http, $timeout, $window, $compile) {
+
+    $scope.SearchPluginName = function (val) {
+        SPVal = val;
+        url = "/websites/SearchOnkeyupPlugin";
+
+        var searchcontent = $scope.searchcontent;
+
+
+        var data = {
+            pluginname: searchcontent
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+            if (response.data.status === 1) {
+                if (SPVal == 'add') {
+                    $('#mysearch').show()
+                    document.getElementById('mysearch').innerHTML = "";
+                    var res = response.data.plugns.plugins
+                    // console.log(res);
+                    for (i = 0; i <= res.length; i++) {
+                        //
+                        var tml = '<option onclick="selectpluginJs(\'' + res[i].slug + '\')" style="  border-bottom: 1px solid  rgba(90, 91, 92, 0.5); padding: 5px; " value="' + res[i].slug + '">' + res[i].name + '</option> <br>';
+                        $('#mysearch').append(tml);
+                    }
+                } else if (SPVal == 'eidt') {
+                    $('#mysearch').show()
+                    document.getElementById('mysearch').innerHTML = "";
+                    var res = response.data.plugns.plugins
+                    // console.log(res);
+                    for (i = 0; i <= res.length; i++) {
+                        //
+                        var tml = '<option  ng-click="Addplugin(\'' + res[i].slug + '\')" style="  border-bottom: 1px solid  rgba(90, 91, 92, 0.5); padding: 5px; " value="' + res[i].slug + '">' + res[i].name + '</option> <br>';
+                       var temp = $compile(tml)($scope)
+                        angular.element(document.getElementById('mysearch')).append(temp);
+                    }
+
+                }
+
+
+            } else {
+
+                // $scope.errorMessage = response.data.error_message;
+                alert("Status not = 1: Error..." + response.data.error_message)
+            }
+
+
+        }
+
+        function cantLoadInitialDatas(response) {
+
+            alert("Error..." + response)
+
+        }
+    }
+
+    $scope.AddNewplugin = function () {
+
+        url = "/websites/AddNewpluginAjax";
+
+        var bucketname = $scope.PluginbucketName
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        var data = {
+            config: arry,
+            Name: bucketname
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+
+            if (response.data.status === 1) {
+                alert("added..........");
+                location.reload();
+            } else {
+
+                // $scope.errorMessage = response.data.error_message;
+                alert("Status not = 1: Error..." + response.data.error_message)
+            }
+
+
+        }
+
+        function cantLoadInitialDatas(response) {
+
+            alert("Error..." + response)
+
+        }
+    }
+
+    $scope.deletesPlgin = function (val) {
+
+        url = "/websites/deletesPlgin";
+
+
+        var data = {
+            pluginname: val,
+            pluginbBucketID: $('#pluginbID').html()
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+            if (response.data.status === 1) {
+                location.reload();
+
+            } else {
+
+                // $scope.errorMessage = response.data.error_message;
+                alert("Status not = 1: Error..." + response.data.error_message)
+            }
+
+
+        }
+
+        function cantLoadInitialDatas(response) {
+
+            alert("Error..." + response)
+
+        }
+
+    }
+
+    $scope.Addplugin = function (slug) {
+         $('#mysearch').hide()
+
+                url = "/websites/Addplugineidt";
+
+
+        var data = {
+            pluginname: slug,
+            pluginbBucketID: $('#pluginbID').html()
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+            if (response.data.status === 1) {
+                location.reload();
+
+            } else {
+
+                // $scope.errorMessage = response.data.error_message;
+                alert("Status not = 1: Error..." + response.data.error_message)
+            }
+
+
+        }
+
+        function cantLoadInitialDatas(response) {
+
+            alert("Error..." + response)
+
+        }
+
+
+    }
+
+});
+
 
 /* Java script code to create account */
 app.controller('createWebsite', function ($scope, $http, $timeout, $window) {
@@ -700,8 +923,9 @@ app.controller('listChildDomainsMain', function ($scope, $http, $timeout) {
 
 
     }
+
     var DeleteDomain;
-    $scope.deleteDomainInit = function (childDomainForDeletion){
+    $scope.deleteDomainInit = function (childDomainForDeletion) {
         DeleteDomain = childDomainForDeletion;
     };
 
@@ -2044,7 +2268,7 @@ app.controller('websitePages', function ($scope, $http, $timeout, $window) {
 
     var statusFile;
 
-    $scope.WebsiteSelection = function (){
+    $scope.WebsiteSelection = function () {
         $scope.DomainCreateForm = false;
     };
 
@@ -2730,7 +2954,7 @@ RewriteRule ^/?(.*) https://%{SERVER_NAME}/$1 [R,L]
 ### End CyberPanel Generated Rules.
 
 `;
-    
+
     const WWWToNonWWW = `### Rewrite Rules Added by CyberPanel Rewrite Rule Generator
 
 RewriteEngine On
@@ -2757,8 +2981,7 @@ RewriteRule ^(.*)$ http://www.%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
             $scope.rewriteRules = httpToHTTPS + $scope.rewriteRules;
         } else if ($scope.rewriteTemplate === "Force NON-WWW -> WWW") {
             $scope.rewriteRules = nonWWWToWWW + $scope.rewriteRules;
-        }
-        else if ($scope.rewriteTemplate === "Force WWW -> NON-WWW") {
+        } else if ($scope.rewriteTemplate === "Force WWW -> NON-WWW") {
             $scope.rewriteRules = WWWToNonWWW + $scope.rewriteRules;
         }
     };
