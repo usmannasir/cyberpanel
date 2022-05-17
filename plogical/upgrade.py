@@ -388,7 +388,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                 for items in data:
                     if items.find("$sCustomDataPath = '';") > -1:
                         writeToFile.writelines(
-                            "			$sCustomDataPath = '/usr/local/lscp/cyberpanel/snappymail/data';\n")
+                            "			$sCustomDataPath = '/usr/local/lscp/cyberpanel/rainloop/data';\n")
                     else:
                         writeToFile.writelines(items)
 
