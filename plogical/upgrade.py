@@ -418,6 +418,9 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             count = 0
 
+            if os.path.exists('/usr/local/CyberCP/public/snappymail'):
+                shutil.rmtree('/usr/local/CyberCP/public/snappymail')
+
             while (1):
                 command = 'unzip snappymail-2.15.3.zip -d /usr/local/CyberCP/public/snappymail'
 
