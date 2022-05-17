@@ -96,6 +96,7 @@ class preFlightsChecks:
     debug = 1
     cyberPanelMirror = "mirror.cyberpanel.net/pip"
     cdn = 'cyberpanel.sh'
+    SnappyVersion = '2.15.3'
 
     def __init__(self, rootPath, ip, path, cwd, cyberPanelPath, distro, remotemysql=None, mysqlhost=None, mysqldb=None,
                  mysqluser=None, mysqlpassword=None, mysqlport=None):
@@ -1241,15 +1242,19 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             os.chdir("/usr/local/CyberCP/public")
 
-            command = 'wget https://snappymail.eu/repository/latest.tar.gz'
+            command = 'wget https://github.com/the-djmaze/snappymail/releases/download/v%s/snappymail-%s.zip' % (preFlightsChecks.SnappyVersion, preFlightsChecks.SnappyVersion)
+
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
             #############
 
-            command = 'unzip latest.tar.gz -d /usr/local/CyberCP/public/snappymail'
+            command = 'unzip snappymail-%s.zip -d /usr/local/CyberCP/public/snappymail' % (preFlightsChecks.SnappyVersion)
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
-            os.remove("latest.tar.gz")
+            try:
+                os.remove("snappymail-%s.zip" % (preFlightsChecks.SnappyVersion))
+            except:
+                pass
 
             #######
 
@@ -1265,15 +1270,15 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             ######
 
-            command = "mkdir -p /usr/local/lscp/cyberpanel/snappymail/data"
+            command = "mkdir -p /usr/local/lscp/cyberpanel/rainloop/data"
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             ### Enable sub-folders
 
-            command = "mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/configs/"
+            command = "mkdir -p /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/"
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-            labsPath = '/usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/configs/application.ini'
+            labsPath = '/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/application.ini'
 
             labsData = """[labs]
 imap_folder_list_limit = 0
@@ -1293,7 +1298,7 @@ imap_folder_list_limit = 0
             for items in data:
                 if items.find("$sCustomDataPath = '';") > -1:
                     writeToFile.writelines(
-                        "			$sCustomDataPath = '/usr/local/lscp/cyberpanel/snappymail/data';\n")
+                        "			$sCustomDataPath = '/usr/local/lscp/cyberpanel/rainloop/data';\n")
                 else:
                     writeToFile.writelines(items)
 

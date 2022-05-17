@@ -34,6 +34,7 @@ class Upgrade:
     CentOSPath = '/etc/redhat-release'
     UbuntuPath = '/etc/lsb-release'
     FromCloud = 0
+    SnappyVersion = '2.15.3'
 
     AdminACL = '{"adminStatus":1, "versionManagement": 1, "createNewUser": 1, "listUsers": 1, "deleteUser":1 , "resellerCenter": 1, ' \
                '"changeUserACL": 1, "createWebsite": 1, "modifyWebsite": 1, "suspendWebsite": 1, "deleteWebsite": 1, ' \
@@ -366,18 +367,18 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
         try:
             #######
 
-            if os.path.exists("/usr/local/CyberCP/public/snappymail"):
+            if os.path.exists("/usr/local/CyberCP/public/rainloop"):
 
-                if os.path.exists("/usr/local/lscp/cyberpanel/snappymail/data"):
+                if os.path.exists("/usr/local/lscp/cyberpanel/rainloop/data"):
                     pass
                 else:
-                    command = "mv /usr/local/CyberCP/public/snappymail/data /usr/local/lscp/cyberpanel/snappymail/data"
+                    command = "mv /usr/local/CyberCP/public/rainloop/data /usr/local/lscp/cyberpanel/rainloop/data"
                     Upgrade.executioner(command, 0)
 
-                    command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail/data"
+                    command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
                     Upgrade.executioner(command, 0)
 
-                iPath = os.listdir('/usr/local/CyberCP/public/snappymail/snappymail/v/')
+                iPath = os.listdir('/usr/local/CyberCP/public/rainloop/rainloop/v/')
 
                 path = "/usr/local/CyberCP/public/snappymail/snappymail/v/%s/include.php" % (iPath[0])
 
@@ -404,7 +405,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             count = 1
 
             while (1):
-                command = 'wget https://github.com/the-djmaze/snappymail/releases/download/v2.15.3/snappymail-2.15.3.zip'
+                command = 'wget https://github.com/the-djmaze/snappymail/releases/download/v%s/snappymail-%s.zip' % (Upgrade.SnappyVersion, Upgrade.SnappyVersion)
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
                 if res != 0:
@@ -422,7 +423,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                 shutil.rmtree('/usr/local/CyberCP/public/snappymail')
 
             while (1):
-                command = 'unzip snappymail-2.15.3.zip -d /usr/local/CyberCP/public/snappymail'
+                command = 'unzip snappymail-%s.zip -d /usr/local/CyberCP/public/snappymail' % (Upgrade.SnappyVersion)
 
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
@@ -433,7 +434,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                 else:
                     break
             try:
-                os.remove("snappymail-2.15.3.zip")
+                os.remove("snappymail-%s.zip" % (Upgrade.SnappyVersion))
             except:
                 pass
 
