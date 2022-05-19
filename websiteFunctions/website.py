@@ -65,7 +65,7 @@ class WebsiteManager:
         phps = PHPManager.findPHPVersions()
         FinalVersions = []
         #logging.CyberCPLogFileWriter.writeToFile("jassssssssss...............")
-
+        userobj = Administrator.objects.get(pk=userID)
         counter = 0
         try:
             import requests
@@ -81,9 +81,11 @@ class WebsiteManager:
         except:
             FinalVersions = ['5.6', '5.5.3', '5.5.2']
 
+        Plugins = wpplugins.objects.filter(owner=userobj)
+
         # logging.CyberCPLogFileWriter.writeToFile("FinalVersions:%s"+str(FinalVersions))
 
-        Data = {'packageList': packagesName, "owernList": adminNames, 'phps': phps, 'WPVersions': FinalVersions}
+        Data = {'packageList': packagesName, "owernList": adminNames, 'WPVersions': FinalVersions, 'Plugins': Plugins }
         proc = httpProc(request, 'websiteFunctions/WPCreate.html',
                         Data, 'createWebsite')
         return proc.render()
@@ -339,6 +341,47 @@ class WebsiteManager:
             'noAlias': noAlias
         })
         return proc.render()
+
+
+    def submitWorpressCreation(self, userID=None, data=None):
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            extraArgs = {}
+            extraArgs['adminID'] = admin.pk
+            extraArgs['domainName'] = data['domain']
+            extraArgs['WPVersion'] = data['WPVersion']
+            extraArgs['blogTitle'] = data['title']
+            extraArgs['PluginsThemes'] = data['PluginsThemes']
+            extraArgs['adminUser'] = data['adminUser']
+            extraArgs['PasswordByPass'] = data['PasswordByPass']
+            extraArgs['adminPassword'] = data['PasswordByPass']
+            extraArgs['adminEmail'] = data['Email']
+            extraArgs['updates'] = data['AutomaticUpdates']
+            extraArgs['Plugins'] = data['Plugins']
+            extraArgs['Themes'] = data['Themes']
+            extraArgs['websiteOwner'] = data['websiteOwner']
+            extraArgs['package'] = data['package']
+            extraArgs['home'] = "1"
+            extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
+
+
+            background = ApplicationInstaller('wordpressInstallNew', extraArgs)
+            background.start()
+
+            time.sleep(2)
+
+            data_ret = {'status': 1, 'installStatus': 1, 'error_message': 'None',
+                        'tempStatusPath': extraArgs['tempStatusPath']}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
 
     def submitWebsiteCreation(self, userID=None, data=None):
         try:
@@ -2508,11 +2551,11 @@ StrictHostKeyChecking no
             adminEmail = data['ownerEmail']
             websiteOwner = data['websiteOwner']
             ownerPassword = data['ownerPassword']
-            data['ssl'] = 0
+            data['ssl'] = 1
             data['dkimCheck'] = 0
             data['openBasedir'] = 1
             data['adminEmail'] = data['ownerEmail']
-            data['phpSelection'] = "PHP 7.0"
+            data['phpSelection'] = "PHP 7.4"
             data['package'] = data['packageName']
             try:
                 websitesLimit = data['websitesLimit']

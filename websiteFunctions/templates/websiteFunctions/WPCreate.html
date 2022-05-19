@@ -14,7 +14,7 @@
         </div>
 
 
-        <div ng-controller="createWebsite" class="panel">
+        <div ng-controller="createWordpress" class="panel">
             <div class="panel-body">
                 <h3 class="content-box-header">
                     {% trans "Website Details" %} <img ng-hide="webSiteCreationLoading"
@@ -64,7 +64,7 @@
                                  class="current-pack">{% trans "Invalid Domain (Note: You don't need to add 'http' or 'https')" %}</div>
                         </div>
 
-                    <div ng-hide="installationDetailsForm" class="form-group">
+                        <div ng-hide="installationDetailsForm" class="form-group">
                             <label class="col-sm-3 control-label">{% trans "Username" %}</label>
                             <div class="col-sm-6">
                                 <input name="Username" type="text" class="form-control" ng-model="WPUsername"
@@ -82,7 +82,7 @@
                             <div ng-show="websiteCreationForm.email.$error.email"
                                  class="current-pack">{% trans "Invalid Email" %}</div>
                         </div>
-                     <div ng-hide="installationDetailsForm" class="form-group">
+                        <div ng-hide="installationDetailsForm" class="form-group">
                             <label class="col-sm-3 control-label">{% trans "Password" %}</label>
                             <div class="col-sm-6">
                                 <input name="password" type="password" class="form-control" ng-model="WPPassword"
@@ -95,13 +95,65 @@
                         <div ng-hide="installationDetailsForm" class="form-group">
                             <label class="col-sm-3 control-label">{% trans "Select WP Version" %}</label>
                             <div class="col-sm-6">
-                                <select ng-model="phpSelection" class="form-control">
-                                    {% for php in WPVersions %}
-                                        <option>{{ php }}</option>
+                                <select ng-model="WPVersions" class="form-control">
+                                    {% for wp in WPVersions %}
+                                        <option>{{ wp }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
                         </div>
+
+                        <div ng-hide="installationDetailsForm" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Plugin/Theme" %}</label>
+                            <div class="col-sm-6">
+                                <select ng-model="pluginbucket" class="form-control">
+                                    <option value="-1" selected>Select Plugin Bucket</option>
+                                    {% for wp in Plugins %}
+                                        <option value="{{ wp.id }}">{{ wp.Name }}</option>
+                                    {% endfor %}
+                                </select>
+
+                            </div>
+                        </div>
+
+                        <div ng-hide="installationDetailsForm" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Automatic Updates" %}</label>
+                            <div class="col-sm-6">
+                                <select ng-model="autoupdates" class="form-control">
+
+                                    <option>Disabled</option>
+                                    <option>All (minor and major)</option>
+                                    <option>Minor and Security Updates</option>
+
+                                </select>
+
+                            </div>
+                        </div>
+                        <div ng-hide="installationDetailsForm" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Plugins Updates" %}</label>
+                            <div class="col-sm-6">
+                                <select ng-model="pluginupdates" class="form-control">
+
+                                    <option>Enabled</option>
+                                    <option>Disabled</option>
+
+                                </select>
+
+                            </div>
+                        </div>
+                        <div ng-hide="installationDetailsForm" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Themes Updates" %}</label>
+                            <div class="col-sm-6">
+                                <select ng-model="themeupdates" class="form-control">
+
+                                    <option>Enabled</option>
+                                    <option>Disabled</option>
+
+                                </select>
+
+                            </div>
+                        </div>
+
 
                         <div ng-hide="installationDetailsForm" class="form-group">
                             <label class="col-sm-3 control-label">{% trans "Additional Features" %}</label>
@@ -145,8 +197,7 @@
                         <div ng-hide="installationDetailsForm" class="form-group">
                             <label class="col-sm-3 control-label"></label>
                             <div class="col-sm-4">
-                                <button ng-disabled="websiteCreationForm.dom.$error.required || websiteCreationForm.email.$invalid"
-                                        type="button" ng-click="createWebsite()"
+                                <button   type="button" ng-click="createWordPresssite()"
                                         class="btn btn-primary btn-lg">{% trans "Create Website" %}</button>
 
                             </div>

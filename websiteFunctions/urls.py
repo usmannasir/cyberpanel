@@ -19,6 +19,9 @@ urlpatterns = [
     ### WordPress
     url(r'^createWordpress$', views.WPCreate, name='createWordpress'),
 
+    ###WordPress Ajax
+    url(r'^submitWorpressCreation', views.submitWorpressCreation, name='submitWorpressCreation'),
+
     #### AddPlugin
     url(r'^ConfigurePlugins$', views.ConfigurePlugins, name='ConfigurePlugins'),
     url(r'^Addnewplugin$', views.Addnewplugin, name='Addnewplugin'),

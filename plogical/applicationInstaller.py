@@ -1,8 +1,11 @@
 #!/usr/local/CyberCP/bin/python
 import argparse
 import os, sys
+import time
 
+from loginSystem.models import Administrator
 from plogical.acl import ACLManager
+
 
 sys.path.append('/usr/local/CyberCP')
 import django
@@ -11,8 +14,9 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
 import threading as multi
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+import plogical.CyberCPLogFileWriter as logging
 import subprocess
-from websiteFunctions.models import ChildDomains, Websites
+from websiteFunctions.models import ChildDomains, Websites, WPSites
 from plogical import randomPassword
 from plogical.mysqlUtilities import mysqlUtilities
 from databases.models import Databases
@@ -33,11 +37,13 @@ class ApplicationInstaller(multi.Thread):
         multi.Thread.__init__(self)
         self.installApp = installApp
         self.extraArgs = extraArgs
+
         if extraArgs != None:
             try:
                 self.tempStatusPath = self.extraArgs['tempStatusPath']
             except:
                 pass
+        self.data = self.extraArgs
 
     def run(self):
         try:
@@ -56,6 +62,8 @@ class ApplicationInstaller(multi.Thread):
                 self.updatePackage()
             elif self.installApp == 'mautic':
                 self.installMautic()
+            elif self.installApp == 'wordpressInstallNew':
+                self.wordpressInstallNew()
 
         except BaseException as msg:
             logging.writeToFile(str(msg) + ' [ApplicationInstaller.run]')
@@ -473,7 +481,6 @@ $parameters = array(
 
     def installWordPress(self):
         try:
-
             domainName = self.extraArgs['domainName']
             home = self.extraArgs['home']
             tempStatusPath = self.extraArgs['tempStatusPath']
@@ -1620,6 +1627,103 @@ $parameters = array(
             statusFile = open(self.tempStatusPath, 'w')
             statusFile.writelines(str(msg) + " [404]")
             statusFile.close()
+            return 0
+
+    def wordpressInstallNew(self):
+        try:
+            from websiteFunctions.website import WebsiteManager
+            import json
+            logging.CyberCPLogFileWriter.writeToFile("start wordpressInstallNew...." )
+            tempStatusPath = self.data['tempStatusPath']
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines('Creating Website...')
+            statusFile.close()
+
+
+            DataToPass = {}
+
+            currentTemp = self.extraArgs['tempStatusPath']
+            DataToPass['domainName'] = self.data['domainName']
+            DataToPass['adminEmail'] = self.data['adminEmail']
+            DataToPass['phpSelection'] = "PHP 7.4"
+            DataToPass['websiteOwner'] = self.data['websiteOwner']
+            DataToPass['package'] = self.data['package']
+            DataToPass['ssl'] = 1
+            DataToPass['dkimCheck'] = 0
+            DataToPass['openBasedir'] = 0
+            DataToPass['mailDomain'] = 0
+            UserID = self.data['adminID']
+
+            ab = WebsiteManager()
+            coreResult = ab.submitWebsiteCreation(UserID, DataToPass)
+            coreResult1 = json.loads((coreResult).content)
+            logging.CyberCPLogFileWriter.writeToFile("Creating website result....%s"%coreResult1)
+            reutrntempath = coreResult1['tempStatusPath']
+            while (1):
+                lastLine = open(reutrntempath, 'r').read()
+
+                if lastLine.find('[200]') > -1:
+                    break
+                elif lastLine.find('[404]') > -1:
+                    statusFile = open(currentTemp, 'w')
+                    statusFile.writelines('Failed to Create Website: error: %s[404]' % lastLine)
+                    statusFile.close()
+                    return 0
+                else:
+                    statusFile = open(currentTemp, 'w')
+                    statusFile.writelines('Creating Website....,20')
+                    statusFile.close()
+                    time.sleep(2)
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines('Installing WordPress....')
+            statusFile.close()
+
+            ## Install WordPress
+
+
+            currentTemp = self.extraArgs['tempStatusPath']
+            self.extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
+            self.installWordPress()
+
+            while (1):
+                lastLine = open(self.extraArgs['tempStatusPath'], 'r').read()
+
+                if lastLine.find('[200]') > -1:
+                    break
+                elif lastLine.find('[404]') > -1:
+                    statusFile = open(currentTemp, 'w')
+                    statusFile.writelines('Failed to install WordPress: error: %s[404]' % lastLine)
+                    statusFile.close()
+                    return 0
+                else:
+                    statusFile = open(currentTemp, 'w')
+                    statusFile.writelines('Installing WordPress....,30')
+                    statusFile.close()
+                    time.sleep(2)
+
+            statusFile = open(currentTemp, 'w')
+            statusFile.writelines('WordPress installed..,70')
+            statusFile.close()
+
+
+            webobj = Websites.objects.get(domain= self.extraArgs['domainName'])
+
+            path ="/home/%s/public_html"%(self.extraArgs['domainName'])
+            Finalurl = (self.extraArgs['domainName'])
+
+            wpobj = WPSites(owner=webobj, title=self.extraArgs['blogTitle'], path=path, FinalURL=Finalurl,
+                            AutoUpdates=(self.extraArgs['updates']), PluginUpdates=(self.extraArgs['Plugins']),
+                            ThemeUpdates=(self.extraArgs['Themes']),)
+            wpobj.save()
+
+            statusFile = open(currentTemp, 'w')
+            statusFile.writelines('WordPress installed..,[200]')
+            statusFile.close()
+
+
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile("Error WP web creating  ....... %s" % str(msg))
             return 0
 
 def main():

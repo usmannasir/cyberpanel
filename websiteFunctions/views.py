@@ -161,6 +161,28 @@ def Addplugineidt(request):
         return redirect(loadLoginPage)
 
 
+def submitWorpressCreation(request):
+    try:
+        userID = request.session['userID']
+
+        result = pluginManager.preWebsiteCreation(request)
+
+        if  result != 200:
+            return result
+
+        wm = WebsiteManager()
+        coreResult = wm.submitWorpressCreation(userID, json.loads(request.body))
+
+        result = pluginManager.postWebsiteCreation(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
 
 def modifyWebsite(request):
     try:
