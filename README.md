@@ -9,7 +9,7 @@ Web Hosting Control Panel that uses OpenLiteSpeed as the underlying Web Server.
 * FTP Server.
 * Light-weight DNS Server (PowerDNS).
 * phpMyAdmin to manage DBs (MariaDB).
-* Email Support (RainLoop).
+* Email Support (SnappyMail).
 * File Manager.
 * PHP Managment.
 * Firewall (FirewallD & ConfigServer Firewall Integration).

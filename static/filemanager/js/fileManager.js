@@ -1201,9 +1201,11 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
             pathbase = $scope.currentPath;
         }
 
+
+
         $scope.extractionLoading = false;
 
-        var completeFileToExtract = $scope.currentRPath + "/" + allFilesAndFolders[0];
+        var completeFileToExtract = pathbase + "/" + allFilesAndFolders[0];
         var extractionType = "";
 
         if (findFileExtension(completeFileToExtract) == "gz") {

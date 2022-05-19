@@ -96,6 +96,7 @@ class preFlightsChecks:
     debug = 1
     cyberPanelMirror = "mirror.cyberpanel.net/pip"
     cdn = 'cyberpanel.sh'
+    SnappyVersion = '2.15.3'
 
     def __init__(self, rootPath, ip, path, cwd, cyberPanelPath, distro, remotemysql=None, mysqlhost=None, mysqldb=None,
                  mysqluser=None, mysqlpassword=None, mysqlport=None):
@@ -648,11 +649,11 @@ password="%s"
         command = 'chmod 640 /usr/local/lscp/cyberpanel/logs/access.log'
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-        command = 'mkdir -p/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/'
+        command = 'mkdir -p/usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/configs/'
 
-        rainloopinipath = '/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/application.ini'
+        snappymailinipath = '/usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/configs/application.ini'
 
-        command = 'chmod 600 /usr/local/CyberCP/public/rainloop.php'
+        command = 'chmod 600 /usr/local/CyberCP/public/snappymail.php'
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
         ###
@@ -1236,24 +1237,28 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             if not os.path.exists("/usr/local/CyberCP/public"):
                 os.mkdir("/usr/local/CyberCP/public")
 
-            if os.path.exists("/usr/local/CyberCP/public/rainloop"):
+            if os.path.exists("/usr/local/CyberCP/public/snappymail"):
                 return 0
 
             os.chdir("/usr/local/CyberCP/public")
 
-            command = 'wget https://www.rainloop.net/repository/webmail/rainloop-community-latest.zip'
+            command = 'wget https://github.com/the-djmaze/snappymail/releases/download/v%s/snappymail-%s.zip' % (preFlightsChecks.SnappyVersion, preFlightsChecks.SnappyVersion)
+
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
             #############
 
-            command = 'unzip rainloop-community-latest.zip -d /usr/local/CyberCP/public/rainloop'
+            command = 'unzip snappymail-%s.zip -d /usr/local/CyberCP/public/snappymail' % (preFlightsChecks.SnappyVersion)
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
-            os.remove("rainloop-community-latest.zip")
+            try:
+                os.remove("snappymail-%s.zip" % (preFlightsChecks.SnappyVersion))
+            except:
+                pass
 
             #######
 
-            os.chdir("/usr/local/CyberCP/public/rainloop")
+            os.chdir("/usr/local/CyberCP/public/snappymail")
 
             command = 'find . -type d -exec chmod 755 {} \;'
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
@@ -1283,9 +1288,9 @@ imap_folder_list_limit = 0
             writeToFile.write(labsData)
             writeToFile.close()
 
-            iPath = os.listdir('/usr/local/CyberCP/public/rainloop/rainloop/v/')
+            iPath = os.listdir('/usr/local/CyberCP/public/snappymail/snappymail/v/')
 
-            path = "/usr/local/CyberCP/public/rainloop/rainloop/v/%s/include.php" % (iPath[0])
+            path = "/usr/local/CyberCP/public/snappymail/snappymail/v/%s/include.php" % (iPath[0])
 
             data = open(path, 'r').readlines()
             writeToFile = open(path, 'w')
@@ -1300,7 +1305,7 @@ imap_folder_list_limit = 0
             writeToFile.close()
 
         except BaseException as msg:
-            logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [downoad_and_install_rainloop]")
+            logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [downoad_and_install_snappymail]")
             return 0
 
         return 1
@@ -2346,10 +2351,10 @@ def main():
     # checks.disablePackegeUpdates()
 
     try:
-        # command = 'mkdir -p /usr/local/lscp/cyberpanel/rainloop/data/data/default/configs/'
+        # command = 'mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/data/default/configs/'
         # subprocess.call(shlex.split(command))
 
-        writeToFile = open('/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/application.ini', 'a')
+        writeToFile = open('/usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/configs/application.ini', 'a')
 
         writeToFile.write("""
 [security]
@@ -2362,23 +2367,23 @@ admin_password = "12345"
 
         content = """<?php
 
-$_ENV['RAINLOOP_INCLUDE_AS_API'] = true;
-include '/usr/local/CyberCP/public/rainloop/index.php';
+$_ENV['snappymail_INCLUDE_AS_API'] = true;
+include '/usr/local/CyberCP/public/snappymail/index.php';
 
-$oConfig = \RainLoop\Api::Config();
+$oConfig = \snappymail\Api::Config();
 $oConfig->SetPassword('%s');
 echo $oConfig->Save() ? 'Done' : 'Error';
 
 ?>""" % (randomPassword.generate_pass())
 
-        writeToFile = open('/usr/local/CyberCP/public/rainloop.php', 'w')
+        writeToFile = open('/usr/local/CyberCP/public/snappymail.php', 'w')
         writeToFile.write(content)
         writeToFile.close()
 
-        command = '/usr/local/lsws/lsphp72/bin/php /usr/local/CyberCP/public/rainloop.php'
+        command = '/usr/local/lsws/lsphp72/bin/php /usr/local/CyberCP/public/snappymail.php'
         subprocess.call(shlex.split(command))
 
-        command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
+        command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail/data"
         subprocess.call(shlex.split(command))
     except:
         pass

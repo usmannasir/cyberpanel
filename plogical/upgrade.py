@@ -34,6 +34,7 @@ class Upgrade:
     CentOSPath = '/etc/redhat-release'
     UbuntuPath = '/etc/lsb-release'
     FromCloud = 0
+    SnappyVersion = '2.15.3'
 
     AdminACL = '{"adminStatus":1, "versionManagement": 1, "createNewUser": 1, "listUsers": 1, "deleteUser":1 , "resellerCenter": 1, ' \
                '"changeUserACL": 1, "createWebsite": 1, "modifyWebsite": 1, "suspendWebsite": 1, "deleteWebsite": 1, ' \
@@ -379,7 +380,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
                 iPath = os.listdir('/usr/local/CyberCP/public/rainloop/rainloop/v/')
 
-                path = "/usr/local/CyberCP/public/rainloop/rainloop/v/%s/include.php" % (iPath[0])
+                path = "/usr/local/CyberCP/public/snappymail/snappymail/v/%s/include.php" % (iPath[0])
 
                 data = open(path, 'r').readlines()
                 writeToFile = open(path, 'w')
@@ -404,7 +405,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             count = 1
 
             while (1):
-                command = 'wget https://www.rainloop.net/repository/webmail/rainloop-community-latest.zip'
+                command = 'wget https://github.com/the-djmaze/snappymail/releases/download/v%s/snappymail-%s.zip' % (Upgrade.SnappyVersion, Upgrade.SnappyVersion)
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
                 if res != 0:
@@ -418,8 +419,11 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             count = 0
 
+            if os.path.exists('/usr/local/CyberCP/public/snappymail'):
+                shutil.rmtree('/usr/local/CyberCP/public/snappymail')
+
             while (1):
-                command = 'unzip rainloop-community-latest.zip -d /usr/local/CyberCP/public/rainloop'
+                command = 'unzip snappymail-%s.zip -d /usr/local/CyberCP/public/snappymail' % (Upgrade.SnappyVersion)
 
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
@@ -429,12 +433,14 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                         break
                 else:
                     break
-
-            os.remove("rainloop-community-latest.zip")
+            try:
+                os.remove("snappymail-%s.zip" % (Upgrade.SnappyVersion))
+            except:
+                pass
 
             #######
 
-            os.chdir("/usr/local/CyberCP/public/rainloop")
+            os.chdir("/usr/local/CyberCP/public/snappymail")
 
             count = 0
 
@@ -465,9 +471,9 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                     break
             ######
 
-            iPath = os.listdir('/usr/local/CyberCP/public/rainloop/rainloop/v/')
+            iPath = os.listdir('/usr/local/CyberCP/public/snappymail/snappymail/v/')
 
-            path = "/usr/local/CyberCP/public/rainloop/rainloop/v/%s/include.php" % (iPath[0])
+            path = "/usr/local/CyberCP/public/snappymail/snappymail/v/%s/include.php" % (iPath[0])
 
             data = open(path, 'r').readlines()
             writeToFile = open(path, 'w')
@@ -482,7 +488,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             writeToFile.close()
 
             command = "mkdir -p /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/"
-            Upgrade.executioner(command, 'mkdir rainloop configs', 0)
+            Upgrade.executioner(command, 'mkdir snappymail configs', 0)
 
             labsPath = '/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/application.ini'
 
@@ -1906,20 +1912,20 @@ imap_folder_list_limit = 0
                     return ''.join(random.choice(chars) for x in range(size))
 
                 content = """<?php
-$_ENV['RAINLOOP_INCLUDE_AS_API'] = true;
-include '/usr/local/CyberCP/public/rainloop/index.php';
+$_ENV['snappymail_INCLUDE_AS_API'] = true;
+include '/usr/local/CyberCP/public/snappymail/index.php';
 
-$oConfig = \RainLoop\Api::Config();
+$oConfig = \snappymail\Api::Config();
 $oConfig->SetPassword('%s');
 echo $oConfig->Save() ? 'Done' : 'Error';
 
 ?>""" % (generate_pass())
 
-                writeToFile = open('/usr/local/CyberCP/public/rainloop.php', 'w')
+                writeToFile = open('/usr/local/CyberCP/public/snappymail.php', 'w')
                 writeToFile.write(content)
                 writeToFile.close()
 
-                command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
+                command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail/data"
                 subprocess.call(shlex.split(command))
 
             except:
@@ -2079,10 +2085,10 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             command = 'chmod 640 /usr/local/lscp/cyberpanel/logs/access.log'
             Upgrade.executioner(command, 0)
 
-            command = '/usr/local/lsws/lsphp72/bin/php /usr/local/CyberCP/public/rainloop.php'
+            command = '/usr/local/lsws/lsphp72/bin/php /usr/local/CyberCP/public/snappymail.php'
             Upgrade.executioner(command, 0)
 
-            command = 'chmod 600 /usr/local/CyberCP/public/rainloop.php'
+            command = 'chmod 600 /usr/local/CyberCP/public/snappymail.php'
             Upgrade.executioner(command, 0)
 
             ###
