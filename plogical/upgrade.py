@@ -496,7 +496,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 imap_folder_list_limit = 0
 """
 
-            writeToFile = open(labsPath, 'w')
+            writeToFile = open(labsPath, 'a')
             writeToFile.write(labsData)
             writeToFile.close()
 
