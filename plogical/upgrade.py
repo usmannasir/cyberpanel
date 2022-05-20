@@ -496,9 +496,9 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 imap_folder_list_limit = 0
 """
 
-            writeToFile = open(labsPath, 'a')
-            writeToFile.write(labsData)
-            writeToFile.close()
+            # writeToFile = open(labsPath, 'a')
+            # writeToFile.write(labsData)
+            # writeToFile.close()
 
             includeFileOldPath = '/usr/local/CyberCP/public/snappymail/_include.php'
             includeFileNewPath = '/usr/local/CyberCP/public/snappymail/include.php'
