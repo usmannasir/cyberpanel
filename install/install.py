@@ -1315,6 +1315,9 @@ imap_folder_list_limit = 0
             command = 'mv %s %s' % (includeFileOldPath, includeFileNewPath)
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
+            command = "sed -i 's|autocreate_system_folders = Off|autocreate_system_folders = On|g' %s" % (labsPath)
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
         except BaseException as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [downoad_and_install_snappymail]")
             return 0

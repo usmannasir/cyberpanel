@@ -500,6 +500,20 @@ imap_folder_list_limit = 0
             writeToFile.write(labsData)
             writeToFile.close()
 
+            includeFileOldPath = '/usr/local/CyberCP/public/snappymail/_include.php'
+            includeFileNewPath = '/usr/local/CyberCP/public/snappymail/include.php'
+
+            if os.path.exists(includeFileOldPath):
+                writeToFile = open(includeFileOldPath, 'a')
+                writeToFile.write("\ndefine('APP_DATA_FOLDER_PATH', '/usr/local/lscp/cyberpanel/rainloop/data/');\n")
+                writeToFile.close()
+
+            command = 'mv %s %s' % (includeFileOldPath, includeFileNewPath)
+            Upgrade.executioner(command, 'mkdir snappymail configs', 0)
+
+            command = "sed -i 's|autocreate_system_folders = Off|autocreate_system_folders = On|g' %s" % (labsPath)
+            Upgrade.executioner(command, 'mkdir snappymail configs', 0)
+
             os.chdir(cwd)
 
         except BaseException as msg:
@@ -1977,7 +1991,7 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             command = "chown -R root:root /usr/local/lscp"
             Upgrade.executioner(command, 'chown core code', 0)
 
-            command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
+            command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop"
             Upgrade.executioner(command, 'chown core code', 0)
 
             command = "chmod 700 /usr/local/CyberCP/cli/cyberPanel.py"
