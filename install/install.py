@@ -547,7 +547,7 @@ password="%s"
         command = "chown -R root:root /usr/local/lscp"
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-        command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
+        command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop"
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
         command = "chmod 700 /usr/local/CyberCP/cli/cyberPanel.py"
@@ -1309,7 +1309,7 @@ imap_folder_list_limit = 0
 
             if os.path.exists(includeFileOldPath):
                 writeToFile = open(includeFileOldPath, 'a')
-                writeToFile.write("\ndefine('APP_DATA_FOLDER_PATH', '/usr/local/lscp/cyberpanel/rainloop/');\n")
+                writeToFile.write("\ndefine('APP_DATA_FOLDER_PATH', '/usr/local/lscp/cyberpanel/rainloop/data/');\n")
                 writeToFile.close()
 
             command = 'mv %s %s' % (includeFileOldPath, includeFileNewPath)
