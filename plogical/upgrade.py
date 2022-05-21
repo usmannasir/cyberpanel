@@ -367,33 +367,33 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
         try:
             #######
 
-            if os.path.exists("/usr/local/CyberCP/public/rainloop"):
-
-                if os.path.exists("/usr/local/lscp/cyberpanel/rainloop/data"):
-                    pass
-                else:
-                    command = "mv /usr/local/CyberCP/public/rainloop/data /usr/local/lscp/cyberpanel/rainloop/data"
-                    Upgrade.executioner(command, 0)
-
-                    command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
-                    Upgrade.executioner(command, 0)
-
-                iPath = os.listdir('/usr/local/CyberCP/public/rainloop/rainloop/v/')
-
-                path = "/usr/local/CyberCP/public/snappymail/snappymail/v/%s/include.php" % (iPath[0])
-
-                data = open(path, 'r').readlines()
-                writeToFile = open(path, 'w')
-
-                for items in data:
-                    if items.find("$sCustomDataPath = '';") > -1:
-                        writeToFile.writelines(
-                            "			$sCustomDataPath = '/usr/local/lscp/cyberpanel/rainloop/data';\n")
-                    else:
-                        writeToFile.writelines(items)
-
-                writeToFile.close()
-                return 0
+            # if os.path.exists("/usr/local/CyberCP/public/rainloop"):
+            #
+            #     if os.path.exists("/usr/local/lscp/cyberpanel/rainloop/data"):
+            #         pass
+            #     else:
+            #         command = "mv /usr/local/CyberCP/public/rainloop/data /usr/local/lscp/cyberpanel/rainloop/data"
+            #         Upgrade.executioner(command, 0)
+            #
+            #         command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
+            #         Upgrade.executioner(command, 0)
+            #
+            #     iPath = os.listdir('/usr/local/CyberCP/public/rainloop/rainloop/v/')
+            #
+            #     path = "/usr/local/CyberCP/public/snappymail/snappymail/v/%s/include.php" % (iPath[0])
+            #
+            #     data = open(path, 'r').readlines()
+            #     writeToFile = open(path, 'w')
+            #
+            #     for items in data:
+            #         if items.find("$sCustomDataPath = '';") > -1:
+            #             writeToFile.writelines(
+            #                 "			$sCustomDataPath = '/usr/local/lscp/cyberpanel/rainloop/data';\n")
+            #         else:
+            #             writeToFile.writelines(items)
+            #
+            #     writeToFile.close()
+            #     return 0
 
             cwd = os.getcwd()
 
