@@ -163,12 +163,14 @@
                                         <thead>
                                         <tr>
                                             <th>{% trans "Emails" %}</th>
+                                            <th>{% trans "Disk Usage" %}</th>
                                             <th>{% trans "Actions" %}</th>
                                         </tr>
                                         </thead>
                                         <tbody>
                                         <tr ng-repeat="record in records track by $index">
                                             <td ng-bind="record.email"></td>
+                                            <td ng-bind="record.DiskUsage"></td>
                                             <td>
                                                 <a data-toggle="modal" data-target="#settings"
                                                    ng-click="changePasswordInitial(record.email)"
