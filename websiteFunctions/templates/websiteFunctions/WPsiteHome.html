@@ -1,0 +1,416 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Websites Hosted - CyberPanel" %}{% endblock %}
+{% block content %}
+
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
+
+    <div style="display: none" id="wordpresshome"></div>
+    <div style="display: none" id="WPid">{{ wpsite.id }}</div>
+
+    <div ng-controller="WPsiteHome" class="container">
+
+        <div class="col-sm-12">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-lg-4">
+                                    <!-- Product image -->
+                                    <a target="_blank" style="border: 1px solid greenyellow"
+                                       href="http://{{ wpsite.FinalURL }}" class="text-center d-block mb-4">
+                                        <img src="https://cdn.statically.io/screenshot/{{ wpsite.FinalURL }}"
+                                             class="img-fluid"
+                                             alt="{{ wpsite.FinalURL }}">
+                                    </a>
+                                    <hr>
+                                    <div class="d-lg-flex d-none justify-content-center">
+                                        <a href="/websites/{{ wpsite.owner.domain }}">
+                                            <svg xmlns="http://www.w3.org/2000/svg"
+                                                 xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true"
+                                                 focusable="false" width="1em" height="1em"
+                                                 style="-ms-transform: rotate(360deg); -webkit-transform: rotate(360deg); transform: rotate(360deg);"
+                                                 preserveAspectRatio="xMidYMid meet" viewBox="0 0 32 32">
+                                                <path d="M16 18H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2zM6 6v10h10V6z"
+                                                      fill="#626262"></path>
+                                                <path d="M26 12v4h-4v-4h4m0-2h-4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2z"
+                                                      fill="#626262"></path>
+                                                <path d="M26 22v4h-4v-4h4m0-2h-4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2z"
+                                                      fill="#626262"></path>
+                                                <path d="M16 22v4h-4v-4h4m0-2h-4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2z"
+                                                      fill="#626262"></path>
+                                            </svg>
+                                            Manage Application
+                                        </a>
+                                        <a ng-click="autoUpdateConfigurationsInit()" data-toggle="modal"
+                                           data-target="#autoUpdateConfig" style="margin-left: 3%"
+                                           href="javascript: void(0);">
+                                            <svg xmlns="http://www.w3.org/2000/svg"
+                                                 xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true"
+                                                 focusable="false" width="1em" height="1em"
+                                                 style="-ms-transform: rotate(360deg); -webkit-transform: rotate(360deg); transform: rotate(360deg);"
+                                                 preserveAspectRatio="xMidYMid meet" viewBox="0 0 20 20">
+                                                <path d="M10.2 3.28c3.53 0 6.43 2.61 6.92 6h2.08l-3.5 4l-3.5-4h2.32a4.439 4.439 0 0 0-4.32-3.45c-1.45 0-2.73.71-3.54 1.78L4.95 5.66a6.965 6.965 0 0 1 5.25-2.38zm-.4 13.44c-3.52 0-6.43-2.61-6.92-6H.8l3.5-4c1.17 1.33 2.33 2.67 3.5 4H5.48a4.439 4.439 0 0 0 4.32 3.45c1.45 0 2.73-.71 3.54-1.78l1.71 1.95a6.95 6.95 0 0 1-5.25 2.38z"
+                                                      fill="#626262"></path>
+                                            </svg>
+                                            Autoupdate Configurations
+                                        </a>
+                                        <div id="autoUpdateConfig" class="modal fade" tabindex="-1" role="dialog"
+                                             aria-hidden="true">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <div class="modal-body">
+                                                        <div class="text-center mt-2 mb-4">
+                                                        </div>
+
+                                                        <form>
+
+
+                                                            <h3 style="margin-top: 2%">UPDATES</h3>
+                                                            <p>Configure setting for automatic updates.</p>
+                                                            <div class="row">
+                                                                <h5 class="font-arial">Automatic Updates
+                                                                    (Currently: {{ wpsite.AutoUpdates }})</h5>
+                                                                <div class="col-12">
+                                                                    <select id="AutomaticUpdates"
+                                                                            class="form-group form-group-default"
+                                                                            style="padding: 10px">
+                                                                        <option>Disabled</option>
+                                                                        <option>Minor and Security Updates</option>
+                                                                        <option>All (minor and major)</option>
+                                                                    </select>
+                                                                </div>
+                                                            </div>
+                                                            <div class="row">
+                                                                <h5 class="font-arial">Plugins
+                                                                    (Currently: {{ wpsite.PluginUpdates }})</h5>
+                                                                <div class="col-12">
+                                                                    <select id="Plugins"
+                                                                            class="form-group form-group-default"
+                                                                            style="padding: 10px">
+                                                                        <option>Enabled</option>
+                                                                        <option>Disabled</option>
+                                                                    </select>
+                                                                </div>
+                                                            </div>
+                                                            <div class="row">
+                                                                <h5 class="font-arial">Themes
+                                                                    (Currently: {{ wpsite.ThemeUpdates }})</h5>
+                                                                <div class="col-12">
+                                                                    <select id="Themes"
+                                                                            class="form-group form-group-default"
+                                                                            style="padding: 10px">
+                                                                        <option>Enabled</option>
+                                                                        <option>Disabled</option>
+                                                                    </select>
+                                                                </div>
+                                                            </div>
+                                                            <div class="row bg-dark"
+                                                                 style="border-radius: 2%;margin-top: 1%">
+                                                                <div class="v-align-middle col-12 ">
+                                                                    <button onclick="SaveAutoUpdateSettings()"
+                                                                            aria-label=""
+                                                                            type="button"
+                                                                            class="v-align-middle btn bg-dark col-12"
+                                                                            style="color: white; padding: 15px">
+                                                                        Save Changes <img
+                                                                            class="LPLoader"
+                                                                            style="margin-left: 2%"
+                                                                            src="{% static 'BaseTemplates/images/loader.gif' %}">
+                                                                    </button>
+
+                                                                </div>
+                                                            </div>
+                                                        </form>
+
+
+                                                    </div>
+                                                </div>
+                                                <!-- /.modal-content -->
+                                            </div>
+                                            <!-- /.modal-dialog -->
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-8">
+
+                                    <!-- Product title -->
+                                    <h2 style="display: inline" class="mt-0">{{ wpsite.title }}</h2>
+                                    <p style="display: inline;">({{ wpsite.path }}) <img ng-hide="wordpresshomeloading"
+                                                                                         src="{% static 'images/loading.gif' %}">
+                                    </p>
+
+
+                                    <div class="panel-body">
+                                        <div class="example-box-wrapper">
+                                            <ul class="nav-responsive nav nav-tabs">
+
+                                                <li class="active"><a href="#tab1" data-toggle="tab"
+                                                                      aria-selected="true">General</a></li>
+                                                <li class=""><a href="#tab2" ng-click="GetCurrentPlugins()"
+                                                                data-toggle="tab">Plugins</a></li>
+                                                <li class=""><a href="#tab3" ng-click="GetCurrentThemes()"
+                                                                data-toggle="tab">Themes</a></li>
+                                                <li><a href="#tab4" data-toggle="tab">Staging</a></li>
+
+                                                </li>
+                                            </ul>
+                                            <div class="tab-content">
+                                                <div class="tab-pane active" id="tab1">
+                                                    <div class="d-lg-flex d-none">
+                                                        <a target="_blank" href="http://{{ wpsite.FinalURL }}">
+                                                            <svg xmlns="http://www.w3.org/2000/svg"
+                                                                 xmlns:xlink="http://www.w3.org/1999/xlink"
+                                                                 aria-hidden="true" focusable="false" width="1em"
+                                                                 height="1em"
+                                                                 style="-ms-transform: rotate(360deg); -webkit-transform: rotate(360deg); transform: rotate(360deg);"
+                                                                 preserveAspectRatio="xMidYMid meet"
+                                                                 viewBox="0 0 24 24">
+                                                                <path d="M13 3l3.293 3.293l-7 7l1.414 1.414l7-7L21 11V3z"
+                                                                      fill="#626262"></path>
+                                                                <path d="M19 19H5V5h7l-2-2H5c-1.103 0-2 .897-2 2v14c0 1.103.897 2 2 2h14c1.103 0 2-.897 2-2v-5l-2-2v7z"
+                                                                      fill="#626262"></path>
+                                                            </svg>
+                                                            Open
+                                                        </a>
+                                                        <a target="_blank"
+                                                           href="/filemanager/{{ wpsite.owner.domain }}"
+                                                           style="margin-left: 4%">
+                                                            <svg xmlns="http://www.w3.org/2000/svg"
+                                                                 xmlns:xlink="http://www.w3.org/1999/xlink"
+                                                                 aria-hidden="true" focusable="false" width="1em"
+                                                                 height="1em"
+                                                                 style="-ms-transform: rotate(360deg); -webkit-transform: rotate(360deg); transform: rotate(360deg);"
+                                                                 preserveAspectRatio="xMidYMid meet"
+                                                                 viewBox="0 0 1024 1024">
+                                                                <path d="M159 768h612.3l103.4-256H262.3z"
+                                                                      fill-opacity=".15"
+                                                                      fill="#626262"/>
+                                                                <path d="M928 444H820V330.4c0-17.7-14.3-32-32-32H473L355.7 186.2a8.15 8.15 0 0 0-5.5-2.2H96c-17.7 0-32 14.3-32 32v592c0 17.7 14.3 32 32 32h698c13 0 24.8-7.9 29.7-20l134-332c1.5-3.8 2.3-7.9 2.3-12c0-17.7-14.3-32-32-32zM136 256h188.5l119.6 114.4H748V444H238c-13 0-24.8 7.9-29.7 20L136 643.2V256zm635.3 512H159l103.3-256h612.4L771.3 768z"
+                                                                      fill="#626262"/>
+                                                            </svg>
+                                                            File Manager
+                                                        </a>
+                                                        <a ng-click="autoLogin()"
+                                                           style="margin-left: 4%"
+                                                           href="javascript: void(0);">
+                                                            <svg xmlns="http://www.w3.org/2000/svg"
+                                                                 xmlns:xlink="http://www.w3.org/1999/xlink"
+                                                                 aria-hidden="true" focusable="false" width="1em"
+                                                                 height="1em"
+                                                                 style="-ms-transform: rotate(360deg); -webkit-transform: rotate(360deg); transform: rotate(360deg);"
+                                                                 preserveAspectRatio="xMidYMid meet"
+                                                                 viewBox="0 0 20 20">
+                                                                <path d="M14 10L8 5v3H1v4h7v3l6-5zm3 7H9v2h8c1.1 0 2-.9 2-2V3c0-1.1-.9-2-2-2H9v2h8v14z"
+                                                                      fill="#626262"></path>
+                                                            </svg>
+                                                            Login
+                                                        </a>
+                                                        <a style="margin-left: 4%" target="_blank"
+                                                           href="/websites/{{ wpsite.owner.domain}}/manageGIT">
+                                                            <svg xmlns="http://www.w3.org/2000/svg"
+                                                                 xmlns:xlink="http://www.w3.org/1999/xlink"
+                                                                 aria-hidden="true" focusable="false" width="1em"
+                                                                 height="1em"
+                                                                 style="-ms-transform: rotate(360deg); -webkit-transform: rotate(360deg); transform: rotate(360deg);"
+                                                                 preserveAspectRatio="xMidYMid meet"
+                                                                 viewBox="0 0 24 24">
+                                                                <path d="M17.5 4C15.57 4 14 5.57 14 7.5c0 1.554 1.025 2.859 2.43 3.315c-.146.932-.547 1.7-1.23 2.323c-1.946 1.773-5.527 1.935-7.2 1.907V8.837c1.44-.434 2.5-1.757 2.5-3.337C10.5 3.57 8.93 2 7 2S3.5 3.57 3.5 5.5c0 1.58 1.06 2.903 2.5 3.337v6.326c-1.44.434-2.5 1.757-2.5 3.337C3.5 20.43 5.07 22 7 22s3.5-1.57 3.5-3.5c0-.551-.14-1.065-.367-1.529c2.06-.186 4.657-.757 6.409-2.35c1.097-.997 1.731-2.264 1.904-3.768C19.915 10.438 21 9.1 21 7.5C21 5.57 19.43 4 17.5 4zm-12 1.5C5.5 4.673 6.173 4 7 4s1.5.673 1.5 1.5S7.827 7 7 7s-1.5-.673-1.5-1.5zM7 20c-.827 0-1.5-.673-1.5-1.5a1.5 1.5 0 0 1 1.482-1.498l.13.01A1.495 1.495 0 0 1 7 20zM17.5 9c-.827 0-1.5-.673-1.5-1.5S16.673 6 17.5 6s1.5.673 1.5 1.5S18.327 9 17.5 9z"
+                                                                      fill="#626262"></path>
+                                                            </svg>
+                                                            Git Manager
+                                                        </a>
+                                                    </div>
+                                                    <div style="margin-top: 4%">
+                                                        <div class="row">
+                                                            <div class="col-md-4">
+                                                                <h6 class="font-14">WordPress Version</h6>
+                                                                <p id="WPVersion" class="text-sm lh-150"></p>
+                                                            </div>
+                                                            <div class="col-md-4">
+                                                                <h6 class="font-14">PHP</h6>
+                                                                <p class="text-sm lh-150">{{ wpsite.owner.phpSelection }}</p>
+                                                            </div>
+                                                            <div class="col-md-4">
+                                                                <h6 class="font-14">LSCache</h6>
+                                                                <div class="custom-control custom-switch">
+                                                                    <input ng-click="UpdateWPSettings('lscache')"
+                                                                           type="checkbox"
+                                                                           class="custom-control-input ng-pristine ng-untouched ng-valid ng-not-empty"
+                                                                           id="lscache">
+                                                                    <label class="custom-control-label"
+                                                                           for="lscache"></label>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div style="margin-top: 4%">
+                                                        <div class="row">
+                                                            <div class="col-md-4">
+                                                                <h6 class="font-14">Debugging</h6>
+                                                                <div class="custom-control custom-switch">
+                                                                    <input ng-click="UpdateWPSettings('debugging')"
+                                                                           type="checkbox"
+                                                                           class="custom-control-input ng-pristine ng-untouched ng-valid ng-empty"
+                                                                           id="debugging">
+                                                                    <label class="custom-control-label"
+                                                                           for="debugging"></label>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-4">
+                                                                <h6 class="font-14">Search Engine Indexing</h6>
+                                                                <div class="custom-control custom-switch">
+                                                                    <input ng-click="UpdateWPSettings('searchIndex')"
+                                                                           type="checkbox"
+                                                                           class="custom-control-input ng-pristine ng-untouched ng-valid ng-not-empty"
+                                                                           id="searchIndex">
+                                                                    <label class="custom-control-label"
+                                                                           for="searchIndex"></label>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-4">
+                                                                <h6 class="font-14">Maintenance mode</h6>
+                                                                <div class="custom-control custom-switch">
+                                                                    <input ng-click="UpdateWPSettings('maintenanceMode')"
+                                                                           type="checkbox"
+                                                                           class="custom-control-input ng-pristine ng-untouched ng-valid ng-empty"
+                                                                           id="maintenanceMode">
+                                                                    <label class="custom-control-label"
+                                                                           for="maintenanceMode"></label>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="tab-pane" id="tab2">
+                                                    <div class="row mb-2">
+                                                        <div class="col-sm-8">
+                                                            <a ng-click="UpdatePlugins('all')"
+                                                               href="javascript:void(0);"
+                                                               class="btn btn-sm btn-default">
+                                                                <svg xmlns="http://www.w3.org/2000/svg"
+                                                                     xmlns:xlink="http://www.w3.org/1999/xlink"
+                                                                     aria-hidden="true" focusable="false" width="1em"
+                                                                     height="1em"
+                                                                     style="-ms-transform: rotate(360deg); -webkit-transform: rotate(360deg); transform: rotate(360deg);"
+                                                                     preserveAspectRatio="xMidYMid meet"
+                                                                     viewBox="0 0 24 24">
+                                                                    <path fill="none" stroke="#626262" stroke-width="2"
+                                                                          d="M2.998 7V1H17.5L21 4.5V23h-6m1-22v5h5M8 23A7 7 0 1 0 8 9a7 7 0 0 0 0 14zm-3.5-6.5L8 13l3.5 3.5m-3.5-3V20"></path>
+                                                                </svg>
+                                                                Update All</a>
+                                                            <a ng-click="UpdatePlugins('selected')"
+                                                               href="javascript:void(0);"
+                                                               class="btn btn-sm btn-default"> Update
+                                                                Selected</a>
+                                                        </div>
+                                                        <div class="col-sm-4">
+                                                            <div class="text-sm-right">
+                                                                <button data-toggle="modal" data-target="#DeleteWebsite"
+                                                                        ng-click="DeletePlugins('selected')"
+                                                                        aria-label=""
+                                                                        class="btn btn-danger btn-icon-left m-b-10"
+                                                                        type="button">Delete Selected
+                                                                </button>
+                                                            </div>
+                                                        </div><!-- end col-->
+                                                    </div>
+                                                    <table class="table table-hover mb-0">
+                                                        <thead>
+                                                        <tr>
+                                                            <th>
+                                                                {% comment %}<div class="custom-control custom-checkbox" style="padding-left: 0px">
+                                                                <input type="checkbox" id="CheckAll">
+                                                                <label for="CheckAll"></label>
+                                                            </div>{% endcomment %}
+                                                            </th>
+                                                            <th>Plugin</th>
+                                                            <th>State</th>
+                                                            <th>Updates</th>
+                                                            <th>Version</th>
+                                                            <th>Delete</th>
+                                                        </tr>
+                                                        </thead>
+                                                        <tbody id="PluginBody">
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                                <div class="tab-pane" id="tab3">
+                                                    <div class="row mb-2">
+                                                        <div class="col-sm-8">
+                                                            <a ng-click="UpdateThemes('all')" href="javascript:void(0);"
+                                                               class="btn btn-sm btn-default">
+                                                                <svg xmlns="http://www.w3.org/2000/svg"
+                                                                     xmlns:xlink="http://www.w3.org/1999/xlink"
+                                                                     aria-hidden="true" focusable="false" width="1em"
+                                                                     height="1em"
+                                                                     style="-ms-transform: rotate(360deg); -webkit-transform: rotate(360deg); transform: rotate(360deg);"
+                                                                     preserveAspectRatio="xMidYMid meet"
+                                                                     viewBox="0 0 24 24">
+                                                                    <path fill="none" stroke="#626262" stroke-width="2"
+                                                                          d="M2.998 7V1H17.5L21 4.5V23h-6m1-22v5h5M8 23A7 7 0 1 0 8 9a7 7 0 0 0 0 14zm-3.5-6.5L8 13l3.5 3.5m-3.5-3V20"></path>
+                                                                </svg>
+                                                                Update All</a>
+                                                            <a ng-click="UpdateThemes('selected')"
+                                                               href="javascript:void(0);"
+                                                               class="btn btn-sm btn-default"> Update
+                                                                Selected</a>
+                                                        </div>
+                                                        <div class="col-sm-4">
+                                                            <div class="text-sm-right">
+                                                                <button data-toggle="modal" data-target="#DeleteWebsite"
+                                                                        ng-click="DeleteThemes('selected')"
+                                                                        aria-label=""
+                                                                        class="btn btn-danger btn-icon-left m-b-10"
+                                                                        type="button">Delete
+                                                                    Selected
+                                                                </button>
+                                                            </div>
+                                                        </div><!-- end col-->
+                                                    </div>
+                                                    <table class="table table-hover mb-0">
+                                                        <thead>
+                                                        <tr>
+                                                            <th>
+                                                                {% comment %}<div class="custom-control custom-checkbox" style="padding-left: 0px">
+                                                                <input type="checkbox" id="CheckAll">
+                                                                <label for="CheckAll"></label>
+                                                            </div>{% endcomment %}
+                                                            </th>
+                                                            <th>Theme</th>
+                                                            <th>State</th>
+                                                            <th>Updates</th>
+                                                            <th>Version</th>
+                                                            <th>Delete</th>
+                                                        </tr>
+                                                        </thead>
+                                                        <tbody id="ThemeBody">
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                                <div class="tab-pane" id="tab4">
+                                                    <p>Howdy, I'm in Section 4.</p>
+                                                </div>
+
+
+                                            </div>
+                                        </div>
+
+                                    </div>
+
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+
+{% endblock %}

@@ -64,6 +64,16 @@ class ApplicationInstaller(multi.Thread):
                 self.installMautic()
             elif self.installApp == 'wordpressInstallNew':
                 self.wordpressInstallNew()
+            elif self.installApp == 'UpdateWPTheme':
+                self.UpdateWPTheme()
+            elif self.installApp == 'UpdateWPPlugin':
+                self.UpdateWPPlugin()
+            elif self.installApp == 'DeleteThemes':
+                self.DeleteThemes()
+            elif self.installApp == 'DeletePlugins':
+                self.DeletePlugins()
+            elif self.installApp == 'ChangeStatusThemes':
+                self.ChangeStatusThemes()
 
         except BaseException as msg:
             logging.writeToFile(str(msg) + ' [ApplicationInstaller.run]')
@@ -1633,7 +1643,6 @@ $parameters = array(
         try:
             from websiteFunctions.website import WebsiteManager
             import json
-            logging.CyberCPLogFileWriter.writeToFile("start wordpressInstallNew...." )
             tempStatusPath = self.data['tempStatusPath']
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines('Creating Website...')
@@ -1725,6 +1734,157 @@ $parameters = array(
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile("Error WP web creating  ....... %s" % str(msg))
             return 0
+
+    def UpdateWPTheme(self):
+        try:
+            FinalPHPPath = self.data['FinalPHPPath']
+            Vhuser=self.data['Vhuser']
+            path=self.data['path']
+
+            if self.data['Theme'] == 'all':
+                command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp theme update --all --skip-plugins --skip-themes --path=%s' % (
+                Vhuser, FinalPHPPath, path)
+                stdoutput = ProcessUtilities.outputExecutioner(command)
+
+
+
+            elif self.data['Theme'] == 'selected':
+
+                ThemeList = ''
+
+                for plugin in self.data['Themearray']:
+                    ThemeList = '%s %s' % (ThemeList, plugin)
+
+                command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp theme update %s --skip-plugins --skip-themes --path=%s' % (
+                Vhuser, FinalPHPPath, ThemeList, path)
+                stdoutput = ProcessUtilities.outputExecutioner(command)
+
+
+            else:
+                command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp theme update %s --skip-plugins --skip-themes --path=%s' % (
+                Vhuser, FinalPHPPath, self.data['Theme'], path)
+                stdoutput = ProcessUtilities.outputExecutioner(command)
+
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile("Error WP UpdateWPTheme ....... %s" % str(msg))
+            return 0
+
+
+    def UpdateWPPlugin(self):
+        try:
+            FinalPHPPath = self.data['FinalPHPPath']
+            Vhuser=self.data['Vhuser']
+            path=self.data['path']
+
+            if self.data['plugin'] == 'all':
+                command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp theme update --all --skip-plugins --skip-themes --path=%s' % (
+                Vhuser, FinalPHPPath, path)
+                stdoutput = ProcessUtilities.outputExecutioner(command)
+
+
+
+
+            elif self.data['plugin'] == 'selected':
+
+                pluginsList = ''
+
+                for plug in self.data['pluginarray']:
+                    pluginsList = '%s %s' % (pluginsList, plug)
+
+                command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp plugin update %s --skip-plugins --skip-themes --path=%s' % (
+                Vhuser, FinalPHPPath, pluginsList, path)
+                stdoutput = ProcessUtilities.outputExecutioner(command)
+
+
+            else:
+                command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp theme update %s --skip-plugins --skip-themes --path=%s' % (
+                Vhuser, FinalPHPPath, self.data['plugin'], path)
+                stdoutput = ProcessUtilities.outputExecutioner(command)
+
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile("Error WP UpdateWPTheme ....... %s" % str(msg))
+            return 0
+
+    def DeleteThemes(self):
+        try:
+            FinalPHPPath = self.data['FinalPHPPath']
+            Vhuser = self.data['Vhuser']
+            path = self.data['path']
+            if self.data['Theme'] == 'selected':
+                ThemeList = ''
+
+                for plugin in self.data['Themearray']:
+                    ThemeList = '%s %s' % (ThemeList, plugin)
+
+                command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp theme delete %s --skip-plugins --skip-themes --path=%s' % (
+                Vhuser, FinalPHPPath, ThemeList, path)
+                stdoutput = ProcessUtilities.outputExecutioner(command)
+
+            else:
+                command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp theme delete %s --skip-plugins --skip-themes --path=%s' % (
+                Vhuser, FinalPHPPath, self.data['Theme'], path)
+                stdoutput = ProcessUtilities.outputExecutioner(command)
+
+
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile("Error WP DeleteThemes ....... %s" % str(msg))
+            return 0
+
+    def DeletePlugins(self):
+        try:
+            FinalPHPPath = self.data['FinalPHPPath']
+            Vhuser = self.data['Vhuser']
+            path = self.data['path']
+            plugin = self.data['plugin']
+            pluginarray = self.data['pluginarray']
+
+
+            if plugin == 'selected':
+                pluginsList = ''
+
+                for plug in pluginarray:
+                    pluginsList = '%s %s' % (pluginsList, plug)
+
+                    command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp plugin delete %s --skip-plugins --skip-themes --path=%s' % (Vhuser, FinalPHPPath, pluginsList, path)
+                    stdoutput = ProcessUtilities.outputExecutioner(command)
+
+            else:
+                command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp plugin delete %s --skip-plugins --skip-themes --path=%s' % (Vhuser, FinalPHPPath, plugin, path)
+                stdoutput = ProcessUtilities.outputExecutioner(command)
+
+
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile("Error WP DeletePlugins ....... %s" % str(msg))
+            return 0
+
+    def ChangeStatusThemes(self):
+        try:
+            FinalPHPPath = self.data['FinalPHPPath']
+            Vhuser = self.data['Vhuser']
+            path = self.data['path']
+            Theme = self.data['Theme']
+
+            command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp theme status %s --skip-plugins --skip-themes --path=%s' % (
+            Vhuser, FinalPHPPath, Theme, path)
+            stdoutput = ProcessUtilities.outputExecutioner(command)
+
+            if stdoutput.find('Status: Active') > -1:
+                command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp theme deactivate %s --skip-plugins --skip-themes --path=%s' % (
+                Vhuser, FinalPHPPath, Theme, path)
+                stdoutput = ProcessUtilities.outputExecutioner(command)
+
+            else:
+
+                command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp theme activate %s --skip-plugins --skip-themes --path=%s' % (
+                Vhuser, FinalPHPPath, Theme, path)
+                stdoutput = ProcessUtilities.outputExecutioner(command)
+
+
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile("Error WP ChangeStatusThemes ....... %s" % str(msg))
+            return 0
+
+
 
 def main():
     parser = argparse.ArgumentParser(description='CyberPanel Application Installer')
