@@ -547,7 +547,7 @@ password="%s"
         command = "chown -R root:root /usr/local/lscp"
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-        command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
+        command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop"
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
         command = "chmod 700 /usr/local/CyberCP/cli/cyberPanel.py"
@@ -1282,9 +1282,10 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             labsData = """[labs]
 imap_folder_list_limit = 0
+autocreate_system_folders = On
 """
 
-            writeToFile = open(labsPath, 'w')
+            writeToFile = open(labsPath, 'a')
             writeToFile.write(labsData)
             writeToFile.close()
 
@@ -1303,6 +1304,20 @@ imap_folder_list_limit = 0
                     writeToFile.writelines(items)
 
             writeToFile.close()
+
+            includeFileOldPath = '/usr/local/CyberCP/public/snappymail/_include.php'
+            includeFileNewPath = '/usr/local/CyberCP/public/snappymail/include.php'
+
+            if os.path.exists(includeFileOldPath):
+                writeToFile = open(includeFileOldPath, 'a')
+                writeToFile.write("\ndefine('APP_DATA_FOLDER_PATH', '/usr/local/lscp/cyberpanel/rainloop/data/');\n")
+                writeToFile.close()
+
+            command = 'mv %s %s' % (includeFileOldPath, includeFileNewPath)
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+            command = "sed -i 's|autocreate_system_folders = Off|autocreate_system_folders = On|g' %s" % (labsPath)
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
         except BaseException as msg:
             logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [downoad_and_install_snappymail]")

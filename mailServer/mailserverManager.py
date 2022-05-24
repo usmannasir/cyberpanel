@@ -183,7 +183,7 @@ class MailServerManager(multi.Thread):
             checker = 0
             count = 1
             for items in emails:
-                dic = {'id': count, 'email': items.email}
+                dic = {'id': count, 'email': items.email, 'DiskUsage': '%sMB' % items.DiskUsage}
                 count = count + 1
 
                 if checker == 0:
@@ -543,6 +543,7 @@ class MailServerManager(multi.Thread):
 
             for items in records:
                 dic = {'email': items.email,
+                       'DiskUsage': '%sMB' % items.DiskUsage
                        }
 
                 if checker == 0:

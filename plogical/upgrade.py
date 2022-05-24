@@ -367,33 +367,33 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
         try:
             #######
 
-            if os.path.exists("/usr/local/CyberCP/public/rainloop"):
-
-                if os.path.exists("/usr/local/lscp/cyberpanel/rainloop/data"):
-                    pass
-                else:
-                    command = "mv /usr/local/CyberCP/public/rainloop/data /usr/local/lscp/cyberpanel/rainloop/data"
-                    Upgrade.executioner(command, 0)
-
-                    command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
-                    Upgrade.executioner(command, 0)
-
-                iPath = os.listdir('/usr/local/CyberCP/public/rainloop/rainloop/v/')
-
-                path = "/usr/local/CyberCP/public/snappymail/snappymail/v/%s/include.php" % (iPath[0])
-
-                data = open(path, 'r').readlines()
-                writeToFile = open(path, 'w')
-
-                for items in data:
-                    if items.find("$sCustomDataPath = '';") > -1:
-                        writeToFile.writelines(
-                            "			$sCustomDataPath = '/usr/local/lscp/cyberpanel/rainloop/data';\n")
-                    else:
-                        writeToFile.writelines(items)
-
-                writeToFile.close()
-                return 0
+            # if os.path.exists("/usr/local/CyberCP/public/rainloop"):
+            #
+            #     if os.path.exists("/usr/local/lscp/cyberpanel/rainloop/data"):
+            #         pass
+            #     else:
+            #         command = "mv /usr/local/CyberCP/public/rainloop/data /usr/local/lscp/cyberpanel/rainloop/data"
+            #         Upgrade.executioner(command, 0)
+            #
+            #         command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
+            #         Upgrade.executioner(command, 0)
+            #
+            #     iPath = os.listdir('/usr/local/CyberCP/public/rainloop/rainloop/v/')
+            #
+            #     path = "/usr/local/CyberCP/public/snappymail/snappymail/v/%s/include.php" % (iPath[0])
+            #
+            #     data = open(path, 'r').readlines()
+            #     writeToFile = open(path, 'w')
+            #
+            #     for items in data:
+            #         if items.find("$sCustomDataPath = '';") > -1:
+            #             writeToFile.writelines(
+            #                 "			$sCustomDataPath = '/usr/local/lscp/cyberpanel/rainloop/data';\n")
+            #         else:
+            #             writeToFile.writelines(items)
+            #
+            #     writeToFile.close()
+            #     return 0
 
             cwd = os.getcwd()
 
@@ -494,11 +494,26 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             labsData = """[labs]
 imap_folder_list_limit = 0
+autocreate_system_folders = On
 """
 
-            writeToFile = open(labsPath, 'w')
+            writeToFile = open(labsPath, 'a')
             writeToFile.write(labsData)
             writeToFile.close()
+
+            includeFileOldPath = '/usr/local/CyberCP/public/snappymail/_include.php'
+            includeFileNewPath = '/usr/local/CyberCP/public/snappymail/include.php'
+
+            if os.path.exists(includeFileOldPath):
+                writeToFile = open(includeFileOldPath, 'a')
+                writeToFile.write("\ndefine('APP_DATA_FOLDER_PATH', '/usr/local/lscp/cyberpanel/rainloop/data/');\n")
+                writeToFile.close()
+
+            command = 'mv %s %s' % (includeFileOldPath, includeFileNewPath)
+            Upgrade.executioner(command, 'mkdir snappymail configs', 0)
+
+            command = "sed -i 's|autocreate_system_folders = Off|autocreate_system_folders = On|g' %s" % (labsPath)
+            Upgrade.executioner(command, 'mkdir snappymail configs', 0)
 
             os.chdir(cwd)
 
@@ -621,6 +636,7 @@ imap_folder_list_limit = 0
                     'CREATE TABLE `loginSystem_acl` (`id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY, `name` varchar(50) NOT NULL UNIQUE, `adminStatus` integer NOT NULL DEFAULT 0, `versionManagement` integer NOT NULL DEFAULT 0, `createNewUser` integer NOT NULL DEFAULT 0, `deleteUser` integer NOT NULL DEFAULT 0, `resellerCenter` integer NOT NULL DEFAULT 0, `changeUserACL` integer NOT NULL DEFAULT 0, `createWebsite` integer NOT NULL DEFAULT 0, `modifyWebsite` integer NOT NULL DEFAULT 0, `suspendWebsite` integer NOT NULL DEFAULT 0, `deleteWebsite` integer NOT NULL DEFAULT 0, `createPackage` integer NOT NULL DEFAULT 0, `deletePackage` integer NOT NULL DEFAULT 0, `modifyPackage` integer NOT NULL DEFAULT 0, `createDatabase` integer NOT NULL DEFAULT 0, `deleteDatabase` integer NOT NULL DEFAULT 0, `listDatabases` integer NOT NULL DEFAULT 0, `createNameServer` integer NOT NULL DEFAULT 0, `createDNSZone` integer NOT NULL DEFAULT 0, `deleteZone` integer NOT NULL DEFAULT 0, `addDeleteRecords` integer NOT NULL DEFAULT 0, `createEmail` integer NOT NULL DEFAULT 0, `deleteEmail` integer NOT NULL DEFAULT 0, `emailForwarding` integer NOT NULL DEFAULT 0, `changeEmailPassword` integer NOT NULL DEFAULT 0, `dkimManager` integer NOT NULL DEFAULT 0, `createFTPAccount` integer NOT NULL DEFAULT 0, `deleteFTPAccount` integer NOT NULL DEFAULT 0, `listFTPAccounts` integer NOT NULL DEFAULT 0, `createBackup` integer NOT NULL DEFAULT 0, `restoreBackup` integer NOT NULL DEFAULT 0, `addDeleteDestinations` integer NOT NULL DEFAULT 0, `scheduleBackups` integer NOT NULL DEFAULT 0, `remoteBackups` integer NOT NULL DEFAULT 0, `manageSSL` integer NOT NULL DEFAULT 0, `hostnameSSL` integer NOT NULL DEFAULT 0, `mailServerSSL` integer NOT NULL DEFAULT 0)')
             except:
                 pass
+
             try:
                 cursor.execute('ALTER TABLE loginSystem_administrator ADD token varchar(500)')
             except:
@@ -837,6 +853,11 @@ imap_folder_list_limit = 0
 
             try:
                 cursor.execute(query)
+            except:
+                pass
+
+            try:
+                cursor.execute('ALTER TABLE e_users ADD DiskUsage varchar(200)')
             except:
                 pass
 
@@ -1977,7 +1998,7 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             command = "chown -R root:root /usr/local/lscp"
             Upgrade.executioner(command, 'chown core code', 0)
 
-            command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
+            command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop"
             Upgrade.executioner(command, 'chown core code', 0)
 
             command = "chmod 700 /usr/local/CyberCP/cli/cyberPanel.py"

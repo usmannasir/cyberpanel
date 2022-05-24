@@ -1237,7 +1237,36 @@ def installExtensions(request):
                 phpExtension.save()
         except:
             pass
+        
+        try:
+            newPHP81 = PHP(phpVers="php81")
+            newPHP81.save()
 
+            php81Path = ''
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                php81Path = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'php81.xml')
+            else:
+                php81Path = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'ubuntuphp81.xml')
+
+            php81 = ElementTree.parse(php81Path)
+
+            php81Extensions = php81.findall('extension')
+
+            for extension in php81Extensions:
+                extensionName = extension.find('extensionName').text
+                extensionDescription = extension.find('extensionDescription').text
+                status = int(extension.find('status').text)
+
+                phpExtension = installedPackages(phpVers=newPHP81,
+                                                 extensionName=extensionName,
+                                                 description=extensionDescription,
+                                                 status=status)
+
+                phpExtension.save()
+        except:
+            pass
+        
         proc = httpProc(request, 'managePHP/installExtensions.html',
                         {'phps': PHPManager.findPHPVersions()}, 'admin')
         return proc.render()
