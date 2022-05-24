@@ -12,7 +12,7 @@ django.setup()
 import json
 from plogical.acl import ACLManager
 import plogical.CyberCPLogFileWriter as logging
-from websiteFunctions.models import Websites, ChildDomains, GitLogs, wpplugins
+from websiteFunctions.models import Websites, ChildDomains, GitLogs, wpplugins, WPSites
 from plogical.virtualHostUtilities import virtualHostUtilities
 import subprocess
 import shlex
@@ -90,6 +90,63 @@ class WebsiteManager:
         proc = httpProc(request, 'websiteFunctions/WPCreate.html',
                         Data, 'createWebsite')
         return proc.render()
+
+    def ListWPSites(self, request=None, userID=None, data=None):
+        currentACL = ACLManager.loadedACL(userID)
+
+        userobj = Administrator.objects.get(pk=userID)
+        webobjs = Websites.objects.all()
+        tata = {}
+        tata['wp']=[]
+        tata['wpsites']=[]
+        tata['wp'] = WPSites.objects.all()
+
+        for sub in tata['wp']:
+            tata['wpsites'].append({'id': sub.id,
+                                    'title': sub.title,
+                                    'url': sub.FinalURL
+                                    })
+
+
+
+        proc = httpProc(request, 'websiteFunctions/WPsitesList.html',
+                        {"wpsite": tata['wpsites']})
+        return proc.render()
+
+    def WPHome(self, request=None, userID=None, WPid=None):
+        Data = {}
+        currentACL = ACLManager.loadedACL(userID)
+        WPobj = WPSites.objects.get(pk=WPid)
+
+        Data['wpsite'] = WPobj
+
+
+        proc = httpProc(request, 'websiteFunctions/WPsiteHome.html',
+                        Data, 'createWebsite')
+        return proc.render()
+
+    def AutoLogin(self, request=None, userID=None, WPid=None):
+        pass
+        # data = {}
+        # currentACL = ACLManager.loadedACL(userID)
+        # WPobj = WPSites.objects.get(pk=WPid)
+        #
+        # data['wpsite'] = WPobj
+        #
+        # if data['wpsite'].FinalURL.endswith('/'):
+        #     FinalURL = data['wpsite'].FinalURL[:-1]
+        # else:
+        #     FinalURL = data['wpsite'].FinalURL
+        #
+        # data['url'] = 'https://%s' % (FinalURL)
+        # data['userName'] = 'autologin'
+        # data['password'] = message
+        #
+        # proc = httpProc(request, 'websiteFunctions/WPsiteHome.html',
+        #                 Data, 'createWebsite')
+        # return proc.render()
+
+
 
     def ConfigurePlugins(self, request=None, userID=None, data=None):
 
@@ -342,6 +399,537 @@ class WebsiteManager:
             'noAlias': noAlias
         })
         return proc.render()
+
+
+    def FetchWPdata(self, userID=None, data=None):
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            WPManagerID = data['WPid']
+            wpsite = WPSites.objects.get(pk=WPManagerID)
+            path = wpsite.path
+
+            Webobj= Websites.objects.get(pk=wpsite.owner_id)
+
+            Vhuser = Webobj.externalApp
+            PHPVersion = Webobj.phpSelection
+
+
+            php = ACLManager.getPHPString(PHPVersion)
+            FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
+
+
+
+            command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp core version --skip-plugins --skip-themes --path=%s' % (Vhuser, FinalPHPPath, path)
+            version = ProcessUtilities.outputExecutioner(command)
+
+
+            command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp plugin status litespeed-cache --skip-plugins --skip-themes --path=%s' % (Vhuser, FinalPHPPath, path)
+            lscachee = ProcessUtilities.outputExecutioner(command)
+
+            if lscachee.find('Status: Active') > -1:
+                lscache = 1
+            else:
+                lscache = 0
+
+
+            command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp config list --skip-plugins --skip-themes --path=%s' % (Vhuser, FinalPHPPath, path)
+            stdout = ProcessUtilities.outputExecutioner(command)
+            debugging = 0
+            for items in stdout.split('\n'):
+                if items.find('WP_DEBUG	true	constant') > -1:
+                    debugging = 1
+                    break
+
+            command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp option get blog_public --skip-plugins --skip-themes --path=%s' %(Vhuser, FinalPHPPath, path)
+            stdoutput = ProcessUtilities.outputExecutioner(command)
+            searchindex = int(stdoutput.splitlines()[-1])
+
+
+
+            command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp maintenance-mode status --skip-plugins --skip-themes --path=%s' %(Vhuser, FinalPHPPath, path)
+            maintenanceMod = ProcessUtilities.outputExecutioner(command)
+
+            result = maintenanceMod.splitlines()[-1]
+            if result.find('not active') > -1:
+                maintenanceMode = 0
+            else:
+                maintenanceMode = 1
+
+            fb ={
+                'version': version.rstrip('\n'),
+                'lscache': lscache,
+                'debugging': debugging,
+                'searchIndex': searchindex,
+                'maintenanceMode': maintenanceMode
+
+            }
+
+            data_ret = {'status': 1, 'error_message': 'None', 'ret_data':fb}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+    def GetCurrentPlugins(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            WPManagerID = data['WPid']
+            wpsite = WPSites.objects.get(pk=WPManagerID)
+            path = wpsite.path
+
+            Webobj= Websites.objects.get(pk=wpsite.owner_id)
+
+            Vhuser = Webobj.externalApp
+            PHPVersion = Webobj.phpSelection
+            php = ACLManager.getPHPString(PHPVersion)
+            FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
+
+            command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp plugin list --skip-plugins --skip-themes --format=json --path=%s' % (Vhuser, FinalPHPPath, path)
+            stdoutput = ProcessUtilities.outputExecutioner(command)
+            json_data = stdoutput.splitlines()[-1]
+
+
+
+            data_ret = {'status': 1, 'error_message': 'None', 'plugins': json_data}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+    def GetCurrentThemes(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            WPManagerID = data['WPid']
+            wpsite = WPSites.objects.get(pk=WPManagerID)
+            path = wpsite.path
+
+            Webobj= Websites.objects.get(pk=wpsite.owner_id)
+
+            Vhuser = Webobj.externalApp
+            PHPVersion = Webobj.phpSelection
+            php = ACLManager.getPHPString(PHPVersion)
+            FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
+
+
+
+
+            command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp theme list --skip-plugins --skip-themes --format=json --path=%s'  % (Vhuser, FinalPHPPath, path)
+            stdoutput = ProcessUtilities.outputExecutioner(command)
+            json_data = stdoutput.splitlines()[-1]
+
+
+
+            data_ret = {'status': 1, 'error_message': 'None', 'themes': json_data}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+    def UpdatePlugins(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            WPManagerID = data['WPid']
+            plugin = data['plugin']
+            pluginarray = data['pluginarray']
+            wpsite = WPSites.objects.get(pk=WPManagerID)
+            path = wpsite.path
+
+            Webobj= Websites.objects.get(pk=wpsite.owner_id)
+
+            Vhuser = Webobj.externalApp
+            PHPVersion = Webobj.phpSelection
+            php = ACLManager.getPHPString(PHPVersion)
+            FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
+
+            extraArgs = {}
+            extraArgs['adminID'] = admin.pk
+            extraArgs['plugin'] = plugin
+            extraArgs['pluginarray'] = pluginarray
+            extraArgs['FinalPHPPath'] = FinalPHPPath
+            extraArgs['path'] = path
+            extraArgs['Vhuser'] = Vhuser
+
+            background = ApplicationInstaller('UpdateWPPlugin', extraArgs)
+            background.start()
+
+
+            time.sleep(2)
+
+
+            data_ret = {'status': 1, 'error_message': 'None'}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+    def UpdateThemes(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+
+            WPManagerID = data['WPid']
+            Theme = data['Theme']
+            Themearray = data['Themearray']
+            wpsite = WPSites.objects.get(pk=WPManagerID)
+            path = wpsite.path
+
+            Webobj= Websites.objects.get(pk=wpsite.owner_id)
+
+            Vhuser = Webobj.externalApp
+            PHPVersion = Webobj.phpSelection
+            php = ACLManager.getPHPString(PHPVersion)
+            FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
+
+
+
+            extraArgs = {}
+            extraArgs['adminID'] = admin.pk
+            extraArgs['Theme'] = Theme
+            extraArgs['Themearray'] = Themearray
+            extraArgs['FinalPHPPath'] = FinalPHPPath
+            extraArgs['path'] = path
+            extraArgs['Vhuser'] = Vhuser
+
+
+
+            background = ApplicationInstaller('UpdateWPTheme', extraArgs)
+            background.start()
+
+            time.sleep(2)
+
+
+
+
+
+            data_ret = {'status': 1, 'error_message': 'None'}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+
+    def DeletePlugins(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            WPManagerID = data['WPid']
+            plugin = data['plugin']
+            pluginarray = data['pluginarray']
+            wpsite = WPSites.objects.get(pk=WPManagerID)
+            path = wpsite.path
+
+            Webobj= Websites.objects.get(pk=wpsite.owner_id)
+
+            Vhuser = Webobj.externalApp
+            PHPVersion = Webobj.phpSelection
+            php = ACLManager.getPHPString(PHPVersion)
+            FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
+
+            extraArgs = {}
+            extraArgs['adminID'] = admin.pk
+            extraArgs['plugin'] = plugin
+            extraArgs['pluginarray'] = pluginarray
+            extraArgs['FinalPHPPath'] = FinalPHPPath
+            extraArgs['path'] = path
+            extraArgs['Vhuser'] = Vhuser
+
+            background = ApplicationInstaller('DeletePlugins', extraArgs)
+            background.start()
+
+
+            time.sleep(2)
+
+            data_ret = {'status': 1, 'error_message': 'None'}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+    def DeleteThemes(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            WPManagerID = data['WPid']
+            Theme = data['Theme']
+            Themearray = data['Themearray']
+            wpsite = WPSites.objects.get(pk=WPManagerID)
+            path = wpsite.path
+
+            Webobj= Websites.objects.get(pk=wpsite.owner_id)
+
+            Vhuser = Webobj.externalApp
+            PHPVersion = Webobj.phpSelection
+            php = ACLManager.getPHPString(PHPVersion)
+            FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
+
+
+
+            extraArgs = {}
+            extraArgs['adminID'] = admin.pk
+            extraArgs['Theme'] = Theme
+            extraArgs['Themearray'] = Themearray
+            extraArgs['FinalPHPPath'] = FinalPHPPath
+            extraArgs['path'] = path
+            extraArgs['Vhuser'] = Vhuser
+
+
+
+            background = ApplicationInstaller('DeleteThemes', extraArgs)
+            background.start()
+
+
+            data_ret = {'status': 1, 'error_message': 'None'}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+    def ChangeStatus(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            WPManagerID = data['WPid']
+            plugin = data['plugin']
+            wpsite = WPSites.objects.get(pk=WPManagerID)
+            path = wpsite.path
+
+            Webobj= Websites.objects.get(pk=wpsite.owner_id)
+
+            Vhuser = Webobj.externalApp
+            PHPVersion = Webobj.phpSelection
+            php = ACLManager.getPHPString(PHPVersion)
+            FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
+
+
+            command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp plugin status %s --skip-plugins --skip-themes --path=%s' % (Vhuser, FinalPHPPath, plugin, path)
+            stdoutput = ProcessUtilities.outputExecutioner(command)
+
+            if stdoutput.find('Status: Active') > -1:
+                command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp plugin deactivate %s --skip-plugins --skip-themes --path=%s' % (Vhuser, FinalPHPPath, plugin, path)
+                stdoutput = ProcessUtilities.outputExecutioner(command)
+                time.sleep(3)
+
+            else:
+
+                command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp plugin activate %s --skip-plugins --skip-themes --path=%s' % (Vhuser, FinalPHPPath, plugin, path)
+                stdoutput = ProcessUtilities.outputExecutioner(command)
+                time.sleep(3)
+
+
+
+            data_ret = {'status': 1, 'error_message': 'None'}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+    def ChangeStatusThemes(self, userID=None, data=None):
+        try:
+            # logging.CyberCPLogFileWriter.writeToFile("Error WP ChangeStatusThemes ....... %s")
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            WPManagerID = data['WPid']
+            Theme = data['theme']
+            wpsite = WPSites.objects.get(pk=WPManagerID)
+            path = wpsite.path
+
+            Webobj= Websites.objects.get(pk=wpsite.owner_id)
+
+            Vhuser = Webobj.externalApp
+            PHPVersion = Webobj.phpSelection
+            php = ACLManager.getPHPString(PHPVersion)
+            FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
+
+
+
+            extraArgs = {}
+            extraArgs['adminID'] = admin.pk
+            extraArgs['Theme'] = Theme
+            extraArgs['FinalPHPPath'] = FinalPHPPath
+            extraArgs['path'] = path
+            extraArgs['Vhuser'] = Vhuser
+
+
+
+            background = ApplicationInstaller('ChangeStatusThemes', extraArgs)
+            background.start()
+
+
+
+
+            data_ret = {'status': 1, 'error_message': 'None'}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+
+
+    def UpdateWPSettings(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            WPManagerID = data['WPid']
+            setting = data['setting']
+            settingValue = data['settingValue']
+            wpsite = WPSites.objects.get(pk=WPManagerID)
+            path = wpsite.path
+
+            Webobj= Websites.objects.get(pk=wpsite.owner_id)
+
+            Vhuser = Webobj.externalApp
+            PHPVersion = Webobj.phpSelection
+            php = ACLManager.getPHPString(PHPVersion)
+            FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
+
+
+
+            if setting == 'lscache':
+                if settingValue:
+
+                    command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp plugin install litespeed-cache --path=%s --skip-plugins --skip-themes" %   (Vhuser, FinalPHPPath, path)
+                    stdoutput = ProcessUtilities.outputExecutioner(command)
+
+
+                    command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp plugin activate litespeed-cache --path=%s --skip-plugins --skip-themes" %  (Vhuser, FinalPHPPath, path)
+                    stdoutput = ProcessUtilities.outputExecutioner(command)
+
+
+                else:
+                    command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp plugin deactivate litespeed-cache --path=%s --skip-plugins --skip-themes'  % (Vhuser, FinalPHPPath, path)
+                    stdoutput = ProcessUtilities.outputExecutioner(command)
+
+            elif setting == 'debugging':
+
+                command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp litespeed-purge all --path=%s --skip-plugins --skip-themes" %   (Vhuser, FinalPHPPath, path)
+                stdoutput = ProcessUtilities.outputExecutioner(command)
+
+                if settingValue:
+                    command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp config set WP_DEBUG true --path=%s --skip-plugins --skip-themes" % (Vhuser, FinalPHPPath, path)
+                    stdoutput = ProcessUtilities.outputExecutioner(command)
+                    logging.CyberCPLogFileWriter.writeToFile("Debugging mk true 1  output:" + str(stdoutput))
+
+                    command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp config list --skip-plugins --skip-themes --path=%s' % (
+                    Vhuser, FinalPHPPath, path)
+                    stdout = ProcessUtilities.outputExecutioner(command)
+                    logging.CyberCPLogFileWriter.writeToFile("Debugging output:" + str(stdout))
+
+
+                else:
+                    command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp config set WP_DEBUG false --path=%s --skip-plugins --skip-themes"  % (Vhuser, FinalPHPPath, path)
+                    stdoutput = ProcessUtilities.outputExecutioner(command)
+                    logging.CyberCPLogFileWriter.writeToFile("Debugging mk false 0  output:" + str(stdoutput))
+
+                    command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp config list --skip-plugins --skip-themes --path=%s' % (
+                        Vhuser, FinalPHPPath, path)
+                    stdout = ProcessUtilities.outputExecutioner(command)
+                    logging.CyberCPLogFileWriter.writeToFile("Debugging output:" + str(stdout))
+
+            elif setting == 'searchIndex':
+
+                command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp litespeed-purge all --path=%s --skip-plugins --skip-themes"  % (Vhuser, FinalPHPPath, path)
+                stdoutput = ProcessUtilities.outputExecutioner(command)
+
+                if settingValue:
+                    command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp option update blog_public 1 --path=%s --skip-plugins --skip-themes"  % (Vhuser, FinalPHPPath, path)
+                    stdoutput = ProcessUtilities.outputExecutioner(command)
+
+
+                else:
+                    command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp option update blog_public 0 --path=%s --skip-plugins --skip-themes"  % (Vhuser, FinalPHPPath, path)
+                    stdoutput = ProcessUtilities.outputExecutioner(command)
+
+            elif setting == 'maintenanceMode':
+
+                command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp litespeed-purge all --path=%s --skip-plugins --skip-themes"  % (Vhuser, FinalPHPPath, path)
+                stdoutput = ProcessUtilities.outputExecutioner(command)
+
+                if settingValue:
+
+                    command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp maintenance-mode activate --path=%s --skip-plugins --skip-themes"  % (Vhuser, FinalPHPPath, path)
+                    stdoutput = ProcessUtilities.outputExecutioner(command)
+
+
+                else:
+                    command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp maintenance-mode deactivate --path=%s --skip-plugins --skip-themes" % (Vhuser, FinalPHPPath, path)
+                    stdoutput = ProcessUtilities.outputExecutioner(command)
+
+            data_ret = {'status': 1, 'error_message': 'None'}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
 
 
     def submitWorpressCreation(self, userID=None, data=None):

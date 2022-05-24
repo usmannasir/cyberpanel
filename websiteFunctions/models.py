@@ -117,3 +117,7 @@ class WPSites(models.Model):
     ThemeUpdates = models.CharField(max_length=15, default='Disabled')
     date = models.DateTimeField(default=datetime.now)
     WPLockState = models.IntegerField(default=1)
+
+class WPStaging(models.Model):
+    owner = models.ForeignKey(WPSites, on_delete=models.CASCADE)
+    wpsite = models.ForeignKey(WPSites, on_delete=models.CASCADE, related_name='actual_wpsite')
