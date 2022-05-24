@@ -266,12 +266,12 @@ elif grep -q -E "CloudLinux 7|CloudLinux 8" /etc/os-release ; then
   Server_OS="CloudLinux"
 elif grep -q -E "Rocky Linux" /etc/os-release ; then
   Server_OS="RockyLinux"
-elif grep -q -E "Ubuntu 18.04|Ubuntu 20.04|Ubuntu 20.10" /etc/os-release ; then
+elif grep -q -E "Ubuntu 18.04|Ubuntu 20.04|Ubuntu 20.10|Ubuntu 22.04" /etc/os-release ; then
   Server_OS="Ubuntu"
 else
   echo -e "Unable to detect your system..."
-  echo -e "\nCyberPanel is supported on Ubuntu 18.04 x86_64, Ubuntu 20.04 x86_64, Ubuntu 20.10 x86_64, CentOS 7.x, CentOS 8.x, AlmaLinux 8.x, RockyLinux 8.x, CloudLinux 7.x, CloudLinux 8.x...\n"
-  Debug_Log2 "CyberPanel is supported on Ubuntu 18.04 x86_64, Ubuntu 20.04 x86_64, Ubuntu 20.10 x86_64, CentOS 7.x, CentOS 8.x, AlmaLinux 8.x, RockyLinux 8.x, CloudLinux 7.x, CloudLinux 8.x... [404]"
+  echo -e "\nCyberPanel is supported on Ubuntu 18.04 x86_64, Ubuntu 20.04 x86_64, Ubuntu 20.10 x86_64, Ubuntu 22.04 x86_64, CentOS 7.x, CentOS 8.x, AlmaLinux 8.x, RockyLinux 8.x, CloudLinux 7.x, CloudLinux 8.x...\n"
+  Debug_Log2 "CyberPanel is supported on Ubuntu 18.04 x86_64, Ubuntu 20.04 x86_64, Ubuntu 20.10 x86_64, Ubuntu 22.04 x86_64, CentOS 7.x, CentOS 8.x, AlmaLinux 8.x, RockyLinux 8.x, CloudLinux 7.x, CloudLinux 8.x... [404]"
   exit
 fi
 
@@ -998,8 +998,13 @@ else
     apt install -y --allow-downgrades libgnutls30=3.6.13-2ubuntu1.3
   fi
 
-  DEBIAN_FRONTEND=noninteracitve apt install -y dnsutils net-tools htop telnet libcurl4-gnutls-dev libgnutls28-dev libgcrypt20-dev libattr1 libattr1-dev liblzma-dev libgpgme-dev libmariadbclient-dev libcurl4-gnutls-dev libssl-dev nghttp2 libnghttp2-dev idn2 libidn2-dev libidn2-0-dev librtmp-dev libpsl-dev nettle-dev libgnutls28-dev libldap2-dev libgssapi-krb5-2 libk5crypto3 libkrb5-dev libcomerr2 libldap2-dev virtualenv git socat vim unzip zip
-    Check_Return
+  if [[ "$Server_OS_Version" = "22" ]] ; then
+    DEBIAN_FRONTEND=noninteracitve apt install -y dnsutils net-tools htop telnet libcurl4-gnutls-dev libgnutls28-dev libgcrypt20-dev libattr1 libattr1-dev liblzma-dev libgpgme-dev libcurl4-gnutls-dev libssl-dev nghttp2 libnghttp2-dev idn2 libidn2-dev libidn2-0-dev librtmp-dev libpsl-dev nettle-dev libgnutls28-dev libldap2-dev libgssapi-krb5-2 libk5crypto3 libkrb5-dev libcomerr2 libldap2-dev virtualenv git socat vim unzip zip libmariadb-dev-compat libmariadb-dev
+     Check_Return
+  else
+    DEBIAN_FRONTEND=noninteracitve apt install -y dnsutils net-tools htop telnet libcurl4-gnutls-dev libgnutls28-dev libgcrypt20-dev libattr1 libattr1-dev liblzma-dev libgpgme-dev libmariadbclient-dev libcurl4-gnutls-dev libssl-dev nghttp2 libnghttp2-dev idn2 libidn2-dev libidn2-0-dev librtmp-dev libpsl-dev nettle-dev libgnutls28-dev libldap2-dev libgssapi-krb5-2 libk5crypto3 libkrb5-dev libcomerr2 libldap2-dev virtualenv git socat vim unzip zip
+     Check_Return
+  fi
 
   DEBIAN_FRONTEND=noninteractive apt install -y python3-pip
     Check_Return
@@ -1027,8 +1032,13 @@ Retry_Command "pip install --default-timeout=3600 virtualenv==16.7.9"
 
 Download_Requirement
 
+if [[ "$Server_OS" = "Ubuntu" ]] && [[ "$Server_OS_Version" = "22" ]] ; then
+python3 -m venv /usr/local/CyberPanel
+Check_Return
+else
 virtualenv -p /usr/bin/python3 /usr/local/CyberPanel
   Check_Return
+fi
 
 if [[ "$Server_OS" = "Ubuntu" ]] && [[ "$Server_OS_Version" != "20" ]] ; then
   # shellcheck disable=SC1091
@@ -1187,6 +1197,10 @@ if ! grep -q "pid_max" /etc/rc.local 2>/dev/null ; then
     systemctl mask systemd-resolved  >/dev/null 2>&1
   fi
 
+  # Backup previous resolv.conf file
+  cp /etc/resolv.conf /etc/resolv.conf_bak
+
+  # Delete resolv.conf file
   rm -f /etc/resolv.conf
 
   if [[ "$Server_Provider" = "Tencent Cloud" ]] ; then
@@ -1203,6 +1217,21 @@ if ! grep -q "pid_max" /etc/rc.local 2>/dev/null ; then
   systemctl restart systemd-networkd >/dev/null 2>&1
   sleep 3
   #take a break ,or installer will break
+
+  # Check Connectivity
+  if ping -q -c 1 -W 1 cyberpanel.sh >/dev/null; then
+    echo -e "\nSuccessfully set up nameservers..\n"
+    echo -e "\nThe network is up.. :)\n"
+    echo -e "\nContinue installation..\n"
+  else
+    echo -e "\nThe network is down.. :(\n"
+    rm -f /etc/resolv.conf
+    mv /etc/resolv.conf_bak /etc/resolv.conf
+    systemctl restart systemd-networkd >/dev/null 2>&1
+    echo -e "\nReturns the nameservers settings to default..\n"
+    echo -e "\nContinue installation..\n"
+    sleep 3
+  fi
 
 cp /etc/resolv.conf /etc/resolv.conf-tmp
 
@@ -1282,7 +1311,7 @@ sed -i "s|https://www.litespeedtech.com/|https://cyberpanel.sh/www.litespeedtech
 sed -i 's|composer.sh|composer_cn.sh|g' install.py
 sed -i 's|./composer_cn.sh|COMPOSER_ALLOW_SUPERUSER=1 ./composer_cn.sh|g' install.py
 sed -i 's|http://www.litespeedtech.com|https://cyberpanel.sh/www.litespeedtech.com|g' install.py
-sed -i 's|https://www.rainloop.net/repository/webmail/rainloop-community-latest.zip|https://cyberpanel.sh/www.rainloop.net/repository/webmail/rainloop-community-latest.zip|g' install.py
+sed -i 's|https://snappymail.eu/repository/latest.tar.gz|https://cyberpanel.sh/www.snappymail.eu/repository/latest.tar.gz|g' install.py
 
 sed -i "s|rep.cyberpanel.net|cyberpanel.sh/rep.cyberpanel.net|g" installCyberPanel.py
 sed -i "s|rep.cyberpanel.net|cyberpanel.sh/rep.cyberpanel.net|g" install.py
@@ -1617,7 +1646,7 @@ fi
 }
 
 Post_Install_Display_Final_Info() {
-RainloopAdminPass=$(grep SetPassword /usr/local/CyberCP/public/rainloop.php| sed -e 's|$oConfig->SetPassword(||g' -e "s|');||g" -e "s|'||g")
+snappymailAdminPass=$(grep SetPassword /usr/local/CyberCP/public/snappymail.php| sed -e 's|$oConfig->SetPassword(||g' -e "s|');||g" -e "s|'||g")
 Elapsed_Time="$((Time_Count / 3600)) hrs $(((SECONDS / 60) % 60)) min $((Time_Count % 60)) sec"
 echo "###################################################################"
 echo "                CyberPanel Successfully Installed                  "
@@ -1639,9 +1668,9 @@ fi
 #echo "                WebAdmin console username: admin                   "
 #echo "                WebAdmin console password: $Webadmin_Pass          "
 #echo "                                                                   "
-#echo "                Visit: https://$Server_IP:8090/rainloop/?admin     "
-#echo "                Rainloop Admin username: admin                     "
-#echo "                Rainloop Admin password: $RainloopAdminPass        "
+#echo "                Visit: https://$Server_IP:8090/snappymail/?admin     "
+#echo "                snappymail Admin username: admin                     "
+#echo "                snappymail Admin password: $snappymailAdminPass        "
 echo "                                                                   "
 echo -e "             Run \e[31mcyberpanel help\e[39m to get FAQ info"
 echo -e "             Run \e[31mcyberpanel upgrade\e[39m to upgrade it to latest version."
@@ -1723,7 +1752,14 @@ rm -f /root/cyberpanel/cert_conf
 
 Post_Install_Required_Components() {
 Debug_Log2 "Finalization..,80"
+
+if [[ "$Server_OS" = "Ubuntu" ]] && [[ "$Server_OS_Version" = "22" ]] ; then
+python3 -m venv /usr/local/CyberCP
+Check_Return
+else
 virtualenv -p /usr/bin/python3 /usr/local/CyberCP
+  Check_Return
+fi
 
 if [[ "$Server_OS" = "Ubuntu" ]] && [[ "$Server_OS_Version" = "20" ]] ; then
   # shellcheck disable=SC1091
@@ -1789,6 +1825,7 @@ mkdir -p /etc/opendkim
 
 echo '/usr/local/CyberPanel/bin/python /usr/local/CyberCP/plogical/adminPass.py --password $@' > /usr/bin/adminPass
 echo "systemctl restart lscpd" >> /usr/bin/adminPass
+echo "echo \$@ > /etc/cyberpanel/adminPass" >> /usr/bin/adminPass
 chmod 700 /usr/bin/adminPass
 
 rm -f /usr/bin/php

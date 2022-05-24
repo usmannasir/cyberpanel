@@ -749,7 +749,7 @@ class vhost:
                 print("0,0")
                 return 0,0
 
-            bwmeta = "/home/" + domainName + "/logs/bwmeta"
+            bwmeta = "/home/cyberpanel/%s.bwmeta" % (domainName)
 
             if not os.path.exists(path):
                 print("0,0")

@@ -1196,6 +1196,14 @@ class virtualHostUtilities:
                 return [int(0), int(0)]
 
     @staticmethod
+    def getDiskUsageofPath(path):
+
+        try:
+             return subprocess.check_output('du -hs %s --block-size=1M' % (path), shell=True).decode("utf-8").split()[0]
+        except BaseException:
+            return '0MB'
+
+    @staticmethod
     def permissionControl(path):
         try:
             command = 'sudo chown -R  cyberpanel:cyberpanel ' + path

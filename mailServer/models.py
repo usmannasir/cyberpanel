@@ -24,6 +24,7 @@ class EUsers(models.Model):
     email = models.CharField(primary_key=True, max_length=80)
     password = models.CharField(max_length=200)
     mail = models.CharField(max_length=200, default='')
+    DiskUsage = models.CharField(max_length=200, default='0')
 
 
     class Meta:

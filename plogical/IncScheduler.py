@@ -378,6 +378,7 @@ class IncScheduler(multi.Thread):
                     GDriveJobLogs(owner=items, status=backupSchedule.INFO,
                                   message='Job Completed').save()
 
+
                     print("job com[leted")
 
                     #logging.writeToFile('job completed')
@@ -876,6 +877,16 @@ Automatic backup failed for %s on %s.
                     config = json.loads(website.config)
                 except:
                     config = {}
+
+                eDomains = website.domains_set.all()
+
+                for eDomain in eDomains:
+                    for email in eDomain.eusers_set.all():
+                        emailPath = '/home/vmail/%s/%s' % (website.domain, email.email.split('@')[0])
+                        email.DiskUsage = virtualHostUtilities.getDiskUsageofPath(emailPath)
+                        email.save()
+                        print('Disk Usage of %s is %s' % (email.email,email.DiskUsage))
+
 
                 config['DiskUsage'], config['DiskUsagePercentage'] = virtualHostUtilities.getDiskUsage(
                     "/home/" + website.domain, website.package.diskSpace)

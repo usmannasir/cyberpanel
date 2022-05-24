@@ -170,9 +170,10 @@ class ProcessUtilities(multi.Thread):
                 return ProcessUtilities.ubuntu20
             return ProcessUtilities.ubuntu
         else:
-            if open('/etc/redhat-release', 'r').read().find('CentOS Linux release 8') > -1 or open('/etc/redhat-release', 'r').read().find('AlmaLinux release 8') > -1:
+            if open('/etc/redhat-release', 'r').read().find('CentOS Linux release 8') > -1 or open('/etc/redhat-release', 'r').read().find('AlmaLinux release 8') > -1 or open('/etc/redhat-release', 'r').read().find('Rocky Linux release 8') > -1:
                 return ProcessUtilities.cent8
             return ProcessUtilities.centos
+
 
     @staticmethod
     def containerCheck():
@@ -225,7 +226,8 @@ class ProcessUtilities(multi.Thread):
                     command = 'sudo %s' % (command)
 
                 if os.path.exists(ProcessUtilities.debugPath):
-                    logging.writeToFile(ProcessUtilities.token + command)
+                    if command.find('cat') == -1:
+                        logging.writeToFile(ProcessUtilities.token + command)
 
                 if dir == None:
                     sock.sendall((ProcessUtilities.token + command).encode('utf-8'))
@@ -238,8 +240,11 @@ class ProcessUtilities(multi.Thread):
                 else:
                     command = '%s-u %s -d %s %s' % (ProcessUtilities.token, user, dir, command)
                 command = command.replace('sudo', '')
+
+
                 if os.path.exists(ProcessUtilities.debugPath):
-                    logging.writeToFile(command)
+                    if command.find('cat') == -1:
+                        logging.writeToFile(command)
 
                 sock.sendall(command.encode('utf-8'))
 

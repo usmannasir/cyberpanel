@@ -645,7 +645,7 @@ class backupUtilities:
 
                 dbName = database.find('dbName').text
 
-                if VERSION == '2.1' and int(BUILD) >= 1:
+                if (VERSION == '2.1' or VERSION == '2.3') and int(BUILD) >= 1:
 
                     logging.CyberCPLogFileWriter.writeToFile('Backup version 2.1.1+ detected..')
                     databaseUsers = database.findall('databaseUsers')
@@ -912,7 +912,7 @@ class backupUtilities:
 
                 dbName = database.find('dbName').text
 
-                if VERSION == '2.1' and int(BUILD) >= 1:
+                if (VERSION == '2.1' or VERSION == '2.3') and int(BUILD) >= 1:
 
                     logging.CyberCPLogFileWriter.writeToFile('Backup version 2.1.1+ detected..')
 
@@ -962,6 +962,7 @@ class backupUtilities:
 
             # /home/backup/backup-example.com-02.13.2018_10-24-52/public_html.tar.gz
             ## Moving above v2.0.0 extracting webhome data is not required, thus commenting below lines
+
 
             if not twoPointO:
                 tar = tarfile.open(pathToCompressedHome)

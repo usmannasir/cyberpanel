@@ -1,0 +1,103 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "plugin - CyberPanel" %}{% endblock %}
+{% block content %}
+
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
+
+    <div class="container">
+        <div id="page-title">
+            <h2 id="domainNamePage"><h2>{% trans "Configure Plugins" %}</h2>
+                <a class="pull-right btn btn-primary" href="{% url "Addnewplugin" %}">{% trans "Add New Plugin" %}</a>
+            </h2>
+        </div>
+        <h3>List of Saved Plugins Bucket</h3>
+        <table class="table table-hover dataTable no-footer" id="basicTable" role="grid">
+            <thead style="background-color: #0a6ebd">
+            <tr role="row" class="plans-head">
+                <th style="color: #fff0ff" class="sorting_desc" tabindex="0"
+                    aria-controls="basicTable" rowspan="1" colspan="1"
+                    aria-sort="descending"
+                    aria-label="Title: activate to sort column ascending">ID
+                </th>
+                <th style="color: #fff0ff" class="sorting" tabindex="0"
+                    aria-controls="basicTable" rowspan="1" colspan="1"
+                    aria-label="Places: activate to sort column ascending">File name
+                </th>
+
+                <th style="color: #fff0ff" class="sorting" tabindex="0"
+                    aria-controls="basicTable" rowspan="1" colspan="1"
+                    aria-label="Places: activate to sort column ascending">Action
+                </th>
+
+
+            </tr>
+            </thead>
+
+            <tbody>
+            {% for sub in Selectedplugins %}
+
+                <tr role="row" class="odd">
+                    <td class="v-align-middle sorting_1">
+                        <p>{{ sub.id }}</p>
+
+                    </td>
+                    <td class="v-align-middle">
+                        <p>{{ sub.Name }}</p>
+                    </td>
+                    <td class="row">
+                        <div class="col-md-2">
+                            <a href="{% url 'EidtPlugin'%}?ID={{sub.id}}"
+                               type="button" class="btn btn-border btn-alt border-green btn-link font-green">
+                                Edit
+                            </a>
+                        </div>
+                        <div class="col-md-2">
+
+
+                            <button
+                                    onclick="DeletePluginBuucket('{% url 'ConfigurePlugins' %}?delete={{ sub.id }}')"
+                                    data-toggle="modal"
+                                    data-target="#DeleteMember" aria-label=""
+                                    type="button" class="btn btn-border btn-alt border-red btn-link font-red">
+                                Delete
+                            </button>
+
+                        </div>
+                    </td>
+
+
+                </tr>
+            {% endfor %}
+
+            </tbody>
+        </table>
+
+
+    </div>
+
+    <!------------Modal---->
+
+    <div class="modal fade stick-up" id="DeleteMember" tabindex="-1">
+<div class="modal-dialog">
+<div class="modal-content">
+<div class="modal-header">
+<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+<h4 class="modal-title">Deleting Plugin Bucket</h4>
+</div>
+<div class="modal-body">
+<p>Are you sure?</p>
+</div>
+<div class="modal-footer">
+<button type="button" class="btn btn-default" data-dismiss="modal">No</button>
+<button type="button" onclick="FinalDeletePluginBuucket()" class="btn btn-primary">Yes</button>
+</div>
+</div>
+</div>
+    </div>
+
+
+
+{% endblock %}

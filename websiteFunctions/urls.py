@@ -16,6 +16,42 @@ urlpatterns = [
     url(r'^CreateNewDomain$', views.CreateNewDomain, name='CreateNewDomain'),
 
 
+    ### WordPress
+    url(r'^createWordpress$', views.WPCreate, name='createWordpress'),
+    url(r'^ListWPSites$', views.ListWPSites, name='ListWPSites'),
+    url(r'^WPHome$', views.WPHome, name='WPHome'),
+    url(r'^AutoLogin$', views.AutoLogin, name='AutoLogin'),
+
+
+    ###WordPress Ajax
+    url(r'^submitWorpressCreation', views.submitWorpressCreation, name='submitWorpressCreation'),
+    url(r'^FetchWPdata', views.FetchWPdata, name='FetchWPdata'),
+    url(r'^GetCurrentPlugins', views.GetCurrentPlugins, name='GetCurrentPlugins'),
+    url(r'^GetCurrentThemes', views.GetCurrentThemes, name='GetCurrentThemes'),
+    url(r'^UpdateWPSettings', views.UpdateWPSettings, name='UpdateWPSettings'),
+    url(r'^UpdatePlugins', views.UpdatePlugins, name='UpdatePlugins'),
+    url(r'^DeletePlugins', views.DeletePlugins, name='DeletePlugins'),
+    url(r'^ChangeStatus', views.ChangeStatus, name='ChangeStatus'),
+    url(r'^UpdateThemes', views.UpdateThemes, name='UpdateThemes'),
+    url(r'^DeleteThemes', views.DeleteThemes, name='DeleteThemes'),
+    url(r'^StatusThemes', views.StatusThemes, name='StatusThemes'),
+
+
+
+    #### AddPlugin
+    url(r'^ConfigurePlugins$', views.ConfigurePlugins, name='ConfigurePlugins'),
+    url(r'^Addnewplugin$', views.Addnewplugin, name='Addnewplugin'),
+    url(r'^EidtPlugin$', views.EidtPlugin, name='EidtPlugin'),
+
+
+
+    ## AddPlugin Ajax
+    url(r'^SearchOnkeyupPlugin$', views.SearchOnkeyupPlugin, name='SearchOnkeyupPlugin'),
+    url(r'^AddNewpluginAjax$', views.AddNewpluginAjax, name='AddNewpluginAjax'),
+    url(r'^deletesPlgin', views.deletesPlgin, name='deletesPlgin'),
+    url(r'^Addplugineidt', views.Addplugineidt, name='Addplugineidt'),
+
+
     # Website modification url
 
 

@@ -543,6 +543,32 @@ class ACLManager:
         return websiteNames
 
     @staticmethod
+    def getPHPString(phpVersion):
+
+        if phpVersion == "PHP 5.3":
+            php = "53"
+        elif phpVersion == "PHP 5.4":
+            php = "54"
+        elif phpVersion == "PHP 5.5":
+            php = "55"
+        elif phpVersion == "PHP 5.6":
+            php = "56"
+        elif phpVersion == "PHP 7.0":
+            php = "70"
+        elif phpVersion == "PHP 7.1":
+            php = "71"
+        elif phpVersion == "PHP 7.2":
+            php = "72"
+        elif phpVersion == "PHP 7.3":
+            php = "73"
+        elif phpVersion == "PHP 7.4":
+            php = "74"
+        elif phpVersion == "PHP 8.0":
+            php = "80"
+
+        return php
+
+    @staticmethod
     def searchWebsiteObjects(currentACL, userID, searchTerm):
 
         if currentACL['admin'] == 1:
@@ -615,7 +641,7 @@ class ACLManager:
                 doms = items.websites_set.all().order_by('domain')
                 for dom in doms:
                     domainsList.append(dom.domain)
-                    for childs in items.childdomains_set.all():
+                    for childs in dom.childdomains_set.all():
                         domainsList.append(childs.domain)
 
         return domainsList

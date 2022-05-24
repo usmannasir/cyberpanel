@@ -1,0 +1,95 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Websites Hosted - CyberPanel" %}{% endblock %}
+{% block content %}
+
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
+
+    <script>
+        $(document).ready(function () {
+            $('[data-toggle="tooltip"]').tooltip();
+        });
+    </script>
+
+    <div ng-controller="listWebsites" class="container">
+
+        <div id="page-title">
+            <h2 id="domainNamePage">{% trans "List WordPress Websites" %}
+                <a class="pull-right btn btn-primary" href="{% url "createWordpress" %}">{% trans "Create WordPress Website" %}</a>
+            </h2>
+            <img ng-hide="cyberPanelLoading" src="{% static 'images/loading.gif' %}">
+            <p>{% trans "On this page you can launch, list, modify and delete websites from your server." %}</p>
+        </div>
+
+     <table class="table table-hover dataTable no-footer" id="basicTable" role="grid">
+            <thead style="background-color: #0a6ebd">
+            <tr role="row" class="plans-head">
+                <th style="color: #fff0ff" class="sorting_desc" tabindex="0"
+                    aria-controls="basicTable" rowspan="1" colspan="1"
+                    aria-sort="descending"
+                    aria-label="Title: activate to sort column ascending">ID
+                </th>
+                <th style="color: #fff0ff" class="sorting" tabindex="0"
+                    aria-controls="basicTable" rowspan="1" colspan="1"
+                    aria-label="Places: activate to sort column ascending">WordPress Site Title
+                </th>
+                <th style="color: #fff0ff" class="sorting" tabindex="0"
+                    aria-controls="basicTable" rowspan="1" colspan="1"
+                    aria-label="Places: activate to sort column ascending">URL
+                </th>
+
+                <th style="color: #fff0ff" class="sorting" tabindex="0"
+                    aria-controls="basicTable" rowspan="1" colspan="1"
+                    aria-label="Places: activate to sort column ascending">Action
+                </th>
+
+
+            </tr>
+            </thead>
+
+            <tbody>
+            {% for sub in wpsite %}
+
+                <tr role="row" class="odd">
+                    <td class="v-align-middle sorting_1">
+                        <p>{{ sub.id }}</p>
+
+                    </td>
+                    <td class="v-align-middle sorting_1">
+                        <a href="{% url 'WPHome'%}?ID={{sub.id}}">
+                          <p>{{ sub.title }}</p>
+                        </a>
+
+
+                    </td>
+                    <td class="v-align-middle">
+                        <p>{{ sub.url }}</p>
+                    </td>
+                    <td class="row">
+
+
+
+                            <button
+
+                                    data-toggle="modal"
+                                    data-target="#DeleteMember" aria-label=""
+                                    type="button" class="btn btn-border btn-alt border-red btn-link font-red">
+                                Delete
+                            </button>
+
+
+                    </td>
+
+
+                </tr>
+            {% endfor %}
+
+            </tbody>
+        </table>
+
+
+    </div>
+
+{% endblock %}
