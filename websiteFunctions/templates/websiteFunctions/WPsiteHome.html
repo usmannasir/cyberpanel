@@ -61,75 +61,69 @@
                                         <div id="autoUpdateConfig" class="modal fade" tabindex="-1" role="dialog"
                                              aria-hidden="true">
                                             <div class="modal-dialog">
-                                                <div class="modal-content">
-                                                    <div class="modal-body">
-                                                        <div class="text-center mt-2 mb-4">
-                                                        </div>
 
+                                                <!-- Modal content-->
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <button type="button" class="close" data-dismiss="modal">&times;
+                                                        </button>
+                                                        <h4 class="modal-title">{% trans "Updates" %}</h4>
+                                                    </div>
+                                                    <div class="modal-body">
                                                         <form>
 
 
-                                                            <h3 style="margin-top: 2%">UPDATES</h3>
-                                                            <p>Configure setting for automatic updates.</p>
-                                                            <div class="row">
-                                                                <h5 class="font-arial">Automatic Updates
-                                                                    (Currently: {{ wpsite.AutoUpdates }})</h5>
-                                                                <div class="col-12">
-                                                                    <select id="AutomaticUpdates"
-                                                                            class="form-group form-group-default"
-                                                                            style="padding: 10px">
-                                                                        <option>Disabled</option>
-                                                                        <option>Minor and Security Updates</option>
-                                                                        <option>All (minor and major)</option>
-                                                                    </select>
-                                                                </div>
-                                                            </div>
-                                                            <div class="row">
-                                                                <h5 class="font-arial">Plugins
-                                                                    (Currently: {{ wpsite.PluginUpdates }})</h5>
-                                                                <div class="col-12">
-                                                                    <select id="Plugins"
-                                                                            class="form-group form-group-default"
-                                                                            style="padding: 10px">
-                                                                        <option>Enabled</option>
-                                                                        <option>Disabled</option>
-                                                                    </select>
-                                                                </div>
-                                                            </div>
-                                                            <div class="row">
-                                                                <h5 class="font-arial">Themes
-                                                                    (Currently: {{ wpsite.ThemeUpdates }})</h5>
-                                                                <div class="col-12">
-                                                                    <select id="Themes"
-                                                                            class="form-group form-group-default"
-                                                                            style="padding: 10px">
-                                                                        <option>Enabled</option>
-                                                                        <option>Disabled</option>
-                                                                    </select>
-                                                                </div>
-                                                            </div>
-                                                            <div class="row bg-dark"
-                                                                 style="border-radius: 2%;margin-top: 1%">
-                                                                <div class="v-align-middle col-12 ">
-                                                                    <button onclick="SaveAutoUpdateSettings()"
-                                                                            aria-label=""
-                                                                            type="button"
-                                                                            class="v-align-middle btn bg-dark col-12"
-                                                                            style="color: white; padding: 15px">
-                                                                        Save Changes <img
-                                                                            class="LPLoader"
-                                                                            style="margin-left: 2%"
-                                                                            src="{% static 'BaseTemplates/images/loader.gif' %}">
-                                                                    </button>
 
-                                                                </div>
+                                                        <h4 style="margin: 2%">Configure setting for automatic updates.</h4>
+                                                        <div class="row">
+                                                            <label class="col-lg-6">Automatic Updates (Currently:
+                                                                {{ wpsite.AutoUpdates }})</label>
+                                                            <div class="col-lg-6">
+                                                                <select id="AutomaticUpdates"
+                                                                        style="padding: 10px">
+                                                                    <option>Disabled</option>
+                                                                    <option>Minor and Security Updates</option>
+                                                                    <option>All (minor and major)</option>
+                                                                </select>
                                                             </div>
-                                                        </form>
+                                                        </div>
+                                                        <div class="row">
+                                                            <label class="col-lg-4">Plugins (Currently: {{ wpsite.PluginUpdates }})</label>
+                                                            <div class="col-lg-8">
+                                                                <select id="Plugins"
+
+                                                                        style="padding: 10px">
+                                                                    <option>Enabled</option>
+                                                                    <option>Disabled</option>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                        <div class="row">
+                                                            <label class="col-lg-4">Themes (Currently: {{ wpsite.ThemeUpdates }})</label>
+                                                            <div class="col-lg-8">
+                                                                <select id="Themes"
+
+                                                                        style="padding: 10px">
+                                                                    <option>Enabled</option>
+                                                                    <option>Disabled</option>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+
+                                                    </form>
 
 
                                                     </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-primary"
+                                                                ng-click="SaveUpdateConfig()">Save
+                                                        </button>
+                                                        <button type="button" ng-disabled="savingSettings"
+                                                                class="btn btn-default" data-dismiss="modal">
+                                                            Close
+                                                        </button>
+                                                    </div>
                                                 </div>
-                                                <!-- /.modal-content -->
                                             </div>
                                             <!-- /.modal-dialog -->
                                         </div>
@@ -154,7 +148,8 @@
                                                                 data-toggle="tab">Plugins</a></li>
                                                 <li class=""><a href="#tab3" ng-click="GetCurrentThemes()"
                                                                 data-toggle="tab">Themes</a></li>
-                                                <li><a href="#tab4" data-toggle="tab">Staging</a></li>
+                                                <li><a href="#tab4" data-toggle="tab"
+                                                       ng-click="fetchstaging()">Staging</a></li>
 
                                                 </li>
                                             </ul>
@@ -210,7 +205,7 @@
                                                             Login
                                                         </a>
                                                         <a style="margin-left: 4%" target="_blank"
-                                                           href="/websites/{{ wpsite.owner.domain}}/manageGIT">
+                                                           href="/websites/{{ wpsite.owner.domain }}/manageGIT">
                                                             <svg xmlns="http://www.w3.org/2000/svg"
                                                                  xmlns:xlink="http://www.w3.org/1999/xlink"
                                                                  aria-hidden="true" focusable="false" width="1em"
@@ -392,10 +387,90 @@
                                                     </table>
                                                 </div>
                                                 <div class="tab-pane" id="tab4">
-                                                    <p>Howdy, I'm in Section 4.</p>
+                                                    <h2>Create Staging site</h2>
+                                                    <div ng-hide="stagingDetailsForm" class="form-group">
+                                                        <label style="margin-bottom: 2%!important; margin-top: 2%!important;"
+                                                               class="col-sm-2 control-label">Name</label>
+                                                        <div class="col-sm-10">
+                                                            <input style="margin-bottom: 2%!important; margin-top: 2%!important;"
+                                                                   type="text" class="form-control" id="stagingName">
+                                                        </div>
+                                                    </div>
+                                                    <div ng-hide="stagingDetailsForm" class="form-group mt-5">
+                                                        <label style="margin-bottom: 2%!important;"
+                                                               class="col-sm-2 control-label">Domain Name</label>
+                                                        <div class="col-sm-10">
+                                                            <input style="margin-bottom: 2%!important;"
+                                                                   type="text" class="form-control" id="stagingDomain">
+                                                        </div>
+                                                    </div>
+                                                    <div ng-hide="stagingDetailsForm" class="center-div mt-5">
+                                                        <button ng-click="CreateStagingNow()"
+                                                                style="margin-bottom: 2%!important;"
+                                                                class="btn btn-alt btn-hover btn-blue-alt">
+                                                            <span>Create Now</span>
+                                                            <i class="glyph-icon icon-arrow-right"></i>
+                                                        </button>
+                                                    </div>
+                                                    <div ng-hide="installationProgress" class="form-group">
+                                                        <label class="col-sm-2 control-label"></label>
+                                                        <div class="col-sm-7">
+
+                                                            <div class="alert alert-success text-center">
+                                                                <h2>{$ currentStatus $}</h2>
+                                                            </div>
+
+                                                            <div class="progress">
+                                                                <div id="installProgress" class="progress-bar"
+                                                                     role="progressbar" aria-valuenow="70"
+                                                                     aria-valuemin="0" aria-valuemax="100"
+                                                                     style="width:0%">
+                                                                    <span class="sr-only">70% Complete</span>
+                                                                </div>
+                                                            </div>
+
+                                                            <div ng-hide="errorMessageBox" class="alert alert-danger">
+                                                                <p>{% trans "Error message:" %} {$ errorMessage $}</p>
+                                                            </div>
+
+                                                            <div ng-hide="success" class="alert alert-success">
+                                                                <p>{% trans "Website succesfully created." %}</p>
+                                                            </div>
+
+
+                                                            <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                                                <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                                                            </div>
+
+
+                                                        </div>
+                                                    </div>
+
+                                                    <div ng-hide="installationProgress" class="form-group">
+                                                        <label class="col-sm-3 control-label"></label>
+                                                        <div class="col-sm-4">
+                                                            <button type="button" ng-disabled="goBackDisable"
+                                                                    ng-click="goBack()"
+                                                                    class="btn btn-primary btn-lg center-div">{% trans "Go Back" %}</button>
+                                                        </div>
+                                                    </div>
+
+                                                    <br>
+                                                    <br>
+                                                    <h3>List staging site</h3>
+                                                    <table class="table table-condensed">
+                                                        <thead>
+                                                        <tr>
+                                                            <th>Name</th>
+                                                            <th>Domain</th>
+                                                            <th>Path</th>
+                                                            <th>Action</th>
+                                                        </tr>
+                                                        </thead>
+                                                        <tbody id="StagingBody">
+                                                        </tbody>
+                                                    </table>
                                                 </div>
-
-
                                             </div>
                                         </div>
 

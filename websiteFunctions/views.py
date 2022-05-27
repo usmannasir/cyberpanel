@@ -50,8 +50,9 @@ def WPHome(request):
         userID = request.session['userID']
 
         WPid = request.GET.get('ID')
+        DeleteID = request.GET.get('DeleteID')
         wm = WebsiteManager()
-        return wm.WPHome(request, userID, WPid)
+        return wm.WPHome(request, userID, WPid, DeleteID)
     except KeyError:
         return redirect(loadLoginPage)
 def AutoLogin(request):
@@ -88,6 +89,9 @@ def Addnewplugin(request):
         return wm.Addnewplugin(request, userID)
     except KeyError:
         return redirect(loadLoginPage)
+
+
+
 
 def SearchOnkeyupPlugin(request):
     try:
@@ -243,6 +247,50 @@ def GetCurrentPlugins(request):
 
         wm = WebsiteManager()
         coreResult = wm.GetCurrentPlugins(userID, json.loads(request.body))
+        # coreResult = wm.GetCsurrentPlugins(userID, json.loads(request.body))
+
+        result = pluginManager.postWebsiteCreation(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def fetchstaging(request):
+    try:
+        userID = request.session['userID']
+
+        result = pluginManager.preWebsiteCreation(request)
+
+        if  result != 200:
+            return result
+
+        wm = WebsiteManager()
+        coreResult = wm.fetchstaging(userID, json.loads(request.body))
+
+        result = pluginManager.postWebsiteCreation(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def SaveUpdateConfig(request):
+    try:
+        userID = request.session['userID']
+
+        result = pluginManager.preWebsiteCreation(request)
+
+        if result != 200:
+            return result
+
+        wm = WebsiteManager()
+        coreResult = wm.SaveUpdateConfig(userID, json.loads(request.body))
 
         result = pluginManager.postWebsiteCreation(request, coreResult)
         if result != 200:
@@ -420,6 +468,28 @@ def StatusThemes(request):
 
         wm = WebsiteManager()
         coreResult = wm.ChangeStatusThemes(userID, json.loads(request.body))
+
+        result = pluginManager.postWebsiteCreation(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def CreateStagingNow(request):
+    try:
+        userID = request.session['userID']
+
+        result = pluginManager.preWebsiteCreation(request)
+
+        if result != 200:
+            return result
+
+        wm = WebsiteManager()
+        coreResult = wm.CreateStagingNow(userID, json.loads(request.body))
 
         result = pluginManager.postWebsiteCreation(request, coreResult)
         if result != 200:

@@ -12,7 +12,7 @@ django.setup()
 import json
 from plogical.acl import ACLManager
 import plogical.CyberCPLogFileWriter as logging
-from websiteFunctions.models import Websites, ChildDomains, GitLogs, wpplugins, WPSites
+from websiteFunctions.models import Websites, ChildDomains, GitLogs, wpplugins, WPSites, WPStaging
 from plogical.virtualHostUtilities import virtualHostUtilities
 import subprocess
 import shlex
@@ -113,13 +113,23 @@ class WebsiteManager:
                         {"wpsite": tata['wpsites']})
         return proc.render()
 
-    def WPHome(self, request=None, userID=None, WPid=None):
+    def WPHome(self, request=None, userID=None, WPid=None, DeleteID=None):
         Data = {}
         currentACL = ACLManager.loadedACL(userID)
         WPobj = WPSites.objects.get(pk=WPid)
 
         Data['wpsite'] = WPobj
 
+        try:
+            DeleteID = request.GET.get('DeleteID', None)
+
+            if DeleteID != None:
+                wstagingDelete = WPStaging.objects.get(pk=DeleteID)
+                wstagingDelete.delete()
+
+        except BaseException as msg:
+
+            da= str(msg)
 
         proc = httpProc(request, 'websiteFunctions/WPsiteHome.html',
                         Data, 'createWebsite')
@@ -548,6 +558,63 @@ class WebsiteManager:
             return HttpResponse(json_data)
 
 
+    def fetchstaging(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            WPManagerID = data['WPid']
+            wpsite = WPSites.objects.get(pk=WPManagerID)
+
+
+            from plogical.phpUtilities import phpUtilities
+
+
+            json_data = phpUtilities.GetStagingInJson(wpsite.wpstaging_set.all().order_by('-id'))
+
+
+            data_ret = {'status': 1, 'error_message': 'None', 'wpsites': json_data}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+
+    def SaveUpdateConfig(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            WPManagerID = data['WPid']
+            Plugins = data['Plugins']
+            Themes = data['Themes']
+            AutomaticUpdates = data['AutomaticUpdates']
+
+            wpsite = WPSites.objects.get(pk=WPManagerID)
+
+            wpsite.AutoUpdates = AutomaticUpdates
+            wpsite.PluginUpdates = Plugins
+            wpsite.ThemeUpdates = Themes
+            wpsite.save()
+
+            data_ret = {'status': 1, 'error_message': 'None',}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
     def UpdatePlugins(self, userID=None, data=None):
         try:
 
@@ -818,6 +885,35 @@ class WebsiteManager:
 
 
             data_ret = {'status': 1, 'error_message': 'None'}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+    def CreateStagingNow(self, userID=None, data=None):
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            extraArgs = {}
+            extraArgs['adminID'] = admin.pk
+            extraArgs['StagingDomain'] = data['StagingDomain']
+            extraArgs['StagingName'] = data['StagingName']
+            extraArgs['WPid'] = data['WPid']
+            extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
+
+            background = ApplicationInstaller('CreateStagingNow', extraArgs)
+            background.start()
+
+            time.sleep(2)
+
+            data_ret = {'status': 1, 'installStatus': 1, 'error_message': 'None',
+                        'tempStatusPath': extraArgs['tempStatusPath']}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 

@@ -16,7 +16,7 @@ import threading as multi
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 import plogical.CyberCPLogFileWriter as logging
 import subprocess
-from websiteFunctions.models import ChildDomains, Websites, WPSites
+from websiteFunctions.models import ChildDomains, Websites, WPSites, WPStaging
 from plogical import randomPassword
 from plogical.mysqlUtilities import mysqlUtilities
 from databases.models import Databases
@@ -74,6 +74,8 @@ class ApplicationInstaller(multi.Thread):
                 self.DeletePlugins()
             elif self.installApp == 'ChangeStatusThemes':
                 self.ChangeStatusThemes()
+            elif self.installApp == 'CreateStagingNow':
+                self.CreateStagingNow()
 
         except BaseException as msg:
             logging.writeToFile(str(msg) + ' [ApplicationInstaller.run]')
@@ -1878,6 +1880,176 @@ $parameters = array(
                 command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp theme activate %s --skip-plugins --skip-themes --path=%s' % (
                 Vhuser, FinalPHPPath, Theme, path)
                 stdoutput = ProcessUtilities.outputExecutioner(command)
+
+
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile("Error WP ChangeStatusThemes ....... %s" % str(msg))
+            return 0
+
+    def CreateStagingNow(self):
+        try:
+            from websiteFunctions.website import WebsiteManager
+            import json
+            tempStatusPath = self.data['tempStatusPath']
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines('Creating Website...,15')
+
+            statusFile.close()
+
+            wpobj = WPSites.objects.get(pk=self.data['WPid'])
+
+            DataToPass = {}
+
+            currentTemp = self.extraArgs['tempStatusPath']
+            DataToPass['domainName'] = self.data['StagingDomain']
+            DataToPass['adminEmail'] = wpobj.owner.adminEmail
+            DataToPass['phpSelection'] = wpobj.owner.phpSelection
+            DataToPass['websiteOwner'] = wpobj.owner.admin.userName
+            DataToPass['package'] = 'Default'
+            DataToPass['ssl'] = 1
+            DataToPass['dkimCheck'] = 0
+            DataToPass['openBasedir'] = 0
+            DataToPass['mailDomain'] = 0
+            UserID = self.data['adminID']
+
+            ab = WebsiteManager()
+            coreResult = ab.submitWebsiteCreation(UserID, DataToPass)
+            coreResult1 = json.loads((coreResult).content)
+            logging.CyberCPLogFileWriter.writeToFile("Creating website result....%s" % coreResult1)
+            reutrntempath = coreResult1['tempStatusPath']
+            while (1):
+                lastLine = open(reutrntempath, 'r').read()
+
+                if lastLine.find('[200]') > -1:
+                    break
+                elif lastLine.find('[404]') > -1:
+                    statusFile = open(currentTemp, 'w')
+                    statusFile.writelines('Failed to Create Website: error: %s[404]' % lastLine)
+                    statusFile.close()
+                    return 0
+                else:
+                    statusFile = open(currentTemp, 'w')
+                    statusFile.writelines('Creating Website....,20')
+                    statusFile.close()
+                    time.sleep(2)
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines('Installing WordPress....')
+            statusFile.close()
+
+            ####No crreating DataBAse.............
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines('Creating DataBase....,30')
+            statusFile.close()
+            website = Websites.objects.get(domain=self.data['StagingDomain'])
+
+            dbNameRestore, dbUser, dbPassword = self.dbCreation(tempStatusPath, website)
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines('Creating Staging....,50')
+            statusFile.close()
+
+
+            masterDomain= wpobj.owner.domain
+            domain = self.data['StagingDomain']
+
+            path= wpobj.path
+
+            Vhuser = website.externalApp
+            PHPVersion = website.phpSelection
+            php = ACLManager.getPHPString(PHPVersion)
+            FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
+
+            command = '%s -d error_reporting=0 /usr/bin/wp core config --dbname=%s --dbuser=%s --dbpass=%s --dbhost=%s:%s --path=%s' % (
+            FinalPHPPath, dbNameRestore, dbUser, dbPassword, ApplicationInstaller.LOCALHOST, ApplicationInstaller.PORT, path)
+            ProcessUtilities.executioner(command, website.externalApp)
+
+            try:
+                masterPath = '/home/%s/public_html/%s' % (masterDomain, path)
+                replaceDomain = '%s/%s' % (masterDomain, path)
+            except:
+                masterPath = '/home/%s/public_html' % (masterDomain)
+                replaceDomain = masterDomain
+
+            ### Get table prefix of master site
+
+            command = '%s -d error_reporting=0 /usr/bin/wp config get table_prefix --allow-root --skip-plugins --skip-themes --path=%s' % (
+                FinalPHPPath, masterPath)
+            TablePrefix = ProcessUtilities.outputExecutioner(command).rstrip('\n')
+
+            ### Set table prefix
+
+            command = '%s -d error_reporting=0 /usr/bin/wp config set table_prefix %s --path=%s' % (
+            FinalPHPPath, TablePrefix, path)
+            ProcessUtilities.executioner(command, website.externalApp)
+
+            ## Exporting and importing database
+
+            command = '%s -d error_reporting=0 /usr/bin/wp --allow-root --skip-plugins --skip-themes --path=%s db export %s/dbexport-stage.sql' % (
+            FinalPHPPath, masterPath, path)
+            ProcessUtilities.executioner(command)
+
+            ## Import
+
+            command = '%s -d error_reporting=0 /usr/bin/wp --allow-root --skip-plugins --skip-themes --path=%s --quiet db import %s/dbexport-stage.sql' % (
+            FinalPHPPath, path, path)
+            ProcessUtilities.executioner(command)
+
+            try:
+                command = 'rm -f %s/dbexport-stage.sql' % (path)
+                ProcessUtilities.executioner(command)
+            except:
+                pass
+
+            ## Sync WP-Content Folder
+
+            command = '%s -d error_reporting=0 /usr/bin/wp theme path --skip-plugins --skip-themes --allow-root --path=%s' % (FinalPHPPath, masterPath)
+            WpContentPath = ProcessUtilities.outputExecutioner(command).splitlines()[-1].replace('themes', '')
+
+            command = 'cp -R %s %s/' % (WpContentPath, path)
+            ProcessUtilities.executioner(command)
+
+            ## Copy htaccess
+
+            command = 'cp -f %s/.htaccess %s/' % (WpContentPath.replace('/wp-content/', ''), path)
+            ProcessUtilities.executioner(command)
+
+            ## Search and replace url
+
+            command = '%s -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --allow-root --path=%s "%s" "%s"' % (FinalPHPPath, path, replaceDomain, domain)
+            ProcessUtilities.executioner(command)
+
+            command = '%s -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --allow-root --path=%s "www.%s" "%s"' % (FinalPHPPath, path, domain, domain)
+            ProcessUtilities.executioner(command)
+
+            command = '%s -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --allow-root --path=%s "https://%s" "http://%s"' % (
+            FinalPHPPath, path, domain, domain)
+            ProcessUtilities.executioner(command)
+
+
+            from filemanager.filemanager import FileManager
+
+            fm = FileManager(None, None)
+            fm.fixPermissions(masterDomain)
+
+            from plogical.installUtilities import installUtilities
+            installUtilities.reStartLiteSpeed()
+
+
+
+            wpsite = WPSites(owner=website,  title=self.data['StagingName'],
+                             path ="/home/%s/public_html"%(self.extraArgs['StagingDomain']),
+                             FinalURL='%s' % (self.data['StagingDomain']))
+            wpsite.save()
+
+            WPStaging(wpsite=wpsite, owner=wpobj).save()
+            statusFile = open(currentTemp, 'w')
+            statusFile.writelines('statging Created..,[200]')
+            statusFile.close()
+
+
+
 
 
         except BaseException as msg:

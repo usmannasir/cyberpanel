@@ -35,6 +35,10 @@ urlpatterns = [
     url(r'^UpdateThemes', views.UpdateThemes, name='UpdateThemes'),
     url(r'^DeleteThemes', views.DeleteThemes, name='DeleteThemes'),
     url(r'^StatusThemes', views.StatusThemes, name='StatusThemes'),
+    url(r'^CreateStagingNow', views.CreateStagingNow, name='CreateStagingNow'),
+    url(r'^fetchstaging', views.fetchstaging, name='fetchstaging'),
+    url(r'^SaveUpdateConfig', views.SaveUpdateConfig, name='SaveUpdateConfig'),
+
 
 
 
