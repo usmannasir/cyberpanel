@@ -1647,7 +1647,7 @@ $parameters = array(
             import json
             tempStatusPath = self.data['tempStatusPath']
             statusFile = open(tempStatusPath, 'w')
-            statusFile.writelines('Creating Website...')
+            statusFile.writelines('Creating Website...,10')
             statusFile.close()
 
 
@@ -1677,7 +1677,7 @@ $parameters = array(
                     break
                 elif lastLine.find('[404]') > -1:
                     statusFile = open(currentTemp, 'w')
-                    statusFile.writelines('Failed to Create Website: error: %s[404]' % lastLine)
+                    statusFile.writelines('Failed to Create Website: error: %s. [404]' % lastLine)
                     statusFile.close()
                     return 0
                 else:
@@ -1687,7 +1687,7 @@ $parameters = array(
                     time.sleep(2)
 
             statusFile = open(tempStatusPath, 'w')
-            statusFile.writelines('Installing WordPress....')
+            statusFile.writelines('Installing WordPress....,30')
             statusFile.close()
 
             ## Install WordPress

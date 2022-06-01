@@ -310,11 +310,13 @@ app.controller('createWordpress', function ($scope, $http, $timeout, $compile, $
                 getCreationStatus();
 
             } else {
-
-                // $scope.errorMessage = response.data.error_message;
-                alert("Status not = 1: Error..." + response.data.error_message)
+                $scope.goBackDisable = false;
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
             }
-
 
         }
 

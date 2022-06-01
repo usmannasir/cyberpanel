@@ -168,8 +168,6 @@ class WebsiteManager:
         userobj = Administrator.objects.get(pk=userID)
 
 
-
-
         Selectedplugins = wpplugins.objects.filter(owner = userobj)
         #data['Selectedplugins'] = wpplugins.objects.filter(ProjectOwner=HostingCompany)
 
@@ -1050,7 +1048,6 @@ class WebsiteManager:
             extraArgs['package'] = data['package']
             extraArgs['home'] = "1"
             extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
-
 
             background = ApplicationInstaller('wordpressInstallNew', extraArgs)
             background.start()
@@ -2798,7 +2795,7 @@ class WebsiteManager:
                 return HttpResponse(json_data)
             elif lastLine.find('[404]') > -1:
                 data_ret = {'abort': 1, 'installStatus': 0, 'installationProgress': "0",
-                            'error_message': lastLine}
+                            'error_message': ProcessUtilities.outputExecutioner("cat " + statusFile).splitlines()}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
             else:
