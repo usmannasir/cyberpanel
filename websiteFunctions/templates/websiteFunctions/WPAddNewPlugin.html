@@ -29,16 +29,11 @@
 
 
 
-                            <label>{% trans "Search Plugin Name" %}</label>
+                            <label style="margin-top: 15px;">{% trans "Search Plugin Name" %}</label>
 
                                 <input name="searchcontent" type="text" class="form-control" ng-model="searchcontent"
                                        ng-keyup="SearchPluginName('add')"
                                        placeholder="{% trans "Search Plugin...." %}" required>
-
-
-
-
-
 
                             <div id="mysearch" class="col-lg-12"  style="display: none; border-top: none!important;
                                                             border: 1px solid  rgba(90, 91, 92, 0.7);
@@ -48,8 +43,8 @@
 
 
 
-                        <h3>Selected Plugin</h3>
-                        <div id="selJS" style="display: none; display: flex; flex-direction: row;">
+                        <h3 style="margin-top: 20px;">Selected Plugin</h3>
+                        <div id="selJS" style="display: none; display: flex; flex-direction: row; margin-top: 10px;">
 
                         </div>
                         <div ng-hide="installationDetailsForm" class="form-group">

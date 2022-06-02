@@ -101,6 +101,7 @@ class NormalBackupJobLogs(models.Model):
     message = models.TextField()
 
 
+
 class wpplugins(models.Model):
     owner = models.ForeignKey(Administrator, on_delete=models.CASCADE)
     Name = models.CharField(max_length=255, default='')

@@ -22,16 +22,11 @@
                           class="form-horizontal bordered-row panel-body">
 
 
-                            <label>{% trans "Search Plugin Name" %}</label>
+                            <label style="margin-bottom: 10px;">{% trans "Search Plugin Name" %}</label>
 
                                 <input name="searchcontent" type="text" class="form-control" ng-model="searchcontent"
                                        ng-keyup="SearchPluginName('eidt')"
                                        placeholder="{% trans "Search Plugin...." %}" required>
-
-
-
-
-
 
                             <div id="mysearch" class="col-lg-12"  style="display: none; border-top: none!important;
                                                             border: 1px solid  rgba(90, 91, 92, 0.7);
@@ -39,10 +34,8 @@
                                                             background-color: #FFFFFF">
                             </div>
 
-
-
-                        <h3>Selected Plugin</h3>
-                       <div id="sedplugn" style="  display: flex; flex-direction: row;">
+                        <h3 style="margin-top: 20px;">Selected Plugin</h3>
+                       <div id="sedplugn" style="  display: flex; flex-direction: row; margin-top: 10px;">
                     {% for plugin in Selectedplugins %}
                     <div id="selplug"
                          style="background-color: #12207a; color: #FFFFFF; padding: 5px;  border-radius: 30px">

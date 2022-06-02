@@ -14,7 +14,6 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
 import threading as multi
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
-import plogical.CyberCPLogFileWriter as logging
 import subprocess
 from websiteFunctions.models import ChildDomains, Websites, WPSites, WPStaging
 from plogical import randomPassword
@@ -1668,11 +1667,11 @@ $parameters = array(
             ab = WebsiteManager()
             coreResult = ab.submitWebsiteCreation(UserID, DataToPass)
             coreResult1 = json.loads((coreResult).content)
-            logging.CyberCPLogFileWriter.writeToFile("Creating website result....%s"%coreResult1)
+            logging.writeToFile("Creating website result....%s"%coreResult1)
             reutrntempath = coreResult1['tempStatusPath']
             while (1):
                 lastLine = open(reutrntempath, 'r').read()
-
+                logging.writeToFile("Error web creating lastline ....... %s" % lastLine)
                 if lastLine.find('[200]') > -1:
                     break
                 elif lastLine.find('[404]') > -1:
@@ -1709,7 +1708,7 @@ $parameters = array(
                     return 0
                 else:
                     statusFile = open(currentTemp, 'w')
-                    statusFile.writelines('Installing WordPress....,30')
+                    statusFile.writelines('Installing WordPress....,50')
                     statusFile.close()
                     time.sleep(2)
 
@@ -1734,7 +1733,7 @@ $parameters = array(
 
 
         except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile("Error WP web creating  ....... %s" % str(msg))
+            logging.writeToFile("Error WP web creating  ....... %s" % str(msg))
             return 0
 
     def UpdateWPTheme(self):
@@ -1768,7 +1767,7 @@ $parameters = array(
                 stdoutput = ProcessUtilities.outputExecutioner(command)
 
         except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile("Error WP UpdateWPTheme ....... %s" % str(msg))
+            logging.writeToFile("Error WP UpdateWPTheme ....... %s" % str(msg))
             return 0
 
 
@@ -1804,7 +1803,7 @@ $parameters = array(
                 stdoutput = ProcessUtilities.outputExecutioner(command)
 
         except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile("Error WP UpdateWPTheme ....... %s" % str(msg))
+            logging.writeToFile("Error WP UpdateWPTheme ....... %s" % str(msg))
             return 0
 
     def DeleteThemes(self):
@@ -1829,7 +1828,7 @@ $parameters = array(
 
 
         except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile("Error WP DeleteThemes ....... %s" % str(msg))
+            logging.writeToFile("Error WP DeleteThemes ....... %s" % str(msg))
             return 0
 
     def DeletePlugins(self):
@@ -1856,7 +1855,7 @@ $parameters = array(
 
 
         except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile("Error WP DeletePlugins ....... %s" % str(msg))
+            logging.writeToFile("Error WP DeletePlugins ....... %s" % str(msg))
             return 0
 
     def ChangeStatusThemes(self):
@@ -1883,7 +1882,7 @@ $parameters = array(
 
 
         except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile("Error WP ChangeStatusThemes ....... %s" % str(msg))
+            logging.writeToFile("Error WP ChangeStatusThemes ....... %s" % str(msg))
             return 0
 
     def CreateStagingNow(self):
@@ -1915,7 +1914,7 @@ $parameters = array(
             ab = WebsiteManager()
             coreResult = ab.submitWebsiteCreation(UserID, DataToPass)
             coreResult1 = json.loads((coreResult).content)
-            logging.CyberCPLogFileWriter.writeToFile("Creating website result....%s" % coreResult1)
+            logging.writeToFile("Creating website result....%s" % coreResult1)
             reutrntempath = coreResult1['tempStatusPath']
             while (1):
                 lastLine = open(reutrntempath, 'r').read()
@@ -2053,7 +2052,7 @@ $parameters = array(
 
 
         except BaseException as msg:
-            logging.CyberCPLogFileWriter.writeToFile("Error WP ChangeStatusThemes ....... %s" % str(msg))
+            logging.writeToFile("Error WP ChangeStatusThemes ....... %s" % str(msg))
             return 0
 
 
