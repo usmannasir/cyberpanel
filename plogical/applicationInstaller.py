@@ -14,7 +14,6 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
 import threading as multi
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
-import plogical.CyberCPLogFileWriter as logging
 import subprocess
 from websiteFunctions.models import ChildDomains, Websites, WPSites, WPStaging
 from plogical import randomPassword
