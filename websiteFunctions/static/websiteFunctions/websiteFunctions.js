@@ -48,6 +48,7 @@ function FinalDeletePluginBuucket() {
 }
 
 var SPVal;
+
 app.controller('WPAddNewPlugin', function ($scope, $http, $timeout, $window, $compile) {
 
     $scope.SearchPluginName = function (val) {
@@ -442,6 +443,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
     $scope.LoadWPdata = function () {
 
         $scope.wordpresshomeloading = false;
+        $('#wordpresshomeloading').show();
 
         var url = "/websites/FetchWPdata";
 
@@ -462,6 +464,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
 
         function ListInitialDatas(response) {
             wordpresshomeloading = true;
+            $('#wordpresshomeloading').hide();
 
             if (response.data.status === 1) {
                 $('#WPVersion').text(response.data.ret_data.version);
@@ -486,6 +489,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
         }
 
         function cantLoadInitialDatas(response) {
+            $('#wordpresshomeloading').hide();
 
             $scope.webSiteCreationLoading = true;
             $scope.installationDetailsForm = true;
@@ -562,6 +566,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
 
 
     $scope.GetCurrentPlugins = function () {
+        $('#wordpresshomeloading').show();
 
         $scope.wordpresshomeloading = false;
 
@@ -583,6 +588,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
 
         function ListInitialDatas(response) {
             wordpresshomeloading = true;
+            $('#wordpresshomeloading').hide();
 
             if (response.data.status === 1) {
                 $('#PluginBody').html('');
@@ -597,6 +603,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
         }
 
         function cantLoadInitialDatas(response) {
+            $('#wordpresshomeloading').hide();
 
             $scope.webSiteCreationLoading = true;
             $scope.installationDetailsForm = true;
@@ -613,6 +620,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
 
 
     $scope.GetCurrentThemes = function () {
+        $('#wordpresshomeloading').show();
 
         $scope.wordpresshomeloading = false;
 
@@ -634,6 +642,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
 
         function ListInitialDatas(response) {
             wordpresshomeloading = true;
+            $('#wordpresshomeloading').hide();
 
             if (response.data.status === 1) {
 
@@ -649,7 +658,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
         }
 
         function cantLoadInitialDatas(response) {
-
+            $('#wordpresshomeloading').hide();
             $scope.webSiteCreationLoading = true;
             $scope.installationDetailsForm = true;
             $scope.installationProgress = false;
@@ -664,7 +673,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
     };
 
     $scope.UpdatePlugins = function (plugin) {
-
+        $('#wordpresshomeloading').show();
         var data = {
             plugin: plugin,
             pluginarray: PluginsList,
@@ -686,6 +695,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
 
 
         function ListInitialDatas(response) {
+            $('#wordpresshomeloading').hide();
             $scope.wordpresshomeloading = true;
 
             if (response.data.status === 1) {
@@ -706,6 +716,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
         }
 
         function cantLoadInitialDatas(response) {
+            $('#wordpresshomeloading').hide();
             $scope.wordpresshomeloading = true;
             alert(response)
 
@@ -715,6 +726,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
     };
 
     $scope.DeletePlugins = function (plugin) {
+        $('#wordpresshomeloading').show();
         var data = {
             plugin: plugin,
             pluginarray: PluginsList,
@@ -736,6 +748,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
 
 
         function ListInitialDatas(response) {
+            $('#wordpresshomeloading').hide();
             $scope.wordpresshomeloading = true;
 
             if (response.data.status === 1) {
@@ -756,6 +769,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
         }
 
         function cantLoadInitialDatas(response) {
+            $('#wordpresshomeloading').hide();
             $scope.wordpresshomeloading = true;
             alert(response)
 
@@ -764,6 +778,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
     }
 
     $scope.ChangeStatus = function (plugin) {
+        $('#wordpresshomeloading').show();
         var data = {
             plugin: plugin,
             WPid: $('#WPid').html(),
@@ -784,6 +799,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
 
 
         function ListInitialDatas(response) {
+            $('#wordpresshomeloading').hide();
             $scope.wordpresshomeloading = true;
 
             if (response.data.status === 1) {
@@ -804,6 +820,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
         }
 
         function cantLoadInitialDatas(response) {
+            $('#wordpresshomeloading').hide();
             $scope.wordpresshomeloading = true;
             alert(response)
 
@@ -838,8 +855,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
     }
 
     $scope.UpdateThemes = function (theme) {
-
-
+        $('#wordpresshomeloading').show();
         var data = {
             Theme: theme,
             Themearray: ThemesList,
@@ -861,6 +877,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
 
 
         function ListInitialDatas(response) {
+            $('#wordpresshomeloading').hide();
             $scope.wordpresshomeloading = true;
 
             if (response.data.status === 1) {
@@ -881,6 +898,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
         }
 
         function cantLoadInitialDatas(response) {
+            $('#wordpresshomeloading').hide();
             $scope.wordpresshomeloading = true;
             alert(response)
 
@@ -890,6 +908,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
     };
 
     $scope.DeleteThemes = function (theme) {
+        $('#wordpresshomeloading').show();
         var data = {
             Theme: theme,
             Themearray: ThemesList,
@@ -911,6 +930,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
 
 
         function ListInitialDatas(response) {
+            $('#wordpresshomeloading').hide();
             $scope.wordpresshomeloading = true;
 
             if (response.data.status === 1) {
@@ -931,6 +951,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
         }
 
         function cantLoadInitialDatas(response) {
+            $('#wordpresshomeloading').hide();
             $scope.wordpresshomeloading = true;
             alert(response)
 
@@ -938,6 +959,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
     };
 
     $scope.ChangeStatusThemes = function (theme) {
+        $('#wordpresshomeloading').show();
         var data = {
             theme: theme,
             WPid: $('#WPid').html(),
@@ -958,6 +980,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
 
 
         function ListInitialDatas(response) {
+            $('#wordpresshomeloading').hide();
             $scope.wordpresshomeloading = true;
 
             if (response.data.status === 1) {
@@ -978,6 +1001,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
         }
 
         function cantLoadInitialDatas(response) {
+            $('#wordpresshomeloading').hide();
             $scope.wordpresshomeloading = true;
             alert(response)
 
@@ -1013,6 +1037,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
     }
 
     $scope.CreateStagingNow = function () {
+        $('#wordpresshomeloading').show();
 
             $scope.wordpresshomeloading = false;
             $scope.stagingDetailsForm = true;
@@ -1042,7 +1067,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
 
 
         function ListInitialDatas(response) {
-
+            $('#wordpresshomeloading').hide();
             if (response.data.status === 1) {
                  statusFile = response.data.tempStatusPath;
                 getCreationStatus();
@@ -1058,6 +1083,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
         }
 
         function cantLoadInitialDatas(response) {
+            $('#wordpresshomeloading').hide();
             $scope.wordpresshomeloading = true;
             alert(response)
 
@@ -1065,6 +1091,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
     };
 
     function getCreationStatus() {
+        $('#wordpresshomeloading').show();
 
         url = "/websites/installWordpressStatus";
 
@@ -1083,7 +1110,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
 
 
         function ListInitialDatas(response) {
-
+            $('#wordpresshomeloading').hide();
 
             if (response.data.abort === 1) {
 
@@ -1122,6 +1149,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
                 }
 
             } else {
+
                 $("#installProgress").css("width", response.data.installationProgress + "%");
                 $scope.installPercentage = response.data.installationProgress;
                 $scope.currentStatus = response.data.currentStatus;
@@ -1131,7 +1159,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
         }
 
         function cantLoadInitialDatas(response) {
-
+             $('#wordpresshomeloading').hide();
             $scope.wordpresshomeloading = true;
             $scope.stagingDetailsForm = true;
             $scope.installationProgress = false;
@@ -1146,6 +1174,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
     }
 
     $scope.goBack = function () {
+         $('#wordpresshomeloading').hide();
         $scope.wordpresshomeloading = true;
         $scope.stagingDetailsForm = false;
         $scope.installationProgress = true;
@@ -1157,6 +1186,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
     };
 
     $scope.fetchstaging = function () {
+         $('#wordpresshomeloading').show();
         $scope.wordpresshomeloading = false;
 
         var url = "/websites/fetchstaging";
@@ -1177,6 +1207,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
 
         function ListInitialDatas(response) {
             wordpresshomeloading = true;
+             $('#wordpresshomeloading').hide();
 
             if (response.data.status === 1) {
 
@@ -1196,6 +1227,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
         }
 
         function cantLoadInitialDatas(response) {
+             $('#wordpresshomeloading').hide();
             alert("Error"+response)
 
         }
@@ -1211,6 +1243,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
     }
 
     $scope.SaveUpdateConfig =function () {
+         $('#wordpresshomeloading').show();
         var data = {
             AutomaticUpdates: $('#AutomaticUpdates').find(":selected").text(),
             Plugins: $('#Plugins').find(":selected").text(),
@@ -1233,6 +1266,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
 
 
         function ListInitialDatas(response) {
+             $('#wordpresshomeloading').hide();
             $scope.wordpresshomeloading = true;
 
             if (response.data.status === 1) {
@@ -1254,6 +1288,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
         }
 
         function cantLoadInitialDatas(response) {
+             $('#wordpresshomeloading').hide();
            new PNotify({
                     title: 'Operation Failed!',
                     text: response,

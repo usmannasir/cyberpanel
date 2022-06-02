@@ -1,6 +1,6 @@
 {% extends "baseTemplate/index.html" %}
 {% load i18n %}
-{% block title %}{% trans "Websites Hosted - CyberPanel" %}{% endblock %}
+{% block title %}{% trans "WordPress List - CyberPanel" %}{% endblock %}
 {% block content %}
 
     {% load static %}
@@ -13,81 +13,139 @@
         });
     </script>
 
+    <style>
+    table { /* tables still need 'cellspacing="0"' in the markup */
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .table-spacing {
+        border-spacing: 0em .9em;
+    }
+
+    table th:nth-child(1) {
+
+        /* Safari 3-4, iOS 1-3.2, Android 1.6- */
+        -webkit-border-radius: 3px 0px 0px 3px;
+
+        /* Firefox 1-3.6 */
+        -moz-border-radius: 3px 0px 0px 3px;
+
+        /* Opera 10.5, IE 9, Safari 5, Chrome, Firefox 4, iOS 4, Android 2.1+ */
+        border-radius: 3px 0px 0px 3px;
+    }
+    table  th:nth-child(1){
+
+    /* Safari 3-4, iOS 1-3.2, Android 1.6- */
+    -webkit-border-radius: 20px 0px 0px 20px;
+
+    /* Firefox 1-3.6 */
+    -moz-border-radius:  20px 0px 0px 20px;
+
+    /* Opera 10.5, IE 9, Safari 5, Chrome, Firefox 4, iOS 4, Android 2.1+ */
+    border-radius:  20px 0px 0px 20px;
+    }
+
+    table th:nth-last-child(1) {
+        /* Safari 3-4, iOS 1-3.2, Android 1.6- */
+        -webkit-border-radius: 0px 20px 20px 0px;
+
+        /* Firefox 1-3.6 */
+        -moz-border-radius: 0px 20px 20px 0px;
+
+        /* Opera 10.5, IE 9, Safari 5, Chrome, Firefox 4, iOS 4, Android 2.1+ */
+        border-radius:0px 20px 20px 0px;
+    }
+      table  td:nth-child(1){
+
+    /* Safari 3-4, iOS 1-3.2, Android 1.6- */
+    -webkit-border-radius: 20px 0px 0px 20px;
+
+    /* Firefox 1-3.6 */
+    -moz-border-radius:  20px 0px 0px 20px;
+
+    /* Opera 10.5, IE 9, Safari 5, Chrome, Firefox 4, iOS 4, Android 2.1+ */
+    border-radius:  20px 0px 0px 20px;
+    }
+
+    table td:nth-last-child(1) {
+        /* Safari 3-4, iOS 1-3.2, Android 1.6- */
+        -webkit-border-radius: 0px 20px 20px 0px;
+
+        /* Firefox 1-3.6 */
+        -moz-border-radius: 0px 20px 20px 0px;
+
+        /* Opera 10.5, IE 9, Safari 5, Chrome, Firefox 4, iOS 4, Android 2.1+ */
+        border-radius: 0px 20px 20px 0px;
+    }
+
+</style>
+
+
     <div ng-controller="listWebsites" class="container">
 
         <div id="page-title">
             <h2 id="domainNamePage">{% trans "List WordPress Websites" %}
-                <a class="pull-right btn btn-primary" href="{% url "createWordpress" %}">{% trans "Create WordPress Website" %}</a>
+                <a class="pull-right btn btn-primary"
+                   href="{% url "createWordpress" %}">{% trans "Create WordPress Website" %}</a>
             </h2>
             <img ng-hide="cyberPanelLoading" src="{% static 'images/loading.gif' %}">
-            <p>{% trans "On this page you can launch, list, modify and delete websites from your server." %}</p>
+            <p>{% trans "On this page you can launch, list, modify and delete Wordpress Sites from your server." %}</p>
         </div>
 
-     <table class="table table-hover dataTable no-footer" id="basicTable" role="grid">
-            <thead style="background-color: #0a6ebd">
-            <tr role="row" class="plans-head">
-                <th style="color: #fff0ff" class="sorting_desc" tabindex="0"
-                    aria-controls="basicTable" rowspan="1" colspan="1"
-                    aria-sort="descending"
-                    aria-label="Title: activate to sort column ascending">ID
-                </th>
-                <th style="color: #fff0ff" class="sorting" tabindex="0"
-                    aria-controls="basicTable" rowspan="1" colspan="1"
-                    aria-label="Places: activate to sort column ascending">WordPress Site Title
-                </th>
-                <th style="color: #fff0ff" class="sorting" tabindex="0"
-                    aria-controls="basicTable" rowspan="1" colspan="1"
-                    aria-label="Places: activate to sort column ascending">URL
-                </th>
-
-                <th style="color: #fff0ff" class="sorting" tabindex="0"
-                    aria-controls="basicTable" rowspan="1" colspan="1"
-                    aria-label="Places: activate to sort column ascending">Action
-                </th>
-
-
-            </tr>
-            </thead>
-
-            <tbody>
-            {% for sub in wpsite %}
-
-                <tr role="row" class="odd">
-                    <td class="v-align-middle sorting_1">
-                        <p>{{ sub.id }}</p>
-
-                    </td>
-                    <td class="v-align-middle sorting_1">
-                        <a href="{% url 'WPHome'%}?ID={{sub.id}}">
-                          <p>{{ sub.title }}</p>
-                        </a>
-
-
-                    </td>
-                    <td class="v-align-middle">
-                        <p>{{ sub.url }}</p>
-                    </td>
-                    <td class="row">
 
 
 
-                            <button
+             <table class="table-spacing" style="width: 100%">
+                    <thead style="color: white; background-color: #0a6ebd">
+                    <tr>
+                        <th style="padding: 18px; color: white; width: 161px; font-size: 12px;">WordPress Site Title
+                        </th>
+                        <th style="padding: 18px; color: white; width: 161px; font-size: 12px;">Domain
+                        </th>
+                        <th style="padding: 18px; color: white; width: 161px; font-size: 12px;">Action
+                        </th>
 
-                                    data-toggle="modal"
-                                    data-target="#DeleteMember" aria-label=""
-                                    type="button" class="btn btn-border btn-alt border-red btn-link font-red">
-                                Delete
-                            </button>
+
+                    </tr>
+                    </thead>
+
+                    <tbody style="background-color: #d9eefa">
+                    {% for sub in wpsite %}
+
+                        <tr >
+                            <td style="padding: 13px;">
+                                     <a href="{% url 'WPHome'%}?ID={{sub.id}}">
+                                    <p style="font-weight: bold; text-transform: uppercase; ">{{ sub.title }}</p>
+                                    </a>
+                            </td>
+                            <td style="padding: 13px;">
+                               <a target="_blank" style="color: #6aa7ff"
+                                   href="http://{{ sub.url }}">Visit
+                                   <i  class="glyph-icon icon-external-link-square" title="{{ sub.url }}"></i></a>
+                            </td>
+
+                            <td style="padding: 13px;">
 
 
-                    </td>
+
+                                    <button
+
+                                            data-toggle="modal"
+                                            data-target="#DeleteMember" aria-label=""
+                                            type="button" class="btn btn-border btn-alt border-red btn-link font-red">
+                                        Delete
+                                    </button>
 
 
-                </tr>
-            {% endfor %}
+                            </td>
 
-            </tbody>
-        </table>
+
+                        </tr>
+                    {% endfor %}
+
+                    </tbody>
+                </table>
 
 
     </div>
