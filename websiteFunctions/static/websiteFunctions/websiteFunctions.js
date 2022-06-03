@@ -275,7 +275,7 @@ app.controller('createWordpress', function ($scope, $http, $timeout, $compile, $
         var adminEmail = $scope.adminEmail;
         var WPPassword = $scope.WPPassword;
         var WPVersions = $scope.WPVersions;
-        var pluginbucket = $scope.pluginbucket;
+        var pluginbucket = $('#pliginbucket').val();
         var autoupdates = $scope.autoupdates;
         var pluginupdates = $scope.pluginupdates;
         var themeupdates = $scope.themeupdates;
@@ -284,7 +284,7 @@ app.controller('createWordpress', function ($scope, $http, $timeout, $compile, $
             title: WPtitle,
             domain: domainNameCreate,
             WPVersion: WPVersions,
-            PluginsThemes: pluginbucket,
+            pluginbucket: pluginbucket,
             adminUser: WPUsername,
             Email: adminEmail,
             PasswordByPass: WPPassword,
@@ -423,6 +423,15 @@ app.controller('createWordpress', function ($scope, $http, $timeout, $compile, $
 });
 
 
+
+//........... delete wp list
+var FurlDeleteWP;
+function  DeleteWPNow(url) {
+FurlDeleteWP = url;
+}
+function FinalDeleteWPNow() {
+  window.location.href = FurlDeleteWP;
+}
 app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $window) {
     $scope.wordpresshomeloading = true;
     $scope.stagingDetailsForm = false;
@@ -482,7 +491,11 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
                 }
 
             } else {
-                alert("Error:" + response.data.error_message)
+                 new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
 
             }
 

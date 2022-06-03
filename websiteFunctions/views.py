@@ -40,8 +40,9 @@ def WPCreate(request):
 def ListWPSites(request):
     try:
         userID = request.session['userID']
+        DeleteID = request.GET.get('DeleteID')
         wm = WebsiteManager()
-        return wm.ListWPSites(request, userID)
+        return wm.ListWPSites(request, userID, DeleteID)
     except KeyError:
         return redirect(loadLoginPage)
 

@@ -15,7 +15,7 @@ django.setup()
 import threading as multi
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 import subprocess
-from websiteFunctions.models import ChildDomains, Websites, WPSites, WPStaging
+from websiteFunctions.models import ChildDomains, Websites, WPSites, WPStaging, wpplugins
 from plogical import randomPassword
 from plogical.mysqlUtilities import mysqlUtilities
 from databases.models import Databases
@@ -729,6 +729,31 @@ $parameters = array(
                 pass
 
 
+
+
+            ############## Install Save Plugin Buckets
+            try:
+                logging.writeToFile("plugin bucket list start")
+                logging.writeToFile("plugin bucket list: %s" % str(self.extraArgs['AllPluginsList']))
+                logging.writeToFile("plugin bucket saved: %s" % str(self.extraArgs['SavedPlugins']))
+                if self.extraArgs['SavedPlugins'] == True:
+                    AllPluginList= self.extraArgs['AllPluginsList']
+                    for i in range(len(AllPluginList)):
+                        # command = "wp plugin install " + AllPluginList[i]+ "--allow-root --path=" + finalPath
+                        command = "wp plugin install %s --allow-root --path=%s" %(AllPluginList[i], finalPath)
+                        result = ProcessUtilities.outputExecutioner(command, externalApp)
+
+                        if result.find('Success:') == -1:
+                            raise BaseException(result)
+
+                        command = "wp plugin activate %s --allow-root --path=%s"  %(AllPluginList[i], finalPath)
+                        result = ProcessUtilities.outputExecutioner(command, externalApp)
+            except BaseException as msg:
+                logging.writeToFile("Error in istall plugin bucket: %s"%str(msg))
+                pass
+
+
+
             ##
 
             # from filemanager.filemanager import FileManager
@@ -1407,7 +1432,7 @@ $parameters = array(
             wm = WebsiteManager()
             wm.submitWebsiteDeletion(1, self.extraArgs)
             logging.statusWriter(self.extraArgs['tempStatusPath'], '%s [404].' % (str(msg)))
-	
+
     def installWhmcs(self):
         try:
 
@@ -1504,8 +1529,8 @@ $parameters = array(
             statusFile.writelines('Extracting WHMCS Installer zip..,30')
             statusFile.close()
             command = "unzip -qq %s -d %s" % (whmcs_installer, finalPath)
-            ProcessUtilities.executioner(command, externalApp)          
-            
+            ProcessUtilities.executioner(command, externalApp)
+
             ##
 
             statusFile = open(tempStatusPath, 'w')
@@ -1522,7 +1547,7 @@ $parameters = array(
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines('Installing and configuring WHMCS..,60')
             statusFile.close()
-            
+
             command = "chown -R " + externalApp + ":" + groupName + " " + homeDir
             ProcessUtilities.executioner(command, externalApp)
 
@@ -1536,7 +1561,7 @@ $parameters = array(
 
             command = "mv %s/configuration.php.new %s/configuration.php" % (finalPath, finalPath)
             ProcessUtilities.executioner(command, externalApp)
-          
+
             # Post database and license information to webinstaller form
             command = """
             curl %s/install/install.php?step=4" \
@@ -1567,8 +1592,8 @@ $parameters = array(
 
             command = "rm -rf " + finalPath + "install"
             ProcessUtilities.executioner(command, externalApp)
-            
-            
+
+
             ### Update whmcs urls to siteurl
 
             statusFile = open(tempStatusPath, 'w')
@@ -1592,7 +1617,7 @@ $parameters = array(
             except BaseException as msg:
                 logging.writeToFile(str(msg))
 
-      
+
 
             # Secure WHMCS configuration.php file : https://docs.whmcs.com/Further_Security_Steps#Secure_the_configuration.php_File
             command = "chmod 400 %s/configuration.php" % (finalPath)
@@ -1689,11 +1714,33 @@ $parameters = array(
             statusFile.writelines('Installing WordPress....,30')
             statusFile.close()
 
-            ## Install WordPress
+            logging.writeToFile("Pluginbucket  ....... %s" % str(self.data['pluginbucket']))
 
+
+            ## Install WordPress
+                ## get save pluginbucket
+
+            ###Get save plugin
+            SavedPlugins = False
+            AllPluginsList = []
+            try:
+                if(self.data['pluginbucket'] != 1):
+                    bucktobj = wpplugins.objects.get(pk=self.data['pluginbucket'])
+                    pluginlistt = json.loads(bucktobj.config)
+                    SavedPlugins = True
+                    for i in range(len(pluginlistt)):
+                             AllPluginsList.append(pluginlistt[i])
+            except BaseException as msg:
+                logging.writeToFile("Error in Get save plugin  ....... %s" % str(msg))
+                pass
+
+            logging.writeToFile("AllPluginsList 1  ....... %s" % str(AllPluginsList))
+            logging.writeToFile("SavedPlugins 1  ....... %s" % str(SavedPlugins))
 
             currentTemp = self.extraArgs['tempStatusPath']
             self.extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
+            self.extraArgs['SavedPlugins'] = SavedPlugins
+            self.extraArgs['AllPluginsList'] = AllPluginsList
             self.installWordPress()
 
             while (1):

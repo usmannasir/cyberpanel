@@ -127,15 +127,43 @@
 
                             <td style="padding: 13px;">
 
-
-
                                     <button
-
                                             data-toggle="modal"
                                             data-target="#DeleteMember" aria-label=""
+                                            onclick="DeleteWPNow('{% url 'ListWPSites'  %}?DeleteID={{ sub.id }}')"
                                             type="button" class="btn btn-border btn-alt border-red btn-link font-red">
                                         Delete
                                     </button>
+                                  <div id="DeleteMember" class="modal fade" role="dialog">
+                                <div class="modal-dialog">
+                                    <!-- Modal content-->
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal">&times;
+                                            </button>
+                                            <h4 class="modal-title">Delete WordPress Site
+                                                <img ng-hide="$parent.cyberPanelLoading"
+                                                     src="/static/images/loading.gif"
+                                                     style="display: none;">
+                                            </h4>
+                                        </div>
+                                        <div class="modal-body">
+                                            <form name="DeleteDocumentRootForm" action="/" class="form-horizontal">
+
+                                                <span>Do you want to delete the site??</span>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-primary"
+                                                    onclick="FinalDeleteWPNow()">Yes
+                                            </button>
+                                            <button type="button" ng-disabled="savingSettings"
+                                                    class="btn btn-default" data-dismiss="modal">
+                                                NOt
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
 
                             </td>
