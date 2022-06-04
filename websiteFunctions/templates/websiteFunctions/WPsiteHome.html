@@ -82,9 +82,8 @@
                                             </svg>
                                             File Manager
                                         </a>
-                                        <a ng-click="autoLogin()"
-                                           style="margin-left: 4%"
-                                           href="javascript: void(0);">
+                                        <a target="_blank" style="margin-left: 4%"
+                                           href="{% url 'AutoLogin' %}?id={{ wpsite.id }}">
                                             <svg xmlns="http://www.w3.org/2000/svg"
                                                  xmlns:xlink="http://www.w3.org/1999/xlink"
                                                  aria-hidden="true" focusable="false" width="1em"

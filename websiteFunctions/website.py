@@ -28,7 +28,7 @@ from plogical.childDomain import ChildDomainManager
 from math import ceil
 from plogical.alias import AliasManager
 from plogical.applicationInstaller import ApplicationInstaller
-from plogical import hashPassword
+from plogical import hashPassword, randomPassword
 from emailMarketing.emACL import emACL
 from plogical.processUtilities import ProcessUtilities
 from managePHP.phpManager import PHPManager
@@ -143,26 +143,38 @@ class WebsiteManager:
                         Data, 'createWebsite')
         return proc.render()
 
-    def AutoLogin(self, request=None, userID=None, WPid=None):
-        pass
-        # data = {}
-        # currentACL = ACLManager.loadedACL(userID)
-        # WPobj = WPSites.objects.get(pk=WPid)
-        #
-        # data['wpsite'] = WPobj
-        #
-        # if data['wpsite'].FinalURL.endswith('/'):
-        #     FinalURL = data['wpsite'].FinalURL[:-1]
-        # else:
-        #     FinalURL = data['wpsite'].FinalURL
-        #
-        # data['url'] = 'https://%s' % (FinalURL)
-        # data['userName'] = 'autologin'
-        # data['password'] = message
-        #
-        # proc = httpProc(request, 'websiteFunctions/WPsiteHome.html',
-        #                 Data, 'createWebsite')
-        # return proc.render()
+    def AutoLogin(self, request=None, userID=None):
+
+        WPid = request.GET.get('id')
+        WPobj = WPSites.objects.get(pk=WPid)
+
+        #php = VirtualHost.getPHPString(self.data['PHPVersion'])
+        #FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
+
+        ## Get title
+
+        password = randomPassword.generate_pass(10)
+
+        command = 'sudo -u %s wp user create autologin %s --role=administrator --user_pass="%s" --path=%s --skip-plugins --skip-themes' % (WPobj.owner.externalApp, 'autologin@cloudpages.cloud', password, WPobj.path)
+        ProcessUtilities.executioner(command)
+
+        command = 'sudo -u %s wp user update autologin --user_pass="%s" --path=%s --skip-plugins --skip-themes' % (WPobj.owner.externalApp, password, WPobj.path)
+        ProcessUtilities.executioner(command)
+
+        data = {}
+
+        if WPobj.FinalURL.endswith('/'):
+            FinalURL = WPobj.FinalURL[:-1]
+        else:
+            FinalURL = WPobj.FinalURL
+
+        data['url'] = 'https://%s' % (FinalURL)
+        data['userName'] = 'autologin'
+        data['password'] = password
+
+        proc = httpProc(request, 'websiteFunctions/AutoLogin.html',
+                        data, 'createWebsite')
+        return proc.render()
 
 
 

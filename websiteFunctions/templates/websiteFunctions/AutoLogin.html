@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Auto login for {{ url }}</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+<body>
+<span style="display: none" id="userName">{{ userName }}</span>
+<span style="display: none" id="password">{{ password }}</span>
+<form style="display: none" name="loginform" id="loginform" action="{{ url }}/wp-login.php" method="post">
+    {% csrf_token %}
+    <p>
+        <label for="user_login">Username or Email Address</label>
+        <input type="text" name="log" id="user_login" class="input" value="" size="20" autocapitalize="off"/>
+    </p>
+
+    <div class="user-pass-wrap">
+        <label for="user_pass">Password</label>
+        <div class="wp-pwd">
+            <input type="password" name="pwd" id="user_pass" class="input password-input" value="" size="20"/>
+            <button type="button" class="button button-secondary wp-hide-pw hide-if-no-js" data-toggle="0"
+                    aria-label="Show password">
+                <span class="dashicons dashicons-visibility" aria-hidden="true"></span>
+            </button>
+        </div>
+    </div>
+    <p class="forgetmenot"><input name="rememberme" type="checkbox" id="rememberme" value="forever"/> <label
+            for="rememberme">Remember Me</label></p>
+    <p class="submit">
+        <input type="submit" name="wp-submit" id="wp-submit" class="button button-primary button-large"
+               value="Log In"/>
+        <input type="hidden" name="redirect_to" value="{{ url }}/wp-admin"/>
+{#        <input type="hidden" name="testcookie" value="1"/>#}
+    </p>
+</form>
+<script>
+    document.getElementById("user_login").value = $("#userName").text();
+    document.getElementById("user_pass").value = $("#password").text();
+    document.forms["loginform"].submit();
+</script>
+</body>
+</html>

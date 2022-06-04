@@ -59,10 +59,9 @@ def WPHome(request):
 def AutoLogin(request):
     try:
         userID = request.session['userID']
-
-        WPid = request.GET.get('ID')
         wm = WebsiteManager()
-        return wm.AutoLogin(request, userID, WPid)
+        return wm.AutoLogin(request, userID)
+
     except KeyError:
         return redirect(loadLoginPage)
 def ConfigurePlugins(request):
