@@ -91,7 +91,7 @@ class WebsiteManager:
                         Data, 'createWebsite')
         return proc.render()
 
-    def ListWPSites(self, request=None, userID=None, data=None):
+    def ListWPSites(self, request=None, userID=None, DeleteID=None):
         currentACL = ACLManager.loadedACL(userID)
 
         userobj = Administrator.objects.get(pk=userID)
@@ -100,6 +100,14 @@ class WebsiteManager:
         tata['wp']=[]
         tata['wpsites']=[]
         tata['wp'] = WPSites.objects.all()
+
+        try:
+            if DeleteID != None:
+                WPDelete = WPSites.objects.get(pk=DeleteID)
+                WPDelete.delete()
+
+        except BaseException as msg:
+            pass
 
         for sub in tata['wp']:
             tata['wpsites'].append({'id': sub.id,
@@ -248,6 +256,7 @@ class WebsiteManager:
         lmo = json.loads(pluginobj.config)
         Data['Selectedplugins'] = lmo
         Data['pluginbID'] = pluginbID
+        Data['BucketName'] = pluginobj.Name
 
 
         proc = httpProc(request, 'websiteFunctions/WPEidtPlugin.html',
@@ -417,6 +426,7 @@ class WebsiteManager:
             WPManagerID = data['WPid']
             wpsite = WPSites.objects.get(pk=WPManagerID)
             path = wpsite.path
+
 
             Webobj= Websites.objects.get(pk=wpsite.owner_id)
 
@@ -1036,7 +1046,7 @@ class WebsiteManager:
             extraArgs['domainName'] = data['domain']
             extraArgs['WPVersion'] = data['WPVersion']
             extraArgs['blogTitle'] = data['title']
-            extraArgs['PluginsThemes'] = data['PluginsThemes']
+            extraArgs['pluginbucket'] = data['pluginbucket']
             extraArgs['adminUser'] = data['adminUser']
             extraArgs['PasswordByPass'] = data['PasswordByPass']
             extraArgs['adminPassword'] = data['PasswordByPass']

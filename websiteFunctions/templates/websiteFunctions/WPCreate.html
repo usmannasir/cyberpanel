@@ -106,7 +106,7 @@
                         <div ng-hide="installationDetailsForm" class="form-group">
                             <label class="col-sm-3 control-label">{% trans "Plugin/Theme" %}</label>
                             <div class="col-sm-6">
-                                <select ng-model="pluginbucket" class="form-control">
+                                <select id="pliginbucket" ng-model="pluginbucket" class="form-control">
                                     <option value="-1" selected>Select Plugin Bucket</option>
                                     {% for wp in Plugins %}
                                         <option value="{{ wp.id }}">{{ wp.Name }}</option>

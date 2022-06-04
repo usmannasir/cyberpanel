@@ -395,18 +395,18 @@
                         <li>
                             <a href="{% url 'loadWebsitesHome' %}" title="{% trans 'WordPress' %}">
                                 <div class="glyph-icon icon-wordpress" title="{% trans 'WordPress' %}"></div>
-                                <span>{% trans "Wordpresss" %}</span>
+                                <span>{% trans "WordPresss" %}</span>
                             </a>
                         <div class="sidebar-submenu">
 
                                 <ul>
                                    {% if admin or createWebsite %}
                                          <li><a href="{% url 'createWordpress' %}"
-                                               title="{% trans 'Create Worpress' %}"><span>{% trans "Create Worpress" %}</span></a>
+                                               title="{% trans 'Deploy WordPress' %}"><span>{% trans "Deploy WordPress" %}</span></a>
                                         </li>
                                     {% endif %}
                                     <li><a href="{% url 'ListWPSites' %}"
-                                           title="{% trans 'List Websites' %}"><span>{% trans "List Worpress" %}</span></a>
+                                           title="{% trans 'List WordPress' %}"><span>{% trans "List WordPress" %}</span></a>
                                     </li>
                                     <li><a href="{% url 'ConfigurePlugins' %}"
                                            title="{% trans 'ConfigurePlugins' %}"><span>{% trans "Configure Plugins" %}</span></a>
