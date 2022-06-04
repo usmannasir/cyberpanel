@@ -882,16 +882,6 @@ autocreate_system_folders = On
                 pass
 
             try:
-                cursor.execute('ALTER TABLE `websiteFunctions_wpstaging` ADD CONSTRAINT `websiteFunctions_wps_owner_id_543d8aec_fk_websiteFu` FOREIGN KEY (`owner_id`) REFERENCES `websiteFunctions_wpsites` (`id`)')
-            except:
-                pass
-
-            try:
-                cursor.execute('ALTER TABLE `websiteFunctions_wpstaging` ADD CONSTRAINT `websiteFunctions_wps_wpsite_id_82843593_fk_websiteFu` FOREIGN KEY (`wpsite_id`) REFERENCES `websiteFunctions_wpsites` (`id`)')
-            except:
-                pass
-
-            try:
                 cursor.execute('CREATE TABLE `websiteFunctions_wpstaging` (`id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY, `owner_id` integer NOT NULL, `wpsite_id` integer NOT NULL)')
             except:
                 pass
