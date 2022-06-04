@@ -862,6 +862,51 @@ autocreate_system_folders = On
                 pass
 
             try:
+                cursor.execute('CREATE TABLE `websiteFunctions_wpplugins` (`id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY, `Name` varchar(255) NOT NULL, `config` longtext NOT NULL, `owner_id` integer NOT NULL)')
+            except:
+                pass
+
+            try:
+                cursor.execute('ALTER TABLE `websiteFunctions_wpplugins` ADD CONSTRAINT `websiteFunctions_wpp_owner_id_493a02c7_fk_loginSyst` FOREIGN KEY (`owner_id`) REFERENCES `loginSystem_administrator` (`id`)')
+            except:
+                pass
+
+            try:
+                cursor.execute('CREATE TABLE `websiteFunctions_wpsites` (`id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY, `title` varchar(255) NOT NULL, `path` varchar(255) NOT NULL, `FinalURL` varchar(255) NOT NULL, `AutoUpdates` varchar(100) NOT NULL, `PluginUpdates` varchar(15) NOT NULL, `ThemeUpdates` varchar(15) NOT NULL, `date` datetime(6) NOT NULL, `WPLockState` integer NOT NULL, `owner_id` integer NOT NULL)')
+            except:
+                pass
+
+            try:
+                cursor.execute('ALTER TABLE `websiteFunctions_wpsites` ADD CONSTRAINT `websiteFunctions_wps_owner_id_6d67df2a_fk_websiteFu` FOREIGN KEY (`owner_id`) REFERENCES `websiteFunctions_websites` (`id`)')
+            except:
+                pass
+
+            try:
+                cursor.execute('ALTER TABLE `websiteFunctions_wpstaging` ADD CONSTRAINT `websiteFunctions_wps_owner_id_543d8aec_fk_websiteFu` FOREIGN KEY (`owner_id`) REFERENCES `websiteFunctions_wpsites` (`id`)')
+            except:
+                pass
+
+            try:
+                cursor.execute('ALTER TABLE `websiteFunctions_wpstaging` ADD CONSTRAINT `websiteFunctions_wps_wpsite_id_82843593_fk_websiteFu` FOREIGN KEY (`wpsite_id`) REFERENCES `websiteFunctions_wpsites` (`id`)')
+            except:
+                pass
+
+            try:
+                cursor.execute('CREATE TABLE `websiteFunctions_wpstaging` (`id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY, `owner_id` integer NOT NULL, `wpsite_id` integer NOT NULL)')
+            except:
+                pass
+
+            try:
+                cursor.execute('ALTER TABLE `websiteFunctions_wpstaging` ADD CONSTRAINT `websiteFunctions_wps_owner_id_543d8aec_fk_websiteFu` FOREIGN KEY (`owner_id`) REFERENCES `websiteFunctions_wpsites` (`id`);')
+            except:
+                pass
+
+            try:
+                cursor.execute('ALTER TABLE `websiteFunctions_wpstaging` ADD CONSTRAINT `websiteFunctions_wps_wpsite_id_82843593_fk_websiteFu` FOREIGN KEY (`wpsite_id`) REFERENCES `websiteFunctions_wpsites` (`id`)')
+            except:
+                pass
+
+            try:
                 connection.close()
             except:
                 pass
