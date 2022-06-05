@@ -20,27 +20,25 @@
                     <form name="websiteCreationForm" action="/" id="createPackages"
                           class="form-horizontal bordered-row panel-body">
 
-                            <label>{% trans "Plugin Bucket Name" %}</label>
+                        <label>{% trans "Plugin Bucket Name" %} <img ng-hide="webSiteCreationLoading"
+                                                                     src="{% static 'images/loading.gif' %}"></label>
 
-                                <input name="PluginbucketName" type="text" class="form-control"
-                                       ng-model="PluginbucketName"
-                                       required>
+                        <input name="PluginbucketName" type="text" class="form-control"
+                               ng-model="PluginbucketName"
+                               required>
 
 
+                        <label style="margin-top: 15px;">{% trans "Search Plugin Name" %}</label>
 
+                        <input name="searchcontent" type="text" class="form-control" ng-model="searchcontent"
+                               ng-keyup="$event.keyCode == 13 ? SearchPluginName('add') : null"
+                               placeholder="{% trans "Search Plugin...." %}" required>
 
-                            <label style="margin-top: 15px;">{% trans "Search Plugin Name" %}</label>
-
-                                <input name="searchcontent" type="text" class="form-control" ng-model="searchcontent"
-                                       ng-keyup="SearchPluginName('add')"
-                                       placeholder="{% trans "Search Plugin...." %}" required>
-
-                            <div id="mysearch" class="col-lg-12"  style="display: none; border-top: none!important;
+                        <div id="mysearch" class="col-lg-12" style="display: none; border-top: none!important;
                                                             border: 1px solid  rgba(90, 91, 92, 0.7);
                                                             position: absolute; z-index: 1;
                                                             background-color: #FFFFFF">
-                            </div>
-
+                        </div>
 
 
                         <h3 style="margin-top: 20px;">Selected Plugin</h3>

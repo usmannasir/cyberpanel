@@ -63,9 +63,7 @@ class WebsiteManager:
         currentACL = ACLManager.loadedACL(userID)
         adminNames = ACLManager.loadAllUsers(userID)
         packagesName = ACLManager.loadPackages(userID, currentACL)
-        phps = PHPManager.findPHPVersions()
         FinalVersions = []
-        #logging.CyberCPLogFileWriter.writeToFile("jassssssssss...............")
         userobj = Administrator.objects.get(pk=userID)
         counter = 0
         try:
@@ -78,13 +76,10 @@ class WebsiteManager:
                 if versions['current'] not in FinalVersions:
                     FinalVersions.append(versions['current'])
                     counter = counter + 1
-
         except:
             FinalVersions = ['5.6', '5.5.3', '5.5.2']
 
         Plugins = wpplugins.objects.filter(owner=userobj)
-
-        # logging.CyberCPLogFileWriter.writeToFile("FinalVersions:%s"+str(FinalVersions))
 
         Data = {'packageList': packagesName, "owernList": adminNames, 'WPVersions': FinalVersions, 'Plugins': Plugins }
         proc = httpProc(request, 'websiteFunctions/WPCreate.html',
@@ -94,17 +89,18 @@ class WebsiteManager:
     def ListWPSites(self, request=None, userID=None, DeleteID=None):
         currentACL = ACLManager.loadedACL(userID)
 
-        userobj = Administrator.objects.get(pk=userID)
-        webobjs = Websites.objects.all()
+        admin = Administrator.objects.get(pk=userID)
         tata = {}
         tata['wp']=[]
         tata['wpsites']=[]
-        tata['wp'] = WPSites.objects.all()
+        tata['wp'] = ACLManager.GetALLWPObjects(currentACL, userID)
 
         try:
             if DeleteID != None:
                 WPDelete = WPSites.objects.get(pk=DeleteID)
-                WPDelete.delete()
+
+                if ACLManager.checkOwnership(WPDelete.owner.domain, admin, currentACL) == 1:
+                    WPDelete.delete()
 
         except BaseException as msg:
             pass
@@ -115,8 +111,6 @@ class WebsiteManager:
                                     'url': sub.FinalURL
                                     })
 
-
-
         proc = httpProc(request, 'websiteFunctions/WPsitesList.html',
                         {"wpsite": tata['wpsites']})
         return proc.render()
@@ -125,6 +119,12 @@ class WebsiteManager:
         Data = {}
         currentACL = ACLManager.loadedACL(userID)
         WPobj = WPSites.objects.get(pk=WPid)
+        admin = Administrator.objects.get(pk=userID)
+
+        if ACLManager.checkOwnership(WPobj.owner.domain, admin, currentACL) == 1:
+            pass
+        else:
+            return ACLManager.loadError()
 
         Data['wpsite'] = WPobj
 
@@ -132,11 +132,10 @@ class WebsiteManager:
             DeleteID = request.GET.get('DeleteID', None)
 
             if DeleteID != None:
-                wstagingDelete = WPStaging.objects.get(pk=DeleteID)
+                wstagingDelete = WPStaging.objects.get(pk=DeleteID, owner=WPobj)
                 wstagingDelete.delete()
 
         except BaseException as msg:
-
             da= str(msg)
 
         proc = httpProc(request, 'websiteFunctions/WPsiteHome.html',
@@ -146,7 +145,14 @@ class WebsiteManager:
     def AutoLogin(self, request=None, userID=None):
 
         WPid = request.GET.get('id')
+        currentACL = ACLManager.loadedACL(userID)
         WPobj = WPSites.objects.get(pk=WPid)
+        admin = Administrator.objects.get(pk=userID)
+
+        if ACLManager.checkOwnership(WPobj.owner.domain, admin, currentACL) == 1:
+            pass
+        else:
+            return ACLManager.loadError()
 
         #php = VirtualHost.getPHPString(self.data['PHPVersion'])
         #FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
@@ -176,26 +182,20 @@ class WebsiteManager:
                         data, 'createWebsite')
         return proc.render()
 
-
-
     def ConfigurePlugins(self, request=None, userID=None, data=None):
 
         DataPass ={}
         currentACL = ACLManager.loadedACL(userID)
-        adminNames = ACLManager.loadAllUsers(userID)
-        packagesName = ACLManager.loadPackages(userID, currentACL)
-        phps = PHPManager.findPHPVersions()
         userobj = Administrator.objects.get(pk=userID)
 
 
         Selectedplugins = wpplugins.objects.filter(owner = userobj)
         #data['Selectedplugins'] = wpplugins.objects.filter(ProjectOwner=HostingCompany)
 
-        Data = {'packageList': packagesName, "owernList": adminNames, 'phps': phps, 'Selectedplugins' : Selectedplugins,}
+        Data = {'Selectedplugins' : Selectedplugins,}
         proc = httpProc(request, 'websiteFunctions/WPConfigurePlugins.html',
                         Data, 'createWebsite')
         return proc.render()
-
 
     def Addnewplugin(self, request=None, userID=None, data=None):
         currentACL = ACLManager.loadedACL(userID)
@@ -233,7 +233,6 @@ class WebsiteManager:
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-
     def AddNewpluginAjax(self, userID=None, data=None):
         try:
             currentACL = ACLManager.loadedACL(userID)
@@ -260,7 +259,6 @@ class WebsiteManager:
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-
     def EidtPlugin(self,request=None, userID=None, pluginbID=None):
         Data ={}
         currentACL = ACLManager.loadedACL(userID)
@@ -274,7 +272,6 @@ class WebsiteManager:
         proc = httpProc(request, 'websiteFunctions/WPEidtPlugin.html',
                         Data, 'createWebsite')
         return proc.render()
-
 
     def deletesPlgin(self, userID=None, data=None,):
         try:
@@ -303,7 +300,6 @@ class WebsiteManager:
             data_ret = {'status': 0, 'deletesPlgin': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
-
 
     def Addplugineidt(self, userID=None, data=None,):
         try:
@@ -342,7 +338,6 @@ class WebsiteManager:
             data_ret = {'status': 0, 'deletesPlgin': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
-
 
     def modifyWebsite(self, request=None, userID=None, data=None):
         currentACL = ACLManager.loadedACL(userID)
@@ -429,7 +424,6 @@ class WebsiteManager:
         })
         return proc.render()
 
-
     def FetchWPdata(self, userID=None, data=None):
         try:
             currentACL = ACLManager.loadedACL(userID)
@@ -437,18 +431,21 @@ class WebsiteManager:
 
             WPManagerID = data['WPid']
             wpsite = WPSites.objects.get(pk=WPManagerID)
-            path = wpsite.path
 
+            if ACLManager.checkOwnership(wpsite.owner.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
+            path = wpsite.path
 
             Webobj= Websites.objects.get(pk=wpsite.owner_id)
 
             Vhuser = Webobj.externalApp
             PHPVersion = Webobj.phpSelection
 
-
             php = ACLManager.getPHPString(PHPVersion)
             FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
-
 
 
             command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp core version --skip-plugins --skip-themes --path=%s' % (Vhuser, FinalPHPPath, path)
@@ -506,7 +503,6 @@ class WebsiteManager:
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-
     def GetCurrentPlugins(self, userID=None, data=None):
         try:
 
@@ -515,6 +511,12 @@ class WebsiteManager:
 
             WPManagerID = data['WPid']
             wpsite = WPSites.objects.get(pk=WPManagerID)
+
+            if ACLManager.checkOwnership(wpsite.owner.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
             path = wpsite.path
 
             Webobj= Websites.objects.get(pk=wpsite.owner_id)
@@ -540,7 +542,6 @@ class WebsiteManager:
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-
     def GetCurrentThemes(self, userID=None, data=None):
         try:
 
@@ -549,6 +550,12 @@ class WebsiteManager:
 
             WPManagerID = data['WPid']
             wpsite = WPSites.objects.get(pk=WPManagerID)
+
+            if ACLManager.checkOwnership(wpsite.owner.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
             path = wpsite.path
 
             Webobj= Websites.objects.get(pk=wpsite.owner_id)
@@ -577,7 +584,6 @@ class WebsiteManager:
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-
     def fetchstaging(self, userID=None, data=None):
         try:
 
@@ -587,6 +593,10 @@ class WebsiteManager:
             WPManagerID = data['WPid']
             wpsite = WPSites.objects.get(pk=WPManagerID)
 
+            if ACLManager.checkOwnership(wpsite.owner.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
 
             from plogical.phpUtilities import phpUtilities
 
@@ -604,8 +614,6 @@ class WebsiteManager:
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-
-
     def SaveUpdateConfig(self, userID=None, data=None):
         try:
 
@@ -618,6 +626,11 @@ class WebsiteManager:
             AutomaticUpdates = data['AutomaticUpdates']
 
             wpsite = WPSites.objects.get(pk=WPManagerID)
+
+            if ACLManager.checkOwnership(wpsite.owner.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
 
             wpsite.AutoUpdates = AutomaticUpdates
             wpsite.PluginUpdates = Plugins
@@ -634,7 +647,6 @@ class WebsiteManager:
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-
     def UpdatePlugins(self, userID=None, data=None):
         try:
 
@@ -645,6 +657,12 @@ class WebsiteManager:
             plugin = data['plugin']
             pluginarray = data['pluginarray']
             wpsite = WPSites.objects.get(pk=WPManagerID)
+
+            if ACLManager.checkOwnership(wpsite.owner.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
             path = wpsite.path
 
             Webobj= Websites.objects.get(pk=wpsite.owner_id)
@@ -679,7 +697,6 @@ class WebsiteManager:
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-
     def UpdateThemes(self, userID=None, data=None):
         try:
 
@@ -691,6 +708,12 @@ class WebsiteManager:
             Theme = data['Theme']
             Themearray = data['Themearray']
             wpsite = WPSites.objects.get(pk=WPManagerID)
+
+            if ACLManager.checkOwnership(wpsite.owner.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
             path = wpsite.path
 
             Webobj= Websites.objects.get(pk=wpsite.owner_id)
@@ -731,8 +754,6 @@ class WebsiteManager:
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-
-
     def DeletePlugins(self, userID=None, data=None):
         try:
 
@@ -743,6 +764,12 @@ class WebsiteManager:
             plugin = data['plugin']
             pluginarray = data['pluginarray']
             wpsite = WPSites.objects.get(pk=WPManagerID)
+
+            if ACLManager.checkOwnership(wpsite.owner.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
             path = wpsite.path
 
             Webobj= Websites.objects.get(pk=wpsite.owner_id)
@@ -776,7 +803,6 @@ class WebsiteManager:
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-
     def DeleteThemes(self, userID=None, data=None):
         try:
 
@@ -790,6 +816,11 @@ class WebsiteManager:
             path = wpsite.path
 
             Webobj= Websites.objects.get(pk=wpsite.owner_id)
+
+            if ACLManager.checkOwnership(wpsite.owner.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
 
             Vhuser = Webobj.externalApp
             PHPVersion = Webobj.phpSelection
@@ -822,7 +853,6 @@ class WebsiteManager:
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-
     def ChangeStatus(self, userID=None, data=None):
         try:
 
@@ -832,6 +862,12 @@ class WebsiteManager:
             WPManagerID = data['WPid']
             plugin = data['plugin']
             wpsite = WPSites.objects.get(pk=WPManagerID)
+
+            if ACLManager.checkOwnership(wpsite.owner.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
             path = wpsite.path
 
             Webobj= Websites.objects.get(pk=wpsite.owner_id)
@@ -868,7 +904,6 @@ class WebsiteManager:
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-
     def ChangeStatusThemes(self, userID=None, data=None):
         try:
             # logging.CyberCPLogFileWriter.writeToFile("Error WP ChangeStatusThemes ....... %s")
@@ -878,6 +913,12 @@ class WebsiteManager:
             WPManagerID = data['WPid']
             Theme = data['theme']
             wpsite = WPSites.objects.get(pk=WPManagerID)
+
+            if ACLManager.checkOwnership(wpsite.owner.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
             path = wpsite.path
 
             Webobj= Websites.objects.get(pk=wpsite.owner_id)
@@ -914,7 +955,6 @@ class WebsiteManager:
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-
     def CreateStagingNow(self, userID=None, data=None):
         try:
             currentACL = ACLManager.loadedACL(userID)
@@ -926,6 +966,13 @@ class WebsiteManager:
             extraArgs['StagingName'] = data['StagingName']
             extraArgs['WPid'] = data['WPid']
             extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
+
+            wpsite = WPSites.objects.get(pk=data['WPid'])
+
+            if ACLManager.checkOwnership(wpsite.owner.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
 
             background = ApplicationInstaller('CreateStagingNow', extraArgs)
             background.start()
@@ -943,9 +990,6 @@ class WebsiteManager:
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-
-
-
     def UpdateWPSettings(self, userID=None, data=None):
         try:
 
@@ -956,6 +1000,12 @@ class WebsiteManager:
             setting = data['setting']
             settingValue = data['settingValue']
             wpsite = WPSites.objects.get(pk=WPManagerID)
+
+            if ACLManager.checkOwnership(wpsite.owner.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
             path = wpsite.path
 
             Webobj= Websites.objects.get(pk=wpsite.owner_id)
@@ -1047,18 +1097,22 @@ class WebsiteManager:
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-
     def submitWorpressCreation(self, userID=None, data=None):
         try:
             currentACL = ACLManager.loadedACL(userID)
             admin = Administrator.objects.get(pk=userID)
 
             extraArgs = {}
+            extraArgs['currentACL'] = currentACL
             extraArgs['adminID'] = admin.pk
             extraArgs['domainName'] = data['domain']
             extraArgs['WPVersion'] = data['WPVersion']
             extraArgs['blogTitle'] = data['title']
-            extraArgs['pluginbucket'] = data['pluginbucket']
+            try:
+                extraArgs['pluginbucket'] = data['pluginbucket']
+            except:
+                extraArgs['pluginbucket'] = '-1'
+
             extraArgs['adminUser'] = data['adminUser']
             extraArgs['PasswordByPass'] = data['PasswordByPass']
             extraArgs['adminPassword'] = data['PasswordByPass']

@@ -1,6 +1,6 @@
 {% extends "baseTemplate/index.html" %}
 {% load i18n %}
-{% block title %}{% trans "Create New WordPress - CyberPanel" %}{% endblock %}
+{% block title %}{% trans "Deploy WordPress - CyberPanel" %}{% endblock %}
 {% block content %}
 
     {% load static %}
@@ -106,7 +106,7 @@
                         <div ng-hide="installationDetailsForm" class="form-group">
                             <label class="col-sm-3 control-label">{% trans "Plugin/Theme" %}</label>
                             <div class="col-sm-6">
-                                <select id="pliginbucket" ng-model="pluginbucket" class="form-control">
+                                <select ng-model="pluginbucket" class="form-control">
                                     <option value="-1" selected>Select Plugin Bucket</option>
                                     {% for wp in Plugins %}
                                         <option value="{{ wp.id }}">{{ wp.Name }}</option>

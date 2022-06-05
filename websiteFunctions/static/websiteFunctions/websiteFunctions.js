@@ -50,8 +50,10 @@ function FinalDeletePluginBuucket() {
 var SPVal;
 
 app.controller('WPAddNewPlugin', function ($scope, $http, $timeout, $window, $compile) {
+    $scope.webSiteCreationLoading = true;
 
     $scope.SearchPluginName = function (val) {
+        $scope.webSiteCreationLoading = false;
         SPVal = val;
         url = "/websites/SearchOnkeyupPlugin";
 
@@ -72,6 +74,7 @@ app.controller('WPAddNewPlugin', function ($scope, $http, $timeout, $window, $co
 
 
         function ListInitialDatas(response) {
+            $scope.webSiteCreationLoading = true;
 
             if (response.data.status === 1) {
                 if (SPVal == 'add') {
@@ -138,12 +141,19 @@ app.controller('WPAddNewPlugin', function ($scope, $http, $timeout, $window, $co
         function ListInitialDatas(response) {
 
             if (response.data.status === 1) {
-                alert("added..........");
+                new PNotify({
+                    title: 'Success!',
+                    text: 'Bucket created.',
+                    type: 'success'
+                });
                 location.reload();
             } else {
 
-                // $scope.errorMessage = response.data.error_message;
-                alert("Status not = 1: Error..." + response.data.error_message)
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
             }
 
 
@@ -275,7 +285,7 @@ app.controller('createWordpress', function ($scope, $http, $timeout, $compile, $
         var adminEmail = $scope.adminEmail;
         var WPPassword = $scope.WPPassword;
         var WPVersions = $scope.WPVersions;
-        var pluginbucket = $('#pliginbucket').val();
+        var pluginbucket = $scope.pluginbucket;
         var autoupdates = $scope.autoupdates;
         var pluginupdates = $scope.pluginupdates;
         var themeupdates = $scope.themeupdates;
@@ -305,7 +315,7 @@ app.controller('createWordpress', function ($scope, $http, $timeout, $compile, $
 
 
         function ListInitialDatas(response) {
-
+            $scope.webSiteCreationLoading = true;
             if (response.data.status === 1) {
                 statusFile = response.data.tempStatusPath;
                 getCreationStatus();
@@ -338,7 +348,6 @@ app.controller('createWordpress', function ($scope, $http, $timeout, $compile, $
         $scope.goBackDisable = true;
         $("#installProgress").css("width", "0%");
     };
-
     function getCreationStatus() {
 
         url = "/websites/installWordpressStatus";
@@ -359,7 +368,6 @@ app.controller('createWordpress', function ($scope, $http, $timeout, $compile, $
 
         function ListInitialDatas(response) {
 
-
             if (response.data.abort === 1) {
 
                 if (response.data.installStatus === 1) {
@@ -377,7 +385,8 @@ app.controller('createWordpress', function ($scope, $http, $timeout, $compile, $
                     $scope.currentStatus = response.data.currentStatus;
                     $timeout.cancel();
 
-                } else {
+                }
+                else {
 
                     $scope.webSiteCreationLoading = true;
                     $scope.installationDetailsForm = true;
@@ -396,6 +405,7 @@ app.controller('createWordpress', function ($scope, $http, $timeout, $compile, $
                 }
 
             } else {
+                $scope.webSiteCreationLoading = false;
                 $("#installProgress").css("width", response.data.installationProgress + "%");
                 $scope.installPercentage = response.data.installationProgress;
                 $scope.currentStatus = response.data.currentStatus;

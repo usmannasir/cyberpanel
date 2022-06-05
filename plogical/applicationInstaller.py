@@ -1689,30 +1689,39 @@ $parameters = array(
             DataToPass['mailDomain'] = 0
             UserID = self.data['adminID']
 
-            ab = WebsiteManager()
-            coreResult = ab.submitWebsiteCreation(UserID, DataToPass)
-            coreResult1 = json.loads((coreResult).content)
-            logging.writeToFile("Creating website result....%s"%coreResult1)
-            reutrntempath = coreResult1['tempStatusPath']
-            while (1):
-                lastLine = open(reutrntempath, 'r').read()
-                logging.writeToFile("Error web creating lastline ....... %s" % lastLine)
-                if lastLine.find('[200]') > -1:
-                    break
-                elif lastLine.find('[404]') > -1:
-                    statusFile = open(currentTemp, 'w')
-                    statusFile.writelines('Failed to Create Website: error: %s. [404]' % lastLine)
-                    statusFile.close()
-                    return 0
-                else:
-                    statusFile = open(currentTemp, 'w')
-                    statusFile.writelines('Creating Website....,20')
-                    statusFile.close()
-                    time.sleep(2)
+            try:
+                website = Websites.objects.get(domain=DataToPass['domainName'])
 
-            statusFile = open(tempStatusPath, 'w')
-            statusFile.writelines('Installing WordPress....,30')
-            statusFile.close()
+                if ACLManager.checkOwnership(website.domain, self.extraArgs['adminID'], self.extraArgs['currentACL']) == 0:
+                    statusFile = open(tempStatusPath, 'w')
+                    statusFile.writelines('You dont own this site.[404]')
+                    statusFile.close()
+            except:
+
+                ab = WebsiteManager()
+                coreResult = ab.submitWebsiteCreation(UserID, DataToPass)
+                coreResult1 = json.loads((coreResult).content)
+                logging.writeToFile("Creating website result....%s"%coreResult1)
+                reutrntempath = coreResult1['tempStatusPath']
+                while (1):
+                    lastLine = open(reutrntempath, 'r').read()
+                    logging.writeToFile("Error web creating lastline ....... %s" % lastLine)
+                    if lastLine.find('[200]') > -1:
+                        break
+                    elif lastLine.find('[404]') > -1:
+                        statusFile = open(currentTemp, 'w')
+                        statusFile.writelines('Failed to Create Website: error: %s. [404]' % lastLine)
+                        statusFile.close()
+                        return 0
+                    else:
+                        statusFile = open(currentTemp, 'w')
+                        statusFile.writelines('Creating Website....,20')
+                        statusFile.close()
+                        time.sleep(2)
+
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines('Installing WordPress....,30')
+                statusFile.close()
 
             logging.writeToFile("Pluginbucket  ....... %s" % str(self.data['pluginbucket']))
 

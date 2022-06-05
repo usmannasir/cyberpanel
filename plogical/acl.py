@@ -18,6 +18,7 @@ from shlex import split
 from .CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from dockerManager.models import Containers
 from re import compile
+
 class ACLManager:
 
 
@@ -916,5 +917,17 @@ class ACLManager:
                 dic['dnsAsWhole'] = 1
             else:
                 dic['dnsAsWhole'] = 0
+
+    @staticmethod
+    def GetALLWPObjects(currentACL, userID):
+        from websiteFunctions.models import WPSites
+
+        wpsites = WPSites.objects.none()
+        websites = ACLManager.findWebsiteObjects(currentACL, userID)
+
+        for website in websites:
+            wpsites |= website.wpsites_set.all()
+
+        return wpsites
 
 
