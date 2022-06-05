@@ -1826,7 +1826,6 @@ $parameters = array(
             logging.writeToFile("Error WP UpdateWPTheme ....... %s" % str(msg))
             return 0
 
-
     def UpdateWPPlugin(self):
         try:
             FinalPHPPath = self.data['FinalPHPPath']
@@ -1945,13 +1944,25 @@ $parameters = array(
         try:
             from websiteFunctions.website import WebsiteManager
             import json
+
+            ## Source object
+
+            wpobj = WPSites.objects.get(pk=self.data['WPid'])
+
+            ### Create secure folder
+            ACLManager.CreateSecureDir()
+            tempPath = '%s/%s' % ('/usr/local/CyberCP/tmp', str(randint(1000, 9999)))
+
+            command = f'mkdir -p {tempPath}'
+            ProcessUtilities.executioner(command)
+
+            command = f'chown -R {wpobj.owner.externalApp}:{wpobj.owner.externalApp} {tempPath}'
+            ProcessUtilities.executioner(command)
+
             tempStatusPath = self.data['tempStatusPath']
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines('Creating Website...,15')
-
             statusFile.close()
-
-            wpobj = WPSites.objects.get(pk=self.data['WPid'])
 
             DataToPass = {}
 
@@ -1970,8 +1981,10 @@ $parameters = array(
             ab = WebsiteManager()
             coreResult = ab.submitWebsiteCreation(UserID, DataToPass)
             coreResult1 = json.loads((coreResult).content)
-            logging.writeToFile("Creating website result....%s" % coreResult1)
+            if os.path.exists('/usr/local/CyberCP/debug'):
+                logging.writeToFile("Creating website result....%s" % coreResult1)
             reutrntempath = coreResult1['tempStatusPath']
+
             while (1):
                 lastLine = open(reutrntempath, 'r').read()
 
@@ -2011,13 +2024,17 @@ $parameters = array(
 
             path= wpobj.path
 
-            Vhuser = website.externalApp
             PHPVersion = website.phpSelection
             php = ACLManager.getPHPString(PHPVersion)
             FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
 
-            command = '%s -d error_reporting=0 /usr/bin/wp core config --dbname=%s --dbuser=%s --dbpass=%s --dbhost=%s:%s --path=%s' % (
-            FinalPHPPath, dbNameRestore, dbUser, dbPassword, ApplicationInstaller.LOCALHOST, ApplicationInstaller.PORT, path)
+            ## Staging site
+            StagingPath = f'/home/{website.domain}/public_html'
+
+            command = f'{FinalPHPPath} -d error_reporting=0 /usr/bin/wp core download --path={StagingPath}'
+            ProcessUtilities.executioner(command, website.externalApp)
+
+            command = f'{FinalPHPPath} -d error_reporting=0 /usr/bin/wp core config --dbname={dbNameRestore} --dbuser={dbUser} --dbpass={dbPassword} --dbhost={ApplicationInstaller.LOCALHOST}:{ApplicationInstaller.PORT} --path={StagingPath}'
             ProcessUtilities.executioner(command, website.externalApp)
 
             try:
@@ -2029,68 +2046,73 @@ $parameters = array(
 
             ### Get table prefix of master site
 
-            command = '%s -d error_reporting=0 /usr/bin/wp config get table_prefix --allow-root --skip-plugins --skip-themes --path=%s' % (
-                FinalPHPPath, masterPath)
-            TablePrefix = ProcessUtilities.outputExecutioner(command).rstrip('\n')
+            command = f'{FinalPHPPath} -d error_reporting=0 /usr/bin/wp config get table_prefix --skip-plugins --skip-themes --path={path}'
+            TablePrefix = ProcessUtilities.outputExecutioner(command, wpobj.owner.externalApp).rstrip('\n')
+
+            ## Export database from master site
+
+            command = f'{FinalPHPPath} -d error_reporting=0 /usr/bin/wp --allow-root --skip-plugins --skip-themes --path={path} db export {tempPath}/dbexport-stage.sql'
+            ProcessUtilities.executioner(command, wpobj.owner.externalApp)
+
+            ## Copy wp content folder to securey path
+
+            command = f'{FinalPHPPath} -d error_reporting=0 /usr/bin/wp theme path --skip-plugins --skip-themes --allow-root --path={path}'
+            WpContentPath = ProcessUtilities.outputExecutioner(command, wpobj.owner.externalApp).splitlines()[-1].replace('themes', '')
+
+            command = f'cp -R {WpContentPath} {tempPath}/'
+            ProcessUtilities.executioner(command, wpobj.owner.externalApp)
+
+            command = f'cp -f {path}/.htaccess {tempPath}/'
+            ProcessUtilities.executioner(command, wpobj.owner.externalApp)
 
             ### Set table prefix
 
-            command = '%s -d error_reporting=0 /usr/bin/wp config set table_prefix %s --path=%s' % (
-            FinalPHPPath, TablePrefix, path)
+            command = f'{FinalPHPPath} -d error_reporting=0 /usr/bin/wp config set table_prefix {TablePrefix} --path={StagingPath}'
             ProcessUtilities.executioner(command, website.externalApp)
 
-            ## Exporting and importing database
+            ### Change permissions of temp folder to staging site
 
-            command = '%s -d error_reporting=0 /usr/bin/wp --allow-root --skip-plugins --skip-themes --path=%s db export %s/dbexport-stage.sql' % (
-            FinalPHPPath, masterPath, path)
+            command = f'chown -R {website.externalApp}:{website.externalApp} {tempPath}'
             ProcessUtilities.executioner(command)
 
-            ## Import
 
-            command = '%s -d error_reporting=0 /usr/bin/wp --allow-root --skip-plugins --skip-themes --path=%s --quiet db import %s/dbexport-stage.sql' % (
-            FinalPHPPath, path, path)
-            ProcessUtilities.executioner(command)
+            ## Import Database
+
+            command = f'{FinalPHPPath} -d error_reporting=0 /usr/bin/wp --allow-root --skip-plugins --skip-themes --path={StagingPath} --quiet db import {tempPath}/dbexport-stage.sql'
+            ProcessUtilities.executioner(command, website.externalApp)
 
             try:
-                command = 'rm -f %s/dbexport-stage.sql' % (path)
-                ProcessUtilities.executioner(command)
+                command = 'rm -f %s/dbexport-stage.sql' % (tempPath)
+                ProcessUtilities.executioner(command, website.externalApp)
             except:
                 pass
 
-            ## Sync WP-Content Folder
+            ## Move wp-content from temp tp staging
 
-            command = '%s -d error_reporting=0 /usr/bin/wp theme path --skip-plugins --skip-themes --allow-root --path=%s' % (FinalPHPPath, masterPath)
-            WpContentPath = ProcessUtilities.outputExecutioner(command).splitlines()[-1].replace('themes', '')
+            command = f'rm -rf {StagingPath}/wp-content'
+            ProcessUtilities.executioner(command, website.externalApp)
 
-            command = 'cp -R %s %s/' % (WpContentPath, path)
-            ProcessUtilities.executioner(command)
+            command = f'mv {tempPath}/wp-content {StagingPath}/'
+            ProcessUtilities.executioner(command, website.externalApp)
 
             ## Copy htaccess
 
-            command = 'cp -f %s/.htaccess %s/' % (WpContentPath.replace('/wp-content/', ''), path)
-            ProcessUtilities.executioner(command)
+            command = f'cp -f {tempPath}/.htaccess {StagingPath}/'
+            ProcessUtilities.executioner(command, wpobj.owner.externalApp)
 
             ## Search and replace url
 
-            command = '%s -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --allow-root --path=%s "%s" "%s"' % (FinalPHPPath, path, replaceDomain, domain)
-            ProcessUtilities.executioner(command)
+            command = f'{FinalPHPPath} -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --path={StagingPath} "{replaceDomain}" "{domain}"'
+            ProcessUtilities.executioner(command, website.externalApp)
 
-            command = '%s -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --allow-root --path=%s "www.%s" "%s"' % (FinalPHPPath, path, domain, domain)
-            ProcessUtilities.executioner(command)
+            command = f'{FinalPHPPath} -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --path={StagingPath} "www.{replaceDomain}" "{domain}"'
+            ProcessUtilities.executioner(command,website.externalApp)
 
-            command = '%s -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --allow-root --path=%s "https://%s" "http://%s"' % (
-            FinalPHPPath, path, domain, domain)
-            ProcessUtilities.executioner(command)
-
-
-            from filemanager.filemanager import FileManager
-
-            fm = FileManager(None, None)
-            fm.fixPermissions(masterDomain)
+            command = f'{FinalPHPPath} -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --path={StagingPath} "https://{domain}" "http://{domain}"'
+            ProcessUtilities.executioner(command,website.externalApp)
 
             from plogical.installUtilities import installUtilities
             installUtilities.reStartLiteSpeed()
-
 
 
             wpsite = WPSites(owner=website,  title=self.data['StagingName'],
@@ -2100,14 +2122,14 @@ $parameters = array(
 
             WPStaging(wpsite=wpsite, owner=wpobj).save()
             statusFile = open(currentTemp, 'w')
-            statusFile.writelines('statging Created..,[200]')
+            statusFile.writelines('Staging site created,[200]')
             statusFile.close()
 
 
-
-
-
         except BaseException as msg:
+            # statusFile = open(currentTemp, 'w')
+            # statusFile.writelines(f'{str(msg)}[404]')
+            # statusFile.close()
             logging.writeToFile("Error WP ChangeStatusThemes ....... %s" % str(msg))
             return 0
 
