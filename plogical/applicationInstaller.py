@@ -1952,6 +1952,7 @@ $parameters = array(
             ### Create secure folder
             ACLManager.CreateSecureDir()
             tempPath = '%s/%s' % ('/usr/local/CyberCP/tmp', str(randint(1000, 9999)))
+            self.tempPath = tempPath
 
             command = f'mkdir -p {tempPath}'
             ProcessUtilities.executioner(command)
@@ -1960,6 +1961,7 @@ $parameters = array(
             ProcessUtilities.executioner(command)
 
             tempStatusPath = self.data['tempStatusPath']
+            self.tempStatusPath = tempStatusPath
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines('Creating Website...,15')
             statusFile.close()
@@ -2120,6 +2122,9 @@ $parameters = array(
                              FinalURL='%s' % (self.data['StagingDomain']))
             wpsite.save()
 
+            command = f'rm -rf {tempPath}'
+            ProcessUtilities.executioner(command)
+
             WPStaging(wpsite=wpsite, owner=wpobj).save()
             statusFile = open(currentTemp, 'w')
             statusFile.writelines('Staging site created,[200]')
@@ -2127,9 +2132,11 @@ $parameters = array(
 
 
         except BaseException as msg:
-            # statusFile = open(currentTemp, 'w')
-            # statusFile.writelines(f'{str(msg)}[404]')
-            # statusFile.close()
+            command = f'rm -rf {self.tempPath}'
+            ProcessUtilities.executioner(command)
+            statusFile = open(self.tempStatusPath, 'w')
+            statusFile.writelines(f'{str(msg)}[404]')
+            statusFile.close()
             logging.writeToFile("Error WP ChangeStatusThemes ....... %s" % str(msg))
             return 0
 
