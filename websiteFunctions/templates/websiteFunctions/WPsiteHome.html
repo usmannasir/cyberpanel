@@ -18,7 +18,7 @@
                                        src="{% static 'images/loading.gif' %}"></p>
         </div>
 
-        <div class="panel" >
+        <div class="panel">
             <div class="panel-body">
                 <h3 class="content-box-header">
                     {% trans "WordPress Manager" %}
@@ -338,30 +338,29 @@
                                         </div>
                                     </div>
 
-                                    <div ng-hide="installationProgress" class="form-group">
-                                        <label class="col-sm-3 control-label"></label>
-                                        <div class="col-sm-4">
+                                    <div ng-hide="installationProgress" class="form-group center-div">
+                                        <div class="col-sm-12">
                                             <button type="button" ng-disabled="goBackDisable"
                                                     ng-click="goBack()"
                                                     class="btn btn-primary btn-lg center-div">{% trans "Go Back" %}</button>
                                         </div>
                                     </div>
+                                    <div class="form-group">
+                                        <table class="table table-condensed">
+                                            <thead>
+                                            <tr>
+                                                <th>Name</th>
+                                                <th>Domain</th>
+                                                <th>Path</th>
+                                                <th>Action</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody id="StagingBody">
+                                            </tbody>
+                                        </table>
 
-                                    <br>
-                                    <br>
-                                    <h3>List staging site</h3>
-                                    <table class="table table-condensed">
-                                        <thead>
-                                        <tr>
-                                            <th>Name</th>
-                                            <th>Domain</th>
-                                            <th>Path</th>
-                                            <th>Action</th>
-                                        </tr>
-                                        </thead>
-                                        <tbody id="StagingBody">
-                                        </tbody>
-                                    </table>
+                                    </div>
+
                                 </div>
                             </div>
                         </div>
@@ -474,6 +473,41 @@
                     </div>
 
 
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="DeployToProduction" class="modal fade" role="dialog">
+        <div class="modal-dialog">
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;
+                    </button>
+                    <h4 class="modal-title">DeployToProduction
+                        <img ng-hide="$parent.cyberPanelLoading"
+                             src="/static/images/loading.gif"
+                             style="display: none;">
+                    </h4>
+                </div>
+                <div class="modal-body">
+                    <p class="no-margin">When you deploy a
+                        staging site to production, the main
+                        site is completely restored with the
+                        staging site, so if you have made
+                        any changes to main site they will
+                        be lost.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary"
+                            onclick="FinalDeployToProduction()">Yes
+                    </button>
+                    <button type="button" ng-disabled="savingSettings"
+                            class="btn btn-default" data-dismiss="modal">
+                        Cancel
+                    </button>
                 </div>
             </div>
         </div>

@@ -38,6 +38,7 @@ urlpatterns = [
     url(r'^CreateStagingNow', views.CreateStagingNow, name='CreateStagingNow'),
     url(r'^fetchstaging', views.fetchstaging, name='fetchstaging'),
     url(r'^SaveUpdateConfig', views.SaveUpdateConfig, name='SaveUpdateConfig'),
+    url(r'^DeploytoProduction', views.DeploytoProduction, name='DeploytoProduction'),
 
 
 

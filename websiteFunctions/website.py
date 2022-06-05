@@ -647,6 +647,51 @@ class WebsiteManager:
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
+
+    def DeploytoProduction(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            WPManagerID = data['WPid']
+            statgingID = data['StagingID']
+            wpsite = WPSites.objects.get(pk=WPManagerID)
+            StagingObj = WPSites.objects.get(pk=statgingID)
+
+            if ACLManager.checkOwnership(wpsite.owner.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
+            extraArgs = {}
+            extraArgs['adminID'] = admin.pk
+            extraArgs['StagingDomain'] = StagingObj.FinalURL
+            extraArgs['StagingName'] = StagingObj.title
+            extraArgs['WPid'] = WPManagerID
+            extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
+
+
+            if ACLManager.checkOwnership(wpsite.owner.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
+            background = ApplicationInstaller('CreateStagingNow', extraArgs)
+            background.start()
+
+            time.sleep(2)
+
+            data_ret = {'status': 1, 'installStatus': 1, 'error_message': 'None',
+                        'tempStatusPath': extraArgs['tempStatusPath']}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
     def UpdatePlugins(self, userID=None, data=None):
         try:
 

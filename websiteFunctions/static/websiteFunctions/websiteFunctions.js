@@ -1321,7 +1321,67 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
         }
     };
 
+
+    FinalDeployToProduction = function () {
+        $('#wordpresshomeloading').show();
+        $('#DeployToProduction').modal('hide');
+        var data = {
+            WPid: $('#WPid').html(),
+            StagingID: DeploytoProductionID
+        }
+
+        var url = "/websites/DeploytoProduction";
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+
+             $('#wordpresshomeloading').hide();
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success!',
+                    text: 'Deploy To Production start!.',
+                    type: 'success'
+                });
+                statusFile = response.data.tempStatusPath;
+                getCreationStatus();
+
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+             $('#wordpresshomeloading').hide();
+               new PNotify({
+                        title: 'Operation Failed!',
+                        text: response,
+                        type: 'error'
+                    });
+
+        }
+
+    };
+
 });
+
+var DeploytoProductionID;
+function DeployToProductionInitial(vall){
+    DeploytoProductionID=vall;
+}
 
 function AddStagings(value, index, array) {
     var FinalMarkup = '<tr>'
