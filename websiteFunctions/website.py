@@ -672,11 +672,6 @@ class WebsiteManager:
             extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
 
 
-            if ACLManager.checkOwnership(wpsite.owner.domain, admin, currentACL) == 1:
-                pass
-            else:
-                return ACLManager.loadError()
-
             background = ApplicationInstaller('CreateStagingNow', extraArgs)
             background.start()
 

@@ -348,6 +348,7 @@ app.controller('createWordpress', function ($scope, $http, $timeout, $compile, $
         $scope.goBackDisable = true;
         $("#installProgress").css("width", "0%");
     };
+
     function getCreationStatus() {
 
         url = "/websites/installWordpressStatus";
@@ -385,8 +386,7 @@ app.controller('createWordpress', function ($scope, $http, $timeout, $compile, $
                     $scope.currentStatus = response.data.currentStatus;
                     $timeout.cancel();
 
-                }
-                else {
+                } else {
 
                     $scope.webSiteCreationLoading = true;
                     $scope.installationDetailsForm = true;
@@ -433,16 +433,19 @@ app.controller('createWordpress', function ($scope, $http, $timeout, $compile, $
 });
 
 
-
 //........... delete wp list
 var FurlDeleteWP;
-function  DeleteWPNow(url) {
-FurlDeleteWP = url;
+
+function DeleteWPNow(url) {
+    FurlDeleteWP = url;
 }
+
 function FinalDeleteWPNow() {
-  window.location.href = FurlDeleteWP;
+    window.location.href = FurlDeleteWP;
 }
+
 app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $window) {
+
     $scope.wordpresshomeloading = true;
     $scope.stagingDetailsForm = false;
     $scope.installationProgress = true;
@@ -501,7 +504,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
                 }
 
             } else {
-                 new PNotify({
+                new PNotify({
                     title: 'Operation Failed!',
                     text: response.data.error_message,
                     type: 'error'
@@ -587,7 +590,6 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
 
     };
 
-
     $scope.GetCurrentPlugins = function () {
         $('#wordpresshomeloading').show();
 
@@ -640,7 +642,6 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
 
 
     };
-
 
     $scope.GetCurrentThemes = function () {
         $('#wordpresshomeloading').show();
@@ -1032,7 +1033,6 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
 
     };
 
-
     function AddThemes(value, index, array) {
         var FinalMarkup = '<tr>'
         FinalMarkup = FinalMarkup + '<td><input onclick="AddThemeToArray(this,\'' + value.name + '\')" type="checkbox" id="' + value.name + '"><label for="' + value.name + '"></label></td>';
@@ -1062,20 +1062,20 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
     $scope.CreateStagingNow = function () {
         $('#wordpresshomeloading').show();
 
-            $scope.wordpresshomeloading = false;
-            $scope.stagingDetailsForm = true;
-            $scope.installationProgress = false;
-            $scope.errorMessageBox = true;
-            $scope.success = true;
-            $scope.couldNotConnect = true;
-            $scope.goBackDisable = true;
+        $scope.wordpresshomeloading = false;
+        $scope.stagingDetailsForm = true;
+        $scope.installationProgress = false;
+        $scope.errorMessageBox = true;
+        $scope.success = true;
+        $scope.couldNotConnect = true;
+        $scope.goBackDisable = true;
 
 
-            $scope.currentStatus = "Starting creation Staging..";
+        $scope.currentStatus = "Starting creation Staging..";
         var data = {
             StagingName: $('#stagingName').val(),
             StagingDomain: $('#stagingDomain').val(),
-             WPid: $('#WPid').html(),
+            WPid: $('#WPid').html(),
         }
         var url = "/websites/CreateStagingNow";
 
@@ -1092,7 +1092,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
         function ListInitialDatas(response) {
             $('#wordpresshomeloading').hide();
             if (response.data.status === 1) {
-                 statusFile = response.data.tempStatusPath;
+                statusFile = response.data.tempStatusPath;
                 getCreationStatus();
             } else {
                 new PNotify({
@@ -1182,7 +1182,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
         }
 
         function cantLoadInitialDatas(response) {
-             $('#wordpresshomeloading').hide();
+            $('#wordpresshomeloading').hide();
             $scope.wordpresshomeloading = true;
             $scope.stagingDetailsForm = true;
             $scope.installationProgress = false;
@@ -1197,7 +1197,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
     }
 
     $scope.goBack = function () {
-         $('#wordpresshomeloading').hide();
+        $('#wordpresshomeloading').hide();
         $scope.wordpresshomeloading = true;
         $scope.stagingDetailsForm = false;
         $scope.installationProgress = true;
@@ -1209,7 +1209,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
     };
 
     $scope.fetchstaging = function () {
-         $('#wordpresshomeloading').show();
+        $('#wordpresshomeloading').show();
         $scope.wordpresshomeloading = false;
 
         var url = "/websites/fetchstaging";
@@ -1230,7 +1230,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
 
         function ListInitialDatas(response) {
             wordpresshomeloading = true;
-             $('#wordpresshomeloading').hide();
+            $('#wordpresshomeloading').hide();
 
             if (response.data.status === 1) {
 
@@ -1250,23 +1250,15 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
         }
 
         function cantLoadInitialDatas(response) {
-             $('#wordpresshomeloading').hide();
-            alert("Error"+response)
+            $('#wordpresshomeloading').hide();
+            alert("Error" + response)
 
         }
 
     };
 
-
-    $scope.autoLogin = function () {
-         var url = "/websites/DeleteThemes";
-         //window.open("/wpmanager/" + $('#HostingCompanyID').html() + "/manage/" + server + "/" + wordpress + "/AutoLogin");
-        var WPid = $('#WPid').html();
-        window.open("/websites/AutoLogin?WordPressID="+sub.id);
-    }
-
-    $scope.SaveUpdateConfig =function () {
-         $('#wordpresshomeloading').show();
+    $scope.SaveUpdateConfig = function () {
+        $('#wordpresshomeloading').show();
         var data = {
             AutomaticUpdates: $('#AutomaticUpdates').find(":selected").text(),
             Plugins: $('#Plugins').find(":selected").text(),
@@ -1289,7 +1281,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
 
 
         function ListInitialDatas(response) {
-             $('#wordpresshomeloading').hide();
+            $('#wordpresshomeloading').hide();
             $scope.wordpresshomeloading = true;
 
             if (response.data.status === 1) {
@@ -1298,7 +1290,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
                     text: 'Update Configurations Sucessfully!.',
                     type: 'success'
                 });
-                 $("#autoUpdateConfig").modal('hide');
+                $("#autoUpdateConfig").modal('hide');
             } else {
                 new PNotify({
                     title: 'Operation Failed!',
@@ -1311,18 +1303,27 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
         }
 
         function cantLoadInitialDatas(response) {
-             $('#wordpresshomeloading').hide();
-           new PNotify({
-                    title: 'Operation Failed!',
-                    text: response,
-                    type: 'error'
-                });
+            $('#wordpresshomeloading').hide();
+            new PNotify({
+                title: 'Operation Failed!',
+                text: response,
+                type: 'error'
+            });
 
         }
     };
 
+    var DeploytoProductionID;
 
-    FinalDeployToProduction = function () {
+    function DeployToProductionInitial(vall) {
+        DeploytoProductionID = vall;
+    }
+
+    function FinalDeployToProduction() {
+        alert($('#WPid').html());
+        alert(DeploytoProductionID);
+        return 0;
+
         $('#wordpresshomeloading').show();
         $('#DeployToProduction').modal('hide');
         var data = {
@@ -1343,7 +1344,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
 
         function ListInitialDatas(response) {
 
-             $('#wordpresshomeloading').hide();
+            $('#wordpresshomeloading').hide();
             if (response.data.status === 1) {
                 new PNotify({
                     title: 'Success!',
@@ -1365,29 +1366,25 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
         }
 
         function cantLoadInitialDatas(response) {
-             $('#wordpresshomeloading').hide();
-               new PNotify({
-                        title: 'Operation Failed!',
-                        text: response,
-                        type: 'error'
-                    });
+            $('#wordpresshomeloading').hide();
+            new PNotify({
+                title: 'Operation Failed!',
+                text: response,
+                type: 'error'
+            });
 
         }
 
-    };
+    }
 
 });
 
-var DeploytoProductionID;
-function DeployToProductionInitial(vall){
-    DeploytoProductionID=vall;
-}
 
 function AddStagings(value, index, array) {
     var FinalMarkup = '<tr>'
     for (let x in value) {
         if (x === 'name') {
-            FinalMarkup = FinalMarkup + '<td><a href="' + value.url + '">' + value[x] + '</a></td>';
+            FinalMarkup = FinalMarkup + '<td><a href=/websites/WPHome?ID=' + value.id + '>' + value[x] + '</a></td>';
         } else if (x !== 'url' && x !== 'deleteURL' && x !== 'id') {
             FinalMarkup = FinalMarkup + '<td>' + value[x] + "</td>";
         }

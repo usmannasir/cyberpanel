@@ -673,6 +673,7 @@ class ACLManager:
     @staticmethod
     def checkOwnership(domain, admin, currentACL):
 
+
         try:
             childDomain = ChildDomains.objects.get(domain=domain)
 
