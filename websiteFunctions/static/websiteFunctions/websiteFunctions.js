@@ -1376,6 +1376,50 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
 
     };
 
+
+    $scope.CreateBackup = function (){
+         $('#wordpresshomeloading').show();
+         var data = {
+             WPid: $('#WPid').html(),
+        }
+        var url = "/websites/WPCreateBackup";
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $('#wordpresshomeloading').hide();
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success!',
+                    text: 'Backup Created!.',
+                    type: 'success'
+                });
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $('#wordpresshomeloading').hide();
+            alert(response)
+
+        }
+
+    };
+
 });
 
 var DeploytoProductionID;
