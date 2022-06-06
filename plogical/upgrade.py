@@ -567,6 +567,15 @@ autocreate_system_folders = On
         if not os.path.exists("/usr/local/CyberCP/public"):
             os.mkdir("/usr/local/CyberCP/public")
 
+        cwd = os.getcwd()
+
+        os.chdir('/usr/local/CyberCP')
+
+        command = '/usr/local/CyberPanel/bin/python manage.py collectstatic --noinput --clear'
+        Upgrade.executioner(command, 'Remove old static content', 0)
+
+        os.chdir(cwd)
+
         shutil.move("/usr/local/CyberCP/static", "/usr/local/CyberCP/public/")
 
     @staticmethod
