@@ -323,6 +323,27 @@ def DeploytoProduction(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+def WPCreateBackup(request):
+    try:
+        userID = request.session['userID']
+
+        result = pluginManager.preWebsiteCreation(request)
+
+        if result != 200:
+            return result
+
+        wm = WebsiteManager()
+        coreResult = wm.WPCreateBackup(userID, json.loads(request.body))
+
+        result = pluginManager.postWebsiteCreation(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
 
 
 def GetCurrentThemes(request):

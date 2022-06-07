@@ -43,8 +43,8 @@
                                                 data-toggle="tab">Themes</a></li>
                                 <li><a href="#tab4" data-toggle="tab"
                                        ng-click="fetchstaging()">Staging</a></li>
-
-                                </li>
+                                <li><a href="#tab5" data-toggle="tab"
+                                >Backups</a></li>
                             </ul>
                             <div class="tab-content">
                                 <div class="tab-pane active" id="tab1">
@@ -362,6 +362,55 @@
                                     </div>
 
                                 </div>
+                                <div class="tab-pane" id="tab5">
+                                    <h2>Create Backup Now</h2>
+                                    <div class="col-sm-12" style="margin-top: 1%">
+                                        <button id="createbackupbutton" type="button"
+                                                ng-click="CreateBackup()"
+                                                class="btn btn-primary btn-lg center-div">{% trans "Create Backup" %}</button>
+                                    </div>
+                                    <div style="margin-top: 1%" ng-hide="installationProgress" class="form-group">
+                                        <label class="col-sm-2 control-label"></label>
+                                        <div class="col-sm-7">
+
+                                            <div class="alert alert-success text-center">
+                                                <h2>{$ currentStatus $}</h2>
+                                            </div>
+
+                                            <div class="progress">
+                                                <div id="installProgress" class="progress-bar"
+                                                     role="progressbar" aria-valuenow="70"
+                                                     aria-valuemin="0" aria-valuemax="100"
+                                                     style="width:0%">
+                                                    <span class="sr-only">70% Complete</span>
+                                                </div>
+                                            </div>
+
+                                            <div ng-hide="errorMessageBox" class="alert alert-danger">
+                                                <p>{% trans "Error message:" %} {$ errorMessage $}</p>
+                                            </div>
+
+                                            <div ng-hide="success" class="alert alert-success">
+                                                <p>{% trans "Backup succesfully created." %}</p>
+                                            </div>
+
+
+                                            <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                                <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                                            </div>
+
+
+                                        </div>
+                                    </div>
+                                    <div ng-hide="installationProgress" class="form-group center-div">
+                                        <div class="col-sm-12">
+                                            <button type="button" ng-disabled="goBackDisable"
+                                                    ng-click="goBack()"
+                                                    class="btn btn-primary btn-lg center-div">{% trans "Go Back" %}</button>
+                                        </div>
+                                    </div>
+                                </div>
+
                             </div>
                         </div>
                         <hr>
@@ -396,6 +445,7 @@
                                 </svg>
                                 Autoupdate Configurations
                             </a>
+
                             <div id="autoUpdateConfig" class="modal fade" tabindex="-1" role="dialog"
                                  aria-hidden="true">
                                 <div class="modal-dialog">
