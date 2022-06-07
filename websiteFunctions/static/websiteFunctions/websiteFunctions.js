@@ -1378,10 +1378,19 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
     }
 
 
-    $scope.CreateBackup = function (){
-         $('#wordpresshomeloading').show();
-         var data = {
-             WPid: $('#WPid').html(),
+    $scope.CreateBackup = function () {
+        $('#wordpresshomeloading').show();
+
+        $scope.wordpresshomeloading = false;
+        $scope.stagingDetailsForm = true;
+        $scope.installationProgress = false;
+        $scope.errorMessageBox = true;
+        $scope.success = true;
+        $scope.couldNotConnect = true;
+        $scope.goBackDisable = true;
+        $scope.currentStatus = "Starting creation Backups..";
+        var data = {
+            WPid: $('#WPid').html(),
         }
         var url = "/websites/WPCreateBackup";
 
@@ -1396,12 +1405,15 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
 
         function ListInitialDatas(response) {
             $('#wordpresshomeloading').hide();
+            $('createbackupbutton').hide();
             if (response.data.status === 1) {
                 new PNotify({
                     title: 'Success!',
-                    text: 'Backup Created!.',
+                    text: 'Creating Backups!.',
                     type: 'success'
                 });
+                statusFile = response.data.tempStatusPath;
+                getCreationStatus();
             } else {
                 new PNotify({
                     title: 'Operation Failed!',

@@ -704,21 +704,20 @@ class WebsiteManager:
             else:
                 return ACLManager.loadError()
 
-            # extraArgs = {}
-            # extraArgs['adminID'] = admin.pk
-            # extraArgs['StagingDomain'] = StagingObj.FinalURL
-            # extraArgs['StagingName'] = StagingObj.title
-            # extraArgs['WPid'] = WPManagerID
-            # extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
+            extraArgs = {}
+            extraArgs['adminID'] = admin.pk
+            extraArgs['WPid'] = WPManagerID
+            extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
 
 
 
-            # background = ApplicationInstaller('CreateStagingNow', extraArgs)
-            # background.start()
+            background = ApplicationInstaller('WPCreateBackup', extraArgs)
+            background.start()
 
             time.sleep(2)
 
-            data_ret = {'status': 1, 'installStatus': 1, 'error_message': 'None',}
+            data_ret = {'status': 1, 'installStatus': 1, 'error_message': 'None',
+                        'tempStatusPath': extraArgs['tempStatusPath']}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
