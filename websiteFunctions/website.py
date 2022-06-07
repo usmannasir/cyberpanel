@@ -710,7 +710,6 @@ class WebsiteManager:
             extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
 
 
-
             background = ApplicationInstaller('WPCreateBackup', extraArgs)
             background.start()
 

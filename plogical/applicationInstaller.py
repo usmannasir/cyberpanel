@@ -2147,10 +2147,11 @@ $parameters = array(
             from managePHP.phpManager import PHPManager
             import json
             tempStatusPath = self.extraArgs['tempStatusPath']
+            self.tempStatusPath = tempStatusPath
+
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines('Creating BackUp...,10')
             statusFile.close()
-
             wpsite = WPSites.objects.get(pk=self.extraArgs['WPid'])
 
             website =Websites.objects.get(pk=wpsite.owner_id)
@@ -2282,9 +2283,9 @@ $parameters = array(
             if os.path.exists(ProcessUtilities.debugPath):
                 logging.writeToFile(result)
 
+
             command = f'rm -rf {tempPath}'
             ProcessUtilities.executioner(command)
-
 
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines("Successfully Created. [200]")
@@ -2293,6 +2294,8 @@ $parameters = array(
 
 
         except BaseException as msg:
+            command = f'rm -rf {self.tempPath}'
+            ProcessUtilities.executioner(command)
             logging.writeToFile("Error WPCreateBackup ....... %s" % str(msg))
             statusFile = open(self.tempStatusPath, 'w')
             statusFile.writelines(str(msg) + " [404]")
