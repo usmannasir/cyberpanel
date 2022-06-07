@@ -526,9 +526,6 @@
                 </div>
             </div>
         </div>
-    </div>
-
-
     <div id="DeployToProduction" class="modal fade" role="dialog">
         <div class="modal-dialog">
             <!-- Modal content-->
@@ -552,7 +549,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-primary"
-                            onclick="FinalDeployToProduction()">Yes
+                            ng-click="FinalDeployToProduction()" data-dismiss="modal">Yes
                     </button>
                     <button type="button" ng-disabled="savingSettings"
                             class="btn btn-default" data-dismiss="modal">
@@ -562,5 +559,7 @@
             </div>
         </div>
     </div>
+    </div>
+
 
 {% endblock %}

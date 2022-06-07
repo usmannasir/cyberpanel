@@ -906,6 +906,16 @@ autocreate_system_folders = On
                 pass
 
             try:
+                cursor.execute("CREATE TABLE `websiteFunctions_wpsitesbackup` (`id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY, `WPSiteID` integer NOT NULL, `WebsiteID` integer NOT NULL, `config` longtext NOT NULL, `owner_id` integer NOT NULL); ")
+            except:
+                pass
+
+            try:
+                cursor.execute("ALTER TABLE `websiteFunctions_wpsitesbackup` ADD CONSTRAINT `websiteFunctions_wps_owner_id_8a8dd0c5_fk_loginSyst` FOREIGN KEY (`owner_id`) REFERENCES `loginSystem_administrator` (`id`); ")
+            except:
+                pass
+
+            try:
                 connection.close()
             except:
                 pass

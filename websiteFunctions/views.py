@@ -56,6 +56,7 @@ def WPHome(request):
         return wm.WPHome(request, userID, WPid, DeleteID)
     except KeyError:
         return redirect(loadLoginPage)
+
 def AutoLogin(request):
     try:
         userID = request.session['userID']
@@ -305,19 +306,19 @@ def DeploytoProduction(request):
     try:
         userID = request.session['userID']
 
-        result = pluginManager.preWebsiteCreation(request)
+        #result = pluginManager.preWebsiteCreation(request)
 
-        if result != 200:
-            return result
+        #if result != 200:
+        #    return result
 
         wm = WebsiteManager()
-        coreResult = wm.DeploytoProduction(userID, json.loads(request.body))
+        return wm.DeploytoProduction(userID, json.loads(request.body))
 
-        result = pluginManager.postWebsiteCreation(request, coreResult)
-        if result != 200:
-            return result
+        #result = pluginManager.postWebsiteCreation(request, coreResult)
+        #if result != 200:
+        #    return result
 
-        return coreResult
+        #return coreResult
 
     except KeyError:
         return redirect(loadLoginPage)

@@ -444,6 +444,12 @@ function FinalDeleteWPNow() {
     window.location.href = FurlDeleteWP;
 }
 
+var DeploytoProductionID;
+
+function DeployToProductionInitial(vall) {
+    DeploytoProductionID = vall;
+}
+
 app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $window) {
 
     $scope.wordpresshomeloading = true;
@@ -1322,19 +1328,33 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
         }
     };
 
-    var DeploytoProductionID;
-
-    function DeployToProductionInitial(vall) {
-        DeploytoProductionID = vall;
+    function AddStagings(value, index, array) {
+        var FinalMarkup = '<tr>'
+        for (let x in value) {
+            if (x === 'name') {
+                FinalMarkup = FinalMarkup + '<td><a href=/websites/WPHome?ID=' + value.id + '>' + value[x] + '</a></td>';
+            } else if (x !== 'url' && x !== 'deleteURL' && x !== 'id') {
+                FinalMarkup = FinalMarkup + '<td>' + value[x] + "</td>";
+            }
+        }
+        FinalMarkup = FinalMarkup + '<td><button onclick="DeployToProductionInitial(' + value.id + ')" data-toggle="modal" data-target="#DeployToProduction" style="margin-bottom: 2%; display: block" aria-label="" type="button" class="btn btn-outline-primary">Deploy to Production</button>' +
+            '<a href="' + value.deleteURL + '"> <button aria-label="" class="btn btn-danger btn-icon-left m-b-10" type="button">Delete</button></a></td>'
+        FinalMarkup = FinalMarkup + '</tr>'
+        AppendToTable('#StagingBody', FinalMarkup);
     }
 
-    function FinalDeployToProduction() {
-        alert($('#WPid').html());
-        alert(DeploytoProductionID);
-        return 0;
+    $scope.FinalDeployToProduction = function () {
 
         $('#wordpresshomeloading').show();
-        $('#DeployToProduction').modal('hide');
+
+        $scope.wordpresshomeloading = false;
+        $scope.stagingDetailsForm = true;
+        $scope.installationProgress = false;
+        $scope.errorMessageBox = true;
+        $scope.success = true;
+        $scope.couldNotConnect = true;
+        $scope.goBackDisable = true;
+
         var data = {
             WPid: $('#WPid').html(),
             StagingID: DeploytoProductionID
@@ -1384,7 +1404,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
 
         }
 
-    }
+    };
 
 
     $scope.CreateBackup = function () {
@@ -1444,21 +1464,6 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
 
 });
 
-
-function AddStagings(value, index, array) {
-    var FinalMarkup = '<tr>'
-    for (let x in value) {
-        if (x === 'name') {
-            FinalMarkup = FinalMarkup + '<td><a href=/websites/WPHome?ID=' + value.id + '>' + value[x] + '</a></td>';
-        } else if (x !== 'url' && x !== 'deleteURL' && x !== 'id') {
-            FinalMarkup = FinalMarkup + '<td>' + value[x] + "</td>";
-        }
-    }
-    FinalMarkup = FinalMarkup + '<td><button onclick="DeployToProductionInitial(' + value.id + ')" data-toggle="modal" data-target="#DeployToProduction" style="margin-bottom: 2%; display: block" aria-label="" type="button" class="btn btn-outline-primary">Deploy to Production</button>' +
-        '<a href="' + value.deleteURL + '"> <button aria-label="" class="btn btn-danger btn-icon-left m-b-10" type="button">Delete</button></a></td>'
-    FinalMarkup = FinalMarkup + '</tr>'
-    AppendToTable('#StagingBody', FinalMarkup);
-}
 
 var PluginsList = [];
 

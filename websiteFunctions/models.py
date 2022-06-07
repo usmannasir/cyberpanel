@@ -122,3 +122,9 @@ class WPSites(models.Model):
 class WPStaging(models.Model):
     owner = models.ForeignKey(WPSites, on_delete=models.CASCADE)
     wpsite = models.ForeignKey(WPSites, on_delete=models.CASCADE, related_name='actual_wpsite')
+
+class WPSitesBackup(models.Model):
+    owner = models.ForeignKey(Administrator, on_delete=models.CASCADE)
+    WPSiteID = models.IntegerField(default=-1)
+    WebsiteID = models.IntegerField(default=-1)
+    config = models.TextField()
