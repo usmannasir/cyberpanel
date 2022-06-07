@@ -2246,7 +2246,7 @@ $parameters = array(
 
 
             command = f'rm -rf {self.tempPath}'
-            #ProcessUtilities.executioner(command)
+            ProcessUtilities.executioner(command)
 
 
             logging.statusWriter(self.tempStatusPath, 'Completed.[200]')
@@ -2257,7 +2257,6 @@ $parameters = array(
             ProcessUtilities.executioner(command)
             mesg = '%s. [404]' % (str(msg))
             logging.statusWriter(self.tempStatusPath, mesg)
-
 
     def WPCreateBackup(self):
         try:
