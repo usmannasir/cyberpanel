@@ -379,6 +379,34 @@ class ServerStatusUtil:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
             ServerStatusUtil.recover()
 
+    @staticmethod
+    def switchTOLSWSCLI(licenseKey):
+        try:
+
+            ServerStatusUtil.switchTOLSWS(licenseKey)
+
+            command = 'sudo cat ' + ServerStatusUtil.lswsInstallStatusPath
+            output = ProcessUtilities.outputExecutioner(command)
+
+            if output.find('[404]') > -1:
+                command = "sudo rm -f " + ServerStatusUtil.lswsInstallStatusPath
+                ProcessUtilities.popenExecutioner(command)
+                data_ret = {'status': 1, 'abort': 1, 'requestStatus': output, 'installed': 0}
+                print(str(data_ret))
+                return 0
+            elif output.find('[200]') > -1:
+                command = "sudo rm -f " + ServerStatusUtil.lswsInstallStatusPath
+                ProcessUtilities.popenExecutioner(command)
+                data_ret = {'status': 1, 'abort': 1, 'requestStatus': 'Successfully converted.', 'installed': 1}
+                print(str(data_ret))
+                return 1
+            else:
+                data_ret = {'status': 1, 'abort': 0, 'requestStatus': output, 'installed': 0}
+                print(output)
+
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg))
+
 def main():
 
     parser = argparse.ArgumentParser(description='Server Status Util.')

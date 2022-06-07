@@ -70,4 +70,9 @@ class cliParser:
         parser.add_argument('--siteTitle', help='Site Title for application installers.')
         parser.add_argument('--path', help='Path for application installers.')
 
+        ### Convert to LSWS Ent via cli
+
+        parser.add_argument('--licenseKey', help='LiteSpeed Enterprise License key')
+
+
         return parser.parse_args()
