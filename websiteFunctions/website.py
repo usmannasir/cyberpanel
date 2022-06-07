@@ -659,20 +659,27 @@ class WebsiteManager:
             wpsite = WPSites.objects.get(pk=WPManagerID)
             StagingObj = WPSites.objects.get(pk=statgingID)
 
+            ###
+
             if ACLManager.checkOwnership(wpsite.owner.domain, admin, currentACL) == 1:
                 pass
             else:
                 return ACLManager.loadError()
 
+            if ACLManager.checkOwnership(StagingObj.owner.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
+            ###
+
             extraArgs = {}
             extraArgs['adminID'] = admin.pk
-            extraArgs['StagingDomain'] = StagingObj.FinalURL
-            extraArgs['StagingName'] = StagingObj.title
+            extraArgs['statgingID'] = statgingID
             extraArgs['WPid'] = WPManagerID
             extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
 
-
-            background = ApplicationInstaller('CreateStagingNow', extraArgs)
+            background = ApplicationInstaller('DeploytoProduction', extraArgs)
             background.start()
 
             time.sleep(2)
