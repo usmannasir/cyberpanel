@@ -12,7 +12,7 @@ django.setup()
 import json
 from plogical.acl import ACLManager
 import plogical.CyberCPLogFileWriter as logging
-from websiteFunctions.models import Websites, ChildDomains, GitLogs, wpplugins, WPSites, WPStaging
+from websiteFunctions.models import Websites, ChildDomains, GitLogs, wpplugins, WPSites, WPStaging, WPSitesBackup
 from plogical.virtualHostUtilities import virtualHostUtilities
 import subprocess
 import shlex
@@ -139,6 +139,45 @@ class WebsiteManager:
             da= str(msg)
 
         proc = httpProc(request, 'websiteFunctions/WPsiteHome.html',
+                        Data, 'createWebsite')
+        return proc.render()
+
+    def RestoreBackups(self, request=None, userID=None, DeleteID=None):
+        Data = {}
+        currentACL = ACLManager.loadedACL(userID)
+        admin = Administrator.objects.get(pk=userID)
+
+
+
+
+        backobj = WPSitesBackup.objects.filter(owner=admin)
+
+        try:
+            if DeleteID != None:
+                DeleteIDobj = WPSitesBackup.objects.get(pk=DeleteID)
+                DeleteIDobj.delete()
+
+        except BaseException as msg:
+            pass
+        Data['job'] = []
+
+        for sub in backobj:
+            try:
+                wpsite = WPSites.objects.get(pk=sub.WPSiteID)
+                web = wpsite.title
+            except:
+                web = "Website Not Found"
+
+            Data['job'].append({
+                'id': sub.id,
+                'title': web,
+            })
+
+
+
+
+
+        proc = httpProc(request, 'websiteFunctions/RestoreBackups.html',
                         Data, 'createWebsite')
         return proc.render()
 

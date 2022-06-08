@@ -16,7 +16,7 @@ django.setup()
 import threading as multi
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 import subprocess
-from websiteFunctions.models import ChildDomains, Websites, WPSites, WPStaging, wpplugins
+from websiteFunctions.models import ChildDomains, Websites, WPSites, WPStaging, wpplugins, WPSitesBackup
 from plogical import randomPassword
 from plogical.mysqlUtilities import mysqlUtilities
 from databases.models import Databases
@@ -2262,13 +2262,12 @@ $parameters = array(
         try:
             from managePHP.phpManager import PHPManager
             import json
-            tempStatusPath = self.extraArgs['tempStatusPath']
-            self.tempStatusPath = tempStatusPath
+            logging.writeToFile("WPCreateBackup ....... start" )
+            self.tempStatusPath = self.extraArgs['tempStatusPath']
+            logging.statusWriter(self.tempStatusPath, 'Creating BackUp...,10')
 
-            statusFile = open(tempStatusPath, 'w')
-            statusFile.writelines('Creating BackUp...,10')
-            statusFile.close()
             wpsite = WPSites.objects.get(pk=self.extraArgs['WPid'])
+            Adminobj = Administrator.objects.get(pk=self.extraArgs['adminID'])
 
             website =Websites.objects.get(pk=wpsite.owner_id)
             PhpVersion = website.phpSelection
@@ -2279,9 +2278,9 @@ $parameters = array(
 
             php = PHPManager.getPHPString(PhpVersion)
             FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
-            statusFile = open(tempStatusPath, 'w')
-            statusFile.writelines('Getting DataBase...,20')
-            statusFile.close()
+
+
+            logging.statusWriter(self.tempStatusPath, 'Getting DataBase...,20')
 
             command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp config get DB_NAME  --skip-plugins --skip-themes --path=%s' % (VHuser, FinalPHPPath, WPsitepath)
             stdoutput = ProcessUtilities.outputExecutioner(command)
@@ -2308,9 +2307,7 @@ $parameters = array(
             ProcessUtilities.executioner(command)
 
             ### Make directory for backup
-            statusFile = open(tempStatusPath, 'w')
-            statusFile.writelines('Creating Backup Directory...,40')
-            statusFile.close()
+            logging.statusWriter(self.tempStatusPath, 'Creating Backup Directory...,40')
 
             command = "sudo -u %s mkdir -p %s/public_html" % (VHuser, tempPath)
             ProcessUtilities.executioner(command)
@@ -2355,9 +2352,8 @@ $parameters = array(
             command = "rm -r /home/cyberpanel/config.json"
             ProcessUtilities.executioner(command)
 
-            statusFile = open(tempStatusPath, 'w')
-            statusFile.writelines('Copying website data.....,50')
-            statusFile.close()
+            logging.statusWriter(self.tempStatusPath, 'Copying website data.....,50')
+
 
             ############## Copy Public_htnl to backup
             command = "sudo -u %s cp -R %s* %s/public_html" % (VHuser, WPsitepath, tempPath)
@@ -2372,9 +2368,9 @@ $parameters = array(
             if os.path.exists(ProcessUtilities.debugPath):
                 logging.writeToFile(result)
 
-            statusFile = open(tempStatusPath, 'w')
-            statusFile.writelines('Copying DataBase.....,70')
-            statusFile.close()
+            logging.statusWriter(self.tempStatusPath, 'Copying DataBase.....,70')
+
+
 
 
             ##### SQLDUMP database into new directory
@@ -2385,10 +2381,10 @@ $parameters = array(
             if os.path.exists(ProcessUtilities.debugPath):
                 logging.writeToFile(result)
 
+
+
             ######## Zip backup directory
-            statusFile = open(tempStatusPath, 'w')
-            statusFile.writelines('Compressing backup files.....,90')
-            statusFile.close()
+            logging.statusWriter(self.tempStatusPath, 'Compressing backup files.....,80')
 
             websitepath = "/home/%s"%websitedomain
 
@@ -2396,26 +2392,26 @@ $parameters = array(
             command = "sudo -u %s tar -czvf %s -P %s" % (VHuser, FinalZipPath, tempPath)
             result = ProcessUtilities.outputExecutioner(command)
 
+
+
+            backupobj = WPSitesBackup(owner=Adminobj, WPSiteID=wpsite.id, WebsiteID=website.id, config=json_object)
+            backupobj.save()
             if os.path.exists(ProcessUtilities.debugPath):
                 logging.writeToFile(result)
-
-
             command = f'rm -rf {tempPath}'
             ProcessUtilities.executioner(command)
 
-            statusFile = open(tempStatusPath, 'w')
-            statusFile.writelines("Successfully Created. [200]")
-            statusFile.close()
+
+
+            logging.statusWriter(self.tempStatusPath, 'Completed.[200]')
             return 0
 
 
         except BaseException as msg:
+            logging.writeToFile("Error WPCreateBackup ....... %s" % str(msg))
             command = f'rm -rf {self.tempPath}'
             ProcessUtilities.executioner(command)
-            logging.writeToFile("Error WPCreateBackup ....... %s" % str(msg))
-            statusFile = open(self.tempStatusPath, 'w')
-            statusFile.writelines(str(msg) + " [404]")
-            statusFile.close()
+            logging.statusWriter(self.tempStatusPath, str(msg))
             return 0
 
 

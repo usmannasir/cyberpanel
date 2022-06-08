@@ -1154,6 +1154,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
                     $scope.couldNotConnect = true;
                     $scope.goBackDisable = false;
 
+
                     $("#installProgress").css("width", "100%");
                     $("#installProgressbackup").css("width", "100%");
                     $scope.installPercentage = "100";

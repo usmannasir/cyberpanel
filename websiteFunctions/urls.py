@@ -20,6 +20,7 @@ urlpatterns = [
     url(r'^createWordpress$', views.WPCreate, name='createWordpress'),
     url(r'^ListWPSites$', views.ListWPSites, name='ListWPSites'),
     url(r'^WPHome$', views.WPHome, name='WPHome'),
+    url(r'^RestoreBackups$', views.RestoreBackups, name='RestoreBackups'),
     url(r'^AutoLogin$', views.AutoLogin, name='AutoLogin'),
 
 
