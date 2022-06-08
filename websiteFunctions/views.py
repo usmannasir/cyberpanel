@@ -56,6 +56,15 @@ def WPHome(request):
         return wm.WPHome(request, userID, WPid, DeleteID)
     except KeyError:
         return redirect(loadLoginPage)
+def RestoreBackups(request):
+    try:
+        userID = request.session['userID']
+
+        DeleteID = request.GET.get('DeleteID')
+        wm = WebsiteManager()
+        return wm.RestoreBackups(request, userID, DeleteID)
+    except KeyError:
+        return redirect(loadLoginPage)
 
 def AutoLogin(request):
     try:

@@ -1154,10 +1154,15 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
                     $scope.couldNotConnect = true;
                     $scope.goBackDisable = false;
 
+
                     $("#installProgress").css("width", "100%");
+                    $("#installProgressbackup").css("width", "100%");
                     $scope.installPercentage = "100";
                     $scope.currentStatus = response.data.currentStatus;
                     $timeout.cancel();
+
+
+
 
                 } else {
 
@@ -1172,17 +1177,22 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
                     $scope.errorMessage = response.data.error_message;
 
                     $("#installProgress").css("width", "0%");
+                    $("#installProgressbackup").css("width", "0%");
                     $scope.installPercentage = "0";
                     $scope.goBackDisable = false;
+
+
 
                 }
 
             } else {
 
                 $("#installProgress").css("width", response.data.installationProgress + "%");
+                $("#installProgressbackup").css("width", response.data.installationProgress + "%");
                 $scope.installPercentage = response.data.installationProgress;
                 $scope.currentStatus = response.data.currentStatus;
                 $timeout(getCreationStatus, 1000);
+
             }
 
         }
