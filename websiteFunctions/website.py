@@ -147,9 +147,6 @@ class WebsiteManager:
         currentACL = ACLManager.loadedACL(userID)
         admin = Administrator.objects.get(pk=userID)
 
-
-
-
         backobj = WPSitesBackup.objects.filter(owner=admin)
 
         try:
