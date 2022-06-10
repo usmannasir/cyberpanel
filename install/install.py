@@ -2068,7 +2068,6 @@ milter_default_action = accept
                         writeDataToFile.write(line)
                 writeDataToFile.close()
 
-
         except IOError as err:
             pass
 
@@ -2320,6 +2319,7 @@ def main():
     checks.setupPHPAndComposer()
     checks.fix_selinux_issue()
     checks.install_psmisc()
+    checks.fixSudoers()
 
     if args.postfix is None:
         checks.install_postfix_dovecot()

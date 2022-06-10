@@ -36,18 +36,6 @@ accesslog $VH_ROOT/logs/$VH_NAME.access_log {
   compressArchive         1
 }
 
-errorpage 403 {
-  url                     403.html
-}
-
-errorpage 404 {
-  url                     404.html
-}
-
-errorpage 500 {
-  url                     500.html
-}
-
 scripthandler  {
   add                     lsapi:{virtualHostUser} php
 }
@@ -143,18 +131,6 @@ phpIniOverride  {
 
 module cache {
  storagePath /usr/local/lsws/cachedata/$VH_NAME
-}
-
-errorpage 403 {
-  url                     403.html
-}
-
-errorpage 404 {
-  url                     404.html
-}
-
-errorpage 500 {
-  url                     500.html
 }
 
 scripthandler  {
