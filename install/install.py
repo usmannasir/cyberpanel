@@ -2052,6 +2052,27 @@ milter_default_action = accept
             return 0
 
     @staticmethod
+    def fixSudoers():
+        try:
+            distroPath = '/etc/lsb-release'
+
+            if not os.path.exists(distroPath):
+                fileName = '/etc/sudoers'
+                data = open(fileName, 'r').readlines()
+
+                writeDataToFile = open(fileName, 'w')
+                for line in data:
+                    if line.find("root") > -1 and line.find("ALL=(ALL)") > -1 and line[0] != '#':
+                        writeDataToFile.writelines('root	ALL=(ALL:ALL) 	ALL\n')
+                    else:
+                        writeDataToFile.write(line)
+                writeDataToFile.close()
+
+
+        except IOError as err:
+            pass
+
+    @staticmethod
     def setUpFirstAccount():
         try:
             command = 'python /usr/local/CyberCP/plogical/adminPass.py --password 1234567'
