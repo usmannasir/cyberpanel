@@ -1748,7 +1748,6 @@ $parameters = array(
                 pass
 
 
-
             currentTemp = self.extraArgs['tempStatusPath']
             self.extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
             self.extraArgs['SavedPlugins'] = SavedPlugins
@@ -1778,10 +1777,15 @@ $parameters = array(
 
             webobj = Websites.objects.get(domain= self.extraArgs['domainName'])
 
-            path ="/home/%s/public_html"%(self.extraArgs['domainName'])
-            Finalurl = (self.extraArgs['domainName'])
+            if self.extraArgs['home'] == '0':
+                path = self.extraArgs['path']
+                finalPath = "/home/" + self.extraArgs['domainName'] + "/public_html/" + path + "/"
+                Finalurl = f'{self.extraArgs["domainName"]}/{path}'
+            else:
+                finalPath = "/home/" + self.extraArgs['domainName'] + "/public_html/"
+                Finalurl = (self.extraArgs['domainName'])
 
-            wpobj = WPSites(owner=webobj, title=self.extraArgs['blogTitle'], path=path, FinalURL=Finalurl,
+            wpobj = WPSites(owner=webobj, title=self.extraArgs['blogTitle'], path=finalPath, FinalURL=Finalurl,
                             AutoUpdates=(self.extraArgs['updates']), PluginUpdates=(self.extraArgs['Plugins']),
                             ThemeUpdates=(self.extraArgs['Themes']),)
             wpobj.save()

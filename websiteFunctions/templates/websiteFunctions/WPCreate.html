@@ -54,15 +54,39 @@
 
                         </div>
 
+{#                        <div ng-hide="installationDetailsForm" class="form-group">#}
+{#                            <label class="col-sm-3 control-label">{% trans "Domain Name" %}</label>#}
+{#                            <div class="col-sm-6">#}
+{#                                <input name="dom" type="text" class="form-control" ng-model="domainNameCreate"#}
+{#                                       placeholder="{% trans "Do not enter WWW, it will be auto created!" %}" required>#}
+{#                            </div>#}
+{#                            <div ng-show="websiteCreationForm.dom.$error.pattern"#}
+{#                                 class="current-pack">{% trans "Invalid Domain (Note: You don't need to add 'http' or 'https')" %}</div>#}
+{#                        </div>#}
+
                         <div ng-hide="installationDetailsForm" class="form-group">
                             <label class="col-sm-3 control-label">{% trans "Domain Name" %}</label>
                             <div class="col-sm-6">
-                                <input name="dom" type="text" class="form-control" ng-model="domainNameCreate"
-                                       placeholder="{% trans "Do not enter WWW, it will be auto created!" %}" required>
+                                <div class="input-group bootstrap-touchspin">
+                                    <span
+                                            class="input-group-addon bootstrap-touchspin-prefix"
+                                            style="display: none;"></span>
+                                    <input ng-model="domainNameCreate" id="touchspin-demo-1" class="form-control"
+                                           type="text" value="55"
+                                           name="touchspin-demo-1"
+                                           style="display: block;" placeholder="{% trans "Do not enter WWW, it will be auto created!" %}">
+                                    <span class="input-group-addon bootstrap-touchspin-postfix">/</span>
+                                    <span style="width: 25%" class="input-group-btn">
+                                        <input id="touchspin-demo-1" class="form-control"
+                                               placeholder="{% trans "Leave empty for default" %}"
+                                               type="text" value="Leave empty for default"
+                                               name="touchspin-demo-1" ng-model="installPath"
+                                               style="display: block;"></span></div>
                             </div>
                             <div ng-show="websiteCreationForm.dom.$error.pattern"
                                  class="current-pack">{% trans "Invalid Domain (Note: You don't need to add 'http' or 'https')" %}</div>
                         </div>
+
 
                         <div ng-hide="installationDetailsForm" class="form-group">
                             <label class="col-sm-3 control-label">{% trans "Username" %}</label>
@@ -158,7 +182,7 @@
                         <div ng-hide="installationDetailsForm" class="form-group">
                             <label class="col-sm-3 control-label"></label>
                             <div class="col-sm-4">
-                                <button   type="button" ng-click="createWordPresssite()"
+                                <button type="button" ng-click="createWordPresssite()"
                                         class="btn btn-primary btn-lg">{% trans "Create Website" %}</button>
 
                             </div>

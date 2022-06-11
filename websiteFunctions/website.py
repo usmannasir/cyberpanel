@@ -1293,7 +1293,13 @@ class WebsiteManager:
             extraArgs['Themes'] = data['Themes']
             extraArgs['websiteOwner'] = data['websiteOwner']
             extraArgs['package'] = data['package']
-            extraArgs['home'] = "1"
+            extraArgs['home'] = data['home']
+            try:
+                extraArgs['path'] = data['path']
+                if extraArgs['path'] == '':
+                    extraArgs['home'] = '1'
+            except:
+                pass
             extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
 
             background = ApplicationInstaller('wordpressInstallNew', extraArgs)

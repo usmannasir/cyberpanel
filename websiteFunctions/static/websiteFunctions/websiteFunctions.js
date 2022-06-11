@@ -289,6 +289,15 @@ app.controller('createWordpress', function ($scope, $http, $timeout, $compile, $
         var autoupdates = $scope.autoupdates;
         var pluginupdates = $scope.pluginupdates;
         var themeupdates = $scope.themeupdates;
+
+        var path = $scope.installPath;
+
+        var home = "1";
+
+        if (typeof path != 'undefined') {
+            home = "0";
+        }
+
         var data = {
 
             title: WPtitle,
@@ -303,6 +312,8 @@ app.controller('createWordpress', function ($scope, $http, $timeout, $compile, $
             Themes: themeupdates,
             websiteOwner: websiteOwner,
             package: package,
+            home: home,
+            path: path,
         }
         var config = {
             headers: {
