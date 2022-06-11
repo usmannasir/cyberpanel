@@ -21,6 +21,7 @@ urlpatterns = [
     url(r'^ListWPSites$', views.ListWPSites, name='ListWPSites'),
     url(r'^WPHome$', views.WPHome, name='WPHome'),
     url(r'^RestoreBackups$', views.RestoreBackups, name='RestoreBackups'),
+    url(r'^RestoreHome$', views.RestoreHome, name='RestoreHome'),
     url(r'^AutoLogin$', views.AutoLogin, name='AutoLogin'),
 
 
@@ -41,6 +42,7 @@ urlpatterns = [
     url(r'^SaveUpdateConfig', views.SaveUpdateConfig, name='SaveUpdateConfig'),
     url(r'^DeploytoProduction', views.DeploytoProduction, name='DeploytoProduction'),
     url(r'^WPCreateBackup', views.WPCreateBackup, name='WPCreateBackup'),
+    url(r'^RestoreWPbackupNow', views.RestoreWPbackupNow, name='RestoreWPbackupNow'),
 
 
 

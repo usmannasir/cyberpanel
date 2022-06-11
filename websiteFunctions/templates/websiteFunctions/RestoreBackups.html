@@ -121,6 +121,12 @@
                     </td>
 
                     <td style="padding: 13px;">
+                        <a href="{% url 'RestoreHome' %}?BackupID={{ sub.id }}"
+                                aria-label=""
+
+                                type="button" class="btn btn-border btn-alt border-green btn-link font-green">
+                            Restore
+                        </a>
 
                         <button
                                 data-toggle="modal"
@@ -129,6 +135,7 @@
                                 type="button" class="btn btn-border btn-alt border-red btn-link font-red">
                             Delete
                         </button>
+
                         <div id="DeleteMember" class="modal fade" role="dialog">
                             <div class="modal-dialog">
                                 <!-- Modal content-->

@@ -56,6 +56,15 @@ def WPHome(request):
         return wm.WPHome(request, userID, WPid, DeleteID)
     except KeyError:
         return redirect(loadLoginPage)
+def RestoreHome(request):
+    try:
+        userID = request.session['userID']
+
+        BackupID = request.GET.get('BackupID')
+        wm = WebsiteManager()
+        return wm.RestoreHome(request, userID, BackupID)
+    except KeyError:
+        return redirect(loadLoginPage)
 def RestoreBackups(request):
     try:
         userID = request.session['userID']
@@ -343,6 +352,29 @@ def WPCreateBackup(request):
 
         wm = WebsiteManager()
         coreResult = wm.WPCreateBackup(userID, json.loads(request.body))
+
+        result = pluginManager.postWebsiteCreation(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+
+def RestoreWPbackupNow(request):
+    try:
+        userID = request.session['userID']
+
+        result = pluginManager.preWebsiteCreation(request)
+
+        if result != 200:
+            return result
+
+        wm = WebsiteManager()
+        coreResult = wm.RestoreWPbackupNow(userID, json.loads(request.body))
 
         result = pluginManager.postWebsiteCreation(request, coreResult)
         if result != 200:

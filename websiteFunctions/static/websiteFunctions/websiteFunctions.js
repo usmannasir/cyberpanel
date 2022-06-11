@@ -1162,8 +1162,6 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
                     $timeout.cancel();
 
 
-
-
                 } else {
 
                     $scope.wordpresshomeloading = true;
@@ -1180,7 +1178,6 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
                     $("#installProgressbackup").css("width", "0%");
                     $scope.installPercentage = "0";
                     $scope.goBackDisable = false;
-
 
 
                 }
@@ -1501,6 +1498,222 @@ function AddThemeToArray(cBox, name) {
 function AppendToTable(table, markup) {
     $(table).append(markup);
 }
+
+
+//..................Restore Backup Home
+
+
+app.controller('RestoreWPBackup', function ($scope, $http, $timeout, $window) {
+    $scope.wordpresshomeloading = true;
+    $scope.stagingDetailsForm = false;
+    $scope.installationProgress = true;
+    $scope.errorMessageBox = true;
+    $scope.success = true;
+    $scope.couldNotConnect = true;
+    $scope.goBackDisable = true;
+
+
+    $scope.checkmethode = function () {
+        var val = $('#RestoreMethode').children("option:selected").val();
+        if (val == 1) {
+            $('#Newsitediv').show();
+            $('#exinstingsitediv').hide();
+        } else if (val == 0) {
+            $('#exinstingsitediv').show();
+            $('#Newsitediv').hide();
+        } else {
+
+        }
+    };
+
+
+    $scope.RestoreWPbackupNow = function () {
+        $('#wordpresshomeloading').show();
+        $scope.wordpresshomeloading = false;
+        $scope.stagingDetailsForm = true;
+        $scope.installationProgress = false;
+        $scope.errorMessageBox = true;
+        $scope.success = true;
+        $scope.couldNotConnect = true;
+        $scope.goBackDisable = true;
+        $scope.currentStatus = "Start Restoring WordPress..";
+
+        var url = "/websites/RestoreWPbackupNow";
+
+
+
+        var data = {
+            backupid: $('#backupid').html(),
+            DesSite: $('#DesSite').children("option:selected").val(),
+            Domain: $("input[name=Newdomain]").val()
+        }
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        // console.log(data)
+
+        var d = $('#DesSite').children("option:selected").val();
+        var c = $("input[name=Newdomain]").val();
+        if( d == -1 && c == "")
+        {
+            alert("Please Select Method of Backup Restore");
+        }
+        else {
+            $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+        }
+
+
+
+
+
+        function ListInitialDatas(response) {
+            wordpresshomeloading = true;
+            $('#wordpresshomeloading').hide();
+
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success!',
+                    text: 'Restoring process starts!.',
+                    type: 'success'
+                });
+                statusFile = response.data.tempStatusPath;
+                getCreationStatus();
+
+            } else {
+                $('#wordpresshomeloading').hide();
+                $scope.wordpresshomeloading = true;
+                $scope.installationDetailsForm = true;
+                $scope.installationProgress = false;
+                $scope.errorMessageBox = false;
+                $scope.success = true;
+                $scope.couldNotConnect = true;
+                $scope.goBackDisable = false;
+
+                $scope.errorMessage = response.data.error_message;
+
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $('#wordpresshomeloading').hide();
+
+            new PNotify({
+                title: 'Operation Failed!',
+                text: response.data.error_message,
+                type: 'error'
+            });
+
+
+        }
+    }
+
+    function getCreationStatus() {
+        $('#wordpresshomeloading').show();
+
+        url = "/websites/installWordpressStatus";
+
+        var data = {
+            statusFile: statusFile
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $('#wordpresshomeloading').hide();
+
+            if (response.data.abort === 1) {
+
+                if (response.data.installStatus === 1) {
+
+
+                    $scope.wordpresshomeloading = true;
+                    $scope.stagingDetailsForm = true;
+                    $scope.installationProgress = false;
+                    $scope.errorMessageBox = true;
+                    $scope.success = false;
+                    $scope.couldNotConnect = true;
+                    $scope.goBackDisable = false;
+
+
+                    $("#installProgress").css("width", "100%");
+                    $("#installProgressbackup").css("width", "100%");
+                    $scope.installPercentage = "100";
+                    $scope.currentStatus = response.data.currentStatus;
+                    $timeout.cancel();
+
+
+                } else {
+
+                    $scope.wordpresshomeloading = true;
+                    $scope.stagingDetailsForm = true;
+                    $scope.installationProgress = false;
+                    $scope.errorMessageBox = false;
+                    $scope.success = true;
+                    $scope.couldNotConnect = true;
+                    $scope.goBackDisable = false;
+
+                    $scope.errorMessage = response.data.error_message;
+
+                    $("#installProgress").css("width", "0%");
+                    $("#installProgressbackup").css("width", "0%");
+                    $scope.installPercentage = "0";
+                    $scope.goBackDisable = false;
+
+
+                }
+
+            } else {
+
+                $("#installProgress").css("width", response.data.installationProgress + "%");
+                $("#installProgressbackup").css("width", response.data.installationProgress + "%");
+                $scope.installPercentage = response.data.installationProgress;
+                $scope.currentStatus = response.data.currentStatus;
+                $timeout(getCreationStatus, 1000);
+
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $('#wordpresshomeloading').hide();
+            $scope.wordpresshomeloading = true;
+            $scope.stagingDetailsForm = true;
+            $scope.installationProgress = false;
+            $scope.errorMessageBox = true;
+            $scope.success = true;
+            $scope.couldNotConnect = false;
+            $scope.goBackDisable = false;
+
+        }
+
+
+    }
+
+    $scope.goBack = function () {
+        $('#wordpresshomeloading').hide();
+        $scope.wordpresshomeloading = true;
+        $scope.stagingDetailsForm = false;
+        $scope.installationProgress = true;
+        $scope.errorMessageBox = true;
+        $scope.success = true;
+        $scope.couldNotConnect = true;
+        $scope.goBackDisable = true;
+        $("#installProgress").css("width", "0%");
+    };
+});
 
 
 /* Java script code to create account */

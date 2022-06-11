@@ -142,6 +142,20 @@ class WebsiteManager:
                         Data, 'createWebsite')
         return proc.render()
 
+
+    def RestoreHome(self, request=None, userID=None, BackupID=None ):
+        Data = {}
+        currentACL = ACLManager.loadedACL(userID)
+
+        Data['backupobj'] = WPSitesBackup.objects.get(pk=BackupID)
+
+        config = json.loads(Data['backupobj'].config)
+        Data['FileName']= config['name']
+        Data['WPsites'] = ACLManager.GetALLWPObjects(currentACL, userID)
+        proc = httpProc(request, 'websiteFunctions/WPRestoreHome.html',
+                        Data, 'createWebsite')
+        return proc.render()
+
     def RestoreBackups(self, request=None, userID=None, DeleteID=None):
         Data = {}
         currentACL = ACLManager.loadedACL(userID)
@@ -768,6 +782,41 @@ class WebsiteManager:
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
+
+    def RestoreWPbackupNow(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            backupid = data['backupid']
+            DesSiteID = data['DesSite']
+            Domain = data['Domain']
+
+
+            extraArgs = {}
+            extraArgs['adminID'] = admin.pk
+            extraArgs['backupid'] = backupid
+            extraArgs['DesSiteID'] = DesSiteID
+            extraArgs['Domain'] = Domain
+            extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
+
+
+            background = ApplicationInstaller('RestoreWPbackupNow', extraArgs)
+            background.start()
+
+            time.sleep(2)
+
+            data_ret = {'status': 1, 'installStatus': 1, 'error_message': 'None',
+                        'tempStatusPath': extraArgs['tempStatusPath']}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
     def UpdatePlugins(self, userID=None, data=None):
         try:
 
@@ -1222,6 +1271,7 @@ class WebsiteManager:
         try:
             currentACL = ACLManager.loadedACL(userID)
             admin = Administrator.objects.get(pk=userID)
+
 
             extraArgs = {}
             extraArgs['currentACL'] = currentACL
