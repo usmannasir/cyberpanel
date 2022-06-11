@@ -246,6 +246,8 @@ class Upgrade:
                     for items in data:
                         if items.find("wheel") > -1 and items.find("ALL=(ALL)"):
                             continue
+                        elif items.find("root") > -1 and items.find("ALL=(ALL)") > -1 and items[0] != '#':
+                            writeToFile.writelines('root	ALL=(ALL:ALL) 	ALL\n')
                         else:
                             writeToFile.writelines(items)
 
