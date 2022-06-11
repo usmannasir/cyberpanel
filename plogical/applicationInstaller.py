@@ -2119,11 +2119,11 @@ $parameters = array(
 
             ## Search and replace url
 
-            command = f'{FinalPHPPath} -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --path={StagingPath} "{masterDomain}" "{domain}"'
+            command = f'{FinalPHPPath} -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --path={StagingPath} "{wpobj.FinalURL}" "{domain}"'
             if ProcessUtilities.executioner(command, website.externalApp) == 0:
                 raise BaseException('search-replace failed 1. [404]')
 
-            command = f'{FinalPHPPath} -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --path={StagingPath} "www.{masterDomain}" "{domain}"'
+            command = f'{FinalPHPPath} -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --path={StagingPath} "www.{wpobj.FinalURL}" "{domain}"'
             if ProcessUtilities.executioner(command,website.externalApp) == 0:
                 raise BaseException('search-replace failed 2. [404]')
 
