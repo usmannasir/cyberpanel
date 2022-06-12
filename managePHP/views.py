@@ -1290,34 +1290,43 @@ def getExtensionsInformation(request):
                 data = json.loads(request.body)
                 phpVers = data['phpSelection']
 
-                phpVers = "php" + PHPManager.getPHPString(phpVers)
+                phpVers = f"lsphp{PHPManager.getPHPString(phpVers)}"
 
-                php = PHP.objects.get(phpVers=phpVers)
+                # php = PHP.objects.get(phpVers=phpVers)
 
-                records = php.installedpackages_set.all()
+                if os.path.exists('/etc/lsb-release'):
+                    command = f'apt list | grep {phpVers}'
+
+                result = ProcessUtilities.outputExecutioner(command).split('\n')
+
+                #records = php.installedpackages_set.all()
 
                 json_data = "["
                 checker = 0
+                counter = 1
 
-                for items in records:
+                for items in result:
 
-                    if items.status == 0:
-                        status = "Not-Installed"
-                    else:
-                        status = "Installed"
+                    if items.find(phpVers) > -1:
 
-                    dic = {'id': items.id,
-                           'phpVers': items.phpVers.phpVers,
-                           'extensionName': items.extensionName,
-                           'description': items.description,
-                           'status': status
-                           }
+                        if items.find('installed') == -1:
+                            status = "Not-Installed"
+                        else:
+                            status = "Installed"
 
-                    if checker == 0:
-                        json_data = json_data + json.dumps(dic)
-                        checker = 1
-                    else:
-                        json_data = json_data + ',' + json.dumps(dic)
+                        dic = {'id': counter,
+                               'phpVers': phpVers,
+                               'extensionName': items.split('/')[0],
+                               'description': items,
+                               'status': status
+                               }
+
+                        if checker == 0:
+                            json_data = json_data + json.dumps(dic)
+                            checker = 1
+                        else:
+                            json_data = json_data + ',' + json.dumps(dic)
+                        counter += 1
 
                 json_data = json_data + ']'
                 final_json = json.dumps({'fetchStatus': 1, 'error_message': "None", "data": json_data})
