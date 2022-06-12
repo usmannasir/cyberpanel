@@ -1296,6 +1296,11 @@ def getExtensionsInformation(request):
 
                 if os.path.exists('/etc/lsb-release'):
                     command = f'apt list | grep {phpVers}'
+                else:
+                    command = 'yum list installed'
+                    resultInstalled = ProcessUtilities.outputExecutioner(command)
+
+                    command = f'yum list | grep {phpVers} | xargs -n3 | column -t'
 
                 result = ProcessUtilities.outputExecutioner(command).split('\n')
 
@@ -1306,27 +1311,50 @@ def getExtensionsInformation(request):
                 counter = 1
 
                 for items in result:
+                    if os.path.exists('/etc/lsb-release'):
+                        if items.find(phpVers) > -1:
+                            if items.find('installed') == -1:
+                                status = "Not-Installed"
+                            else:
+                                status = "Installed"
 
-                    if items.find(phpVers) > -1:
+                            dic = {'id': counter,
+                                   'phpVers': phpVers,
+                                   'extensionName': items.split('/')[0],
+                                   'description': items,
+                                   'status': status
+                                   }
 
-                        if items.find('installed') == -1:
-                            status = "Not-Installed"
-                        else:
-                            status = "Installed"
+                            if checker == 0:
+                                json_data = json_data + json.dumps(dic)
+                                checker = 1
+                            else:
+                                json_data = json_data + ',' + json.dumps(dic)
+                            counter += 1
+                    else:
+                        ResultExt = items.split(' ')
+                        extesnion = ResultExt[0]
 
-                        dic = {'id': counter,
-                               'phpVers': phpVers,
-                               'extensionName': items.split('/')[0],
-                               'description': items,
-                               'status': status
-                               }
+                        if extesnion.find(phpVers) > -1:
+                            if resultInstalled.find(extesnion) == -1:
+                                status = "Not-Installed"
+                            else:
+                                status = "Installed"
 
-                        if checker == 0:
-                            json_data = json_data + json.dumps(dic)
-                            checker = 1
-                        else:
-                            json_data = json_data + ',' + json.dumps(dic)
-                        counter += 1
+                            dic = {'id': counter,
+                                   'phpVers': phpVers,
+                                   'extensionName': extesnion,
+                                   'description': items,
+                                   'status': status
+                                   }
+
+
+                            if checker == 0:
+                                json_data = json_data + json.dumps(dic)
+                                checker = 1
+                            else:
+                                json_data = json_data + ',' + json.dumps(dic)
+                            counter += 1
 
                 json_data = json_data + ']'
                 final_json = json.dumps({'fetchStatus': 1, 'error_message': "None", "data": json_data})
