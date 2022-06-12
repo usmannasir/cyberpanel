@@ -1447,14 +1447,14 @@ def getRequestStatus(request):
                     command = "sudo rm -f " + phpUtilities.installLogPath
                     ProcessUtilities.executioner(command)
 
-                    if ProcessUtilities.outputExecutioner(checkCommand).find(extensionName) > -1:
-                        ext = installedPackages.objects.get(extensionName=extensionName)
-                        ext.status = 1
-                        ext.save()
-                    else:
-                        ext = installedPackages.objects.get(extensionName=extensionName)
-                        ext.status = 0
-                        ext.save()
+                    # if ProcessUtilities.outputExecutioner(checkCommand).find(extensionName) > -1:
+                    #     ext = installedPackages.objects.get(extensionName=extensionName)
+                    #     ext.status = 1
+                    #     ext.save()
+                    # else:
+                    #     ext = installedPackages.objects.get(extensionName=extensionName)
+                    #     ext.status = 0
+                    #     ext.save()
 
                     final_json = json.dumps({'finished': 1, 'extensionRequestStatus': 1,
                                              'error_message': "None",
@@ -1466,15 +1466,15 @@ def getRequestStatus(request):
                     command = "sudo rm -f " + phpUtilities.installLogPath
                     ProcessUtilities.executioner(command)
 
-                    if ProcessUtilities.outputExecutioner(checkCommand).find(extensionName) > -1:
-                        ext = installedPackages.objects.get(extensionName=extensionName)
-                        ext.status = 1
-                        ext.save()
-
-                    else:
-                        ext = installedPackages.objects.get(extensionName=extensionName)
-                        ext.status = 0
-                        ext.save()
+                    # if ProcessUtilities.outputExecutioner(checkCommand).find(extensionName) > -1:
+                    #     ext = installedPackages.objects.get(extensionName=extensionName)
+                    #     ext.status = 1
+                    #     ext.save()
+                    #
+                    # else:
+                    #     ext = installedPackages.objects.get(extensionName=extensionName)
+                    #     ext.status = 0
+                    #     ext.save()
 
                     final_json = json.dumps({'finished': 1, 'extensionRequestStatus': 1,
                                              'error_message': "None",
@@ -1486,15 +1486,15 @@ def getRequestStatus(request):
                     command = "sudo rm -f " + phpUtilities.installLogPath
                     ProcessUtilities.executioner(command)
 
-                    if ProcessUtilities.outputExecutioner(checkCommand).find(extensionName) > -1:
-                        ext = installedPackages.objects.get(extensionName=extensionName)
-                        ext.status = 1
-                        ext.save()
-
-                    else:
-                        ext = installedPackages.objects.get(extensionName=extensionName)
-                        ext.status = 0
-                        ext.save()
+                    # if ProcessUtilities.outputExecutioner(checkCommand).find(extensionName) > -1:
+                    #     ext = installedPackages.objects.get(extensionName=extensionName)
+                    #     ext.status = 1
+                    #     ext.save()
+                    #
+                    # else:
+                    #     ext = installedPackages.objects.get(extensionName=extensionName)
+                    #     ext.status = 0
+                    #     ext.save()
 
                     final_json = json.dumps({'finished': 1, 'extensionRequestStatus': 1,
                                              'error_message': "None",
@@ -1506,9 +1506,9 @@ def getRequestStatus(request):
                     command = "sudo rm -f " + phpUtilities.installLogPath
                     ProcessUtilities.executioner(command)
 
-                    ext = installedPackages.objects.get(extensionName=extensionName)
-                    ext.status = 0
-                    ext.save()
+                    # ext = installedPackages.objects.get(extensionName=extensionName)
+                    # ext.status = 0
+                    # ext.save()
 
                     final_json = json.dumps({'finished': 1, 'extensionRequestStatus': 1,
                                              'error_message': "None",
