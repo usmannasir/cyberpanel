@@ -1728,9 +1728,6 @@ $parameters = array(
                 statusFile.writelines('Installing WordPress....,30')
                 statusFile.close()
 
-            logging.writeToFile("Pluginbucket  ....... %s" % str(self.data['pluginbucket']))
-
-
             ## Install WordPress
                 ## get save pluginbucket
 
@@ -1777,6 +1774,7 @@ $parameters = array(
 
             webobj = Websites.objects.get(domain= self.extraArgs['domainName'])
 
+
             if self.extraArgs['home'] == '0':
                 path = self.extraArgs['path']
                 finalPath = "/home/" + self.extraArgs['domainName'] + "/public_html/" + path + "/"
@@ -1784,6 +1782,7 @@ $parameters = array(
             else:
                 finalPath = "/home/" + self.extraArgs['domainName'] + "/public_html/"
                 Finalurl = (self.extraArgs['domainName'])
+
 
             wpobj = WPSites(owner=webobj, title=self.extraArgs['blogTitle'], path=finalPath, FinalURL=Finalurl,
                             AutoUpdates=(self.extraArgs['updates']), PluginUpdates=(self.extraArgs['Plugins']),
@@ -2454,6 +2453,15 @@ $parameters = array(
                 newurl = wpsite.FinalURL
 
 
+                #### Check If sub dir in web site
+                try:
+                    abc = newWPpath.split("/")
+                    newpath = abc[4]
+                    home = "0"
+                except BaseException as msg:
+                    home = "1"
+
+
 
                 ### get WPsite Database name and usr
                 php = PHPManager.getPHPString(PhpVersion)
@@ -2508,7 +2516,10 @@ $parameters = array(
 
                 logging.statusWriter(self.tempStatusPath, 'Copying Data File...,50')
                 ###Copy backup content to newsite
-                unzippath ="%s/ab/usr/local/CyberCP/tmp/%s/public_html/public_html/"%(self.tempPath, oldtemppath)
+                if home == "0":
+                    unzippath = "%s/ab/usr/local/CyberCP/tmp/%s/public_html/" % (self.tempPath, oldtemppath)
+                else:
+                    unzippath = "%s/ab/usr/local/CyberCP/tmp/%s/public_html/public_html/" % (self.tempPath, oldtemppath)
                 command = "sudo -u %s cp -R %s* %s" % (VHuser, unzippath, newWPpath)
                 result = ProcessUtilities.outputExecutioner(command)
 
@@ -2567,6 +2578,22 @@ $parameters = array(
                 DataToPass['Themes'] = config['WPThemeUpdates']
                 DataToPass['websiteOwner'] = WebOwner
                 DataToPass['package'] = packegs
+                try:
+                    oldpath = config['WPsitepath']
+                    logging.writeToFile("old path..:%s"%oldpath)
+                    abc = oldpath.split("/")
+                    newpath = abc[4]
+                    newurl = "%s/%s"%(DomainName,newpath)
+                    home = "0"
+                except BaseException as msg:
+                    logging.writeToFile("path error: %s"%msg)
+                    newpath = ""
+                    newurl = DomainName
+                    home = "1"
+
+                DataToPass['path'] = newpath
+
+                DataToPass['home'] = home
 
                 try:
                     website = Websites.objects.get(domain=DomainName)
@@ -2590,11 +2617,11 @@ $parameters = array(
                             time.sleep(2)
 
                     logging.statusWriter(self.tempStatusPath, 'Restoring site ....,30')
-                    NewWPsite =WPSites.objects.get(FinalURL=DomainName)
+                    NewWPsite =WPSites.objects.get(FinalURL=newurl)
                     VHuser = NewWPsite.owner.externalApp
                     PhpVersion = NewWPsite.owner.phpSelection
                     newWPpath = NewWPsite.path
-                    newurl = NewWPsite.FinalURL
+
 
 
                     ###### Same code already used in Existing site
@@ -2653,7 +2680,11 @@ $parameters = array(
 
                     logging.statusWriter(self.tempStatusPath, 'Copying Data File...,60')
                     ###Copy backup content to newsite
-                    unzippath = "%s/ab/usr/local/CyberCP/tmp/%s/public_html/public_html/" % (self.tempPath, oldtemppath)
+                    if home == "0":
+                        unzippath = "%s/ab/usr/local/CyberCP/tmp/%s/public_html/" % (self.tempPath, oldtemppath)
+                    else:
+                        unzippath = "%s/ab/usr/local/CyberCP/tmp/%s/public_html/public_html/" % (self.tempPath, oldtemppath)
+
                     command = "sudo -u %s cp -R %s* %s" % (VHuser, unzippath, newWPpath)
                     result = ProcessUtilities.outputExecutioner(command)
 
