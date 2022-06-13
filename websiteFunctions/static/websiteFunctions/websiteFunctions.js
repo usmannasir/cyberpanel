@@ -1429,6 +1429,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
         $scope.currentStatus = "Starting creation Backups..";
         var data = {
             WPid: $('#WPid').html(),
+            Backuptype: $('#backuptype').val()
         }
         var url = "/websites/WPCreateBackup";
 

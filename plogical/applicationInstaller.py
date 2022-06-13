@@ -2263,12 +2263,13 @@ $parameters = array(
         try:
             from managePHP.phpManager import PHPManager
             import json
-            logging.writeToFile("WPCreateBackup ....... start" )
             self.tempStatusPath = self.extraArgs['tempStatusPath']
             logging.statusWriter(self.tempStatusPath, 'Creating BackUp...,10')
 
             wpsite = WPSites.objects.get(pk=self.extraArgs['WPid'])
             Adminobj = Administrator.objects.get(pk=self.extraArgs['adminID'])
+            Backuptype = self.extraArgs['Backuptype']
+
 
             website = wpsite.owner
             PhpVersion = website.phpSelection
@@ -2280,129 +2281,328 @@ $parameters = array(
             php = PHPManager.getPHPString(PhpVersion)
             FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
 
+            if Backuptype == "1":
 
-            logging.statusWriter(self.tempStatusPath, 'Getting database...,20')
+                logging.statusWriter(self.tempStatusPath, 'Getting database...,20')
 
-            command = f'{FinalPHPPath} -d error_reporting=0 /usr/bin/wp config get DB_NAME  --skip-plugins --skip-themes --path={WPsitepath}'
-            stdoutput = ProcessUtilities.outputExecutioner(command, VHuser)
-            DataBaseName = stdoutput.rstrip("\n")
-
-
-            command = f'{FinalPHPPath} -d error_reporting=0 /usr/bin/wp config get DB_USER  --skip-plugins --skip-themes --path={WPsitepath}'
-            stdoutput = ProcessUtilities.outputExecutioner(command,VHuser)
-            DataBaseUser = stdoutput.rstrip("\n")
+                command = f'{FinalPHPPath} -d error_reporting=0 /usr/bin/wp config get DB_NAME  --skip-plugins --skip-themes --path={WPsitepath}'
+                stdoutput = ProcessUtilities.outputExecutioner(command, VHuser)
+                DataBaseName = stdoutput.rstrip("\n")
 
 
-            ### Create secure folder
-
-            ACLManager.CreateSecureDir()
-            RandomPath = str(randint(1000, 9999))
-            self.tempPath = '%s/%s' % ('/usr/local/CyberCP/tmp', RandomPath)
-
-            command = f'mkdir -p {self.tempPath}'
-            ProcessUtilities.executioner(command)
-
-            command = f'chown -R {wpsite.owner.externalApp}:{wpsite.owner.externalApp} {self.tempPath}'
-            ProcessUtilities.executioner(command)
-
-            ### Make directory for backup
-            logging.statusWriter(self.tempStatusPath, 'Creating Backup Directory...,40')
-
-            command = f"mkdir -p {self.tempPath}/public_html"
-            ProcessUtilities.executioner(command, VHuser)
-
-            config = {}
-            config['WPtitle']=wpsite.title
-            config['WPAutoUpdates']=wpsite.AutoUpdates
-            config['WPFinalURL']=wpsite.FinalURL
-            config['WPPluginUpdates']=wpsite.PluginUpdates
-            config['WPThemeUpdates']=wpsite.ThemeUpdates
-            config['WPowner_id']=wpsite.owner_id
-            config["WPsitepath"] = wpsite.path
-            config["DatabaseName"] = DataBaseName
-            config["DatabaseUser"] = DataBaseUser
-            config['RandomPath'] = RandomPath
-            config["WebDomain"] = websitedomain
-            config['WebadminEmail'] = website.adminEmail
-            config['WebphpSelection'] = website.phpSelection
-            config['Webssl'] = website.ssl
-            config['Webstate'] = website.state
-            config['WebVHuser'] = website.externalApp
-            config['Webpackage_id'] = website.package_id
-            config['Webadmin_id'] = website.admin_id
-            config['name'] = 'backup-' + websitedomain + "-" + time.strftime("%m.%d.%Y_%H-%M-%S")
-
-            ###############Create config.Json file
-            #command = "sudo -u %s touch /home/cyberpanel/config.json" % (VHuser)
-            #ProcessUtilities.executioner(command)
-            ###### write into config
-            json_object = json.dumps(config, indent=4)
-            configPath = "/home/cyberpanel/" + str(randint(1000, 9999))
-            file = open(configPath, "w")
-            file.write(json_object)
-            file.close()
-
-            os.chmod(configPath, 0o600)
-
-            command = f"cp -R {configPath} {self.tempPath}"
-            ProcessUtilities.executioner(command, VHuser)
-
-            command = f"rm -r {configPath}"
-            ProcessUtilities.executioner(command)
-
-            logging.statusWriter(self.tempStatusPath, 'Copying website data.....,50')
-
-            ############## Copy Public_htnl to backup
-            command = "sudo -u %s cp -R %s* %s/public_html" % (VHuser, WPsitepath, self.tempPath)
-            result = ProcessUtilities.outputExecutioner(command)
-
-            if os.path.exists(ProcessUtilities.debugPath):
-                logging.writeToFile(result)
-
-            command = "sudo -u %s cp -R %s.[^.]* %s/public_html/" % (VHuser, WPsitepath, self.tempPath)
-            result = ProcessUtilities.outputExecutioner(command)
-
-            if os.path.exists(ProcessUtilities.debugPath):
-                logging.writeToFile(result)
-
-            logging.statusWriter(self.tempStatusPath, 'Copying DataBase.....,70')
+                command = f'{FinalPHPPath} -d error_reporting=0 /usr/bin/wp config get DB_USER  --skip-plugins --skip-themes --path={WPsitepath}'
+                stdoutput = ProcessUtilities.outputExecutioner(command,VHuser)
+                DataBaseUser = stdoutput.rstrip("\n")
 
 
+                ### Create secure folder
 
-            ##### SQLDUMP database into new directory
+                ACLManager.CreateSecureDir()
+                RandomPath = str(randint(1000, 9999))
+                self.tempPath = '%s/%s' % ('/usr/local/CyberCP/tmp', RandomPath)
 
-            command = "mysqldump %s --result-file %s/%s.sql" % (DataBaseName, self.tempPath, DataBaseName)
-            result = ProcessUtilities.outputExecutioner(command)
+                command = f'mkdir -p {self.tempPath}'
+                ProcessUtilities.executioner(command)
 
-            if os.path.exists(ProcessUtilities.debugPath):
-                logging.writeToFile(result)
+                command = f'chown -R {wpsite.owner.externalApp}:{wpsite.owner.externalApp} {self.tempPath}'
+                ProcessUtilities.executioner(command)
+
+                ### Make directory for backup
+                logging.statusWriter(self.tempStatusPath, 'Creating Backup Directory...,40')
+
+                command = f"mkdir -p {self.tempPath}/public_html"
+                ProcessUtilities.executioner(command, VHuser)
+
+                config = {}
+                config['WPtitle']=wpsite.title
+                config['WPAutoUpdates']=wpsite.AutoUpdates
+                config['WPFinalURL']=wpsite.FinalURL
+                config['WPPluginUpdates']=wpsite.PluginUpdates
+                config['WPThemeUpdates']=wpsite.ThemeUpdates
+                config['WPowner_id']=wpsite.owner_id
+                config["WPsitepath"] = wpsite.path
+                config["DatabaseName"] = DataBaseName
+                config["DatabaseUser"] = DataBaseUser
+                config['RandomPath'] = RandomPath
+                config["WebDomain"] = websitedomain
+                config['WebadminEmail'] = website.adminEmail
+                config['WebphpSelection'] = website.phpSelection
+                config['Webssl'] = website.ssl
+                config['Webstate'] = website.state
+                config['WebVHuser'] = website.externalApp
+                config['Webpackage_id'] = website.package_id
+                config['Webadmin_id'] = website.admin_id
+                config['name'] = 'backup-' + websitedomain + "-" + time.strftime("%m.%d.%Y_%H-%M-%S")
+                config['Backuptype'] = "Both Website and DataBase"
+                ###############Create config.Json file
+                #command = "sudo -u %s touch /home/cyberpanel/config.json" % (VHuser)
+                #ProcessUtilities.executioner(command)
+                ###### write into config
+                json_object = json.dumps(config, indent=4)
+                configPath = "/home/cyberpanel/" + str(randint(1000, 9999))
+                file = open(configPath, "w")
+                file.write(json_object)
+                file.close()
+
+                os.chmod(configPath, 0o600)
+
+                command = f"cp -R {configPath} {self.tempPath}"
+                ProcessUtilities.executioner(command, VHuser)
+
+                command = f"rm -r {configPath}"
+                ProcessUtilities.executioner(command)
+
+                logging.statusWriter(self.tempStatusPath, 'Copying website data.....,50')
+
+                ############## Copy Public_htnl to backup
+                command = "sudo -u %s cp -R %s* %s/public_html" % (VHuser, WPsitepath, self.tempPath)
+                result = ProcessUtilities.outputExecutioner(command)
+
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.writeToFile(result)
+
+                command = "sudo -u %s cp -R %s.[^.]* %s/public_html/" % (VHuser, WPsitepath, self.tempPath)
+                result = ProcessUtilities.outputExecutioner(command)
+
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.writeToFile(result)
+
+                logging.statusWriter(self.tempStatusPath, 'Copying DataBase.....,70')
 
 
 
-            ######## Zip backup directory
-            logging.statusWriter(self.tempStatusPath, 'Compressing backup files.....,80')
+                ##### SQLDUMP database into new directory
 
-            websitepath = "/home/%s"%websitedomain
+                command = "mysqldump %s --result-file %s/%s.sql" % (DataBaseName, self.tempPath, DataBaseName)
+                result = ProcessUtilities.outputExecutioner(command)
 
-            FinalZipPath = '%s/%s.zip' % (websitepath, RandomPath)
-
-            command = 'mkdir -p /home/backup/'
-            ProcessUtilities.executioner(command)
-
-            command = f"tar -czvf /home/backup/{config['name']}.tar.gz -P {self.tempPath}"
-            result = ProcessUtilities.outputExecutioner(command)
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.writeToFile(result)
 
 
-            backupobj = WPSitesBackup(owner=Adminobj, WPSiteID=wpsite.id, WebsiteID=website.id, config=json_object)
-            backupobj.save()
-            if os.path.exists(ProcessUtilities.debugPath):
-                logging.writeToFile(result)
 
-            command = f'rm -rf {self.tempPath}'
-            ProcessUtilities.executioner(command)
+                ######## Zip backup directory
+                logging.statusWriter(self.tempStatusPath, 'Compressing backup files.....,80')
 
-            logging.statusWriter(self.tempStatusPath, 'Completed.[200]')
-            return 1, f"/home/backup/{config['name']}.tar.gz"
+                websitepath = "/home/%s"%websitedomain
+
+                FinalZipPath = '%s/%s.zip' % (websitepath, RandomPath)
+
+                command = 'mkdir -p /home/backup/'
+                ProcessUtilities.executioner(command)
+
+                command = f"tar -czvf /home/backup/{config['name']}.tar.gz -P {self.tempPath}"
+                result = ProcessUtilities.outputExecutioner(command)
+
+
+                backupobj = WPSitesBackup(owner=Adminobj, WPSiteID=wpsite.id, WebsiteID=website.id, config=json_object)
+                backupobj.save()
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.writeToFile(result)
+
+                command = f'rm -rf {self.tempPath}'
+                ProcessUtilities.executioner(command)
+
+                logging.statusWriter(self.tempStatusPath, 'Completed.[200]')
+                return 1, f"/home/backup/{config['name']}.tar.gz"
+            elif Backuptype == "2":
+                ###Onlye website data
+                ### Create secure folder
+
+                ACLManager.CreateSecureDir()
+                RandomPath = str(randint(1000, 9999))
+                self.tempPath = '%s/%s' % ('/usr/local/CyberCP/tmp', RandomPath)
+
+                command = f'mkdir -p {self.tempPath}'
+                ProcessUtilities.executioner(command)
+
+                command = f'chown -R {wpsite.owner.externalApp}:{wpsite.owner.externalApp} {self.tempPath}'
+                ProcessUtilities.executioner(command)
+
+                ### Make directory for backup
+                logging.statusWriter(self.tempStatusPath, 'Creating Backup Directory...,40')
+
+                command = f"mkdir -p {self.tempPath}/public_html"
+                ProcessUtilities.executioner(command, VHuser)
+
+                config = {}
+                config['WPtitle'] = wpsite.title
+                config['WPAutoUpdates'] = wpsite.AutoUpdates
+                config['WPFinalURL'] = wpsite.FinalURL
+                config['WPPluginUpdates'] = wpsite.PluginUpdates
+                config['WPThemeUpdates'] = wpsite.ThemeUpdates
+                config['WPowner_id'] = wpsite.owner_id
+                config["WPsitepath"] = wpsite.path
+                config["DatabaseName"] = "Not availabe"
+                config["DatabaseUser"] = "Not availabe"
+                config['RandomPath'] = RandomPath
+                config["WebDomain"] = websitedomain
+                config['WebadminEmail'] = website.adminEmail
+                config['WebphpSelection'] = website.phpSelection
+                config['Webssl'] = website.ssl
+                config['Webstate'] = website.state
+                config['WebVHuser'] = website.externalApp
+                config['Webpackage_id'] = website.package_id
+                config['Webadmin_id'] = website.admin_id
+                config['name'] = 'backup-' + websitedomain + "-" + time.strftime("%m.%d.%Y_%H-%M-%S")
+                config['Backuptype'] = "Website Backup"
+                ###############Create config.Json file
+                # command = "sudo -u %s touch /home/cyberpanel/config.json" % (VHuser)
+                # ProcessUtilities.executioner(command)
+                ###### write into config
+                json_object = json.dumps(config, indent=4)
+                configPath = "/home/cyberpanel/" + str(randint(1000, 9999))
+                file = open(configPath, "w")
+                file.write(json_object)
+                file.close()
+
+                os.chmod(configPath, 0o600)
+
+                command = f"cp -R {configPath} {self.tempPath}"
+                ProcessUtilities.executioner(command, VHuser)
+
+                command = f"rm -r {configPath}"
+                ProcessUtilities.executioner(command)
+
+                logging.statusWriter(self.tempStatusPath, 'Copying website data.....,50')
+
+                ############## Copy Public_htnl to backup
+                command = "sudo -u %s cp -R %s* %s/public_html" % (VHuser, WPsitepath, self.tempPath)
+                result = ProcessUtilities.outputExecutioner(command)
+
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.writeToFile(result)
+
+                command = "sudo -u %s cp -R %s.[^.]* %s/public_html/" % (VHuser, WPsitepath, self.tempPath)
+                result = ProcessUtilities.outputExecutioner(command)
+
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.writeToFile(result)
+
+                ######## Zip backup directory
+                logging.statusWriter(self.tempStatusPath, 'Compressing backup files.....,80')
+
+                websitepath = "/home/%s" % websitedomain
+
+                FinalZipPath = '%s/%s.zip' % (websitepath, RandomPath)
+
+                command = 'mkdir -p /home/backup/'
+                ProcessUtilities.executioner(command)
+
+                command = f"tar -czvf /home/backup/{config['name']}.tar.gz -P {self.tempPath}"
+                result = ProcessUtilities.outputExecutioner(command)
+
+                backupobj = WPSitesBackup(owner=Adminobj, WPSiteID=wpsite.id, WebsiteID=website.id,
+                                          config=json_object)
+                backupobj.save()
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.writeToFile(result)
+
+                command = f'rm -rf {self.tempPath}'
+                ProcessUtilities.executioner(command)
+
+                logging.statusWriter(self.tempStatusPath, 'Completed.[200]')
+                return 1, f"/home/backup/{config['name']}.tar.gz"
+            else:
+                ###only backup of data base
+                logging.statusWriter(self.tempStatusPath, 'Getting database...,20')
+
+                command = f'{FinalPHPPath} -d error_reporting=0 /usr/bin/wp config get DB_NAME  --skip-plugins --skip-themes --path={WPsitepath}'
+                stdoutput = ProcessUtilities.outputExecutioner(command, VHuser)
+                DataBaseName = stdoutput.rstrip("\n")
+
+                command = f'{FinalPHPPath} -d error_reporting=0 /usr/bin/wp config get DB_USER  --skip-plugins --skip-themes --path={WPsitepath}'
+                stdoutput = ProcessUtilities.outputExecutioner(command, VHuser)
+                DataBaseUser = stdoutput.rstrip("\n")
+
+                ### Create secure folder
+
+                ACLManager.CreateSecureDir()
+                RandomPath = str(randint(1000, 9999))
+                self.tempPath = '%s/%s' % ('/usr/local/CyberCP/tmp', RandomPath)
+
+                command = f'mkdir -p {self.tempPath}'
+                ProcessUtilities.executioner(command)
+
+                command = f'chown -R {wpsite.owner.externalApp}:{wpsite.owner.externalApp} {self.tempPath}'
+                ProcessUtilities.executioner(command)
+
+                ### Make directory for backup
+                logging.statusWriter(self.tempStatusPath, 'Creating Backup Directory...,40')
+
+
+                config = {}
+                config['WPtitle'] = wpsite.title
+                config['WPAutoUpdates'] = wpsite.AutoUpdates
+                config['WPFinalURL'] = wpsite.FinalURL
+                config['WPPluginUpdates'] = wpsite.PluginUpdates
+                config['WPThemeUpdates'] = wpsite.ThemeUpdates
+                config['WPowner_id'] = wpsite.owner_id
+                config["WPsitepath"] = wpsite.path
+                config["DatabaseName"] = DataBaseName
+                config["DatabaseUser"] = DataBaseUser
+                config['RandomPath'] = RandomPath
+                config["WebDomain"] = websitedomain
+                config['WebadminEmail'] = website.adminEmail
+                config['WebphpSelection'] = website.phpSelection
+                config['Webssl'] = website.ssl
+                config['Webstate'] = website.state
+                config['WebVHuser'] = website.externalApp
+                config['Webpackage_id'] = website.package_id
+                config['Webadmin_id'] = website.admin_id
+                config['name'] = 'backup-' + websitedomain + "-" + time.strftime("%m.%d.%Y_%H-%M-%S")
+                config['Backuptype'] = "DataBase Backup"
+                ###############Create config.Json file
+                # command = "sudo -u %s touch /home/cyberpanel/config.json" % (VHuser)
+                # ProcessUtilities.executioner(command)
+                ###### write into config
+                json_object = json.dumps(config, indent=4)
+                configPath = "/home/cyberpanel/" + str(randint(1000, 9999))
+                file = open(configPath, "w")
+                file.write(json_object)
+                file.close()
+
+                os.chmod(configPath, 0o600)
+
+                command = f"cp -R {configPath} {self.tempPath}"
+                ProcessUtilities.executioner(command, VHuser)
+
+                command = f"rm -r {configPath}"
+                ProcessUtilities.executioner(command)
+
+                logging.statusWriter(self.tempStatusPath, 'Copying DataBase.....,70')
+
+                ##### SQLDUMP database into new directory
+
+                command = "mysqldump %s --result-file %s/%s.sql" % (DataBaseName, self.tempPath, DataBaseName)
+                result = ProcessUtilities.outputExecutioner(command)
+
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.writeToFile(result)
+
+                ######## Zip backup directory
+                logging.statusWriter(self.tempStatusPath, 'Compressing backup files.....,80')
+
+                websitepath = "/home/%s" % websitedomain
+
+                FinalZipPath = '%s/%s.zip' % (websitepath, RandomPath)
+
+                command = 'mkdir -p /home/backup/'
+                ProcessUtilities.executioner(command)
+
+                command = f"tar -czvf /home/backup/{config['name']}.tar.gz -P {self.tempPath}"
+                result = ProcessUtilities.outputExecutioner(command)
+
+                backupobj = WPSitesBackup(owner=Adminobj, WPSiteID=wpsite.id, WebsiteID=website.id, config=json_object)
+                backupobj.save()
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.writeToFile(result)
+
+                command = f'rm -rf {self.tempPath}'
+                ProcessUtilities.executioner(command)
+
+                logging.statusWriter(self.tempStatusPath, 'Completed.[200]')
+                return 1, f"/home/backup/{config['name']}.tar.gz"
 
         except BaseException as msg:
             logging.writeToFile("Error WPCreateBackup ....... %s" % str(msg))
@@ -2440,213 +2640,53 @@ $parameters = array(
             WebOwnerobj = Administrator.objects.get(pk=config['Webadmin_id'])
             WebOwner = WebOwnerobj.userName
 
+            #####Check Backup Type
+            BackupType = config['Backuptype']
+
+            if BackupType == 'DataBase Backup':
+                pass
+            elif BackupType == 'Website Backup':
+                pass
+            else:
+                #### Methode of Restoring
+                ############## Existing site
+                if (DomainName == "" and int(self.extraArgs['DesSiteID']) != -1):
+                    wpsite = WPSites.objects.get(pk=DesSiteID)
+                    VHuser = wpsite.owner.externalApp
+                    PhpVersion = wpsite.owner.phpSelection
+                    newWPpath = wpsite.path
+                    newurl = wpsite.FinalURL
 
 
-
-            #### Methode of Restoring
-            ############## Existing site
-            if (DomainName == "" and int(self.extraArgs['DesSiteID']) != -1):
-                wpsite = WPSites.objects.get(pk=DesSiteID)
-                VHuser = wpsite.owner.externalApp
-                PhpVersion = wpsite.owner.phpSelection
-                newWPpath = wpsite.path
-                newurl = wpsite.FinalURL
-
-
-                #### Check If sub dir in web site
-                try:
-                    abc = newWPpath.split("/")
-                    newpath = abc[4]
-                    home = "0"
-                except BaseException as msg:
-                    home = "1"
-
-
-
-                ### get WPsite Database name and usr
-                php = PHPManager.getPHPString(PhpVersion)
-                FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
-
-                ######Get DBname
-                command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp config get DB_NAME  --skip-plugins --skip-themes --path=%s' % (VHuser, FinalPHPPath, newWPpath)
-                stdout = ProcessUtilities.outputExecutioner(command)
-                Finaldbname = stdout.rstrip("\n")
-
-                ######Get DBuser
-                command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp config get DB_USER  --skip-plugins --skip-themes --path=%s' % (VHuser, FinalPHPPath, newWPpath)
-                stdout = ProcessUtilities.outputExecutioner(command)
-                Finaldbuser = stdout.rstrip("\n")
-
-
-                #####Get DBpsswd
-                command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp config get DB_PASSWORD  --skip-plugins --skip-themes --path=%s' % (VHuser, FinalPHPPath, newWPpath)
-                stdout = ProcessUtilities.outputExecutioner(command)
-                Finaldbpasswd = stdout.rstrip("\n")
-
-
-                ### Create secure folder
-
-                ACLManager.CreateSecureDir()
-                RandomPath = str(randint(1000, 9999))
-                self.tempPath = '%s/%s' % ('/usr/local/CyberCP/tmp', RandomPath)
-
-                command = f'mkdir -p {self.tempPath}'
-                ProcessUtilities.executioner(command)
-
-                command = f'chown -R {wpsite.owner.externalApp}:{wpsite.owner.externalApp} {self.tempPath}'
-                ProcessUtilities.executioner(command)
-
-                logging.statusWriter(self.tempStatusPath, 'Extracting Backup File...,30')
-
-                ###First copy backup file to temp and then Unzip
-                command = "sudo -u %s cp -R /home/backup/%s* %s" % (VHuser, BackUpFileName, self.tempPath)
-                ProcessUtilities.executioner(command)
-
-                #### Make temp dir ab for unzip
-                command ="sudo -u %s mkdir %s/ab"%(VHuser,self.tempPath)
-                ProcessUtilities.executioner(command)
-
-                command = "sudo -u %s tar -xvf  %s/%s.tar.gz -C %s/ab" % (VHuser, self.tempPath, BackUpFileName, self.tempPath)
-                ProcessUtilities.outputExecutioner(command)
-
-
-                ###first empty the Existing site phblichtml folder
-                command = "sudo -u %s rm -r %s/*"%(VHuser, newWPpath)
-                result = ProcessUtilities.outputExecutioner(command)
-
-                logging.statusWriter(self.tempStatusPath, 'Copying Data File...,50')
-                ###Copy backup content to newsite
-                if home == "0":
-                    unzippath = "%s/ab/usr/local/CyberCP/tmp/%s/public_html/" % (self.tempPath, oldtemppath)
-                else:
-                    unzippath = "%s/ab/usr/local/CyberCP/tmp/%s/public_html/public_html/" % (self.tempPath, oldtemppath)
-                command = "sudo -u %s cp -R %s* %s" % (VHuser, unzippath, newWPpath)
-                result = ProcessUtilities.outputExecutioner(command)
-
-
-                #dump Mysql file in unzippath path
-                unzippath2 = "%s/ab/usr/local/CyberCP/tmp/%s/%s" % (self.tempPath, oldtemppath, DumpFileName)
-                command = "mysql -u root %s < %s" % (Finaldbname, unzippath2)
-                ProcessUtilities.outputExecutioner(command)
-
-                logging.statusWriter(self.tempStatusPath, 'Restoreing Data Base...,70')
-                #####SetUp DataBase Settings
-                ##set DBName
-                command = "sudo -u %s %s /usr/bin/wp config set DB_NAME %s --skip-plugins --skip-themes --path=%s" % (VHuser, FinalPHPPath, Finaldbname, newWPpath)
-                ProcessUtilities.outputExecutioner(command)
-
-                ##set DBuser
-                command = "sudo -u %s %s /usr/bin/wp config set DB_USER %s --skip-plugins --skip-themes --path=%s" % (VHuser, FinalPHPPath, Finaldbuser, newWPpath)
-                ProcessUtilities.outputExecutioner(command)
-
-                ##set DBpasswd
-                command = "sudo -u %s %s /usr/bin/wp config set DB_PASSWORD %s --skip-plugins --skip-themes --path=%s" % (VHuser, FinalPHPPath, Finaldbpasswd, newWPpath)
-                ProcessUtilities.outputExecutioner(command)
-
-                logging.statusWriter(self.tempStatusPath, 'Replacing URLs...,90')
-                ########Now Replace URL's
-                command = 'sudo -u %s /usr/local/lsws/lsphp74/bin/php -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --path=%s "%s" "%s"' % (VHuser, newWPpath, oldurl, newurl)
-                ProcessUtilities.outputExecutioner(command)
-
-                command = 'sudo -u %s /usr/local/lsws/lsphp74/bin/php -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --allow-root --path=%s "https://www.%s" "http://%s"' % (VHuser, newWPpath, newurl, newurl)
-                ProcessUtilities.outputExecutioner(command)
-
-                ##Remove temppath
-                command = f'rm -rf {self.tempPath}'
-                ProcessUtilities.executioner(command)
-
-                ###Restart Server
-
-                from plogical.installUtilities import installUtilities
-                installUtilities.reStartLiteSpeed()
-
-
-            ############## New Site
-            elif(DomainName != "" and int(self.extraArgs['DesSiteID']) == -1):
-            ###############Create New WordPressSite First
-                # logging.writeToFile("New Website Domain ....... %s" % str(DomainName))
-                DataToPass = {}
-
-                DataToPass['title'] = config['WPtitle']
-                DataToPass['domain'] = DomainName
-                DataToPass['WPVersion'] = "6.0"
-                DataToPass['adminUser'] = config['WebVHuser']
-                DataToPass['Email'] = config['WebadminEmail']
-                DataToPass['PasswordByPass'] =  config['DatabaseUser']
-                DataToPass['AutomaticUpdates'] = config['WPAutoUpdates']
-                DataToPass['Plugins'] = config['WPPluginUpdates']
-                DataToPass['Themes'] = config['WPThemeUpdates']
-                DataToPass['websiteOwner'] = WebOwner
-                DataToPass['package'] = packegs
-                try:
-                    oldpath = config['WPsitepath']
-                    logging.writeToFile("old path..:%s"%oldpath)
-                    abc = oldpath.split("/")
-                    newpath = abc[4]
-                    newurl = "%s/%s"%(DomainName,newpath)
-                    home = "0"
-                except BaseException as msg:
-                    logging.writeToFile("path error: %s"%msg)
-                    newpath = ""
-                    newurl = DomainName
-                    home = "1"
-
-                DataToPass['path'] = newpath
-
-                DataToPass['home'] = home
-
-                try:
-                    website = Websites.objects.get(domain=DomainName)
-                    logging.statusWriter(self.tempStatusPath, 'Web Site Already Exist.[404]')
-                except:
-                    ab = WebsiteManager()
-                    coreResult = ab.submitWorpressCreation(userID, DataToPass)
-                    coreResult1 = json.loads((coreResult).content)
-                    logging.writeToFile("WP Creating website result....%s" % coreResult1)
-                    reutrntempath = coreResult1['tempStatusPath']
-                    while (1):
-                        lastLine = open(reutrntempath, 'r').read()
-                        logging.writeToFile("Error WP creating lastline ....... %s" % lastLine)
-                        if lastLine.find('[200]') > -1:
-                            break
-                        elif lastLine.find('[404]') > -1:
-                            logging.statusWriter(self.tempStatusPath, 'Failed to WordPress: error: %s. [404]'% lastLine)
-                            return 0
-                        else:
-                            logging.statusWriter(self.tempStatusPath, 'Creating WordPress....,20')
-                            time.sleep(2)
-
-                    logging.statusWriter(self.tempStatusPath, 'Restoring site ....,30')
-                    NewWPsite =WPSites.objects.get(FinalURL=newurl)
-                    VHuser = NewWPsite.owner.externalApp
-                    PhpVersion = NewWPsite.owner.phpSelection
-                    newWPpath = NewWPsite.path
-
-
-
-                    ###### Same code already used in Existing site
+                    #### Check If sub dir in web site
+                    try:
+                        oldpath = config['WPsitepath']
+                        abc = oldpath.split("/")
+                        pathexta = abc[4]
+                        home = "0"
+                    except BaseException as msg:
+                        home = "1"
 
                     ### get WPsite Database name and usr
                     php = PHPManager.getPHPString(PhpVersion)
                     FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
 
                     ######Get DBname
-                    command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp config get DB_NAME  --skip-plugins --skip-themes --path=%s' % (
-                    VHuser, FinalPHPPath, newWPpath)
+                    command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp config get DB_NAME  --skip-plugins --skip-themes --path=%s' % (VHuser, FinalPHPPath, newWPpath)
                     stdout = ProcessUtilities.outputExecutioner(command)
                     Finaldbname = stdout.rstrip("\n")
 
                     ######Get DBuser
-                    command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp config get DB_USER  --skip-plugins --skip-themes --path=%s' % (
-                    VHuser, FinalPHPPath, newWPpath)
+                    command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp config get DB_USER  --skip-plugins --skip-themes --path=%s' % (VHuser, FinalPHPPath, newWPpath)
                     stdout = ProcessUtilities.outputExecutioner(command)
                     Finaldbuser = stdout.rstrip("\n")
 
+
                     #####Get DBpsswd
-                    command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp config get DB_PASSWORD  --skip-plugins --skip-themes --path=%s' % (
-                    VHuser, FinalPHPPath, newWPpath)
+                    command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp config get DB_PASSWORD  --skip-plugins --skip-themes --path=%s' % (VHuser, FinalPHPPath, newWPpath)
                     stdout = ProcessUtilities.outputExecutioner(command)
                     Finaldbpasswd = stdout.rstrip("\n")
+
 
                     ### Create secure folder
 
@@ -2657,70 +2697,73 @@ $parameters = array(
                     command = f'mkdir -p {self.tempPath}'
                     ProcessUtilities.executioner(command)
 
-                    command = f'chown -R {NewWPsite.owner.externalApp}:{NewWPsite.owner.externalApp} {self.tempPath}'
+                    command = f'chown -R {wpsite.owner.externalApp}:{wpsite.owner.externalApp} {self.tempPath}'
                     ProcessUtilities.executioner(command)
 
-                    logging.statusWriter(self.tempStatusPath, 'Extracting Backup File...,40')
+                    logging.statusWriter(self.tempStatusPath, 'Extracting Backup File...,30')
 
                     ###First copy backup file to temp and then Unzip
                     command = "sudo -u %s cp -R /home/backup/%s* %s" % (VHuser, BackUpFileName, self.tempPath)
                     ProcessUtilities.executioner(command)
 
                     #### Make temp dir ab for unzip
-                    command = "sudo -u %s mkdir %s/ab" % (VHuser, self.tempPath)
+                    command ="sudo -u %s mkdir %s/ab"%(VHuser,self.tempPath)
                     ProcessUtilities.executioner(command)
 
-                    command = "sudo -u %s tar -xvf  %s/%s.tar.gz -C %s/ab" % (
-                    VHuser, self.tempPath, BackUpFileName, self.tempPath)
+                    command = "sudo -u %s tar -xvf  %s/%s.tar.gz -C %s/ab" % (VHuser, self.tempPath, BackUpFileName, self.tempPath)
                     ProcessUtilities.outputExecutioner(command)
 
-                    ###first empty the Existing site phblichtml folder
-                    command = "sudo -u %s rm -r %s/*" % (VHuser, newWPpath)
-                    result = ProcessUtilities.outputExecutioner(command)
 
-                    logging.statusWriter(self.tempStatusPath, 'Copying Data File...,60')
+
+                    logging.statusWriter(self.tempStatusPath, 'Copying Data File...,50')
                     ###Copy backup content to newsite
                     if home == "0":
+
                         unzippath = "%s/ab/usr/local/CyberCP/tmp/%s/public_html/" % (self.tempPath, oldtemppath)
+                        ###make dir of sub folder in existing site
+                        command = "sudo -u %s mkdir %s%s"%(VHuser, newWPpath, pathexta)
+                        ProcessUtilities.executioner(command)
+                        Webnewpath = str(newWPpath)+str(pathexta)
                     else:
                         unzippath = "%s/ab/usr/local/CyberCP/tmp/%s/public_html/public_html/" % (self.tempPath, oldtemppath)
+                        Webnewpath = newWPpath
 
-                    command = "sudo -u %s cp -R %s* %s" % (VHuser, unzippath, newWPpath)
+
+                    command = "sudo -u %s cp -R %s* %s" % (VHuser, unzippath, Webnewpath)
                     result = ProcessUtilities.outputExecutioner(command)
 
-                    # dump Mysql file in unzippath path
+                    command = "sudo -u %s cp -R %s.[^.]* %s" % (VHuser, unzippath, Webnewpath)
+                    result = ProcessUtilities.outputExecutioner(command)
+
+
+                    #dump Mysql file in unzippath path
                     unzippath2 = "%s/ab/usr/local/CyberCP/tmp/%s/%s" % (self.tempPath, oldtemppath, DumpFileName)
                     command = "mysql -u root %s < %s" % (Finaldbname, unzippath2)
                     ProcessUtilities.outputExecutioner(command)
 
-                    logging.statusWriter(self.tempStatusPath, 'Restoreing Data Base...,80')
+                    logging.statusWriter(self.tempStatusPath, 'Restoreing Data Base...,70')
                     #####SetUp DataBase Settings
                     ##set DBName
-                    command = "sudo -u %s %s /usr/bin/wp config set DB_NAME %s --skip-plugins --skip-themes --path=%s" % (
-                    VHuser, FinalPHPPath, Finaldbname, newWPpath)
+                    command = "sudo -u %s %s /usr/bin/wp config set DB_NAME %s --skip-plugins --skip-themes --path=%s" % (VHuser, FinalPHPPath, Finaldbname, newWPpath)
                     ProcessUtilities.outputExecutioner(command)
 
                     ##set DBuser
-                    command = "sudo -u %s %s /usr/bin/wp config set DB_USER %s --skip-plugins --skip-themes --path=%s" % (
-                    VHuser, FinalPHPPath, Finaldbuser, newWPpath)
+                    command = "sudo -u %s %s /usr/bin/wp config set DB_USER %s --skip-plugins --skip-themes --path=%s" % (VHuser, FinalPHPPath, Finaldbuser, newWPpath)
                     ProcessUtilities.outputExecutioner(command)
 
                     ##set DBpasswd
-                    command = "sudo -u %s %s /usr/bin/wp config set DB_PASSWORD %s --skip-plugins --skip-themes --path=%s" % (
-                    VHuser, FinalPHPPath, Finaldbpasswd, newWPpath)
+                    command = "sudo -u %s %s /usr/bin/wp config set DB_PASSWORD %s --skip-plugins --skip-themes --path=%s" % (VHuser, FinalPHPPath, Finaldbpasswd, newWPpath)
                     ProcessUtilities.outputExecutioner(command)
 
                     logging.statusWriter(self.tempStatusPath, 'Replacing URLs...,90')
                     ########Now Replace URL's
-                    command = 'sudo -u %s /usr/local/lsws/lsphp74/bin/php -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --path=%s "%s" "%s"' % (
-                    VHuser, newWPpath, oldurl, newurl)
+                    command = 'sudo -u %s /usr/local/lsws/lsphp74/bin/php -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --path=%s "%s" "%s"' % (VHuser, newWPpath, oldurl, newurl)
                     ProcessUtilities.outputExecutioner(command)
 
-                    command = 'sudo -u %s /usr/local/lsws/lsphp74/bin/php -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --allow-root --path=%s "https://www.%s" "http://%s"' % (
-                    VHuser, newWPpath, newurl, newurl)
+                    command = 'sudo -u %s /usr/local/lsws/lsphp74/bin/php -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --allow-root --path=%s "https://www.%s" "http://%s"' % (VHuser, newWPpath, newurl, newurl)
                     ProcessUtilities.outputExecutioner(command)
 
-                    ##Remove temppath
+                    # ##Remove temppath
                     command = f'rm -rf {self.tempPath}'
                     ProcessUtilities.executioner(command)
 
@@ -2728,6 +2771,172 @@ $parameters = array(
 
                     from plogical.installUtilities import installUtilities
                     installUtilities.reStartLiteSpeed()
+                ############## New Site
+                elif(DomainName != "" and int(self.extraArgs['DesSiteID']) == -1):
+                ###############Create New WordPressSite First
+                    # logging.writeToFile("New Website Domain ....... %s" % str(DomainName))
+                    DataToPass = {}
+
+                    DataToPass['title'] = config['WPtitle']
+                    DataToPass['domain'] = DomainName
+                    DataToPass['WPVersion'] = "6.0"
+                    DataToPass['adminUser'] = config['WebVHuser']
+                    DataToPass['Email'] = config['WebadminEmail']
+                    DataToPass['PasswordByPass'] =  config['DatabaseUser']
+                    DataToPass['AutomaticUpdates'] = config['WPAutoUpdates']
+                    DataToPass['Plugins'] = config['WPPluginUpdates']
+                    DataToPass['Themes'] = config['WPThemeUpdates']
+                    DataToPass['websiteOwner'] = WebOwner
+                    DataToPass['package'] = packegs
+                    try:
+                        oldpath = config['WPsitepath']
+                        abc = oldpath.split("/")
+                        newpath = abc[4]
+                        newurl = "%s/%s"%(DomainName,newpath)
+                        home = "0"
+                    except BaseException as msg:
+                        newpath = ""
+                        newurl = DomainName
+                        home = "1"
+
+                    DataToPass['path'] = newpath
+
+                    DataToPass['home'] = home
+
+                    try:
+                        website = Websites.objects.get(domain=DomainName)
+                        logging.statusWriter(self.tempStatusPath, 'Web Site Already Exist.[404]')
+                    except:
+                        ab = WebsiteManager()
+                        coreResult = ab.submitWorpressCreation(userID, DataToPass)
+                        coreResult1 = json.loads((coreResult).content)
+                        logging.writeToFile("WP Creating website result....%s" % coreResult1)
+                        reutrntempath = coreResult1['tempStatusPath']
+                        while (1):
+                            lastLine = open(reutrntempath, 'r').read()
+                            logging.writeToFile("Error WP creating lastline ....... %s" % lastLine)
+                            if lastLine.find('[200]') > -1:
+                                break
+                            elif lastLine.find('[404]') > -1:
+                                logging.statusWriter(self.tempStatusPath, 'Failed to WordPress: error: %s. [404]'% lastLine)
+                                return 0
+                            else:
+                                logging.statusWriter(self.tempStatusPath, 'Creating WordPress....,20')
+                                time.sleep(2)
+
+                        logging.statusWriter(self.tempStatusPath, 'Restoring site ....,30')
+                        NewWPsite =WPSites.objects.get(FinalURL=newurl)
+                        VHuser = NewWPsite.owner.externalApp
+                        PhpVersion = NewWPsite.owner.phpSelection
+                        newWPpath = NewWPsite.path
+
+
+
+                        ###### Same code already used in Existing site
+
+                        ### get WPsite Database name and usr
+                        php = PHPManager.getPHPString(PhpVersion)
+                        FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
+
+                        ######Get DBname
+                        command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp config get DB_NAME  --skip-plugins --skip-themes --path=%s' % (
+                        VHuser, FinalPHPPath, newWPpath)
+                        stdout = ProcessUtilities.outputExecutioner(command)
+                        Finaldbname = stdout.rstrip("\n")
+
+                        ######Get DBuser
+                        command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp config get DB_USER  --skip-plugins --skip-themes --path=%s' % (
+                        VHuser, FinalPHPPath, newWPpath)
+                        stdout = ProcessUtilities.outputExecutioner(command)
+                        Finaldbuser = stdout.rstrip("\n")
+
+                        #####Get DBpsswd
+                        command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp config get DB_PASSWORD  --skip-plugins --skip-themes --path=%s' % (
+                        VHuser, FinalPHPPath, newWPpath)
+                        stdout = ProcessUtilities.outputExecutioner(command)
+                        Finaldbpasswd = stdout.rstrip("\n")
+
+                        ### Create secure folder
+
+                        ACLManager.CreateSecureDir()
+                        RandomPath = str(randint(1000, 9999))
+                        self.tempPath = '%s/%s' % ('/usr/local/CyberCP/tmp', RandomPath)
+
+                        command = f'mkdir -p {self.tempPath}'
+                        ProcessUtilities.executioner(command)
+
+                        command = f'chown -R {NewWPsite.owner.externalApp}:{NewWPsite.owner.externalApp} {self.tempPath}'
+                        ProcessUtilities.executioner(command)
+
+                        logging.statusWriter(self.tempStatusPath, 'Extracting Backup File...,40')
+
+                        ###First copy backup file to temp and then Unzip
+                        command = "sudo -u %s cp -R /home/backup/%s* %s" % (VHuser, BackUpFileName, self.tempPath)
+                        ProcessUtilities.executioner(command)
+
+                        #### Make temp dir ab for unzip
+                        command = "sudo -u %s mkdir %s/ab" % (VHuser, self.tempPath)
+                        ProcessUtilities.executioner(command)
+
+                        command = "sudo -u %s tar -xvf  %s/%s.tar.gz -C %s/ab" % (
+                        VHuser, self.tempPath, BackUpFileName, self.tempPath)
+                        ProcessUtilities.outputExecutioner(command)
+
+
+                        logging.statusWriter(self.tempStatusPath, 'Copying Data File...,60')
+                        ###Copy backup content to newsite
+                        if home == "0":
+                            unzippath = "%s/ab/usr/local/CyberCP/tmp/%s/public_html/" % (self.tempPath, oldtemppath)
+                        else:
+                            unzippath = "%s/ab/usr/local/CyberCP/tmp/%s/public_html/public_html/" % (self.tempPath, oldtemppath)
+
+                        command = "sudo -u %s cp -R %s* %s" % (VHuser, unzippath, newWPpath)
+                        result = ProcessUtilities.outputExecutioner(command)
+                        
+                        
+                        command = "sudo -u %s cp -R %s.[^.]* %s" % (VHuser, unzippath, newWPpath)
+                        result = ProcessUtilities.outputExecutioner(command)
+
+                        # dump Mysql file in unzippath path
+                        unzippath2 = "%s/ab/usr/local/CyberCP/tmp/%s/%s" % (self.tempPath, oldtemppath, DumpFileName)
+                        command = "mysql -u root %s < %s" % (Finaldbname, unzippath2)
+                        ProcessUtilities.outputExecutioner(command)
+
+                        logging.statusWriter(self.tempStatusPath, 'Restoreing Data Base...,80')
+                        #####SetUp DataBase Settings
+                        ##set DBName
+                        command = "sudo -u %s %s /usr/bin/wp config set DB_NAME %s --skip-plugins --skip-themes --path=%s" % (
+                        VHuser, FinalPHPPath, Finaldbname, newWPpath)
+                        ProcessUtilities.outputExecutioner(command)
+
+                        ##set DBuser
+                        command = "sudo -u %s %s /usr/bin/wp config set DB_USER %s --skip-plugins --skip-themes --path=%s" % (
+                        VHuser, FinalPHPPath, Finaldbuser, newWPpath)
+                        ProcessUtilities.outputExecutioner(command)
+
+                        ##set DBpasswd
+                        command = "sudo -u %s %s /usr/bin/wp config set DB_PASSWORD %s --skip-plugins --skip-themes --path=%s" % (
+                        VHuser, FinalPHPPath, Finaldbpasswd, newWPpath)
+                        ProcessUtilities.outputExecutioner(command)
+
+                        logging.statusWriter(self.tempStatusPath, 'Replacing URLs...,90')
+                        ########Now Replace URL's
+                        command = 'sudo -u %s /usr/local/lsws/lsphp74/bin/php -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --path=%s "%s" "%s"' % (
+                        VHuser, newWPpath, oldurl, newurl)
+                        ProcessUtilities.outputExecutioner(command)
+
+                        command = 'sudo -u %s /usr/local/lsws/lsphp74/bin/php -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --allow-root --path=%s "https://www.%s" "http://%s"' % (
+                        VHuser, newWPpath, newurl, newurl)
+                        ProcessUtilities.outputExecutioner(command)
+
+                        ##Remove temppath
+                        command = f'rm -rf {self.tempPath}'
+                        ProcessUtilities.executioner(command)
+
+                        ###Restart Server
+
+                        from plogical.installUtilities import installUtilities
+                        installUtilities.reStartLiteSpeed()
 
 
 

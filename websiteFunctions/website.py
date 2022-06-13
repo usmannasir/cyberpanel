@@ -176,12 +176,19 @@ class WebsiteManager:
             try:
                 wpsite = WPSites.objects.get(pk=sub.WPSiteID)
                 web = wpsite.title
+                config = sub.config
+                conf = json.loads(config)
+                Backuptype = conf['Backuptype']
             except:
                 web = "Website Not Found"
+                Backuptype = "Backup type not exists"
+
+
 
             Data['job'].append({
                 'id': sub.id,
                 'title': web,
+                'Backuptype': Backuptype
             })
 
 
@@ -752,6 +759,7 @@ class WebsiteManager:
             admin = Administrator.objects.get(pk=userID)
 
             WPManagerID = data['WPid']
+            Backuptype = data['Backuptype']
 
             wpsite = WPSites.objects.get(pk=WPManagerID)
 
@@ -764,6 +772,7 @@ class WebsiteManager:
             extraArgs = {}
             extraArgs['adminID'] = admin.pk
             extraArgs['WPid'] = WPManagerID
+            extraArgs['Backuptype'] = Backuptype
             extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
 
 
