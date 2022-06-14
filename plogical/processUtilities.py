@@ -289,7 +289,7 @@ class ProcessUtilities(multi.Thread):
             return 0
 
     @staticmethod
-    def outputExecutioner(command, user=None, shell = None, dir = None):
+    def outputExecutioner(command, user=None, shell = None, dir = None, retRequired = None):
         try:
 
             if getpass.getuser() == 'root':
@@ -304,7 +304,18 @@ class ProcessUtilities(multi.Thread):
             if type(command) == list:
                 command = " ".join(command)
 
-            return ProcessUtilities.sendCommand(command, user, dir)[:-1]
+            if retRequired:
+                ret = ProcessUtilities.sendCommand(command, user)
+
+                exitCode = ret[len(ret) - 1]
+                exitCode = int(codecs.encode(exitCode.encode(), 'hex'))
+
+                if exitCode == 0:
+                    return 1, ret[:-1]
+                else:
+                    return 0, ret[:-1]
+            else:
+                return ProcessUtilities.sendCommand(command, user, dir)[:-1]
         except BaseException as msg:
             logging.writeToFile(str(msg) + "[outputExecutioner:188]")
 
