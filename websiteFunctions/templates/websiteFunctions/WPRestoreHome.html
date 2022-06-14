@@ -16,112 +16,119 @@
             </h2>
             <p>{% trans "On this page you can Restore, list, modify and delete Backups Wordpress Sites from your server." %}</p>
         </div>
+        <span id="backupid" style="display: none">{{ backupobj.id }}</span>
+        <span id="backuptype" style="display: none">{{ Backuptype }}</span>
         <div class="panel">
             <div class="panel-body">
-                <h2 > {{ FileName }}</h2><img id="wordpresshomeloading" style="display: none" src="{% static 'images/loading.gif' %}">
+                <h3 class="content-box-header">
+                    {{ FileName }} <img id="wordpresshomeloading" style="display: none"
+                                        src="{% static 'images/loading.gif' %}"></h3>
+                <div class="example-box-wrapper">
 
-                <span id="backupid" style="display: none">{{ backupobj.id }}</span>
-                <span id="backuptype" style="display: none">{{ Backuptype }}</span>
-            {% if Backuptype == "DataBase Backup" %}
-                <div id="exinstingsitedivDB" ng-hide="installationDetailsForm" style="margin-top: 2%;"
-                     class="form-group">
-                    <label class="col-sm-2 control-label">{% trans "Choose WPsite Restore Destination " %}</label>
-                    <div class="col-sm-10">
-                        <select id="DesSite" class="form-control" required>
-                        <option value="-1">Select WordPress Site</option>
-                            {% for i in WPsites %}
-                                <option value="{{ i.id }}">{{ i.FinalURL }}</option>
-                            {% endfor %}
+                    <form name="websiteCreationForm" action="/" id="createPackages"
+                          class="form-horizontal bordered-row panel-body">
+                        {% if Backuptype == "DataBase Backup" %}
+                            <div id="exinstingsitedivDB" ng-hide="installationDetailsForm"
+                                 class="form-group">
+                                <label class="col-sm-2 control-label">{% trans "Choose WPsite Restore Destination " %}</label>
+                                <div class="col-sm-10">
+                                    <select id="DesSite" class="form-control" required>
+                                        <option value="-1">Select WordPress Site</option>
+                                        {% for i in WPsites %}
+                                            <option value="{{ i.id }}">{{ i.FinalURL }}</option>
+                                        {% endfor %}
 
-                        </select>
+                                    </select>
 
-                    </div>
-                </div>
-            {% else %}
-                <div ng-hide="installationDetailsForm" style="margin-top: 1%" class="form-group">
-                    <label class="col-sm-2 control-label">{% trans "Choose Restronig Method " %}</label>
-                    <div class="col-sm-10">
-                        <select ng-click="checkmethode()" id="RestoreMethode" class="form-control" required>
-                            <option value="-1">Selecte Methode</option>
-                            <option value="1">Restore to New Site</option>
-                            <option value="0">Restore to Existing Site</option>
-                        </select>
+                                </div>
+                            </div>
+                        {% else %}
+                            <div ng-hide="installationDetailsForm" class="form-group">
+                                <label class="col-sm-2 control-label">{% trans "Choose Restronig Method " %}</label>
+                                <div class="col-sm-10">
+                                    <select ng-click="checkmethode()" id="RestoreMethode" class="form-control" required>
+                                        <option value="-1">Select Method</option>
+                                        <option value="1">Restore to New Site</option>
+                                        <option value="0">Restore to Existing Site</option>
+                                    </select>
 
-                    </div>
-                </div>
-                <div id="exinstingsitediv" ng-hide="installationDetailsForm" style="margin-top: 4%; display: none"
-                     class="form-group">
-                    <label class="col-sm-2 control-label">{% trans "Choose WPsite Restore Destination " %}</label>
-                    <div class="col-sm-10">
-                        <select id="DesSite" class="form-control" required>
-                        <option value="-1">Select WordPress Site</option>
-                            {% for i in WPsites %}
-                                <option value="{{ i.id }}">{{ i.FinalURL }}</option>
-                            {% endfor %}
+                                </div>
+                            </div>
+                            <div id="exinstingsitediv" ng-hide="installationDetailsForm" style="display: none"
+                                 class="form-group">
+                                <label class="col-sm-2 control-label">{% trans "Choose WPsite Restore Destination " %}</label>
+                                <div class="col-sm-10">
+                                    <select id="DesSite" class="form-control" required>
+                                        <option value="-1">Select WordPress Site</option>
+                                        {% for i in WPsites %}
+                                            <option value="{{ i.id }}">{{ i.FinalURL }}</option>
+                                        {% endfor %}
 
-                        </select>
+                                    </select>
 
-                    </div>
-                </div>
-                <div id="Newsitediv" ng-hide="installationDetailsForm" style="margin-top: 4%; display: none" class="form-group">
-                    <label class="col-sm-2 control-label">{% trans "Website Domain" %}</label>
-                    <div class="col-sm-10">
-                        <input name="Newdomain" id="Newdomain" type="url"  placeholder="Enter New Website Domain for Restoring Website "
-                               class="form-control"  required>
-                    </div>
-                </div>
-            {% endif %}
-
-
-
-
-                <div ng-model="installationDetailsForm" class="col-sm-12 center-div" style="margin-top: 7%">
-                    <button id="RestoreWPbackupNow" type="button"
-                            ng-click="RestoreWPbackupNow()"
-                            class="btn btn-primary btn-lg center-div">{% trans "Restore Backup Now" %}</button>
-                </div>
-
-
-                <div style="margin-top: 1%" ng-hide="installationProgress" class="form-group">
-                    <label class="col-sm-2 control-label"></label>
-                    <div class="col-sm-7">
-
-                        <div class="alert alert-success text-center">
-                            <h2>{$ currentStatus $}</h2>
+                                </div>
+                            </div>
+                            <div id="Newsitediv" ng-hide="installationDetailsForm" style="display: none"
+                                 class="form-group">
+                                <label class="col-sm-2 control-label">{% trans "Website Domain" %}</label>
+                                <div class="col-sm-10">
+                                    <input name="Newdomain" id="Newdomain" type="url"
+                                           placeholder="Enter New Website Domain for Restoring Website "
+                                           class="form-control" required>
+                                </div>
+                            </div>
+                        {% endif %}
+                        <div ng-model="installationDetailsForm" class="col-sm-12 center-div">
+                            <button id="RestoreWPbackupNow" type="button"
+                                    ng-click="RestoreWPbackupNow()"
+                                    class="btn btn-primary btn-lg center-div">{% trans "Restore Backup Now" %}</button>
                         </div>
+                        <div style="margin-top: 1%" ng-hide="installationProgress" class="form-group">
+                            <label class="col-sm-2 control-label"></label>
+                            <div class="col-sm-7">
 
-                        <div class="progress">
-                            <div id="installProgressbackup" class="progress-bar"
-                                 role="progressbar" aria-valuenow="70"
-                                 aria-valuemin="0" aria-valuemax="100"
-                                 style="width:0%">
-                                <span class="sr-only">70% Complete</span>
+                                <div class="alert alert-success text-center">
+                                    <h2>{$ currentStatus $}</h2>
+                                </div>
+
+                                <div class="progress">
+                                    <div id="installProgressbackup" class="progress-bar"
+                                         role="progressbar" aria-valuenow="70"
+                                         aria-valuemin="0" aria-valuemax="100"
+                                         style="width:0%">
+                                        <span class="sr-only">70% Complete</span>
+                                    </div>
+                                </div>
+
+                                <div ng-hide="errorMessageBox" class="alert alert-danger">
+                                    <p>{% trans "Error message:" %} {$ errorMessage $}</p>
+                                </div>
+
+                                <div ng-hide="success" class="alert alert-success">
+                                    <p>{% trans "Backup succesfully created." %}</p>
+                                </div>
+
+
+                                <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                    <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                                </div>
+
+
+                            </div>
+                        </div>
+                        <div ng-hide="installationProgress" class="form-group center-div">
+                            <div class="col-sm-12">
+                                <button type="button" ng-disabled="goBackDisable"
+                                        ng-click="goBack()"
+                                        class="btn btn-primary btn-lg center-div">{% trans "Go Back" %}</button>
                             </div>
                         </div>
 
-                        <div ng-hide="errorMessageBox" class="alert alert-danger">
-                            <p>{% trans "Error message:" %} {$ errorMessage $}</p>
-                        </div>
 
-                        <div ng-hide="success" class="alert alert-success">
-                            <p>{% trans "Backup succesfully created." %}</p>
-                        </div>
-
-
-                        <div ng-hide="couldNotConnect" class="alert alert-danger">
-                            <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
-                        </div>
-
-
-                    </div>
+                    </form>
                 </div>
-                <div ng-hide="installationProgress" class="form-group center-div">
-                    <div class="col-sm-12">
-                        <button type="button" ng-disabled="goBackDisable"
-                                ng-click="goBack()"
-                                class="btn btn-primary btn-lg center-div">{% trans "Go Back" %}</button>
-                    </div>
-                </div>
+
+
             </div>
         </div>
 
