@@ -392,15 +392,15 @@ EOF
 
     #all pre-upgrade operation for CentOS 7
   elif [[ "$Server_OS_Version" = "8" ]] ; then
-    cat <<EOF >/etc/yum.repos.d/CentOS-PowerTools-CyberPanel.repo
-[powertools-for-cyberpanel]
-name=CentOS Linux \$releasever - PowerTools
-mirrorlist=http://mirrorlist.centos.org/?release=\$releasever&arch=\$basearch&repo=PowerTools&infra=\$infra
-baseurl=http://mirror.centos.org/\$contentdir/\$releasever/PowerTools/\$basearch/os/
-gpgcheck=1
-enabled=1
-gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
-EOF
+#    cat <<EOF >/etc/yum.repos.d/CentOS-PowerTools-CyberPanel.repo
+#[powertools-for-cyberpanel]
+#name=CentOS Linux \$releasever - PowerTools
+#mirrorlist=http://mirrorlist.centos.org/?release=\$releasever&arch=\$basearch&repo=PowerTools&infra=\$infra
+#baseurl=http://mirror.centos.org/\$contentdir/\$releasever/PowerTools/\$basearch/os/
+#gpgcheck=1
+#enabled=1
+#gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
+#EOF
 
   if [[ "$Server_Country" = "CN" ]] ; then
     dnf --nogpg install -y https://cyberpanel.sh/mirror.ghettoforge.org/distributions/gf/gf-release-latest.gf.el8.noarch.rpm
