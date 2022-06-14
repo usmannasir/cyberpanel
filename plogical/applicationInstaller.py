@@ -2691,18 +2691,6 @@ $parameters = array(
                     newWPpath = wpsite.path
                     newurl = wpsite.FinalURL
 
-                    #### Check If sub dir in web site
-                    try:
-                        oldpath = config['WPsitepath']
-                        abc = oldpath.split("/")
-                        pathexta = abc[4]
-                        if pathexta != "":
-                            home = "0"
-                        else:
-                            home = "1"
-                    except BaseException as msg:
-                        home = "1"
-
                     ### get WPsite Database name and usr
                     php = PHPManager.getPHPString(PhpVersion)
                     FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
@@ -2841,19 +2829,37 @@ $parameters = array(
                     logging.statusWriter(self.tempStatusPath, 'Copying Data File...,50')
                     ###Copy backup content to newsite
                     if home == "0":
+                        #### Check If sub dir in New web site
+                        try:
+                            kl = newWPpath.split("/")
+                            newpathexta = kl[4]
+                            if newpathexta != "":
+                                newsubdir = "0"
+                            else:
+                                newsubdir = "1"
+                        except BaseException as msg:
+                            newsubdir = "1"
+
+                        if newsubdir == "0":
+                            unzippath = "%s/ab/usr/local/CyberCP/tmp/%s/public_html/" % (self.tempPath, oldtemppath)
+                            ###first split back to publich_html then mak dir and te copy
+                            b = newWPpath.rstrip('/')
+                            newwebpath = b.rstrip(newpathexta)
+                            command = "sudo -u %s mkdir %s%s" % (VHuser, newwebpath, pathexta)
+                            ProcessUtilities.executioner(command)
+                            Webnewpath = str(newwebpath) + str(pathexta)
+
+                        else:
+                            unzippath = "%s/ab/usr/local/CyberCP/tmp/%s/public_html/" % (self.tempPath, oldtemppath)
+                            ###make dir of sub folder in existing site
+                            command = "sudo -u %s mkdir %s%s" % (VHuser, newWPpath, pathexta)
+                            ProcessUtilities.executioner(command)
+                            Webnewpath = str(newWPpath) + str(pathexta)
+
+                    else:
 
                         unzippath = "%s/ab/usr/local/CyberCP/tmp/%s/public_html/" % (self.tempPath, oldtemppath)
-                        ###make dir of sub folder in existing site
-                        command = "sudo -u %s mkdir %s%s" % (VHuser, newWPpath, pathexta)
-                        ProcessUtilities.executioner(command)
-                        Webnewpath = str(newWPpath) + str(pathexta)
-                    else:
-                        unzippath = "%s/ab/usr/local/CyberCP/tmp/%s/public_html/" % (
-                        self.tempPath, oldtemppath)
                         Webnewpath = newWPpath
-
-                    ###/usr/local/CyberCP/tmp/1755/ab/usr/local/CyberCP/tmp/8774/public_html
-                    ###/usr/local/CyberCP/tmp/1755/ab/usr/local/CyberCP/tmp/8774/public_html/public_html/*
 
                     command = "sudo -u %s cp -R %s* %s" % (VHuser, unzippath, Webnewpath)
                     result = ProcessUtilities.outputExecutioner(command)
@@ -3014,7 +3020,7 @@ $parameters = array(
                     newurl = wpsite.FinalURL
 
 
-                    #### Check If sub dir in web site
+                    #### Check If sub dir in old web site
                     try:
                         oldpath = config['WPsitepath']
                         abc = oldpath.split("/")
@@ -3025,6 +3031,9 @@ $parameters = array(
                             home = "1"
                     except BaseException as msg:
                         home = "1"
+
+
+
 
                     ### get WPsite Database name and usr
                     php = PHPManager.getPHPString(PhpVersion)
@@ -3078,15 +3087,36 @@ $parameters = array(
                     logging.statusWriter(self.tempStatusPath, 'Copying Data File...,50')
                     ###Copy backup content to newsite
                     if home == "0":
+                        #### Check If sub dir in New web site
+                        try:
+                            kl = newWPpath.split("/")
+                            newpathexta = kl[4]
+                            if newpathexta != "":
+                                newsubdir = "0"
+                            else:
+                                newsubdir = "1"
+                        except BaseException as msg:
+                            newsubdir = "1"
+
+                        if newsubdir == "0":
+                            unzippath = "%s/ab/usr/local/CyberCP/tmp/%s/public_html/" % (self.tempPath, oldtemppath)
+                            ###first split back to publich_html then mak dir and te copy
+                            b = newWPpath.rstrip('/')
+                            newwebpath = b.rstrip(newpathexta)
+                            command = "sudo -u %s mkdir %s%s" % (VHuser, newwebpath, pathexta)
+                            ProcessUtilities.executioner(command)
+                            Webnewpath = str(newwebpath) + str(pathexta)
+
+                        else:
+                            unzippath = "%s/ab/usr/local/CyberCP/tmp/%s/public_html/" % (self.tempPath, oldtemppath)
+                            ###make dir of sub folder in existing site
+                            command = "sudo -u %s mkdir %s%s" % (VHuser, newWPpath, pathexta)
+                            ProcessUtilities.executioner(command)
+                            Webnewpath = str(newWPpath) + str(pathexta)
+
+                    else:
 
                         unzippath = "%s/ab/usr/local/CyberCP/tmp/%s/public_html/" % (self.tempPath, oldtemppath)
-                        ###make dir of sub folder in existing site
-                        command = "sudo -u %s mkdir %s%s"%(VHuser, newWPpath, pathexta)
-                        ProcessUtilities.executioner(command)
-                        Webnewpath = str(newWPpath)+str(pathexta)
-                    else:
-                        ##usr/local/CyberCP/tmp/4701/ab/usr/local/CyberCP/tmp/9507/public_html/public_html/
-                        unzippath = "%s/ab/usr/local/CyberCP/tmp/%s/public_html/public_html/" % (self.tempPath, oldtemppath)
                         Webnewpath = newWPpath
 
 
