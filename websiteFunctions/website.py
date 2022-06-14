@@ -165,11 +165,11 @@ class WebsiteManager:
         currentACL = ACLManager.loadedACL(userID)
         admin = Administrator.objects.get(pk=userID)
 
-        backobj = WPSitesBackup.objects.filter(owner=admin)
+        backobj = WPSitesBackup.objects.filter(owner=admin).order_by('-id')
 
         try:
             if DeleteID != None:
-                DeleteIDobj = WPSitesBackup.objects.get(pk=DeleteID)
+                DeleteIDobj = WPSitesBackup.objects.get(pk=DeleteID, owner=admin)
                 config = DeleteIDobj.config
                 conf = json.loads(config)
                 FileName = conf['name']
