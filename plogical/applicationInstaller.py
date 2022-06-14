@@ -3047,7 +3047,7 @@ $parameters = array(
                         Webnewpath = str(newWPpath)+str(pathexta)
                     else:
                         ##usr/local/CyberCP/tmp/4701/ab/usr/local/CyberCP/tmp/9507/public_html/public_html/
-                        unzippath = "%s/ab/usr/local/CyberCP/tmp/%s/public_html/public_html/" % (self.tempPath, oldtemppath)
+                        unzippath = "%s/ab/usr/local/CyberCP/tmp/%s/public_html/" % (self.tempPath, oldtemppath)
                         Webnewpath = newWPpath
 
 
