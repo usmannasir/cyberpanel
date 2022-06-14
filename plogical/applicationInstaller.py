@@ -2353,12 +2353,11 @@ $parameters = array(
 
                 command = f"cp -R {configPath} {self.tempPath}"
                 if ProcessUtilities.executioner(command, VHuser) == 0:
-                    raise BaseException('Failed to config to temp path.')
+                    raise BaseException('Failed to copy config file to temp path.')
 
 
                 command = f"rm -r {configPath}"
-                ProcessUtilities.executioner(command)
-                if ProcessUtilities.executioner(command, VHuser) == 0:
+                if ProcessUtilities.executioner(command) == 0:
                     raise BaseException('Failed to remove config.')
 
                 logging.statusWriter(self.tempStatusPath, 'Copying website data.....,50')
@@ -2403,7 +2402,6 @@ $parameters = array(
 
                 websitepath = "/home/%s"%websitedomain
 
-                FinalZipPath = '%s/%s.zip' % (websitepath, RandomPath)
 
                 command = 'mkdir -p /home/backup/'
                 ProcessUtilities.executioner(command)
@@ -2426,6 +2424,7 @@ $parameters = array(
 
                 logging.statusWriter(self.tempStatusPath, 'Completed.[200]')
                 return 1, f"/home/backup/{config['name']}.tar.gz"
+
             elif Backuptype == "2":
                 ###Onlye website data
                 ### Create secure folder
@@ -2482,13 +2481,11 @@ $parameters = array(
 
                 command = f"cp -R {configPath} {self.tempPath}"
 
-                if ProcessUtilities.executioner(command, VHuser) == 0:
-                    raise BaseException('Failed to copy config to temp path.')
+                if ProcessUtilities.executioner(command) == 0:
+                    raise BaseException('Failed to copy config file to temp path.')
 
                 command = f"rm -r {configPath}"
-                ProcessUtilities.executioner(command)
-
-                if ProcessUtilities.executioner(command, VHuser) == 0:
+                if ProcessUtilities.executioner(command) == 0:
                     raise BaseException('Failed to remove config temp file.')
 
                 logging.statusWriter(self.tempStatusPath, 'Copying website data.....,50')
@@ -2517,8 +2514,6 @@ $parameters = array(
 
                 websitepath = "/home/%s" % websitedomain
 
-                FinalZipPath = '%s/%s.zip' % (websitepath, RandomPath)
-
                 command = 'mkdir -p /home/backup/'
                 ProcessUtilities.executioner(command)
 
@@ -2544,12 +2539,20 @@ $parameters = array(
                 logging.statusWriter(self.tempStatusPath, 'Getting database...,20')
 
                 command = f'{FinalPHPPath} -d error_reporting=0 /usr/bin/wp config get DB_NAME  --skip-plugins --skip-themes --path={WPsitepath}'
-                stdoutput = ProcessUtilities.outputExecutioner(command, VHuser)
-                DataBaseName = stdoutput.rstrip("\n")
+                retStatus, stdoutput = ProcessUtilities.outputExecutioner(command, VHuser, None, None, 1)
+
+                if stdoutput.find('Error:') == -1:
+                    DataBaseName = stdoutput.rstrip("\n")
+                else:
+                    raise BaseException(stdoutput)
 
                 command = f'{FinalPHPPath} -d error_reporting=0 /usr/bin/wp config get DB_USER  --skip-plugins --skip-themes --path={WPsitepath}'
-                stdoutput = ProcessUtilities.outputExecutioner(command, VHuser)
-                DataBaseUser = stdoutput.rstrip("\n")
+                retStatus, stdoutput = ProcessUtilities.outputExecutioner(command, VHuser, None, None, 1)
+
+                if stdoutput.find('Error:') == -1:
+                    DataBaseUser = stdoutput.rstrip("\n")
+                else:
+                    raise BaseException(stdoutput)
 
                 ### Create secure folder
 
@@ -2601,17 +2604,22 @@ $parameters = array(
                 os.chmod(configPath, 0o600)
 
                 command = f"cp -R {configPath} {self.tempPath}"
-                ProcessUtilities.executioner(command, VHuser)
+                if ProcessUtilities.executioner(command) == 0:
+                    raise BaseException('Failed to copy config file to temp path.')
 
                 command = f"rm -r {configPath}"
-                ProcessUtilities.executioner(command)
+                if ProcessUtilities.executioner(command) == 0:
+                    raise BaseException('Failed to remove config temp file.')
 
                 logging.statusWriter(self.tempStatusPath, 'Copying DataBase.....,70')
 
                 ##### SQLDUMP database into new directory
 
                 command = "mysqldump %s --result-file %s/%s.sql" % (DataBaseName, self.tempPath, DataBaseName)
-                result = ProcessUtilities.outputExecutioner(command)
+                retStatus, result = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+
+                if retStatus == 0:
+                    raise BaseException(result)
 
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.writeToFile(result)
@@ -2627,10 +2635,14 @@ $parameters = array(
                 ProcessUtilities.executioner(command)
 
                 command = f"tar -czvf /home/backup/{config['name']}.tar.gz -P {self.tempPath}"
-                result = ProcessUtilities.outputExecutioner(command)
+                retStatus, result = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+
+                if retStatus == 0:
+                    raise BaseException(result)
 
                 backupobj = WPSitesBackup(owner=Adminobj, WPSiteID=wpsite.id, WebsiteID=website.id, config=json_object)
                 backupobj.save()
+
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.writeToFile(result)
 
