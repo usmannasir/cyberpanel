@@ -1550,15 +1550,25 @@ app.controller('RestoreWPBackup', function ($scope, $http, $timeout, $window) {
         $scope.goBackDisable = true;
         $scope.currentStatus = "Start Restoring WordPress..";
 
+        var backuptype = $('#backuptype').html();
+        var data;
+        if (backuptype == "DataBase Backup") {
+            data = {
+                backupid: $('#backupid').html(),
+                DesSite: $('#DesSite').children("option:selected").val(),
+                Domain: ''
+            }
+        } else {
+            data = {
+                backupid: $('#backupid').html(),
+                DesSite: $('#DesSite').children("option:selected").val(),
+                Domain: $("input[name=Newdomain]").val()
+            }
+
+        }
+
         var url = "/websites/RestoreWPbackupNow";
 
-
-
-        var data = {
-            backupid: $('#backupid').html(),
-            DesSite: $('#DesSite').children("option:selected").val(),
-            Domain: $("input[name=Newdomain]").val()
-        }
 
         var config = {
             headers: {
@@ -1570,16 +1580,11 @@ app.controller('RestoreWPBackup', function ($scope, $http, $timeout, $window) {
 
         var d = $('#DesSite').children("option:selected").val();
         var c = $("input[name=Newdomain]").val();
-        if( d == -1 && c == "")
-        {
-            alert("Please Select Method of Backup Restore");
-        }
-        else {
+        // if (d == -1 || c == "") {
+        //     alert("Please Select Method of Backup Restore");
+        // } else {
             $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
-        }
-
-
-
+        // }
 
 
         function ListInitialDatas(response) {

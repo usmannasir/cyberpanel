@@ -151,6 +151,10 @@ class WebsiteManager:
 
         config = json.loads(Data['backupobj'].config)
         Data['FileName']= config['name']
+        try:
+            Data['Backuptype']= config['Backuptype']
+        except:
+            Data['Backuptype'] = None
         Data['WPsites'] = ACLManager.GetALLWPObjects(currentACL, userID)
         proc = httpProc(request, 'websiteFunctions/WPRestoreHome.html',
                         Data, 'createWebsite')
@@ -166,6 +170,11 @@ class WebsiteManager:
         try:
             if DeleteID != None:
                 DeleteIDobj = WPSitesBackup.objects.get(pk=DeleteID)
+                config = DeleteIDobj.config
+                conf = json.loads(config)
+                FileName = conf['name']
+                command = "rm -r /home/backup/%s.tar.gz"%FileName
+                ProcessUtilities.executioner(command)
                 DeleteIDobj.delete()
 
         except BaseException as msg:
@@ -800,8 +809,9 @@ class WebsiteManager:
 
             backupid = data['backupid']
             DesSiteID = data['DesSite']
-            Domain = data['Domain']
 
+            logging.CyberCPLogFileWriter.writeToFile("Error WP ChangeStatusThemes ....... %s"%data)
+            Domain = data['Domain']
 
             extraArgs = {}
             extraArgs['adminID'] = admin.pk

@@ -18,9 +18,26 @@
         </div>
         <div class="panel">
             <div class="panel-body">
-                <h2 > {{ FileName }}</h2>
-            <span id="backupid" style="display: none">{{ backupobj.id }}</span>
-                <img id="wordpresshomeloading" style="display: none" src="{% static 'images/loading.gif' %}">
+                <h2 > {{ FileName }}</h2><img id="wordpresshomeloading" style="display: none" src="{% static 'images/loading.gif' %}">
+
+                <span id="backupid" style="display: none">{{ backupobj.id }}</span>
+                <span id="backuptype" style="display: none">{{ Backuptype }}</span>
+            {% if Backuptype == "DataBase Backup" %}
+                <div id="exinstingsitedivDB" ng-hide="installationDetailsForm" style="margin-top: 2%;"
+                     class="form-group">
+                    <label class="col-sm-2 control-label">{% trans "Choose WPsite Restore Destination " %}</label>
+                    <div class="col-sm-10">
+                        <select id="DesSite" class="form-control" required>
+                        <option value="-1">Select WordPress Site</option>
+                            {% for i in WPsites %}
+                                <option value="{{ i.id }}">{{ i.FinalURL }}</option>
+                            {% endfor %}
+
+                        </select>
+
+                    </div>
+                </div>
+            {% else %}
                 <div ng-hide="installationDetailsForm" style="margin-top: 1%" class="form-group">
                     <label class="col-sm-2 control-label">{% trans "Choose Restronig Method " %}</label>
                     <div class="col-sm-10">
@@ -53,6 +70,8 @@
                                class="form-control"  required>
                     </div>
                 </div>
+            {% endif %}
+
 
 
 
