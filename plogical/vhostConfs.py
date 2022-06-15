@@ -468,3 +468,30 @@ pm.max_spare_servers = {pmMaxSpareServers}
     </IfModule>
     }
 }'"""
+
+    OLSPPConf = """
+### PASSWORD PROTECTION CONF STARTS
+
+realm {{RealM_Name}} {
+
+  userDB  {
+    location              $SERVER_ROOT/conf/vhosts/$VH_NAME/htpasswd
+  }
+}
+
+context / {
+  location                {{path}}
+  allowBrowse             1
+  realm                   {{RealM_Name}}
+
+  rewrite  {
+
+  }
+  addDefaultCharset       off
+
+  phpIniOverride  {
+
+  }
+}
+### PASSWORD PROTECTION CONF ENDS
+"""

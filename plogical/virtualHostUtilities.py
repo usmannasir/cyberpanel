@@ -1245,6 +1245,71 @@ class virtualHostUtilities:
 
         return DiskUsage, DiskUsagePercentage, bwInMB, bwUsage
 
+    @staticmethod
+    def EnableDisablePP(vhostName, username=None, password=None, path=None):
+        try:
+            confPath = f'{virtualHostUtilities.vhostConfPath}/vhosts/{vhostName}/vhost.conf'
+            htpassword = f'{virtualHostUtilities.vhostConfPath}/vhosts/{vhostName}/htpasswd'
+
+            if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+                if os.path.exists(htpassword):
+                    os.remove(htpassword)
+                    removeCheck = 0
+
+                    data = open(confPath, 'r').readlines()
+                    writeToFile = open(confPath, 'w')
+                    for line in data:
+                        if line.find('PASSWORD PROTECTION CONF STARTS') > -1:
+                            removeCheck = 1
+                            continue
+                        if line.find('PASSWORD PROTECTION CONF ENDS') > -1:
+                            removeCheck = 0
+                            continue
+
+                        if removeCheck == 0:
+                            writeToFile.writelines(line)
+                    writeToFile.close()
+                else:
+                    writeToFile = open(confPath, 'a')
+                    from vhostConfs import vhostConfs
+                    OLSPPConf = vhostConfs.OLSPPConf
+                    OLSPPConf = OLSPPConf.replace('{{RealM_Name}}', str(randint(1000, 9999)))
+                    OLSPPConf = OLSPPConf.replace('{{path}}', path)
+
+                    writeToFile.write(OLSPPConf)
+                    writeToFile.close()
+
+                    ###
+                    import bcrypt
+                    password = password.encode()
+                    hashed = bcrypt.hashpw(password, bcrypt.gensalt())
+                    print(hashed.decode())
+                    UserPass = f'{username}:{hashed}:{username}'
+                    writeToFile = open(htpassword, 'w')
+                    writeToFile.write(UserPass)
+                    writeToFile.close()
+
+                    os.chmod(htpassword, 0o644)
+
+                    uBuntuPath = '/etc/lsb-release'
+
+                    if os.path.exists(uBuntuPath):
+                        group = 'nogroup'
+                    else:
+                        group = 'nobody'
+
+                    command = f'chown lsadm:{group} {htpassword}'
+                    ProcessUtilities.executioner(command)
+                    print('1,None')
+
+
+
+
+        except BaseException as msg:
+            print(f'0,{str(msg)}')
+            return 0,str(msg)
+
+
 
 def main():
     parser = argparse.ArgumentParser(description='CyberPanel Installer')
@@ -1412,6 +1477,8 @@ def main():
         virtualHostUtilities.deleteDomain(args.virtualHostName, int(args.DeleteDocRoot))
     elif args.function == 'switchServer':
         virtualHostUtilities.switchServer(args.virtualHostName, args.phpVersion, int(args.server), args.tempStatusPath)
+    elif args.function == 'EnableDisablePP':
+        virtualHostUtilities.EnableDisablePP(args.virtualHostName, args.username, args.password, args.path)
 
 
 if __name__ == "__main__":

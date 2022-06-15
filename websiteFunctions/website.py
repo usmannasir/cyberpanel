@@ -1187,7 +1187,13 @@ class WebsiteManager:
 
             WPManagerID = data['WPid']
             setting = data['setting']
-            settingValue = data['settingValue']
+
+            if setting == 'PasswordProtection':
+                PPUsername = data['PPUsername']
+                PPPassword = data['PPPassword']
+            else:
+                settingValue = data['settingValue']
+
             wpsite = WPSites.objects.get(pk=WPManagerID)
 
             if ACLManager.checkOwnership(wpsite.owner.domain, admin, currentACL) == 1:
@@ -1260,7 +1266,6 @@ class WebsiteManager:
                 else:
                     command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp option update blog_public 0 --path=%s --skip-plugins --skip-themes"  % (Vhuser, FinalPHPPath, path)
                     stdoutput = ProcessUtilities.outputExecutioner(command)
-
             elif setting == 'maintenanceMode':
 
                 command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp litespeed-purge all --path=%s --skip-plugins --skip-themes"  % (Vhuser, FinalPHPPath, path)
@@ -1275,6 +1280,11 @@ class WebsiteManager:
                 else:
                     command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp maintenance-mode deactivate --path=%s --skip-plugins --skip-themes" % (Vhuser, FinalPHPPath, path)
                     stdoutput = ProcessUtilities.outputExecutioner(command)
+            elif setting == 'PasswordProtection':
+                execPath = f"/usr/local/CyberCP/bin/python {virtualHostUtilities.cyberPanel}/plogical/virtualHostUtilities.py"
+                execPath = f"{execPath} EnableDisablePP --username '{PPUsername}' --password '{PPPassword}' --virtualHostName {Webobj.domain} --path {path}"
+                ProcessUtilities.executioner(execPath)
+
 
             data_ret = {'status': 1, 'error_message': 'None'}
             json_data = json.dumps(data_ret)
