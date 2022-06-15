@@ -14,3 +14,6 @@ else:
     home = "1"
 print(wpexpath)
 print(c)
+# furl = "habi.com/subfolder"
+# a=furl[furl.find('/'):]
+# print(a)
