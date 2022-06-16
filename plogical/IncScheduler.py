@@ -383,6 +383,8 @@ class IncScheduler(multi.Thread):
 
                     #logging.writeToFile('job completed')
 
+
+
                     url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
                     data = {
                         "name": "backups-retention",
@@ -393,7 +395,7 @@ class IncScheduler(multi.Thread):
                     response = requests.post(url, data=json.dumps(data))
                     Status = response.json()['status']
 
-                    if (Status == 1):
+                    if (Status == 1) or ProcessUtilities.decideServer() == ProcessUtilities.ent:
                         try:
 
                             page_token = None
@@ -457,7 +459,6 @@ class IncScheduler(multi.Thread):
                             except BaseException as msg:
                                     print('An error occurred fetch child: %s' % msg)
                                     logging.writeToFile('An error occurred fetch child: %s' % msg)
-
                         except BaseException as msg:
                             logging.writeToFile('job not completed [ERROR:]..%s'%msg)
 
