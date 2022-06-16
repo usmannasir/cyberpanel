@@ -1246,10 +1246,13 @@ class virtualHostUtilities:
         return DiskUsage, DiskUsagePercentage, bwInMB, bwUsage
 
     @staticmethod
-    def EnableDisablePP(vhostName, username=None, password=None, path=None):
+    def EnableDisablePP(vhostName, username=None, password=None, path=None, wpid=None):
         try:
             confPath = f'{virtualHostUtilities.vhostConfPath}/vhosts/{vhostName}/vhost.conf'
-            htpassword = f'{virtualHostUtilities.vhostConfPath}/vhosts/{vhostName}/htpasswd'
+            htpassword = f'{virtualHostUtilities.vhostConfPath}/vhosts/{vhostName}/{wpid}'
+
+            FindLine = f'PASSWORD PROTECTION CONF STARTS {path}'
+            FindLineEnd = f'PASSWORD PROTECTION CONF ENDS {path}'
 
             if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
                 if os.path.exists(htpassword):
@@ -1259,10 +1262,10 @@ class virtualHostUtilities:
                     data = open(confPath, 'r').readlines()
                     writeToFile = open(confPath, 'w')
                     for line in data:
-                        if line.find('PASSWORD PROTECTION CONF STARTS') > -1:
+                        if line.find(FindLine) > -1:
                             removeCheck = 1
                             continue
-                        if line.find('PASSWORD PROTECTION CONF ENDS') > -1:
+                        if line.find(FindLineEnd) > -1:
                             removeCheck = 0
                             continue
 
@@ -1275,6 +1278,7 @@ class virtualHostUtilities:
                     OLSPPConf = vhostConfs.OLSPPConf
                     OLSPPConf = OLSPPConf.replace('{{RealM_Name}}', str(randint(1000, 9999)))
                     OLSPPConf = OLSPPConf.replace('{{path}}', path)
+                    OLSPPConf = OLSPPConf.replace('{{wpid}}', wpid)
 
                     writeToFile.write(OLSPPConf)
                     writeToFile.close()
@@ -1283,8 +1287,7 @@ class virtualHostUtilities:
                     import bcrypt
                     password = password.encode()
                     hashed = bcrypt.hashpw(password, bcrypt.gensalt())
-                    print(hashed.decode())
-                    UserPass = f'{username}:{hashed}:{username}'
+                    UserPass = f'{username}:{hashed.decode()}:{username}'
                     writeToFile = open(htpassword, 'w')
                     writeToFile.write(UserPass)
                     writeToFile.close()
@@ -1300,9 +1303,61 @@ class virtualHostUtilities:
 
                     command = f'chown lsadm:{group} {htpassword}'
                     ProcessUtilities.executioner(command)
-                    print('1,None')
+            else:
+                RealmName = str(randint(1000, 9999))
+                htaccesspath = f'{path}/.htaccess'
+                if os.path.exists(htpassword):
+                    os.remove(htpassword)
+                    removeCheck = 0
 
+                    if os.path.exists(htaccesspath):
+                        data = open(htaccesspath, 'r').readlines()
+                        writeToFile = open(htaccesspath, 'w')
+                        for line in data:
+                            if line.find(FindLine) > -1:
+                                removeCheck = 1
+                                continue
+                            if line.find(FindLineEnd) > -1:
+                                removeCheck = 0
+                                continue
 
+                            if removeCheck == 0:
+                                writeToFile.writelines(line)
+                        writeToFile.close()
+                else:
+                    writeToFile = open(htaccesspath, 'a')
+                    from vhostConfs import vhostConfs
+                    LSWSPPProtection = vhostConfs.LSWSPPProtection
+                    LSWSPPProtection = LSWSPPProtection.replace('{{RealM_Name}}', RealmName)
+                    LSWSPPProtection = LSWSPPProtection.replace('{{path}}', path)
+                    LSWSPPProtection = LSWSPPProtection.replace('{{PassFile}}', htpassword)
+
+                    writeToFile.write(LSWSPPProtection)
+                    writeToFile.close()
+
+                    ###
+                    import bcrypt
+                    password = password.encode()
+                    hashed = bcrypt.hashpw(password, bcrypt.gensalt())
+                    UserPass = f'{username}:{hashed.decode()}:{username}'
+                    writeToFile = open(htpassword, 'w')
+                    writeToFile.write(UserPass)
+                    writeToFile.close()
+
+                    os.chmod(htpassword, 0o644)
+
+                    uBuntuPath = '/etc/lsb-release'
+
+                    if os.path.exists(uBuntuPath):
+                        group = 'nogroup'
+                    else:
+                        group = 'nobody'
+
+                    command = f'chown lsadm:{group} {htpassword}'
+                    ProcessUtilities.executioner(command)
+
+            installUtilities.installUtilities.reStartLiteSpeed()
+            print('1,None')
 
 
         except BaseException as msg:
@@ -1377,6 +1432,7 @@ def main():
     ## Switch Server
 
     parser.add_argument('--server', help='Switch server parameter.')
+    parser.add_argument('--wpid', help='WordPress ID')
 
     ## Doc root deletion for child domain
 
@@ -1478,7 +1534,7 @@ def main():
     elif args.function == 'switchServer':
         virtualHostUtilities.switchServer(args.virtualHostName, args.phpVersion, int(args.server), args.tempStatusPath)
     elif args.function == 'EnableDisablePP':
-        virtualHostUtilities.EnableDisablePP(args.virtualHostName, args.username, args.password, args.path)
+        virtualHostUtilities.EnableDisablePP(args.virtualHostName, args.username, args.password, args.path, args.wpid)
 
 
 if __name__ == "__main__":

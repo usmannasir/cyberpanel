@@ -1282,7 +1282,7 @@ class WebsiteManager:
                     stdoutput = ProcessUtilities.outputExecutioner(command)
             elif setting == 'PasswordProtection':
                 execPath = f"/usr/local/CyberCP/bin/python {virtualHostUtilities.cyberPanel}/plogical/virtualHostUtilities.py"
-                execPath = f"{execPath} EnableDisablePP --username '{PPUsername}' --password '{PPPassword}' --virtualHostName {Webobj.domain} --path {path}"
+                execPath = f"{execPath} EnableDisablePP --username '{PPUsername}' --password '{PPPassword}' --virtualHostName {Webobj.domain} --path {path} --wpid {str(wpsite.id)}"
                 ProcessUtilities.executioner(execPath)
 
 

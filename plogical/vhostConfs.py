@@ -470,12 +470,12 @@ pm.max_spare_servers = {pmMaxSpareServers}
 }'"""
 
     OLSPPConf = """
-### PASSWORD PROTECTION CONF STARTS
+### PASSWORD PROTECTION CONF STARTS {{path}}
 
 realm {{RealM_Name}} {
 
   userDB  {
-    location              $SERVER_ROOT/conf/vhosts/$VH_NAME/htpasswd
+    location              $SERVER_ROOT/conf/vhosts/$VH_NAME/{{wpid}}
   }
 }
 
@@ -493,5 +493,13 @@ context / {
 
   }
 }
-### PASSWORD PROTECTION CONF ENDS
+### PASSWORD PROTECTION CONF ENDS {{path}}
+"""
+    LSWSPPProtection = """
+### PASSWORD PROTECTION CONF STARTS {{path}}
+AuthType Basic
+AuthName "{{RealM_Name}}"
+AuthUserFile {{PassFile}}
+Require valid-user
+### PASSWORD PROTECTION CONF ENDS {{path}}
 """
