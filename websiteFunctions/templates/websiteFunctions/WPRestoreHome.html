@@ -68,17 +68,39 @@
 
                                 </div>
                             </div>
-                            <div id="Newsitediv" ng-hide="installationDetailsForm" style="display: none"
-                                 class="form-group">
-                                <label class="col-sm-2 control-label">{% trans "Website Domain" %}</label>
+                            <div id="Newsitediv" ng-hide="installationDetailsForm" style="display: none" class="form-group">
+                                <label class="col-sm-2 control-label">{% trans "Domain Name" %}</label>
                                 <div class="col-sm-10">
-                                    <input name="Newdomain" id="Newdomain" type="url"
-                                           placeholder="Enter New Website Domain for Restoring Website "
-                                           class="form-control" required>
+                                    <div class="input-group bootstrap-touchspin">
+                                    <span
+                                            class="input-group-addon bootstrap-touchspin-prefix"
+                                            style="display: none;"></span>
+                                        <input ng-model="domainNameCreate"  id="touchspin-demo-1" class="form-control"
+                                               type="text" value="55"
+                                               name="touchspin-demo-1"
+                                               style="display: block;"
+                                               placeholder="{% trans "Do not enter WWW, it will be auto created!" %}">
+                                        <span class="input-group-addon bootstrap-touchspin-postfix">/</span>
+                                        <span style="width: 25%" class="input-group-btn">
+                                        <input id="wprestoresubdirpath" class="form-control"
+                                               placeholder="{% trans "Leave empty for default" %}"
+                                               type="text" value="Leave empty for default"
+                                               name="wprestoresubdirpath" ng-model="installPath"
+                                               style="display: block;"></span></div>
                                 </div>
                             </div>
+
+                            {#                            <div id="Newsitediv" ng-hide="installationDetailsForm" style="display: none"#}
+                            {#                                 class="form-group">#}
+                            {#                                <label class="col-sm-2 control-label">{% trans "Website Domain" %}</label>#}
+                            {#                                <div class="col-sm-10">#}
+                            {#                                    <input name="Newdomain" id="Newdomain" type="url"#}
+                            {#                                           placeholder="Enter New Website Domain for Restoring Website "#}
+                            {#                                           class="form-control" required>#}
+                            {#                                </div>#}
+                            {#                            </div>#}
                         {% endif %}
-                        <div ng-model="installationDetailsForm" class="col-sm-12 center-div">
+                        <div ng-model="installationDetailsForm" class="col-sm-12 center-div" class="form-control">
                             <button id="RestoreWPbackupNow" type="button"
                                     ng-click="RestoreWPbackupNow()"
                                     class="btn btn-primary btn-lg center-div">{% trans "Restore Backup Now" %}</button>
