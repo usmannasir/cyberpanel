@@ -1556,7 +1556,7 @@ app.controller('RestoreWPBackup', function ($scope, $http, $timeout, $window) {
         $scope.goBackDisable = true;
         $scope.currentStatus = "Start Restoring WordPress..";
 
-        var Domain = $scope.domainNameCreate;
+        var Domain = $('#wprestoresubdirdomain').val()
         var path = $('#wprestoresubdirpath').val()
         var home = "1";
 
