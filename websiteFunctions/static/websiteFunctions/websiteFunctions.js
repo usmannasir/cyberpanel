@@ -551,20 +551,26 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
 
         $scope.wordpresshomeloading = false;
 
-        var settingValue = 0;
-
-        if ($('#' + setting).is(":checked")) {
-            settingValue = 1;
-        }
 
         var url = "/websites/UpdateWPSettings";
 
-        var data = {
-            WPid: $('#WPid').html(),
-            setting: setting,
-            settingValue: settingValue
-
-
+        if (setting === "PasswordProtection") {
+            var data = {
+                WPid: $('#WPid').html(),
+                setting: setting,
+                PPUsername: $scope.PPUsername,
+                PPPassword: $scope.PPPassword,
+            }
+        } else {
+            var settingValue = 0;
+            if ($('#' + setting).is(":checked")) {
+                settingValue = 1;
+            }
+            var data = {
+                WPid: $('#WPid').html(),
+                setting: setting,
+                settingValue: settingValue
+            }
         }
 
 
@@ -1595,7 +1601,8 @@ app.controller('RestoreWPBackup', function ($scope, $http, $timeout, $window) {
         // if (d == -1 || c == "") {
         //     alert("Please Select Method of Backup Restore");
         // } else {
-            $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
         // }
 
 
