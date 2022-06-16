@@ -1550,19 +1550,31 @@ app.controller('RestoreWPBackup', function ($scope, $http, $timeout, $window) {
         $scope.goBackDisable = true;
         $scope.currentStatus = "Start Restoring WordPress..";
 
+        var Domain = $scope.domainNameCreate;
+        var path = $('#wprestoresubdirpath').val()
+        var home = "1";
+
+        if (typeof path != 'undefined' || path != '') {
+            home = "0";
+        }
+
         var backuptype = $('#backuptype').html();
         var data;
         if (backuptype == "DataBase Backup") {
             data = {
                 backupid: $('#backupid').html(),
                 DesSite: $('#DesSite').children("option:selected").val(),
-                Domain: ''
+                Domain: '',
+                path: path,
+                home: home,
             }
         } else {
             data = {
                 backupid: $('#backupid').html(),
                 DesSite: $('#DesSite').children("option:selected").val(),
-                Domain: $("input[name=Newdomain]").val()
+                Domain: Domain,
+                path: path,
+                home: home,
             }
 
         }

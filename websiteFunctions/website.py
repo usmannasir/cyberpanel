@@ -185,13 +185,15 @@ class WebsiteManager:
             try:
                 wpsite = WPSites.objects.get(pk=sub.WPSiteID)
                 web = wpsite.title
+            except:
+                web = "Website Not Found"
+
+            try:
                 config = sub.config
                 conf = json.loads(config)
                 Backuptype = conf['Backuptype']
             except:
-                web = "Website Not Found"
                 Backuptype = "Backup type not exists"
-
 
 
             Data['job'].append({
@@ -810,14 +812,16 @@ class WebsiteManager:
             backupid = data['backupid']
             DesSiteID = data['DesSite']
 
-            logging.CyberCPLogFileWriter.writeToFile("Error WP ChangeStatusThemes ....... %s"%data)
             Domain = data['Domain']
+
 
             extraArgs = {}
             extraArgs['adminID'] = admin.pk
             extraArgs['backupid'] = backupid
             extraArgs['DesSiteID'] = DesSiteID
             extraArgs['Domain'] = Domain
+            extraArgs['path'] = data['path']
+            extraArgs['home'] = data['home']
             extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
 
 

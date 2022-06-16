@@ -3345,62 +3345,10 @@ $parameters = array(
                         except:
                             ####Website found --> WPsite Found --> Final URL Not Match
                             ####Create new obj and call wordpressnew
-                            DataToPass = {}
-
-                            DataToPass['title'] = config['WPtitle']
-                            DataToPass['WPVersion'] = "6.0"
-                            DataToPass['adminUser'] = config['WebVHuser']
-                            DataToPass['Email'] = config['WebadminEmail']
-                            DataToPass['PasswordByPass'] = config['DatabaseUser']
-                            DataToPass['AutomaticUpdates'] = config['WPAutoUpdates']
-                            DataToPass['Plugins'] = config['WPPluginUpdates']
-                            DataToPass['Themes'] = config['WPThemeUpdates']
-                            DataToPass['websiteOwner'] = WebOwner
-                            DataToPass['package'] = packegs
-
-                            # create path
-                            try:
-                                abc = config['WPsitepath'].split("/")
-                                wppamndath = abc[4]
-                                home = "0"
-                            except:
-                                abc = config['WPsitepath'].split("/")
-                                wppamndath = abc[3]
-                                home = "1"
-                            DataToPass['domain'] = webobj.domain
-                            DataToPass['path'] = wppamndath
-                            DataToPass['home'] = home
-                            Furlofnewp = "%s/%s" % (webobj.domain, wppamndath)
-
-                            try:
-                                website = Websites.objects.get(domain=DomainName)
-                                logging.statusWriter(self.tempStatusPath, 'Web Site Already Exist.[404]')
-                            except:
-                                ab = WebsiteManager()
-                                coreResult = ab.submitWorpressCreation(userID, DataToPass)
-                                coreResult1 = json.loads((coreResult).content)
-                                logging.writeToFile("WP Creating website result....%s" % coreResult1)
-                                reutrntempath = coreResult1['tempStatusPath']
-                                while (1):
-                                    lastLine = open(reutrntempath, 'r').read()
-                                    logging.writeToFile("Error WP creating lastline ....... %s" % lastLine)
-                                    if lastLine.find('[200]') > -1:
-                                        break
-                                    elif lastLine.find('[404]') > -1:
-                                        logging.statusWriter(self.tempStatusPath,
-                                                             'Failed to WordPress: error: %s. [404]' % lastLine)
-                                        return 0
-                                    else:
-                                        logging.statusWriter(self.tempStatusPath, 'Creating WordPress....,20')
-                                        time.sleep(2)
-
-                            ##### Now resting start
-                            newWPobj = WPSites.objects.get(FinalURL=Furlofnewp)
-                            ## get WPsite Database name and usr
-                            Newurl = newWPobj.FinalURL
-                            WPpath = newWPobj.path
-                            VHuser = newWPobj.owner.externalApp
-                            PhpVersion = newWPobj.owner.phpSelection
+                            Newurl = wpsite.FinalURL
+                            WPpath = wpsite.path
+                            VHuser = wpsite.owner.externalApp
+                            PhpVersion = wpsite.owner.phpSelection
                             php = PHPManager.getPHPString(PhpVersion)
                             FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
 
@@ -3449,7 +3397,7 @@ $parameters = array(
                             if result == 0:
                                 raise BaseException(stdout)
 
-                            command = f'chown -R {newWPobj.owner.externalApp}:{newWPobj.owner.externalApp} {self.tempPath}'
+                            command = f'chown -R {wpsite.owner.externalApp}:{wpsite.owner.externalApp} {self.tempPath}'
                             result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
                             if result == 0:
@@ -3544,12 +3492,16 @@ $parameters = array(
                             if stdout.find('Error:') > -1:
                                 raise BaseException(stdout)
 
-                            # ##Remove temppath
-                            command = f'rm -rf {self.tempPath}'
-                            result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                            # # ##Remove temppath
+                            # command = f'rm -rf {self.tempPath}'
+                            # result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                            #
+                            # if result == 0:
+                            #     raise BaseException(stdout)
 
-                            if result == 0:
-                                raise BaseException(stdout)
+
+
+                            #################################################################
 
 
 
@@ -3822,6 +3774,7 @@ $parameters = array(
                 elif(DomainName != "" and int(self.extraArgs['DesSiteID']) == -1):
                 ###############Create New WordPressSite First
                     # logging.writeToFile("New Website Domain ....... %s" % str(DomainName))
+                    # logging.writeToFile("New Website Domain path....... %s" % str(self.extraArgs['path']))
                     DataToPass = {}
 
                     DataToPass['title'] = config['WPtitle']
@@ -3839,211 +3792,203 @@ $parameters = array(
                         oldpath = config['WPsitepath']
                         abc = oldpath.split("/")
                         newpath = abc[4]
-                        if newpath != "":
-                            newurl = "%s/%s"%(DomainName,newpath)
-                        else:
-                            newurl = DomainName
-                        home = "0"
+                        oldhome = "0"
                     except BaseException as msg:
-                        newpath = ""
+                        oldhome = "1"
+
+                    if self.extraArgs['path'] == '':
                         newurl = DomainName
-                        home = "1"
+                    else:
+                        newurl = "%s/%s"%(DomainName, self.extraArgs['path'])
 
-                    DataToPass['path'] = newpath
+                    DataToPass['path'] = self.extraArgs['path']
 
-                    DataToPass['home'] = home
+                    DataToPass['home'] = self.extraArgs['home']
 
-                    try:
-                        website = Websites.objects.get(domain=DomainName)
-                        logging.statusWriter(self.tempStatusPath, 'Web Site Already Exist.[404]')
-                    except:
-                        ab = WebsiteManager()
-                        coreResult = ab.submitWorpressCreation(userID, DataToPass)
-                        coreResult1 = json.loads((coreResult).content)
-                        logging.writeToFile("WP Creating website result....%s" % coreResult1)
-                        reutrntempath = coreResult1['tempStatusPath']
-                        while (1):
-                            lastLine = open(reutrntempath, 'r').read()
-                            logging.writeToFile("Error WP creating lastline ....... %s" % lastLine)
-                            if lastLine.find('[200]') > -1:
-                                break
-                            elif lastLine.find('[404]') > -1:
-                                logging.statusWriter(self.tempStatusPath, 'Failed to Create WordPress: error: %s. [404]'% lastLine)
-                                return 0
-                            else:
-                                logging.statusWriter(self.tempStatusPath, 'Creating WordPress....,20')
-                                time.sleep(2)
+                    ab = WebsiteManager()
+                    coreResult = ab.submitWorpressCreation(userID, DataToPass)
+                    coreResult1 = json.loads((coreResult).content)
+                    logging.writeToFile("WP Creating website result....%s" % coreResult1)
+                    reutrntempath = coreResult1['tempStatusPath']
+                    while (1):
+                        lastLine = open(reutrntempath, 'r').read()
+                        logging.writeToFile("Error WP creating lastline ....... %s" % lastLine)
+                        if lastLine.find('[200]') > -1:
+                            break
+                        elif lastLine.find('[404]') > -1:
+                            logging.statusWriter(self.tempStatusPath,
+                                                 'Failed to Create WordPress: error: %s. [404]' % lastLine)
+                            return 0
+                        else:
+                            logging.statusWriter(self.tempStatusPath, 'Creating WordPress....,20')
+                            time.sleep(2)
 
-                        logging.statusWriter(self.tempStatusPath, 'Restoring site ....,30')
-                        NewWPsite =WPSites.objects.get(FinalURL=newurl)
-                        VHuser = NewWPsite.owner.externalApp
-                        PhpVersion = NewWPsite.owner.phpSelection
-                        newWPpath = NewWPsite.path
+                    logging.statusWriter(self.tempStatusPath, 'Restoring site ....,30')
+                    NewWPsite = WPSites.objects.get(FinalURL=newurl)
+                    VHuser = NewWPsite.owner.externalApp
+                    PhpVersion = NewWPsite.owner.phpSelection
+                    newWPpath = NewWPsite.path
 
+                    ###### Same code already used in Existing site
 
+                    ### get WPsite Database name and usr
+                    php = PHPManager.getPHPString(PhpVersion)
+                    FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
 
-                        ###### Same code already used in Existing site
-
-                        ### get WPsite Database name and usr
-                        php = PHPManager.getPHPString(PhpVersion)
-                        FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
-
-                        ######Get DBname
-                        command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp config get DB_NAME  --skip-plugins --skip-themes --path=%s' % (
+                    ######Get DBname
+                    command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp config get DB_NAME  --skip-plugins --skip-themes --path=%s' % (
                         VHuser, FinalPHPPath, newWPpath)
 
-                        result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                    result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
-                        if stdout.find('Error:') > -1:
-                            raise BaseException(stdout)
-                        else:
-                            Finaldbname = stdout.rstrip("\n")
+                    if stdout.find('Error:') > -1:
+                        raise BaseException(stdout)
+                    else:
+                        Finaldbname = stdout.rstrip("\n")
 
-                        ######Get DBuser
-                        command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp config get DB_USER  --skip-plugins --skip-themes --path=%s' % (
+                    ######Get DBuser
+                    command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp config get DB_USER  --skip-plugins --skip-themes --path=%s' % (
                         VHuser, FinalPHPPath, newWPpath)
 
-                        result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                    result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
-                        if stdout.find('Error:') > -1:
-                            raise BaseException(stdout)
-                        else:
-                            Finaldbuser = stdout.rstrip("\n")
+                    if stdout.find('Error:') > -1:
+                        raise BaseException(stdout)
+                    else:
+                        Finaldbuser = stdout.rstrip("\n")
 
-                        #####Get DBpsswd
-                        command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp config get DB_PASSWORD  --skip-plugins --skip-themes --path=%s' % (
+                    #####Get DBpsswd
+                    command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp config get DB_PASSWORD  --skip-plugins --skip-themes --path=%s' % (
                         VHuser, FinalPHPPath, newWPpath)
 
-                        result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                    result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
-                        if stdout.find('Error:') > -1:
-                            raise BaseException(stdout)
-                        else:
-                            Finaldbpasswd = stdout.rstrip("\n")
+                    if stdout.find('Error:') > -1:
+                        raise BaseException(stdout)
+                    else:
+                        Finaldbpasswd = stdout.rstrip("\n")
 
-                        ### Create secure folder
+                    ### Create secure folder
 
-                        ACLManager.CreateSecureDir()
-                        RandomPath = str(randint(1000, 9999))
-                        self.tempPath = '%s/%s' % ('/usr/local/CyberCP/tmp', RandomPath)
+                    ACLManager.CreateSecureDir()
+                    RandomPath = str(randint(1000, 9999))
+                    self.tempPath = '%s/%s' % ('/usr/local/CyberCP/tmp', RandomPath)
 
-                        command = f'mkdir -p {self.tempPath}'
-                        result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                    command = f'mkdir -p {self.tempPath}'
+                    result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
-                        if result == 0:
-                            raise BaseException(stdout)
+                    if result == 0:
+                        raise BaseException(stdout)
 
-                        command = f'chown -R {NewWPsite.owner.externalApp}:{NewWPsite.owner.externalApp} {self.tempPath}'
-                        result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                    command = f'chown -R {NewWPsite.owner.externalApp}:{NewWPsite.owner.externalApp} {self.tempPath}'
+                    result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
-                        if result == 0:
-                            raise BaseException(stdout)
+                    if result == 0:
+                        raise BaseException(stdout)
 
-                        logging.statusWriter(self.tempStatusPath, 'Extracting Backup File...,40')
+                    logging.statusWriter(self.tempStatusPath, 'Extracting Backup File...,40')
 
-                        ###First copy backup file to temp and then Unzip
-                        command = "sudo -u %s cp -R /home/backup/%s* %s" % (VHuser, BackUpFileName, self.tempPath)
-                        result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                    ###First copy backup file to temp and then Unzip
+                    command = "sudo -u %s cp -R /home/backup/%s* %s" % (VHuser, BackUpFileName, self.tempPath)
+                    result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
-                        if result == 0:
-                            raise BaseException(stdout)
+                    if result == 0:
+                        raise BaseException(stdout)
 
-                        #### Make temp dir ab for unzip
-                        command = "sudo -u %s mkdir %s/ab" % (VHuser, self.tempPath)
-                        result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                    #### Make temp dir ab for unzip
+                    command = "sudo -u %s mkdir %s/ab" % (VHuser, self.tempPath)
+                    result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
-                        if result == 0:
-                            raise BaseException(stdout)
+                    if result == 0:
+                        raise BaseException(stdout)
 
-                        command = "sudo -u %s tar -xvf  %s/%s.tar.gz -C %s/ab" % (
+                    command = "sudo -u %s tar -xvf  %s/%s.tar.gz -C %s/ab" % (
                         VHuser, self.tempPath, BackUpFileName, self.tempPath)
-                        result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                    result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
-                        if result == 0:
-                            raise BaseException(stdout)
+                    if result == 0:
+                        raise BaseException(stdout)
 
+                    logging.statusWriter(self.tempStatusPath, 'Copying Data File...,60')
+                    ###Copy backup content to newsite
+                    if oldhome == "0":
+                        unzippath = "%s/ab/usr/local/CyberCP/tmp/%s/public_html/" % (self.tempPath, oldtemppath)
+                    else:
+                        unzippath = "%s/ab/usr/local/CyberCP/tmp/%s/public_html/public_html/" % (self.tempPath, oldtemppath)
 
-                        logging.statusWriter(self.tempStatusPath, 'Copying Data File...,60')
-                        ###Copy backup content to newsite
-                        if home == "0":
-                            unzippath = "%s/ab/usr/local/CyberCP/tmp/%s/public_html/" % (self.tempPath, oldtemppath)
-                        else:
-                            unzippath = "%s/ab/usr/local/CyberCP/tmp/%s/public_html/public_html/" % (self.tempPath, oldtemppath)
+                    command = "sudo -u %s cp -R %s* %s" % (VHuser, unzippath, newWPpath)
+                    result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
-                        command = "sudo -u %s cp -R %s* %s" % (VHuser, unzippath, newWPpath)
-                        result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                    if result == 0:
+                        raise BaseException(stdout)
 
-                        if result == 0:
-                            raise BaseException(stdout)
+                    command = "sudo -u %s cp -R %s.[^.]* %s" % (VHuser, unzippath, newWPpath)
+                    result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
+                    if result == 0:
+                        raise BaseException(stdout)
 
-                        command = "sudo -u %s cp -R %s.[^.]* %s" % (VHuser, unzippath, newWPpath)
-                        result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                    # dump Mysql file in unzippath path
+                    unzippath2 = "%s/ab/usr/local/CyberCP/tmp/%s/%s" % (self.tempPath, oldtemppath, DumpFileName)
+                    command = "mysql -u root %s < %s" % (Finaldbname, unzippath2)
+                    result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
-                        if result == 0:
-                            raise BaseException(stdout)
+                    if stdout.find('Error:') > -1:
+                        raise BaseException(stdout)
 
-                        # dump Mysql file in unzippath path
-                        unzippath2 = "%s/ab/usr/local/CyberCP/tmp/%s/%s" % (self.tempPath, oldtemppath, DumpFileName)
-                        command = "mysql -u root %s < %s" % (Finaldbname, unzippath2)
-                        result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                        if stdout.find('Error:') > -1:
-                            raise BaseException(stdout)
-
-                        logging.statusWriter(self.tempStatusPath, 'Restoreing Data Base...,80')
-                        #####SetUp DataBase Settings
-                        ##set DBName
-                        command = "sudo -u %s %s /usr/bin/wp config set DB_NAME %s --skip-plugins --skip-themes --path=%s" % (
+                    logging.statusWriter(self.tempStatusPath, 'Restoreing Data Base...,80')
+                    #####SetUp DataBase Settings
+                    ##set DBName
+                    command = "sudo -u %s %s /usr/bin/wp config set DB_NAME %s --skip-plugins --skip-themes --path=%s" % (
                         VHuser, FinalPHPPath, Finaldbname, newWPpath)
-                        result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                    result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
-                        if stdout.find('Error:') > -1:
-                            raise BaseException(stdout)
+                    if stdout.find('Error:') > -1:
+                        raise BaseException(stdout)
 
-                        ##set DBuser
-                        command = "sudo -u %s %s /usr/bin/wp config set DB_USER %s --skip-plugins --skip-themes --path=%s" % (
+                    ##set DBuser
+                    command = "sudo -u %s %s /usr/bin/wp config set DB_USER %s --skip-plugins --skip-themes --path=%s" % (
                         VHuser, FinalPHPPath, Finaldbuser, newWPpath)
-                        result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                    result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
-                        if stdout.find('Error:') > -1:
-                            raise BaseException(stdout)
+                    if stdout.find('Error:') > -1:
+                        raise BaseException(stdout)
 
-                        ##set DBpasswd
-                        command = "sudo -u %s %s /usr/bin/wp config set DB_PASSWORD %s --skip-plugins --skip-themes --path=%s" % (
+                    ##set DBpasswd
+                    command = "sudo -u %s %s /usr/bin/wp config set DB_PASSWORD %s --skip-plugins --skip-themes --path=%s" % (
                         VHuser, FinalPHPPath, Finaldbpasswd, newWPpath)
-                        result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                    result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
-                        if stdout.find('Error:') > -1:
-                            raise BaseException(stdout)
+                    if stdout.find('Error:') > -1:
+                        raise BaseException(stdout)
 
-                        logging.statusWriter(self.tempStatusPath, 'Replacing URLs...,90')
-                        ########Now Replace URL's
-                        command = 'sudo -u %s /usr/local/lsws/lsphp74/bin/php -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --path=%s "%s" "%s"' % (
+                    logging.statusWriter(self.tempStatusPath, 'Replacing URLs...,90')
+                    ########Now Replace URL's
+                    command = 'sudo -u %s /usr/local/lsws/lsphp74/bin/php -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --path=%s "%s" "%s"' % (
                         VHuser, newWPpath, oldurl, newurl)
-                        result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                    result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
-                        if stdout.find('Error:') > -1:
-                            raise BaseException(stdout)
+                    if stdout.find('Error:') > -1:
+                        raise BaseException(stdout)
 
-                        command = 'sudo -u %s /usr/local/lsws/lsphp74/bin/php -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --allow-root --path=%s "https://www.%s" "http://%s"' % (
+                    command = 'sudo -u %s /usr/local/lsws/lsphp74/bin/php -d error_reporting=0 /usr/bin/wp search-replace --skip-plugins --skip-themes --allow-root --path=%s "https://www.%s" "http://%s"' % (
                         VHuser, newWPpath, newurl, newurl)
-                        result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                    result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
-                        if stdout.find('Error:') > -1:
-                            raise BaseException(stdout)
+                    if stdout.find('Error:') > -1:
+                        raise BaseException(stdout)
 
-                        ##Remove temppath
-                        command = f'rm -rf {self.tempPath}'
-                        result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                    ##Remove temppath
+                    command = f'rm -rf {self.tempPath}'
+                    result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
-                        if stdout.find('Error:') > -1:
-                            raise BaseException(stdout)
+                    if stdout.find('Error:') > -1:
+                        raise BaseException(stdout)
 
-                        ###Restart Server
+                    ###Restart Server
 
-                        from plogical.installUtilities import installUtilities
-                        installUtilities.reStartLiteSpeed()
+                    from plogical.installUtilities import installUtilities
+                    installUtilities.reStartLiteSpeed()
 
 
 
