@@ -211,21 +211,25 @@ def FileManagerRoot(request):
 
     try:
 
-        url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
-        data = {
-            "name": "Filemanager",
-             "IP": ipAddressLocal
-        }
+        from plogical.processUtilities import ProcessUtilities
+        if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
 
-        import requests
-        response = requests.post(url, data=json.dumps(data))
-        Status = response.json()['status']
+            url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
+            data = {
+                "name": "Filemanager",
+                 "IP": ipAddressLocal
+            }
 
-        if(Status == 1):
-            template = 'baseTemplate/FileManager.html'
+            import requests
+            response = requests.post(url, data=json.dumps(data))
+            Status = response.json()['status']
+
+            if(Status == 1):
+                template = 'baseTemplate/FileManager.html'
+            else:
+              return  redirect("https://cyberpanel.net/cyberpanel-addons")
         else:
-          return  redirect("https://cyberpanel.net/cyberpanel-addons")
-
+            template = 'baseTemplate/FileManager.html'
     except BaseException as msg:
         template = 'baseTemplate/FileManager.html'
 

@@ -1246,17 +1246,38 @@ class virtualHostUtilities:
         return DiskUsage, DiskUsagePercentage, bwInMB, bwUsage
 
     @staticmethod
-    def EnableDisablePP(vhostName, username=None, password=None, path=None, wpid=None):
+    def EnableDisablePP(vhostName, username=None, password=None, path=None, wpid=None, externalApp = None):
         try:
+            vhostPassDir = f'/home/{vhostName}'
+
+            uBuntuPath = '/etc/lsb-release'
+
+            if os.path.exists(uBuntuPath):
+                group = 'nogroup'
+            else:
+                group = 'nobody'
+
+
             confPath = f'{virtualHostUtilities.vhostConfPath}/vhosts/{vhostName}/vhost.conf'
-            htpassword = f'{virtualHostUtilities.vhostConfPath}/vhosts/{vhostName}/{wpid}'
+            htpassword = f'{vhostPassDir}/{wpid}'
+            htpasstemp = f'/usr/local/CyberCP/{wpid}'
+
+            command = f'touch {htpasstemp}'
+            ProcessUtilities.executioner(command)
+
+            command = f'chown  {externalApp}:{group} {htpasstemp}'
+            ProcessUtilities.executioner(command)
 
             FindLine = f'PASSWORD PROTECTION CONF STARTS {path}'
             FindLineEnd = f'PASSWORD PROTECTION CONF ENDS {path}'
 
             if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
                 if os.path.exists(htpassword):
-                    os.remove(htpassword)
+
+                    command = f'rm -f {htpassword}'
+                    ProcessUtilities.executioner(command, externalApp)
+
+                    #os.remove(htpassword)
                     removeCheck = 0
 
                     data = open(confPath, 'r').readlines()
@@ -1279,6 +1300,7 @@ class virtualHostUtilities:
                     OLSPPConf = OLSPPConf.replace('{{RealM_Name}}', str(randint(1000, 9999)))
                     OLSPPConf = OLSPPConf.replace('{{path}}', path)
                     OLSPPConf = OLSPPConf.replace('{{wpid}}', wpid)
+                    OLSPPConf = OLSPPConf.replace('{{PassFile}}', htpassword)
 
                     writeToFile.write(OLSPPConf)
                     writeToFile.close()
@@ -1288,26 +1310,30 @@ class virtualHostUtilities:
                     password = password.encode()
                     hashed = bcrypt.hashpw(password, bcrypt.gensalt())
                     UserPass = f'{username}:{hashed.decode()}:{username}'
-                    writeToFile = open(htpassword, 'w')
+
+                    writeToFile = open(htpasstemp, 'w')
                     writeToFile.write(UserPass)
                     writeToFile.close()
 
-                    os.chmod(htpassword, 0o644)
+                    command = f'cp {htpasstemp} {htpassword}'
+                    ProcessUtilities.executioner(command, externalApp)
 
-                    uBuntuPath = '/etc/lsb-release'
+                    os.remove(htpasstemp)
 
-                    if os.path.exists(uBuntuPath):
-                        group = 'nogroup'
-                    else:
-                        group = 'nobody'
+                    command = f'chmod 640 {htpassword}'
+                    ProcessUtilities.executioner(command, externalApp, True)
 
-                    command = f'chown lsadm:{group} {htpassword}'
+                    command = f'sudo -u {externalApp} -g {group} chown {externalApp}:{group} {htpassword}'
                     ProcessUtilities.executioner(command)
             else:
                 RealmName = str(randint(1000, 9999))
                 htaccesspath = f'{path}/.htaccess'
                 if os.path.exists(htpassword):
-                    os.remove(htpassword)
+
+                    command = f'rm -f {htpassword}'
+                    ProcessUtilities.executioner(command, externalApp)
+
+                    #os.remove(htpassword)
                     removeCheck = 0
 
                     if os.path.exists(htaccesspath):
@@ -1340,20 +1366,22 @@ class virtualHostUtilities:
                     password = password.encode()
                     hashed = bcrypt.hashpw(password, bcrypt.gensalt())
                     UserPass = f'{username}:{hashed.decode()}:{username}'
-                    writeToFile = open(htpassword, 'w')
+
+
+                    writeToFile = open(htpasstemp, 'w')
                     writeToFile.write(UserPass)
                     writeToFile.close()
 
-                    os.chmod(htpassword, 0o644)
+                    command = f'cp {htpasstemp} {htpassword}'
+                    ProcessUtilities.executioner(command, externalApp)
 
-                    uBuntuPath = '/etc/lsb-release'
+                    os.remove(htpasstemp)
 
-                    if os.path.exists(uBuntuPath):
-                        group = 'nogroup'
-                    else:
-                        group = 'nobody'
+                    command = f'chmod 640 {htpassword}'
+                    ProcessUtilities.executioner(command, externalApp, True)
 
-                    command = f'chown lsadm:{group} {htpassword}'
+
+                    command = f'sudo -u {externalApp} -g {group} chown {externalApp}:{group} {htpassword}'
                     ProcessUtilities.executioner(command)
 
             installUtilities.installUtilities.reStartLiteSpeed()
@@ -1534,7 +1562,7 @@ def main():
     elif args.function == 'switchServer':
         virtualHostUtilities.switchServer(args.virtualHostName, args.phpVersion, int(args.server), args.tempStatusPath)
     elif args.function == 'EnableDisablePP':
-        virtualHostUtilities.EnableDisablePP(args.virtualHostName, args.username, args.password, args.path, args.wpid)
+        virtualHostUtilities.EnableDisablePP(args.virtualHostName, args.username, args.password, args.path, args.wpid, args.virtualHostUser)
 
 
 if __name__ == "__main__":

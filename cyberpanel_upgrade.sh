@@ -401,6 +401,7 @@ EOF
 #enabled=1
 #gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
 #EOF
+  rm -f /etc/yum.repos.d/CentOS-PowerTools-CyberPanel.repo
 
   if [[ "$Server_Country" = "CN" ]] ; then
     dnf --nogpg install -y https://cyberpanel.sh/mirror.ghettoforge.org/distributions/gf/gf-release-latest.gf.el8.noarch.rpm

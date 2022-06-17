@@ -475,7 +475,7 @@ pm.max_spare_servers = {pmMaxSpareServers}
 realm {{RealM_Name}} {
 
   userDB  {
-    location              $SERVER_ROOT/conf/vhosts/$VH_NAME/{{wpid}}
+    location              {{PassFile}}
   }
 }
 

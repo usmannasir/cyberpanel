@@ -2274,7 +2274,6 @@ $parameters = array(
             WPsitepath = wpsite.path
             websitedomain = website.domain
 
-
             php = PHPManager.getPHPString(PhpVersion)
             FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
 
@@ -2283,7 +2282,6 @@ $parameters = array(
                 logging.statusWriter(self.tempStatusPath, 'Getting database...,20')
 
                 command = f'{FinalPHPPath} -d error_reporting=0 /usr/bin/wp config get DB_NAME  --skip-plugins --skip-themes --path={WPsitepath}'
-
                 retStatus, stdoutput = ProcessUtilities.outputExecutioner(command, VHuser, None, None, 1)
 
                 if stdoutput.find('Error:') == -1:
@@ -2348,10 +2346,12 @@ $parameters = array(
                 config['Webadmin_id'] = website.admin_id
                 config['name'] = 'backup-' + websitedomain + "-" + time.strftime("%m.%d.%Y_%H-%M-%S")
                 config['Backuptype'] = "Both Website and DataBase"
+
                 ###############Create config.Json file
                 #command = "sudo -u %s touch /home/cyberpanel/config.json" % (VHuser)
                 #ProcessUtilities.executioner(command)
                 ###### write into config
+
                 json_object = json.dumps(config, indent=4)
                 configPath = "/home/cyberpanel/" + str(randint(1000, 9999))
                 file = open(configPath, "w")
@@ -2361,13 +2361,16 @@ $parameters = array(
                 os.chmod(configPath, 0o600)
 
                 command = f"cp -R {configPath} {self.tempPath}"
-                if ProcessUtilities.executioner(command, VHuser) == 0:
-                    raise BaseException('Failed to copy config file to temp path.')
+                retStatus, stdoutput = ProcessUtilities.outputExecutioner(command, VHuser, None, None, 1)
+                if retStatus == 0:
+                    raise BaseException(stdoutput)
 
 
                 command = f"rm -r {configPath}"
-                if ProcessUtilities.executioner(command) == 0:
-                    raise BaseException('Failed to remove config.')
+                result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+
+                if result == 0:
+                    raise BaseException(stdout)
 
                 logging.statusWriter(self.tempStatusPath, 'Copying website data.....,50')
 
@@ -2393,7 +2396,6 @@ $parameters = array(
                 logging.statusWriter(self.tempStatusPath, 'Copying database.....,70')
 
 
-
                 ##### SQLDUMP database into new directory
 
                 command = "mysqldump %s --result-file %s/%s.sql" % (DataBaseName, self.tempPath, DataBaseName)
@@ -2409,8 +2411,6 @@ $parameters = array(
                 ######## Zip backup directory
                 logging.statusWriter(self.tempStatusPath, 'Compressing backup files.....,80')
 
-                websitepath = "/home/%s"%websitedomain
-
 
                 command = 'mkdir -p /home/backup/'
                 result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
@@ -2424,8 +2424,8 @@ $parameters = array(
                 if retStatus == 0:
                     raise BaseException(result)
 
-                if os.path.exists(ProcessUtilities.debugPath):
-                    logging.writeToFile(result)
+                #if os.path.exists(ProcessUtilities.debugPath):
+                #    logging.writeToFile(result)
 
 
                 backupobj = WPSitesBackup(owner=Adminobj, WPSiteID=wpsite.id, WebsiteID=website.id, config=json_object)
@@ -2490,6 +2490,7 @@ $parameters = array(
                 config['Webadmin_id'] = website.admin_id
                 config['name'] = 'backup-' + websitedomain + "-" + time.strftime("%m.%d.%Y_%H-%M-%S")
                 config['Backuptype'] = "Website Backup"
+
                 ###############Create config.Json file
                 # command = "sudo -u %s touch /home/cyberpanel/config.json" % (VHuser)
                 # ProcessUtilities.executioner(command)
@@ -2504,13 +2505,16 @@ $parameters = array(
                 os.chmod(configPath, 0o600)
 
                 command = f"cp -R {configPath} {self.tempPath}"
+                result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
-                if ProcessUtilities.executioner(command) == 0:
-                    raise BaseException('Failed to copy config file to temp path.')
+                if result == 0:
+                    raise BaseException(stdout)
 
                 command = f"rm -r {configPath}"
-                if ProcessUtilities.executioner(command) == 0:
-                    raise BaseException('Failed to remove config temp file.')
+                result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+
+                if result == 0:
+                    raise BaseException(stdout)
 
                 logging.statusWriter(self.tempStatusPath, 'Copying website data.....,50')
 
@@ -2663,10 +2667,6 @@ $parameters = array(
                 ######## Zip backup directory
                 logging.statusWriter(self.tempStatusPath, 'Compressing backup files.....,80')
 
-                websitepath = "/home/%s" % websitedomain
-
-                FinalZipPath = '%s/%s.zip' % (websitepath, RandomPath)
-
                 command = 'mkdir -p /home/backup/'
                 result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
@@ -2710,6 +2710,7 @@ $parameters = array(
             from managePHP.phpManager import PHPManager
             from websiteFunctions.website import WebsiteManager
             from packages.models import Package
+
             if os.path.exists(ProcessUtilities.debugPath):
                 logging.writeToFile("Error Restore WP backup Now ....... start:%s"% self.extraArgs['Domain'])
 
@@ -3989,7 +3990,6 @@ $parameters = array(
 
                     from plogical.installUtilities import installUtilities
                     installUtilities.reStartLiteSpeed()
-
 
 
             logging.statusWriter(self.tempStatusPath, 'Completed.[200]')
