@@ -2747,11 +2747,11 @@ $parameters = array(
                     newWPpath = wpsite.path
                     newurl = wpsite.FinalURL
 
-                    ### get WPsite Database name and usr
+                    ## get WPsite Database name and usr
                     php = PHPManager.getPHPString(PhpVersion)
                     FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
 
-                    ######Get DBname
+                    #####Get DBname
                     command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp config get DB_NAME  --skip-plugins --skip-themes --path=%s' % (
                     VHuser, FinalPHPPath, newWPpath)
                     result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
@@ -2761,7 +2761,7 @@ $parameters = array(
                     else:
                         raise BaseException(stdout)
 
-                    ######Get DBuser
+                    #####Get DBuser
                     command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp config get DB_USER  --skip-plugins --skip-themes --path=%s' % (
                     VHuser, FinalPHPPath, newWPpath)
                     result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
@@ -2781,7 +2781,7 @@ $parameters = array(
                     else:
                         raise BaseException(stdout)
 
-                    ### Create secure folder
+                    ### ##Create secure folder
 
                     ACLManager.CreateSecureDir()
                     RandomPath = str(randint(1000, 9999))
@@ -2801,7 +2801,7 @@ $parameters = array(
 
                     logging.statusWriter(self.tempStatusPath, 'Extracting Backup File...,30')
 
-                    ###First copy backup file to temp and then Unzip
+                    #####First copy backup file to temp and then Unzip
                     command = "sudo -u %s cp -R /home/backup/%s* %s" % (VHuser, BackUpFileName, self.tempPath)
                     result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
@@ -2823,8 +2823,8 @@ $parameters = array(
                         raise BaseException(stdout)
 
                     # dump Mysql file in unzippath path
-                    unzippath2 = "%s/ab/usr/local/CyberCP/tmp/%s/%s" % (self.tempPath, oldtemppath, DumpFileName)
-                    command = "mysql -u root %s < %s" % (Finaldbname, unzippath2)
+                    unzippathdb = "%s/ab/usr/local/CyberCP/tmp/%s/%s" % (self.tempPath, oldtemppath, DumpFileName)
+                    command = "mysql -u root %s < %s" % (Finaldbname, unzippathdb)
                     result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
                     if result == 0:
