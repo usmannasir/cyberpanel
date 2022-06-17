@@ -1,5 +1,6 @@
 #!/usr/local/CyberCP/bin/python
 import os,sys
+import time
 sys.path.append('/usr/local/CyberCP')
 import django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
@@ -15,11 +16,20 @@ from plogical.virtualHostUtilities import virtualHostUtilities
 from plogical.sslUtilities import sslUtilities
 from plogical.vhost import vhost
 from shutil import ignore_patterns
+import threading as multi
 
 
-class ServerStatusUtil:
+class ServerStatusUtil(multi.Thread):
+
     lswsInstallStatusPath = '/home/cyberpanel/switchLSWSStatus'
     serverRootPath = '/usr/local/lsws/'
+
+    def __init__(self, key):
+        multi.Thread.__init__(self)
+        self.key = key
+
+    def run(self):
+        self.switchTOLSWS(self.key)
 
     @staticmethod
     def executioner(command, statusFile):
@@ -383,26 +393,28 @@ class ServerStatusUtil:
     def switchTOLSWSCLI(licenseKey):
         try:
 
-            ServerStatusUtil.switchTOLSWS(licenseKey)
+            ssu = ServerStatusUtil(licenseKey)
+            ssu.start()
 
-            command = 'sudo cat ' + ServerStatusUtil.lswsInstallStatusPath
-            output = ProcessUtilities.outputExecutioner(command)
-
-            if output.find('[404]') > -1:
-                command = "sudo rm -f " + ServerStatusUtil.lswsInstallStatusPath
-                ProcessUtilities.popenExecutioner(command)
-                data_ret = {'status': 1, 'abort': 1, 'requestStatus': output, 'installed': 0}
-                print(str(data_ret))
-                return 0
-            elif output.find('[200]') > -1:
-                command = "sudo rm -f " + ServerStatusUtil.lswsInstallStatusPath
-                ProcessUtilities.popenExecutioner(command)
-                data_ret = {'status': 1, 'abort': 1, 'requestStatus': 'Successfully converted.', 'installed': 1}
-                print(str(data_ret))
-                return 1
-            else:
-                data_ret = {'status': 1, 'abort': 0, 'requestStatus': output, 'installed': 0}
-                print(output)
+            while(True):
+                command = 'sudo cat ' + ServerStatusUtil.lswsInstallStatusPath
+                output = ProcessUtilities.outputExecutioner(command)
+                if output.find('[404]') > -1:
+                    command = "sudo rm -f " + ServerStatusUtil.lswsInstallStatusPath
+                    ProcessUtilities.popenExecutioner(command)
+                    data_ret = {'status': 1, 'abort': 1, 'requestStatus': output, 'installed': 0}
+                    print(str(data_ret))
+                    return 0
+                elif output.find('[200]') > -1:
+                    command = "sudo rm -f " + ServerStatusUtil.lswsInstallStatusPath
+                    ProcessUtilities.popenExecutioner(command)
+                    data_ret = {'status': 1, 'abort': 1, 'requestStatus': 'Successfully converted.', 'installed': 1}
+                    print(str(data_ret))
+                    return 1
+                else:
+                    data_ret = {'status': 1, 'abort': 0, 'requestStatus': output, 'installed': 0}
+                    #print(output)
+                    time.sleep(2)
 
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg))
