@@ -1582,6 +1582,18 @@ def main():
         wm = WebsiteManager()
         wm.installJoomla(1, data)
 
+    elif args.function == "switchTOLSWS":
+
+        completeCommandExample = 'cyberpanel switchTOLSWS --licenseKey <Your lsws key here or you can enter TRIAL)'
+
+        if not args.licenseKey:
+            print("\n\nPlease enter LiteSpeed License key. For example:\n\n" + completeCommandExample + "\n\n")
+            return
+
+        from serverStatus.serverStatusUtil import ServerStatusUtil
+
+        ServerStatusUtil.switchTOLSWSCLI(args.licenseKey)
+
 
 if __name__ == "__main__":
     main()
