@@ -872,6 +872,19 @@ class WebsiteManager:
             backupid = data['backupid']
             DesSiteID = data['DesSite']
 
+            # bwp = WPSites.objects.get(pk=int(backupid))
+            # dwp = WPSites.objects.get(pk=int(DesSiteID))
+            #
+            # if ACLManager.checkOwnership(bwp.owner.domain, admin, currentACL) == 1:
+            #     pass
+            # else:
+            #     return ACLManager.loadError()
+            #
+            # if ACLManager.checkOwnership(dwp.owner.domain, admin, currentACL) == 1:
+            #     pass
+            # else:
+            #     return ACLManager.loadError()
+
 
             Domain = data['Domain']
 
@@ -1347,7 +1360,8 @@ class WebsiteManager:
                     stdoutput = ProcessUtilities.outputExecutioner(command)
             elif setting == 'PasswordProtection':
                 execPath = f"/usr/local/CyberCP/bin/python {virtualHostUtilities.cyberPanel}/plogical/virtualHostUtilities.py"
-                execPath = f"{execPath} EnableDisablePP --username '{PPUsername}' --password '{PPPassword}' --virtualHostName {Webobj.domain} --path {path} --wpid {str(wpsite.id)}"
+                execPath = f"{execPath} EnableDisablePP --username '{PPUsername}' --password '{PPPassword}' " \
+                           f"--virtualHostName {Webobj.domain} --path {path} --wpid {str(wpsite.id)} --virtualHostUser {Webobj.externalApp}"
                 ProcessUtilities.executioner(execPath)
 
 
