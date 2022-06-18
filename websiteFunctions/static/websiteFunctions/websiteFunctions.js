@@ -1237,6 +1237,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
     };
 
     $scope.fetchstaging = function () {
+
         $('#wordpresshomeloading').show();
         $scope.wordpresshomeloading = false;
 
@@ -1275,6 +1276,49 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
 
             }
 
+        }
+
+        function cantLoadInitialDatas(response) {
+            $('#wordpresshomeloading').hide();
+            alert("Error" + response)
+
+        }
+
+    };
+
+    $scope.fetchDatabase = function () {
+
+        $('#wordpresshomeloading').show();
+        $scope.wordpresshomeloading = false;
+
+        var url = "/websites/fetchDatabase";
+
+        var data = {
+            WPid: $('#WPid').html(),
+        }
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            wordpresshomeloading = true;
+            $('#wordpresshomeloading').hide();
+
+            if (response.data.status === 1) {
+                $('#DB_Name').html(response.data.DataBaseName);
+                $('#DB_User').html(response.data.DataBaseUser);
+                $('#tableprefix').html(response.data.tableprefix);
+            } else {
+                alert("Error data.error_message:" + response.data.error_message)
+
+            }
         }
 
         function cantLoadInitialDatas(response) {
