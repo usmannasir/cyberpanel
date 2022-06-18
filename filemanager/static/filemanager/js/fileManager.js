@@ -654,6 +654,16 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
         } else {
             if (functionName === "startPoint") {
                 completePathToFile = $scope.currentPath;
+                // check if there is any path in QS
+
+                const urlParams = new URLSearchParams(window.location.search);
+                QSPath = urlParams.get('path')
+
+                if (QSPath !== null) {
+                    completePathToFile = QSPath
+                }
+
+                //
             } else if (functionName === "doubleClick") {
                 completePathToFile = $scope.currentPath + "/" + node.innerHTML;
             } else if (functionName === "homeFetch") {
@@ -1200,7 +1210,6 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
         } else {
             pathbase = $scope.currentPath;
         }
-
 
 
         $scope.extractionLoading = false;

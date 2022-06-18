@@ -5,6 +5,7 @@ import shutil
 import time
 
 from loginSystem.models import Administrator
+from managePHP.phpManager import PHPManager
 from plogical.acl import ACLManager
 sys.path.append('/usr/local/CyberCP')
 import django
@@ -575,6 +576,8 @@ $parameters = array(
                 dbName, dbUser, dbPassword = self.dbCreation(tempStatusPath, website)
                 self.permPath = '/home/%s/public_html' % (website.domain)
 
+            php = PHPManager.getPHPString(website.phpSelection)
+            FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
 
             ## Security Check
 
@@ -600,7 +603,7 @@ $parameters = array(
             statusFile.close()
 
             try:
-                command = "wp core download --allow-root --path=%s --version=%s" % (finalPath, self.extraArgs['version'])
+                command = f"{FinalPHPPath} -d error_reporting=0 /usr/bin/wp core download --allow-root --path={finalPath} --version={self.extraArgs['WPVersion']}"
             except:
                 command = "wp core download --allow-root --path=" + finalPath
 
@@ -618,7 +621,7 @@ $parameters = array(
             statusFile.writelines('Configuring the installation,40')
             statusFile.close()
 
-            command = "wp core config --dbname=" + dbName + " --dbuser=" + dbUser + " --dbpass=" + dbPassword + " --dbhost=%s:%s --dbprefix=wp_ --allow-root --path=" % (ApplicationInstaller.LOCALHOST, ApplicationInstaller.PORT) + finalPath
+            command = f"{FinalPHPPath} -d error_reporting=0 /usr/bin/wp core config --dbname={dbName} --dbuser={dbUser} --dbpass={dbPassword} --dbhost={ApplicationInstaller.LOCALHOST}:{ApplicationInstaller.PORT} --dbprefix=wp_ --path={finalPath}"
             result = ProcessUtilities.outputExecutioner(command, externalApp)
 
             if os.path.exists(ProcessUtilities.debugPath):
@@ -633,7 +636,7 @@ $parameters = array(
             else:
                 finalURL = domainName
 
-            command = 'wp core install --url="http://' + finalURL + '" --title="' + blogTitle + '" --admin_user="' + adminUser + '" --admin_password="' + adminPassword + '" --admin_email="' + adminEmail + '" --allow-root --path=' + finalPath
+            command = f'{FinalPHPPath} -d error_reporting=0 /usr/bin/wp core install --url="http://{finalURL}" --title="{blogTitle}" --admin_user="{adminUser}" --admin_password="{adminPassword}" --admin_email="{adminEmail}" --path={finalPath}'
             result = ProcessUtilities.outputExecutioner(command, externalApp)
 
             if os.path.exists(ProcessUtilities.debugPath):
@@ -648,7 +651,7 @@ $parameters = array(
             statusFile.writelines('Installing LSCache Plugin,80')
             statusFile.close()
 
-            command = "wp plugin install litespeed-cache --allow-root --path=" + finalPath
+            command = f"{FinalPHPPath} -d error_reporting=0 /usr/bin/wp plugin install litespeed-cache --allow-root --path=" + finalPath
             result = ProcessUtilities.outputExecutioner(command, externalApp)
 
             if os.path.exists(ProcessUtilities.debugPath):
@@ -661,7 +664,7 @@ $parameters = array(
             statusFile.writelines('Activating LSCache Plugin,90')
             statusFile.close()
 
-            command = "wp plugin activate litespeed-cache --allow-root --path=" + finalPath
+            command = f"{FinalPHPPath} -d error_reporting=0 /usr/bin/wp plugin activate litespeed-cache --allow-root --path=" + finalPath
             result = ProcessUtilities.outputExecutioner(command, externalApp)
 
             if os.path.exists(ProcessUtilities.debugPath):
@@ -673,19 +676,19 @@ $parameters = array(
             try:
                 if self.extraArgs['updates']:
                     if self.extraArgs['updates'] == 'Disabled':
-                        command = "wp config set WP_AUTO_UPDATE_CORE false --raw --allow-root --path=" + finalPath
+                        command = f"{FinalPHPPath} -d error_reporting=0 /usr/bin/wp config set WP_AUTO_UPDATE_CORE false --raw --allow-root --path=" + finalPath
                         result = ProcessUtilities.outputExecutioner(command, externalApp)
 
                         if result.find('Success:') == -1:
                             raise BaseException(result)
                     elif self.extraArgs['updates'] == 'Minor and Security Updates':
-                        command = "wp config set WP_AUTO_UPDATE_CORE minor --allow-root --path=" + finalPath
+                        command = f"{FinalPHPPath} -d error_reporting=0 /usr/bin/wp config set WP_AUTO_UPDATE_CORE minor --allow-root --path=" + finalPath
                         result = ProcessUtilities.outputExecutioner(command, externalApp)
 
                         if result.find('Success:') == -1:
                             raise BaseException(result)
                     else:
-                        command = "wp config set WP_AUTO_UPDATE_CORE true --raw --allow-root --path=" + finalPath
+                        command = f"{FinalPHPPath} -d error_reporting=0 /usr/bin/wp config set WP_AUTO_UPDATE_CORE true --raw --allow-root --path=" + finalPath
                         result = ProcessUtilities.outputExecutioner(command, externalApp)
 
                         if result.find('Success:') == -1:
@@ -734,34 +737,25 @@ $parameters = array(
                 pass
 
 
-
-
             ############## Install Save Plugin Buckets
             try:
                 if self.extraArgs['SavedPlugins'] == True:
                     AllPluginList= self.extraArgs['AllPluginsList']
                     for i in range(len(AllPluginList)):
                         # command = "wp plugin install " + AllPluginList[i]+ "--allow-root --path=" + finalPath
-                        command = "wp plugin install %s --allow-root --path=%s" %(AllPluginList[i], finalPath)
+                        command = f"{FinalPHPPath} -d error_reporting=0 /usr/bin/wp plugin install %s --allow-root --path=%s" %(AllPluginList[i], finalPath)
                         result = ProcessUtilities.outputExecutioner(command, externalApp)
 
                         if result.find('Success:') == -1:
                             raise BaseException(result)
 
-                        command = "wp plugin activate %s --allow-root --path=%s"  %(AllPluginList[i], finalPath)
+                        command = f"{FinalPHPPath} -d error_reporting=0 /usr/bin/wp plugin activate %s --allow-root --path=%s"  %(AllPluginList[i], finalPath)
                         result = ProcessUtilities.outputExecutioner(command, externalApp)
             except BaseException as msg:
                 logging.writeToFile("Error in istall plugin bucket: %s"%str(msg))
                 pass
 
-
-
             ##
-
-            # from filemanager.filemanager import FileManager
-            #
-            # fm = FileManager(None, None)
-            # fm.fixPermissions(self.masterDomain)
 
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines("Successfully Installed. [200]")
@@ -1669,6 +1663,7 @@ $parameters = array(
 
     def wordpressInstallNew(self):
         try:
+
             from websiteFunctions.website import WebsiteManager
             import json
             tempStatusPath = self.data['tempStatusPath']
