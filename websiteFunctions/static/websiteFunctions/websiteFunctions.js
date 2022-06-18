@@ -1557,12 +1557,16 @@ app.controller('RestoreWPBackup', function ($scope, $http, $timeout, $window) {
         $scope.currentStatus = "Start Restoring WordPress..";
 
         var Domain = $('#wprestoresubdirdomain').val()
-        var path = $('#wprestoresubdirpath').val()
+        var path = $('#wprestoresubdirpath').val();
         var home = "1";
 
         if (typeof path != 'undefined' || path != '') {
             home = "0";
         }
+        if (typeof path == 'undefined' ) {
+            path = "";
+        }
+
 
         var backuptype = $('#backuptype').html();
         var data;
