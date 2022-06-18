@@ -65,7 +65,7 @@
                                         Open
                                     </a>
                                     <a target="_blank"
-                                       href="/filemanager/{{ wpsite.owner.domain }}"
+                                       href="/filemanager/{{ wpsite.owner.domain }}?path={{wpsite.path}}"
                                        style="margin-left: 4%">
                                         <svg xmlns="http://www.w3.org/2000/svg"
                                              xmlns:xlink="http://www.w3.org/1999/xlink"
@@ -136,9 +136,9 @@
                                             <h6 style="font-weight: bold">Password Protection</h6>
                                             <div class="custom-control custom-switch">
                                                 <input type="radio" data-toggle="modal"
-                                                        data-target="#Passwordprotection"
-                                                        class="custom-control-input ng-pristine ng-untouched ng-valid ng-not-empty"
-                                                        id="passwdprotection">
+                                                       data-target="#Passwordprotection"
+                                                       class="custom-control-input ng-pristine ng-untouched ng-valid ng-not-empty"
+                                                       id="passwdprotection">
                                                 <label class="custom-control-label"
                                                        for="passwdprotection"></label>
                                             </div>
@@ -441,7 +441,10 @@
                                                 <div class="col-sm-4">
                                                     <button type="button" id="createbackupbutton"
                                                             ng-click="CreateBackup()"
-                                                            class="btn btn-primary btn-lg">{% trans "Create Backup" %}</button>
+                                                            class="btn btn-primary btn-lg">{% trans "Create Backup" %}
+                                                        <img style="display: none"
+                                                             ng-hide="wordpresshomeloading"
+                                                             src="{% static 'images/loading.gif' %}"></button>
 
                                                 </div>
                                             </div>

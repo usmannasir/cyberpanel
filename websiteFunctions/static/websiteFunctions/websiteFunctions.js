@@ -1156,12 +1156,10 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
 
 
         function ListInitialDatas(response) {
-            $('#wordpresshomeloading').hide();
+            //$('#wordpresshomeloading').hide();
 
             if (response.data.abort === 1) {
-
                 if (response.data.installStatus === 1) {
-
 
                     $scope.wordpresshomeloading = true;
                     $scope.stagingDetailsForm = true;

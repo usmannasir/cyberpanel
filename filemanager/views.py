@@ -90,7 +90,6 @@ def controller(request):
             else:
                 return ACLManager.loadErrorJson('FilemanagerAdmin', 0)
 
-
         fm = FM(request, data)
 
         if method == 'listForTable':
