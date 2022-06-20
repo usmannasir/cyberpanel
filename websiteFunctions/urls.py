@@ -43,6 +43,9 @@ urlpatterns = [
     url(r'^DeploytoProduction', views.DeploytoProduction, name='DeploytoProduction'),
     url(r'^WPCreateBackup', views.WPCreateBackup, name='WPCreateBackup'),
     url(r'^RestoreWPbackupNow', views.RestoreWPbackupNow, name='RestoreWPbackupNow'),
+    url(r'^RestoreWPbackupNow', views.RestoreWPbackupNow, name='RestoreWPbackupNow'),
+    url(r'^dataintegrity', views.dataintegrity, name='dataintegrity'),
+    url(r'^installwpcore', views.installwpcore, name='installwpcore'),
 
 
 

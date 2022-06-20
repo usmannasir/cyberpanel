@@ -1476,6 +1476,108 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
 
     };
 
+
+    $scope.installwpcore = function () {
+
+         $('#wordpresshomeloading').show();
+        var data = {
+            WPid: $('#WPid').html(),
+        }
+
+        $scope.wordpresshomeloading = false;
+
+        var url = "/websites/installwpcore";
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $('#wordpresshomeloading').hide();
+            $scope.wordpresshomeloading = true;
+
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success!',
+                    text: 'installwpcore done.',
+                    type: 'success'
+                });
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $('#wordpresshomeloading').hide();
+            $scope.wordpresshomeloading = true;
+            alert(response)
+
+        }
+
+    };
+
+    $scope.dataintegrity = function () {
+
+         $('#wordpresshomeloading').show();
+        var data = {
+            WPid: $('#WPid').html(),
+        }
+
+        $scope.wordpresshomeloading = false;
+
+        var url = "/websites/dataintegrity";
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $('#wordpresshomeloading').hide();
+            $scope.wordpresshomeloading = true;
+
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success!',
+                    text: 'dataintegrity done.',
+                    type: 'success'
+                });
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $('#wordpresshomeloading').hide();
+            $scope.wordpresshomeloading = true;
+            alert(response)
+
+        }
+    };
+
 });
 
 

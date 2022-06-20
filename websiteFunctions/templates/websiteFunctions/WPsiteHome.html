@@ -65,7 +65,7 @@
                                         Open
                                     </a>
                                     <a target="_blank"
-                                       href="/filemanager/{{ wpsite.owner.domain }}?path={{wpsite.path}}"
+                                       href="/filemanager/{{ wpsite.owner.domain }}?path={{ wpsite.path }}"
                                        style="margin-left: 4%">
                                         <svg xmlns="http://www.w3.org/2000/svg"
                                              xmlns:xlink="http://www.w3.org/1999/xlink"
@@ -220,6 +220,17 @@
                                                        type="checkbox"
                                                        class="custom-control-input ng-pristine ng-untouched ng-valid ng-empty"
                                                        id="maintenanceMode">
+                                                <label class="custom-control-label"
+                                                       for="maintenanceMode"></label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <h6 style="font-weight: bold"> WP Corn</h6>
+                                            <div class="custom-control custom-switch">
+                                                <input
+                                                        type="checkbox"
+                                                        class="custom-control-input ng-pristine ng-untouched ng-valid ng-empty"
+                                                        id="maintenanceMode">
                                                 <label class="custom-control-label"
                                                        for="maintenanceMode"></label>
                                             </div>
@@ -498,110 +509,53 @@
 
                         </div>
                         <hr>
-                        <div class="d-lg-flex d-none justify-content-center">
-                            <a href="/websites/{{ wpsite.owner.domain }}">
-                                <svg xmlns="http://www.w3.org/2000/svg"
-                                     xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true"
-                                     focusable="false" width="1em" height="1em"
-                                     style="-ms-transform: rotate(360deg); -webkit-transform: rotate(360deg); transform: rotate(360deg);"
-                                     preserveAspectRatio="xMidYMid meet" viewBox="0 0 32 32">
-                                    <path d="M16 18H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2zM6 6v10h10V6z"
-                                          fill="#626262"></path>
-                                    <path d="M26 12v4h-4v-4h4m0-2h-4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2z"
-                                          fill="#626262"></path>
-                                    <path d="M26 22v4h-4v-4h4m0-2h-4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2z"
-                                          fill="#626262"></path>
-                                    <path d="M16 22v4h-4v-4h4m0-2h-4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2z"
-                                          fill="#626262"></path>
-                                </svg>
-                                Manage Application
-                            </a>
-                            <a ng-click="autoUpdateConfigurationsInit()" data-toggle="modal"
-                               data-target="#autoUpdateConfig" style="margin-left: 3%"
-                               href="javascript: void(0);">
-                                <svg xmlns="http://www.w3.org/2000/svg"
-                                     xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true"
-                                     focusable="false" width="1em" height="1em"
-                                     style="-ms-transform: rotate(360deg); -webkit-transform: rotate(360deg); transform: rotate(360deg);"
-                                     preserveAspectRatio="xMidYMid meet" viewBox="0 0 20 20">
-                                    <path d="M10.2 3.28c3.53 0 6.43 2.61 6.92 6h2.08l-3.5 4l-3.5-4h2.32a4.439 4.439 0 0 0-4.32-3.45c-1.45 0-2.73.71-3.54 1.78L4.95 5.66a6.965 6.965 0 0 1 5.25-2.38zm-.4 13.44c-3.52 0-6.43-2.61-6.92-6H.8l3.5-4c1.17 1.33 2.33 2.67 3.5 4H5.48a4.439 4.439 0 0 0 4.32 3.45c1.45 0 2.73-.71 3.54-1.78l1.71 1.95a6.95 6.95 0 0 1-5.25 2.38z"
-                                          fill="#626262"></path>
-                                </svg>
-                                Autoupdate Configurations
-                            </a>
+                        <div style="display: flex; flex-wrap: wrap">
+                            <div class="col-sm-11">
+                                <a href="/websites/{{ wpsite.owner.domain }}">
+                                    <svg xmlns="http://www.w3.org/2000/svg"
+                                         xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true"
+                                         focusable="false" width="1em" height="1em"
+                                         style="-ms-transform: rotate(360deg); -webkit-transform: rotate(360deg); transform: rotate(360deg);"
+                                         preserveAspectRatio="xMidYMid meet" viewBox="0 0 32 32">
+                                        <path d="M16 18H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2zM6 6v10h10V6z"
+                                              fill="#626262"></path>
+                                        <path d="M26 12v4h-4v-4h4m0-2h-4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2z"
+                                              fill="#626262"></path>
+                                        <path d="M26 22v4h-4v-4h4m0-2h-4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2z"
+                                              fill="#626262"></path>
+                                        <path d="M16 22v4h-4v-4h4m0-2h-4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2z"
+                                              fill="#626262"></path>
+                                    </svg>
+                                    Manage Application
+                                </a>
+                                <a ng-click="autoUpdateConfigurationsInit()" data-toggle="modal"
+                                   data-target="#autoUpdateConfig" style="margin-left: 3%"
+                                   href="javascript: void(0);">
+                                    <svg xmlns="http://www.w3.org/2000/svg"
+                                         xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true"
+                                         focusable="false" width="1em" height="1em"
+                                         style="-ms-transform: rotate(360deg); -webkit-transform: rotate(360deg); transform: rotate(360deg);"
+                                         preserveAspectRatio="xMidYMid meet" viewBox="0 0 20 20">
+                                        <path d="M10.2 3.28c3.53 0 6.43 2.61 6.92 6h2.08l-3.5 4l-3.5-4h2.32a4.439 4.439 0 0 0-4.32-3.45c-1.45 0-2.73.71-3.54 1.78L4.95 5.66a6.965 6.965 0 0 1 5.25-2.38zm-.4 13.44c-3.52 0-6.43-2.61-6.92-6H.8l3.5-4c1.17 1.33 2.33 2.67 3.5 4H5.48a4.439 4.439 0 0 0 4.32 3.45c1.45 0 2.73-.71 3.54-1.78l1.71 1.95a6.95 6.95 0 0 1-5.25 2.38z"
+                                              fill="#626262"></path>
+                                    </svg>
+                                    Autoupdate Configurations
+                                </a>
+                            </div>
 
-                            <div id="autoUpdateConfig" class="modal fade" tabindex="-1" role="dialog"
-                                 aria-hidden="true">
-                                <div class="modal-dialog">
+                            <div class="col-sm-1">
 
-                                    <!-- Modal content-->
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <button type="button" class="close" data-dismiss="modal">
-                                                &times;
-                                            </button>
-                                            <h4 class="modal-title">{% trans "Updates" %}</h4>
-                                        </div>
-                                        <div class="modal-body">
-                                            <form>
-
-
-                                                <h4 style="margin: 2%">Configure setting for automatic
-                                                    updates.</h4>
-                                                <div class="row">
-                                                    <label class="col-lg-6">Automatic Updates
-                                                        (Currently:
-                                                        {{ wpsite.AutoUpdates }})</label>
-                                                    <div class="col-lg-6">
-                                                        <select id="AutomaticUpdates"
-                                                                style="padding: 10px">
-                                                            <option>Disabled</option>
-                                                            <option>Minor and Security Updates</option>
-                                                            <option>All (minor and major)</option>
-                                                        </select>
-                                                    </div>
-                                                </div>
-                                                <div class="row">
-                                                    <label class="col-lg-4">Plugins
-                                                        (Currently: {{ wpsite.PluginUpdates }})</label>
-                                                    <div class="col-lg-8">
-                                                        <select id="Plugins"
-
-                                                                style="padding: 10px">
-                                                            <option>Enabled</option>
-                                                            <option>Disabled</option>
-                                                        </select>
-                                                    </div>
-                                                </div>
-                                                <div class="row">
-                                                    <label class="col-lg-4">Themes
-                                                        (Currently: {{ wpsite.ThemeUpdates }})</label>
-                                                    <div class="col-lg-8">
-                                                        <select id="Themes"
-
-                                                                style="padding: 10px">
-                                                            <option>Enabled</option>
-                                                            <option>Disabled</option>
-                                                        </select>
-                                                    </div>
-                                                </div>
-
-                                            </form>
-
-
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-primary"
-                                                    ng-click="SaveUpdateConfig()">Save
-                                            </button>
-                                            <button type="button" ng-disabled="savingSettings"
-                                                    class="btn btn-default" data-dismiss="modal">
-                                                Close
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!-- /.modal-dialog -->
+                                <a data-toggle="modal"
+                                   data-target="#securitymodel" style="margin-left: 3%"
+                                   href="javascript: void(0);">
+                                    <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img" width="1em"
+                                         style="-ms-transform: rotate(360deg); -webkit-transform: rotate(360deg); transform: rotate(360deg);"
+                                         height="1em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24">
+                                        <path fill="#626262"
+                                              d="M12 22q-3.475-.875-5.737-3.988Q4 14.9 4 11.1V5l8-3l8 3v6.1q0 3.8-2.262 6.912Q15.475 21.125 12 22Zm0-2.1q2.425-.75 4.05-2.962q1.625-2.213 1.9-4.938H12V4.125l-6 2.25v5.175q0 .175.05.45H12Z"/>
+                                    </svg>
+                                    Security
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -610,6 +564,119 @@
                 </div>
             </div>
         </div>
+        <!-------Start Model of AutoUpdateCongiguration-->
+        <div id="autoUpdateConfig" class="modal fade" tabindex="-1" role="dialog"
+             aria-hidden="true">
+            <div class="modal-dialog">
+
+                <!-- Modal content-->
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">
+                            &times;
+                        </button>
+                        <h4 class="modal-title">{% trans "Updates" %}</h4>
+                    </div>
+                    <div class="modal-body">
+                        <form>
+
+
+                            <h4 style="margin: 2%">Configure setting for automatic
+                                updates.</h4>
+                            <div class="row">
+                                <label class="col-lg-6">Automatic Updates
+                                    (Currently:
+                                    {{ wpsite.AutoUpdates }})</label>
+                                <div class="col-lg-6">
+                                    <select id="AutomaticUpdates"
+                                            style="padding: 10px">
+                                        <option>Disabled</option>
+                                        <option>Minor and Security Updates</option>
+                                        <option>All (minor and major)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <label class="col-lg-4">Plugins
+                                    (Currently: {{ wpsite.PluginUpdates }})</label>
+                                <div class="col-lg-8">
+                                    <select id="Plugins"
+
+                                            style="padding: 10px">
+                                        <option>Enabled</option>
+                                        <option>Disabled</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <label class="col-lg-4">Themes
+                                    (Currently: {{ wpsite.ThemeUpdates }})</label>
+                                <div class="col-lg-8">
+                                    <select id="Themes"
+
+                                            style="padding: 10px">
+                                        <option>Enabled</option>
+                                        <option>Disabled</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                        </form>
+
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary"
+                                ng-click="SaveUpdateConfig()">Save
+                        </button>
+                        <button type="button" ng-disabled="savingSettings"
+                                class="btn btn-default" data-dismiss="modal">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- /.modal-dialog -->
+        </div>
+        <!-------End Model of AutoUpdateCongiguration-->
+
+        <!-------Start Model of Security-->
+        <div id="securitymodel" class="modal fade" tabindex="-1" role="dialog"
+             aria-hidden="true">
+            <div class="modal-dialog">
+
+                <!-- Modal content-->
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">
+                            &times;
+                        </button>
+                        <h4 class="modal-title">{% trans "Security" %}</h4>
+                    </div>
+                    <div class="modal-body center-div">
+                         <button
+                                data-toggle="modal"
+                                data-target="#DeleteMember" aria-label=""
+                                ng-click="dataintegrity()"
+                                type="button" class="btn btn-border btn-alt border-azure btn-link font-black">
+                            data integrity
+                        </button>
+                         <button
+                                data-toggle="modal"
+                                data-target="#DeleteMember" aria-label=""
+                                ng-click="installwpcore()"
+                                type="button" class="btn btn-border btn-alt border-azure btn-link font-black">
+                            Install WP Core
+                        </button>
+
+
+                    </div>
+
+                </div>
+            </div>
+            <!-- /.modal-dialog -->
+        </div>
+        <!-------End Model of Security-->
         <div id="DeployToProduction" class="modal fade" role="dialog">
             <div class="modal-dialog">
                 <!-- Modal content-->
