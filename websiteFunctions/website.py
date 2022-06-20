@@ -745,6 +745,62 @@ class WebsiteManager:
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
+    def fetchDatabase(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            WPManagerID = data['WPid']
+            wpsite = WPSites.objects.get(pk=WPManagerID)
+
+            if ACLManager.checkOwnership(wpsite.owner.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
+            php = PHPManager.getPHPString(wpsite.owner.phpSelection)
+            FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
+
+            command = f'{FinalPHPPath} -d error_reporting=0 /usr/bin/wp config get DB_NAME  --skip-plugins --skip-themes --path={wpsite.path}'
+            retStatus, stdoutput = ProcessUtilities.outputExecutioner(command, wpsite.owner.externalApp, None, None, 1)
+
+            if stdoutput.find('Error:') == -1:
+                DataBaseName = stdoutput.rstrip("\n")
+            else:
+                data_ret = {'status': 0, 'error_message': stdoutput}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+            command = f'{FinalPHPPath} -d error_reporting=0 /usr/bin/wp config get DB_USER  --skip-plugins --skip-themes --path={wpsite.path}'
+            retStatus, stdoutput = ProcessUtilities.outputExecutioner(command, wpsite.owner.externalApp, None, None, 1)
+
+            if stdoutput.find('Error:') == -1:
+                DataBaseUser = stdoutput.rstrip("\n")
+            else:
+                data_ret = {'status': 0, 'error_message': stdoutput}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+            command = f'{FinalPHPPath} -d error_reporting=0 /usr/bin/wp config get table_prefix  --skip-plugins --skip-themes --path={wpsite.path}'
+            retStatus, stdoutput = ProcessUtilities.outputExecutioner(command, wpsite.owner.externalApp, None, None, 1)
+
+            if stdoutput.find('Error:') == -1:
+                tableprefix = stdoutput.rstrip("\n")
+            else:
+                data_ret = {'status': 0, 'error_message': stdoutput}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+            data_ret = {'status': 1, 'error_message': 'None', "DataBaseUser": DataBaseUser, "DataBaseName": DataBaseName, 'tableprefix': tableprefix}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
     def SaveUpdateConfig(self, userID=None, data=None):
         try:
 

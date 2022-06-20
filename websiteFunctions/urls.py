@@ -39,6 +39,7 @@ urlpatterns = [
     url(r'^StatusThemes', views.StatusThemes, name='StatusThemes'),
     url(r'^CreateStagingNow', views.CreateStagingNow, name='CreateStagingNow'),
     url(r'^fetchstaging', views.fetchstaging, name='fetchstaging'),
+    url(r'^fetchDatabase', views.fetchDatabase, name='fetchDatabase'),
     url(r'^SaveUpdateConfig', views.SaveUpdateConfig, name='SaveUpdateConfig'),
     url(r'^DeploytoProduction', views.DeploytoProduction, name='DeploytoProduction'),
     url(r'^WPCreateBackup', views.WPCreateBackup, name='WPCreateBackup'),

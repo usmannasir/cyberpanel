@@ -2869,6 +2869,9 @@ $parameters = array(
                     if stdout.find('Error:') > -1:
                         raise BaseException(stdout)
 
+                    command = f'sudo -u {VHuser} /usr/local/lsws/lsphp74/bin/php -d error_reporting=0 /usr/bin/wp litespeed-purge all --path={newWPpath}'
+                    ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+
                     # ##Remove temppath
                     command = f'rm -rf {self.tempPath}'
                     result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
@@ -2973,6 +2976,9 @@ $parameters = array(
                             if stdout.find('Error:') > -1:
                                 raise BaseException(stdout)
 
+                            command = f'sudo -u {VHuser} /usr/local/lsws/lsphp74/bin/php -d error_reporting=0 /usr/bin/wp litespeed-purge all --path={newWPpath}'
+                            ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+
                             # ##Remove temppath
                             command = f'rm -rf {self.tempPath}'
                             result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
@@ -2989,7 +2995,6 @@ $parameters = array(
                             PhpVersion = wpsite.owner.phpSelection
                             php = PHPManager.getPHPString(PhpVersion)
                             FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
-
 
 
                             ### Create secure folder
@@ -3065,6 +3070,9 @@ $parameters = array(
 
                             if stdout.find('Error:') > -1:
                                 raise BaseException(stdout)
+
+                            command = f'sudo -u {VHuser} /usr/local/lsws/lsphp74/bin/php -d error_reporting=0 /usr/bin/wp litespeed-purge all --path={WPpath}'
+                            ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
                             # ##Remove temppath
                             command = f'rm -rf {self.tempPath}'
@@ -3212,6 +3220,9 @@ $parameters = array(
 
                     if stdout.find('Error:') > -1:
                         raise BaseException(stdout)
+
+                    command = f'sudo -u {VHuser} /usr/local/lsws/lsphp74/bin/php -d error_reporting=0 /usr/bin/wp litespeed-purge all --path={newWPpath}'
+                    ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
                     ##Remove temppath
                     command = f'rm -rf {self.tempPath}'
@@ -3385,6 +3396,9 @@ $parameters = array(
                             if stdout.find('Error:') > -1:
                                 raise BaseException(stdout)
 
+                            command = f'sudo -u {VHuser} /usr/local/lsws/lsphp74/bin/php -d error_reporting=0 /usr/bin/wp litespeed-purge all --path={newWPpath}'
+                            ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+
                             # ##Remove temppath
                             command = f'rm -rf {self.tempPath}'
                             result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
@@ -3541,6 +3555,9 @@ $parameters = array(
 
                             if stdout.find('Error:') > -1:
                                 raise BaseException(stdout)
+
+                            command = f'sudo -u {VHuser} /usr/local/lsws/lsphp74/bin/php -d error_reporting=0 /usr/bin/wp litespeed-purge all --path={WPpath}'
+                            ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
                             # ##Remove temppath
                             command = f'rm -rf {self.tempPath}'
@@ -3757,6 +3774,10 @@ $parameters = array(
                     if stdout.find('Error:') > -1:
                         raise BaseException(stdout)
 
+                    command = f'sudo -u {VHuser} /usr/local/lsws/lsphp74/bin/php -d error_reporting=0 /usr/bin/wp litespeed-purge all --path={newWPpath}'
+                    ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+
+
                     ##Remove temppath
                     command = f'rm -rf {self.tempPath}'
                     result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
@@ -3768,6 +3789,7 @@ $parameters = array(
 
                     from plogical.installUtilities import installUtilities
                     installUtilities.reStartLiteSpeed()
+
 
 
             logging.statusWriter(self.tempStatusPath, 'Completed.[200]')

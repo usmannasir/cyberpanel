@@ -299,6 +299,27 @@ def fetchstaging(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+def fetchDatabase(request):
+    try:
+        userID = request.session['userID']
+
+        result = pluginManager.preWebsiteCreation(request)
+
+        if  result != 200:
+            return result
+
+        wm = WebsiteManager()
+        coreResult = wm.fetchDatabase(userID, json.loads(request.body))
+
+        result = pluginManager.postWebsiteCreation(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
 def SaveUpdateConfig(request):
     try:
         userID = request.session['userID']

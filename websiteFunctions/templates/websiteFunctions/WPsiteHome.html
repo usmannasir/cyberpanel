@@ -30,7 +30,6 @@
                 <p style="display: inline;">
                 </p>
 
-
                 <div>
                     <div class="example-box-wrapper">
                         <ul class="nav-responsive nav nav-tabs">
@@ -41,10 +40,9 @@
                                             data-toggle="tab">Plugins</a></li>
                             <li class=""><a href="#tab3" ng-click="GetCurrentThemes()"
                                             data-toggle="tab">Themes</a></li>
-                            <li><a href="#tab4" data-toggle="tab"
-                                   ng-click="fetchstaging()">Staging</a></li>
-                            <li><a href="#tab5" data-toggle="tab"
-                            >Backups</a></li>
+                            <li><a href="#tab4" data-toggle="tab" ng-click="fetchstaging()">Staging</a></li>
+                            <li><a href="#tab5" data-toggle="tab">Backups</a></li>
+                            <li><a ng-click="fetchDatabase()" href="#tab6" data-toggle="tab">Database</a></li>
                         </ul>
                         <div class="tab-content">
                             <div class="tab-pane active" id="tab1">
@@ -431,7 +429,7 @@
                             <div class="tab-pane" id="tab5">
                                 <div class="panel-body">
                                     <h3 class="content-box-header">
-                                        {% trans "Create Backup " %}
+                                        {% trans "Create Backup " %} - <a href="{% url 'RestoreBackups' %}">{% trans "Restore Backups " %} <i class="glyph-icon icon-external-link-square" title="staging.cyberpanel.net"></i></a>
                                     </h3>
                                     <div class="example-box-wrapper">
 
@@ -501,6 +499,41 @@
                                                 </div>
                                             </div>
 
+                                        </form>
+                                    </div>
+
+                                </div>
+                            </div>
+                            <div class="tab-pane" id="tab6">
+                                <div class="panel-body">
+                                    <h3 class="content-box-header">
+                                        {% trans "Database for" %} {{ wpsite.title }}
+                                    </h3>
+                                    <div class="example-box-wrapper">
+                                        <form action="/" class="form-horizontal bordered-row panel-body">
+                                            <div class="form-group">
+                                                <label class="col-sm-2 control-label mb-5"
+                                                       style="padding-top: 0px;">{% trans "Database Name" %}</label>
+                                                <div class="col-sm-1 mb-10">
+                                                    <a target="_blank" href="{% url 'phpMyAdmin' %}"> <div id="DB_Name" class="mb-10 text-bold"></div></a>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label class="col-sm-2 control-label mb-5"
+                                                       style="padding-top: 0px;">{% trans "Database User" %}</label>
+                                                <div class="col-sm-1 mb-10">
+                                                    <div id="DB_User" class="mb-10 text-bold"></div>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label class="col-sm-2 control-label mb-5"
+                                                       style="padding-top: 0px;">{% trans "Table Prefix" %}</label>
+                                                <div class="col-sm-1 mb-10">
+                                                    <div id="tableprefix" class="mb-10 text-bold"></div>
+                                                </div>
+                                            </div>
                                         </form>
                                     </div>
 
