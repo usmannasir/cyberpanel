@@ -615,12 +615,33 @@ class WebsiteManager:
             else:
                 maintenanceMode = 1
 
+
+            ##### Check passwd protection
+            vhostName = wpsite.owner.domain
+            vhostPassDir = f'/home/{vhostName}'
+            path = f'{vhostPassDir}/{WPManagerID}'
+            if os.path.exists(path):
+                passwd = 0
+            else:
+                passwd = 1
+
+
+            #### Check WP cron
+            command = "sudo -u %s cat %s/wp-config.php"%(Vhuser, wpsite.path)
+            stdout = ProcessUtilities.outputExecutioner(command)
+            if stdout.find("'DISABLE_WP_CRON', 'true'") > -1:
+                wpcron = 1
+            else:
+                wpcron = 0
+
             fb ={
                 'version': version.rstrip('\n'),
                 'lscache': lscache,
                 'debugging': debugging,
                 'searchIndex': searchindex,
-                'maintenanceMode': maintenanceMode
+                'maintenanceMode': maintenanceMode,
+                'passwordprotection': passwd,
+                'wpcron': wpcron
 
             }
 
@@ -977,9 +998,36 @@ class WebsiteManager:
             currentACL = ACLManager.loadedACL(userID)
             admin = Administrator.objects.get(pk=userID)
 
-            WPid = data['WPid']
+            WPManagerID = data['WPid']
+            wpsite = WPSites.objects.get(pk=WPManagerID)
 
-            time.sleep(2)
+            if ACLManager.checkOwnership(wpsite.owner.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
+            path = wpsite.path
+
+            Webobj = Websites.objects.get(pk=wpsite.owner_id)
+
+            Vhuser = Webobj.externalApp
+            PHPVersion = Webobj.phpSelection
+
+            php = ACLManager.getPHPString(PHPVersion)
+            FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
+
+            ###fetch WP version
+
+            command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp core version --skip-plugins --skip-themes --path=%s' % (
+            Vhuser, FinalPHPPath, path)
+            version = ProcessUtilities.outputExecutioner(command)
+            version = version.rstrip("\n")
+
+            ###install wp core
+            command = "sudo -u %s wp core download --force --skip-content --version=%s"%(Vhuser, version)
+            output = ProcessUtilities.outputExecutioner(command)
+
+
 
             data_ret = {'status': 1, 'installStatus': 1, 'error_message': 'None',}
             json_data = json.dumps(data_ret)
@@ -997,9 +1045,33 @@ class WebsiteManager:
             currentACL = ACLManager.loadedACL(userID)
             admin = Administrator.objects.get(pk=userID)
 
-            WPid = data['WPid']
+            WPManagerID = data['WPid']
+            wpsite = WPSites.objects.get(pk=WPManagerID)
 
-            time.sleep(2)
+            if ACLManager.checkOwnership(wpsite.owner.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
+            path = wpsite.path
+
+            Webobj = Websites.objects.get(pk=wpsite.owner_id)
+
+            Vhuser = Webobj.externalApp
+            PHPVersion = Webobj.phpSelection
+
+            php = ACLManager.getPHPString(PHPVersion)
+            FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
+
+            ###fetch WP version
+
+            command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp core version --skip-plugins --skip-themes --path=%s' % (
+                Vhuser, FinalPHPPath, path)
+            version = ProcessUtilities.outputExecutioner(command)
+            version = version.rstrip("\n")
+
+            ###dataintegrity
+
 
             data_ret = {'status': 1, 'installStatus': 1, 'error_message': 'None',}
             json_data = json.dumps(data_ret)
@@ -1440,6 +1512,8 @@ class WebsiteManager:
                 else:
                     command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp option update blog_public 0 --path=%s --skip-plugins --skip-themes"  % (Vhuser, FinalPHPPath, path)
                     stdoutput = ProcessUtilities.outputExecutioner(command)
+
+
             elif setting == 'maintenanceMode':
 
                 command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp litespeed-purge all --path=%s --skip-plugins --skip-themes"  % (Vhuser, FinalPHPPath, path)
@@ -1454,11 +1528,18 @@ class WebsiteManager:
                 else:
                     command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp maintenance-mode deactivate --path=%s --skip-plugins --skip-themes" % (Vhuser, FinalPHPPath, path)
                     stdoutput = ProcessUtilities.outputExecutioner(command)
+
+
             elif setting == 'PasswordProtection':
                 execPath = f"/usr/local/CyberCP/bin/python {virtualHostUtilities.cyberPanel}/plogical/virtualHostUtilities.py"
                 execPath = f"{execPath} EnableDisablePP --username '{PPUsername}' --password '{PPPassword}' " \
                            f"--virtualHostName {Webobj.domain} --path {path} --wpid {str(wpsite.id)} --virtualHostUser {Webobj.externalApp}"
                 ProcessUtilities.executioner(execPath)
+
+            elif setting == 'Wpcron':
+                command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp core version --skip-plugins --skip-themes --path=%s' % (
+                    Vhuser, FinalPHPPath, path)
+                version = ProcessUtilities.outputExecutioner(command)
 
 
             data_ret = {'status': 1, 'error_message': 'None'}

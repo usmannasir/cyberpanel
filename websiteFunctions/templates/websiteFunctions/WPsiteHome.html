@@ -130,63 +130,15 @@
                                                        for="lscache"></label>
                                             </div>
                                         </div>
+                                        <span style="display: none" id="#checkjq"></span>
                                         <div class="col-md-3">
                                             <h6 style="font-weight: bold">Password Protection</h6>
-                                            <div class="custom-control custom-switch">
-                                                <input type="radio" data-toggle="modal"
-                                                       data-target="#Passwordprotection"
-                                                       class="custom-control-input ng-pristine ng-untouched ng-valid ng-not-empty"
-                                                       id="passwdprotection">
-                                                <label class="custom-control-label"
-                                                       for="passwdprotection"></label>
+                                            <div class="custom-control custom-switch" id="prsswdprodata">
+
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-
-                                <!------------------MOdael for passwd protection-------->
-                                <div id="Passwordprotection" class="modal fade" role="dialog">
-                                    <div class="modal-dialog">
-                                        <!-- Modal content-->
-                                        <div class="modal-content">
-                                            <div class="modal-header">
-                                                <button type="button" class="close" data-dismiss="modal">&times;
-                                                </button>
-                                                <h4 class="modal-title">Delete WordPress Site
-                                                    <img ng-hide="$parent.cyberPanelLoading"
-                                                         src="/static/images/loading.gif"
-                                                         style="display: none;">
-                                                </h4>
-                                            </div>
-                                            <div class="modal-body" style="height: 100px;">
-
-                                                <div>
-                                                    <label class="col-sm-4">Username</label>
-                                                    <input ng-model="$parent.PPUsername" required class="col-lg-8"
-                                                           type="text" placeholder="Username">
-
-                                                </div>
-                                                <div style="margin-top: 36px;">
-                                                    <label class="col-sm-4">Password</label>
-                                                    <input ng-model="$parent.PPPassword" required class="col-lg-8"
-                                                           type="password" placeholder="*******************">
-
-                                                </div>
-
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-primary"
-                                                        ng-click="UpdateWPSettings('PasswordProtection')">Yes
-                                                </button>
-                                                <button type="button" ng-disabled="savingSettings"
-                                                        class="btn btn-default" data-dismiss="modal">
-                                                    Cancel
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!------------------End MOdael for passwd protection-------->
                                 <div style="margin-top: 4%">
                                     <div class="row">
                                         <div class="col-md-3">
@@ -223,14 +175,14 @@
                                             </div>
                                         </div>
                                         <div class="col-md-3">
-                                            <h6 style="font-weight: bold"> WP Corn</h6>
+                                            <h6 style="font-weight: bold"> WP Cron</h6>
                                             <div class="custom-control custom-switch">
-                                                <input
+                                                <input ng-click="UpdateWPSettings('Wpcron')"
                                                         type="checkbox"
                                                         class="custom-control-input ng-pristine ng-untouched ng-valid ng-empty"
-                                                        id="maintenanceMode">
+                                                        id="wpcron">
                                                 <label class="custom-control-label"
-                                                       for="maintenanceMode"></label>
+                                                       for="wpcron"></label>
                                             </div>
                                         </div>
                                     </div>
@@ -429,7 +381,10 @@
                             <div class="tab-pane" id="tab5">
                                 <div class="panel-body">
                                     <h3 class="content-box-header">
-                                        {% trans "Create Backup " %} - <a href="{% url 'RestoreBackups' %}">{% trans "Restore Backups " %} <i class="glyph-icon icon-external-link-square" title="staging.cyberpanel.net"></i></a>
+                                        {% trans "Create Backup " %} - <a
+                                            href="{% url 'RestoreBackups' %}">{% trans "Restore Backups " %} <i
+                                            class="glyph-icon icon-external-link-square"
+                                            title="staging.cyberpanel.net"></i></a>
                                     </h3>
                                     <div class="example-box-wrapper">
 
@@ -515,7 +470,9 @@
                                                 <label class="col-sm-2 control-label mb-5"
                                                        style="padding-top: 0px;">{% trans "Database Name" %}</label>
                                                 <div class="col-sm-1 mb-10">
-                                                    <a target="_blank" href="{% url 'phpMyAdmin' %}"> <div id="DB_Name" class="mb-10 text-bold"></div></a>
+                                                    <a target="_blank" href="{% url 'phpMyAdmin' %}">
+                                                        <div id="DB_Name" class="mb-10 text-bold"></div>
+                                                    </a>
                                                 </div>
                                             </div>
 
@@ -597,6 +554,51 @@
                 </div>
             </div>
         </div>
+
+        <!------------------MOdael for passwd protection-------->
+        <div id="Passwordprotection" class="modal fade" role="dialog">
+            <div class="modal-dialog">
+                <!-- Modal content-->
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">&times;
+                        </button>
+                        <h4 class="modal-title">Enable Password Protection
+                            <img ng-hide="$parent.cyberPanelLoading"
+                                 src="/static/images/loading.gif"
+                                 style="display: none;">
+                        </h4>
+                    </div>
+                    <div class="modal-body" style="height: 100px;">
+
+                        <div>
+                            <label class="col-sm-4">Username</label>
+                            <input ng-model="$parent.PPUsername" required class="col-lg-8"
+                                   type="text" placeholder="Username">
+
+                        </div>
+                        <div style="margin-top: 36px;">
+                            <label class="col-sm-4">Password</label>
+                            <input ng-model="$parent.PPPassword" required class="col-lg-8"
+                                   type="password" placeholder="*******************">
+
+                        </div>
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary"
+                                ng-click="UpdateWPSettings('PasswordProtection')">Yes
+                        </button>
+                        <button type="button" ng-disabled="savingSettings"
+                                class="btn btn-default" data-dismiss="modal">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!------------------End MOdael for passwd protection-------->
+
         <!-------Start Model of AutoUpdateCongiguration-->
         <div id="autoUpdateConfig" class="modal fade" tabindex="-1" role="dialog"
              aria-hidden="true">
@@ -684,17 +686,20 @@
                         <button type="button" class="close" data-dismiss="modal">
                             &times;
                         </button>
-                        <h4 class="modal-title">{% trans "Security" %}</h4>
+                        <h4 class="modal-title">{% trans "Security" %}<img style="display: none"
+                                                                           id="wordpresshomeloadingsec"
+                                                                           ng-hide="wordpresshomeloading"
+                                                                           src="{% static 'images/loading.gif' %}"></h4>
                     </div>
                     <div class="modal-body center-div">
-                         <button
+                        <button
                                 data-toggle="modal"
                                 data-target="#DeleteMember" aria-label=""
                                 ng-click="dataintegrity()"
                                 type="button" class="btn btn-border btn-alt border-azure btn-link font-black">
                             data integrity
                         </button>
-                         <button
+                        <button
                                 data-toggle="modal"
                                 data-target="#DeleteMember" aria-label=""
                                 ng-click="installwpcore()"

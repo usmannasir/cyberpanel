@@ -463,6 +463,8 @@ function DeployToProductionInitial(vall) {
 
 app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $window) {
 
+    var CheckBoxpasssword = 0;
+
     $scope.wordpresshomeloading = true;
     $scope.stagingDetailsForm = false;
     $scope.installationProgress = true;
@@ -519,6 +521,29 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
                 if (response.data.ret_data.maintenanceMode === 1) {
                     $('#maintenanceMode').prop('checked', true);
                 }
+                if(response.data.ret_data.wpcron === 1) {
+                    $('#wpcron').prop('checked', true);
+                }
+                if (response.data.ret_data.passwordprotection == 1) {
+
+                    var dc = '<input  type="checkbox" checked \n' +
+                        '        ng-click="UpdateWPSettings(\'PasswordProtection\')" class="custom-control-input ng-pristine ng-untouched ng-valid ng-not-empty"\n' +
+                        '                                                       id="passwdprotection">\n' +
+                        '                                                <label class="custom-control-label"\n' +
+                        '                                                       for="passwdprotection"></label>'
+                    var mp = $compile(dc)($scope);
+                    angular.element(document.getElementById('prsswdprodata')).append(mp);
+                    CheckBoxpasssword = 1;
+                } else if (response.data.ret_data.passwordprotection == 0) {
+                    var dc = '<input  type="checkbox" data-toggle="modal"\n' +
+                        '                                                       data-target="#Passwordprotection"\n' +
+                        '                                                       class="custom-control-input ng-pristine ng-untouched ng-valid ng-not-empty"\n' +
+                        '                                                       id="passwdprotection">\n' +
+                        '                                                <label class="custom-control-label"\n' +
+                        '                                                       for="passwdprotection"></label>'
+                    $('#prsswdprodata').append(dc);
+                    CheckBoxpasssword = 0;
+                }
 
             } else {
                 new PNotify({
@@ -550,17 +575,31 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
     $scope.UpdateWPSettings = function (setting) {
 
         $scope.wordpresshomeloading = false;
+        $('#wordpresshomeloading').show();
 
 
         var url = "/websites/UpdateWPSettings";
 
         if (setting === "PasswordProtection") {
-            var data = {
-                WPid: $('#WPid').html(),
-                setting: setting,
-                PPUsername: $scope.PPUsername,
-                PPPassword: $scope.PPPassword,
+            if (CheckBoxpasssword == 0) {
+                var data = {
+                    WPid: $('#WPid').html(),
+                    setting: setting,
+                    PPUsername: $scope.PPUsername,
+                    PPPassword: $scope.PPPassword,
+                }
+
             }
+            else {
+                var data = {
+                    WPid: $('#WPid').html(),
+                    setting: setting,
+                    PPUsername: '',
+                    PPPassword: '',
+                }
+
+            }
+
         } else {
             var settingValue = 0;
             if ($('#' + setting).is(":checked")) {
@@ -586,6 +625,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
 
         function ListInitialDatas(response) {
             $scope.wordpresshomeloading = true;
+            $('#wordpresshomeloading').hide();
 
             if (response.data.status === 1) {
                 new PNotify({
@@ -605,6 +645,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
         }
 
         function cantLoadInitialDatas(response) {
+            $('#wordpresshomeloading').hide();
             $scope.wordpresshomeloading = true;
             alert(response)
 
@@ -1523,7 +1564,8 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
 
     $scope.installwpcore = function () {
 
-         $('#wordpresshomeloading').show();
+        $('#wordpresshomeloading').show();
+        $('#wordpresshomeloadingsec').show();
         var data = {
             WPid: $('#WPid').html(),
         }
@@ -1544,6 +1586,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
 
         function ListInitialDatas(response) {
             $('#wordpresshomeloading').hide();
+            $('#wordpresshomeloadingsec').hide();
             $scope.wordpresshomeloading = true;
 
             if (response.data.status === 1) {
@@ -1565,6 +1608,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
 
         function cantLoadInitialDatas(response) {
             $('#wordpresshomeloading').hide();
+            $('#wordpresshomeloadingsec').hide();
             $scope.wordpresshomeloading = true;
             alert(response)
 
@@ -1574,7 +1618,8 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
 
     $scope.dataintegrity = function () {
 
-         $('#wordpresshomeloading').show();
+        $('#wordpresshomeloading').show();
+        $('#wordpresshomeloadingsec').show();
         var data = {
             WPid: $('#WPid').html(),
         }
@@ -1595,6 +1640,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
 
         function ListInitialDatas(response) {
             $('#wordpresshomeloading').hide();
+            $('#wordpresshomeloadingsec').hide();
             $scope.wordpresshomeloading = true;
 
             if (response.data.status === 1) {
@@ -1616,6 +1662,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
 
         function cantLoadInitialDatas(response) {
             $('#wordpresshomeloading').hide();
+            $('#wordpresshomeloadingsec').hide();
             $scope.wordpresshomeloading = true;
             alert(response)
 
@@ -1707,7 +1754,7 @@ app.controller('RestoreWPBackup', function ($scope, $http, $timeout, $window) {
         if (typeof path != 'undefined' || path != '') {
             home = "0";
         }
-        if (typeof path == 'undefined' ) {
+        if (typeof path == 'undefined') {
             path = "";
         }
 
