@@ -488,6 +488,9 @@ password="%s"
         if not os.path.exists("/usr/local/CyberCP/public"):
             os.mkdir("/usr/local/CyberCP/public")
 
+        command = "/usr/local/CyberPanel/bin/python manage.py collectstatic --noinput --clear"
+        preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+
         ## Moving static content to lscpd location
         command = 'mv static /usr/local/CyberCP/public/'
         preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
