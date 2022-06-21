@@ -175,12 +175,12 @@
                                             </div>
                                         </div>
                                         <div class="col-md-3">
-                                            <h6 style="font-weight: bold"> WP Cron</h6>
+                                            <h6 style="font-weight: bold">Disable WP Cron</h6>
                                             <div class="custom-control custom-switch">
                                                 <input ng-click="UpdateWPSettings('Wpcron')"
-                                                        type="checkbox"
-                                                        class="custom-control-input ng-pristine ng-untouched ng-valid ng-empty"
-                                                        id="wpcron">
+                                                       type="checkbox"
+                                                       class="custom-control-input ng-pristine ng-untouched ng-valid ng-empty"
+                                                       id="Wpcron">
                                                 <label class="custom-control-label"
                                                        for="wpcron"></label>
                                             </div>
@@ -692,19 +692,23 @@
                                                                            src="{% static 'images/loading.gif' %}"></h4>
                     </div>
                     <div class="modal-body center-div">
+                        <div class="alert alert-warning">
+                            <h4 class="alert-title">Status</h4>
+                            <p id="SecurityResult"></p>
+                        </div>
                         <button
                                 data-toggle="modal"
                                 data-target="#DeleteMember" aria-label=""
                                 ng-click="dataintegrity()"
                                 type="button" class="btn btn-border btn-alt border-azure btn-link font-black">
-                            data integrity
+                            Data integrity
                         </button>
                         <button
                                 data-toggle="modal"
                                 data-target="#DeleteMember" aria-label=""
                                 ng-click="installwpcore()"
                                 type="button" class="btn btn-border btn-alt border-azure btn-link font-black">
-                            Install WP Core
+                            Re-Install WP Core
                         </button>
 
 

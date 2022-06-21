@@ -633,12 +633,18 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
                     text: 'Successfully Updated!.',
                     type: 'success'
                 });
+                if (setting === "PasswordProtection"){
+                    location.reload();
+                }
             } else {
                 new PNotify({
                     title: 'Operation Failed!',
                     text: response.data.error_message,
                     type: 'error'
                 });
+                if (setting === "PasswordProtection"){
+                    location.reload();
+                }
 
             }
 
@@ -1592,9 +1598,10 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
             if (response.data.status === 1) {
                 new PNotify({
                     title: 'Success!',
-                    text: 'installwpcore done.',
+                    text: 'Results fetched..',
                     type: 'success'
                 });
+                $('#SecurityResult').html(response.data.result);
             } else {
                 new PNotify({
                     title: 'Operation Failed!',
@@ -1646,9 +1653,10 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
             if (response.data.status === 1) {
                 new PNotify({
                     title: 'Success!',
-                    text: 'dataintegrity done.',
+                    text: 'Results fetched',
                     type: 'success'
                 });
+                $('#SecurityResult').html(response.data.result);
             } else {
                 new PNotify({
                     title: 'Operation Failed!',

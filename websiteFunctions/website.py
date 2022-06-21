@@ -139,34 +139,41 @@ class WebsiteManager:
         else:
             return ACLManager.loadError()
 
-        url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
-        data = {
-            "name": "wp-manager",
-            "IP": ACLManager.GetServerIP()
-        }
+        try:
 
-        import requests
-        response = requests.post(url, data=json.dumps(data))
-        Status = response.json()['status']
+            url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
+            data = {
+                "name": "wp-manager",
+                "IP": ACLManager.GetServerIP()
+            }
 
-        if (Status == 1) or ProcessUtilities.decideServer() == ProcessUtilities.ent:
-            Data['wpsite'] = WPobj
+            import requests
+            response = requests.post(url, data=json.dumps(data))
+            Status = response.json()['status']
 
-            try:
-                DeleteID = request.GET.get('DeleteID', None)
+            if (Status == 1) or ProcessUtilities.decideServer() == ProcessUtilities.ent:
+                Data['wpsite'] = WPobj
 
-                if DeleteID != None:
-                    wstagingDelete = WPStaging.objects.get(pk=DeleteID, owner=WPobj)
-                    wstagingDelete.delete()
+                try:
+                    DeleteID = request.GET.get('DeleteID', None)
 
-            except BaseException as msg:
-                da= str(msg)
+                    if DeleteID != None:
+                        wstagingDelete = WPStaging.objects.get(pk=DeleteID, owner=WPobj)
+                        wstagingDelete.delete()
 
+                except BaseException as msg:
+                    da= str(msg)
+
+                proc = httpProc(request, 'websiteFunctions/WPsiteHome.html',
+                                Data, 'createWebsite')
+                return proc.render()
+            else:
+                return redirect("https://cyberpanel.net/cyberpanel-addons")
+
+        except:
             proc = httpProc(request, 'websiteFunctions/WPsiteHome.html',
                             Data, 'createWebsite')
             return proc.render()
-        else:
-            return redirect("https://cyberpanel.net/cyberpanel-addons")
 
     def RestoreHome(self, request=None, userID=None, BackupID=None ):
         Data = {}
@@ -621,9 +628,9 @@ class WebsiteManager:
             vhostPassDir = f'/home/{vhostName}'
             path = f'{vhostPassDir}/{WPManagerID}'
             if os.path.exists(path):
-                passwd = 0
-            else:
                 passwd = 1
+            else:
+                passwd = 0
 
 
             #### Check WP cron
@@ -1024,12 +1031,11 @@ class WebsiteManager:
             version = version.rstrip("\n")
 
             ###install wp core
-            command = "sudo -u %s wp core download --force --skip-content --version=%s"%(Vhuser, version)
+            command = f"sudo -u {Vhuser} {FinalPHPPath} -d error_reporting=0 /usr/bin/wp core download --force --skip-content --version={version} --path={path}"
             output = ProcessUtilities.outputExecutioner(command)
 
 
-
-            data_ret = {'status': 1, 'installStatus': 1, 'error_message': 'None',}
+            data_ret = {'status': 1, 'installStatus': 1, 'error_message': 'None', 'result': output}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -1065,15 +1071,12 @@ class WebsiteManager:
 
             ###fetch WP version
 
-            command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp core version --skip-plugins --skip-themes --path=%s' % (
+            command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp core verify-checksums --skip-plugins --skip-themes --path=%s' % (
                 Vhuser, FinalPHPPath, path)
-            version = ProcessUtilities.outputExecutioner(command)
-            version = version.rstrip("\n")
-
-            ###dataintegrity
+            result = ProcessUtilities.outputExecutioner(command)
 
 
-            data_ret = {'status': 1, 'installStatus': 1, 'error_message': 'None',}
+            data_ret = {'status': 1, 'installStatus': 1, 'error_message': 'None', 'result': result}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -1472,7 +1475,6 @@ class WebsiteManager:
                 else:
                     command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp plugin deactivate litespeed-cache --path=%s --skip-plugins --skip-themes'  % (Vhuser, FinalPHPPath, path)
                     stdoutput = ProcessUtilities.outputExecutioner(command)
-
             elif setting == 'debugging':
 
                 command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp litespeed-purge all --path=%s --skip-plugins --skip-themes" %   (Vhuser, FinalPHPPath, path)
@@ -1498,7 +1500,6 @@ class WebsiteManager:
                         Vhuser, FinalPHPPath, path)
                     stdout = ProcessUtilities.outputExecutioner(command)
                     logging.CyberCPLogFileWriter.writeToFile("Debugging output:" + str(stdout))
-
             elif setting == 'searchIndex':
 
                 command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp litespeed-purge all --path=%s --skip-plugins --skip-themes"  % (Vhuser, FinalPHPPath, path)
@@ -1512,8 +1513,6 @@ class WebsiteManager:
                 else:
                     command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp option update blog_public 0 --path=%s --skip-plugins --skip-themes"  % (Vhuser, FinalPHPPath, path)
                     stdoutput = ProcessUtilities.outputExecutioner(command)
-
-
             elif setting == 'maintenanceMode':
 
                 command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp litespeed-purge all --path=%s --skip-plugins --skip-themes"  % (Vhuser, FinalPHPPath, path)
@@ -1528,8 +1527,6 @@ class WebsiteManager:
                 else:
                     command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp maintenance-mode deactivate --path=%s --skip-plugins --skip-themes" % (Vhuser, FinalPHPPath, path)
                     stdoutput = ProcessUtilities.outputExecutioner(command)
-
-
             elif setting == 'PasswordProtection':
                 execPath = f"/usr/local/CyberCP/bin/python {virtualHostUtilities.cyberPanel}/plogical/virtualHostUtilities.py"
                 execPath = f"{execPath} EnableDisablePP --username '{PPUsername}' --password '{PPPassword}' " \
@@ -1537,9 +1534,47 @@ class WebsiteManager:
                 ProcessUtilities.executioner(execPath)
 
             elif setting == 'Wpcron':
-                command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp core version --skip-plugins --skip-themes --path=%s' % (
+
+                command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp litespeed-purge all --path=%s --skip-plugins --skip-themes" % (
+                Vhuser, FinalPHPPath, path)
+
+                stdoutput = ProcessUtilities.outputExecutioner(command)
+
+                if settingValue:
+
+                    command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp config set DISABLE_WP_CRON true --path=%s --skip-plugins --skip-themes" % (
                     Vhuser, FinalPHPPath, path)
-                version = ProcessUtilities.outputExecutioner(command)
+
+                    stdoutput = ProcessUtilities.outputExecutioner(command)
+
+                    logging.CyberCPLogFileWriter.writeToFile("Debugging mk true 1  output:" + str(stdoutput))
+
+                    command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp config list --skip-plugins --skip-themes --path=%s' % (
+
+                        Vhuser, FinalPHPPath, path)
+
+                    stdout = ProcessUtilities.outputExecutioner(command)
+
+                    logging.CyberCPLogFileWriter.writeToFile("Debugging output:" + str(stdout))
+
+
+
+                else:
+
+                    command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp config set DISABLE_WP_CRON false --path=%s --skip-plugins --skip-themes" % (
+                    Vhuser, FinalPHPPath, path)
+
+                    stdoutput = ProcessUtilities.outputExecutioner(command)
+
+                    logging.CyberCPLogFileWriter.writeToFile("Debugging mk false 0  output:" + str(stdoutput))
+
+                    command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp config list --skip-plugins --skip-themes --path=%s' % (
+
+                        Vhuser, FinalPHPPath, path)
+
+                    stdout = ProcessUtilities.outputExecutioner(command)
+
+                    logging.CyberCPLogFileWriter.writeToFile("Debugging output:" + str(stdout))
 
 
             data_ret = {'status': 1, 'error_message': 'None'}
