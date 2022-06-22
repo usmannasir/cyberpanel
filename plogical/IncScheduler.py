@@ -979,6 +979,7 @@ def main():
     ib = IncScheduler('startBackup', {'freq': args.function})
     ib.start()
 
+
     ###
 
     IncScheduler.startBackup(args.function)
@@ -987,6 +988,8 @@ def main():
     IncScheduler.checkDiskUsage()
     IncScheduler.startNormalBackups(args.function)
     IncScheduler.runAWSBackups(args.function)
+
+    ib.join()
 
 
 if __name__ == "__main__":
