@@ -2765,7 +2765,8 @@ vmail
         imunifyAVPath = '/etc/sysconfig/imunify360/integration.conf'
 
         if os.path.exists(imunifyAVPath):
-            command = "yum reinstall imunify-antivirus-generic -y"
+            execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/CLManager/CageFS.py"
+            command = execPath + " --function submitinstallImunifyAV"
             Upgrade.executioner(command, command, 1)
 
         Upgrade.stdOut("Upgrade Completed.")
