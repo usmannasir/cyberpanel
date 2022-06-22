@@ -957,4 +957,21 @@ class ACLManager:
         except:
             return 1
 
+    @staticmethod
+    def CheckIPBackupObjectOwner(currentACL, backupobj, user):
+        if currentACL['admin'] == 1:
+            return 1
+        elif backupobj.owner == user:
+            return 1
+        else:
+            return 0
+
+    @staticmethod
+    def CheckIPPluginObjectOwner(currentACL, backupobj, user):
+        if currentACL['admin'] == 1:
+            return 1
+        elif backupobj.owner == user:
+            return 1
+        else:
+            return 0
 
