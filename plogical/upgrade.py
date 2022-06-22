@@ -2769,6 +2769,10 @@ vmail
             command = execPath + " --function submitinstallImunifyAV"
             Upgrade.executioner(command, command, 1)
 
+            command = 'chmod +x /usr/local/CyberCP/bin/python /usr/local/CyberCP/CLManager/CageFS.py'
+            Upgrade.executioner(command, command, 1)
+
+
         Upgrade.stdOut("Upgrade Completed.")
 
 def main():
