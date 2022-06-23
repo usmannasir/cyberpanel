@@ -8,11 +8,11 @@
 <div class="container">
 <div id="page-title">
    <h2>{% trans "Version Management" %}</h2>
-   <p>{% trans "On this page you can manage versions and or upgrade to latest version of CyberPanel" %}</p>
+   <p>{% trans "Here you can manage versions and check for updates to CyberPanel" %}</p>
 </div>
        {% if Notecheck %}
             <div class="alert alert-info">
-            <p style="color:red; font-weight: bold ;">{% trans "Note: Latest commit does not match, please upgrade." %}</p>
+            <p style="color:red; font-weight: bold ;">{% trans "Note: Latest commit does not match, please upgrade CyberPanel." %}</p>
             </div>
         {% endif %}
 
@@ -28,7 +28,7 @@
             <form   action="/" class="form-horizontal bordered-row">
                 <div class="form-group">
 
-                    <label class="col-sm-3 control-label " style="margin: 0px!important; padding: 0px!important;">{% trans "Current Version :" %}&nbsp&nbsp</label>
+                    <label class="col-sm-3 control-label " style="margin: 0px!important; padding: 0px!important;">{% trans "Current Version:" %}&nbsp&nbsp</label>
                         <div  class="current-pack col-sm-9" style="margin: 0px!important; padding: 0px!important;">{{ currentVersion }} </div>
 
                 </div>
@@ -36,9 +36,9 @@
 
 
                 <div class="form-group">
-                    <label class="col-sm-3 control-label " style="margin: 0px!important; padding: 0px!important;">{% trans "Build :" %}&nbsp&nbsp</label>
+                    <label class="col-sm-3 control-label " style="margin: 0px!important; padding: 0px!important;">{% trans "Build:" %}&nbsp&nbsp</label>
                         <div  class="current-pack col-sm-9" style="margin: 0px!important; padding: 0px!important;">{{ build }} </div>
-                    <label class="col-sm-3 control-label " style="margin: 0px!important; padding: 0px!important;">{% trans "Current Commit :" %}&nbsp&nbsp</label>
+                    <label class="col-sm-3 control-label " style="margin: 0px!important; padding: 0px!important;">{% trans "Current Commit:" %}&nbsp&nbsp</label>
                         <div  class="current-pack col-sm-9" style="margin: 0px!important; padding: 0px!important;">{{ Currentcomt }} </div>
 
                 </div>
@@ -46,7 +46,7 @@
 
 
                 <div class="form-group">
-                    <label class="col-sm-3 control-label " style="margin: 0px!important; padding: 0px!important;">{% trans "Latest Version :" %}&nbsp&nbsp</label>
+                    <label class="col-sm-3 control-label " style="margin: 0px!important; padding: 0px!important;">{% trans "Latest Version:" %}&nbsp&nbsp</label>
                         <div  class="current-pack col-sm-9" style="margin: 0px!important; padding: 0px!important;">{{ latestVersion }} </div>
 
 
@@ -54,9 +54,9 @@
 
 
                 <div class="form-group">
-                       <label class="col-sm-3 control-label " style="margin: 0px!important; padding: 0px!important;">{% trans "Latest Build :" %}&nbsp&nbsp</label>
+                       <label class="col-sm-3 control-label " style="margin: 0px!important; padding: 0px!important;">{% trans "Latest Build:" %}&nbsp&nbsp</label>
                         <div  class="current-pack col-sm-9" style="margin: 0px!important; padding: 0px!important;">{{ latestBuild }} </div>
-                    <label class="col-sm-3 control-label " style="margin: 0px!important; padding: 0px!important;">{% trans "Latest Commit :" %}&nbsp&nbsp</label>
+                    <label class="col-sm-3 control-label " style="margin: 0px!important; padding: 0px!important;">{% trans "Latest Commit:" %}&nbsp&nbsp</label>
                         <div  class="current-pack col-sm-9" style="margin: 0px!important; padding: 0px!important;">{{ latestcomit }} </div>
 
                 </div>
