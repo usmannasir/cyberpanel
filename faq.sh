@@ -52,7 +52,7 @@ ${BLUE}------------------------------------------------------------${NC}
 
 ${PURPLE}6.${NC} How to raise upload limit for cyberpanel's phpMyAdmin and File Manager?
 
-edit file ${RED}/usr/local/lsws/lsphp73/etc/php.ini${NC} for CentOS
+edit file ${RED}/usr/local/lsws/lsphp73/etc/php.ini${NC} for CentOS or openEuler
 
 ${RED}/usr/local/lsws/lsphp73/etc/php/7.3/litespeed/php.ini${NC} for Ubbuntu
 

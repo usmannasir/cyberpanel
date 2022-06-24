@@ -5,8 +5,8 @@
 #set -u
 
 
-#CyberPanel installer script for CentOS 7.X, CentOS 8.X, CloudLinux 7.X, RockyLinux 8.X, Ubuntu 18.04, Ubuntu 20.04 , Ubuntu 20.10 and AlmaLinux 8.X
-#For whoever may edit this script, please follow :
+#CyberPanel installer script for CentOS 7, CentOS 8, CloudLinux 7, AlmaLinux 8, RockyLinux 8, Ubuntu 18.04, Ubuntu 20.04, Ubuntu 20.10, openEuler 20.03 and openEuler 22.03
+#For whoever may edit this script, please follow:
 #Please use Pre_Install_xxx() and Post_Install_xxx() if you want to something respectively before or after the panel installation
 #and update below accordingly
 #Please use variable/functions name as MySomething or My_Something, and please try not to use too-short abbreviation :)
@@ -16,13 +16,13 @@
 #Set_Default_Variables() --->  set some default variable for later use
 #Check_Root()  ---> check for root
 #Check_Server_IP()  ---> check for server IP and geolocation at country level
-#Check_OS() ---> check system , support on centos7/8, rockylinux 8.x , almalinux 8.x ubutnu18/20 and cloudlinux 7 , 8 is untested.
+#Check_OS() ---> check system , support on CentOS 7/8, RockyLinux 8, AlmaLinux 8, Ubuntu 18/20, openEuler 20.03/22.03 and CloudLinux 7, 8 is untested.
 #Check_Virtualization()  ---> check for virtualizaon , #LXC not supported# , some edit needed on OVZ
 #Check_Panel() --->  check to make sure no other panel is installed
 #Check_Process() ---> check no other process like Apache is running
-#Check_Provider() ---> check the provider, certain provider like Alibaba or Tencent Yun may need some special change
+#Check_Provider() ---> check the provider, certain provider like Alibaba or Tencent Cloud may need some special change
 #Check_Argument() ---> parse argument and go to Argument_Mode() or Interactive_Mode() respectively
-#Pre_Install_Setup_Repository() ---> setup/install repositories for centos system.
+#Pre_Install_Setup_Repository() ---> setup/install repositories for CentOS and openEuler system.
 #go to Pre_Install_Setup_CN_Repository() if server is within China.
 #Pre_Install_Setup_Git_URL() --->  form up github URL , use Gitee for servers within China.
 #Pre_Install_Required_Components() --->  install required softwares and git clone it
@@ -33,7 +33,7 @@
 #Post_Install_Required_Components() --->  install some required softwares.
 #Post_Install_PHP_Session_Setup() --->  set up PHP session
 #Post_Install_PHP_TimezoneDB() ---> set up PHP timezoneDB
-#Post_Install_Regenerate_Cert() ---> regenerate cert for :7080 and :8090 to avoid Chrome on MacOS blocking.
+#Post_Install_Regenerate_Cert() ---> regenerate cert for :7080 and :8090 to avoid Chrome on macOS blocking.
 #Post_Install_Regenerate_Webadmin_Console_Passwd() ---> regenerate the webadmin console password
 #Post_Install_Setup_Watchdog() ---> set up watchdog script for webserver and MariaDB.
 #Post_Install_Setup_Utility() --->  set up utility script for some handy features
@@ -252,7 +252,6 @@ else
     exit
 fi
 
-
 if ! uname -m | grep -q x86_64 ; then
   echo -e "x86_64 system is required...\n"
   exit
@@ -268,22 +267,24 @@ elif grep -q -E "Rocky Linux" /etc/os-release ; then
   Server_OS="RockyLinux"
 elif grep -q -E "Ubuntu 18.04|Ubuntu 20.04|Ubuntu 20.10|Ubuntu 22.04" /etc/os-release ; then
   Server_OS="Ubuntu"
+elif grep -q -E "openEuler 20.03|openEuler 22.03" /etc/os-release ; then
+  Server_OS="openEuler"
 else
   echo -e "Unable to detect your system..."
-  echo -e "\nCyberPanel is supported on Ubuntu 18.04 x86_64, Ubuntu 20.04 x86_64, Ubuntu 20.10 x86_64, Ubuntu 22.04 x86_64, CentOS 7.x, CentOS 8.x, AlmaLinux 8.x, RockyLinux 8.x, CloudLinux 7.x, CloudLinux 8.x...\n"
-  Debug_Log2 "CyberPanel is supported on Ubuntu 18.04 x86_64, Ubuntu 20.04 x86_64, Ubuntu 20.10 x86_64, Ubuntu 22.04 x86_64, CentOS 7.x, CentOS 8.x, AlmaLinux 8.x, RockyLinux 8.x, CloudLinux 7.x, CloudLinux 8.x... [404]"
+  echo -e "\nCyberPanel is supported on x86_64 based Ubuntu 18.04, Ubuntu 20.04, Ubuntu 20.10, Ubuntu 22.04, CentOS 7, CentOS 8, AlmaLinux 8, RockyLinux 8, CloudLinux 7, CloudLinux 8, openEuler 20.03, openEuler 22.03...\n"
+  Debug_Log2 "CyberPanel is supported on x86_64 based Ubuntu 18.04, Ubuntu 20.04, Ubuntu 20.10, Ubuntu 22.04, CentOS 7, CentOS 8, AlmaLinux 8, RockyLinux 8, CloudLinux 7, CloudLinux 8, openEuler 20.03, openEuler 22.03... [404]"
   exit
 fi
 
 Server_OS_Version=$(grep VERSION_ID /etc/os-release | awk -F[=,] '{print $2}' | tr -d \" | head -c2 | tr -d . )
-#to make 20.04 display as 20
+#to make 20.04 display as 20, etc.
 
 echo -e "System: $Server_OS $Server_OS_Version detected...\n"
 
 if [[ $Server_OS = "CloudLinux" ]] || [[ "$Server_OS" = "AlmaLinux" ]] || [[ "$Server_OS" = "RockyLinux" ]] ; then
   Server_OS="CentOS"
-  #CloudLinux gives version id like 7.8 , 7.9 , so cut it to show first number only
-  #treat CL , Rocky and Alma as CentOS
+  #CloudLinux gives version id like 7.8, 7.9, so cut it to show first number only
+  #treat CloudLinux, Rocky and Alma as CentOS
 fi
 
 if [[ "$Debug" = "On" ]] ; then
@@ -830,12 +831,6 @@ if [[ $Server_OS = "CentOS" ]] ; then
   rm -f /etc/yum.repos.d/epel.repo
   rm -f /etc/yum.repos.d/epel.repo.rpmsave
 
-  yum install -y yum-plugin-copr
-    Check_Return "yum repo" "no_exit"
-  yum copr enable -y copart/restic
-    Check_Return "yum repo" "no_exit"
-
-
   if [[ "$Server_OS_Version" = "8" ]]; then
     rpm --import https://cyberpanel.sh/www.centos.org/keys/RPM-GPG-KEY-CentOS-Official
     rpm --import https://cyberpanel.sh/dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-8
@@ -865,6 +860,10 @@ if [[ $Server_OS = "CentOS" ]] ; then
     yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
       Check_Return "yum repo" "no_exit"
 
+    yum install -y yum-plugin-copr
+      Check_Return "yum repo" "no_exit"
+    yum copr enable -y copart/restic
+      Check_Return "yum repo" "no_exit"
     yum install -y yum-plugin-priorities
       Check_Return "yum repo" "no_exit"
     curl -o /etc/yum.repos.d/powerdns-auth-43.repo https://cyberpanel.sh/repo.powerdns.com/repo-files/centos-auth-43.repo
@@ -890,6 +889,25 @@ EOF
       Check_Return "yum repo" "no_exit"
   fi
 fi
+
+if [[ $Server_OS = "openEuler" ]]; then
+  rpm --import https://cyberpanel.sh/rpms.litespeedtech.com/centos/RPM-GPG-KEY-litespeed
+  #import the LiteSpeed GPG key
+  yum clean all
+  sed -i "s|gpgcheck=1|gpgcheck=0|g" /etc/yum.repos.d/openEuler.repo
+  sed -i "s|repo.openeuler.org|mirror.efaith.com.hk/openeuler|g" /etc/yum.repos.d/openEuler.repo
+
+  if [[ "$Server_OS_Version" = "20" ]]; then
+    dnf install --nogpg -y https://repo.yaro.ee/yaro-release-20.03LTS-latest.oe1.noarch.rpm
+      Check_Return "yum repo" "no_exit"
+  fi
+
+  if [[ "$Server_OS_Version" = "22" ]]; then
+    dnf install --nogpg -y https://repo.yaro.ee/yaro-release-22.03LTS-latest.oe2203.noarch.rpm
+      Check_Return "yum repo" "no_exit"
+  fi
+fi
+
 Debug_Log2 "Setting up repositories...,1"
 
 if [[ "$Server_Country" = "CN" ]] ; then
@@ -977,7 +995,7 @@ Pre_Install_Required_Components() {
 
 Debug_Log2 "Installing necessary components..,3"
 
-if [[ "$Server_OS" = "CentOS" ]] ; then
+if [[ "$Server_OS" = "CentOS" ]] || [[ "$Server_OS" = "openEuler" ]] ; then
   yum update -y
   if [[ "$Server_OS_Version" = "7" ]] ; then
     yum install -y wget strace net-tools curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel gpgme-devel curl-devel git socat openssl-devel MariaDB-shared mariadb-devel yum-utils python36u python36u-pip python36u-devel zip unzip bind-utils
@@ -986,6 +1004,11 @@ if [[ "$Server_OS" = "CentOS" ]] ; then
       Check_Return
   elif [[ "$Server_OS_Version" = "8" ]] ; then
     dnf install -y libnsl zip wget strace net-tools curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-devel curl-devel git platform-python-devel tar socat python3 zip unzip bind-utils
+      Check_Return
+    dnf install -y gpgme-devel
+      Check_Return
+  elif [[ "$Server_OS_Version" = "20" ]] || [[ "$Server_OS_Version" = "22" ]] ; then
+    dnf install -y libnsl zip wget strace net-tools curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-devel curl-devel git python3-devel tar socat python3 zip unzip bind-utils
       Check_Return
     dnf install -y gpgme-devel
       Check_Return
@@ -1124,7 +1147,7 @@ elif  [[ "$Server_OS" = "Ubuntu" ]] ; then
 fi
 
 if ! grep -q "pid_max" /etc/rc.local 2>/dev/null ; then
-  if [[ $Server_OS = "CentOS" ]] ; then
+  if [[ $Server_OS = "CentOS" ]] || [[ $Server_OS = "openEuler" ]] ; then
     echo "echo 1000000 > /proc/sys/kernel/pid_max
     echo 1 > /sys/kernel/mm/ksm/run" >>/etc/rc.d/rc.local
     chmod +x /etc/rc.d/rc.local
@@ -1425,7 +1448,7 @@ fi
 }
 
 Post_Install_Addon_Mecached_LSMCD() {
-if [[ $Server_OS = "CentOS" ]]; then
+if [[ $Server_OS = "CentOS" ]] || [[ $Server_OS = "openEuler" ]]; then
   yum groupinstall "Development Tools" -y
   yum install autoconf automake zlib-devel openssl-devel expat-devel pcre-devel libmemcached-devel cyrus-sasl* -y
   wget -O lsmcd-master.zip https://cyberpanel.sh/codeload.github.com/litespeedtech/lsmcd/zip/master
@@ -1479,6 +1502,18 @@ if [[ $Server_OS = "Ubuntu" ]]; then
     systemctl start memcached
   fi
 fi
+if [[ $Server_OS = "openEuler" ]]; then
+  #yum install -y lsphp??-memcached lsphp??-pecl-memcached
+  if [[ $Total_RAM -eq "2048" ]] || [[ $Total_RAM -gt "2048" ]]; then
+    Post_Install_Addon_Mecached_LSMCD
+  else
+    yum install -y memcached
+    sed -i 's|OPTIONS=""|OPTIONS="-l 127.0.0.1 -U 0"|g' /etc/sysconfig/memcached
+    #turn off UDP and bind to 127.0.0.1 only
+    systemctl enable memcached
+    systemctl start memcached
+  fi
+fi
 
 if pgrep "lsmcd" ; then
   echo -e "\n\nLiteSpeed Memcached installed and running..."
@@ -1522,6 +1557,10 @@ else
   systemctl start redis
 fi
 
+if [[ "$Server_OS" = "openEuler" ]]; then
+  #yum install -y lsphp??-redis redis
+fi
+
 if pgrep "redis" ; then
   echo -e "\n\nRedis installed and running..."
   touch /home/cyberpanel/redis
@@ -1559,7 +1598,7 @@ for PHP_Version in /usr/local/lsws/lsphp?? ;
   do
     PHP_INI_Path=$(find "$PHP_Version" -name php.ini)
 
-    if [[ "$Server_OS" = "CentOS" ]]; then
+    if [[ "$Server_OS" = "CentOS" ]] || [[ "$Server_OS" = "openEuler" ]]; then
       if [[ ! -d "${PHP_Version}/tmp" ]]; then
         mkdir "${PHP_Version}/tmp"
       fi
@@ -1627,7 +1666,7 @@ if [[ "$Watchdog" = "On" ]]; then
     nohup watchdog mariadb >/dev/null 2>&1 &
   fi
 
-  if [[ "$Server_OS" = "CentOS" ]]; then
+  if [[ "$Server_OS" = "CentOS" ]] || [[ "$Server_OS" = "openEuler" ]]; then
     echo "nohup watchdog lsws > /dev/null 2>&1 &
 nohup watchdog mariadb > /dev/null 2>&1 &" >>/etc/rc.d/rc.local
   else
@@ -1832,7 +1871,7 @@ rm -f /usr/bin/php
 ln -s /usr/local/lsws/lsphp74/bin/php /usr/bin/php
 
 if [[ "$Server_OS" = "CentOS" ]] ; then
-#all centos7/8 post change goes here
+#all centos 7/8 post change goes here
 
   sed -i 's|error_reporting = E_ALL \&amp; ~E_DEPRECATED \&amp; ~E_STRICT|error_reporting = E_ALL \& ~E_DEPRECATED \& ~E_STRICT|g' /usr/local/lsws/{lsphp72,lsphp73}/etc/php.ini
 #fix php.ini &amp; issue
@@ -1871,10 +1910,8 @@ if [[ "$Server_OS" = "CentOS" ]] ; then
   fi
 
 elif [[ "$Server_OS" = "Ubuntu" ]] ; then
-#all ubuntu18/20 post change goes here
-
+#all ubuntu 18/20 post change goes here
   sed -i 's|/usr/local/lsws/bin/lswsctrl restart|systemctl restart lsws|g' /var/spool/cron/crontabs/root
-
   if [[ ! -f /usr/sbin/ipset ]] ; then
     ln -s /sbin/ipset /usr/sbin/ipset
   fi
@@ -1889,8 +1926,11 @@ elif [[ "$Server_OS" = "Ubuntu" ]] ; then
     :
   fi
 
+elif [[ "$Server_OS" = "openEuler" ]] ; then
+  sed -i 's|error_reporting = E_ALL \&amp; ~E_DEPRECATED \&amp; ~E_STRICT|error_reporting = E_ALL \& ~E_DEPRECATED \& ~E_STRICT|g' /usr/local/lsws/{lsphp72,lsphp73}/etc/php.ini
+  #fix php.ini &amp; issue
+  sed -i 's|/usr/local/lsws/bin/lswsctrl restart|systemctl restart lsws|g' /var/spool/cron/root
 fi
-
 
 if [[ "$Server_Edition" = "OLS" ]]; then
   Word="OpenLiteSpeed"
