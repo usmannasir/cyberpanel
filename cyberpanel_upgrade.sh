@@ -4,8 +4,8 @@
 #set -x
 #set -u
 
-#CyberPanel installer script for CentOS 7.X, CentOS 8.X, CloudLinux 7.X, Ubuntu 18.04 and Ubuntu 20.04
-#For whoever may edit this script, please follow :
+#CyberPanel installer script for CentOS 7, CentOS 8, CloudLinux 7, AlmaLinux 8, RockyLinux 8, Ubuntu 18.04, Ubuntu 20.04, Ubuntu 20.10, openEuler 20.03 and openEuler 22.03
+#For whoever may edit this script, please follow:
 #Please use Pre_Install_xxx() and Post_Install_xxx() if you want to something respectively before or after the panel installation
 #and update below accordingly
 #Please use variable/functions name as MySomething or My_Something, and please try not to use too-short abbreviation :)
@@ -121,22 +121,24 @@ elif grep -q "AlmaLinux-8" /etc/os-release ; then
   Server_OS="AlmaLinux"
 elif grep -q -E "Ubuntu 18.04|Ubuntu 20.04|Ubuntu 20.10" /etc/os-release ; then
   Server_OS="Ubuntu"
+elif grep -q -E "openEuler 20.03|openEuler 22.03" /etc/os-release ; then
+  Server_OS="openEuler"
 else
   echo -e "Unable to detect your system..."
-  echo -e "\nCyberPanel is supported on Ubuntu 18.04 x86_64, Ubuntu 20.04 x86_64, Ubuntu 20.10 x86_64, CentOS 7.x, CentOS 8.x, CloudLinux 7.x and AlmaLinux 8.x...\n"
-  Debug_Log2 "CyberPanel is supported on Ubuntu 18.04 x86_64, Ubuntu 20.04 x86_64, Ubuntu 20.10 x86_64, CentOS 7.x, CentOS 8.x, AlmaLinux 8.x... [404]"
+  echo -e "\nCyberPanel is supported on x86_64 based Ubuntu 18.04, Ubuntu 20.04, Ubuntu 20.10, Ubuntu 22.04, CentOS 7, CentOS 8, AlmaLinux 8, RockyLinux 8, CloudLinux 7, CloudLinux 8, openEuler 20.03, openEuler 22.03...\n"
+  Debug_Log2 "CyberPanel is supported on x86_64 based Ubuntu 18.04, Ubuntu 20.04, Ubuntu 20.10, Ubuntu 22.04, CentOS 7, CentOS 8, AlmaLinux 8, RockyLinux 8, CloudLinux 7, CloudLinux 8, openEuler 20.03, openEuler 22.03... [404]"
   exit
 fi
 
 Server_OS_Version=$(grep VERSION_ID /etc/os-release | awk -F[=,] '{print $2}' | tr -d \" | head -c2 | tr -d . )
-#to make 20.04 display as 20
+#to make 20.04 display as 20, etc.
 
 echo -e "System: $Server_OS $Server_OS_Version detected...\n"
 
 if [[ $Server_OS = "CloudLinux" ]] || [[ "$Server_OS" = "AlmaLinux" ]] ; then
   Server_OS="CentOS"
-  #CloudLinux gives version id like 7.8 , 7.9 , so cut it to show first number only
-  #treat CL and Alma as CentOS
+  #CloudLinux gives version id like 7.8, 7.9, so cut it to show first number only
+  #treat CloudLinux, Rocky and Alma as CentOS
 fi
 
 if [[ "$Debug" = "On" ]] ; then
@@ -446,6 +448,18 @@ elif [[ "$Server_OS" = "Ubuntu" ]] ; then
   fi
 #all pre-upgrade operation for Ubuntu 20
 fi
+if [[ "$Server_OS" = "openEuler" ]] ; then
+  rm -f /etc/yum.repos.d/CyberPanel.repo
+  rm -f /etc/yum.repos.d/litespeed.repo
+
+  yum clean all
+  yum update -y
+
+  dnf install -y wget strace htop net-tools telnet curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-devel curl-devel git python3-devel tar socat bind-utils
+  dnf install gpgme-devel -y
+  dnf install python3 -y
+fi
+#all pre-upgrade operation for openEuler
 }
 
 Download_Requirement() {
@@ -502,6 +516,11 @@ elif [[ "$Server_OS" = "Ubuntu" ]] ; then
   # shellcheck disable=SC1091
   . /usr/local/CyberPanel/bin/activate
     Check_Return
+  pip3 install --default-timeout=3600 virtualenv==16.7.9
+    Check_Return
+  pip3 install --default-timeout=3600 --ignore-installed -r /usr/local/requirments.txt
+    Check_Return
+elif [[ "$Server_OS" = "openEuler" ]] ; then
   pip3 install --default-timeout=3600 virtualenv==16.7.9
     Check_Return
   pip3 install --default-timeout=3600 --ignore-installed -r /usr/local/requirments.txt

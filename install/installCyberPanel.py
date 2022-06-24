@@ -14,6 +14,7 @@ import time
 centos = 0
 ubuntu = 1
 cent8 = 2
+openeuler = 3
 
 
 def get_Ubuntu_release():
@@ -71,7 +72,7 @@ class InstallCyberPanel:
                 command = 'yum install -y openlitespeed'
                 install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
             else:
-                command = 'yum install -y openlitespeed'
+                command = 'dnf install -y openlitespeed'
                 install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
         else:
@@ -250,6 +251,10 @@ class InstallCyberPanel:
         if self.distro == cent8:
             command = 'dnf install lsphp71* lsphp72* lsphp73* lsphp74* lsphp80* --exclude lsphp73-pecl-zip --exclude *imagick* -y'
             subprocess.call(command, shell=True)
+        
+        if self.distro == openeuler:
+            command = 'dnf install lsphp71* lsphp72* lsphp73* lsphp74* lsphp80* -y'
+            subprocess.call(command, shell=True)
 
     def installMySQL(self, mysql):
 
@@ -272,7 +277,7 @@ class InstallCyberPanel:
             command = "apt-get -y install mariadb-server"
         elif self.distro == centos:
             command = 'yum --enablerepo=mariadb -y install MariaDB-server MariaDB-client'
-        elif self.distro == cent8:
+        elif self.distro == cent8 or self.distro == openeuler:
             command = 'dnf -y install mariadb-server'
 
         install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
@@ -369,7 +374,7 @@ class InstallCyberPanel:
         elif self.distro == centos:
             command = "yum install -y pure-ftpd"
             install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
-        elif self.distro == cent8:
+        elif self.distro == cent8 or self.distro == openeuler:
             command = 'dnf install pure-ftpd -y'
             install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
@@ -405,7 +410,7 @@ class InstallCyberPanel:
             except:
                 logging.InstallLog.writeToFile("[ERROR] Could not create directory for FTP SSL")
 
-            if (self.distro == centos or self.distro == cent8) or (
+            if (self.distro == centos or self.distro == cent8 or self.distro == openeuler) or (
                     self.distro == ubuntu and get_Ubuntu_release() == 18.14):
                 command = 'openssl req -newkey rsa:1024 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout /etc/ssl/private/pure-ftpd.pem -out /etc/ssl/private/pure-ftpd.pem'
             else:
@@ -502,7 +507,7 @@ class InstallCyberPanel:
     def installPowerDNS(self):
         try:
 
-            if self.distro == ubuntu or self.distro == cent8:
+            if self.distro == ubuntu or self.distro == cent8 or self.distro == openeuler:
                 command = 'systemctl stop systemd-resolved'
                 install.preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
                 command = 'systemctl disable systemd-resolved.service'
@@ -555,7 +560,7 @@ class InstallCyberPanel:
             InstallCyberPanel.stdOut("Configuring PowerDNS..", 1)
 
             os.chdir(self.cwd)
-            if self.distro == centos or self.distro == cent8:
+            if self.distro == centos or self.distro == cent8 or self.distro == openeuler:
                 dnsPath = "/etc/pdns/pdns.conf"
             else:
                 dnsPath = "/etc/powerdns/pdns.conf"

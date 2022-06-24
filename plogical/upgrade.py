@@ -25,6 +25,8 @@ Ubuntu18 = 2
 Ubuntu20 = 3
 CloudLinux7 = 4
 CloudLinux8 = 5
+openEuler20 = 6
+openEuler22 = 7
 
 
 class Upgrade:
@@ -33,6 +35,7 @@ class Upgrade:
     installedOutput = ''
     CentOSPath = '/etc/redhat-release'
     UbuntuPath = '/etc/lsb-release'
+    openEulerPath = '/etc/openEuler-release'
     FromCloud = 0
     SnappyVersion = '2.15.3'
 
@@ -81,6 +84,15 @@ class Upgrade:
                 return CENTOS8
             else:
                 return CENTOS7
+
+        elif os.path.exists(Upgrade.openEulerPath):
+            result = open(Upgrade.openEulerPath, 'r').read()
+
+            if result.find('20.03') > -1:
+                return openEuler20
+            elif result.find('22.03') > -1:
+                return openEuler22
+
         else:
             result = open(Upgrade.UbuntuPath, 'r').read()
 
@@ -88,7 +100,6 @@ class Upgrade:
                 return Ubuntu20
             else:
                 return Ubuntu18
-
 
     @staticmethod
     def stdOut(message, do_exit=0):
@@ -2152,7 +2163,7 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             command = "find /usr/local/CyberCP/ -name '*.pyc' -delete"
             Upgrade.executioner(command, 0)
 
-            if os.path.exists(Upgrade.CentOSPath):
+            if os.path.exists(Upgrade.CentOSPath) or os.path.exists(Upgrade.openEulerPath):
                 command = 'chown root:pdns /etc/pdns/pdns.conf'
                 Upgrade.executioner(command, 0)
 
@@ -2180,8 +2191,9 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             ###
 
             CentOSPath = '/etc/redhat-release'
+            openEulerPath = '/etc/openEuler-release'
 
-            if not os.path.exists(CentOSPath):
+            if not os.path.exists(CentOSPath) or not os.path.exists(openEulerPath):
                 group = 'nobody'
             else:
                 group = 'nogroup'
@@ -2262,8 +2274,9 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             os.system(command)
 
         CentOSPath = '/etc/redhat-release'
+        openEulerPath = '/etc/openEuler-release'
 
-        if not os.path.exists(CentOSPath):
+        if not os.path.exists(CentOSPath) or not os.path.exists(openEulerPath):
             command = 'cp /usr/local/lsws/lsphp71/bin/php /usr/bin/'
             Upgrade.executioner(command, 'Set default PHP 7.0, 0')
 
@@ -2280,6 +2293,7 @@ echo $oConfig->Save() ? 'Done' : 'Error';
         try:
             Upgrade.stdOut("Upgrading Dovecot..")
             CentOSPath = '/etc/redhat-release'
+            openEulerPath = '/etc/openEuler-release'
 
             dovecotConfPath = '/etc/dovecot/'
             postfixConfPath = '/etc/postfix/'
@@ -2297,7 +2311,7 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             command = 'cp -pR %s %s' % (postfixConfPath, configbackups)
             Upgrade.executioner(command, 0)
 
-            if Upgrade.FindOperatingSytem() == CENTOS8 or Upgrade.FindOperatingSytem() == CENTOS7:
+            if Upgrade.FindOperatingSytem() == CENTOS8 or Upgrade.FindOperatingSytem() == CENTOS7 or Upgrade.FindOperatingSytem() == openEuler22 or Upgrade.FindOperatingSytem() == openEuler20:
 
                 command = "yum makecache -y"
                 Upgrade.executioner(command, 0)
@@ -2419,8 +2433,9 @@ echo $oConfig->Save() ? 'Done' : 'Error';
     @staticmethod
     def installRestic():
         CentOSPath = '/etc/redhat-release'
+        openEulerPath = '/etc/openEuler-release'
 
-        if os.path.exists(CentOSPath):
+        if os.path.exists(CentOSPath) or os.path.exists(openEulerPath):
             if Upgrade.installedOutput.find('restic') == -1:
                 command = 'yum install restic -y'
                 Upgrade.executioner(command, 'Install Restic')
@@ -2451,8 +2466,9 @@ echo $oConfig->Save() ? 'Done' : 'Error';
         try:
 
             CentOSPath = '/etc/redhat-release'
+            openEulerPath = '/etc/openEuler-release'
 
-            if os.path.exists(CentOSPath):
+            if os.path.exists(CentOSPath) or os.path.exists(openEulerPath):
                 command = 'mkdir -p /opt/cpvendor/etc/'
                 Upgrade.executioner(command, 0)
 
@@ -2517,8 +2533,9 @@ vmail
         # Install findBWUsage cron if missing
 
         CentOSPath = '/etc/redhat-release'
+        openEulerPath = '/etc/openEuler-release'
 
-        if os.path.exists(CentOSPath):
+        if os.path.exists(CentOSPath) or os.path.exists(openEulerPath):
             cronPath = '/var/spool/cron/root'
         else:
             cronPath = '/var/spool/cron/crontabs/root'
@@ -2581,7 +2598,7 @@ vmail
             writeToFile.close()
 
 
-        if not os.path.exists(CentOSPath):
+        if not os.path.exists(CentOSPath) or not os.path.exists(openEulerPath):
             command = 'chmod 600 %s' % (cronPath)
             Upgrade.executioner(command, 0)
 
@@ -2615,7 +2632,7 @@ vmail
         # Upgrade.stdOut("Upgrades are currently disabled")
         # return 0
 
-        if os.path.exists(Upgrade.CentOSPath):
+        if os.path.exists(Upgrade.CentOSPath) or os.path.exists(Upgrade.openEulerPath):
             command = 'yum list installed'
             Upgrade.installedOutput = subprocess.check_output(shlex.split(command)).decode()
         else:
