@@ -4,6 +4,7 @@ import os.path
 import sys
 import django
 
+from databases.models import Databases
 from plogical.httpProc import httpProc
 
 sys.path.append('/usr/local/CyberCP')
@@ -12,7 +13,7 @@ django.setup()
 import json
 from plogical.acl import ACLManager
 import plogical.CyberCPLogFileWriter as logging
-from websiteFunctions.models import Websites, ChildDomains, GitLogs, wpplugins, WPSites, WPStaging, WPSitesBackup
+from websiteFunctions.models import Websites, ChildDomains, GitLogs, wpplugins, WPSites, WPStaging, WPSitesBackup, RemoteBackupConfig,RemoteBackupSchedule, RemoteBackupsites
 from plogical.virtualHostUtilities import virtualHostUtilities
 import subprocess
 import shlex
@@ -197,6 +198,100 @@ class WebsiteManager:
                 Data['Backuptype'] = None
             Data['WPsites'] = ACLManager.GetALLWPObjects(currentACL, userID)
             proc = httpProc(request, 'websiteFunctions/WPRestoreHome.html',
+                            Data, 'createWebsite')
+            return proc.render()
+        else:
+            return redirect("https://cyberpanel.net/cyberpanel-addons")
+
+
+    def RemoteBackupConfig(self, request=None, userID=None, DeleteID=None ):
+        Data = {}
+        currentACL = ACLManager.loadedACL(userID)
+        admin = Administrator.objects.get(pk=userID)
+        try:
+            if DeleteID != None:
+                BackupconfigDelete = RemoteBackupConfig.objects.get(pk=DeleteID)
+                BackupconfigDelete.delete()
+        except:
+            pass
+
+        if ACLManager.CheckForPremFeature('wp-manager'):
+
+            Data['WPsites'] = ACLManager.GetALLWPObjects(currentACL, userID)
+            allcon = RemoteBackupConfig.objects.all()
+            Data['backupconfigs'] =[]
+            for i in allcon:
+                configr = json.loads(i.config)
+                Data['backupconfigs'].append({
+                    'id':i.pk,
+                    'Type': i.configtype,
+                    'HostName': configr['Hostname'],
+                    'Path': configr['Path']
+                })
+            proc = httpProc(request, 'websiteFunctions/RemoteBackupConfig.html',
+                            Data, 'createWebsite')
+            return proc.render()
+        else:
+            return redirect("https://cyberpanel.net/cyberpanel-addons")
+
+
+    def BackupfileConfig(self, request=None, userID=None, RemoteConfigID=None, DeleteID=None ):
+        Data = {}
+        currentACL = ACLManager.loadedACL(userID)
+        admin = Administrator.objects.get(pk=userID)
+
+        Data['RemoteConfigID'] = RemoteConfigID
+        RemoteConfigobj = RemoteBackupConfig.objects.get(pk=RemoteConfigID)
+        try:
+            if DeleteID != None:
+                RemoteBackupConfigDelete = RemoteBackupSchedule.objects.get(pk=DeleteID)
+                RemoteBackupConfigDelete.delete()
+        except:
+            pass
+
+        if ACLManager.CheckForPremFeature('wp-manager'):
+            Data['WPsites'] = ACLManager.GetALLWPObjects(currentACL, userID)
+            allsechedule = RemoteBackupSchedule.objects.filter(RemoteBackupConfig=RemoteConfigobj)
+            Data['Backupschedule'] = []
+            for i in allsechedule:
+                Data['Backupschedule'].append({
+                    'id': i.pk,
+                    'Name': i.Name,
+                    'RemoteConfiguration': i.RemoteBackupConfig.configtype
+                })
+            proc = httpProc(request, 'websiteFunctions/BackupfileConfig.html',
+                            Data, 'createWebsite')
+            return proc.render()
+        else:
+            return redirect("https://cyberpanel.net/cyberpanel-addons")
+
+
+    def AddRemoteBackupsite(self, request=None, userID=None, RemoteScheduleID=None , DeleteSiteID=None):
+        Data = {}
+        currentACL = ACLManager.loadedACL(userID)
+        admin = Administrator.objects.get(pk=userID)
+
+        Data['RemoteScheduleID'] = RemoteScheduleID
+        RemoteBackupScheduleobj= RemoteBackupSchedule.objects.get(pk=RemoteScheduleID)
+
+        try:
+            if DeleteSiteID != None:
+                RemoteBackupsitesDelete = RemoteBackupsites.objects.get(pk=DeleteSiteID)
+                RemoteBackupsitesDelete.delete()
+        except:
+            pass
+
+        if ACLManager.CheckForPremFeature('wp-manager'):
+            Data['WPsites'] = ACLManager.GetALLWPObjects(currentACL, userID)
+            allRemoteBackupsites = RemoteBackupsites.objects.filter(owner=RemoteBackupScheduleobj)
+            Data['RemoteBackupsites'] = []
+            for i in allRemoteBackupsites:
+                wpsite = WPSites.objects.get(pk=i.WPsites)
+                Data['RemoteBackupsites'].append({
+                    'id': i.pk,
+                    'Title': wpsite.title,
+                })
+            proc = httpProc(request, 'websiteFunctions/AddRemoteBackupSite.html',
                             Data, 'createWebsite')
             return proc.render()
         else:
@@ -1031,6 +1126,118 @@ class WebsiteManager:
             data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
+
+
+
+    def SaveBackupConfig(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+            ConfigType = data['type']
+            if ConfigType == 'SFTP':
+                Hname = data['Hname']
+                Uname = data['Uname']
+                Passwd = data['Passwd']
+                path = data['path']
+                config = {
+                    "Hostname": Hname,
+                    "Username": Uname,
+                    "Password": Passwd,
+                    "Path": path
+                }
+                mkobj = RemoteBackupConfig(owner=admin, configtype=ConfigType, config=json.dumps(config))
+                mkobj.save()
+
+
+            time.sleep(1)
+
+            data_ret = {'status': 1,  'error_message': 'None',}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0,  'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+    def SaveBackupSchedule(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+            FileRetention = data['FileRetention']
+            Backfrequency = data['Backfrequency']
+            ScheduleName = data['ScheduleName']
+            RemoteConfigID = data['RemoteConfigID']
+            BackupType = data['BackupType']
+            config = {
+                'BackupType': BackupType
+            }
+
+            RemoteBackupConfigobj = RemoteBackupConfig.objects.get(pk=RemoteConfigID)
+
+            svobj = RemoteBackupSchedule( RemoteBackupConfig=RemoteBackupConfigobj, Name=ScheduleName,
+                                      timeintervel=Backfrequency, fileretention=FileRetention, config=json.dumps(config),
+                                     lastrun=str(time.time()))
+            svobj.save()
+
+            data_ret = {'status': 1,  'error_message': 'None',}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0,  'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+    def AddWPsiteforRemoteBackup(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+            WPid = data['WpsiteID']
+            RemoteScheduleID = data['RemoteScheduleID']
+
+            wpsiteobj = WPSites.objects.get(pk=WPid)
+            WPpath = wpsiteobj.path
+            VHuser = wpsiteobj.owner.externalApp
+            PhpVersion = wpsiteobj.owner.phpSelection
+            php = PHPManager.getPHPString(PhpVersion)
+            FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
+
+            ####Get DB Name
+
+            command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp config get DB_NAME  --skip-plugins --skip-themes --path=%s' % (
+                VHuser, FinalPHPPath, WPpath)
+            result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+
+            if stdout.find('Error:') > -1:
+                raise BaseException(stdout)
+            else:
+                Finaldbname = stdout.rstrip("\n")
+
+            ## Get DB obj
+            try:
+                DBobj = Databases.objects.get(dbName=Finaldbname)
+            except:
+                raise BaseException(str("DataBase Not Found"))
+            RemoteScheduleIDobj = RemoteBackupSchedule.objects.get(pk=RemoteScheduleID)
+
+            svobj = RemoteBackupsites( owner=RemoteScheduleIDobj, WPsites = WPid, database = DBobj.pk)
+            svobj.save()
+
+            data_ret = {'status': 1,  'error_message': 'None',}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0,  'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
 
 
     def installwpcore(self, userID=None, data=None):

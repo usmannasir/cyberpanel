@@ -521,7 +521,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
                 if (response.data.ret_data.maintenanceMode === 1) {
                     $('#maintenanceMode').prop('checked', true);
                 }
-                if(response.data.ret_data.wpcron === 1) {
+                if (response.data.ret_data.wpcron === 1) {
                     $('#wpcron').prop('checked', true);
                 }
                 if (response.data.ret_data.passwordprotection == 1) {
@@ -589,8 +589,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
                     PPPassword: $scope.PPPassword,
                 }
 
-            }
-            else {
+            } else {
                 var data = {
                     WPid: $('#WPid').html(),
                     setting: setting,
@@ -633,7 +632,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
                     text: 'Successfully Updated!.',
                     type: 'success'
                 });
-                if (setting === "PasswordProtection"){
+                if (setting === "PasswordProtection") {
                     location.reload();
                 }
             } else {
@@ -642,7 +641,7 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
                     text: response.data.error_message,
                     type: 'error'
                 });
-                if (setting === "PasswordProtection"){
+                if (setting === "PasswordProtection") {
                     location.reload();
                 }
 
@@ -1955,6 +1954,217 @@ app.controller('RestoreWPBackup', function ($scope, $http, $timeout, $window) {
 });
 
 
+//.......................................Remote Backup
+
+//........... delete DeleteBackupConfigNow
+
+function DeleteBackupConfigNow(url) {
+    window.location.href = url;
+}
+function DeleteRemoteBackupsiteNow(url) {
+    window.location.href = url;
+}
+function DeleteBackupfileConfigNow(url) {
+    window.location.href = url;
+}
+
+
+app.controller('RemoteBackupConfig', function ($scope, $http, $timeout, $window) {
+    $scope.RemoteBackupLoading = true;
+    $scope.SFTPBackUpdiv = true;
+    $scope.S3backupdiv = true;
+    $scope.SelectRemoteBackuptype = function () {
+        var val = $scope.RemoteBackuptype;
+        if (val == "SFTP") {
+            $scope.SFTPBackUpdiv = false;
+            $scope.S3backupdiv = true;
+        } else {
+            $scope.S3backupdiv = false;
+            $scope.SFTPBackUpdiv = true;
+        }
+    }
+
+    $scope.SaveBackupConfig = function () {
+        $scope.RemoteBackupLoading = false;
+        var Hname = $scope.Hostname;
+        var Uname = $scope.Username;
+        var Passwd = $scope.Password;
+        var path = $scope.path;
+        var type = $scope.RemoteBackuptype;
+
+        if (type == "SFTP") {
+
+            var data = {
+                Hname: Hname,
+                Uname: Uname,
+                Passwd: Passwd,
+                path: path,
+                type: type
+            }
+            var url = "/websites/SaveBackupConfig";
+
+
+            var config = {
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            };
+            $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+            function ListInitialDatas(response) {
+                $scope.RemoteBackupLoading = true;
+                if (response.data.status === 1) {
+                    new PNotify({
+                        title: 'Success!',
+                        text: 'Successfully Saved!.',
+                        type: 'success'
+                    });
+                    location.reload();
+
+
+                } else {
+                    new PNotify({
+                        title: 'Error!',
+                        text: response.data.error_message,
+                        type: 'error'
+                    });
+                }
+            }
+
+            function cantLoadInitialDatas(response) {
+                $scope.RemoteBackupLoading = true;
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+
+
+            }
+        }
+
+
+    }
+
+});
+
+
+app.controller('BackupSchedule', function ($scope, $http, $timeout, $window) {
+    $scope.BackupScheduleLoading = true;
+    $scope.SaveBackupSchedule = function () {
+        $scope.RemoteBackupLoading = false;
+        var FileRetention = $scope.Fretention;
+        var Backfrequency = $scope.Bfrequency;
+
+
+        var data = {
+            FileRetention: FileRetention,
+            Backfrequency: Backfrequency,
+            ScheduleName: $scope.ScheduleName,
+            RemoteConfigID : $('#RemoteConfigID').html(),
+            BackupType: $scope.BackupType
+        }
+        var url = "/websites/SaveBackupSchedule";
+
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.RemoteBackupLoading = true;
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success!',
+                    text: 'Successfully Saved!.',
+                    type: 'success'
+                });
+                location.reload();
+
+
+            } else {
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.RemoteBackupLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: response.data.error_message,
+                type: 'error'
+            });
+
+
+        }
+
+
+    }
+
+
+    $scope.AddWPsiteforRemoteBackup = function () {
+        $scope.RemoteBackupLoading = false;
+
+
+
+        var data = {
+            WpsiteID:  $('#Wpsite').val(),
+            RemoteScheduleID : $('#RemoteScheduleID').html()
+        }
+        var url = "/websites/AddWPsiteforRemoteBackup";
+
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.RemoteBackupLoading = true;
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success!',
+                    text: 'Successfully Saved!.',
+                    type: 'success'
+                });
+                location.reload();
+
+
+            } else {
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.RemoteBackupLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: response.data.error_message,
+                type: 'error'
+            });
+
+
+        }
+
+
+    }
+});
 /* Java script code to create account */
 app.controller('createWebsite', function ($scope, $http, $timeout, $window) {
 

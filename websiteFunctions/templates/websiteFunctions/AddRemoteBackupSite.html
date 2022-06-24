@@ -1,0 +1,87 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Backup Sites Configurations - CyberPanel" %}{% endblock %}
+{% block content %}
+
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
+
+    <div class="container">
+        <div id="page-title">
+            <h2>{% trans "Backup Sites Configurations" %}</h2>
+        </div>
+
+
+        <div ng-controller="BackupSchedule" class="panel">
+            <div class="panel-body">
+                <h3 class="content-box-header">
+                    {% trans " Add WordPress Sites for Remote Backup" %} <img ng-hide="BackupScheduleLoading"
+                                                         src="{% static 'images/loading.gif' %}">
+                </h3>
+                <form name="websiteCreationForm" action="/" id="createPackages"
+                      class="form-horizontal bordered-row panel-body">
+
+                    <span style="display: none" id="RemoteScheduleID"> {{ RemoteScheduleID }}</span>
+
+
+                    <div ng-hide="installationDetailsForm" class="form-group">
+                        <label class="col-sm-3 control-label">{% trans "Selecte WordPress Site" %}</label>
+                        <div class="col-sm-6">
+                            <select ng-model="Wpsite" id="Wpsite"
+                                    class="form-control">
+                                {% for i in WPsites %}
+                                <option value="{{ i.id }}">{{ i.title }}</option>
+                                {% endfor %}
+
+                            </select>
+                        </div>
+                    </div>
+
+                    <div ng-hide="installationDetailsForm" class="form-group">
+                        <label class="col-sm-3 control-label"></label>
+                        <div class="col-sm-4">
+                            <button type="button" ng-click="AddWPsiteforRemoteBackup()"
+                                    class="btn btn-primary btn-lg">{% trans "Save Backup Schedule" %}</button>
+
+                        </div>
+                    </div>
+                </form>
+                <h3 class="content-box-header">
+                    {% trans "Saved Sites For Remote Backup" %} </h3>
+                <table class="table-spacing" style="width: 100%">
+                    <thead style="color: white; background-color: #0a6ebd">
+                    <tr>
+                        <th style="padding: 18px; color: white; width: 161px; font-size: 12px;">ID</th>
+                        <th style="padding: 18px; color: white; width: 161px; font-size: 12px;">WordPress Title</th>
+                        <th style="padding: 18px; color: white; width: 161px; font-size: 12px;">Action</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    {% for sub in RemoteBackupsites %}
+                        <tr>
+                            <td style="padding: 13px;">{{ sub.id }}</td>
+                            <td style="padding: 13px;">{{ sub.Title }}</td>
+                            <td style="padding: 13px;">
+                                <button
+                                        aria-label=""
+                                        onclick="DeleteRemoteBackupsiteNow('{% url 'AddRemoteBackupsite' %}?ID={{ RemoteScheduleID }}&DeleteID={{ sub.id }}')"
+                                        type="button" class="btn btn-border btn-alt border-red btn-link font-red">
+                                    Delete
+                                </button>
+
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+
+            </div>
+        </div>
+
+
+    </div>
+
+
+{% endblock %}

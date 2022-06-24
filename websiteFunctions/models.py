@@ -128,3 +128,22 @@ class WPSitesBackup(models.Model):
     WPSiteID = models.IntegerField(default=-1)
     WebsiteID = models.IntegerField(default=-1)
     config = models.TextField()
+
+
+class RemoteBackupConfig(models.Model):
+    owner = models.ForeignKey(Administrator, on_delete=models.CASCADE)
+    configtype = models.CharField(max_length=255, default='')
+    config = models.TextField()
+
+class RemoteBackupSchedule(models.Model):
+    RemoteBackupConfig = models.ForeignKey(RemoteBackupConfig, on_delete=models.CASCADE)
+    Name = models.CharField(max_length=255, default='')
+    timeintervel = models.CharField(max_length=200)
+    fileretention = models.CharField(max_length=200)
+    lastrun = models.CharField(max_length=200)
+    config = models.TextField()
+
+class RemoteBackupsites(models.Model):
+    owner = models.ForeignKey(RemoteBackupSchedule, on_delete=models.CASCADE)
+    WPsites = models.IntegerField(null=True)
+    database = models.IntegerField(null=True)
