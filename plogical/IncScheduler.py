@@ -980,7 +980,7 @@ Automatic backup failed for %s on %s.
                 backuptype = configbakup['BackupType']
                 if backuptype == 'Only DataBase':
                     Backuptype = "3"
-                elif backuptype == 'Only Website'
+                elif backuptype == 'Only Website':
                     Backuptype = "2"
                 else:
                     Backuptype = "1"
