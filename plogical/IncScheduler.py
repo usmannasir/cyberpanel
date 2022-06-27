@@ -960,6 +960,78 @@ Automatic backup failed for %s on %s.
             except BaseException as msg:
                 logging.writeToFile('%s. [WPUpdates:767]' % (str(msg)))
 
+    @staticmethod
+    def RemoteBackup():
+        from websiteFunctions.models import RemoteBackupSchedule, RemoteBackupsites, WPSites
+        from loginSystem.models import Administrator
+        import json
+        for config in RemoteBackupSchedule.objects.all():
+            try:
+                RemoteBackupsiteobj = RemoteBackupsites.objects.filter(owner=config.pk)
+                backupsiteID=RemoteBackupsiteobj.WPsites
+                wpsite=WPSites.objects.get(pk=backupsiteID)
+                AdminID=wpsite.owner.admin_id
+                Admin = Administrator.objects.get(pk=AdminID)
+                
+            except:
+                continue
+            try:
+                configbakup=json.loads(config.config)
+                backuptype = configbakup['BackupType']
+                if backuptype == 'Only DataBase':
+                    Backuptype = "3"
+                elif backuptype == 'Only Website'
+                    Backuptype = "2"
+                else:
+                    Backuptype = "1"
+            except:
+                pass
+
+            extraArgs = {}
+            extraArgs['adminID'] = Admin.pk
+            extraArgs['WPid'] = wpsite.pk
+            extraArgs['Backuptype'] = Backuptype
+            extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
+
+            Lastrun = config.lastrun
+            Currenttime = float(time.time())
+            if config.timeintervel == "30 Minutes":
+                al = float(Currenttime) - float(1800)
+                if float(al) >= float(Lastrun):
+                    background = ApplicationInstaller('WPCreateBackup', extraArgs)
+                    background.start()
+            elif config.timeintervel =="1 Hour":
+                al = float(Currenttime) - float(3600)
+                if float(al) >= float(Lastrun):
+                    background = ApplicationInstaller('WPCreateBackup', extraArgs)
+                    background.start()
+            elif config.timeintervel =="6 Hours":
+                al = float(Currenttime) - float(21600)
+                if float(al) >= float(Lastrun):
+                    background = ApplicationInstaller('WPCreateBackup', extraArgs)
+                    background.start()
+            elif config.timeintervel =="12 Hours":
+                al = float(Currenttime) - float(43200)
+                if float(al) >= float(Lastrun):
+                    background = ApplicationInstaller('WPCreateBackup', extraArgs)
+                    background.start()
+            elif config.timeintervel =="1 Day":
+                al = float(Currenttime) - float(86400)
+                if float(al) >= float(Lastrun):
+                    background = ApplicationInstaller('WPCreateBackup', extraArgs)
+                    background.start()
+            elif config.timeintervel =="3 Days":
+                al = float(Currenttime) - float(259200)
+                if float(al) >= float(Lastrun):
+                    background = ApplicationInstaller('WPCreateBackup', extraArgs)
+                    background.start()
+            elif config.timeintervel =="1 Week":
+                al = float(Currenttime) - float(604800)
+                if float(al) >= float(Lastrun):
+                    background = ApplicationInstaller('WPCreateBackup', extraArgs)
+                    background.start()
+
+
 
 def main():
     parser = argparse.ArgumentParser(description='CyberPanel Installer')
@@ -983,6 +1055,7 @@ def main():
     ###
 
     IncScheduler.startBackup(args.function)
+    IncScheduler.RemoteBackup(args)
     IncScheduler.runGoogleDriveBackups(args.function)
     IncScheduler.git(args.function)
     IncScheduler.checkDiskUsage()

@@ -2272,6 +2272,8 @@ $parameters = array(
             php = PHPManager.getPHPString(PhpVersion)
             FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
 
+
+            ### Website and Database Both === 1
             if Backuptype == "1":
 
                 logging.statusWriter(self.tempStatusPath, 'Getting database...,20')
@@ -2435,6 +2437,7 @@ $parameters = array(
                 logging.statusWriter(self.tempStatusPath, 'Completed.[200]')
                 return 1, f"/home/backup/{config['name']}.tar.gz"
 
+            #### Only Website Data === 2
             elif Backuptype == "2":
                 ###Onlye website data
                 ### Create secure folder
@@ -2563,6 +2566,8 @@ $parameters = array(
 
                 logging.statusWriter(self.tempStatusPath, 'Completed.[200]')
                 return 1, f"/home/backup/{config['name']}.tar.gz"
+
+            #### Only Database === 3
             else:
                 ###only backup of data base
                 logging.statusWriter(self.tempStatusPath, 'Getting database...,20')
