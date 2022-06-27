@@ -15,7 +15,7 @@ from stat import *
 import stat
 
 VERSION = '2.3'
-BUILD = 1
+BUILD = 2
 
 char_set = {'small': 'abcdefghijklmnopqrstuvwxyz', 'nums': '0123456789', 'big': 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'}
 
@@ -33,6 +33,7 @@ def generate_pass(length=14):
 centos = 0
 ubuntu = 1
 cent8 = 2
+openeuler = 3
 
 
 def get_distro():
@@ -45,8 +46,8 @@ def get_distro():
                 if line == "DISTRIB_ID=Ubuntu\n":
                     distro = ubuntu
 
-    elif exists("/etc/os-release"):
-        distro_file = "/etc/os-release"
+    elif exists("/etc/redhat-release"):
+        distro_file = "/etc/redhat-release"
         distro = centos
 
         data = open('/etc/redhat-release', 'r').read()
@@ -57,6 +58,10 @@ def get_distro():
             return cent8
         if data.find('Rocky Linux release 8') > -1 or data.find('Rocky Linux 8') > -1 or data.find('rocky:8') > -1:
             return cent8
+        
+    elif exists("/etc/openEuler-release"):
+        distro_file = "/etc/openEuler-release"
+        distro = openeuler
 
     else:
         logging.InstallLog.writeToFile("Can't find linux release file - fatal error")
@@ -268,7 +273,7 @@ class preFlightsChecks:
     def setup_account_cyberpanel(self):
         try:
 
-            if self.distro == centos or self.distro == cent8:
+            if self.distro == centos or self.distro == cent8 or self.distro == openeuler:
                 command = "yum install sudo -y"
                 preFlightsChecks.call(command, self.distro, command,
                                       command,
@@ -359,7 +364,7 @@ class preFlightsChecks:
     def install_psmisc(self):
         self.stdOut("Install psmisc")
 
-        if self.distro == centos or self.distro == cent8:
+        if self.distro == centos or self.distro == cent8 or self.distro == openeuler:
             command = "yum -y install psmisc"
         else:
             command = "apt-get -y install psmisc"
@@ -642,7 +647,7 @@ password="%s"
         command = "find /usr/local/CyberCP/ -name '*.pyc' -delete"
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-        if self.distro == cent8 or self.distro == centos:
+        if self.distro == cent8 or self.distro == centos or self.distro == openeuler:
             command = 'chown root:pdns /etc/pdns/pdns.conf'
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
@@ -691,7 +696,7 @@ password="%s"
     def install_unzip(self):
         self.stdOut("Install unzip")
         try:
-            if self.distro == centos or self.distro == cent8:
+            if self.distro == centos or self.distro == cent8 or self.distro == openeuler:
                 command = 'yum -y install unzip'
             else:
                 command = 'apt-get -y install unzip'
@@ -703,7 +708,7 @@ password="%s"
     def install_zip(self):
         self.stdOut("Install zip")
         try:
-            if self.distro == centos or self.distro == cent8:
+            if self.distro == centos or self.distro == cent8 or self.distro == openeuler:
                 command = 'yum -y install zip'
             else:
                 command = 'apt-get -y install zip'
@@ -813,11 +818,13 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                 command = 'yum install --enablerepo=gf-plus -y postfix3 postfix3-ldap postfix3-mysql postfix3-pcre'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
             elif self.distro == cent8:
-
                 command = 'dnf --nogpg install -y https://mirror.ghettoforge.org/distributions/gf/gf-release-latest.gf.el8.noarch.rpm'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
                 command = 'dnf install --enablerepo=gf-plus postfix3 postfix3-mysql -y'
+                preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+            elif self.distro == openeuler:
+                command = 'dnf install postfix -y'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
             else:
@@ -842,6 +849,8 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                 command = 'yum --enablerepo=gf-plus -y install dovecot23 dovecot23-mysql'
             elif self.distro == cent8:
                 command = 'dnf install --enablerepo=gf-plus dovecot23 dovecot23-mysql -y'
+            elif self.distro == openeuler:
+                command = 'dnf install dovecot -y'
             else:
                 command = 'apt-get -y install dovecot-mysql dovecot-imapd dovecot-pop3d'
 
@@ -1464,14 +1473,14 @@ autocreate_system_folders = On
             except:
                 pass
 
-            if self.distro == centos or self.distro == cent8:
+            if self.distro == centos or self.distro == cent8 or self.distro == openeuler:
                 command = 'adduser lscpd -M -d /usr/local/lscp'
             else:
                 command = 'useradd lscpd -M -d /usr/local/lscp'
 
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-            if self.distro == centos or self.distro == cent8:
+            if self.distro == centos or self.distro == cent8 or self.distro == openeuler:
                 command = 'groupadd lscpd'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
                 # Added group in useradd for Ubuntu
@@ -1691,21 +1700,21 @@ autocreate_system_folders = On
         try:
             ## first install crontab
 
-            if self.distro == centos or self.distro == cent8:
+            if self.distro == centos or self.distro == cent8 or self.distro == openeuler:
                 command = 'yum install cronie -y'
             else:
                 command = 'apt-get -y install cron'
 
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-            if self.distro == centos or self.distro == cent8:
+            if self.distro == centos or self.distro == cent8 or self.distro == openeuler:
                 command = 'systemctl enable crond'
             else:
                 command = 'systemctl enable cron'
 
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-            if self.distro == centos or self.distro == cent8:
+            if self.distro == centos or self.distro == cent8 or self.distro == openeuler:
                 command = 'systemctl start crond'
             else:
                 command = 'systemctl start cron'
@@ -1715,8 +1724,9 @@ autocreate_system_folders = On
             ##
 
             CentOSPath = '/etc/redhat-release'
+            openEulerPath = '/etc/openEuler-release'
 
-            if os.path.exists(CentOSPath):
+            if os.path.exists(CentOSPath) or os.path.exists(openEulerPath):
                 cronPath = '/var/spool/cron/root'
             else:
                 cronPath = '/var/spool/cron/crontabs/root'
@@ -1754,11 +1764,11 @@ autocreate_system_folders = On
 
                 writeToFile.close()
 
-            if not os.path.exists(CentOSPath):
+            if not os.path.exists(CentOSPath) or not os.path.exists(openEulerPath):
                 command = 'chmod 600 %s' % (cronPath)
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-            if self.distro == centos or self.distro == cent8:
+            if self.distro == centos or self.distro == cent8 or self.distro == openeuler:
                 command = 'systemctl restart crond.service'
             else:
                 command = 'systemctl restart cron.service'
@@ -1785,7 +1795,7 @@ autocreate_system_folders = On
 
     def install_rsync(self):
         try:
-            if self.distro == centos or self.distro == cent8:
+            if self.distro == centos or self.distro == cent8 or self.distro == openeuler:
                 command = 'yum -y install rsync'
             else:
                 command = 'apt-get -y install rsync'
@@ -1843,14 +1853,14 @@ autocreate_system_folders = On
         try:
             if self.distro == centos:
                 command = 'yum -y install opendkim'
-            elif self.distro == cent8:
+            elif self.distro == cent8 or self.distro == openeuler:
                 command = 'dnf install opendkim -y'
             else:
                 command = 'apt-get -y install opendkim'
 
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-            if self.distro == cent8:
+            if self.distro == cent8 or self.distro == openeuler:
                 command = 'dnf install opendkim-tools -y'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
@@ -2086,12 +2096,15 @@ milter_default_action = accept
         try:
 
             CentOSPath = '/etc/redhat-release'
+            openEulerPath = '/etc/openEuler-release'
 
-            if os.path.exists(CentOSPath):
-                command = 'yum install -y yum-plugin-copr'
-                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-                command = 'yum copr enable -y copart/restic'
-                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            if os.path.exists(CentOSPath) or os.path.exists(openEulerPath):
+                if self.distro == centos:
+                    command = 'yum install -y yum-plugin-copr'
+                    preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                    command = 'yum copr enable -y copart/restic'
+                    preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
                 command = 'yum install -y restic'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
                 command = 'restic self-update'
@@ -2114,8 +2127,9 @@ milter_default_action = accept
         try:
 
             CentOSPath = '/etc/redhat-release'
+            openEulerPath = '/etc/openEuler-release'
 
-            if os.path.exists(CentOSPath):
+            if os.path.exists(CentOSPath) or os.path.exists(openEulerPath):
                 command = 'mkdir -p /opt/cpvendor/etc/'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
