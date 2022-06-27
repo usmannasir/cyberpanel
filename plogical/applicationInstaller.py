@@ -2261,6 +2261,10 @@ $parameters = array(
             wpsite = WPSites.objects.get(pk=self.extraArgs['WPid'])
             Adminobj = Administrator.objects.get(pk=self.extraArgs['adminID'])
             Backuptype = self.extraArgs['Backuptype']
+            try:
+                BackupDestination = self.extraArgs['BackupDestination']
+            except:
+                BackupDestination = 'Local'
 
             website = wpsite.owner
             PhpVersion = website.phpSelection
@@ -2344,6 +2348,7 @@ $parameters = array(
                 config['Webadmin_id'] = website.admin_id
                 config['name'] = 'backup-' + websitedomain + "-" + time.strftime("%m.%d.%Y_%H-%M-%S")
                 config['Backuptype'] = "Both Website and DataBase"
+                config['BackupDestination'] = BackupDestination
 
                 ###############Create config.Json file
                 #command = "sudo -u %s touch /home/cyberpanel/config.json" % (VHuser)
@@ -2489,6 +2494,7 @@ $parameters = array(
                 config['Webadmin_id'] = website.admin_id
                 config['name'] = 'backup-' + websitedomain + "-" + time.strftime("%m.%d.%Y_%H-%M-%S")
                 config['Backuptype'] = "Website Backup"
+                config['BackupDestination'] = BackupDestination
 
                 ###############Create config.Json file
                 # command = "sudo -u %s touch /home/cyberpanel/config.json" % (VHuser)
@@ -2632,6 +2638,7 @@ $parameters = array(
                 config['Webadmin_id'] = website.admin_id
                 config['name'] = 'backup-' + websitedomain + "-" + time.strftime("%m.%d.%Y_%H-%M-%S")
                 config['Backuptype'] = "DataBase Backup"
+                config['BackupDestination'] = BackupDestination
                 ###############Create config.Json file
                 # command = "sudo -u %s touch /home/cyberpanel/config.json" % (VHuser)
                 # ProcessUtilities.executioner(command)

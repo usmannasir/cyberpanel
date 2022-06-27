@@ -991,6 +991,8 @@ Automatic backup failed for %s on %s.
                         extraArgs['adminID'] = Admin.pk
                         extraArgs['WPid'] = wpsite.pk
                         extraArgs['Backuptype'] = Backuptype
+                        extraArgs['BackupDestination'] = "SFTP"
+
                         extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
                         Lastrun = config.lastrun
                         Currenttime = float(time.time())
@@ -1003,6 +1005,11 @@ Automatic backup failed for %s on %s.
                                 if status == 1:
                                     filename = msg
                                     IncScheduler.SendTORemote(filename, config.RemoteBackupConfig_id)
+                                    command = f"rm -r {filename}"
+                                    ProcessUtilities.executioner(command)
+                                    obj = RemoteBackupSchedule.objects.get(pk=config.id)
+                                    obj.lastrun = time.time()
+                                    obj.save()
                         elif config.timeintervel == "1 Hour":
                             al = float(Currenttime) - float(3600)
                             if float(al) >= float(Lastrun):
@@ -1011,6 +1018,11 @@ Automatic backup failed for %s on %s.
                                 if status == 1:
                                     filename = msg
                                     IncScheduler.SendTORemote(filename, config.RemoteBackupConfig_id)
+                                    command = f"rm -r {filename}"
+                                    ProcessUtilities.executioner(command)
+                                    obj = RemoteBackupSchedule.objects.get(pk=config.id)
+                                    obj.lastrun = time.time()
+                                    obj.save()
                         elif config.timeintervel == "6 Hours":
                             al = float(Currenttime) - float(21600)
                             if float(al) >= float(Lastrun):
@@ -1019,6 +1031,11 @@ Automatic backup failed for %s on %s.
                                 if status == 1:
                                     filename = msg
                                     IncScheduler.SendTORemote(filename, config.RemoteBackupConfig_id)
+                                    command = f"rm -r {filename}"
+                                    ProcessUtilities.executioner(command)
+                                    obj = RemoteBackupSchedule.objects.get(pk=config.id)
+                                    obj.lastrun = time.time()
+                                    obj.save()
                         elif config.timeintervel == "12 Hours":
                             al = float(Currenttime) - float(43200)
                             if float(al) >= float(Lastrun):
@@ -1027,6 +1044,11 @@ Automatic backup failed for %s on %s.
                                 if status == 1:
                                     filename = msg
                                     IncScheduler.SendTORemote(filename, config.RemoteBackupConfig_id)
+                                    command = f"rm -r {filename}"
+                                    ProcessUtilities.executioner(command)
+                                    obj = RemoteBackupSchedule.objects.get(pk=config.id)
+                                    obj.lastrun = time.time()
+                                    obj.save()
                         elif config.timeintervel == "1 Day":
                             al = float(Currenttime) - float(86400)
                             if float(al) >= float(Lastrun):
@@ -1035,6 +1057,11 @@ Automatic backup failed for %s on %s.
                                 if status == 1:
                                     filename = msg
                                     IncScheduler.SendTORemote(filename, config.RemoteBackupConfig_id)
+                                    command = f"rm -r {filename}"
+                                    ProcessUtilities.executioner(command)
+                                    obj = RemoteBackupSchedule.objects.get(pk=config.id)
+                                    obj.lastrun = time.time()
+                                    obj.save()
                         elif config.timeintervel == "3 Days":
                             al = float(Currenttime) - float(259200)
                             if float(al) >= float(Lastrun):
@@ -1043,6 +1070,11 @@ Automatic backup failed for %s on %s.
                                 if status == 1:
                                     filename = msg
                                     IncScheduler.SendTORemote(filename, config.RemoteBackupConfig_id)
+                                    command = f"rm -r {filename}"
+                                    ProcessUtilities.executioner(command)
+                                    obj = RemoteBackupSchedule.objects.get(pk=config.id)
+                                    obj.lastrun = time.time()
+                                    obj.save()
                         elif config.timeintervel == "1 Week":
                             al = float(Currenttime) - float(604800)
                             if float(al) >= float(Lastrun):
@@ -1051,8 +1083,12 @@ Automatic backup failed for %s on %s.
                                 if status == 1:
                                     filename = msg
                                     IncScheduler.SendTORemote(filename, config.RemoteBackupConfig_id)
+                                    command = f"rm -r {filename}"
+                                    ProcessUtilities.executioner(command)
+                                    obj = RemoteBackupSchedule.objects.get(pk=config.id)
+                                    obj.lastrun = time.time()
+                                    obj.save()
                 except BaseException as msg:
-                    print("Error Wpsite: %s"%str(msg))
                     continue
         except BaseException as msg:
             print("Error: [RemoteBackup]: %s"%str(msg))

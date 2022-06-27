@@ -349,6 +349,7 @@ class WebsiteManager:
                     config = sub.config
                     conf = json.loads(config)
                     Backuptype = conf['Backuptype']
+                    BackupDestination = conf['BackupDestination']
                 except:
                     Backuptype = "Backup type not exists"
 
@@ -356,7 +357,8 @@ class WebsiteManager:
                 Data['job'].append({
                     'id': sub.id,
                     'title': web,
-                    'Backuptype': Backuptype
+                    'Backuptype': Backuptype,
+                    'BackupDestination': BackupDestination
                 })
 
 
