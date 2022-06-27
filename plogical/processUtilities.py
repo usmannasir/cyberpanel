@@ -291,7 +291,6 @@ class ProcessUtilities(multi.Thread):
     @staticmethod
     def outputExecutioner(command, user=None, shell = None, dir = None, retRequired = None):
         try:
-
             if getpass.getuser() == 'root':
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.writeToFile(command)
@@ -299,7 +298,11 @@ class ProcessUtilities(multi.Thread):
                     p = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                 else:
                     p = subprocess.Popen(shlex.split(command),  stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-                return p.communicate()[0].decode("utf-8")
+
+                if retRequired:
+                    return 1, p.communicate()[0].decode("utf-8")
+                else:
+                    return p.communicate()[0].decode("utf-8")
 
             if type(command) == list:
                 command = " ".join(command)

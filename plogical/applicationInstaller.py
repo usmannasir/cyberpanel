@@ -2262,7 +2262,6 @@ $parameters = array(
             Adminobj = Administrator.objects.get(pk=self.extraArgs['adminID'])
             Backuptype = self.extraArgs['Backuptype']
 
-
             website = wpsite.owner
             PhpVersion = website.phpSelection
             VHuser = website.externalApp
@@ -2278,8 +2277,10 @@ $parameters = array(
 
                 logging.statusWriter(self.tempStatusPath, 'Getting database...,20')
 
-                command = f'{FinalPHPPath} -d error_reporting=0 /usr/bin/wp config get DB_NAME  --skip-plugins --skip-themes --path={WPsitepath}'
+                command = f'sudo -u {VHuser} {FinalPHPPath} -d error_reporting=0 /usr/bin/wp config get DB_NAME  --skip-plugins --skip-themes --path={WPsitepath}'
+                print(command)
                 retStatus, stdoutput = ProcessUtilities.outputExecutioner(command, VHuser, None, None, 1)
+                print(stdoutput)
 
                 if stdoutput.find('Error:') == -1:
                     DataBaseName = stdoutput.rstrip("\n")
@@ -2287,7 +2288,7 @@ $parameters = array(
                     raise BaseException(stdoutput)
 
 
-                command = f'{FinalPHPPath} -d error_reporting=0 /usr/bin/wp config get DB_USER  --skip-plugins --skip-themes --path={WPsitepath}'
+                command = f'sudo -u {VHuser} {FinalPHPPath} -d error_reporting=0 /usr/bin/wp config get DB_USER  --skip-plugins --skip-themes --path={WPsitepath}'
                 retStatus, stdoutput = ProcessUtilities.outputExecutioner(command,VHuser, None, None, 1)
 
                 if stdoutput.find('Error:') == -1:
@@ -2316,7 +2317,7 @@ $parameters = array(
                 ### Make directory for backup
                 logging.statusWriter(self.tempStatusPath, 'Creating Backup Directory...,40')
 
-                command = f"mkdir -p {self.tempPath}/public_html"
+                command = f"sudo -u {VHuser} mkdir -p {self.tempPath}/public_html"
                 result, stdout = ProcessUtilities.outputExecutioner(command, VHuser, None, None, 1)
 
                 if result == 0:
@@ -2357,7 +2358,7 @@ $parameters = array(
 
                 os.chmod(configPath, 0o600)
 
-                command = f"cp -R {configPath} {self.tempPath}"
+                command = f"sudo -u {VHuser} cp -R {configPath} {self.tempPath}"
                 retStatus, stdoutput = ProcessUtilities.outputExecutioner(command, VHuser, None, None, 1)
                 if retStatus == 0:
                     raise BaseException(stdoutput)
