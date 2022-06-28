@@ -138,7 +138,7 @@ class IncJobs(multi.Thread):
                 backupExcludesFile = '/home/%s/backup-exclude.conf' % (self.website.domain)
                 resticBackupExcludeCMD = ' --exclude-file=%s' % (backupExcludesFile)
 
-                command = 'export AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s  && restic -r s3:s3.amazonaws.com/%s backup %s --password-file %s --exclude /home/%s/backup --exclude /home/%s/incbackup' % (
+                command = 'AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s restic -r s3:s3.amazonaws.com/%s backup %s --password-file %s --exclude /home/%s/backup --exclude /home/%s/incbackup' % (
                     key, secret, self.website.domain, backupPath, self.passwordFile, self.website.domain, self.website.domain)
 
                 # If /home/%s/backup-exclude.conf file exists lets pass this to restic by appending the command to end.
@@ -184,7 +184,7 @@ class IncJobs(multi.Thread):
 
                     key, secret = self.getAWSData()
 
-                    command = 'export AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s  && restic -r s3:s3.amazonaws.com/%s forget %s --password-file %s' % (
+                    command = 'AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s restic -r s3:s3.amazonaws.com/%s forget %s --password-file %s' % (
                         key, secret, self.website, snapshotID, self.passwordFile)
 
                     result = ProcessUtilities.outputExecutioner(command, self.externalApp)
@@ -195,7 +195,7 @@ class IncJobs(multi.Thread):
                         logging.statusWriter(self.statusPath, 'Failed: %s. [5009]' % (result), 1)
                         return 0
 
-                    command = 'export AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s  && restic -r s3:s3.amazonaws.com/%s prune --password-file %s' % (
+                    command = 'AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s restic -r s3:s3.amazonaws.com/%s prune --password-file %s' % (
                         key, secret, self.website, self.passwordFile)
 
                     ProcessUtilities.outputExecutioner(command, self.externalApp)
@@ -204,7 +204,7 @@ class IncJobs(multi.Thread):
 
                     key, secret = self.getAWSData()
 
-                    command = 'export AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s  && restic -r s3:s3.amazonaws.com/%s restore %s --password-file %s --target %s' % (
+                    command = 'AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s restic -r s3:s3.amazonaws.com/%s restore %s --password-file %s --target %s' % (
                         key, secret, self.website, snapshotID, self.passwordFile, self.restoreTarget)
 
                     result = ProcessUtilities.outputExecutioner(command, self.externalApp)
@@ -764,7 +764,7 @@ class IncJobs(multi.Thread):
                     logging.statusWriter(self.statusPath, result, 1)
             else:
                 key, secret = self.getAWSData()
-                command = 'export AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s  && restic -r s3:s3.amazonaws.com/%s init --password-file %s' % (
+                command = 'AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s restic -r s3:s3.amazonaws.com/%s init --password-file %s' % (
                     key, secret, self.website.domain, self.passwordFile)
                 result = ProcessUtilities.outputExecutioner(command, self.externalApp)
 
