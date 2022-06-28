@@ -728,7 +728,7 @@ password="%s"
             preFlightsChecks.call(command, self.distro, '[download_install_phpmyadmin]',
                                   command, 1, 0, os.EX_OSERR)
 
-            command = 'unzip /usr/local/CyberCP/public/phpmyadmin.zip -d /usr/local/CyberCP/public/'
+            command = 'unzip /usr/local/CyberCP/public/phpmyadmin.zip -d /usr/local/CyberCP/public/phpmyadmin'
             preFlightsChecks.call(command, self.distro, '[download_install_phpmyadmin]',
                                   command, 1, 0, os.EX_OSERR)
 
