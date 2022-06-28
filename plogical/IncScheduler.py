@@ -992,6 +992,7 @@ Automatic backup failed for %s on %s.
                         extraArgs['WPid'] = wpsite.pk
                         extraArgs['Backuptype'] = Backuptype
                         extraArgs['BackupDestination'] = "SFTP"
+                        extraArgs['SFTPID'] = config.RemoteBackupConfig_id
 
                         extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
                         Lastrun = config.lastrun

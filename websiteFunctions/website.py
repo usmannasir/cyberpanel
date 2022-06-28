@@ -1082,23 +1082,23 @@ class WebsiteManager:
             DesSiteID = data['DesSite']
 
 
-            try:
-
-                bwp = WPSites.objects.get(pk=int(backupid))
-
-                if ACLManager.checkOwnership(bwp.owner.domain, admin, currentACL) == 1:
-                    pass
-                else:
-                    return ACLManager.loadError()
-
-            except:
-                pass
-
-            dwp = WPSites.objects.get(pk=int(DesSiteID))
-            if ACLManager.checkOwnership(dwp.owner.domain, admin, currentACL) == 1:
-                pass
-            else:
-                return ACLManager.loadError()
+            # try:
+            #
+            #     bwp = WPSites.objects.get(pk=int(backupid))
+            #
+            #     if ACLManager.checkOwnership(bwp.owner.domain, admin, currentACL) == 1:
+            #         pass
+            #     else:
+            #         return ACLManager.loadError()
+            #
+            # except:
+            #     pass
+            #
+            # dwp = WPSites.objects.get(pk=int(DesSiteID))
+            # if ACLManager.checkOwnership(dwp.owner.domain, admin, currentACL) == 1:
+            #     pass
+            # else:
+            #     return ACLManager.loadError()
 
 
             Domain = data['Domain']
