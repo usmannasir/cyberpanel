@@ -2770,12 +2770,8 @@ $parameters = array(
 
                 with pysftp.Connection(HostName, username=Username, password=Password, cnopts=cnopts) as sftp:
                     logging.statusWriter(self.tempStatusPath, 'Downloading Backups...,15')
-                    # with sftp.cd(Path):
-
                     loaclpath = "/home/cyberpanel/%s.tar.gz" % BackUpFileName
-                    # command = "sudo -u cyberpanel touch %s"%loaclpath
-                    # result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-                    remotepath = "/home/a.com/%s.tar.gz" % BackUpFileName
+                    remotepath = "%s/%s.tar.gz" % (Path, BackUpFileName)
                     logging.writeToFile("Downloading start")
                     sftp.get(str(remotepath), str(loaclpath))
 
