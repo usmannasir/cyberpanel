@@ -1558,7 +1558,7 @@ else
 fi
 
 if [[ "$Server_OS" = "openEuler" ]]; then
-  #yum install -y lsphp??-redis redis
+  yum install -y lsphp??-redis redis
 fi
 
 if pgrep "redis" ; then
