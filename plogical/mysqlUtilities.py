@@ -838,6 +838,7 @@ password=%s
 
             if connection == 0:
                 return 0
+
             cursor.execute("use mysql")
 
             if host != None:
@@ -855,10 +856,10 @@ password=%s
             else:
                 query = "SET PASSWORD FOR '" + userName + "'@'%s' = '" % (LOCALHOST) + dbPassword + "'"
 
-            cursor.execute(query)
-
             if os.path.exists(ProcessUtilities.debugPath):
                 logging.CyberCPLogFileWriter.writeToFile(query)
+
+            cursor.execute(query)
 
             connection.close()
 

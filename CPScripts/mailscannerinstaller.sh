@@ -40,7 +40,7 @@ DIR=/etc/mail/spamassassin
 if [ -d "$DIR" ]; then
   sa-update
 else
-  echo "Please install spamassassin through the CyberPanel interface before proceeding"
+  echo "Please install SpamAssasin through the CyberPanel interface before proceeding"
   exit
 fi
 
