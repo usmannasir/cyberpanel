@@ -2049,7 +2049,7 @@ app.controller('RemoteBackupConfig', function ($scope, $http, $timeout, $window)
 
 });
 
-
+var UpdatescheduleID;
 app.controller('BackupSchedule', function ($scope, $http, $timeout, $window) {
     $scope.BackupScheduleLoading = true;
     $scope.SaveBackupSchedule = function () {
@@ -2108,8 +2108,67 @@ app.controller('BackupSchedule', function ($scope, $http, $timeout, $window) {
         }
 
 
+    };
+
+
+
+
+    $scope.getupdateid = function (ID) {
+        UpdatescheduleID = ID;
     }
 
+    $scope.UpdateRemoteschedules = function () {
+         $scope.RemoteBackupLoading = false;
+         var Frequency = $scope.RemoteFrequency;
+         var fretention = $scope.RemoteFileretention;
+
+         var data = {
+             ScheduleID:UpdatescheduleID,
+             Frequency: Frequency,
+             FileRetention: fretention
+         }
+         var url = "/websites/UpdateRemoteschedules";
+
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.RemoteBackupLoading = true;
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success!',
+                    text: 'Successfully Updated!.',
+                    type: 'success'
+                });
+                location.reload();
+
+
+            } else {
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.RemoteBackupLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: response.data.error_message,
+                type: 'error'
+            });
+
+
+        }
+    };
 
     $scope.AddWPsiteforRemoteBackup = function () {
         $scope.RemoteBackupLoading = false;
@@ -2163,7 +2222,7 @@ app.controller('BackupSchedule', function ($scope, $http, $timeout, $window) {
         }
 
 
-    }
+    };
 });
 /* Java script code to create account */
 app.controller('createWebsite', function ($scope, $http, $timeout, $window) {

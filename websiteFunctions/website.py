@@ -254,10 +254,15 @@ class WebsiteManager:
             allsechedule = RemoteBackupSchedule.objects.filter(RemoteBackupConfig=RemoteConfigobj)
             Data['Backupschedule'] = []
             for i in allsechedule:
+                lastrun = i.lastrun
+                LastRun = time.strftime('%Y-%m-%d', time.localtime(float(lastrun)))
                 Data['Backupschedule'].append({
                     'id': i.pk,
                     'Name': i.Name,
-                    'RemoteConfiguration': i.RemoteBackupConfig.configtype
+                    'RemoteConfiguration': i.RemoteBackupConfig.configtype,
+                    'Retention': i.fileretention,
+                    'Frequency': i.timeintervel,
+                    'LastRun': LastRun
                 })
             proc = httpProc(request, 'websiteFunctions/BackupfileConfig.html',
                             Data, 'createWebsite')
@@ -1230,6 +1235,30 @@ class WebsiteManager:
 
             svobj = RemoteBackupsites( owner=RemoteScheduleIDobj, WPsites = WPid, database = DBobj.pk)
             svobj.save()
+
+            data_ret = {'status': 1,  'error_message': 'None',}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0,  'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+    def UpdateRemoteschedules(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+            ScheduleID = data['ScheduleID']
+            Frequency = data['Frequency']
+            FileRetention = data['FileRetention']
+
+            scheduleobj = RemoteBackupSchedule.objects.get(pk=ScheduleID)
+            scheduleobj.timeintervel = Frequency
+            scheduleobj.fileretention = FileRetention
+            scheduleobj.save()
 
             data_ret = {'status': 1,  'error_message': 'None',}
             json_data = json.dumps(data_ret)

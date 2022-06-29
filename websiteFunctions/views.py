@@ -502,6 +502,27 @@ def AddWPsiteforRemoteBackup(request):
         return redirect(loadLoginPage)
 
 
+def UpdateRemoteschedules(request):
+    try:
+        userID = request.session['userID']
+
+        result = pluginManager.preWebsiteCreation(request)
+        if result != 200:
+            return result
+
+        wm = WebsiteManager()
+        coreResult = wm.UpdateRemoteschedules(userID, json.loads(request.body))
+
+        result = pluginManager.postWebsiteCreation(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
 def installwpcore(request):
     try:
         userID = request.session['userID']

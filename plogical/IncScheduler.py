@@ -1090,6 +1090,7 @@ Automatic backup failed for %s on %s.
                                     obj.lastrun = time.time()
                                     obj.save()
                 except BaseException as msg:
+                    print("Error in Sites:%s"%str(msg))
                     continue
         except BaseException as msg:
             print("Error: [RemoteBackup]: %s"%str(msg))
