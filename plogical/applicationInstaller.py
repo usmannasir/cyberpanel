@@ -2444,7 +2444,7 @@ $parameters = array(
                     raise BaseException(stdout)
 
                 logging.statusWriter(self.tempStatusPath, 'Completed.[200]')
-                return 1, f"/home/backup/{config['name']}.tar.gz"
+                return 1, f"/home/backup/{config['name']}.tar.gz", backupobj.id
 
             #### Only Website Data === 2
             elif Backuptype == "2":
@@ -2576,7 +2576,7 @@ $parameters = array(
                     raise BaseException(stdout)
 
                 logging.statusWriter(self.tempStatusPath, 'Completed.[200]')
-                return 1, f"/home/backup/{config['name']}.tar.gz"
+                return 1, f"/home/backup/{config['name']}.tar.gz", backupobj.id
 
             #### Only Database === 3
             else:
@@ -2705,7 +2705,7 @@ $parameters = array(
                     raise BaseException(stdout)
 
                 logging.statusWriter(self.tempStatusPath, 'Completed.[200]')
-                return 1, f"/home/backup/{config['name']}.tar.gz"
+                return 1, f"/home/backup/{config['name']}.tar.gz", backupobj.id
 
         except BaseException as msg:
             logging.writeToFile("Error WPCreateBackup ....... %s" % str(msg))
@@ -2715,7 +2715,7 @@ $parameters = array(
             except:
                 pass
             logging.statusWriter(self.tempStatusPath, f'{str(msg)}. [404]')
-            return 0, str(msg)
+            return 0, str(msg), None
 
     def RestoreWPbackupNow(self):
         try:
