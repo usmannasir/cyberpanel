@@ -222,12 +222,30 @@ class WebsiteManager:
             Data['backupconfigs'] =[]
             for i in allcon:
                 configr = json.loads(i.config)
-                Data['backupconfigs'].append({
-                    'id':i.pk,
-                    'Type': i.configtype,
-                    'HostName': configr['Hostname'],
-                    'Path': configr['Path']
-                })
+                if i.configtype == "SFTP":
+                    Data['backupconfigs'].append({
+                        'id': i.pk,
+                        'Type': i.configtype,
+                        'HostName': configr['Hostname'],
+                        'Path': configr['Path']
+                    })
+                elif i.configtype == "S3":
+                    Provider = configr['Provider']
+                    if Provider == "Backblaze":
+                        Data['backupconfigs'].append({
+                            'id': i.pk,
+                            'Type': i.configtype,
+                            'HostName': Provider,
+                            'Path': configr['S3keyname']
+                        })
+                    else:
+                        Data['backupconfigs'].append({
+                            'id': i.pk,
+                            'Type': i.configtype,
+                            'HostName': Provider,
+                            'Path': configr['S3keyname']
+                        })
+
             proc = httpProc(request, 'websiteFunctions/RemoteBackupConfig.html',
                             Data, 'createWebsite')
             return proc.render()
@@ -1153,8 +1171,37 @@ class WebsiteManager:
                     "Password": Passwd,
                     "Path": path
                 }
-                mkobj = RemoteBackupConfig(owner=admin, configtype=ConfigType, config=json.dumps(config))
-                mkobj.save()
+            elif ConfigType == "S3":
+                Provider = data['Provider']
+                if Provider == "Backblaze":
+                    S3keyname = data['S3keyname']
+                    SecertKey = data['SecertKey']
+                    AccessKey = data['AccessKey']
+                    EndUrl = data['EndUrl']
+                    config = {
+                        "Provider": Provider,
+                        "S3keyname": S3keyname,
+                        "SecertKey": SecertKey,
+                        "AccessKey": AccessKey,
+                        "EndUrl": EndUrl
+
+                    }
+                else:
+                    S3keyname = data['S3keyname']
+                    SecertKey = data['SecertKey']
+                    AccessKey = data['AccessKey']
+                    config = {
+                        "Provider": Provider,
+                        "S3keyname": S3keyname,
+                        "SecertKey": SecertKey,
+                        "AccessKey": AccessKey,
+
+                    }
+
+
+
+            mkobj = RemoteBackupConfig(owner=admin, configtype=ConfigType, config=json.dumps(config))
+            mkobj.save()
 
 
             time.sleep(1)

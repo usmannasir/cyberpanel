@@ -30,6 +30,7 @@
                                 <select ng-model="RemoteBackuptype" ng-change="SelectRemoteBackuptype()"
                                         class="form-control">
                                     <option>SFTP</option>
+                                    <option>S3</option>
                                 </select>
                             </div>
                         </div>
@@ -68,8 +69,45 @@
 
                         </div>
 
-                        <div ng-hide="S3backupdiv">
-                            <span>S3 BAckups</span>
+
+                        <div ng-hide="Selectprovider" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Choose Provider" %}</label>
+                            <div class="col-sm-6">
+                                <select ng-model="Providervalue" ng-change="SelectProvidertype()"
+                                        class="form-control">
+                                    <option selected="selected">Amazon</option>
+                                    <option>Wasabi</option>
+                                    <option>Backblaze</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div ng-hide="S3keyNamediv" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Name" %}</label>
+                            <div class="col-sm-6">
+                                <input name="S3keyName" type="text" class="form-control" ng-model="S3keyName"
+                                       required>
+                            </div>
+                        </div>
+                        <div ng-hide="EndpointURLdiv" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Endpoint URL" %}</label>
+                            <div class="col-sm-6">
+                                <input name="EndpointURL" type="text" class="form-control" ng-model="EndpointURL"
+                                       required>
+                            </div>
+                        </div>
+                        <div ng-hide="Accesskeydiv" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Access Key" %}</label>
+                            <div class="col-sm-6">
+                                <input name="Accesskey" type="text" class="form-control" ng-model="Accesskey"
+                                       required>
+                            </div>
+                        </div>
+                        <div ng-hide="SecretKeydiv" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Secret Key" %}</label>
+                            <div class="col-sm-6">
+                                <input name="SecretKey" type="text" class="form-control" ng-model="SecretKey"
+                                       required>
+                            </div>
                         </div>
 
 
@@ -93,36 +131,36 @@
                     <tr>
                         <th style="padding: 18px; color: white; width: 161px; font-size: 12px;">Backup Type</th>
                         <th style="padding: 18px; color: white; width: 161px; font-size: 12px;">HostName</th>
-                        <th style="padding: 18px; color: white; width: 161px; font-size: 12px;">Path</th>
+                        <th style="padding: 18px; color: white; width: 161px; font-size: 12px;">Path / Key Name</th>
                         <th style="padding: 18px; color: white; width: 161px; font-size: 12px;">Action</th>
                     </tr>
                     </thead>
 
-                    <tbody >
+                    <tbody>
                     {% for sub in backupconfigs %}
-                    <tr>
-                        <td style="padding: 13px;">{{ sub.Type }}</td>
-                        <td style="padding: 13px;">{{ sub.HostName }}</td>
-                        <td style="padding: 13px;">{{ sub.Path }}</td>
-                        <td style="padding: 13px;"> <button
-                                aria-label=""
-                                onclick="DeleteBackupConfigNow('{% url 'RemoteBackupConfig' %}?DeleteID={{ sub.id }}')"
-                                type="button" class="btn btn-border btn-alt border-red btn-link font-red">
-                            Delete
-                        </button>
-                        <a href="{% url 'BackupfileConfig' %}?ID={{ sub.id }}"
-                                aria-label=""
+                        <tr>
+                            <td style="padding: 13px;">{{ sub.Type }}</td>
+                            <td style="padding: 13px;">{{ sub.HostName }}</td>
+                            <td style="padding: 13px;">{{ sub.Path }}</td>
+                            <td style="padding: 13px;">
+                                <button
+                                        aria-label=""
+                                        onclick="DeleteBackupConfigNow('{% url 'RemoteBackupConfig' %}?DeleteID={{ sub.id }}')"
+                                        type="button" class="btn btn-border btn-alt border-red btn-link font-red">
+                                    Delete
+                                </button>
+                                <a href="{% url 'BackupfileConfig' %}?ID={{ sub.id }}"
+                                   aria-label=""
 
-                                type="button" class="btn btn-border btn-alt border-green btn-link font-green">
-                            Schedule Backups
-                        </a></td>
-                    </tr>
+                                   type="button" class="btn btn-border btn-alt border-green btn-link font-green">
+                                    Schedule Backups
+                                </a></td>
+                        </tr>
                     {% endfor %}
                     </tbody>
                 </table>
             </div>
         </div>
-
 
 
     </div>
