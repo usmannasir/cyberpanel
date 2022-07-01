@@ -25,6 +25,7 @@ from plogical.mailUtilities import mailUtilities
 from random import randint
 import time
 import re
+import boto3
 from plogical.childDomain import ChildDomainManager
 from math import ceil
 from plogical.alias import AliasManager
@@ -222,12 +223,30 @@ class WebsiteManager:
             Data['backupconfigs'] =[]
             for i in allcon:
                 configr = json.loads(i.config)
-                Data['backupconfigs'].append({
-                    'id':i.pk,
-                    'Type': i.configtype,
-                    'HostName': configr['Hostname'],
-                    'Path': configr['Path']
-                })
+                if i.configtype == "SFTP":
+                    Data['backupconfigs'].append({
+                        'id': i.pk,
+                        'Type': i.configtype,
+                        'HostName': configr['Hostname'],
+                        'Path': configr['Path']
+                    })
+                elif i.configtype == "S3":
+                    Provider = configr['Provider']
+                    if Provider == "Backblaze":
+                        Data['backupconfigs'].append({
+                            'id': i.pk,
+                            'Type': i.configtype,
+                            'HostName': Provider,
+                            'Path': configr['S3keyname']
+                        })
+                    else:
+                        Data['backupconfigs'].append({
+                            'id': i.pk,
+                            'Type': i.configtype,
+                            'HostName': Provider,
+                            'Path': configr['S3keyname']
+                        })
+
             proc = httpProc(request, 'websiteFunctions/RemoteBackupConfig.html',
                             Data, 'createWebsite')
             return proc.render()
@@ -254,10 +273,15 @@ class WebsiteManager:
             allsechedule = RemoteBackupSchedule.objects.filter(RemoteBackupConfig=RemoteConfigobj)
             Data['Backupschedule'] = []
             for i in allsechedule:
+                lastrun = i.lastrun
+                LastRun = time.strftime('%Y-%m-%d', time.localtime(float(lastrun)))
                 Data['Backupschedule'].append({
                     'id': i.pk,
                     'Name': i.Name,
-                    'RemoteConfiguration': i.RemoteBackupConfig.configtype
+                    'RemoteConfiguration': i.RemoteBackupConfig.configtype,
+                    'Retention': i.fileretention,
+                    'Frequency': i.timeintervel,
+                    'LastRun': LastRun
                 })
             proc = httpProc(request, 'websiteFunctions/BackupfileConfig.html',
                             Data, 'createWebsite')
@@ -1148,8 +1172,37 @@ class WebsiteManager:
                     "Password": Passwd,
                     "Path": path
                 }
-                mkobj = RemoteBackupConfig(owner=admin, configtype=ConfigType, config=json.dumps(config))
-                mkobj.save()
+            elif ConfigType == "S3":
+                Provider = data['Provider']
+                if Provider == "Backblaze":
+                    S3keyname = data['S3keyname']
+                    SecertKey = data['SecertKey']
+                    AccessKey = data['AccessKey']
+                    EndUrl = data['EndUrl']
+                    config = {
+                        "Provider": Provider,
+                        "S3keyname": S3keyname,
+                        "SecertKey": SecertKey,
+                        "AccessKey": AccessKey,
+                        "EndUrl": EndUrl
+
+                    }
+                else:
+                    S3keyname = data['S3keyname']
+                    SecertKey = data['SecertKey']
+                    AccessKey = data['AccessKey']
+                    config = {
+                        "Provider": Provider,
+                        "S3keyname": S3keyname,
+                        "SecertKey": SecertKey,
+                        "AccessKey": AccessKey,
+
+                    }
+
+
+
+            mkobj = RemoteBackupConfig(owner=admin, configtype=ConfigType, config=json.dumps(config))
+            mkobj.save()
 
 
             time.sleep(1)
@@ -1174,11 +1227,46 @@ class WebsiteManager:
             ScheduleName = data['ScheduleName']
             RemoteConfigID = data['RemoteConfigID']
             BackupType = data['BackupType']
-            config = {
-                'BackupType': BackupType
-            }
+
 
             RemoteBackupConfigobj = RemoteBackupConfig.objects.get(pk=RemoteConfigID)
+            Rconfig = json.loads(RemoteBackupConfigobj.config)
+            provider = Rconfig['Provider']
+            if provider == "Backblaze":
+                EndURl = Rconfig['EndUrl']
+            elif provider == "Amazon":
+                EndURl = "https://s3.us-east-1.amazonaws.com"
+            elif provider == "Wasabi":
+                EndURl = "https://s3.wasabisys.com"
+
+            AccessKey = Rconfig['AccessKey']
+            SecertKey = Rconfig['SecertKey']
+
+            session = boto3.session.Session()
+
+            client = session.client(
+                's3',
+                endpoint_url=EndURl,
+                aws_access_key_id=AccessKey,
+                aws_secret_access_key=SecertKey,
+                verify=False
+            )
+
+            ############Creating Bucket
+            BucketName = randomPassword.generate_pass().lower()
+
+            try:
+                client.create_bucket(Bucket=BucketName)
+            except BaseException as msg:
+               logging.CyberCPLogFileWriter.writeToFile("Creating Bucket Error: %s"%str(msg))
+               data_ret = {'status': 0, 'error_message': str(msg)}
+               json_data = json.dumps(data_ret)
+               return HttpResponse(json_data)
+
+            config = {
+                'BackupType': BackupType,
+                'BucketName': BucketName
+            }
 
             svobj = RemoteBackupSchedule( RemoteBackupConfig=RemoteBackupConfigobj, Name=ScheduleName,
                                       timeintervel=Backfrequency, fileretention=FileRetention, config=json.dumps(config),
@@ -1230,6 +1318,30 @@ class WebsiteManager:
 
             svobj = RemoteBackupsites( owner=RemoteScheduleIDobj, WPsites = WPid, database = DBobj.pk)
             svobj.save()
+
+            data_ret = {'status': 1,  'error_message': 'None',}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0,  'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+    def UpdateRemoteschedules(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+            ScheduleID = data['ScheduleID']
+            Frequency = data['Frequency']
+            FileRetention = data['FileRetention']
+
+            scheduleobj = RemoteBackupSchedule.objects.get(pk=ScheduleID)
+            scheduleobj.timeintervel = Frequency
+            scheduleobj.fileretention = FileRetention
+            scheduleobj.save()
 
             data_ret = {'status': 1,  'error_message': 'None',}
             json_data = json.dumps(data_ret)

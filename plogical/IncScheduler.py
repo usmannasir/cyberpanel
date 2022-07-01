@@ -1,9 +1,11 @@
 #!/usr/local/CyberCP/bin/python
 import os.path
 import sys
+
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 import django
+
 django.setup()
 from IncBackups.IncBackupsControl import IncJobs
 from IncBackups.models import BackupJob
@@ -22,6 +24,7 @@ import requests
 import socket
 from websiteFunctions.models import NormalBackupJobs, NormalBackupJobLogs
 from boto3.s3.transfer import TransferConfig
+
 try:
     from s3Backups.models import BackupPlan, BackupLogs
     import boto3
@@ -63,7 +66,7 @@ class IncScheduler(multi.Thread):
             tempPath = "/home/cyberpanel/" + str(randint(1000, 9999))
             for job in BackupJob.objects.all():
                 logging.statusWriter(IncScheduler.logPath, 'Job Description:\n\n Destination: %s, Frequency: %s.\n ' % (
-                job.destination, job.frequency), 1)
+                    job.destination, job.frequency), 1)
                 if job.frequency == type:
                     for web in job.jobsites_set.all():
                         logging.statusWriter(IncScheduler.logPath, 'Backing up %s.' % (web.website), 1)
@@ -129,7 +132,7 @@ class IncScheduler(multi.Thread):
                 web = Websites.objects.get(domain=website)
 
                 message = '[%s Cron] Checking if %s has any pending commits on %s.' % (
-                type, website, time.strftime("%m.%d.%Y_%H-%M-%S"))
+                    type, website, time.strftime("%m.%d.%Y_%H-%M-%S"))
                 finalText = '%s\n' % (message)
                 GitLogs(owner=web, type='INFO', message=message).save()
 
@@ -148,7 +151,7 @@ class IncScheduler(multi.Thread):
                         data['domain'] = gitConf['domain']
                         data['folder'] = gitConf['folder']
                         data['commitMessage'] = 'Auto commit by CyberPanel %s cron on %s' % (
-                        type, time.strftime('%m-%d-%Y_%H-%M-%S'))
+                            type, time.strftime('%m-%d-%Y_%H-%M-%S'))
 
                         if gitConf['autoCommit'] == type:
 
@@ -182,7 +185,7 @@ class IncScheduler(multi.Thread):
                         finalText = '%s\n%s' % (finalText, message)
 
                 message = '[%s Cron] Finished checking for %s on %s.' % (
-                type, website, time.strftime("%m.%d.%Y_%H-%M-%S"))
+                    type, website, time.strftime("%m.%d.%Y_%H-%M-%S"))
                 finalText = '%s\n%s' % (finalText, message)
                 logging.SendEmail(web.adminEmail, web.adminEmail, finalText, 'Git report for %s.' % (web.domain))
                 GitLogs(owner=web, type='INFO', message=message).save()
@@ -333,7 +336,7 @@ class IncScheduler(multi.Thread):
                             if retValues[0] == 0:
                                 GDriveJobLogs(owner=items, status=backupSchedule.ERROR,
                                               message='[ERROR] Backup failed for %s, error: %s moving on..' % (
-                                              website.domain, retValues[1])).save()
+                                                  website.domain, retValues[1])).save()
                                 continue
 
                             completeFileToSend = retValues[1] + ".tar.gz"
@@ -378,12 +381,9 @@ class IncScheduler(multi.Thread):
                     GDriveJobLogs(owner=items, status=backupSchedule.INFO,
                                   message='Job Completed').save()
 
-
                     print("job com[leted")
 
-                    #logging.writeToFile('job completed')
-
-
+                    # logging.writeToFile('job completed')
 
                     url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
                     data = {
@@ -400,67 +400,67 @@ class IncScheduler(multi.Thread):
 
                             page_token = None
                             while True:
-                                response = drive.files().list(q="name='%s-%s'" % (items.name,ipAddress),
-                                    spaces='drive',
+                                response = drive.files().list(q="name='%s-%s'" % (items.name, ipAddress),
+                                                              spaces='drive',
                                                               fields='nextPageToken, files(id, name)',
                                                               pageToken=page_token).execute()
                                 for file in response.get('files', []):
                                     # Process change
-                                    #print('Fetch Main folder ID: %s (%s)' % (file.get('name'), file.get('id')))
-                                    #logging.writeToFile('Fetch Main folder ID: %s (%s)' % (file.get('name'), file.get('id')))
-                                    mainfolder_id= file.get('id')
+                                    # print('Fetch Main folder ID: %s (%s)' % (file.get('name'), file.get('id')))
+                                    # logging.writeToFile('Fetch Main folder ID: %s (%s)' % (file.get('name'), file.get('id')))
+                                    mainfolder_id = file.get('id')
                                 page_token = response.get('nextPageToken', None)
                                 if page_token is None:
                                     break
-                            #print("new job started ")
+                            # print("new job started ")
                             try:
                                 page_token = None
                                 while True:
-                                    response = drive.files().list(q="'%s' in parents"%(mainfolder_id),
-                                                                          spaces='drive',
-                                                                          fields='nextPageToken, files(id, name, createdTime)',
-                                                                          pageToken=page_token).execute()
+                                    response = drive.files().list(q="'%s' in parents" % (mainfolder_id),
+                                                                  spaces='drive',
+                                                                  fields='nextPageToken, files(id, name, createdTime)',
+                                                                  pageToken=page_token).execute()
                                     for file in response.get('files', []):
                                         # Process change
-                                        #print('Fetch all folders in main folder: %s (%s) time:-%s' % (file.get('name'), file.get('id'), file.get('createdTime')))
-                                        #logging.writeToFile('Fetch all folders in main folder: %s (%s) time:-%s' % (file.get('name'), file.get('id'),file.get('createdTime')))
+                                        # print('Fetch all folders in main folder: %s (%s) time:-%s' % (file.get('name'), file.get('id'), file.get('createdTime')))
+                                        # logging.writeToFile('Fetch all folders in main folder: %s (%s) time:-%s' % (file.get('name'), file.get('id'),file.get('createdTime')))
                                         ab = file.get('createdTime')[:10]
                                         filename = file.get('name')
                                         fileDeleteID = file.get('id')
-                                        timestamp = time.mktime(datetime.datetime.strptime(ab,"%Y-%m-%d").timetuple())
+                                        timestamp = time.mktime(datetime.datetime.strptime(ab, "%Y-%m-%d").timetuple())
                                         CUrrenttimestamp = time.time()
                                         timerrtention = gDriveData['FileRetentiontime']
-                                        if(timerrtention == '1d'):
+                                        if (timerrtention == '1d'):
                                             new = CUrrenttimestamp - float(86400)
-                                            if(new>=timestamp):
-                                                resp=drive.files().delete(fileId=fileDeleteID).execute()
-                                                logging.writeToFile('Delete file %s '%filename)
-                                        elif(timerrtention == '1w'):
+                                            if (new >= timestamp):
+                                                resp = drive.files().delete(fileId=fileDeleteID).execute()
+                                                logging.writeToFile('Delete file %s ' % filename)
+                                        elif (timerrtention == '1w'):
                                             new = CUrrenttimestamp - float(604800)
                                             if (new >= timestamp):
                                                 resp = drive.files().delete(fileId=fileDeleteID).execute()
-                                                logging.writeToFile('Delete file %s '%filename)
+                                                logging.writeToFile('Delete file %s ' % filename)
                                         elif (timerrtention == '1m'):
                                             new = CUrrenttimestamp - float(2592000)
                                             if (new >= timestamp):
                                                 resp = drive.files().delete(fileId=fileDeleteID).execute()
-                                                logging.writeToFile('Delete file %s '%filename)
+                                                logging.writeToFile('Delete file %s ' % filename)
                                         elif (timerrtention == '6m'):
                                             new = CUrrenttimestamp - float(15552000)
                                             if (new >= timestamp):
                                                 resp = drive.files().delete(fileId=fileDeleteID).execute()
-                                                logging.writeToFile('Delete file %s '%filename)
+                                                logging.writeToFile('Delete file %s ' % filename)
                                     page_token = response.get('nextPageToken', None)
                                     if page_token is None:
                                         break
 
-                               # logging.writeToFile('Createtime list - %s'%Createtime)
+                            # logging.writeToFile('Createtime list - %s'%Createtime)
 
                             except BaseException as msg:
-                                    print('An error occurred fetch child: %s' % msg)
-                                    logging.writeToFile('An error occurred fetch child: %s' % msg)
+                                print('An error occurred fetch child: %s' % msg)
+                                logging.writeToFile('An error occurred fetch child: %s' % msg)
                         except BaseException as msg:
-                            logging.writeToFile('job not completed [ERROR:]..%s'%msg)
+                            logging.writeToFile('job not completed [ERROR:]..%s' % msg)
 
             except BaseException as msg:
                 GDriveJobLogs(owner=items, status=backupSchedule.ERROR,
@@ -523,7 +523,7 @@ class IncScheduler(multi.Thread):
                     NormalBackupJobLogs.objects.filter(owner=backupjob).delete()
                     NormalBackupJobLogs(owner=backupjob, status=backupSchedule.INFO,
                                         message='Starting %s backup on %s..' % (
-                                        type, time.strftime("%m.%d.%Y_%H-%M-%S"))).save()
+                                            type, time.strftime("%m.%d.%Y_%H-%M-%S"))).save()
 
                     if oldJobContinue:
                         NormalBackupJobLogs(owner=backupjob, status=backupSchedule.INFO,
@@ -886,8 +886,7 @@ Automatic backup failed for %s on %s.
                         emailPath = '/home/vmail/%s/%s' % (website.domain, email.email.split('@')[0])
                         email.DiskUsage = virtualHostUtilities.getDiskUsageofPath(emailPath)
                         email.save()
-                        print('Disk Usage of %s is %s' % (email.email,email.DiskUsage))
-
+                        print('Disk Usage of %s is %s' % (email.email, email.DiskUsage))
 
                 config['DiskUsage'], config['DiskUsagePercentage'] = virtualHostUtilities.getDiskUsage(
                     "/home/" + website.domain, website.package.diskSpace)
@@ -947,14 +946,14 @@ Automatic backup failed for %s on %s.
 
                 if config['pluginUpdates'] == 'Enabled':
                     command = 'wp plugin update --all --minor --allow-root --path=/home/%s/public_html' % (
-                    config['domainName'])
+                        config['domainName'])
                     ProcessUtilities.executioner(command)
 
                 ### Themes, for plugins we will do minor updates only.
 
                 if config['themeUpdates'] == 'Enabled':
                     command = 'wp theme update --all --minor --allow-root --path=/home/%s/public_html' % (
-                    config['domainName'])
+                        config['domainName'])
                     ProcessUtilities.executioner(command)
 
             except BaseException as msg:
@@ -970,7 +969,7 @@ Automatic backup failed for %s on %s.
             from plogical.applicationInstaller import ApplicationInstaller
             for config in RemoteBackupSchedule.objects.all():
                 try:
-                    configbakup=json.loads(config.config)
+                    configbakup = json.loads(config.config)
                     backuptype = configbakup['BackupType']
                     if backuptype == 'Only DataBase':
                         Backuptype = "3"
@@ -983,118 +982,230 @@ Automatic backup failed for %s on %s.
                 try:
                     allRemoteBackupsiteobj = RemoteBackupsites.objects.filter(owner=config.pk)
                     for i in allRemoteBackupsiteobj:
-                        backupsiteID=i.WPsites
-                        wpsite=WPSites.objects.get(pk=backupsiteID)
-                        AdminID=wpsite.owner.admin_id
+                        backupsiteID = i.WPsites
+                        wpsite = WPSites.objects.get(pk=backupsiteID)
+                        AdminID = wpsite.owner.admin_id
                         Admin = Administrator.objects.get(pk=AdminID)
-                        extraArgs = {}
-                        extraArgs['adminID'] = Admin.pk
-                        extraArgs['WPid'] = wpsite.pk
-                        extraArgs['Backuptype'] = Backuptype
-                        extraArgs['BackupDestination'] = "SFTP"
-                        extraArgs['SFTPID'] = config.RemoteBackupConfig_id
 
-                        extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
                         Lastrun = config.lastrun
                         Currenttime = float(time.time())
                         if config.timeintervel == "30 Minutes":
                             al = float(Currenttime) - float(1800)
                             if float(al) >= float(Lastrun):
-                            # if 1 == 1:
+                            #if 1 == 1:
+                                extraArgs = {}
+                                extraArgs['adminID'] = Admin.pk
+                                extraArgs['WPid'] = wpsite.pk
+                                extraArgs['Backuptype'] = Backuptype
+                                extraArgs['BackupDestination'] = config.RemoteBackupConfig.configtype
+                                extraArgs['SFTPID'] = config.RemoteBackupConfig_id
+
+                                extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
                                 background = ApplicationInstaller('WPCreateBackup', extraArgs)
-                                status, msg = background.WPCreateBackup()
+                                status, msg, backupID = background.WPCreateBackup()
                                 if status == 1:
                                     filename = msg
-                                    IncScheduler.SendTORemote(filename, config.RemoteBackupConfig_id)
-                                    command = f"rm -r {filename}"
-                                    ProcessUtilities.executioner(command)
-                                    obj = RemoteBackupSchedule.objects.get(pk=config.id)
-                                    obj.lastrun = time.time()
-                                    obj.save()
+                                    if config.RemoteBackupConfig.configtype == "SFTP":
+                                        IncScheduler.SendTORemote(filename, config.RemoteBackupConfig_id)
+                                        command = f"rm -r {filename}"
+                                        ProcessUtilities.executioner(command)
+                                        obj = RemoteBackupSchedule.objects.get(pk=config.id)
+                                        obj.lastrun = time.time()
+                                        obj.save()
+                                    elif config.RemoteBackupConfig.configtype == "S3":
+                                        IncScheduler.SendToS3Cloud(filename, config.RemoteBackupConfig_id, backupID, config.id)
+                                        command = f"rm -r {filename}"
+                                        ProcessUtilities.executioner(command)
+                                        obj = RemoteBackupSchedule.objects.get(pk=config.id)
+                                        obj.lastrun = time.time()
+                                        obj.save()
                         elif config.timeintervel == "1 Hour":
                             al = float(Currenttime) - float(3600)
                             if float(al) >= float(Lastrun):
+                                # if 1 == 1:
+                                extraArgs = {}
+                                extraArgs['adminID'] = Admin.pk
+                                extraArgs['WPid'] = wpsite.pk
+                                extraArgs['Backuptype'] = Backuptype
+                                extraArgs['BackupDestination'] = config.RemoteBackupConfig.configtype
+                                extraArgs['SFTPID'] = config.RemoteBackupConfig_id
+
+                                extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
                                 background = ApplicationInstaller('WPCreateBackup', extraArgs)
-                                status, msg = background.WPCreateBackup()
+                                status, msg, backupID = background.WPCreateBackup()
                                 if status == 1:
                                     filename = msg
-                                    IncScheduler.SendTORemote(filename, config.RemoteBackupConfig_id)
-                                    command = f"rm -r {filename}"
-                                    ProcessUtilities.executioner(command)
-                                    obj = RemoteBackupSchedule.objects.get(pk=config.id)
-                                    obj.lastrun = time.time()
-                                    obj.save()
+                                    if config.RemoteBackupConfig.configtype == "SFTP":
+                                        IncScheduler.SendTORemote(filename, config.RemoteBackupConfig_id)
+                                        command = f"rm -r {filename}"
+                                        ProcessUtilities.executioner(command)
+                                        obj = RemoteBackupSchedule.objects.get(pk=config.id)
+                                        obj.lastrun = time.time()
+                                        obj.save()
+                                    elif config.RemoteBackupConfig.configtype == "S3":
+                                        IncScheduler.SendToS3Cloud(filename, config.RemoteBackupConfig_id, backupID,
+                                                                   config.id)
+                                        command = f"rm -r {filename}"
+                                        ProcessUtilities.executioner(command)
+                                        obj = RemoteBackupSchedule.objects.get(pk=config.id)
+                                        obj.lastrun = time.time()
+                                        obj.save()
                         elif config.timeintervel == "6 Hours":
                             al = float(Currenttime) - float(21600)
                             if float(al) >= float(Lastrun):
+                                extraArgs = {}
+                                extraArgs['adminID'] = Admin.pk
+                                extraArgs['WPid'] = wpsite.pk
+                                extraArgs['Backuptype'] = Backuptype
+                                extraArgs['BackupDestination'] = "SFTP"
+                                extraArgs['SFTPID'] = config.RemoteBackupConfig_id
+
+                                extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
                                 background = ApplicationInstaller('WPCreateBackup', extraArgs)
-                                status, msg = background.WPCreateBackup()
+                                status, msg, backupID = background.WPCreateBackup()
                                 if status == 1:
                                     filename = msg
-                                    IncScheduler.SendTORemote(filename, config.RemoteBackupConfig_id)
-                                    command = f"rm -r {filename}"
-                                    ProcessUtilities.executioner(command)
-                                    obj = RemoteBackupSchedule.objects.get(pk=config.id)
-                                    obj.lastrun = time.time()
-                                    obj.save()
+                                    if config.RemoteBackupConfig.configtype == "SFTP":
+                                        IncScheduler.SendTORemote(filename, config.RemoteBackupConfig_id)
+                                        command = f"rm -r {filename}"
+                                        ProcessUtilities.executioner(command)
+                                        obj = RemoteBackupSchedule.objects.get(pk=config.id)
+                                        obj.lastrun = time.time()
+                                        obj.save()
+                                    elif config.RemoteBackupConfig.configtype == "S3":
+                                        IncScheduler.SendToS3Cloud(filename, config.RemoteBackupConfig_id, backupID,
+                                                                   config.id)
+                                        command = f"rm -r {filename}"
+                                        ProcessUtilities.executioner(command)
+                                        obj = RemoteBackupSchedule.objects.get(pk=config.id)
+                                        obj.lastrun = time.time()
+                                        obj.save()
                         elif config.timeintervel == "12 Hours":
                             al = float(Currenttime) - float(43200)
                             if float(al) >= float(Lastrun):
+                                extraArgs = {}
+                                extraArgs['adminID'] = Admin.pk
+                                extraArgs['WPid'] = wpsite.pk
+                                extraArgs['Backuptype'] = Backuptype
+                                extraArgs['BackupDestination'] = "SFTP"
+                                extraArgs['SFTPID'] = config.RemoteBackupConfig_id
+
+                                extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
                                 background = ApplicationInstaller('WPCreateBackup', extraArgs)
-                                status, msg = background.WPCreateBackup()
+                                status, msg, backupID = background.WPCreateBackup()
                                 if status == 1:
                                     filename = msg
-                                    IncScheduler.SendTORemote(filename, config.RemoteBackupConfig_id)
-                                    command = f"rm -r {filename}"
-                                    ProcessUtilities.executioner(command)
-                                    obj = RemoteBackupSchedule.objects.get(pk=config.id)
-                                    obj.lastrun = time.time()
-                                    obj.save()
+                                    if config.RemoteBackupConfig.configtype == "SFTP":
+                                        IncScheduler.SendTORemote(filename, config.RemoteBackupConfig_id)
+                                        command = f"rm -r {filename}"
+                                        ProcessUtilities.executioner(command)
+                                        obj = RemoteBackupSchedule.objects.get(pk=config.id)
+                                        obj.lastrun = time.time()
+                                        obj.save()
+                                    elif config.RemoteBackupConfig.configtype == "S3":
+                                        IncScheduler.SendToS3Cloud(filename, config.RemoteBackupConfig_id, backupID,
+                                                                   config.id)
+                                        command = f"rm -r {filename}"
+                                        ProcessUtilities.executioner(command)
+                                        obj = RemoteBackupSchedule.objects.get(pk=config.id)
+                                        obj.lastrun = time.time()
+                                        obj.save()
                         elif config.timeintervel == "1 Day":
                             al = float(Currenttime) - float(86400)
                             if float(al) >= float(Lastrun):
+                                extraArgs = {}
+                                extraArgs['adminID'] = Admin.pk
+                                extraArgs['WPid'] = wpsite.pk
+                                extraArgs['Backuptype'] = Backuptype
+                                extraArgs['BackupDestination'] = "SFTP"
+                                extraArgs['SFTPID'] = config.RemoteBackupConfig_id
+
+                                extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
                                 background = ApplicationInstaller('WPCreateBackup', extraArgs)
-                                status, msg = background.WPCreateBackup()
+                                status, msg, backupID = background.WPCreateBackup()
                                 if status == 1:
                                     filename = msg
-                                    IncScheduler.SendTORemote(filename, config.RemoteBackupConfig_id)
-                                    command = f"rm -r {filename}"
-                                    ProcessUtilities.executioner(command)
-                                    obj = RemoteBackupSchedule.objects.get(pk=config.id)
-                                    obj.lastrun = time.time()
-                                    obj.save()
+                                    if config.RemoteBackupConfig.configtype == "SFTP":
+                                        IncScheduler.SendTORemote(filename, config.RemoteBackupConfig_id)
+                                        command = f"rm -r {filename}"
+                                        ProcessUtilities.executioner(command)
+                                        obj = RemoteBackupSchedule.objects.get(pk=config.id)
+                                        obj.lastrun = time.time()
+                                        obj.save()
+                                    elif config.RemoteBackupConfig.configtype == "S3":
+                                        IncScheduler.SendToS3Cloud(filename, config.RemoteBackupConfig_id, backupID,
+                                                                   config.id)
+                                        command = f"rm -r {filename}"
+                                        ProcessUtilities.executioner(command)
+                                        obj = RemoteBackupSchedule.objects.get(pk=config.id)
+                                        obj.lastrun = time.time()
+                                        obj.save()
                         elif config.timeintervel == "3 Days":
                             al = float(Currenttime) - float(259200)
                             if float(al) >= float(Lastrun):
+                                extraArgs = {}
+                                extraArgs['adminID'] = Admin.pk
+                                extraArgs['WPid'] = wpsite.pk
+                                extraArgs['Backuptype'] = Backuptype
+                                extraArgs['BackupDestination'] = "SFTP"
+                                extraArgs['SFTPID'] = config.RemoteBackupConfig_id
+
+                                extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
                                 background = ApplicationInstaller('WPCreateBackup', extraArgs)
-                                status, msg = background.WPCreateBackup()
+                                status, msg, backupID = background.WPCreateBackup()
                                 if status == 1:
                                     filename = msg
-                                    IncScheduler.SendTORemote(filename, config.RemoteBackupConfig_id)
-                                    command = f"rm -r {filename}"
-                                    ProcessUtilities.executioner(command)
-                                    obj = RemoteBackupSchedule.objects.get(pk=config.id)
-                                    obj.lastrun = time.time()
-                                    obj.save()
+                                    if config.RemoteBackupConfig.configtype == "SFTP":
+                                        IncScheduler.SendTORemote(filename, config.RemoteBackupConfig_id)
+                                        command = f"rm -r {filename}"
+                                        ProcessUtilities.executioner(command)
+                                        obj = RemoteBackupSchedule.objects.get(pk=config.id)
+                                        obj.lastrun = time.time()
+                                        obj.save()
+                                    elif config.RemoteBackupConfig.configtype == "S3":
+                                        IncScheduler.SendToS3Cloud(filename, config.RemoteBackupConfig_id, backupID,
+                                                                   config.id)
+                                        command = f"rm -r {filename}"
+                                        ProcessUtilities.executioner(command)
+                                        obj = RemoteBackupSchedule.objects.get(pk=config.id)
+                                        obj.lastrun = time.time()
+                                        obj.save()
                         elif config.timeintervel == "1 Week":
                             al = float(Currenttime) - float(604800)
                             if float(al) >= float(Lastrun):
+                                extraArgs = {}
+                                extraArgs['adminID'] = Admin.pk
+                                extraArgs['WPid'] = wpsite.pk
+                                extraArgs['Backuptype'] = Backuptype
+                                extraArgs['BackupDestination'] = "SFTP"
+                                extraArgs['SFTPID'] = config.RemoteBackupConfig_id
+
+                                extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
                                 background = ApplicationInstaller('WPCreateBackup', extraArgs)
-                                status, msg = background.WPCreateBackup()
+                                status, msg, backupID = background.WPCreateBackup()
                                 if status == 1:
                                     filename = msg
-                                    IncScheduler.SendTORemote(filename, config.RemoteBackupConfig_id)
-                                    command = f"rm -r {filename}"
-                                    ProcessUtilities.executioner(command)
-                                    obj = RemoteBackupSchedule.objects.get(pk=config.id)
-                                    obj.lastrun = time.time()
-                                    obj.save()
+                                    if config.RemoteBackupConfig.configtype == "SFTP":
+                                        IncScheduler.SendTORemote(filename, config.RemoteBackupConfig_id)
+                                        command = f"rm -r {filename}"
+                                        ProcessUtilities.executioner(command)
+                                        obj = RemoteBackupSchedule.objects.get(pk=config.id)
+                                        obj.lastrun = time.time()
+                                        obj.save()
+                                    elif config.RemoteBackupConfig.configtype == "S3":
+                                        IncScheduler.SendToS3Cloud(filename, config.RemoteBackupConfig_id, backupID,
+                                                                   config.id)
+                                        command = f"rm -r {filename}"
+                                        ProcessUtilities.executioner(command)
+                                        obj = RemoteBackupSchedule.objects.get(pk=config.id)
+                                        obj.lastrun = time.time()
+                                        obj.save()
                 except BaseException as msg:
+                    print("Error in Sites:%s" % str(msg))
                     continue
         except BaseException as msg:
-            print("Error: [RemoteBackup]: %s"%str(msg))
+            print("Error: [RemoteBackup]: %s" % str(msg))
             logging.writeToFile('%s. [RemoteBackup]' % (str(msg)))
-
 
     @staticmethod
     def SendTORemote(FileName, RemoteBackupID):
@@ -1117,7 +1228,6 @@ Automatic backup failed for %s on %s.
             with pysftp.Connection(HostName, username=Username, password=Password, cnopts=cnopts) as sftp:
                 print("Connection succesfully stablished ... ")
 
-
                 try:
                     with sftp.cd(Path):
                         sftp.put(FileName)
@@ -1131,6 +1241,109 @@ Automatic backup failed for %s on %s.
         except BaseException as msg:
             logging.writeToFile('%s. [SendTORemote]' % (str(msg)))
 
+    @staticmethod
+    def SendToS3Cloud(FileName, RemoteBackupCofigID, backupID, scheduleID):
+        import boto3
+        import json
+        import time
+        from websiteFunctions.models import RemoteBackupConfig, WPSitesBackup, RemoteBackupSchedule
+        import plogical.randomPassword as randomPassword
+        try:
+            print("UPloading to S3")
+            Backupobj = WPSitesBackup.objects.get(pk=backupID)
+            backupConfig = json.loads(Backupobj.config)
+            websitedomain = backupConfig['WebDomain']
+            RemoteBackupOBJ = RemoteBackupConfig.objects.get(pk=RemoteBackupCofigID)
+            config = json.loads(RemoteBackupOBJ.config)
+            provider = config['Provider']
+            if provider == "Backblaze":
+                EndURl = config['EndUrl']
+            elif provider == "Amazon":
+                EndURl = "https://s3.us-east-1.amazonaws.com"
+            elif provider == "Wasabi":
+                EndURl = "https://s3.wasabisys.com"
+
+            AccessKey = config['AccessKey']
+            SecertKey = config['SecertKey']
+
+            session = boto3.session.Session()
+
+            client = session.client(
+                's3',
+                endpoint_url=EndURl,
+                aws_access_key_id=AccessKey,
+                aws_secret_access_key=SecertKey,
+                verify=False
+            )
+
+            # ############Creating Bucket
+            # BucketName = randomPassword.generate_pass().lower()
+            # print("BucketName...%s"%BucketName)
+            #
+            # try:
+            #     client.create_bucket(Bucket=BucketName)
+            # except BaseException as msg:
+            #     print("Error in Creating bucket...: %s" % str(msg))
+            #     logging.writeToFile("Create bucket error---%s:" % str(msg))
+
+
+            ####getting Bucket from backup schedule
+            Scheduleobj = RemoteBackupSchedule.objects.get(pk=scheduleID)
+            Scheduleconfig = json.loads(Scheduleobj.config)
+            BucketName = Scheduleconfig['BucketName']
+            #####Uploading File
+
+            uploadfilename = 'backup-' + websitedomain + "-" + time.strftime("%m.%d.%Y_%H-%M-%S")
+            print("uploadfilename....%s"%uploadfilename)
+
+            try:
+                res = client.upload_file(Filename=FileName, Bucket=BucketName, Key=uploadfilename)
+                print("res of Uploading...: %s" % res)
+
+            except BaseException as msg:
+                print("Error in Uploading...: %s" % msg)
+
+            ###################### version id, this only applied to blackbaze
+            try:
+
+                s3 = boto3.resource(
+                    's3',
+                    endpoint_url=EndURl,
+                    aws_access_key_id=AccessKey,
+                    aws_secret_access_key=SecertKey,
+                )
+
+                bucket = BucketName
+                key = uploadfilename
+                versions = s3.Bucket(bucket).object_versions.filter(Prefix=key)
+                data = {}
+
+                for version in versions:
+                    obj = version.get()
+                    print("VersionId---%s:" % obj.get('VersionId'))
+                    data['backupVersionId'] = obj.get('VersionId')
+
+                ab = os.path.getsize(FileName)
+                filesize = float(ab) / 1024.0
+
+                backupConfig['uploadfilename'] = uploadfilename
+                backupConfig['backupVersionId'] = data['backupVersionId']
+                backupConfig['BucketName'] = BucketName
+                backupConfig['Uplaodingfilesize'] = filesize
+                Backupobj.config = json.dumps(backupConfig)
+                Backupobj.save()
+
+            except BaseException as msg:
+                print("Version ID Error: %s"%str(msg))
+
+
+
+
+
+
+        except BaseException as msg:
+            print('%s. [SendToS3Cloud]' % (str(msg)))
+            logging.writeToFile('%s. [SendToS3Cloud]' % (str(msg)))
 
 
 def main():
@@ -1150,7 +1363,6 @@ def main():
 
     ib = IncScheduler('startBackup', {'freq': args.function})
     ib.start()
-
 
     ###
 
