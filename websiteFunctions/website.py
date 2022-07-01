@@ -25,6 +25,7 @@ from plogical.mailUtilities import mailUtilities
 from random import randint
 import time
 import re
+import boto3
 from plogical.childDomain import ChildDomainManager
 from math import ceil
 from plogical.alias import AliasManager
@@ -1226,11 +1227,46 @@ class WebsiteManager:
             ScheduleName = data['ScheduleName']
             RemoteConfigID = data['RemoteConfigID']
             BackupType = data['BackupType']
-            config = {
-                'BackupType': BackupType
-            }
+
 
             RemoteBackupConfigobj = RemoteBackupConfig.objects.get(pk=RemoteConfigID)
+            Rconfig = json.loads(RemoteBackupConfigobj.config)
+            provider = Rconfig['Provider']
+            if provider == "Backblaze":
+                EndURl = Rconfig['EndUrl']
+            elif provider == "Amazon":
+                EndURl = "https://s3.us-east-1.amazonaws.com"
+            elif provider == "Wasabi":
+                EndURl = "https://s3.wasabisys.com"
+
+            AccessKey = Rconfig['AccessKey']
+            SecertKey = Rconfig['SecertKey']
+
+            session = boto3.session.Session()
+
+            client = session.client(
+                's3',
+                endpoint_url=EndURl,
+                aws_access_key_id=AccessKey,
+                aws_secret_access_key=SecertKey,
+                verify=False
+            )
+
+            ############Creating Bucket
+            BucketName = randomPassword.generate_pass().lower()
+
+            try:
+                client.create_bucket(Bucket=BucketName)
+            except BaseException as msg:
+               logging.CyberCPLogFileWriter.writeToFile("Creating Bucket Error: %s"%str(msg))
+               data_ret = {'status': 0, 'error_message': str(msg)}
+               json_data = json.dumps(data_ret)
+               return HttpResponse(json_data)
+
+            config = {
+                'BackupType': BackupType,
+                'BucketName': BucketName
+            }
 
             svobj = RemoteBackupSchedule( RemoteBackupConfig=RemoteBackupConfigobj, Name=ScheduleName,
                                       timeintervel=Backfrequency, fileretention=FileRetention, config=json.dumps(config),

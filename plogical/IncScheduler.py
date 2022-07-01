@@ -991,8 +991,8 @@ Automatic backup failed for %s on %s.
                         Currenttime = float(time.time())
                         if config.timeintervel == "30 Minutes":
                             al = float(Currenttime) - float(1800)
-                            # if float(al) >= float(Lastrun):
-                            if 1 == 1:
+                            if float(al) >= float(Lastrun):
+                            #if 1 == 1:
                                 extraArgs = {}
                                 extraArgs['adminID'] = Admin.pk
                                 extraArgs['WPid'] = wpsite.pk
@@ -1013,7 +1013,7 @@ Automatic backup failed for %s on %s.
                                         obj.lastrun = time.time()
                                         obj.save()
                                     elif config.RemoteBackupConfig.configtype == "S3":
-                                        IncScheduler.SendToS3Cloud(filename, config.RemoteBackupConfig_id, backupID)
+                                        IncScheduler.SendToS3Cloud(filename, config.RemoteBackupConfig_id, backupID, config.id)
                                         command = f"rm -r {filename}"
                                         ProcessUtilities.executioner(command)
                                         obj = RemoteBackupSchedule.objects.get(pk=config.id)
@@ -1043,7 +1043,8 @@ Automatic backup failed for %s on %s.
                                         obj.lastrun = time.time()
                                         obj.save()
                                     elif config.RemoteBackupConfig.configtype == "S3":
-                                        IncScheduler.SendToS3Cloud(filename, config.RemoteBackupConfig_id, backupID)
+                                        IncScheduler.SendToS3Cloud(filename, config.RemoteBackupConfig_id, backupID,
+                                                                   config.id)
                                         command = f"rm -r {filename}"
                                         ProcessUtilities.executioner(command)
                                         obj = RemoteBackupSchedule.objects.get(pk=config.id)
@@ -1072,7 +1073,8 @@ Automatic backup failed for %s on %s.
                                         obj.lastrun = time.time()
                                         obj.save()
                                     elif config.RemoteBackupConfig.configtype == "S3":
-                                        IncScheduler.SendToS3Cloud(filename, config.RemoteBackupConfig_id, backupID)
+                                        IncScheduler.SendToS3Cloud(filename, config.RemoteBackupConfig_id, backupID,
+                                                                   config.id)
                                         command = f"rm -r {filename}"
                                         ProcessUtilities.executioner(command)
                                         obj = RemoteBackupSchedule.objects.get(pk=config.id)
@@ -1101,7 +1103,8 @@ Automatic backup failed for %s on %s.
                                         obj.lastrun = time.time()
                                         obj.save()
                                     elif config.RemoteBackupConfig.configtype == "S3":
-                                        IncScheduler.SendToS3Cloud(filename, config.RemoteBackupConfig_id, backupID)
+                                        IncScheduler.SendToS3Cloud(filename, config.RemoteBackupConfig_id, backupID,
+                                                                   config.id)
                                         command = f"rm -r {filename}"
                                         ProcessUtilities.executioner(command)
                                         obj = RemoteBackupSchedule.objects.get(pk=config.id)
@@ -1130,7 +1133,8 @@ Automatic backup failed for %s on %s.
                                         obj.lastrun = time.time()
                                         obj.save()
                                     elif config.RemoteBackupConfig.configtype == "S3":
-                                        IncScheduler.SendToS3Cloud(filename, config.RemoteBackupConfig_id, backupID)
+                                        IncScheduler.SendToS3Cloud(filename, config.RemoteBackupConfig_id, backupID,
+                                                                   config.id)
                                         command = f"rm -r {filename}"
                                         ProcessUtilities.executioner(command)
                                         obj = RemoteBackupSchedule.objects.get(pk=config.id)
@@ -1159,7 +1163,8 @@ Automatic backup failed for %s on %s.
                                         obj.lastrun = time.time()
                                         obj.save()
                                     elif config.RemoteBackupConfig.configtype == "S3":
-                                        IncScheduler.SendToS3Cloud(filename, config.RemoteBackupConfig_id, backupID)
+                                        IncScheduler.SendToS3Cloud(filename, config.RemoteBackupConfig_id, backupID,
+                                                                   config.id)
                                         command = f"rm -r {filename}"
                                         ProcessUtilities.executioner(command)
                                         obj = RemoteBackupSchedule.objects.get(pk=config.id)
@@ -1188,7 +1193,8 @@ Automatic backup failed for %s on %s.
                                         obj.lastrun = time.time()
                                         obj.save()
                                     elif config.RemoteBackupConfig.configtype == "S3":
-                                        IncScheduler.SendToS3Cloud(filename, config.RemoteBackupConfig_id, backupID)
+                                        IncScheduler.SendToS3Cloud(filename, config.RemoteBackupConfig_id, backupID,
+                                                                   config.id)
                                         command = f"rm -r {filename}"
                                         ProcessUtilities.executioner(command)
                                         obj = RemoteBackupSchedule.objects.get(pk=config.id)
@@ -1236,11 +1242,11 @@ Automatic backup failed for %s on %s.
             logging.writeToFile('%s. [SendTORemote]' % (str(msg)))
 
     @staticmethod
-    def SendToS3Cloud(FileName, RemoteBackupCofigID, backupID):
+    def SendToS3Cloud(FileName, RemoteBackupCofigID, backupID, scheduleID):
         import boto3
         import json
         import time
-        from websiteFunctions.models import RemoteBackupConfig, WPSitesBackup
+        from websiteFunctions.models import RemoteBackupConfig, WPSitesBackup, RemoteBackupSchedule
         import plogical.randomPassword as randomPassword
         try:
             print("UPloading to S3")
@@ -1270,16 +1276,21 @@ Automatic backup failed for %s on %s.
                 verify=False
             )
 
-            ############Creating Bucket
-            BucketName = randomPassword.generate_pass().lower()
-            print("BucketName...%s"%BucketName)
+            # ############Creating Bucket
+            # BucketName = randomPassword.generate_pass().lower()
+            # print("BucketName...%s"%BucketName)
+            #
+            # try:
+            #     client.create_bucket(Bucket=BucketName)
+            # except BaseException as msg:
+            #     print("Error in Creating bucket...: %s" % str(msg))
+            #     logging.writeToFile("Create bucket error---%s:" % str(msg))
 
-            try:
-                client.create_bucket(Bucket=BucketName)
-            except BaseException as msg:
-                print("Error in Creating bucket...: %s" % str(msg))
-                logging.writeToFile("Create bucket error---%s:" % str(msg))
 
+            ####getting Bucket from backup schedule
+            Scheduleobj = RemoteBackupSchedule.objects.get(pk=scheduleID)
+            Scheduleconfig = json.loads(Scheduleobj.config)
+            BucketName = Scheduleconfig['BucketName']
             #####Uploading File
 
             uploadfilename = 'backup-' + websitedomain + "-" + time.strftime("%m.%d.%Y_%H-%M-%S")
