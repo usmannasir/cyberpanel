@@ -960,7 +960,7 @@ Automatic backup failed for %s on %s.
                 logging.writeToFile('%s. [WPUpdates:767]' % (str(msg)))
 
     @staticmethod
-    def RemoteBackup():
+    def RemoteBackup(function):
         try:
             from websiteFunctions.models import RemoteBackupSchedule, RemoteBackupsites, WPSites
             from loginSystem.models import Administrator
@@ -1352,6 +1352,10 @@ def main():
     parser.add_argument('--planName', help='Plan name for AWS!')
     args = parser.parse_args()
 
+    if args.function == '30 Minutes' or args.function == '30 Minutes' or args.function == '1 Hour' or args.function == '6 Hours' or args.function == '12 Hours' or args.function == '1 Day' or args.function == '3 Days' or args.function == '1 Week':
+        IncScheduler.RemoteBackup(args.function)
+        return 0
+
     if args.function == 'forceRunAWSBackup':
         IncScheduler.forceRunAWSBackup(args.planName)
         return 0
@@ -1367,12 +1371,12 @@ def main():
     ###
 
     IncScheduler.startBackup(args.function)
-    IncScheduler.RemoteBackup()
-    # IncScheduler.runGoogleDriveBackups(args.function)
-    # IncScheduler.git(args.function)
-    # IncScheduler.checkDiskUsage()
-    # IncScheduler.startNormalBackups(args.function)
-    # IncScheduler.runAWSBackups(args.function)
+
+    IncScheduler.runGoogleDriveBackups(args.function)
+    IncScheduler.git(args.function)
+    IncScheduler.checkDiskUsage()
+    IncScheduler.startNormalBackups(args.function)
+    IncScheduler.runAWSBackups(args.function)
 
     ib.join()
 
