@@ -989,217 +989,232 @@ Automatic backup failed for %s on %s.
 
                         Lastrun = config.lastrun
                         Currenttime = float(time.time())
-                        if config.timeintervel == "30 Minutes":
-                            al = float(Currenttime) - float(1800)
-                            if float(al) >= float(Lastrun):
+
+                        if config.timeintervel == function:
+                            #al = float(Currenttime) - float(1800)
+                            #if float(al) >= float(Lastrun):
                             #if 1 == 1:
-                                extraArgs = {}
-                                extraArgs['adminID'] = Admin.pk
-                                extraArgs['WPid'] = wpsite.pk
-                                extraArgs['Backuptype'] = Backuptype
-                                extraArgs['BackupDestination'] = config.RemoteBackupConfig.configtype
-                                extraArgs['SFTPID'] = config.RemoteBackupConfig_id
 
-                                extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
-                                background = ApplicationInstaller('WPCreateBackup', extraArgs)
-                                status, msg, backupID = background.WPCreateBackup()
-                                if status == 1:
-                                    filename = msg
-                                    if config.RemoteBackupConfig.configtype == "SFTP":
-                                        IncScheduler.SendTORemote(filename, config.RemoteBackupConfig_id)
-                                        command = f"rm -r {filename}"
-                                        ProcessUtilities.executioner(command)
-                                        obj = RemoteBackupSchedule.objects.get(pk=config.id)
-                                        obj.lastrun = time.time()
-                                        obj.save()
-                                    elif config.RemoteBackupConfig.configtype == "S3":
-                                        IncScheduler.SendToS3Cloud(filename, config.RemoteBackupConfig_id, backupID, config.id)
-                                        command = f"rm -r {filename}"
-                                        ProcessUtilities.executioner(command)
-                                        obj = RemoteBackupSchedule.objects.get(pk=config.id)
-                                        obj.lastrun = time.time()
-                                        obj.save()
-                        elif config.timeintervel == "1 Hour":
-                            al = float(Currenttime) - float(3600)
-                            if float(al) >= float(Lastrun):
-                                # if 1 == 1:
-                                extraArgs = {}
-                                extraArgs['adminID'] = Admin.pk
-                                extraArgs['WPid'] = wpsite.pk
-                                extraArgs['Backuptype'] = Backuptype
-                                extraArgs['BackupDestination'] = config.RemoteBackupConfig.configtype
-                                extraArgs['SFTPID'] = config.RemoteBackupConfig_id
+                            extraArgs = {}
+                            extraArgs['adminID'] = Admin.pk
+                            extraArgs['WPid'] = wpsite.pk
+                            extraArgs['Backuptype'] = Backuptype
+                            extraArgs['BackupDestination'] = config.RemoteBackupConfig.configtype
+                            extraArgs['SFTPID'] = config.RemoteBackupConfig_id
 
-                                extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
-                                background = ApplicationInstaller('WPCreateBackup', extraArgs)
-                                status, msg, backupID = background.WPCreateBackup()
-                                if status == 1:
-                                    filename = msg
-                                    if config.RemoteBackupConfig.configtype == "SFTP":
-                                        IncScheduler.SendTORemote(filename, config.RemoteBackupConfig_id)
-                                        command = f"rm -r {filename}"
-                                        ProcessUtilities.executioner(command)
-                                        obj = RemoteBackupSchedule.objects.get(pk=config.id)
-                                        obj.lastrun = time.time()
-                                        obj.save()
-                                    elif config.RemoteBackupConfig.configtype == "S3":
-                                        IncScheduler.SendToS3Cloud(filename, config.RemoteBackupConfig_id, backupID,
-                                                                   config.id)
-                                        command = f"rm -r {filename}"
-                                        ProcessUtilities.executioner(command)
-                                        obj = RemoteBackupSchedule.objects.get(pk=config.id)
-                                        obj.lastrun = time.time()
-                                        obj.save()
-                        elif config.timeintervel == "6 Hours":
-                            al = float(Currenttime) - float(21600)
-                            if float(al) >= float(Lastrun):
-                                extraArgs = {}
-                                extraArgs['adminID'] = Admin.pk
-                                extraArgs['WPid'] = wpsite.pk
-                                extraArgs['Backuptype'] = Backuptype
-                                extraArgs['BackupDestination'] = "SFTP"
-                                extraArgs['SFTPID'] = config.RemoteBackupConfig_id
+                            extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
+                            background = ApplicationInstaller('WPCreateBackup', extraArgs)
+                            status, msg, backupID = background.WPCreateBackup()
+                            if status == 1:
+                                filename = msg
+                                if config.RemoteBackupConfig.configtype == "SFTP":
+                                    IncScheduler.SendTORemote(filename, config.RemoteBackupConfig_id)
+                                    command = f"rm -r {filename}"
+                                    ProcessUtilities.executioner(command)
+                                    obj = RemoteBackupSchedule.objects.get(pk=config.id)
+                                    obj.lastrun = time.time()
+                                    obj.save()
+                                elif config.RemoteBackupConfig.configtype == "S3":
+                                    IncScheduler.SendToS3Cloud(filename, config.RemoteBackupConfig_id, backupID,
+                                                               config.id)
+                                    command = f"rm -r {filename}"
+                                    ProcessUtilities.executioner(command)
+                                    obj = RemoteBackupSchedule.objects.get(pk=config.id)
+                                    obj.lastrun = time.time()
+                                    obj.save()
 
-                                extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
-                                background = ApplicationInstaller('WPCreateBackup', extraArgs)
-                                status, msg, backupID = background.WPCreateBackup()
-                                if status == 1:
-                                    filename = msg
-                                    if config.RemoteBackupConfig.configtype == "SFTP":
-                                        IncScheduler.SendTORemote(filename, config.RemoteBackupConfig_id)
-                                        command = f"rm -r {filename}"
-                                        ProcessUtilities.executioner(command)
-                                        obj = RemoteBackupSchedule.objects.get(pk=config.id)
-                                        obj.lastrun = time.time()
-                                        obj.save()
-                                    elif config.RemoteBackupConfig.configtype == "S3":
-                                        IncScheduler.SendToS3Cloud(filename, config.RemoteBackupConfig_id, backupID,
-                                                                   config.id)
-                                        command = f"rm -r {filename}"
-                                        ProcessUtilities.executioner(command)
-                                        obj = RemoteBackupSchedule.objects.get(pk=config.id)
-                                        obj.lastrun = time.time()
-                                        obj.save()
-                        elif config.timeintervel == "12 Hours":
-                            al = float(Currenttime) - float(43200)
-                            if float(al) >= float(Lastrun):
-                                extraArgs = {}
-                                extraArgs['adminID'] = Admin.pk
-                                extraArgs['WPid'] = wpsite.pk
-                                extraArgs['Backuptype'] = Backuptype
-                                extraArgs['BackupDestination'] = "SFTP"
-                                extraArgs['SFTPID'] = config.RemoteBackupConfig_id
+                        elif config.timeintervel == function:
+                            #al = float(Currenttime) - float(3600)
+                            #if float(al) >= float(Lastrun):
+                            # if 1 == 1:
 
-                                extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
-                                background = ApplicationInstaller('WPCreateBackup', extraArgs)
-                                status, msg, backupID = background.WPCreateBackup()
-                                if status == 1:
-                                    filename = msg
-                                    if config.RemoteBackupConfig.configtype == "SFTP":
-                                        IncScheduler.SendTORemote(filename, config.RemoteBackupConfig_id)
-                                        command = f"rm -r {filename}"
-                                        ProcessUtilities.executioner(command)
-                                        obj = RemoteBackupSchedule.objects.get(pk=config.id)
-                                        obj.lastrun = time.time()
-                                        obj.save()
-                                    elif config.RemoteBackupConfig.configtype == "S3":
-                                        IncScheduler.SendToS3Cloud(filename, config.RemoteBackupConfig_id, backupID,
-                                                                   config.id)
-                                        command = f"rm -r {filename}"
-                                        ProcessUtilities.executioner(command)
-                                        obj = RemoteBackupSchedule.objects.get(pk=config.id)
-                                        obj.lastrun = time.time()
-                                        obj.save()
-                        elif config.timeintervel == "1 Day":
-                            al = float(Currenttime) - float(86400)
-                            if float(al) >= float(Lastrun):
-                                extraArgs = {}
-                                extraArgs['adminID'] = Admin.pk
-                                extraArgs['WPid'] = wpsite.pk
-                                extraArgs['Backuptype'] = Backuptype
-                                extraArgs['BackupDestination'] = "SFTP"
-                                extraArgs['SFTPID'] = config.RemoteBackupConfig_id
+                            extraArgs = {}
+                            extraArgs['adminID'] = Admin.pk
+                            extraArgs['WPid'] = wpsite.pk
+                            extraArgs['Backuptype'] = Backuptype
+                            extraArgs['BackupDestination'] = config.RemoteBackupConfig.configtype
+                            extraArgs['SFTPID'] = config.RemoteBackupConfig_id
 
-                                extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
-                                background = ApplicationInstaller('WPCreateBackup', extraArgs)
-                                status, msg, backupID = background.WPCreateBackup()
-                                if status == 1:
-                                    filename = msg
-                                    if config.RemoteBackupConfig.configtype == "SFTP":
-                                        IncScheduler.SendTORemote(filename, config.RemoteBackupConfig_id)
-                                        command = f"rm -r {filename}"
-                                        ProcessUtilities.executioner(command)
-                                        obj = RemoteBackupSchedule.objects.get(pk=config.id)
-                                        obj.lastrun = time.time()
-                                        obj.save()
-                                    elif config.RemoteBackupConfig.configtype == "S3":
-                                        IncScheduler.SendToS3Cloud(filename, config.RemoteBackupConfig_id, backupID,
-                                                                   config.id)
-                                        command = f"rm -r {filename}"
-                                        ProcessUtilities.executioner(command)
-                                        obj = RemoteBackupSchedule.objects.get(pk=config.id)
-                                        obj.lastrun = time.time()
-                                        obj.save()
-                        elif config.timeintervel == "3 Days":
-                            al = float(Currenttime) - float(259200)
-                            if float(al) >= float(Lastrun):
-                                extraArgs = {}
-                                extraArgs['adminID'] = Admin.pk
-                                extraArgs['WPid'] = wpsite.pk
-                                extraArgs['Backuptype'] = Backuptype
-                                extraArgs['BackupDestination'] = "SFTP"
-                                extraArgs['SFTPID'] = config.RemoteBackupConfig_id
+                            extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
+                            background = ApplicationInstaller('WPCreateBackup', extraArgs)
+                            status, msg, backupID = background.WPCreateBackup()
+                            if status == 1:
+                                filename = msg
+                                if config.RemoteBackupConfig.configtype == "SFTP":
+                                    IncScheduler.SendTORemote(filename, config.RemoteBackupConfig_id)
+                                    command = f"rm -r {filename}"
+                                    ProcessUtilities.executioner(command)
+                                    obj = RemoteBackupSchedule.objects.get(pk=config.id)
+                                    obj.lastrun = time.time()
+                                    obj.save()
+                                elif config.RemoteBackupConfig.configtype == "S3":
+                                    IncScheduler.SendToS3Cloud(filename, config.RemoteBackupConfig_id, backupID,
+                                                               config.id)
+                                    command = f"rm -r {filename}"
+                                    ProcessUtilities.executioner(command)
+                                    obj = RemoteBackupSchedule.objects.get(pk=config.id)
+                                    obj.lastrun = time.time()
+                                    obj.save()
 
-                                extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
-                                background = ApplicationInstaller('WPCreateBackup', extraArgs)
-                                status, msg, backupID = background.WPCreateBackup()
-                                if status == 1:
-                                    filename = msg
-                                    if config.RemoteBackupConfig.configtype == "SFTP":
-                                        IncScheduler.SendTORemote(filename, config.RemoteBackupConfig_id)
-                                        command = f"rm -r {filename}"
-                                        ProcessUtilities.executioner(command)
-                                        obj = RemoteBackupSchedule.objects.get(pk=config.id)
-                                        obj.lastrun = time.time()
-                                        obj.save()
-                                    elif config.RemoteBackupConfig.configtype == "S3":
-                                        IncScheduler.SendToS3Cloud(filename, config.RemoteBackupConfig_id, backupID,
-                                                                   config.id)
-                                        command = f"rm -r {filename}"
-                                        ProcessUtilities.executioner(command)
-                                        obj = RemoteBackupSchedule.objects.get(pk=config.id)
-                                        obj.lastrun = time.time()
-                                        obj.save()
-                        elif config.timeintervel == "1 Week":
-                            al = float(Currenttime) - float(604800)
-                            if float(al) >= float(Lastrun):
-                                extraArgs = {}
-                                extraArgs['adminID'] = Admin.pk
-                                extraArgs['WPid'] = wpsite.pk
-                                extraArgs['Backuptype'] = Backuptype
-                                extraArgs['BackupDestination'] = "SFTP"
-                                extraArgs['SFTPID'] = config.RemoteBackupConfig_id
+                        elif config.timeintervel == function:
+                            #al = float(Currenttime) - float(21600)
+                            #if float(al) >= float(Lastrun):
 
-                                extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
-                                background = ApplicationInstaller('WPCreateBackup', extraArgs)
-                                status, msg, backupID = background.WPCreateBackup()
-                                if status == 1:
-                                    filename = msg
-                                    if config.RemoteBackupConfig.configtype == "SFTP":
-                                        IncScheduler.SendTORemote(filename, config.RemoteBackupConfig_id)
-                                        command = f"rm -r {filename}"
-                                        ProcessUtilities.executioner(command)
-                                        obj = RemoteBackupSchedule.objects.get(pk=config.id)
-                                        obj.lastrun = time.time()
-                                        obj.save()
-                                    elif config.RemoteBackupConfig.configtype == "S3":
-                                        IncScheduler.SendToS3Cloud(filename, config.RemoteBackupConfig_id, backupID,
-                                                                   config.id)
-                                        command = f"rm -r {filename}"
-                                        ProcessUtilities.executioner(command)
-                                        obj = RemoteBackupSchedule.objects.get(pk=config.id)
-                                        obj.lastrun = time.time()
-                                        obj.save()
+                            extraArgs = {}
+                            extraArgs['adminID'] = Admin.pk
+                            extraArgs['WPid'] = wpsite.pk
+                            extraArgs['Backuptype'] = Backuptype
+                            extraArgs['BackupDestination'] = "SFTP"
+                            extraArgs['SFTPID'] = config.RemoteBackupConfig_id
+
+                            extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
+                            background = ApplicationInstaller('WPCreateBackup', extraArgs)
+                            status, msg, backupID = background.WPCreateBackup()
+                            if status == 1:
+                                filename = msg
+                                if config.RemoteBackupConfig.configtype == "SFTP":
+                                    IncScheduler.SendTORemote(filename, config.RemoteBackupConfig_id)
+                                    command = f"rm -r {filename}"
+                                    ProcessUtilities.executioner(command)
+                                    obj = RemoteBackupSchedule.objects.get(pk=config.id)
+                                    obj.lastrun = time.time()
+                                    obj.save()
+                                elif config.RemoteBackupConfig.configtype == "S3":
+                                    IncScheduler.SendToS3Cloud(filename, config.RemoteBackupConfig_id, backupID,
+                                                               config.id)
+                                    command = f"rm -r {filename}"
+                                    ProcessUtilities.executioner(command)
+                                    obj = RemoteBackupSchedule.objects.get(pk=config.id)
+                                    obj.lastrun = time.time()
+                                    obj.save()
+
+                        elif config.timeintervel == function:
+                            #al = float(Currenttime) - float(43200)
+                            #if float(al) >= float(Lastrun):
+                            extraArgs = {}
+                            extraArgs['adminID'] = Admin.pk
+                            extraArgs['WPid'] = wpsite.pk
+                            extraArgs['Backuptype'] = Backuptype
+                            extraArgs['BackupDestination'] = "SFTP"
+                            extraArgs['SFTPID'] = config.RemoteBackupConfig_id
+
+                            extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
+                            background = ApplicationInstaller('WPCreateBackup', extraArgs)
+                            status, msg, backupID = background.WPCreateBackup()
+                            if status == 1:
+                                filename = msg
+                                if config.RemoteBackupConfig.configtype == "SFTP":
+                                    IncScheduler.SendTORemote(filename, config.RemoteBackupConfig_id)
+                                    command = f"rm -r {filename}"
+                                    ProcessUtilities.executioner(command)
+                                    obj = RemoteBackupSchedule.objects.get(pk=config.id)
+                                    obj.lastrun = time.time()
+                                    obj.save()
+                                elif config.RemoteBackupConfig.configtype == "S3":
+                                    IncScheduler.SendToS3Cloud(filename, config.RemoteBackupConfig_id, backupID,
+                                                               config.id)
+                                    command = f"rm -r {filename}"
+                                    ProcessUtilities.executioner(command)
+                                    obj = RemoteBackupSchedule.objects.get(pk=config.id)
+                                    obj.lastrun = time.time()
+                                    obj.save()
+
+                        elif config.timeintervel == function:
+                            #al = float(Currenttime) - float(86400)
+                            #if float(al) >= float(Lastrun):
+
+                            extraArgs = {}
+                            extraArgs['adminID'] = Admin.pk
+                            extraArgs['WPid'] = wpsite.pk
+                            extraArgs['Backuptype'] = Backuptype
+                            extraArgs['BackupDestination'] = "SFTP"
+                            extraArgs['SFTPID'] = config.RemoteBackupConfig_id
+
+                            extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
+                            background = ApplicationInstaller('WPCreateBackup', extraArgs)
+                            status, msg, backupID = background.WPCreateBackup()
+                            if status == 1:
+                                filename = msg
+                                if config.RemoteBackupConfig.configtype == "SFTP":
+                                    IncScheduler.SendTORemote(filename, config.RemoteBackupConfig_id)
+                                    command = f"rm -r {filename}"
+                                    ProcessUtilities.executioner(command)
+                                    obj = RemoteBackupSchedule.objects.get(pk=config.id)
+                                    obj.lastrun = time.time()
+                                    obj.save()
+                                elif config.RemoteBackupConfig.configtype == "S3":
+                                    IncScheduler.SendToS3Cloud(filename, config.RemoteBackupConfig_id, backupID,
+                                                               config.id)
+                                    command = f"rm -r {filename}"
+                                    ProcessUtilities.executioner(command)
+                                    obj = RemoteBackupSchedule.objects.get(pk=config.id)
+                                    obj.lastrun = time.time()
+                                    obj.save()
+
+                        elif config.timeintervel == function:
+                            #al = float(Currenttime) - float(259200)
+                            #if float(al) >= float(Lastrun):
+
+                            extraArgs = {}
+                            extraArgs['adminID'] = Admin.pk
+                            extraArgs['WPid'] = wpsite.pk
+                            extraArgs['Backuptype'] = Backuptype
+                            extraArgs['BackupDestination'] = "SFTP"
+                            extraArgs['SFTPID'] = config.RemoteBackupConfig_id
+
+                            extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
+                            background = ApplicationInstaller('WPCreateBackup', extraArgs)
+                            status, msg, backupID = background.WPCreateBackup()
+                            if status == 1:
+                                filename = msg
+                                if config.RemoteBackupConfig.configtype == "SFTP":
+                                    IncScheduler.SendTORemote(filename, config.RemoteBackupConfig_id)
+                                    command = f"rm -r {filename}"
+                                    ProcessUtilities.executioner(command)
+                                    obj = RemoteBackupSchedule.objects.get(pk=config.id)
+                                    obj.lastrun = time.time()
+                                    obj.save()
+                                elif config.RemoteBackupConfig.configtype == "S3":
+                                    IncScheduler.SendToS3Cloud(filename, config.RemoteBackupConfig_id, backupID,
+                                                               config.id)
+                                    command = f"rm -r {filename}"
+                                    ProcessUtilities.executioner(command)
+                                    obj = RemoteBackupSchedule.objects.get(pk=config.id)
+                                    obj.lastrun = time.time()
+                                    obj.save()
+
+                        elif config.timeintervel == function:
+                            #al = float(Currenttime) - float(604800)
+                            #if float(al) >= float(Lastrun):
+
+                            extraArgs = {}
+                            extraArgs['adminID'] = Admin.pk
+                            extraArgs['WPid'] = wpsite.pk
+                            extraArgs['Backuptype'] = Backuptype
+                            extraArgs['BackupDestination'] = "SFTP"
+                            extraArgs['SFTPID'] = config.RemoteBackupConfig_id
+
+                            extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
+                            background = ApplicationInstaller('WPCreateBackup', extraArgs)
+                            status, msg, backupID = background.WPCreateBackup()
+                            if status == 1:
+                                filename = msg
+                                if config.RemoteBackupConfig.configtype == "SFTP":
+                                    IncScheduler.SendTORemote(filename, config.RemoteBackupConfig_id)
+                                    command = f"rm -r {filename}"
+                                    ProcessUtilities.executioner(command)
+                                    obj = RemoteBackupSchedule.objects.get(pk=config.id)
+                                    obj.lastrun = time.time()
+                                    obj.save()
+                                elif config.RemoteBackupConfig.configtype == "S3":
+                                    IncScheduler.SendToS3Cloud(filename, config.RemoteBackupConfig_id, backupID,
+                                                               config.id)
+                                    command = f"rm -r {filename}"
+                                    ProcessUtilities.executioner(command)
+                                    obj = RemoteBackupSchedule.objects.get(pk=config.id)
+                                    obj.lastrun = time.time()
+                                    obj.save()
+
                 except BaseException as msg:
                     print("Error in Sites:%s" % str(msg))
                     continue
