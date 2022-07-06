@@ -287,7 +287,7 @@ class Upgrade:
             command = 'wget -O /usr/local/CyberCP/public/phpmyadmin.zip https://github.com/usmannasir/cyberpanel/raw/stable/phpmyadmin.zip'
             Upgrade.executioner(command, 0)
 
-            command = 'unzip /usr/local/CyberCP/public/phpmyadmin.zip -d /usr/local/CyberCP/public/'
+            command = 'unzip /usr/local/CyberCP/public/phpmyadmin.zip -d /usr/local/CyberCP/public/phpmyadmin'
             Upgrade.executioner(command, 0)
 
             command = 'mv /usr/local/CyberCP/public/phpMyAdmin-*-all-languages /usr/local/CyberCP/public/phpmyadmin'
@@ -2566,6 +2566,22 @@ vmail
                 writeToFile = open(cronPath, 'a')
                 writeToFile.write(content)
                 writeToFile.close()
+
+            if data.find("IncScheduler.py '30 Minutes'") == -1:
+                content = """
+*/30 * * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py '30 Minutes'
+0 * * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py '1 Hour'
+0 */6 * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py '6 Hours'
+0 */12 * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py '12 Hours'
+0 1 * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py '1 Day'
+0 0 */3 * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py '3 Days'
+0 0 * * 0 /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py '1 Week'
+"""
+                writeToFile = open(cronPath, 'a')
+                writeToFile.write(content)
+                writeToFile.close()
+
+
         else:
             content = """
 0 * * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/findBWUsage.py >/dev/null 2>&1
@@ -2786,7 +2802,7 @@ vmail
             command = execPath + " --function submitinstallImunifyAV"
             Upgrade.executioner(command, command, 1)
 
-            command = 'chmod +x /usr/local/CyberCP/bin/python /usr/local/CyberCP/CLManager/CageFS.py'
+            command = 'chmod +x /usr/local/CyberCP/public/imunifyav/bin/execute.py'
             Upgrade.executioner(command, command, 1)
 
 

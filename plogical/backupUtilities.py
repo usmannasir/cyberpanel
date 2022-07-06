@@ -360,8 +360,7 @@ class backupUtilities:
 
             completPathToConf = f'{backupUtilities.Server_root}/conf/vhosts/{domainName}/vhost.conf'
 
-            if os.path.exists(backupUtilities.licenseKey):
-                copy(completPathToConf, tempStoragePath + '/vhost.conf')
+            copy(completPathToConf, tempStoragePath + '/vhost.conf')
 
             ## /home/example.com/backup/backup-example.com-02.13.2018_10-24-52 -- tempStoragePath
             ## shutil.make_archive
@@ -441,9 +440,9 @@ class backupUtilities:
                 actualChildDomain = childDomain.find('domain').text
                 childPath = childDomain.find('path').text
 
-                if os.path.exists(backupUtilities.licenseKey):
-                    completPathToConf = f'{backupUtilities.Server_root}/conf/vhosts/{actualChildDomain}/vhost.conf'
-                    copy(completPathToConf, f'{tempStoragePath}/{actualChildDomain}.vhost.conf')
+
+                completPathToConf = f'{backupUtilities.Server_root}/conf/vhosts/{actualChildDomain}/vhost.conf'
+                copy(completPathToConf, f'{tempStoragePath}/{actualChildDomain}.vhost.conf')
 
                     ### Storing SSL for child domainsa
 
@@ -813,10 +812,9 @@ class backupUtilities:
 
                         try:
 
-                            if os.path.exists(backupUtilities.licenseKey):
-                                if os.path.exists(completPath + '/' + domain + '.vhost.conf'):
-                                    completPathToConf = backupUtilities.Server_root + '/conf/vhosts/' + domain + '/vhost.conf'
-                                    copy(completPath + '/' + domain + '.vhost.conf', completPathToConf)
+                            if os.path.exists(completPath + '/' + domain + '.vhost.conf'):
+                                completPathToConf = backupUtilities.Server_root + '/conf/vhosts/' + domain + '/vhost.conf'
+                                copy(completPath + '/' + domain + '.vhost.conf', completPathToConf)
 
                             sslStoragePath = completPath + "/" + domain + ".cert.pem"
 
@@ -1025,10 +1023,9 @@ class backupUtilities:
 
             ## emails extracted
 
-            if os.path.exists(backupUtilities.licenseKey):
-                completPathToConf = backupUtilities.Server_root + '/conf/vhosts/' + masterDomain + '/vhost.conf'
-                if os.path.exists(completPath + '/vhost.conf'):
-                    copy(completPath + '/vhost.conf', completPathToConf)
+            completPathToConf = backupUtilities.Server_root + '/conf/vhosts/' + masterDomain + '/vhost.conf'
+            if os.path.exists(completPath + '/vhost.conf'):
+                copy(completPath + '/vhost.conf', completPathToConf)
 
             logging.CyberCPLogFileWriter.statusWriter(status, "Done")
 

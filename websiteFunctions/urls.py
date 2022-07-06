@@ -23,6 +23,9 @@ urlpatterns = [
     url(r'^RestoreBackups$', views.RestoreBackups, name='RestoreBackups'),
     url(r'^RestoreHome$', views.RestoreHome, name='RestoreHome'),
     url(r'^AutoLogin$', views.AutoLogin, name='AutoLogin'),
+    url(r'^RemoteBackupConfig$', views.RemoteBackupConfig, name='RemoteBackupConfig'),
+    url(r'^BackupfileConfig$', views.BackupfileConfig, name='BackupfileConfig'),
+    url(r'^AddRemoteBackupsite$', views.AddRemoteBackupsite, name='AddRemoteBackupsite'),
 
 
     ###WordPress Ajax
@@ -44,9 +47,12 @@ urlpatterns = [
     url(r'^DeploytoProduction', views.DeploytoProduction, name='DeploytoProduction'),
     url(r'^WPCreateBackup', views.WPCreateBackup, name='WPCreateBackup'),
     url(r'^RestoreWPbackupNow', views.RestoreWPbackupNow, name='RestoreWPbackupNow'),
-    url(r'^RestoreWPbackupNow', views.RestoreWPbackupNow, name='RestoreWPbackupNow'),
     url(r'^dataintegrity', views.dataintegrity, name='dataintegrity'),
     url(r'^installwpcore', views.installwpcore, name='installwpcore'),
+    url(r'^SaveBackupConfig', views.SaveBackupConfig, name='SaveBackupConfig'),
+    url(r'^SaveBackupSchedule', views.SaveBackupSchedule, name='SaveBackupSchedule'),
+    url(r'^AddWPsiteforRemoteBackup', views.AddWPsiteforRemoteBackup, name='AddWPsiteforRemoteBackup'),
+    url(r'^UpdateRemoteschedules', views.UpdateRemoteschedules, name='UpdateRemoteschedules'),
 
 
 

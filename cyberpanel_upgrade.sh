@@ -20,7 +20,7 @@ export LC_CTYPE=en_US.UTF-8
 echo -e "\nFetching latest data from CyberPanel server...\n"
 echo -e "This may take few seconds..."
 
-Server_Country="Unknow"
+Server_Country="Unknown"
 Server_OS=""
 Server_OS_Version=""
 Server_Provider='Undefined'
@@ -64,18 +64,18 @@ echo -e "\n${1}" >> /var/log/upgradeLogs.txt
 Check_Root() {
 echo -e "\nChecking root privileges..."
   if echo "$Sudo_Test" | grep SUDO >/dev/null; then
-    echo -e "\nYou are using SUDO , please run as root user...\n"
+    echo -e "\nYou are using SUDO, please run as root user...\n"
     echo -e "\nIf you don't have direct access to root user, please run \e[31msudo su -\e[39m command (do NOT miss the \e[31m-\e[39m at end or it will fail) and then run installation command again."
     exit
   fi
 
   if [[ $(id -u) != 0 ]] >/dev/null; then
-    echo -e "\nYou must run on root user to install CyberPanel...\n"
-    echo -e "or run following command: (do NOT miss the quotes)"
+    echo -e "\nYou must run as root user to install CyberPanel...\n"
+    echo -e "or run the following command: (do NOT miss the quotes)"
     echo -e "\e[31msudo su -c \"sh <(curl https://cyberpanel.sh || wget -O - https://cyberpanel.sh)\"\e[39m"
     exit 1
   else
-    echo -e "\nYou are runing as root...\n"
+    echo -e "\nYou are running as root...\n"
   fi
 }
 
@@ -84,7 +84,7 @@ echo -e "Checking server location...\n"
 
 Server_Country=$(curl --silent --max-time 10 -4 https://cyberpanel.sh/?country)
 if [[ ${#Server_Country} != "2" ]] ; then
-  Server_Country="Unknow"
+  Server_Country="Unknown"
 fi
 
 if [[ "$Debug" = "On" ]] ; then
@@ -93,7 +93,7 @@ fi
 
 if [[ "$*" = *"--mirror"* ]] ; then
   Server_Country="CN"
-  echo -e "Force to use mirror server due to --mirror argument...\n"
+  echo -e "Forced to use mirror server due to --mirror argument...\n"
 fi
 
 if [[ "$Server_Country" = *"CN"* ]] ; then
@@ -104,7 +104,7 @@ fi
 
 Check_OS() {
 if [[ ! -f /etc/os-release ]] ; then
-  echo -e "Unable to detect the operating system...\n"
+  echo -e "Unable to detect the Operating System...\n"
   exit
 fi
 
@@ -474,7 +474,7 @@ for i in {1..50};
     sleep 30
   fi
 done
-#special made function for Gitee.com , for whatever reason , sometimes it fails to download this file
+#special made function for Gitee.com, for whatever reason sometimes it fails to download this file
 }
 
 
@@ -490,12 +490,12 @@ else
 fi
 
 if [[ -f /usr/local/CyberPanel/bin/python2 ]]; then
-  echo -e "\nPython 2 dectected, doing resetup...\n"
+  echo -e "\nPython 2 dectected, doing re-setup...\n"
   rm -rf /usr/local/CyberPanel/bin
   virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberPanel
   Check_Return
 elif [[ -d /usr/local/CyberPanel/bin/ ]]; then
-  echo -e "\nNo need to resetup virtualenv at /usr/local/CyberPanel...\n"
+  echo -e "\nNo need to re-setup virtualenv at /usr/local/CyberPanel...\n"
 else
   echo -e "\nNothing found, need fresh setup...\n"
   virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberPanel
@@ -562,9 +562,9 @@ fi
 }
 
 Pre_Upgrade_Branch_Input() {
-  echo -e "\nPress Enter key to continue with latest version or Enter specific version such as: \e[31m1.9.4\e[39m , \e[31m1.9.5\e[39m ...etc"
-  echo -e "\nIf nothing is input in 10 seconds , script will proceed with latest stable. "
-  echo -e "\nPlease press Enter key , or specify a version number ,or wait for 10 seconds timeout: "
+  echo -e "\nPress the Enter key to continue with latest version, or enter specific version such as: \e[31m1.9.4\e[39m , \e[31m1.9.5\e[39m ...etc"
+  echo -e "\nIf nothing is input in 10 seconds, script will proceed with the latest stable version. "
+  echo -e "\nPlease press the Enter key or specify a version number, or wait for 10 seconds: "
   printf "%s" ""
   read -r -t 10 Tmp_Input
   if [[ $Tmp_Input = "" ]]; then
@@ -583,7 +583,7 @@ if [[ -f /usr/local/CyberCP/bin/python2 ]]; then
   virtualenv -p /usr/bin/python3 /usr/local/CyberCP
     Check_Return
 elif [[ -d /usr/local/CyberCP/bin/ ]]; then
-  echo -e "\nNo need to resetup virtualenv at /usr/local/CyberCP...\n"
+  echo -e "\nNo need to re-setup virtualenv at /usr/local/CyberCP...\n"
 else
   virtualenv -p /usr/bin/python3 --system-site-packages /usr/local/CyberCP
     Check_Return
@@ -751,7 +751,7 @@ if curl -I -XGET -k "https://127.0.0.1:${Panel_Port#*:}" | grep -q "200 OK" ; th
   echo "                CyberPanel Upgraded                                "
   echo "###################################################################"
 else
-  echo -e "\nSeems something wrong with upgarde, please check...\n"
+  echo -e "\nSeems something wrong with upgrade, please check...\n"
 fi
 rm -rf /root/cyberpanel_upgrade_tmp
 }

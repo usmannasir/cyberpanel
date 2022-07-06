@@ -40,18 +40,42 @@ DIR=/etc/mail/spamassassin
 if [ -d "$DIR" ]; then
   sa-update
 else
-  echo "Please install spamassassin through the CyberPanel interface before proceeding"
+  echo "Please install SpamAssasin through the CyberPanel interface before proceeding"
   exit
 fi
 
-if [ -f /etc/os-release ]; then
-  OS=$(head -1 /etc/os-release)
-  UBUNTUVERSION=$(sed '6q;d' /etc/os-release)
-  CENTOSVERSION=$(sed '5q;d' /etc/os-release)
-  CLNVERSION=$(sed '3q;d' /etc/os-release)
+### OS Detection
+Server_OS=""
+Server_OS_Version=""
+if grep -q -E "CentOS Linux 7|CentOS Linux 8" /etc/os-release ; then
+  Server_OS="CentOS"
+elif grep -q "AlmaLinux-8" /etc/os-release ; then
+  Server_OS="AlmaLinux"
+elif grep -q -E "CloudLinux 7|CloudLinux 8" /etc/os-release ; then
+  Server_OS="CloudLinux"
+elif grep -q -E "Rocky Linux" /etc/os-release ; then
+  Server_OS="RockyLinux"
+elif grep -q -E "Ubuntu 18.04|Ubuntu 20.04|Ubuntu 20.10|Ubuntu 22.04" /etc/os-release ; then
+  Server_OS="Ubuntu"
+elif grep -q -E "openEuler 20.03|openEuler 22.03" /etc/os-release ; then
+  Server_OS="openEuler"
+else
+  echo -e "Unable to detect your system..."
+  echo -e "\nCyberPanel is supported on x86_64 based Ubuntu 18.04, Ubuntu 20.04, Ubuntu 20.10, Ubuntu 22.04, CentOS 7, CentOS 8, AlmaLinux 8, RockyLinux 8, CloudLinux 7, CloudLinux 8, openEuler 20.03, openEuler 22.03...\n"
+  exit
 fi
 
-if [ "$CENTOSVERSION" = "VERSION_ID=\"7\"" ]; then
+Server_OS_Version=$(grep VERSION_ID /etc/os-release | awk -F[=,] '{print $2}' | tr -d \" | head -c2 | tr -d . )
+
+echo -e "System: $Server_OS $Server_OS_Version detected...\n"
+
+if [[ $Server_OS = "CloudLinux" ]] || [[ "$Server_OS" = "AlmaLinux" ]] || [[ "$Server_OS" = "RockyLinux" ]] ; then
+  Server_OS="CentOS"
+  #CloudLinux gives version id like 7.8, 7.9, so cut it to show first number only
+  #treat CloudLinux, Rocky and Alma as CentOS
+fi
+
+if [[ $Server_OS = "CentOS" ]] && [[ "$Server_OS_Version" = "7" ]] ; then
 
   setenforce 0
   yum install -y perl yum-utils perl-CPAN
@@ -68,7 +92,7 @@ if [ "$CENTOSVERSION" = "VERSION_ID=\"7\"" ]; then
 
   freshclam -v
 
-elif [ "$CENTOSVERSION" = "VERSION_ID=\"8\"" ]; then
+elif [[ $Server_OS = "CentOS" ]] && [[ "$Server_OS_Version" = "8" ]] ; then
 
   setenforce 0
   yum install -y perl yum-utils perl-CPAN
@@ -107,7 +131,7 @@ elif [ "$CLNVERSION" = "ID=\"cloudlinux\"" ]; then
 
   freshclam -v
 
-elif [ "$OS" = "NAME=\"Ubuntu\"" ]; then
+elif [[ $Server_OS = "Ubuntu" ]]; then
 
   apt-get install -y libmysqlclient-dev
 
@@ -133,8 +157,8 @@ echo "/^Received:/ HOLD" >>/etc/postfix/header_checks
 
 systemctl restart postfix
 
-if [ "$OS" = "NAME=\"Ubuntu\"" ]; then
-  wget https://github.com/MailScanner/v5/releases/download/5.3.3-1/MailScanner-5.3.3-1.noarch.deb
+if [[ $Server_OS = "Ubuntu" ]]; then
+  wget https://github.com/MailScanner/v5/releases/download/5.4.4-1/MailScanner-5.4.4-1.noarch.deb
   dpkg -i *.noarch.deb
 
   mkdir /var/run/MailScanner
@@ -144,10 +168,9 @@ if [ "$OS" = "NAME=\"Ubuntu\"" ]; then
   chown -R postfix:postfix /var/lock/subsys/MailScanner
   chown -R postfix:postfix /var/spool/MailScanner
 
-elif [ "$OS" = "NAME=\"CentOS Linux\"" ]; then
-  wget https://github.com/MailScanner/v5/releases/download/5.3.3-1/MailScanner-5.3.3-1.rhel.noarch.rpm
+elif [[ $Server_OS = "CentOS" ]]; then
+  wget https://github.com/MailScanner/v5/releases/download/5.4.4-1/MailScanner-5.4.4-1.rhel.noarch.rpm
   rpm -Uvh *.rhel.noarch.rpm
-
 elif [ "$OS" = "NAME=\"CloudLinux\"" ]; then
   wget https://github.com/MailScanner/v5/releases/download/5.3.3-1/MailScanner-5.3.3-1.rhel.noarch.rpm
   rpm -Uvh *.rhel.noarch.rpm

@@ -1,0 +1,202 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "File Config - CyberPanel" %}{% endblock %}
+{% block content %}
+
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
+
+    <div class="container">
+        <div id="page-title">
+            <h2>{% trans "Backup File Configurations" %}</h2>
+        </div>
+
+
+        <div ng-controller="BackupSchedule" class="panel">
+            <div class="panel-body">
+                <h3 class="content-box-header">
+                    {% trans " Schedule Backups" %} <img ng-hide="BackupScheduleLoading"
+                                                         src="{% static 'images/loading.gif' %}">
+                </h3>
+                <form name="websiteCreationForm" action="/" id="createPackages"
+                      class="form-horizontal bordered-row panel-body">
+                    <div ng-hide="installationDetailsForm" class="form-group">
+                        <label class="col-sm-3 control-label">{% trans "Schedule Name" %}</label>
+                        <div class="col-sm-6">
+                            <input name="Hostname" type="text" class="form-control" ng-model="ScheduleName"
+                                   required>
+                        </div>
+
+                    </div>
+                    <span style="display: none" id="RemoteConfigID"> {{ RemoteConfigID }}</span>
+
+                    <div ng-hide="installationDetailsForm" class="form-group">
+                        <label class="col-sm-3 control-label">{% trans "Backup Frequency" %}</label>
+                        <div class="col-sm-6">
+                            <select ng-model="Bfrequency"
+                                    class="form-control">
+                                <option>30 Minutes</option>
+                                <option>1 Hour</option>
+                                <option>6 Hours</option>
+                                <option>12 Hours</option>
+                                <option>1 Day</option>
+                                <option>3 Days</option>
+                                <option>1 Week</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div ng-hide="installationDetailsForm" class="form-group">
+                        <label class="col-sm-3 control-label">{% trans "Backup File Retention" %}</label>
+                        <div class="col-sm-6">
+                            <select ng-model="Fretention"
+                                    class="form-control">
+                                <option>3 Days</option>
+                                <option>1 Week</option>
+                                <option>3 Weeks</option>
+                                <option>1 Month</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div ng-hide="installationDetailsForm" class="form-group">
+                        <label class="col-sm-3 control-label">{% trans "Backup Type" %}</label>
+                        <div class="col-sm-6">
+                            <select ng-model="BackupType"
+                                    class="form-control">
+                                <option>Only DataBase</option>
+                                <option>Only Website</option>
+                                <option>Website and Database Both</option>
+
+                            </select>
+                        </div>
+                    </div>
+
+                    <div ng-hide="installationDetailsForm" class="form-group">
+                        <label class="col-sm-3 control-label"></label>
+                        <div class="col-sm-4">
+                            <button type="button" ng-click="SaveBackupSchedule()"
+                                    class="btn btn-primary btn-lg">{% trans "Save Backup Schedule" %}</button>
+
+                        </div>
+                    </div>
+                </form>
+                <h3 class="content-box-header">
+                    {% trans "Configure Backup Schedules" %} </h3>
+                <table class="table-spacing" style="width: 100%">
+                    <thead style="color: white; background-color: #0a6ebd">
+                    <tr>
+                        <th style="padding: 18px; color: white; width: 161px; font-size: 12px;">ID</th>
+                        <th style="padding: 18px; color: white; width: 161px; font-size: 12px;">Schedule Name</th>
+                        <th style="padding: 18px; color: white; width: 161px; font-size: 12px;">Backup Frequency</th>
+                        <th style="padding: 18px; color: white; width: 161px; font-size: 12px;">Backup File Retention
+                        </th>
+                        <th style="padding: 18px; color: white; width: 161px; font-size: 12px;">Last Run</th>
+                        <th style="padding: 18px; color: white; width: 161px; font-size: 12px;">Remote Configuration
+                        </th>
+                        <th style="padding: 18px; color: white; width: 161px; font-size: 12px;">Action</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    {% for sub in Backupschedule %}
+                        <tr>
+                            <td style="padding: 13px;">{{ sub.id }}</td>
+                            <td style="padding: 13px;">{{ sub.Name }}</td>
+                            <td style="padding: 13px;">{{ sub.Frequency }}</td>
+                            <td style="padding: 13px;">{{ sub.Retention }}</td>
+                            <td style="padding: 13px;">{{ sub.LastRun }}</td>
+                            <td style="padding: 13px;">{{ sub.RemoteConfiguration }}</td>
+                            <td style="padding: 13px;">
+                                <button
+                                        aria-label=""
+                                        onclick="DeleteBackupfileConfigNow('{% url 'BackupfileConfig' %}?ID={{ RemoteConfigID }}&DeleteID={{ sub.id }}')"
+                                        type="button" class="btn btn-border btn-alt border-red btn-link font-red">
+                                    Delete
+                                </button>
+                                <button ng-click="getupdateid({{ sub.id }})" data-toggle="modal" data-target="#EidtRemoteShedule"
+                                        aria-label=""
+                                        type="button" class="btn btn-border btn-alt border-yellow btn-link font-yellow">
+                                    Eidt
+                                </button>
+                                <a href="{% url 'AddRemoteBackupsite' %}?ID={{ sub.id }}"
+                                   aria-label=""
+                                   style="margin-top: 5px;"
+                                   type="button" class="btn btn-border btn-alt border-green btn-link font-green">
+                                    Add WordPress Sites
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+
+                <div id="EidtRemoteShedule" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">Update Remote Backup Schedules
+                                    <img id="containerSettingLoading" src="/static/images/loading.gif"
+                                         style="display: none;">
+                                </h4>
+                            </div>
+                            <div class="modal-body">
+
+                                <form name="containerSettingsForm" action="/" class="form-horizontal">
+                                    <div ng-hide="installationDetailsForm" class="form-group">
+                                        <label class="col-sm-3 control-label">{% trans "Backup Frequency" %}</label>
+                                        <div class="col-sm-6">
+
+                                            <select ng-model="RemoteFrequency"
+                                                    class="form-control">
+                                                <option>30 Minutes</option>
+                                                <option>1 Hour</option>
+                                                <option>6 Hours</option>
+                                                <option>12 Hours</option>
+                                                <option>1 Day</option>
+                                                <option>3 Days</option>
+                                                <option>1 Week</option>
+                                            </select>
+                                        </div>
+
+                                    </div>
+                                    <div ng-hide="installationDetailsForm" class="form-group">
+                                        <label class="col-sm-3 control-label">{% trans "Backup File Retention" %}</label>
+                                        <div class="col-sm-6">
+                                            <select ng-model="RemoteFileretention"
+                                                    class="form-control">
+                                                <option>3 Days</option>
+                                                <option>1 Week</option>
+                                                <option>3 Weeks</option>
+                                                <option>1 Month</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+
+                                </form>
+
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" ng-disabled="savingSettings" class="btn btn-primary"
+                                        ng-click="UpdateRemoteschedules()">Save
+                                </button>
+                                <button type="button" ng-disabled="savingSettings" class="btn btn-default"
+                                        data-dismiss="modal">
+                                    Close
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+
+    </div>
+
+
+{% endblock %}
