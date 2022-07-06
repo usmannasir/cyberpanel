@@ -15,7 +15,7 @@ from stat import *
 import stat
 
 VERSION = '2.3'
-BUILD = 1
+BUILD = 2
 
 char_set = {'small': 'abcdefghijklmnopqrstuvwxyz', 'nums': '0123456789', 'big': 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'}
 
@@ -33,6 +33,7 @@ def generate_pass(length=14):
 centos = 0
 ubuntu = 1
 cent8 = 2
+openeuler = 3
 
 
 def get_distro():
@@ -45,8 +46,8 @@ def get_distro():
                 if line == "DISTRIB_ID=Ubuntu\n":
                     distro = ubuntu
 
-    elif exists("/etc/os-release"):
-        distro_file = "/etc/os-release"
+    elif exists("/etc/redhat-release"):
+        distro_file = "/etc/redhat-release"
         distro = centos
 
         data = open('/etc/redhat-release', 'r').read()
@@ -57,6 +58,10 @@ def get_distro():
             return cent8
         if data.find('Rocky Linux release 8') > -1 or data.find('Rocky Linux 8') > -1 or data.find('rocky:8') > -1:
             return cent8
+        
+    elif exists("/etc/openEuler-release"):
+        distro_file = "/etc/openEuler-release"
+        distro = openeuler
 
     else:
         logging.InstallLog.writeToFile("Can't find linux release file - fatal error")
@@ -96,6 +101,7 @@ class preFlightsChecks:
     debug = 1
     cyberPanelMirror = "mirror.cyberpanel.net/pip"
     cdn = 'cyberpanel.sh'
+    SnappyVersion = '2.15.3'
 
     def __init__(self, rootPath, ip, path, cwd, cyberPanelPath, distro, remotemysql=None, mysqlhost=None, mysqldb=None,
                  mysqluser=None, mysqlpassword=None, mysqlport=None):
@@ -267,7 +273,7 @@ class preFlightsChecks:
     def setup_account_cyberpanel(self):
         try:
 
-            if self.distro == centos or self.distro == cent8:
+            if self.distro == centos or self.distro == cent8 or self.distro == openeuler:
                 command = "yum install sudo -y"
                 preFlightsChecks.call(command, self.distro, command,
                                       command,
@@ -358,7 +364,7 @@ class preFlightsChecks:
     def install_psmisc(self):
         self.stdOut("Install psmisc")
 
-        if self.distro == centos or self.distro == cent8:
+        if self.distro == centos or self.distro == cent8 or self.distro == openeuler:
             command = "yum -y install psmisc"
         else:
             command = "apt-get -y install psmisc"
@@ -487,6 +493,9 @@ password="%s"
         if not os.path.exists("/usr/local/CyberCP/public"):
             os.mkdir("/usr/local/CyberCP/public")
 
+        command = "/usr/local/CyberPanel/bin/python manage.py collectstatic --noinput --clear"
+        preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+
         ## Moving static content to lscpd location
         command = 'mv static /usr/local/CyberCP/public/'
         preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
@@ -546,7 +555,7 @@ password="%s"
         command = "chown -R root:root /usr/local/lscp"
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-        command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
+        command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop"
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
         command = "chmod 700 /usr/local/CyberCP/cli/cyberPanel.py"
@@ -638,7 +647,7 @@ password="%s"
         command = "find /usr/local/CyberCP/ -name '*.pyc' -delete"
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-        if self.distro == cent8 or self.distro == centos:
+        if self.distro == cent8 or self.distro == centos or self.distro == openeuler:
             command = 'chown root:pdns /etc/pdns/pdns.conf'
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
@@ -648,11 +657,11 @@ password="%s"
         command = 'chmod 640 /usr/local/lscp/cyberpanel/logs/access.log'
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-        command = 'mkdir -p/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/'
+        command = 'mkdir -p/usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/configs/'
 
-        rainloopinipath = '/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/application.ini'
+        snappymailinipath = '/usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/configs/application.ini'
 
-        command = 'chmod 600 /usr/local/CyberCP/public/rainloop.php'
+        command = 'chmod 600 /usr/local/CyberCP/public/snappymail.php'
         preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
         ###
@@ -687,7 +696,7 @@ password="%s"
     def install_unzip(self):
         self.stdOut("Install unzip")
         try:
-            if self.distro == centos or self.distro == cent8:
+            if self.distro == centos or self.distro == cent8 or self.distro == openeuler:
                 command = 'yum -y install unzip'
             else:
                 command = 'apt-get -y install unzip'
@@ -699,7 +708,7 @@ password="%s"
     def install_zip(self):
         self.stdOut("Install zip")
         try:
-            if self.distro == centos or self.distro == cent8:
+            if self.distro == centos or self.distro == cent8 or self.distro == openeuler:
                 command = 'yum -y install zip'
             else:
                 command = 'apt-get -y install zip'
@@ -719,7 +728,7 @@ password="%s"
             preFlightsChecks.call(command, self.distro, '[download_install_phpmyadmin]',
                                   command, 1, 0, os.EX_OSERR)
 
-            command = 'unzip /usr/local/CyberCP/public/phpmyadmin.zip -d /usr/local/CyberCP/public/'
+            command = 'unzip /usr/local/CyberCP/public/phpmyadmin.zip -d /usr/local/CyberCP/public/phpmyadmin'
             preFlightsChecks.call(command, self.distro, '[download_install_phpmyadmin]',
                                   command, 1, 0, os.EX_OSERR)
 
@@ -809,11 +818,13 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                 command = 'yum install --enablerepo=gf-plus -y postfix3 postfix3-ldap postfix3-mysql postfix3-pcre'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
             elif self.distro == cent8:
-
                 command = 'dnf --nogpg install -y https://mirror.ghettoforge.org/distributions/gf/gf-release-latest.gf.el8.noarch.rpm'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
                 command = 'dnf install --enablerepo=gf-plus postfix3 postfix3-mysql -y'
+                preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+            elif self.distro == openeuler:
+                command = 'dnf install postfix -y'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
             else:
@@ -838,6 +849,8 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                 command = 'yum --enablerepo=gf-plus -y install dovecot23 dovecot23-mysql'
             elif self.distro == cent8:
                 command = 'dnf install --enablerepo=gf-plus dovecot23 dovecot23-mysql -y'
+            elif self.distro == openeuler:
+                command = 'dnf install dovecot -y'
             else:
                 command = 'apt-get -y install dovecot-mysql dovecot-imapd dovecot-pop3d'
 
@@ -1236,24 +1249,28 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             if not os.path.exists("/usr/local/CyberCP/public"):
                 os.mkdir("/usr/local/CyberCP/public")
 
-            if os.path.exists("/usr/local/CyberCP/public/rainloop"):
+            if os.path.exists("/usr/local/CyberCP/public/snappymail"):
                 return 0
 
             os.chdir("/usr/local/CyberCP/public")
 
-            command = 'wget https://www.rainloop.net/repository/webmail/rainloop-community-latest.zip'
+            command = 'wget https://github.com/the-djmaze/snappymail/releases/download/v%s/snappymail-%s.zip' % (preFlightsChecks.SnappyVersion, preFlightsChecks.SnappyVersion)
+
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
             #############
 
-            command = 'unzip rainloop-community-latest.zip -d /usr/local/CyberCP/public/rainloop'
+            command = 'unzip snappymail-%s.zip -d /usr/local/CyberCP/public/snappymail' % (preFlightsChecks.SnappyVersion)
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
-            os.remove("rainloop-community-latest.zip")
+            try:
+                os.remove("snappymail-%s.zip" % (preFlightsChecks.SnappyVersion))
+            except:
+                pass
 
             #######
 
-            os.chdir("/usr/local/CyberCP/public/rainloop")
+            os.chdir("/usr/local/CyberCP/public/snappymail")
 
             command = 'find . -type d -exec chmod 755 {} \;'
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
@@ -1277,15 +1294,16 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             labsData = """[labs]
 imap_folder_list_limit = 0
+autocreate_system_folders = On
 """
 
-            writeToFile = open(labsPath, 'w')
+            writeToFile = open(labsPath, 'a')
             writeToFile.write(labsData)
             writeToFile.close()
 
-            iPath = os.listdir('/usr/local/CyberCP/public/rainloop/rainloop/v/')
+            iPath = os.listdir('/usr/local/CyberCP/public/snappymail/snappymail/v/')
 
-            path = "/usr/local/CyberCP/public/rainloop/rainloop/v/%s/include.php" % (iPath[0])
+            path = "/usr/local/CyberCP/public/snappymail/snappymail/v/%s/include.php" % (iPath[0])
 
             data = open(path, 'r').readlines()
             writeToFile = open(path, 'w')
@@ -1299,8 +1317,22 @@ imap_folder_list_limit = 0
 
             writeToFile.close()
 
+            includeFileOldPath = '/usr/local/CyberCP/public/snappymail/_include.php'
+            includeFileNewPath = '/usr/local/CyberCP/public/snappymail/include.php'
+
+            if os.path.exists(includeFileOldPath):
+                writeToFile = open(includeFileOldPath, 'a')
+                writeToFile.write("\ndefine('APP_DATA_FOLDER_PATH', '/usr/local/lscp/cyberpanel/rainloop/data/');\n")
+                writeToFile.close()
+
+            command = 'mv %s %s' % (includeFileOldPath, includeFileNewPath)
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+            command = "sed -i 's|autocreate_system_folders = Off|autocreate_system_folders = On|g' %s" % (labsPath)
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
         except BaseException as msg:
-            logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [downoad_and_install_rainloop]")
+            logging.InstallLog.writeToFile('[ERROR] ' + str(msg) + " [downoad_and_install_snappymail]")
             return 0
 
         return 1
@@ -1441,14 +1473,14 @@ imap_folder_list_limit = 0
             except:
                 pass
 
-            if self.distro == centos or self.distro == cent8:
+            if self.distro == centos or self.distro == cent8 or self.distro == openeuler:
                 command = 'adduser lscpd -M -d /usr/local/lscp'
             else:
                 command = 'useradd lscpd -M -d /usr/local/lscp'
 
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-            if self.distro == centos or self.distro == cent8:
+            if self.distro == centos or self.distro == cent8 or self.distro == openeuler:
                 command = 'groupadd lscpd'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
                 # Added group in useradd for Ubuntu
@@ -1668,21 +1700,21 @@ imap_folder_list_limit = 0
         try:
             ## first install crontab
 
-            if self.distro == centos or self.distro == cent8:
+            if self.distro == centos or self.distro == cent8 or self.distro == openeuler:
                 command = 'yum install cronie -y'
             else:
                 command = 'apt-get -y install cron'
 
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-            if self.distro == centos or self.distro == cent8:
+            if self.distro == centos or self.distro == cent8 or self.distro == openeuler:
                 command = 'systemctl enable crond'
             else:
                 command = 'systemctl enable cron'
 
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-            if self.distro == centos or self.distro == cent8:
+            if self.distro == centos or self.distro == cent8 or self.distro == openeuler:
                 command = 'systemctl start crond'
             else:
                 command = 'systemctl start cron'
@@ -1692,8 +1724,9 @@ imap_folder_list_limit = 0
             ##
 
             CentOSPath = '/etc/redhat-release'
+            openEulerPath = '/etc/openEuler-release'
 
-            if os.path.exists(CentOSPath):
+            if os.path.exists(CentOSPath) or os.path.exists(openEulerPath):
                 cronPath = '/var/spool/cron/root'
             else:
                 cronPath = '/var/spool/cron/crontabs/root'
@@ -1709,6 +1742,15 @@ imap_folder_list_limit = 0
 7 0 * * * "/root/.acme.sh"/acme.sh --cron --home "/root/.acme.sh" > /dev/null
 0 0 * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py Daily
 0 0 * * 0 /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py Weekly
+
+*/30 * * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py '30 Minutes'
+0 * * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py '1 Hour'
+0 */6 * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py '6 Hours'
+0 */12 * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py '12 Hours'
+0 1 * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py '1 Day'
+0 0 */3 * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py '3 Days'
+0 0 * * 0 /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py '1 Week'
+
 */3 * * * * if ! find /home/*/public_html/ -maxdepth 2 -type f -newer /usr/local/lsws/cgid -name '.htaccess' -exec false {} +; then /usr/local/lsws/bin/lswsctrl restart; fi
 """
 
@@ -1731,11 +1773,11 @@ imap_folder_list_limit = 0
 
                 writeToFile.close()
 
-            if not os.path.exists(CentOSPath):
+            if not os.path.exists(CentOSPath) or not os.path.exists(openEulerPath):
                 command = 'chmod 600 %s' % (cronPath)
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-            if self.distro == centos or self.distro == cent8:
+            if self.distro == centos or self.distro == cent8 or self.distro == openeuler:
                 command = 'systemctl restart crond.service'
             else:
                 command = 'systemctl restart cron.service'
@@ -1762,7 +1804,7 @@ imap_folder_list_limit = 0
 
     def install_rsync(self):
         try:
-            if self.distro == centos or self.distro == cent8:
+            if self.distro == centos or self.distro == cent8 or self.distro == openeuler:
                 command = 'yum -y install rsync'
             else:
                 command = 'apt-get -y install rsync'
@@ -1820,12 +1862,16 @@ imap_folder_list_limit = 0
         try:
             if self.distro == centos:
                 command = 'yum -y install opendkim'
-            elif self.distro == cent8:
+            elif self.distro == cent8 or self.distro == openeuler:
                 command = 'dnf install opendkim -y'
             else:
                 command = 'apt-get -y install opendkim'
 
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+            if self.distro == cent8 or self.distro == openeuler:
+                command = 'dnf install opendkim-tools -y'
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             if self.distro == ubuntu:
                 command = 'apt install opendkim-tools -y'
@@ -2028,6 +2074,26 @@ milter_default_action = accept
             return 0
 
     @staticmethod
+    def fixSudoers():
+        try:
+            distroPath = '/etc/lsb-release'
+
+            if not os.path.exists(distroPath):
+                fileName = '/etc/sudoers'
+                data = open(fileName, 'r').readlines()
+
+                writeDataToFile = open(fileName, 'w')
+                for line in data:
+                    if line.find("root") > -1 and line.find("ALL=(ALL)") > -1 and line[0] != '#':
+                        writeDataToFile.writelines('root	ALL=(ALL:ALL) 	ALL\n')
+                    else:
+                        writeDataToFile.write(line)
+                writeDataToFile.close()
+
+        except IOError as err:
+            pass
+
+    @staticmethod
     def setUpFirstAccount():
         try:
             command = 'python /usr/local/CyberCP/plogical/adminPass.py --password 1234567'
@@ -2039,13 +2105,18 @@ milter_default_action = accept
         try:
 
             CentOSPath = '/etc/redhat-release'
+            openEulerPath = '/etc/openEuler-release'
 
-            if os.path.exists(CentOSPath):
-                command = 'yum install -y yum-plugin-copr'
-                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-                command = 'yum copr enable -y copart/restic'
-                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            if os.path.exists(CentOSPath) or os.path.exists(openEulerPath):
+                if self.distro == centos:
+                    command = 'yum install -y yum-plugin-copr'
+                    preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                    command = 'yum copr enable -y copart/restic'
+                    preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
                 command = 'yum install -y restic'
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                command = 'restic self-update'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             else:
@@ -2053,6 +2124,9 @@ milter_default_action = accept
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
                 command = 'apt-get install restic -y'
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                
+                command = 'restic self-update'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
         except:
@@ -2062,8 +2136,9 @@ milter_default_action = accept
         try:
 
             CentOSPath = '/etc/redhat-release'
+            openEulerPath = '/etc/openEuler-release'
 
-            if os.path.exists(CentOSPath):
+            if os.path.exists(CentOSPath) or os.path.exists(openEulerPath):
                 command = 'mkdir -p /opt/cpvendor/etc/'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
@@ -2270,6 +2345,7 @@ def main():
     checks.setupPHPAndComposer()
     checks.fix_selinux_issue()
     checks.install_psmisc()
+    checks.fixSudoers()
 
     if args.postfix is None:
         checks.install_postfix_dovecot()
@@ -2337,10 +2413,10 @@ def main():
     # checks.disablePackegeUpdates()
 
     try:
-        # command = 'mkdir -p /usr/local/lscp/cyberpanel/rainloop/data/data/default/configs/'
+        # command = 'mkdir -p /usr/local/lscp/cyberpanel/snappymail/data/data/default/configs/'
         # subprocess.call(shlex.split(command))
 
-        writeToFile = open('/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/application.ini', 'a')
+        writeToFile = open('/usr/local/lscp/cyberpanel/snappymail/data/_data_/_default_/configs/application.ini', 'a')
 
         writeToFile.write("""
 [security]
@@ -2353,23 +2429,23 @@ admin_password = "12345"
 
         content = """<?php
 
-$_ENV['RAINLOOP_INCLUDE_AS_API'] = true;
-include '/usr/local/CyberCP/public/rainloop/index.php';
+$_ENV['snappymail_INCLUDE_AS_API'] = true;
+include '/usr/local/CyberCP/public/snappymail/index.php';
 
-$oConfig = \RainLoop\Api::Config();
+$oConfig = \snappymail\Api::Config();
 $oConfig->SetPassword('%s');
 echo $oConfig->Save() ? 'Done' : 'Error';
 
 ?>""" % (randomPassword.generate_pass())
 
-        writeToFile = open('/usr/local/CyberCP/public/rainloop.php', 'w')
+        writeToFile = open('/usr/local/CyberCP/public/snappymail.php', 'w')
         writeToFile.write(content)
         writeToFile.close()
 
-        command = '/usr/local/lsws/lsphp72/bin/php /usr/local/CyberCP/public/rainloop.php'
+        command = '/usr/local/lsws/lsphp72/bin/php /usr/local/CyberCP/public/snappymail.php'
         subprocess.call(shlex.split(command))
 
-        command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
+        command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail/data"
         subprocess.call(shlex.split(command))
     except:
         pass

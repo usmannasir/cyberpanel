@@ -297,6 +297,11 @@ app.controller('editPHPConfig', function ($scope, $http, $timeout) {
 
 
     $scope.fetchPHPDetails = function () {
+        var phpSelection = $scope.phpSelection;
+        if (!phpSelection) {
+            return;
+        }
+        
         $scope.loadingPHP = false;
         $scope.canNotFetch = true;
         $scope.detailsSaved = true;
@@ -308,8 +313,6 @@ app.controller('editPHPConfig', function ($scope, $http, $timeout) {
         $('#allow_url_include').bootstrapToggle('off');
 
         url = "/managephp/getCurrentPHPConfig";
-
-        var phpSelection = $scope.phpSelection;
 
         var data = {
             phpSelection: phpSelection,
@@ -440,13 +443,15 @@ app.controller('editPHPConfig', function ($scope, $http, $timeout) {
     };
 
     $scope.fetchAdvancePHPDetails = function () {
+        var phpSelection = $scope.phpSelection;
+        if (!phpSelection) {
+            return;
+        }
+        
         $scope.loadingPHP = false;
         $scope.savebtnAdvance = true;
 
-
         url = "/managephp/getCurrentAdvancedPHPConfig";
-
-        var phpSelection = $scope.phpSelection;
 
         var data = {
             phpSelection: phpSelection,

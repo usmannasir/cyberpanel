@@ -1,0 +1,196 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Restore Backpus - CyberPanel" %}{% endblock %}
+{% block content %}
+
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
+
+    <script>
+        $(document).ready(function () {
+            $('[data-toggle="tooltip"]').tooltip();
+        });
+    </script>
+
+    <style>
+        table { /* tables still need 'cellspacing="0"' in the markup */
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .table-spacing {
+            border-spacing: 0em .9em;
+        }
+
+        table th:nth-child(1) {
+
+            /* Safari 3-4, iOS 1-3.2, Android 1.6- */
+            -webkit-border-radius: 3px 0px 0px 3px;
+
+            /* Firefox 1-3.6 */
+            -moz-border-radius: 3px 0px 0px 3px;
+
+            /* Opera 10.5, IE 9, Safari 5, Chrome, Firefox 4, iOS 4, Android 2.1+ */
+            border-radius: 3px 0px 0px 3px;
+        }
+
+        table th:nth-child(1) {
+
+            /* Safari 3-4, iOS 1-3.2, Android 1.6- */
+            -webkit-border-radius: 20px 0px 0px 20px;
+
+            /* Firefox 1-3.6 */
+            -moz-border-radius: 20px 0px 0px 20px;
+
+            /* Opera 10.5, IE 9, Safari 5, Chrome, Firefox 4, iOS 4, Android 2.1+ */
+            border-radius: 20px 0px 0px 20px;
+        }
+
+        table th:nth-last-child(1) {
+            /* Safari 3-4, iOS 1-3.2, Android 1.6- */
+            -webkit-border-radius: 0px 20px 20px 0px;
+
+            /* Firefox 1-3.6 */
+            -moz-border-radius: 0px 20px 20px 0px;
+
+            /* Opera 10.5, IE 9, Safari 5, Chrome, Firefox 4, iOS 4, Android 2.1+ */
+            border-radius: 0px 20px 20px 0px;
+        }
+
+        table td:nth-child(1) {
+
+            /* Safari 3-4, iOS 1-3.2, Android 1.6- */
+            -webkit-border-radius: 20px 0px 0px 20px;
+
+            /* Firefox 1-3.6 */
+            -moz-border-radius: 20px 0px 0px 20px;
+
+            /* Opera 10.5, IE 9, Safari 5, Chrome, Firefox 4, iOS 4, Android 2.1+ */
+            border-radius: 20px 0px 0px 20px;
+        }
+
+        table td:nth-last-child(1) {
+            /* Safari 3-4, iOS 1-3.2, Android 1.6- */
+            -webkit-border-radius: 0px 20px 20px 0px;
+
+            /* Firefox 1-3.6 */
+            -moz-border-radius: 0px 20px 20px 0px;
+
+            /* Opera 10.5, IE 9, Safari 5, Chrome, Firefox 4, iOS 4, Android 2.1+ */
+            border-radius: 0px 20px 20px 0px;
+        }
+
+    </style>
+
+
+    <div ng-controller="listWebsites" class="container">
+
+        <div id="page-title">
+            <h2 id="domainNamePage">{% trans "List Backups " %}
+            </h2>
+            <img ng-hide="cyberPanelLoading" src="{% static 'images/loading.gif' %}">
+            <p>{% trans "On this page you can Restore, list, modify and delete Backups Wordpress Sites from your server." %}</p>
+        </div>
+
+
+        <table class="table-spacing" style="width: 100%">
+            <thead style="color: white; background-color: #0a6ebd">
+            <tr>
+                <th style="padding: 18px; color: white; width: 161px; font-size: 12px;">ID
+                </th>
+                <th style="padding: 18px; color: white; width: 161px; font-size: 12px;">Website
+                </th>
+                <th style="padding: 18px; color: white; width: 161px; font-size: 12px;">Type
+                </th>
+                 <th style="padding: 18px; color: white; width: 161px; font-size: 12px;">Backup Destination
+                </th>
+                <th style="padding: 18px; color: white; width: 161px; font-size: 12px;">Action
+                </th>
+
+
+            </tr>
+            </thead>
+                <tbody style="background-color: #d9eefa">
+            {% for sub in job %}
+
+                <tr>
+                    <td style="padding: 13px;">
+
+                            <p style="font-weight: bold; text-transform: uppercase; ">{{ sub.id }}</p>
+
+                    </td>
+                    <td style="padding: 13px;">
+                        {{ sub.title }}
+                    </td>
+                    <td style="padding: 13px;">
+                        {{ sub.Backuptype }}
+                    </td>
+                    <td style="padding: 13px;">
+                        {{ sub.BackupDestination }}
+                    </td>
+
+                    <td style="padding: 13px;">
+                        <a href="{% url 'RestoreHome' %}?BackupID={{ sub.id }}"
+                                aria-label=""
+
+                                type="button" class="btn btn-border btn-alt border-green btn-link font-green">
+                            Restore
+                        </a>
+
+                        <button
+                                data-toggle="modal"
+                                data-target="#DeleteMember" aria-label=""
+                                onclick="DeleteWPNow('{% url 'RestoreBackups' %}?DeleteID={{ sub.id }}')"
+                                type="button" class="btn btn-border btn-alt border-red btn-link font-red">
+                            Delete
+                        </button>
+
+                        <div id="DeleteMember" class="modal fade" role="dialog">
+                            <div class="modal-dialog">
+                                <!-- Modal content-->
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <button type="button" class="close" data-dismiss="modal">&times;
+                                        </button>
+                                        <h4 class="modal-title">Delete WordPress Site
+                                            <img ng-hide="$parent.cyberPanelLoading"
+                                                 src="/static/images/loading.gif"
+                                                 style="display: none;">
+                                        </h4>
+                                    </div>
+                                    <div class="modal-body">
+                                        <form name="DeleteDocumentRootForm" action="/"
+                                              class="form-horizontal">
+
+                                            <span>Do you want to delete the site?</span>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-primary"
+                                                onclick="FinalDeleteWPNow()">Yes
+                                        </button>
+                                        <button type="button" ng-disabled="savingSettings"
+                                                class="btn btn-default" data-dismiss="modal">
+                                            Cancel
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+                    </td>
+
+
+                </tr>
+            {% endfor %}
+
+            </tbody>
+
+
+        </table>
+
+
+    </div>
+
+{% endblock %}

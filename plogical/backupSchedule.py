@@ -89,8 +89,21 @@ class backupSchedule:
 
                 ifRunning = ProcessUtilities.outputExecutioner('ps aux')
 
+                if os.path.exists('/usr/local/CyberCP/debug'):
+                    message = 'Output of px aux when running remote backup status check: %s' % (ifRunning)
+                    logging.CyberCPLogFileWriter.writeToFile(message)
+
+
                 if (ifRunning.find('startBackup') > -1 or ifRunning.find('BackupRoot') > -1) and ifRunning.find('/%s/' % (backupDomain)):
+                    if os.path.exists('/usr/local/CyberCP/debug'):
+                        message = 'If running found.'
+                        logging.CyberCPLogFileWriter.writeToFile(message)
+
                     if os.path.exists(status):
+                        if os.path.exists('/usr/local/CyberCP/debug'):
+                            message = 'If running found. and status file exists'
+                            logging.CyberCPLogFileWriter.writeToFile(message)
+
                         status = open(status, 'r').read()
                         time.sleep(2)
 
@@ -115,6 +128,9 @@ class backupSchedule:
                             return 1, tempStoragePath
 
                         elif status.find("[5009]") > -1:
+                            if os.path.exists('/usr/local/CyberCP/debug'):
+                                message = 'If running found. status file exists but error'
+                                logging.CyberCPLogFileWriter.writeToFile(message)
                             ## removing status file, so that backup can re-run
                             try:
                                 command = 'sudo rm -f ' + status
@@ -150,6 +166,9 @@ class backupSchedule:
                             return 0, tempStoragePath
 
                         elif os.path.exists(schedulerPath):
+                            if os.path.exists('/usr/local/CyberCP/debug'):
+                                message = 'If running found. status file exists, scheduler path also exists hence killed'
+                                logging.CyberCPLogFileWriter.writeToFile(message)
                             backupSchedule.remoteBackupLogging(backupLogPath, 'Backup process killed. Error: %s' % (
                                 open(schedulerPath, 'r').read()),
                                                                backupSchedule.ERROR)
@@ -157,8 +176,15 @@ class backupSchedule:
                             command = 'rm -rf %s' % (tempStoragePath)
                             ProcessUtilities.normalExecutioner(command)
                             return 0, 'Backup process killed.'
+
                 else:
+                    if os.path.exists('/usr/local/CyberCP/debug'):
+                        message = 'If running not found.'
+                        logging.CyberCPLogFileWriter.writeToFile(message)
                     if os.path.exists(status):
+                        if os.path.exists('/usr/local/CyberCP/debug'):
+                            message = 'if running not found, Status file exists'
+                            logging.CyberCPLogFileWriter.writeToFile(message)
                         status = open(status, 'r').read()
                         time.sleep(2)
 
@@ -182,6 +208,11 @@ class backupSchedule:
                                 pass
                             return 1, tempStoragePath
                         elif os.path.exists(schedulerPath):
+
+                            if os.path.exists('/usr/local/CyberCP/debug'):
+                                message = 'if running not found, Status file exists, scheduler path exists thus killed.'
+                                logging.CyberCPLogFileWriter.writeToFile(message)
+
                             backupSchedule.remoteBackupLogging(backupLogPath, 'Backup process killed. Error: %s' % (open(schedulerPath, 'r').read()),
                                                            backupSchedule.ERROR)
                             os.remove(schedulerPath)
@@ -189,13 +220,23 @@ class backupSchedule:
                             ProcessUtilities.normalExecutioner(command)
                             return 0, 'Backup process killed.'
                     else:
+                        if os.path.exists('/usr/local/CyberCP/debug'):
+                            message = 'Status file does not exists.'
+                            logging.CyberCPLogFileWriter.writeToFile(message)
                         if killCounter == 1:
+
+                            if os.path.exists('/usr/local/CyberCP/debug'):
+                                message = 'if running not found, Status file  does not exists, kill counter 1, thus killed'
+                                logging.CyberCPLogFileWriter.writeToFile(message)
 
                             command = 'rm -rf %s' % (tempStoragePath)
                             ProcessUtilities.normalExecutioner(command)
 
                             return 0, 'Backup process killed without reporting any error. [184]'
                         elif os.path.exists(schedulerPath):
+                            if os.path.exists('/usr/local/CyberCP/debug'):
+                                message = 'if running not found, Status file does not exists, scheduler path found thus killed'
+                                logging.CyberCPLogFileWriter.writeToFile(message)
                             backupSchedule.remoteBackupLogging(backupLogPath, 'Backup process killed. Error: %s' % (
                                 open(schedulerPath, 'r').read()),
                                                                backupSchedule.ERROR)

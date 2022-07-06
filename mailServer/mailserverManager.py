@@ -183,7 +183,7 @@ class MailServerManager(multi.Thread):
             checker = 0
             count = 1
             for items in emails:
-                dic = {'id': count, 'email': items.email}
+                dic = {'id': count, 'email': items.email, 'DiskUsage': '%sMB' % items.DiskUsage}
                 count = count + 1
 
                 if checker == 0:
@@ -543,6 +543,7 @@ class MailServerManager(multi.Thread):
 
             for items in records:
                 dic = {'email': items.email,
+                       'DiskUsage': '%sMB' % items.DiskUsage
                        }
 
                 if checker == 0:
@@ -1475,7 +1476,7 @@ milter_default_action = accept
         command = "chown -R root:root /usr/local/lscp"
         ProcessUtilities.executioner(command)
 
-        command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
+        command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail/data"
         ProcessUtilities.executioner(command)
 
         command = "chmod 700 /usr/local/CyberCP/cli/cyberPanel.py"

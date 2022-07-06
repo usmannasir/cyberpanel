@@ -1,0 +1,242 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Deploy WordPress - CyberPanel" %}{% endblock %}
+{% block content %}
+
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
+
+    <div class="container">
+        <div id="page-title">
+            <h2>{% trans "Create Wordpress Site" %}</h2>
+            <p>{% trans "On this page you can launch, list, modify and delete websites from your server." %}</p>
+        </div>
+
+
+        <div ng-controller="createWordpress" class="panel">
+            <div class="panel-body">
+                <h3 class="content-box-header">
+                    {% trans "Website Details" %} <img ng-hide="webSiteCreationLoading"
+                                                       src="{% static 'images/loading.gif' %}">
+                </h3>
+                <div class="example-box-wrapper">
+
+                    <form name="websiteCreationForm" action="/" id="createPackages"
+                          class="form-horizontal bordered-row panel-body">
+
+                        <div ng-hide="installationDetailsForm" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Select Package" %}</label>
+                            <div class="col-sm-6">
+                                <select ng-model="packageForWebsite" class="form-control">
+                                    {% for items in packageList %}
+                                        <option>{{ items }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div ng-hide="installationDetailsForm" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Select Owner" %}</label>
+                            <div class="col-sm-6">
+                                <select ng-model="websiteOwner" class="form-control">
+                                    {% for items in owernList %}
+                                        <option>{{ items }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div ng-hide="installationDetailsForm" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Title" %}</label>
+                            <div class="col-sm-6">
+                                <input type="text" name="WPtitle" class="form-control" ng-model="WPtitle" required>
+                            </div>
+
+                        </div>
+
+{#                        <div ng-hide="installationDetailsForm" class="form-group">#}
+{#                            <label class="col-sm-3 control-label">{% trans "Domain Name" %}</label>#}
+{#                            <div class="col-sm-6">#}
+{#                                <input name="dom" type="text" class="form-control" ng-model="domainNameCreate"#}
+{#                                       placeholder="{% trans "Do not enter WWW, it will be auto created!" %}" required>#}
+{#                            </div>#}
+{#                            <div ng-show="websiteCreationForm.dom.$error.pattern"#}
+{#                                 class="current-pack">{% trans "Invalid Domain (Note: You don't need to add 'http' or 'https')" %}</div>#}
+{#                        </div>#}
+
+                        <div ng-hide="installationDetailsForm" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Domain Name" %}</label>
+                            <div class="col-sm-6">
+                                <div class="input-group bootstrap-touchspin">
+                                    <span
+                                            class="input-group-addon bootstrap-touchspin-prefix"
+                                            style="display: none;"></span>
+                                    <input ng-model="domainNameCreate" id="touchspin-demo-1" class="form-control"
+                                           type="text" value="55"
+                                           name="touchspin-demo-1"
+                                           style="display: block;" placeholder="{% trans "Do not enter WWW, it will be auto created!" %}">
+                                    <span class="input-group-addon bootstrap-touchspin-postfix">/</span>
+                                    <span style="width: 25%" class="input-group-btn">
+                                        <input id="touchspin-demo-1" class="form-control"
+                                               placeholder="{% trans "Leave empty for default" %}"
+                                               type="text" value="Leave empty for default"
+                                               name="touchspin-demo-1" ng-model="installPath"
+                                               style="display: block;"></span></div>
+                            </div>
+                            <div ng-show="websiteCreationForm.dom.$error.pattern"
+                                 class="current-pack">{% trans "Invalid Domain (Note: You don't need to add 'http' or 'https')" %}</div>
+                        </div>
+
+
+                        <div ng-hide="installationDetailsForm" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Username" %}</label>
+                            <div class="col-sm-6">
+                                <input name="Username" type="text" class="form-control" ng-model="WPUsername"
+                                       required>
+                            </div>
+                            <div ng-show="websiteCreationForm.dom.$error.pattern"
+                                 class="current-pack">{% trans "Invalid Domain (Note: You don't need to add 'http' or 'https')" %}</div>
+                        </div>
+
+                        <div ng-hide="installationDetailsForm" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Email" %}</label>
+                            <div class="col-sm-6">
+                                <input type="email" name="email" class="form-control" ng-model="adminEmail" required>
+                            </div>
+                            <div ng-show="websiteCreationForm.email.$error.email"
+                                 class="current-pack">{% trans "Invalid Email" %}</div>
+                        </div>
+                        <div ng-hide="installationDetailsForm" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Password" %}</label>
+                            <div class="col-sm-6">
+                                <input name="password" type="password" class="form-control" ng-model="WPPassword"
+                                       required>
+                            </div>
+                            <div ng-show="websiteCreationForm.dom.$error.pattern"
+                                 class="current-pack">{% trans "Invalid Domain (Note: You don't need to add 'http' or 'https')" %}</div>
+                        </div>
+
+                        <div ng-hide="installationDetailsForm" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Select WP Version" %}</label>
+                            <div class="col-sm-6">
+                                <select ng-model="WPVersions" class="form-control">
+                                    {% for wp in WPVersions %}
+                                        <option>{{ wp }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div ng-hide="installationDetailsForm" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Plugin/Theme" %}</label>
+                            <div class="col-sm-6">
+                                <select ng-model="pluginbucket" class="form-control">
+                                    <option value="-1" selected>Select Plugin Bucket</option>
+                                    {% for wp in Plugins %}
+                                        <option value="{{ wp.id }}">{{ wp.Name }}</option>
+                                    {% endfor %}
+                                </select>
+
+                            </div>
+                        </div>
+
+                        <div ng-hide="installationDetailsForm" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Automatic Updates" %}</label>
+                            <div class="col-sm-6">
+                                <select ng-model="autoupdates" class="form-control">
+
+                                    <option>Disabled</option>
+                                    <option>All minor and major</option>
+                                    <option>Minor and Security Updates</option>
+
+                                </select>
+
+                            </div>
+                        </div>
+                        <div ng-hide="installationDetailsForm" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Plugins Updates" %}</label>
+                            <div class="col-sm-6">
+                                <select ng-model="pluginupdates" class="form-control">
+
+                                    <option>Enabled</option>
+                                    <option>Disabled</option>
+
+                                </select>
+
+                            </div>
+                        </div>
+                        <div ng-hide="installationDetailsForm" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Themes Updates" %}</label>
+                            <div class="col-sm-6">
+                                <select ng-model="themeupdates" class="form-control">
+
+                                    <option>Enabled</option>
+                                    <option>Disabled</option>
+
+                                </select>
+
+                            </div>
+                        </div>
+
+
+                        <div ng-hide="installationDetailsForm" class="form-group">
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-4">
+                                <button type="button" ng-click="createWordPresssite()"
+                                        class="btn btn-primary btn-lg">{% trans "Create Website" %}</button>
+
+                            </div>
+                        </div>
+
+                        <div ng-hide="installationProgress" class="form-group">
+                            <label class="col-sm-2 control-label"></label>
+                            <div class="col-sm-7">
+
+                                <div class="alert alert-success text-center">
+                                    <h2>{$ currentStatus $}</h2>
+                                </div>
+
+                                <div class="progress">
+                                    <div id="installProgress" class="progress-bar" role="progressbar" aria-valuenow="70"
+                                         aria-valuemin="0" aria-valuemax="100" style="width:0%">
+                                        <span class="sr-only">70% Complete</span>
+                                    </div>
+                                </div>
+
+                                <div ng-hide="errorMessageBox" class="alert alert-danger">
+                                    <p>{% trans "Error message:" %} {$ errorMessage $}</p>
+                                </div>
+
+                                <div ng-hide="success" class="alert alert-success">
+                                    <p>{% trans "Website succesfully created." %}</p>
+                                </div>
+
+
+                                <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                    <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                                </div>
+
+
+                            </div>
+                        </div>
+
+                        <div ng-hide="installationProgress" class="form-group">
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-4">
+                                <button type="button" ng-disabled="goBackDisable" ng-click="goBack()"
+                                        class="btn btn-primary btn-lg">{% trans "Go Back" %}</button>
+                            </div>
+                        </div>
+
+
+                    </form>
+
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+
+
+{% endblock %}

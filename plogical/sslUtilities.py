@@ -1,3 +1,5 @@
+import requests
+
 from plogical import CyberCPLogFileWriter as logging
 import os
 import shlex
@@ -276,6 +278,45 @@ class sslUtilities:
     def obtainSSLForADomain(virtualHostName, adminEmail, sslpath, aliasDomain=None):
         sender_email = 'root@%s' % (socket.gethostname())
 
+        if not os.path.exists('/usr/local/lsws/Example/html/.well-known/acme-challenge'):
+            command = f'mkdir -p /usr/local/lsws/Example/html/.well-known/acme-challenge'
+            ProcessUtilities.normalExecutioner(command)
+
+        CustomVerificationFile = f'/usr/local/lsws/Example/html/.well-known/acme-challenge/{virtualHostName}'
+        command = f'touch {CustomVerificationFile}'
+        ProcessUtilities.normalExecutioner(command)
+
+        WWWStatus = 0
+        NONWWWStatus = 0
+
+        URLFetchPathWWW = f'http://www.{virtualHostName}/.well-known/acme-challenge/{virtualHostName}'
+        URLFetchPathNONWWW = f'http://{virtualHostName}/.well-known/acme-challenge/{virtualHostName}'
+
+        try:
+            resp = requests.get(URLFetchPathWWW, timeout=5)
+
+            if resp.status_code == 200:
+                logging.CyberCPLogFileWriter.writeToFile(f'Status Code: 200 for: {URLFetchPathWWW}')
+                WWWStatus = 1
+            else:
+                logging.CyberCPLogFileWriter.writeToFile(
+                    f'Status Code: {str(resp.status_code)} for: {URLFetchPathWWW}. Error: {resp.text}')
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile(
+                f'Status Code: Unkown for: {URLFetchPathWWW}. Error: {str(msg)}')
+
+        try:
+            resp = requests.get(URLFetchPathNONWWW, timeout=5)
+            if resp.status_code == 200:
+                logging.CyberCPLogFileWriter.writeToFile(f'Status Code: 200 for: {URLFetchPathNONWWW}')
+                NONWWWStatus = 1
+            else:
+                logging.CyberCPLogFileWriter.writeToFile(f'Status Code: {str(resp.status_code)} for: {URLFetchPathNONWWW}. Error: {resp.text}')
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile(
+                f'Status Code: Unkown for: {URLFetchPathNONWWW}. Error: {str(msg)}')
+
+
         try:
             acmePath = '/root/.acme.sh/acme.sh'
 
@@ -295,18 +336,22 @@ class sslUtilities:
                     subprocess.call(shlex.split(command))
 
                 try:
-                    logging.CyberCPLogFileWriter.writeToFile("Trying to obtain SSL for: " + virtualHostName + " and: www." + virtualHostName, 0)
-
                     command = acmePath + " --issue -d " + virtualHostName + " -d www." + virtualHostName \
                               + ' --cert-file ' + existingCertPath + '/cert.pem' + ' --key-file ' + existingCertPath + '/privkey.pem' \
                               + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w /usr/local/lsws/Example/html -k ec-256 --force --server letsencrypt'
 
-                    logging.CyberCPLogFileWriter.writeToFile(command, 0)
+                    if WWWStatus and NONWWWStatus:
+                        logging.CyberCPLogFileWriter.writeToFile("Trying to obtain SSL for: " + virtualHostName + " and: www." + virtualHostName, 0)
 
-                    output = subprocess.check_output(shlex.split(command)).decode("utf-8")
-                    logging.CyberCPLogFileWriter.writeToFile("Successfully obtained SSL for: " + virtualHostName + " and: www." + virtualHostName, 0)
+                        logging.CyberCPLogFileWriter.writeToFile(command, 0)
 
-                    logging.CyberCPLogFileWriter.SendEmail(sender_email, adminEmail, output, 'SSL Notification for %s.' % (virtualHostName))
+                        output = subprocess.check_output(shlex.split(command)).decode("utf-8")
+                        logging.CyberCPLogFileWriter.writeToFile("Successfully obtained SSL for: " + virtualHostName + " and: www." + virtualHostName, 0)
+
+                        logging.CyberCPLogFileWriter.SendEmail(sender_email, adminEmail, output, 'SSL Notification for %s.' % (virtualHostName))
+                    else:
+                        logging.CyberCPLogFileWriter.writeToFile(command, 0)
+                        raise subprocess.CalledProcessError(0, '', '')
 
                 except subprocess.CalledProcessError:
                     logging.CyberCPLogFileWriter.writeToFile(
@@ -315,16 +360,22 @@ class sslUtilities:
                     finalText = "Failed to obtain SSL for: " + virtualHostName + " and: www." + virtualHostName
 
                     try:
-                        finalText = '%s\nTrying to obtain SSL for: %s' % (finalText, virtualHostName)
-                        logging.CyberCPLogFileWriter.writeToFile("Trying to obtain SSL for: " + virtualHostName, 0)
                         command = acmePath + " --issue -d " + virtualHostName + ' --cert-file ' + existingCertPath \
                                   + '/cert.pem' + ' --key-file ' + existingCertPath + '/privkey.pem' \
                                   + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w /usr/local/lsws/Example/html -k ec-256 --force --server letsencrypt'
-                        output = subprocess.check_output(shlex.split(command)).decode("utf-8")
-                        logging.CyberCPLogFileWriter.writeToFile("Successfully obtained SSL for: " + virtualHostName, 0)
-                        finalText = '%s\nSuccessfully obtained SSL for: %s.' % (finalText, virtualHostName)
-                        logging.CyberCPLogFileWriter.SendEmail(sender_email, adminEmail, finalText,
-                                                               'SSL Notification for %s.' % (virtualHostName))
+
+                        if NONWWWStatus:
+                            finalText = '%s\nTrying to obtain SSL for: %s' % (finalText, virtualHostName)
+                            logging.CyberCPLogFileWriter.writeToFile("Trying to obtain SSL for: " + virtualHostName, 0)
+                            output = subprocess.check_output(shlex.split(command)).decode("utf-8")
+                            logging.CyberCPLogFileWriter.writeToFile("Successfully obtained SSL for: " + virtualHostName, 0)
+                            finalText = '%s\nSuccessfully obtained SSL for: %s.' % (finalText, virtualHostName)
+                            logging.CyberCPLogFileWriter.SendEmail(sender_email, adminEmail, finalText,
+                                                                   'SSL Notification for %s.' % (virtualHostName))
+                        else:
+                            logging.CyberCPLogFileWriter.writeToFile(command, 0)
+                            raise subprocess.CalledProcessError(0, '', '')
+
                     except subprocess.CalledProcessError:
                         logging.CyberCPLogFileWriter.writeToFile('Failed to obtain SSL, issuing self-signed SSL for: ' + virtualHostName, 0)
                         logging.CyberCPLogFileWriter.SendEmail(sender_email, adminEmail, 'Failed to obtain SSL, issuing self-signed SSL for: ' + virtualHostName,

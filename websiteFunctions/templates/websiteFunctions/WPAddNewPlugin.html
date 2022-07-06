@@ -1,0 +1,64 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "plugin - CyberPanel" %}{% endblock %}
+{% block content %}
+
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
+
+    <div class="container">
+        <div id="page-title">
+            <h2 id="domainNamePage">{% trans "Add New Plugin" %}
+
+            </h2>
+        </div>
+        <div ng-controller="WPAddNewPlugin" class="panel">
+            <div class="panel-body">
+                <div class="example-box-wrapper">
+
+                    <form name="websiteCreationForm" action="/" id="createPackages"
+                          class="form-horizontal bordered-row panel-body">
+
+                        <label>{% trans "Plugin Bucket Name" %} <img ng-hide="webSiteCreationLoading"
+                                                                     src="{% static 'images/loading.gif' %}"></label>
+
+                        <input name="PluginbucketName" type="text" class="form-control"
+                               ng-model="PluginbucketName"
+                               required>
+
+
+                        <label style="margin-top: 15px;">{% trans "Search Plugin Name" %}</label>
+
+                        <input name="searchcontent" type="text" class="form-control" ng-model="searchcontent"
+                               ng-keyup="$event.keyCode == 13 ? SearchPluginName('add') : null"
+                               placeholder="{% trans "Search Plugin...." %}" required>
+
+                        <div id="mysearch" class="col-lg-12" style="display: none; border-top: none!important;
+                                                            border: 1px solid  rgba(90, 91, 92, 0.7);
+                                                            position: absolute; z-index: 1;
+                                                            background-color: #FFFFFF">
+                        </div>
+
+
+                        <h3 style="margin-top: 20px;">Selected Plugin</h3>
+                        <div id="selJS" style="display: none; display: flex; flex-direction: row; margin-top: 10px;">
+
+                        </div>
+                        <div ng-hide="installationDetailsForm" class="form-group">
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-4">
+                                <button ng-disabled="websiteCreationForm.dom.$error.required || websiteCreationForm.email.$invalid"
+                                        type="button" ng-click="AddNewplugin()"
+                                        class="btn btn-primary btn-lg">{% trans "Add Plugin Bucket" %}</button>
+
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+{% endblock %}

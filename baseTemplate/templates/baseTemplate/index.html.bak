@@ -1,0 +1,1102 @@
+{% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
+<!DOCTYPE html>
+<html lang="en" ng-app="CyberCP">
+<head>
+
+    <style>
+        /* Loading Spinner */
+        .spinner {
+            margin: 0;
+            width: 70px;
+            height: 18px;
+            margin: -35px 0 0 -9px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            text-align: center
+        }
+
+        .spinner > div {
+            width: 18px;
+            height: 18px;
+            background-color: #333;
+            border-radius: 100%;
+            display: inline-block;
+            -webkit-animation: bouncedelay 1.4s infinite ease-in-out;
+            animation: bouncedelay 1.4s infinite ease-in-out;
+            -webkit-animation-fill-mode: both;
+            animation-fill-mode: both
+        }
+
+        .spinner .bounce1 {
+            -webkit-animation-delay: -.32s;
+            animation-delay: -.32s
+        }
+
+        .spinner .bounce2 {
+            -webkit-animation-delay: -.16s;
+            animation-delay: -.16s
+        }
+
+        @-webkit-keyframes bouncedelay {
+            0%, 80%, 100% {
+                -webkit-transform: scale(0.0)
+            }
+            40% {
+                -webkit-transform: scale(1.0)
+            }
+        }
+
+        @keyframes bouncedelay {
+            0%, 80%, 100% {
+                transform: scale(0.0);
+                -webkit-transform: scale(0.0)
+            }
+            40% {
+                transform: scale(1.0);
+                -webkit-transform: scale(1.0)
+            }
+        }
+    </style>
+
+
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <!--[if IE]>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'><![endif]-->
+    <title>{% block title %}Page Title{% endblock %}</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <!-- Favicons -->
+    {% load static %}
+
+    <script src="{% static 'baseTemplate/angularjs.1.6.5.js' %}"></script>
+    <script src="{% static 'baseTemplate/jquery.3.2.1.js' %}"></script>
+
+    <!-- HELPERS -->
+
+    {% with version="2.1.2" %}
+
+        <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/finalBase/finalBase.css' %}">
+
+        <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/assets/finalBase/finalBaseTheme.css' %}">
+
+        <link rel="stylesheet" type="text/css" href="/static/baseTemplate/assets/themes/admin/layout.css">
+        <link rel="stylesheet" type="text/css"
+              href="/static/baseTemplate/assets/themes/admin/color-schemes/default.css">
+        <link rel="stylesheet" type="text/css"
+              href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css">
+        <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/custom-js/pnotify.custom.min.css' %}">
+        <link rel="stylesheet" type="text/css" href="{% static 'websiteFunctions/websiteFunctions.css' %}">
+        <link rel="icon" type="image/png" href="{% static 'baseTemplate/assets/finalBase/favicon.png' %}">
+        <link type="text/css" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css"
+              rel="stylesheet"/>
+        {% block styles %}
+        {% endblock %}
+
+        <script type="text/javascript" src="{% static 'baseTemplate/assets/js-core/jquery-core.min.js' %}"></script>
+        <script type="text/javascript">
+            $(window).load(function () {
+                setTimeout(function () {
+                    $('#loading').fadeOut(400, "linear");
+                }, 300);
+            });
+        </script>
+        <script src="https://cdn.jsdelivr.net/npm/flot-charts@0.8.3/jquery.flot.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/jquery.flot@0.8.3/jquery.flot.time.js"></script>
+
+        {% block header_scripts %}
+        {% endblock %}
+
+        <!-- JS Ends -->
+
+        <style>
+            {{ cosmetic.MainDashboardCSS | safe }}
+        </style>
+
+        </head>
+
+
+        <body>
+
+        <div class="sb-slidebar bg-black sb-right sb-style-overlay">
+            <div class="scrollable-content scrollable-slim-sidebar">
+                <div class="pad15A">
+
+
+                    <div class="clear"></div>
+
+
+                    <div ng-controller="systemStatusInfo" id="sidebar-toggle-3" class="collapse in">
+
+                        <ul class="progress-box">
+                            <li>
+
+                                <div class="progress-title">
+                                    {% trans "CPU Usage" %}
+                                    <b>{$ cpuUsage $}%</b>
+                                </div>
+                                <div class="progressbar-small progressbar" data-value="{$ cpuUsage $}">
+                                    <div class="progressbar-value bg-yellow tooltip-button" title="{$ cpuUsage $}%">
+                                    </div>
+                                </div>
+                            </li>
+                            <li>
+                                <b class="pull-right">{$ ramUsage $}%</b>
+                                <div class="progress-title">
+                                    {% trans "Ram Usage" %}
+                                </div>
+                                <div class="progressbar-small progressbar" data-value="{$ ramUsage $}">
+                                    <div class="progressbar-value bg-red tooltip-button" title="{$ ramUsage $}%"></div>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="progress-title">
+                                    {% trans "Disk Usage" %}
+                                    <b>{$ diskUsage $}%</b>
+                                </div>
+                                <div class="progressbar" data-value="{$ diskUsage $}">
+                                    <div class="progressbar-value bg-green">
+                                        <div class="progress-label">{$ diskUsage $}%</div>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+
+                    </div>
+
+                    <div class="clear"></div>
+
+                </div>
+            </div>
+        </div>
+
+        <div id="loading">
+            <div class="spinner">
+                <div class="bounce1"></div>
+                <div class="bounce2"></div>
+                <div class="bounce3"></div>
+            </div>
+        </div>
+
+        <div id="page-wrapper">
+            <div id="page-header" class="bg-gradient-9">
+                <div id="mobile-navigation">
+                    <button id="nav-toggle" class="collapsed" data-toggle="collapse" data-target="#page-sidebar">
+                        <span></span></button>
+                    <a href="{% url 'index' %}" class="logo-content-small" title="{% trans 'CyberPanel' %}"></a>
+                </div>
+                <div id="header-logo" class="logo-bg">
+                    <a href="{% url 'index' %}" class="logo-content-big" title="{% trans 'CyberPanel' %}">
+                        Cyber <i>Panel</i>
+                        <span>{% trans "Web Hosting Control Panel" %}</span>
+                    </a>
+                    <a href="{% url 'index' %}" class="logo-content-small" title="{% trans 'CyberPanel' %}">
+                        Cyber <i>Panel</i>
+                        <span>{% trans "Web Hosting Control Panel" %}</span>
+                    </a>
+                    <a id="close-sidebar" href="#" title="{% trans 'Close sidebar' %}">
+                        <i class="glyph-icon icon-angle-left"></i>
+                    </a>
+                </div>
+
+                <div ng-controller="loadAvg" id="header-nav-right">
+                    {% comment %}<a class="hide-on-phone hdr-btn" style="background-color: unset;width: 33px" href="#"
+                       title="{% trans 'CPU Load Average' %}" data-placement="bottom">
+                        <span class="badge bg-red" id="load1">{$ one $}</span>
+                    </a>
+
+                    <a class="hide-on-phone hdr-btn" style="background-color: unset;width: 33px" href="#"
+                       title="{% trans 'CPU Load Average' %}" data-placement="bottom">
+                        <span class="badge bg-red" id="load2">{$ two $}</span>
+                    </a>
+
+                    <a class="hide-on-phone hdr-btn" style="background-color: unset;width: 33px" href="#"
+                       title="{% trans 'CPU Load Average' %}" data-placement="bottom">
+                        <span class="badge bg-red" id="load3">{$ three $}</span>
+                    </a>{% endcomment %}
+
+                    {#                    <div class="dropdown" id="dashnav-btn">#}
+                    {#                        <a href="#" data-toggle="dropdown" data-placement="bottom"#}
+                    {#                           class="popover-button-header tooltip-button" title="{% trans 'Dashboard Quick Menu' %}">#}
+                    {#                            <i class="glyph-icon icon-linecons-cog"></i>#}
+                    {#                        </a>#}
+                    {#                        <div class="dropdown-menu float-right">#}
+                    {#                            <div class="box-sm">#}
+                    {#                                <div class="pad5T pad5B pad10L pad10R dashboard-buttons clearfix">#}
+                    {#                                    <a href="{% url 'loadWebsitesHome' %}"#}
+                    {#                                       class="btn vertical-button remove-border btn-info" title="{% trans '' %}">#}
+                    {#                            <span class="glyph-icon icon-separator-vertical pad0A medium">#}
+                    {#                                <i class="glyph-icon icon-dashboard opacity-80 font-size-20"></i>#}
+                    {#                            </span>#}
+                    {#                                        {% trans "Websites" %}#}
+                    {#                                    </a>#}
+                    {#                                    <a href="{% url 'packagesHome' %}"#}
+                    {#                                       class="btn vertical-button remove-border btn-danger"#}
+                    {#                                       title="{% trans '' %}">#}
+                    {#                            <span class="glyph-icon icon-separator-vertical pad0A medium">#}
+                    {#                                <i class="glyph-icon icon-tags opacity-80 font-size-20"></i>#}
+                    {#                            </span>#}
+                    {#                                        {% trans "Packages" %}#}
+                    {#                                    </a>#}
+                    {#                                    <a href="{% url 'dnsHome' %}" class="btn vertical-button remove-border btn-purple"#}
+                    {#                                       title="{% trans '' %}">#}
+                    {#                            <span class="glyph-icon icon-separator-vertical pad0A medium">#}
+                    {#                                <i class="glyph-icon icon-fire opacity-80 font-size-20"></i>#}
+                    {#                            </span>#}
+                    {#                                        {% trans "DNS" %}#}
+                    {#                                    </a>#}
+                    {#                                    <a href="{% url 'loadFTPHome' %}"#}
+                    {#                                       class="btn vertical-button remove-border btn-azure"#}
+                    {#                                       title="{% trans '' %}">#}
+                    {#                            <span class="glyph-icon icon-separator-vertical pad0A medium">#}
+                    {#                                <i class="glyph-icon icon-bar-chart-o opacity-80 font-size-20"></i>#}
+                    {#                            </span>#}
+                    {#                                        {% trans "FTP" %}#}
+                    {#                                    </a>#}
+                    {#                                    <a href="{% url 'loadTuningHome' %}"#}
+                    {#                                       class="btn vertical-button remove-border btn-yellow" title="{% trans '' %}">#}
+                    {#                            <span class="glyph-icon icon-separator-vertical pad0A medium">#}
+                    {#                                <i class="glyph-icon icon-laptop opacity-80 font-size-20"></i>#}
+                    {#                            </span>#}
+                    {#                                        {% trans "Tuning" %}#}
+                    {#                                    </a>#}
+                    {#                                    <a href="{% url 'serverStatusHome' %}"#}
+                    {#                                       class="btn vertical-button remove-border btn-warning" title="{% trans '' %}">#}
+                    {#                            <span class="glyph-icon icon-separator-vertical pad0A medium">#}
+                    {#                                <i class="glyph-icon icon-code opacity-80 font-size-20"></i>#}
+                    {#                            </span>#}
+                    {#                                        {% trans "Status" %}#}
+                    {#                                    </a>#}
+                    {##}
+                    {#                                </div>#}
+                    {##}
+                    {#                            </div>#}
+                    {#                        </div>#}
+                    {#                    </div>#}
+                    <a class="header-btn" target="_blank" href="https://go.cyberpanel.net/community"
+                       title="{% trans 'Community' %}">
+                        <i class="glyph-icon icon-comments"></i>
+                    </a>
+                    <a class="header-btn" target="_blank" href="https://go.cyberpanel.net/support"
+                       title="{% trans 'Support' %}">
+                        <i class="glyph-icon icon-support"></i>
+                    </a>
+                    <a class="header-btn" id="logout-btn" href="{% url 'logout' %}" title="{% trans 'Logout' %}">
+                        <i class="glyph-icon icon-power-off"></i>
+                    </a>
+
+
+                </div>
+                <!-- #header-nav-right -->
+
+            </div>
+            <div id="page-sidebar">
+                <div class="scroll-sidebar">
+                    <ul id="sidebar-menu">
+                        <li class="header"><span>{% trans "Overview" %}</span></li>
+                        <li>
+                            <a href="#" title="{% trans 'Server IP Address' %}">
+                                <i class="glyph-icon tooltip-button icon-laptop" title="{% trans 'Server IP Address' %}"
+                                   data-original-title=".icon-laptop"></i>
+                                <span style="color: #db6868;font-weight: bold;">{{ ipAddress }}</span>
+                            </a>
+                            <a href="{% url 'index' %}" title="{% trans 'Dashboard' %}">
+                                <i class="glyph-icon icon-dashboard"></i>
+                                <span>{% trans "Dashboard" %}</span>
+                            </a>
+                            {% if admin or versionManagement %}
+                                <a href="{% url 'versionManagment' %}"
+                                   title="{% trans 'Version Management' %}">
+                                    <i class="glyph-icon tooltip-button icon-info"
+                                       title="{% trans 'Version Management' %}" data-original-title=".icon-cloud-upload"
+                                       aria-describedby="tooltip896208"></i>
+                                    <span>{% trans "Version Management" %}</span>
+                                </a>
+                                <a href="{% url 'design' %}"
+                                   title="{% trans 'Design' %}">
+                                    <i class="glyph-icon tooltip-button icon-cog"
+                                       title="{% trans 'Design' %}" data-original-title=".icon-cloud-upload"
+                                       aria-describedby="tooltip896208"></i>
+                                    <span>{% trans "Design" %}</span>
+                                </a>
+                                <a href="https://go.cyberpanel.net/cloud"
+                                   title="{% trans 'Connect' %}">
+                                    <i class="glyph-icon tooltip-button icon-link" title="{% trans 'Connect' %}"
+                                       data-original-title=".icon-cloud-upload" aria-describedby="tooltip896208"></i>
+                                    <span>{% trans "Connect" %}</span>
+                                </a>
+                                <a target="_blank" href="https://go.cyberpanel.net/community"
+                                   title="{% trans 'Connect' %}">
+                                    <i class="glyph-icon tooltip-button icon-comments-o" title="{% trans 'Community' %}"
+                                       data-original-title=".icon-comments-alt" aria-describedby="tooltip896208"></i>
+                                    <span>{% trans "Community" %}</span>
+                                </a>
+
+                            {% endif %}
+                        </li>
+                        <li class="divider"></li>
+                        <li class="header"><span>{% trans "Main" %}</span></li>
+
+                        <li>
+                            <a href="{% url 'loadUsersHome' %}" title="{% trans 'Users' %}">
+                                <i class="glyph-icon icon-users" title="{% trans 'Users' %}"></i>
+                                <span>{% trans "Users" %}</span>
+                            </a>
+                            <div class="sidebar-submenu">
+
+                                <ul>
+                                    <li><a href="{% url 'viewProfile' %}"
+                                           title="{% trans 'View Profile' %}"><span>{% trans "View Profile" %}</span></a>
+                                    </li>
+                                    {% if admin or createNewUser %}
+
+                                        <li><a href="{% url 'createUser' %}"
+                                               title="{% trans 'Create New User' %}"><span>{% trans "Create New User" %}</span></a>
+                                        </li>
+
+                                    {% endif %}
+                                    {% if admin or listUsers %}
+                                        <li><a href="{% url 'listUsers' %}"
+                                               title="{% trans 'List Users' %}"><span>{% trans "List Users" %}</span></a>
+                                        </li>
+                                    {% endif %}
+                                    <li><a href="{% url 'modifyUsers' %}"
+                                           title="{% trans 'Modify User' %}"><span>{% trans "Modify User" %}</span></a>
+                                    </li>
+                                    {% if admin or resellerCenter %}
+                                        <li><a href="{% url 'resellerCenter' %}"
+                                               title="{% trans 'Reseller Center' %}"><span>{% trans "Reseller Center" %}</span></a>
+                                        </li>
+                                    {% endif %}
+                                    {% if admin %}
+                                        <li><a href="{% url 'createNewACL' %}"
+                                               title="{% trans 'Create New ACL' %}"><span>{% trans "Create New ACL" %}</span></a>
+                                        </li>
+                                        <li><a href="{% url 'deleteACL' %}"
+                                               title="{% trans 'Delete ACL' %}"><span>{% trans "Delete ACL" %}</span></a>
+                                        </li>
+                                        <li><a href="{% url 'modifyACL' %}"
+                                               title="{% trans 'Modify ACL' %}"><span>{% trans "Modify ACL" %}</span></a>
+                                        </li>
+                                        <li><a href="{% url 'apiAccess' %}"
+                                               title="{% trans 'API Access' %}"><span>{% trans "API Access" %}</span></a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+
+                            </div><!-- .sidebar-submenu -->
+                        </li>
+
+                        <li>
+                            <a href="{% url 'loadWebsitesHome' %}" title="{% trans 'Websites' %}">
+                                <div class="glyph-icon icon-globe" title="{% trans 'Websites' %}"></div>
+                                <span>{% trans "Websites" %}</span>
+                            </a>
+                            <div class="sidebar-submenu">
+
+                                <ul>
+                                    {% if admin or createWebsite %}
+                                        <li><a href="{% url 'createWebsite' %}"
+                                               title="{% trans 'Create Website' %}"><span>{% trans "Create Website" %}</span></a>
+                                        </li>
+                                    {% endif %}
+                                    <li><a href="{% url 'listWebsites' %}"
+                                           title="{% trans 'List Websites' %}"><span>{% trans "List Websites" %}</span></a>
+                                    </li>
+                                    <li><a href="{% url 'CreateNewDomain' %}"
+                                           title="{% trans 'Create New Domain' %}"><span>{% trans "Create New Domain" %}</span></a>
+                                    </li>
+                                    <li><a href="{% url 'listChildDomains' %}"
+                                           title="{% trans 'List Domains' %}"><span>{% trans "List Domains" %}</span></a>
+                                    </li>
+                                    {% if admin or modifyWebsite %}
+                                        <li><a href="{% url 'modifyWebsite' %}"
+                                               title="{% trans 'Modify Website' %}"><span>{% trans "Modify Website" %}</span></a>
+                                        </li>
+                                    {% endif %}
+                                    {% if admin or suspendWebsite %}
+                                        <li><a href="{% url 'siteState' %}"
+                                               title="{% trans 'Suspend/Unsuspend' %}"><span>{% trans "Suspend/Unsuspend" %}</span></a>
+                                        </li>
+                                    {% endif %}
+                                    {% if admin or deleteWebsite %}
+                                        <li><a href="{% url 'deleteWebsite' %}"
+                                               title="{% trans 'Delete Website' %}"><span>{% trans "Delete Website" %}</span></a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+
+                            </div><!-- .sidebar-submenu -->
+                        </li>
+                        <li>
+                            <a id="packageHome" href="{% url 'packagesHome' %}" title="{% trans 'Packages' %}">
+                                <i class="glyph-icon icon-cubes"></i>
+                                <span>{% trans "Packages" %}</span>
+                            </a>
+                            <div id="packageSub" class="sidebar-submenu">
+
+                                <ul>
+                                    {% if admin or createPackage %}
+                                        <li><a href="{% url 'createPackage' %}"
+                                               title="{% trans 'Create Package' %}"><span>{% trans "Create Package" %}</span></a>
+                                        </li>
+                                    {% endif %}
+                                    {% if admin or listPackages %}
+                                        <li><a href="{% url 'listPackages' %}"
+                                               title="{% trans 'List Packages' %}"><span>{% trans "List Packages" %}</span></a>
+                                        </li>
+                                    {% endif %}
+                                    {% if admin or deletePackage %}
+                                        <li><a href="{% url 'deletePackage' %}"
+                                               title="{% trans 'Delete Package' %}"><span>{% trans "Delete Package" %}</span></a>
+                                        </li>
+                                    {% endif %}
+                                    {% if admin or modifyPackage %}
+                                        <li><a href="{% url 'modifyPackage' %}"
+                                               title="{% trans 'Modify Package' %}"><span>{% trans "Modify Package" %}</span></a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+
+                            </div><!-- .sidebar-submenu -->
+                        </li>
+                        <li>
+                            <a title="{% trans 'Databases' %}">
+                                <i class="glyph-icon icon-database" title="{% trans 'Databases' %}"></i>
+                                <span>{% trans "Databases" %}</span>
+                            </a>
+                            <div class="sidebar-submenu">
+
+                                <ul>
+                                    {% if admin or createDatabase %}
+                                        <li><a href="{% url 'createDatabase' %}"
+                                               title="{% trans 'Create Database' %}"><span>{% trans "Create Database" %}</span></a>
+                                        </li>
+                                    {% endif %}
+                                    {% if admin or deleteDatabase %}
+                                        <li><a href="{% url 'deleteDatabase' %}"
+                                               title="{% trans 'Delete Database' %}"><span>{% trans "Delete Database" %}</span></a>
+                                        </li>
+                                    {% endif %}
+                                    {% if admin or listDatabases %}
+                                        <li><a href="{% url 'listDBs' %}"
+                                               title="{% trans 'List Databases' %}"><span>{% trans "List Databases" %}</span></a>
+                                        </li>
+                                    {% endif %}
+                                    {% if admin or createDatabase %}
+                                        <li><a target="_blank" href="{% url 'phpMyAdmin' %}"
+                                               title="{% trans 'PHPMYAdmin' %}"><span>{% trans "PHPMYAdmin" %}</span></a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+
+                            </div><!-- .sidebar-submenu -->
+                        </li>
+
+                        {% if dnsAsWhole %}
+
+                            <li class="dnsAsWhole">
+                                <a title="{% trans 'DNS' %}">
+                                    <i class="glyph-icon icon-sitemap"></i>
+                                    <span>{% trans "DNS" %}</span>
+                                </a>
+                                <div class="sidebar-submenu">
+
+                                    <ul>
+                                        {% if admin or createNameServer %}
+                                            <li><a href="{% url 'createNameserver' %}"
+                                                   title="{% trans 'Create Nameserver' %}"><span>{% trans "Create Nameserver" %}</span></a>
+                                            </li>
+                                        {% endif %}
+                                        {% if admin %}
+                                            <li><a href="{% url 'configureDefaultNameServers' %}"
+                                                   title="{% trans 'Configure Default Nameservers' %}"><span>{% trans "Config Default Nameservers" %}</span></a>
+                                            </li>
+                                        {% endif %}
+                                        {% if admin or createDNSZone %}
+                                            <li><a href="{% url 'createDNSZone' %}"
+                                                   title="{% trans 'Create DNS Zone' %}"><span>{% trans "Create DNS Zone" %}</span></a>
+                                            </li>
+                                        {% endif %}
+                                        {% if admin or deleteZone %}
+                                            <li><a href="{% url 'deleteDNSZone' %}"
+                                                   title="{% trans 'Delete Zone' %}"><span>{% trans "Delete Zone" %}</span></a>
+                                            </li>
+                                        {% endif %}
+                                        {% if admin or addDeleteRecords %}
+                                            <li><a href="{% url 'addDeleteDNSRecords' %}"
+                                                   title="{% trans 'Add/Delete Records' %}"><span>{% trans "Add/Delete Records" %}</span></a>
+                                            </li>
+                                        {% endif %}
+                                        {% if admin or addDeleteRecords %}
+                                            <li class="addDeleteRecords"><a
+                                                    href="{% url 'addDeleteDNSRecordsCloudFlare' %}"
+                                                    title="{% trans 'CloudFlare' %}"><span>{% trans "CloudFlare" %}</span></a>
+                                            </li>
+                                        {% endif %}
+                                    </ul>
+
+                                </div><!-- .sidebar-submenu -->
+                            </li>
+
+                        {% endif %}
+
+                        {% if emailAsWhole %}
+
+                            <li class="emailAsWhole">
+                                <a href="{% url 'loadEmailHome' %}" title="{% trans 'Email' %}">
+                                    <i class="glyph-icon icon-paper-plane"></i>
+                                    <span>{% trans "Email" %}</span>
+                                </a>
+                                <div class="sidebar-submenu">
+
+                                    <ul>
+                                        {% if admin or createEmail %}
+                                            <li><a href="{% url 'createEmailAccount' %}"
+                                                   title="{% trans 'Create Email Account' %}"><span>{% trans "Create Email" %}</span></a>
+                                            </li>
+                                        {% endif %}
+                                        {% if admin or listEmails %}
+                                            <li><a href="{% url 'listEmails' %}"
+                                                   title="{% trans 'List Emails' %}"><span>{% trans "List Emails" %}</span></a>
+                                            </li>
+                                        {% endif %}
+                                        {% if admin or deleteEmail %}
+                                            <li><a href="{% url 'deleteEmailAccount' %}"
+                                                   title="{% trans 'Delete Email Account' %}"><span>{% trans "Delete Email" %}</span></a>
+                                            </li>
+                                        {% endif %}
+                                        {% if admin or emailForwarding %}
+                                            <li><a href="{% url 'emailForwarding' %}"
+                                                   title="{% trans 'Email Forwarding' %}"><span>{% trans "Email Forwarding" %}</span></a>
+                                            </li>
+                                        {% endif %}
+                                        {% if admin or changeEmailPassword %}
+                                            <li><a href="{% url 'changeEmailAccountPassword' %}"
+                                                   title="{% trans 'Change Password' %}"><span>{% trans "Change Password" %}</span></a>
+                                            </li>
+                                        {% endif %}
+                                        {% if admin or dkimManager %}
+                                            <li><a href="{% url 'dkimManager' %}"
+                                                   title="{% trans 'DKIM Manager' %}"><span>{% trans "DKIM Manager" %}</span></a>
+                                            </li>
+                                        {% endif %}
+                                        {% if admin or createEmail %}
+                                            <li><a href="/rainloop/index.php" title="{% trans 'Access Webmail' %}"
+                                                   target="_blank"><span>{% trans "Access Webmail" %}</span></a>
+                                            </li>
+                                        {% endif %}
+                                    </ul>
+
+                                </div><!-- .sidebar-submenu -->
+                            </li>
+
+                        {% endif %}
+                        {% if ftpAsWhole %}
+
+                            <li class="ftpAsWhole">
+                                <a href="{% url 'ftpHome' %}" title="{% trans 'FTP' %}">
+                                    <i class="glyph-icon icon-cloud-upload"></i>
+                                    <span>{% trans "FTP" %}</span>
+                                </a>
+                                <div class="sidebar-submenu">
+
+                                    <ul>
+                                        {% if admin or createFTPAccount %}
+                                            <li><a href="{% url 'createFTPAccount' %}"
+                                                   title="{% trans 'Create FTP Account' %}"><span>{% trans "Create FTP Account" %}</span></a>
+                                            </li>
+                                        {% endif %}
+                                        {% if admin or deleteFTPAccount %}
+                                            <li><a href="{% url 'deleteFTPAccount' %}"
+                                                   title="{% trans 'Delete FTP Account' %}"><span>{% trans "Delete FTP Account" %}</span></a>
+                                            </li>
+                                        {% endif %}
+                                        {% if admin or listFTPAccounts %}
+                                            <li><a href="{% url 'listFTPAccounts' %}"
+                                                   title="{% trans 'List FTP Accounts' %}"><span>{% trans "List FTP Accounts" %}</span></a>
+                                            </li>
+                                        {% endif %}
+                                    </ul>
+
+                                </div><!-- .sidebar-submenu -->
+                            </li>
+
+                        {% endif %}
+
+                        <li>
+                            <a href="{% url 'loadBackupHome' %}" title="{% trans 'Backup' %}">
+                                <i class="glyph-icon tooltip-button icon-copy" title=".icon-folder"></i>
+                                <span>{% trans "Backup" %}</span>
+                            </a>
+                            <div class="sidebar-submenu">
+
+                                <ul>
+                                    {% if admin or createBackup %}
+                                        <li><a href="{% url 'backupSite' %}"
+                                               title="{% trans 'Create Backup' %}"><span>{% trans "Create Backup" %}</span></a>
+                                        </li>
+                                    {% endif %}
+                                    {% if admin or restoreBackup %}
+                                        <li><a href="{% url 'restoreSite' %}"
+                                               title="{% trans 'Restore Backup' %}"><span>{% trans "Restore Backup" %}</span></a>
+                                        </li>
+                                    {% endif %}
+                                    {% if admin or addDeleteDestinations %}
+                                        <li><a href="{% url 'backupDestinations' %}"
+                                               title="{% trans 'Add Destination' %}"><span>{% trans "Add/Delete Destination" %}</span></a>
+                                        </li>
+                                    {% endif %}
+                                    {% if admin or scheduleBackups %}
+                                        <li><a href="{% url 'scheduleBackup' %}"
+                                               title="{% trans 'Schedule Backup' %}"><span>{% trans "Schedule Backup" %}</span></a>
+                                        </li>
+                                    {% endif %}
+                                    {% if admin or googleDriveBackups %}
+                                        <li><a href="{% url 'gDrive' %}"
+                                               title="{% trans 'Setup Google Drive' %}"><span>{% trans "Setup Google Drive" %}</span></a>
+                                        </li>
+                                    {% endif %}
+                                    {% if admin or remoteBackups %}
+                                        <li><a href="{% url 'remoteBackups' %}"
+                                               title="{% trans 'Remote Backups' %}"><span>{% trans "Remote Backups" %}</span></a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+
+                            </div><!-- .sidebar-submenu -->
+                        </li>
+
+
+                        <li>
+                            <a href="{% url 'loadBackupHome' %}" title="{% trans 'Incremental Backup - Beta' %}">
+                                <i class="glyph-icon tooltip-button icon-save" title="Incremental Backup"></i>
+                                <span>{% trans "Incremental Backup" %}</span>
+                            </a>
+                            <div class="sidebar-submenu">
+
+                                <ul>
+                                    {% if admin or createBackup %}
+                                        <li><a href="{% url 'createBackupInc' %}"
+                                               title="{% trans 'Create Backup' %}"><span>{% trans "Create/Restore Backup" %}</span></a>
+                                        </li>
+                                    {% endif %}
+                                    {% if admin or restoreBackup %}
+                                        <li><a href="{% url 'backupDestinationsInc' %}"
+                                               title="{% trans 'Restore Backup' %}"><span>{% trans "Add/Remove Destinations" %}</span></a>
+                                        </li>
+                                    {% endif %}
+                                    {% if admin or restoreBackup %}
+                                        <li><a href="{% url 'scheduleBackupsInc' %}"
+                                               title="{% trans 'Schedule Backups' %}"><span>{% trans "Schedule Backups" %}</span></a>
+                                        </li>
+                                    {% endif %}
+                                    {% if admin or remoteBackups %}
+                                        <li><a href="{% url 'restoreRemoteBackupsInc' %}"
+                                               title="{% trans 'Restore from Remote Server' %}"><span>{% trans "Restore from Remote" %}</span></a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+
+                            </div>
+                        </li>
+
+
+                        <li>
+                            <a href="{% url 'loadSSLHome' %}" title="{% trans 'Backup' %}">
+                                <i class="glyph-icon tooltip-button icon-lock" title="{% trans 'SSL' %}"></i>
+                                <span>{% trans "SSL" %}</span>
+                            </a>
+                            <div class="sidebar-submenu">
+
+                                <ul>
+                                    {% if admin or manageSSL %}
+                                        <li class="manageSSL"><a href="{% url 'manageSSL' %}"
+                                                                 title="{% trans 'Manage SSL' %}"><span>{% trans "Manage SSL" %}</span></a>
+                                        </li>
+                                    {% endif %}
+                                    {% if admin or hostnameSSL %}
+                                        <li class="hostnameSSL"><a href="{% url 'sslForHostName' %}"
+                                                                   title="{% trans 'Hostname SSL' %}"><span>{% trans "Hostname SSL" %}</span></a>
+                                        </li>
+                                    {% endif %}
+                                    {% if admin or mailServerSSL %}
+                                        <li class="mailServerSSL"><a href="{% url 'sslForMailServer' %}"
+                                                                     title="{% trans 'MailServer SSL' %}"><span>{% trans "MailServer SSL" %}</span></a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+
+                            </div>
+                        </li>
+
+                        {% if admin %}
+
+                            <li class="header"><span>{% trans "Server" %}</span></li>
+                            <li>
+                                <a href="{% url 'Filemanager' %}"
+                                   title="{% trans 'Root File Manager' %}">
+                                    <i class="glyph-icon tooltip-button icon-link" title="{% trans 'Root File Manager' %}"
+                                       data-original-title=".icon-cloud-upload" aria-describedby="tooltip896208"></i>
+                                    <span>{% trans "Root File Manager" %}</span>
+                                </a>
+                            </li>
+
+
+
+                            {#                            <li>#}
+                            {#                                <a href="#" title="{% trans 'Terminal' %}">#}
+                            {#                                    <i class="glyph-icon icon-linecons-fire"></i>#}
+                            {#                                    <span>{% trans "Web Terminal" %}</span>#}
+                            {#                                    <span class="bs-label badge-yellow">{% trans "NEW" %}</span>#}
+                            {#                                </a>#}
+                            {#                                <div class="sidebar-submenu">#}
+                            {##}
+                            {#                                    <ul>#}
+                            {#                                        <li><a href="{% url 'terminal' %}"#}
+                            {#                                               title="{% trans 'Web Based Terminal' %}"><span>{% trans "Terminal" %}</span></a>#}
+                            {#                                        </li>#}
+                            {#                                    </ul>#}
+                            {#                                </div><!-- .sidebar-submenu -->#}
+                            {#                            </li>#}
+
+                            <li>
+                                <a href="#" title="{% trans 'CloudLinux' %}">
+                                    <i class="glyph-icon icon-linecons-fire"></i>
+                                    <span>{% trans "CloudLinux" %}</span>
+                                    <span class="bs-label badge-yellow">{% trans "NEW" %}</span>
+                                </a>
+                                <div class="sidebar-submenu">
+
+                                    <ul>
+                                        <li><a href="{% url 'CreatePackageCL' %}"
+                                               title="{% trans 'Create Cloud Linux Package' %}"><span>{% trans "Create Package" %}</span></a>
+                                        </li>
+                                    </ul>
+                                    <ul>
+                                        <li><a href="{% url 'listPackagesCL' %}"
+                                               title="{% trans 'List Cloud Linux Package' %}"><span>{% trans "List Packages" %}</span></a>
+                                        </li>
+                                    </ul>
+                                    <ul>
+                                        <li><a href="{% url 'monitorUsage' %}"
+                                               title="{% trans 'Monitor Usage of your Websites' %}"><span>{% trans "Monitor Usage" %}</span></a>
+                                        </li>
+                                    </ul>
+                                    <ul>
+                                        <li><a href="{% url 'CageFS' %}"
+                                               title="{% trans 'CageFS Configurations' %}"><span>{% trans "CageFS" %}</span></a>
+                                        </li>
+                                    </ul>
+
+                                </div><!-- .sidebar-submenu -->
+                            </li>
+
+                            <li>
+                                <a href="#" title="{% trans 'Containerization' %}">
+                                    <i class="glyph-icon icon-linecons-fire"></i>
+                                    <span>{% trans "Containerization" %}</span>
+                                    <span class="bs-label badge-yellow">{% trans "NEW" %}</span>
+                                </a>
+                                <div class="sidebar-submenu">
+
+                                    <ul>
+                                        <li><a href="{% url 'cHome' %}"
+                                               title="{% trans 'Create Website Limits' %}"><span>{% trans "Create Limits" %}</span></a>
+                                        </li>
+                                    </ul>
+
+                                </div><!-- .sidebar-submenu -->
+                            </li>
+
+                            <li>
+                                <a href="#" title="{% trans 'Docker' %}">
+                                    <i class="glyph-icon icon-cogs"></i>
+                                    <span>{% trans "Docker Manager" %}</span>
+                                    <span class="bs-label badge-yellow">{% trans "NEW" %}</span>
+                                </a>
+                                <div class="sidebar-submenu">
+
+                                    <ul>
+                                        <li><a href="{% url 'manageImages' %}"
+                                               title="{% trans 'Manage Docker Images' %}"><span>{% trans "Manage Images" %}</span></a>
+                                        </li>
+                                        <li><a href="{% url 'listContainers' %}"
+                                               title="{% trans 'Manage Docker Containers' %}"><span>{% trans "Manage Containers" %}</span></a>
+                                        </li>
+                                        <li><a href="{% url 'containerImage' %}"
+                                               title="{% trans 'Create New Docker Container' %}"><span>{% trans "Create New Container" %}</span></a>
+                                        </li>
+                                    </ul>
+
+                                </div><!-- .sidebar-submenu -->
+                            </li>
+
+                            <li>
+                                <a href="#" title="{% trans 'Tuning' %}">
+                                    <i class="glyph-icon icon-adjust"></i>
+                                    <span>{% trans "Tuning" %}</span>
+                                </a>
+                                <div class="sidebar-submenu">
+
+                                    <ul>
+                                        <li><a href="{% url 'liteSpeedTuning' %}"
+                                               title="{% trans 'LiteSpeed Tuning' %}"><span>{% trans "LiteSpeed Tuning" %}</span></a>
+                                        </li>
+                                        <li><a href="{% url 'phpTuning' %}"
+                                               title="{% trans 'PHP Tuning' %}"><span>{% trans "PHP Tuning" %}</span></a>
+                                        </li>
+                                    </ul>
+
+                                </div><!-- .sidebar-submenu -->
+                            </li>
+
+                            <li>
+                                <a href="#" title="{% trans 'Server Status' %}">
+                                    <i class="glyph-icon icon-cog"></i>
+                                    <span>{% trans "Server Status" %}</span>
+                                </a>
+                                <div class="sidebar-submenu">
+
+                                    <ul>
+                                        <li><a href="{% url 'topProcesses' %}"
+                                               title="{% trans 'Top Processes' %}"><span>{% trans "Top Processes" %}</span></a>
+                                        </li>
+                                        <li><a href="{% url 'litespeedStatus' %}"
+                                               title="{% trans 'LiteSpeed Status' %}"><span>{% trans "LiteSpeed Status" %}</span></a>
+                                        </li>
+                                        <li><a href="{% url 'CyberPanelPort' %}"
+                                               title="{% trans 'Change CyberPanel Port' %}"><span>{% trans "Change Port" %}</span></a>
+                                        </li>
+                                        <li><a href="{% url 'packageManager' %}"
+                                               title="{% trans 'Package Manager' %}"><span>{% trans "Package Manager" %}</span></a>
+                                        </li>
+                                    </ul>
+
+                                </div><!-- .sidebar-submenu -->
+                            </li>
+
+                            <li>
+                                <a href="{% url 'loadPHPHome' %}" title="{% trans 'PHP' %}">
+                                    <i class="glyph-icon icon-code"></i>
+                                    <span>{% trans "PHP" %}</span>
+                                </a>
+                                <div class="sidebar-submenu">
+
+                                    <ul>
+                                        <li><a href="{% url 'installExtensions' %}"
+                                               title="{% trans 'Install PHP Extensions' %}"><span>{% trans "Install Extensions" %}</span></a>
+                                        </li>
+                                        <li><a href="{% url 'editPHPConfigs' %}"
+                                               title="{% trans 'Edit PHP Configs' %}"><span>{% trans "Edit PHP Configs" %}</span></a>
+                                        </li>
+                                    </ul>
+
+                                </div><!-- .sidebar-submenu -->
+                            </li>
+
+                            <li>
+                                <a href="{% url 'logsHome' %}" title="{% trans 'Server Status' %}">
+                                    <i class="glyph-icon icon-file"></i>
+                                    <span>{% trans "Logs" %}</span>
+                                </a>
+                                <div class="sidebar-submenu">
+
+                                    <ul>
+                                        <li><a href="{% url 'serverMail' %}"
+                                               title="{% trans 'Server Mail' %}"><span>{% trans "Server Mail" %}</span></a>
+                                        </li>
+                                        <li><a href="{% url 'cyberCPMainLogFile' %}"
+                                               title="{% trans 'CyberPanel Main Log File' %}"><span>{% trans "CyberPanel Main Log File" %}</span></a>
+                                        </li>
+                                        <li><a href="{% url 'accessLogs' %}"
+                                               title="{% trans 'Access Log' %}"><span>{% trans "Access Log" %}</span></a>
+                                        </li>
+                                        <li><a href="{% url 'errorLogs' %}"
+                                               title="{% trans 'Error Logs' %}"><span>{% trans "Error Logs" %}</span></a>
+                                        </li>
+                                        <li><a href="{% url 'emaillogs' %}"
+                                               title="{% trans 'Email Logs' %}"><span>{% trans "Email Log" %}</span></a>
+                                        </li>
+                                        <li><a href="{% url 'ftplogs' %}"
+                                               title="{% trans 'FTP Logs' %}"><span>{% trans "FTP Logs" %}</span></a>
+                                        </li>
+                                        <li><a href="{% url 'modSecAuditLogs' %}"
+                                               title="{% trans 'ModSecurity Audit Logs' %}"><span>{% trans "ModSec Audit Logs" %}</span></a>
+                                        </li>
+                                    </ul>
+
+                                </div><!-- .sidebar-submenu -->
+                            </li>
+
+                            <li>
+                                <a href="{% url 'securityHome' %}" title="{% trans 'Security' %}">
+                                    <i class="glyph-icon icon-shield"></i>
+                                    <span>{% trans "Security" %}</span>
+                                </a>
+                                <div class="sidebar-submenu">
+
+                                    <ul>
+                                        <li><a href="{% url 'firewallHome' %}"
+                                               title="{% trans 'Firewall Home' %}"><span>{% trans "Firewall" %}</span></a>
+                                        </li>
+                                        <li><a href="{% url 'secureSSH' %}"
+                                               title="{% trans 'Secure SSH' %}"><span>{% trans "Secure SSH" %}</span></a>
+                                        </li>
+                                        <li><a href="{% url 'modSecurity' %}"
+                                               title="{% trans 'ModSecurity Configurations' %}"><span>{% trans "ModSecurity Conf" %}</span></a>
+                                        </li>
+                                        <li><a href="{% url 'modSecRules' %}"
+                                               title="{% trans 'ModSecurity Rules' %}"><span>{% trans "ModSecurity Rules" %}</span></a>
+                                        </li>
+                                        <li><a href="{% url 'modSecRulesPacks' %}"
+                                               title="{% trans 'ModSecurity Rules Packs' %}"><span>{% trans "ModSecurity Rules Packs" %}</span></a>
+                                        </li>
+                                        <li><a href="{% url 'csf' %}"
+                                               title="{% trans 'ConfigServer Security & Firewall (CSF)' %}"><span>{% trans "CSF" %}</span></a>
+                                        </li>
+                                        <li><a href="{% url 'imunify' %}"
+                                               title="{% trans 'Imunify 360' %}"><span>{% trans "Imunify 360" %}</span></a>
+                                        </li>
+                                        <li><a href="{% url 'imunifyAV' %}"
+                                               title="{% trans 'ImunifyAV' %}"><span>{% trans "ImunifyAV" %}</span></a>
+                                        </li>
+                                    </ul>
+
+                                </div><!-- .sidebar-submenu -->
+                            </li>
+
+                            <li class="emailAsWhole">
+                                <a href="#" title="{% trans 'Mail Settings' %}">
+                                    <i class="glyph-icon icon-envelope"></i>
+                                    <span>{% trans "Mail Settings" %}</span>
+                                    <span class="bs-label badge-yellow">{% trans "NEW" %}</span>
+                                </a>
+                                <div class="sidebar-submenu">
+
+                                    <ul>
+                                        <li><a href="{% url 'mailQueue' %}"
+                                               title="{% trans 'Mail Queue' %}"><span>{% trans "Mail Queue" %}</span></a>
+                                        </li>
+                                        <li><a href="{% url 'emailPolicyServer' %}"
+                                               title="{% trans 'Email Policy Server' %}"><span>{% trans "Email Policy Server" %}</span></a>
+                                        </li>
+                                        <li><a href="{% url 'listDomains' %}"
+                                               title="{% trans 'Email Limits' %}"><span>{% trans "Email Limits" %}</span></a>
+                                        </li>
+                                        <li><a href="{% url 'SpamAssassin' %}"
+                                               title="{% trans 'SpamAssassin Configurations' %}"><span>{% trans "SpamAssassin" %}</span></a>
+                                        </li>
+                                        <li><a href="{% url 'emailMarketing' %}"
+                                               title="{% trans 'Email Marketing' %}"><span>{% trans "Email Marketing" %}</span></a>
+                                        </li>
+                                        <li><a href="{% url 'MailScanner' %}"
+                                               title="{% trans 'MailScanner' %}"><span>{% trans "MailScanner" %}</span></a>
+                                        </li>
+                                    </ul>
+
+                                </div><!-- .sidebar-submenu -->
+                            </li>
+
+                            <li>
+                                <a href="#" title="{% trans 'Manage Services' %}">
+                                    <i class="glyph-icon icon-folder-open"></i>
+                                    <span>{% trans "Manage Services" %}</span>
+                                </a>
+                                <div class="sidebar-submenu">
+
+                                    <ul>
+                                        <li><a href="{% url 'manageApplications' %}"
+                                               title="{% trans 'Manage Applications' %}"><span>{% trans "Applications" %}</span></a>
+                                        </li>
+                                        <li><a href="{% url 'services' %}"
+                                               title="{% trans 'Services Status' %}"><span>{% trans "Services Status" %}</span></a>
+                                        </li>
+                                        <li><a href="{% url 'managePowerDNS' %}"
+                                               title="{% trans 'Manage PowerDNS' %}"><span>{% trans "Manage PowerDNS" %}</span></a>
+                                        </li>
+                                        <li><a href="{% url 'managePostfix' %}"
+                                               title="{% trans 'Manage Postfix' %}"><span>{% trans "Manage Postfix" %}</span></a>
+                                        </li>
+                                        <li><a href="{% url 'managePureFtpd' %}"
+                                               title="{% trans 'Manage FTP' %}"><span>{% trans "Manage FTP" %}</span></a>
+                                        </li>
+                                    </ul>
+
+                                </div><!-- .sidebar-submenu -->
+                            </li>
+
+                            <li>
+                                <a href="#" title="{% trans 'Plugins' %}">
+                                    <i class="glyph-icon icon-plug"></i>
+                                    <span>{% trans "Plugins" %}</span>
+                                </a>
+                                <div class="sidebar-submenu">
+
+                                    <ul>
+                                        <li><a href="{% url 'installed' %}"
+                                               title="{% trans 'Installed Plugins' %}"><span>{% trans "Installed" %}</span></a>
+                                        </li>
+                                        {# pluginsList #}
+                                    </ul>
+
+                                </div><!-- .sidebar-submenu -->
+                            </li>
+
+                        {% endif %}
+
+                    </ul><!-- #sidebar-menu -->
+                </div>
+            </div>
+            <div id="page-content-wrapper">
+                <div id="page-content">
+
+
+                    {% block content %}
+                    {% endblock %}
+
+                </div>
+
+            </div>
+        </div>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+        <script src="{% static 'baseTemplate/custom-js/pnotify.custom.min.js' %}"></script>
+        <script src="{% static 'baseTemplate/custom-js/system-status.js' %}?ver={{ version }}"></script>
+        <script src="{% static 'packages/packages.js' %}?ver={{ version }}"></script>
+        <script src="{% static 'websiteFunctions/websiteFunctions.js' %}?ver={{ version }}"></script>
+        <script src="{% static 'tuning/tuning.js' %}?ver={{ version }}"></script>
+        <script src="{% static 'serverStatus/serverStatus.js' %}?ver={{ version }}"></script>
+        <script src="{% static 'dns/dns.js' %}?ver={{ version }}"></script>
+        <script src="{% static 'ftp/ftp.js' %}?ver={{ version }}"></script>
+        <script src="{% static 'userManagment/userManagment.js' %}?ver={{ version }}"></script>
+        <script src="{% static 'databases/databases.js' %}?ver={{ version }}"></script>
+        <script src="{% static 'mailServer/mailServer.js' %}?ver={{ version }}"></script>
+        <script src="{% static 'serverLogs/serverLogs.js' %}?ver={{ version }}"></script>
+        <script src="{% static 'emailPremium/emailPremium.js' %}?ver={{ version }}"></script>
+        <script src="{% static 'emailMarketing/emailMarketing.js' %}?ver={{ version }}"></script>
+        <script type="text/javascript" src="{% static 'baseTemplate/assets/finalJS/final.js' %}"></script>
+        <script src="{% static 'backup/backup.js' %}?ver={{ version }}"></script>
+        <script src="{% static 'managePHP/managePHP.js' %}?ver={{ version }}"></script>
+        <script src="{% static 'baseTemplate/bootstrap-toggle.min.js' %}"></script>
+        <script src="{% static 'firewall/firewall.js' %}?ver={{ version }}"></script>
+        <script src="{% static 'manageSSL/manageSSL.js' %}?ver={{ version }}"></script>
+        <script src="{% static 'manageServices/manageServices.js' %}?ver={{ version }}"></script>
+        <script src="{% static 'dockerManager/dockerManager.js' %}?ver={{ version }}"></script>
+        <script src="{% static 'containerization/containerization.js' %}?ver={{ version }}"></script>
+        <script src="{% static 'CLManager/CLManager.js' %}?ver={{ version }}"></script>
+        <script src="{% static 'IncBackups/IncBackups.js' %}?ver={{ version }}"></script>
+        <script src="{% static 'WebTerminal/term.js' %}?ver={{ version }}"></script>
+        <script src="{% static 'WebTerminal/ws.js' %}?ver={{ version }}"></script>
+        <script src="{% static 'WebTerminal/main.js' %}?ver={{ version }}"></script>
+
+    {% endwith %}
+
+    </div>
+    {% block footer_scripts %}
+    {% endblock %}
+    </body>
+</html>

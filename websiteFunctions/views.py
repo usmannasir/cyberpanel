@@ -6,8 +6,11 @@ from django.http import HttpResponse
 from loginSystem.models import Administrator
 from loginSystem.views import loadLoginPage
 import json
+import plogical.CyberCPLogFileWriter as logging
+
 
 from plogical.httpProc import httpProc
+from websiteFunctions.models import wpplugins
 from websiteFunctions.website import WebsiteManager
 from websiteFunctions.pluginManager import pluginManager
 from django.views.decorators.csrf import csrf_exempt
@@ -26,6 +29,743 @@ def createWebsite(request):
         return wm.createWebsite(request, userID)
     except KeyError:
         return redirect(loadLoginPage)
+def WPCreate(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.WPCreate(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def ListWPSites(request):
+    try:
+        userID = request.session['userID']
+        DeleteID = request.GET.get('DeleteID')
+        wm = WebsiteManager()
+        return wm.ListWPSites(request, userID, DeleteID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def WPHome(request):
+    try:
+        userID = request.session['userID']
+
+        WPid = request.GET.get('ID')
+        DeleteID = request.GET.get('DeleteID')
+        wm = WebsiteManager()
+        return wm.WPHome(request, userID, WPid, DeleteID)
+    except KeyError:
+        return redirect(loadLoginPage)
+def RestoreHome(request):
+    try:
+        userID = request.session['userID']
+
+        BackupID = request.GET.get('BackupID')
+        wm = WebsiteManager()
+        return wm.RestoreHome(request, userID, BackupID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def RemoteBackupConfig(request):
+    try:
+        userID = request.session['userID']
+
+        DeleteID = request.GET.get('DeleteID')
+        wm = WebsiteManager()
+        return wm.RemoteBackupConfig(request, userID, DeleteID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def BackupfileConfig(request):
+    try:
+        userID = request.session['userID']
+
+        ID = request.GET.get('ID')
+        DeleteID = request.GET.get('DeleteID')
+        wm = WebsiteManager()
+        return wm.BackupfileConfig(request, userID, ID, DeleteID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def AddRemoteBackupsite(request):
+    try:
+        userID = request.session['userID']
+
+        ID = request.GET.get('ID')
+        DeleteSiteID = request.GET.get('DeleteID')
+        wm = WebsiteManager()
+        return wm.AddRemoteBackupsite(request, userID, ID,DeleteSiteID )
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def RestoreBackups(request):
+    try:
+        userID = request.session['userID']
+
+        DeleteID = request.GET.get('DeleteID')
+        wm = WebsiteManager()
+        return wm.RestoreBackups(request, userID, DeleteID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def AutoLogin(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.AutoLogin(request, userID)
+
+    except KeyError:
+        return redirect(loadLoginPage)
+def ConfigurePlugins(request):
+    try:
+        userID = request.session['userID']
+        userobj = Administrator.objects.get(pk=userID)
+        DeleteFileID = request.GET.get('delete', None)
+        if DeleteFileID != None:
+            try:
+                jobobj = wpplugins.objects.get(pk=DeleteFileID, owner=userobj)
+                jobobj.delete()
+                Deleted = 1
+            except BaseException as msg:
+                logging.CyberCPLogFileWriter.writeToFile("DeleteFileID ....... %s....msg.....%s" % (DeleteFileID,msg))
+                Deleted = 0
+        wm = WebsiteManager()
+        return wm.ConfigurePlugins(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def Addnewplugin(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.Addnewplugin(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+
+
+def SearchOnkeyupPlugin(request):
+    try:
+        userID = request.session['userID']
+
+        result = pluginManager.preWebsiteCreation(request)
+
+        if  result != 200:
+            return result
+
+        wm = WebsiteManager()
+        coreResult = wm.SearchOnkeyupPlugin(userID, json.loads(request.body))
+
+        result = pluginManager.postWebsiteCreation(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def AddNewpluginAjax(request):
+    try:
+        userID = request.session['userID']
+
+        result = pluginManager.preWebsiteCreation(request)
+
+        if  result != 200:
+            return result
+
+        wm = WebsiteManager()
+        coreResult = wm.AddNewpluginAjax(userID, json.loads(request.body))
+
+        result = pluginManager.postWebsiteCreation(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def EidtPlugin(request):
+    try:
+        userID = request.session['userID']
+
+        pluginbID = request.GET.get('ID')
+        wm = WebsiteManager()
+        return wm.EidtPlugin(request, userID, pluginbID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def deletesPlgin(request):
+    try:
+        userID = request.session['userID']
+
+        result = pluginManager.preWebsiteCreation(request)
+
+        if  result != 200:
+            return result
+
+        wm = WebsiteManager()
+        coreResult = wm.deletesPlgin(userID, json.loads(request.body))
+
+        result = pluginManager.postWebsiteCreation(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def Addplugineidt(request):
+    try:
+        userID = request.session['userID']
+
+        result = pluginManager.preWebsiteCreation(request)
+
+        if  result != 200:
+            return result
+
+        wm = WebsiteManager()
+        coreResult = wm.Addplugineidt(userID, json.loads(request.body))
+
+        result = pluginManager.postWebsiteCreation(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def submitWorpressCreation(request):
+    try:
+        userID = request.session['userID']
+
+        result = pluginManager.preWebsiteCreation(request)
+
+        if  result != 200:
+            return result
+
+        wm = WebsiteManager()
+        coreResult = wm.submitWorpressCreation(userID, json.loads(request.body))
+
+        result = pluginManager.postWebsiteCreation(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def FetchWPdata(request):
+    try:
+        userID = request.session['userID']
+
+        result = pluginManager.preWebsiteCreation(request)
+
+        if  result != 200:
+            return result
+
+        wm = WebsiteManager()
+        coreResult = wm.FetchWPdata(userID, json.loads(request.body))
+
+        result = pluginManager.postWebsiteCreation(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def GetCurrentPlugins(request):
+    try:
+        userID = request.session['userID']
+
+        result = pluginManager.preWebsiteCreation(request)
+
+        if  result != 200:
+            return result
+
+        wm = WebsiteManager()
+        coreResult = wm.GetCurrentPlugins(userID, json.loads(request.body))
+        # coreResult = wm.GetCsurrentPlugins(userID, json.loads(request.body))
+
+        result = pluginManager.postWebsiteCreation(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def fetchstaging(request):
+    try:
+        userID = request.session['userID']
+
+        result = pluginManager.preWebsiteCreation(request)
+
+        if  result != 200:
+            return result
+
+        wm = WebsiteManager()
+        coreResult = wm.fetchstaging(userID, json.loads(request.body))
+
+        result = pluginManager.postWebsiteCreation(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def fetchDatabase(request):
+    try:
+        userID = request.session['userID']
+
+        result = pluginManager.preWebsiteCreation(request)
+
+        if  result != 200:
+            return result
+
+        wm = WebsiteManager()
+        coreResult = wm.fetchDatabase(userID, json.loads(request.body))
+
+        result = pluginManager.postWebsiteCreation(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def SaveUpdateConfig(request):
+    try:
+        userID = request.session['userID']
+
+        result = pluginManager.preWebsiteCreation(request)
+
+        if result != 200:
+            return result
+
+        wm = WebsiteManager()
+        coreResult = wm.SaveUpdateConfig(userID, json.loads(request.body))
+
+        result = pluginManager.postWebsiteCreation(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def DeploytoProduction(request):
+    try:
+        userID = request.session['userID']
+
+        #result = pluginManager.preWebsiteCreation(request)
+
+        #if result != 200:
+        #    return result
+
+        wm = WebsiteManager()
+        return wm.DeploytoProduction(userID, json.loads(request.body))
+
+        #result = pluginManager.postWebsiteCreation(request, coreResult)
+        #if result != 200:
+        #    return result
+
+        #return coreResult
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def WPCreateBackup(request):
+    try:
+        userID = request.session['userID']
+
+        result = pluginManager.preWebsiteCreation(request)
+
+        if result != 200:
+            return result
+
+        wm = WebsiteManager()
+        coreResult = wm.WPCreateBackup(userID, json.loads(request.body))
+
+        result = pluginManager.postWebsiteCreation(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+
+def RestoreWPbackupNow(request):
+    try:
+        userID = request.session['userID']
+
+        result = pluginManager.preWebsiteCreation(request)
+
+        if result != 200:
+            return result
+
+        wm = WebsiteManager()
+        coreResult = wm.RestoreWPbackupNow(userID, json.loads(request.body))
+
+        result = pluginManager.postWebsiteCreation(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def SaveBackupConfig(request):
+    try:
+        userID = request.session['userID']
+
+        result = pluginManager.preWebsiteCreation(request)
+        if result != 200:
+            return result
+
+        wm = WebsiteManager()
+        coreResult = wm.SaveBackupConfig(userID, json.loads(request.body))
+
+        result = pluginManager.postWebsiteCreation(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def SaveBackupSchedule(request):
+    try:
+        userID = request.session['userID']
+
+        result = pluginManager.preWebsiteCreation(request)
+        if result != 200:
+            return result
+
+        wm = WebsiteManager()
+        coreResult = wm.SaveBackupSchedule(userID, json.loads(request.body))
+
+        result = pluginManager.postWebsiteCreation(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def AddWPsiteforRemoteBackup(request):
+    try:
+        userID = request.session['userID']
+
+        result = pluginManager.preWebsiteCreation(request)
+        if result != 200:
+            return result
+
+        wm = WebsiteManager()
+        coreResult = wm.AddWPsiteforRemoteBackup(userID, json.loads(request.body))
+
+        result = pluginManager.postWebsiteCreation(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def UpdateRemoteschedules(request):
+    try:
+        userID = request.session['userID']
+
+        result = pluginManager.preWebsiteCreation(request)
+        if result != 200:
+            return result
+
+        wm = WebsiteManager()
+        coreResult = wm.UpdateRemoteschedules(userID, json.loads(request.body))
+
+        result = pluginManager.postWebsiteCreation(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def installwpcore(request):
+    try:
+        userID = request.session['userID']
+
+        result = pluginManager.preWebsiteCreation(request)
+
+        if result != 200:
+            return result
+
+        wm = WebsiteManager()
+        coreResult = wm.installwpcore(userID, json.loads(request.body))
+
+        result = pluginManager.postWebsiteCreation(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def dataintegrity(request):
+    try:
+        userID = request.session['userID']
+
+        result = pluginManager.preWebsiteCreation(request)
+
+        if result != 200:
+            return result
+
+        wm = WebsiteManager()
+        coreResult = wm.dataintegrity(userID, json.loads(request.body))
+
+        result = pluginManager.postWebsiteCreation(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+
+def GetCurrentThemes(request):
+    try:
+        userID = request.session['userID']
+
+        result = pluginManager.preWebsiteCreation(request)
+
+        if  result != 200:
+            return result
+
+        wm = WebsiteManager()
+        coreResult = wm.GetCurrentThemes(userID, json.loads(request.body))
+
+        result = pluginManager.postWebsiteCreation(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def UpdateWPSettings(request):
+    try:
+        userID = request.session['userID']
+
+        result = pluginManager.preWebsiteCreation(request)
+
+        if  result != 200:
+            return result
+
+        wm = WebsiteManager()
+        coreResult = wm.UpdateWPSettings(userID, json.loads(request.body))
+
+        result = pluginManager.postWebsiteCreation(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def UpdatePlugins(request):
+    try:
+        userID = request.session['userID']
+
+        result = pluginManager.preWebsiteCreation(request)
+
+        if  result != 200:
+            return result
+
+        wm = WebsiteManager()
+        coreResult = wm.UpdatePlugins(userID, json.loads(request.body))
+
+        result = pluginManager.postWebsiteCreation(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def UpdateThemes(request):
+    try:
+        userID = request.session['userID']
+
+        result = pluginManager.preWebsiteCreation(request)
+
+        if  result != 200:
+            return result
+
+        wm = WebsiteManager()
+        coreResult = wm.UpdateThemes(userID, json.loads(request.body))
+
+        result = pluginManager.postWebsiteCreation(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def DeletePlugins(request):
+    try:
+        userID = request.session['userID']
+
+        result = pluginManager.preWebsiteCreation(request)
+
+        if  result != 200:
+            return result
+
+        wm = WebsiteManager()
+        coreResult = wm.DeletePlugins(userID, json.loads(request.body))
+
+        result = pluginManager.postWebsiteCreation(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def DeleteThemes(request):
+    try:
+        userID = request.session['userID']
+
+        result = pluginManager.preWebsiteCreation(request)
+
+        if  result != 200:
+            return result
+
+        wm = WebsiteManager()
+        coreResult = wm.DeleteThemes(userID, json.loads(request.body))
+
+        result = pluginManager.postWebsiteCreation(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def ChangeStatus(request):
+    try:
+        userID = request.session['userID']
+
+        result = pluginManager.preWebsiteCreation(request)
+
+        if  result != 200:
+            return result
+
+        wm = WebsiteManager()
+        coreResult = wm.ChangeStatus(userID, json.loads(request.body))
+
+        result = pluginManager.postWebsiteCreation(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def StatusThemes(request):
+    try:
+        userID = request.session['userID']
+
+        result = pluginManager.preWebsiteCreation(request)
+
+        if result != 200:
+            return result
+
+        wm = WebsiteManager()
+        coreResult = wm.ChangeStatusThemes(userID, json.loads(request.body))
+
+        result = pluginManager.postWebsiteCreation(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def CreateStagingNow(request):
+    try:
+        userID = request.session['userID']
+
+        result = pluginManager.preWebsiteCreation(request)
+
+        if result != 200:
+            return result
+
+        wm = WebsiteManager()
+        coreResult = wm.CreateStagingNow(userID, json.loads(request.body))
+
+        result = pluginManager.postWebsiteCreation(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
 
 def modifyWebsite(request):
     try:

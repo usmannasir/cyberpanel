@@ -1,0 +1,169 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Remote Backup Configurations - CyberPanel" %}{% endblock %}
+{% block content %}
+
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
+
+    <div class="container">
+        <div id="page-title">
+            <h2>{% trans "Remote Backup Configurations" %}</h2>
+        </div>
+
+
+        <div ng-controller="RemoteBackupConfig" class="panel">
+            <div class="panel-body">
+                <h3 class="content-box-header">
+                    {% trans "Configure Remote Backups" %} <img ng-hide="RemoteBackupLoading"
+                                                                src="{% static 'images/loading.gif' %}">
+                </h3>
+                <div class="example-box-wrapper">
+
+                    <form name="websiteCreationForm" action="/" id="createPackages"
+                          class="form-horizontal bordered-row panel-body">
+
+                        <div ng-hide="installationDetailsForm" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Select Remote Backup Type" %}</label>
+                            <div class="col-sm-6">
+                                <select ng-model="RemoteBackuptype" ng-change="SelectRemoteBackuptype()"
+                                        class="form-control">
+                                    <option>SFTP</option>
+                                    <option>S3</option>
+                                </select>
+                            </div>
+                        </div>
+
+
+                        <div ng-hide="SFTPBackUpdiv" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Hostname" %}</label>
+                            <div class="col-sm-6">
+                                <input name="Hostname" type="text" class="form-control" ng-model="Hostname"
+                                       required>
+                            </div>
+
+                        </div>
+                        <div ng-hide="SFTPBackUpdiv" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Username" %}</label>
+                            <div class="col-sm-6">
+                                <input name="Username" type="text" class="form-control" ng-model="Username"
+                                       required>
+                            </div>
+
+                        </div>
+                        <div ng-hide="SFTPBackUpdiv" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Password" %}</label>
+                            <div class="col-sm-6">
+                                <input name="Password" type="password" class="form-control" ng-model="Password"
+                                       required>
+                            </div>
+
+                        </div>
+                        <div ng-hide="SFTPBackUpdiv" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "path" %}</label>
+                            <div class="col-sm-6">
+                                <input name="path" type="path" class="form-control" ng-model="path"
+                                       required>
+                            </div>
+
+                        </div>
+
+
+                        <div ng-hide="Selectprovider" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Choose Provider" %}</label>
+                            <div class="col-sm-6">
+                                <select ng-model="Providervalue" ng-change="SelectProvidertype()"
+                                        class="form-control">
+                                    <option selected="selected">Amazon</option>
+                                    <option>Wasabi</option>
+                                    <option>Backblaze</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div ng-hide="S3keyNamediv" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Name" %}</label>
+                            <div class="col-sm-6">
+                                <input name="S3keyName" type="text" class="form-control" ng-model="S3keyName"
+                                       required>
+                            </div>
+                        </div>
+                        <div ng-hide="EndpointURLdiv" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Endpoint URL" %}</label>
+                            <div class="col-sm-6">
+                                <input name="EndpointURL" type="text" class="form-control" ng-model="EndpointURL"
+                                       required>
+                            </div>
+                        </div>
+                        <div ng-hide="Accesskeydiv" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Access Key" %}</label>
+                            <div class="col-sm-6">
+                                <input name="Accesskey" type="text" class="form-control" ng-model="Accesskey"
+                                       required>
+                            </div>
+                        </div>
+                        <div ng-hide="SecretKeydiv" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Secret Key" %}</label>
+                            <div class="col-sm-6">
+                                <input name="SecretKey" type="password" class="form-control" ng-model="SecretKey"
+                                       required>
+                            </div>
+                        </div>
+
+
+                        <div ng-hide="installationDetailsForm" class="form-group">
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-4">
+                                <button type="button" ng-click="SaveBackupConfig()"
+                                        class="btn btn-primary btn-lg">{% trans "Save Configurations" %}</button>
+
+                            </div>
+                        </div>
+
+
+                    </form>
+
+                </div>
+                <h3 class="content-box-header">
+                    {% trans "Saved Remote Configuration" %} </h3>
+                <table class="table-spacing" style="width: 100%">
+                    <thead style="color: white; background-color: #0a6ebd">
+                    <tr>
+                        <th style="padding: 18px; color: white; width: 161px; font-size: 12px;">Backup Type</th>
+                        <th style="padding: 18px; color: white; width: 161px; font-size: 12px;">HostName</th>
+                        <th style="padding: 18px; color: white; width: 161px; font-size: 12px;">Path / Key Name</th>
+                        <th style="padding: 18px; color: white; width: 161px; font-size: 12px;">Action</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    {% for sub in backupconfigs %}
+                        <tr>
+                            <td style="padding: 13px;">{{ sub.Type }}</td>
+                            <td style="padding: 13px;">{{ sub.HostName }}</td>
+                            <td style="padding: 13px;">{{ sub.Path }}</td>
+                            <td style="padding: 13px;">
+                                <button
+                                        aria-label=""
+                                        onclick="DeleteBackupConfigNow('{% url 'RemoteBackupConfig' %}?DeleteID={{ sub.id }}')"
+                                        type="button" class="btn btn-border btn-alt border-red btn-link font-red">
+                                    Delete
+                                </button>
+                                <a href="{% url 'BackupfileConfig' %}?ID={{ sub.id }}"
+                                   aria-label=""
+
+                                   type="button" class="btn btn-border btn-alt border-green btn-link font-green">
+                                    Schedule Backups
+                                </a></td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+
+    </div>
+
+
+{% endblock %}

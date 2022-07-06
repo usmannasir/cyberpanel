@@ -1237,7 +1237,36 @@ def installExtensions(request):
                 phpExtension.save()
         except:
             pass
+        
+        try:
+            newPHP81 = PHP(phpVers="php81")
+            newPHP81.save()
 
+            php81Path = ''
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                php81Path = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'php81.xml')
+            else:
+                php81Path = os.path.join('/usr', 'local', 'CyberCP', 'managePHP', 'ubuntuphp81.xml')
+
+            php81 = ElementTree.parse(php81Path)
+
+            php81Extensions = php81.findall('extension')
+
+            for extension in php81Extensions:
+                extensionName = extension.find('extensionName').text
+                extensionDescription = extension.find('extensionDescription').text
+                status = int(extension.find('status').text)
+
+                phpExtension = installedPackages(phpVers=newPHP81,
+                                                 extensionName=extensionName,
+                                                 description=extensionDescription,
+                                                 status=status)
+
+                phpExtension.save()
+        except:
+            pass
+        
         proc = httpProc(request, 'managePHP/installExtensions.html',
                         {'phps': PHPManager.findPHPVersions()}, 'admin')
         return proc.render()
@@ -1261,34 +1290,71 @@ def getExtensionsInformation(request):
                 data = json.loads(request.body)
                 phpVers = data['phpSelection']
 
-                phpVers = "php" + PHPManager.getPHPString(phpVers)
+                phpVers = f"lsphp{PHPManager.getPHPString(phpVers)}"
 
-                php = PHP.objects.get(phpVers=phpVers)
+                # php = PHP.objects.get(phpVers=phpVers)
 
-                records = php.installedpackages_set.all()
+                if os.path.exists('/etc/lsb-release'):
+                    command = f'apt list | grep {phpVers}'
+                else:
+                    command = 'yum list installed'
+                    resultInstalled = ProcessUtilities.outputExecutioner(command)
+
+                    command = f'yum list | grep {phpVers} | xargs -n3 | column -t'
+
+                result = ProcessUtilities.outputExecutioner(command).split('\n')
+
+                #records = php.installedpackages_set.all()
 
                 json_data = "["
                 checker = 0
+                counter = 1
 
-                for items in records:
+                for items in result:
+                    if os.path.exists('/etc/lsb-release'):
+                        if items.find(phpVers) > -1:
+                            if items.find('installed') == -1:
+                                status = "Not-Installed"
+                            else:
+                                status = "Installed"
 
-                    if items.status == 0:
-                        status = "Not-Installed"
+                            dic = {'id': counter,
+                                   'phpVers': phpVers,
+                                   'extensionName': items.split('/')[0],
+                                   'description': items,
+                                   'status': status
+                                   }
+
+                            if checker == 0:
+                                json_data = json_data + json.dumps(dic)
+                                checker = 1
+                            else:
+                                json_data = json_data + ',' + json.dumps(dic)
+                            counter += 1
                     else:
-                        status = "Installed"
+                        ResultExt = items.split(' ')
+                        extesnion = ResultExt[0]
 
-                    dic = {'id': items.id,
-                           'phpVers': items.phpVers.phpVers,
-                           'extensionName': items.extensionName,
-                           'description': items.description,
-                           'status': status
-                           }
+                        if extesnion.find(phpVers) > -1:
+                            if resultInstalled.find(extesnion) == -1:
+                                status = "Not-Installed"
+                            else:
+                                status = "Installed"
 
-                    if checker == 0:
-                        json_data = json_data + json.dumps(dic)
-                        checker = 1
-                    else:
-                        json_data = json_data + ',' + json.dumps(dic)
+                            dic = {'id': counter,
+                                   'phpVers': phpVers,
+                                   'extensionName': extesnion,
+                                   'description': items,
+                                   'status': status
+                                   }
+
+
+                            if checker == 0:
+                                json_data = json_data + json.dumps(dic)
+                                checker = 1
+                            else:
+                                json_data = json_data + ',' + json.dumps(dic)
+                            counter += 1
 
                 json_data = json_data + ']'
                 final_json = json.dumps({'fetchStatus': 1, 'error_message': "None", "data": json_data})
@@ -1381,14 +1447,14 @@ def getRequestStatus(request):
                     command = "sudo rm -f " + phpUtilities.installLogPath
                     ProcessUtilities.executioner(command)
 
-                    if ProcessUtilities.outputExecutioner(checkCommand).find(extensionName) > -1:
-                        ext = installedPackages.objects.get(extensionName=extensionName)
-                        ext.status = 1
-                        ext.save()
-                    else:
-                        ext = installedPackages.objects.get(extensionName=extensionName)
-                        ext.status = 0
-                        ext.save()
+                    # if ProcessUtilities.outputExecutioner(checkCommand).find(extensionName) > -1:
+                    #     ext = installedPackages.objects.get(extensionName=extensionName)
+                    #     ext.status = 1
+                    #     ext.save()
+                    # else:
+                    #     ext = installedPackages.objects.get(extensionName=extensionName)
+                    #     ext.status = 0
+                    #     ext.save()
 
                     final_json = json.dumps({'finished': 1, 'extensionRequestStatus': 1,
                                              'error_message': "None",
@@ -1400,15 +1466,15 @@ def getRequestStatus(request):
                     command = "sudo rm -f " + phpUtilities.installLogPath
                     ProcessUtilities.executioner(command)
 
-                    if ProcessUtilities.outputExecutioner(checkCommand).find(extensionName) > -1:
-                        ext = installedPackages.objects.get(extensionName=extensionName)
-                        ext.status = 1
-                        ext.save()
-
-                    else:
-                        ext = installedPackages.objects.get(extensionName=extensionName)
-                        ext.status = 0
-                        ext.save()
+                    # if ProcessUtilities.outputExecutioner(checkCommand).find(extensionName) > -1:
+                    #     ext = installedPackages.objects.get(extensionName=extensionName)
+                    #     ext.status = 1
+                    #     ext.save()
+                    #
+                    # else:
+                    #     ext = installedPackages.objects.get(extensionName=extensionName)
+                    #     ext.status = 0
+                    #     ext.save()
 
                     final_json = json.dumps({'finished': 1, 'extensionRequestStatus': 1,
                                              'error_message': "None",
@@ -1420,15 +1486,15 @@ def getRequestStatus(request):
                     command = "sudo rm -f " + phpUtilities.installLogPath
                     ProcessUtilities.executioner(command)
 
-                    if ProcessUtilities.outputExecutioner(checkCommand).find(extensionName) > -1:
-                        ext = installedPackages.objects.get(extensionName=extensionName)
-                        ext.status = 1
-                        ext.save()
-
-                    else:
-                        ext = installedPackages.objects.get(extensionName=extensionName)
-                        ext.status = 0
-                        ext.save()
+                    # if ProcessUtilities.outputExecutioner(checkCommand).find(extensionName) > -1:
+                    #     ext = installedPackages.objects.get(extensionName=extensionName)
+                    #     ext.status = 1
+                    #     ext.save()
+                    #
+                    # else:
+                    #     ext = installedPackages.objects.get(extensionName=extensionName)
+                    #     ext.status = 0
+                    #     ext.save()
 
                     final_json = json.dumps({'finished': 1, 'extensionRequestStatus': 1,
                                              'error_message': "None",
@@ -1440,9 +1506,9 @@ def getRequestStatus(request):
                     command = "sudo rm -f " + phpUtilities.installLogPath
                     ProcessUtilities.executioner(command)
 
-                    ext = installedPackages.objects.get(extensionName=extensionName)
-                    ext.status = 0
-                    ext.save()
+                    # ext = installedPackages.objects.get(extensionName=extensionName)
+                    # ext.status = 0
+                    # ext.save()
 
                     final_json = json.dumps({'finished': 1, 'extensionRequestStatus': 1,
                                              'error_message': "None",

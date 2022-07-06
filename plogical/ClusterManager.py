@@ -16,8 +16,8 @@ from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from plogical.mysqlUtilities import mysqlUtilities
 class ClusterManager:
 
-    LogURL = "https://cloud.cyberpanel.net/HighAvailability/RecvData"
-    UptimeURL = "https://cloud.cyberpanel.net/servers/UptimeReport"
+    LogURL = "https://platform.cyberpersons.com/HighAvailability/RecvData"
+    UptimeURL = "https://platform.cyberpersons.com/servers/UptimeReport"
     ClusterFile = '/home/cyberpanel/cluster'
     CloudConfig = '/home/cyberpanel/cloud'
     vhostConfPath = '/usr/local/lsws/conf/vhosts'

@@ -17,7 +17,7 @@ import random
 import string
 
 VERSION = '2.3'
-BUILD = 1
+BUILD = 2
 
 CENTOS7 = 0
 CENTOS8 = 1
@@ -25,6 +25,8 @@ Ubuntu18 = 2
 Ubuntu20 = 3
 CloudLinux7 = 4
 CloudLinux8 = 5
+openEuler20 = 6
+openEuler22 = 7
 
 
 class Upgrade:
@@ -33,7 +35,9 @@ class Upgrade:
     installedOutput = ''
     CentOSPath = '/etc/redhat-release'
     UbuntuPath = '/etc/lsb-release'
+    openEulerPath = '/etc/openEuler-release'
     FromCloud = 0
+    SnappyVersion = '2.15.3'
 
     AdminACL = '{"adminStatus":1, "versionManagement": 1, "createNewUser": 1, "listUsers": 1, "deleteUser":1 , "resellerCenter": 1, ' \
                '"changeUserACL": 1, "createWebsite": 1, "modifyWebsite": 1, "suspendWebsite": 1, "deleteWebsite": 1, ' \
@@ -80,6 +84,15 @@ class Upgrade:
                 return CENTOS8
             else:
                 return CENTOS7
+
+        elif os.path.exists(Upgrade.openEulerPath):
+            result = open(Upgrade.openEulerPath, 'r').read()
+
+            if result.find('20.03') > -1:
+                return openEuler20
+            elif result.find('22.03') > -1:
+                return openEuler22
+
         else:
             result = open(Upgrade.UbuntuPath, 'r').read()
 
@@ -87,7 +100,6 @@ class Upgrade:
                 return Ubuntu20
             else:
                 return Ubuntu18
-
 
     @staticmethod
     def stdOut(message, do_exit=0):
@@ -245,6 +257,8 @@ class Upgrade:
                     for items in data:
                         if items.find("wheel") > -1 and items.find("ALL=(ALL)"):
                             continue
+                        elif items.find("root") > -1 and items.find("ALL=(ALL)") > -1 and items[0] != '#':
+                            writeToFile.writelines('root	ALL=(ALL:ALL) 	ALL\n')
                         else:
                             writeToFile.writelines(items)
 
@@ -273,7 +287,7 @@ class Upgrade:
             command = 'wget -O /usr/local/CyberCP/public/phpmyadmin.zip https://github.com/usmannasir/cyberpanel/raw/stable/phpmyadmin.zip'
             Upgrade.executioner(command, 0)
 
-            command = 'unzip /usr/local/CyberCP/public/phpmyadmin.zip -d /usr/local/CyberCP/public/'
+            command = 'unzip /usr/local/CyberCP/public/phpmyadmin.zip -d /usr/local/CyberCP/public/phpmyadmin'
             Upgrade.executioner(command, 0)
 
             command = 'mv /usr/local/CyberCP/public/phpMyAdmin-*-all-languages /usr/local/CyberCP/public/phpmyadmin'
@@ -366,33 +380,33 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
         try:
             #######
 
-            if os.path.exists("/usr/local/CyberCP/public/rainloop"):
-
-                if os.path.exists("/usr/local/lscp/cyberpanel/rainloop/data"):
-                    pass
-                else:
-                    command = "mv /usr/local/CyberCP/public/rainloop/data /usr/local/lscp/cyberpanel/rainloop/data"
-                    Upgrade.executioner(command, 0)
-
-                    command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
-                    Upgrade.executioner(command, 0)
-
-                iPath = os.listdir('/usr/local/CyberCP/public/rainloop/rainloop/v/')
-
-                path = "/usr/local/CyberCP/public/rainloop/rainloop/v/%s/include.php" % (iPath[0])
-
-                data = open(path, 'r').readlines()
-                writeToFile = open(path, 'w')
-
-                for items in data:
-                    if items.find("$sCustomDataPath = '';") > -1:
-                        writeToFile.writelines(
-                            "			$sCustomDataPath = '/usr/local/lscp/cyberpanel/rainloop/data';\n")
-                    else:
-                        writeToFile.writelines(items)
-
-                writeToFile.close()
-                return 0
+            # if os.path.exists("/usr/local/CyberCP/public/rainloop"):
+            #
+            #     if os.path.exists("/usr/local/lscp/cyberpanel/rainloop/data"):
+            #         pass
+            #     else:
+            #         command = "mv /usr/local/CyberCP/public/rainloop/data /usr/local/lscp/cyberpanel/rainloop/data"
+            #         Upgrade.executioner(command, 0)
+            #
+            #         command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
+            #         Upgrade.executioner(command, 0)
+            #
+            #     iPath = os.listdir('/usr/local/CyberCP/public/rainloop/rainloop/v/')
+            #
+            #     path = "/usr/local/CyberCP/public/snappymail/snappymail/v/%s/include.php" % (iPath[0])
+            #
+            #     data = open(path, 'r').readlines()
+            #     writeToFile = open(path, 'w')
+            #
+            #     for items in data:
+            #         if items.find("$sCustomDataPath = '';") > -1:
+            #             writeToFile.writelines(
+            #                 "			$sCustomDataPath = '/usr/local/lscp/cyberpanel/rainloop/data';\n")
+            #         else:
+            #             writeToFile.writelines(items)
+            #
+            #     writeToFile.close()
+            #     return 0
 
             cwd = os.getcwd()
 
@@ -404,7 +418,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             count = 1
 
             while (1):
-                command = 'wget https://www.rainloop.net/repository/webmail/rainloop-community-latest.zip'
+                command = 'wget https://github.com/the-djmaze/snappymail/releases/download/v%s/snappymail-%s.zip' % (Upgrade.SnappyVersion, Upgrade.SnappyVersion)
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
                 if res != 0:
@@ -418,8 +432,11 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             count = 0
 
+            if os.path.exists('/usr/local/CyberCP/public/snappymail'):
+                shutil.rmtree('/usr/local/CyberCP/public/snappymail')
+
             while (1):
-                command = 'unzip rainloop-community-latest.zip -d /usr/local/CyberCP/public/rainloop'
+                command = 'unzip snappymail-%s.zip -d /usr/local/CyberCP/public/snappymail' % (Upgrade.SnappyVersion)
 
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
@@ -429,12 +446,14 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                         break
                 else:
                     break
-
-            os.remove("rainloop-community-latest.zip")
+            try:
+                os.remove("snappymail-%s.zip" % (Upgrade.SnappyVersion))
+            except:
+                pass
 
             #######
 
-            os.chdir("/usr/local/CyberCP/public/rainloop")
+            os.chdir("/usr/local/CyberCP/public/snappymail")
 
             count = 0
 
@@ -465,9 +484,9 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                     break
             ######
 
-            iPath = os.listdir('/usr/local/CyberCP/public/rainloop/rainloop/v/')
+            iPath = os.listdir('/usr/local/CyberCP/public/snappymail/snappymail/v/')
 
-            path = "/usr/local/CyberCP/public/rainloop/rainloop/v/%s/include.php" % (iPath[0])
+            path = "/usr/local/CyberCP/public/snappymail/snappymail/v/%s/include.php" % (iPath[0])
 
             data = open(path, 'r').readlines()
             writeToFile = open(path, 'w')
@@ -482,17 +501,32 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             writeToFile.close()
 
             command = "mkdir -p /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/"
-            Upgrade.executioner(command, 'mkdir rainloop configs', 0)
+            Upgrade.executioner(command, 'mkdir snappymail configs', 0)
 
             labsPath = '/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/application.ini'
 
             labsData = """[labs]
 imap_folder_list_limit = 0
+autocreate_system_folders = On
 """
 
-            writeToFile = open(labsPath, 'w')
+            writeToFile = open(labsPath, 'a')
             writeToFile.write(labsData)
             writeToFile.close()
+
+            includeFileOldPath = '/usr/local/CyberCP/public/snappymail/_include.php'
+            includeFileNewPath = '/usr/local/CyberCP/public/snappymail/include.php'
+
+            if os.path.exists(includeFileOldPath):
+                writeToFile = open(includeFileOldPath, 'a')
+                writeToFile.write("\ndefine('APP_DATA_FOLDER_PATH', '/usr/local/lscp/cyberpanel/rainloop/data/');\n")
+                writeToFile.close()
+
+            command = 'mv %s %s' % (includeFileOldPath, includeFileNewPath)
+            Upgrade.executioner(command, 'mkdir snappymail configs', 0)
+
+            command = "sed -i 's|autocreate_system_folders = Off|autocreate_system_folders = On|g' %s" % (labsPath)
+            Upgrade.executioner(command, 'mkdir snappymail configs', 0)
 
             os.chdir(cwd)
 
@@ -545,6 +579,15 @@ imap_folder_list_limit = 0
 
         if not os.path.exists("/usr/local/CyberCP/public"):
             os.mkdir("/usr/local/CyberCP/public")
+
+        cwd = os.getcwd()
+
+        os.chdir('/usr/local/CyberCP')
+
+        command = '/usr/local/CyberPanel/bin/python manage.py collectstatic --noinput --clear'
+        Upgrade.executioner(command, 'Remove old static content', 0)
+
+        os.chdir(cwd)
 
         shutil.move("/usr/local/CyberCP/static", "/usr/local/CyberCP/public/")
 
@@ -615,6 +658,7 @@ imap_folder_list_limit = 0
                     'CREATE TABLE `loginSystem_acl` (`id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY, `name` varchar(50) NOT NULL UNIQUE, `adminStatus` integer NOT NULL DEFAULT 0, `versionManagement` integer NOT NULL DEFAULT 0, `createNewUser` integer NOT NULL DEFAULT 0, `deleteUser` integer NOT NULL DEFAULT 0, `resellerCenter` integer NOT NULL DEFAULT 0, `changeUserACL` integer NOT NULL DEFAULT 0, `createWebsite` integer NOT NULL DEFAULT 0, `modifyWebsite` integer NOT NULL DEFAULT 0, `suspendWebsite` integer NOT NULL DEFAULT 0, `deleteWebsite` integer NOT NULL DEFAULT 0, `createPackage` integer NOT NULL DEFAULT 0, `deletePackage` integer NOT NULL DEFAULT 0, `modifyPackage` integer NOT NULL DEFAULT 0, `createDatabase` integer NOT NULL DEFAULT 0, `deleteDatabase` integer NOT NULL DEFAULT 0, `listDatabases` integer NOT NULL DEFAULT 0, `createNameServer` integer NOT NULL DEFAULT 0, `createDNSZone` integer NOT NULL DEFAULT 0, `deleteZone` integer NOT NULL DEFAULT 0, `addDeleteRecords` integer NOT NULL DEFAULT 0, `createEmail` integer NOT NULL DEFAULT 0, `deleteEmail` integer NOT NULL DEFAULT 0, `emailForwarding` integer NOT NULL DEFAULT 0, `changeEmailPassword` integer NOT NULL DEFAULT 0, `dkimManager` integer NOT NULL DEFAULT 0, `createFTPAccount` integer NOT NULL DEFAULT 0, `deleteFTPAccount` integer NOT NULL DEFAULT 0, `listFTPAccounts` integer NOT NULL DEFAULT 0, `createBackup` integer NOT NULL DEFAULT 0, `restoreBackup` integer NOT NULL DEFAULT 0, `addDeleteDestinations` integer NOT NULL DEFAULT 0, `scheduleBackups` integer NOT NULL DEFAULT 0, `remoteBackups` integer NOT NULL DEFAULT 0, `manageSSL` integer NOT NULL DEFAULT 0, `hostnameSSL` integer NOT NULL DEFAULT 0, `mailServerSSL` integer NOT NULL DEFAULT 0)')
             except:
                 pass
+
             try:
                 cursor.execute('ALTER TABLE loginSystem_administrator ADD token varchar(500)')
             except:
@@ -831,6 +875,56 @@ imap_folder_list_limit = 0
 
             try:
                 cursor.execute(query)
+            except:
+                pass
+
+            try:
+                cursor.execute('ALTER TABLE e_users ADD DiskUsage varchar(200)')
+            except:
+                pass
+
+            try:
+                cursor.execute('CREATE TABLE `websiteFunctions_wpplugins` (`id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY, `Name` varchar(255) NOT NULL, `config` longtext NOT NULL, `owner_id` integer NOT NULL)')
+            except:
+                pass
+
+            try:
+                cursor.execute('ALTER TABLE `websiteFunctions_wpplugins` ADD CONSTRAINT `websiteFunctions_wpp_owner_id_493a02c7_fk_loginSyst` FOREIGN KEY (`owner_id`) REFERENCES `loginSystem_administrator` (`id`)')
+            except:
+                pass
+
+            try:
+                cursor.execute('CREATE TABLE `websiteFunctions_wpsites` (`id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY, `title` varchar(255) NOT NULL, `path` varchar(255) NOT NULL, `FinalURL` varchar(255) NOT NULL, `AutoUpdates` varchar(100) NOT NULL, `PluginUpdates` varchar(15) NOT NULL, `ThemeUpdates` varchar(15) NOT NULL, `date` datetime(6) NOT NULL, `WPLockState` integer NOT NULL, `owner_id` integer NOT NULL)')
+            except:
+                pass
+
+            try:
+                cursor.execute('ALTER TABLE `websiteFunctions_wpsites` ADD CONSTRAINT `websiteFunctions_wps_owner_id_6d67df2a_fk_websiteFu` FOREIGN KEY (`owner_id`) REFERENCES `websiteFunctions_websites` (`id`)')
+            except:
+                pass
+
+            try:
+                cursor.execute('CREATE TABLE `websiteFunctions_wpstaging` (`id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY, `owner_id` integer NOT NULL, `wpsite_id` integer NOT NULL)')
+            except:
+                pass
+
+            try:
+                cursor.execute('ALTER TABLE `websiteFunctions_wpstaging` ADD CONSTRAINT `websiteFunctions_wps_owner_id_543d8aec_fk_websiteFu` FOREIGN KEY (`owner_id`) REFERENCES `websiteFunctions_wpsites` (`id`);')
+            except:
+                pass
+
+            try:
+                cursor.execute('ALTER TABLE `websiteFunctions_wpstaging` ADD CONSTRAINT `websiteFunctions_wps_wpsite_id_82843593_fk_websiteFu` FOREIGN KEY (`wpsite_id`) REFERENCES `websiteFunctions_wpsites` (`id`)')
+            except:
+                pass
+
+            try:
+                cursor.execute("CREATE TABLE `websiteFunctions_wpsitesbackup` (`id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY, `WPSiteID` integer NOT NULL, `WebsiteID` integer NOT NULL, `config` longtext NOT NULL, `owner_id` integer NOT NULL); ")
+            except:
+                pass
+
+            try:
+                cursor.execute("ALTER TABLE `websiteFunctions_wpsitesbackup` ADD CONSTRAINT `websiteFunctions_wps_owner_id_8a8dd0c5_fk_loginSyst` FOREIGN KEY (`owner_id`) REFERENCES `loginSystem_administrator` (`id`); ")
             except:
                 pass
 
@@ -1906,20 +2000,20 @@ imap_folder_list_limit = 0
                     return ''.join(random.choice(chars) for x in range(size))
 
                 content = """<?php
-$_ENV['RAINLOOP_INCLUDE_AS_API'] = true;
-include '/usr/local/CyberCP/public/rainloop/index.php';
+$_ENV['snappymail_INCLUDE_AS_API'] = true;
+include '/usr/local/CyberCP/public/snappymail/index.php';
 
-$oConfig = \RainLoop\Api::Config();
+$oConfig = \snappymail\Api::Config();
 $oConfig->SetPassword('%s');
 echo $oConfig->Save() ? 'Done' : 'Error';
 
 ?>""" % (generate_pass())
 
-                writeToFile = open('/usr/local/CyberCP/public/rainloop.php', 'w')
+                writeToFile = open('/usr/local/CyberCP/public/snappymail.php', 'w')
                 writeToFile.write(content)
                 writeToFile.close()
 
-                command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
+                command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/snappymail/data"
                 subprocess.call(shlex.split(command))
 
             except:
@@ -1971,7 +2065,7 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             command = "chown -R root:root /usr/local/lscp"
             Upgrade.executioner(command, 'chown core code', 0)
 
-            command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data"
+            command = "chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop"
             Upgrade.executioner(command, 'chown core code', 0)
 
             command = "chmod 700 /usr/local/CyberCP/cli/cyberPanel.py"
@@ -2069,7 +2163,7 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             command = "find /usr/local/CyberCP/ -name '*.pyc' -delete"
             Upgrade.executioner(command, 0)
 
-            if os.path.exists(Upgrade.CentOSPath):
+            if os.path.exists(Upgrade.CentOSPath) or os.path.exists(Upgrade.openEulerPath):
                 command = 'chown root:pdns /etc/pdns/pdns.conf'
                 Upgrade.executioner(command, 0)
 
@@ -2079,10 +2173,10 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             command = 'chmod 640 /usr/local/lscp/cyberpanel/logs/access.log'
             Upgrade.executioner(command, 0)
 
-            command = '/usr/local/lsws/lsphp72/bin/php /usr/local/CyberCP/public/rainloop.php'
+            command = '/usr/local/lsws/lsphp72/bin/php /usr/local/CyberCP/public/snappymail.php'
             Upgrade.executioner(command, 0)
 
-            command = 'chmod 600 /usr/local/CyberCP/public/rainloop.php'
+            command = 'chmod 600 /usr/local/CyberCP/public/snappymail.php'
             Upgrade.executioner(command, 0)
 
             ###
@@ -2097,8 +2191,9 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             ###
 
             CentOSPath = '/etc/redhat-release'
+            openEulerPath = '/etc/openEuler-release'
 
-            if not os.path.exists(CentOSPath):
+            if not os.path.exists(CentOSPath) or not os.path.exists(openEulerPath):
                 group = 'nobody'
             else:
                 group = 'nogroup'
@@ -2179,8 +2274,9 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             os.system(command)
 
         CentOSPath = '/etc/redhat-release'
+        openEulerPath = '/etc/openEuler-release'
 
-        if not os.path.exists(CentOSPath):
+        if not os.path.exists(CentOSPath) or not os.path.exists(openEulerPath):
             command = 'cp /usr/local/lsws/lsphp71/bin/php /usr/bin/'
             Upgrade.executioner(command, 'Set default PHP 7.0, 0')
 
@@ -2197,6 +2293,7 @@ echo $oConfig->Save() ? 'Done' : 'Error';
         try:
             Upgrade.stdOut("Upgrading Dovecot..")
             CentOSPath = '/etc/redhat-release'
+            openEulerPath = '/etc/openEuler-release'
 
             dovecotConfPath = '/etc/dovecot/'
             postfixConfPath = '/etc/postfix/'
@@ -2214,7 +2311,7 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             command = 'cp -pR %s %s' % (postfixConfPath, configbackups)
             Upgrade.executioner(command, 0)
 
-            if Upgrade.FindOperatingSytem() == CENTOS8 or Upgrade.FindOperatingSytem() == CENTOS7:
+            if Upgrade.FindOperatingSytem() == CENTOS8 or Upgrade.FindOperatingSytem() == CENTOS7 or Upgrade.FindOperatingSytem() == openEuler22 or Upgrade.FindOperatingSytem() == openEuler20:
 
                 command = "yum makecache -y"
                 Upgrade.executioner(command, 0)
@@ -2336,10 +2433,13 @@ echo $oConfig->Save() ? 'Done' : 'Error';
     @staticmethod
     def installRestic():
         CentOSPath = '/etc/redhat-release'
+        openEulerPath = '/etc/openEuler-release'
 
-        if os.path.exists(CentOSPath):
+        if os.path.exists(CentOSPath) or os.path.exists(openEulerPath):
             if Upgrade.installedOutput.find('restic') == -1:
                 command = 'yum install restic -y'
+                Upgrade.executioner(command, 'Install Restic')
+                command = 'restic self-update'
                 Upgrade.executioner(command, 'Install Restic')
         else:
 
@@ -2348,6 +2448,9 @@ echo $oConfig->Save() ? 'Done' : 'Error';
                 Upgrade.executioner(command, 'Install Restic')
 
                 command = 'apt-get install restic -y'
+                Upgrade.executioner(command, 'Install Restic')
+                
+                command = 'restic self-update'
                 Upgrade.executioner(command, 'Install Restic')
 
     @staticmethod
@@ -2363,8 +2466,9 @@ echo $oConfig->Save() ? 'Done' : 'Error';
         try:
 
             CentOSPath = '/etc/redhat-release'
+            openEulerPath = '/etc/openEuler-release'
 
-            if os.path.exists(CentOSPath):
+            if os.path.exists(CentOSPath) or os.path.exists(openEulerPath):
                 command = 'mkdir -p /opt/cpvendor/etc/'
                 Upgrade.executioner(command, 0)
 
@@ -2429,8 +2533,9 @@ vmail
         # Install findBWUsage cron if missing
 
         CentOSPath = '/etc/redhat-release'
+        openEulerPath = '/etc/openEuler-release'
 
-        if os.path.exists(CentOSPath):
+        if os.path.exists(CentOSPath) or os.path.exists(openEulerPath):
             cronPath = '/var/spool/cron/root'
         else:
             cronPath = '/var/spool/cron/crontabs/root'
@@ -2461,6 +2566,22 @@ vmail
                 writeToFile = open(cronPath, 'a')
                 writeToFile.write(content)
                 writeToFile.close()
+
+            if data.find("IncScheduler.py '30 Minutes'") == -1:
+                content = """
+*/30 * * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py '30 Minutes'
+0 * * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py '1 Hour'
+0 */6 * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py '6 Hours'
+0 */12 * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py '12 Hours'
+0 1 * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py '1 Day'
+0 0 */3 * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py '3 Days'
+0 0 * * 0 /usr/local/CyberCP/bin/python /usr/local/CyberCP/IncBackups/IncScheduler.py '1 Week'
+"""
+                writeToFile = open(cronPath, 'a')
+                writeToFile.write(content)
+                writeToFile.close()
+
+
         else:
             content = """
 0 * * * * /usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/findBWUsage.py >/dev/null 2>&1
@@ -2493,7 +2614,7 @@ vmail
             writeToFile.close()
 
 
-        if not os.path.exists(CentOSPath):
+        if not os.path.exists(CentOSPath) or not os.path.exists(openEulerPath):
             command = 'chmod 600 %s' % (cronPath)
             Upgrade.executioner(command, 0)
 
@@ -2527,7 +2648,7 @@ vmail
         # Upgrade.stdOut("Upgrades are currently disabled")
         # return 0
 
-        if os.path.exists(Upgrade.CentOSPath):
+        if os.path.exists(Upgrade.CentOSPath) or os.path.exists(Upgrade.openEulerPath):
             command = 'yum list installed'
             Upgrade.installedOutput = subprocess.check_output(shlex.split(command)).decode()
         else:
@@ -2677,8 +2798,13 @@ vmail
         imunifyAVPath = '/etc/sysconfig/imunify360/integration.conf'
 
         if os.path.exists(imunifyAVPath):
-            command = "yum reinstall imunify-antivirus-generic -y"
+            execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/CLManager/CageFS.py"
+            command = execPath + " --function submitinstallImunifyAV"
             Upgrade.executioner(command, command, 1)
+
+            command = 'chmod +x /usr/local/CyberCP/public/imunifyav/bin/execute.py'
+            Upgrade.executioner(command, command, 1)
+
 
         Upgrade.stdOut("Upgrade Completed.")
 

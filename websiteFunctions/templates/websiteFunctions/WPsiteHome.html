@@ -1,0 +1,758 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "WordPress Manager - CyberPanel" %}{% endblock %}
+{% block content %}
+
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
+
+    <div style="display: none" id="wordpresshome"></div>
+    <div style="display: none" id="WPid">{{ wpsite.id }}</div>
+
+    <div ng-controller="WPsiteHome" class="container">
+
+    <div id="page-title">
+        <h2>{{ wpsite.title }}</h2>
+        <p>({{ wpsite.path }})<img style="display: none" id="wordpresshomeloading" ng-hide="wordpresshomeloading"
+                                   src="{% static 'images/loading.gif' %}"></p>
+    </div>
+
+    <div class="panel">
+        <div class="panel-body">
+            <h3 class="content-box-header">
+                {% trans "WordPress Manager" %}
+            </h3>
+            <div>
+
+                <!-- Product title -->
+                <h2 style="display: inline" class="mt-0"></h2>
+                <p style="display: inline;">
+                </p>
+
+                <div>
+                    <div class="example-box-wrapper">
+                        <ul class="nav-responsive nav nav-tabs">
+
+                            <li class="active"><a href="#tab1" data-toggle="tab"
+                                                  aria-selected="true">General</a></li>
+                            <li class=""><a href="#tab2" ng-click="GetCurrentPlugins()"
+                                            data-toggle="tab">Plugins</a></li>
+                            <li class=""><a href="#tab3" ng-click="GetCurrentThemes()"
+                                            data-toggle="tab">Themes</a></li>
+                            <li><a href="#tab4" data-toggle="tab" ng-click="fetchstaging()">Staging</a></li>
+                            <li><a href="#tab5" data-toggle="tab">Backups</a></li>
+                            <li><a ng-click="fetchDatabase()" href="#tab6" data-toggle="tab">Database</a></li>
+                        </ul>
+                        <div class="tab-content">
+                            <div class="tab-pane active" id="tab1">
+                                <div class="d-lg-flex d-none">
+                                    <a target="_blank" href="http://{{ wpsite.FinalURL }}">
+                                        <svg xmlns="http://www.w3.org/2000/svg"
+                                             xmlns:xlink="http://www.w3.org/1999/xlink"
+                                             aria-hidden="true" focusable="false" width="1em"
+                                             height="1em"
+                                             style="-ms-transform: rotate(360deg); -webkit-transform: rotate(360deg); transform: rotate(360deg);"
+                                             preserveAspectRatio="xMidYMid meet"
+                                             viewBox="0 0 24 24">
+                                            <path d="M13 3l3.293 3.293l-7 7l1.414 1.414l7-7L21 11V3z"
+                                                  fill="#626262"></path>
+                                            <path d="M19 19H5V5h7l-2-2H5c-1.103 0-2 .897-2 2v14c0 1.103.897 2 2 2h14c1.103 0 2-.897 2-2v-5l-2-2v7z"
+                                                  fill="#626262"></path>
+                                        </svg>
+                                        Open
+                                    </a>
+                                    <a target="_blank"
+                                       href="/filemanager/{{ wpsite.owner.domain }}?path={{ wpsite.path }}"
+                                       style="margin-left: 4%">
+                                        <svg xmlns="http://www.w3.org/2000/svg"
+                                             xmlns:xlink="http://www.w3.org/1999/xlink"
+                                             aria-hidden="true" focusable="false" width="1em"
+                                             height="1em"
+                                             style="-ms-transform: rotate(360deg); -webkit-transform: rotate(360deg); transform: rotate(360deg);"
+                                             preserveAspectRatio="xMidYMid meet"
+                                             viewBox="0 0 1024 1024">
+                                            <path d="M159 768h612.3l103.4-256H262.3z"
+                                                  fill-opacity=".15"
+                                                  fill="#626262"/>
+                                            <path d="M928 444H820V330.4c0-17.7-14.3-32-32-32H473L355.7 186.2a8.15 8.15 0 0 0-5.5-2.2H96c-17.7 0-32 14.3-32 32v592c0 17.7 14.3 32 32 32h698c13 0 24.8-7.9 29.7-20l134-332c1.5-3.8 2.3-7.9 2.3-12c0-17.7-14.3-32-32-32zM136 256h188.5l119.6 114.4H748V444H238c-13 0-24.8 7.9-29.7 20L136 643.2V256zm635.3 512H159l103.3-256h612.4L771.3 768z"
+                                                  fill="#626262"/>
+                                        </svg>
+                                        File Manager
+                                    </a>
+                                    <a target="_blank" style="margin-left: 4%"
+                                       href="{% url 'AutoLogin' %}?id={{ wpsite.id }}">
+                                        <svg xmlns="http://www.w3.org/2000/svg"
+                                             xmlns:xlink="http://www.w3.org/1999/xlink"
+                                             aria-hidden="true" focusable="false" width="1em"
+                                             height="1em"
+                                             style="-ms-transform: rotate(360deg); -webkit-transform: rotate(360deg); transform: rotate(360deg);"
+                                             preserveAspectRatio="xMidYMid meet"
+                                             viewBox="0 0 20 20">
+                                            <path d="M14 10L8 5v3H1v4h7v3l6-5zm3 7H9v2h8c1.1 0 2-.9 2-2V3c0-1.1-.9-2-2-2H9v2h8v14z"
+                                                  fill="#626262"></path>
+                                        </svg>
+                                        Login
+                                    </a>
+                                    <a style="margin-left: 4%" target="_blank"
+                                       href="/websites/{{ wpsite.owner.domain }}/manageGIT">
+                                        <svg xmlns="http://www.w3.org/2000/svg"
+                                             xmlns:xlink="http://www.w3.org/1999/xlink"
+                                             aria-hidden="true" focusable="false" width="1em"
+                                             height="1em"
+                                             style="-ms-transform: rotate(360deg); -webkit-transform: rotate(360deg); transform: rotate(360deg);"
+                                             preserveAspectRatio="xMidYMid meet"
+                                             viewBox="0 0 24 24">
+                                            <path d="M17.5 4C15.57 4 14 5.57 14 7.5c0 1.554 1.025 2.859 2.43 3.315c-.146.932-.547 1.7-1.23 2.323c-1.946 1.773-5.527 1.935-7.2 1.907V8.837c1.44-.434 2.5-1.757 2.5-3.337C10.5 3.57 8.93 2 7 2S3.5 3.57 3.5 5.5c0 1.58 1.06 2.903 2.5 3.337v6.326c-1.44.434-2.5 1.757-2.5 3.337C3.5 20.43 5.07 22 7 22s3.5-1.57 3.5-3.5c0-.551-.14-1.065-.367-1.529c2.06-.186 4.657-.757 6.409-2.35c1.097-.997 1.731-2.264 1.904-3.768C19.915 10.438 21 9.1 21 7.5C21 5.57 19.43 4 17.5 4zm-12 1.5C5.5 4.673 6.173 4 7 4s1.5.673 1.5 1.5S7.827 7 7 7s-1.5-.673-1.5-1.5zM7 20c-.827 0-1.5-.673-1.5-1.5a1.5 1.5 0 0 1 1.482-1.498l.13.01A1.495 1.495 0 0 1 7 20zM17.5 9c-.827 0-1.5-.673-1.5-1.5S16.673 6 17.5 6s1.5.673 1.5 1.5S18.327 9 17.5 9z"
+                                                  fill="#626262"></path>
+                                        </svg>
+                                        Git Manager
+                                    </a>
+                                </div>
+                                <div style="margin-top: 4%">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <h6 style="font-weight: bold">WordPress Version</h6>
+                                            <p id="WPVersion" class="text-sm lh-150"></p>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <h6 style="font-weight: bold">PHP</h6>
+                                            <p class="text-sm lh-150">{{ wpsite.owner.phpSelection }}</p>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <h6 style="font-weight: bold">LSCache</h6>
+                                            <div class="custom-control custom-switch">
+                                                <input ng-click="UpdateWPSettings('lscache')"
+                                                       type="checkbox"
+                                                       class="custom-control-input ng-pristine ng-untouched ng-valid ng-not-empty"
+                                                       id="lscache">
+                                                <label class="custom-control-label"
+                                                       for="lscache"></label>
+                                            </div>
+                                        </div>
+                                        <span style="display: none" id="#checkjq"></span>
+                                        <div class="col-md-3">
+                                            <h6 style="font-weight: bold">Password Protection</h6>
+                                            <div class="custom-control custom-switch" id="prsswdprodata">
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="margin-top: 4%">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <h6 style="font-weight: bold">Debugging</h6>
+                                            <div class="custom-control custom-switch">
+                                                <input ng-click="UpdateWPSettings('debugging')"
+                                                       type="checkbox"
+                                                       class="custom-control-input ng-pristine ng-untouched ng-valid ng-empty"
+                                                       id="debugging">
+                                                <label class="custom-control-label"
+                                                       for="debugging"></label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <h6 style="font-weight: bold">Search Engine Indexing</h6>
+                                            <div class="custom-control custom-switch">
+                                                <input ng-click="UpdateWPSettings('searchIndex')"
+                                                       type="checkbox"
+                                                       class="custom-control-input ng-pristine ng-untouched ng-valid ng-not-empty"
+                                                       id="searchIndex">
+                                                <label class="custom-control-label"
+                                                       for="searchIndex"></label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <h6 style="font-weight: bold">Maintenance mode</h6>
+                                            <div class="custom-control custom-switch">
+                                                <input ng-click="UpdateWPSettings('maintenanceMode')"
+                                                       type="checkbox"
+                                                       class="custom-control-input ng-pristine ng-untouched ng-valid ng-empty"
+                                                       id="maintenanceMode">
+                                                <label class="custom-control-label"
+                                                       for="maintenanceMode"></label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <h6 style="font-weight: bold">Disable WP Cron</h6>
+                                            <div class="custom-control custom-switch">
+                                                <input ng-click="UpdateWPSettings('Wpcron')"
+                                                       type="checkbox"
+                                                       class="custom-control-input ng-pristine ng-untouched ng-valid ng-empty"
+                                                       id="Wpcron">
+                                                <label class="custom-control-label"
+                                                       for="wpcron"></label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tab-pane" id="tab2">
+                                <div class="row mb-2">
+                                    <div class="col-sm-8">
+                                        <a ng-click="UpdatePlugins('all')"
+                                           href="javascript:void(0);"
+                                           class="btn btn-sm btn-default">
+                                            <svg xmlns="http://www.w3.org/2000/svg"
+                                                 xmlns:xlink="http://www.w3.org/1999/xlink"
+                                                 aria-hidden="true" focusable="false" width="1em"
+                                                 height="1em"
+                                                 style="-ms-transform: rotate(360deg); -webkit-transform: rotate(360deg); transform: rotate(360deg);"
+                                                 preserveAspectRatio="xMidYMid meet"
+                                                 viewBox="0 0 24 24">
+                                                <path fill="none" stroke="#626262" stroke-width="2"
+                                                      d="M2.998 7V1H17.5L21 4.5V23h-6m1-22v5h5M8 23A7 7 0 1 0 8 9a7 7 0 0 0 0 14zm-3.5-6.5L8 13l3.5 3.5m-3.5-3V20"></path>
+                                            </svg>
+                                            Update All</a>
+                                        <a ng-click="UpdatePlugins('selected')"
+                                           href="javascript:void(0);"
+                                           class="btn btn-sm btn-default"> Update
+                                            Selected</a>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <div class="text-sm-right">
+                                            <button data-toggle="modal" data-target="#DeleteWebsite"
+                                                    ng-click="DeletePlugins('selected')"
+                                                    aria-label=""
+                                                    class="btn btn-danger btn-icon-left m-b-10"
+                                                    type="button">Delete Selected
+                                            </button>
+                                        </div>
+                                    </div><!-- end col-->
+                                </div>
+                                <table class="table table-hover mb-0">
+                                    <thead>
+                                    <tr>
+                                        <th>
+                                            {% comment %}<div class="custom-control custom-checkbox" style="padding-left: 0px">
+                                                                <input type="checkbox" id="CheckAll">
+                                                                <label for="CheckAll"></label>
+                                                            </div>{% endcomment %}
+                                        </th>
+                                        <th>Plugin</th>
+                                        <th>State</th>
+                                        <th>Updates</th>
+                                        <th>Version</th>
+                                        <th>Delete</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="PluginBody">
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="tab-pane" id="tab3">
+                                <div class="row mb-2">
+                                    <div class="col-sm-8">
+                                        <a ng-click="UpdateThemes('all')" href="javascript:void(0);"
+                                           class="btn btn-sm btn-default">
+                                            <svg xmlns="http://www.w3.org/2000/svg"
+                                                 xmlns:xlink="http://www.w3.org/1999/xlink"
+                                                 aria-hidden="true" focusable="false" width="1em"
+                                                 height="1em"
+                                                 style="-ms-transform: rotate(360deg); -webkit-transform: rotate(360deg); transform: rotate(360deg);"
+                                                 preserveAspectRatio="xMidYMid meet"
+                                                 viewBox="0 0 24 24">
+                                                <path fill="none" stroke="#626262" stroke-width="2"
+                                                      d="M2.998 7V1H17.5L21 4.5V23h-6m1-22v5h5M8 23A7 7 0 1 0 8 9a7 7 0 0 0 0 14zm-3.5-6.5L8 13l3.5 3.5m-3.5-3V20"></path>
+                                            </svg>
+                                            Update All</a>
+                                        <a ng-click="UpdateThemes('selected')"
+                                           href="javascript:void(0);"
+                                           class="btn btn-sm btn-default"> Update
+                                            Selected</a>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <div class="text-sm-right">
+                                            <button data-toggle="modal" data-target="#DeleteWebsite"
+                                                    ng-click="DeleteThemes('selected')"
+                                                    aria-label=""
+                                                    class="btn btn-danger btn-icon-left m-b-10"
+                                                    type="button">Delete
+                                                Selected
+                                            </button>
+                                        </div>
+                                    </div><!-- end col-->
+                                </div>
+                                <table class="table table-hover mb-0">
+                                    <thead>
+                                    <tr>
+                                        <th>
+                                            {% comment %}<div class="custom-control custom-checkbox" style="padding-left: 0px">
+                                                                <input type="checkbox" id="CheckAll">
+                                                                <label for="CheckAll"></label>
+                                                            </div>{% endcomment %}
+                                        </th>
+                                        <th>Theme</th>
+                                        <th>State</th>
+                                        <th>Updates</th>
+                                        <th>Version</th>
+                                        <th>Delete</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="ThemeBody">
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="tab-pane" id="tab4">
+                                <h2>Create Staging site</h2>
+                                <div ng-hide="stagingDetailsForm" class="form-group">
+                                    <label style="margin-bottom: 2%!important; margin-top: 2%!important;"
+                                           class="col-sm-2 control-label">Name</label>
+                                    <div class="col-sm-10">
+                                        <input style="margin-bottom: 2%!important; margin-top: 2%!important;"
+                                               type="text" class="form-control" id="stagingName">
+                                    </div>
+                                </div>
+                                <div ng-hide="stagingDetailsForm" class="form-group mt-5">
+                                    <label style="margin-bottom: 2%!important;"
+                                           class="col-sm-2 control-label">Domain Name</label>
+                                    <div class="col-sm-10">
+                                        <input style="margin-bottom: 2%!important;"
+                                               type="text" class="form-control" id="stagingDomain">
+                                    </div>
+                                </div>
+                                <div ng-hide="stagingDetailsForm" class="center-div mt-5">
+                                    <button ng-click="CreateStagingNow()"
+                                            style="margin-bottom: 2%!important;"
+                                            class="btn btn-alt btn-hover btn-blue-alt">
+                                        <span>Create Now</span>
+                                        <i class="glyph-icon icon-arrow-right"></i>
+                                    </button>
+                                </div>
+                                <div style="margin-top: 1%" ng-hide="installationProgress" class="form-group">
+                                    <label class="col-sm-2 control-label"></label>
+                                    <div class="col-sm-7">
+
+                                        <div class="alert alert-success text-center">
+                                            <h2>{$ currentStatus $}</h2>
+                                        </div>
+
+                                        <div class="progress">
+                                            <div id="installProgress" class="progress-bar"
+                                                 role="progressbar" aria-valuenow="70"
+                                                 aria-valuemin="0" aria-valuemax="100"
+                                                 style="width:0%">
+                                                <span class="sr-only">70% Complete</span>
+                                            </div>
+                                        </div>
+
+                                        <div ng-hide="errorMessageBox" class="alert alert-danger">
+                                            <p>{% trans "Error message:" %} {$ errorMessage $}</p>
+                                        </div>
+
+                                        <div ng-hide="success" class="alert alert-success">
+                                            <p>{% trans "Website succesfully created." %}</p>
+                                        </div>
+
+
+                                        <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                            <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                                        </div>
+
+
+                                    </div>
+                                </div>
+
+                                <div ng-hide="installationProgress" class="form-group center-div">
+                                    <div class="col-sm-12">
+                                        <button type="button" ng-disabled="goBackDisable"
+                                                ng-click="goBack()"
+                                                class="btn btn-primary btn-lg center-div">{% trans "Go Back" %}</button>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <table class="table table-condensed">
+                                        <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Domain</th>
+                                            <th>Path</th>
+                                            <th>Action</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody id="StagingBody">
+                                        </tbody>
+                                    </table>
+
+                                </div>
+
+                            </div>
+                            <div class="tab-pane" id="tab5">
+                                <div class="panel-body">
+                                    <h3 class="content-box-header">
+                                        {% trans "Create Backup " %} - <a
+                                            href="{% url 'RestoreBackups' %}">{% trans "Restore Backups " %} <i
+                                            class="glyph-icon icon-external-link-square"
+                                            title="staging.cyberpanel.net"></i></a>
+                                    </h3>
+                                    <div class="example-box-wrapper">
+
+                                        <form name="websiteCreationForm" action="/" id="createPackages"
+                                              class="form-horizontal bordered-row panel-body">
+                                            <div ng-hide="installationDetailsForm" class="form-group">
+                                                <label class="col-sm-3 control-label">{% trans "Select Backup type" %}</label>
+                                                <div class="col-sm-6">
+                                                    <select id="backuptype" class="form-control">
+                                                        <option value="1">Website and Database Both</option>
+                                                        <option value="2">Only Website Data</option>
+                                                        <option value="3">Only Database</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div ng-hide="installationDetailsForm" class="form-group">
+                                                <label class="col-sm-3 control-label"></label>
+                                                <div class="col-sm-4">
+                                                    <button type="button" id="createbackupbutton"
+                                                            ng-click="CreateBackup()"
+                                                            class="btn btn-primary btn-lg">{% trans "Create Backup" %}
+                                                        <img style="display: none"
+                                                             ng-hide="wordpresshomeloading"
+                                                             src="{% static 'images/loading.gif' %}"></button>
+
+                                                </div>
+                                            </div>
+                                            <div style="margin-top: 1%" ng-hide="installationProgress"
+                                                 class="form-group">
+                                                <label class="col-sm-2 control-label"></label>
+                                                <div class="col-sm-7">
+
+                                                    <div class="alert alert-success text-center">
+                                                        <h2>{$ currentStatus $}</h2>
+                                                    </div>
+
+                                                    <div class="progress">
+                                                        <div id="installProgressbackup" class="progress-bar"
+                                                             role="progressbar" aria-valuenow="70"
+                                                             aria-valuemin="0" aria-valuemax="100"
+                                                             style="width:0%">
+                                                            <span class="sr-only">70% Complete</span>
+                                                        </div>
+                                                    </div>
+
+                                                    <div ng-hide="errorMessageBox" class="alert alert-danger">
+                                                        <p>{% trans "Error message:" %} {$ errorMessage $}</p>
+                                                    </div>
+
+                                                    <div ng-hide="success" class="alert alert-success">
+                                                        <p>{% trans "Backup succesfully created." %}</p>
+                                                    </div>
+
+
+                                                    <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                                        <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                                                    </div>
+
+
+                                                </div>
+                                            </div>
+                                            <div ng-hide="installationProgress" class="form-group center-div">
+                                                <div class="col-sm-12">
+                                                    <button type="button" ng-disabled="goBackDisable"
+                                                            ng-click="goBack()"
+                                                            class="btn btn-primary btn-lg center-div">{% trans "Go Back" %}</button>
+                                                </div>
+                                            </div>
+
+                                        </form>
+                                    </div>
+
+                                </div>
+                            </div>
+                            <div class="tab-pane" id="tab6">
+                                <div class="panel-body">
+                                    <h3 class="content-box-header">
+                                        {% trans "Database for" %} {{ wpsite.title }}
+                                    </h3>
+                                    <div class="example-box-wrapper">
+                                        <form action="/" class="form-horizontal bordered-row panel-body">
+                                            <div class="form-group">
+                                                <label class="col-sm-2 control-label mb-5"
+                                                       style="padding-top: 0px;">{% trans "Database Name" %}</label>
+                                                <div class="col-sm-1 mb-10">
+                                                    <a target="_blank" href="{% url 'phpMyAdmin' %}">
+                                                        <div id="DB_Name" class="mb-10 text-bold"></div>
+                                                    </a>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label class="col-sm-2 control-label mb-5"
+                                                       style="padding-top: 0px;">{% trans "Database User" %}</label>
+                                                <div class="col-sm-1 mb-10">
+                                                    <div id="DB_User" class="mb-10 text-bold"></div>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label class="col-sm-2 control-label mb-5"
+                                                       style="padding-top: 0px;">{% trans "Table Prefix" %}</label>
+                                                <div class="col-sm-1 mb-10">
+                                                    <div id="tableprefix" class="mb-10 text-bold"></div>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+
+                                </div>
+                            </div>
+
+                        </div>
+                        <hr>
+                        <div style="display: flex; flex-wrap: wrap">
+                            <div class="col-sm-11">
+                                <a href="/websites/{{ wpsite.owner.domain }}">
+                                    <svg xmlns="http://www.w3.org/2000/svg"
+                                         xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true"
+                                         focusable="false" width="1em" height="1em"
+                                         style="-ms-transform: rotate(360deg); -webkit-transform: rotate(360deg); transform: rotate(360deg);"
+                                         preserveAspectRatio="xMidYMid meet" viewBox="0 0 32 32">
+                                        <path d="M16 18H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2zM6 6v10h10V6z"
+                                              fill="#626262"></path>
+                                        <path d="M26 12v4h-4v-4h4m0-2h-4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2z"
+                                              fill="#626262"></path>
+                                        <path d="M26 22v4h-4v-4h4m0-2h-4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2z"
+                                              fill="#626262"></path>
+                                        <path d="M16 22v4h-4v-4h4m0-2h-4a2 2 0 0 0-2 2v4a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2z"
+                                              fill="#626262"></path>
+                                    </svg>
+                                    Manage Application
+                                </a>
+                                <a ng-click="autoUpdateConfigurationsInit()" data-toggle="modal"
+                                   data-target="#autoUpdateConfig" style="margin-left: 3%"
+                                   href="javascript: void(0);">
+                                    <svg xmlns="http://www.w3.org/2000/svg"
+                                         xmlns:xlink="http://www.w3.org/1999/xlink" aria-hidden="true"
+                                         focusable="false" width="1em" height="1em"
+                                         style="-ms-transform: rotate(360deg); -webkit-transform: rotate(360deg); transform: rotate(360deg);"
+                                         preserveAspectRatio="xMidYMid meet" viewBox="0 0 20 20">
+                                        <path d="M10.2 3.28c3.53 0 6.43 2.61 6.92 6h2.08l-3.5 4l-3.5-4h2.32a4.439 4.439 0 0 0-4.32-3.45c-1.45 0-2.73.71-3.54 1.78L4.95 5.66a6.965 6.965 0 0 1 5.25-2.38zm-.4 13.44c-3.52 0-6.43-2.61-6.92-6H.8l3.5-4c1.17 1.33 2.33 2.67 3.5 4H5.48a4.439 4.439 0 0 0 4.32 3.45c1.45 0 2.73-.71 3.54-1.78l1.71 1.95a6.95 6.95 0 0 1-5.25 2.38z"
+                                              fill="#626262"></path>
+                                    </svg>
+                                    Autoupdate Configurations
+                                </a>
+                            </div>
+
+                            <div class="col-sm-1">
+
+                                <a data-toggle="modal"
+                                   data-target="#securitymodel" style="margin-left: 3%"
+                                   href="javascript: void(0);">
+                                    <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img" width="1em"
+                                         style="-ms-transform: rotate(360deg); -webkit-transform: rotate(360deg); transform: rotate(360deg);"
+                                         height="1em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24">
+                                        <path fill="#626262"
+                                              d="M12 22q-3.475-.875-5.737-3.988Q4 14.9 4 11.1V5l8-3l8 3v6.1q0 3.8-2.262 6.912Q15.475 21.125 12 22Zm0-2.1q2.425-.75 4.05-2.962q1.625-2.213 1.9-4.938H12V4.125l-6 2.25v5.175q0 .175.05.45H12Z"/>
+                                    </svg>
+                                    Security
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+
+                </div>
+            </div>
+        </div>
+
+        <!------------------MOdael for passwd protection-------->
+        <div id="Passwordprotection" class="modal fade" role="dialog">
+            <div class="modal-dialog">
+                <!-- Modal content-->
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">&times;
+                        </button>
+                        <h4 class="modal-title">Enable Password Protection
+                            <img ng-hide="$parent.cyberPanelLoading"
+                                 src="/static/images/loading.gif"
+                                 style="display: none;">
+                        </h4>
+                    </div>
+                    <div class="modal-body" style="height: 100px;">
+
+                        <div>
+                            <label class="col-sm-4">Username</label>
+                            <input ng-model="$parent.PPUsername" required class="col-lg-8"
+                                   type="text" placeholder="Username">
+
+                        </div>
+                        <div style="margin-top: 36px;">
+                            <label class="col-sm-4">Password</label>
+                            <input ng-model="$parent.PPPassword" required class="col-lg-8"
+                                   type="password" placeholder="*******************">
+
+                        </div>
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary"
+                                ng-click="UpdateWPSettings('PasswordProtection')">Yes
+                        </button>
+                        <button type="button" ng-disabled="savingSettings"
+                                class="btn btn-default" data-dismiss="modal">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!------------------End MOdael for passwd protection-------->
+
+        <!-------Start Model of AutoUpdateCongiguration-->
+        <div id="autoUpdateConfig" class="modal fade" tabindex="-1" role="dialog"
+             aria-hidden="true">
+            <div class="modal-dialog">
+
+                <!-- Modal content-->
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">
+                            &times;
+                        </button>
+                        <h4 class="modal-title">{% trans "Updates" %}</h4>
+                    </div>
+                    <div class="modal-body">
+                        <form>
+
+
+                            <h4 style="margin: 2%">Configure setting for automatic
+                                updates.</h4>
+                            <div class="row">
+                                <label class="col-lg-6">Automatic Updates
+                                    (Currently:
+                                    {{ wpsite.AutoUpdates }})</label>
+                                <div class="col-lg-6">
+                                    <select id="AutomaticUpdates"
+                                            style="padding: 10px">
+                                        <option>Disabled</option>
+                                        <option>Minor and Security Updates</option>
+                                        <option>All (minor and major)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <label class="col-lg-4">Plugins
+                                    (Currently: {{ wpsite.PluginUpdates }})</label>
+                                <div class="col-lg-8">
+                                    <select id="Plugins"
+
+                                            style="padding: 10px">
+                                        <option>Enabled</option>
+                                        <option>Disabled</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <label class="col-lg-4">Themes
+                                    (Currently: {{ wpsite.ThemeUpdates }})</label>
+                                <div class="col-lg-8">
+                                    <select id="Themes"
+
+                                            style="padding: 10px">
+                                        <option>Enabled</option>
+                                        <option>Disabled</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                        </form>
+
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary"
+                                ng-click="SaveUpdateConfig()">Save
+                        </button>
+                        <button type="button" ng-disabled="savingSettings"
+                                class="btn btn-default" data-dismiss="modal">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- /.modal-dialog -->
+        </div>
+        <!-------End Model of AutoUpdateCongiguration-->
+
+        <!-------Start Model of Security-->
+        <div id="securitymodel" class="modal fade" tabindex="-1" role="dialog"
+             aria-hidden="true">
+            <div class="modal-dialog">
+
+                <!-- Modal content-->
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">
+                            &times;
+                        </button>
+                        <h4 class="modal-title">{% trans "Security" %}<img style="display: none"
+                                                                           id="wordpresshomeloadingsec"
+                                                                           ng-hide="wordpresshomeloading"
+                                                                           src="{% static 'images/loading.gif' %}"></h4>
+                    </div>
+                    <div class="modal-body center-div">
+                        <div class="alert alert-warning">
+                            <h4 class="alert-title">Status</h4>
+                            <p id="SecurityResult"></p>
+                        </div>
+                        <button
+                                data-toggle="modal"
+                                data-target="#DeleteMember" aria-label=""
+                                ng-click="dataintegrity()"
+                                type="button" class="btn btn-border btn-alt border-azure btn-link font-black">
+                            Data integrity
+                        </button>
+                        <button
+                                data-toggle="modal"
+                                data-target="#DeleteMember" aria-label=""
+                                ng-click="installwpcore()"
+                                type="button" class="btn btn-border btn-alt border-azure btn-link font-black">
+                            Re-Install WP Core
+                        </button>
+
+
+                    </div>
+
+                </div>
+            </div>
+            <!-- /.modal-dialog -->
+        </div>
+        <!-------End Model of Security-->
+        <div id="DeployToProduction" class="modal fade" role="dialog">
+            <div class="modal-dialog">
+                <!-- Modal content-->
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">&times;
+                        </button>
+                        <h4 class="modal-title">DeployToProduction
+                            <img ng-hide="$parent.cyberPanelLoading"
+                                 src="/static/images/loading.gif"
+                                 style="display: none;">
+                        </h4>
+                    </div>
+                    <div class="modal-body">
+                        <p class="no-margin">When you deploy a
+                            staging site to production, the main
+                            site is completely restored with the
+                            staging site, so if you have made
+                            any changes to main site they will
+                            be lost.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary"
+                                ng-click="FinalDeployToProduction()" data-dismiss="modal">Yes
+                        </button>
+                        <button type="button" ng-disabled="savingSettings"
+                                class="btn btn-default" data-dismiss="modal">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+{% endblock %}

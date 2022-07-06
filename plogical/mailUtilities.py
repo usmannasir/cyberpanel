@@ -814,12 +814,13 @@ class MailServerManagerUtils(multi.Thread):
 
     def install_postfix_dovecot(self):
         try:
+
             if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
-                command = 'yum remove postfix -y'
-                ProcessUtilities.executioner(command)
-            elif ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
-                command = 'apt-get -y remove postfix'
-                ProcessUtilities.executioner(command)
+                command = 'yum remove postfix* dovecot* -y'
+                ProcessUtilities.executioner(command, None, True)
+            elif ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
+                command = 'apt-get -y remove postfix* dovecot*'
+                ProcessUtilities.executioner(command, None, True)
 
             ### On Ubuntu 18 find if old dovecot and remove
 
@@ -827,7 +828,7 @@ class MailServerManagerUtils(multi.Thread):
                 try:
 
                     command = 'apt-get purge dovecot* -y'
-                    os.system(command)
+                    ProcessUtilities.executioner(command, None, True)
 
                     command = 'apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 18A348AEED409DA1'
                     ProcessUtilities.executioner(command)
@@ -854,13 +855,11 @@ class MailServerManagerUtils(multi.Thread):
                 command = 'yum install --enablerepo=gf-plus -y postfix3 postfix3-ldap postfix3-mysql postfix3-pcre'
             elif ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
 
-                command = 'dnf --nogpg install -y https://mirror.ghettoforge.org/distributions/gf/el/8/gf/x86_64/gf-release-8-11.gf.el8.noarch.rpm'
+                command = 'dnf --nogpg install -y https://mirror.ghettoforge.org/distributions/gf/gf-release-latest.gf.el8.noarch.rpm'
                 ProcessUtilities.executioner(command)
 
                 command = 'dnf install --enablerepo=gf-plus postfix3 postfix3-mysql -y'
-                ProcessUtilities.executioner(command)
             else:
-
 
                 import socket
                 command = 'apt-get install -y debconf-utils'
@@ -1038,6 +1037,9 @@ class MailServerManagerUtils(multi.Thread):
 
     def centos_lib_dir_to_ubuntu(self, filename, old, new):
         try:
+            #command = "sed -i 's|%s|%s|g' %s" % (old, new, filename)
+            #ProcessUtilities.executioner(command, None, True)
+
             fd = open(filename, 'r')
             lines = fd.readlines()
             fd.close()
@@ -1101,7 +1103,7 @@ class MailServerManagerUtils(multi.Thread):
             ProcessUtilities.executioner(command)
 
             # Cleanup config files for ubuntu
-            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
                 self.centos_lib_dir_to_ubuntu("/usr/local/CyberCP/install/email-configs-one/master.cf", "/usr/libexec/",
                                               "/usr/lib/")
                 self.centos_lib_dir_to_ubuntu("/usr/local/CyberCP/install/email-configs-one/main.cf",
@@ -1502,6 +1504,8 @@ class MailServerManagerUtils(multi.Thread):
                 virtualHostUtilities.issueSSLForMailServer(self.mailHostName,
                                                            '/home/%s/public_html' % (self.mailHostName))
 
+
+            MailServerSSLCheck = 0
             from websiteFunctions.models import ChildDomains
             from plogical.virtualHostUtilities import virtualHostUtilities
             for websites in Websites.objects.all():
@@ -1512,6 +1516,15 @@ class MailServerManagerUtils(multi.Thread):
                     virtualHostUtilities.setupAutoDiscover(1, '/dev/null', websites.domain, websites.admin)
                 except:
                     pass
+
+                if self.MailSSL == 0 and MailServerSSLCheck == 0:
+                    logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
+                                                              'Setting up Mail Server SSL as no hostname SSL found..,80')
+                    from plogical.virtualHostUtilities import virtualHostUtilities
+                    virtualHostUtilities.issueSSLForMailServer(websites.domain,
+                                                               '/home/%s/public_html' % (websites.domain))
+                    MailServerSSLCheck = 1
+
 
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Fixing permissions..,90')
 
@@ -1525,6 +1538,10 @@ class MailServerManagerUtils(multi.Thread):
 
     def configureOpenDKIM(self):
         try:
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                command = 'dnf install opendkim-tools -y'
+                ProcessUtilities.executioner(command)
 
             ## Configure OpenDKIM specific settings
 

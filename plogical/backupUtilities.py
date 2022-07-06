@@ -49,7 +49,7 @@ except:
     pass
 
 VERSION = '2.3'
-BUILD = 1
+BUILD = 2
 
 
 ## I am not the monster that you think I am..
@@ -360,8 +360,7 @@ class backupUtilities:
 
             completPathToConf = f'{backupUtilities.Server_root}/conf/vhosts/{domainName}/vhost.conf'
 
-            if os.path.exists(backupUtilities.licenseKey):
-                copy(completPathToConf, tempStoragePath + '/vhost.conf')
+            copy(completPathToConf, tempStoragePath + '/vhost.conf')
 
             ## /home/example.com/backup/backup-example.com-02.13.2018_10-24-52 -- tempStoragePath
             ## shutil.make_archive
@@ -441,9 +440,9 @@ class backupUtilities:
                 actualChildDomain = childDomain.find('domain').text
                 childPath = childDomain.find('path').text
 
-                if os.path.exists(backupUtilities.licenseKey):
-                    completPathToConf = f'{backupUtilities.Server_root}/conf/vhosts/{actualChildDomain}/vhost.conf'
-                    copy(completPathToConf, f'{tempStoragePath}/{actualChildDomain}.vhost.conf')
+
+                completPathToConf = f'{backupUtilities.Server_root}/conf/vhosts/{actualChildDomain}/vhost.conf'
+                copy(completPathToConf, f'{tempStoragePath}/{actualChildDomain}.vhost.conf')
 
                     ### Storing SSL for child domainsa
 
@@ -645,7 +644,7 @@ class backupUtilities:
 
                 dbName = database.find('dbName').text
 
-                if VERSION == '2.1' and int(BUILD) >= 1:
+                if (VERSION == '2.1' or VERSION == '2.3') and int(BUILD) >= 1:
 
                     logging.CyberCPLogFileWriter.writeToFile('Backup version 2.1.1+ detected..')
                     databaseUsers = database.findall('databaseUsers')
@@ -813,10 +812,9 @@ class backupUtilities:
 
                         try:
 
-                            if os.path.exists(backupUtilities.licenseKey):
-                                if os.path.exists(completPath + '/' + domain + '.vhost.conf'):
-                                    completPathToConf = backupUtilities.Server_root + '/conf/vhosts/' + domain + '/vhost.conf'
-                                    copy(completPath + '/' + domain + '.vhost.conf', completPathToConf)
+                            if os.path.exists(completPath + '/' + domain + '.vhost.conf'):
+                                completPathToConf = backupUtilities.Server_root + '/conf/vhosts/' + domain + '/vhost.conf'
+                                copy(completPath + '/' + domain + '.vhost.conf', completPathToConf)
 
                             sslStoragePath = completPath + "/" + domain + ".cert.pem"
 
@@ -912,7 +910,7 @@ class backupUtilities:
 
                 dbName = database.find('dbName').text
 
-                if VERSION == '2.1' and int(BUILD) >= 1:
+                if (VERSION == '2.1' or VERSION == '2.3') and int(BUILD) >= 1:
 
                     logging.CyberCPLogFileWriter.writeToFile('Backup version 2.1.1+ detected..')
 
@@ -962,6 +960,7 @@ class backupUtilities:
 
             # /home/backup/backup-example.com-02.13.2018_10-24-52/public_html.tar.gz
             ## Moving above v2.0.0 extracting webhome data is not required, thus commenting below lines
+
 
             if not twoPointO:
                 tar = tarfile.open(pathToCompressedHome)
@@ -1024,10 +1023,9 @@ class backupUtilities:
 
             ## emails extracted
 
-            if os.path.exists(backupUtilities.licenseKey):
-                completPathToConf = backupUtilities.Server_root + '/conf/vhosts/' + masterDomain + '/vhost.conf'
-                if os.path.exists(completPath + '/vhost.conf'):
-                    copy(completPath + '/vhost.conf', completPathToConf)
+            completPathToConf = backupUtilities.Server_root + '/conf/vhosts/' + masterDomain + '/vhost.conf'
+            if os.path.exists(completPath + '/vhost.conf'):
+                copy(completPath + '/vhost.conf', completPathToConf)
 
             logging.CyberCPLogFileWriter.statusWriter(status, "Done")
 

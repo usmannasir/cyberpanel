@@ -1163,6 +1163,10 @@ class BackupManager:
 
                 r = requests.post(url, data=finalData, verify=False)
 
+                if os.path.exists('/usr/local/CyberCP/debug'):
+                    message = 'Remote transfer initiation status: %s' % (r.text)
+                    logging.CyberCPLogFileWriter.writeToFile(message)
+
                 data = json.loads(r.text)
 
                 if data['transferStatus'] == 1:

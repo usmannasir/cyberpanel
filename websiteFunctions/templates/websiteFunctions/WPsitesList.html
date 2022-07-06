@@ -1,0 +1,195 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "WordPress Sites - CyberPanel" %}{% endblock %}
+{% block content %}
+
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
+
+    <script>
+        $(document).ready(function () {
+            $('[data-toggle="tooltip"]').tooltip();
+        });
+    </script>
+
+    <style>
+        table { /* tables still need 'cellspacing="0"' in the markup */
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .table-spacing {
+            border-spacing: 0em .9em;
+        }
+
+        table th:nth-child(1) {
+
+            /* Safari 3-4, iOS 1-3.2, Android 1.6- */
+            -webkit-border-radius: 3px 0px 0px 3px;
+
+            /* Firefox 1-3.6 */
+            -moz-border-radius: 3px 0px 0px 3px;
+
+            /* Opera 10.5, IE 9, Safari 5, Chrome, Firefox 4, iOS 4, Android 2.1+ */
+            border-radius: 3px 0px 0px 3px;
+        }
+
+        table th:nth-child(1) {
+
+            /* Safari 3-4, iOS 1-3.2, Android 1.6- */
+            -webkit-border-radius: 20px 0px 0px 20px;
+
+            /* Firefox 1-3.6 */
+            -moz-border-radius: 20px 0px 0px 20px;
+
+            /* Opera 10.5, IE 9, Safari 5, Chrome, Firefox 4, iOS 4, Android 2.1+ */
+            border-radius: 20px 0px 0px 20px;
+        }
+
+        table th:nth-last-child(1) {
+            /* Safari 3-4, iOS 1-3.2, Android 1.6- */
+            -webkit-border-radius: 0px 20px 20px 0px;
+
+            /* Firefox 1-3.6 */
+            -moz-border-radius: 0px 20px 20px 0px;
+
+            /* Opera 10.5, IE 9, Safari 5, Chrome, Firefox 4, iOS 4, Android 2.1+ */
+            border-radius: 0px 20px 20px 0px;
+        }
+
+        table td:nth-child(1) {
+
+            /* Safari 3-4, iOS 1-3.2, Android 1.6- */
+            -webkit-border-radius: 20px 0px 0px 20px;
+
+            /* Firefox 1-3.6 */
+            -moz-border-radius: 20px 0px 0px 20px;
+
+            /* Opera 10.5, IE 9, Safari 5, Chrome, Firefox 4, iOS 4, Android 2.1+ */
+            border-radius: 20px 0px 0px 20px;
+        }
+
+        table td:nth-last-child(1) {
+            /* Safari 3-4, iOS 1-3.2, Android 1.6- */
+            -webkit-border-radius: 0px 20px 20px 0px;
+
+            /* Firefox 1-3.6 */
+            -moz-border-radius: 0px 20px 20px 0px;
+
+            /* Opera 10.5, IE 9, Safari 5, Chrome, Firefox 4, iOS 4, Android 2.1+ */
+            border-radius: 0px 20px 20px 0px;
+        }
+
+    </style>
+
+
+    <div ng-controller="listWebsites" class="container">
+
+        <div id="page-title">
+            <h2 id="domainNamePage">{% trans "List WordPress Websites" %}
+                <a class="pull-right btn btn-primary"
+                   href="{% url "createWordpress" %}">{% trans "Create WordPress Website" %}</a>
+            </h2>
+            <img ng-hide="cyberPanelLoading" src="{% static 'images/loading.gif' %}">
+            <p>{% trans "On this page you can launch, list, modify and delete Wordpress Sites from your server." %}</p>
+        </div>
+
+
+        <table class="table-spacing" style="width: 100%">
+            <thead style="color: white; background-color: #0a6ebd">
+            <tr>
+                <th style="padding: 18px; color: white; width: 161px; font-size: 12px;">WordPress Site Title</th>
+                <th style="padding: 18px; color: white; width: 161px; font-size: 12px;">Login</th>
+                <th style="padding: 18px; color: white; width: 161px; font-size: 12px;">Domain</th>
+                <th style="padding: 18px; color: white; width: 161px; font-size: 12px;">Action</th>
+            </tr>
+            </thead>
+
+            <tbody style="background-color: #d9eefa">
+            {% for sub in wpsite %}
+
+                <tr>
+                    <td style="padding: 13px;">
+                        <a href="{% url 'WPHome' %}?ID={{ sub.id }}">
+                            <p style="font-weight: bold; text-transform: uppercase; ">{{ sub.title }}</p>
+                        </a>
+
+                    </td>
+                    <td style="padding: 13px;">
+                        <a title="Auto Login" style="margin-right: 2%; margin-left: 10px;"
+                           target="_blank"
+                           href="{% url 'AutoLogin' %}?id={{ sub.id }}">
+                            <svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img" width="1.5em"
+                                 style="margin: 3px;" height="1.5em" preserveAspectRatio="xMidYMid meet"
+                                 viewBox="0 0 16 16">
+                                <g fill="#006600">
+                                    <path d="M12.633 7.653c0-.848-.305-1.435-.566-1.892l-.08-.13c-.317-.51-.594-.958-.594-1.48c0-.63.478-1.218 1.152-1.218c.02 0 .039.002.058.003l.031.003A6.838 6.838 0 0 0 8 1.137A6.855 6.855 0 0 0 2.266 4.23c.16.005.313.009.442.009c.717 0 1.828-.087 1.828-.087c.37-.022.414.521.044.565c0 0-.371.044-.785.065l2.5 7.434l1.5-4.506l-1.07-2.929c-.369-.022-.719-.065-.719-.065c-.37-.022-.326-.588.043-.566c0 0 1.134.087 1.808.087c.718 0 1.83-.087 1.83-.087c.37-.022.413.522.043.566c0 0-.372.043-.785.065l2.48 7.377l.684-2.287l.054-.173c.27-.86.469-1.495.469-2.046zM1.137 8a6.864 6.864 0 0 0 3.868 6.176L1.73 5.206A6.837 6.837 0 0 0 1.137 8z"></path>
+                                    <path d="M6.061 14.583L8.121 8.6l2.109 5.78c.014.033.03.064.049.094a6.854 6.854 0 0 1-4.218.109zm7.96-9.876c.03.219.047.453.047.706c0 .696-.13 1.479-.522 2.458l-2.096 6.06a6.86 6.86 0 0 0 2.572-9.224z"></path>
+                                    <path fill-rule="evenodd"
+                                          d="M0 8c0-4.411 3.589-8 8-8c4.41 0 8 3.589 8 8s-3.59 8-8 8c-4.411 0-8-3.589-8-8zm.367 0c0 4.209 3.424 7.633 7.633 7.633c4.208 0 7.632-3.424 7.632-7.633C15.632 3.79 12.208.367 8 .367C3.79.367.367 3.79.367 8z"></path>
+                                </g>
+                            </svg>
+                        </a>
+                    </td>
+                    <td style="padding: 13px;">
+                        <a target="_blank" style="color: #6aa7ff"
+                           href="http://{{ sub.url }}">Visit
+                            <i class="glyph-icon icon-external-link-square" title="{{ sub.url }}"></i></a>
+                    </td>
+
+                    <td style="padding: 13px;">
+
+                        <button
+                                data-toggle="modal"
+                                data-target="#DeleteMember" aria-label=""
+                                onclick="DeleteWPNow('{% url 'ListWPSites' %}?DeleteID={{ sub.id }}')"
+                                type="button" class="btn btn-border btn-alt border-red btn-link font-red">
+                            Delete
+                        </button>
+                        <div id="DeleteMember" class="modal fade" role="dialog">
+                            <div class="modal-dialog">
+                                <!-- Modal content-->
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <button type="button" class="close" data-dismiss="modal">&times;
+                                        </button>
+                                        <h4 class="modal-title">Delete WordPress Site
+                                            <img ng-hide="$parent.cyberPanelLoading"
+                                                 src="/static/images/loading.gif"
+                                                 style="display: none;">
+                                        </h4>
+                                    </div>
+                                    <div class="modal-body">
+                                        <form name="DeleteDocumentRootForm" action="/"
+                                              class="form-horizontal">
+
+                                            <span>Do you want to delete the site?</span>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-primary"
+                                                onclick="FinalDeleteWPNow()">Yes
+                                        </button>
+                                        <button type="button" ng-disabled="savingSettings"
+                                                class="btn btn-default" data-dismiss="modal">
+                                            Cancel
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+                    </td>
+
+
+                </tr>
+            {% endfor %}
+
+            </tbody>
+        </table>
+
+
+    </div>
+
+{% endblock %}

@@ -4,6 +4,7 @@ import os.path
 import sys
 import django
 
+from databases.models import Databases
 from plogical.httpProc import httpProc
 
 sys.path.append('/usr/local/CyberCP')
@@ -12,23 +13,24 @@ django.setup()
 import json
 from plogical.acl import ACLManager
 import plogical.CyberCPLogFileWriter as logging
-from websiteFunctions.models import Websites, ChildDomains, GitLogs
+from websiteFunctions.models import Websites, ChildDomains, GitLogs, wpplugins, WPSites, WPStaging, WPSitesBackup, RemoteBackupConfig,RemoteBackupSchedule, RemoteBackupsites
 from plogical.virtualHostUtilities import virtualHostUtilities
 import subprocess
 import shlex
 from plogical.installUtilities import installUtilities
-from django.shortcuts import HttpResponse, render
+from django.shortcuts import HttpResponse, render, redirect
 from loginSystem.models import Administrator, ACL
 from packages.models import Package
 from plogical.mailUtilities import mailUtilities
 from random import randint
 import time
 import re
+import boto3
 from plogical.childDomain import ChildDomainManager
 from math import ceil
 from plogical.alias import AliasManager
 from plogical.applicationInstaller import ApplicationInstaller
-from plogical import hashPassword
+from plogical import hashPassword, randomPassword
 from emailMarketing.emACL import emACL
 from plogical.processUtilities import ProcessUtilities
 from managePHP.phpManager import PHPManager
@@ -58,6 +60,574 @@ class WebsiteManager:
         proc = httpProc(request, 'websiteFunctions/createWebsite.html',
                         Data, 'createWebsite')
         return proc.render()
+
+    def WPCreate(self, request=None, userID=None, data=None):
+        url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
+        data = {
+            "name": "wp-manager",
+            "IP": ACLManager.GetServerIP()
+        }
+
+        import requests
+        response = requests.post(url, data=json.dumps(data))
+        Status = response.json()['status']
+
+        if (Status == 1) or ProcessUtilities.decideServer() == ProcessUtilities.ent:
+            currentACL = ACLManager.loadedACL(userID)
+            adminNames = ACLManager.loadAllUsers(userID)
+            packagesName = ACLManager.loadPackages(userID, currentACL)
+            FinalVersions = []
+            userobj = Administrator.objects.get(pk=userID)
+            counter = 0
+            try:
+                import requests
+                WPVersions = json.loads(requests.get('https://api.wordpress.org/core/version-check/1.7/').text)['offers']
+
+                for versions in WPVersions:
+                    if counter == 7:
+                        break
+                    if versions['current'] not in FinalVersions:
+                        FinalVersions.append(versions['current'])
+                        counter = counter + 1
+            except:
+                FinalVersions = ['5.6', '5.5.3', '5.5.2']
+
+            Plugins = wpplugins.objects.filter(owner=userobj)
+
+            Data = {'packageList': packagesName, "owernList": adminNames, 'WPVersions': FinalVersions, 'Plugins': Plugins }
+            proc = httpProc(request, 'websiteFunctions/WPCreate.html',
+                            Data, 'createWebsite')
+            return proc.render()
+        else:
+            return redirect("https://cyberpanel.net/cyberpanel-addons")
+
+    def ListWPSites(self, request=None, userID=None, DeleteID=None):
+        currentACL = ACLManager.loadedACL(userID)
+
+        admin = Administrator.objects.get(pk=userID)
+        tata = {}
+        tata['wp']=[]
+        tata['wpsites']=[]
+        tata['wp'] = ACLManager.GetALLWPObjects(currentACL, userID)
+
+        try:
+            if DeleteID != None:
+                WPDelete = WPSites.objects.get(pk=DeleteID)
+
+                if ACLManager.checkOwnership(WPDelete.owner.domain, admin, currentACL) == 1:
+                    WPDelete.delete()
+
+        except BaseException as msg:
+            pass
+
+        for sub in tata['wp']:
+            tata['wpsites'].append({'id': sub.id,
+                                    'title': sub.title,
+                                    'url': sub.FinalURL
+                                    })
+
+        proc = httpProc(request, 'websiteFunctions/WPsitesList.html',
+                        {"wpsite": tata['wpsites']})
+        return proc.render()
+
+    def WPHome(self, request=None, userID=None, WPid=None, DeleteID=None):
+        Data = {}
+        currentACL = ACLManager.loadedACL(userID)
+        WPobj = WPSites.objects.get(pk=WPid)
+        admin = Administrator.objects.get(pk=userID)
+
+        if ACLManager.checkOwnership(WPobj.owner.domain, admin, currentACL) == 1:
+            pass
+        else:
+            return ACLManager.loadError()
+
+        try:
+
+            url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
+            data = {
+                "name": "wp-manager",
+                "IP": ACLManager.GetServerIP()
+            }
+
+            import requests
+            response = requests.post(url, data=json.dumps(data))
+            Status = response.json()['status']
+
+            if (Status == 1) or ProcessUtilities.decideServer() == ProcessUtilities.ent:
+                Data['wpsite'] = WPobj
+
+                try:
+                    DeleteID = request.GET.get('DeleteID', None)
+
+                    if DeleteID != None:
+                        wstagingDelete = WPStaging.objects.get(pk=DeleteID, owner=WPobj)
+                        wstagingDelete.delete()
+
+                except BaseException as msg:
+                    da= str(msg)
+
+                proc = httpProc(request, 'websiteFunctions/WPsiteHome.html',
+                                Data, 'createWebsite')
+                return proc.render()
+            else:
+                return redirect("https://cyberpanel.net/cyberpanel-addons")
+
+        except:
+            proc = httpProc(request, 'websiteFunctions/WPsiteHome.html',
+                            Data, 'createWebsite')
+            return proc.render()
+
+    def RestoreHome(self, request=None, userID=None, BackupID=None ):
+        Data = {}
+        currentACL = ACLManager.loadedACL(userID)
+        admin = Administrator.objects.get(pk=userID)
+
+        if ACLManager.CheckForPremFeature('wp-manager'):
+
+            Data['backupobj'] = WPSitesBackup.objects.get(pk=BackupID)
+
+            if ACLManager.CheckIPBackupObjectOwner(currentACL, Data['backupobj'], admin) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
+            config = json.loads(Data['backupobj'].config)
+            Data['FileName']= config['name']
+            try:
+                Data['Backuptype']= config['Backuptype']
+            except:
+                Data['Backuptype'] = None
+            Data['WPsites'] = ACLManager.GetALLWPObjects(currentACL, userID)
+            proc = httpProc(request, 'websiteFunctions/WPRestoreHome.html',
+                            Data, 'createWebsite')
+            return proc.render()
+        else:
+            return redirect("https://cyberpanel.net/cyberpanel-addons")
+
+
+    def RemoteBackupConfig(self, request=None, userID=None, DeleteID=None ):
+        Data = {}
+        currentACL = ACLManager.loadedACL(userID)
+        admin = Administrator.objects.get(pk=userID)
+        try:
+            if DeleteID != None:
+                BackupconfigDelete = RemoteBackupConfig.objects.get(pk=DeleteID)
+                BackupconfigDelete.delete()
+        except:
+            pass
+
+        if ACLManager.CheckForPremFeature('wp-manager'):
+
+            Data['WPsites'] = ACLManager.GetALLWPObjects(currentACL, userID)
+            allcon = RemoteBackupConfig.objects.all()
+            Data['backupconfigs'] =[]
+            for i in allcon:
+                configr = json.loads(i.config)
+                if i.configtype == "SFTP":
+                    Data['backupconfigs'].append({
+                        'id': i.pk,
+                        'Type': i.configtype,
+                        'HostName': configr['Hostname'],
+                        'Path': configr['Path']
+                    })
+                elif i.configtype == "S3":
+                    Provider = configr['Provider']
+                    if Provider == "Backblaze":
+                        Data['backupconfigs'].append({
+                            'id': i.pk,
+                            'Type': i.configtype,
+                            'HostName': Provider,
+                            'Path': configr['S3keyname']
+                        })
+                    else:
+                        Data['backupconfigs'].append({
+                            'id': i.pk,
+                            'Type': i.configtype,
+                            'HostName': Provider,
+                            'Path': configr['S3keyname']
+                        })
+
+            proc = httpProc(request, 'websiteFunctions/RemoteBackupConfig.html',
+                            Data, 'createWebsite')
+            return proc.render()
+        else:
+            return redirect("https://cyberpanel.net/cyberpanel-addons")
+
+
+    def BackupfileConfig(self, request=None, userID=None, RemoteConfigID=None, DeleteID=None ):
+        Data = {}
+        currentACL = ACLManager.loadedACL(userID)
+        admin = Administrator.objects.get(pk=userID)
+
+        Data['RemoteConfigID'] = RemoteConfigID
+        RemoteConfigobj = RemoteBackupConfig.objects.get(pk=RemoteConfigID)
+        try:
+            if DeleteID != None:
+                RemoteBackupConfigDelete = RemoteBackupSchedule.objects.get(pk=DeleteID)
+                RemoteBackupConfigDelete.delete()
+        except:
+            pass
+
+        if ACLManager.CheckForPremFeature('wp-manager'):
+            Data['WPsites'] = ACLManager.GetALLWPObjects(currentACL, userID)
+            allsechedule = RemoteBackupSchedule.objects.filter(RemoteBackupConfig=RemoteConfigobj)
+            Data['Backupschedule'] = []
+            for i in allsechedule:
+                lastrun = i.lastrun
+                LastRun = time.strftime('%Y-%m-%d', time.localtime(float(lastrun)))
+                Data['Backupschedule'].append({
+                    'id': i.pk,
+                    'Name': i.Name,
+                    'RemoteConfiguration': i.RemoteBackupConfig.configtype,
+                    'Retention': i.fileretention,
+                    'Frequency': i.timeintervel,
+                    'LastRun': LastRun
+                })
+            proc = httpProc(request, 'websiteFunctions/BackupfileConfig.html',
+                            Data, 'createWebsite')
+            return proc.render()
+        else:
+            return redirect("https://cyberpanel.net/cyberpanel-addons")
+
+
+    def AddRemoteBackupsite(self, request=None, userID=None, RemoteScheduleID=None , DeleteSiteID=None):
+        Data = {}
+        currentACL = ACLManager.loadedACL(userID)
+        admin = Administrator.objects.get(pk=userID)
+
+        Data['RemoteScheduleID'] = RemoteScheduleID
+        RemoteBackupScheduleobj= RemoteBackupSchedule.objects.get(pk=RemoteScheduleID)
+
+        try:
+            if DeleteSiteID != None:
+                RemoteBackupsitesDelete = RemoteBackupsites.objects.get(pk=DeleteSiteID)
+                RemoteBackupsitesDelete.delete()
+        except:
+            pass
+
+        if ACLManager.CheckForPremFeature('wp-manager'):
+            Data['WPsites'] = ACLManager.GetALLWPObjects(currentACL, userID)
+            allRemoteBackupsites = RemoteBackupsites.objects.filter(owner=RemoteBackupScheduleobj)
+            Data['RemoteBackupsites'] = []
+            for i in allRemoteBackupsites:
+                wpsite = WPSites.objects.get(pk=i.WPsites)
+                Data['RemoteBackupsites'].append({
+                    'id': i.pk,
+                    'Title': wpsite.title,
+                })
+            proc = httpProc(request, 'websiteFunctions/AddRemoteBackupSite.html',
+                            Data, 'createWebsite')
+            return proc.render()
+        else:
+            return redirect("https://cyberpanel.net/cyberpanel-addons")
+
+    def RestoreBackups(self, request=None, userID=None, DeleteID=None):
+        Data = {}
+        currentACL = ACLManager.loadedACL(userID)
+        admin = Administrator.objects.get(pk=userID)
+
+        url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
+        data = {
+            "name": "wp-manager",
+            "IP": ACLManager.GetServerIP()
+        }
+
+        import requests
+        response = requests.post(url, data=json.dumps(data))
+        Status = response.json()['status']
+
+        if (Status == 1) or ProcessUtilities.decideServer() == ProcessUtilities.ent:
+
+            backobj = WPSitesBackup.objects.filter(owner=admin).order_by('-id')
+
+            if ACLManager.CheckIPBackupObjectOwner(currentACL, backobj, admin) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
+            try:
+                if DeleteID != None:
+                    DeleteIDobj = WPSitesBackup.objects.get(pk=DeleteID)
+
+                    if ACLManager.CheckIPBackupObjectOwner(currentACL, DeleteIDobj, admin) == 1:
+
+                        config = DeleteIDobj.config
+                        conf = json.loads(config)
+                        FileName = conf['name']
+                        command = "rm -r /home/backup/%s.tar.gz"%FileName
+                        ProcessUtilities.executioner(command)
+                        DeleteIDobj.delete()
+
+            except BaseException as msg:
+                pass
+            Data['job'] = []
+
+            for sub in backobj:
+                try:
+                    wpsite = WPSites.objects.get(pk=sub.WPSiteID)
+                    web = wpsite.title
+                except:
+                    web = "Website Not Found"
+
+                try:
+                    config = sub.config
+                    conf = json.loads(config)
+                    Backuptype = conf['Backuptype']
+                    BackupDestination = conf['BackupDestination']
+                except:
+                    Backuptype = "Backup type not exists"
+
+
+                Data['job'].append({
+                    'id': sub.id,
+                    'title': web,
+                    'Backuptype': Backuptype,
+                    'BackupDestination': BackupDestination
+                })
+
+
+            proc = httpProc(request, 'websiteFunctions/RestoreBackups.html',
+                            Data, 'createWebsite')
+            return proc.render()
+        else:
+            return redirect("https://cyberpanel.net/cyberpanel-addons")
+
+    def AutoLogin(self, request=None, userID=None):
+
+        WPid = request.GET.get('id')
+        currentACL = ACLManager.loadedACL(userID)
+        WPobj = WPSites.objects.get(pk=WPid)
+        admin = Administrator.objects.get(pk=userID)
+
+        if ACLManager.checkOwnership(WPobj.owner.domain, admin, currentACL) == 1:
+            pass
+        else:
+            return ACLManager.loadError()
+
+        #php = VirtualHost.getPHPString(self.data['PHPVersion'])
+        #FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
+
+        url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
+        data = {
+            "name": "wp-manager",
+            "IP": ACLManager.GetServerIP()
+        }
+
+        import requests
+        response = requests.post(url, data=json.dumps(data))
+        Status = response.json()['status']
+
+        if (Status == 1) or ProcessUtilities.decideServer() == ProcessUtilities.ent:
+
+            ## Get title
+
+            password = randomPassword.generate_pass(10)
+
+            command = 'sudo -u %s wp user create autologin %s --role=administrator --user_pass="%s" --path=%s --skip-plugins --skip-themes' % (WPobj.owner.externalApp, 'autologin@cloudpages.cloud', password, WPobj.path)
+            ProcessUtilities.executioner(command)
+
+            command = 'sudo -u %s wp user update autologin --user_pass="%s" --path=%s --skip-plugins --skip-themes' % (WPobj.owner.externalApp, password, WPobj.path)
+            ProcessUtilities.executioner(command)
+
+            data = {}
+
+            if WPobj.FinalURL.endswith('/'):
+                FinalURL = WPobj.FinalURL[:-1]
+            else:
+                FinalURL = WPobj.FinalURL
+
+            data['url'] = 'https://%s' % (FinalURL)
+            data['userName'] = 'autologin'
+            data['password'] = password
+
+            proc = httpProc(request, 'websiteFunctions/AutoLogin.html',
+                            data, 'createWebsite')
+            return proc.render()
+        else:
+            return redirect("https://cyberpanel.net/cyberpanel-addons")
+
+    def ConfigurePlugins(self, request=None, userID=None, data=None):
+
+        if ACLManager.CheckForPremFeature('wp-manager'):
+            currentACL = ACLManager.loadedACL(userID)
+            userobj = Administrator.objects.get(pk=userID)
+
+
+            Selectedplugins = wpplugins.objects.filter(owner = userobj)
+            #data['Selectedplugins'] = wpplugins.objects.filter(ProjectOwner=HostingCompany)
+
+            Data = {'Selectedplugins' : Selectedplugins,}
+            proc = httpProc(request, 'websiteFunctions/WPConfigurePlugins.html',
+                            Data, 'createWebsite')
+            return proc.render()
+        else:
+            return redirect("https://cyberpanel.net/cyberpanel-addons")
+
+    def Addnewplugin(self, request=None, userID=None, data=None):
+        if ACLManager.CheckForPremFeature('wp-manager'):
+            currentACL = ACLManager.loadedACL(userID)
+            adminNames = ACLManager.loadAllUsers(userID)
+            packagesName = ACLManager.loadPackages(userID, currentACL)
+            phps = PHPManager.findPHPVersions()
+
+            Data = {'packageList': packagesName, "owernList": adminNames, 'phps': phps}
+            proc = httpProc(request, 'websiteFunctions/WPAddNewPlugin.html',
+                            Data, 'createWebsite')
+            return proc.render()
+        return redirect("https://cyberpanel.net/cyberpanel-addons")
+
+    def SearchOnkeyupPlugin(self, userID=None, data=None):
+        try:
+            if ACLManager.CheckForPremFeature('wp-manager'):
+                currentACL = ACLManager.loadedACL(userID)
+
+                pluginname = data['pluginname']
+                # logging.CyberCPLogFileWriter.writeToFile("Plugin Name ....... %s"%pluginname)
+
+                url = "http://api.wordpress.org/plugins/info/1.1/?action=query_plugins&request[search]=%s" % str(pluginname)
+                import requests
+
+                res = requests.get(url)
+                r = res.json()
+
+                # return proc.ajax(1, 'Done', {'plugins': r})
+
+                data_ret = {'status': 1,'plugns': r,}
+
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            else:
+                data_ret = {'status': 0, 'createWebSiteStatus': 0, 'error_message': 'Premium feature not available.'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'createWebSiteStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def AddNewpluginAjax(self, userID=None, data=None):
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+
+            userobj = Administrator.objects.get(pk=userID)
+
+            config = data['config']
+            Name = data['Name']
+            # pluginname = data['pluginname']
+            # logging.CyberCPLogFileWriter.writeToFile("config ....... %s"%config)
+            # logging.CyberCPLogFileWriter.writeToFile(" Name ....... %s"%Name)
+
+
+            addpl = wpplugins(Name=Name, config=json.dumps(config), owner=userobj)
+            addpl.save()
+
+            data_ret = {'status': 1}
+
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'AddNewpluginAjax': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def EidtPlugin(self,request=None, userID=None, pluginbID=None):
+        Data ={}
+        currentACL = ACLManager.loadedACL(userID)
+        admin = Administrator.objects.get(pk=userID)
+        pluginobj = wpplugins.objects.get(pk=pluginbID)
+
+        if ACLManager.CheckIPPluginObjectOwner(currentACL, pluginobj, admin) == 1:
+            pass
+        else:
+            return ACLManager.loadError()
+
+        lmo = json.loads(pluginobj.config)
+        Data['Selectedplugins'] = lmo
+        Data['pluginbID'] = pluginbID
+        Data['BucketName'] = pluginobj.Name
+
+
+        proc = httpProc(request, 'websiteFunctions/WPEidtPlugin.html',
+                        Data, 'createWebsite')
+        return proc.render()
+
+    def deletesPlgin(self, userID=None, data=None,):
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+            userobj = Administrator.objects.get(pk=userID)
+            pluginname = data['pluginname']
+            pluginbBucketID = data['pluginbBucketID']
+            # logging.CyberCPLogFileWriter.writeToFile("pluginbID ....... %s" % pluginbBucketID)
+            # logging.CyberCPLogFileWriter.writeToFile("pluginname ....... %s" % pluginname)
+
+            obj = wpplugins.objects.get(pk=pluginbBucketID, owner=userobj)
+
+            if ACLManager.CheckIPPluginObjectOwner(currentACL, obj, admin) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
+            ab = []
+            ab = json.loads(obj.config)
+            ab.remove(pluginname)
+            obj.config = json.dumps(ab)
+            obj.save()
+
+            data_ret = {'status': 1}
+
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+        except BaseException as msg:
+            data_ret = {'status': 0, 'deletesPlgin': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def Addplugineidt(self, userID=None, data=None,):
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+            userobj = Administrator.objects.get(pk=userID)
+            pluginname = data['pluginname']
+            pluginbBucketID = data['pluginbBucketID']
+
+            #logging.CyberCPLogFileWriter.writeToFile("pluginbID ....... %s" % pluginbBucketID)
+            #logging.CyberCPLogFileWriter.writeToFile("pluginname ....... %s" % pluginname)
+
+            pObj = wpplugins.objects.get(pk=pluginbBucketID, owner=userobj)
+
+            if ACLManager.CheckIPPluginObjectOwner(currentACL, pObj, admin) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
+            listofplugin = json.loads(pObj.config)
+            try:
+                index = listofplugin.index(pluginname)
+                print('index.....%s' % index)
+                if (index >= 0):
+                    data_ret = {'status': 0, 'deletesPlgin': 0, 'error_message': str('Already Save in your Plugin lis')}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+
+            except:
+                ab = []
+                ab = json.loads(pObj.config)
+                ab.append(pluginname)
+                pObj.config = json.dumps(ab)
+                pObj.save()
+
+
+            data_ret = {'status': 1}
+
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+        except BaseException as msg:
+            data_ret = {'status': 0, 'deletesPlgin': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
 
     def modifyWebsite(self, request=None, userID=None, data=None):
         currentACL = ACLManager.loadedACL(userID)
@@ -143,6 +713,1279 @@ class WebsiteManager:
             'noAlias': noAlias
         })
         return proc.render()
+
+    def FetchWPdata(self, userID=None, data=None):
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            WPManagerID = data['WPid']
+            wpsite = WPSites.objects.get(pk=WPManagerID)
+
+            if ACLManager.checkOwnership(wpsite.owner.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
+            path = wpsite.path
+
+            Webobj= Websites.objects.get(pk=wpsite.owner_id)
+
+            Vhuser = Webobj.externalApp
+            PHPVersion = Webobj.phpSelection
+
+            php = ACLManager.getPHPString(PHPVersion)
+            FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
+
+
+            command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp core version --skip-plugins --skip-themes --path=%s' % (Vhuser, FinalPHPPath, path)
+            version = ProcessUtilities.outputExecutioner(command)
+
+
+            command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp plugin status litespeed-cache --skip-plugins --skip-themes --path=%s' % (Vhuser, FinalPHPPath, path)
+            lscachee = ProcessUtilities.outputExecutioner(command)
+
+            if lscachee.find('Status: Active') > -1:
+                lscache = 1
+            else:
+                lscache = 0
+
+
+            command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp config list --skip-plugins --skip-themes --path=%s' % (Vhuser, FinalPHPPath, path)
+            stdout = ProcessUtilities.outputExecutioner(command)
+            debugging = 0
+            for items in stdout.split('\n'):
+                if items.find('WP_DEBUG	true	constant') > -1:
+                    debugging = 1
+                    break
+
+            command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp option get blog_public --skip-plugins --skip-themes --path=%s' %(Vhuser, FinalPHPPath, path)
+            stdoutput = ProcessUtilities.outputExecutioner(command)
+            searchindex = int(stdoutput.splitlines()[-1])
+
+
+
+            command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp maintenance-mode status --skip-plugins --skip-themes --path=%s' %(Vhuser, FinalPHPPath, path)
+            maintenanceMod = ProcessUtilities.outputExecutioner(command)
+
+            result = maintenanceMod.splitlines()[-1]
+            if result.find('not active') > -1:
+                maintenanceMode = 0
+            else:
+                maintenanceMode = 1
+
+
+            ##### Check passwd protection
+            vhostName = wpsite.owner.domain
+            vhostPassDir = f'/home/{vhostName}'
+            path = f'{vhostPassDir}/{WPManagerID}'
+            if os.path.exists(path):
+                passwd = 1
+            else:
+                passwd = 0
+
+
+            #### Check WP cron
+            command = "sudo -u %s cat %s/wp-config.php"%(Vhuser, wpsite.path)
+            stdout = ProcessUtilities.outputExecutioner(command)
+            if stdout.find("'DISABLE_WP_CRON', 'true'") > -1:
+                wpcron = 1
+            else:
+                wpcron = 0
+
+            fb ={
+                'version': version.rstrip('\n'),
+                'lscache': lscache,
+                'debugging': debugging,
+                'searchIndex': searchindex,
+                'maintenanceMode': maintenanceMode,
+                'passwordprotection': passwd,
+                'wpcron': wpcron
+
+            }
+
+            data_ret = {'status': 1, 'error_message': 'None', 'ret_data':fb}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def GetCurrentPlugins(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            WPManagerID = data['WPid']
+            wpsite = WPSites.objects.get(pk=WPManagerID)
+
+            if ACLManager.checkOwnership(wpsite.owner.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
+            path = wpsite.path
+
+            Webobj= Websites.objects.get(pk=wpsite.owner_id)
+
+            Vhuser = Webobj.externalApp
+            PHPVersion = Webobj.phpSelection
+            php = ACLManager.getPHPString(PHPVersion)
+            FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
+
+            command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp plugin list --skip-plugins --skip-themes --format=json --path=%s' % (Vhuser, FinalPHPPath, path)
+            stdoutput = ProcessUtilities.outputExecutioner(command)
+            json_data = stdoutput.splitlines()[-1]
+
+
+
+            data_ret = {'status': 1, 'error_message': 'None', 'plugins': json_data}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def GetCurrentThemes(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            WPManagerID = data['WPid']
+            wpsite = WPSites.objects.get(pk=WPManagerID)
+
+            if ACLManager.checkOwnership(wpsite.owner.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
+            path = wpsite.path
+
+            Webobj= Websites.objects.get(pk=wpsite.owner_id)
+
+            Vhuser = Webobj.externalApp
+            PHPVersion = Webobj.phpSelection
+            php = ACLManager.getPHPString(PHPVersion)
+            FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
+
+
+            command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp theme list --skip-plugins --skip-themes --format=json --path=%s'  % (Vhuser, FinalPHPPath, path)
+            stdoutput = ProcessUtilities.outputExecutioner(command)
+            json_data = stdoutput.splitlines()[-1]
+
+
+
+            data_ret = {'status': 1, 'error_message': 'None', 'themes': json_data}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def fetchstaging(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            WPManagerID = data['WPid']
+            wpsite = WPSites.objects.get(pk=WPManagerID)
+
+            if ACLManager.checkOwnership(wpsite.owner.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
+            from plogical.phpUtilities import phpUtilities
+
+
+            json_data = phpUtilities.GetStagingInJson(wpsite.wpstaging_set.all().order_by('-id'))
+
+
+            data_ret = {'status': 1, 'error_message': 'None', 'wpsites': json_data}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def fetchDatabase(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            WPManagerID = data['WPid']
+            wpsite = WPSites.objects.get(pk=WPManagerID)
+
+            if ACLManager.checkOwnership(wpsite.owner.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
+            php = PHPManager.getPHPString(wpsite.owner.phpSelection)
+            FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
+
+            command = f'{FinalPHPPath} -d error_reporting=0 /usr/bin/wp config get DB_NAME  --skip-plugins --skip-themes --path={wpsite.path}'
+            retStatus, stdoutput = ProcessUtilities.outputExecutioner(command, wpsite.owner.externalApp, None, None, 1)
+
+            if stdoutput.find('Error:') == -1:
+                DataBaseName = stdoutput.rstrip("\n")
+            else:
+                data_ret = {'status': 0, 'error_message': stdoutput}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+            command = f'{FinalPHPPath} -d error_reporting=0 /usr/bin/wp config get DB_USER  --skip-plugins --skip-themes --path={wpsite.path}'
+            retStatus, stdoutput = ProcessUtilities.outputExecutioner(command, wpsite.owner.externalApp, None, None, 1)
+
+            if stdoutput.find('Error:') == -1:
+                DataBaseUser = stdoutput.rstrip("\n")
+            else:
+                data_ret = {'status': 0, 'error_message': stdoutput}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+            command = f'{FinalPHPPath} -d error_reporting=0 /usr/bin/wp config get table_prefix  --skip-plugins --skip-themes --path={wpsite.path}'
+            retStatus, stdoutput = ProcessUtilities.outputExecutioner(command, wpsite.owner.externalApp, None, None, 1)
+
+            if stdoutput.find('Error:') == -1:
+                tableprefix = stdoutput.rstrip("\n")
+            else:
+                data_ret = {'status': 0, 'error_message': stdoutput}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+            data_ret = {'status': 1, 'error_message': 'None', "DataBaseUser": DataBaseUser, "DataBaseName": DataBaseName, 'tableprefix': tableprefix}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def SaveUpdateConfig(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            WPManagerID = data['WPid']
+            Plugins = data['Plugins']
+            Themes = data['Themes']
+            AutomaticUpdates = data['AutomaticUpdates']
+
+            wpsite = WPSites.objects.get(pk=WPManagerID)
+
+            if ACLManager.checkOwnership(wpsite.owner.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
+            wpsite.AutoUpdates = AutomaticUpdates
+            wpsite.PluginUpdates = Plugins
+            wpsite.ThemeUpdates = Themes
+            wpsite.save()
+
+            data_ret = {'status': 1, 'error_message': 'None',}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def DeploytoProduction(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            WPManagerID = data['WPid']
+            statgingID = data['StagingID']
+            wpsite = WPSites.objects.get(pk=WPManagerID)
+            StagingObj = WPSites.objects.get(pk=statgingID)
+
+            ###
+
+            if ACLManager.checkOwnership(wpsite.owner.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
+            if ACLManager.checkOwnership(StagingObj.owner.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
+            ###
+
+            extraArgs = {}
+            extraArgs['adminID'] = admin.pk
+            extraArgs['statgingID'] = statgingID
+            extraArgs['WPid'] = WPManagerID
+            extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
+
+            background = ApplicationInstaller('DeploytoProduction', extraArgs)
+            background.start()
+
+            time.sleep(2)
+
+            data_ret = {'status': 1, 'installStatus': 1, 'error_message': 'None',
+                        'tempStatusPath': extraArgs['tempStatusPath']}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+        except BaseException as msg:
+            data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def WPCreateBackup(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            WPManagerID = data['WPid']
+            Backuptype = data['Backuptype']
+
+            wpsite = WPSites.objects.get(pk=WPManagerID)
+
+
+            if ACLManager.checkOwnership(wpsite.owner.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
+            extraArgs = {}
+            extraArgs['adminID'] = admin.pk
+            extraArgs['WPid'] = WPManagerID
+            extraArgs['Backuptype'] = Backuptype
+            extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
+
+
+            background = ApplicationInstaller('WPCreateBackup', extraArgs)
+            background.start()
+
+            time.sleep(2)
+
+            data_ret = {'status': 1, 'installStatus': 1, 'error_message': 'None',
+                        'tempStatusPath': extraArgs['tempStatusPath']}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def RestoreWPbackupNow(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            backupid = data['backupid']
+            DesSiteID = data['DesSite']
+
+
+            # try:
+            #
+            #     bwp = WPSites.objects.get(pk=int(backupid))
+            #
+            #     if ACLManager.checkOwnership(bwp.owner.domain, admin, currentACL) == 1:
+            #         pass
+            #     else:
+            #         return ACLManager.loadError()
+            #
+            # except:
+            #     pass
+            #
+            # dwp = WPSites.objects.get(pk=int(DesSiteID))
+            # if ACLManager.checkOwnership(dwp.owner.domain, admin, currentACL) == 1:
+            #     pass
+            # else:
+            #     return ACLManager.loadError()
+
+
+            Domain = data['Domain']
+
+
+            extraArgs = {}
+            extraArgs['adminID'] = admin.pk
+            extraArgs['backupid'] = backupid
+            extraArgs['DesSiteID'] = DesSiteID
+            extraArgs['Domain'] = Domain
+            extraArgs['path'] = data['path']
+            extraArgs['home'] = data['home']
+            extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
+
+
+            background = ApplicationInstaller('RestoreWPbackupNow', extraArgs)
+            background.start()
+
+            time.sleep(2)
+
+            data_ret = {'status': 1, 'installStatus': 1, 'error_message': 'None',
+                        'tempStatusPath': extraArgs['tempStatusPath']}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+
+    def SaveBackupConfig(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+            ConfigType = data['type']
+            if ConfigType == 'SFTP':
+                Hname = data['Hname']
+                Uname = data['Uname']
+                Passwd = data['Passwd']
+                path = data['path']
+                config = {
+                    "Hostname": Hname,
+                    "Username": Uname,
+                    "Password": Passwd,
+                    "Path": path
+                }
+            elif ConfigType == "S3":
+                Provider = data['Provider']
+                if Provider == "Backblaze":
+                    S3keyname = data['S3keyname']
+                    SecertKey = data['SecertKey']
+                    AccessKey = data['AccessKey']
+                    EndUrl = data['EndUrl']
+                    config = {
+                        "Provider": Provider,
+                        "S3keyname": S3keyname,
+                        "SecertKey": SecertKey,
+                        "AccessKey": AccessKey,
+                        "EndUrl": EndUrl
+
+                    }
+                else:
+                    S3keyname = data['S3keyname']
+                    SecertKey = data['SecertKey']
+                    AccessKey = data['AccessKey']
+                    config = {
+                        "Provider": Provider,
+                        "S3keyname": S3keyname,
+                        "SecertKey": SecertKey,
+                        "AccessKey": AccessKey,
+
+                    }
+
+
+
+            mkobj = RemoteBackupConfig(owner=admin, configtype=ConfigType, config=json.dumps(config))
+            mkobj.save()
+
+
+            time.sleep(1)
+
+            data_ret = {'status': 1,  'error_message': 'None',}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0,  'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+    def SaveBackupSchedule(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+            FileRetention = data['FileRetention']
+            Backfrequency = data['Backfrequency']
+            ScheduleName = data['ScheduleName']
+            RemoteConfigID = data['RemoteConfigID']
+            BackupType = data['BackupType']
+
+
+            RemoteBackupConfigobj = RemoteBackupConfig.objects.get(pk=RemoteConfigID)
+            Rconfig = json.loads(RemoteBackupConfigobj.config)
+            provider = Rconfig['Provider']
+            if provider == "Backblaze":
+                EndURl = Rconfig['EndUrl']
+            elif provider == "Amazon":
+                EndURl = "https://s3.us-east-1.amazonaws.com"
+            elif provider == "Wasabi":
+                EndURl = "https://s3.wasabisys.com"
+
+            AccessKey = Rconfig['AccessKey']
+            SecertKey = Rconfig['SecertKey']
+
+            session = boto3.session.Session()
+
+            client = session.client(
+                's3',
+                endpoint_url=EndURl,
+                aws_access_key_id=AccessKey,
+                aws_secret_access_key=SecertKey,
+                verify=False
+            )
+
+            ############Creating Bucket
+            BucketName = randomPassword.generate_pass().lower()
+
+            try:
+                client.create_bucket(Bucket=BucketName)
+            except BaseException as msg:
+               logging.CyberCPLogFileWriter.writeToFile("Creating Bucket Error: %s"%str(msg))
+               data_ret = {'status': 0, 'error_message': str(msg)}
+               json_data = json.dumps(data_ret)
+               return HttpResponse(json_data)
+
+            config = {
+                'BackupType': BackupType,
+                'BucketName': BucketName
+            }
+
+            svobj = RemoteBackupSchedule( RemoteBackupConfig=RemoteBackupConfigobj, Name=ScheduleName,
+                                      timeintervel=Backfrequency, fileretention=FileRetention, config=json.dumps(config),
+                                     lastrun=str(time.time()))
+            svobj.save()
+
+            data_ret = {'status': 1,  'error_message': 'None',}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0,  'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+    def AddWPsiteforRemoteBackup(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+            WPid = data['WpsiteID']
+            RemoteScheduleID = data['RemoteScheduleID']
+
+            wpsiteobj = WPSites.objects.get(pk=WPid)
+            WPpath = wpsiteobj.path
+            VHuser = wpsiteobj.owner.externalApp
+            PhpVersion = wpsiteobj.owner.phpSelection
+            php = PHPManager.getPHPString(PhpVersion)
+            FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
+
+            ####Get DB Name
+
+            command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp config get DB_NAME  --skip-plugins --skip-themes --path=%s' % (
+                VHuser, FinalPHPPath, WPpath)
+            result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+
+            if stdout.find('Error:') > -1:
+                raise BaseException(stdout)
+            else:
+                Finaldbname = stdout.rstrip("\n")
+
+            ## Get DB obj
+            try:
+                DBobj = Databases.objects.get(dbName=Finaldbname)
+            except:
+                raise BaseException(str("DataBase Not Found"))
+            RemoteScheduleIDobj = RemoteBackupSchedule.objects.get(pk=RemoteScheduleID)
+
+            svobj = RemoteBackupsites( owner=RemoteScheduleIDobj, WPsites = WPid, database = DBobj.pk)
+            svobj.save()
+
+            data_ret = {'status': 1,  'error_message': 'None',}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0,  'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+    def UpdateRemoteschedules(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+            ScheduleID = data['ScheduleID']
+            Frequency = data['Frequency']
+            FileRetention = data['FileRetention']
+
+            scheduleobj = RemoteBackupSchedule.objects.get(pk=ScheduleID)
+            scheduleobj.timeintervel = Frequency
+            scheduleobj.fileretention = FileRetention
+            scheduleobj.save()
+
+            data_ret = {'status': 1,  'error_message': 'None',}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0,  'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+
+    def installwpcore(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            WPManagerID = data['WPid']
+            wpsite = WPSites.objects.get(pk=WPManagerID)
+
+            if ACLManager.checkOwnership(wpsite.owner.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
+            path = wpsite.path
+
+            Webobj = Websites.objects.get(pk=wpsite.owner_id)
+
+            Vhuser = Webobj.externalApp
+            PHPVersion = Webobj.phpSelection
+
+            php = ACLManager.getPHPString(PHPVersion)
+            FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
+
+            ###fetch WP version
+
+            command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp core version --skip-plugins --skip-themes --path=%s' % (
+            Vhuser, FinalPHPPath, path)
+            version = ProcessUtilities.outputExecutioner(command)
+            version = version.rstrip("\n")
+
+            ###install wp core
+            command = f"sudo -u {Vhuser} {FinalPHPPath} -d error_reporting=0 /usr/bin/wp core download --force --skip-content --version={version} --path={path}"
+            output = ProcessUtilities.outputExecutioner(command)
+
+
+            data_ret = {'status': 1, 'installStatus': 1, 'error_message': 'None', 'result': output}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+    def dataintegrity(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            WPManagerID = data['WPid']
+            wpsite = WPSites.objects.get(pk=WPManagerID)
+
+            if ACLManager.checkOwnership(wpsite.owner.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
+            path = wpsite.path
+
+            Webobj = Websites.objects.get(pk=wpsite.owner_id)
+
+            Vhuser = Webobj.externalApp
+            PHPVersion = Webobj.phpSelection
+
+            php = ACLManager.getPHPString(PHPVersion)
+            FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
+
+            ###fetch WP version
+
+            command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp core verify-checksums --skip-plugins --skip-themes --path=%s' % (
+                Vhuser, FinalPHPPath, path)
+            result = ProcessUtilities.outputExecutioner(command)
+
+
+            data_ret = {'status': 1, 'installStatus': 1, 'error_message': 'None', 'result': result}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def UpdatePlugins(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            WPManagerID = data['WPid']
+            plugin = data['plugin']
+            pluginarray = data['pluginarray']
+            wpsite = WPSites.objects.get(pk=WPManagerID)
+
+            if ACLManager.checkOwnership(wpsite.owner.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
+            path = wpsite.path
+
+            Webobj= Websites.objects.get(pk=wpsite.owner_id)
+
+            Vhuser = Webobj.externalApp
+            PHPVersion = Webobj.phpSelection
+            php = ACLManager.getPHPString(PHPVersion)
+            FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
+
+            extraArgs = {}
+            extraArgs['adminID'] = admin.pk
+            extraArgs['plugin'] = plugin
+            extraArgs['pluginarray'] = pluginarray
+            extraArgs['FinalPHPPath'] = FinalPHPPath
+            extraArgs['path'] = path
+            extraArgs['Vhuser'] = Vhuser
+
+            background = ApplicationInstaller('UpdateWPPlugin', extraArgs)
+            background.start()
+
+
+            time.sleep(2)
+
+
+            data_ret = {'status': 1, 'error_message': 'None'}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def UpdateThemes(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+
+            WPManagerID = data['WPid']
+            Theme = data['Theme']
+            Themearray = data['Themearray']
+            wpsite = WPSites.objects.get(pk=WPManagerID)
+
+            if ACLManager.checkOwnership(wpsite.owner.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
+            path = wpsite.path
+
+            Webobj= Websites.objects.get(pk=wpsite.owner_id)
+
+            Vhuser = Webobj.externalApp
+            PHPVersion = Webobj.phpSelection
+            php = ACLManager.getPHPString(PHPVersion)
+            FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
+
+
+
+            extraArgs = {}
+            extraArgs['adminID'] = admin.pk
+            extraArgs['Theme'] = Theme
+            extraArgs['Themearray'] = Themearray
+            extraArgs['FinalPHPPath'] = FinalPHPPath
+            extraArgs['path'] = path
+            extraArgs['Vhuser'] = Vhuser
+
+            background = ApplicationInstaller('UpdateWPTheme', extraArgs)
+            background.start()
+
+            time.sleep(2)
+
+
+            data_ret = {'status': 1, 'error_message': 'None'}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def DeletePlugins(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            WPManagerID = data['WPid']
+            plugin = data['plugin']
+            pluginarray = data['pluginarray']
+            wpsite = WPSites.objects.get(pk=WPManagerID)
+
+            if ACLManager.checkOwnership(wpsite.owner.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
+            path = wpsite.path
+
+            Webobj= Websites.objects.get(pk=wpsite.owner_id)
+
+            Vhuser = Webobj.externalApp
+            PHPVersion = Webobj.phpSelection
+            php = ACLManager.getPHPString(PHPVersion)
+            FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
+
+            extraArgs = {}
+            extraArgs['adminID'] = admin.pk
+            extraArgs['plugin'] = plugin
+            extraArgs['pluginarray'] = pluginarray
+            extraArgs['FinalPHPPath'] = FinalPHPPath
+            extraArgs['path'] = path
+            extraArgs['Vhuser'] = Vhuser
+
+            background = ApplicationInstaller('DeletePlugins', extraArgs)
+            background.start()
+
+
+            time.sleep(2)
+
+            data_ret = {'status': 1, 'error_message': 'None'}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def DeleteThemes(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            WPManagerID = data['WPid']
+            Theme = data['Theme']
+            Themearray = data['Themearray']
+            wpsite = WPSites.objects.get(pk=WPManagerID)
+            path = wpsite.path
+
+            Webobj= Websites.objects.get(pk=wpsite.owner_id)
+
+            if ACLManager.checkOwnership(wpsite.owner.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
+            Vhuser = Webobj.externalApp
+            PHPVersion = Webobj.phpSelection
+            php = ACLManager.getPHPString(PHPVersion)
+            FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
+
+
+
+            extraArgs = {}
+            extraArgs['adminID'] = admin.pk
+            extraArgs['Theme'] = Theme
+            extraArgs['Themearray'] = Themearray
+            extraArgs['FinalPHPPath'] = FinalPHPPath
+            extraArgs['path'] = path
+            extraArgs['Vhuser'] = Vhuser
+
+
+
+            background = ApplicationInstaller('DeleteThemes', extraArgs)
+            background.start()
+
+
+            data_ret = {'status': 1, 'error_message': 'None'}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def ChangeStatus(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            WPManagerID = data['WPid']
+            plugin = data['plugin']
+            wpsite = WPSites.objects.get(pk=WPManagerID)
+
+            if ACLManager.checkOwnership(wpsite.owner.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
+            path = wpsite.path
+
+            Webobj= Websites.objects.get(pk=wpsite.owner_id)
+
+            Vhuser = Webobj.externalApp
+            PHPVersion = Webobj.phpSelection
+            php = ACLManager.getPHPString(PHPVersion)
+            FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
+
+
+            command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp plugin status %s --skip-plugins --skip-themes --path=%s' % (Vhuser, FinalPHPPath, plugin, path)
+            stdoutput = ProcessUtilities.outputExecutioner(command)
+
+            if stdoutput.find('Status: Active') > -1:
+                command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp plugin deactivate %s --skip-plugins --skip-themes --path=%s' % (Vhuser, FinalPHPPath, plugin, path)
+                stdoutput = ProcessUtilities.outputExecutioner(command)
+                time.sleep(3)
+
+            else:
+
+                command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp plugin activate %s --skip-plugins --skip-themes --path=%s' % (Vhuser, FinalPHPPath, plugin, path)
+                stdoutput = ProcessUtilities.outputExecutioner(command)
+                time.sleep(3)
+
+
+
+            data_ret = {'status': 1, 'error_message': 'None'}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def ChangeStatusThemes(self, userID=None, data=None):
+        try:
+            # logging.CyberCPLogFileWriter.writeToFile("Error WP ChangeStatusThemes ....... %s")
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            WPManagerID = data['WPid']
+            Theme = data['theme']
+            wpsite = WPSites.objects.get(pk=WPManagerID)
+
+            if ACLManager.checkOwnership(wpsite.owner.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
+            path = wpsite.path
+
+            Webobj= Websites.objects.get(pk=wpsite.owner_id)
+
+            Vhuser = Webobj.externalApp
+            PHPVersion = Webobj.phpSelection
+            php = ACLManager.getPHPString(PHPVersion)
+            FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
+
+
+
+            extraArgs = {}
+            extraArgs['adminID'] = admin.pk
+            extraArgs['Theme'] = Theme
+            extraArgs['FinalPHPPath'] = FinalPHPPath
+            extraArgs['path'] = path
+            extraArgs['Vhuser'] = Vhuser
+
+
+
+            background = ApplicationInstaller('ChangeStatusThemes', extraArgs)
+            background.start()
+
+
+
+
+            data_ret = {'status': 1, 'error_message': 'None'}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def CreateStagingNow(self, userID=None, data=None):
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            extraArgs = {}
+            extraArgs['adminID'] = admin.pk
+            extraArgs['StagingDomain'] = data['StagingDomain']
+            extraArgs['StagingName'] = data['StagingName']
+            extraArgs['WPid'] = data['WPid']
+            extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
+
+            wpsite = WPSites.objects.get(pk=data['WPid'])
+
+            if ACLManager.checkOwnership(wpsite.owner.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
+            background = ApplicationInstaller('CreateStagingNow', extraArgs)
+            background.start()
+
+            time.sleep(2)
+
+            data_ret = {'status': 1, 'installStatus': 1, 'error_message': 'None',
+                        'tempStatusPath': extraArgs['tempStatusPath']}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def UpdateWPSettings(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            WPManagerID = data['WPid']
+            setting = data['setting']
+
+            if setting == 'PasswordProtection':
+                PPUsername = data['PPUsername']
+                PPPassword = data['PPPassword']
+            else:
+                settingValue = data['settingValue']
+
+            wpsite = WPSites.objects.get(pk=WPManagerID)
+
+            if ACLManager.checkOwnership(wpsite.owner.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
+            path = wpsite.path
+
+            Webobj= Websites.objects.get(pk=wpsite.owner_id)
+
+            Vhuser = Webobj.externalApp
+            PHPVersion = Webobj.phpSelection
+            php = ACLManager.getPHPString(PHPVersion)
+            FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
+
+
+
+            if setting == 'lscache':
+                if settingValue:
+
+                    command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp plugin install litespeed-cache --path=%s --skip-plugins --skip-themes" %   (Vhuser, FinalPHPPath, path)
+                    stdoutput = ProcessUtilities.outputExecutioner(command)
+
+
+                    command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp plugin activate litespeed-cache --path=%s --skip-plugins --skip-themes" %  (Vhuser, FinalPHPPath, path)
+                    stdoutput = ProcessUtilities.outputExecutioner(command)
+
+
+                else:
+                    command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp plugin deactivate litespeed-cache --path=%s --skip-plugins --skip-themes'  % (Vhuser, FinalPHPPath, path)
+                    stdoutput = ProcessUtilities.outputExecutioner(command)
+            elif setting == 'debugging':
+
+                command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp litespeed-purge all --path=%s --skip-plugins --skip-themes" %   (Vhuser, FinalPHPPath, path)
+                stdoutput = ProcessUtilities.outputExecutioner(command)
+
+                if settingValue:
+                    command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp config set WP_DEBUG true --path=%s --skip-plugins --skip-themes" % (Vhuser, FinalPHPPath, path)
+                    stdoutput = ProcessUtilities.outputExecutioner(command)
+                    logging.CyberCPLogFileWriter.writeToFile("Debugging mk true 1  output:" + str(stdoutput))
+
+                    command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp config list --skip-plugins --skip-themes --path=%s' % (
+                    Vhuser, FinalPHPPath, path)
+                    stdout = ProcessUtilities.outputExecutioner(command)
+                    logging.CyberCPLogFileWriter.writeToFile("Debugging output:" + str(stdout))
+
+
+                else:
+                    command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp config set WP_DEBUG false --path=%s --skip-plugins --skip-themes"  % (Vhuser, FinalPHPPath, path)
+                    stdoutput = ProcessUtilities.outputExecutioner(command)
+                    logging.CyberCPLogFileWriter.writeToFile("Debugging mk false 0  output:" + str(stdoutput))
+
+                    command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp config list --skip-plugins --skip-themes --path=%s' % (
+                        Vhuser, FinalPHPPath, path)
+                    stdout = ProcessUtilities.outputExecutioner(command)
+                    logging.CyberCPLogFileWriter.writeToFile("Debugging output:" + str(stdout))
+            elif setting == 'searchIndex':
+
+                command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp litespeed-purge all --path=%s --skip-plugins --skip-themes"  % (Vhuser, FinalPHPPath, path)
+                stdoutput = ProcessUtilities.outputExecutioner(command)
+
+                if settingValue:
+                    command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp option update blog_public 1 --path=%s --skip-plugins --skip-themes"  % (Vhuser, FinalPHPPath, path)
+                    stdoutput = ProcessUtilities.outputExecutioner(command)
+
+
+                else:
+                    command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp option update blog_public 0 --path=%s --skip-plugins --skip-themes"  % (Vhuser, FinalPHPPath, path)
+                    stdoutput = ProcessUtilities.outputExecutioner(command)
+            elif setting == 'maintenanceMode':
+
+                command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp litespeed-purge all --path=%s --skip-plugins --skip-themes"  % (Vhuser, FinalPHPPath, path)
+                stdoutput = ProcessUtilities.outputExecutioner(command)
+
+                if settingValue:
+
+                    command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp maintenance-mode activate --path=%s --skip-plugins --skip-themes"  % (Vhuser, FinalPHPPath, path)
+                    stdoutput = ProcessUtilities.outputExecutioner(command)
+
+
+                else:
+                    command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp maintenance-mode deactivate --path=%s --skip-plugins --skip-themes" % (Vhuser, FinalPHPPath, path)
+                    stdoutput = ProcessUtilities.outputExecutioner(command)
+            elif setting == 'PasswordProtection':
+                execPath = f"/usr/local/CyberCP/bin/python {virtualHostUtilities.cyberPanel}/plogical/virtualHostUtilities.py"
+                execPath = f"{execPath} EnableDisablePP --username '{PPUsername}' --password '{PPPassword}' " \
+                           f"--virtualHostName {Webobj.domain} --path {path} --wpid {str(wpsite.id)} --virtualHostUser {Webobj.externalApp}"
+                ProcessUtilities.executioner(execPath)
+
+            elif setting == 'Wpcron':
+
+                command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp litespeed-purge all --path=%s --skip-plugins --skip-themes" % (
+                Vhuser, FinalPHPPath, path)
+
+                stdoutput = ProcessUtilities.outputExecutioner(command)
+
+                if settingValue:
+
+                    command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp config set DISABLE_WP_CRON true --path=%s --skip-plugins --skip-themes" % (
+                    Vhuser, FinalPHPPath, path)
+
+                    stdoutput = ProcessUtilities.outputExecutioner(command)
+
+                    logging.CyberCPLogFileWriter.writeToFile("Debugging mk true 1  output:" + str(stdoutput))
+
+                    command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp config list --skip-plugins --skip-themes --path=%s' % (
+
+                        Vhuser, FinalPHPPath, path)
+
+                    stdout = ProcessUtilities.outputExecutioner(command)
+
+                    logging.CyberCPLogFileWriter.writeToFile("Debugging output:" + str(stdout))
+
+
+
+                else:
+
+                    command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp config set DISABLE_WP_CRON false --path=%s --skip-plugins --skip-themes" % (
+                    Vhuser, FinalPHPPath, path)
+
+                    stdoutput = ProcessUtilities.outputExecutioner(command)
+
+                    logging.CyberCPLogFileWriter.writeToFile("Debugging mk false 0  output:" + str(stdoutput))
+
+                    command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp config list --skip-plugins --skip-themes --path=%s' % (
+
+                        Vhuser, FinalPHPPath, path)
+
+                    stdout = ProcessUtilities.outputExecutioner(command)
+
+                    logging.CyberCPLogFileWriter.writeToFile("Debugging output:" + str(stdout))
+
+
+            data_ret = {'status': 1, 'error_message': 'None'}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def submitWorpressCreation(self, userID=None, data=None):
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+
+            extraArgs = {}
+            extraArgs['currentACL'] = currentACL
+            extraArgs['adminID'] = admin.pk
+            extraArgs['domainName'] = data['domain']
+            extraArgs['WPVersion'] = data['WPVersion']
+            extraArgs['blogTitle'] = data['title']
+            try:
+                extraArgs['pluginbucket'] = data['pluginbucket']
+            except:
+                extraArgs['pluginbucket'] = '-1'
+            extraArgs['adminUser'] = data['adminUser']
+            extraArgs['PasswordByPass'] = data['PasswordByPass']
+            extraArgs['adminPassword'] = data['PasswordByPass']
+            extraArgs['adminEmail'] = data['Email']
+            extraArgs['updates'] = data['AutomaticUpdates']
+            extraArgs['Plugins'] = data['Plugins']
+            extraArgs['Themes'] = data['Themes']
+            extraArgs['websiteOwner'] = data['websiteOwner']
+            extraArgs['package'] = data['package']
+            extraArgs['home'] = data['home']
+            try:
+                extraArgs['path'] = data['path']
+                if extraArgs['path'] == '':
+                    extraArgs['home'] = '1'
+            except:
+                pass
+            extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
+
+            background = ApplicationInstaller('wordpressInstallNew', extraArgs)
+            background.start()
+
+            time.sleep(2)
+
+            data_ret = {'status': 1, 'installStatus': 1, 'error_message': 'None',
+                        'tempStatusPath': extraArgs['tempStatusPath']}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+        except BaseException as msg:
+            data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
 
     def submitWebsiteCreation(self, userID=None, data=None):
         try:
@@ -1844,7 +3687,6 @@ class WebsiteManager:
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-
         except BaseException as msg:
             data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
@@ -1875,7 +3717,7 @@ class WebsiteManager:
                 return HttpResponse(json_data)
             elif lastLine.find('[404]') > -1:
                 data_ret = {'abort': 1, 'installStatus': 0, 'installationProgress': "0",
-                            'error_message': lastLine}
+                            'error_message': ProcessUtilities.outputExecutioner("cat " + statusFile).splitlines()}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
             else:
@@ -2312,11 +4154,11 @@ StrictHostKeyChecking no
             adminEmail = data['ownerEmail']
             websiteOwner = data['websiteOwner']
             ownerPassword = data['ownerPassword']
-            data['ssl'] = 0
+            data['ssl'] = 1
             data['dkimCheck'] = 0
             data['openBasedir'] = 1
             data['adminEmail'] = data['ownerEmail']
-            data['phpSelection'] = "PHP 7.0"
+            data['phpSelection'] = "PHP 7.4"
             data['package'] = data['packageName']
             try:
                 websitesLimit = data['websitesLimit']

@@ -19,7 +19,7 @@ from plogical.httpProc import httpProc
 # Create your views here.
 
 VERSION = '2.3'
-BUILD = 1
+BUILD = 2
 
 
 @ensure_csrf_cookie
@@ -119,10 +119,18 @@ def versionManagment(request):
     output = ProcessUtilities.outputExecutioner(command)
 
     Currentcomt = output.rstrip("\n")
-    notechk = True;
+    notechk = True
+    
+    # command ="git fetch -C /usr/local/CyberCP/"
+    # output = ProcessUtilities.outputExecutioner(command)
+    #
+    # command ="git -C /usr/local/CyberCP/ log %s..%s --pretty=oneline | wc -l" % ( Currentcomt, latestcomit)
+    # output = ProcessUtilities.outputExecutioner(command)
+    #
+    # numCommits = output.rstrip("\n")
 
     if(Currentcomt == latestcomit):
-        notechk = False;
+        notechk = False
 
 
     template = 'baseTemplate/versionManagment.html'
@@ -240,6 +248,13 @@ def design(request):
         from baseTemplate.models import CyberPanelCosmetic
         cosmetic = CyberPanelCosmetic()
         cosmetic.save()
+
+    val = request.session['userID']
+    currentACL = ACLManager.loadedACL(val)
+    if currentACL['admin'] == 1:
+        pass
+    else:
+        return ACLManager.loadErrorJson('reboot', 0)
 
     finalData = {}
 

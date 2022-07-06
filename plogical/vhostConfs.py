@@ -36,18 +36,6 @@ accesslog $VH_ROOT/logs/$VH_NAME.access_log {
   compressArchive         1
 }
 
-errorpage 403 {
-  url                     403.html
-}
-
-errorpage 404 {
-  url                     404.html
-}
-
-errorpage 500 {
-  url                     500.html
-}
-
 scripthandler  {
   add                     lsapi:{virtualHostUser} php
 }
@@ -145,18 +133,6 @@ module cache {
  storagePath /usr/local/lsws/cachedata/$VH_NAME
 }
 
-errorpage 403 {
-  url                     403.html
-}
-
-errorpage 404 {
-  url                     404.html
-}
-
-errorpage 500 {
-  url                     500.html
-}
-
 scripthandler  {
   add                     lsapi:{externalApp} php
 }
@@ -228,6 +204,7 @@ context /.well-known/acme-challenge {
     ServerAdmin {administratorEmail}
     SuexecUserGroup {externalApp} {externalApp}
     DocumentRoot {path}
+    Alias /.well-known/acme-challenge /usr/local/lsws/Example/html/.well-known/acme-challenge
     CustomLog /home/{masterDomain}/logs/{masterDomain}.access_log combined
     AddHandler application/x-httpd-php{php} .php .php7 .phtml
     <IfModule LiteSpeed>
@@ -491,3 +468,38 @@ pm.max_spare_servers = {pmMaxSpareServers}
     </IfModule>
     }
 }'"""
+
+    OLSPPConf = """
+### PASSWORD PROTECTION CONF STARTS {{path}}
+
+realm {{RealM_Name}} {
+
+  userDB  {
+    location              {{PassFile}}
+  }
+}
+
+context / {
+  location                {{path}}
+  allowBrowse             1
+  realm                   {{RealM_Name}}
+
+  rewrite  {
+
+  }
+  addDefaultCharset       off
+
+  phpIniOverride  {
+
+  }
+}
+### PASSWORD PROTECTION CONF ENDS {{path}}
+"""
+    LSWSPPProtection = """
+### PASSWORD PROTECTION CONF STARTS {{path}}
+AuthType Basic
+AuthName "{{RealM_Name}}"
+AuthUserFile {{PassFile}}
+Require valid-user
+### PASSWORD PROTECTION CONF ENDS {{path}}
+"""

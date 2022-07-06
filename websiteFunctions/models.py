@@ -99,3 +99,51 @@ class NormalBackupJobLogs(models.Model):
     owner = models.ForeignKey(NormalBackupJobs, on_delete=models.CASCADE)
     status = models.IntegerField()
     message = models.TextField()
+
+
+
+class wpplugins(models.Model):
+    owner = models.ForeignKey(Administrator, on_delete=models.CASCADE)
+    Name = models.CharField(max_length=255, default='')
+    config = models.TextField()
+
+
+class WPSites(models.Model):
+    owner = models.ForeignKey(Websites, on_delete=models.CASCADE)
+    title = models.CharField(max_length=255, default='')
+    path = models.CharField(max_length=255, default='')
+    FinalURL = models.CharField(max_length=255, default='')
+    AutoUpdates = models.CharField(max_length=100, default='Disabled')
+    PluginUpdates = models.CharField(max_length=15, default='Disabled')
+    ThemeUpdates = models.CharField(max_length=15, default='Disabled')
+    date = models.DateTimeField(default=datetime.now)
+    WPLockState = models.IntegerField(default=1)
+
+class WPStaging(models.Model):
+    owner = models.ForeignKey(WPSites, on_delete=models.CASCADE)
+    wpsite = models.ForeignKey(WPSites, on_delete=models.CASCADE, related_name='actual_wpsite')
+
+class WPSitesBackup(models.Model):
+    owner = models.ForeignKey(Administrator, on_delete=models.CASCADE)
+    WPSiteID = models.IntegerField(default=-1)
+    WebsiteID = models.IntegerField(default=-1)
+    config = models.TextField()
+
+
+class RemoteBackupConfig(models.Model):
+    owner = models.ForeignKey(Administrator, on_delete=models.CASCADE)
+    configtype = models.CharField(max_length=255, default='')
+    config = models.TextField()
+
+class RemoteBackupSchedule(models.Model):
+    RemoteBackupConfig = models.ForeignKey(RemoteBackupConfig, on_delete=models.CASCADE)
+    Name = models.CharField(max_length=255, default='')
+    timeintervel = models.CharField(max_length=200)
+    fileretention = models.CharField(max_length=200)
+    lastrun = models.CharField(max_length=200)
+    config = models.TextField()
+
+class RemoteBackupsites(models.Model):
+    owner = models.ForeignKey(RemoteBackupSchedule, on_delete=models.CASCADE)
+    WPsites = models.IntegerField(null=True)
+    database = models.IntegerField(null=True)

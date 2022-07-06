@@ -18,6 +18,7 @@ from shlex import split
 from .CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from dockerManager.models import Containers
 from re import compile
+
 class ACLManager:
 
 
@@ -543,6 +544,32 @@ class ACLManager:
         return websiteNames
 
     @staticmethod
+    def getPHPString(phpVersion):
+
+        if phpVersion == "PHP 5.3":
+            php = "53"
+        elif phpVersion == "PHP 5.4":
+            php = "54"
+        elif phpVersion == "PHP 5.5":
+            php = "55"
+        elif phpVersion == "PHP 5.6":
+            php = "56"
+        elif phpVersion == "PHP 7.0":
+            php = "70"
+        elif phpVersion == "PHP 7.1":
+            php = "71"
+        elif phpVersion == "PHP 7.2":
+            php = "72"
+        elif phpVersion == "PHP 7.3":
+            php = "73"
+        elif phpVersion == "PHP 7.4":
+            php = "74"
+        elif phpVersion == "PHP 8.0":
+            php = "80"
+
+        return php
+
+    @staticmethod
     def searchWebsiteObjects(currentACL, userID, searchTerm):
 
         if currentACL['admin'] == 1:
@@ -615,7 +642,7 @@ class ACLManager:
                 doms = items.websites_set.all().order_by('domain')
                 for dom in doms:
                     domainsList.append(dom.domain)
-                    for childs in items.childdomains_set.all():
+                    for childs in dom.childdomains_set.all():
                         domainsList.append(childs.domain)
 
         return domainsList
@@ -645,6 +672,7 @@ class ACLManager:
 
     @staticmethod
     def checkOwnership(domain, admin, currentACL):
+
 
         try:
             childDomain = ChildDomains.objects.get(domain=domain)
@@ -891,4 +919,59 @@ class ACLManager:
             else:
                 dic['dnsAsWhole'] = 0
 
+    @staticmethod
+    def GetALLWPObjects(currentACL, userID):
+        from websiteFunctions.models import WPSites
+
+        wpsites = WPSites.objects.none()
+        websites = ACLManager.findWebsiteObjects(currentACL, userID)
+
+        for website in websites:
+            wpsites |= website.wpsites_set.all()
+
+        return wpsites
+
+    @staticmethod
+    def GetServerIP():
+        ipFile = "/etc/cyberpanel/machineIP"
+        f = open(ipFile)
+        ipData = f.read()
+        return ipData.split('\n', 1)[0]
+
+    @staticmethod
+    def CheckForPremFeature(feature):
+        try:
+
+            if ProcessUtilities.decideServer() == ProcessUtilities.ent:
+                return 1
+
+            url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
+            data = {
+                "name": feature,
+                "IP": ACLManager.GetServerIP()
+            }
+
+            import requests
+            response = requests.post(url, data=json.dumps(data))
+            return response.json()['status']
+        except:
+            return 1
+
+    @staticmethod
+    def CheckIPBackupObjectOwner(currentACL, backupobj, user):
+        if currentACL['admin'] == 1:
+            return 1
+        elif backupobj.owner == user:
+            return 1
+        else:
+            return 0
+
+    @staticmethod
+    def CheckIPPluginObjectOwner(currentACL, backupobj, user):
+        if currentACL['admin'] == 1:
+            return 1
+        elif backupobj.owner == user:
+            return 1
+        else:
+            return 0
 
