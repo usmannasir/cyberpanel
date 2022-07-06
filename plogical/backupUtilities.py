@@ -369,7 +369,6 @@ class backupUtilities:
 
             from shutil import copytree
 
-
             #copytree('/home/%s/public_html' % domainName, '%s/%s' % (tempStoragePath, 'public_html'))
             command = f'cp -R /home/{domainName}/public_html {tempStoragePath}/public_html'
 
