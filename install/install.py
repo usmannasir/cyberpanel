@@ -58,15 +58,16 @@ def get_distro():
             return cent8
         if data.find('Rocky Linux release 8') > -1 or data.find('Rocky Linux 8') > -1 or data.find('rocky:8') > -1:
             return cent8
-        
-    elif exists("/etc/openEuler-release"):
-        distro_file = "/etc/openEuler-release"
-        distro = openeuler
 
     else:
-        logging.InstallLog.writeToFile("Can't find linux release file - fatal error")
-        preFlightsChecks.stdOut("Can't find linux release file - fatal error")
-        os._exit(os.EX_UNAVAILABLE)
+        if exists("/etc/openEuler-release"):
+            distro_file = "/etc/openEuler-release"
+            distro = openeuler
+
+        else:
+            logging.InstallLog.writeToFile("Can't find linux release file - fatal error")
+            preFlightsChecks.stdOut("Can't find linux release file - fatal error")
+            os._exit(os.EX_UNAVAILABLE)
 
     if distro == -1:
         logging.InstallLog.writeToFile("Can't find distro name in " + distro_file + " - fatal error")

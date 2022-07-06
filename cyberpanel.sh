@@ -1504,6 +1504,7 @@ if [[ $Server_OS = "Ubuntu" ]]; then
 fi
 if [[ $Server_OS = "openEuler" ]]; then
   #yum install -y lsphp??-memcached lsphp??-pecl-memcached
+  echo -e "\nMemcached process and its PHP extensions for openEuler are in process of packaging...\n"
   if [[ $Total_RAM -eq "2048" ]] || [[ $Total_RAM -gt "2048" ]]; then
     Post_Install_Addon_Mecached_LSMCD
   else
@@ -1558,7 +1559,8 @@ else
 fi
 
 if [[ "$Server_OS" = "openEuler" ]]; then
-  yum install -y lsphp??-redis redis
+  #yum install -y lsphp??-redis redis
+  echo -e "\nRedis process and its PHP extensions for openEuler are in process of packaging...\n"
 fi
 
 if pgrep "redis" ; then
