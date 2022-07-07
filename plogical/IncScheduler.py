@@ -1308,7 +1308,7 @@ Automatic backup failed for %s on %s.
             BucketName = Scheduleconfig['BucketName']
             #####Uploading File
 
-            uploadfilename = 'backup-' + websitedomain + "-" + time.strftime("%m.%d.%Y_%H-%M-%S")
+            uploadfilename = backupConfig['name']
             print("uploadfilename....%s"%uploadfilename)
 
             try:
