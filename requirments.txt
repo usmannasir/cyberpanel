@@ -47,6 +47,7 @@ oauthlib==3.1.0
 paramiko==2.7.2
 parsedatetime==2.6
 pbr==5.5.1
+pysftp
 pexpect==4.8.0
 prettytable==1.0.1
 protobuf==3.13.0
