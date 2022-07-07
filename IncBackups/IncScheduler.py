@@ -9,7 +9,7 @@ def main():
     parser.add_argument('function', help='Specific a function to call!')
     args = parser.parse_args()
 
-    command = '/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/IncScheduler.py %s' % (args.function)
+    command = f"/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/IncScheduler.py '{args.function}'" % ()
     ProcessUtilities.normalExecutioner(command)
 
 
