@@ -928,6 +928,42 @@ autocreate_system_folders = On
             except:
                 pass
 
+            query = """CREATE TABLE `websiteFunctions_remotebackupconfig` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `configtype` varchar(255) NOT NULL,
+  `config` longtext NOT NULL,
+  `owner_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`)
+)"""
+
+            cursor.execute(query)
+
+            query = """CREATE TABLE `websiteFunctions_remotebackupschedule` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `Name` varchar(255) NOT NULL,
+  `timeintervel` varchar(200) NOT NULL,
+  `fileretention` varchar(200) NOT NULL,
+  `lastrun` varchar(200) NOT NULL,
+  `config` longtext NOT NULL,
+  `RemoteBackupConfig_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `websiteFunctions_rem_RemoteBackupConfig_i_224c46fb_fk_websiteFu` (`RemoteBackupConfig_id`),
+  CONSTRAINT `websiteFunctions_rem_RemoteBackupConfig_i_224c46fb_fk_websiteFu` FOREIGN KEY (`RemoteBackupConfig_id`) REFERENCES `websiteFunctions_remotebackupconfig` (`id`)
+)"""
+
+            cursor.execute(query)
+
+            query = """CREATE TABLE `websiteFunctions_remotebackupsites` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `WPsites` int(11) DEFAULT NULL,
+  `database` int(11) DEFAULT NULL,
+  `owner_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `websiteFunctions_rem_owner_id_d6c4475a_fk_websiteFu` (`owner_id`),
+  CONSTRAINT `websiteFunctions_rem_owner_id_d6c4475a_fk_websiteFu` FOREIGN KEY (`owner_id`) REFERENCES `websiteFunctions_remotebackupschedule` (`id`)
+)"""
+            cursor.execute(query)
+
             try:
                 connection.close()
             except:
