@@ -366,6 +366,7 @@ install_php_memcached() {
 	DEBIAN_FRONTEND=noninteractive apt install -y lsphp74-memcached lsphp73-memcached lsphp72-memcached lsphp71-memcached lsphp70-memcached
 	fi
 	if [[ $SERVER_OS == "openEuler" ]] ; then
+	echo " "
 	#yum install -y lsphp74-memcached lsphp73-memcached lsphp72-memcached lsphp71-memcached
 	fi
 	echo -e "\nMemcached extension for PHP has been installed..."
