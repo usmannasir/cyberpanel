@@ -242,6 +242,7 @@ install_php_redis() {
 	fi
 	if [[ $SERVER_OS == "openEuler" ]] ; then
 		#dnf install -y lsphp74-redis lsphp73-redis lsphp72-redis lsphp71-redis
+		echo " "
 	fi
 	echo -e "\nRedis extension for PHP has been installed..."
 	exit
