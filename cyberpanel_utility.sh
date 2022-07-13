@@ -241,7 +241,7 @@ install_php_redis() {
 		DEBIAN_FRONTEND=noninteractive apt install -y lsphp74-redis lsphp73-redis lsphp72-redis lsphp71-redis lsphp70-redis
 	fi
 	if [[ $SERVER_OS == "openEuler" ]] ; then
-		#dnf install -y lsphp74-redis lsphp73-redis lsphp72-redis lsphp71-redis
+		dnf install -y lsphp74-redis lsphp73-redis lsphp72-redis lsphp71-redis
 	fi
 	echo -e "\nRedis extension for PHP has been installed..."
 	exit
@@ -258,7 +258,7 @@ install_redis() {
 		DEBIAN_FRONTEND=noninteractive apt install -y redis
 	fi
 	if [[ ! -f /usr/bin/redis-cli ]] && [[ $SERVER_OS == "openEuler" ]] ; then
-		yum install -y redis
+		yum install -y redis6
 	fi
 	if ifconfig -a | grep inet6 ; then
 		echo -e "\n IPv6 detected..."
@@ -365,7 +365,7 @@ install_php_memcached() {
 	DEBIAN_FRONTEND=noninteractive apt install -y lsphp74-memcached lsphp73-memcached lsphp72-memcached lsphp71-memcached lsphp70-memcached
 	fi
 	if [[ $SERVER_OS == "openEuler" ]] ; then
-	#yum install -y lsphp74-memcached lsphp73-memcached lsphp72-memcached lsphp71-memcached
+	dnf install -y lsphp74-memcached lsphp73-memcached lsphp72-memcached lsphp71-memcached
 	fi
 	echo -e "\nMemcached extension for PHP has been installed..."
 	exit
