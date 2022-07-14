@@ -2640,6 +2640,65 @@ app.controller('listWebsites', function ($scope, $http) {
 
     };
 
+    $scope.ScanWordpressSite = function () {
+
+        $('#cyberPanelLoading').show();
+
+
+        var url = "/websites/ScanWordpressSite";
+
+        var data = {
+
+        }
+
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+            $('#cyberPanelLoading').hide();
+
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success!',
+                    text: 'Successfully Saved!.',
+                    type: 'success'
+                });
+                location.reload();
+
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $('#cyberPanelLoading').hide();
+            new PNotify({
+                title: 'Operation Failed!',
+                text: response.data.error_message,
+                type: 'error'
+            });
+
+
+        }
+
+
+    };
+
 
 });
 

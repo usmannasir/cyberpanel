@@ -1353,6 +1353,50 @@ class WebsiteManager:
             return HttpResponse(json_data)
 
 
+    def ScanWordpressSite(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            allweb = Websites.objects.all()
+
+            childdomain = ChildDomains.objects.all()
+
+            for web in allweb:
+                webpath = "/home/%s/public_html" % web.domain
+                command = "cat %s/wp-config.php" % webpath
+                result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+
+                if result == 1:
+                    wpobj = WPSites(owner=web, title=web.domain, path=webpath, FinalURL=web.domain,
+                                    AutoUpdates="Enabled", PluginUpdates="Enabled",
+                                    ThemeUpdates="Enabled", )
+                    wpobj.save()
+
+            for chlid in childdomain:
+                command = "cat %s/wp-config.php"%chlid.path
+                result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+
+                if result == 1:
+                    wpobj = WPSites(owner=chlid.master, title=chlid.domain, path=chlid.path, FinalURL=chlid.domain,
+                                    AutoUpdates="Enabled", PluginUpdates="Enabled",
+                                    ThemeUpdates="Enabled", )
+                    wpobj.save()
+
+
+            
+
+            data_ret = {'status': 1,  'error_message': 'None',}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'status': 0,  'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
 
     def installwpcore(self, userID=None, data=None):
         try:

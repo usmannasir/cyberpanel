@@ -53,6 +53,7 @@ urlpatterns = [
     url(r'^SaveBackupSchedule', views.SaveBackupSchedule, name='SaveBackupSchedule'),
     url(r'^AddWPsiteforRemoteBackup', views.AddWPsiteforRemoteBackup, name='AddWPsiteforRemoteBackup'),
     url(r'^UpdateRemoteschedules', views.UpdateRemoteschedules, name='UpdateRemoteschedules'),
+    url(r'^ScanWordpressSite', views.ScanWordpressSite, name='ScanWordpressSite'),
 
 
 
