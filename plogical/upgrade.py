@@ -935,8 +935,10 @@ autocreate_system_folders = On
   `owner_id` int(11) NOT NULL,
   PRIMARY KEY (`id`)
 )"""
-
-            cursor.execute(query)
+            try:
+                cursor.execute(query)
+            except:
+                pass
 
             query = """CREATE TABLE `websiteFunctions_remotebackupschedule` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -950,8 +952,10 @@ autocreate_system_folders = On
   KEY `websiteFunctions_rem_RemoteBackupConfig_i_224c46fb_fk_websiteFu` (`RemoteBackupConfig_id`),
   CONSTRAINT `websiteFunctions_rem_RemoteBackupConfig_i_224c46fb_fk_websiteFu` FOREIGN KEY (`RemoteBackupConfig_id`) REFERENCES `websiteFunctions_remotebackupconfig` (`id`)
 )"""
-
-            cursor.execute(query)
+            try:
+                cursor.execute(query)
+            except:
+                pass
 
             query = """CREATE TABLE `websiteFunctions_remotebackupsites` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -962,7 +966,10 @@ autocreate_system_folders = On
   KEY `websiteFunctions_rem_owner_id_d6c4475a_fk_websiteFu` (`owner_id`),
   CONSTRAINT `websiteFunctions_rem_owner_id_d6c4475a_fk_websiteFu` FOREIGN KEY (`owner_id`) REFERENCES `websiteFunctions_remotebackupschedule` (`id`)
 )"""
-            cursor.execute(query)
+            try:
+                cursor.execute(query)
+            except:
+                pass
 
             try:
                 connection.close()
