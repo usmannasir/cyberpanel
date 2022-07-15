@@ -1364,25 +1364,35 @@ class WebsiteManager:
             childdomain = ChildDomains.objects.all()
 
             for web in allweb:
-                webpath = "/home/%s/public_html" % web.domain
-                command = "cat %s/wp-config.php" % webpath
+                webpath = "/home/%s/public_html/" % web.domain
+                command = "cat %swp-config.php" % webpath
                 result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
                 if result == 1:
-                    wpobj = WPSites(owner=web, title=web.domain, path=webpath, FinalURL=web.domain,
-                                    AutoUpdates="Enabled", PluginUpdates="Enabled",
-                                    ThemeUpdates="Enabled", )
-                    wpobj.save()
+                    try:
+                        WPSites.objects.get(path=webpath)
+                    except:
+                        wpobj = WPSites(owner=web, title=web.domain, path=webpath, FinalURL=web.domain,
+                                        AutoUpdates="Enabled", PluginUpdates="Enabled",
+                                        ThemeUpdates="Enabled", )
+                        wpobj.save()
 
             for chlid in childdomain:
-                command = "cat %s/wp-config.php"%chlid.path
+                childPath = chlid.path.rstrip('/')
+
+                command = "cat %s/wp-config.php"% childPath
                 result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
                 if result == 1:
-                    wpobj = WPSites(owner=chlid.master, title=chlid.domain, path=chlid.path, FinalURL=chlid.domain,
-                                    AutoUpdates="Enabled", PluginUpdates="Enabled",
-                                    ThemeUpdates="Enabled", )
-                    wpobj.save()
+                    fChildPath = f'{childPath}/'
+                    try:
+                        WPSites.objects.get(path=fChildPath)
+                    except:
+
+                        wpobj = WPSites(owner=chlid.master, title=chlid.domain, path=fChildPath, FinalURL=chlid.domain,
+                                        AutoUpdates="Enabled", PluginUpdates="Enabled",
+                                        ThemeUpdates="Enabled", )
+                        wpobj.save()
 
 
             
