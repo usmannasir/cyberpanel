@@ -672,6 +672,7 @@ class IncJobs(multi.Thread):
                 elif self.backupDestinations[:4] == 'sftp':
                     if self.sftpFunction(dbPathNew, 'database') == 0:
                         return 0
+
                 else:
                     if self.awsFunction('backup', dbPathNew, '', 'database') == 0:
                         return 0
