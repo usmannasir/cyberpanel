@@ -318,7 +318,7 @@ class FTPManager:
 
             command = "yum install -y pure-ftpd"
             ProcessUtilities.executioner(command)
-        elif ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+        elif ProcessUtilities.decideDistro() == ProcessUtilities.cent8 or ProcessUtilities.decideDistro() == ProcessUtilities.openeuler:
 
             command = 'yum remove pure-ftp* -y'
             os.system(command)
@@ -365,7 +365,7 @@ class FTPManager:
             except:
                 pass
 
-            if (ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8) or (
+            if (ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8 or ProcessUtilities.decideDistro() == ProcessUtilities.openeuler) or (
                     ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20 and ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu):
                 command = 'openssl req -newkey rsa:1024 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout /etc/ssl/private/pure-ftpd.pem -out /etc/ssl/private/pure-ftpd.pem'
             else:

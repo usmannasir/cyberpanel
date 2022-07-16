@@ -763,7 +763,7 @@ def fetchPackages(request):
                     packages = upgradePackages
 
 
-        elif ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+        elif ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8 or ProcessUtilities.decideDistro() == ProcessUtilities.openeuler:
 
             ### Check Package Lock status
 
@@ -903,7 +903,7 @@ def fetchPackages(request):
                             json_data = json_data + ',' + json.dumps(dic)
                 except BaseException as msg:
                     logging.CyberCPLogFileWriter.writeToFile('[ERROR] %s. [fetchPackages:773]' % (str(msg)))
-            elif ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+            elif ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8 or ProcessUtilities.decideDistro() == ProcessUtilities.openeuler:
                 try:
                     if type == 'installed' or type == 'upgrade':
 
@@ -988,7 +988,7 @@ def fetchPackageDetails(request):
         if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
             command = 'apt-cache show %s' % (package)
             packageDetails = ProcessUtilities.outputExecutioner(command)
-        elif ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+        elif ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8 or ProcessUtilities.decideDistro() == ProcessUtilities.openeuler:
             command = 'yum info %s' % (package)
             packageDetails = ProcessUtilities.outputExecutioner(command)
 
@@ -1064,7 +1064,7 @@ def lockStatus(request):
                 command = 'apt-mark hold %s' % (package)
                 ProcessUtilities.executioner(command)
 
-        elif ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+        elif ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8 or ProcessUtilities.decideDistro() == ProcessUtilities.openeuler:
 
             package = package.split('.')[0]
 

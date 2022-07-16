@@ -945,7 +945,7 @@ class MailServerManager(multi.Thread):
             
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Re-installing Dovecot..,15')
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8 or ProcessUtilities.decideDistro() == ProcessUtilities.openeuler:
                 pass
             else:
                 command = 'apt-get -y install dovecot-imapd dovecot-pop3d postfix-mysql'
@@ -1571,7 +1571,7 @@ milter_default_action = accept
         command = "find /usr/local/CyberCP/ -name '*.pyc' -delete"
         ProcessUtilities.executioner(command)
 
-        if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.cent8:
+        if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.cent8 or ProcessUtilities.openeuler:
 
             command = 'chown root:pdns /etc/pdns/pdns.conf'
             ProcessUtilities.executioner(command)

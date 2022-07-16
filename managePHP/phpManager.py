@@ -15,7 +15,7 @@ class PHPManager:
         distro = ProcessUtilities.decideDistro()
         if distro == ProcessUtilities.centos:
             return ['PHP 5.3', 'PHP 5.4', 'PHP 5.5', 'PHP 5.6', 'PHP 7.0', 'PHP 7.1', 'PHP 7.2', 'PHP 7.3', 'PHP 7.4', 'PHP 8.0', 'PHP 8.1']
-        elif distro == ProcessUtilities.cent8:
+        elif distro == ProcessUtilities.cent8 or ProcessUtilities.openeuler:
             return ['PHP 7.1','PHP 7.2', 'PHP 7.3', 'PHP 7.4', 'PHP 8.0', 'PHP 8.1']
         elif distro == ProcessUtilities.ubuntu20:
             return ['PHP 7.2', 'PHP 7.3', 'PHP 7.4', 'PHP 8.0', 'PHP 8.1']

@@ -1016,7 +1016,7 @@ class FileManager:
         website = Websites.objects.get(domain=domainName)
         externalApp = website.externalApp
 
-        if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+        if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8 or ProcessUtilities.decideDistro() == ProcessUtilities.openeuler:
             groupName = 'nobody'
         else:
             groupName = 'nogroup'

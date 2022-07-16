@@ -1158,7 +1158,7 @@ class DNSManager:
     def installPowerDNSConfigurations(self, mysqlPassword):
         try:
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.cent8 or ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.cent8 or ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.openeuler:
                 dnsPath = "/etc/pdns/pdns.conf"
             else:
                 dnsPath = "/etc/powerdns/pdns.conf"

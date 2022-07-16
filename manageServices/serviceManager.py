@@ -23,7 +23,7 @@ class ServiceManager:
     def managePDNS(self):
         type = self.extraArgs['type']
 
-        if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+        if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8 or ProcessUtilities.decideDistro() == ProcessUtilities.openeuler:
             path = '/etc/pdns/pdns.conf'
         else:
             path = '/etc/powerdns/pdns.conf'
@@ -264,6 +264,9 @@ type=rpm-md
         if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
             command = 'yum install redis -y'
             ServerStatusUtil.executioner(command, statusFile)
+        elif ProcessUtilities.decideDistro() == ProcessUtilities.openeuler:
+            command = 'dnf install redis6 -y'
+            ServerStatusUtil.executioner(command, statusFile)
         else:
 
             command = 'apt-get install redis-server -y'
@@ -290,6 +293,9 @@ type=rpm-md
 
         if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
             command = 'yum erase redis -y'
+            ServerStatusUtil.executioner(command, statusFile)
+        elif ProcessUtilities.decideDistro() == ProcessUtilities.openeuler:
+            command = 'dnf erase redis6 -y'
             ServerStatusUtil.executioner(command, statusFile)
         else:
 

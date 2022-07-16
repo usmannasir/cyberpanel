@@ -240,7 +240,7 @@ class mailUtilities:
 
                 ## Generate keys
 
-                if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8 or ProcessUtilities.decideDistro() == ProcessUtilities.openeuler:
                     command = "/usr/sbin/opendkim-genkey -D /etc/opendkim/keys/%s -d %s -s default" % (virtualHostName, virtualHostName)
                 else:
                     command = "opendkim-genkey -D /etc/opendkim/keys/%s -d %s -s default" % (
@@ -469,7 +469,7 @@ milter_default_action = accept
             if os.path.exists(mailUtilities.spamassassinInstallLogPath):
                 os.remove(mailUtilities.spamassassinInstallLogPath)
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8 or ProcessUtilities.decideDistro() == ProcessUtilities.openeuler:
                 command = 'sudo yum install spamassassin -y'
             else:
                 command = 'sudo apt-get install spamassassin spamc -y'
@@ -817,7 +817,7 @@ class MailServerManagerUtils(multi.Thread):
     def install_postfix_dovecot(self):
         try:
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8 or ProcessUtilities.decideDistro() == ProcessUtilities.openeuler:
                 command = 'yum remove postfix* dovecot* -y'
                 ProcessUtilities.executioner(command, None, True)
             elif ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
@@ -1420,7 +1420,7 @@ class MailServerManagerUtils(multi.Thread):
         command = "find /usr/local/CyberCP/ -name '*.pyc' -delete"
         ProcessUtilities.executioner(command)
 
-        if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.cent8:
+        if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.cent8 or ProcessUtilities.openeuler:
             command = 'chown root:pdns /etc/pdns/pdns.conf'
             ProcessUtilities.executioner(command)
 

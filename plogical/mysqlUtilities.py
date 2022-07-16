@@ -536,7 +536,7 @@ password=%s
     def applyMySQLChanges(data):
         try:
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8 or ProcessUtilities.decideDistro() == ProcessUtilities.openeuler:
                 command = 'sudo mv /etc/my.cnf /etc/my.cnf.bak'
             else:
                 command = 'sudo mv /etc/mysql/my.cnf /etc/mysql/my.cnf.bak'
@@ -553,7 +553,7 @@ password=%s
             writeToFile.close()
 
             ##
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8 or ProcessUtilities.decideDistro() == ProcessUtilities.openeuler:
                 command = 'sudo mv ' + tempPath + ' /etc/my.cnf'
             else:
                 command = 'sudo mv ' + tempPath + ' /etc/mysql/my.cnf'
@@ -563,7 +563,7 @@ password=%s
             return 1, None
 
         except BaseException as msg:
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8 or ProcessUtilities.decideDistro() == ProcessUtilities.openeuler:
                 command = 'sudo mv /etc/my.cnf.bak /etc/my.cnf'
             else:
                 command = 'sudo mv /etc/mysql/my.cnf.bak /etc/mysql//my.cnf'

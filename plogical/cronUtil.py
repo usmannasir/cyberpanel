@@ -16,7 +16,7 @@ class CronUtil:
     def getWebsiteCron(externalApp):
         try:
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8 or ProcessUtilities.decideDistro() == ProcessUtilities.openeuler:
                 cronPath = "/var/spool/cron/" + externalApp
             else:
                 cronPath = "/var/spool/cron/crontabs/" + externalApp
@@ -36,7 +36,7 @@ class CronUtil:
         try:
 
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8 or ProcessUtilities.decideDistro() == ProcessUtilities.openeuler:
                 cronPath = "/var/spool/cron/" + externalApp
             else:
                 cronPath = "/var/spool/cron/crontabs/" + externalApp
@@ -58,7 +58,7 @@ class CronUtil:
         try:
             line -= 1
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8 or ProcessUtilities.decideDistro() == ProcessUtilities.openeuler:
                 cronPath = "/var/spool/cron/" + externalApp
             else:
                 cronPath = "/var/spool/cron/crontabs/" + externalApp
@@ -89,7 +89,7 @@ class CronUtil:
     def addNewCron(externalApp, finalCron):
         try:
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8 or ProcessUtilities.decideDistro() == ProcessUtilities.openeuler:
                 cronPath = "/var/spool/cron/" + externalApp
             else:
                 cronPath = "/var/spool/cron/crontabs/" + externalApp

@@ -260,7 +260,7 @@ $parameters = array(
 
             homeDir = "/home/" + domainName + "/public_html"
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8 or ProcessUtilities.decideDistro() == ProcessUtilities.openeuler:
                 groupName = 'nobody'
             else:
                 groupName = 'nogroup'
@@ -305,7 +305,7 @@ $parameters = array(
                     f.write(ProcessUtilities.outputExecutioner(command))
 
                 f.close()
-            elif ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+            elif ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8 or ProcessUtilities.decideDistro() == ProcessUtilities.openeuler:
                 if package == 'all':
                     command = 'yum update -y'
                     f.write(ProcessUtilities.outputExecutioner(command))
@@ -924,7 +924,7 @@ $parameters = array(
 
             homeDir = "/home/" + domainName + "/public_html"
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8 or ProcessUtilities.decideDistro() == ProcessUtilities.openeuler:
                 groupName = 'nobody'
             else:
                 groupName = 'nogroup'
@@ -1410,7 +1410,7 @@ $parameters = array(
 
             ## Set up cron if missing
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8 or ProcessUtilities.decideDistro() == ProcessUtilities.openeuler:
                 localCronPath = "/var/spool/cron/root"
             else:
                 localCronPath = "/var/spool/cron/crontabs/root"
@@ -1637,7 +1637,7 @@ $parameters = array(
 
             homeDir = "/home/" + domainName + "/public_html"
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8 or ProcessUtilities.decideDistro() == ProcessUtilities.openeuler:
                 groupName = 'nobody'
             else:
                 groupName = 'nogroup'

@@ -698,7 +698,7 @@ class cPanelImporter:
                 logging.statusWriter(self.logFile, message, 1)
                 return 1
             
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8 or ProcessUtilities.decideDistro() == ProcessUtilities.openeuler:
                 localCronPath = "/var/spool/cron/" + self.externalApp
             else:
                 localCronPath = "/var/spool/cron/crontabs/" + self.externalApp
