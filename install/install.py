@@ -2108,7 +2108,7 @@ milter_default_action = accept
             CentOSPath = '/etc/redhat-release'
             openEulerPath = '/etc/openEuler-release'
 
-            if os.path.exists(CentOSPath) or os.path.exists(openEulerPath):
+            if os.path.exists(CentOSPath):
                 if self.distro == centos:
                     command = 'yum install -y yum-plugin-copr'
                     preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
@@ -2119,7 +2119,11 @@ milter_default_action = accept
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
                 command = 'restic self-update'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
+            elif os.path.exists(openEulerPath):
+                command = 'dnf install -y restic'
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+                command = 'restic self-update'
+                preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
             else:
                 command = 'apt-get update -y'
                 preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)

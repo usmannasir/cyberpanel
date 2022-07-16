@@ -99,8 +99,8 @@ elif [ -f /etc/debian_version ]; then
     # Older Debian/Ubuntu/etc.
     OS=Debian
     VER=$(cat /etc/debian_version)
-elif [ -f /etc/SuSe-release ]; then
-    # Older SuSE/etc.
+elif [ -f /etc/openEuler-release ]; then
+    # Older openEuler.
     ...
 elif [ -f /etc/redhat-release ]; then
     # Older Red Hat, CentOS, etc.
@@ -395,7 +395,7 @@ all () {
 
 	elif [ "${ControlPanel}" == "cyberpanel" ] ; then
 
-		if [[ $OS = 'CentOS Linux' ]] ; then
+		if [[ $OS = 'CentOS Linux' ]] || [[ $OS = 'openEuler' ]] ; then
 	   	for user in $(getent passwd | awk -F: '5001<$3 && $3<6000 {print $1}' |grep -v spamd)
 		    do
 		  	fixperms_cyberpanel "$user"

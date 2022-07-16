@@ -818,6 +818,7 @@ Subject: %s
                 try:
 
                     CentOSPath = '/etc/redhat-release'
+                    openEulerPath = '/etc/openEuler-release'
 
                     if os.path.exists(CentOSPath):
                             command = 'yum install -y yum-plugin-copr'
@@ -826,7 +827,9 @@ Subject: %s
                             ProcessUtilities.executioner(command)
                             command = 'yum install -y restic'
                             ProcessUtilities.executioner(command)
-
+                    elif os.path.exists(openEulerPath):
+                            command = 'dnf install -y restic'
+                            ProcessUtilities.executioner(command)
                     else:
                         command = 'apt-get update -y'
                         ProcessUtilities.executioner(command)

@@ -142,8 +142,9 @@ class mailUtilities:
             #emailAcct = EUsers(emailOwner=emailDomain, email=finalEmailUsername, password=hash.hexdigest())
 
             CentOSPath = '/etc/redhat-release'
+            openEulerPath = '/etc/openEuler-release'
 
-            if os.path.exists(CentOSPath):
+            if os.path.exists(CentOSPath) or os.path.exists(openEulerPath):
                 if restore == None:
                     password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
                     password = '{CRYPT}%s' % (password.decode())
@@ -197,8 +198,9 @@ class mailUtilities:
         try:
             if encrypt == None:
                 CentOSPath = '/etc/redhat-release'
+                openEulerPath = '/etc/openEuler-release'
                 changePass = EUsers.objects.get(email=email)
-                if os.path.exists(CentOSPath):
+                if os.path.exists(CentOSPath) or os.path.exists(openEulerPath):
                     password = bcrypt.hashpw(newPassword.encode('utf-8'), bcrypt.gensalt())
                     password = '{CRYPT}%s' % (password.decode())
                     changePass.password = password

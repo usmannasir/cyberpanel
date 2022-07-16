@@ -605,7 +605,9 @@ class MailServerManager(multi.Thread):
                     return ACLManager.loadErrorJson()
 
             CentOSPath = '/etc/redhat-release'
-            if os.path.exists(CentOSPath):
+            openEulerPath = '/etc/openEuler-release'
+
+            if os.path.exists(CentOSPath) or os.path.exists(openEulerPath):
                 password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
                 password = '{CRYPT}%s' % (password.decode())
                 emailDB.password = password

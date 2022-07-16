@@ -17,6 +17,7 @@ class ProcessUtilities(multi.Thread):
     cent8 = 2
     ubuntu = 0
     ubuntu20 = 3
+    openeuler = 4
     server_address = '/usr/local/lscpd/admin/comm.sock'
     token = "unset"
     portPath = '/usr/local/lscp/conf/bind.conf'
@@ -172,6 +173,8 @@ class ProcessUtilities(multi.Thread):
         else:
             if open('/etc/redhat-release', 'r').read().find('CentOS Linux release 8') > -1 or open('/etc/redhat-release', 'r').read().find('AlmaLinux release 8') > -1 or open('/etc/redhat-release', 'r').read().find('Rocky Linux release 8') > -1:
                 return ProcessUtilities.cent8
+            if open('/etc/openEuler-release', 'r').read().find('openEuler release 20.03') > -1 or open('/etc/openEuler-release', 'r').read().find('openEuler release 22.03') > -1:
+                return ProcessUtilities.openeuler
             return ProcessUtilities.centos
 
 

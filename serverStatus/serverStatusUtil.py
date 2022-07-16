@@ -318,7 +318,7 @@ class ServerStatusUtil(multi.Thread):
                     except:
                         pass
 
-            if os.path.exists('/etc/redhat-release'):
+            if os.path.exists('/etc/redhat-release') or os.path.exists('/etc/openEuler-release'):
 
                 command = 'yum -y erase openlitespeed'
             else:
@@ -361,8 +361,9 @@ class ServerStatusUtil(multi.Thread):
             ### Check and remove OLS restart if lsws ent detected
 
             CentOSPath = '/etc/redhat-release'
+            openEulerPath = '/etc/openEuler-release'
 
-            if os.path.exists(CentOSPath):
+            if os.path.exists(CentOSPath) or os.path.exists(openEulerPath):
                 cronPath = '/var/spool/cron/root'
             else:
                 cronPath = '/var/spool/cron/crontabs/root'

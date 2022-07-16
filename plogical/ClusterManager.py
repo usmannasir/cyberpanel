@@ -73,8 +73,9 @@ class ClusterManager:
         try:
 
             CentOSPath = '/etc/redhat-release'
+            openEulerPath = '/etc/openEuler-release'
 
-            if os.path.exists(CentOSPath):
+            if os.path.exists(CentOSPath) or os.path.exists(openEulerPath):
                 cronPath = '/var/spool/cron/root'
             else:
                 cronPath = '/var/spool/cron/crontabs/root'
@@ -394,8 +395,9 @@ password=%s""" % (rootdbpassword, rootdbpassword)
         try:
 
             CentOSPath = '/etc/redhat-release'
+            openEulerPath = '/etc/openEuler-release'
 
-            if os.path.exists(CentOSPath):
+            if os.path.exists(CentOSPath) or os.path.exists(openEulerPath):
                 cronPath = '/var/spool/cron/root'
             else:
                 cronPath = '/var/spool/cron/crontabs/root'
