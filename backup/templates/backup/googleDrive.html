@@ -186,10 +186,7 @@
                                                                         <select ng-model="currentPageLogs"
                                                                                 class="form-control"
                                                                                 ng-change="fetchLogs()">
-                                                                            <option ng-repeat="page in paginationLogs">{$
-                                                                                $index + 1
-                                                                                $}
-                                                                            </option>
+                                                                            <option ng-repeat="page in paginationLogs">{$ $index + 1 $}</option>
                                                                         </select>
                                                                     </div>
                                                                 </div>
@@ -244,9 +241,7 @@
                                             <div class="form-group">
                                                 <select ng-model="currentPage" class="form-control"
                                                         ng-change="fetchWebsites()">
-                                                    <option ng-repeat="page in pagination">{$ $index + 1
-                                                        $}
-                                                    </option>
+                                                    <option ng-repeat="page in pagination">{$ $index + 1$}</option>
                                                 </select>
                                             </div>
                                         </div>
