@@ -1,0 +1,409 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Rspamd - CyberPanel" %}{% endblock %}
+{% block content %}
+
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
+
+
+    <div class="container">
+        <div id="page-title">
+            <h2>{% trans "Rspamd Configurations!" %} - <a target="_blank"
+                                                          href="http://go.cyberpanel.net/SpamAssassin"
+                                                          style="height: 23px;line-height: 21px;"
+                                                          class="btn btn-border btn-alt border-red btn-link font-red"
+                                                          title=""><span>{% trans "Rspamd Docs" %}</span></a>
+            </h2>
+            <p>{% trans "On this page you can configure RSPAMD settings." %}</p>
+        </div>
+
+        <div ng-controller="Rspamd" class="example-box-wrapper">
+            <div class="panel panel-body">
+                <div style="width: 100%; margin: 0 auto">
+                    <div class="col-lg-10" style="float: left">
+                        <h3 class="content-box-header">
+                            {% trans "Rspamd" %} <img ng-hide="RspamdLoading" src="/static/images/loading.gif">
+
+                        </h3>
+                    </div>
+
+                    <div ng-hide="uninstallbutton" class="col-lg-2" style="float: left">
+                        <button type="button" data-toggle="modal" data-target="#UninstallRspamdmodal"
+                                class="btn btn-danger btn-lg btn-block">{% trans "uninstall." %}</button>
+
+                    </div>
+                </div>
+
+                {#-------------------------------un install process----------------------------------#}
+                <div ng-hide="uninstalldiv">
+                    <div class="col-md-12 text-center" style="margin-bottom: 2%;">
+                        <h4 class="mb-10">{% trans "Uninstalling Rspamd " %}
+                        </h4>
+                    </div>
+                </div>
+                <!------ RSPAMD unInstall Log box ----------------->
+
+                <div ng-hide="uninstallRspamdNotifyBox" class="form-group">
+                    <label class="col-sm-3 control-label"></label>
+                    <div class="col-sm-6">
+
+                        <div ng-hide="failedToStartInallation" class="alert alert-danger">
+                            <p>{% trans "Failed to start Uninstallation, Error message: " %} {$ errorMessage $}</p>
+                        </div>
+
+                        <div ng-hide="couldNotConnect" class="alert alert-danger">
+                            <p>{% trans "Could not connect. Please refresh this page." %} </p>
+                        </div>
+
+                        <div ng-hide="installationFailed" class="alert alert-danger">
+                            <p>{% trans "Installation failed." %} {$ errorMessage $}</p>
+                        </div>
+
+                        <div ng-hide="RspamdSuccessfullyInstalled" class="alert alert-success">
+                            <p>{% trans "RSPAMD successfully Uninstalled, refreshing page in 3 seconds.." %}</p>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div ng-hide="uninstallRspamdInstallBox" class="col-md-12">
+
+                    <form action="/" id="" class="form-horizontal bordered-row">
+                        <div class="form-group">
+                            <div class="col-sm-12 text-center">
+                                <h3><img
+                                        src="{% static 'firewall/icons/firewall.png' %}"> {% trans "Winter is coming, but so is RSPAMD." %}
+                                    <img ng-hide="RspamdLoading" src="/static/images/loading.gif">
+                                </h3>
+                            </div>
+                            <div style="margin-top: 2%;" class="col-sm-12">
+                                            <textarea ng-model="requestData" rows="15"
+                                                      class="form-control">{{ requestData }}</textarea>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+
+                <!----- RSPAMD unInstall Log box ----------------->
+
+
+                <div class="content-box-wrapper">
+                    <div class="row">
+
+                        {% if checkIfRspamdInstalled == 0 %}
+
+                            <div class="col-md-12 text-center" style="margin-bottom: 2%;">
+                                <h4 class="mb-10">{% trans "Rspamd is not installed " %}
+                                </h4>
+                                <button ng-click="installRspamd()" class="btn btn-alt btn-hover btn-blue-alt">
+                                    <span>{% trans "Install Now." %}</span>
+                                    <i class="glyph-icon icon-arrow-right"></i>
+                                </button>
+                            </div>
+
+                            <!------ RSPAMD Install Log box ----------------->
+
+                            <div ng-hide="RspamdNotifyBox" class="form-group">
+                                <label class="col-sm-3 control-label"></label>
+                                <div class="col-sm-6">
+
+                                    <div ng-hide="failedToStartInallation" class="alert alert-danger">
+                                        <p>{% trans "Failed to start installation, Error message: " %} {$ errorMessage
+                                            $}</p>
+                                    </div>
+
+                                    <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                        <p>{% trans "Could not connect. Please refresh this page." %} </p>
+                                    </div>
+
+                                    <div ng-hide="installationFailed" class="alert alert-danger">
+                                        <p>{% trans "Installation failed." %} {$ errorMessage $}</p>
+                                    </div>
+
+                                    <div ng-hide="RspamdSuccessfullyInstalled" class="alert alert-success">
+                                        <p>{% trans "RSPAMD successfully installed, refreshing page in 3 seconds.." %}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+
+                            <div ng-hide="RspamdInstallBox" class="col-md-12">
+
+                                <form action="/" id="" class="form-horizontal bordered-row">
+                                    <div class="form-group">
+                                        <div class="col-sm-12 text-center">
+                                            <h3><img
+                                                    src="{% static 'firewall/icons/firewall.png' %}"> {% trans "Winter is coming, but so is RSPAMD." %}
+                                                <img ng-hide="RspamdLoading" src="/static/images/loading.gif">
+                                            </h3>
+                                        </div>
+                                        <div style="margin-top: 2%;" class="col-sm-12">
+                                            <textarea ng-model="requestData" rows="15"
+                                                      class="form-control">{{ requestData }}</textarea>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+
+
+                            <!----- RSPAMD Install Log box ----------------->
+                        {% else %}
+
+                            <div ng-hide="installedrspamd">
+                                <!-----------------------------------------ClamAv--------------------------->
+                                <div style="padding: 2%" class="col-md-12">
+                                    <h3 class="content-box-header">
+                                        {% trans "ClamAV" %}
+                                    </h3>
+                                    <form action="/" id="createPackages" class="form-horizontal bordered-row">
+
+                                        <div ng-hide="phpDetailsBox" class="form-group">
+                                            <label class="col-sm-4 control-label">Antivirus Status</label>
+                                            <div class="col-sm-6">
+                                                <input type="checkbox" id="antivirus_status" data-toggle="toggle">
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="col-sm-4 control-label">Action</label>
+                                            <div class="col-sm-6">
+                                                <select class="form-control" ng-model="action_rspamd">
+                                                    <option selected="selected">Reject</option>
+                                                    <option>Unset</option>
+                                                </select>
+                                            </div>
+                                            <div ng-hide="ActionValue" class="col-sm-2">
+                                                <strong style="margin-top: 10px; ">Selected</strong>
+                                                <strong ng-model="selctedaction" id="selctedaction"></strong>
+                                            </div>
+                                        </div>
+                                        <div ng-hide="phpDetailsBox" class="form-group">
+                                            <label class="col-sm-4 control-label">Scan Mime Parts</label>
+                                            <div class="col-sm-6">
+                                                <input type="checkbox" id="scan_mime_parts" data-toggle="toggle">
+                                            </div>
+                                        </div>
+                                        <div ng-hide="phpDetailsBox" class="form-group">
+                                            <label class="col-sm-4 control-label">Log Clean</label>
+                                            <div class="col-sm-6">
+                                                <input type="checkbox" id="log_clean" data-toggle="toggle">
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label class="col-sm-4 control-label">Max Size</label>
+                                            <div class="col-sm-6">
+                                                <input type="text" class="form-control" ng-model="max_size" required>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label class="col-sm-4 control-label">Clamav virus</label>
+                                            <div class="col-sm-6">
+                                                <input type="text" class="form-control" ng-model="CLAMAV_VIRUS"
+                                                       required>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="col-sm-4 control-label">Servers</label>
+                                            <div class="col-sm-6">
+                                                <input type="text" class="form-control" ng-model="server" required>
+                                            </div>
+                                        </div>
+
+
+                                        <div class="form-group">
+                                            <label class="col-sm-3 control-label"></label>
+                                            <div class="col-sm-4">
+                                                <button type="button" ng-click="saveRspamdConfigurations()"
+                                                        class="btn btn-primary btn-lg btn-block">{% trans "Save changes." %}</button>
+
+                                            </div>
+                                        </div>
+
+
+                                        <div class="form-group">
+                                            <label class="col-sm-3 control-label"></label>
+                                            <div class="col-sm-6">
+
+                                                <div ng-hide="failedToSave" class="alert alert-danger">
+                                                    <p>{% trans "Failed to save RSPAMD configurations. Error message: " %}
+                                                        {$ errorMessage $}</p>
+                                                </div>
+
+                                                <div ng-hide="successfullySaved" class="alert alert-success">
+                                                    <p>{% trans "RSPAMD configurations successfully saved." %}</p>
+                                                </div>
+
+                                                <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                                    <p>{% trans "Could not connect. Please refresh this page." %} </p>
+                                                </div>
+
+                                            </div>
+                                        </div>
+
+
+                                    </form>
+                                </div>
+                                <!-----------------------------------------postfix--------------------------->
+                                <div style="padding: 2%" class="col-md-12">
+                                    <h3 class="content-box-header">
+                                        {% trans "Postfix" %}<img ng-hide="postfixLoading"
+                                                                  src="/static/images/loading.gif">
+                                    </h3>
+                                    <form action="/" id="createPackages" class="form-horizontal bordered-row">
+
+                                        <div class="form-group">
+                                            <label class="col-sm-4 control-label">Smtpd Milters</label>
+                                            <div class="col-sm-6">
+                                                <input type="text" class="form-control" ng-model="smtpd_milters"
+                                                       required>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="col-sm-4 control-label">Non Smtpd Milters</label>
+                                            <div class="col-sm-6">
+                                                <input type="text" class="form-control" ng-model="non_smtpd_milters"
+                                                       required>
+                                            </div>
+                                        </div>
+
+
+                                        <div class="form-group">
+                                            <label class="col-sm-3 control-label"></label>
+                                            <div class="col-sm-4">
+                                                <button type="button" ng-click="savepostfixConfigurations()"
+                                                        class="btn btn-primary btn-lg btn-block">{% trans "Save changes." %}</button>
+
+                                            </div>
+                                        </div>
+
+
+                                        <div class="form-group">
+                                            <label class="col-sm-3 control-label"></label>
+                                            <div class="col-sm-6">
+
+                                                <div ng-hide="postfixfailedToSave" class="alert alert-danger">
+                                                    <p>{% trans "Failed to save Postfix configurations. Error message: " %}
+                                                        {$ errorMessage $}</p>
+                                                </div>
+
+                                                <div ng-hide="postfixsuccessfullySaved" class="alert alert-success">
+                                                    <p>{% trans "Postfix configurations successfully saved." %}</p>
+                                                </div>
+
+                                                <div ng-hide="postfixcouldNotConnect" class="alert alert-danger">
+                                                    <p>{% trans "Could not connect. Please refresh this page." %} </p>
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                                <!-----------------------------------------Redis--------------------------->
+                                <div style="padding: 2%" class="col-md-12">
+                                    <h3 class="content-box-header">
+                                        {% trans "Redis" %}<img ng-hide="RedisLoading" src="/static/images/loading.gif">
+                                    </h3>
+                                    <form action="/" id="createPackages" class="form-horizontal bordered-row">
+
+                                        <div class="form-group">
+                                            <label class="col-sm-4 control-label">Write Servers</label>
+                                            <div class="col-sm-6">
+                                                <input type="text" class="form-control" ng-model="write_servers"
+                                                       required>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="col-sm-4 control-label">Read Servers</label>
+                                            <div class="col-sm-6">
+                                                <input type="text" class="form-control" ng-model="read_servers"
+                                                       required>
+                                            </div>
+                                        </div>
+
+
+                                        <div class="form-group">
+                                            <label class="col-sm-3 control-label"></label>
+                                            <div class="col-sm-4">
+                                                <button type="button" ng-click="saveRedisConfigurations()"
+                                                        class="btn btn-primary btn-lg btn-block">{% trans "Save changes." %}</button>
+
+                                            </div>
+                                        </div>
+
+
+                                        <div class="form-group">
+                                            <label class="col-sm-3 control-label"></label>
+                                            <div class="col-sm-6">
+
+                                                <div ng-hide="RedisfailedToSave" class="alert alert-danger">
+                                                    <p>{% trans "Failed to save Redis configurations. Error message: " %}
+                                                        {$ errorMessage $}</p>
+                                                </div>
+
+                                                <div ng-hide="RedissuccessfullySaved" class="alert alert-success">
+                                                    <p>{% trans "Redis configurations successfully saved." %}</p>
+                                                </div>
+
+                                                <div ng-hide="RediscouldNotConnect" class="alert alert-danger">
+                                                    <p>{% trans "Could not connect. Please refresh this page." %} </p>
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+
+
+
+
+                        {% endif %}
+
+
+                    </div>
+                </div>
+            </div>
+            <!----- Modal ----------------------->
+            <div id="UninstallRspamdmodal" ng-model="UninstallRspamdmodal" class="modal fade" role="dialog">
+                <div class="modal-dialog">
+
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;
+                            </button>
+                            <h4 class="modal-title">{% trans "Uninstall Rspamd" %}
+                            </h4>
+                        </div>
+                        <div class="modal-body">
+                            <p> Do You Want to Uninstall Rspamd? </p>
+
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button"
+                                    class="btn btn-primary" data-dismiss="modal" ng-click="unistallRspamd()">yes
+                            </button>
+                            <button type="button"
+                                    class="btn btn-default" data-dismiss="modal">
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+        </div>
+
+
+    </div>
+
+
+
+
+
+{% endblock %}

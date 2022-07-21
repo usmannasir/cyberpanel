@@ -42,6 +42,21 @@ urlpatterns = [
     url(r'^installMailScanner$', views.installMailScanner, name='installMailScanner'),
     url(r'^installStatusMailScanner$', views.installStatusMailScanner, name='installStatusMailScanner'),
 
+
+
+    url(r'^Rspamd$', views.Rspamd, name='Rspamd'),
+
+    url(r'^installRspamd$', views.installRspamd, name='installRspamd'),
+    url(r'^installStatusRspamd$', views.installStatusRspamd, name='installStatusRspamd'),
+    url(r'^fetchRspamdSettings$', views.fetchRspamdSettings, name='fetchRspamdSettings'),
+    url(r'^saveRspamdConfigurations$', views.saveRspamdConfigurations, name='saveRspamdConfigurations'),
+    url(r'^savepostfixConfigurations$', views.savepostfixConfigurations, name='savepostfixConfigurations'),
+    url(r'^saveRedisConfigurations$', views.saveRedisConfigurations, name='saveRedisConfigurations'),
+    url(r'^saveRedisConfigurations$', views.saveRedisConfigurations, name='saveRedisConfigurations'),
+    url(r'^unistallRspamd$', views.unistallRspamd, name='unistallRspamd'),
+    url(r'^uninstallStatusRspamd$', views.uninstallStatusRspamd, name='uninstallStatusRspamd'),
+
+
     url(r'^(?P<domain>(.*))$', views.emailLimits, name='emailLimits'),
 
 

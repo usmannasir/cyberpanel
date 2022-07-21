@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
+import time
 
 from django.shortcuts import redirect
 from django.http import HttpResponse
 from mailServer.models import Domains, EUsers
+from plogical.applicationInstaller import ApplicationInstaller
 from websiteFunctions.models import Websites
 from loginSystem.views import loadLoginPage
 import plogical.CyberCPLogFileWriter as logging
@@ -17,12 +19,14 @@ from plogical.acl import ACLManager
 from plogical.processUtilities import ProcessUtilities
 from plogical.httpProc import httpProc
 
+
 ## Email Policy Server
 
 def emailPolicyServer(request):
     proc = httpProc(request, 'emailPremium/policyServer.html',
                     None, 'admin')
     return proc.render()
+
 
 def fetchPolicyServerStatus(request):
     try:
@@ -46,8 +50,7 @@ def fetchPolicyServerStatus(request):
                         installCheck = 1
                         break
 
-
-                data_ret = {'status': 1, 'error_message': 'None', 'installCheck' : installCheck}
+                data_ret = {'status': 1, 'error_message': 'None', 'installCheck': installCheck}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
@@ -62,6 +65,7 @@ def fetchPolicyServerStatus(request):
         data_ret = {'status': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
+
 
 def savePolicyServerStatus(request):
     try:
@@ -111,10 +115,10 @@ def savePolicyServerStatus(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
+
 ## Email Policy Server configs
 
 def listDomains(request):
-
     websites = DomainLimits.objects.all()
 
     ## Check if Policy Server is installed.
@@ -152,6 +156,7 @@ def listDomains(request):
                     {"pagination": pagination, "installCheck": installCheck}, 'admin')
     return proc.render()
 
+
 def getFurtherDomains(request):
     try:
         userID = request.session['userID']
@@ -163,7 +168,6 @@ def getFurtherDomains(request):
             return ACLManager.loadErrorJson()
 
         try:
-
 
             if request.method == 'POST':
                 try:
@@ -188,13 +192,13 @@ def getFurtherDomains(request):
 
                     dic = {'domain': items.domain, 'emails': domain.eusers_set.all().count(),
                            'monthlyLimit': domainLimits.monthlyLimit, 'monthlyUsed': domainLimits.monthlyUsed,
-                           'status':domainLimits.limitStatus}
+                           'status': domainLimits.limitStatus}
 
                     if checker == 0:
                         json_data = json_data + json.dumps(dic)
                         checker = 1
                     else:
-                        json_data = json_data +',' + json.dumps(dic)
+                        json_data = json_data + ',' + json.dumps(dic)
                 except BaseException as msg:
                     try:
                         domain = Domains.objects.get(domainOwner=items)
@@ -231,6 +235,7 @@ def getFurtherDomains(request):
         json_data = json.dumps(dic)
         return HttpResponse(json_data)
 
+
 def enableDisableEmailLimits(request):
     try:
         userID = request.session['userID']
@@ -241,10 +246,8 @@ def enableDisableEmailLimits(request):
         else:
             return ACLManager.loadErrorJson()
 
-
         try:
             if request.method == 'POST':
-
                 data = json.loads(request.body)
                 operationVal = data['operationVal']
                 domainName = data['domainName']
@@ -257,7 +260,6 @@ def enableDisableEmailLimits(request):
 
                 command = 'cyberpanelCleaner purgeLimitDomain ' + domainName + ' ' + str(operationVal)
                 cacheClient.handleCachePurgeRequest(command)
-
 
                 dic = {'status': 1, 'error_message': 'None'}
                 json_data = json.dumps(dic)
@@ -274,7 +276,8 @@ def enableDisableEmailLimits(request):
         json_data = json.dumps(dic)
         return HttpResponse(json_data)
 
-def emailLimits(request,domain):
+
+def emailLimits(request, domain):
     if Websites.objects.filter(domain=domain).exists():
         website = Websites.objects.get(domain=domain)
         domainEmail = Domains.objects.get(domainOwner=website)
@@ -317,6 +320,7 @@ def emailLimits(request,domain):
                         'admin')
         return proc.render()
 
+
 def changeDomainLimit(request):
     try:
         userID = request.session['userID']
@@ -328,7 +332,6 @@ def changeDomainLimit(request):
             return ACLManager.loadErrorJson()
         try:
             if request.method == 'POST':
-
                 data = json.loads(request.body)
                 newLimit = data['newLimit']
                 domainName = data['domainName']
@@ -356,6 +359,7 @@ def changeDomainLimit(request):
         dic = {'statusa': 0, 'error_message': str(msg)}
         json_data = json.dumps(dic)
         return HttpResponse(json_data)
+
 
 def getFurtherEmail(request):
     try:
@@ -389,20 +393,19 @@ def getFurtherEmail(request):
 
                         dic = {'email': item.email, 'monthlyLimit': emailLts.monthlyLimits,
                                'monthlyUsed': emailLts.monthlyUsed, 'hourlyLimit': emailLts.hourlyLimit,
-                               'hourlyUsed':emailLts.hourlyUsed,'status': emailLts.limitStatus}
+                               'hourlyUsed': emailLts.hourlyUsed, 'status': emailLts.limitStatus}
 
                         if checker == 0:
                             json_data = json_data + json.dumps(dic)
                             checker = 1
                         else:
-                            json_data = json_data +',' + json.dumps(dic)
+                            json_data = json_data + ',' + json.dumps(dic)
                     except BaseException as msg:
                         logging.CyberCPLogFileWriter.writeToFile(str(msg))
 
                 json_data = json_data + ']'
                 final_dic = {'status': 1, 'error_message': "None", "data": json_data}
                 final_json = json.dumps(final_dic)
-
 
                 return HttpResponse(final_json)
 
@@ -417,6 +420,7 @@ def getFurtherEmail(request):
         json_data = json.dumps(dic)
         return HttpResponse(json_data)
 
+
 def enableDisableIndividualEmailLimits(request):
     try:
         userID = request.session['userID']
@@ -428,7 +432,6 @@ def enableDisableIndividualEmailLimits(request):
             return ACLManager.loadErrorJson()
         try:
             if request.method == 'POST':
-
                 data = json.loads(request.body)
                 operationVal = data['operationVal']
                 emailAddress = data['emailAddress']
@@ -455,6 +458,7 @@ def enableDisableIndividualEmailLimits(request):
         json_data = json.dumps(dic)
         return HttpResponse(json_data)
 
+
 def emailPage(request, emailAddress):
     Data = {}
     Data['emailAddress'] = emailAddress
@@ -480,6 +484,7 @@ def emailPage(request, emailAddress):
     proc = httpProc(request, 'emailPremium/emailPage.html', Data, 'admin')
     return proc.render()
 
+
 def getEmailStats(request):
     try:
         userID = request.session['userID']
@@ -491,13 +496,11 @@ def getEmailStats(request):
             return ACLManager.loadErrorJson()
         try:
             if request.method == 'POST':
-
                 data = json.loads(request.body)
                 emailAddress = data['emailAddress']
 
                 email = EUsers.objects.get(email=emailAddress)
                 emailLTS = EmailLimits.objects.get(email=email)
-
 
                 final_dic = {'status': 1, 'error_message': "None", "monthlyLimit": emailLTS.monthlyLimits,
                              'monthlyUsed': emailLTS.monthlyUsed, 'hourlyLimit': emailLTS.hourlyLimit,
@@ -505,7 +508,6 @@ def getEmailStats(request):
                              'limitStatus': emailLTS.limitStatus, 'logsStatus': emailLTS.emailLogs}
 
                 final_json = json.dumps(final_dic)
-
 
                 return HttpResponse(final_json)
 
@@ -520,6 +522,7 @@ def getEmailStats(request):
         json_data = json.dumps(dic)
         return HttpResponse(json_data)
 
+
 def enableDisableIndividualEmailLogs(request):
     try:
         userID = request.session['userID']
@@ -531,7 +534,6 @@ def enableDisableIndividualEmailLogs(request):
             return ACLManager.loadErrorJson()
         try:
             if request.method == 'POST':
-
                 data = json.loads(request.body)
                 operationVal = data['operationVal']
                 emailAddress = data['emailAddress']
@@ -557,6 +559,7 @@ def enableDisableIndividualEmailLogs(request):
         dic = {'statusa': 0, 'error_message': str(msg)}
         json_data = json.dumps(dic)
         return HttpResponse(json_data)
+
 
 def changeDomainEmailLimitsIndividual(request):
     try:
@@ -594,11 +597,11 @@ def changeDomainEmailLimitsIndividual(request):
                     emailLTS = EmailLimits.objects.get(email=email)
                     currentEmailConsumption = emailLTS.monthlyLimits + currentEmailConsumption
 
-
                 allowedLimit = domainLimit.monthlyLimit - currentEmailConsumption
 
                 if monthlyLimit > allowedLimit:
-                    dic = {'status': 0, 'error_message': 'You can not set this monthly limit, first increase limits for this domain.'}
+                    dic = {'status': 0,
+                           'error_message': 'You can not set this monthly limit, first increase limits for this domain.'}
                     json_data = json.dumps(dic)
                     return HttpResponse(json_data)
 
@@ -612,7 +615,8 @@ def changeDomainEmailLimitsIndividual(request):
 
                 emailLTS.save()
 
-                command = 'cyberpanelCleaner purgeLimitEmail ' + emailAddress + ' ' + str(monthlyLimit) + ' ' + str(hourlyLimit)
+                command = 'cyberpanelCleaner purgeLimitEmail ' + emailAddress + ' ' + str(monthlyLimit) + ' ' + str(
+                    hourlyLimit)
                 cacheClient.handleCachePurgeRequest(command)
 
                 dic = {'status': 1, 'error_message': 'None'}
@@ -629,6 +633,7 @@ def changeDomainEmailLimitsIndividual(request):
         dic = {'statusa': 0, 'error_message': str(msg)}
         json_data = json.dumps(dic)
         return HttpResponse(json_data)
+
 
 def getEmailLogs(request):
     try:
@@ -657,7 +662,7 @@ def getEmailLogs(request):
 
                 for item in logEntries:
 
-                    dic = {'id': item.id, 'source': emailAddress, 'destination':item.destination,
+                    dic = {'id': item.id, 'source': emailAddress, 'destination': item.destination,
                            'time': item.timeStamp}
 
                     if checker == 0:
@@ -669,7 +674,6 @@ def getEmailLogs(request):
                 json_data = json_data + ']'
                 final_dic = {'status': 1, 'error_message': "None", "data": json_data}
                 final_json = json.dumps(final_dic)
-
 
                 return HttpResponse(final_json)
 
@@ -683,6 +687,7 @@ def getEmailLogs(request):
         dic = {'status': 0, 'error_message': str(msg)}
         json_data = json.dumps(dic)
         return HttpResponse(json_data)
+
 
 def flushEmailLogs(request):
     try:
@@ -731,6 +736,7 @@ def spamAssassinHome(request):
                     {'checkIfSpamAssassinInstalled': checkIfSpamAssassinInstalled}, 'admin')
     return proc.render()
 
+
 def installSpamAssassin(request):
     try:
         userID = request.session['userID']
@@ -757,6 +763,7 @@ def installSpamAssassin(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
+
 def installStatusSpamAssassin(request):
     try:
         userID = request.session['userID']
@@ -766,7 +773,7 @@ def installStatusSpamAssassin(request):
                 command = "sudo cat " + mailUtilities.spamassassinInstallLogPath
                 installStatus = ProcessUtilities.outputExecutioner(command)
 
-                if installStatus.find("[200]")>-1:
+                if installStatus.find("[200]") > -1:
 
                     execPath = "export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/root/bin  && /usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
                     execPath = execPath + " configureSpamAssassin"
@@ -797,28 +804,30 @@ def installStatusSpamAssassin(request):
                 elif installStatus.find("[404]") > -1:
 
                     final_json = json.dumps({
-                                             'abort':1,
-                                             'installed':0,
-                                             'error_message': "None",
-                                             'requestStatus': installStatus,
-                                             })
+                        'abort': 1,
+                        'installed': 0,
+                        'error_message': "None",
+                        'requestStatus': installStatus,
+                    })
                     return HttpResponse(final_json)
 
                 else:
                     final_json = json.dumps({
-                                             'abort':0,
-                                             'error_message': "None",
-                                             'requestStatus': installStatus,
-                                             })
+                        'abort': 0,
+                        'error_message': "None",
+                        'requestStatus': installStatus,
+                    })
                     return HttpResponse(final_json)
         except BaseException as msg:
-            final_dic = {'abort':1,'installed':0, 'error_message': str(msg)}
+            final_dic = {'abort': 1, 'installed': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
     except KeyError:
-        final_dic = {'abort':1,'installed':0, 'error_message': "Not Logged In, please refresh the page or login again."}
+        final_dic = {'abort': 1, 'installed': 0,
+                     'error_message': "Not Logged In, please refresh the page or login again."}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
+
 
 def fetchSpamAssassinSettings(request):
     try:
@@ -845,6 +854,8 @@ def fetchSpamAssassinSettings(request):
                     command = "sudo cat " + confPath
 
                     data = ProcessUtilities.outputExecutioner(command).splitlines()
+
+                    # logging.CyberCPLogFileWriter.writeToFile(str(data))
 
                     for items in data:
                         if items.find('report_safe ') > -1:
@@ -882,8 +893,6 @@ def fetchSpamAssassinSettings(request):
                     final_dic = {'fetchStatus': 1,
                                  'installed': 0}
 
-
-
                 final_json = json.dumps(final_dic)
                 return HttpResponse(final_json)
 
@@ -894,6 +903,7 @@ def fetchSpamAssassinSettings(request):
             return HttpResponse(final_json)
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def saveSpamAssassinConfigurations(request):
     try:
@@ -923,9 +933,7 @@ def saveSpamAssassinConfigurations(request):
                 rewrite_header = "rewrite_header " + rewrite_header
                 required_score = "required_score " + required_score
 
-
                 ## writing data temporary to file
-
 
                 tempConfigPath = "/home/cyberpanel/" + str(randint(1000, 9999))
 
@@ -965,10 +973,12 @@ def saveSpamAssassinConfigurations(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
+
 def mailQueue(request):
     proc = httpProc(request, 'emailPremium/mailQueue.html',
                     None, 'admin')
     return proc.render()
+
 
 def fetchMailQueue(request):
     try:
@@ -1006,6 +1016,7 @@ def fetchMailQueue(request):
         json_data = json.dumps(dic)
         return HttpResponse(json_data)
 
+
 def fetchMessage(request):
     try:
         userID = request.session['userID']
@@ -1023,7 +1034,6 @@ def fetchMessage(request):
             command = 'postcat -vq %s' % (id)
             emailMessageContent = ProcessUtilities.outputExecutioner(command)
 
-
             dic = {'status': 1, 'error_message': 'None', 'emailMessageContent': emailMessageContent}
             json_data = json.dumps(dic)
             return HttpResponse(json_data)
@@ -1037,6 +1047,7 @@ def fetchMessage(request):
         dic = {'status': 0, 'error_message': str(msg)}
         json_data = json.dumps(dic)
         return HttpResponse(json_data)
+
 
 def flushQueue(request):
     try:
@@ -1065,6 +1076,7 @@ def flushQueue(request):
         dic = {'status': 0, 'error_message': str(msg)}
         json_data = json.dumps(dic)
         return HttpResponse(json_data)
+
 
 def delete(request):
     try:
@@ -1101,6 +1113,7 @@ def delete(request):
         json_data = json.dumps(dic)
         return HttpResponse(json_data)
 
+
 ## MailScanner
 
 def MailScanner(request):
@@ -1117,6 +1130,7 @@ def MailScanner(request):
     proc = httpProc(request, 'emailPremium/MailScanner.html',
                     {'checkIfMailScannerInstalled': checkIfMailScannerInstalled, 'ipAddress': ipAddress}, 'admin')
     return proc.render()
+
 
 def installMailScanner(request):
     try:
@@ -1136,7 +1150,8 @@ def installMailScanner(request):
                 result = ProcessUtilities.outputExecutioner(command)
 
                 if result.find('disabled') == -1:
-                    final_json = json.dumps({'status': 0, 'error_message': "Disable selinux before installing MailScanner."})
+                    final_json = json.dumps(
+                        {'status': 0, 'error_message': "Disable selinux before installing MailScanner."})
                     return HttpResponse(final_json)
 
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
@@ -1154,6 +1169,7 @@ def installMailScanner(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
+
 def installStatusMailScanner(request):
     try:
         userID = request.session['userID']
@@ -1170,7 +1186,7 @@ def installStatusMailScanner(request):
                 command = "sudo cat " + mailUtilities.mailScannerInstallLogPath
                 installStatus = ProcessUtilities.outputExecutioner(command)
 
-                if installStatus.find("[200]")>-1:
+                if installStatus.find("[200]") > -1:
 
                     final_json = json.dumps({
                         'error_message': "None",
@@ -1183,27 +1199,476 @@ def installStatusMailScanner(request):
                 elif installStatus.find("[404]") > -1:
 
                     final_json = json.dumps({
-                                             'abort':1,
-                                             'installed':0,
-                                             'error_message': "None",
-                                             'requestStatus': installStatus,
-                                             })
+                        'abort': 1,
+                        'installed': 0,
+                        'error_message': "None",
+                        'requestStatus': installStatus,
+                    })
                     return HttpResponse(final_json)
 
                 else:
                     final_json = json.dumps({
-                                             'abort':0,
-                                             'error_message': "None",
-                                             'requestStatus': installStatus,
-                                             })
+                        'abort': 0,
+                        'error_message': "None",
+                        'requestStatus': installStatus,
+                    })
                     return HttpResponse(final_json)
 
 
         except BaseException as msg:
-            final_dic = {'abort':1,'installed':0, 'error_message': str(msg)}
+            final_dic = {'abort': 1, 'installed': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
     except KeyError:
-        final_dic = {'abort':1,'installed':0, 'error_message': "Not Logged In, please refresh the page or login again."}
+        final_dic = {'abort': 1, 'installed': 0,
+                     'error_message': "Not Logged In, please refresh the page or login again."}
+        final_json = json.dumps(final_dic)
+        return HttpResponse(final_json)
+
+
+###Rspamd
+
+def Rspamd(request):
+    checkIfRspamdInstalled = 0
+
+    ipFile = "/etc/cyberpanel/machineIP"
+    f = open(ipFile)
+    ipData = f.read()
+    ipAddress = ipData.split('\n', 1)[0]
+
+    if mailUtilities.checkIfRspamdInstalled() == 1:
+        checkIfRspamdInstalled = 1
+
+    proc = httpProc(request, 'emailPremium/Rspamd.html',
+                    {'checkIfRspamdInstalled': checkIfRspamdInstalled, 'ipAddress': ipAddress}, 'admin')
+    return proc.render()
+
+
+def installRspamd(request):
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
+        try:
+
+            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
+            execPath = execPath + " installRspamd"
+            ProcessUtilities.popenExecutioner(execPath)
+
+            final_json = json.dumps({'status': 1, 'error_message': "None"})
+            return HttpResponse(final_json)
+        except BaseException as msg:
+            final_dic = {'status': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+    except KeyError:
+        final_dic = {'status': 0, 'error_message': "Not Logged In, please refresh the page or login again."}
+        final_json = json.dumps(final_dic)
+        return HttpResponse(final_json)
+
+
+def installStatusRspamd(request):
+    try:
+        userID = request.session['userID']
+        try:
+            if request.method == 'POST':
+
+                command = "sudo cat " + mailUtilities.RspamdInstallLogPath
+                installStatus = ProcessUtilities.outputExecutioner(command)
+
+                if installStatus.find("[200]") > -1:
+
+                    final_json = json.dumps({
+                        'error_message': "None",
+                        'requestStatus': installStatus,
+                        'abort': 1,
+                        'installed': 1,
+                    })
+                    cmd = 'rm -f %s'%mailUtilities.RspamdInstallLogPath
+                    ProcessUtilities.executioner(cmd)
+                    return HttpResponse(final_json)
+
+
+                elif installStatus.find("[404]") > -1:
+
+                    final_json = json.dumps({
+                        'abort': 1,
+                        'installed': 0,
+                        'error_message': "None",
+                        'requestStatus': installStatus,
+                    })
+                    cmd = 'rm -f %s' % mailUtilities.RspamdInstallLogPath
+                    ProcessUtilities.executioner(cmd)
+                    return HttpResponse(final_json)
+
+                else:
+                    final_json = json.dumps({
+                        'abort': 0,
+                        'error_message': "None",
+                        'requestStatus': installStatus,
+                    })
+                    return HttpResponse(final_json)
+        except BaseException as msg:
+            final_dic = {'abort': 1, 'installed': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+    except KeyError:
+        final_dic = {'abort': 1, 'installed': 0,
+                     'error_message': "Not Logged In, please refresh the page or login again."}
+        final_json = json.dumps(final_dic)
+        return HttpResponse(final_json)
+
+
+def fetchRspamdSettings(request):
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('fetchStatus', 0)
+
+        try:
+            if request.method == 'POST':
+
+                enabled = True
+                action = ''
+                max_Size = ''
+                scan_mime_parts = True
+                log_clean = True
+                Server = ''
+                CLAMAV_VIRUS = ''
+
+                confPath = "/etc/rspamd/local.d/antivirus.conf"
+                postfixpath = "/etc/postfix/main.cf"
+
+                if mailUtilities.checkIfRspamdInstalled() == 1:
+
+                    command = "sudo cat " + confPath
+
+                    data = ProcessUtilities.outputExecutioner(command).splitlines()
+
+                    for items in data:
+                        if items.find('enabled ') > -1:
+                            if items.find('enabled = true') < 0:
+                                enabled = False
+                                continue
+                            else:
+                                enabled = True
+                        if items.find('action =') > -1:
+                            tempData = items.split(' ')
+                            # logging.CyberCPLogFileWriter.writeToFile(str(tempData) + "action")
+                            try:
+                                a = tempData[4]
+                            except:
+                                a = tempData[2]
+                            ac = a.split('"')
+                            action = ac[1]
+                        if items.find('max_size') > -1:
+                            tempData = items.split(' ')
+                            max = tempData[4]
+                            max_Size = max.rstrip(";")
+
+                        if items.find('scan_mime_parts ') > -1:
+                            if items.find('scan_mime_parts = true') < 0:
+                                scan_mime_parts = False
+                                continue
+                            else:
+                                scan_mime_parts = True
+                        if items.find('log_clean  ') > -1:
+                            if items.find('scan_mime_parts = true') < 0:
+                                log_clean = False
+                                continue
+                            else:
+                                log_clean = True
+                        if items.find('servers =') > -1:
+                            tempData = items.split(' ')
+                            Ser = tempData[4]
+                            x = Ser.rstrip(";")
+                            y = x.split('"')
+                            Server = y[1]
+                        if items.find('CLAMAV_VIRUS =') > -1:
+                            tempData = items.split(' ')
+                            CLAMAV = tempData[6]
+                            i = CLAMAV.rstrip(";")
+                            j = i.split('"')
+                            CLAMAV_VIRUS = j[1]
+
+                    ###postfix
+                    smtpd_milters = ""
+                    non_smtpd_milters = ""
+                    command = "sudo cat " + postfixpath
+
+                    postdata = ProcessUtilities.outputExecutioner(command).splitlines()
+                    for i in postdata:
+                        if i.find('smtpd_milters=') > -1 and i.find('non_smtpd_milters') < 0:
+                            tempData = i.split(' ')
+                            x = tempData[0]
+                            y = x.split('=')
+                            smtpd_milters = y[1]
+                        if i.find('non_smtpd_milters=') > -1:
+                            tempData = i.split(' ')
+                            x = tempData[0]
+                            y = x.split('=')
+                            non_smtpd_milters = y[1]
+
+                    ###Redis
+                    Redispath = "/etc/rspamd/local.d/redis.conf"
+                    read_servers = ''
+                    write_servers = ''
+                    command = "sudo cat " + Redispath
+
+                    postdata = ProcessUtilities.outputExecutioner(command).splitlines()
+
+                    for i in postdata:
+                        if i.find('write_servers =') > -1:
+                            tempData = i.split(' ')
+                            # logging.CyberCPLogFileWriter.writeToFile(str(tempData) + "redis")
+                            write = tempData[2]
+                            i = write.rstrip(";")
+                            j = i.split('"')
+                            write_servers = j[1]
+                            # logging.CyberCPLogFileWriter.writeToFile(str(write_servers) + "write_servers")
+
+                        if i.find('read_servers =') > -1:
+                            tempData = i.split(' ')
+                            # logging.CyberCPLogFileWriter.writeToFile(str(tempData) + "redis2")
+                            read = tempData[2]
+                            i = read.rstrip(";")
+                            j = i.split('"')
+                            read_servers = j[1]
+                            # logging.CyberCPLogFileWriter.writeToFile(str(read_servers) + "read_servers")
+
+                    final_dic = {'fetchStatus': 1,
+                                 'installed': 1,
+                                 'enabled': enabled,
+                                 'action': action,
+                                 'max_Size': max_Size,
+                                 'scan_mime_parts': scan_mime_parts,
+                                 'log_clean ': log_clean,
+                                 'Server': Server,
+                                 'CLAMAV_VIRUS': CLAMAV_VIRUS,
+                                 'smtpd_milters': smtpd_milters,
+                                 'non_smtpd_milters': non_smtpd_milters,
+                                 'read_servers': read_servers,
+                                 'write_servers': write_servers
+                                 }
+
+
+                else:
+                    final_dic = {'fetchStatus': 1,
+                                 'installed': 0}
+
+                final_json = json.dumps(final_dic)
+                return HttpResponse(final_json)
+
+
+        except BaseException as msg:
+            final_dic = {'fetchStatus': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def saveRspamdConfigurations(request):
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('saveStatus', 0)
+
+        try:
+            if request.method == 'POST':
+                data = json.loads(request.body)
+                tempfilepath = "/home/cyberpanel/tempfilerspamdconfigs"
+                json_object = json.dumps(data, indent=4)
+                writeDataToFile = open(tempfilepath, "w")
+                writeDataToFile.write(json_object)
+                writeDataToFile.close()
+
+                execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
+                execPath = execPath + " changeRspamdConfig "
+                output = ProcessUtilities.outputExecutioner(execPath)
+
+                data_ret = {'saveStatus': 1, 'error_message': 'None'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+
+        except BaseException as msg:
+            data_ret = {'saveStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def savepostfixConfigurations(request):
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('saveStatus', 0)
+
+        try:
+            if request.method == 'POST':
+                data = json.loads(request.body)
+                tempfilepath = "/home/cyberpanel/tempfilepostfixconfigs"
+                json_object = json.dumps(data, indent=4)
+                writeDataToFile = open(tempfilepath, "w")
+                writeDataToFile.write(json_object)
+                writeDataToFile.close()
+
+                # status, msg = mailUtilities.changeRspamdConfig(request.body)
+                execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
+                execPath = execPath + " changePostfixConfig "
+                output = ProcessUtilities.outputExecutioner(execPath)
+
+                data_ret = {'saveStatus': 1, 'error_message': 'None'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'saveStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def saveRedisConfigurations(request):
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('saveStatus', 0)
+
+        try:
+            if request.method == 'POST':
+                data = json.loads(request.body)
+                tempfilepath = "/home/cyberpanel/saveRedisConfigurations"
+                json_object = json.dumps(data, indent=4)
+                writeDataToFile = open(tempfilepath, "w")
+                writeDataToFile.write(json_object)
+                writeDataToFile.close()
+
+                # status, msg = mailUtilities.changeRspamdConfig(request.body)
+                execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
+                execPath = execPath + " changeRedisxConfig "
+                output = ProcessUtilities.outputExecutioner(execPath)
+
+                data_ret = {'saveStatus': 1, 'error_message': 'None'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'saveStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def unistallRspamd(request):
+    try:
+        logging.CyberCPLogFileWriter.writeToFile("unistallRspamd...1")
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
+
+
+        try:
+
+            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
+            execPath = execPath + " uninstallRspamd"
+            ProcessUtilities.popenExecutioner(execPath)
+
+
+            final_json = json.dumps({'status': 1, 'error_message': "None"})
+            return HttpResponse(final_json)
+        except BaseException as msg:
+            final_dic = {'status': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+
+    except KeyError:
+
+        final_dic = {'status': 0, 'error_message': "Not Logged In, please refresh the page or login again."}
+
+        final_json = json.dumps(final_dic)
+
+        return HttpResponse(final_json)
+
+def uninstallStatusRspamd(request):
+    try:
+        userID = request.session['userID']
+        try:
+            if request.method == 'POST':
+
+                command = "sudo cat " + mailUtilities.RspamdUnInstallLogPath
+                installStatus = ProcessUtilities.outputExecutioner(command)
+
+                if installStatus.find("[200]") > -1:
+
+                    final_json = json.dumps({
+                        'error_message': "None",
+                        'requestStatus': installStatus,
+                        'abort': 1,
+                        'installed': 1,
+                    })
+                    cmd = 'rm -f %s' % mailUtilities.RspamdUnInstallLogPath
+                    ProcessUtilities.executioner(cmd)
+                    return HttpResponse(final_json)
+
+
+                elif installStatus.find("[404]") > -1:
+
+                    final_json = json.dumps({
+                        'abort': 1,
+                        'installed': 0,
+                        'error_message': "None",
+                        'requestStatus': installStatus,
+                    })
+                    cmd = 'rm -f %s' % mailUtilities.RspamdUnInstallLogPath
+                    ProcessUtilities.executioner(cmd)
+                    return HttpResponse(final_json)
+
+                else:
+                    final_json = json.dumps({
+                        'abort': 0,
+                        'error_message': "None",
+                        'requestStatus': installStatus,
+                    })
+                    return HttpResponse(final_json)
+        except BaseException as msg:
+            final_dic = {'abort': 1, 'installed': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+    except KeyError:
+        final_dic = {'abort': 1, 'installed': 0,
+                     'error_message': "Not Logged In, please refresh the page or login again."}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)

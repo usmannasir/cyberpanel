@@ -1,7 +1,10 @@
 import json
 import os,sys
+import time
 
 from django.http import HttpResponse
+
+
 
 sys.path.append('/usr/local/CyberCP')
 import django
@@ -34,6 +37,8 @@ class mailUtilities:
 
     installLogPath = "/home/cyberpanel/openDKIMInstallLog"
     spamassassinInstallLogPath = "/home/cyberpanel/spamassassinInstallLogPath"
+    RspamdInstallLogPath = "/home/cyberpanel/RspamdInstallLogPath"
+    RspamdUnInstallLogPath = "/home/cyberpanel/RspamdUnInstallLogPath"
     cyberPanelHome = "/home/cyberpanel"
     mailScannerInstallLogPath = "/home/cyberpanel/mailScannerInstallLogPath"
 
@@ -495,6 +500,329 @@ milter_default_action = accept
             writeToFile.close()
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[installSpamAssassin]")
 
+
+    @staticmethod
+    def installRspamd(install, rspamd):
+        from manageServices.serviceManager import ServiceManager
+        try:
+            if os.path.exists(mailUtilities.RspamdInstallLogPath):
+                os.remove(mailUtilities.RspamdInstallLogPath)
+
+
+            ####Frist install redis
+            ServiceManager.InstallRedis()
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                command = 'sudo yum install rspamd clamav clamav-daemon -y'
+            else:
+                command = 'sudo apt-get install rspamd clamav clamav-daemon -y'
+
+
+            cmd = shlex.split(command)
+
+            with open(mailUtilities.RspamdInstallLogPath, 'w') as f:
+                res = subprocess.call(cmd, stdout=f)
+
+
+
+            ###### makefile
+            path = "/etc/rspamd/local.d/antivirus.conf"
+            content ="""# ================= DO NOT MODIFY THIS FILE =================
+# 
+# Manual changes will be lost when this file is regenerated.
+#
+# Please read the developer's guide, which is available
+# at NethServer official site: https://www.nethserver.org
+#
+# 
+
+#Enable or disable the module 
+enabled = true
+
+# multiple scanners could be checked, for each we create a configuration block with an arbitrary name
+clamav {
+  # If set force this action if any virus is found (default unset: no action is forced, 'rewrite_subject' to tag as spam)
+  action = "reject";
+
+  # if `true` only messages with non-image attachments will be checked (default true)
+  scan_mime_parts = false;
+
+  # If `max_size` is set, messages > n bytes in size are not scanned
+  max_size = 20000000;
+
+  # type of scanner: "clamav", "fprot", "sophos" or "savapi"
+  type = "clamav";
+
+  # If set true, log message is emitted for clean messages
+  log_clean = false;
+
+  # Timeout and retransmits increased in case of clamav is reloading its database
+  # It takes a lot of time (25 to 60 seconds), after rspamd answers a temporally failure
+  #timeout = 5;
+  #retransmits = 2;
+
+  # servers to query (if port is unspecified, scanner-specific default is used)
+  # can be specified multiple times to pool servers
+  # can be set to a path to a unix socket
+  servers = "127.0.0.1:3310";
+
+  # if `patterns` is specified virus name will be matched against provided regexes and the related
+  # symbol will be yielded if a match is found. If no match is found, default symbol is yielded.
+  patterns {
+    # symbol_name = "pattern";
+    CLAMAV_VIRUS = "^Eicar-Test-Signature$";
+  }
+
+  # In version 1.7.0+ patterns could be a list for ordered matching
+  #patterns = [{SANE_MAL = "Sanesecurity.Malware.*"}, {CLAM_UNOFFICIAL = "UNOFFICIAL$"}];
+
+  # `whitelist` points to a map of IP addresses. Mail from these addresses is not scanned.
+  whitelist = "/etc/rspamd/antivirus.wl";
+}
+"""
+
+
+            wirtedata = open(path, 'w')
+            wirtedata.writelines(content)
+            wirtedata.close()
+
+
+            appendpath = "/etc/postfix/main.cf"
+            appenddata = """smtpd_milters=inet:127.0.0.1:11332 # For inbound scan or outbound scan via SMTP
+non_smtpd_milters=inet:127.0.0.1:11332 # For invocation via LDA
+"""
+            wirtedata1 = open(appendpath, 'a')
+            wirtedata1.writelines(appenddata)
+            wirtedata1.close()
+
+
+            wpath = "/etc/rspamd/local.d/redis.conf"
+            wdata = """write_servers = "127.0.0.1";
+read_servers = "127.0.0.1";"""
+
+            wirtedata2 = open(wpath, 'w')
+            wirtedata2.writelines(wdata)
+            wirtedata2.close()
+
+
+
+
+            if res == 1:
+                writeToFile = open(mailUtilities.RspamdInstallLogPath, 'a')
+                writeToFile.writelines("Can not be installed.[404]\n")
+                writeToFile.close()
+                logging.CyberCPLogFileWriter.writeToFile("[Could not Install Rspamd.]")
+                return 0
+            else:
+                writeToFile = open(mailUtilities.RspamdInstallLogPath, 'a')
+                writeToFile.writelines("Rspamd Installed.[200]\n")
+                writeToFile.close()
+
+            return 1
+        except BaseException as msg:
+            writeToFile = open(mailUtilities.RspamdInstallLogPath, 'a')
+            writeToFile.writelines("Can not be installed.[404]\n")
+            writeToFile.close()
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[installRspamd]")
+
+    @staticmethod
+    def uninstallRspamd(install, rspamd):
+        from manageServices.serviceManager import ServiceManager
+        try:
+            logging.CyberCPLogFileWriter.writeToFile( "start................[uninstallRspamd]")
+            if os.path.exists(mailUtilities.RspamdUnInstallLogPath):
+                os.remove(mailUtilities.RspamdUnInstallLogPath)
+
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                command = 'sudo yum remove rspamd clamav clamav-daemon -y'
+            else:
+                command = 'sudo apt purge rspamd clamav clamav-daemon -y'
+
+            cmd = shlex.split(command)
+
+
+
+            with open(mailUtilities.RspamdUnInstallLogPath, 'w') as f:
+                res = subprocess.call(cmd, stdout=f)
+            if res == 1:
+                writeToFile = open(mailUtilities.RspamdUnInstallLogPath, 'a')
+                writeToFile.writelines("Can not be uninstalled.[404]\n")
+                writeToFile.close()
+                logging.CyberCPLogFileWriter.writeToFile("[Could not Install Rspamd.]")
+                return 0
+            else:
+                cmdd = 'systemctl stop rspamd'
+                ProcessUtilities.normalExecutioner(cmdd)
+
+                cmmd = 'systemctl disable rspamd'
+                ProcessUtilities.normalExecutioner(cmmd)
+                writeToFile = open(mailUtilities.RspamdUnInstallLogPath, 'a')
+                writeToFile.writelines("Rspamd unInstalled.[200]\n")
+                writeToFile.close()
+            return 1
+        except BaseException as msg:
+            writeToFile = open(mailUtilities.RspamdUnInstallLogPath, 'a')
+            writeToFile.writelines("Can not be installed.[404]\n")
+            writeToFile.close()
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[uninstallRspamd]")
+
+
+    @staticmethod
+    def changeRspamdConfig(install, changeRspamdConfig):
+        try:
+
+            tempfilepath = "/home/cyberpanel/tempfilerspamdconfigs"
+            file= open(tempfilepath, "r")
+            jsondata1 = file.read()
+            jsondata = json.loads(jsondata1)
+            file.close()
+            status = jsondata['status']
+            scan_mime_parts = jsondata['scan_mime_parts']
+            log_clean = jsondata['log_clean']
+            max_size = jsondata['max_size']
+            server = jsondata['Rspamdserver']
+            CLAMAV_VIRUS = jsondata['CLAMAV_VIRUS']
+            action_rspamd = jsondata['action_rspamd']
+
+            confPath = "/etc/rspamd/local.d/antivirus.conf"
+
+            f = open(confPath, "r")
+            dataa = f.read()
+            f.close()
+            data = dataa.splitlines()
+
+            writeDataToFile = open(confPath, "w")
+            for items in data:
+                if items.find('enabled ') > -1:
+                    if status == True:
+                        command = 'systemctl start rspamd'
+                        ProcessUtilities.executioner(command)
+                        newitem = 'enabled = true'
+                        writeDataToFile.writelines(newitem + '\n')
+
+                    elif status == False:
+
+                        command = 'systemctl stop rspamd'
+                        ProcessUtilities.executioner(command)
+                        newitem = 'enabled = false'
+                        writeDataToFile.writelines(newitem + '\n')
+                elif items.find('action =') > -1:
+                    if action_rspamd == 'Reject':
+                        newitem = '  action = "reject";'
+                        writeDataToFile.writelines(newitem + '\n')
+                    elif action_rspamd == 'Unset':
+                        newitem = '  action = "unset";'
+                        writeDataToFile.writelines(newitem + '\n')
+
+                elif items.find('scan_mime_parts') > -1:
+                    if scan_mime_parts == True:
+                        newitem = '  scan_mime_parts = true;'
+                        writeDataToFile.writelines(newitem + '\n')
+                    elif scan_mime_parts == False:
+                        newitem = '  scan_mime_parts = false;'
+                        writeDataToFile.writelines(newitem + '\n')
+                elif items.find('log_clean =') > -1:
+                    if log_clean == True:
+                        newitem = '  log_clean = true;'
+                        writeDataToFile.writelines(newitem + '\n')
+                    elif log_clean == False:
+                        newitem = '  log_clean = false;'
+                        writeDataToFile.writelines(newitem + '\n')
+                elif items.find('max_size =') > -1:
+                    newitem = '  max_size = %s;'%max_size
+                    writeDataToFile.writelines(newitem + '\n')
+                elif items.find('CLAMAV_VIRUS =') > -1:
+                    newitem = '    CLAMAV_VIRUS = "%s";' % CLAMAV_VIRUS
+                    writeDataToFile.writelines(newitem + '\n')
+                elif items.find('servers =') > -1:
+                    newitem = '  servers = "%s";' % server
+                    writeDataToFile.writelines(newitem + '\n')
+                else:
+                    writeDataToFile.writelines(items + '\n')
+
+
+            print("1,None")
+            return 1, 'None'
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[changeRspamdConfig]")
+            str((msg) + " [changeRspamdConfig]")
+            print(0, str(msg))
+            return [0, str(msg) + " [changeRspamdConfig]"]
+
+
+    @staticmethod
+    def changePostfixConfig(install , changePostfixConfig):
+        try:
+            tempfilepath = "/home/cyberpanel/tempfilepostfixconfigs"
+            file = open(tempfilepath, "r")
+            jsondata1 = file.read()
+            jsondata = json.loads(jsondata1)
+            file.close()
+            non_smtpd_milters = jsondata['non_smtpd_milters']
+            smtpd_milters = jsondata['smtpd_milters']
+
+            postfixpath = "/etc/postfix/main.cf"
+
+            f = open(postfixpath, "r")
+            dataa = f.read()
+            f.close()
+            data = dataa.splitlines()
+
+            writeDataToFile = open(postfixpath, "w")
+            for i in data:
+                if i.find('smtpd_milters=') > -1 and i.find('non_smtpd_milters') < 0:
+                    newitem = 'smtpd_milters=%s' % smtpd_milters
+                    writeDataToFile.writelines(newitem + '\n')
+                elif i.find('non_smtpd_milters=') > -1:
+                    newitem = 'non_smtpd_milters=%s' % non_smtpd_milters
+                    writeDataToFile.writelines(newitem + '\n')
+                else:
+                    writeDataToFile.writelines(i + '\n')
+
+            print("1,None")
+            return 1, 'None'
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[changePostfixConfig]")
+            str((msg) + " [changePostfixConfig]")
+            print(0, str(msg))
+            return [0, str(msg) + " [changePostfixConfig]"]
+
+    @staticmethod
+    def changeRedisxConfig(install, changeRedisxConfig):
+        try:
+            tempfilepath = "/home/cyberpanel/saveRedisConfigurations"
+            file = open(tempfilepath, "r")
+            jsondata1 = file.read()
+            jsondata = json.loads(jsondata1)
+            file.close()
+            write_servers = jsondata['write_servers']
+            read_servers = jsondata['read_servers']
+
+            Redispath = "/etc/rspamd/local.d/redis.conf"
+
+            f = open(Redispath, "r")
+            dataa = f.read()
+            f.close()
+            data = dataa.splitlines()
+
+            writeDataToFile = open(Redispath, "w")
+            for i in data:
+                if i.find('write_servers =') > -1:
+                    newitem = 'write_servers = "%s";' % write_servers
+                    writeDataToFile.writelines(newitem + '\n')
+                elif i.find('read_servers =') > -1:
+                    newitem = 'read_servers = "%s";' % read_servers
+                    writeDataToFile.writelines(newitem + '\n')
+                else:
+                    writeDataToFile.writelines(i + '\n')
+            print("1,None")
+            return 1, 'None'
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[changeRedisxConfig]")
+            str((msg) + " [changeRedisxConfig]")
+            print(0, str(msg))
+            return [0, str(msg) + " [changeRedisxConfig]"]
     @staticmethod
     def installMailScanner(install, SpamAssassin):
         try:
@@ -736,6 +1064,25 @@ milter_default_action = accept
             path = "/usr/local/CyberCP/public/mailwatch"
 
             if os .path.exists(path):
+                return 1
+            else:
+                return 0
+
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile(
+                str(msg) + "  [checkIfMailScannerInstalled]")
+            return 0
+
+    @staticmethod
+    def checkIfRspamdInstalled():
+        try:
+            command= "apt list | grep rspamd"
+            result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+
+            resul = stdout.find("installed")
+
+
+            if resul != -1:
                 return 1
             else:
                 return 0
@@ -1658,8 +2005,18 @@ def main():
         mailUtilities.savePolicyServerStatus(args.install)
     elif args.function == 'installSpamAssassin':
         mailUtilities.installSpamAssassin("install", "SpamAssassin")
+    elif args.function == 'installRspamd':
+        mailUtilities.installRspamd("install", "rspamd")
+    elif args.function == 'uninstallRspamd':
+        mailUtilities.uninstallRspamd("install", "rspamd")
     elif args.function == 'installMailScanner':
         mailUtilities.installMailScanner("install", "installMailScanner")
+    elif args.function == 'changeRspamdConfig':
+        mailUtilities.changeRspamdConfig("install", "changeRspamdConfig")
+    elif args.function == 'changePostfixConfig':
+        mailUtilities.changePostfixConfig("install", "changePostfixConfig")
+    elif args.function == 'changeRedisxConfig':
+        mailUtilities.changeRedisxConfig("install", "changeRedisxConfig")
     elif args.function == 'AfterEffects':
         mailUtilities.AfterEffects(args.domain)
     elif args.function == "ResetEmailConfigurations":
