@@ -622,11 +622,16 @@
                                                    title="{% trans 'DKIM Manager' %}"><span>{% trans "DKIM Manager" %}</span></a>
                                             </li>
                                         {% endif %}
+                                            <li><a href="{% url 'EmailDebugger' %}"
+                                                   title="{% trans 'Email Debugger' %}"><span>{% trans "Email Debugger" %}</span></a>
+                                            </li>
+
                                         {% if admin or createEmail %}
                                             <li><a href="/snappymail/index.php" title="{% trans 'Access Webmail' %}"
                                                    target="_blank"><span>{% trans "Access Webmail" %}</span></a>
                                             </li>
                                         {% endif %}
+
                                     </ul>
 
                                 </div><!-- .sidebar-submenu -->

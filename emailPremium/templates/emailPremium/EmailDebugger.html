@@ -1,0 +1,252 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Email Debugger - CyberPanel" %}{% endblock %}
+{% block content %}
+
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
+
+
+    <div class="container">
+
+        <div id="page-title">
+            <h2 id="domainNamePage">{% trans "Email Debugger" %} - <a target="_blank"
+                                                                      href="https://go.cyberpanel.net/mailQueue"
+                                                                      style="height: 23px;line-height: 21px;"
+                                                                      class="btn btn-border btn-alt border-red btn-link font-red"
+                                                                      title=""><span>{% trans "Queue Docs" %}</span></a>
+            </h2>
+            <p>{% trans "On this page you manage your server Debug Email setting." %}</p>
+        </div>
+
+        <div ng-controller="EmailDebuuger" class="panel">
+            <div class="panel-body">
+
+                <h3 class="content-box-header">
+                    {% trans "DEBUG EMAIL SERVER" %} <img
+                        ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}">
+                </h3>
+
+                <div class="col-lg-3">
+                    <button type="button" ng-click="RunServerLevelEmailChecks()"
+                            class="btn btn-primary btn-lg btn-block">{% trans "Run Server Level Checks" %}
+                        <img ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}"></button>
+                </div>
+                <div class="col-lg-5">
+                    <button type="button" ng-click="ResetEmailConfigurations()"
+                            class="btn btn-danger btn-lg btn-block">
+                                <span>Reset Server wide Email Configurations  <img
+                                        ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}"></span>
+                    </button>
+                </div>
+
+                <div ng-hide="ExecutionStatus" class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <h4> {$ functionStatus $} <img
+                                    ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}">
+                            </h4>
+                            <div class="progress">
+                                <div ng-style="functionProgress"
+                                     class="progress-bar progress-bar-striped bg-info"
+                                     role="progressbar"
+                                     aria-valuenow="50" aria-valuemin="0"
+                                     aria-valuemax="100"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div> <!-- end row -->
+
+                <div ng-hide="ReportStatus" class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <div class="table-responsive-sm">
+                                <table class="table table-centered mb-0">
+                                    <thead>
+                                    <tr>
+                                        <th>Issue</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr>
+                                        <td>Mail Server SSL</td>
+                                        <td>{$ MailSSL $}</td>
+                                        <td>
+                                            <a id="MailSSLURL" target="_blank" href="#">
+                                                <button data-toggle="modal" title="Manage CyberPanel" type="button"
+                                                        class="btn btn-success">
+                                                    Issue Now
+                                                </button>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Port 25</td>
+                                        <td>{$ Port25 $}</td>
+                                        <td>
+                                            <a id="MailSSLURL" target="_blank"
+                                               href="https://go.cyberpanel.net/MailIssues">
+                                                <button data-toggle="modal" title="Manage CyberPanel" type="button"
+                                                        class="btn btn-success">
+                                                    Learn More
+                                                </button>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Port 587</td>
+                                        <td>{$ Port587 $}</td>
+                                        <td>
+                                            <a id="MailSSLURL" target="_blank"
+                                               href="https://go.cyberpanel.net/MailIssues">
+                                                <button data-toggle="modal" title="Manage CyberPanel" type="button"
+                                                        class="btn btn-success">
+                                                    Learn More
+                                                </button>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Port 465</td>
+                                        <td>{$ Port465 $}</td>
+                                        <td>
+                                            <a id="MailSSLURL" target="_blank"
+                                               href="https://go.cyberpanel.net/MailIssues">
+                                                <button data-toggle="modal" title="Manage CyberPanel" type="button"
+                                                        class="btn btn-success">
+                                                    Learn More
+                                                </button>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Port 110</td>
+                                        <td>{$ Port110 $}</td>
+                                        <td>
+                                            <a id="MailSSLURL" target="_blank"
+                                               href="https://go.cyberpanel.net/MailIssues">
+                                                <button data-toggle="modal" title="Manage CyberPanel" type="button"
+                                                        class="btn btn-success">
+                                                    Learn More
+                                                </button>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Port 143</td>
+                                        <td>{$ Port143 $}</td>
+                                        <td>
+                                            <a id="MailSSLURL" target="_blank"
+                                               href="https://go.cyberpanel.net/MailIssues">
+                                                <button data-toggle="modal" title="Manage CyberPanel" type="button"
+                                                        class="btn btn-success">
+                                                    Learn More
+                                                </button>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Port 995</td>
+                                        <td>{$ Port995 $}</td>
+                                        <td>
+                                            <a id="MailSSLURL" target="_blank"
+                                               href="https://go.cyberpanel.net/MailIssues">
+                                                <button data-toggle="modal" title="Manage CyberPanel" type="button"
+                                                        class="btn btn-success">
+                                                    Learn More
+                                                </button>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Port 993</td>
+                                        <td>{$ Port993 $}</td>
+                                        <td>
+                                            <a id="MailSSLURL" target="_blank"
+                                               href="https://go.cyberpanel.net/MailIssues">
+                                                <button data-toggle="modal" title="Manage CyberPanel" type="button"
+                                                        class="btn btn-success">
+                                                    Learn More
+                                                </button>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div> <!-- end row -->
+
+
+                <div class="example-box-wrapper">
+
+
+                </div>
+
+            </div>
+        </div>
+
+        <div ng-controller="emailDebuggerDomainLevel" class="panel">
+            <div class="panel-body">
+                <h3 class="content-box-header">
+                    {% trans "WEBSITE LEVEL EMAIL ISSUES" %} <img
+                        ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}">
+                </h3>
+
+                <div class="col-md-12">
+                    <div class="form-group mb-3">
+                        <label for="example-select">Websites</label>
+                        <select ng-model="websiteName" class="form-control" ng-change="debugEmailForSite()"
+                                id="example-select">
+                            {% for items in websiteList %}
+                                <option>{{ items }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div ng-hide="ReportStatus" class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <div class="table-responsive-sm">
+                                <table class="table table-centered mb-0">
+                                    <thead>
+                                    <tr>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr>
+                                        <td>{$ message $}</td>
+                                        <td>
+                                            <button ng-click="fixMailSSL()" ng-disabled='status==1' data-toggle="modal"
+                                                    title="Manage CyberPanel" type="button"
+                                                    class="btn btn-success">
+                                                Fix Now
+                                            </button>
+                                            <button ng-click="fixMailSSL()" data-toggle="modal"
+                                                    title="Manage CyberPanel" type="button"
+                                                    class="btn btn-success">
+                                                Force Fix
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+
+
+{% endblock %}

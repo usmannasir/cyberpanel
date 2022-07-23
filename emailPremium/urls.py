@@ -56,8 +56,22 @@ urlpatterns = [
     url(r'^unistallRspamd$', views.unistallRspamd, name='unistallRspamd'),
     url(r'^uninstallStatusRspamd$', views.uninstallStatusRspamd, name='uninstallStatusRspamd'),
 
+    url(r'^EmailDebugger$', views.EmailDebugger, name='EmailDebugger'),
+
+    url(r'^RunServerLevelEmailChecks$', views.RunServerLevelEmailChecks, name='RunServerLevelEmailChecks'),
+    url(r'^ResetEmailConfigurations$', views.ResetEmailConfigurations, name='ResetEmailConfigurations'),
+    url(r'^statusFunc$', views.statusFunc, name='statusFunc'),
+    url(r'^ReadReport$', views.ReadReport, name='ReadReport'),
+
+
+    url(r'^debugEmailForSite$', views.debugEmailForSite, name='debugEmailForSite'),
+    url(r'^fixMailSSL$', views.fixMailSSL, name='fixMailSSL'),
+
 
     url(r'^(?P<domain>(.*))$', views.emailLimits, name='emailLimits'),
+
+
+
 
 
 

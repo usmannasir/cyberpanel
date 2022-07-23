@@ -3,6 +3,8 @@ import time
 
 from django.shortcuts import redirect
 from django.http import HttpResponse
+
+from loginSystem.models import Administrator
 from mailServer.models import Domains, EUsers
 from plogical.applicationInstaller import ApplicationInstaller
 from websiteFunctions.models import Websites
@@ -18,6 +20,7 @@ from random import randint
 from plogical.acl import ACLManager
 from plogical.processUtilities import ProcessUtilities
 from plogical.httpProc import httpProc
+from cloudAPI.cloudManager import CloudManager
 
 
 ## Email Policy Server
@@ -1672,3 +1675,143 @@ def uninstallStatusRspamd(request):
                      'error_message': "Not Logged In, please refresh the page or login again."}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
+
+
+##Email Debugger
+
+def EmailDebugger(request):
+    userID = request.session['userID']
+    currentACL = ACLManager.loadedACL(userID)
+    websitesName = ACLManager.findAllSites(currentACL, userID)
+
+    proc = httpProc(request, 'emailPremium/EmailDebugger.html',
+                    {'websiteList': websitesName}, 'admin')
+    return proc.render()
+
+def RunServerLevelEmailChecks(request):
+    try:
+        userID = request.session['userID']
+        ob = CloudManager()
+        res = ob.RunServerLevelEmailChecks()
+        return res
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def ResetEmailConfigurations(request):
+    try:
+        userID = request.session['userID']
+        ob = CloudManager()
+        res = ob.ResetEmailConfigurations()
+
+        return res
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def statusFunc(request):
+    try:
+        userID = request.session['userID']
+        ob = CloudManager(json.loads(request.body))
+        #wm = WebsiteManager()
+        res = ob.statusFunc()
+        return res
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def ReadReport(request):
+    try:
+        userID = request.session['userID']
+        try:
+            ob = CloudManager(json.loads(request.body))
+            res = ob.ReadReport()
+            Result = json.loads(res.content)
+            status = Result['status']
+            #fetch Ip
+            IP = ACLManager.GetServerIP()
+            if status == 1:
+                def CheckPort(port):
+                    import socket
+                    # Create a TCP socket
+                    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    try:
+                        s.settimeout(1)
+                        s.connect((IP, port))
+                        return 1
+                    except socket.error as e:
+                        return 0
+                    finally:
+                        s.close()
+
+                report = {}
+
+                if CheckPort(25):
+                    report['Port25'] = 'Open'
+                else:
+                    report['Port25'] = 'Closed, mail will not go through.'
+
+                if CheckPort(587):
+                    report['Port587'] = 'Open'
+                else:
+                    report['Port587'] = 'Closed, mail will not go through.'
+
+                if CheckPort(465):
+                    report['Port465'] = 'Open'
+                else:
+                    report['Port465'] = 'Closed, mail will not go through.'
+
+                if CheckPort(110):
+                    report['Port110'] = 'Open'
+                else:
+                    report['Port110'] = 'Closed, POP3 will not work.'
+
+                if CheckPort(143):
+                    report['Port143'] = 'Open'
+                else:
+                    report['Port143'] = 'Closed, IMAP will not work.'
+
+                if CheckPort(993):
+                    report['Port993'] = 'Open'
+                else:
+                    report['Port993'] = 'Closed, IMAP will not work.'
+
+                if CheckPort(995):
+                    report['Port995'] = 'Open'
+                else:
+                    report['Port995'] = 'Closed, POP3 will not work.'
+
+                report['serverHostName'] = IP
+                finalResult = Result
+                finalResult['report'] = report
+
+                final_json = json.dumps(finalResult)
+                return HttpResponse(final_json)
+            else:
+                return 0 , Result
+
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile("Result....3:" + str(msg))
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def debugEmailForSite(request):
+    try:
+        userID = request.session['userID']
+        ob = CloudManager(json.loads(request.body))
+        res = ob.debugEmailForSite()
+        return res
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def fixMailSSL(request):
+    try:
+        userID = request.session['userID']
+        admin = Administrator.objects.get(pk=userID)
+        data={}
+        cm = CloudManager(json.loads(request.body), admin)
+        res = cm.fixMailSSL(request)
+        logging.CyberCPLogFileWriter.writeToFile("Result....3:" + str(res.content))
+        return res
+    except KeyError:
+        return redirect(loadLoginPage)
