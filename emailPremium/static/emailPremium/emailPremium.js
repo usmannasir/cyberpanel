@@ -1523,17 +1523,13 @@ app.controller('Rspamd', function ($scope, $http, $timeout, $window) {
 
 });
 
-
-
 //// Email Debugger
-
 
 app.controller('EmailDebuuger', function ($scope, $http, $timeout, $window) {
 
     $scope.cyberpanelLoading = true;
     $scope.ExecutionStatus = true;
     $scope.ReportStatus = true;
-
 
 
     $scope.RunServerLevelEmailChecks = function () {
@@ -1747,11 +1743,7 @@ app.controller('EmailDebuuger', function ($scope, $http, $timeout, $window) {
         }
     };
 
-
-
-
 });
-
 
 app.controller('emailDebuggerDomainLevel', function ($scope, $http, $timeout, $window) {
     $scope.cyberpanelLoading = true;
