@@ -512,8 +512,30 @@ milter_default_action = accept
             ####Frist install redis
             ServiceManager.InstallRedis()
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
-                command = 'sudo yum install rspamd clamav clamav-daemon -y'
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
+
+                command = 'curl https://rspamd.com/rpm-stable/centos-7/rspamd.repo > /etc/yum.repos.d/rspamd.repo'
+                ProcessUtilities.normalExecutioner(command, True)
+
+                command = 'rpm --import https://rspamd.com/rpm-stable/gpg.key'
+                ProcessUtilities.normalExecutioner(command, True)
+
+                command = 'yum update'
+                ProcessUtilities.normalExecutioner(command, True)
+
+
+                command = 'sudo yum install rspamd clamav-server clamav-data clamav-update clamav-filesystem clamav clamav-scanner-systemd clamav-devel clamav-lib clamav-server-systemd -y'
+            elif ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                command = 'curl https://rspamd.com/rpm-stable/centos-8/rspamd.repo > /etc/yum.repos.d/rspamd.repo'
+                ProcessUtilities.normalExecutioner(command, True)
+
+                command = 'rpm --import https://rspamd.com/rpm-stable/gpg.key'
+                ProcessUtilities.normalExecutioner(command, True)
+
+                command = 'yum update'
+                ProcessUtilities.normalExecutioner(command, True)
+
+                command = 'sudo yum install rspamd clamav-server clamav-data clamav-update clamav-filesystem clamav clamav-scanner-systemd clamav-devel clamav-lib clamav-server-systemd -y'
             else:
                 command = 'sudo apt-get install rspamd clamav clamav-daemon -y'
 
@@ -522,7 +544,6 @@ milter_default_action = accept
 
             with open(mailUtilities.RspamdInstallLogPath, 'w') as f:
                 res = subprocess.call(cmd, stdout=f)
-
 
 
             ###### makefile
@@ -588,8 +609,9 @@ clamav {
 
 
             appendpath = "/etc/postfix/main.cf"
-            appenddata = """smtpd_milters=inet:127.0.0.1:11332 # For inbound scan or outbound scan via SMTP
-non_smtpd_milters=inet:127.0.0.1:11332 # For invocation via LDA
+            appenddata = """
+smtpd_milters=inet:127.0.0.1:11332
+non_smtpd_milters=inet:127.0.0.1:11332
 """
             wirtedata1 = open(appendpath, 'a')
             wirtedata1.writelines(appenddata)
@@ -597,14 +619,14 @@ non_smtpd_milters=inet:127.0.0.1:11332 # For invocation via LDA
 
 
             wpath = "/etc/rspamd/local.d/redis.conf"
-            wdata = """write_servers = "127.0.0.1";
-read_servers = "127.0.0.1";"""
+            wdata = """
+write_servers = "127.0.0.1";
+read_servers = "127.0.0.1";
+"""
 
             wirtedata2 = open(wpath, 'w')
             wirtedata2.writelines(wdata)
             wirtedata2.close()
-
-
 
 
             if res == 1:
