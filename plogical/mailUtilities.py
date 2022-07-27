@@ -651,13 +651,22 @@ read_servers = "127.0.0.1";
 
                 if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                     command = 'setsebool -P antivirus_can_scan_system 1'
-                    ProcessUtilities.normalExecutioner(command)
+                    cmd = shlex.split(command)
+
+                    with open(mailUtilities.RspamdInstallLogPath, 'a') as f:
+                        res = subprocess.call(cmd, stdout=f)
 
                     command = 'setsebool -P clamd_use_jit 1'
-                    ProcessUtilities.normalExecutioner(command)
+                    cmd = shlex.split(command)
 
-                    command = 'usermod -a -G clamav _rspamd'
-                    ProcessUtilities.normalExecutioner(command)
+                    with open(mailUtilities.RspamdInstallLogPath, 'a') as f:
+                        res = subprocess.call(cmd, stdout=f)
+
+                    command = 'usermod -a -G clamscan _rspamd'
+                    cmd = shlex.split(command)
+
+                    with open(mailUtilities.RspamdInstallLogPath, 'a') as f:
+                        res = subprocess.call(cmd, stdout=f)
 
                     clamavcontent = """
 User clamscan
@@ -685,20 +694,35 @@ LogFile /var/log/clamd.scan/clamav.log
                     writeToFile.close()
 
                     command = 'freshclam'
-                    ProcessUtilities.normalExecutioner(command)
+                    cmd = shlex.split(command)
+
+                    with open(mailUtilities.RspamdInstallLogPath, 'a') as f:
+                        res = subprocess.call(cmd, stdout=f)
 
                     command = 'systemctl start clamd@scan'
-                    ProcessUtilities.normalExecutioner(command)
+                    cmd = shlex.split(command)
+
+                    with open(mailUtilities.RspamdInstallLogPath, 'a') as f:
+                        res = subprocess.call(cmd, stdout=f)
 
                     command = 'systemctl restart rspamd'
-                    ProcessUtilities.normalExecutioner(command)
+                    cmd = shlex.split(command)
+
+                    with open(mailUtilities.RspamdInstallLogPath, 'a') as f:
+                        res = subprocess.call(cmd, stdout=f)
                 elif ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
 
                     command = 'usermod -a -G clamav _rspamd'
-                    ProcessUtilities.normalExecutioner(command)
+                    cmd = shlex.split(command)
+
+                    with open(mailUtilities.RspamdInstallLogPath, 'a') as f:
+                        res = subprocess.call(cmd, stdout=f)
 
                     command = 'chown -R clamav:clamav /var/run/clamav'
-                    ProcessUtilities.normalExecutioner(command)
+                    cmd = shlex.split(command)
+
+                    with open(mailUtilities.RspamdInstallLogPath, 'a') as f:
+                        res = subprocess.call(cmd, stdout=f)
 
                     clamavcontent = """
 User clamav
@@ -724,13 +748,24 @@ LogFile /var/log/clamav/clamav.log
                     writeToFile.close()
 
                     command = 'freshclam'
-                    ProcessUtilities.normalExecutioner(command)
+                    cmd = shlex.split(command)
 
-                    command = 'service clamav-daemon restart'
-                    ProcessUtilities.normalExecutioner(command)
+                    with open(mailUtilities.RspamdInstallLogPath, 'a') as f:
+                        res = subprocess.call(cmd, stdout=f)
+
+                    command = 'systemctl restart clamav-daemon'
+                    cmd = shlex.split(command)
+
+                    with open(mailUtilities.RspamdInstallLogPath, 'a') as f:
+                        res = subprocess.call(cmd, stdout=f)
 
                     command = 'systemctl restart rspamd'
-                    ProcessUtilities.normalExecutioner(command)
+                    cmd = shlex.split(command)
+
+                    with open(mailUtilities.RspamdInstallLogPath, 'a') as f:
+                        res = subprocess.call(cmd, stdout=f)
+
+                time.sleep(5)
 
                 writeToFile = open(mailUtilities.RspamdInstallLogPath, 'a')
                 writeToFile.writelines("Rspamd Installed.[200]\n")
