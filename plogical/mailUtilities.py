@@ -41,6 +41,7 @@ class mailUtilities:
     RspamdUnInstallLogPath = "/home/cyberpanel/RspamdUnInstallLogPath"
     cyberPanelHome = "/home/cyberpanel"
     mailScannerInstallLogPath = "/home/cyberpanel/mailScannerInstallLogPath"
+    RSpamdLogPath = '/var/log/rspamd/rspamd.log'
 
     @staticmethod
     def SendEmail(sender, receivers, message):
@@ -514,6 +515,11 @@ milter_default_action = accept
 
             if ProcessUtilities.decideDistro() == ProcessUtilities.centos:
 
+                writeToFile = open(mailUtilities.RspamdInstallLogPath, 'a')
+                writeToFile.writelines("Configuring RSPAMD repo..\n")
+                writeToFile.close()
+
+
                 command = 'curl https://rspamd.com/rpm-stable/centos-7/rspamd.repo > /etc/yum.repos.d/rspamd.repo'
                 ProcessUtilities.normalExecutioner(command, True)
 
@@ -525,7 +531,13 @@ milter_default_action = accept
 
 
                 command = 'sudo yum install rspamd clamav-server clamav-data clamav-update clamav-filesystem clamav clamav-scanner-systemd clamav-devel clamav-lib clamav-server-systemd -y'
+
             elif ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+
+                writeToFile = open(mailUtilities.RspamdInstallLogPath, 'a')
+                writeToFile.writelines("Configuring RSPAMD repo..\n")
+                writeToFile.close()
+
                 command = 'curl https://rspamd.com/rpm-stable/centos-8/rspamd.repo > /etc/yum.repos.d/rspamd.repo'
                 ProcessUtilities.normalExecutioner(command, True)
 
@@ -535,7 +547,7 @@ milter_default_action = accept
                 command = 'yum update'
                 ProcessUtilities.normalExecutioner(command, True)
 
-                command = 'sudo yum install rspamd clamav-server clamav-data clamav-update clamav-filesystem clamav clamav-scanner-systemd clamav-devel clamav-lib clamav-server-systemd -y'
+                command = 'sudo yum install rspamd clamav clamd clamav-update -y'
             else:
                 command = 'sudo apt-get install rspamd clamav clamav-daemon -y'
 
@@ -636,6 +648,51 @@ read_servers = "127.0.0.1";
                 logging.CyberCPLogFileWriter.writeToFile("[Could not Install Rspamd.]")
                 return 0
             else:
+
+                if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                    command = 'setsebool -P antivirus_can_scan_system 1'
+                    ProcessUtilities.normalExecutioner(command)
+
+                    command = 'setsebool -P clamd_use_jit 1'
+                    ProcessUtilities.normalExecutioner(command)
+
+                    command = 'usermod -a -G clamav _rspamd'
+                    ProcessUtilities.normalExecutioner(command)
+
+                    clamavcontent = """
+User clamscan
+PidFile /var/run/clamd.scan/clamd.pid
+TCPSocket 3310
+TCPAddr 127.0.0.1
+ConcurrentDatabaseReload no
+Debug false
+FixStaleSocket true
+LocalSocketMode 666
+ScanMail true
+ScanArchive true
+Debug false
+LogFile /var/log/clamd.scan/clamav.log
+"""
+                    writeToFile = open('/etc/clamd.d/scan.conf', 'w')
+                    writeToFile.write(clamavcontent)
+                    writeToFile.close()
+
+                    command = 'touch /var/log/clamd.scan/clamav.log'
+                    ProcessUtilities.normalExecutioner(command, False, 'clamscan')
+
+                    writeToFile = open(mailUtilities.RspamdInstallLogPath, 'a')
+                    writeToFile.writelines("Updating Freshclam database..\n")
+                    writeToFile.close()
+
+                    command = 'freshclam'
+                    ProcessUtilities.normalExecutioner(command, False, 'clamscan')
+
+                    command = 'systemctl start clamd@scan'
+                    ProcessUtilities.normalExecutioner(command, False, 'clamscan')
+
+                    command = 'systemctl restart rspamd'
+                    ProcessUtilities.normalExecutioner(command, False, 'clamscan')
+
                 writeToFile = open(mailUtilities.RspamdInstallLogPath, 'a')
                 writeToFile.writelines("Rspamd Installed.[200]\n")
                 writeToFile.close()
@@ -1098,17 +1155,10 @@ read_servers = "127.0.0.1";
     @staticmethod
     def checkIfRspamdInstalled():
         try:
-            command= "apt list | grep rspamd"
-            result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-            resul = stdout.find("installed")
-
-
-            if resul != -1:
+            if os.path.exists('/etc/rspamd/rspamd.conf'):
                 return 1
             else:
                 return 0
-
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "  [checkIfMailScannerInstalled]")
