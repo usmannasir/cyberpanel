@@ -685,13 +685,52 @@ LogFile /var/log/clamd.scan/clamav.log
                     writeToFile.close()
 
                     command = 'freshclam'
-                    ProcessUtilities.normalExecutioner(command, False, 'clamscan')
+                    ProcessUtilities.normalExecutioner(command)
 
                     command = 'systemctl start clamd@scan'
-                    ProcessUtilities.normalExecutioner(command, False, 'clamscan')
+                    ProcessUtilities.normalExecutioner(command)
 
                     command = 'systemctl restart rspamd'
-                    ProcessUtilities.normalExecutioner(command, False, 'clamscan')
+                    ProcessUtilities.normalExecutioner(command)
+                elif ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
+
+                    command = 'usermod -a -G clamav _rspamd'
+                    ProcessUtilities.normalExecutioner(command)
+
+                    command = 'chown -R clamav:clamav /var/run/clamav'
+                    ProcessUtilities.normalExecutioner(command)
+
+                    clamavcontent = """
+User clamav
+PidFile /var/run/clamav/clamd.pid
+TCPSocket 3310
+TCPAddr 127.0.0.1
+ConcurrentDatabaseReload no
+Debug false
+FixStaleSocket true
+LocalSocketMode 666
+ScanMail true
+ScanArchive true
+Debug false
+LogFile /var/log/clamav/clamav.log
+"""
+                    writeToFile = open('/etc/clamav/clamd.conf', 'w')
+                    writeToFile.write(clamavcontent)
+                    writeToFile.close()
+
+
+                    writeToFile = open(mailUtilities.RspamdInstallLogPath, 'a')
+                    writeToFile.writelines("Updating Freshclam database..\n")
+                    writeToFile.close()
+
+                    command = 'freshclam'
+                    ProcessUtilities.normalExecutioner(command)
+
+                    command = 'service clamav-daemon restart'
+                    ProcessUtilities.normalExecutioner(command)
+
+                    command = 'systemctl restart rspamd'
+                    ProcessUtilities.normalExecutioner(command)
 
                 writeToFile = open(mailUtilities.RspamdInstallLogPath, 'a')
                 writeToFile.writelines("Rspamd Installed.[200]\n")
