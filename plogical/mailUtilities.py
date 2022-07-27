@@ -680,7 +680,7 @@ LocalSocketMode 666
 ScanMail true
 ScanArchive true
 Debug false
-LogFile /var/log/clamd.scan/clamav.log
+#LogFile /var/log/clamd.scan/clamav.log
 """
                     writeToFile = open('/etc/clamd.d/scan.conf', 'w')
                     writeToFile.write(clamavcontent)
@@ -735,7 +735,6 @@ FixStaleSocket true
 LocalSocketMode 666
 ScanMail true
 ScanArchive true
-Debug false
 LogFile /var/log/clamav/clamav.log
 """
                     writeToFile = open('/etc/clamav/clamd.conf', 'w')
