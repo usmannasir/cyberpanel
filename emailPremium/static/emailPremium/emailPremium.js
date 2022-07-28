@@ -1133,6 +1133,9 @@ app.controller('Rspamd', function ($scope, $http, $timeout, $window) {
     $('#log_clean').change(function () {
         log_clean = $(this).prop('checked');
     });
+    $('#clamav_Debug').change(function () {
+        clamav_Debug = $(this).prop('checked');
+    });
 
     fetchRspamdSettings();
 
@@ -1180,6 +1183,11 @@ app.controller('Rspamd', function ($scope, $http, $timeout, $window) {
                     } else if (response.data.log_clean === false) {
                         $('#log_clean').bootstrapToggle('off');
                     }
+                    if (response.data.clamav_Debug === true) {
+                        $('#clamav_Debug').bootstrapToggle('on');
+                    } else if (response.data.clamav_Debug === false) {
+                        $('#clamav_Debug').bootstrapToggle('off');
+                    }
 
                     $scope.max_size = response.data.max_Size;
                     $scope.server = response.data.Server;
@@ -1189,6 +1197,9 @@ app.controller('Rspamd', function ($scope, $http, $timeout, $window) {
                     $scope.non_smtpd_milters = response.data.non_smtpd_milters;
                     $scope.read_servers = response.data.read_servers;
                     $scope.write_servers = response.data.write_servers;
+                    $scope.LogFile = response.data.LogFile;
+                    $scope.TCPAddr = response.data.TCPAddr;
+                    $scope.TCPSocket = response.data.TCPSocket;
                     //     $scope.required_score = response.data.required_score;
                     //
                 }
@@ -1519,6 +1530,138 @@ app.controller('Rspamd', function ($scope, $http, $timeout, $window) {
         }
 
     }
+
+
+    ///ClamAV config
+
+    $scope.CLamAVLoading = true;
+    $scope.ClamAVfailedToSave = true;
+    $scope.ClamAVsuccessfullySaved = true;
+    $scope.ClamAVcouldNotConnect = true;
+
+    $scope.saveclamavConfigurations = function () {
+        $scope.CLamAVLoading = false;
+        url = "/emailPremium/saveclamavConfigurations";
+        var data = {
+            LogFile: $scope.LogFile,
+            TCPAddr: $scope.TCPAddr,
+            TCPSocket: $scope.TCPSocket,
+            clamav_Debug: clamav_Debug
+        };
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+
+
+            if (response.data.saveStatus === 1) {
+
+                $scope.CLamAVfailedToSave = true;
+                $scope.CLamAVsuccessfullySaved = false;
+                $scope.CLamAVLoading = true;
+                $scope.CLamAVcouldNotConnect = true;
+
+                location.reload();
+
+            } else {
+                $scope.errorMessage = response.data.error_message;
+
+                $scope.CLamAVfailedToSave = false;
+                $scope.CLamAVsuccessfullySaved = true;
+                $scope.CLamAVLoading = true;
+                $scope.CLamAVcouldNotConnect = true;
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.CLamAVfailedToSave = true;
+            $scope.CLamAVsuccessfullySaved = true;
+            $scope.CLamAVLoading = true;
+            $scope.CLamAVcouldNotConnect = false;
+        }
+    };
+
+    $scope.FetchRspamdLog = function () {
+         url = "/emailPremium/FetchRspamdLog";
+        var data = {
+
+        };
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+        function ListInitialDatas(response) {
+
+
+            if (response.data.status === 1) {
+
+                console.log(response.data)
+                $scope.RspamdlogsData = response.data.logsdata;
+
+            } else {
+
+               console.log( response.data.error_message)
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            console.log(response)
+        }
+    };
+
+
+    $scope.RestartRspamd = function () {
+
+        $scope.RspamdLoading = false;
+        url = "/emailPremium/RestartRspamd";
+        var data = {
+
+        };
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+        function ListInitialDatas(response) {
+            $scope.RspamdLoading = true;
+            if (response.data.status === 1) {
+
+                console.log(response.data)
+                new PNotify({
+                    title: 'Success',
+                    text: 'SUccessfully Restarted.',
+                    type: 'success'
+                });
+
+            } else {
+
+               new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.RspamdLoading = true;
+             new PNotify({
+                    title: 'Error',
+                    text: 'Could not connect to server, please refresh this page.',
+                    type: 'error'
+                });
+        }
+    };
 
 
 });

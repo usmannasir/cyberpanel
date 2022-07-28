@@ -759,8 +759,8 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
     $scope.getFileContents = function () {
 
 
-        console.log("selectedfile"+ allFilesAndFolders)
-        console.log("currentpath"+ $scope.currentRPath)
+        // console.log("selectedfile"+ allFilesAndFolders)
+        // console.log("currentpath"+ $scope.currentRPath)
         var completePathForFile = $scope.currentRPath + "/" + allFilesAndFolders[0];
 
 

@@ -679,7 +679,6 @@ FixStaleSocket true
 LocalSocketMode 666
 ScanMail true
 ScanArchive true
-Debug false
 #LogFile /var/log/clamd.scan/clamav.log
 """
                     writeToFile = open('/etc/clamd.d/scan.conf', 'w')
@@ -975,6 +974,57 @@ LogFile /var/log/clamav/clamav.log
             str((msg) + " [changeRedisxConfig]")
             print(0, str(msg))
             return [0, str(msg) + " [changeRedisxConfig]"]
+
+    @staticmethod
+    def changeclamavConfig(install, changeclamavConfig):
+        try:
+            tempfilepath = "/home/cyberpanel/saveclamavConfigurations"
+            file = open(tempfilepath, "r")
+            jsondata1 = file.read()
+            jsondata = json.loads(jsondata1)
+            file.close()
+            LogFile= jsondata['LogFile']
+            TCPAddr= jsondata['TCPAddr']
+            TCPSocket= jsondata['TCPSocket']
+            clamav_Debug= jsondata['clamav_Debug']
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                pass
+            elif ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
+                clamavconfpath = "/etc/clamav/clamd.conf"
+                f = open(clamavconfpath, "r")
+                dataa = f.read()
+                f.close()
+                data = dataa.splitlines()
+
+                writeDataToFile = open(clamavconfpath, "w")
+                for i in data:
+                    if i.find('TCPSocket') > -1:
+                        newitem = 'TCPSocket %s' % TCPSocket
+                        writeDataToFile.writelines(newitem + '\n')
+                    elif i.find('TCPAddr') > -1:
+                        newitem = 'TCPAddr %s' % TCPAddr
+                        writeDataToFile.writelines(newitem + '\n')
+                    elif i.find('LogFile') > -1:
+                        newitem = 'LogFile %s' % LogFile
+                        writeDataToFile.writelines(newitem + '\n')
+                    elif i.find('Debug =') > -1:
+                        if clamav_Debug == True:
+                            newitem = 'Debug true'
+                            writeDataToFile.writelines(newitem + '\n')
+                        elif clamav_Debug == False:
+                            newitem = 'Debug false'
+                            writeDataToFile.writelines(newitem + '\n')
+                    else:
+                        writeDataToFile.writelines(i + '\n')
+
+
+            return 1, 'None'
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[changeclamavConfig]")
+            str((msg) + " [changeclamavConfig]")
+            print(0, str(msg))
+            return [0, str(msg) + " [changeclamavConfig]"]
     @staticmethod
     def installMailScanner(install, SpamAssassin):
         try:
@@ -2162,6 +2212,8 @@ def main():
         mailUtilities.changePostfixConfig("install", "changePostfixConfig")
     elif args.function == 'changeRedisxConfig':
         mailUtilities.changeRedisxConfig("install", "changeRedisxConfig")
+    elif args.function == 'changeclamavConfig':
+        mailUtilities.changeclamavConfig("install", "changeclamavConfig")
     elif args.function == 'AfterEffects':
         mailUtilities.AfterEffects(args.domain)
     elif args.function == "ResetEmailConfigurations":

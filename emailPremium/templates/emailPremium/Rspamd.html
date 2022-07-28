@@ -10,28 +10,36 @@
 
     <div class="container">
         <div id="page-title">
-            <h2>{% trans "Rspamd Configurations!" %} - <a target="_blank"
-                                                          href="http://go.cyberpanel.net/SpamAssassin"
-                                                          style="height: 23px;line-height: 21px;"
-                                                          class="btn btn-border btn-alt border-red btn-link font-red"
-                                                          title=""><span>{% trans "Rspamd Docs" %}</span></a>
+            <h2>{% trans "Rspamd Configurations!" %} -
             </h2>
             <p>{% trans "On this page you can configure RSPAMD settings." %}</p>
         </div>
 
         <div ng-controller="Rspamd" class="example-box-wrapper">
             <div class="panel panel-body">
-                <div style="width: 100%; margin: 0 auto">
-                    <div class="col-lg-10" style="float: left">
+            <div class="col-lg-12" style="float: left">
                         <h3 class="content-box-header">
                             {% trans "Rspamd" %} <img ng-hide="RspamdLoading" src="/static/images/loading.gif">
 
                         </h3>
                     </div>
+                <div style="width: 100%; margin: 0 auto">
+
+                    <div ng-hide="uninstallbutton" class="col-lg-3" style="float: left">
+                        <button type="button" data-toggle="modal" data-target="#ViewRspamdlog" ng-click="FetchRspamdLog()"
+                                class="btn btn-primaryb btn-lg btn-block">{% trans "View Rsmapd Log" %}</button>
+                    </div>
 
                     <div ng-hide="uninstallbutton" class="col-lg-2" style="float: left">
+
                         <button type="button" data-toggle="modal" data-target="#UninstallRspamdmodal"
                                 class="btn btn-danger btn-lg btn-block">{% trans "uninstall." %}</button>
+
+                    </div>
+                    <div ng-hide="uninstallbutton" class="col-lg-2" style="float: left">
+
+                        <button type="button" ng-click="RestartRspamd()"
+                                class="btn btn-gray btn-lg btn-block">{% trans "Restart" %}</button>
 
                     </div>
                 </div>
@@ -247,6 +255,78 @@
 
                                     </form>
                                 </div>
+
+                                 <!-----------------------------------------ClamAv 2--------------------------->
+                                <div style="padding: 2%" class="col-md-12">
+                                    <h3 class="content-box-header">
+                                        {% trans "ClamAV Configuration" %}
+                                        <img ng-hide="CLamAVLoading"
+                                                                  src="/static/images/loading.gif">
+                                    </h3>
+                                    <form action="/" id="createPackages" class="form-horizontal bordered-row">
+                                        <div ng-hide="phpDetailsBox" class="form-group">
+                                            <label class="col-sm-4 control-label">TCPSocket</label>
+                                            <div class="col-sm-6">
+                                                <input type="text" class="form-control" ng-model="TCPSocket"
+                                                       required>
+                                            </div>
+
+                                        </div>
+                                        <div ng-hide="phpDetailsBox" class="form-group">
+                                            <label class="col-sm-4 control-label">TCPAddr</label>
+                                            <div class="col-sm-6">
+                                                <input type="text" class="form-control" ng-model="TCPAddr"
+                                                       required>
+                                            </div>
+
+                                        </div>
+                                        <div ng-hide="phpDetailsBox" class="form-group">
+                                            <label class="col-sm-4 control-label">Debug</label>
+                                            <div class="col-sm-6">
+                                                <input type="checkbox" id="clamav_Debug" data-toggle="toggle">
+                                            </div>
+
+                                        </div>
+                                        <div ng-hide="phpDetailsBox" class="form-group">
+                                            <label class="col-sm-4 control-label">Log Path</label>
+                                            <div class="col-sm-6">
+                                                <input type="text" class="form-control" ng-model="LogFile"
+                                                       required>
+                                            </div>
+
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label class="col-sm-3 control-label"></label>
+                                            <div class="col-sm-4">
+                                                <button type="button" ng-click="saveclamavConfigurations()"
+                                                        class="btn btn-primary btn-lg btn-block">{% trans "Save changes." %}</button>
+
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label class="col-sm-3 control-label"></label>
+                                            <div class="col-sm-6">
+
+                                                <div ng-hide="ClamAVfailedToSave" class="alert alert-danger">
+                                                    <p>{% trans "Failed to save ClamAV configurations. Error message: " %}
+                                                        {$ errorMessage $}</p>
+                                                </div>
+
+                                                <div ng-hide="ClamAVsuccessfullySaved" class="alert alert-success">
+                                                    <p>{% trans "ClamAV configurations successfully saved." %}</p>
+                                                </div>
+
+                                                <div ng-hide="ClamAVcouldNotConnect" class="alert alert-danger">
+                                                    <p>{% trans "Could not connect. Please refresh this page." %} </p>
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+
                                 <!-----------------------------------------postfix--------------------------->
                                 <div style="padding: 2%" class="col-md-12">
                                     <h3 class="content-box-header">
@@ -386,6 +466,35 @@
                         <div class="modal-footer">
                             <button type="button"
                                     class="btn btn-primary" data-dismiss="modal" ng-click="unistallRspamd()">yes
+                            </button>
+                            <button type="button"
+                                    class="btn btn-default" data-dismiss="modal">
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!------------------Rspamd View Log -------->
+            <div id="ViewRspamdlog" ng-model="ViewRspamdlog" class="modal fade " role="dialog">
+                <div class="modal-dialog modal-lg">
+
+                    <!-- Modal content-->
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;
+                            </button>
+                            <h4 class="modal-title">{% trans "Uninstall Rspamd" %}
+                            </h4>
+                        </div>
+                        <div class="modal-body">
+                            <textarea ng-model="RspamdlogsData" class="form-control" rows="30">{{ Rspamdlogs }}</textarea>
+
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button"
+                                    class="btn btn-primary" data-dismiss="modal" >yes
                             </button>
                             <button type="button"
                                     class="btn btn-default" data-dismiss="modal">

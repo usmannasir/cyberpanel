@@ -1487,6 +1487,39 @@ def fetchRspamdSettings(request):
                                 read_servers = j[1]
                                 # logging.CyberCPLogFileWriter.writeToFile(str(read_servers) + "read_servers")
 
+                        #ClamAV configs
+
+                        clamav_Debug = True
+                        LogFile = ''
+                        TCPAddr = ''
+                        TCPSocket = ''
+
+                        if  ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                            pass
+                        elif ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
+                            clamavconfpath = "/etc/clamav/clamd.conf"
+                            command = "sudo cat " + clamavconfpath
+                            data = ProcessUtilities.outputExecutioner(command).splitlines()
+                            for items in data:
+                                if items.find('TCPSocket') > -1:
+                                    tempData = items.split(' ')
+                                    TCPSocket = tempData[1]
+                                if items.find('TCPAddr') > -1:
+                                    tempData = items.split(' ')
+                                    TCPAddr = tempData[1]
+                                if items.find('LogFile') > -1:
+                                    tempData = items.split(' ')
+                                    LogFile = tempData[1]
+                                if items.find('Debug') > -1:
+                                    if items.find('Debug true') < 0:
+                                        clamav_Debug = False
+                                        continue
+                                    else:
+                                        clamav_Debug = True
+
+
+
+
                         final_dic = {'fetchStatus': 1,
                                      'installed': 1,
                                      'enabled': enabled,
@@ -1499,7 +1532,12 @@ def fetchRspamdSettings(request):
                                      'smtpd_milters': smtpd_milters,
                                      'non_smtpd_milters': non_smtpd_milters,
                                      'read_servers': read_servers,
-                                     'write_servers': write_servers
+                                     'write_servers': write_servers,
+                                     'clamav_Debug': clamav_Debug,
+                                     'LogFile': LogFile,
+                                     'TCPAddr': TCPAddr,
+                                     'TCPSocket': TCPSocket,
+
                                      }
 
 
@@ -1624,6 +1662,44 @@ def saveRedisConfigurations(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
+
+def saveclamavConfigurations(request):
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson('saveStatus', 0)
+
+        try:
+            if request.method == 'POST':
+                data = json.loads(request.body)
+                tempfilepath = "/home/cyberpanel/saveclamavConfigurations"
+                json_object = json.dumps(data, indent=4)
+                writeDataToFile = open(tempfilepath, "w")
+                writeDataToFile.write(json_object)
+                writeDataToFile.close()
+
+                # status, msg = mailUtilities.changeRspamdConfig(request.body)
+                execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/mailUtilities.py"
+                execPath = execPath + " changeclamavConfig"
+                output = ProcessUtilities.outputExecutioner(execPath)
+
+                data_ret = {'saveStatus': 1, 'error_message': 'None'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'saveStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
 def unistallRspamd(request):
     try:
         logging.CyberCPLogFileWriter.writeToFile("unistallRspamd...1")
@@ -1715,6 +1791,62 @@ def uninstallStatusRspamd(request):
                      'error_message': "Not Logged In, please refresh the page or login again."}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
+
+def FetchRspamdLog(request):
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
+
+        fileName = "/var/log/rspamd/rspamd.log"
+        try:
+            command = "sudo tail -100 " + fileName
+            fewLinesOfLogFile = ProcessUtilities.outputExecutioner(command)
+            status = {"status": 1, "logstatus": 1, "logsdata": fewLinesOfLogFile}
+            final_json = json.dumps(status)
+            return HttpResponse(final_json)
+        except:
+            status = {"status": 1, "logstatus": 1, "logsdata": 'Emtpy File.'}
+            final_json = json.dumps(status)
+            return HttpResponse(final_json)
+    except KeyError:
+        final_dic = {'abort': 1, 'installed': 0,
+                     'error_message': "Not Logged In, please refresh the page or login again."}
+        final_json = json.dumps(final_dic)
+        return HttpResponse(final_json)
+
+
+def RestartRspamd(request):
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
+        try:
+            command = "systemctl restart rspamd"
+            ProcessUtilities.executioner(command)
+            command = "systemctl restart clamav-daemon"
+            ProcessUtilities.executioner(command)
+
+            dic = {'status': 1, 'error_message': 'None',}
+            json_data = json.dumps(dic)
+            return HttpResponse(json_data)
+        except BaseException as msg:
+            dic = {'status': 0, 'error_message': str(msg)}
+            json_data = json.dumps(dic)
+            return HttpResponse(json_data)
+    except KeyError:
+        dic = {'status': 0, 'error_message': str("Not Logged In, please refresh the page or login again.")}
+        json_data = json.dumps(dic)
+        return HttpResponse(json_data)
+
 
 ##Email Debugger
 
