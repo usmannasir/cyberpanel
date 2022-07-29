@@ -989,35 +989,35 @@ LogFile /var/log/clamav/clamav.log
             clamav_Debug= jsondata['clamav_Debug']
 
             if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
-                pass
+                clamavconfpath = '/etc/clamd.d/scan.conf'
             elif ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
                 clamavconfpath = "/etc/clamav/clamd.conf"
-                f = open(clamavconfpath, "r")
-                dataa = f.read()
-                f.close()
-                data = dataa.splitlines()
 
-                writeDataToFile = open(clamavconfpath, "w")
-                for i in data:
-                    if i.find('TCPSocket') > -1:
-                        newitem = 'TCPSocket %s' % TCPSocket
-                        writeDataToFile.writelines(newitem + '\n')
-                    elif i.find('TCPAddr') > -1:
-                        newitem = 'TCPAddr %s' % TCPAddr
-                        writeDataToFile.writelines(newitem + '\n')
-                    elif i.find('LogFile') > -1:
-                        newitem = 'LogFile %s' % LogFile
-                        writeDataToFile.writelines(newitem + '\n')
-                    elif i.find('Debug =') > -1:
-                        if clamav_Debug == True:
-                            newitem = 'Debug true'
-                            writeDataToFile.writelines(newitem + '\n')
-                        elif clamav_Debug == False:
-                            newitem = 'Debug false'
-                            writeDataToFile.writelines(newitem + '\n')
-                    else:
-                        writeDataToFile.writelines(i + '\n')
+            f = open(clamavconfpath, "r")
+            dataa = f.read()
+            f.close()
+            data = dataa.splitlines()
 
+            writeDataToFile = open(clamavconfpath, "w")
+            for i in data:
+                if i.find('TCPSocket') > -1:
+                    newitem = 'TCPSocket %s' % TCPSocket
+                    writeDataToFile.writelines(newitem + '\n')
+                elif i.find('TCPAddr') > -1:
+                    newitem = 'TCPAddr %s' % TCPAddr
+                    writeDataToFile.writelines(newitem + '\n')
+                elif i.find('LogFile') > -1:
+                    newitem = 'LogFile %s' % LogFile
+                    writeDataToFile.writelines(newitem + '\n')
+                elif i.find('Debug =') > -1:
+                    if clamav_Debug == True:
+                        newitem = 'Debug true'
+                        writeDataToFile.writelines(newitem + '\n')
+                    elif clamav_Debug == False:
+                        newitem = 'Debug false'
+                        writeDataToFile.writelines(newitem + '\n')
+                else:
+                    writeDataToFile.writelines(i + '\n')
 
             return 1, 'None'
         except BaseException as msg:
