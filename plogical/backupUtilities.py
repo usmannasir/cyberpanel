@@ -358,9 +358,9 @@ class backupUtilities:
 
             ## Saving original vhost conf file
 
-            completPathToConf = f'{backupUtilities.Server_root}/conf/vhosts/{domainName}/vhost.conf'
+            #completPathToConf = f'{backupUtilities.Server_root}/conf/vhosts/{domainName}/vhost.conf'
 
-            copy(completPathToConf, tempStoragePath + '/vhost.conf')
+            #copy(completPathToConf, tempStoragePath + '/vhost.conf')
 
             ## /home/example.com/backup/backup-example.com-02.13.2018_10-24-52 -- tempStoragePath
             ## shutil.make_archive
@@ -430,6 +430,12 @@ class backupUtilities:
                 logging.CyberCPLogFileWriter.writeToFile(f'{str(msg)}. [283:startBackup]')
 
         ## Child Domains SSL.
+
+        ## For master domain copy the conf file to tempStorage path here it was done above, but since it is root operation it should be performed here
+
+        completPathToConf = f'{backupUtilities.Server_root}/conf/vhosts/{domainName}/vhost.conf'
+
+        copy(completPathToConf, tempStoragePath + '/vhost.conf')
 
         childDomains = backupMetaData.findall('ChildDomains/domain')
 

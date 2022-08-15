@@ -1495,29 +1495,28 @@ def fetchRspamdSettings(request):
                         TCPSocket = ''
 
                         if  ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
-                            pass
+                            clamavconfpath = '/etc/clamd.d/scan.conf'
                         elif ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
                             clamavconfpath = "/etc/clamav/clamd.conf"
-                            command = "sudo cat " + clamavconfpath
-                            data = ProcessUtilities.outputExecutioner(command).splitlines()
-                            for items in data:
-                                if items.find('TCPSocket') > -1:
-                                    tempData = items.split(' ')
-                                    TCPSocket = tempData[1]
-                                if items.find('TCPAddr') > -1:
-                                    tempData = items.split(' ')
-                                    TCPAddr = tempData[1]
-                                if items.find('LogFile') > -1:
-                                    tempData = items.split(' ')
-                                    LogFile = tempData[1]
-                                if items.find('Debug') > -1:
-                                    if items.find('Debug true') < 0:
-                                        clamav_Debug = False
-                                        continue
-                                    else:
-                                        clamav_Debug = True
 
-
+                        command = "sudo cat " + clamavconfpath
+                        data = ProcessUtilities.outputExecutioner(command).splitlines()
+                        for items in data:
+                            if items.find('TCPSocket') > -1:
+                                tempData = items.split(' ')
+                                TCPSocket = tempData[1]
+                            if items.find('TCPAddr') > -1:
+                                tempData = items.split(' ')
+                                TCPAddr = tempData[1]
+                            if items.find('LogFile') > -1:
+                                tempData = items.split(' ')
+                                LogFile = tempData[1]
+                            if items.find('Debug') > -1:
+                                if items.find('Debug true') < 0:
+                                    clamav_Debug = False
+                                    continue
+                                else:
+                                    clamav_Debug = True
 
 
                         final_dic = {'fetchStatus': 1,
@@ -1661,8 +1660,6 @@ def saveRedisConfigurations(request):
 
     except KeyError:
         return redirect(loadLoginPage)
-
-
 
 def saveclamavConfigurations(request):
     try:
@@ -1832,7 +1829,12 @@ def RestartRspamd(request):
         try:
             command = "systemctl restart rspamd"
             ProcessUtilities.executioner(command)
-            command = "systemctl restart clamav-daemon"
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                command = 'systemctl start clamd@scan'
+            else:
+                command = "systemctl restart clamav-daemon"
+
             ProcessUtilities.executioner(command)
 
             dic = {'status': 1, 'error_message': 'None',}
@@ -2011,7 +2013,6 @@ def ReadReport(request):
     except KeyError:
         return redirect(loadLoginPage)
 
-
 def debugEmailForSite(request):
     try:
         userID = request.session['userID']
@@ -2027,7 +2028,6 @@ def debugEmailForSite(request):
             return res
     except KeyError:
         return redirect(loadLoginPage)
-
 
 def fixMailSSL(request):
     try:
