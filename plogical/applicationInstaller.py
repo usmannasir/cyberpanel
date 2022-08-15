@@ -2409,7 +2409,10 @@ $parameters = array(
                     logging.writeToFile(f'DB Name Dump: {DataBaseName}')
                 ##### SQLDUMP database into new directory
 
-                command = "mysqldump %s --result-file %s/%s.sql" % (DataBaseName, self.tempPath, DataBaseName)
+                # command = "mysqldump %s --result-file %s/%s.sql" % (DataBaseName, self.tempPath, DataBaseName)
+
+                command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp --allow-root --skip-plugins --skip-themes --path=%s db export %s/%s.sql' % (
+                VHuser, FinalPHPPath, WPsitepath, self.tempPath, DataBaseName)
 
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.writeToFile(command)
@@ -2683,7 +2686,9 @@ $parameters = array(
 
                 ##### SQLDUMP database into new directory
 
-                command = "mysqldump %s --result-file %s/%s.sql" % (DataBaseName, self.tempPath, DataBaseName)
+                # command = "mysqldump %s --result-file %s/%s.sql" % (DataBaseName, self.tempPath, DataBaseName)
+                command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp --allow-root --skip-plugins --skip-themes --path=%s db export %s/%s.sql' % (
+                    VHuser, FinalPHPPath, WPsitepath, self.tempPath, DataBaseName)
 
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.writeToFile(command)
@@ -2883,7 +2888,9 @@ $parameters = array(
 
                             # dump Mysql file in unzippath path
                             unzippathdb = "%s/ab/usr/local/CyberCP/tmp/%s/%s" % (self.tempPath, oldtemppath, DumpFileName)
-                            command = "mysql -u root %s < %s" % (Finaldbname, unzippathdb)
+                            # command = "mysql -u root %s < %s" % (Finaldbname, unzippathdb)
+                            command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp --allow-root --skip-plugins --skip-themes --path=%s --quiet db import %s' % (
+                                VHuser, FinalPHPPath, newWPpath, unzippathdb)
                             result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
                             if result == 0:
@@ -3411,7 +3418,9 @@ $parameters = array(
                                     # dump Mysql file in unzippath path
                                     unzippath2 = "%s/ab/usr/local/CyberCP/tmp/%s/%s" % (
                                         self.tempPath, oldtemppath, DumpFileName)
-                                    command = "mysql -u root %s < %s" % (Finaldbname, unzippath2)
+                                    # command = "mysql -u root %s < %s" % (Finaldbname, unzippath2)
+                                    command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp --allow-root --skip-plugins --skip-themes --path=%s --quiet db import %s' % (
+                                        VHuser, FinalPHPPath, newWPpath, unzippath2)
                                     result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
                                     if result == 0:
@@ -3571,7 +3580,9 @@ $parameters = array(
                                     # dump Mysql file in unzippath path
                                     unzippath2 = "%s/ab/usr/local/CyberCP/tmp/%s/%s" % (
                                         self.tempPath, oldtemppath, DumpFileName)
-                                    command = "mysql -u root %s < %s" % (Finaldbname, unzippath2)
+                                    # command = "mysql -u root %s < %s" % (Finaldbname, unzippath2)
+                                    command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp --allow-root --skip-plugins --skip-themes --path=%s --quiet db import %s' % (
+                                        VHuser, FinalPHPPath, newWPpath, unzippath2)
                                     result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
                                     if result == 0:
@@ -3790,7 +3801,9 @@ $parameters = array(
 
                             # dump Mysql file in unzippath path
                             unzippath2 = "%s/ab/usr/local/CyberCP/tmp/%s/%s" % (self.tempPath, oldtemppath, DumpFileName)
-                            command = "mysql -u root %s < %s" % (Finaldbname, unzippath2)
+                            # command = "mysql -u root %s < %s" % (Finaldbname, unzippath2)
+                            command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp --allow-root --skip-plugins --skip-themes --path=%s --quiet db import %s' % (
+                                VHuser, FinalPHPPath, newWPpath, unzippath2)
                             result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
                             if stdout.find('Error:') > -1:
@@ -3977,7 +3990,9 @@ $parameters = array(
 
                         # dump Mysql file in unzippath path
                         unzippathdb = "%s/ab/usr/local/CyberCP/tmp/%s/%s" % (self.tempPath, oldtemppath, DumpFileName)
-                        command = "mysql -u root %s < %s" % (Finaldbname, unzippathdb)
+                        # command = "mysql -u root %s < %s" % (Finaldbname, unzippathdb)
+                        command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp --allow-root --skip-plugins --skip-themes --path=%s --quiet db import %s' % (
+                            VHuser, FinalPHPPath, newWPpath, unzippathdb)
                         result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
                         if result == 0:
@@ -4500,7 +4515,9 @@ $parameters = array(
                                 # dump Mysql file in unzippath path
                                 unzippath2 = "%s/ab/usr/local/CyberCP/tmp/%s/%s" % (
                                     self.tempPath, oldtemppath, DumpFileName)
-                                command = "mysql -u root %s < %s" % (Finaldbname, unzippath2)
+                                # command = "mysql -u root %s < %s" % (Finaldbname, unzippath2)
+                                command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp --allow-root --skip-plugins --skip-themes --path=%s --quiet db import %s' % (
+                                    VHuser, FinalPHPPath, newWPpath, unzippath2)
                                 result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
                                 if result == 0:
@@ -4660,7 +4677,9 @@ $parameters = array(
                                 # dump Mysql file in unzippath path
                                 unzippath2 = "%s/ab/usr/local/CyberCP/tmp/%s/%s" % (
                                     self.tempPath, oldtemppath, DumpFileName)
-                                command = "mysql -u root %s < %s" % (Finaldbname, unzippath2)
+                                # command = "mysql -u root %s < %s" % (Finaldbname, unzippath2)
+                                command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp --allow-root --skip-plugins --skip-themes --path=%s --quiet db import %s' % (
+                                    VHuser, FinalPHPPath, newWPpath, unzippath2)
                                 result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
                                 if result == 0:
@@ -4880,7 +4899,9 @@ $parameters = array(
 
                         # dump Mysql file in unzippath path
                         unzippath2 = "%s/ab/usr/local/CyberCP/tmp/%s/%s" % (self.tempPath, oldtemppath, DumpFileName)
-                        command = "mysql -u root %s < %s" % (Finaldbname, unzippath2)
+                        # command = "mysql -u root %s < %s" % (Finaldbname, unzippath2)
+                        command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp --allow-root --skip-plugins --skip-themes --path=%s --quiet db import %s' % (
+                            VHuser, FinalPHPPath, newWPpath, unzippath2)
                         result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
                         if stdout.find('Error:') > -1:
@@ -4942,7 +4963,6 @@ $parameters = array(
 
                         from plogical.installUtilities import installUtilities
                         installUtilities.reStartLiteSpeed()
-
             #####Local BAckups
             else:
                 ##### CHeck if Backup type is Only Database
@@ -5031,7 +5051,10 @@ $parameters = array(
 
                         # dump Mysql file in unzippath path
                         unzippathdb = "%s/ab/usr/local/CyberCP/tmp/%s/%s" % (self.tempPath, oldtemppath, DumpFileName)
-                        command = "mysql -u root %s < %s" % (Finaldbname, unzippathdb)
+                        # command = "mysql -u root %s < %s" % (Finaldbname, unzippathdb)
+                        command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp --allow-root --skip-plugins --skip-themes --path=%s --quiet db import %s' % (
+                        VHuser, FinalPHPPath, newWPpath, unzippathdb)
+
                         result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
                         if result == 0:
@@ -5559,7 +5582,9 @@ $parameters = array(
                                 # dump Mysql file in unzippath path
                                 unzippath2 = "%s/ab/usr/local/CyberCP/tmp/%s/%s" % (
                                 self.tempPath, oldtemppath, DumpFileName)
-                                command = "mysql -u root %s < %s" % (Finaldbname, unzippath2)
+                                # command = "mysql -u root %s < %s" % (Finaldbname, unzippath2)
+                                command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp --allow-root --skip-plugins --skip-themes --path=%s --quiet db import %s' % (
+                                    VHuser, FinalPHPPath, newWPpath, unzippath2)
                                 result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
                                 if result == 0:
@@ -5719,7 +5744,9 @@ $parameters = array(
                                 # dump Mysql file in unzippath path
                                 unzippath2 = "%s/ab/usr/local/CyberCP/tmp/%s/%s" % (
                                     self.tempPath, oldtemppath, DumpFileName)
-                                command = "mysql -u root %s < %s" % (Finaldbname, unzippath2)
+                                # command = "mysql -u root %s < %s" % (Finaldbname, unzippath2)
+                                command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp --allow-root --skip-plugins --skip-themes --path=%s --quiet db import %s' % (
+                                    VHuser, FinalPHPPath, newWPpath, unzippath2)
                                 result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
                                 if result == 0:
@@ -5937,11 +5964,17 @@ $parameters = array(
 
                         # dump Mysql file in unzippath path
                         unzippath2 = "%s/ab/usr/local/CyberCP/tmp/%s/%s" % (self.tempPath, oldtemppath, DumpFileName)
-                        command = "mysql -u root %s < %s" % (Finaldbname, unzippath2)
+                        # command = "mysql -u root %s < %s" % (Finaldbname, unzippath2)
+                        command = 'sudo -u %s %s /usr/bin/wp --allow-root --skip-plugins --skip-themes --path=%s --quiet db import %s' % (
+                        VHuser, FinalPHPPath, newWPpath, unzippath2)
                         result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
+                        logging.writeToFile("stdoutput.....-->"+str(stdout))
+                        logging.writeToFile("result:.....-->"+str(stdout))
                         if stdout.find('Error:') > -1:
                             raise BaseException(stdout)
+
+
 
                         logging.statusWriter(self.tempStatusPath, 'Restoreing Data Base...,80')
                         #####SetUp DataBase Settings
@@ -5989,12 +6022,12 @@ $parameters = array(
                         ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
 
-                        ##Remove temppath
-                        command = f'rm -rf {self.tempPath}'
-                        result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
-
-                        if stdout.find('Error:') > -1:
-                            raise BaseException(stdout)
+                        # ##Remove temppath
+                        # command = f'rm -rf {self.tempPath}'
+                        # result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                        #
+                        # if stdout.find('Error:') > -1:
+                        #     raise BaseException(stdout)
 
                         ###Restart Server
 

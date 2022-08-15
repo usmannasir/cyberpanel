@@ -1,4 +1,5 @@
 #!/usr/local/CyberCP/bin/python
+import html
 import os
 import os.path
 import sys
@@ -740,6 +741,7 @@ class WebsiteManager:
 
             command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp core version --skip-plugins --skip-themes --path=%s' % (Vhuser, FinalPHPPath, path)
             version = ProcessUtilities.outputExecutioner(command)
+            version = html.escape(version)
 
 
             command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp plugin status litespeed-cache --skip-plugins --skip-themes --path=%s' % (Vhuser, FinalPHPPath, path)
@@ -945,6 +947,7 @@ class WebsiteManager:
 
             if stdoutput.find('Error:') == -1:
                 DataBaseName = stdoutput.rstrip("\n")
+                DataBaseName = html.escape(DataBaseName)
             else:
                 data_ret = {'status': 0, 'error_message': stdoutput}
                 json_data = json.dumps(data_ret)
@@ -955,6 +958,7 @@ class WebsiteManager:
 
             if stdoutput.find('Error:') == -1:
                 DataBaseUser = stdoutput.rstrip("\n")
+                DataBaseUser =  html.escape(DataBaseUser)
             else:
                 data_ret = {'status': 0, 'error_message': stdoutput}
                 json_data = json.dumps(data_ret)
@@ -965,6 +969,7 @@ class WebsiteManager:
 
             if stdoutput.find('Error:') == -1:
                 tableprefix = stdoutput.rstrip("\n")
+                tableprefix =  html.escape(tableprefix)
             else:
                 data_ret = {'status': 0, 'error_message': stdoutput}
                 json_data = json.dumps(data_ret)
