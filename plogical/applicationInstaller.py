@@ -1841,8 +1841,6 @@ $parameters = array(
                 stdoutput = ProcessUtilities.outputExecutioner(command)
 
 
-
-
             elif self.data['plugin'] == 'selected':
 
                 pluginsList = ''
