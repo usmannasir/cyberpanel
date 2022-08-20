@@ -42,7 +42,7 @@ if [[ ! -e /usr/local/CyberCP/bin/cleansessions ]]; then
 	chmod +x /usr/local/CyberCP/bin/cleansessions
 	cat >> /usr/local/CyberCP/bin/cleansessions <<"EOL"
 #!/bin/bash
-for version in $(ls /usr/local/lsws|grep lsphp); do echo ""; echo "PHP $version"; session_time=$(/usr/local/lsws/${version}/bin/php -i |grep -Ei 'session.gc_maxlifetime'| grep -Eo "[[:digit:]]+"|sort -u); find -O3 "/var/lib/lsphp/session/${version}" -ignore_readdir_race -depth -mindepth 1 -name 'sess_*' -type f -cmin "${session_time}" -delete; done
+for version in $(ls /usr/local/lsws|grep lsphp); do echo ""; echo "PHP $version"; session_time=$(/usr/local/lsws/${version}/bin/php -i |grep -Ei 'session.gc_maxlifetime'| grep -Eo "[[:digit:]]+"|sort -u); find -O3 "/var/lib/lsphp/session/${version}" -ignore_readdir_race -depth -mindepth 1 -name 'sess_*' -type f -cmin 120 -delete; done
 EOL
 
 fi

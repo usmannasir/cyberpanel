@@ -71,7 +71,7 @@ class secMiddleware:
                             final_json = json.dumps(final_dic)
                             return HttpResponse(final_json)
 
-                    if hasattr(value, "__len__"):
+                    if type(value) == list:
                         for items in value:
                             if items.find('- -') > -1 or items.find('\n') > -1 or items.find(';') > -1 or items.find(
                                     '&&') > -1 or items.find('|') > -1 or items.find('...') > -1 \
