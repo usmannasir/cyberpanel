@@ -369,11 +369,21 @@ class backupUtilities:
 
             from shutil import copytree
 
-            #copytree('/home/%s/public_html' % domainName, '%s/%s' % (tempStoragePath, 'public_html'))
-            command = f'cp -R /home/{domainName}/public_html {tempStoragePath}/public_html'
+            ## Get All Subfolders Under Domain name
+            allSubfoldersUnderDomain = [f.name for f in os.scandir(f'/home/{domainName}')]
+            #allSubfoldersUnderDomain = [f.name for f in os.scandir(f'/home/{domainName}') if f.is_dir()]
+            for subfolder in allSubfoldersUnderDomain:
+                if subfolder == 'logs' or subfolder == 'backup':
+                    continue
+                command = f'cp -R /home/{domainName}/{subfolder} {tempStoragePath}/{subfolder}'
+                if ProcessUtilities.normalExecutioner(command) == 0:
+                    raise BaseException(f'Failed to run cp command during backup generation.')
 
-            if ProcessUtilities.normalExecutioner(command) == 0:
-                 raise BaseException(f'Failed to run cp command during backup generation.')
+            #copytree('/home/%s/public_html' % domainName, '%s/%s' % (tempStoragePath, 'public_html'))
+            #command = f'cp -R /home/{domainName}/public_html {tempStoragePath}/public_html'
+
+            #if ProcessUtilities.normalExecutioner(command) == 0:
+            #     raise BaseException(f'Failed to run cp command during backup generation.')
 
             # make_archive(os.path.join(tempStoragePath,"public_html"), 'gztar', os.path.join("/home",domainName,"public_html"))
 
