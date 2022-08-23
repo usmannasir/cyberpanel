@@ -154,8 +154,8 @@ superslave=yes
 
             content = '''
 [elasticsearch]
-name=Elasticsearch repository for 7.x packages
-baseurl=https://artifacts.elastic.co/packages/7.x/yum
+name=Elasticsearch repository for 8.x packages
+baseurl=https://artifacts.elastic.co/packages/8.x/yum
 gpgcheck=1
 gpgkey=https://artifacts.elastic.co/GPG-KEY-elasticsearch
 enabled=0
@@ -176,7 +176,7 @@ type=rpm-md
             command = 'apt-get install apt-transport-https -y'
             ServerStatusUtil.executioner(command, statusFile)
 
-            command = 'echo "deb https://artifacts.elastic.co/packages/7.x/apt stable main" | sudo tee /etc/apt/sources.list.d/elastic-7.x.list'
+            command = 'echo "deb https://artifacts.elastic.co/packages/8.x/apt stable main" | sudo tee /etc/apt/sources.list.d/elastic-8.x.list'
             subprocess.call(command, shell=True)
 
             command = 'apt-get update -y'
@@ -236,6 +236,7 @@ type=rpm-md
 
             try:
                 os.remove('/etc/apt/sources.list.d/elastic-7.x.list')
+                os.remove('/etc/apt/sources.list.d/elastic-8.x.list')
             except:
                 pass
 
