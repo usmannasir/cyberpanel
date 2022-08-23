@@ -182,7 +182,7 @@ type=rpm-md
             command = 'apt-get update -y'
             ServerStatusUtil.executioner(command, statusFile)
 
-            command = 'apt-get install elasticsearch -y'
+            command = 'apt-get install elasticsearch kibana -y'
             ServerStatusUtil.executioner(command, statusFile)
 
         ### Tmp folder configurations
@@ -241,7 +241,7 @@ type=rpm-md
                 pass
 
 
-            command = 'apt-get remove elasticsearch -y'
+            command = 'apt-get remove elasticsearch kibana -y'
             ServerStatusUtil.executioner(command, statusFile)
 
         ### Tmp folder configurations
