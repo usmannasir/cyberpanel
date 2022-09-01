@@ -356,6 +356,9 @@ class backupUtilities:
 
             domainName = backupMetaData.find('masterDomain').text
 
+            ## Using childdomains to skip their docroot folder, we will copy them in another function
+            childDomains = backupMetaData.findall('ChildDomains/domain')
+
             ## Saving original vhost conf file
 
             completPathToConf = f'{backupUtilities.Server_root}/conf/vhosts/{domainName}/vhost.conf'
@@ -373,8 +376,19 @@ class backupUtilities:
             allSubfoldersUnderDomain = [f.name for f in os.scandir(f'/home/{domainName}')]
             #allSubfoldersUnderDomain = [f.name for f in os.scandir(f'/home/{domainName}') if f.is_dir()]
             for subfolder in allSubfoldersUnderDomain:
-                if subfolder == 'logs' or subfolder == 'backup':
+                isChildDomainRoot = False
+                try:
+                    for childDomain in childDomains:
+                        childPath = childDomain.find('path').text
+                        if(childPath == f'/home/{domainName}/{subfolder}'):
+                            isChildDomainRoot = True
+                            break
+                except BaseException as msg:
+                    pass
+
+                if subfolder == 'logs' or subfolder == 'backup' or subfolder = '.ssh' or isChildDomainRoot:
                     continue
+
                 command = f'cp -R /home/{domainName}/{subfolder} {tempStoragePath}/{subfolder}'
                 if ProcessUtilities.normalExecutioner(command) == 0:
                     raise BaseException(f'Failed to run cp command during backup generation.')
