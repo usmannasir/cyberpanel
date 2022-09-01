@@ -1609,16 +1609,17 @@ autocreate_system_folders = On
     def setupPythonWSGI(self):
         try:
 
-            command = "wget http://www.litespeedtech.com/packages/lsapi/wsgi-lsapi-1.6.tgz"
+            command = "wget http://www.litespeedtech.com/packages/lsapi/wsgi-lsapi-2.1.tgz"
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-            command = "tar xf wsgi-lsapi-1.6.tgz"
+            command = "tar xf wsgi-lsapi-2.1.tgz"
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-            os.chdir("wsgi-lsapi-1.6")
+            os.chdir("wsgi-lsapi-2.1")
 
             command = "/usr/local/CyberPanel/bin/python ./configure.py"
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
 
             command = "make"
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
