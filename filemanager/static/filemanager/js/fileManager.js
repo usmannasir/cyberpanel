@@ -67,7 +67,6 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
         $('#showHTMLEditor').modal('show');
         $scope.fileInEditor = allFilesAndFolders[0];
         $scope.getFileContents();
-
     };
 
 
@@ -636,7 +635,6 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
             if (functionName === "startPoint") {
                 completePathToFile = $scope.currentRPath;
             } else if (functionName === "doubleClick") {
-
                 completePathToFile = $scope.currentRPath + "/" + node.innerHTML;
             } else if (functionName === "homeFetch") {
                 completePathToFile = homeRPathBack;
