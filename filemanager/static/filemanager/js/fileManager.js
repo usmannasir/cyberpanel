@@ -61,12 +61,12 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
         $('#uploadBox').modal('show');
     };
 
-    $scope.showHTMLEditorModal = function () {
+    $scope.showHTMLEditorModal = function (MainFM= 0) {
         $scope.htmlEditorLoading = false;
         $scope.errorMessageEditor = true;
         $('#showHTMLEditor').modal('show');
         $scope.fileInEditor = allFilesAndFolders[0];
-        $scope.getFileContents();
+        $scope.getFileContents(MainFM);
     };
 
 
@@ -754,13 +754,16 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
 
     // html editor
 
-    $scope.getFileContents = function () {
+    $scope.getFileContents = function (MainFM = 0) {
 
 
         // console.log("selectedfile"+ allFilesAndFolders)
         // console.log("currentpath"+ $scope.currentRPath)
-        var completePathForFile = $scope.currentRPath + "/" + allFilesAndFolders[0];
-
+        if(MainFM === 1){
+            var completePathForFile = $scope.currentPath + "/" + allFilesAndFolders[0];
+        }else {
+            var completePathForFile = $scope.currentRPath + "/" + allFilesAndFolders[0];
+        }
 
         var data = {
             fileName: completePathForFile,
