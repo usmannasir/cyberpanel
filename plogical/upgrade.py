@@ -2561,18 +2561,19 @@ vmail
 
     @staticmethod
     def runSomeImportantBash():
+
         # Remove invalid crons from /etc/crontab Reference: https://github.com/usmannasir/cyberpanel/issues/216
-        # command = """sed -i '/CyberCP/d' /etc/crontab"""
-        # Upgrade.executioner(command, command, 0, True)
-        #
-        # if os.path.exists('/usr/local/lsws/conf/httpd.conf'):
-        #     # Setup /usr/local/lsws/conf/httpd.conf to use new Logformat standard for better stats and accesslogs
-        #     command = """sed -i "s|^LogFormat.*|LogFormat '%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"' combined|g" /usr/local/lsws/conf/httpd.conf"""
-        #     Upgrade.executioner(command, command, 0, True)
-        #
-        # # Fix all existing vhost confs to use new Logformat standard for better stats and accesslogs
-        # command = """find /usr/local/lsws/conf/vhosts/ -type f -name 'vhost.conf' -exec sed -i "s/.*CustomLog.*/    LogFormat '%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"' combined\n&/g" {} \;"""
-        # Upgrade.executioner(command, command, 0, True)
+        command = """sed -i '/CyberCP/d' /etc/crontab"""
+        Upgrade.executioner(command, command, 0, True)
+
+        if os.path.exists('/usr/local/lsws/conf/httpd.conf'):
+            # Setup /usr/local/lsws/conf/httpd.conf to use new Logformat standard for better stats and accesslogs
+            command = """sed -i "s|^LogFormat.*|LogFormat '%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"' combined|g" /usr/local/lsws/conf/httpd.conf"""
+            Upgrade.executioner(command, command, 0, True)
+
+        # Fix all existing vhost confs to use new Logformat standard for better stats and accesslogs
+        command = """find /usr/local/lsws/conf/vhosts/ -type f -name 'vhost.conf' -exec sed -i "s/.*CustomLog.*/    LogFormat '%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"' combined\n&/g" {} \;"""
+        Upgrade.executioner(command, command, 0, True)
 
         # Install any Cyberpanel missing crons to root crontab so its visible to users via crontab -l as root user
 
