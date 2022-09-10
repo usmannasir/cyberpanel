@@ -863,7 +863,7 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
 
     $scope.errorMessage = true;
     var uploader;
-    if (domainName == "") {
+    if (domainName === "") {
         uploader = $scope.uploader = new FileUploader({
             url: "/filemanager/upload",
             headers: {
@@ -885,7 +885,6 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
                 "home": homePathBack
             }]
         });
-
     }
 
 
