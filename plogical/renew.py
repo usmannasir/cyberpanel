@@ -55,11 +55,6 @@ class Renew:
                             'Renewing SSL for %s..' % (website.domain), 0)
 
                         virtualHostUtilities.issueSSL(website.domain, '/home/%s/public_html' % (website.domain), website.adminEmail)
-                else:
-                    logging.writeToFile(
-                        'SSL does not exist for %s. Obtaining now..' % (website.domain), 0)
-                    virtualHostUtilities.issueSSL(website.domain, '/home/%s/public_html' % (website.domain),
-                                                  website.adminEmail)
 
             ## For child-domains
 
@@ -96,12 +91,6 @@ class Renew:
 
                         virtualHostUtilities.issueSSL(website.domain, website.path,
                                                       website.master.adminEmail)
-                else:
-                    logging.writeToFile(
-                        'SSL does not exist for %s. Obtaining now..' % (website.domain), 0)
-                    virtualHostUtilities.issueSSL(website.domain, website.path,
-                                                  website.master.adminEmail)
-
         except BaseException as msg:
            logging.writeToFile(str(msg) + '. Renew.SSLObtainer')
 
