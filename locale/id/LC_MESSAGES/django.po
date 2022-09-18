@@ -606,7 +606,7 @@ msgstr "Port"
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:63
 #: backup/templates/backup/backupDestinations.html:47
 msgid "Backup server SSH Port, leave empty for 22."
-msgstr "Port SSH server backup, kosongkan jika 22."
+msgstr "Port SSH server cadangan, kosongkan jika 22."
 
 #: IncBackups/templates/IncBackups/incrementalDestinations.html:91
 #: backup/templates/backup/backupDestinations.html:97
@@ -682,7 +682,7 @@ msgstr "Terminal"
 
 #: WebTerminal/templates/WebTerminal/WebTerminal.html:18
 msgid "Web Terminal Docs"
-msgstr "Dokumentasiumen Web Terminal"
+msgstr "Dokumentasi Web Terminal"
 
 #: WebTerminal/templates/WebTerminal/WebTerminal.html:19
 msgid "Execute your terminal commands."
@@ -836,7 +836,7 @@ msgstr "Tujuan Berhasil Ditambahkan."
 #: websiteFunctions/templates/websiteFunctions/website.html:778
 #: websiteFunctions/templates/websiteFunctions/website.html:884
 msgid "Could not connect to server. Please refresh this page."
-msgstr "Tidak bisa menyambung ke server. Coba refresh halaman ini."
+msgstr "Tidak bisa menyambung ke server. Coba muat ulang halaman ini."
 
 #: backup/templates/backup/backupDestinations.html:98
 #: backup/templates/backup/backupDestinations.html:106
@@ -918,7 +918,7 @@ msgstr "Cadangan Jarak jauh"
 
 #: backup/templates/backup/remoteBackups.html:3
 msgid "Transfer Websites from Remote Server - CyberPanel"
-msgstr "Transfer Situs dan Server Lain - CyberPanel"
+msgstr "Transfer Situs dari Server Lain - CyberPanel"
 
 #: backup/templates/backup/remoteBackups.html:14
 msgid "Remote Transfer"
@@ -954,7 +954,7 @@ msgstr "Batalkan"
 
 #: backup/templates/backup/remoteBackups.html:72
 msgid "Could not connect, please refresh this page."
-msgstr "Tidak bisa menyambungkan, coba refresh halaman."
+msgstr "Tidak bisa menyambungkan, coba muat ulang halaman."
 
 #: backup/templates/backup/remoteBackups.html:76
 msgid "Accounts Successfully Fetched from remote server."
@@ -1002,7 +1002,7 @@ msgstr "Paket"
 #: websiteFunctions/templates/websiteFunctions/installWordPress.html:49
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:67
 msgid "Email"
-msgstr "Email"
+msgstr "Surel"
 
 #: backup/templates/backup/restore.html:3
 msgid "Restore Website - CyberPanel"
@@ -1029,7 +1029,7 @@ msgstr "Pilih Cadangan"
 
 #: backup/templates/backup/restore.html:61
 msgid "Condition"
-msgstr "Syarat"
+msgstr "Kondisi"
 
 #: backup/templates/backup/restore.html:86
 #: databases/templates/databases/deleteDatabase.html:60
@@ -1226,7 +1226,7 @@ msgstr "Panel Kontrol Hosting Web"
 
 #: baseTemplate/templates/baseTemplate/index.html:203
 msgid "Close sidebar"
-msgstr "Tutup baris sisi"
+msgstr "Tutup sisi baris"
 
 #: baseTemplate/templates/baseTemplate/index.html:209
 msgid "My Account"
@@ -1372,7 +1372,7 @@ msgstr "Buat Situs"
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:19
 #: websiteFunctions/templates/websiteFunctions/modifyWebsite.html:93
 msgid "Modify Website"
-msgstr "Edit Situs"
+msgstr "Ubah Situs"
 
 #: baseTemplate/templates/baseTemplate/index.html:417
 #: websiteFunctions/templates/websiteFunctions/index.html:81
@@ -1506,7 +1506,7 @@ msgstr "Tambah/Hapus Rekor"
 #: mailServer/templates/mailServer/createEmailAccount.html:12
 #: mailServer/templates/mailServer/createEmailAccount.html:19
 msgid "Create Email Account"
-msgstr "Buat Akun Email"
+msgstr "Buat Akun Surel"
 
 #: baseTemplate/templates/baseTemplate/index.html:513
 #: mailServer/templates/mailServer/createEmailAccount.html:98
@@ -1515,19 +1515,19 @@ msgstr "Buat Akun Email"
 #: userManagment/templates/userManagment/createACL.html:262
 #: userManagment/templates/userManagment/modifyACL.html:266
 msgid "Create Email"
-msgstr "Buat Email"
+msgstr "Buat Surel"
 
 #: baseTemplate/templates/baseTemplate/index.html:516
 #: userManagment/templates/userManagment/createACL.html:271
 #: userManagment/templates/userManagment/modifyACL.html:275
 msgid "List Emails"
-msgstr "Daftar Email"
+msgstr "Daftar Surel"
 
 #: baseTemplate/templates/baseTemplate/index.html:519
 #: mailServer/templates/mailServer/deleteEmailAccount.html:12
 #: mailServer/templates/mailServer/deleteEmailAccount.html:19
 msgid "Delete Email Account"
-msgstr "Hapus Akun Email"
+msgstr "Hapus Akun Surel"
 
 #: baseTemplate/templates/baseTemplate/index.html:519
 #: mailServer/templates/mailServer/deleteEmailAccount.html:73
@@ -1536,13 +1536,13 @@ msgstr "Hapus Akun Email"
 #: userManagment/templates/userManagment/createACL.html:280
 #: userManagment/templates/userManagment/modifyACL.html:284
 msgid "Delete Email"
-msgstr "Hapus Email"
+msgstr "Hapus Surel"
 
 #: baseTemplate/templates/baseTemplate/index.html:522
 #: userManagment/templates/userManagment/createACL.html:289
 #: userManagment/templates/userManagment/modifyACL.html:293
 msgid "Email Forwarding"
-msgstr "Pengalihan Email"
+msgstr "Pengalihan Surel"
 
 #: baseTemplate/templates/baseTemplate/index.html:525
 #: databases/templates/databases/listDataBases.html:90
@@ -1636,11 +1636,11 @@ msgstr "Jadwal Cadangan"
 
 #: baseTemplate/templates/baseTemplate/index.html:607
 msgid "Restore from Remote Server"
-msgstr "Pulihkan dari Server Remot  - CyberPanel"
+msgstr "Pulihkan dari Server Jarak Jauh  - CyberPanel"
 
 #: baseTemplate/templates/baseTemplate/index.html:607
 msgid "Restore from Remote"
-msgstr "Pulihkan dari Server Remot"
+msgstr "Pulihkan dari Server Jarak Jauh"
 
 #: baseTemplate/templates/baseTemplate/index.html:624
 #: manageSSL/templates/manageSSL/index.html:29
@@ -1759,14 +1759,14 @@ msgstr "Buat Kontainer Baru"
 #: tuning/templates/tuning/index.html:24 tuning/templates/tuning/index.html:26
 #: tuning/templates/tuning/liteSpeedTuning.html:12
 msgid "LiteSpeed Tuning"
-msgstr "Tuning LiteSpeed"
+msgstr "Penyetelan LiteSpeed"
 
 #: baseTemplate/templates/baseTemplate/index.html:736
 #: tuning/templates/tuning/index.html:36 tuning/templates/tuning/index.html:38
 #: tuning/templates/tuning/phpTuning.html:13
 #: tuning/templates/tuning/phpTuning.html:149
 msgid "PHP Tuning"
-msgstr "Tuning PHP"
+msgstr "Penyetelan PHP"
 
 #: baseTemplate/templates/baseTemplate/index.html:751
 #: serverStatus/templates/serverStatus/topProcesses.html:14
@@ -1827,11 +1827,11 @@ msgstr "Log Kesalahan"
 #: serverLogs/templates/serverLogs/index.html:49
 #: serverLogs/templates/serverLogs/index.html:52
 msgid "Email Logs"
-msgstr "Log Email"
+msgstr "Log Surel"
 
 #: baseTemplate/templates/baseTemplate/index.html:799
 msgid "Email Log"
-msgstr "Log Email"
+msgstr "Log Surel"
 
 #: baseTemplate/templates/baseTemplate/index.html:801
 #: serverLogs/templates/serverLogs/ftplogs.html:13
@@ -1920,11 +1920,11 @@ msgstr "Pengaturan Mail"
 #: baseTemplate/templates/baseTemplate/index.html:852
 #: emailPremium/templates/emailPremium/policyServer.html:20
 msgid "Email Policy Server"
-msgstr "Server Kebijakan Email"
+msgstr "Server Kebijakan Surel"
 
 #: baseTemplate/templates/baseTemplate/index.html:855
 msgid "Email Limits"
-msgstr "Batasan Email"
+msgstr "Batasan Surel"
 
 #: baseTemplate/templates/baseTemplate/index.html:858
 msgid "SpamAssassin Configurations"
@@ -2587,7 +2587,7 @@ msgid ""
 "You do not have permissions to install Docker. Please contact your system "
 "administrator"
 msgstr ""
-"Anda tidak mempunyai keweangan untuk memasang Docker. Silakan hubungi "
+"Anda tidak mempunyai kewenangan untuk memasang Docker. Silakan hubungi "
 "pengelola sistem anda"
 
 #: dockerManager/templates/dockerManager/listContainers.html:3
@@ -2772,7 +2772,7 @@ msgstr "Nama Templat"
 
 #: emailMarketing/templates/emailMarketing/composeMessages.html:36
 msgid "Email Subject"
-msgstr "Subyek Email"
+msgstr "Subyek Surel"
 
 #: emailMarketing/templates/emailMarketing/composeMessages.html:43
 msgid "From Name"
@@ -2780,11 +2780,11 @@ msgstr "Nama Pengirim"
 
 #: emailMarketing/templates/emailMarketing/composeMessages.html:50
 msgid "From Email"
-msgstr "Email Pengirim"
+msgstr "Surel Pengirim"
 
 #: emailMarketing/templates/emailMarketing/composeMessages.html:57
 msgid "Reply Email"
-msgstr "Email Balasan"
+msgstr "Surel Balasan"
 
 #: emailMarketing/templates/emailMarketing/composeMessages.html:73
 msgid "Save Template"
@@ -2792,12 +2792,12 @@ msgstr "Simpan Templat"
 
 #: emailMarketing/templates/emailMarketing/createEmailList.html:3
 msgid "Create Email List - CyberPanel"
-msgstr "Buat Email List - CyberPanel"
+msgstr "Buat Surel List - CyberPanel"
 
 #: emailMarketing/templates/emailMarketing/createEmailList.html:13
 #: emailMarketing/templates/emailMarketing/createEmailList.html:19
 msgid "Create Email List"
-msgstr "Buat Email List"
+msgstr "Buat Surel List"
 
 #: emailMarketing/templates/emailMarketing/createEmailList.html:14
 msgid "Create email list, to send out news letters and marketing emails."
@@ -2822,7 +2822,7 @@ msgstr "Pilih user untuk Mengaktifkan/Menonaktifkan Fitur Email Marketing!"
 #: emailMarketing/templates/emailMarketing/emailMarketing.html:29
 #: emailPremium/templates/emailPremium/listDomains.html:29
 msgid "Email Policy Server is not enabled "
-msgstr "Server Kebijakan Email tidak diaktifkan "
+msgstr "Server Kebijakan Surel tidak diaktifkan "
 
 #: emailMarketing/templates/emailMarketing/emailMarketing.html:32
 #: emailPremium/templates/emailPremium/listDomains.html:33
@@ -2841,7 +2841,7 @@ msgstr "Username"
 
 #: emailMarketing/templates/emailMarketing/emailMarketing.html:54
 msgid "Email Marketing Enabled."
-msgstr "Email Marketing Diaktifkan."
+msgstr "Surel Marketing Diaktifkan."
 
 #: emailMarketing/templates/emailMarketing/emailMarketing.html:55
 #: emailPremium/templates/emailPremium/emailLimits.html:53
@@ -2856,7 +2856,7 @@ msgstr "Nonaktifkan"
 
 #: emailMarketing/templates/emailMarketing/emailMarketing.html:56
 msgid "Email Marketing Disabled."
-msgstr "Email Marketing Dinonaktifkan."
+msgstr "Surel Marketing Dinonaktifkan."
 
 #: emailMarketing/templates/emailMarketing/emailMarketing.html:57
 #: emailPremium/templates/emailPremium/emailLimits.html:55
@@ -2871,12 +2871,12 @@ msgstr "Aktifkan"
 
 #: emailMarketing/templates/emailMarketing/manageLists.html:3
 msgid "Manage Email Lists - CyberPanel"
-msgstr "Kelola Email List - CyberPanel"
+msgstr "Kelola Surel List - CyberPanel"
 
 #: emailMarketing/templates/emailMarketing/manageLists.html:13
 #: emailMarketing/templates/emailMarketing/manageLists.html:19
 msgid "Manage Email Lists"
-msgstr "Kelola Email List"
+msgstr "Kelola Surel List"
 
 #: emailMarketing/templates/emailMarketing/manageLists.html:14
 msgid ""
@@ -2924,15 +2924,15 @@ msgstr "Verifikasi List Ini"
 
 #: emailMarketing/templates/emailMarketing/manageLists.html:66
 msgid "Add More Emails"
-msgstr "Tambah Email Lagi"
+msgstr "Tambah Surel Lagi"
 
 #: emailMarketing/templates/emailMarketing/manageLists.html:83
 msgid "Load Emails"
-msgstr "Panggil Email"
+msgstr "Panggil Surel"
 
 #: emailMarketing/templates/emailMarketing/manageLists.html:142
 msgid "email"
-msgstr "email"
+msgstr "surel"
 
 #: emailMarketing/templates/emailMarketing/manageLists.html:143
 msgid "Verification Status"
@@ -2978,7 +2978,7 @@ msgstr "Verifikasi Host"
 
 #: emailMarketing/templates/emailMarketing/sendEmails.html:3
 msgid "Send Emails - CyberPanel"
-msgstr "Kirim Email - CyberPanel"
+msgstr "Kirim Surel - CyberPanel"
 
 #: emailMarketing/templates/emailMarketing/sendEmails.html:13
 #: emailMarketing/templates/emailMarketing/sendEmails.html:19
@@ -2990,7 +2990,7 @@ msgstr "Kirim Email - CyberPanel"
 #: websiteFunctions/templates/websiteFunctions/website.html:960
 #: websiteFunctions/templates/websiteFunctions/website.html:961
 msgid "Send Emails"
-msgstr "Kirim Email"
+msgstr "Kirim Surel"
 
 #: emailMarketing/templates/emailMarketing/sendEmails.html:14
 msgid ""
@@ -3034,7 +3034,7 @@ msgstr "Jalankan Tugas"
 
 #: emailMarketing/templates/emailMarketing/sendEmails.html:154
 msgid "Total Emails"
-msgstr "Total Email"
+msgstr "Total Surel"
 
 #: emailMarketing/templates/emailMarketing/sendEmails.html:155
 msgid "Sent"
@@ -3443,7 +3443,7 @@ msgstr "File"
 #: websiteFunctions/templates/websiteFunctions/website.html:803
 #: websiteFunctions/templates/websiteFunctions/website.html:804
 msgid "File Manager"
-msgstr "File Manager"
+msgstr "Pengelola File"
 
 #: emailMarketing/templates/emailMarketing/website.html:874
 #: emailMarketing/templates/emailMarketing/website.html:877
@@ -3610,7 +3610,7 @@ msgstr "Konfigurasi SpamAssassin!"
 
 #: emailPremium/templates/emailPremium/SpamAssassin.html:17
 msgid "SpamAssassin Docs"
-msgstr "Dokumentasiumentasi SpamAssassin"
+msgstr "Dokumentasi SpamAssassin"
 
 #: emailPremium/templates/emailPremium/SpamAssassin.html:19
 #: firewall/templates/firewall/spamassassin.html:14
@@ -3730,7 +3730,7 @@ msgstr "Batasan yang tidak diterapkan!"
 #: userManagment/templates/userManagment/listUsers.html:51
 #: websiteFunctions/templates/websiteFunctions/listCron.html:66
 msgid "Edit"
-msgstr "Edit"
+msgstr "Ubah"
 
 #: emailPremium/templates/emailPremium/emailLimits.html:70
 #: emailPremium/templates/emailPremium/emailPage.html:78
@@ -3756,11 +3756,11 @@ msgstr "Batasan berhasil diubah, memuat ulang dalam 3 detik."
 #: emailPremium/templates/emailPremium/emailLimits.html:126
 #: emailPremium/templates/emailPremium/emailPage.html:25
 msgid "Email Resource Usage"
-msgstr "Penggunaan Sumberdaya Email"
+msgstr "Penggunaan Sumberdaya Surel"
 
 #: emailPremium/templates/emailPremium/emailLimits.html:133
 msgid "Search Emails.."
-msgstr "Cari Email.."
+msgstr "Cari Surel.."
 
 #: emailPremium/templates/emailPremium/emailLimits.html:164
 #: emailPremium/templates/emailPremium/listDomains.html:67
@@ -3770,7 +3770,7 @@ msgstr "Kelola"
 
 #: emailPremium/templates/emailPremium/emailPage.html:13
 msgid "Emai Limits Docs"
-msgstr "Dokumentasi Batasan Email"
+msgstr "Dokumentasi Batasan Surel"
 
 #: emailPremium/templates/emailPremium/emailPage.html:14
 msgid "View and change limits for an Email Address."
@@ -3778,11 +3778,11 @@ msgstr "Lihat dan ubah batasan untuk sebuah Alamat Email."
 
 #: emailPremium/templates/emailPremium/emailPage.html:60
 msgid "Logging in ON!"
-msgstr "Logging ON!"
+msgstr "Masuk!"
 
 #: emailPremium/templates/emailPremium/emailPage.html:62
 msgid "Logging is Off"
-msgstr "Logging OFF"
+msgstr "Keluar"
 
 #: emailPremium/templates/emailPremium/emailPage.html:88
 msgid "Hourly Limit"
@@ -3794,7 +3794,7 @@ msgstr "Batasan berhasil diubah."
 
 #: emailPremium/templates/emailPremium/emailPage.html:151
 msgid "Search Emails Logs.."
-msgstr "Cari Log Email.."
+msgstr "Cari Log Surel.."
 
 #: emailPremium/templates/emailPremium/emailPage.html:155
 msgid "Flush Logs"
@@ -3811,15 +3811,15 @@ msgstr ""
 
 #: emailPremium/templates/emailPremium/policyServer.html:3
 msgid "Email Policy Server - CyberPanel"
-msgstr "Server Kebijakan Email - CyberPanel"
+msgstr "Server Kebijakan Surel - CyberPanel"
 
 #: emailPremium/templates/emailPremium/policyServer.html:13
 msgid "Email Policy Server Configurations!"
-msgstr "Konfigurasi Server Kebijakan Email!"
+msgstr "Konfigurasi Server Kebijakan Surel!"
 
 #: emailPremium/templates/emailPremium/policyServer.html:14
 msgid "Turn ON Email Policy Server to use Email Limits Feature. "
-msgstr "Aktifkan Server Kebijakan Email untuk menggunakan Fitur Pembatasan Email. "
+msgstr "Aktifkan Server Kebijakan Surel untuk menggunakan Fitur Pembatasan Surel. "
 
 #: emailPremium/templates/emailPremium/policyServer.html:40
 #: manageServices/templates/manageServices/managePostfix.html:41
@@ -3847,11 +3847,11 @@ msgstr "Perubahan berhasil diterapkan."
 
 #: filemanager/templates/filemanager/index.html:5
 msgid "File Manager - CyberPanel"
-msgstr "File Manager - CyberPanel"
+msgstr "Pengelola File - CyberPanel"
 
 #: filemanager/templates/filemanager/index.html:54
 msgid " File Manager"
-msgstr " File Manager"
+msgstr " Pengelola File"
 
 #: filemanager/templates/filemanager/index.html:58
 #: filemanager/templates/filemanager/index.html:197
@@ -3919,7 +3919,7 @@ msgstr "Kembali"
 #: serverStatus/templates/serverStatus/cybercpmainlogfile.html:37
 #: websiteFunctions/templates/websiteFunctions/listCron.html:36
 msgid "Refresh"
-msgstr "Refresh"
+msgstr "Muat Ulang"
 
 #: filemanager/templates/filemanager/index.html:146
 msgid "Select All"
@@ -4136,7 +4136,7 @@ msgstr "Mode"
 #: filemanager/templates/filemanager/index.html:612
 #: serverStatus/templates/serverStatus/topProcesses.html:193
 msgid "User"
-msgstr "User"
+msgstr "Pengguna"
 
 #: filemanager/templates/filemanager/index.html:613
 msgid "Group"
@@ -4287,7 +4287,7 @@ msgstr "Rule berhasil ditambahkan."
 
 #: firewall/templates/firewall/index.html:3
 msgid "Security - CyberPanel"
-msgstr "Keamanan - CyberPaneç"
+msgstr "Keamanan - CyberPanel"
 
 #: firewall/templates/firewall/index.html:12
 msgid "Security Functions"
@@ -4299,7 +4299,7 @@ msgstr "Kelola keamanan server di halaman ini."
 
 #: firewall/templates/firewall/modSecurity.html:3
 msgid "ModSecurity - CyberPanel"
-msgstr "ModSecurity - CyberPaneç"
+msgstr "ModSecurity - CyberPanel"
 
 #: firewall/templates/firewall/modSecurity.html:14
 #: firewall/templates/firewall/modSecurity.html:208
@@ -4335,7 +4335,7 @@ msgstr "ModSecurity belum terpasang "
 #: firewall/templates/firewall/modSecurity.html:257
 #: firewall/templates/firewall/spamassassin.html:55
 msgid "ModSecurity successfully installed, refreshing page in 3 seconds.."
-msgstr "ModSecurity berhasil terpasang, memuat ulanghalaman dalam 3 detik.."
+msgstr "ModSecurity berhasil terpasang, memuat ulang halaman dalam 3 detik.."
 
 #: firewall/templates/firewall/modSecurity.html:73
 #: firewall/templates/firewall/modSecurity.html:269
@@ -4416,7 +4416,7 @@ msgstr "Nama berkas"
 
 #: firewall/templates/firewall/secureSSH.html:3
 msgid "Secure SSH - CyberPanel"
-msgstr "Secure SSH - CyberPanel"
+msgstr "Keamanan SSH - CyberPanel"
 
 #: firewall/templates/firewall/secureSSH.html:13
 msgid "SSH Docs"
@@ -4575,14 +4575,14 @@ msgstr "Direktori"
 
 #: mailServer/templates/mailServer/changeEmailPassword.html:3
 msgid "Change Email Password - CyberPanel"
-msgstr "Ganti Password Email - CyberPanel"
+msgstr "Ganti Password Surel - CyberPanel"
 
 #: mailServer/templates/mailServer/changeEmailPassword.html:12
 #: mailServer/templates/mailServer/changeEmailPassword.html:19
 #: userManagment/templates/userManagment/createACL.html:299
 #: userManagment/templates/userManagment/modifyACL.html:303
 msgid "Change Email Password"
-msgstr "Ganti Password Email"
+msgstr "Ganti Password Surel"
 
 #: mailServer/templates/mailServer/changeEmailPassword.html:13
 msgid "Select a website from the list, to change its password."
@@ -4600,7 +4600,7 @@ msgstr "Postfix tidak aktif."
 #: mailServer/templates/mailServer/deleteEmailAccount.html:58
 #: mailServer/templates/mailServer/emailForwarding.html:52
 msgid "Select Email"
-msgstr "Pilih Email"
+msgstr "Pilih Surel"
 
 #: mailServer/templates/mailServer/changeEmailPassword.html:106
 #: mailServer/templates/mailServer/deleteEmailAccount.html:90
@@ -4618,7 +4618,7 @@ msgstr "Saat ini tidak ada akun email dalam domain ini."
 
 #: mailServer/templates/mailServer/createEmailAccount.html:3
 msgid "Create Email Account - CyberPanel"
-msgstr "Buat Akun Email - CyberPanel"
+msgstr "Buat Akun Surel - CyberPanel"
 
 #: mailServer/templates/mailServer/createEmailAccount.html:13
 msgid "Select a website from the list, to create an email account."
@@ -4626,11 +4626,11 @@ msgstr "Pilih situs dari daftar untuk membuat akun email."
 
 #: mailServer/templates/mailServer/createEmailAccount.html:106
 msgid "Cannot create email account. Error message:"
-msgstr "Tidak bisa membuat akun email. Pesan kesalahan:"
+msgstr "Tidak bisa membuat akun Surel. Pesan kesalahan:"
 
 #: mailServer/templates/mailServer/createEmailAccount.html:111
 msgid "Email with id :"
-msgstr "Email dengan ID:"
+msgstr "Surel dengan ID:"
 
 #: mailServer/templates/mailServer/createEmailAccount.html:112
 msgid " is successfully created."
@@ -4638,15 +4638,15 @@ msgstr " berhasil dibuat."
 
 #: mailServer/templates/mailServer/deleteEmailAccount.html:3
 msgid "Delete Email Account - CyberPanel"
-msgstr "Hapus Akun Email - CyberPanel"
+msgstr "Hapus Akun Surel - CyberPanel"
 
 #: mailServer/templates/mailServer/deleteEmailAccount.html:13
 msgid "Select a website from the list, to delete an email account."
-msgstr "Pilih situs dari daftar untuk menghapus akun email."
+msgstr "Pilih situs dari daftar untuk menghapus akun Surel."
 
 #: mailServer/templates/mailServer/deleteEmailAccount.html:95
 msgid "Email with id : {$ deletedID $} is successfully deleted."
-msgstr "Email dengan ID: {$ deletedID $} berhasil dihapus."
+msgstr "Surel dengan ID: {$ deletedID $} berhasil dihapus."
 
 #: mailServer/templates/mailServer/dkimManager.html:3
 msgid "DKIM Manager - CyberPanel"
@@ -4701,12 +4701,12 @@ msgstr "Kunci Publik"
 
 #: mailServer/templates/mailServer/emailForwarding.html:3
 msgid "Setup Email Forwarding - CyberPanel"
-msgstr "Penyiapan Pengalihan Email - CyberPanel"
+msgstr "Penyiapan Pengalihan Surel - CyberPanel"
 
 #: mailServer/templates/mailServer/emailForwarding.html:12
 #: mailServer/templates/mailServer/emailForwarding.html:19
 msgid "Setup Email Forwarding"
-msgstr "Setel Pengalihan Email"
+msgstr "Setel Pengalihan Surel"
 
 #: mailServer/templates/mailServer/emailForwarding.html:12
 msgid "Forwarding Docs"
@@ -4714,7 +4714,7 @@ msgstr "Opsi Penerusan"
 
 #: mailServer/templates/mailServer/emailForwarding.html:13
 msgid "This page help you setup email forwarding for your emails."
-msgstr "Halaman ini membantu menyiapkan pengalihan untuk email anda."
+msgstr "Halaman ini membantu menyiapkan pengalihan untuk Surel anda."
 
 #: mailServer/templates/mailServer/emailForwarding.html:61
 msgid "Forwarding Options"
@@ -4731,7 +4731,7 @@ msgstr ""
 
 #: mailServer/templates/mailServer/emailForwarding.html:106
 msgid "Forward Email"
-msgstr "Alihkan Email"
+msgstr "Alihkan Surel"
 
 #: mailServer/templates/mailServer/index.html:3
 msgid "Mail Functions - CyberPanel"
@@ -4743,7 +4743,7 @@ msgstr "Fungsi Mail"
 
 #: mailServer/templates/mailServer/index.html:13
 msgid "Manage email accounts on this page."
-msgstr "Mengelola akun email di halaman ini."
+msgstr "Mengelola akun Surel di halaman ini."
 
 #: mailServer/templates/mailServer/listEmails.html:3
 msgid "List Email Accounts - CyberPanel"
@@ -4756,7 +4756,7 @@ msgstr "Daftar Akun FTP"
 
 #: mailServer/templates/mailServer/listEmails.html:14
 msgid "List Emails Accounts. Change their passwords or delete them."
-msgstr "Daftar Akun Email. Ubah kata sandi atau hapus."
+msgstr "Daftar Akun Surel. Ubah kata sandi atau hapus."
 
 #: managePHP/templates/managePHP/editPHPConfig.html:3
 msgid "Edit PHP Configurations - CyberPanel"

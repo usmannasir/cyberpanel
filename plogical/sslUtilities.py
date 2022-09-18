@@ -52,6 +52,20 @@ class sslUtilities:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [IO Error with main config file [checkSSLListener]]")
             return str(msg)
         return 0
+    
+ 
+    @staticmethod
+    def checkSSLIPv6Listener():
+        try:
+            data = open("/usr/local/lsws/conf/httpd_config.conf").readlines()
+            for items in data:
+                if items.find("listener SSL IPv6") > -1:
+                    return 1
+
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [IO Error with main config file [checkSSLIPv6Listener]]")
+            return str(msg)
+        return 0
 
     @staticmethod
     def getDNSRecords(virtualHostName):
@@ -87,6 +101,45 @@ class sslUtilities:
 
                     listener = "listener SSL {" + "\n"
                     address = "  address                 *:443" + "\n"
+                    secure = "  secure                  1" + "\n"
+                    keyFile = "  keyFile                  /etc/letsencrypt/live/" + virtualHostName + "/privkey.pem\n"
+                    certFile = "  certFile                 /etc/letsencrypt/live/" + virtualHostName + "/fullchain.pem\n"
+                    certChain = "  certChain               1" + "\n"
+                    sslProtocol = "  sslProtocol             24" + "\n"
+                    enableECDHE = "  enableECDHE             1" + "\n"
+                    renegProtection = "  renegProtection         1" + "\n"
+                    sslSessionCache = "  sslSessionCache         1" + "\n"
+                    enableSpdy = "  enableSpdy              15" + "\n"
+                    enableStapling = "  enableStapling           1" + "\n"
+                    ocspRespMaxAge = "  ocspRespMaxAge           86400" + "\n"
+                    map = "  map                     " + virtualHostName + " " + virtualHostName + "\n"
+                    final = "}" + "\n" + "\n"
+
+                    writeDataToFile.writelines("\n")
+                    writeDataToFile.writelines(listener)
+                    writeDataToFile.writelines(address)
+                    writeDataToFile.writelines(secure)
+                    writeDataToFile.writelines(keyFile)
+                    writeDataToFile.writelines(certFile)
+                    writeDataToFile.writelines(certChain)
+                    writeDataToFile.writelines(sslProtocol)
+                    writeDataToFile.writelines(enableECDHE) 
+                    writeDataToFile.writelines(renegProtection)
+                    writeDataToFile.writelines(sslSessionCache)
+                    writeDataToFile.writelines(enableSpdy)
+                    writeDataToFile.writelines(enableStapling)
+                    writeDataToFile.writelines(ocspRespMaxAge)
+                    writeDataToFile.writelines(map)
+                    writeDataToFile.writelines(final)
+                    writeDataToFile.writelines("\n")
+                    writeDataToFile.close()
+
+                elif sslUtilities.checkSSLIPv6Listener() != 1:
+
+                    writeDataToFile = open("/usr/local/lsws/conf/httpd_config.conf", 'a')
+
+                    listener = "listener SSL IPv6 {" + "\n"
+                    address = "  address                 [ANY]:443" + "\n"
                     secure = "  secure                  1" + "\n"
                     keyFile = "  keyFile                  /etc/letsencrypt/live/" + virtualHostName + "/privkey.pem\n"
                     certFile = "  certFile                 /etc/letsencrypt/live/" + virtualHostName + "/fullchain.pem\n"
@@ -303,7 +356,7 @@ class sslUtilities:
                     f'Status Code: {str(resp.status_code)} for: {URLFetchPathWWW}. Error: {resp.text}')
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(
-                f'Status Code: Unkown for: {URLFetchPathWWW}. Error: {str(msg)}')
+                f'Status Code: Unknown for: {URLFetchPathWWW}. Error: {str(msg)}')
 
         try:
             resp = requests.get(URLFetchPathNONWWW, timeout=5)
@@ -339,9 +392,11 @@ class sslUtilities:
                     command = acmePath + " --issue -d " + virtualHostName + " -d www." + virtualHostName \
                               + ' --cert-file ' + existingCertPath + '/cert.pem' + ' --key-file ' + existingCertPath + '/privkey.pem' \
                               + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w /usr/local/lsws/Example/html -k ec-256 --force --server letsencrypt'
+                    ResultText = open(logging.CyberCPLogFileWriter.fileName, 'r').read()
+                    CurrentMessage = "Trying to obtain SSL for: " + virtualHostName + " and: www." + virtualHostName
+                    if (WWWStatus and NONWWWStatus) or ResultText.find(CurrentMessage) == -1:
 
-                    if WWWStatus and NONWWWStatus:
-                        logging.CyberCPLogFileWriter.writeToFile("Trying to obtain SSL for: " + virtualHostName + " and: www." + virtualHostName, 0)
+                        #logging.CyberCPLogFileWriter.writeToFile(CurrentMessage, 0)
 
                         logging.CyberCPLogFileWriter.writeToFile(command, 0)
 
@@ -364,7 +419,10 @@ class sslUtilities:
                                   + '/cert.pem' + ' --key-file ' + existingCertPath + '/privkey.pem' \
                                   + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + ' -w /usr/local/lsws/Example/html -k ec-256 --force --server letsencrypt'
 
-                        if NONWWWStatus:
+                        ResultText = open(logging.CyberCPLogFileWriter.fileName, 'r').read()
+                        CurrentMessage = '%s\nTrying to obtain SSL for: %s' % (finalText, virtualHostName)
+
+                        if NONWWWStatus or ResultText.find(CurrentMessage) == -1:
                             finalText = '%s\nTrying to obtain SSL for: %s' % (finalText, virtualHostName)
                             logging.CyberCPLogFileWriter.writeToFile("Trying to obtain SSL for: " + virtualHostName, 0)
                             output = subprocess.check_output(shlex.split(command)).decode("utf-8")

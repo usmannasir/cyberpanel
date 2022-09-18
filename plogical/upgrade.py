@@ -2563,9 +2563,10 @@ vmail
         command = """sed -i '/CyberCP/d' /etc/crontab"""
         subprocess.call(command, shell=True)
 
-        # Setup /usr/local/lsws/conf/httpd.conf to use new Logformat standard for better stats and accesslogs
-        command = """sed -i "s|^LogFormat.*|LogFormat '%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"' combined|g" /usr/local/lsws/conf/httpd.conf"""
-        subprocess.call(command, shell=True)
+        if os.path.exists('/usr/local/lsws/conf/httpd.conf'):
+            # Setup /usr/local/lsws/conf/httpd.conf to use new Logformat standard for better stats and accesslogs
+            command = """sed -i "s|^LogFormat.*|LogFormat '%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"' combined|g" /usr/local/lsws/conf/httpd.conf"""
+            subprocess.call(command, shell=True)
 
         # Fix all existing vhost confs to use new Logformat standard for better stats and accesslogs
         command = """find /usr/local/lsws/conf/vhosts/ -type f -name 'vhost.conf' -exec sed -i "s/.*CustomLog.*/    LogFormat '%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"' combined\n&/g" {} \;"""
