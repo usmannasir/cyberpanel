@@ -271,20 +271,24 @@ class mysqlUtilities:
 
             if not os.path.exists(cnfPath):
                 cnfContent = """[mysqldump]
-user=root
-password=%s
-max_allowed_packet=1024M
-[mysql]
-user=root
-password=%s
-""" % (password, password)
+                    user=%s
+                    password="%s"
+                    host=%s
+                    port=%s
+                    max_allowed_packet=1024M
+                    [mysql]
+                    user=%s
+                    password="%s"
+                    host=%s
+                    port=%s
+                    """ % (mysqluser,password, mysqlhost, mysqlport, mysqluser,password, mysqlhost, mysqlport)
                 writeToFile = open(cnfPath, 'w')
                 writeToFile.write(cnfContent)
                 writeToFile.close()
 
                 os.chmod(cnfPath, 0o600)
 
-            command = 'mysqldump --defaults-extra-file=/home/cyberpanel/.my.cnf -u %s --host=%s --port %s %s' % (mysqluser, mysqlhost, mysqlport, databaseName)
+            command = 'mysqldump --defaults-extra-file=/home/cyberpanel/.my.cnf %s' % (databaseName)
             cmd = shlex.split(command)
 
             try:
@@ -332,13 +336,17 @@ password=%s
 
             if not os.path.exists(cnfPath):
                 cnfContent = """[mysqldump]
-user=root
-password=%s
-max_allowed_packet=1024M
-[mysql]
-user=root
-password=%s
-""" % (password, password)
+                    user=%s
+                    password="%s"
+                    host=%s
+                    port=%s
+                    max_allowed_packet=1024M
+                    [mysql]
+                    user=%s
+                    password="%s"
+                    host=%s
+                    port=%s
+                    """ % (mysqluser,password, mysqlhost, mysqlport, mysqluser,password, mysqlhost, mysqlport)
                 writeToFile = open(cnfPath, 'w')
                 writeToFile.write(cnfContent)
                 writeToFile.close()
@@ -347,7 +355,7 @@ password=%s
                 command = 'chown cyberpanel:cyberpanel %s' % (cnfPath)
                 subprocess.call(shlex.split(command))
 
-            command = 'mysql --defaults-extra-file=/home/cyberpanel/.my.cnf -u %s --host=%s --port %s %s' % (mysqluser, mysqlhost, mysqlport, databaseName)
+            command = 'mysql --defaults-extra-file=/home/cyberpanel/.my.cnf %s' % (databaseName)
             if os.path.exists(ProcessUtilities.debugPath):
                 logging.CyberCPLogFileWriter.writeToFile(f'{command} {tempStoragePath}/{databaseName} ' )
             cmd = shlex.split(command)
