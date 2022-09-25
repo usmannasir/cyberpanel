@@ -27,6 +27,7 @@ CloudLinux7 = 4
 CloudLinux8 = 5
 openEuler20 = 6
 openEuler22 = 7
+Ubuntu22 = 8
 
 
 class Upgrade:
@@ -98,6 +99,8 @@ class Upgrade:
 
             if result.find('20.04') > -1:
                 return Ubuntu20
+            elif result.find('22.04') > -1:
+                return Ubuntu22
             else:
                 return Ubuntu18
 
@@ -2422,7 +2425,7 @@ echo $oConfig->Save() ? 'Done' : 'Error';
 
                 command = 'systemctl restart postfix'
                 Upgrade.executioner(command, 0)
-            elif Upgrade.FindOperatingSytem() == Ubuntu20:
+            elif Upgrade.FindOperatingSytem() == Ubuntu20 or Upgrade.FindOperatingSytem() == Ubuntu22:
 
                 debPath = '/etc/apt/sources.list.d/dovecot.list'
                 # writeToFile = open(debPath, 'w')
