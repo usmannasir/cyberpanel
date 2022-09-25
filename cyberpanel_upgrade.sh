@@ -614,7 +614,7 @@ fi
 
 wget https://cyberpanel.sh/www.litespeedtech.com/packages/lsapi/wsgi-lsapi-2.1.tgz
 tar xf wsgi-lsapi-2.1.tgz
-cd wsgi-lsapi-2.1.tgz || exit
+cd wsgi-lsapi-2.1 || exit
 /usr/local/CyberPanel/bin/python ./configure.py
 make
 
