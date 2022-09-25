@@ -1989,13 +1989,13 @@ autocreate_system_folders = On
             if os.path.exists(lscpdPath):
                 os.remove(lscpdPath)
 
-            command = 'cp -f /usr/local/CyberCP/lscpd-0.3.1 /usr/local/lscp/bin/lscpd-0.3.1'
+            command = 'cp -f /usr/local/CyberCP/lscpd.0.4.0 /usr/local/lscp/bin/lscpd.0.4.0'
             Upgrade.executioner(command, command, 0)
 
             command = 'rm -f /usr/local/lscp/bin/lscpd'
             Upgrade.executioner(command, command, 0)
 
-            command = 'mv /usr/local/lscp/bin/lscpd-0.3.1 /usr/local/lscp/bin/lscpd'
+            command = 'mv /usr/local/lscp/bin/lscpd.0.4.0 /usr/local/lscp/bin/lscpd'
             Upgrade.executioner(command, command, 0)
 
             command = f'chmod 755 {lscpdPath}'
