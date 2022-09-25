@@ -1697,6 +1697,10 @@ $parameters = array(
             try:
                 website = Websites.objects.get(domain=DataToPass['domainName'])
 
+                if website.phpSelection == 'PHP 7.3':
+                    website.phpSelection = 'PHP 7.4'
+                    website.save()
+
                 if ACLManager.checkOwnership(website.domain, self.extraArgs['adminID'],
                                              self.extraArgs['currentACL']) == 0:
                     statusFile = open(tempStatusPath, 'w')
