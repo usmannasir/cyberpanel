@@ -2820,7 +2820,7 @@ vmail
         except:
             pass
 
-        command = 'cp /usr/local/lsws/lsphp73/bin/lsphp %s' % (phpPath)
+        command = 'cp /usr/local/lsws/lsphp74/bin/lsphp %s' % (phpPath)
         Upgrade.executioner(command, 0)
 
         try:
