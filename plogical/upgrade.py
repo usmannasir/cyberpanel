@@ -2218,6 +2218,12 @@ echo $oConfig->Save() ? 'Done' : 'Error';
 
                 command = 'chmod 640 /etc/pdns/pdns.conf'
                 Upgrade.executioner(command, 0)
+            else:
+                command = 'chown root:pdns /etc/powerdns/pdns.conf'
+                Upgrade.executioner(command, 0)
+
+                command = 'chmod 640 /etc/powerdns/pdns.conf'
+                Upgrade.executioner(command, 0)
 
             command = 'chmod 640 /usr/local/lscp/cyberpanel/logs/access.log'
             Upgrade.executioner(command, 0)
