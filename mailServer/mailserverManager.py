@@ -1577,7 +1577,7 @@ milter_default_action = accept
             command = 'chmod 640 /etc/pdns/pdns.conf'
             ProcessUtilities.executioner(command)
         else:
-            command = 'chown root:pdns /etc/powerdns/pdns.conf'
+            command = 'chown root:powerdns /etc/powerdns/pdns.conf'
             ProcessUtilities.executioner(command)
 
             command = 'chmod 640 /etc/powerdns/pdns.conf'

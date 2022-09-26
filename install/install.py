@@ -655,7 +655,7 @@ password="%s"
             command = 'chmod 640 /etc/pdns/pdns.conf'
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
         else:
-            command = 'chown root:pdns /etc/powerdns/pdns.conf'
+            command = 'chown root:powerdns /etc/powerdns/pdns.conf'
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             command = 'chmod 640 /etc/powerdns/pdns.conf'
