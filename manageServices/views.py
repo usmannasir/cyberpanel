@@ -276,6 +276,7 @@ def manageApplications(request):
 
     esPath = '/home/cyberpanel/elasticsearch'
     rPath = '/home/cyberpanel/redis'
+    psPath = '/home/cyberpanel/postgresql'
 
     if os.path.exists(esPath):
         installed = 'Installed'
@@ -287,12 +288,21 @@ def manageApplications(request):
     else:
         rInstalled = 'Not-Installed'
 
+    if os.path.exists(psPath):
+        rInstalled = 'Installed'
+    else:
+        rInstalled = 'Not-Installed'    
+
     elasticSearch = {'image': '/static/manageServices/images/elastic-search.png', 'name': 'Elasticsearch',
                      'installed': installed}
     redis = {'image': '/static/manageServices/images/redis.png', 'name': 'Redis',
              'installed': rInstalled}
+    postgresql = {'image': '/static/manageServices/images/postgresql.png', 'name': 'Postgresql',
+             'installed': rInstalled}
+
     services.append(elasticSearch)
     services.append(redis)
+    services.append(postgresql)
 
     proc = httpProc(request, 'manageServices/applications.html',
                     {'services': services}, 'admin')
@@ -318,11 +328,17 @@ def removeInstall(request):
                     command = '/usr/local/CyberCP/bin/python /usr/local/CyberCP/manageServices/serviceManager.py --function InstallElasticSearch'
                 else:
                     command = '/usr/local/CyberCP/bin/python /usr/local/CyberCP/manageServices/serviceManager.py --function RemoveElasticSearch'
-            elif appName == 'Redis':
+            if appName == 'Redis':
                 if status == 'Installing':
                     command = '/usr/local/CyberCP/bin/python /usr/local/CyberCP/manageServices/serviceManager.py --function InstallRedis'
                 else:
                     command = '/usr/local/CyberCP/bin/python /usr/local/CyberCP/manageServices/serviceManager.py --function RemoveRedis'
+
+            elif appName == 'Postgresql':
+                if status == 'Installing':
+                    command = '/usr/local/CyberCP/bin/python /usr/local/CyberCP/manageServices/serviceManager.py --function InstallPostgresql'
+                else:
+                    command = '/usr/local/CyberCP/bin/python /usr/local/CyberCP/manageServices/serviceManager.py --function RemovePostgresql'        
 
             ProcessUtilities.popenExecutioner(command)
             data_ret = {'status': 1}
