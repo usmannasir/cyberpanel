@@ -1,0 +1,19 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "WordPress Manager - CyberPanel" %}{% endblock %}
+{% block content %}
+
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
+
+    <div class="container">
+        <div id="page-title">
+            <h2>{% trans "Cyber Panel WordPress manager" %}</h2>
+            <p>{% trans "On this page you can launch, list, modify and delete websites from your server." %}</p>
+        </div>
+    </div>
+
+
+
+{% endblock %}
