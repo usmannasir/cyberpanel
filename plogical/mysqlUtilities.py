@@ -164,7 +164,7 @@ class mysqlUtilities:
             if dbcreate:
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.CyberCPLogFileWriter.writeToFile('Deleting database because failed to create %s' % (dbname))
-                mysqlUtilities.deleteDatabase(dbname, dbuser)
+                #mysqlUtilities.deleteDatabase(dbname, dbuser)
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[createDatabase]")
             return 0
 
@@ -348,6 +348,8 @@ password=%s
                 subprocess.call(shlex.split(command))
 
             command = 'mysql --defaults-extra-file=/home/cyberpanel/.my.cnf -u %s --host=%s --port %s %s' % (mysqluser, mysqlhost, mysqlport, databaseName)
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.CyberCPLogFileWriter.writeToFile(f'{command} {tempStoragePath}/{databaseName} ' )
             cmd = shlex.split(command)
 
             if additionalName == None:

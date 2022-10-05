@@ -1569,10 +1569,10 @@ fi
 
 Post_Install_PHP_Session_Setup() {
 echo -e "\nSetting up PHP session storage path...\n"
-wget -O /root/php_session_script.sh "${Git_Content_URL}/stable/CPScripts/setup_php_sessions.sh"
-chmod +x /root/php_session_script.sh
-bash /root/php_session_script.sh
-rm -f /root/php_session_script.sh
+#wget -O /root/php_session_script.sh "${Git_Content_URL}/stable/CPScripts/setup_php_sessions.sh"
+chmod +x /usr/local/CyberCP/CPScripts/setup_php_sessions.sh
+bash /usr/local/CyberCP/CPScripts/setup_php_sessions.sh
+#rm -f /root/php_session_script.sh
 Debug_Log2 "Setting up PHP session conf...,90"
 }
 

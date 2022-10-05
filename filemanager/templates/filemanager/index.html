@@ -73,7 +73,7 @@
                     <a onclick="return false;" ng-click="showRenameModal()" class="nav-link point-events" href="#"><i class="fa fa-file-text-o" aria-hidden="true"></i>  {% trans "Rename" %}</a>
                 </li>
                 <li id="editFile" class="nav-item" >
-                    <a onclick="return false;" ng-click="showHTMLEditorModal()"  class="nav-link point-events" href="#"><i class="fa fa-pencil-square-o" aria-hidden="true"></i>  {% trans "Edit" %}</a>
+                    <a onclick="return false;" ng-click="showHTMLEditorModal(1)"  class="nav-link point-events" href="#"><i class="fa fa-pencil-square-o" aria-hidden="true"></i>  {% trans "Edit" %}</a>
                 </li>
                 <li id="compressFile" class="nav-item">
                     <a onclick="return false;" ng-click="showCompressionModal()" class="nav-link point-events" href="#"><i class="fa fa-compress" aria-hidden="true"></i>  {% trans "Compress" %}</a>
@@ -731,7 +731,7 @@
         <a style="border-bottom: 1px solid #007bff;" onclick="return false;" ng-click="showDeleteModal()" href="#"><li class="list-group-item"><i class="fa fa-trash" aria-hidden="true"></i>  {% trans "Delete" %}</li></a>
         <a style="border-bottom: 1px solid #007bff;" onclick="return false;" ng-click="showCompressionModal()" href="#"><li class="list-group-item"><i class="fa fa-compress" aria-hidden="true"></i>  {% trans "Compress" %}</li></a>
         <a style="border-bottom: 1px solid #007bff;" id="extractOnRight" onclick="return false;" ng-click="showExtractionModal()" href="#"><li class="list-group-item"><i class="fa fa-expand" aria-hidden="true"></i>  {% trans "Extract" %}</li></a>
-        <a style="border-bottom: 1px solid #007bff;" id="editOnRight" onclick="return false;" ng-click="showHTMLEditorModal()" href="#"><li class="list-group-item"><i class="fa fa-pencil-square-o" aria-hidden="true"></i>  {% trans "Edit" %}</li></a>
+        <a style="border-bottom: 1px solid #007bff;" id="editOnRight" onclick="return false;" ng-click="showHTMLEditorModal(1)" href="#"><li class="list-group-item"><i class="fa fa-pencil-square-o" aria-hidden="true"></i>  {% trans "Edit" %}</li></a>
         <a style="border-bottom: 1px solid #007bff;" id="editOnRightCodeMirror" onclick="return false;" ng-click="editWithCodeMirror()" href="#"><li class="list-group-item"><i class="fa fa-pencil-square-o" aria-hidden="true"></i>  {% trans "Edit with CodeMirror" %}</li></a>
         <a style="border-bottom: 1px solid #007bff;" id="restoreRight" onclick="return false;" ng-click="showRestoreModal()" href="#"><li class="list-group-item"><i class="fa fa-window-restore" aria-hidden="true"></i>  {% trans "Restore" %}</li></a>
     </ul>

@@ -23,7 +23,6 @@ if [[ -n $YUM_CMD ]]; then
 
 
 
-
 elif [[ -n $APT_GET_CMD ]]; then
 	# Ubuntu
 	for phpver in $(ls -1 /usr/local/lsws/ |grep lsphp | sed 's/lsphp//g') ; do echo ""; echo "LSPHP $phpver" ; lsphpver=$(echo $phpver | sed 's/^\(.\{1\}\)/\1./'); sed -i -e "s|^;session.save_path.*|session.save_path = '/var/lib/lsphp/session/lsphp${phpver}'|g" -e "s|^session.save_path.*|session.save_path = '/var/lib/lsphp/session/lsphp${phpver}'|g" /usr/local/lsws/lsphp${phpver}/etc/php/${lsphpver}/litespeed/php.ini ; /usr/local/lsws/lsphp${phpver}/bin/php -i |grep -Ei 'session.save_path' && echo "" ; done; service lsws restart; killall lsphp;
@@ -42,7 +41,7 @@ if [[ ! -e /usr/local/CyberCP/bin/cleansessions ]]; then
 	chmod +x /usr/local/CyberCP/bin/cleansessions
 	cat >> /usr/local/CyberCP/bin/cleansessions <<"EOL"
 #!/bin/bash
-for version in $(ls /usr/local/lsws|grep lsphp); do echo ""; echo "PHP $version"; session_time=$(/usr/local/lsws/${version}/bin/php -i |grep -Ei 'session.gc_maxlifetime'| grep -Eo "[[:digit:]]+"|sort -u); find -O3 "/var/lib/lsphp/session/${version}" -ignore_readdir_race -depth -mindepth 1 -name 'sess_*' -type f -cmin "${session_time}" -delete; done
+for version in $(ls /usr/local/lsws|grep lsphp); do echo ""; echo "PHP $version"; session_time=$(/usr/local/lsws/${version}/bin/php -i |grep -Ei 'session.gc_maxlifetime'| grep -Eo "[[:digit:]]+"|sort -u); find -O3 "/var/lib/lsphp/session/${version}" -ignore_readdir_race -depth -mindepth 1 -name 'sess_*' -type f -cmin 120 -delete; done
 EOL
 
 fi

@@ -311,11 +311,14 @@ class WebsiteManager:
             allRemoteBackupsites = RemoteBackupsites.objects.filter(owner=RemoteBackupScheduleobj)
             Data['RemoteBackupsites'] = []
             for i in allRemoteBackupsites:
-                wpsite = WPSites.objects.get(pk=i.WPsites)
-                Data['RemoteBackupsites'].append({
-                    'id': i.pk,
-                    'Title': wpsite.title,
-                })
+                try:
+                    wpsite = WPSites.objects.get(pk=i.WPsites)
+                    Data['RemoteBackupsites'].append({
+                        'id': i.pk,
+                        'Title': wpsite.title,
+                    })
+                except:
+                    pass
             proc = httpProc(request, 'websiteFunctions/AddRemoteBackupSite.html',
                             Data, 'createWebsite')
             return proc.render()
