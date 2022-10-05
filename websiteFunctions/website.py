@@ -101,7 +101,7 @@ class WebsiteManager:
             return proc.render()
         else:
             from django.shortcuts import reverse
-            return reverse('pricing')
+            return redirect(reverse('pricing'))
 
     def ListWPSites(self, request=None, userID=None, DeleteID=None):
         currentACL = ACLManager.loadedACL(userID)
@@ -173,7 +173,7 @@ class WebsiteManager:
                 return proc.render()
             else:
                 from django.shortcuts import reverse
-                return reverse('pricing')
+                return redirect(reverse('pricing'))
         except:
             proc = httpProc(request, 'websiteFunctions/WPsiteHome.html',
                             Data, 'createWebsite')
@@ -205,7 +205,7 @@ class WebsiteManager:
             return proc.render()
         else:
             from django.shortcuts import reverse
-            return reverse('pricing')
+            return redirect(reverse('pricing'))
 
     def RemoteBackupConfig(self, request=None, userID=None, DeleteID=None ):
         Data = {}
@@ -254,7 +254,7 @@ class WebsiteManager:
             return proc.render()
         else:
             from django.shortcuts import reverse
-            return reverse('pricing')
+            return redirect(reverse('pricing'))
 
 
     def BackupfileConfig(self, request=None, userID=None, RemoteConfigID=None, DeleteID=None ):
@@ -291,7 +291,7 @@ class WebsiteManager:
             return proc.render()
         else:
             from django.shortcuts import reverse
-            return reverse('pricing')
+            return redirect(reverse('pricing'))
 
 
     def AddRemoteBackupsite(self, request=None, userID=None, RemoteScheduleID=None , DeleteSiteID=None):
@@ -327,7 +327,7 @@ class WebsiteManager:
             return proc.render()
         else:
             from django.shortcuts import reverse
-            return reverse('pricing')
+            return redirect(reverse('pricing'))
 
 
     def WordpressPricing(self, request=None, userID=None,):
@@ -405,7 +405,7 @@ class WebsiteManager:
             return proc.render()
         else:
             from django.shortcuts import reverse
-            return reverse('pricing')
+            return redirect(reverse('pricing'))
 
     def AutoLogin(self, request=None, userID=None):
 
@@ -460,7 +460,7 @@ class WebsiteManager:
             return proc.render()
         else:
             from django.shortcuts import reverse
-            return reverse('pricing')
+            return redirect(reverse('pricing'))
 
     def ConfigurePlugins(self, request=None, userID=None, data=None):
 
@@ -478,7 +478,7 @@ class WebsiteManager:
             return proc.render()
         else:
             from django.shortcuts import reverse
-            return reverse('pricing')
+            return redirect(reverse('pricing'))
 
     def Addnewplugin(self, request=None, userID=None, data=None):
         from django.shortcuts import reverse
@@ -493,7 +493,7 @@ class WebsiteManager:
                             Data, 'createWebsite')
             return proc.render()
 
-        return reverse('pricing')
+        return redirect(reverse('pricing'))
 
 
 
