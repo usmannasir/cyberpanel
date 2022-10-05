@@ -2,7 +2,7 @@
 {% get_current_language as LANGUAGE_CODE %}
 <!DOCTYPE html>
 <html lang="en" ng-app="CyberCP">
-    <head>
+<head>
 
     <style>
         /* Loading Spinner */
@@ -105,6 +105,7 @@
         </script>
         <script src="https://cdn.jsdelivr.net/npm/flot-charts@0.8.3/jquery.flot.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/jquery.flot@0.8.3/jquery.flot.time.js"></script>
+        <script async src="https://js.stripe.com/v3/pricing-table.js"></script>
 
         {% block header_scripts %}
         {% endblock %}
@@ -274,7 +275,8 @@
                     {#                            </div>#}
                     {#                        </div>#}
                     {#                    </div>#}
-                    <a class="header-btn" target="_blank" href="https://www.youtube.com/channel/UCS6sgUWEhaFl1TO238Ck0xw?sub_confirmation=1"
+                    <a class="header-btn" target="_blank"
+                       href="https://www.youtube.com/channel/UCS6sgUWEhaFl1TO238Ck0xw?sub_confirmation=1"
                        title="{% trans 'Youtube Channel' %}">
                         <i class="glyph-icon icon-youtube"></i>
                     </a>
@@ -300,12 +302,14 @@
                     <ul id="sidebar-menu">
                         <li class="header"><span>{% trans "Overview" %}</span></li>
                         <li>
-                            <a id="sidebar-menu-item-server-ip-address" href="#" title="{% trans 'Server IP Address' %}">
+                            <a id="sidebar-menu-item-server-ip-address" href="#"
+                               title="{% trans 'Server IP Address' %}">
                                 <i class="glyph-icon tooltip-button icon-laptop" title="{% trans 'Server IP Address' %}"
                                    data-original-title=".icon-laptop"></i>
                                 <span style="color: #488a3f;font-weight: bold;">{{ ipAddress }}</span>
                             </a>
-                            <a id="sidebar-menu-item-dashboard" href="{% url 'index' %}" title="{% trans 'Dashboard' %}">
+                            <a id="sidebar-menu-item-dashboard" href="{% url 'index' %}"
+                               title="{% trans 'Dashboard' %}">
                                 <i class="glyph-icon icon-dashboard"></i>
                                 <span>{% trans "Dashboard" %}</span>
                             </a>
@@ -394,17 +398,17 @@
 
                         <li id="sidebar-menu-item-websites">
 
-                    <!-------------WordPress--------------------------->
+                            <!-------------WordPress--------------------------->
                         <li>
                             <a href="{% url 'loadWebsitesHome' %}" title="{% trans 'WordPress' %}">
                                 <div class="glyph-icon icon-wordpress" title="{% trans 'WordPress' %}"></div>
                                 <span>{% trans "WordPress" %}</span>
                             </a>
-                        <div class="sidebar-submenu">
+                            <div class="sidebar-submenu">
 
                                 <ul>
-                                   {% if admin or createWebsite %}
-                                         <li><a href="{% url 'createWordpress' %}"
+                                    {% if admin or createWebsite %}
+                                        <li><a href="{% url 'createWordpress' %}"
                                                title="{% trans 'Deploy WordPress' %}"><span>{% trans "Deploy WordPress" %}</span></a>
                                         </li>
                                     {% endif %}
@@ -434,7 +438,7 @@
                             <div class="sidebar-submenu">
 
                                 <ul>
-                                 {% if admin or createWebsite %}
+                                    {% if admin or createWebsite %}
                                         <li><a href="{% url 'createWebsite' %}"
                                                title="{% trans 'Create Website' %}"><span>{% trans "Create Website" %}</span></a>
                                         </li>
@@ -621,9 +625,9 @@
                                                    title="{% trans 'DKIM Manager' %}"><span>{% trans "DKIM Manager" %}</span></a>
                                             </li>
                                         {% endif %}
-                                            <li><a href="{% url 'EmailDebugger' %}"
-                                                   title="{% trans 'Email Debugger' %}"><span>{% trans "Email Debugger" %}</span></a>
-                                            </li>
+                                        <li><a href="{% url 'EmailDebugger' %}"
+                                               title="{% trans 'Email Debugger' %}"><span>{% trans "Email Debugger" %}</span></a>
+                                        </li>
 
                                         {% if admin or createEmail %}
                                             <li><a href="/snappymail/index.php" title="{% trans 'Access Webmail' %}"
@@ -781,7 +785,8 @@
                             <li>
                                 <a href="{% url 'Filemanager' %}"
                                    title="{% trans 'Root File Manager' %}">
-                                    <i class="glyph-icon tooltip-button icon-link" title="{% trans 'Root File Manager' %}"
+                                    <i class="glyph-icon tooltip-button icon-link"
+                                       title="{% trans 'Root File Manager' %}"
                                        data-original-title=".icon-cloud-upload" aria-describedby="tooltip896208"></i>
                                     <span>{% trans "Root File Manager" %}</span>
                                 </a>
