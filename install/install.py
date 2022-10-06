@@ -1457,9 +1457,10 @@ autocreate_system_folders = On
 
             lscpdPath = '/usr/local/lscp/bin/lscpd'
 
-            result = open('/etc/lsb-release', 'r').read()
+
             lscpdSelection = 'lscpd-0.3.1'
             if os.path.exists('/etc/lsb-release'):
+                result = open('/etc/lsb-release', 'r').read()
                 if result.find('22.04') > -1:
                     lscpdSelection = 'lscpd.0.4.0'
 

@@ -1992,10 +1992,11 @@ autocreate_system_folders = On
             if os.path.exists(lscpdPath):
                 os.remove(lscpdPath)
 
-            result = open(Upgrade.UbuntuPath, 'r').read()
+
 
             lscpdSelection = 'lscpd-0.3.1'
             if os.path.exists(Upgrade.UbuntuPath):
+                result = open(Upgrade.UbuntuPath, 'r').read()
                 if result.find('22.04') > -1:
                     lscpdSelection = 'lscpd.0.4.0'
 
