@@ -1992,13 +1992,19 @@ autocreate_system_folders = On
             if os.path.exists(lscpdPath):
                 os.remove(lscpdPath)
 
-            command = 'cp -f /usr/local/CyberCP/lscpd.0.4.0 /usr/local/lscp/bin/lscpd.0.4.0'
+            result = open(Upgrade.UbuntuPath, 'r').read()
+
+            lscpdSelection = 'lscpd-0.3.1'
+            if result.find('22.04') > -1:
+                lscpdSelection = 'lscpd.0.4.0'
+
+            command = f'cp -f /usr/local/CyberCP/{lscpdSelection} /usr/local/lscp/bin/{lscpdSelection}'
             Upgrade.executioner(command, command, 0)
 
             command = 'rm -f /usr/local/lscp/bin/lscpd'
             Upgrade.executioner(command, command, 0)
 
-            command = 'mv /usr/local/lscp/bin/lscpd.0.4.0 /usr/local/lscp/bin/lscpd'
+            command = f'mv /usr/local/lscp/bin/{lscpdSelection} /usr/local/lscp/bin/lscpd'
             Upgrade.executioner(command, command, 0)
 
             command = f'chmod 755 {lscpdPath}'

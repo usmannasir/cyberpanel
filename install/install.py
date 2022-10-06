@@ -1457,13 +1457,19 @@ autocreate_system_folders = On
 
             lscpdPath = '/usr/local/lscp/bin/lscpd'
 
-            command = 'cp -f /usr/local/CyberCP/lscpd.0.4.0 /usr/local/lscp/bin/lscpd.0.4.0'
+            result = open('/etc/lsb-release', 'r').read()
+            lscpdSelection = 'lscpd-0.3.1'
+            if result.find('22.04') > -1:
+                lscpdSelection = 'lscpd.0.4.0'
+
+
+            command = f'cp -f /usr/local/CyberCP/{lscpdSelection} /usr/local/lscp/bin/{lscpdSelection}'
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
             command = 'rm -f /usr/local/lscp/bin/lscpd'
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
-            command = 'mv /usr/local/lscp/bin/lscpd.0.4.0 /usr/local/lscp/bin/lscpd'
+            command = f'mv /usr/local/lscp/bin/{lscpdSelection} /usr/local/lscp/bin/lscpd'
             preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
             command = 'chmod 755 %s' % (lscpdPath)
