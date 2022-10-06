@@ -1459,8 +1459,9 @@ autocreate_system_folders = On
 
             result = open('/etc/lsb-release', 'r').read()
             lscpdSelection = 'lscpd-0.3.1'
-            if result.find('22.04') > -1:
-                lscpdSelection = 'lscpd.0.4.0'
+            if os.path.exists('/etc/lsb-release'):
+                if result.find('22.04') > -1:
+                    lscpdSelection = 'lscpd.0.4.0'
 
 
             command = f'cp -f /usr/local/CyberCP/{lscpdSelection} /usr/local/lscp/bin/{lscpdSelection}'
