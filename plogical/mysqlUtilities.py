@@ -629,8 +629,7 @@ password=%s
             checker = 0
 
             for items in result:
-                if items[0] == 'information_schema' or items[0] == 'mysql' or items[0] == 'performance_schema' or items[
-                    0] == 'performance_schema':
+                if items[0] == 'information_schema' or items[0] == 'mysql' or items[0] == 'performance_schema':
                     continue
 
                 dic = {
