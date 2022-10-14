@@ -101,6 +101,17 @@ class Renew:
                         'SSL does not exist for %s. Obtaining now..' % (website.domain), 0)
                     virtualHostUtilities.issueSSL(website.domain, website.path,
                                                   website.master.adminEmail)
+            self.file = logging.writeToFile('Restarting mail services for them to see new SSL.', 0)
+
+            from plogical.processUtilities import ProcessUtilities
+            command = 'postmap -F hash:/etc/postfix/vmail_ssl.map'
+            ProcessUtilities.normalExecutioner(command)
+
+            command = 'systemctl restart postfix'
+            ProcessUtilities.normalExecutioner(command)
+
+            command = 'systemctl restart dovecot'
+            ProcessUtilities.normalExecutioner(command)
 
         except BaseException as msg:
            logging.writeToFile(str(msg) + '. Renew.SSLObtainer')

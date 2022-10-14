@@ -99,6 +99,14 @@ def AddRemoteBackupsite(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+def WordpressPricing(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.WordpressPricing(request, userID,)
+    except KeyError:
+        return redirect(loadLoginPage)
+
 def RestoreBackups(request):
     try:
         userID = request.session['userID']

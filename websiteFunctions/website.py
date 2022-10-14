@@ -100,7 +100,8 @@ class WebsiteManager:
                             Data, 'createWebsite')
             return proc.render()
         else:
-            return redirect("https://cyberpanel.net/cyberpanel-addons")
+            from django.shortcuts import reverse
+            return redirect(reverse('pricing'))
 
     def ListWPSites(self, request=None, userID=None, DeleteID=None):
         currentACL = ACLManager.loadedACL(userID)
@@ -171,8 +172,8 @@ class WebsiteManager:
                                 Data, 'createWebsite')
                 return proc.render()
             else:
-                return redirect("https://cyberpanel.net/cyberpanel-addons")
-
+                from django.shortcuts import reverse
+                return redirect(reverse('pricing'))
         except:
             proc = httpProc(request, 'websiteFunctions/WPsiteHome.html',
                             Data, 'createWebsite')
@@ -203,8 +204,8 @@ class WebsiteManager:
                             Data, 'createWebsite')
             return proc.render()
         else:
-            return redirect("https://cyberpanel.net/cyberpanel-addons")
-
+            from django.shortcuts import reverse
+            return redirect(reverse('pricing'))
 
     def RemoteBackupConfig(self, request=None, userID=None, DeleteID=None ):
         Data = {}
@@ -252,7 +253,8 @@ class WebsiteManager:
                             Data, 'createWebsite')
             return proc.render()
         else:
-            return redirect("https://cyberpanel.net/cyberpanel-addons")
+            from django.shortcuts import reverse
+            return redirect(reverse('pricing'))
 
 
     def BackupfileConfig(self, request=None, userID=None, RemoteConfigID=None, DeleteID=None ):
@@ -288,7 +290,8 @@ class WebsiteManager:
                             Data, 'createWebsite')
             return proc.render()
         else:
-            return redirect("https://cyberpanel.net/cyberpanel-addons")
+            from django.shortcuts import reverse
+            return redirect(reverse('pricing'))
 
 
     def AddRemoteBackupsite(self, request=None, userID=None, RemoteScheduleID=None , DeleteSiteID=None):
@@ -323,7 +326,14 @@ class WebsiteManager:
                             Data, 'createWebsite')
             return proc.render()
         else:
-            return redirect("https://cyberpanel.net/cyberpanel-addons")
+            from django.shortcuts import reverse
+            return redirect(reverse('pricing'))
+
+
+    def WordpressPricing(self, request=None, userID=None,):
+        Data ={}
+        proc = httpProc(request, 'websiteFunctions/CyberpanelPricing.html', Data, 'createWebsite')
+        return proc.render()
 
     def RestoreBackups(self, request=None, userID=None, DeleteID=None):
         Data = {}
@@ -394,7 +404,8 @@ class WebsiteManager:
                             Data, 'createWebsite')
             return proc.render()
         else:
-            return redirect("https://cyberpanel.net/cyberpanel-addons")
+            from django.shortcuts import reverse
+            return redirect(reverse('pricing'))
 
     def AutoLogin(self, request=None, userID=None):
 
@@ -448,7 +459,8 @@ class WebsiteManager:
                             data, 'createWebsite')
             return proc.render()
         else:
-            return redirect("https://cyberpanel.net/cyberpanel-addons")
+            from django.shortcuts import reverse
+            return redirect(reverse('pricing'))
 
     def ConfigurePlugins(self, request=None, userID=None, data=None):
 
@@ -465,9 +477,11 @@ class WebsiteManager:
                             Data, 'createWebsite')
             return proc.render()
         else:
-            return redirect("https://cyberpanel.net/cyberpanel-addons")
+            from django.shortcuts import reverse
+            return redirect(reverse('pricing'))
 
     def Addnewplugin(self, request=None, userID=None, data=None):
+        from django.shortcuts import reverse
         if ACLManager.CheckForPremFeature('wp-manager'):
             currentACL = ACLManager.loadedACL(userID)
             adminNames = ACLManager.loadAllUsers(userID)
@@ -478,7 +492,10 @@ class WebsiteManager:
             proc = httpProc(request, 'websiteFunctions/WPAddNewPlugin.html',
                             Data, 'createWebsite')
             return proc.render()
-        return redirect("https://cyberpanel.net/cyberpanel-addons")
+
+        return redirect(reverse('pricing'))
+
+
 
     def SearchOnkeyupPlugin(self, userID=None, data=None):
         try:

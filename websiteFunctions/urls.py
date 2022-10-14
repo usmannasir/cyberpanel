@@ -26,6 +26,7 @@ urlpatterns = [
     url(r'^RemoteBackupConfig$', views.RemoteBackupConfig, name='RemoteBackupConfig'),
     url(r'^BackupfileConfig$', views.BackupfileConfig, name='BackupfileConfig'),
     url(r'^AddRemoteBackupsite$', views.AddRemoteBackupsite, name='AddRemoteBackupsite'),
+    url(r'^pricing$', views.WordpressPricing, name='pricing'),
 
 
     ###WordPress Ajax

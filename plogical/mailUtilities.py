@@ -1079,7 +1079,7 @@ LogFile /var/log/clamav/clamav.log
             command = "cat " + path
             output = ProcessUtilities.outputExecutioner(command)
 
-            if output.find('content_filter=spamassassin') > -1:
+            if output.find('spamassassin') > -1 and output.find('user=spamd') > -1:
                 return 1
             else:
                 return 0

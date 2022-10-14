@@ -430,7 +430,7 @@ sudo_check() {
 		echo -e "\nYou must use root user to use CyberPanel Utility..."
 		exit
 	else
-		echo -e "\nYou are runing as root..."
+		echo -e "\nYou are running as root..."
 	fi
 }
 
