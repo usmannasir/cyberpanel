@@ -282,18 +282,18 @@ class InstallCyberPanel:
             command = 'yum --enablerepo=mariadb -y install MariaDB-server MariaDB-client'
         elif self.distro == cent8 or self.distro == openeuler:
             ### check if cent8 which means Alma8 then add Mariadb 10.6 repo
-            if self.distro == cent8:
-                content = """
-[mariadb]
-name = MariaDB
-baseurl = http://yum.mariadb.org/10.6/rhel8-amd64
-module_hotfixes=1
-gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
-gpgcheck=1
-"""
-                writeToFile = open('/etc/yum.repos.d/mariadb.repo', 'w')
-                writeToFile.write(content)
-                writeToFile.close()
+#             if self.distro == cent8:
+#                 content = """
+# [mariadb]
+# name = MariaDB
+# baseurl = http://yum.mariadb.org/10.6/rhel8-amd64
+# module_hotfixes=1
+# gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
+# gpgcheck=1
+# """
+#                 writeToFile = open('/etc/yum.repos.d/mariadb.repo', 'w')
+#                 writeToFile.write(content)
+#                 writeToFile.close()
 
             command = 'dnf -y install mariadb-server'
 
