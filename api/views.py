@@ -61,6 +61,9 @@ def createWebsite(request):
     adminUser = data['adminUser']
     admin = Administrator.objects.get(userName=adminUser)
 
+    if os.path.exists(ProcessUtilities.debugPath):
+        logging.writeToFile(f'Create website payload in API {str(data)}')
+
     if admin.api == 0:
         data_ret = {"existsStatus": 0, 'createWebSiteStatus': 0,
                     'error_message': "API Access Disabled."}
