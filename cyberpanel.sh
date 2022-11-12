@@ -1076,6 +1076,10 @@ Debug_Log2 "Installing requirments..,3"
 Retry_Command "pip install --default-timeout=3600 -r /usr/local/requirments.txt"
   Check_Return "requirments" "no_exit"
 
+if [[ "$Server_OS" = "Ubuntu" ]] && [[ "$Server_OS_Version" = "22" ]] ; then
+  cp /usr/bin/python3.10 /usr/local/CyberCP/bin/python3
+fi
+
 rm -rf cyberpanel
 echo -e "\nFetching files from ${Git_Clone_URL}...\n"
 
@@ -1813,6 +1817,10 @@ fi
 
 Retry_Command "pip install --default-timeout=3600 -r /usr/local/requirments.txt"
  Check_Return "requirments.txt" "no_exit"
+
+if [[ "$Server_OS" = "Ubuntu" ]] && [[ "$Server_OS_Version" = "22" ]] ; then
+  cp /usr/bin/python3.10 /usr/local/CyberCP/bin/python3
+fi
 
 chown -R cyberpanel:cyberpanel /usr/local/CyberCP/lib
 chown -R cyberpanel:cyberpanel /usr/local/CyberCP/lib64 || true
