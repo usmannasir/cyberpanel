@@ -566,6 +566,8 @@ class ACLManager:
             php = "74"
         elif phpVersion == "PHP 8.0":
             php = "80"
+        elif phpVersion == "PHP 8.1":
+            php = "81"
 
         return php
 

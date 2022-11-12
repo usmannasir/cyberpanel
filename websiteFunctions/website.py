@@ -864,7 +864,6 @@ class WebsiteManager:
             json_data = stdoutput.splitlines()[-1]
 
 
-
             data_ret = {'status': 1, 'error_message': 'None', 'plugins': json_data}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
@@ -3256,6 +3255,15 @@ class WebsiteManager:
         execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
         execPath = execPath + " changePHP --phpVersion '" + phpVersion + "' --path " + completePathToConfigFile
         ProcessUtilities.popenExecutioner(execPath)
+
+        try:
+            website = Websites.objects.get(domain=self.domain)
+            website.phpSelection = data['phpSelection']
+            website.save()
+        except:
+            website = ChildDomains.objects.get(domain=self.domain)
+            website.phpSelection = data['phpSelection']
+            website.save()
 
         data_ret = {'status': 1, 'changePHP': 1, 'error_message': "None"}
         json_data = json.dumps(data_ret)
