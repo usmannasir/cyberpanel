@@ -66,8 +66,8 @@ class InstallCyberPanel:
     def installLiteSpeed(self):
         if self.ent == 0:
             if self.distro == ubuntu:
-                command = "apt-get -y install openlitespeed"
-                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+                command = "DEBIAN_FRONTEND=noninteractive apt-get -y install openlitespeed"
+                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
             elif self.distro == centos:
                 command = 'yum install -y openlitespeed'
                 install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
@@ -268,8 +268,8 @@ class InstallCyberPanel:
         if self.distro == ubuntu:
 
             if get_Ubuntu_release() == 18.10:
-                command = 'apt-get install software-properties-common -y'
-                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+                command = 'DEBIAN_FRONTEND=noninteractive apt-get install software-properties-common -y'
+                install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
 
                 command = "apt-key adv --fetch-keys 'https://mariadb.org/mariadb_release_signing_key.asc'"
                 install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
@@ -277,7 +277,7 @@ class InstallCyberPanel:
                 command = "add-apt-repository 'deb [arch=amd64,arm64,ppc64el] https://mirror.yongbok.net/mariadb/repo/10.4/ubuntu bionic main'"
                 install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
-            command = "apt-get -y install mariadb-server"
+            command = "DEBIAN_FRONTEND=noninteractive apt-get -y install mariadb-server"
         elif self.distro == centos:
             command = 'yum --enablerepo=mariadb -y install MariaDB-server MariaDB-client'
         elif self.distro == cent8 or self.distro == openeuler:
@@ -297,7 +297,7 @@ class InstallCyberPanel:
 
             command = 'dnf -y install mariadb-server'
 
-        install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+        install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
 
         ############## Start mariadb ######################
 
