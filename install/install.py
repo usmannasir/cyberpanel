@@ -1988,8 +1988,8 @@ milter_default_action = accept
                     if os.access('/usr/local/lsws/lsphp72/bin/php7.2', os.R_OK):
                         os.symlink('/usr/local/lsws/lsphp72/bin/php7.2', '/usr/local/lsws/lsphp72/bin/php')
 
-            command = "cp /usr/local/lsws/lsphp71/bin/php /usr/bin/"
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            #command = "cp /usr/local/lsws/lsphp71/bin/php /usr/bin/"
+            #preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             os.chdir(self.cwd)
 
