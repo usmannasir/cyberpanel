@@ -6,12 +6,68 @@
     {% load static %}
     {% get_current_language as LANGUAGE_CODE %}
     <!-- Current language: {{ LANGUAGE_CODE }} -->
+    <style>
+        .switch {
+            margin-top: 7px;
+             margin-left: 12px;
+            position: relative;
+            display: inline-block;
+            width: 32px;
+            height: 19px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            -webkit-transition: .4s;
+            transition: .4s;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 11px;
+            width: 12px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            -webkit-transition: .4s;
+            transition: .4s;
+        }
+
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+
+        input:focus + .slider {
+            box-shadow: 0 0 1px #2196F3;
+        }
+
+        input:checked + .slider:before {
+            -webkit-transform: translateX(12px);
+            -ms-transform: translateX(12px);
+            transform: translateX(12px);
+        }
+
+    </style>
 
     <div class="container">
         <div id="page-title">
             <h2>{% trans "Create Wordpress Site" %}</h2>
             <p>{% trans "On this page you can launch, list, modify and delete websites from your server." %}</p>
         </div>
+
 
 
         <div ng-controller="createWordpress" class="panel">
@@ -54,40 +110,92 @@
 
                         </div>
 
-{#                        <div ng-hide="installationDetailsForm" class="form-group">#}
-{#                            <label class="col-sm-3 control-label">{% trans "Domain Name" %}</label>#}
-{#                            <div class="col-sm-6">#}
-{#                                <input name="dom" type="text" class="form-control" ng-model="domainNameCreate"#}
-{#                                       placeholder="{% trans "Do not enter WWW, it will be auto created!" %}" required>#}
-{#                            </div>#}
-{#                            <div ng-show="websiteCreationForm.dom.$error.pattern"#}
-{#                                 class="current-pack">{% trans "Invalid Domain (Note: You don't need to add 'http' or 'https')" %}</div>#}
-{#                        </div>#}
+                        {#                        <div ng-hide="installationDetailsForm" class="form-group">#}
+                        {#                            <label class="col-sm-3 control-label">{% trans "Domain Name" %}</label>#}
+                        {#                            <div class="col-sm-6">#}
+                        {#                                <input name="dom" type="text" class="form-control" ng-model="domainNameCreate"#}
+                        {#                                       placeholder="{% trans "Do not enter WWW, it will be auto created!" %}" required>#}
+                        {#                            </div>#}
+                        {#                            <div ng-show="websiteCreationForm.dom.$error.pattern"#}
+                        {#                                 class="current-pack">{% trans "Invalid Domain (Note: You don't need to add 'http' or 'https')" %}</div>#}
+                        {#                        </div>#}
 
+
+                        {#                     My Work #}
                         <div ng-hide="installationDetailsForm" class="form-group">
-                            <label class="col-sm-3 control-label">{% trans "Domain Name" %}</label>
-                            <div class="col-sm-6">
-                                <div class="input-group bootstrap-touchspin">
+                            <label class="col-sm-3 control-label" style="margin-bottom: 15px">{% trans "Test Domain" %}</label>
+                            <label class="switch my-3">
+                                <input type="checkbox" checked id="myCheck" onclick="checkbox_function()" style="margin-top: 10px">
+                                <span class="slider"></span>
+                            </label>
+                            <br><br>
+
+
+                            <div id="Test_Domain" class="tabcontent" style="border: none;margin-left: 10px">
+                                <div ng-hide="installationDetailsForm" class="form-group"
+                                     ng-if="{{ test_domain_data }} == 1 ">
+                                    <label class="col-sm-3 control-label">{% trans "Domain Name" %}</label>
+                                    <div class="col-sm-6">
+                                        <div class="input-group bootstrap-touchspin">
                                     <span
                                             class="input-group-addon bootstrap-touchspin-prefix"
                                             style="display: none;"></span>
-                                    <input ng-model="domainNameCreate" id="touchspin-demo-1" class="form-control"
-                                           type="text" value="55"
-                                           name="touchspin-demo-1"
-                                           style="display: block;" placeholder="{% trans "Do not enter WWW, it will be auto created!" %}">
-                                    <span class="input-group-addon bootstrap-touchspin-postfix">/</span>
-                                    <span style="width: 25%" class="input-group-btn">
+                                            <input id="TestDomainNameCreate"
+                                                   class="form-control"
+                                                   type="text" value=""
+                                                   name="touchspin-demo-1"
+                                                   style="display: block;"
+                                                   placeholder="{% trans "Enter Subdomain Here" %}">
+
+                                            <span style="width: 48%" class="input-group-btn">
+                                        <input id="Part2_domainNameCreate" class="form-control"
+                                               type="text" name="Part2_domainNameCreate"
+                                               style="display: block;color: black;font-weight: bold;color: black;opacity: 1"
+                                               placeholder=".{{ Randam_String }}.cyberpanel.website"
+                                               value=".{{ Randam_String }}.cyberpanel.website" readonly></span>
+                                        </div>
+                                    </div>
+                                    <div ng-show="websiteCreationForm.dom.$error.pattern"
+                                         class="current-pack">{% trans "Invalid Domain (Note: You don't need to add 'http' or 'https')" %}</div>
+                                </div>
+                                <div ng-if="{{ test_domain_data }} == 0 ">
+                                    <center>Looks like you have not subscripted to temporary domain feature,<a href="https://go.cyberpanel.net/TempDomain">click here</a>
+                                        for more details.
+                                    </center>
+                                </div>
+                            </div>
+
+                            <div id="Own_Domain" class="tabcontent" style="border: none;display: none;margin-left: 10px">
+
+                                <div ng-hide="installationDetailsForm" class="form-group">
+                                    <label class="col-sm-3 control-label">{% trans "Domain Name" %}</label>
+                                    <div class="col-sm-6">
+                                        <div class="input-group bootstrap-touchspin">
+                                    <span
+                                            class="input-group-addon bootstrap-touchspin-prefix"
+                                            style="display: none;"></span>
+                                            <input ng-model="own_domainNameCreate" id="touchspin-demo-1"
+                                                   class="form-control"
+                                                   type="text" value=""
+                                                   name="touchspin-demo-1"
+                                                   style="display: block;"
+                                                   placeholder="{% trans "Do not enter WWW, it will be auto created!" %}">
+                                            <span class="input-group-addon bootstrap-touchspin-postfix">/</span>
+                                            <span style="width: 25%" class="input-group-btn">
                                         <input id="touchspin-demo-1" class="form-control"
                                                placeholder="{% trans "Leave empty for default" %}"
                                                type="text" value="Leave empty for default"
                                                name="touchspin-demo-1" ng-model="installPath"
                                                style="display: block;"></span></div>
+                                    </div>
+                                    <div ng-show="websiteCreationForm.dom.$error.pattern"
+                                         class="current-pack">{% trans "Invalid Domain (Note: You don't need to add 'http' or 'https')" %}</div>
+                                </div>
                             </div>
-                            <div ng-show="websiteCreationForm.dom.$error.pattern"
-                                 class="current-pack">{% trans "Invalid Domain (Note: You don't need to add 'http' or 'https')" %}</div>
+
                         </div>
-
-
+                        {#                          My Work End#}
+                        {#                    #}
                         <div ng-hide="installationDetailsForm" class="form-group">
                             <label class="col-sm-3 control-label">{% trans "Username" %}</label>
                             <div class="col-sm-6">

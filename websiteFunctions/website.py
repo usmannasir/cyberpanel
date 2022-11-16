@@ -52,12 +52,25 @@ class WebsiteManager:
         self.childDomain = childDomain
 
     def createWebsite(self, request=None, userID=None, data=None):
+        url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
+
+        test_domain_data = {
+            "name": "test-domain",
+            "IP": ACLManager.GetServerIP(),
+        }
+
+        import requests
+        response = requests.post(url, data=json.dumps(test_domain_data))
+        test_domain_status = response.json()['status']
+
         currentACL = ACLManager.loadedACL(userID)
         adminNames = ACLManager.loadAllUsers(userID)
         packagesName = ACLManager.loadPackages(userID, currentACL)
         phps = PHPManager.findPHPVersions()
 
-        Data = {'packageList': packagesName, "owernList": adminNames, 'phps': phps}
+        rnpss = randomPassword.generate_pass(10)
+
+        Data = {'packageList': packagesName, "owernList": adminNames, 'phps': phps,'Randam_String': rnpss.lower(), 'test_domain_data': test_domain_status}
         proc = httpProc(request, 'websiteFunctions/createWebsite.html',
                         Data, 'createWebsite')
         return proc.render()
@@ -68,6 +81,17 @@ class WebsiteManager:
             "name": "wp-manager",
             "IP": ACLManager.GetServerIP()
         }
+        test_domain_data = {
+            "name": "test-domain",
+            "IP": ACLManager.GetServerIP(),
+        }
+
+        import requests
+        response = requests.post(url, data=json.dumps(test_domain_data))
+        test_domain_status = response.json()['status']
+
+
+
 
         import requests
         response = requests.post(url, data=json.dumps(data))
@@ -94,8 +118,9 @@ class WebsiteManager:
                 FinalVersions = ['5.6', '5.5.3', '5.5.2']
 
             Plugins = wpplugins.objects.filter(owner=userobj)
+            rnpss = randomPassword.generate_pass(10)
 
-            Data = {'packageList': packagesName, "owernList": adminNames, 'WPVersions': FinalVersions, 'Plugins': Plugins }
+            Data = {'packageList': packagesName, "owernList": adminNames, 'WPVersions': FinalVersions, 'Plugins': Plugins,'Randam_String': rnpss.lower(), 'test_domain_data': test_domain_status}
             proc = httpProc(request, 'websiteFunctions/WPCreate.html',
                             Data, 'createWebsite')
             return proc.render()
@@ -1419,7 +1444,7 @@ class WebsiteManager:
                         wpobj.save()
 
 
-            
+
 
             data_ret = {'status': 1,  'error_message': 'None',}
             json_data = json.dumps(data_ret)
@@ -2021,6 +2046,27 @@ class WebsiteManager:
             admin = Administrator.objects.get(pk=userID)
 
 
+
+            if data['domain'].find("cyberpanel.website") > -1:
+                url = "https://platform.cyberpersons.com/CyberpanelAdOns/CreateDomain"
+
+                domain_data = {
+                    "name": "test-domain",
+                    "IP": ACLManager.GetServerIP(),
+                    "domain": data['domain']
+                }
+
+                import requests
+                response = requests.post(url, data=json.dumps(domain_data))
+                domain_status = response.json()['status']
+
+                if domain_status == 0:
+                    data_ret = {'status': 0, 'installStatus': 0, 'error_message': response.json()['error_message']}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
+
+
+
             extraArgs = {}
             extraArgs['currentACL'] = currentACL
             extraArgs['adminID'] = admin.pk
@@ -2074,6 +2120,24 @@ class WebsiteManager:
             phpSelection = data['phpSelection']
             packageName = data['package']
             websiteOwner = data['websiteOwner'].lower()
+
+            if data['domainName'].find("cyberpanel.website") > -1:
+                url = "https://platform.cyberpersons.com/CyberpanelAdOns/CreateDomain"
+
+                domain_data = {
+                    "name": "test-domain",
+                    "IP": ACLManager.GetServerIP(),
+                    "domain": data['domainName']
+                }
+
+                import requests
+                response = requests.post(url, data=json.dumps(domain_data))
+                domain_status = response.json()['status']
+
+                if domain_status == 0:
+                    data_ret = {'status': 0, 'installStatus': 0, 'error_message': response.json()['error_message']}
+                    json_data = json.dumps(data_ret)
+                    return HttpResponse(json_data)
 
             loggedUser = Administrator.objects.get(pk=userID)
             newOwner = Administrator.objects.get(userName=websiteOwner)
@@ -2433,6 +2497,18 @@ class WebsiteManager:
 
     def submitWebsiteDeletion(self, userID=None, data=None):
         try:
+            if data['websiteName'].find("cyberpanel.website") > -1:
+                url = "https://platform.cyberpersons.com/CyberpanelAdOns/DeleteDomain"
+
+                domain_data = {
+                    "name": "test-domain",
+                    "IP": ACLManager.GetServerIP(),
+                    "domain": data['websiteName']
+                }
+
+                import requests
+                response = requests.post(url, data=json.dumps(domain_data))
+
 
             currentACL = ACLManager.loadedACL(userID)
             if ACLManager.currentContextPermission(currentACL, 'deleteWebsite') == 0:
@@ -2464,9 +2540,24 @@ class WebsiteManager:
     def submitDomainDeletion(self, userID=None, data=None):
         try:
 
+            if data['websiteName'].find("cyberpanel.website") > -1:
+                url = "https://platform.cyberpersons.com/CyberpanelAdOns/DeleteDomain"
+
+                domain_data = {
+                    "name": "test-domain",
+                    "IP": ACLManager.GetServerIP(),
+                    "domain": data['websiteName']
+                }
+
+                import requests
+                response = requests.post(url, data=json.dumps(domain_data))
+
             currentACL = ACLManager.loadedACL(userID)
             admin = Administrator.objects.get(pk=userID)
             websiteName = data['websiteName']
+
+
+
 
             try:
                 DeleteDocRoot = int(data['DeleteDocRoot'])

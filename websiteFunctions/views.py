@@ -33,7 +33,7 @@ def WPCreate(request):
     try:
         userID = request.session['userID']
         wm = WebsiteManager()
-        return wm.WPCreate(request, userID)
+        return wm.WPCreate(request, userID,)
     except KeyError:
         return redirect(loadLoginPage)
 
