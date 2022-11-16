@@ -6,7 +6,7 @@
     {% load static %}
     {% get_current_language as LANGUAGE_CODE %}
     <!-- Current language: {{ LANGUAGE_CODE }} -->
-        <style>
+    <style>
         .switch {
             margin-top: 7px;
             margin-left: 12px;
@@ -14,6 +14,7 @@
             display: inline-block;
             width: 32px;
             height: 19px;
+            border-radius: 10%;
         }
 
         .switch input {
@@ -32,6 +33,7 @@
             background-color: #ccc;
             -webkit-transition: .4s;
             transition: .4s;
+            border-radius: 10%;
         }
 
         .slider:before {
@@ -44,14 +46,16 @@
             background-color: white;
             -webkit-transition: .4s;
             transition: .4s;
+            border-radius: 20%;
         }
+
 
         input:checked + .slider {
             background-color: #2196F3;
         }
 
         input:focus + .slider {
-            box-shadow: 0 0 1px #2196F3;
+            box-shadow: 0 0 2px #2196F3;
         }
 
         input:checked + .slider:before {
@@ -67,7 +71,6 @@
             <h2>{% trans "Create Website" %}</h2>
             <p>{% trans "On this page you can launch, list, modify and delete websites from your server." %}</p>
         </div>
-
 
 
         <div ng-controller="createWebsite" class="panel">
@@ -103,17 +106,20 @@
                             </div>
                         </div>
 
-                                                {#                     My Work #}
+                        {#                     My Work #}
                         <div ng-hide="installationDetailsForm" class="form-group">
-                            <label class="col-sm-3 control-label" style="margin-bottom: 15px">{% trans "Test Domain" %}</label>
+                            <label class="col-sm-3 control-label"
+                                   style="margin-bottom: 15px">{% trans "Test Domain" %}</label>
                             <label class="switch my-3">
-                                <input type="checkbox" checked id="myCheck" onclick="website_create_checkbox_function()" style="margin-top: 10px">
+                                <input type="checkbox" checked id="myCheck" onclick="website_create_checkbox_function()"
+                                       style="margin-top: 10px">
                                 <span class="slider"></span>
                             </label>
                             <br><br>
 
 
-                            <div id="Website_Create_Test_Domain" class="tabcontent" style="border: none;margin-left: 10px">
+                            <div id="Website_Create_Test_Domain" class="tabcontent"
+                                 style="border: none;margin-left: 10px">
                                 <div ng-hide="installationDetailsForm" class="form-group"
                                      ng-if="{{ test_domain_data }} == 1 ">
                                     <label class="col-sm-3 control-label">{% trans "Domain Name" %}</label>
@@ -141,13 +147,15 @@
                                          class="current-pack">{% trans "Invalid Domain (Note: You don't need to add 'http' or 'https')" %}</div>
                                 </div>
                                 <div ng-if="{{ test_domain_data }} == 0 ">
-                                    <center>Looks like you have not subscripted to temporary domain feature, <a href="https://go.cyberpanel.net/TempDomain">click here</a>
+                                    <center>Looks like you have not subscripted to temporary domain feature, <a
+                                            href="https://go.cyberpanel.net/TempDomain">click here</a>
                                         for more details.
                                     </center>
                                 </div>
                             </div>
 
-                            <div id="Website_Create_Own_Domain" class="tabcontent" style="border: none;display: none;margin-left: 10px">
+                            <div id="Website_Create_Own_Domain" class="tabcontent"
+                                 style="border: none;display: none;margin-left: 10px">
 
                                 <div ng-hide="installationDetailsForm" class="form-group">
                                     <label class="col-sm-3 control-label">{% trans "Domain Name" %}</label>
