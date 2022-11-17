@@ -263,14 +263,14 @@ function checkbox_function() {
 
     // If the checkbox is checked, display the output text
     if (checkBox.checked == true) {
-         domain_check = 0;
-         document.getElementById('Test_Domain').style.display= "block";
-         document.getElementById('Own_Domain').style.display = "none";
+        domain_check = 0;
+        document.getElementById('Test_Domain').style.display = "block";
+        document.getElementById('Own_Domain').style.display = "none";
 
     } else {
-         document.getElementById('Test_Domain').style.display = "none";
-         document.getElementById('Own_Domain').style.display = "block";
-         domain_check = 1;
+        document.getElementById('Test_Domain').style.display = "none";
+        document.getElementById('Own_Domain').style.display = "block";
+        domain_check = 1;
     }
 
     // alert(domain_check);
@@ -505,6 +505,29 @@ var DeploytoProductionID;
 
 function DeployToProductionInitial(vall) {
     DeploytoProductionID = vall;
+}
+
+var create_staging_domain_check = 0;
+
+function create_staging_checkbox_function() {
+
+    var checkBox = document.getElementById("Create_Staging_Check");
+    // Get the output text
+
+
+    // If the checkbox is checked, display the output text
+    if (checkBox.checked == true) {
+        create_staging_domain_check = 0;
+        document.getElementById('Website_Create_Test_Domain').style.display = "block";
+        document.getElementById('Website_Create_Own_Domain').style.display = "none";
+
+    } else {
+        document.getElementById('Website_Create_Test_Domain').style.display = "none";
+        document.getElementById('Website_Create_Own_Domain').style.display = "block";
+        create_staging_domain_check = 1;
+    }
+
+    // alert(domain_check);
 }
 
 app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $window) {
@@ -1187,9 +1210,19 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
 
 
         $scope.currentStatus = "Starting creation Staging..";
+
+        //here enter domain name
+        if (create_staging_domain_check == 0) {
+            var Part2_domainNameCreate = document.getElementById('Part2_domainNameCreate').value;
+            var domainNameCreate = document.getElementById('TestDomainNameCreate').value + Part2_domainNameCreate;
+        }
+        if (create_staging_domain_check == 1) {
+
+            var domainNameCreate = $scope.own_domainNameCreate;
+        }
         var data = {
             StagingName: $('#stagingName').val(),
-            StagingDomain: $('#stagingDomain').val(),
+            StagingDomain: domainNameCreate,
             WPid: $('#WPid').html(),
         }
         var url = "/websites/CreateStagingNow";
@@ -2335,18 +2368,19 @@ function website_create_checkbox_function() {
 
     // If the checkbox is checked, display the output text
     if (checkBox.checked == true) {
-         website_create_domain_check = 0;
-         document.getElementById('Website_Create_Test_Domain').style.display= "block";
-         document.getElementById('Website_Create_Own_Domain').style.display = "none";
+        website_create_domain_check = 0;
+        document.getElementById('Website_Create_Test_Domain').style.display = "block";
+        document.getElementById('Website_Create_Own_Domain').style.display = "none";
 
     } else {
-         document.getElementById('Website_Create_Test_Domain').style.display = "none";
-         document.getElementById('Website_Create_Own_Domain').style.display = "block";
-         website_create_domain_check = 1;
+        document.getElementById('Website_Create_Test_Domain').style.display = "none";
+        document.getElementById('Website_Create_Own_Domain').style.display = "block";
+        website_create_domain_check = 1;
     }
 
     // alert(domain_check);
 }
+
 app.controller('createWebsite', function ($scope, $http, $timeout, $window) {
 
     $scope.webSiteCreationLoading = true;
@@ -3380,6 +3414,28 @@ app.controller('modifyWebsitesController', function ($scope, $http) {
 
 
 /* Java script code to create account */
+var website_child_domain_check = 0;
+
+function website_child_domain_checkbox_function() {
+
+    var checkBox = document.getElementById("myCheck");
+    // Get the output text
+
+
+    // If the checkbox is checked, display the output text
+    if (checkBox.checked == true) {
+        website_child_domain_check = 0;
+        document.getElementById('Website_Create_Test_Domain').style.display = "block";
+        document.getElementById('Website_Create_Own_Domain').style.display = "none";
+
+    } else {
+        document.getElementById('Website_Create_Test_Domain').style.display = "none";
+        document.getElementById('Website_Create_Own_Domain').style.display = "block";
+        website_child_domain_check = 1;
+    }
+
+    // alert(domain_check);
+}
 
 app.controller('websitePages', function ($scope, $http, $timeout, $window) {
 
@@ -4483,6 +4539,16 @@ app.controller('websitePages', function ($scope, $http, $timeout, $window) {
 
         if (typeof path === 'undefined') {
             path = "";
+        }
+        var package = $scope.packageForWebsite;
+
+        if (website_child_domain_check == 0) {
+            var Part2_domainNameCreate = document.getElementById('Part2_domainNameCreate').value;
+            var domainName = document.getElementById('TestDomainNameCreate').value + Part2_domainNameCreate;
+        }
+        if (website_child_domain_check == 1) {
+
+            var domainName = $scope.own_domainNameCreate;
         }
 
 

@@ -65,8 +65,13 @@
 
         .help_test_domain {
             background-color: black;
-            padding: 3px;
+            padding: 10px;
             display: none;
+            opacity: 0.7;
+            position: absolute;
+            z-index: 9;
+            text-align: justify;
+
 
         }
 
@@ -78,7 +83,8 @@
             font-size: small;
             border-radius: 5px;
             width: 200px;
-            height: auto;
+
+        {#height: auto;#}
         }
 
     </style>
@@ -161,8 +167,8 @@
 
                             </label>
                             <label class="help_test_domain">
-
-                                Hello World!! Hello World!! Hello World!! Hello World!! Hello World!!Hello World!! Hello World!!git
+                                The test domain allows you to deploy websites without the need to add DNS records, it
+                                allows you to create staging environments, deploy test websites, and much more...
 
                             </label>
 
@@ -170,7 +176,7 @@
                             <br><br>
 
 
-                            <div id="Test_Domain" class="tabcontent" style="border: none;margin-left: 10px">
+                            <div id="Test_Domain" class="tabcontent" style="border: none;margin-left: 10px; position: relative">
                                 <div ng-hide="installationDetailsForm" class="form-group"
                                      ng-if="{{ test_domain_data }} == 1 ">
                                     <label class="col-sm-3 control-label">{% trans "Domain Name" %}</label>
@@ -206,7 +212,7 @@
                             </div>
 
                             <div id="Own_Domain" class="tabcontent"
-                                 style="border: none;display: none;margin-left: 10px">
+                                 style="border: none;display: none;margin-left: 10px;position: relative">
 
                                 <div ng-hide="installationDetailsForm" class="form-group">
                                     <label class="col-sm-3 control-label">{% trans "Domain Name" %}</label>
