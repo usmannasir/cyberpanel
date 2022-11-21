@@ -342,7 +342,7 @@ app.controller('createWordpress', function ($scope, $http, $timeout, $compile, $
             home = "0";
         }
 
-        alert(domainNameCreate);
+        //alert(domainNameCreate);
         var data = {
 
             title: WPtitle,
