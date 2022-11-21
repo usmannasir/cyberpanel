@@ -2343,7 +2343,6 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             #command = 'cp /usr/local/lsws/lsphp71/bin/php /usr/bin/'
             #Upgrade.executioner(command, 'Set default PHP 7.0, 0')
 
-
     @staticmethod
     def someDirectories():
         command = "mkdir -p /usr/local/lscpd/admin/"
