@@ -83,14 +83,6 @@ class WebsiteManager:
             "name": "wp-manager",
             "IP": ACLManager.GetServerIP()
         }
-        test_domain_data = {
-            "name": "test-domain",
-            "IP": ACLManager.GetServerIP(),
-        }
-
-        import requests
-        response = requests.post(url, data=json.dumps(test_domain_data))
-        test_domain_status = response.json()['status']
 
         import requests
         response = requests.post(url, data=json.dumps(data))
@@ -119,6 +111,17 @@ class WebsiteManager:
 
             Plugins = wpplugins.objects.filter(owner=userobj)
             rnpss = randomPassword.generate_pass(10)
+
+            ##
+
+            test_domain_data = {
+                "name": "test-domain",
+                "IP": ACLManager.GetServerIP(),
+            }
+
+            import requests
+            response = requests.post(url, data=json.dumps(test_domain_data))
+            test_domain_status = response.json()['status']
 
             Data = {'packageList': packagesName, "owernList": adminNames, 'WPVersions': FinalVersions,
                     'Plugins': Plugins, 'Randam_String': rnpss.lower(), 'test_domain_data': test_domain_status}
