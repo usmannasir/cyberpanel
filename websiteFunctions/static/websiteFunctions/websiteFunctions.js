@@ -18,6 +18,7 @@ function getCookie(name) {
     return cookieValue;
 }
 
+
 var arry = []
 
 function selectpluginJs(val) {
@@ -252,6 +253,28 @@ app.controller('WPAddNewPlugin', function ($scope, $http, $timeout, $window, $co
 
 });
 
+var domain_check = 0;
+
+function checkbox_function() {
+
+    var checkBox = document.getElementById("myCheck");
+    // Get the output text
+
+
+    // If the checkbox is checked, display the output text
+    if (checkBox.checked == true) {
+        domain_check = 0;
+        document.getElementById('Test_Domain').style.display = "block";
+        document.getElementById('Own_Domain').style.display = "none";
+
+    } else {
+        document.getElementById('Test_Domain').style.display = "none";
+        document.getElementById('Own_Domain').style.display = "block";
+        domain_check = 1;
+    }
+
+    // alert(domain_check);
+}
 
 app.controller('createWordpress', function ($scope, $http, $timeout, $compile, $window) {
     $scope.webSiteCreationLoading = true;
@@ -261,6 +284,7 @@ app.controller('createWordpress', function ($scope, $http, $timeout, $compile, $
     $scope.success = true;
     $scope.couldNotConnect = true;
     $scope.goBackDisable = true;
+
 
     var statusFile;
 
@@ -280,7 +304,17 @@ app.controller('createWordpress', function ($scope, $http, $timeout, $compile, $
         var package = $scope.packageForWebsite;
         var websiteOwner = $scope.websiteOwner;
         var WPtitle = $scope.WPtitle;
-        var domainNameCreate = $scope.domainNameCreate;
+
+        if (domain_check == 0) {
+            var Part2_domainNameCreate = document.getElementById('Part2_domainNameCreate').value;
+            var domainNameCreate = document.getElementById('TestDomainNameCreate').value + Part2_domainNameCreate;
+        }
+        if (domain_check == 1) {
+
+            var domainNameCreate = $scope.own_domainNameCreate;
+        }
+
+
         var WPUsername = $scope.WPUsername;
         var adminEmail = $scope.adminEmail;
         var WPPassword = $scope.WPPassword;
@@ -290,7 +324,17 @@ app.controller('createWordpress', function ($scope, $http, $timeout, $compile, $
         var pluginupdates = $scope.pluginupdates;
         var themeupdates = $scope.themeupdates;
 
-        var path = $scope.installPath;
+        if (domain_check == 0) {
+
+            var path = "";
+
+        }
+        if (domain_check = 1) {
+
+            var path = $scope.installPath;
+
+        }
+
 
         var home = "1";
 
@@ -298,6 +342,7 @@ app.controller('createWordpress', function ($scope, $http, $timeout, $compile, $
             home = "0";
         }
 
+        //alert(domainNameCreate);
         var data = {
 
             title: WPtitle,
@@ -315,6 +360,7 @@ app.controller('createWordpress', function ($scope, $http, $timeout, $compile, $
             home: home,
             path: path,
         }
+
         var config = {
             headers: {
                 'X-CSRFToken': getCookie('csrftoken')
@@ -459,6 +505,29 @@ var DeploytoProductionID;
 
 function DeployToProductionInitial(vall) {
     DeploytoProductionID = vall;
+}
+
+var create_staging_domain_check = 0;
+
+function create_staging_checkbox_function() {
+
+    var checkBox = document.getElementById("Create_Staging_Check");
+    // Get the output text
+
+
+    // If the checkbox is checked, display the output text
+    if (checkBox.checked == true) {
+        create_staging_domain_check = 0;
+        document.getElementById('Website_Create_Test_Domain').style.display = "block";
+        document.getElementById('Website_Create_Own_Domain').style.display = "none";
+
+    } else {
+        document.getElementById('Website_Create_Test_Domain').style.display = "none";
+        document.getElementById('Website_Create_Own_Domain').style.display = "block";
+        create_staging_domain_check = 1;
+    }
+
+    // alert(domain_check);
 }
 
 app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $window) {
@@ -1141,9 +1210,19 @@ app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $windo
 
 
         $scope.currentStatus = "Starting creation Staging..";
+
+        //here enter domain name
+        if (create_staging_domain_check == 0) {
+            var Part2_domainNameCreate = document.getElementById('Part2_domainNameCreate').value;
+            var domainNameCreate = document.getElementById('TestDomainNameCreate').value + Part2_domainNameCreate;
+        }
+        if (create_staging_domain_check == 1) {
+
+            var domainNameCreate = $scope.own_domainNameCreate;
+        }
         var data = {
             StagingName: $('#stagingName').val(),
-            StagingDomain: $('#stagingDomain').val(),
+            StagingDomain: domainNameCreate,
             WPid: $('#WPid').html(),
         }
         var url = "/websites/CreateStagingNow";
@@ -2278,6 +2357,30 @@ app.controller('BackupSchedule', function ($scope, $http, $timeout, $window) {
     };
 });
 /* Java script code to create account */
+
+var website_create_domain_check = 0;
+
+function website_create_checkbox_function() {
+
+    var checkBox = document.getElementById("myCheck");
+    // Get the output text
+
+
+    // If the checkbox is checked, display the output text
+    if (checkBox.checked == true) {
+        website_create_domain_check = 0;
+        document.getElementById('Website_Create_Test_Domain').style.display = "block";
+        document.getElementById('Website_Create_Own_Domain').style.display = "none";
+
+    } else {
+        document.getElementById('Website_Create_Test_Domain').style.display = "none";
+        document.getElementById('Website_Create_Own_Domain').style.display = "block";
+        website_create_domain_check = 1;
+    }
+
+    // alert(domain_check);
+}
+
 app.controller('createWebsite', function ($scope, $http, $timeout, $window) {
 
     $scope.webSiteCreationLoading = true;
@@ -2332,7 +2435,18 @@ app.controller('createWebsite', function ($scope, $http, $timeout, $window) {
         url = "/websites/submitWebsiteCreation";
 
         var package = $scope.packageForWebsite;
-        var domainName = $scope.domainNameCreate;
+
+        if (website_create_domain_check == 0) {
+            var Part2_domainNameCreate = document.getElementById('Part2_domainNameCreate').value;
+            var domainName = document.getElementById('TestDomainNameCreate').value + Part2_domainNameCreate;
+        }
+        if (website_create_domain_check == 1) {
+
+            var domainName = $scope.own_domainNameCreate;
+        }
+
+        // var domainName = $scope.domainNameCreate;
+
         var adminEmail = $scope.adminEmail;
         var phpSelection = $scope.phpSelection;
         var websiteOwner = $scope.websiteOwner;
@@ -2647,9 +2761,7 @@ app.controller('listWebsites', function ($scope, $http) {
 
         var url = "/websites/ScanWordpressSite";
 
-        var data = {
-
-        }
+        var data = {}
 
 
         var config = {
@@ -3302,6 +3414,28 @@ app.controller('modifyWebsitesController', function ($scope, $http) {
 
 
 /* Java script code to create account */
+var website_child_domain_check = 0;
+
+function website_child_domain_checkbox_function() {
+
+    var checkBox = document.getElementById("myCheck");
+    // Get the output text
+
+
+    // If the checkbox is checked, display the output text
+    if (checkBox.checked == true) {
+        website_child_domain_check = 0;
+        document.getElementById('Website_Create_Test_Domain').style.display = "block";
+        document.getElementById('Website_Create_Own_Domain').style.display = "none";
+
+    } else {
+        document.getElementById('Website_Create_Test_Domain').style.display = "none";
+        document.getElementById('Website_Create_Own_Domain').style.display = "block";
+        website_child_domain_check = 1;
+    }
+
+    // alert(domain_check);
+}
 
 app.controller('websitePages', function ($scope, $http, $timeout, $window) {
 
@@ -4406,6 +4540,16 @@ app.controller('websitePages', function ($scope, $http, $timeout, $window) {
         if (typeof path === 'undefined') {
             path = "";
         }
+        var package = $scope.packageForWebsite;
+
+        if (website_child_domain_check == 0) {
+            var Part2_domainNameCreate = document.getElementById('Part2_domainNameCreate').value;
+            var domainName = document.getElementById('TestDomainNameCreate').value + Part2_domainNameCreate;
+        }
+        if (website_child_domain_check == 1) {
+
+            var domainName = $scope.own_domainNameCreate;
+        }
 
 
         var data = {
@@ -5084,7 +5228,7 @@ RewriteRule ^/(xmlrpc|wp-trackback)\.php - [F,L,NC]
             $scope.rewriteRules = nonWWWToWWW + $scope.rewriteRules;
         } else if ($scope.rewriteTemplate === "Force WWW -> NON-WWW") {
             $scope.rewriteRules = WWWToNonWWW + $scope.rewriteRules;
-        }  else if ($scope.rewriteTemplate === "Disable Wordpress XMLRPC & Trackback") {
+        } else if ($scope.rewriteTemplate === "Disable Wordpress XMLRPC & Trackback") {
             $scope.rewriteRules = WordpressProtect + $scope.rewriteRules;
         }
     };
