@@ -57,7 +57,6 @@ class IncScheduler(multi.Thread):
         if self.function == "startBackup":
             IncScheduler.startBackup(self.data['freq'])
         elif self.function == "CalculateAndUpdateDiskUsage":
-            logging.writeToFile('called CalculateAndUpdateDiskUsage etc')
             IncScheduler.CalculateAndUpdateDiskUsage()
 
     @staticmethod
