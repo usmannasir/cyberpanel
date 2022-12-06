@@ -776,6 +776,15 @@ class backupUtilities:
                     1] + ". Not able to create Account, Databases and DNS Records, aborting. [575][5009]")
                 return 0
 
+            #### Find out web server from backup conf
+
+            CurrentServer = ProcessUtilities.OLS
+
+            if os.path.exists(completPath + '/vhost.conf'):
+                if open(f'{completPath}/vhost.conf', 'r').read().find('ServerName') > -1:
+                    CurrentServer = ProcessUtilities.ent
+
+
             ########### Creating child/sub/addon/parked domains
 
             logging.CyberCPLogFileWriter.statusWriter(status, "Creating Child Domains!")
@@ -819,7 +828,8 @@ class backupUtilities:
 
                             if os.path.exists(completPath + '/' + domain + '.vhost.conf'):
                                 completPathToConf = backupUtilities.Server_root + '/conf/vhosts/' + domain + '/vhost.conf'
-                                copy(completPath + '/' + domain + '.vhost.conf', completPathToConf)
+                                if CurrentServer == ProcessUtilities.decideServer():
+                                    copy(completPath + '/' + domain + '.vhost.conf', completPathToConf)
 
                             sslStoragePath = completPath + "/" + domain + ".cert.pem"
 
@@ -1030,7 +1040,8 @@ class backupUtilities:
 
             completPathToConf = backupUtilities.Server_root + '/conf/vhosts/' + masterDomain + '/vhost.conf'
             if os.path.exists(completPath + '/vhost.conf'):
-                copy(completPath + '/vhost.conf', completPathToConf)
+                if CurrentServer == ProcessUtilities.decideServer():
+                    copy(completPath + '/vhost.conf', completPathToConf)
 
             logging.CyberCPLogFileWriter.statusWriter(status, "Done")
 
