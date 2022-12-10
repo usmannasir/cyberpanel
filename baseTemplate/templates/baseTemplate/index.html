@@ -335,7 +335,7 @@
                                        data-original-title=".icon-cloud-upload" aria-describedby="tooltip896208"></i>
                                     <span>{% trans "Connect" %}</span>
                                 </a>
-                                <a target="_blank" href="https://go.cyberpanel.net/community"
+                                <a id="sidebar-menu-item-community" target="_blank" href="https://go.cyberpanel.net/community"
                                    title="{% trans 'Connect' %}">
                                     <i class="glyph-icon tooltip-button icon-comments-o" title="{% trans 'Community' %}"
                                        data-original-title=".icon-comments-alt" aria-describedby="tooltip896208"></i>
@@ -397,10 +397,8 @@
                             </div><!-- .sidebar-submenu -->
                         </li>
 
-                        <li id="sidebar-menu-item-websites">
-
                             <!-------------WordPress--------------------------->
-                        <li>
+                        <li id="sidebar-menu-item-wordpress">
                             <a href="{% url 'loadWebsitesHome' %}" title="{% trans 'WordPress' %}">
                                 <div class="glyph-icon icon-wordpress" title="{% trans 'WordPress' %}"></div>
                                 <span>{% trans "WordPress" %}</span>
@@ -431,7 +429,7 @@
                         </li>
 
 
-                        <li>
+                        <li id="sidebar-menu-item-websites">
                             <a href="{% url 'loadWebsitesHome' %}" title="{% trans 'Websites' %}">
                                 <div class="glyph-icon icon-globe" title="{% trans 'Websites' %}"></div>
                                 <span>{% trans "Websites" %}</span>
@@ -783,7 +781,7 @@
                         {% if admin %}
 
                             <li class="header"><span>{% trans "Server" %}</span></li>
-                            <li>
+                            <li id="sidebar-menu-item-root-file-manager">
                                 <a href="{% url 'Filemanager' %}"
                                    title="{% trans 'Root File Manager' %}">
                                     <i class="glyph-icon tooltip-button icon-link"
@@ -946,7 +944,7 @@
                                 </div><!-- .sidebar-submenu -->
                             </li>
 
-                            <li id="sidebar-menu-item-server-status">
+                            <li id="sidebar-menu-item-logs">
                                 <a href="{% url 'logsHome' %}" title="{% trans 'Server Status' %}">
                                     <i class="glyph-icon icon-file"></i>
                                     <span>{% trans "Logs" %}</span>
