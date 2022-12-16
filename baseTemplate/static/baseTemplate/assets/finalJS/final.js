@@ -60,14 +60,6 @@ $(function(){
 				anchorClass: 'sf-with-ul',
 				menuArrowClass: 'sf-arrows'
 			},
-			outerClick = (function() {
-				$(window).load(function() {
-					$('body').children().on('click.superclick', function() {
-						var $allMenus = $('.sf-js-enabled');
-						$allMenus.superclick('reset');
-					});
-				});
-			})(),
 			toggleMenuClasses = function($menu, o) {
 				var classes = c.menuClass;
 				if (o.cssArrows) {
