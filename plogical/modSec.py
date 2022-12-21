@@ -320,8 +320,8 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
 
                 for items in confData:
                     if items.find('/usr/local/lsws/conf/modsec/rules.conf') > -1:
-                        conf.writelines(items)
                         conf.write(owaspRulesConf)
+                        conf.writelines(items)
                         continue
                     else:
                         conf.writelines(items)
