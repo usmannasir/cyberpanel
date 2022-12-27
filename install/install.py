@@ -1368,6 +1368,22 @@ autocreate_system_folders = On
             pass
         return True
 
+
+    def findSSHPort(self):
+        try:
+            sshData = subprocess.check_output(shlex.split('cat /etc/ssh/sshd_config')).decode("utf-8").split('\n')
+
+            for items in sshData:
+                if items.find('Port') > -1:
+                    if items[0] == 0:
+                        pass
+                    else:
+                        return items.split(' ')[1]
+
+            return '22'
+        except BaseException as msg:
+            return '22'
+
     def installFirewalld(self):
 
         if self.distro == ubuntu:
@@ -1416,6 +1432,15 @@ autocreate_system_folders = On
             FirewallUtilities.addRule("tcp", "53")
             FirewallUtilities.addRule("udp", "443")
             FirewallUtilities.addRule("tcp", "40110-40210")
+
+            try:
+                SSHPort = self.findSSHPort()
+                if SSHPort != '22':
+                    FirewallUtilities.addRule('tcp', SSHPort)
+            except BaseException as msg:
+                logging.InstallLog.writeToFile(f'[Error Custom SSH port] {str(msg)}')
+                preFlightsChecks.stdOut(f'[Error Custom SSH port] {str(msg)}')
+
 
             logging.InstallLog.writeToFile("FirewallD installed and configured!")
             preFlightsChecks.stdOut("FirewallD installed and configured!")
