@@ -1352,12 +1352,6 @@ Automatic backup failed for %s on %s.
 
             except BaseException as msg:
                 print("Version ID Error: %s"%str(msg))
-
-
-
-
-
-
         except BaseException as msg:
             print('%s. [SendToS3Cloud]' % (str(msg)))
             logging.writeToFile('%s. [SendToS3Cloud]' % (str(msg)))
