@@ -435,7 +435,8 @@ class backupUtilities:
 
         completPathToConf = f'{backupUtilities.Server_root}/conf/vhosts/{domainName}/vhost.conf'
 
-        copy(completPathToConf, tempStoragePath + '/vhost.conf')
+        if os.path.exists(completPathToConf):
+            copy(completPathToConf, tempStoragePath + '/vhost.conf')
 
         childDomains = backupMetaData.findall('ChildDomains/domain')
 
@@ -447,7 +448,8 @@ class backupUtilities:
 
 
                 completPathToConf = f'{backupUtilities.Server_root}/conf/vhosts/{actualChildDomain}/vhost.conf'
-                copy(completPathToConf, f'{tempStoragePath}/{actualChildDomain}.vhost.conf')
+                if os.path.exists(completPathToConf):
+                    copy(completPathToConf, f'{tempStoragePath}/{actualChildDomain}.vhost.conf')
 
                     ### Storing SSL for child domainsa
 
