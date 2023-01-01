@@ -435,8 +435,14 @@ class backupUtilities:
 
         completPathToConf = f'{backupUtilities.Server_root}/conf/vhosts/{domainName}/vhost.conf'
 
+        ### If domain is suspended, this path wont exists, so please check for other
+
         if os.path.exists(completPathToConf):
             copy(completPathToConf, tempStoragePath + '/vhost.conf')
+        else:
+            completPathToConf = f'{backupUtilities.Server_root}/conf/vhosts/{domainName}-suspended/vhost.conf'
+            if os.path.exists(completPathToConf):
+                copy(completPathToConf, tempStoragePath + '/vhost.conf')
 
         childDomains = backupMetaData.findall('ChildDomains/domain')
 
@@ -450,8 +456,13 @@ class backupUtilities:
                 completPathToConf = f'{backupUtilities.Server_root}/conf/vhosts/{actualChildDomain}/vhost.conf'
                 if os.path.exists(completPathToConf):
                     copy(completPathToConf, f'{tempStoragePath}/{actualChildDomain}.vhost.conf')
+                else:
+                    completPathToConf = f'{backupUtilities.Server_root}/conf/vhosts/{actualChildDomain}-suspended/vhost.conf'
+                    if os.path.exists(completPathToConf):
+                        copy(completPathToConf, f'{tempStoragePath}/{actualChildDomain}.vhost.conf')
 
-                    ### Storing SSL for child domainsa
+
+                ### Storing SSL for child domainsa
 
                 sslStoragePath = f'/etc/letsencrypt/live/{actualChildDomain}'
 
