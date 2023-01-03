@@ -2804,9 +2804,9 @@ class WebsiteManager:
 
             ## Fix https://github.com/usmannasir/cyberpanel/issues/998
 
-            # from plogical.IncScheduler import IncScheduler
-            isPU = IncScheduler('CalculateAndUpdateDiskUsage', {})
-            isPU.start()
+            #from plogical.IncScheduler import IncScheduler
+            #isPU = IncScheduler('CalculateAndUpdateDiskUsage', {})
+            #isPU.start()
 
             command = '/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForce'
             ProcessUtilities.outputExecutioner(command)
