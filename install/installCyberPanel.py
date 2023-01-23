@@ -212,40 +212,29 @@ class InstallCyberPanel:
 
         ## only php 71
         if self.distro == centos:
-            command = 'yum install lsphp71 lsphp71-json lsphp71-xmlrpc lsphp71-xml lsphp71-soap lsphp71-snmp ' \
-                      'lsphp71-recode lsphp71-pspell lsphp71-process lsphp71-pgsql lsphp71-pear lsphp71-pdo lsphp71-opcache ' \
-                      'lsphp71-odbc lsphp71-mysqlnd lsphp71-mcrypt lsphp71-mbstring lsphp71-ldap lsphp71-intl lsphp71-imap ' \
-                      'lsphp71-gmp lsphp71-gd lsphp71-enchant lsphp71-dba  lsphp71-common  lsphp71-bcmath -y'
-            install.preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            command = 'yum install -y lsphp71* --skip-broken'
 
-            ## only php 72
-            command = 'yum install -y lsphp72 lsphp72-json lsphp72-xmlrpc lsphp72-xml lsphp72-soap lsphp72-snmp ' \
-                      'lsphp72-recode lsphp72-pspell lsphp72-process lsphp72-pgsql lsphp72-pear lsphp72-pdo lsphp72-opcache ' \
-                      'lsphp72-odbc lsphp72-mysqlnd lsphp72-mcrypt lsphp72-mbstring lsphp72-ldap lsphp72-intl lsphp72-imap ' \
-                      'lsphp72-gmp lsphp72-gd lsphp72-enchant lsphp72-dba  lsphp72-common  lsphp72-bcmath'
-
-            install.preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            ## only php 73
-            command = 'yum install -y lsphp73 lsphp73-json lsphp73-xmlrpc lsphp73-xml lsphp73-tidy lsphp73-soap lsphp73-snmp ' \
-                      'lsphp73-recode lsphp73-pspell lsphp73-process lsphp73-pgsql lsphp73-pear lsphp73-pdo lsphp73-opcache ' \
-                      'lsphp73-odbc lsphp73-mysqlnd lsphp73-mcrypt lsphp73-mbstring lsphp73-ldap lsphp73-intl lsphp73-imap ' \
-                      'lsphp73-gmp lsphp73-gd lsphp73-enchant lsphp73-dba  lsphp73-common  lsphp73-bcmath'
-
-            install.preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            ## only php 74
-            command = 'yum install -y lsphp74 lsphp74-json lsphp74-xmlrpc lsphp74-xml lsphp74-tidy lsphp74-soap lsphp74-snmp ' \
-                      'lsphp74-recode lsphp74-pspell lsphp74-process lsphp74-pgsql lsphp74-pear lsphp74-pdo lsphp74-opcache ' \
-                      'lsphp74-odbc lsphp74-mysqlnd lsphp74-mcrypt lsphp74-mbstring lsphp74-ldap lsphp74-intl lsphp74-imap ' \
-                      'lsphp74-gmp lsphp74-gd lsphp74-enchant lsphp74-dba lsphp74-common  lsphp74-bcmath'
-
-            install.preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            command = 'yum install lsphp80* -y'
             subprocess.call(command, shell=True)
 
-            command = 'yum install lsphp81* -y'
+            ## only php 72
+            command = 'yum install -y lsphp72* --skip-broken'
+
+            subprocess.call(command, shell=True)
+
+            ## only php 73
+            command = 'yum install -y lsphp73* --skip-broken'
+
+            subprocess.call(command, shell=True)
+
+            ## only php 74
+            command = 'yum install -y lsphp74* --skip-broken'
+
+            subprocess.call(command, shell=True)
+
+            command = 'yum install lsphp80* -y --skip-broken'
+            subprocess.call(command, shell=True)
+
+            command = 'yum install lsphp81* -y --skip-broken'
             subprocess.call(command, shell=True)
 
         if self.distro == cent8:
