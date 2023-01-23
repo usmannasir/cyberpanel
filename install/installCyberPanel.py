@@ -241,7 +241,7 @@ class InstallCyberPanel:
             command = 'dnf install lsphp71* lsphp72* lsphp73* lsphp74* lsphp80* --exclude lsphp73-pecl-zip --exclude *imagick* -y --skip-broken'
             subprocess.call(command, shell=True)
 
-            command = 'dnf install lsphp81* --exclude *imagick* -y'
+            command = 'dnf install lsphp81* --exclude *imagick* -y --skip-broken'
             subprocess.call(command, shell=True)
         
         if self.distro == openeuler:
