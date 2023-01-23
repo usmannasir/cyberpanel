@@ -2339,9 +2339,9 @@ echo $oConfig->Save() ? 'Done' : 'Error';
         CentOSPath = '/etc/redhat-release'
         openEulerPath = '/etc/openEuler-release'
 
-        if not os.path.exists(CentOSPath) or not os.path.exists(openEulerPath):
-            command = 'cp /usr/local/lsws/lsphp71/bin/php /usr/bin/'
-            Upgrade.executioner(command, 'Set default PHP 7.0, 0')
+        #if not os.path.exists(CentOSPath) or not os.path.exists(openEulerPath):
+            #command = 'cp /usr/local/lsws/lsphp71/bin/php /usr/bin/'
+            #Upgrade.executioner(command, 'Set default PHP 7.0, 0')
 
     @staticmethod
     def someDirectories():

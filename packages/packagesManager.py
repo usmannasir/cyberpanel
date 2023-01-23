@@ -211,6 +211,16 @@ class PackagesManager:
 
             modifyPack.save()
 
+            ## Fix https://github.com/usmannasir/cyberpanel/issues/998
+
+            # from plogical.IncScheduler import IncScheduler
+            # isPU = IncScheduler('CalculateAndUpdateDiskUsage', {})
+            # isPU.start()
+
+            from plogical.processUtilities import ProcessUtilities
+            command = '/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForce'
+            ProcessUtilities.outputExecutioner(command)
+
             data_ret = {'status': 1, 'saveStatus': 1, 'error_message': "None"}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)

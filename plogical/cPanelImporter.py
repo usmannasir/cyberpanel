@@ -102,6 +102,8 @@ class cPanelImporter:
             self.PHPVersion = 'PHP 7.4'
         elif self.PHPVersion.find('80') > -1:
             self.PHPVersion = 'PHP 8.0'
+        elif self.PHPVersion.find('81') > -1:
+            self.PHPVersion = 'PHP 8.1'
             
         if self.PHPVersion == '':
             if self.InheritPHP != '':

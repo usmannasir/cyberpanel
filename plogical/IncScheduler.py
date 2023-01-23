@@ -1,11 +1,9 @@
 #!/usr/local/CyberCP/bin/python
 import os.path
 import sys
-
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 import django
-
 django.setup()
 from IncBackups.IncBackupsControl import IncJobs
 from IncBackups.models import BackupJob
@@ -56,8 +54,10 @@ class IncScheduler(multi.Thread):
         self.data = extraArgs
 
     def run(self):
-        if self.function == 'startBackup':
+        if self.function == "startBackup":
             IncScheduler.startBackup(self.data['freq'])
+        elif self.function == "CalculateAndUpdateDiskUsage":
+            IncScheduler.CalculateAndUpdateDiskUsage()
 
     @staticmethod
     def startBackup(type):
@@ -727,8 +727,11 @@ Automatic backup failed for %s on %s.
                                                     domain, time.strftime("%m.%d.%Y_%H-%M-%S"))).save()
 
                     jobConfig = json.loads(backupjob.config)
-                    if jobConfig['pid']:
-                        del jobConfig['pid']
+                    try:
+                        if jobConfig['pid']:
+                            del jobConfig['pid']
+                    except:
+                        pass
                     jobConfig[IncScheduler.currentStatus] = 'Not running'
                     backupjob.config = json.dumps(jobConfig)
                     backupjob.save()
@@ -1352,12 +1355,6 @@ Automatic backup failed for %s on %s.
 
             except BaseException as msg:
                 print("Version ID Error: %s"%str(msg))
-
-
-
-
-
-
         except BaseException as msg:
             print('%s. [SendToS3Cloud]' % (str(msg)))
             logging.writeToFile('%s. [SendToS3Cloud]' % (str(msg)))
@@ -1368,6 +1365,10 @@ def main():
     parser.add_argument('function', help='Specific a function to call!')
     parser.add_argument('--planName', help='Plan name for AWS!')
     args = parser.parse_args()
+
+    if args.function == 'UpdateDiskUsageForce':
+        IncScheduler.CalculateAndUpdateDiskUsage()
+        return 0
 
     if args.function == '30 Minutes' or args.function == '30 Minutes' or args.function == '1 Hour' or args.function == '6 Hours' or args.function == '12 Hours' or args.function == '1 Day' or args.function == '3 Days' or args.function == '1 Week':
         IncScheduler.RemoteBackup(args.function)

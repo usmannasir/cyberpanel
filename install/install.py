@@ -1368,6 +1368,22 @@ autocreate_system_folders = On
             pass
         return True
 
+
+    def findSSHPort(self):
+        try:
+            sshData = subprocess.check_output(shlex.split('cat /etc/ssh/sshd_config')).decode("utf-8").split('\n')
+
+            for items in sshData:
+                if items.find('Port') > -1:
+                    if items[0] == 0:
+                        pass
+                    else:
+                        return items.split(' ')[1]
+
+            return '22'
+        except BaseException as msg:
+            return '22'
+
     def installFirewalld(self):
 
         if self.distro == ubuntu:
@@ -1416,6 +1432,15 @@ autocreate_system_folders = On
             FirewallUtilities.addRule("tcp", "53")
             FirewallUtilities.addRule("udp", "443")
             FirewallUtilities.addRule("tcp", "40110-40210")
+
+            try:
+                SSHPort = self.findSSHPort()
+                if SSHPort != '22':
+                    FirewallUtilities.addRule('tcp', SSHPort)
+            except BaseException as msg:
+                logging.InstallLog.writeToFile(f'[Error Custom SSH port] {str(msg)}')
+                preFlightsChecks.stdOut(f'[Error Custom SSH port] {str(msg)}')
+
 
             logging.InstallLog.writeToFile("FirewallD installed and configured!")
             preFlightsChecks.stdOut("FirewallD installed and configured!")
@@ -1988,8 +2013,8 @@ milter_default_action = accept
                     if os.access('/usr/local/lsws/lsphp72/bin/php7.2', os.R_OK):
                         os.symlink('/usr/local/lsws/lsphp72/bin/php7.2', '/usr/local/lsws/lsphp72/bin/php')
 
-            command = "cp /usr/local/lsws/lsphp71/bin/php /usr/bin/"
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+            #command = "cp /usr/local/lsws/lsphp71/bin/php /usr/bin/"
+            #preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             os.chdir(self.cwd)
 

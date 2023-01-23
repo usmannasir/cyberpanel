@@ -320,8 +320,8 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/rules.conf
 
                 for items in confData:
                     if items.find('/usr/local/lsws/conf/modsec/rules.conf') > -1:
-                        conf.writelines(items)
                         conf.write(owaspRulesConf)
+                        conf.writelines(items)
                         continue
                     else:
                         conf.writelines(items)
@@ -547,21 +547,36 @@ modsecurity_rules_file /usr/local/lsws/conf/modsec/owasp-modsecurity-crs-3.0-mas
     @staticmethod
     def disableOWASP():
         try:
+            if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+                confFile = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
+                confData = open(confFile).readlines()
+                conf = open(confFile, 'w')
 
-            confFile = os.path.join(virtualHostUtilities.Server_root, "conf/httpd_config.conf")
-            confData = open(confFile).readlines()
-            conf = open(confFile, 'w')
+                for items in confData:
+                    if items.find('modsec/owasp') > -1:
+                        continue
+                    else:
+                        conf.writelines(items)
 
-            for items in confData:
-                if items.find('modsec/owasp') > -1:
-                    continue
-                else:
-                    conf.writelines(items)
+                conf.close()
+                installUtilities.reStartLiteSpeed()
 
-            conf.close()
-            installUtilities.reStartLiteSpeed()
+                print("1,None")
+            else:
+                confFile = os.path.join("/usr/local/lsws/conf/modsec.conf")
+                confData = open(confFile).readlines()
+                conf = open(confFile, 'w')
 
-            print("1,None")
+                for items in confData:
+                    if items.find('modsec/owasp') > -1:
+                        continue
+                    else:
+                        conf.writelines(items)
+
+                conf.close()
+                installUtilities.reStartLiteSpeed()
+
+                print("1,None")
 
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(
