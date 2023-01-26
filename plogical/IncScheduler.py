@@ -1359,6 +1359,11 @@ Automatic backup failed for %s on %s.
             print('%s. [SendToS3Cloud]' % (str(msg)))
             logging.writeToFile('%s. [SendToS3Cloud]' % (str(msg)))
 
+    @staticmethod
+    def FixMailSSL():
+        for website in Websites.objects.all():
+            virtualHostUtilities.setupAutoDiscover(1, '/home/cyberpanel/templogs', website.domain, website.admin)
+
 
 def main():
     parser = argparse.ArgumentParser(description='CyberPanel Installer')
@@ -1380,6 +1385,9 @@ def main():
 
     IncScheduler.CalculateAndUpdateDiskUsage()
     IncScheduler.WPUpdates()
+
+    if args.function == 'Weekly':
+        IncScheduler.FixMailSSL()
 
     ### Run incremental backups in sep thread
 
