@@ -116,11 +116,11 @@ class mailUtilities:
 
         WriteToFile = open(PluginsFilePath, 'w')
         WriteToFile.write("""{
-            "plugin": {
-                "autocreate_system_folders": true
-            }
-        }
-        """)
+    "plugin": {
+        "autocreate_system_folders": true
+    }
+}
+""")
         WriteToFile.close()
 
         command = f'chown lscpd:lscpd {PluginsFilePath}'
