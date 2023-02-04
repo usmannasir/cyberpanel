@@ -248,8 +248,8 @@ class mailUtilities:
             #           f"'/home/vmail/{domain}/{userName}/Maildir/.Junk E-mail'"
             # ProcessUtilities.executioner(command, 'vmail')
 
-            if not os.path.exists('/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect'):
-                mailUtilities.InstallMailBoxFoldersPlugin()
+            #if not os.path.exists('/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect'):
+            #    mailUtilities.InstallMailBoxFoldersPlugin()
 
             print("1,None")
             return 1,"None"

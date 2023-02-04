@@ -523,20 +523,20 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             includeFileOldPath = '/usr/local/CyberCP/public/snappymail/_include.php'
             includeFileNewPath = '/usr/local/CyberCP/public/snappymail/include.php'
 
-            if os.path.exists(includeFileOldPath):
-                writeToFile = open(includeFileOldPath, 'a')
-                writeToFile.write("\ndefine('APP_DATA_FOLDER_PATH', '/usr/local/lscp/cyberpanel/rainloop/data/');\n")
-                writeToFile.close()
+            # if os.path.exists(includeFileOldPath):
+            #     writeToFile = open(includeFileOldPath, 'a')
+            #     writeToFile.write("\ndefine('APP_DATA_FOLDER_PATH', '/usr/local/lscp/cyberpanel/rainloop/data/');\n")
+            #     writeToFile.close()
 
-            command = 'mv %s %s' % (includeFileOldPath, includeFileNewPath)
-            Upgrade.executioner(command, 'mkdir snappymail configs', 0)
+            # command = 'mv %s %s' % (includeFileOldPath, includeFileNewPath)
+            # Upgrade.executioner(command, 'mkdir snappymail configs', 0)
 
             ## take care of auto create folders
 
             ## Disable local cert verification
 
-            command = "sed -i 's|verify_certificate = On|verify_certificate = Off|g' %s" % (labsPath)
-            Upgrade.executioner(command, 'verify certificate', 0)
+            #command = "sed -i 's|verify_certificate = On|verify_certificate = Off|g' %s" % (labsPath)
+            #Upgrade.executioner(command, 'verify certificate', 0)
 
 
             # labsData = open(labsPath, 'r').read()
@@ -571,62 +571,68 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             ### now download and install actual plugin
 
-            command = f'mkdir /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect'
+#             command = f'mkdir /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect'
+#             Upgrade.executioner(command, 'verify certificate', 0)
+#
+#             command = f'chmod 700 /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect'
+#             Upgrade.executioner(command, 'verify certificate', 0)
+#
+#             command = f'chown lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect'
+#             Upgrade.executioner(command, 'verify certificate', 0)
+#
+#             command = f'wget -O /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect/index.php https://raw.githubusercontent.com/the-djmaze/snappymail/master/plugins/mailbox-detect/index.php'
+#             Upgrade.executioner(command, 'verify certificate', 0)
+#
+#             command = f'chmod 644 /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect/index.php'
+#             Upgrade.executioner(command, 'verify certificate', 0)
+#
+#             command = f'chown lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect/index.php'
+#             Upgrade.executioner(command, 'verify certificate', 0)
+#
+#             ### Enable plugins and enable mailbox creation plugin
+#
+#             labsDataLines = open(labsPath, 'r').readlines()
+#             PluginsActivator = 0
+#             WriteToFile = open(labsPath, 'w')
+#
+#
+#             for lines in labsDataLines:
+#                 if lines.find('[plugins]') > -1:
+#                     PluginsActivator = 1
+#                     WriteToFile.write(lines)
+#                 elif PluginsActivator and lines.find('enable = ') > -1:
+#                     WriteToFile.write(f'enable = On\n')
+#                 elif PluginsActivator and lines.find('enabled_list = ') > -1:
+#                     WriteToFile.write(f'enabled_list = "mailbox-detect"\n')
+#                 elif PluginsActivator == 1 and lines.find('[defaults]') > -1:
+#                     PluginsActivator = 0
+#                     WriteToFile.write(lines)
+#                 else:
+#                     WriteToFile.write(lines)
+#             WriteToFile.close()
+#
+#             ## enable auto create in the enabled plugin
+#             PluginsFilePath = '/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/plugin-mailbox-detect.json'
+#
+#             WriteToFile = open(PluginsFilePath, 'w')
+#             WriteToFile.write("""{
+#     "plugin": {
+#         "autocreate_system_folders": true
+#     }
+# }
+# """)
+#             WriteToFile.close()
+#
+#             command = f'chown lscpd:lscpd {PluginsFilePath}'
+#             Upgrade.executioner(command, 'verify certificate', 0)
+#
+#             command = f'chmod 600 {PluginsFilePath}'
+#             Upgrade.executioner(command, 'verify certificate', 0)
+
+            command = f'wget -O /usr/local/CyberCP/snappymail_cyberpanel.php  https://raw.githubusercontent.com/the-djmaze/snappymail/master/integrations/cyberpanel/install.php'
             Upgrade.executioner(command, 'verify certificate', 0)
 
-            command = f'chmod 700 /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect'
-            Upgrade.executioner(command, 'verify certificate', 0)
-
-            command = f'chown lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect'
-            Upgrade.executioner(command, 'verify certificate', 0)
-
-            command = f'wget -O /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect/index.php https://raw.githubusercontent.com/the-djmaze/snappymail/master/plugins/mailbox-detect/index.php'
-            Upgrade.executioner(command, 'verify certificate', 0)
-
-            command = f'chmod 644 /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect/index.php'
-            Upgrade.executioner(command, 'verify certificate', 0)
-
-            command = f'chown lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect/index.php'
-            Upgrade.executioner(command, 'verify certificate', 0)
-
-            ### Enable plugins and enable mailbox creation plugin
-
-            labsDataLines = open(labsPath, 'r').readlines()
-            PluginsActivator = 0
-            WriteToFile = open(labsPath, 'w')
-
-
-            for lines in labsDataLines:
-                if lines.find('[plugins]') > -1:
-                    PluginsActivator = 1
-                    WriteToFile.write(lines)
-                elif PluginsActivator and lines.find('enable = ') > -1:
-                    WriteToFile.write(f'enable = On\n')
-                elif PluginsActivator and lines.find('enabled_list = ') > -1:
-                    WriteToFile.write(f'enabled_list = "mailbox-detect"\n')
-                elif PluginsActivator == 1 and lines.find('[defaults]') > -1:
-                    PluginsActivator = 0
-                    WriteToFile.write(lines)
-                else:
-                    WriteToFile.write(lines)
-            WriteToFile.close()
-
-            ## enable auto create in the enabled plugin
-            PluginsFilePath = '/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/plugin-mailbox-detect.json'
-
-            WriteToFile = open(PluginsFilePath, 'w')
-            WriteToFile.write("""{
-    "plugin": {
-        "autocreate_system_folders": true
-    }
-}
-""")
-            WriteToFile.close()
-
-            command = f'chown lscpd:lscpd {PluginsFilePath}'
-            Upgrade.executioner(command, 'verify certificate', 0)
-
-            command = f'chmod 600 {PluginsFilePath}'
+            command = f'/usr/local/lsws/lsphp74/bin/php /usr/local/CyberCP/snappymail_cyberpanel.php'
             Upgrade.executioner(command, 'verify certificate', 0)
 
 
