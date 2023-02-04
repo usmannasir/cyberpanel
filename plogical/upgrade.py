@@ -533,6 +533,12 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             ## take care of auto create folders
 
+            ## Disable local cert verification
+
+            command = "sed -i 's|verify_certificate = On|verify_certificate = Off|g' %s" % (labsPath)
+            Upgrade.executioner(command, 'verify certificate', 0)
+
+
             # labsData = open(labsPath, 'r').read()
             # labsDataLines = open(labsPath, 'r').readlines()
             #

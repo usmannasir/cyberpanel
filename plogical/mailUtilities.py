@@ -66,6 +66,8 @@ class mailUtilities:
         command = 'chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data/'
         ProcessUtilities.normalExecutioner(command)
 
+
+
     @staticmethod
     def createEmailAccount(domain, userName, password, restore = None):
         try:
@@ -166,6 +168,22 @@ class mailUtilities:
 
             emailLimits = EmailLimits(email=emailAcct)
             emailLimits.save()
+
+            ### Create email folders manually if they dont exist
+
+            command = f"mkdir '/home/vmail/{domain}/{userName}/Maildir/.Archive' " \
+                      f"'/home/vmail/{domain}/{userName}/Maildir/.Deleted Items' " \
+                      f"'/home/vmail/{domain}/{userName}/Maildir/.Drafts' " \
+                      f"'/home/vmail/{domain}/{userName}/Maildir/.Sent' " \
+                      f"'/home/vmail/{domain}/{userName}/Maildir/.Junk E-mail'"
+            ProcessUtilities.executioner(command, 'vmail')
+
+            command = f"chmod 700 '/home/vmail/{domain}/{userName}/Maildir/.Archive' " \
+                      f"'/home/vmail/{domain}/{userName}/Maildir/.Deleted Items' " \
+                      f"'/home/vmail/{domain}/{userName}/Maildir/.Drafts' " \
+                      f"'/home/vmail/{domain}/{userName}/Maildir/.Sent' " \
+                      f"'/home/vmail/{domain}/{userName}/Maildir/.Junk E-mail'"
+            ProcessUtilities.executioner(command, 'vmail')
 
             print("1,None")
             return 1,"None"

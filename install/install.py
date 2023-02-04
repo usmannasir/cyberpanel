@@ -1338,7 +1338,8 @@ autocreate_system_folders = On
             command = 'mv %s %s' % (includeFileOldPath, includeFileNewPath)
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-            command = "sed -i 's|autocreate_system_folders = Off|autocreate_system_folders = On|g' %s" % (labsPath)
+            #command = "sed -i 's|autocreate_system_folders = Off|autocreate_system_folders = On|g' %s" % (labsPath)
+            command = "sed -i 's|verify_certificate = On|verify_certificate = Off|g' %s" % (labsPath)
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
         except BaseException as msg:
