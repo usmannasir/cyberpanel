@@ -533,35 +533,35 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             ## take care of auto create folders
 
-            labsData = open(labsPath, 'r').read()
-            labsDataLines = open(labsPath, 'r').readlines()
-
-            if labsData.find('autocreate_system_folders') > -1:
-                command = "sed -i 's|autocreate_system_folders = Off|autocreate_system_folders = On|g' %s" % (labsPath)
-                Upgrade.executioner(command, 'mkdir snappymail configs', 0)
-            else:
-                WriteToFile = open(labsPath, 'w')
-                for lines in labsDataLines:
-                    if lines.find('[labs]') > -1:
-                        WriteToFile.write(lines)
-                        WriteToFile.write(f'autocreate_system_folders = On\n')
-                    else:
-                        WriteToFile.write(lines)
-                WriteToFile.close()
+            # labsData = open(labsPath, 'r').read()
+            # labsDataLines = open(labsPath, 'r').readlines()
+            #
+            # if labsData.find('autocreate_system_folders') > -1:
+            #     command = "sed -i 's|autocreate_system_folders = Off|autocreate_system_folders = On|g' %s" % (labsPath)
+            #     Upgrade.executioner(command, 'mkdir snappymail configs', 0)
+            # else:
+            #     WriteToFile = open(labsPath, 'w')
+            #     for lines in labsDataLines:
+            #         if lines.find('[labs]') > -1:
+            #             WriteToFile.write(lines)
+            #             WriteToFile.write(f'autocreate_system_folders = On\n')
+            #         else:
+            #             WriteToFile.write(lines)
+            #     WriteToFile.close()
 
             ##take care of imap_folder_list_limit
 
-            labsDataLines = open(labsPath, 'r').readlines()
-
-            if labsData.find('imap_folder_list_limit') == -1:
-                WriteToFile = open(labsPath, 'w')
-                for lines in labsDataLines:
-                    if lines.find('[labs]') > -1:
-                        WriteToFile.write(lines)
-                        WriteToFile.write(f'imap_folder_list_limit = 0\n')
-                    else:
-                        WriteToFile.write(lines)
-                WriteToFile.close()
+            # labsDataLines = open(labsPath, 'r').readlines()
+            #
+            # if labsData.find('imap_folder_list_limit') == -1:
+            #     WriteToFile = open(labsPath, 'w')
+            #     for lines in labsDataLines:
+            #         if lines.find('[labs]') > -1:
+            #             WriteToFile.write(lines)
+            #             WriteToFile.write(f'imap_folder_list_limit = 0\n')
+            #         else:
+            #             WriteToFile.write(lines)
+            #     WriteToFile.close()
 
 
             os.chdir(cwd)

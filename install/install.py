@@ -1307,9 +1307,9 @@ imap_folder_list_limit = 0
 autocreate_system_folders = On
 """
 
-            writeToFile = open(labsPath, 'a')
-            writeToFile.write(labsData)
-            writeToFile.close()
+            # writeToFile = open(labsPath, 'a')
+            # writeToFile.write(labsData)
+            # writeToFile.close()
 
             iPath = os.listdir('/usr/local/CyberCP/public/snappymail/snappymail/v/')
 
