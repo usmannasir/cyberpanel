@@ -1342,6 +1342,26 @@ autocreate_system_folders = On
             command = "sed -i 's|verify_certificate = On|verify_certificate = Off|g' %s" % (labsPath)
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
+            ### now download and install actual plugin
+
+            command = f'mkdir /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect'
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+            command = f'chmod 700 /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect'
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+            command = f'chmod 700 /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect'
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+            command = f'wget -O /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect/index.php https://raw.githubusercontent.com/the-djmaze/snappymail/master/plugins/mailbox-detect/index.php'
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+            command = f'chmod 644 /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect/index.php'
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
+            command = f'chown lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect/index.php'
+            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+
             ### Enable plugins and enable mailbox creation plugin
 
             labsDataLines = open(labsPath, 'r').readlines()
@@ -1378,24 +1398,6 @@ autocreate_system_folders = On
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
             command = f'chmod 600 {PluginsFilePath}'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-
-            ### now download and install actual plugin
-
-            command = f'mkdir /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            command = f'chmod 700 /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            command = f'wget -O /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect/index.php https://raw.githubusercontent.com/the-djmaze/snappymail/master/plugins/mailbox-detect/index.php'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            command = f'chmod 644 /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect/index.php'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            command = f'chown lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect/index.php'
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
 
