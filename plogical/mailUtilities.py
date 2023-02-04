@@ -66,11 +66,74 @@ class mailUtilities:
         command = 'chown -R lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data/'
         ProcessUtilities.normalExecutioner(command)
 
+    @staticmethod
+    def InstallMailBoxFoldersPlugin():
+        ### now download and install actual plugin
 
+        labsPath = '/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/application.ini'
+
+        command = f'mkdir /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect'
+        ProcessUtilities.executioner(command)
+
+        command = f'chmod 700 /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect'
+        ProcessUtilities.executioner(command)
+
+        command = f'chown lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect'
+        ProcessUtilities.executioner(command)
+
+        command = f'wget -O /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect/index.php https://raw.githubusercontent.com/the-djmaze/snappymail/master/plugins/mailbox-detect/index.php'
+        ProcessUtilities.executioner(command)
+
+        command = f'chmod 644 /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect/index.php'
+        ProcessUtilities.executioner(command)
+
+        command = f'chown lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect/index.php'
+        ProcessUtilities.executioner(command)
+
+        ### Enable plugins and enable mailbox creation plugin
+
+        labsDataLines = open(labsPath, 'r').readlines()
+        PluginsActivator = 0
+        WriteToFile = open(labsPath, 'w')
+
+        for lines in labsDataLines:
+            if lines.find('[plugins]') > -1:
+                PluginsActivator = 1
+                WriteToFile.write(lines)
+            elif PluginsActivator and lines.find('enable = ') > -1:
+                WriteToFile.write(f'enable = On\n')
+            elif PluginsActivator and lines.find('enabled_list = ') > -1:
+                WriteToFile.write(f'enabled_list = "mailbox-detect"\n')
+            elif PluginsActivator == 1 and lines.find('[defaults]') > -1:
+                PluginsActivator = 0
+                WriteToFile.write(lines)
+            else:
+                WriteToFile.write(lines)
+        WriteToFile.close()
+
+        ## enable auto create in the enabled plugin
+        PluginsFilePath = '/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/plugin-mailbox-detect.json'
+
+        WriteToFile = open(PluginsFilePath, 'w')
+        WriteToFile.write("""{
+            "plugin": {
+                "autocreate_system_folders": true
+            }
+        }
+        """)
+        WriteToFile.close()
+
+        command = f'chown lscpd:lscpd {PluginsFilePath}'
+        ProcessUtilities.executioner(command)
+
+        command = f'chmod 600 {PluginsFilePath}'
+        ProcessUtilities.executioner(command)
 
     @staticmethod
     def createEmailAccount(domain, userName, password, restore = None):
         try:
+
+
 
             ## Check if already exists
 
@@ -184,6 +247,9 @@ class mailUtilities:
             #           f"'/home/vmail/{domain}/{userName}/Maildir/.Sent' " \
             #           f"'/home/vmail/{domain}/{userName}/Maildir/.Junk E-mail'"
             # ProcessUtilities.executioner(command, 'vmail')
+
+            if not os.path.exists('/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect'):
+                mailUtilities.InstallMailBoxFoldersPlugin()
 
             print("1,None")
             return 1,"None"
