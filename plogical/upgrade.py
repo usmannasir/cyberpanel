@@ -509,7 +509,13 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             command = "mkdir -p /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/"
             Upgrade.executioner(command, 'mkdir snappymail configs', 0)
 
-            labsPath = '/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/application.ini'
+            command = f'wget -O /usr/local/CyberCP/snappymail_cyberpanel.php  https://raw.githubusercontent.com/the-djmaze/snappymail/master/integrations/cyberpanel/install.php'
+            Upgrade.executioner(command, 'verify certificate', 0)
+
+            command = f'/usr/local/lsws/lsphp74/bin/php /usr/local/CyberCP/snappymail_cyberpanel.php'
+            Upgrade.executioner(command, 'verify certificate', 0)
+
+            #labsPath = '/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/application.ini'
 
 #             labsData = """[labs]
 # imap_folder_list_limit = 0
@@ -628,12 +634,6 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 #
 #             command = f'chmod 600 {PluginsFilePath}'
 #             Upgrade.executioner(command, 'verify certificate', 0)
-
-            command = f'wget -O /usr/local/CyberCP/snappymail_cyberpanel.php  https://raw.githubusercontent.com/the-djmaze/snappymail/master/integrations/cyberpanel/install.php'
-            Upgrade.executioner(command, 'verify certificate', 0)
-
-            command = f'/usr/local/lsws/lsphp74/bin/php /usr/local/CyberCP/snappymail_cyberpanel.php'
-            Upgrade.executioner(command, 'verify certificate', 0)
 
 
             os.chdir(cwd)
