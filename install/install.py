@@ -1300,104 +1300,110 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             command = "mkdir -p /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/"
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-            labsPath = '/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/application.ini'
+#             labsPath = '/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/application.ini'
+#
+#             labsData = """[labs]
+# imap_folder_list_limit = 0
+# autocreate_system_folders = On
+# """
+#
+#             # writeToFile = open(labsPath, 'a')
+#             # writeToFile.write(labsData)
+#             # writeToFile.close()
+#
+#             iPath = os.listdir('/usr/local/CyberCP/public/snappymail/snappymail/v/')
+#
+#             path = "/usr/local/CyberCP/public/snappymail/snappymail/v/%s/include.php" % (iPath[0])
+#
+#             data = open(path, 'r').readlines()
+#             writeToFile = open(path, 'w')
+#
+#             for items in data:
+#                 if items.find("$sCustomDataPath = '';") > -1:
+#                     writeToFile.writelines(
+#                         "			$sCustomDataPath = '/usr/local/lscp/cyberpanel/rainloop/data';\n")
+#                 else:
+#                     writeToFile.writelines(items)
+#
+#             writeToFile.close()
+#
+#             includeFileOldPath = '/usr/local/CyberCP/public/snappymail/_include.php'
+#             includeFileNewPath = '/usr/local/CyberCP/public/snappymail/include.php'
+#
+#             if os.path.exists(includeFileOldPath):
+#                 writeToFile = open(includeFileOldPath, 'a')
+#                 writeToFile.write("\ndefine('APP_DATA_FOLDER_PATH', '/usr/local/lscp/cyberpanel/rainloop/data/');\n")
+#                 writeToFile.close()
+#
+#             command = 'mv %s %s' % (includeFileOldPath, includeFileNewPath)
+#             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+#
+#             #command = "sed -i 's|autocreate_system_folders = Off|autocreate_system_folders = On|g' %s" % (labsPath)
+#             command = "sed -i 's|verify_certificate = On|verify_certificate = Off|g' %s" % (labsPath)
+#             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+#
+#             ### now download and install actual plugin
+#
+#             command = f'mkdir /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect'
+#             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+#
+#             command = f'chmod 700 /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect'
+#             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+#
+#             command = f'chmod 700 /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect'
+#             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+#
+#             command = f'wget -O /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect/index.php https://raw.githubusercontent.com/the-djmaze/snappymail/master/plugins/mailbox-detect/index.php'
+#             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+#
+#             command = f'chmod 644 /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect/index.php'
+#             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+#
+#             command = f'chown lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect/index.php'
+#             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+#
+#             ### Enable plugins and enable mailbox creation plugin
+#
+#             labsDataLines = open(labsPath, 'r').readlines()
+#             PluginsActivator = 0
+#             WriteToFile = open(labsPath, 'w')
+#             for lines in labsDataLines:
+#                 if lines.find('[plugins]') > -1:
+#                     PluginsActivator = 1
+#                     WriteToFile.write(lines)
+#                 elif PluginsActivator and lines.find('enable = ') > -1:
+#                     WriteToFile.write(f'enable = On\n')
+#                 elif PluginsActivator and lines.find('enabled_list = ') > -1:
+#                     WriteToFile.write(f'enabled_list = "mailbox-detect"\n')
+#                 elif PluginsActivator == 1 and lines.find('[defaults]') > -1:
+#                     PluginsActivator = 0
+#                     WriteToFile.write(lines)
+#                 else:
+#                     WriteToFile.write(lines)
+#             WriteToFile.close()
+#
+#             ## enable auto create in the enabled plugin
+#             PluginsFilePath = '/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/plugin-mailbox-detect.json'
+#
+#             WriteToFile = open(PluginsFilePath, 'w')
+#             WriteToFile.write("""{
+#     "plugin": {
+#         "autocreate_system_folders": true
+#     }
+# }
+# """)
+#             WriteToFile.close()
+#
+#             command = f'chown lscpd:lscpd {PluginsFilePath}'
+#             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
+#
+#             command = f'chmod 600 {PluginsFilePath}'
+#             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-            labsData = """[labs]
-imap_folder_list_limit = 0
-autocreate_system_folders = On
-"""
-
-            # writeToFile = open(labsPath, 'a')
-            # writeToFile.write(labsData)
-            # writeToFile.close()
-
-            iPath = os.listdir('/usr/local/CyberCP/public/snappymail/snappymail/v/')
-
-            path = "/usr/local/CyberCP/public/snappymail/snappymail/v/%s/include.php" % (iPath[0])
-
-            data = open(path, 'r').readlines()
-            writeToFile = open(path, 'w')
-
-            for items in data:
-                if items.find("$sCustomDataPath = '';") > -1:
-                    writeToFile.writelines(
-                        "			$sCustomDataPath = '/usr/local/lscp/cyberpanel/rainloop/data';\n")
-                else:
-                    writeToFile.writelines(items)
-
-            writeToFile.close()
-
-            includeFileOldPath = '/usr/local/CyberCP/public/snappymail/_include.php'
-            includeFileNewPath = '/usr/local/CyberCP/public/snappymail/include.php'
-
-            if os.path.exists(includeFileOldPath):
-                writeToFile = open(includeFileOldPath, 'a')
-                writeToFile.write("\ndefine('APP_DATA_FOLDER_PATH', '/usr/local/lscp/cyberpanel/rainloop/data/');\n")
-                writeToFile.close()
-
-            command = 'mv %s %s' % (includeFileOldPath, includeFileNewPath)
+            command = f'wget -O /usr/local/CyberCP/snappymail_cyberpanel.php  https://raw.githubusercontent.com/the-djmaze/snappymail/master/integrations/cyberpanel/install.php'
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-            #command = "sed -i 's|autocreate_system_folders = Off|autocreate_system_folders = On|g' %s" % (labsPath)
-            command = "sed -i 's|verify_certificate = On|verify_certificate = Off|g' %s" % (labsPath)
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            ### now download and install actual plugin
-
-            command = f'mkdir /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            command = f'chmod 700 /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            command = f'chmod 700 /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            command = f'wget -O /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect/index.php https://raw.githubusercontent.com/the-djmaze/snappymail/master/plugins/mailbox-detect/index.php'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            command = f'chmod 644 /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect/index.php'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            command = f'chown lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect/index.php'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            ### Enable plugins and enable mailbox creation plugin
-
-            labsDataLines = open(labsPath, 'r').readlines()
-            PluginsActivator = 0
-            WriteToFile = open(labsPath, 'w')
-            for lines in labsDataLines:
-                if lines.find('[plugins]') > -1:
-                    PluginsActivator = 1
-                    WriteToFile.write(lines)
-                elif PluginsActivator and lines.find('enable = ') > -1:
-                    WriteToFile.write(f'enable = On\n')
-                elif PluginsActivator and lines.find('enabled_list = ') > -1:
-                    WriteToFile.write(f'enabled_list = "mailbox-detect"\n')
-                elif PluginsActivator == 1 and lines.find('[defaults]') > -1:
-                    PluginsActivator = 0
-                    WriteToFile.write(lines)
-                else:
-                    WriteToFile.write(lines)
-            WriteToFile.close()
-
-            ## enable auto create in the enabled plugin
-            PluginsFilePath = '/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/plugin-mailbox-detect.json'
-
-            WriteToFile = open(PluginsFilePath, 'w')
-            WriteToFile.write("""{
-    "plugin": {
-        "autocreate_system_folders": true
-    }
-}
-""")
-            WriteToFile.close()
-
-            command = f'chown lscpd:lscpd {PluginsFilePath}'
-            preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
-
-            command = f'chmod 600 {PluginsFilePath}'
+            command = f'/usr/local/lsws/lsphp74/bin/php /usr/local/CyberCP/snappymail_cyberpanel.php'
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
 
