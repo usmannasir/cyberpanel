@@ -584,7 +584,9 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                     WriteToFile.write(f'enable = On\n')
                 elif PluginsActivator and lines.find('enabled_list = ') > -1:
                     WriteToFile.write(f'enabled_list = "mailbox-detect"\n')
+                elif PluginsActivator == 1 and lines.find('[defaults]') > -1:
                     PluginsActivator = 0
+                    WriteToFile.write(lines)
                 else:
                     WriteToFile.write(lines)
             WriteToFile.close()
