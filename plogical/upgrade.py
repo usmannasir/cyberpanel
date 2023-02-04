@@ -574,13 +574,15 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             labsDataLines = open(labsPath, 'r').readlines()
             PluginsActivator = 0
             WriteToFile = open(labsPath, 'w')
+
+
             for lines in labsDataLines:
                 if lines.find('[plugins]') > -1:
                     PluginsActivator = 1
                     WriteToFile.write(lines)
-                elif PluginsActivator and lines.find('enable = '):
+                elif PluginsActivator and lines.find('enable = ') > -1:
                     WriteToFile.write(f'enable = On\n')
-                elif PluginsActivator and lines.find('enabled_list = '):
+                elif PluginsActivator and lines.find('enabled_list = ') > -1:
                     WriteToFile.write(f'enabled_list = "mailbox-detect"\n')
                     PluginsActivator = 0
                 else:
