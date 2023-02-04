@@ -569,6 +569,26 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             #             WriteToFile.write(lines)
             #     WriteToFile.close()
 
+            ### now download and install actual plugin
+
+            command = f'mkdir /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect'
+            Upgrade.executioner(command, 'verify certificate', 0)
+
+            command = f'chmod 700 /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect'
+            Upgrade.executioner(command, 'verify certificate', 0)
+
+            command = f'chown lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect'
+            Upgrade.executioner(command, 'verify certificate', 0)
+
+            command = f'wget -O /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect/index.php https://raw.githubusercontent.com/the-djmaze/snappymail/master/plugins/mailbox-detect/index.php'
+            Upgrade.executioner(command, 'verify certificate', 0)
+
+            command = f'chmod 644 /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect/index.php'
+            Upgrade.executioner(command, 'verify certificate', 0)
+
+            command = f'chown lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect/index.php'
+            Upgrade.executioner(command, 'verify certificate', 0)
+
             ### Enable plugins and enable mailbox creation plugin
 
             labsDataLines = open(labsPath, 'r').readlines()
@@ -607,23 +627,6 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             Upgrade.executioner(command, 'verify certificate', 0)
 
             command = f'chmod 600 {PluginsFilePath}'
-            Upgrade.executioner(command, 'verify certificate', 0)
-
-            ### now download and install actual plugin
-
-            command = f'mkdir /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect'
-            Upgrade.executioner(command, 'verify certificate', 0)
-
-            command = f'chmod 700 /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect'
-            Upgrade.executioner(command, 'verify certificate', 0)
-
-            command = f'wget -O /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect/index.php https://raw.githubusercontent.com/the-djmaze/snappymail/master/plugins/mailbox-detect/index.php'
-            Upgrade.executioner(command, 'verify certificate', 0)
-
-            command = f'chmod 644 /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect/index.php'
-            Upgrade.executioner(command, 'verify certificate', 0)
-
-            command = f'chown lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect/index.php'
             Upgrade.executioner(command, 'verify certificate', 0)
 
 
