@@ -83,7 +83,7 @@ class CPBackupsV2:
 
         pass
 
-    def BackupData(self):
+    def BackupDataBases(self):
 
         ### This function will backup databases of the website, also need to take care of database that we need to exclude
         ### excluded databases are in a list self.data['ExcludedDatabases'] only backup databases if backupdatabase check is on
@@ -91,7 +91,7 @@ class CPBackupsV2:
 
         pass
 
-    def BackupDataBases(self):
+    def BackupData(self):
         ### This function will backup data of the website, also need to take care of directories that we need to exclude
         ### excluded directories are in a list self.data['ExcludedDirectories'] only backup data if backupdata check is on
         ## For example if self.data['BackupData'] is one then only run this function otherwise not
