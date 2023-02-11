@@ -1,3 +1,4 @@
+import json
 import os
 import sys
 
@@ -17,7 +18,7 @@ class CPBackupsV2:
         pass
 
     def InitiateBackup(self):
-        Config = {'domain': self.data['domain']}
+
         from websiteFunctions.models import Websites, ChildDomains, WPSites, WPStaging
         from django.forms.models import model_to_dict
         from plogical.mysqlUtilities import mysqlUtilities
@@ -35,21 +36,65 @@ class CPBackupsV2:
         ChildsList = []
 
         for childDomains in website.childdomains_set.all():
+            print(childDomains.domain)
             ChildsList.append(model_to_dict(childDomains))
 
         Config['ChildDomains'] = ChildsList
 
-        ### Databases
+        #print(str(Config))
 
-        dataBases = website.databases_set.all()
+        ### Databases
 
         connection, cursor = mysqlUtilities.setupConnection()
 
         if connection == 0:
             return 0
 
+        dataBases = website.databases_set.all()
+        DBSList = []
 
+        for db in dataBases:
 
+            query = f"SELECT host,user FROM mysql.db WHERE db='{db.dbName}';"
+            cursor.execute(query)
+            DBUsers = cursor.fetchall()
+
+            UserList = []
+
+            for databaseUser in DBUsers:
+                query = f"SELECT password FROM `mysql`.`user` WHERE `Host`='{databaseUser[0]}' AND `User`='{databaseUser[1]}';"
+                cursor.execute(query)
+                resp = cursor.fetchall()
+                print(resp)
+                UserList.append({'user': databaseUser[1], 'host': databaseUser[0], 'password': resp[0][0]})
+
+            DBSList.append({db.dbName: UserList})
+
+        Config['databases'] = DBSList
+
+        WPSitesList = []
+
+        for wpsite in website.wpsites_set.all():
+            WPSitesList.append(model_to_dict(wpsite,fields=['title', 'path', 'FinalURL', 'AutoUpdates', 'PluginUpdates', 'ThemeUpdates', 'WPLockState']))
+
+        Config['WPSites'] = WPSitesList
+
+        print(json.dumps(Config))
+
+        pass
+
+    def BackupData(self):
+
+        ### This function will backup databases of the website, also need to take care of database that we need to exclude
+        ### excluded databases are in a list self.data['ExcludedDatabases'] only backup databases if backupdatabase check is on
+        ## For example if self.data['BackupDatabase'] is one then only run this function otherwise not
+
+        pass
+
+    def BackupDataBases(self):
+        ### This function will backup data of the website, also need to take care of directories that we need to exclude
+        ### excluded directories are in a list self.data['ExcludedDirectories'] only backup data if backupdata check is on
+        ## For example if self.data['BackupData'] is one then only run this function otherwise not
 
         pass
 
