@@ -443,6 +443,9 @@ def refreshLicense(request):
             command = 'sudo /usr/local/lsws/bin/lshttpd -V'
             ProcessUtilities.outputExecutioner(command)
 
+            command = 'sudo /usr/local/lsws/bin/lshttpd -r'
+            ProcessUtilities.outputExecutioner(command)
+
             installUtilities.reStartLiteSpeed()
 
             final_dic = {'status': 1}
