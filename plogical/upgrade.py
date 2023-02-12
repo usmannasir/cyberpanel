@@ -1084,6 +1084,11 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             except:
                 pass
 
+            try:
+                cursor.execute("ALTER TABLE websiteFunctions_websites ADD COLUMN BackupLock INT DEFAULT 0;")
+            except:
+                pass
+
         except OSError as msg:
             Upgrade.stdOut(str(msg) + " [applyLoginSystemMigrations]")
 

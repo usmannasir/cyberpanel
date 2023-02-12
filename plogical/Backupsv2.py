@@ -92,6 +92,7 @@ class CPBackupsV2:
         pass
 
     def BackupData(self):
+
         ### This function will backup data of the website, also need to take care of directories that we need to exclude
         ### excluded directories are in a list self.data['ExcludedDirectories'] only backup data if backupdata check is on
         ## For example if self.data['BackupData'] is one then only run this function otherwise not
