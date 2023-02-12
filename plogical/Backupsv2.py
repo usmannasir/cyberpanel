@@ -1,3 +1,4 @@
+import argparse
 import json
 import os
 import sys
@@ -11,6 +12,8 @@ try:
     django.setup()
 except:
     pass
+
+from plogical.processUtilities import ProcessUtilities
 
 
 class CPBackupsV2:
@@ -29,12 +32,13 @@ class CPBackupsV2:
         return str(time.time())
 
     def UpdateStatus(self, message, status):
+
         from websiteFunctions.models import Backupsv2, BackupsLogsv2
         self.buv2 = Backupsv2.objects.get(fileName=self.buv2.fileName)
         self.buv2.status = status
         self.buv2.save()
 
-        BackupsLogsv2(message=message).save()
+        BackupsLogsv2(message=message, owner=self.buv2).save()
 
         if status == CPBackupsV2.FAILED:
             self.buv2.website.BackupLock = 0
@@ -45,13 +49,20 @@ class CPBackupsV2:
 
 
 
-
     def InitiateBackup(self):
 
         from websiteFunctions.models import Websites, Backupsv2
         from django.forms.models import model_to_dict
         from plogical.mysqlUtilities import mysqlUtilities
         website = Websites.objects.get(domain=self.data['domain'])
+
+        if not os.path.exists(self.data['BasePath']):
+            command = f"mkdir -p {self.data['BasePath']}"
+            ProcessUtilities.executioner(command)
+
+            command = f"chmod 711 {self.data['BasePath']}"
+            ProcessUtilities.executioner(command)
+
 
         while(1):
 
@@ -63,7 +74,20 @@ class CPBackupsV2:
                 self.buv2 = Backupsv2(website=website, fileName='backup-' + self.data['domain'] + "-" + time.strftime("%m.%d.%Y_%H-%M-%S"), status=CPBackupsV2.RUNNING, BasePath=self.data['BasePath'])
                 self.buv2.save()
 
+                FinalPath = f"{self.data['BasePath']}/{self.buv2.fileName}"
+
+                command = f"mkdir -p {FinalPath}"
+                ProcessUtilities.executioner(command)
+
+                command = f"chown {website.externalApp}:{website.externalApp} {FinalPath}"
+                ProcessUtilities.executioner(command)
+
+                command = f"chmod 711 {FinalPath}"
+                ProcessUtilities.executioner(command, website.externalApp)
+
                 try:
+
+                    self.UpdateStatus('Creating backup config,0', CPBackupsV2.RUNNING)
 
                     Config = {'MainWebsite': model_to_dict(website, fields=['domain', 'adminEmail', 'phpSelection', 'state', 'config'])}
                     Config['admin'] = model_to_dict(website.admin, fields=['userName', 'password', 'firstName', 'lastName',
@@ -118,11 +142,22 @@ class CPBackupsV2:
                         WPSitesList.append(model_to_dict(wpsite,fields=['title', 'path', 'FinalURL', 'AutoUpdates', 'PluginUpdates', 'ThemeUpdates', 'WPLockState']))
 
                     Config['WPSites'] = WPSitesList
+
+                    command = f"echo '{json.dumps(Config)}' > {FinalPath}/config.json"
+                    ProcessUtilities.executioner(command, website.externalApp, True)
+
+                    self.UpdateStatus('Backup config created,5', CPBackupsV2.RUNNING)
                 except BaseException as msg:
                     self.UpdateStatus(str(msg), CPBackupsV2.FAILED)
                     return 0
 
-                print(json.dumps(Config))
+                if self.data['BackupDatabase']:
+                    command = f'/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/Backupsv2.py BackupDataBases --path {FinalPath}'
+
+
+                self.UpdateStatus('Completed', CPBackupsV2.COMPLETED)
+
+                print(FinalPath)
 
                 break
             else:
@@ -145,5 +180,17 @@ class CPBackupsV2:
         pass
 
 if __name__ == "__main__":
-    cpbuv2 = CPBackupsV2({'domain': 'cyberpanel.net', 'BasePath': '/home/backup', 'BackupDatabase': 1, 'BackupData': 1} )
-    cpbuv2.InitiateBackup()
+    try:
+        parser = argparse.ArgumentParser(description='CyberPanel Backup Generator')
+        parser.add_argument('function', help='Specify a function to call!')
+        parser.add_argument('--path', help='')
+
+        args = parser.parse_args()
+
+        if args.function == "BackupDataBases":
+            cpbuv2 = CPBackupsV2({'finalPath': args.path})
+            cpbuv2.BackupDataBases()
+
+    except:
+        cpbuv2 = CPBackupsV2({'domain': 'cyberpanel.net', 'BasePath': '/home/backup', 'BackupDatabase': 1, 'BackupData': 1} )
+        cpbuv2.InitiateBackup()
