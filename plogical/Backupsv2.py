@@ -47,14 +47,12 @@ class CPBackupsV2:
             self.buv2.website.BackupLock = 0
             self.buv2.website.save()
 
-
-
     def InitiateBackup(self):
 
         from websiteFunctions.models import Websites, Backupsv2
         from django.forms.models import model_to_dict
         from plogical.mysqlUtilities import mysqlUtilities
-        website = Websites.objects.get(domain=self.data['domain'])
+        self.website = Websites.objects.get(domain=self.data['domain'])
 
         if not os.path.exists(self.data['BasePath']):
             command = f"mkdir -p {self.data['BasePath']}"
@@ -66,40 +64,43 @@ class CPBackupsV2:
 
         while(1):
 
-            if website.BackupLock == 0:
+            if self.website.BackupLock == 0:
 
-                website.BackupLock = 1
-                website.save()
+                self.website.BackupLock = 1
+                self.website.save()
 
-                self.buv2 = Backupsv2(website=website, fileName='backup-' + self.data['domain'] + "-" + time.strftime("%m.%d.%Y_%H-%M-%S"), status=CPBackupsV2.RUNNING, BasePath=self.data['BasePath'])
+                self.buv2 = Backupsv2(website=self.website, fileName='backup-' + self.data['domain'] + "-" + time.strftime("%m.%d.%Y_%H-%M-%S"), status=CPBackupsV2.RUNNING, BasePath=self.data['BasePath'])
                 self.buv2.save()
 
-                FinalPath = f"{self.data['BasePath']}/{self.buv2.fileName}"
+                self.FinalPath = f"{self.data['BasePath']}/{self.buv2.fileName}"
 
-                command = f"mkdir -p {FinalPath}"
+                command = f"mkdir -p {self.FinalPath}"
                 ProcessUtilities.executioner(command)
 
-                command = f"chown {website.externalApp}:{website.externalApp} {FinalPath}"
+                #command = f"chown {website.externalApp}:{website.externalApp} {self.FinalPath}"
+                #ProcessUtilities.executioner(command)
+
+                command = f'chown cyberpanel:cyberpanel {self.FinalPath}'
                 ProcessUtilities.executioner(command)
 
-                command = f"chmod 711 {FinalPath}"
-                ProcessUtilities.executioner(command, website.externalApp)
+                command = f"chmod 711 {self.FinalPath}"
+                ProcessUtilities.executioner(command, self.website.externalApp)
 
                 try:
 
                     self.UpdateStatus('Creating backup config,0', CPBackupsV2.RUNNING)
 
-                    Config = {'MainWebsite': model_to_dict(website, fields=['domain', 'adminEmail', 'phpSelection', 'state', 'config'])}
-                    Config['admin'] = model_to_dict(website.admin, fields=['userName', 'password', 'firstName', 'lastName',
+                    Config = {'MainWebsite': model_to_dict(self.website, fields=['domain', 'adminEmail', 'phpSelection', 'state', 'config'])}
+                    Config['admin'] = model_to_dict(self.website.admin, fields=['userName', 'password', 'firstName', 'lastName',
                                                                            'email', 'type', 'owner', 'token', 'api', 'securityLevel',
-                                                                           'state', 'initWebsitesLimit', 'twoFA', 'secretKey', 'config'])
-                    Config['acl'] = model_to_dict(website.admin.acl)
+                                                                           'state', 'initself.websitesLimit', 'twoFA', 'secretKey', 'config'])
+                    Config['acl'] = model_to_dict(self.website.admin.acl)
 
                     ### Child domains to config
 
                     ChildsList = []
 
-                    for childDomains in website.childdomains_set.all():
+                    for childDomains in self.website.childdomains_set.all():
                         print(childDomains.domain)
                         ChildsList.append(model_to_dict(childDomains))
 
@@ -114,7 +115,7 @@ class CPBackupsV2:
                     if connection == 0:
                         return 0
 
-                    dataBases = website.databases_set.all()
+                    dataBases = self.website.databases_set.all()
                     DBSList = []
 
                     for db in dataBases:
@@ -138,13 +139,21 @@ class CPBackupsV2:
 
                     WPSitesList = []
 
-                    for wpsite in website.wpsites_set.all():
+                    for wpsite in self.website.wpsites_set.all():
                         WPSitesList.append(model_to_dict(wpsite,fields=['title', 'path', 'FinalURL', 'AutoUpdates', 'PluginUpdates', 'ThemeUpdates', 'WPLockState']))
 
                     Config['WPSites'] = WPSitesList
+                    self.config = Config
 
-                    command = f"echo '{json.dumps(Config)}' > {FinalPath}/config.json"
-                    ProcessUtilities.executioner(command, website.externalApp, True)
+                    #command = f"echo '{json.dumps(Config)}' > {self.FinalPath}/config.json"
+                    #ProcessUtilities.executioner(command, self.website.externalApp, True)
+
+                    WriteToFile = open(f'{self.FinalPath}/config.json', 'w')
+                    WriteToFile.write(json.dumps(Config))
+                    WriteToFile.close()
+
+                    command = f"chmod 600 {self.FinalPath}/config.json"
+                    ProcessUtilities.executioner(command)
 
                     self.UpdateStatus('Backup config created,5', CPBackupsV2.RUNNING)
                 except BaseException as msg:
@@ -152,12 +161,24 @@ class CPBackupsV2:
                     return 0
 
                 if self.data['BackupDatabase']:
-                    command = f'/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/Backupsv2.py BackupDataBases --path {FinalPath}'
+                    self.UpdateStatus('Backing up databases..,10', CPBackupsV2.RUNNING)
+                    if self.BackupDataBases() == 0:
+                        return 0
+                    self.UpdateStatus('Database backups completed successfully..,25', CPBackupsV2.RUNNING)
+
+                if self.data['BackupData']:
+                    self.UpdateStatus('Backing up website data..,30', CPBackupsV2.RUNNING)
+                    if self.BackupData() == 0:
+                        return 0
+                    self.UpdateStatus('Website data backup completed successfully..,70', CPBackupsV2.RUNNING)
+
+                    ##command = f'/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/Backupsv2.py BackupDataBases --path {self.FinalPath}'
+                    ##ProcessUtilities.executioner(command)
 
 
                 self.UpdateStatus('Completed', CPBackupsV2.COMPLETED)
 
-                print(FinalPath)
+                print(self.FinalPath)
 
                 break
             else:
@@ -169,7 +190,25 @@ class CPBackupsV2:
         ### excluded databases are in a list self.data['ExcludedDatabases'] only backup databases if backupdatabase check is on
         ## For example if self.data['BackupDatabase'] is one then only run this function otherwise not
 
-        pass
+        from plogical.mysqlUtilities import mysqlUtilities
+
+        for dbs in self.config['databases']:
+
+            ### Pending: Need to only backup database present in the list of databases that need backing up
+
+            for key, value in dbs.items():
+                print(f'DB {key}')
+
+                if mysqlUtilities.createDatabaseBackup(key, self.FinalPath) == 0:
+                    self.UpdateStatus(f'Failed to create backup for database {key}.', CPBackupsV2.FAILED)
+                    return 0
+
+                for dbUsers in value:
+                    print(f'User: {dbUsers["user"]}, Host: {dbUsers["host"]}, Pass: {dbUsers["password"]}')
+
+
+
+        return 1
 
     def BackupData(self):
 
@@ -177,7 +216,24 @@ class CPBackupsV2:
         ### excluded directories are in a list self.data['ExcludedDirectories'] only backup data if backupdata check is on
         ## For example if self.data['BackupData'] is one then only run this function otherwise not
 
-        pass
+        destination = f'{self.FinalPath}/data'
+        source = f'/home/{self.website.domain}'
+
+        ## Pending add user provided folders in the exclude list
+
+        exclude = f'--exclude=.cache --exclude=.cache --exclude=.cache --exclude=.wp-cli ' \
+                  f'--exclude=backup --exclude=incbackup --exclude=incbackup --exclude=logs --exclude=lscache'
+
+        command = f'mkdir -p {destination}'
+        ProcessUtilities.executioner(command, 'cyberpanel')
+
+        command = f'chown {self.website.externalApp}:{self.website.externalApp} {destination}'
+        ProcessUtilities.executioner(command)
+
+        command = f'rsync -av {exclude}  {source}/ {destination}/'
+        ProcessUtilities.executioner(command, self.website.externalApp)
+
+        return 1
 
 if __name__ == "__main__":
     try:

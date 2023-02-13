@@ -448,6 +448,13 @@ def refreshLicense(request):
 
             installUtilities.reStartLiteSpeed()
 
+            ## for testing
+
+            from plogical.Backupsv2 import CPBackupsV2
+            cpbuv2 = CPBackupsV2(
+                {'domain': 'cyberpanel.net', 'BasePath': '/home/backup', 'BackupDatabase': 1, 'BackupData': 1})
+            cpbuv2.InitiateBackup()
+
             final_dic = {'status': 1}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
