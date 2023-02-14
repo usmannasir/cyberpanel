@@ -69,7 +69,11 @@ class CPBackupsV2:
 
             if self.website.BackupLock == 0:
 
-                self.WebsiteDiskUsage = int(json.loads(self.website.config)['DiskUsage'])
+                Disk1 = f"du -sm /home/{self.website.domain}/"
+                Disk2 = "2>/dev/null | awk '{print $1}'"
+
+
+                self.WebsiteDiskUsage = int(int(ProcessUtilities.outputExecutioner(f"{Disk1} {Disk2}", True).rstrip('\n')))
 
                 self.CurrentFreeSpaceOnDisk = int(ProcessUtilities.outputExecutioner("df -m / | awk 'NR==2 {print $4}'", True).rstrip('\n'))
 
