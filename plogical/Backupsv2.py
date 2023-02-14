@@ -65,6 +65,8 @@ class CPBackupsV2:
 
         while(1):
 
+            self.website = Websites.objects.get(domain=self.data['domain'])
+
             if self.website.BackupLock == 0:
 
                 self.website.BackupLock = 1
@@ -192,6 +194,12 @@ class CPBackupsV2:
 
             else:
                 time.sleep(5)
+                ### If website lock is there for more then 20 minutes it means old backup is stucked or backup job failed, thus continue backup
+                if float(CPBackupsV2.FetchCurrentTimeStamp()) > (float(self.StartingTimeStamp) + 1200):
+                    self.website = Websites.objects.get(domain=self.data['domain'])
+                    self.website.BackupLock = 0
+                    self.website.save()
+
 
     def BackupDataBases(self):
 
