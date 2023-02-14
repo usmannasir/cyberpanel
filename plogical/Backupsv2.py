@@ -61,6 +61,7 @@ class CPBackupsV2:
             command = f"chmod 711 {self.data['BasePath']}"
             ProcessUtilities.executioner(command)
 
+        self.StartingTimeStamp = CPBackupsV2.FetchCurrentTimeStamp()
 
         while(1):
 
@@ -157,30 +158,38 @@ class CPBackupsV2:
 
                     self.UpdateStatus('Backup config created,5', CPBackupsV2.RUNNING)
                 except BaseException as msg:
-                    self.UpdateStatus(str(msg), CPBackupsV2.FAILED)
+                    self.UpdateStatus(f'Failed during config generation, Error: {str(msg)}', CPBackupsV2.FAILED)
                     return 0
 
-                if self.data['BackupDatabase']:
-                    self.UpdateStatus('Backing up databases..,10', CPBackupsV2.RUNNING)
-                    if self.BackupDataBases() == 0:
-                        return 0
-                    self.UpdateStatus('Database backups completed successfully..,25', CPBackupsV2.RUNNING)
+                try:
 
-                if self.data['BackupData']:
-                    self.UpdateStatus('Backing up website data..,30', CPBackupsV2.RUNNING)
-                    if self.BackupData() == 0:
-                        return 0
-                    self.UpdateStatus('Website data backup completed successfully..,70', CPBackupsV2.RUNNING)
+                    if self.data['BackupDatabase']:
+                        self.UpdateStatus('Backing up databases..,10', CPBackupsV2.RUNNING)
+                        if self.BackupDataBases() == 0:
+                            self.UpdateStatus(f'Failed to create backup for databases.', CPBackupsV2.FAILED)
+                            return 0
 
-                    ##command = f'/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/Backupsv2.py BackupDataBases --path {self.FinalPath}'
-                    ##ProcessUtilities.executioner(command)
+                        self.UpdateStatus('Database backups completed successfully..,25', CPBackupsV2.RUNNING)
+
+                    if self.data['BackupData']:
+                        self.UpdateStatus('Backing up website data..,30', CPBackupsV2.RUNNING)
+                        if self.BackupData() == 0:
+                            return 0
+                        self.UpdateStatus('Website data backup completed successfully..,70', CPBackupsV2.RUNNING)
+
+                        ##command = f'/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/Backupsv2.py BackupDataBases --path {self.FinalPath}'
+                        ##ProcessUtilities.executioner(command)
 
 
-                self.UpdateStatus('Completed', CPBackupsV2.COMPLETED)
+                    self.UpdateStatus('Completed', CPBackupsV2.COMPLETED)
 
-                print(self.FinalPath)
+                    print(self.FinalPath)
 
-                break
+                    break
+                except BaseException as msg:
+                    self.UpdateStatus(f'Failed after config generation, Error: {str(msg)}', CPBackupsV2.FAILED)
+                    return 0
+
             else:
                 time.sleep(5)
 
@@ -200,7 +209,7 @@ class CPBackupsV2:
                 print(f'DB {key}')
 
                 if mysqlUtilities.createDatabaseBackup(key, self.FinalPath) == 0:
-                    self.UpdateStatus(f'Failed to create backup for database {key}.', CPBackupsV2.FAILED)
+                    self.UpdateStatus(f'Failed to create backup for database {key}.', CPBackupsV2.RUNNING)
                     return 0
 
                 for dbUsers in value:
