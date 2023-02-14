@@ -69,8 +69,14 @@ class CPBackupsV2:
 
             if self.website.BackupLock == 0:
 
-                self.website.BackupLock = 1
-                self.website.save()
+                self.WebsiteDiskUsage = int(json.loads(self.website.config)['DiskUsage'])
+
+                self.CurrentFreeSpaceOnDisk = int(ProcessUtilities.outputExecutioner("df -m / | awk 'NR==2 {print $4}'", True).rstrip('\n'))
+
+                if self.WebsiteDiskUsage > self.CurrentFreeSpaceOnDisk:
+                    self.UpdateStatus(f'Not enough disk space on the server to backup this website.', CPBackupsV2.FAILED)
+                    return 0
+
 
                 self.buv2 = Backupsv2(website=self.website, fileName='backup-' + self.data['domain'] + "-" + time.strftime("%m.%d.%Y_%H-%M-%S"), status=CPBackupsV2.RUNNING, BasePath=self.data['BasePath'])
                 self.buv2.save()
@@ -164,7 +170,6 @@ class CPBackupsV2:
                     return 0
 
                 try:
-
                     if self.data['BackupDatabase']:
                         self.UpdateStatus('Backing up databases..,10', CPBackupsV2.RUNNING)
                         if self.BackupDataBases() == 0:
@@ -191,7 +196,6 @@ class CPBackupsV2:
                 except BaseException as msg:
                     self.UpdateStatus(f'Failed after config generation, Error: {str(msg)}', CPBackupsV2.FAILED)
                     return 0
-
             else:
                 time.sleep(5)
                 ### If website lock is there for more then 20 minutes it means old backup is stucked or backup job failed, thus continue backup
