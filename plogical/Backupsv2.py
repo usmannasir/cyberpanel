@@ -172,7 +172,22 @@ class CPBackupsV2:
                     Config['MainDNSDomain'] = model_to_dict(self.dnsDomain)
                     Config['DNSRecords'] = DNSRecords
 
+                    ### Email accounts
 
+                    try:
+                        from mailServer.models import Domains
+
+                        self.emailDomain = Domains.objects.get(domain=self.website.domain)
+
+                        EmailAddrList = []
+
+                        for record in self.emailDomain.eusers_set.all():
+                            EmailAddrList.append(model_to_dict(record))
+
+                        Config['MainEmailDomain'] = model_to_dict(self.emailDomain)
+                        Config['EmailAddresses'] = EmailAddrList
+                    except:
+                        pass
 
                     #command = f"echo '{json.dumps(Config)}' > {self.FinalPath}/config.json"
                     #ProcessUtilities.executioner(command, self.website.externalApp, True)
