@@ -158,6 +158,22 @@ class CPBackupsV2:
                     Config['WPSites'] = WPSitesList
                     self.config = Config
 
+                    ### DNS Records
+
+                    from dns.models import Domains
+
+                    self.dnsDomain = Domains.objects.get(name=self.website.domain)
+
+                    DNSRecords = []
+
+                    for record in self.dnsDomain.records_set.all():
+                        DNSRecords.append(model_to_dict(record))
+
+                    Config['MainDNSDomain'] = model_to_dict(self.dnsDomain)
+                    Config['DNSRecords'] = DNSRecords
+
+
+
                     #command = f"echo '{json.dumps(Config)}' > {self.FinalPath}/config.json"
                     #ProcessUtilities.executioner(command, self.website.externalApp, True)
 
@@ -202,7 +218,9 @@ class CPBackupsV2:
                     return 0
             else:
                 time.sleep(5)
+
                 ### If website lock is there for more then 20 minutes it means old backup is stucked or backup job failed, thus continue backup
+
                 if float(CPBackupsV2.FetchCurrentTimeStamp()) > (float(self.StartingTimeStamp) + 1200):
                     self.website = Websites.objects.get(domain=self.data['domain'])
                     self.website.BackupLock = 0
