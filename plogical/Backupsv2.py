@@ -73,9 +73,9 @@ class CPBackupsV2:
                 Disk2 = "2>/dev/null | awk '{print $1}'"
 
 
-                self.WebsiteDiskUsage = int(int(ProcessUtilities.outputExecutioner(f"{Disk1} {Disk2}", True).rstrip('\n')))
+                self.WebsiteDiskUsage = int(ProcessUtilities.outputExecutioner(f"{Disk1} {Disk2}", 'root', True).rstrip('\n'))
 
-                self.CurrentFreeSpaceOnDisk = int(ProcessUtilities.outputExecutioner("df -m / | awk 'NR==2 {print $4}'", True).rstrip('\n'))
+                self.CurrentFreeSpaceOnDisk = int(ProcessUtilities.outputExecutioner("df -m / | awk 'NR==2 {print $4}'", 'root', True).rstrip('\n'))
 
                 if self.WebsiteDiskUsage > self.CurrentFreeSpaceOnDisk:
                     self.UpdateStatus(f'Not enough disk space on the server to backup this website.', CPBackupsV2.FAILED)
@@ -219,8 +219,11 @@ class CPBackupsV2:
                             return 0
                         self.UpdateStatus('Website data backup completed successfully..,70', CPBackupsV2.RUNNING)
 
-                        ##command = f'/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/Backupsv2.py BackupDataBases --path {self.FinalPath}'
-                        ##ProcessUtilities.executioner(command)
+                    if self.data['BackupEmails']:
+                        self.UpdateStatus('Backing up emails..,75', CPBackupsV2.RUNNING)
+                        if self.BackupEmails() == 0:
+                            return 0
+                        self.UpdateStatus('Emails backup completed successfully..,85', CPBackupsV2.RUNNING)
 
 
                     self.UpdateStatus('Completed', CPBackupsV2.COMPLETED)
@@ -293,6 +296,31 @@ class CPBackupsV2:
 
         return 1
 
+    def BackupEmails(self):
+
+        ### This function will backup emails of the website, also need to take care of emails that we need to exclude
+        ### excluded emails are in a list self.data['ExcludedEmails'] only backup data if backupemail check is on
+        ## For example if self.data['BackupEmails'] is one then only run this function otherwise not
+
+        destination = f'{self.FinalPath}/emails'
+        source = f'/home/vmail/{self.website.domain}'
+
+        ## Pending add user provided folders in the exclude list
+
+        exclude = f'--exclude=.cache --exclude=.cache --exclude=.cache --exclude=.wp-cli ' \
+                  f'--exclude=backup --exclude=incbackup --exclude=incbackup --exclude=logs --exclude=lscache'
+
+        command = f'mkdir -p {destination}'
+        ProcessUtilities.executioner(command, 'cyberpanel')
+
+        command = f'chown vmail:vmail {destination}'
+        ProcessUtilities.executioner(command)
+
+        command = f'rsync -av {exclude}  {source}/ {destination}/'
+        ProcessUtilities.executioner(command, 'vmail')
+
+        return 1
+
 if __name__ == "__main__":
     try:
         parser = argparse.ArgumentParser(description='CyberPanel Backup Generator')
@@ -306,5 +334,5 @@ if __name__ == "__main__":
             cpbuv2.BackupDataBases()
 
     except:
-        cpbuv2 = CPBackupsV2({'domain': 'cyberpanel.net', 'BasePath': '/home/backup', 'BackupDatabase': 1, 'BackupData': 1} )
+        cpbuv2 = CPBackupsV2({'domain': 'cyberpanel.net', 'BasePath': '/home/backup', 'BackupDatabase': 1, 'BackupData': 1, 'BackupEmails': 1} )
         cpbuv2.InitiateBackup()
