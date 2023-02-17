@@ -452,7 +452,8 @@ def refreshLicense(request):
 
             from plogical.Backupsv2 import CPBackupsV2
             cpbuv2 = CPBackupsV2(
-                {'domain': 'cyberpanel.net', 'BasePath': '/home/backup', 'BackupDatabase': 1, 'BackupData': 1})
+                {'domain': 'cyberpanel.net', 'BasePath': '/home/backup', 'BackupDatabase': 1, 'BackupData': 1,
+                 'BackupEmails': 1})
             cpbuv2.InitiateBackup()
 
             final_dic = {'status': 1}

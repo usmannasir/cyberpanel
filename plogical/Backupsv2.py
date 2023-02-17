@@ -244,7 +244,6 @@ class CPBackupsV2:
                     self.website.BackupLock = 0
                     self.website.save()
 
-
     def BackupDataBases(self):
 
         ### This function will backup databases of the website, also need to take care of database that we need to exclude
@@ -316,7 +315,7 @@ class CPBackupsV2:
         command = f'chown vmail:vmail {destination}'
         ProcessUtilities.executioner(command)
 
-        command = f'rsync -av {exclude}  {source}/ {destination}/'
+        command = f'rsync -av  {source}/ {destination}/'
         ProcessUtilities.executioner(command, 'vmail')
 
         return 1
