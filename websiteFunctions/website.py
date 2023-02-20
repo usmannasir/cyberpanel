@@ -2183,7 +2183,7 @@ class WebsiteManager:
             time.sleep(2)
 
             data_ret = {'status': 1, 'createWebSiteStatus': 1, 'error_message': "None",
-                        'tempStatusPath': tempStatusPath}
+                        'tempStatusPath': tempStatusPath, 'LinuxUser': externalApp}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
