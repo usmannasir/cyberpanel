@@ -328,7 +328,6 @@ class CPBackupsV2:
     def Incrmentalback(self):
         try:
 
-            logging.CyberCPLogFileWriter.writeToFile('--------------habbi-----------test----------')
             url = "https://api.github.com/repos/rustic-rs/rustic/releases/latest"
             response = requests.get(url)
 
@@ -352,6 +351,8 @@ class CPBackupsV2:
             command = 'sudo mv /home/rustic/rustic /usr/bin/'
             ProcessUtilities.executioner(command)
 
+            command = 'rm -rf /home/rustic'
+            ProcessUtilities.executioner(command)
         except BaseException as msg:
             print('Error: %s'%msg)
 
