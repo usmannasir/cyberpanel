@@ -87,6 +87,15 @@ class CPBackupsV2:
                     self.UpdateStatus(f'Not enough disk space on the server to backup this website.', CPBackupsV2.FAILED)
                     return 0
 
+                ### Before doing anything install rustic
+
+                statusRes, message = self.InstallRustic()
+
+                if statusRes == 0:
+                    self.UpdateStatus(f'Failed to install Rustic, error: {message}',
+                                      CPBackupsV2.FAILED)
+                    return 0
+
 
                 self.buv2 = Backupsv2(website=self.website, fileName='backup-' + self.data['domain'] + "-" + time.strftime("%m.%d.%Y_%H-%M-%S"), status=CPBackupsV2.RUNNING, BasePath=self.data['BasePath'])
                 self.buv2.save()
@@ -326,7 +335,7 @@ class CPBackupsV2:
 
         return 1
 
-    def Incrmentalback(self):
+    def InstallRustic(self):
         try:
 
             url = "https://api.github.com/repos/rustic-rs/rustic/releases/latest"
@@ -336,6 +345,8 @@ class CPBackupsV2:
                 data = response.json()
                 version =  data['tag_name']
                 name =  data['name']
+            else:
+                return 0, str(response.content)
 
             #wget -P /home/rustic https://github.com/rustic-rs/rustic/releases/download/v0.4.3/rustic-v0.4.3-x86_64-unknown-linux-gnu.tar.gz
 
@@ -354,8 +365,12 @@ class CPBackupsV2:
 
             command = 'rm -rf /home/rustic'
             ProcessUtilities.executioner(command)
+
+            return 1, None
+
         except BaseException as msg:
             print('Error: %s'%msg)
+            return 0, str(msg)
 
 if __name__ == "__main__":
     try:
