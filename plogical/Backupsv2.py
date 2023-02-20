@@ -3,9 +3,14 @@ import json
 import os
 import sys
 import time
+import requests
 
 sys.path.append('/usr/local/CyberCP')
 import django
+import plogical.CyberCPLogFileWriter as logging
+
+
+
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 try:
@@ -320,6 +325,36 @@ class CPBackupsV2:
 
         return 1
 
+    def Incrmentalback(self):
+        try:
+
+            logging.CyberCPLogFileWriter.writeToFile('--------------habbi-----------test----------')
+            url = "https://api.github.com/repos/rustic-rs/rustic/releases/latest"
+            response = requests.get(url)
+
+            if response.status_code == 200:
+                data = response.json()
+                version =  data['tag_name']
+                name =  data['name']
+
+            #wget -P /home/rustic https://github.com/rustic-rs/rustic/releases/download/v0.4.3/rustic-v0.4.3-x86_64-unknown-linux-gnu.tar.gz
+
+
+            #tar xzf /home/rustic/rustic-v0.4.3-x86_64-unknown-linux-gnu.tar.gz -C /home/rustic/
+
+            #sudo mv filename /usr/bin/
+            command = 'wget -P /home/rustic https://github.com/rustic-rs/rustic/releases/download/%s/rustic-%s-x86_64-unknown-linux-gnu.tar.gz' %(version, version)
+            ProcessUtilities.executioner(command)
+
+            command = 'tar xzf /home/rustic/rustic-%s-x86_64-unknown-linux-gnu.tar.gz -C /home/rustic//'%(version)
+            ProcessUtilities.executioner(command)
+
+            command = 'sudo mv /home/rustic/rustic /usr/bin/'
+            ProcessUtilities.executioner(command)
+
+        except BaseException as msg:
+            print('Error: %s'%msg)
+
 if __name__ == "__main__":
     try:
         parser = argparse.ArgumentParser(description='CyberPanel Backup Generator')
@@ -335,3 +370,4 @@ if __name__ == "__main__":
     except:
         cpbuv2 = CPBackupsV2({'domain': 'cyberpanel.net', 'BasePath': '/home/backup', 'BackupDatabase': 1, 'BackupData': 1, 'BackupEmails': 1} )
         cpbuv2.InitiateBackup()
+        cpbuv2.Incrmentalback()
