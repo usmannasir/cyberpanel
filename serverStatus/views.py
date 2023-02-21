@@ -455,7 +455,7 @@ def refreshLicense(request):
                 {'domain': 'cyberpanel.net', 'BasePath': '/home/backup', 'BackupDatabase': 1, 'BackupData': 1,
                  'BackupEmails': 1})
             cpbuv2.InitiateBackup()
-            cpbuv2.InstallRustic()
+            #cpbuv2.InstallRustic()
 
             final_dic = {'status': 1}
             final_json = json.dumps(final_dic)
