@@ -310,6 +310,31 @@ class CPBackupsV2:
 
         return 1
 
+    def BackupRustic(self):
+
+        ### This function will backup data of the website, also need to take care of directories that we need to exclude
+        ### excluded directories are in a list self.data['ExcludedDirectories'] only backup data if backupdata check is on
+        ## For example if self.data['BackupData'] is one then only run this function otherwise not
+
+        destination = f'{self.FinalPath}/data'
+        source = f'/home/{self.website.domain}'
+
+        ## Pending add user provided folders in the exclude list
+
+        exclude = f'--exclude=.cache --exclude=.cache --exclude=.cache --exclude=.wp-cli ' \
+                  f'--exclude=backup --exclude=incbackup --exclude=incbackup --exclude=logs --exclude=lscache'
+
+        command = f'mkdir -p {destination}'
+        ProcessUtilities.executioner(command, 'cyberpanel')
+
+        command = f'chown {self.website.externalApp}:{self.website.externalApp} {destination}'
+        ProcessUtilities.executioner(command)
+
+        command = f'rustic -r {source}/rusticbackup backup {source} --password "" {exclude}'
+        ProcessUtilities.executioner(command, self.website.externalApp)
+
+        return 1
+
     def BackupEmails(self):
 
         ### This function will backup emails of the website, also need to take care of emails that we need to exclude
