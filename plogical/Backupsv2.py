@@ -4,6 +4,9 @@ import os
 import sys
 import time
 import requests
+import urllib.request
+
+
 
 sys.path.append('/usr/local/CyberCP')
 import django
@@ -348,16 +351,11 @@ class CPBackupsV2:
             else:
                 return 0, str(response.content)
 
-            #wget -P /home/rustic https://github.com/rustic-rs/rustic/releases/download/v0.4.3/rustic-v0.4.3-x86_64-unknown-linux-gnu.tar.gz
-
-
-            #tar xzf /home/rustic/rustic-v0.4.3-x86_64-unknown-linux-gnu.tar.gz -C /home/rustic/
-
             #sudo mv filename /usr/bin/
-            command = 'wget -P /home/rustic https://github.com/rustic-rs/rustic/releases/download/%s/rustic-%s-x86_64-unknown-linux-gnu.tar.gz' %(version, version)
+            command = 'wget -P /home/rustic https://github.com/rustic-rs/rustic/releases/download/%s/rustic-%s-x86_64-unknown-linux-musl.tar.gz' %(version, version)
             ProcessUtilities.executioner(command)
 
-            command = 'tar xzf /home/rustic/rustic-%s-x86_64-unknown-linux-gnu.tar.gz -C /home/rustic//'%(version)
+            command = 'tar xzf /home/rustic/rustic-%s-x86_64-unknown-linux-musl.tar.gz -C /home/rustic//'%(version)
             ProcessUtilities.executioner(command)
 
             command = 'sudo mv /home/rustic/rustic /usr/bin/'
@@ -365,6 +363,9 @@ class CPBackupsV2:
 
             command = 'rm -rf /home/rustic'
             ProcessUtilities.executioner(command)
+
+
+
 
             return 1, None
 
