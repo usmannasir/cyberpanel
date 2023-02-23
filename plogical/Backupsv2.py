@@ -63,6 +63,8 @@ class CPBackupsV2:
         from plogical.mysqlUtilities import mysqlUtilities
         self.website = Websites.objects.get(domain=self.data['domain'])
 
+        ## Base path is basically the path set by user where all the backups will be housed
+
         if not os.path.exists(self.data['BasePath']):
             command = f"mkdir -p {self.data['BasePath']}"
             ProcessUtilities.executioner(command)
@@ -73,11 +75,6 @@ class CPBackupsV2:
         self.StartingTimeStamp = CPBackupsV2.FetchCurrentTimeStamp()
 
         ### Init rustic repo in main func so dont need to do again and again
-
-        source = f'/home/{self.website.domain}'
-
-        command = f'rustic init -r {source}/rusticbackup --password ""'
-        ProcessUtilities.executioner(command, self.website.externalApp)
 
         while(1):
 
@@ -112,7 +109,15 @@ class CPBackupsV2:
 
                 self.FinalPath = f"{self.data['BasePath']}/{self.buv2.fileName}"
 
+                ### Rustic backup final path
+
+                self.FinalPathRuctic = f"{self.data['BasePath']}/{self.website.domain}"
+
+
                 command = f"mkdir -p {self.FinalPath}"
+                ProcessUtilities.executioner(command)
+
+                command = f"mkdir -p {self.FinalPathRuctic}"
                 ProcessUtilities.executioner(command)
 
                 #command = f"chown {website.externalApp}:{website.externalApp} {self.FinalPath}"
@@ -121,8 +126,14 @@ class CPBackupsV2:
                 command = f'chown cyberpanel:cyberpanel {self.FinalPath}'
                 ProcessUtilities.executioner(command)
 
+                command = f'chown cyberpanel:cyberpanel {self.FinalPathRuctic}'
+                ProcessUtilities.executioner(command)
+
                 command = f"chmod 711 {self.FinalPath}"
-                ProcessUtilities.executioner(command, self.website.externalApp)
+                ProcessUtilities.executioner(command)
+
+                command = f"chmod 711 {self.FinalPathRuctic}"
+                ProcessUtilities.executioner(command)
 
                 try:
 
@@ -217,11 +228,11 @@ class CPBackupsV2:
                     #command = f"echo '{json.dumps(Config)}' > {self.FinalPath}/config.json"
                     #ProcessUtilities.executioner(command, self.website.externalApp, True)
 
-                    WriteToFile = open(f'{self.FinalPath}/config.json', 'w')
+                    WriteToFile = open(f'{self.FinalPathRuctic}/config.json', 'w')
                     WriteToFile.write(json.dumps(Config))
                     WriteToFile.close()
 
-                    command = f"chmod 600 {self.FinalPath}/config.json"
+                    command = f"chmod 600 {self.FinalPathRuctic}/config.json"
                     ProcessUtilities.executioner(command)
 
                     self.UpdateStatus('Backup config created,5', CPBackupsV2.RUNNING)
@@ -301,6 +312,8 @@ class CPBackupsV2:
         ### excluded databases are in a list self.data['ExcludedDatabases'] only backup databases if backupdatabase check is on
         ## For example if self.data['BackupDatabase'] is one then only run this function otherwise not
 
+        source = f'/home/{self.website.domain}'
+
         from plogical.mysqlUtilities import mysqlUtilities
 
         for dbs in self.config['databases']:
@@ -311,6 +324,9 @@ class CPBackupsV2:
                 print(f'DB {key}')
 
                 if mysqlUtilities.createDatabaseBackup(key, self.FinalPath) == 0:
+                    CurrentDBPath = f"{self.FinalPath}/{key}.sql"
+                    command = f'rustic -r {source}/rusticbackup backup {source} --password ""'
+                    ProcessUtilities.executioner(command, self.website.externalApp)
                     self.UpdateStatus(f'Failed to create backup for database {key}.', CPBackupsV2.RUNNING)
                     return 0
 
@@ -352,13 +368,19 @@ class CPBackupsV2:
         ### excluded directories are in a list self.data['ExcludedDirectories'] only backup data if backupdata check is on
         ## For example if self.data['BackupData'] is one then only run this function otherwise not
 
+        command = f'chown {self.website.externalApp}:{self.website.externalApp} {self.FinalPathRuctic}'
+        ProcessUtilities.executioner(command)
+
+        command = f'rustic init -r {self.FinalPathRuctic} --password ""'
+        ProcessUtilities.executioner(command, self.website.externalApp)
+
         source = f'/home/{self.website.domain}'
 
         ## Pending add user provided folders in the exclude list
 
         exclude = f' --exclude-if-present rusticbackup  --exclude-if-present logs '
 
-        command = f'rustic -r {source}/rusticbackup backup {source} --password "" {exclude}'
+        command = f'rustic -r {self.FinalPathRuctic} backup {source} --password "" {exclude}'
         ProcessUtilities.executioner(command, self.website.externalApp)
 
         return 1
