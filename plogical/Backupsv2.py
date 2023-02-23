@@ -72,6 +72,13 @@ class CPBackupsV2:
 
         self.StartingTimeStamp = CPBackupsV2.FetchCurrentTimeStamp()
 
+        ### Init rustic repo in main func so dont need to do again and again
+
+        source = f'/home/{self.website.domain}'
+
+        command = f'rustic init -r {source}/rusticbackup --password ""'
+        ProcessUtilities.executioner(command, self.website.externalApp)
+
         while(1):
 
             self.website = Websites.objects.get(domain=self.data['domain'])
@@ -288,6 +295,32 @@ class CPBackupsV2:
 
         return 1
 
+    def BackupDataBasesRustic(self):
+
+        ### This function will backup databases of the website, also need to take care of database that we need to exclude
+        ### excluded databases are in a list self.data['ExcludedDatabases'] only backup databases if backupdatabase check is on
+        ## For example if self.data['BackupDatabase'] is one then only run this function otherwise not
+
+        from plogical.mysqlUtilities import mysqlUtilities
+
+        for dbs in self.config['databases']:
+
+            ### Pending: Need to only backup database present in the list of databases that need backing up
+
+            for key, value in dbs.items():
+                print(f'DB {key}')
+
+                if mysqlUtilities.createDatabaseBackup(key, self.FinalPath) == 0:
+                    self.UpdateStatus(f'Failed to create backup for database {key}.', CPBackupsV2.RUNNING)
+                    return 0
+
+                for dbUsers in value:
+                    print(f'User: {dbUsers["user"]}, Host: {dbUsers["host"]}, Pass: {dbUsers["password"]}')
+
+
+
+        return 1
+
     def BackupData(self):
 
         ### This function will backup data of the website, also need to take care of directories that we need to exclude
@@ -319,11 +352,7 @@ class CPBackupsV2:
         ### excluded directories are in a list self.data['ExcludedDirectories'] only backup data if backupdata check is on
         ## For example if self.data['BackupData'] is one then only run this function otherwise not
 
-        destination = f'{self.FinalPath}/data'
         source = f'/home/{self.website.domain}'
-
-        command = f'rustic init -r {source}/rusticbackup --password ""'
-        ProcessUtilities.executioner(command, self.website.externalApp)
 
         ## Pending add user provided folders in the exclude list
 
@@ -334,27 +363,6 @@ class CPBackupsV2:
 
         return 1
 
-
-    def BackupDataBaseRustic(self):
-
-        destination = f'{self.FinalPath}/data'
-        source = f'/home/{self.website.domain}'
-
-        command = f'rustic init -r {source}/rusticbackup --password ""'
-        ProcessUtilities.executioner(command, self.website.externalApp)
-        databases = self.website.databases_set.all()
-
-        for items in databases:
-            if mysqlUtilities.mysqlUtilities.createDatabaseBackup(items.dbName, '/home/cyberpanel') == 0:
-                return 0
-
-            dbPath = '/home/cyberpanel/%s.sql' % (items.dbName)
-
-            command = f'rustic -r {source}/rusticbackup backup {dbPath} --password ""'
-            ProcessUtilities.executioner(command, self.website.externalApp)
-
-
-        return 1
     def BackupEmails(self):
 
         ### This function will backup emails of the website, also need to take care of emails that we need to exclude
