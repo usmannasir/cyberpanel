@@ -7,7 +7,7 @@ import requests
 import urllib.request
 
 
-
+import plogical.mysqlUtilities as mysqlUtilities
 sys.path.append('/usr/local/CyberCP')
 import django
 import plogical.CyberCPLogFileWriter as logging
@@ -225,7 +225,7 @@ class CPBackupsV2:
                 try:
                     if self.data['BackupDatabase']:
                         self.UpdateStatus('Backing up databases..,10', CPBackupsV2.RUNNING)
-                        if self.BackupDataBases() == 0:
+                        if self.BackupDataBaseRustic() == 0:
                             self.UpdateStatus(f'Failed to create backup for databases.', CPBackupsV2.FAILED)
                             return 0
 
@@ -233,7 +233,7 @@ class CPBackupsV2:
 
                     if self.data['BackupData']:
                         self.UpdateStatus('Backing up website data..,30', CPBackupsV2.RUNNING)
-                        if self.BackupData() == 0:
+                        if self.BackupRustic() == 0:
                             return 0
                         self.UpdateStatus('Website data backup completed successfully..,70', CPBackupsV2.RUNNING)
 
@@ -322,22 +322,39 @@ class CPBackupsV2:
         destination = f'{self.FinalPath}/data'
         source = f'/home/{self.website.domain}'
 
+        command = f'rustic init -r {source}/rusticbackup --password ""'
+        ProcessUtilities.executioner(command, self.website.externalApp)
+
         ## Pending add user provided folders in the exclude list
 
-        exclude = f'--exclude=.cache --exclude=.cache --exclude=.cache --exclude=.wp-cli ' \
-                  f'--exclude=backup --exclude=incbackup --exclude=incbackup --exclude=logs --exclude=lscache'
-
-        command = f'mkdir -p {destination}'
-        ProcessUtilities.executioner(command, 'cyberpanel')
-
-        command = f'chown {self.website.externalApp}:{self.website.externalApp} {destination}'
-        ProcessUtilities.executioner(command)
+        exclude = f' --exclude-if-present rusticbackup  --exclude-if-present logs '
 
         command = f'rustic -r {source}/rusticbackup backup {source} --password "" {exclude}'
         ProcessUtilities.executioner(command, self.website.externalApp)
 
         return 1
 
+
+    def BackupDataBaseRustic(self):
+
+        destination = f'{self.FinalPath}/data'
+        source = f'/home/{self.website.domain}'
+
+        command = f'rustic init -r {source}/rusticbackup --password ""'
+        ProcessUtilities.executioner(command, self.website.externalApp)
+        databases = self.website.databases_set.all()
+
+        for items in databases:
+            if mysqlUtilities.mysqlUtilities.createDatabaseBackup(items.dbName, '/home/cyberpanel') == 0:
+                return 0
+
+            dbPath = '/home/cyberpanel/%s.sql' % (items.dbName)
+
+            command = f'rustic -r {source}/rusticbackup backup {dbPath} --password ""'
+            ProcessUtilities.executioner(command, self.website.externalApp)
+
+
+        return 1
     def BackupEmails(self):
 
         ### This function will backup emails of the website, also need to take care of emails that we need to exclude
