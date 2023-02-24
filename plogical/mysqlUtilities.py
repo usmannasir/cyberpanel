@@ -285,6 +285,10 @@ password=%s
                 os.chmod(cnfPath, 0o600)
 
             command = 'mysqldump --defaults-extra-file=/home/cyberpanel/.my.cnf -u %s --host=%s --port %s %s' % (mysqluser, mysqlhost, mysqlport, databaseName)
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.CyberCPLogFileWriter.writeToFile(command)
+
             cmd = shlex.split(command)
 
             try:
@@ -296,7 +300,6 @@ password=%s
                         logging.CyberCPLogFileWriter.writeToFile(
                             "Database: " + databaseName + "could not be backed! [createDatabaseBackup]")
                         return 0
-
             except subprocess.CalledProcessError as msg:
                 logging.CyberCPLogFileWriter.writeToFile(
                     "Database: " + databaseName + "could not be backed! Error: %s. [createDatabaseBackup]" % (str(msg)))

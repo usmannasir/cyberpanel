@@ -4,16 +4,11 @@ import os
 import sys
 import time
 import requests
-import urllib.request
 
-
-import plogical.mysqlUtilities as mysqlUtilities
 sys.path.append('/usr/local/CyberCP')
 import django
 import plogical.CyberCPLogFileWriter as logging
-
-
-
+import plogical.mysqlUtilities as mysqlUtilities
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 try:
@@ -243,7 +238,7 @@ class CPBackupsV2:
                 try:
                     if self.data['BackupDatabase']:
                         self.UpdateStatus('Backing up databases..,10', CPBackupsV2.RUNNING)
-                        if self.BackupDataBaseRustic() == 0:
+                        if self.BackupDataBasesRustic() == 0:
                             self.UpdateStatus(f'Failed to create backup for databases.', CPBackupsV2.FAILED)
                             return 0
 
@@ -257,7 +252,7 @@ class CPBackupsV2:
 
                     if self.data['BackupEmails']:
                         self.UpdateStatus('Backing up emails..,75', CPBackupsV2.RUNNING)
-                        if self.BackupEmails() == 0:
+                        if self.BackupEmailsRustic() == 0:
                             return 0
                         self.UpdateStatus('Emails backup completed successfully..,85', CPBackupsV2.RUNNING)
 
@@ -280,31 +275,40 @@ class CPBackupsV2:
                     self.website.BackupLock = 0
                     self.website.save()
 
-    def BackupDataBases(self):
-
-        ### This function will backup databases of the website, also need to take care of database that we need to exclude
-        ### excluded databases are in a list self.data['ExcludedDatabases'] only backup databases if backupdatabase check is on
-        ## For example if self.data['BackupDatabase'] is one then only run this function otherwise not
-
-        from plogical.mysqlUtilities import mysqlUtilities
-
-        for dbs in self.config['databases']:
-
-            ### Pending: Need to only backup database present in the list of databases that need backing up
-
-            for key, value in dbs.items():
-                print(f'DB {key}')
-
-                if mysqlUtilities.createDatabaseBackup(key, self.FinalPath) == 0:
-                    self.UpdateStatus(f'Failed to create backup for database {key}.', CPBackupsV2.RUNNING)
-                    return 0
-
-                for dbUsers in value:
-                    print(f'User: {dbUsers["user"]}, Host: {dbUsers["host"]}, Pass: {dbUsers["password"]}')
-
-
-
-        return 1
+    # def BackupDataBases(self):
+    #
+    #     ### This function will backup databases of the website, also need to take care of database that we need to exclude
+    #     ### excluded databases are in a list self.data['ExcludedDatabases'] only backup databases if backupdatabase check is on
+    #     ## For example if self.data['BackupDatabase'] is one then only run this function otherwise not
+    #
+    #     command = f'chown {self.website.externalApp}:{self.website.externalApp} {self.FinalPathRuctic}'
+    #     ProcessUtilities.executioner(command)
+    #
+    #     command = f'rustic init -r {self.FinalPathRuctic} --password ""'
+    #     ProcessUtilities.executioner(command, self.website.externalApp)
+    #
+    #     command = f'chown cyberpanel:cyberpanel {self.FinalPathRuctic}'
+    #     ProcessUtilities.executioner(command)
+    #
+    #     from plogical.mysqlUtilities import mysqlUtilities
+    #
+    #     for dbs in self.config['databases']:
+    #
+    #         ### Pending: Need to only backup database present in the list of databases that need backing up
+    #
+    #         for key, value in dbs.items():
+    #             print(f'DB {key}')
+    #
+    #             if mysqlUtilities.createDatabaseBackup(key, self.FinalPath) == 0:
+    #                 self.UpdateStatus(f'Failed to create backup for database {key}.', CPBackupsV2.RUNNING)
+    #                 return 0
+    #
+    #             for dbUsers in value:
+    #                 print(f'User: {dbUsers["user"]}, Host: {dbUsers["host"]}, Pass: {dbUsers["password"]}')
+    #
+    #
+    #
+    #     return 1
 
     def BackupDataBasesRustic(self):
 
@@ -312,7 +316,14 @@ class CPBackupsV2:
         ### excluded databases are in a list self.data['ExcludedDatabases'] only backup databases if backupdatabase check is on
         ## For example if self.data['BackupDatabase'] is one then only run this function otherwise not
 
-        source = f'/home/{self.website.domain}'
+        command = f'chown {self.website.externalApp}:{self.website.externalApp} {self.FinalPathRuctic}'
+        ProcessUtilities.executioner(command)
+
+        command = f'rustic init -r {self.FinalPathRuctic} --password ""'
+        ProcessUtilities.executioner(command, self.website.externalApp)
+
+        command = f'chown cyberpanel:cyberpanel {self.FinalPathRuctic}'
+        ProcessUtilities.executioner(command)
 
         from plogical.mysqlUtilities import mysqlUtilities
 
@@ -323,44 +334,55 @@ class CPBackupsV2:
             for key, value in dbs.items():
                 print(f'DB {key}')
 
-                if mysqlUtilities.createDatabaseBackup(key, self.FinalPath) == 0:
-                    CurrentDBPath = f"{self.FinalPath}/{key}.sql"
-                    command = f'rustic -r {source}/rusticbackup backup {source} --password ""'
+                CurrentDBPath = f"{self.FinalPathRuctic}/{key}.sql"
+
+                DBResult = mysqlUtilities.createDatabaseBackup(key, self.FinalPathRuctic)
+
+
+                if DBResult == 1:
+
+                    command = f'chown {self.website.externalApp}:{self.website.externalApp} {CurrentDBPath}'
+                    ProcessUtilities.executioner(command)
+
+                    command = f'rustic -r {self.FinalPathRuctic} backup {CurrentDBPath} --password ""'
+                    print(f'db command rustic: {command}')
                     ProcessUtilities.executioner(command, self.website.externalApp)
+
+
+                    for dbUsers in value:
+                        print(f'User: {dbUsers["user"]}, Host: {dbUsers["host"]}, Pass: {dbUsers["password"]}')
+
+                else:
                     self.UpdateStatus(f'Failed to create backup for database {key}.', CPBackupsV2.RUNNING)
                     return 0
 
-                for dbUsers in value:
-                    print(f'User: {dbUsers["user"]}, Host: {dbUsers["host"]}, Pass: {dbUsers["password"]}')
-
-
 
         return 1
 
-    def BackupData(self):
-
-        ### This function will backup data of the website, also need to take care of directories that we need to exclude
-        ### excluded directories are in a list self.data['ExcludedDirectories'] only backup data if backupdata check is on
-        ## For example if self.data['BackupData'] is one then only run this function otherwise not
-
-        destination = f'{self.FinalPath}/data'
-        source = f'/home/{self.website.domain}'
-
-        ## Pending add user provided folders in the exclude list
-
-        exclude = f'--exclude=.cache --exclude=.cache --exclude=.cache --exclude=.wp-cli ' \
-                  f'--exclude=backup --exclude=incbackup --exclude=incbackup --exclude=logs --exclude=lscache'
-
-        command = f'mkdir -p {destination}'
-        ProcessUtilities.executioner(command, 'cyberpanel')
-
-        command = f'chown {self.website.externalApp}:{self.website.externalApp} {destination}'
-        ProcessUtilities.executioner(command)
-
-        command = f'rsync -av {exclude}  {source}/ {destination}/'
-        ProcessUtilities.executioner(command, self.website.externalApp)
-
-        return 1
+    # def BackupData(self):
+    #
+    #     ### This function will backup data of the website, also need to take care of directories that we need to exclude
+    #     ### excluded directories are in a list self.data['ExcludedDirectories'] only backup data if backupdata check is on
+    #     ## For example if self.data['BackupData'] is one then only run this function otherwise not
+    #
+    #     destination = f'{self.FinalPath}/data'
+    #     source = f'/home/{self.website.domain}'
+    #
+    #     ## Pending add user provided folders in the exclude list
+    #
+    #     exclude = f'--exclude=.cache --exclude=.cache --exclude=.cache --exclude=.wp-cli ' \
+    #               f'--exclude=backup --exclude=incbackup --exclude=incbackup --exclude=logs --exclude=lscache'
+    #
+    #     command = f'mkdir -p {destination}'
+    #     ProcessUtilities.executioner(command, 'cyberpanel')
+    #
+    #     command = f'chown {self.website.externalApp}:{self.website.externalApp} {destination}'
+    #     ProcessUtilities.executioner(command)
+    #
+    #     command = f'rsync -av {exclude}  {source}/ {destination}/'
+    #     ProcessUtilities.executioner(command, self.website.externalApp)
+    #
+    #     return 1
 
     def BackupRustic(self):
 
@@ -385,30 +407,48 @@ class CPBackupsV2:
 
         return 1
 
-    def BackupEmails(self):
+    def BackupEmailsRustic(self):
 
         ### This function will backup emails of the website, also need to take care of emails that we need to exclude
         ### excluded emails are in a list self.data['ExcludedEmails'] only backup data if backupemail check is on
         ## For example if self.data['BackupEmails'] is one then only run this function otherwise not
 
-        destination = f'{self.FinalPath}/emails'
+
         source = f'/home/vmail/{self.website.domain}'
 
         ## Pending add user provided folders in the exclude list
 
-        exclude = f'--exclude=.cache --exclude=.cache --exclude=.cache --exclude=.wp-cli ' \
-                  f'--exclude=backup --exclude=incbackup --exclude=incbackup --exclude=logs --exclude=lscache'
+        exclude = f' --exclude-if-present rusticbackup  --exclude-if-present logs '
 
-        command = f'mkdir -p {destination}'
-        ProcessUtilities.executioner(command, 'cyberpanel')
-
-        command = f'chown vmail:vmail {destination}'
+        command = f'rustic -r {self.FinalPathRuctic} backup {source} --password "" {exclude}'
         ProcessUtilities.executioner(command)
 
-        command = f'rsync -av  {source}/ {destination}/'
-        ProcessUtilities.executioner(command, 'vmail')
-
         return 1
+
+    # def BackupEmails(self):
+    #
+    #     ### This function will backup emails of the website, also need to take care of emails that we need to exclude
+    #     ### excluded emails are in a list self.data['ExcludedEmails'] only backup data if backupemail check is on
+    #     ## For example if self.data['BackupEmails'] is one then only run this function otherwise not
+    #
+    #     destination = f'{self.FinalPath}/emails'
+    #     source = f'/home/vmail/{self.website.domain}'
+    #
+    #     ## Pending add user provided folders in the exclude list
+    #
+    #     exclude = f'--exclude=.cache --exclude=.cache --exclude=.cache --exclude=.wp-cli ' \
+    #               f'--exclude=backup --exclude=incbackup --exclude=incbackup --exclude=logs --exclude=lscache'
+    #
+    #     command = f'mkdir -p {destination}'
+    #     ProcessUtilities.executioner(command, 'cyberpanel')
+    #
+    #     command = f'chown vmail:vmail {destination}'
+    #     ProcessUtilities.executioner(command)
+    #
+    #     command = f'rsync -av  {source}/ {destination}/'
+    #     ProcessUtilities.executioner(command, 'vmail')
+    #
+    #     return 1
 
     def InstallRustic(self):
         try:
@@ -460,4 +500,3 @@ if __name__ == "__main__":
     except:
         cpbuv2 = CPBackupsV2({'domain': 'cyberpanel.net', 'BasePath': '/home/backup', 'BackupDatabase': 1, 'BackupData': 1, 'BackupEmails': 1} )
         cpbuv2.InitiateBackup()
-        cpbuv2.Incrmentalback()
