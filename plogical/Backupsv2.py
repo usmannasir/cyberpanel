@@ -230,6 +230,20 @@ class CPBackupsV2:
                     command = f"chmod 600 {self.FinalPathRuctic}/config.json"
                     ProcessUtilities.executioner(command)
 
+                    ### Backup config file to rustic
+
+                    command = f'chown {self.website.externalApp}:{self.website.externalApp} {self.FinalPathRuctic}'
+                    ProcessUtilities.executioner(command)
+
+                    command = f'rustic init -r {self.FinalPathRuctic} --password ""'
+                    ProcessUtilities.executioner(command, self.website.externalApp)
+
+                    command = f'chown cyberpanel:cyberpanel {self.FinalPathRuctic}'
+                    ProcessUtilities.executioner(command)
+
+                    command = f'rustic -r {self.FinalPathRuctic} backup {self.FinalPathRuctic}/config.json --password ""'
+                    ProcessUtilities.executioner(command)
+
                     self.UpdateStatus('Backup config created,5', CPBackupsV2.RUNNING)
                 except BaseException as msg:
                     self.UpdateStatus(f'Failed during config generation, Error: {str(msg)}', CPBackupsV2.FAILED)
@@ -256,6 +270,10 @@ class CPBackupsV2:
                             return 0
                         self.UpdateStatus('Emails backup completed successfully..,85', CPBackupsV2.RUNNING)
 
+                    ### Finally change the backup rustic folder to the website user owner
+
+                    command = f'chown {self.website.externalApp}:{self.website.externalApp} {self.FinalPathRuctic}'
+                    ProcessUtilities.executioner(command)
 
                     self.UpdateStatus('Completed', CPBackupsV2.COMPLETED)
 
@@ -412,6 +430,12 @@ class CPBackupsV2:
         ### This function will backup emails of the website, also need to take care of emails that we need to exclude
         ### excluded emails are in a list self.data['ExcludedEmails'] only backup data if backupemail check is on
         ## For example if self.data['BackupEmails'] is one then only run this function otherwise not
+
+        command = f'chown {self.website.externalApp}:{self.website.externalApp} {self.FinalPathRuctic}'
+        ProcessUtilities.executioner(command)
+
+        command = f'rustic init -r {self.FinalPathRuctic} --password ""'
+        ProcessUtilities.executioner(command, self.website.externalApp)
 
 
         source = f'/home/vmail/{self.website.domain}'
