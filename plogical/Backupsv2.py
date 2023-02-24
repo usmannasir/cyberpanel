@@ -364,16 +364,32 @@ class CPBackupsV2:
                     command = f'chown {self.website.externalApp}:{self.website.externalApp} {CurrentDBPath}'
                     ProcessUtilities.executioner(command)
 
-                    command = f'rustic -r {self.FinalPathRuctic} backup {CurrentDBPath} --password ""'
+                    command = f'rustic -r {self.FinalPathRuctic} backup {CurrentDBPath} --password "" --json 2>/dev/null'
                     print(f'db command rustic: {command}')
-                    ProcessUtilities.executioner(command, self.website.externalApp)
+                    result = json.loads(
+                        ProcessUtilities.outputExecutioner(command, self.website.externalApp, True).rstrip('\n'))
+
+                    try:
+                        SnapShotID = result['id']  ## snapshot id that we need to store in db
+                        files_new = result['summary']['files_new']  ## basically new files in backup
+                        total_duration = result['summary']['total_duration']  ## time taken
+
+                    except BaseException as msg:
+                        self.UpdateStatus(f'Backup failed as no snapshot id found, error: {str(msg)}',
+                                          CPBackupsV2.FAILED)
+                        return 0
 
 
                     for dbUsers in value:
                         print(f'User: {dbUsers["user"]}, Host: {dbUsers["host"]}, Pass: {dbUsers["password"]}')
 
+                    command = f'rm -f {CurrentDBPath}'
+                    ProcessUtilities.executioner(command)
+
                 else:
-                    self.UpdateStatus(f'Failed to create backup for database {key}.', CPBackupsV2.RUNNING)
+                    command = f'rm -f {CurrentDBPath}'
+                    ProcessUtilities.executioner(command)
+                    self.UpdateStatus(f'Failed to create backup for database {key}.', CPBackupsV2.FAILED)
                     return 0
 
 
@@ -422,8 +438,19 @@ class CPBackupsV2:
 
         exclude = f' --exclude-if-present rusticbackup  --exclude-if-present logs '
 
-        command = f'rustic -r {self.FinalPathRuctic} backup {source} --password "" {exclude}'
-        ProcessUtilities.executioner(command, self.website.externalApp)
+        command = f'rustic -r {self.FinalPathRuctic} backup {source} --password "" {exclude} --json 2>/dev/null'
+        result = json.loads(ProcessUtilities.outputExecutioner(command, self.website.externalApp, True).rstrip('\n'))
+
+        try:
+            SnapShotID = result['id'] ## snapshot id that we need to store in db
+            files_new = result['summary']['files_new'] ## basically new files in backup
+            total_duration = result['summary']['total_duration'] ## time taken
+
+        except BaseException as msg:
+            self.UpdateStatus(f'Backup failed as no snapshot id found, error: {str(msg)}', CPBackupsV2.FAILED)
+            return 0
+
+        #self.UpdateStatus(f'Rustic command result id: {SnapShotID}, files new {files_new}, total_duration {total_duration}', CPBackupsV2.RUNNING)
 
         return 1
 
@@ -446,8 +473,18 @@ class CPBackupsV2:
 
         exclude = f' --exclude-if-present rusticbackup  --exclude-if-present logs '
 
-        command = f'rustic -r {self.FinalPathRuctic} backup {source} --password "" {exclude}'
-        ProcessUtilities.executioner(command)
+        command = f'rustic -r {self.FinalPathRuctic} backup {source} --password "" {exclude} --json 2>/dev/null'
+
+        result = json.loads(ProcessUtilities.outputExecutioner(command, self.website.externalApp, True).rstrip('\n'))
+
+        try:
+            SnapShotID = result['id']  ## snapshot id that we need to store in db
+            files_new = result['summary']['files_new']  ## basically new files in backup
+            total_duration = result['summary']['total_duration']  ## time taken
+
+        except BaseException as msg:
+            self.UpdateStatus(f'Backup failed as no snapshot id found, error: {str(msg)}', CPBackupsV2.FAILED)
+            return 0
 
         return 1
 
