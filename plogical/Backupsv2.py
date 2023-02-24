@@ -25,6 +25,8 @@ class CPBackupsV2:
     COMPLETED = 2
     FAILED = 3
 
+    RUSTIC_PATH = '/usr/bin/rustic'
+
     def __init__(self, data):
         self.data = data
         pass
@@ -477,33 +479,34 @@ class CPBackupsV2:
     def InstallRustic(self):
         try:
 
-            url = "https://api.github.com/repos/rustic-rs/rustic/releases/latest"
-            response = requests.get(url)
+            if not os.path.exists(CPBackupsV2.RUSTIC_PATH):
 
-            if response.status_code == 200:
-                data = response.json()
-                version =  data['tag_name']
-                name =  data['name']
-            else:
-                return 0, str(response.content)
+                url = "https://api.github.com/repos/rustic-rs/rustic/releases/latest"
+                response = requests.get(url)
 
-            #sudo mv filename /usr/bin/
-            command = 'wget -P /home/rustic https://github.com/rustic-rs/rustic/releases/download/%s/rustic-%s-x86_64-unknown-linux-musl.tar.gz' %(version, version)
-            ProcessUtilities.executioner(command)
+                if response.status_code == 200:
+                    data = response.json()
+                    version =  data['tag_name']
+                    name =  data['name']
+                else:
+                    return 0, str(response.content)
 
-            command = 'tar xzf /home/rustic/rustic-%s-x86_64-unknown-linux-musl.tar.gz -C /home/rustic//'%(version)
-            ProcessUtilities.executioner(command)
+                #sudo mv filename /usr/bin/
+                command = 'wget -P /home/rustic https://github.com/rustic-rs/rustic/releases/download/%s/rustic-%s-x86_64-unknown-linux-musl.tar.gz' %(version, version)
+                ProcessUtilities.executioner(command)
 
-            command = 'sudo mv /home/rustic/rustic /usr/bin/'
-            ProcessUtilities.executioner(command)
+                command = 'tar xzf /home/rustic/rustic-%s-x86_64-unknown-linux-musl.tar.gz -C /home/rustic//'%(version)
+                ProcessUtilities.executioner(command)
 
-            command = 'rm -rf /home/rustic'
-            ProcessUtilities.executioner(command)
+                command = 'sudo mv /home/rustic/rustic /usr/bin/'
+                ProcessUtilities.executioner(command)
 
-
-
+                command = 'rm -rf /home/rustic'
+                ProcessUtilities.executioner(command)
 
             return 1, None
+
+
 
         except BaseException as msg:
             print('Error: %s'%msg)
@@ -519,7 +522,7 @@ if __name__ == "__main__":
 
         if args.function == "BackupDataBases":
             cpbuv2 = CPBackupsV2({'finalPath': args.path})
-            cpbuv2.BackupDataBases()
+            #cpbuv2.BackupDataBases()
 
     except:
         cpbuv2 = CPBackupsV2({'domain': 'cyberpanel.net', 'BasePath': '/home/backup', 'BackupDatabase': 1, 'BackupData': 1, 'BackupEmails': 1} )
