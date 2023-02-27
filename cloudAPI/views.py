@@ -118,6 +118,10 @@ def router(request):
             return cm.ChangeStateThemes()
         elif controller == 'DeleteThemes':
             return cm.DeleteThemes()
+        elif controller == 'ChangeLinuxUserPassword':
+            from websiteFunctions.website import WebsiteManager
+            wm = WebsiteManager()
+            return wm.saveSSHAccessChanges(admin.id, data)
         elif controller == 'GetServerPublicSSHkey':
             return cm.GetServerPublicSSHkey()
         elif controller == 'SubmitPublicKey':

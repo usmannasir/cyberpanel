@@ -4680,13 +4680,13 @@ StrictHostKeyChecking no
             uBuntuPath = '/etc/lsb-release'
 
             if os.path.exists(uBuntuPath):
-                command = "echo '%s:%s' | chpasswd" % (data['externalApp'], data['password'])
+                command = "echo '%s:%s' | chpasswd" % (website.externalApp, data['password'])
             else:
-                command = 'echo "%s" | passwd --stdin %s' % (data['password'], data['externalApp'])
+                command = 'echo "%s" | passwd --stdin %s' % (data['password'], website.externalApp)
 
             ProcessUtilities.executioner(command)
 
-            data_ret = {'status': 1, 'error_message': 'None'}
+            data_ret = {'status': 1, 'error_message': 'None', 'LinuxUser': website.externalApp}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
