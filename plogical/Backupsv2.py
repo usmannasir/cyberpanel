@@ -25,11 +25,43 @@ class CPBackupsV2:
     COMPLETED = 2
     FAILED = 3
 
+    ### RCLONE BACKEND TYPES
+    SFTP = 1
+    LOCAL = 2
+
     RUSTIC_PATH = '/usr/bin/rustic'
+    RCLONE_CONFIG = '/root/.config/rclone/rclone.conf'
+    command = 'rclone obscure hosting'
 
     def __init__(self, data):
         self.data = data
         pass
+
+    def SetupRcloneBackend(self, type, config):
+        self.LocalRclonePath = f'/home/{self.website.domain}/.config/rclone'
+        self.ConfigFilePath = f'{self.LocalRclonePath}/rclone.conf'
+
+        command = f'mkdir -p {self.LocalRclonePath}'
+        ProcessUtilities.executioner(command, self.website.externalApp)
+
+        if type == CPBackupsV2.SFTP:
+            ## config = {"name":, "host":, "user":, "port":, "path":, "password":,}
+            command = f'rclone obscure {config["password"]}'
+            ObsecurePassword = ProcessUtilities.outputExecutioner(command).rstrip('\n')
+
+            content = f'''[{config["name"]}]
+type = sftp
+host = {config["host"]}
+user = {config["user"]}
+pass = {ObsecurePassword}
+'''
+
+            command = f"echo '{content}' > {self.ConfigFilePath}"
+            ProcessUtilities.executioner(command, self.website.externalApp, True)
+
+            command = f"chmod 600 {self.ConfigFilePath}"
+            ProcessUtilities.executioner(command, self.website.externalApp)
+
 
     @staticmethod
     def FetchCurrentTimeStamp():

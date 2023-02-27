@@ -454,7 +454,9 @@ def refreshLicense(request):
             cpbuv2 = CPBackupsV2(
                 {'domain': 'cyberpanel.net', 'BasePath': '/home/backup', 'BackupDatabase': 1, 'BackupData': 1,
                  'BackupEmails': 1})
+            RcloneData = {"name":'testremote', "host":"", "user": "", "port": "22", "path": "custombackups", "password":"",}
             cpbuv2.InitiateBackup()
+            cpbuv2.SetupRcloneBackend(CPBackupsV2.SFTP, RcloneData)
             #cpbuv2.InstallRustic()
 
             final_dic = {'status': 1}
