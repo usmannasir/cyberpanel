@@ -90,7 +90,9 @@ pass = {ObsecurePassword}
             self.buv2.website.BackupLock = 0
             self.buv2.website.save()
 
-    def BackupConfig(self):
+
+    ## parent is used to link this snapshot with master snapshot
+    def BackupConfig(self, parent):
         ### Backup config file to rustic
 
         command = f'chown {self.website.externalApp}:{self.website.externalApp} {self.FinalPathRuctic}'
@@ -102,7 +104,7 @@ pass = {ObsecurePassword}
         #command = f'chown cyberpanel:cyberpanel {self.FinalPathRuctic}'
         #ProcessUtilities.executioner(command)
 
-        command = f'rustic -r {self.repo} backup {self.FinalPathRuctic}/config.json --password ""'
+        command = f'rustic -r {self.repo} backup {self.FinalPathRuctic}/config.json --password "" --parent {parent}'
         ProcessUtilities.executioner(command)
 
     def InitiateBackup(self):
@@ -413,6 +415,10 @@ pass = {ObsecurePassword}
                         files_new = result['summary']['files_new']  ## basically new files in backup
                         total_duration = result['summary']['total_duration']  ## time taken
 
+                        ### Config is saved with each database, snapshot of config is attached to db snapshot with parent
+
+                        self.BackupConfig(SnapShotID)
+
                     except BaseException as msg:
                         self.UpdateStatus(f'Backup failed as no snapshot id found, error: {str(msg)}',
                                           CPBackupsV2.FAILED)
@@ -485,6 +491,10 @@ pass = {ObsecurePassword}
             files_new = result['summary']['files_new'] ## basically new files in backup
             total_duration = result['summary']['total_duration'] ## time taken
 
+            ### Config is saved with each backup, snapshot of config is attached to data snapshot with parent
+
+            self.BackupConfig(SnapShotID)
+
         except BaseException as msg:
             self.UpdateStatus(f'Backup failed as no snapshot id found, error: {str(msg)}', CPBackupsV2.FAILED)
             return 0
@@ -520,6 +530,10 @@ pass = {ObsecurePassword}
             SnapShotID = result['id']  ## snapshot id that we need to store in db
             files_new = result['summary']['files_new']  ## basically new files in backup
             total_duration = result['summary']['total_duration']  ## time taken
+
+            ### Config is saved with each email backup, snapshot of config is attached to email snapshot with parent
+
+            self.BackupConfig(SnapShotID)
 
         except BaseException as msg:
             self.UpdateStatus(f'Backup failed as no snapshot id found, error: {str(msg)}', CPBackupsV2.FAILED)
