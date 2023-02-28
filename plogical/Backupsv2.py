@@ -35,7 +35,14 @@ class CPBackupsV2:
 
     def __init__(self, data):
         self.data = data
-        pass
+
+        ### set self.website as it is needed in many functions
+        from websiteFunctions.models import Websites
+        self.website = Websites.objects.get(domain=self.data['domain'])
+
+        ## Set up the repo name to be used
+
+        self.repo = f"rclone:{self.data['BackendName']}:{self.data['domain']}"
 
     def SetupRcloneBackend(self, type, config):
         self.LocalRclonePath = f'/home/{self.website.domain}/.config/rclone'
@@ -62,7 +69,6 @@ pass = {ObsecurePassword}
             command = f"chmod 600 {self.ConfigFilePath}"
             ProcessUtilities.executioner(command, self.website.externalApp)
 
-
     @staticmethod
     def FetchCurrentTimeStamp():
         import time
@@ -84,8 +90,22 @@ pass = {ObsecurePassword}
             self.buv2.website.BackupLock = 0
             self.buv2.website.save()
 
-    def InitiateBackup(self):
+    def BackupConfig(self):
+        ### Backup config file to rustic
 
+        command = f'chown {self.website.externalApp}:{self.website.externalApp} {self.FinalPathRuctic}'
+        ProcessUtilities.executioner(command)
+
+        command = f'rustic init -r {self.repo} --password ""'
+        ProcessUtilities.executioner(command, self.website.externalApp)
+
+        #command = f'chown cyberpanel:cyberpanel {self.FinalPathRuctic}'
+        #ProcessUtilities.executioner(command)
+
+        command = f'rustic -r {self.repo} backup {self.FinalPathRuctic}/config.json --password ""'
+        ProcessUtilities.executioner(command)
+
+    def InitiateBackup(self):
 
         from websiteFunctions.models import Websites, Backupsv2
         from django.forms.models import model_to_dict
@@ -264,19 +284,6 @@ pass = {ObsecurePassword}
                     command = f"chmod 600 {self.FinalPathRuctic}/config.json"
                     ProcessUtilities.executioner(command)
 
-                    ### Backup config file to rustic
-
-                    command = f'chown {self.website.externalApp}:{self.website.externalApp} {self.FinalPathRuctic}'
-                    ProcessUtilities.executioner(command)
-
-                    command = f'rustic init -r {self.FinalPathRuctic} --password ""'
-                    ProcessUtilities.executioner(command, self.website.externalApp)
-
-                    command = f'chown cyberpanel:cyberpanel {self.FinalPathRuctic}'
-                    ProcessUtilities.executioner(command)
-
-                    command = f'rustic -r {self.FinalPathRuctic} backup {self.FinalPathRuctic}/config.json --password ""'
-                    ProcessUtilities.executioner(command)
 
                     self.UpdateStatus('Backup config created,5', CPBackupsV2.RUNNING)
                 except BaseException as msg:
@@ -368,10 +375,10 @@ pass = {ObsecurePassword}
         ### excluded databases are in a list self.data['ExcludedDatabases'] only backup databases if backupdatabase check is on
         ## For example if self.data['BackupDatabase'] is one then only run this function otherwise not
 
-        command = f'chown {self.website.externalApp}:{self.website.externalApp} {self.FinalPathRuctic}'
-        ProcessUtilities.executioner(command)
+        #command = f'chown {self.website.externalApp}:{self.website.externalApp} {self.FinalPathRuctic}'
+        #ProcessUtilities.executioner(command)
 
-        command = f'rustic init -r {self.FinalPathRuctic} --password ""'
+        command = f'rustic init -r {self.repo} --password ""'
         ProcessUtilities.executioner(command, self.website.externalApp)
 
         command = f'chown cyberpanel:cyberpanel {self.FinalPathRuctic}'
@@ -396,7 +403,7 @@ pass = {ObsecurePassword}
                     command = f'chown {self.website.externalApp}:{self.website.externalApp} {CurrentDBPath}'
                     ProcessUtilities.executioner(command)
 
-                    command = f'rustic -r {self.FinalPathRuctic} backup {CurrentDBPath} --password "" --json 2>/dev/null'
+                    command = f'rustic -r {self.repo} backup {CurrentDBPath} --password "" --json 2>/dev/null'
                     print(f'db command rustic: {command}')
                     result = json.loads(
                         ProcessUtilities.outputExecutioner(command, self.website.externalApp, True).rstrip('\n'))
@@ -458,10 +465,10 @@ pass = {ObsecurePassword}
         ### excluded directories are in a list self.data['ExcludedDirectories'] only backup data if backupdata check is on
         ## For example if self.data['BackupData'] is one then only run this function otherwise not
 
-        command = f'chown {self.website.externalApp}:{self.website.externalApp} {self.FinalPathRuctic}'
-        ProcessUtilities.executioner(command)
+        #command = f'chown {self.website.externalApp}:{self.website.externalApp} {self.FinalPathRuctic}'
+        #ProcessUtilities.executioner(command)
 
-        command = f'rustic init -r {self.FinalPathRuctic} --password ""'
+        command = f'rustic init -r {self.repo} --password ""'
         ProcessUtilities.executioner(command, self.website.externalApp)
 
         source = f'/home/{self.website.domain}'
@@ -470,7 +477,7 @@ pass = {ObsecurePassword}
 
         exclude = f' --exclude-if-present rusticbackup  --exclude-if-present logs '
 
-        command = f'rustic -r {self.FinalPathRuctic} backup {source} --password "" {exclude} --json 2>/dev/null'
+        command = f'rustic -r {self.repo} backup {source} --password "" {exclude} --json 2>/dev/null'
         result = json.loads(ProcessUtilities.outputExecutioner(command, self.website.externalApp, True).rstrip('\n'))
 
         try:
@@ -492,10 +499,10 @@ pass = {ObsecurePassword}
         ### excluded emails are in a list self.data['ExcludedEmails'] only backup data if backupemail check is on
         ## For example if self.data['BackupEmails'] is one then only run this function otherwise not
 
-        command = f'chown {self.website.externalApp}:{self.website.externalApp} {self.FinalPathRuctic}'
-        ProcessUtilities.executioner(command)
+        #command = f'chown {self.website.externalApp}:{self.website.externalApp} {self.FinalPathRuctic}'
+        #ProcessUtilities.executioner(command)
 
-        command = f'rustic init -r {self.FinalPathRuctic} --password ""'
+        command = f'rustic init -r {self.repo} --password ""'
         ProcessUtilities.executioner(command, self.website.externalApp)
 
 
@@ -505,7 +512,7 @@ pass = {ObsecurePassword}
 
         exclude = f' --exclude-if-present rusticbackup  --exclude-if-present logs '
 
-        command = f'rustic -r {self.FinalPathRuctic} backup {source} --password "" {exclude} --json 2>/dev/null'
+        command = f'rustic -r {self.repo} backup {source} --password "" {exclude} --json 2>/dev/null'
 
         result = json.loads(ProcessUtilities.outputExecutioner(command, self.website.externalApp, True).rstrip('\n'))
 
