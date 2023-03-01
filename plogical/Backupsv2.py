@@ -86,6 +86,12 @@ pass = {ObsecurePassword}
         if status == CPBackupsV2.FAILED:
             self.buv2.website.BackupLock = 0
             self.buv2.website.save()
+
+            ### delete leftover dbs if backup fails
+
+            command = f'rm -f {self.FinalPathRuctic}/*.sql'
+            ProcessUtilities.executioner(command, None, True)
+
         elif status == CPBackupsV2.COMPLETED:
             self.buv2.website.BackupLock = 0
             self.buv2.website.save()
@@ -418,6 +424,9 @@ pass = {ObsecurePassword}
                         ### Config is saved with each database, snapshot of config is attached to db snapshot with parent
 
                         self.BackupConfig(SnapShotID)
+
+                        command = f'chown cyberpanel:cyberpanel {self.FinalPathRuctic}'
+                        ProcessUtilities.executioner(command)
 
                     except BaseException as msg:
                         self.UpdateStatus(f'Backup failed as no snapshot id found, error: {str(msg)}',
