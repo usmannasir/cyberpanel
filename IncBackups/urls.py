@@ -22,4 +22,7 @@ urlpatterns = [
     url(r'^saveChanges$', views.save_changes, name='saveChanges'),
     url(r'^removeSite$', views.remove_site, name='removeSite'),
     url(r'^addWebsite$', views.add_website, name='addWebsite'),
+    ### V2 Backups URls
+    url(r'^createV2Backup$', views.createV2Backup, name='createV2Backup'),
+
 ]

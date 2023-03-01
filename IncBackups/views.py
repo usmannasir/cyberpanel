@@ -704,3 +704,22 @@ def add_website(request):
     except BaseException as msg:
         final_json = json.dumps({'status': 0, 'error_message': str(msg)})
         return HttpResponse(final_json)
+
+
+
+def createV2Backup(request):
+    try:
+        #user_id, current_acl = _get_user_acl(request)
+        # if ACLManager.currentContextPermission(current_acl, 'createBackup') == 0:
+        #     return ACLManager.loadError()
+
+        # websites = ACLManager.findAllSites(current_acl, user_id)
+        #
+        # destinations = _get_destinations(local=True)
+        proc = httpProc(request, 'IncBackups/createV2Backup.html', 'createBackup')
+        return proc.render()
+
+        # return def_renderer(request, 'IncBackups/createV2Backup.html', 'createBackup')
+    except BaseException as msg:
+        final_json = json.dumps({'status': 0, 'error_message': str(msg)})
+        return HttpResponse(final_json)
