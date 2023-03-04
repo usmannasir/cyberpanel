@@ -455,8 +455,10 @@ def refreshLicense(request):
                 {'domain': 'cyberpanel.net', 'BasePath': '/home/backup', 'BackupDatabase': 1, 'BackupData': 1,
                  'BackupEmails': 1, 'BackendName': 'testremote'})
             RcloneData = {"name":'testremote', "host":"staging.cyberpanel.net", "user": "abcds2751", "port": "22", "password":"hosting",}
-            cpbuv2.SetupRcloneBackend(CPBackupsV2.SFTP, RcloneData)
+            #cpbuv2.SetupRcloneBackend(CPBackupsV2.SFTP, RcloneData)
             cpbuv2.InitiateBackup()
+
+
 
             #cpbuv2.InstallRustic()
 
