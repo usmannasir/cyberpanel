@@ -110,7 +110,7 @@ pass = {ObsecurePassword}
         #command = f'chown cyberpanel:cyberpanel {self.FinalPathRuctic}'
         #ProcessUtilities.executioner(command)
 
-        command = f'rustic -r {self.repo} backup {self.FinalPathRuctic}/config.json --password "" --parent {parent}'
+        command = f'rustic -r {self.repo} backup {self.FinalPathRuctic}/config.json --password "" --tag {parent}'
         ProcessUtilities.executioner(command)
 
     def InitiateBackup(self):
