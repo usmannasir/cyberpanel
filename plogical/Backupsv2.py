@@ -336,7 +336,7 @@ pass = {ObsecurePassword}
 
                     break
                 except BaseException as msg:
-                    self.UpdateStatus(f'Failed after config generation, Error: {str(msg)}', CPBackupsV2.FAILED)
+                    self.UpdateStatus(f'Failed, Error: {str(msg)}', CPBackupsV2.FAILED)
                     return 0
             else:
                 time.sleep(5)
@@ -417,7 +417,12 @@ pass = {ObsecurePassword}
                     command = f'chown {self.website.externalApp}:{self.website.externalApp} {CurrentDBPath}'
                     ProcessUtilities.executioner(command)
 
-                    command = f'rustic -r {self.repo} backup {CurrentDBPath} --password "" --json 2>/dev/null'
+                    ## Now pack config into same thing
+
+                    command = f'chown {self.website.externalApp}:{self.website.externalApp} {self.FinalPathRuctic}/config.json'
+                    ProcessUtilities.executioner(command)
+
+                    command = f'rustic -r {self.repo} backup {CurrentDBPath} {self.FinalPathRuctic}/config.json --password "" --json 2>/dev/null'
                     print(f'db command rustic: {command}')
                     result = json.loads(
                         ProcessUtilities.outputExecutioner(command, self.website.externalApp, True).rstrip('\n'))
@@ -429,7 +434,7 @@ pass = {ObsecurePassword}
 
                         ### Config is saved with each database, snapshot of config is attached to db snapshot with parent
 
-                        self.BackupConfig(SnapShotID)
+                        #self.BackupConfig(SnapShotID)
 
                         command = f'chown cyberpanel:cyberpanel {self.FinalPathRuctic}'
                         ProcessUtilities.executioner(command)
@@ -494,11 +499,14 @@ pass = {ObsecurePassword}
 
         source = f'/home/{self.website.domain}'
 
+        command = f'chown {self.website.externalApp}:{self.website.externalApp} {self.FinalPathRuctic}/config.json'
+        ProcessUtilities.executioner(command)
+
         ## Pending add user provided folders in the exclude list
 
         exclude = f' --exclude-if-present rusticbackup  --exclude-if-present logs '
 
-        command = f'rustic -r {self.repo} backup {source} --password "" {exclude} --json 2>/dev/null'
+        command = f'rustic -r {self.repo} backup {source} {self.FinalPathRuctic}/config.json --password "" {exclude} --json 2>/dev/null'
         result = json.loads(ProcessUtilities.outputExecutioner(command, self.website.externalApp, True).rstrip('\n'))
 
         try:
@@ -508,7 +516,7 @@ pass = {ObsecurePassword}
 
             ### Config is saved with each backup, snapshot of config is attached to data snapshot with parent
 
-            self.BackupConfig(SnapShotID)
+            #self.BackupConfig(SnapShotID)
 
         except BaseException as msg:
             self.UpdateStatus(f'Backup failed as no snapshot id found, error: {str(msg)}', CPBackupsV2.FAILED)
@@ -530,6 +538,9 @@ pass = {ObsecurePassword}
         command = f'rustic init -r {self.repo} --password ""'
         ProcessUtilities.executioner(command, self.website.externalApp)
 
+        command = f'chown {self.website.externalApp}:{self.website.externalApp} {self.FinalPathRuctic}/config.json'
+        ProcessUtilities.executioner(command)
+
 
         source = f'/home/vmail/{self.website.domain}'
 
@@ -537,7 +548,7 @@ pass = {ObsecurePassword}
 
         exclude = f' --exclude-if-present rusticbackup  --exclude-if-present logs '
 
-        command = f'rustic -r {self.repo} backup {source} --password "" {exclude} --json 2>/dev/null'
+        command = f'rustic -r {self.repo} backup {source} {self.FinalPathRuctic}/config.json --password "" {exclude} --json 2>/dev/null'
 
         result = json.loads(ProcessUtilities.outputExecutioner(command, self.website.externalApp, True).rstrip('\n'))
 
@@ -548,7 +559,7 @@ pass = {ObsecurePassword}
 
             ### Config is saved with each email backup, snapshot of config is attached to email snapshot with parent
 
-            self.BackupConfig(SnapShotID)
+            #self.BackupConfig(SnapShotID)
 
         except BaseException as msg:
             self.UpdateStatus(f'Backup failed as no snapshot id found, error: {str(msg)}', CPBackupsV2.FAILED)
