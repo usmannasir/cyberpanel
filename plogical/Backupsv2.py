@@ -301,6 +301,9 @@ pass = {ObsecurePassword}
                     #command = f"echo '{json.dumps(Config)}' > {self.FinalPath}/config.json"
                     #ProcessUtilities.executioner(command, self.website.externalApp, True)
 
+                    command = f'chown cyberpanel:cyberpanel {self.FinalPathRuctic}/config.json'
+                    ProcessUtilities.executioner(command)
+
                     WriteToFile = open(f'{self.FinalPathRuctic}/config.json', 'w')
                     WriteToFile.write(json.dumps(Config))
                     WriteToFile.close()
