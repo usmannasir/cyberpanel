@@ -245,7 +245,7 @@ class mysqlUtilities:
             return str(msg)
 
     @staticmethod
-    def createDatabaseBackup(databaseName, tempStoragePath):
+    def createDatabaseBackup(databaseName, tempStoragePath, rustic=0, RusticRepoName = None, RusticConfigPath = None):
         try:
             passFile = "/etc/cyberpanel/mysqlPassword"
 
@@ -284,26 +284,42 @@ password=%s
 
                 os.chmod(cnfPath, 0o600)
 
-            command = 'mysqldump --defaults-extra-file=/home/cyberpanel/.my.cnf -u %s --host=%s --port %s %s' % (mysqluser, mysqlhost, mysqlport, databaseName)
+            SHELL = False
 
-            if os.path.exists(ProcessUtilities.debugPath):
-                logging.CyberCPLogFileWriter.writeToFile(command)
+            if rustic == 0:
 
-            cmd = shlex.split(command)
+                command = 'mysqldump --defaults-extra-file=/home/cyberpanel/.my.cnf -u %s --host=%s --port %s %s' % (mysqluser, mysqlhost, mysqlport, databaseName)
 
-            try:
-                errorPath = '/home/cyberpanel/error-logs.txt'
-                errorLog = open(errorPath, 'a')
-                with open(tempStoragePath+"/"+databaseName+'.sql', 'w') as f:
-                    res = subprocess.call(cmd,stdout=f, stderr=errorLog)
-                    if res != 0:
-                        logging.CyberCPLogFileWriter.writeToFile(
-                            "Database: " + databaseName + "could not be backed! [createDatabaseBackup]")
-                        return 0
-            except subprocess.CalledProcessError as msg:
-                logging.CyberCPLogFileWriter.writeToFile(
-                    "Database: " + databaseName + "could not be backed! Error: %s. [createDatabaseBackup]" % (str(msg)))
-                return 0
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.CyberCPLogFileWriter.writeToFile(command)
+
+                cmd = shlex.split(command)
+
+                try:
+                    errorPath = '/home/cyberpanel/error-logs.txt'
+                    errorLog = open(errorPath, 'a')
+                    with open(tempStoragePath + "/" + databaseName + '.sql', 'w') as f:
+                        res = subprocess.call(cmd, stdout=f, stderr=errorLog, shell=SHELL)
+                        if res != 0:
+                            logging.CyberCPLogFileWriter.writeToFile(
+                                "Database: " + databaseName + "could not be backed! [createDatabaseBackup]")
+                            return 0
+                except subprocess.CalledProcessError as msg:
+                    logging.CyberCPLogFileWriter.writeToFile(
+                        "Database: " + databaseName + "could not be backed! Error: %s. [createDatabaseBackup]" % (
+                            str(msg)))
+                    return 0
+
+            else:
+                SHELL = True
+
+                command = f'mysqldump --defaults-extra-file=/home/cyberpanel/.my.cnf -u {mysqluser} --host={mysqlhost} --port {mysqlport} --add-drop-table --allow-keywords --complete-insert --quote-names --skip-comments {databaseName} | rustic -r {RusticRepoName} backup --stdin-filename {databaseName}.sql {RusticConfigPath} --password "" --json 2>/dev/null'
+
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.CyberCPLogFileWriter.writeToFile(command)
+
+
+
             return 1
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[createDatabaseBackup]")

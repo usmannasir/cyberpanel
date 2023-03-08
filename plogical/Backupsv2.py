@@ -44,6 +44,16 @@ class CPBackupsV2:
 
         self.repo = f"rclone:{self.data['BackendName']}:{self.data['domain']}"
 
+
+    def FetchSnapShots(self):
+        try:
+            command = f'rustic -r {self.repo} snapshots --password "" --json 2>/dev/null'
+            result = json.loads(
+                ProcessUtilities.outputExecutioner(command, self.website.externalApp, True).rstrip('\n'))
+            return 1, result
+        except BaseException as msg:
+            return 0, str(msg)
+
     def SetupRcloneBackend(self, type, config):
         self.LocalRclonePath = f'/home/{self.website.domain}/.config/rclone'
         self.ConfigFilePath = f'{self.LocalRclonePath}/rclone.conf'
@@ -508,6 +518,7 @@ pass = {ObsecurePassword}
 
         command = f'rustic -r {self.repo} backup {source} {self.FinalPathRuctic}/config.json --password "" {exclude} --json 2>/dev/null'
         result = json.loads(ProcessUtilities.outputExecutioner(command, self.website.externalApp, True).rstrip('\n'))
+
 
         try:
             SnapShotID = result['id'] ## snapshot id that we need to store in db
