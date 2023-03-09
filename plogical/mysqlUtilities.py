@@ -245,7 +245,7 @@ class mysqlUtilities:
             return str(msg)
 
     @staticmethod
-    def createDatabaseBackup(databaseName, tempStoragePath, rustic=0, RusticRepoName = None):
+    def createDatabaseBackup(databaseName, tempStoragePath, rustic=0, RusticRepoName = None, externalApp = None):
         try:
             passFile = "/etc/cyberpanel/mysqlPassword"
 
@@ -313,7 +313,7 @@ password=%s
             else:
                 SHELL = True
 
-                command = f'mysqldump --defaults-extra-file=/home/cyberpanel/.my.cnf -u {mysqluser} --host={mysqlhost} --port {mysqlport} --add-drop-table --allow-keywords --complete-insert --quote-names --skip-comments {databaseName} | rustic -r {RusticRepoName} backup --stdin-filename {databaseName}.sql --password "" --json 2>/dev/null'
+                command = f'mysqldump --defaults-extra-file=/home/cyberpanel/.my.cnf -u {mysqluser} --host={mysqlhost} --port {mysqlport} --add-drop-table --allow-keywords --complete-insert --quote-names --skip-comments {databaseName} | sudo -u {externalApp} rustic -r {RusticRepoName} backup --stdin-filename {databaseName}.sql - --password "" --json 2>/dev/null'
 
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.CyberCPLogFileWriter.writeToFile(command)
