@@ -245,7 +245,7 @@ class mysqlUtilities:
             return str(msg)
 
     @staticmethod
-    def createDatabaseBackup(databaseName, tempStoragePath, rustic=0, RusticRepoName = None, RusticConfigPath = None):
+    def createDatabaseBackup(databaseName, tempStoragePath, rustic=0, RusticRepoName = None):
         try:
             passFile = "/etc/cyberpanel/mysqlPassword"
 
@@ -313,10 +313,23 @@ password=%s
             else:
                 SHELL = True
 
-                command = f'mysqldump --defaults-extra-file=/home/cyberpanel/.my.cnf -u {mysqluser} --host={mysqlhost} --port {mysqlport} --add-drop-table --allow-keywords --complete-insert --quote-names --skip-comments {databaseName} | rustic -r {RusticRepoName} backup --stdin-filename {databaseName}.sql {RusticConfigPath} --password "" --json 2>/dev/null'
+                command = f'mysqldump --defaults-extra-file=/home/cyberpanel/.my.cnf -u {mysqluser} --host={mysqlhost} --port {mysqlport} --add-drop-table --allow-keywords --complete-insert --quote-names --skip-comments {databaseName} | rustic -r {RusticRepoName} backup --stdin-filename {databaseName}.sql --password "" --json 2>/dev/null'
 
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.CyberCPLogFileWriter.writeToFile(command)
+
+                result = json.loads(
+                    ProcessUtilities.outputExecutioner(command, None, True).rstrip('\n'))
+
+                try:
+                    SnapShotID = result['id']  ## snapshot id that we need to store in db
+                    files_new = result['summary']['files_new']  ## basically new files in backup
+                    total_duration = result['summary']['total_duration']  ## time taken
+
+                    return 1, SnapShotID
+
+                except BaseException as msg:
+                    return 0, str(msg)
 
 
 
