@@ -6,8 +6,11 @@ from pathlib import Path
 from random import randint
 
 from django.shortcuts import HttpResponse, redirect
+
+from backup.backupManager import BackupManager
 from loginSystem.models import Administrator
 from loginSystem.views import loadLoginPage
+from plogical.Backupsv2 import CPBackupsV2
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 from plogical.acl import ACLManager
 from plogical.httpProc import httpProc
@@ -709,17 +712,47 @@ def add_website(request):
 
 def createV2Backup(request):
     try:
-        #user_id, current_acl = _get_user_acl(request)
-        # if ACLManager.currentContextPermission(current_acl, 'createBackup') == 0:
-        #     return ACLManager.loadError()
+        user_id, current_acl = _get_user_acl(request)
+        if ACLManager.currentContextPermission(current_acl, 'createBackup') == 0:
+            return ACLManager.loadError()
 
         # websites = ACLManager.findAllSites(current_acl, user_id)
         #
         # destinations = _get_destinations(local=True)
-        proc = httpProc(request, 'IncBackups/createV2Backup.html', 'createBackup')
+        proc = httpProc(request, 'IncBackups/createV2Backup.html')
         return proc.render()
 
-        # return def_renderer(request, 'IncBackups/createV2Backup.html', 'createBackup')
+
     except BaseException as msg:
-        final_json = json.dumps({'status': 0, 'error_message': str(msg)})
+        logging.writeToFile(str(msg))
+        return redirect(loadLoginPage)
+
+
+def createV2BackupSetup(request):
+    try:
+        userID = request.session['userID']
+
+        req_data={}
+        req_data['token'] = request.GET.get('t')
+        req_data['refresh_token'] = request.GET.get('r')
+        req_data['token_uri'] = request.GET.get('to')
+        req_data['scopes'] = request.GET.get('s')
+        req_data['accountname'] = request.GET.get('n')
+
+        cpbuv2 = CPBackupsV2(
+            {'domain': 'cyberpanel.net', 'BasePath': '/home/backup', 'BackupDatabase': 1, 'BackupData': 1,
+             'BackupEmails': 1, 'BackendName': 'testremote'})
+
+        # RcloneData = {"name": 'testremote', "host": "staging.cyberpanel.net", "user": "abcds2751", "port": "22",
+        #               "password": "hosting", }
+        cpbuv2.SetupRcloneBackend(CPBackupsV2.GDrive, req_data)
+        cpbuv2.InitiateBackup()
+
+        # wm = BackupManager()
+        # return wm.gDriveSetup(userID, request)
+
+        final_dic = {'status': 1}
+        final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
+    except KeyError:
+        return redirect(loadLoginPage)

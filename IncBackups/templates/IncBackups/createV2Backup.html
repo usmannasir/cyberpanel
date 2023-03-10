@@ -1,6 +1,6 @@
 {% extends "baseTemplate/index.html" %}
 {% load i18n %}
-{% block title %}{% trans "Create Incremental Backup" %}{% endblock %}
+{% block title %}{% trans "Create V2 Backup" %}{% endblock %}
 {% block content %}
 
     {% load static %}
@@ -9,218 +9,73 @@
     <!-- Current language: {{ LANGUAGE_CODE }} -->
 
     <div class="container">
-        <div id="page-title">
-            <h2>{% trans "Backup Website" %} - <a target="_blank" href="https://cyberpanel.net/docs/2-create-restore-incremental-backups/"
-                                                   style="height: 23px;line-height: 21px;"
-                                                   class="btn btn-border btn-alt border-red btn-link font-red" title=""><span>{% trans "Backup Docs" %}</span></a>
-            </h2>
-            <p>{% trans "This page can be used to create incremental backups for your websites." %}</p>
+
+        <div ng-controller="createV2Backups" class="panel">
+            <div class="panel-body">
+                <h3 class="title-hero">
+                    {% trans "Backup V2" %} <img ng-hide="cyberpanelLoading"
+                                                 src="{% static 'images/loading.gif' %}">
+                </h3>
+                <div class="example-box-wrapper">
+
+
+                    <form action="/" class="form-horizontal bordered-row">
+
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Select Backup Type" %} </label>
+                            <div class="col-sm-6">
+                                <select ng-change="selectbackuptype()" ng-model="v2backuptype" class="form-control">
+                                    <option >SFTP</option>
+                                    <option >GDrive</option>
+                                </select>
+                            </div>
+                        </div>
+
+                    </form>
+
+                    <div id="GdriveModal" class="modal fade" role="dialog">
+                        <div class="modal-dialog modal-lg">
+
+                            <!-- Modal content-->
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <button type="button" class="close" data-dismiss="modal">&times;
+                                    </button>
+                                    <h4 class="modal-title">{% trans "Set up account" %}</h4>
+                                </div>
+                                <div class="modal-body">
+
+                                    <form name="containerSettingsForm" action="/" class="form-horizontal">
+
+                                        <div ng-hide="installationDetailsForm" class="form-group">
+                                            <label class="col-sm-3 control-label">{% trans "Account Name" %}</label>
+                                            <div class="col-sm-6">
+                                                <input name="accountName" type="text" class="form-control"
+                                                       ng-model="accountName">
+                                            </div>
+                                        </div>
+
+                                    </form>
+
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-primary"
+                                            ng-click="setupAccount()">Save <img
+                                            ng-hide="cyberPanelLoading"
+                                            src="{% static 'images/loading.gif' %}">
+                                    </button>
+                                    <button type="button" ng-disabled="savingSettings"
+                                            class="btn btn-default" data-dismiss="modal">
+                                        Close
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-
-        <h1>habbi test v2 backup</h1>
-
-{#        <div ng-controller="createIncrementalBackups" class="panel">#}
-{#            <div class="panel-body">#}
-{#                <h3 class="title-hero">#}
-{#                    {% trans "Backup Website" %} <img ng-hide="cyberpanelLoading"#}
-{#                                                       src="{% static 'images/loading.gif' %}">#}
-{#                </h3>#}
-{#                <div class="example-box-wrapper">#}
-{##}
-{##}
-{#                    <form action="/" class="form-horizontal bordered-row">#}
-{##}
-{##}
-{#                        <div class="form-group">#}
-{#                            <label class="col-sm-3 control-label">{% trans "Select Website" %} </label>#}
-{#                            <div class="col-sm-6">#}
-{#                                <select ng-change="fetchDetails()" ng-model="websiteToBeBacked" class="form-control">#}
-{#                                    {% for items in websiteList %}#}
-{#                                        <option>{{ items }}</option>#}
-{#                                    {% endfor %}#}
-{#                                </select>#}
-{#                            </div>#}
-{#                        </div>#}
-{##}
-{#                        <div ng-hide="destination" class="form-group">#}
-{#                            <label class="col-sm-3 control-label">{% trans "Destination" %}</label>#}
-{#                            <div class="col-sm-6">#}
-{#                                <select ng-change="destinationSelection()" ng-model="backupDestinations"#}
-{#                                        class="form-control">#}
-{#                                    {% for items in destinations %}#}
-{#                                        <option>{{ items }}</option>#}
-{#                                    {% endfor %}#}
-{#                                </select>#}
-{#                            </div>#}
-{#                        </div>#}
-{##}
-{#                        <div ng-hide="destination" class="form-group">#}
-{#                            <label class="col-sm-3 control-label">{% trans "Backup Content" %}</label>#}
-{#                            <div class="col-sm-9">#}
-{#                                <div class="checkbox">#}
-{#                                    <label>#}
-{#                                        <input ng-model="websiteData" type="checkbox" value="">#}
-{#                                        Data#}
-{#                                    </label>#}
-{#                                </div>#}
-{#                            </div>#}
-{#                            <label class="col-sm-3 control-label"></label>#}
-{#                            <div class="col-sm-9">#}
-{#                                <div class="checkbox">#}
-{#                                    <label>#}
-{#                                        <input ng-model="websiteDatabases" type="checkbox" value="">#}
-{#                                        Databases#}
-{#                                    </label>#}
-{#                                </div>#}
-{#                            </div>#}
-{#                            <label class="col-sm-3 control-label"></label>#}
-{#                            <div class="col-sm-9">#}
-{#                                <div class="checkbox">#}
-{#                                    <label>#}
-{#                                        <input ng-model="websiteEmails" type="checkbox" value="">#}
-{#                                        Emails#}
-{#                                    </label>#}
-{#                                </div>#}
-{#                            </div>#}
-{#                            <!---#}
-{#                            <label class="col-sm-3 control-label"></label>#}
-{#                            <div class="col-sm-9">#}
-{#                                <div class="checkbox">#}
-{#                                    <label>#}
-{#                                        <input ng-model="websiteSSLs" type="checkbox" value="">#}
-{#                                        SSL Certificates#}
-{#                                    </label>#}
-{#                                </div>#}
-{#                            </div> -->#}
-{#                        </div>#}
-{##}
-{##}
-{#                        <!---- if Backup is running ----->#}
-{##}
-{#                        <div ng-hide="runningBackup" class="form-group">#}
-{#                            <div class="col-sm-12">#}
-{#                                <div class="col-sm-12">#}
-{#                                    <textarea ng-model="status" class="form-control" rows="10"></textarea>#}
-{#                                </div>#}
-{#                            </div>#}
-{#                        </div>#}
-{##}
-{##}
-{#                        <!---- if Backup is running------>#}
-{##}
-{#                        <div ng-hide="backupButton" class="form-group">#}
-{#                            <label class="col-sm-3 control-label"></label>#}
-{#                            <div class="col-sm-4">#}
-{#                                <button type="button" ng-click="createBackup()"#}
-{#                                        class="btn btn-primary btn-lg btn-block">{% trans "Create Backup" %}</button>#}
-{#                            </div>#}
-{#                        </div>#}
-{##}
-{##}
-{#                        <!------ List of records --------------->#}
-{##}
-{#                        <div class="form-group">#}
-{##}
-{#                            <div class="col-sm-12">#}
-{##}
-{#                                <table class="table">#}
-{#                                    <thead>#}
-{#                                    <tr>#}
-{#                                        <th>{% trans "ID" %}</th>#}
-{#                                        <th>{% trans "Date" %}</th>#}
-{#                                        <th>{% trans "Restore" %}</th>#}
-{#                                        <th>{% trans "Delete" %}</th>#}
-{#                                    </tr>#}
-{#                                    </thead>#}
-{#                                    <tbody>#}
-{#                                    <tr ng-repeat="record in records track by $index">#}
-{#                                        <td ng-bind="record.id"></td>#}
-{#                                        <td ng-bind="record.date"></td>#}
-{#                                        <td>#}
-{#                                            <a ng-click="restore(record.id)" data-toggle="modal" data-target="#settings"#}
-{#                                               ng-click='deleteCLPackage()'#}
-{#                                               class="btn btn-border btn-alt border-green btn-link font-green"#}
-{#                                               title=""><span>Restore Points</span></a>#}
-{#                                            <div id="settings" class="modal fade" role="dialog">#}
-{#                                                <div class="modal-dialog modal-lg">#}
-{##}
-{#                                                    <!-- Modal content-->#}
-{#                                                    <div class="modal-content">#}
-{#                                                        <div class="modal-header">#}
-{#                                                            <button type="button" class="close" data-dismiss="modal">#}
-{#                                                                &times;#}
-{#                                                            </button>#}
-{#                                                            <h4 class="modal-title">Restore Points#}
-{#                                                                <img ng-hide="cyberpanelLoading"#}
-{#                                                       src="{% static 'images/loading.gif' %}">#}
-{#                                                            </h4>#}
-{#                                                        </div>#}
-{#                                                        <div class="modal-body">#}
-{##}
-{#                                                            <table class="table">#}
-{#                                                                <thead>#}
-{#                                                                <tr>#}
-{#                                                                    <th>{% trans "Job ID" %}</th>#}
-{#                                                                    <th>{% trans "Snapshot ID" %}</th>#}
-{#                                                                    <th>{% trans "Type" %}</th>#}
-{#                                                                    <th>{% trans "Destination" %}</th>#}
-{#                                                                    <th>{% trans "Action" %}</th>#}
-{#                                                                </tr>#}
-{#                                                                </thead>#}
-{#                                                                <tbody>#}
-{#                                                                <tr ng-repeat="job in jobs track by $index">#}
-{#                                                                    <td ng-bind="job.id"></td>#}
-{#                                                                    <td ng-bind="job.snapshotid"></td>#}
-{#                                                                    <td ng-bind="job.type"></td>#}
-{#                                                                    <td ng-bind="job.destination"></td>#}
-{#                                                                    <td>#}
-{#                                                                        <a ng-click="restorePoint(job.id, 0)" class="btn btn-border btn-alt border-green btn-link font-green"#}
-{#                                                                           title=""><span>Restore</span></a>#}
-{#                                                                    </td>#}
-{#                                                                </tr>#}
-{#                                                                </tbody>#}
-{#                                                            </table>#}
-{##}
-{#                                                            <div ng-hide="restoreSt" class="form-group">#}
-{#                                                                <div class="col-sm-12">#}
-{#                                                                    <div class="col-sm-12">#}
-{#                                                                        <textarea ng-model="status"#}
-{#                                                                                  class="form-control"#}
-{#                                                                                  rows="7"></textarea>#}
-{#                                                                    </div>#}
-{#                                                                </div>#}
-{#                                                            </div>#}
-{##}
-{#                                                        </div>#}
-{#                                                        <div class="modal-footer">#}
-{#                                                            <button type="button" ng-disabled="savingSettings"#}
-{#                                                                    class="btn btn-default" data-dismiss="modal">#}
-{#                                                                Close#}
-{#                                                            </button>#}
-{#                                                        </div>#}
-{#                                                    </div>#}
-{#                                                </div>#}
-{#                                            </div>#}
-{#                                        </td>#}
-{#                                        <a href="">#}
-{#                                            <td ng-click="deleteBackup(record.id)"><img#}
-{#                                                    src="{% static 'images/delete.png' %}"></td>#}
-{#                                        </a>#}
-{#                                    </tr>#}
-{#                                    </tbody>#}
-{#                                </table>#}
-{#                            </div>#}
-{#                        </div>#}
-{##}
-{#                        <!------ List of records --------------->#}
-{##}
-{##}
-{#                    </form>#}
-{##}
-{##}
-{#                </div>#}
-{#            </div>#}
-{#        </div>#}
 
 
     </div>

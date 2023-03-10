@@ -1142,3 +1142,24 @@ app.controller('restoreRemoteBackupsInc', function ($scope, $http, $timeout) {
 
 
 });
+
+
+app.controller('createV2Backups', function ($scope, $http, $timeout){
+    $scope.cyberpanelLoading = true;
+    $scope.selectbackuptype = function () {
+
+        $scope.cyberpanelLoading = false;
+
+        var backuptype = $scope.v2backuptype
+        if (backuptype === 'GDrive')
+        {
+            $scope.cyberpanelLoading = true;
+            $('#GdriveModal').modal('show');
+        }
+    }
+
+
+    $scope.setupAccount = function(){
+        window.open("https://platform.cyberpersons.com/gDrive?name=" + $scope.accountName + '&server=' + window.location.href + 'Setup');
+    };
+});

@@ -24,5 +24,6 @@ urlpatterns = [
     url(r'^addWebsite$', views.add_website, name='addWebsite'),
     ### V2 Backups URls
     url(r'^createV2Backup$', views.createV2Backup, name='createV2Backup'),
+    url(r'^createV2BackupSetup$', views.createV2BackupSetup, name='createV2BackupSetup'),
 
 ]

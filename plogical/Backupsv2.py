@@ -28,6 +28,7 @@ class CPBackupsV2:
     ### RCLONE BACKEND TYPES
     SFTP = 1
     LOCAL = 2
+    GDrive = 3
 
     RUSTIC_PATH = '/usr/bin/rustic'
     RCLONE_CONFIG = '/root/.config/rclone/rclone.conf'
@@ -63,6 +64,22 @@ user = {config["user"]}
 pass = {ObsecurePassword}
 '''
 
+            command = f"echo '{content}' > {self.ConfigFilePath}"
+            ProcessUtilities.executioner(command, self.website.externalApp, True)
+
+            command = f"chmod 600 {self.ConfigFilePath}"
+            ProcessUtilities.executioner(command, self.website.externalApp)
+        elif type == CPBackupsV2.GDrive:
+            ## config = {"name":, "host":, "user":, "port":, "path":, "password":,}
+            command = f'rclone obscure {config["password"]}'
+            ObsecurePassword = ProcessUtilities.outputExecutioner(command).rstrip('\n')
+
+            content = f'''[{config["name"]}]
+type = sftp
+host = {config["host"]}
+user = {config["user"]}
+pass = {ObsecurePassword}
+'''
             command = f"echo '{content}' > {self.ConfigFilePath}"
             ProcessUtilities.executioner(command, self.website.externalApp, True)
 
