@@ -44,6 +44,17 @@ class CPBackupsV2:
         ## Set up the repo name to be used
 
         self.repo = f"rclone:{self.data['BackendName']}:{self.data['domain']}"
+        self.snapshots = []
+
+
+    def FetchSnapShots(self):
+        try:
+            command = f'rustic -r {self.repo} snapshots --password "" --json 2>/dev/null'
+            result = json.loads(
+                ProcessUtilities.outputExecutioner(command, self.website.externalApp, True).rstrip('\n'))
+            return 1, result
+        except BaseException as msg:
+            return 0, str(msg)
 
     def SetupRcloneBackend(self, type, config):
         self.LocalRclonePath = f'/home/{self.website.domain}/.config/rclone'
@@ -113,9 +124,8 @@ pass = {ObsecurePassword}
             self.buv2.website.BackupLock = 0
             self.buv2.website.save()
 
-
     ## parent is used to link this snapshot with master snapshot
-    def BackupConfig(self, parent):
+    def BackupConfig(self):
         ### Backup config file to rustic
 
         command = f'chown {self.website.externalApp}:{self.website.externalApp} {self.FinalPathRuctic}'
@@ -127,8 +137,37 @@ pass = {ObsecurePassword}
         #command = f'chown cyberpanel:cyberpanel {self.FinalPathRuctic}'
         #ProcessUtilities.executioner(command)
 
-        command = f'rustic -r {self.repo} backup {self.FinalPathRuctic}/config.json --password "" --parent {parent}'
+        command = f'chown {self.website.externalApp}:{self.website.externalApp} {self.FinalPathRuctic}/config.json'
         ProcessUtilities.executioner(command)
+
+        command = f'rustic -r {self.repo} backup {self.FinalPathRuctic}/config.json --json --password "" 2>/dev/null'
+        result = json.loads(ProcessUtilities.outputExecutioner(command, self.website.externalApp, True).rstrip('\n'))
+
+        try:
+            SnapShotID = result['id']  ## snapshot id that we need to store in db
+            files_new = result['summary']['files_new']  ## basically new files in backup
+            total_duration = result['summary']['total_duration']  ## time taken
+
+            self.snapshots.append(SnapShotID)
+
+        except BaseException as msg:
+            self.UpdateStatus(f'Backup failed as no snapshot id found, error: {str(msg)}', CPBackupsV2.FAILED)
+            return 0
+
+        command = f'chown cyberpanel:cyberpanel {self.FinalPathRuctic}/config.json'
+        ProcessUtilities.executioner(command)
+
+    def MergeSnapshots(self):
+        snapshots = ''
+        for snapshot in self.snapshots:
+            snapshots= f'{snapshots} {snapshot}'
+
+
+        command = f'rustic -r {self.repo} merge {snapshots}  --password "" --json 2>/dev/null'
+        result = json.loads(ProcessUtilities.outputExecutioner(command, self.website.externalApp, True).rstrip('\n'))
+
+        command = f'rustic -r {self.repo} forget {snapshots}  --password ""'
+        result = ProcessUtilities.outputExecutioner(command, self.website.externalApp, True)
 
     def InitiateBackup(self):
 
@@ -302,12 +341,17 @@ pass = {ObsecurePassword}
                     #command = f"echo '{json.dumps(Config)}' > {self.FinalPath}/config.json"
                     #ProcessUtilities.executioner(command, self.website.externalApp, True)
 
+                    command = f'chown cyberpanel:cyberpanel {self.FinalPathRuctic}/config.json'
+                    ProcessUtilities.executioner(command)
+
                     WriteToFile = open(f'{self.FinalPathRuctic}/config.json', 'w')
                     WriteToFile.write(json.dumps(Config))
                     WriteToFile.close()
 
                     command = f"chmod 600 {self.FinalPathRuctic}/config.json"
                     ProcessUtilities.executioner(command)
+
+                    self.BackupConfig()
 
 
                     self.UpdateStatus('Backup config created,5', CPBackupsV2.RUNNING)
@@ -330,16 +374,18 @@ pass = {ObsecurePassword}
                             return 0
                         self.UpdateStatus('Website data backup completed successfully..,70', CPBackupsV2.RUNNING)
 
-                    if self.data['BackupEmails']:
-                        self.UpdateStatus('Backing up emails..,75', CPBackupsV2.RUNNING)
-                        if self.BackupEmailsRustic() == 0:
-                            return 0
-                        self.UpdateStatus('Emails backup completed successfully..,85', CPBackupsV2.RUNNING)
+                    # if self.data['BackupEmails']:
+                    #     self.UpdateStatus('Backing up emails..,75', CPBackupsV2.RUNNING)
+                    #     if self.BackupEmailsRustic() == 0:
+                    #         return 0
+                    #     self.UpdateStatus('Emails backup completed successfully..,85', CPBackupsV2.RUNNING)
 
                     ### Finally change the backup rustic folder to the website user owner
 
                     command = f'chown {self.website.externalApp}:{self.website.externalApp} {self.FinalPathRuctic}'
                     ProcessUtilities.executioner(command)
+
+                    self.MergeSnapshots()
 
                     self.UpdateStatus('Completed', CPBackupsV2.COMPLETED)
 
@@ -347,7 +393,7 @@ pass = {ObsecurePassword}
 
                     break
                 except BaseException as msg:
-                    self.UpdateStatus(f'Failed after config generation, Error: {str(msg)}', CPBackupsV2.FAILED)
+                    self.UpdateStatus(f'Failed, Error: {str(msg)}', CPBackupsV2.FAILED)
                     return 0
             else:
                 time.sleep(5)
@@ -420,42 +466,50 @@ pass = {ObsecurePassword}
 
                 CurrentDBPath = f"{self.FinalPathRuctic}/{key}.sql"
 
-                DBResult = mysqlUtilities.createDatabaseBackup(key, self.FinalPathRuctic)
+                DBResult, SnapID = mysqlUtilities.createDatabaseBackup(key, self.FinalPathRuctic, 1, self.repo, self.website.externalApp)
 
 
                 if DBResult == 1:
+                    self.snapshots.append(SnapID)
 
-                    command = f'chown {self.website.externalApp}:{self.website.externalApp} {CurrentDBPath}'
-                    ProcessUtilities.executioner(command)
+                    #command = f'chown {self.website.externalApp}:{self.website.externalApp} {CurrentDBPath}'
+                    #ProcessUtilities.executioner(command)
 
-                    command = f'rustic -r {self.repo} backup {CurrentDBPath} --password "" --json 2>/dev/null'
-                    print(f'db command rustic: {command}')
-                    result = json.loads(
-                        ProcessUtilities.outputExecutioner(command, self.website.externalApp, True).rstrip('\n'))
+                    ## Now pack config into same thing
 
-                    try:
-                        SnapShotID = result['id']  ## snapshot id that we need to store in db
-                        files_new = result['summary']['files_new']  ## basically new files in backup
-                        total_duration = result['summary']['total_duration']  ## time taken
+                    #command = f'chown {self.website.externalApp}:{self.website.externalApp} {self.FinalPathRuctic}/config.json'
+                    #ProcessUtilities.executioner(command)
 
-                        ### Config is saved with each database, snapshot of config is attached to db snapshot with parent
-
-                        self.BackupConfig(SnapShotID)
-
-                        command = f'chown cyberpanel:cyberpanel {self.FinalPathRuctic}'
-                        ProcessUtilities.executioner(command)
-
-                    except BaseException as msg:
-                        self.UpdateStatus(f'Backup failed as no snapshot id found, error: {str(msg)}',
-                                          CPBackupsV2.FAILED)
-                        return 0
-
-
-                    for dbUsers in value:
-                        print(f'User: {dbUsers["user"]}, Host: {dbUsers["host"]}, Pass: {dbUsers["password"]}')
-
-                    command = f'rm -f {CurrentDBPath}'
-                    ProcessUtilities.executioner(command)
+                    # command = f'rustic -r {self.repo} backup {CurrentDBPath} --password "" --json 2>/dev/null'
+                    # print(f'db command rustic: {command}')
+                    # result = json.loads(
+                    #     ProcessUtilities.outputExecutioner(command, self.website.externalApp, True).rstrip('\n'))
+                    #
+                    # try:
+                    #     SnapShotID = result['id']  ## snapshot id that we need to store in db
+                    #     files_new = result['summary']['files_new']  ## basically new files in backup
+                    #     total_duration = result['summary']['total_duration']  ## time taken
+                    #
+                    #     self.snapshots.append(SnapShotID)
+                    #
+                    #     ### Config is saved with each database, snapshot of config is attached to db snapshot with parent
+                    #
+                    #     #self.BackupConfig(SnapShotID)
+                    #
+                    #     command = f'chown cyberpanel:cyberpanel {self.FinalPathRuctic}'
+                    #     ProcessUtilities.executioner(command)
+                    #
+                    # except BaseException as msg:
+                    #     self.UpdateStatus(f'Backup failed as no snapshot id found, error: {str(msg)}',
+                    #                       CPBackupsV2.FAILED)
+                    #     return 0
+                    #
+                    #
+                    # for dbUsers in value:
+                    #     print(f'User: {dbUsers["user"]}, Host: {dbUsers["host"]}, Pass: {dbUsers["password"]}')
+                    #
+                    # command = f'rm -f {CurrentDBPath}'
+                    # ProcessUtilities.executioner(command)
 
                 else:
                     command = f'rm -f {CurrentDBPath}'
@@ -505,6 +559,9 @@ pass = {ObsecurePassword}
 
         source = f'/home/{self.website.domain}'
 
+        #command = f'chown {self.website.externalApp}:{self.website.externalApp} {self.FinalPathRuctic}/config.json'
+        #ProcessUtilities.executioner(command)
+
         ## Pending add user provided folders in the exclude list
 
         exclude = f' --exclude-if-present rusticbackup  --exclude-if-present logs '
@@ -512,14 +569,17 @@ pass = {ObsecurePassword}
         command = f'rustic -r {self.repo} backup {source} --password "" {exclude} --json 2>/dev/null'
         result = json.loads(ProcessUtilities.outputExecutioner(command, self.website.externalApp, True).rstrip('\n'))
 
+
         try:
             SnapShotID = result['id'] ## snapshot id that we need to store in db
             files_new = result['summary']['files_new'] ## basically new files in backup
             total_duration = result['summary']['total_duration'] ## time taken
 
+            self.snapshots.append(SnapShotID)
+
             ### Config is saved with each backup, snapshot of config is attached to data snapshot with parent
 
-            self.BackupConfig(SnapShotID)
+            #self.BackupConfig(SnapShotID)
 
         except BaseException as msg:
             self.UpdateStatus(f'Backup failed as no snapshot id found, error: {str(msg)}', CPBackupsV2.FAILED)
@@ -541,6 +601,9 @@ pass = {ObsecurePassword}
         command = f'rustic init -r {self.repo} --password ""'
         ProcessUtilities.executioner(command, self.website.externalApp)
 
+        #command = f'chown {self.website.externalApp}:{self.website.externalApp} {self.FinalPathRuctic}/config.json'
+        #ProcessUtilities.executioner(command)
+
 
         source = f'/home/vmail/{self.website.domain}'
 
@@ -548,18 +611,20 @@ pass = {ObsecurePassword}
 
         exclude = f' --exclude-if-present rusticbackup  --exclude-if-present logs '
 
-        command = f'rustic -r {self.repo} backup {source} --password "" {exclude} --json 2>/dev/null'
+        command = f'rustic -P /home/{self.website.domain}/.config/rclone/rclone.conf -r {self.repo} backup {source} --password "" {exclude} --json 2>/dev/null'
 
-        result = json.loads(ProcessUtilities.outputExecutioner(command, self.website.externalApp, True).rstrip('\n'))
+        result = json.loads(ProcessUtilities.outputExecutioner(command, None, True).rstrip('\n'))
 
         try:
             SnapShotID = result['id']  ## snapshot id that we need to store in db
             files_new = result['summary']['files_new']  ## basically new files in backup
             total_duration = result['summary']['total_duration']  ## time taken
 
+            self.snapshots.append(SnapShotID)
+
             ### Config is saved with each email backup, snapshot of config is attached to email snapshot with parent
 
-            self.BackupConfig(SnapShotID)
+            #self.BackupConfig(SnapShotID)
 
         except BaseException as msg:
             self.UpdateStatus(f'Backup failed as no snapshot id found, error: {str(msg)}', CPBackupsV2.FAILED)

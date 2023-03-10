@@ -75,14 +75,13 @@ class cyberPanel:
             logger.writeforCLI(str(msg), "Error", stack()[0][3])
             self.printStatus(0, str(msg))
 
-    def createDomain(self, masterDomain, domainName, owner, php, ssl, dkim, openBasedir):
+    def createDomain(self, masterDomain, domainName, owner, php, ssl, dkim, openBasedir, path):
         try:
 
-            path = '/home/' + masterDomain + '/public_html/' + domainName
+            complete_path = '/home/' + masterDomain + '/' + path
             phpSelection = 'PHP ' + php
 
-            result = virtualHostUtilities.createDomain(masterDomain, domainName, phpSelection, path, ssl, dkim,
-                                                       openBasedir, owner, 0)
+            result = virtualHostUtilities.createDomain(masterDomain, domainName, phpSelection, complete_path, ssl, dkim, openBasedir, owner, 0)
 
             if result[0] == 1:
                 self.printStatus(1, 'None')
@@ -920,8 +919,13 @@ def main():
             openBasedir = int(args.openBasedir)
         else:
             openBasedir = 0
+            
+        if args.path:
+            path = args.path
+        else:
+            path = "public_html/" + args.childDomain
 
-        cyberpanel.createDomain(args.masterDomain, args.childDomain, args.owner, args.php, ssl, dkim, openBasedir)
+        cyberpanel.createDomain(args.masterDomain, args.childDomain, args.owner, args.php, ssl, dkim, openBasedir, path)
     elif args.function == "deleteChild":
 
         completeCommandExample = 'cyberpanel deleteChild --childDomain cyberpanel.net'
