@@ -140,7 +140,6 @@ pass = {ObsecurePassword}
         command = f'chown cyberpanel:cyberpanel {self.FinalPathRuctic}/config.json'
         ProcessUtilities.executioner(command)
 
-
     def MergeSnapshots(self):
         snapshots = ''
         for snapshot in self.snapshots:
@@ -152,7 +151,6 @@ pass = {ObsecurePassword}
 
         command = f'rustic -r {self.repo} forget {snapshots}  --password ""'
         result = ProcessUtilities.outputExecutioner(command, self.website.externalApp, True)
-
 
     def InitiateBackup(self):
 
@@ -596,9 +594,9 @@ pass = {ObsecurePassword}
 
         exclude = f' --exclude-if-present rusticbackup  --exclude-if-present logs '
 
-        command = f'rustic -r {self.repo} backup {source} --password "" {exclude} --json 2>/dev/null'
+        command = f'rustic -P /home/{self.website.domain}/.config/rclone/rclone.conf -r {self.repo} backup {source} --password "" {exclude} --json 2>/dev/null'
 
-        result = json.loads(ProcessUtilities.outputExecutioner(command, self.website.externalApp, True).rstrip('\n'))
+        result = json.loads(ProcessUtilities.outputExecutioner(command, None, True).rstrip('\n'))
 
         try:
             SnapShotID = result['id']  ## snapshot id that we need to store in db
