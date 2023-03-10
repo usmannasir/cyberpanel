@@ -25,5 +25,6 @@ urlpatterns = [
     ### V2 Backups URls
     url(r'^createV2Backup$', views.createV2Backup, name='createV2Backup'),
     url(r'^createV2BackupSetup$', views.createV2BackupSetup, name='createV2BackupSetup'),
+    url(r'^RestoreV2backupSite$', views.RestoreV2backupSite, name='RestoreV2backupSite'),
 
 ]

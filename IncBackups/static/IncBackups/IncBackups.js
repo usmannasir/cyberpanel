@@ -172,6 +172,63 @@ app.controller('createIncrementalBackups', function ($scope, $http, $timeout) {
 
     };
 
+    // $scope.RestoreV2Backup = function () {
+    //
+    //     // $scope.status = '';
+    //     //
+    //     // $scope.cyberpanelLoading = false;
+    //     //
+    //     //
+    //     // url = "/IncrementalBackups/submitBackupCreation";
+    //
+    //
+    //     console.log($scope.websiteToBeBacked)
+    //     console.log($scope.websiteData)
+    //     var websites = document.getElementById('create-backup-select');
+    //     var selected_website = websites.options[websites.selectedIndex].innerHTML;
+    //     console.log(selected_website);
+    //
+    //     var data = {
+    //         websiteToBeBacked: $scope.websiteToBeBacked,
+    //         backupDestinations: $scope.backupDestinations,
+    //         websiteData: $scope.websiteData,
+    //         websiteEmails: $scope.websiteEmails,
+    //         websiteSSLs: $scope.websiteSSLs,
+    //         websiteDatabases: $scope.websiteDatabases
+    //
+    //     };
+    //
+    //     // var config = {
+    //     //     headers: {
+    //     //         'X-CSRFToken': getCookie('csrftoken')
+    //     //     }
+    //     // };
+    //     //
+    //     //
+    //     // $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+    //     //
+    //     //
+    //     // function ListInitialDatas(response) {
+    //     //
+    //     //     if (response.data.status === 1) {
+    //     //         $scope.tempPath = response.data.tempPath;
+    //     //         getBackupStatus();
+    //     //     } else {
+    //     //         $scope.cyberpanelLoading = true;
+    //     //         new PNotify({
+    //     //             title: 'Operation Failed!',
+    //     //             text: response.data.error_message,
+    //     //             type: 'error'
+    //     //         });
+    //     //     }
+    //     //
+    //     // }
+    //     //
+    //     // function cantLoadInitialDatas(response) {
+    //     // }
+    //
+    // };
+
     $scope.deleteBackup = function (id) {
 
 
@@ -1143,7 +1200,19 @@ app.controller('restoreRemoteBackupsInc', function ($scope, $http, $timeout) {
 
 });
 
+function RestoreV2Backup() {
 
+
+    var websites = document.getElementById('create-backup-select');
+    var selected_website = websites.options[websites.selectedIndex].innerHTML;
+    console.log(selected_website);
+    url = "/IncrementalBackups/submitBackupCreation";
+    data = {
+        website:selected_website,
+
+    }
+
+}
 app.controller('createV2Backups', function ($scope, $http, $timeout){
     $scope.cyberpanelLoading = true;
     $scope.selectbackuptype = function () {

@@ -51,6 +51,14 @@ def _get_user_acl(request):
     return user_id, current_acl
 
 
+def RestoreV2backupSite(request):
+    try:
+        userID = request.session['userID']
+        bm = BackupManager()
+        return bm.RestoreV2backupSite(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
 def create_backup(request):
 
     try:
