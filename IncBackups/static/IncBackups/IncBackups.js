@@ -1311,6 +1311,7 @@ app.controller('restorev2backupoage', function ($scope, $http, $timeout) {
         $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
 
+
         function ListInitialDatas(response) {
             $scope.backupLoading = true;
             if (response.data.status === 1) {
@@ -1320,15 +1321,33 @@ app.controller('restorev2backupoage', function ($scope, $http, $timeout) {
                 console.log(response.data.data)
                 console.log(response.data.data[0][1])
                 var snaphots = response.data.data[0][1]
-                for (var i=0; i<=snaphots.length; i++)
-                {
-                   var tml = ' <tr>\n' +
-                       '                                <td>'+ snaphots[i].id +'</td>\n' +
-                       '                                <td><button  type="button" \n' +
-                       '                                    class="btn btn-danger">Delete</button></td>\n' +
-                       '                            </tr>'
-                    $('#listsnapshots').append(tml)
 
+                for (var i = 0; i < snaphots.length; i++) {
+                    var tml = ' <tr style="">\n' +
+                        '                                <td>' + snaphots[i].id + '</td>' +
+                        '                                <td><button  type="button" \n' +
+                        '                                    class="btn btn-danger">Delete</button></td>\n' +
+                        '                                \n' +
+                        '                            </tr>' +
+                        '<tr style="border: none!important;"> <td colspan="2" style="display: inherit;max-height: 10px;background-color: transparent; border: none">\n' +
+                        '                                            <button id="' + snaphots[i].id + '" class="my-4 mx-4 btn " style="margin-bottom: 15px;margin-top: -8px;background-color: #161a69; color: white;border-radius: 6px" onclick=listpaths("' + i + '","' + snaphots[i].id + '")>+</button>\n' +
+                        '                                        </td></tr>' +
+                        '<tr style="border: none!important;">' +
+                        ' <td colspan="2" style="display: none;border: none"  id="' + i + '">' +
+                        ' <table id="inside" style="margin: 0 auto;">\n';
+
+                    for (var j = 0; j < snaphots[i].paths.length; j++) {
+                        tml += '<tr>\n' +
+                            '<td>' + snaphots[i].paths[j] + '</td>\n' +
+                            '</tr>\n';
+                    }
+
+                    tml += '</table>\n' +
+                        '</td>\n' +
+                        '</tr>\n' +
+                        '</tr>\n';
+
+                    $('#listsnapshots').append(tml);
                 }
 
                 // $scope.Snaphot_ID
@@ -1399,3 +1418,20 @@ app.controller('createV2Backups', function ($scope, $http, $timeout){
         window.open("https://platform.cyberpersons.com/gDrive?name=" + $scope.accountName + '&server=' + window.location.href + 'Setup');
     };
 });
+
+function listpaths(pathid,button){
+
+    console.log("LIST PAYH FUNCTIOB CALLED WITH ID "+ pathid);
+    var pathlist = document.getElementById(pathid)
+    if (pathlist.style.display === "none") {
+        pathlist.style.display = "revert";
+
+        document.getElementById(button).innerText="-"
+
+    } else {
+       pathlist.style.display = "none";
+
+        document.getElementById(button).innerText="+"
+
+    }
+}

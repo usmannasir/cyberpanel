@@ -7,6 +7,9 @@
 
     {% get_current_language as LANGUAGE_CODE %}
     <!-- Current language: {{ LANGUAGE_CODE }} -->
+    <style>
+
+    </style>
 
     <div class="container">
         <div id="page-title">
@@ -55,9 +58,9 @@
 
                         <table id="snapshotstable" class="table">
                             <thead>
-                            <tr>
-                                <th>{% trans "Snapshot ID" %}</th>
-                                <th>{% trans "Action" %} ></th>
+                            <tr style="border-bottom: #cccccc solid 1px!important;" >
+                                <th style="border: none">{% trans "Snapshot ID" %}</th>
+                                <th style="border: none">{% trans "Action" %} ></th>
                             </tr>
                             </thead>
                             <tbody id="listsnapshots">
