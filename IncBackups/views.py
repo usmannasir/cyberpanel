@@ -51,13 +51,7 @@ def _get_user_acl(request):
     return user_id, current_acl
 
 
-def RestoreV2backupSite(request):
-    try:
-        userID = request.session['userID']
-        bm = BackupManager()
-        return bm.RestoreV2backupSite(request, userID)
-    except KeyError:
-        return redirect(loadLoginPage)
+
 
 def create_backup(request):
 
@@ -764,3 +758,237 @@ def createV2BackupSetup(request):
         return HttpResponse(final_json)
     except KeyError:
         return redirect(loadLoginPage)
+
+
+
+
+def RestoreV2backupSite(request):
+    try:
+        userID = request.session['userID']
+        bm = BackupManager()
+        return bm.RestoreV2backupSite(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def selectwebsiteRetorev2(request):
+    import re
+    try:
+        userID = request.session['userID']
+        data = json.loads(request.body)
+        Selectedwebsite = data['Selectedwebsite']
+        admin = Administrator.objects.get(pk=userID)
+
+        obj = Websites.objects.get(domain = str(Selectedwebsite), admin = admin)
+        #/home/cyberpanel.net/.config/rclone/rclone.conf
+        path = '/home/%s/.config/rclone/rclone.conf' %(obj.domain)
+
+        command = 'cat %s'%(path)
+        result = pu.outputExecutioner(command)
+
+        if result.find('host') > -1:
+            pattern = r'\[(.*?)\]'
+            matches = re.findall(pattern, result)
+            final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": matches})
+            return HttpResponse(final_json)
+        else:
+            final_json = json.dumps({'status': 0, 'fetchStatus': 0, 'error_message': 'Could not Find repo'})
+            return HttpResponse(final_json)
+
+
+        # final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": 1})
+        # return HttpResponse(final_json)
+    except BaseException as msg:
+        final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+        final_json = json.dumps(final_dic)
+        return HttpResponse(final_json)
+
+
+def selectreporestorev2(request):
+    try:
+        userID = request.session['userID']
+        data = json.loads(request.body)
+        Selectedrepo = data['Selectedrepo']
+        Selectedwebsite= data['Selectedwebsite']
+        admin = Administrator.objects.get(pk=userID)
+
+        # f'rustic -r testremote snapshots --password "" --json 2>/dev/null'
+        # final_json = json.dumps({'status': 0, 'fetchStatus': 1, 'error_message': Selectedrepo })
+        # return HttpResponse(final_json)
+
+        vm = CPBackupsV2({'domain': Selectedwebsite, 'BackendName': Selectedrepo, })
+        status, data = vm.FetchSnapShots()
+
+        # ac=[
+        #       [
+        #         {
+        #           "hostname": "ip-172-31-15-45.eu-central-1.compute.internal",
+        #           "label": "",
+        #           "paths": [
+        #             "/home/backup/cyberpanel.net/config.json",
+        #             "/home/cyberpanel.net",
+        #             "MxS2hpJkGLVhZW.sql",
+        #             "cybe_usman.sql",
+        #             "cybe_usmans.sql",
+        #             "qf4fza8IocVVqU.sql",
+        #             "yKtbkp1THRlmBk.sql"
+        #           ]
+        #         },
+        #         [
+        #           {
+        #             "time": "2023-03-10T09:32:14.116381993+00:00",
+        #             "program_version": "rustic v0.4.4-38-g81650ff",
+        #             "tree": "b398a0c342dbba4073f24ee72fe4b25123c76db1cbc59e99d014bf545726e93b",
+        #             "paths": [
+        #               "/home/backup/cyberpanel.net/config.json",
+        #               "/home/cyberpanel.net",
+        #               "MxS2hpJkGLVhZW.sql",
+        #               "cybe_usman.sql",
+        #               "cybe_usmans.sql",
+        #               "qf4fza8IocVVqU.sql",
+        #               "yKtbkp1THRlmBk.sql"
+        #             ],
+        #             "hostname": "ip-172-31-15-45.eu-central-1.compute.internal",
+        #             "username": "",
+        #             "uid": 0,
+        #             "gid": 0,
+        #             "tags": [],
+        #             "original": "2f1003db93946aeea1dd02bea3648794fc547c61863423bfb002667079baa1e0",
+        #             "summary": {
+        #               "files_new": 0,
+        #               "files_changed": 0,
+        #               "files_unmodified": 3469,
+        #               "dirs_new": 0,
+        #               "dirs_changed": 2,
+        #               "dirs_unmodified": 659,
+        #               "data_blobs": 0,
+        #               "tree_blobs": 2,
+        #               "data_added": 1007,
+        #               "data_added_packed": 618,
+        #               "data_added_files": 0,
+        #               "data_added_files_packed": 0,
+        #               "data_added_trees": 1007,
+        #               "data_added_trees_packed": 618,
+        #               "total_files_processed": 3469,
+        #               "total_dirs_processed": 661,
+        #               "total_bytes_processed": 95956649,
+        #               "total_dirsize_processed": 1612281,
+        #               "total_duration": 0.105304887,
+        #               "command": "rustic -r rclone:testremote:cyberpanel.net merge 22fa1914edaf884d722e8ad761863aab34e5d626602911602af4051efd73c587 e305fbceddc516972d18972830e340c24b436a17c8d8df25c5ef726ca1ce462d 12366c9ed1f4b31d288e9419d91236cebf0623ac05845605193977efae1a2880 e2dcdb6e3a96ff235a813c0b60ce2c34eddb5aa0abd15a2aec9bd6dcc2bb26bb b6a4bae0ff82d6bf4863c6b1860db239c8b91f7f980217fb3296749833ee4281 4799a31682522a17286f45689205991ce2cee238f556a51c71ac823c186ea332 aa9324a2807accc30b91b6578c62a5ca752a67e3caef5f9de6a684041554db7a --password  --json",
+        #               "backup_start": "2023-03-10T09:32:14.127752385+00:00",
+        #               "backup_end": "2023-03-10T09:32:14.221686880+00:00",
+        #               "backup_duration": 0.093934495
+        #             },
+        #             "id": "2f1003db93946aeea1dd02bea3648794fc547c61863423bfb002667079baa1e0"
+        #           },
+        #           {
+        #             "time": "2023-03-10T09:32:27.903095150+00:00",
+        #             "program_version": "rustic v0.4.4-38-g81650ff",
+        #             "tree": "397ebf2e96308728763b6ed6a5415852e5b1312d4eafcdf93909521d35933a49",
+        #             "paths": [
+        #               "/home/backup/cyberpanel.net/config.json",
+        #               "/home/cyberpanel.net",
+        #               "MxS2hpJkGLVhZW.sql",
+        #               "cybe_usman.sql",
+        #               "cybe_usmans.sql",
+        #               "qf4fza8IocVVqU.sql",
+        #               "yKtbkp1THRlmBk.sql"
+        #             ],
+        #             "hostname": "ip-172-31-15-45.eu-central-1.compute.internal",
+        #             "username": "",
+        #             "uid": 0,
+        #             "gid": 0,
+        #             "tags": [],
+        #             "original": "2c899e20ad27d25a9b731c03a33e0b98d7d040eda47b6a34c97f4a3c9cbf2fc7",
+        #             "summary": {
+        #               "files_new": 0,
+        #               "files_changed": 0,
+        #               "files_unmodified": 3476,
+        #               "dirs_new": 0,
+        #               "dirs_changed": 2,
+        #               "dirs_unmodified": 673,
+        #               "data_blobs": 0,
+        #               "tree_blobs": 2,
+        #               "data_added": 1007,
+        #               "data_added_packed": 619,
+        #               "data_added_files": 0,
+        #               "data_added_files_packed": 0,
+        #               "data_added_trees": 1007,
+        #               "data_added_trees_packed": 619,
+        #               "total_files_processed": 3476,
+        #               "total_dirs_processed": 675,
+        #               "total_bytes_processed": 96567760,
+        #               "total_dirsize_processed": 1620704,
+        #               "total_duration": 0.101950563,
+        #               "command": "rustic -r rclone:testremote:cyberpanel.net merge 6340ecbae01618a1f5def5e2620d778b6dcd9fc36074edcf9b8f0e52509798ed 1de78d7916fb6391bc7445b4a77967b6bf99ad9d0ed09d473ccb80c0be412fe0 2a31010ab415940d2c7d203ecabdd85d0dcc03f74351607808bc16137ec17b29 4a8e1bc5fbf6f228f1af619d97e1864e62b7e57c62840c0ecc68d255fed06e45 a510f06887c3d8535232ccec3a99a055c33e1a0d5671929b440a1f7a3e0fb396 f1d53a4d7d706a110d945d34f69f8fbffb4ec77787ec6fd36771572ef8f91a64 dd4a7eef8c8836624f11b0f5bff25303371886aaa5de30cf8035104529f193e3 --password  --json",
+        #               "backup_start": "2023-03-10T09:32:27.913203884+00:00",
+        #               "backup_end": "2023-03-10T09:32:28.005045713+00:00",
+        #               "backup_duration": 0.091841829
+        #             },
+        #             "id": "2c899e20ad27d25a9b731c03a33e0b98d7d040eda47b6a34c97f4a3c9cbf2fc7"
+        #           },
+        #           {
+        #             "time": "2023-03-10T09:34:44.180484566+00:00",
+        #             "program_version": "rustic v0.4.4-38-g81650ff",
+        #             "tree": "0e44a3eeca24698340f4c5a852570c2c7ae35f7c881c2208478516b576caa1e9",
+        #             "paths": [
+        #               "/home/backup/cyberpanel.net/config.json",
+        #               "/home/cyberpanel.net",
+        #               "MxS2hpJkGLVhZW.sql",
+        #               "cybe_usman.sql",
+        #               "cybe_usmans.sql",
+        #               "qf4fza8IocVVqU.sql",
+        #               "yKtbkp1THRlmBk.sql"
+        #             ],
+        #             "hostname": "ip-172-31-15-45.eu-central-1.compute.internal",
+        #             "username": "",
+        #             "uid": 0,
+        #             "gid": 0,
+        #             "tags": [],
+        #             "original": "b2e3c5f38343531305538e53192c7499d81989ba98ec2356f8b578c4d8f758e6",
+        #             "summary": {
+        #               "files_new": 0,
+        #               "files_changed": 0,
+        #               "files_unmodified": 3483,
+        #               "dirs_new": 0,
+        #               "dirs_changed": 2,
+        #               "dirs_unmodified": 686,
+        #               "data_blobs": 0,
+        #               "tree_blobs": 2,
+        #               "data_added": 1007,
+        #               "data_added_packed": 617,
+        #               "data_added_files": 0,
+        #               "data_added_files_packed": 0,
+        #               "data_added_trees": 1007,
+        #               "data_added_trees_packed": 617,
+        #               "total_files_processed": 3483,
+        #               "total_dirs_processed": 688,
+        #               "total_bytes_processed": 96583806,
+        #               "total_dirsize_processed": 1628726,
+        #               "total_duration": 0.105863471,
+        #               "command": "rustic -r rclone:testremote:cyberpanel.net merge da3e8ac0d680095d7317393b5403e8745638c385e9131ad82e69c7274acfea39 6b5b6a5471c91bfafc0cdc362c2bb231cad9b349407e6ff9641159c396862d6d 34e6356574fd57f61af52806b6190c4e0b765ca6e46e2c2fbb9dc597cabeeaa3 eec2b9a55d7e6c23a5c80f9804504efd838b51881d3181372d77d47abd45ffa2 cfa880f8d28aca6ecfab0a36681146cbabece413fbea91317e7255af14feb73a ef6fe3f125710a4d7a6b1026ecc14345f68cfdea4994399d4ae5af44cc97f966 a1c1e536f51dbf7fbf1565875b233e5ea2a72953ab22df9d8ba95d1b7d29185c --password  --json",
+        #               "backup_start": "2023-03-10T09:34:44.191031543+00:00",
+        #               "backup_end": "2023-03-10T09:34:44.286348037+00:00",
+        #               "backup_duration": 0.095316494
+        #             },
+        #             "id": "b2e3c5f38343531305538e53192c7499d81989ba98ec2356f8b578c4d8f758e6"
+        #           }
+        #         ]
+        #       ]
+        #     ]
+        # id = []
+        # for item in ac[0][1]:
+        #     id.append(item['id'])
+        if status == 1:
+            final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": data})
+            return HttpResponse(final_json)
+        else:
+            # final_json = json.dumps({'status': 0, 'fetchStatus': 1, 'error_message': ac,})
+            final_json = json.dumps({'status': 0, 'fetchStatus': 1, 'error_message': 'Cannot Find!',})
+            return HttpResponse(final_json)
+
+
+    except BaseException as msg:
+        final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+        final_json = json.dumps(final_dic)
+        return HttpResponse(final_json)

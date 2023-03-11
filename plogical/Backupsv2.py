@@ -50,6 +50,7 @@ class CPBackupsV2:
     def FetchSnapShots(self):
         try:
             command = f'rustic -r {self.repo} snapshots --password "" --json 2>/dev/null'
+            # SLSkjoSCczb6wxTMCBPmBMGq/UDSpp28-u cyber5986 rustic -r rclone:None:cyberpanel.net snapshots --password "" --json 2>/dev/null
             result = json.loads(
                 ProcessUtilities.outputExecutioner(command, self.website.externalApp, True).rstrip('\n'))
             return 1, result

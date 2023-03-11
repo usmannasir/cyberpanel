@@ -1200,19 +1200,186 @@ app.controller('restoreRemoteBackupsInc', function ($scope, $http, $timeout) {
 
 });
 
-function RestoreV2Backup() {
+
+app.controller('restorev2backupoage', function ($scope, $http, $timeout) {
 
 
-    var websites = document.getElementById('create-backup-select');
-    var selected_website = websites.options[websites.selectedIndex].innerHTML;
-    console.log(selected_website);
-    url = "/IncrementalBackups/submitBackupCreation";
-    data = {
-        website:selected_website,
+    $scope.backupLoading = true;
 
+    $scope.selectwebsite = function () {
+        document.getElementById('reposelectbox').innerHTML = "";
+       $scope.backupLoading = false;
+
+        var url = "/IncrementalBackups/selectwebsiteRetorev2";
+
+        var data = {
+            Selectedwebsite: $scope.selwebsite,
+        };
+        //alert( $scope.selwebsite);
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.backupLoading = true;
+            if (response.data.status === 1) {
+
+
+
+                const selectBox = document.getElementById('reposelectbox');
+
+
+                const options = response.data.data;
+                const option = document.createElement('option');
+
+
+                option.value = 1;
+                option.text = 'Choose Repooo';
+
+                selectBox.appendChild(option);
+
+                if (options.length >= 1)
+                {
+                    for (let i = 0; i < options.length; i++) {
+
+                      const option = document.createElement('option');
+
+
+                      option.value = options[i];
+                      option.text = options[i];
+
+                      selectBox.appendChild(option);
+                    }
+
+                }
+                else {
+                     new PNotify({
+                    title: 'Error!',
+                    text: 'file empty',
+                    type: 'error'
+                });
+                }
+
+
+
+            } else {
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.backupLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+        }
     }
 
-}
+
+    $scope.selectrepo = function () {
+       $scope.backupLoading = false;
+
+        var url = "/IncrementalBackups/selectreporestorev2";
+
+        var data = {
+            Selectedrepo: $('#reposelectbox').val(),
+            Selectedwebsite: $scope.selwebsite,
+        }
+        //alert( $scope.selwebsite);
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.backupLoading = true;
+            if (response.data.status === 1) {
+
+                var data = response.data.data
+
+                console.log(response.data.data)
+                console.log(response.data.data[0][1])
+                var snaphots = response.data.data[0][1]
+                for (var i=0; i<=snaphots.length; i++)
+                {
+                   var tml = ' <tr>\n' +
+                       '                                <td>'+ snaphots[i].id +'</td>\n' +
+                       '                                <td><button  type="button" \n' +
+                       '                                    class="btn btn-danger">Delete</button></td>\n' +
+                       '                            </tr>'
+                    $('#listsnapshots').append(tml)
+
+                }
+
+                // $scope.Snaphot_ID
+
+               // var table = document.getElementById("snapshotstable");
+               //
+               //  // Loop through the data and create a new row for each item
+               //  for (var i = 0; i < data.length; i++) {
+               //    // Create a new row element
+               //    var row = table.insertRow();
+               //
+               //    // Create the first cell and set its value to the current item in the data array
+               //    var idCell = row.insertCell(0);
+               //    idCell.innerHTML = data[i];
+               //
+               //    // Create the second cell and add a delete button to it
+               //    var deleteCell = row.insertCell(1);
+               //    var deleteButton = document.createElement("button");
+               //    deleteButton.innerHTML = "Delete";
+               //    deleteButton.addEventListener("click", function() {
+               //      // Call your delete function here
+               //      console.log("Deleting item:", data[i]);
+               //    });
+               //    deleteCell.appendChild(deleteButton);
+               //  }
+            } else {
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.backupLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+        }
+    }
+
+
+
+
+
+});
+
 app.controller('createV2Backups', function ($scope, $http, $timeout){
     $scope.cyberpanelLoading = true;
     $scope.selectbackuptype = function () {
