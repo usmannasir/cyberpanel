@@ -43,8 +43,14 @@ class CPBackupsV2:
         ## Set up the repo name to be used
 
         self.repo = f"rclone:{self.data['BackendName']}:{self.data['domain']}"
+
+        ### This will contain list of all snapshots id generated and it will be merged
+
         self.snapshots = []
 
+        ##
+
+        self.StatusFile = f'/home/cyberpanel/{self.website.domain}_rustic_backup_log'
 
     def FetchSnapShots(self):
         try:
@@ -75,7 +81,7 @@ pass = {ObsecurePassword}
 '''
 
             command = f"echo '{content}' > {self.ConfigFilePath}"
-            ProcessUtilities.executioner(command, self.website.externalApp, True)
+            #ProcessUtilities.executioner(command, self.website.externalApp, True)
 
             command = f"chmod 600 {self.ConfigFilePath}"
             ProcessUtilities.executioner(command, self.website.externalApp)
@@ -87,25 +93,30 @@ pass = {ObsecurePassword}
 
     def UpdateStatus(self, message, status):
 
-        from websiteFunctions.models import Backupsv2, BackupsLogsv2
-        self.buv2 = Backupsv2.objects.get(fileName=self.buv2.fileName)
-        self.buv2.status = status
-        self.buv2.save()
-
-        BackupsLogsv2(message=message, owner=self.buv2).save()
-
         if status == CPBackupsV2.FAILED:
-            self.buv2.website.BackupLock = 0
-            self.buv2.website.save()
-
+            self.website.BackupLock = 0
+            self.website.save()
             ### delete leftover dbs if backup fails
 
             command = f'rm -f {self.FinalPathRuctic}/*.sql'
             ProcessUtilities.executioner(command, None, True)
 
+            file = open(self.StatusFile, 'a')
+            file.writelines("[" + time.strftime(
+                "%m.%d.%Y_%H-%M-%S") + ":FAILED] " + message + "\n")
+            file.close()
         elif status == CPBackupsV2.COMPLETED:
-            self.buv2.website.BackupLock = 0
-            self.buv2.website.save()
+            self.website.BackupLock = 0
+            self.website.save()
+            file = open(self.StatusFile, 'a')
+            file.writelines("[" + time.strftime(
+                "%m.%d.%Y_%H-%M-%S") + ":COMPLETED] " + message + "\n")
+            file.close()
+        else:
+            file = open(self.StatusFile, 'a')
+            file.writelines("[" + time.strftime(
+                "%m.%d.%Y_%H-%M-%S") + ":INFO] " + message + "\n")
+            file.close()
 
     ## parent is used to link this snapshot with master snapshot
     def BackupConfig(self):
@@ -139,6 +150,8 @@ pass = {ObsecurePassword}
 
         command = f'chown cyberpanel:cyberpanel {self.FinalPathRuctic}/config.json'
         ProcessUtilities.executioner(command)
+
+        return 1
 
     def MergeSnapshots(self):
         snapshots = ''
@@ -181,7 +194,6 @@ pass = {ObsecurePassword}
                 Disk1 = f"du -sm /home/{self.website.domain}/"
                 Disk2 = "2>/dev/null | awk '{print $1}'"
 
-
                 self.WebsiteDiskUsage = int(ProcessUtilities.outputExecutioner(f"{Disk1} {Disk2}", 'root', True).rstrip('\n'))
 
                 self.CurrentFreeSpaceOnDisk = int(ProcessUtilities.outputExecutioner("df -m / | awk 'NR==2 {print $4}'", 'root', True).rstrip('\n'))
@@ -195,37 +207,38 @@ pass = {ObsecurePassword}
                 statusRes, message = self.InstallRustic()
 
                 if statusRes == 0:
-                    self.UpdateStatus(f'Failed to install Rustic, error: {message}',
-                                      CPBackupsV2.FAILED)
+                    self.UpdateStatus(f'Failed to install Rustic, error: {message}', CPBackupsV2.FAILED)
                     return 0
 
 
-                self.buv2 = Backupsv2(website=self.website, fileName='backup-' + self.data['domain'] + "-" + time.strftime("%m.%d.%Y_%H-%M-%S"), status=CPBackupsV2.RUNNING, BasePath=self.data['BasePath'])
-                self.buv2.save()
+                # = Backupsv2(website=self.website, fileName='backup-' + self.data['domain'] + "-" + time.strftime("%m.%d.%Y_%H-%M-%S"), status=CPBackupsV2.RUNNING, BasePath=self.data['BasePath'])
+                #self.buv2.save()
 
-                self.FinalPath = f"{self.data['BasePath']}/{self.buv2.fileName}"
+                #self.FinalPath = f"{self.data['BasePath']}/{self.buv2.fileName}"
 
                 ### Rustic backup final path
 
                 self.FinalPathRuctic = f"{self.data['BasePath']}/{self.website.domain}"
 
 
-                command = f"mkdir -p {self.FinalPath}"
-                ProcessUtilities.executioner(command)
+                #command = f"mkdir -p {self.FinalPath}"
+                #ProcessUtilities.executioner(command)
 
-                command = f"mkdir -p {self.FinalPathRuctic}"
-                ProcessUtilities.executioner(command)
+
 
                 #command = f"chown {website.externalApp}:{website.externalApp} {self.FinalPath}"
                 #ProcessUtilities.executioner(command)
 
-                command = f'chown cyberpanel:cyberpanel {self.FinalPath}'
+                #command = f'chown cyberpanel:cyberpanel {self.FinalPath}'
+                #ProcessUtilities.executioner(command)
+
+                #command = f"chmod 711 {self.FinalPath}"
+                #ProcessUtilities.executioner(command)
+
+                command = f"mkdir -p {self.FinalPathRuctic}"
                 ProcessUtilities.executioner(command)
 
                 command = f'chown cyberpanel:cyberpanel {self.FinalPathRuctic}'
-                ProcessUtilities.executioner(command)
-
-                command = f"chmod 711 {self.FinalPath}"
                 ProcessUtilities.executioner(command)
 
                 command = f"chmod 711 {self.FinalPathRuctic}"
@@ -334,8 +347,8 @@ pass = {ObsecurePassword}
                     command = f"chmod 600 {self.FinalPathRuctic}/config.json"
                     ProcessUtilities.executioner(command)
 
-                    self.BackupConfig()
-
+                    if self.BackupConfig() == 0:
+                        return 0
 
                     self.UpdateStatus('Backup config created,5', CPBackupsV2.RUNNING)
                 except BaseException as msg:
@@ -372,8 +385,6 @@ pass = {ObsecurePassword}
 
                     self.UpdateStatus('Completed', CPBackupsV2.COMPLETED)
 
-                    print(self.FinalPath)
-
                     break
                 except BaseException as msg:
                     self.UpdateStatus(f'Failed, Error: {str(msg)}', CPBackupsV2.FAILED)
@@ -387,41 +398,6 @@ pass = {ObsecurePassword}
                     self.website = Websites.objects.get(domain=self.data['domain'])
                     self.website.BackupLock = 0
                     self.website.save()
-
-    # def BackupDataBases(self):
-    #
-    #     ### This function will backup databases of the website, also need to take care of database that we need to exclude
-    #     ### excluded databases are in a list self.data['ExcludedDatabases'] only backup databases if backupdatabase check is on
-    #     ## For example if self.data['BackupDatabase'] is one then only run this function otherwise not
-    #
-    #     command = f'chown {self.website.externalApp}:{self.website.externalApp} {self.FinalPathRuctic}'
-    #     ProcessUtilities.executioner(command)
-    #
-    #     command = f'rustic init -r {self.FinalPathRuctic} --password ""'
-    #     ProcessUtilities.executioner(command, self.website.externalApp)
-    #
-    #     command = f'chown cyberpanel:cyberpanel {self.FinalPathRuctic}'
-    #     ProcessUtilities.executioner(command)
-    #
-    #     from plogical.mysqlUtilities import mysqlUtilities
-    #
-    #     for dbs in self.config['databases']:
-    #
-    #         ### Pending: Need to only backup database present in the list of databases that need backing up
-    #
-    #         for key, value in dbs.items():
-    #             print(f'DB {key}')
-    #
-    #             if mysqlUtilities.createDatabaseBackup(key, self.FinalPath) == 0:
-    #                 self.UpdateStatus(f'Failed to create backup for database {key}.', CPBackupsV2.RUNNING)
-    #                 return 0
-    #
-    #             for dbUsers in value:
-    #                 print(f'User: {dbUsers["user"]}, Host: {dbUsers["host"]}, Pass: {dbUsers["password"]}')
-    #
-    #
-    #
-    #     return 1
 
     def BackupDataBasesRustic(self):
 
@@ -500,33 +476,7 @@ pass = {ObsecurePassword}
                     self.UpdateStatus(f'Failed to create backup for database {key}.', CPBackupsV2.FAILED)
                     return 0
 
-
         return 1
-
-    # def BackupData(self):
-    #
-    #     ### This function will backup data of the website, also need to take care of directories that we need to exclude
-    #     ### excluded directories are in a list self.data['ExcludedDirectories'] only backup data if backupdata check is on
-    #     ## For example if self.data['BackupData'] is one then only run this function otherwise not
-    #
-    #     destination = f'{self.FinalPath}/data'
-    #     source = f'/home/{self.website.domain}'
-    #
-    #     ## Pending add user provided folders in the exclude list
-    #
-    #     exclude = f'--exclude=.cache --exclude=.cache --exclude=.cache --exclude=.wp-cli ' \
-    #               f'--exclude=backup --exclude=incbackup --exclude=incbackup --exclude=logs --exclude=lscache'
-    #
-    #     command = f'mkdir -p {destination}'
-    #     ProcessUtilities.executioner(command, 'cyberpanel')
-    #
-    #     command = f'chown {self.website.externalApp}:{self.website.externalApp} {destination}'
-    #     ProcessUtilities.executioner(command)
-    #
-    #     command = f'rsync -av {exclude}  {source}/ {destination}/'
-    #     ProcessUtilities.executioner(command, self.website.externalApp)
-    #
-    #     return 1
 
     def BackupRustic(self):
 
@@ -637,6 +587,66 @@ pass = {ObsecurePassword}
     #
     #     command = f'rsync -av  {source}/ {destination}/'
     #     ProcessUtilities.executioner(command, 'vmail')
+    #
+    #     return 1
+
+    # def BackupDataBases(self):
+    #
+    #     ### This function will backup databases of the website, also need to take care of database that we need to exclude
+    #     ### excluded databases are in a list self.data['ExcludedDatabases'] only backup databases if backupdatabase check is on
+    #     ## For example if self.data['BackupDatabase'] is one then only run this function otherwise not
+    #
+    #     command = f'chown {self.website.externalApp}:{self.website.externalApp} {self.FinalPathRuctic}'
+    #     ProcessUtilities.executioner(command)
+    #
+    #     command = f'rustic init -r {self.FinalPathRuctic} --password ""'
+    #     ProcessUtilities.executioner(command, self.website.externalApp)
+    #
+    #     command = f'chown cyberpanel:cyberpanel {self.FinalPathRuctic}'
+    #     ProcessUtilities.executioner(command)
+    #
+    #     from plogical.mysqlUtilities import mysqlUtilities
+    #
+    #     for dbs in self.config['databases']:
+    #
+    #         ### Pending: Need to only backup database present in the list of databases that need backing up
+    #
+    #         for key, value in dbs.items():
+    #             print(f'DB {key}')
+    #
+    #             if mysqlUtilities.createDatabaseBackup(key, self.FinalPath) == 0:
+    #                 self.UpdateStatus(f'Failed to create backup for database {key}.', CPBackupsV2.RUNNING)
+    #                 return 0
+    #
+    #             for dbUsers in value:
+    #                 print(f'User: {dbUsers["user"]}, Host: {dbUsers["host"]}, Pass: {dbUsers["password"]}')
+    #
+    #
+    #
+    #     return 1
+
+    # def BackupData(self):
+    #
+    #     ### This function will backup data of the website, also need to take care of directories that we need to exclude
+    #     ### excluded directories are in a list self.data['ExcludedDirectories'] only backup data if backupdata check is on
+    #     ## For example if self.data['BackupData'] is one then only run this function otherwise not
+    #
+    #     destination = f'{self.FinalPath}/data'
+    #     source = f'/home/{self.website.domain}'
+    #
+    #     ## Pending add user provided folders in the exclude list
+    #
+    #     exclude = f'--exclude=.cache --exclude=.cache --exclude=.cache --exclude=.wp-cli ' \
+    #               f'--exclude=backup --exclude=incbackup --exclude=incbackup --exclude=logs --exclude=lscache'
+    #
+    #     command = f'mkdir -p {destination}'
+    #     ProcessUtilities.executioner(command, 'cyberpanel')
+    #
+    #     command = f'chown {self.website.externalApp}:{self.website.externalApp} {destination}'
+    #     ProcessUtilities.executioner(command)
+    #
+    #     command = f'rsync -av {exclude}  {source}/ {destination}/'
+    #     ProcessUtilities.executioner(command, self.website.externalApp)
     #
     #     return 1
 
