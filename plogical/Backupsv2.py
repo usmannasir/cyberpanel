@@ -28,6 +28,7 @@ class CPBackupsV2:
     ### RCLONE BACKEND TYPES
     SFTP = 1
     LOCAL = 2
+    GDrive = 3
 
     RUSTIC_PATH = '/usr/bin/rustic'
     RCLONE_CONFIG = '/root/.config/rclone/rclone.conf'
@@ -55,6 +56,7 @@ class CPBackupsV2:
     def FetchSnapShots(self):
         try:
             command = f'rustic -r {self.repo} snapshots --password "" --json 2>/dev/null'
+            # SLSkjoSCczb6wxTMCBPmBMGq/UDSpp28-u cyber5986 rustic -r rclone:None:cyberpanel.net snapshots --password "" --json 2>/dev/null
             result = json.loads(
                 ProcessUtilities.outputExecutioner(command, self.website.externalApp, True).rstrip('\n'))
             return 1, result
@@ -82,6 +84,22 @@ pass = {ObsecurePassword}
 
             command = f"echo '{content}' > {self.ConfigFilePath}"
             #ProcessUtilities.executioner(command, self.website.externalApp, True)
+
+            command = f"chmod 600 {self.ConfigFilePath}"
+            ProcessUtilities.executioner(command, self.website.externalApp)
+        elif type == CPBackupsV2.GDrive:
+            ## config = {"name":, "host":, "user":, "port":, "path":, "password":,}
+            command = f'rclone obscure {config["password"]}'
+            ObsecurePassword = ProcessUtilities.outputExecutioner(command).rstrip('\n')
+
+            content = f'''[{config["name"]}]
+type = sftp
+host = {config["host"]}
+user = {config["user"]}
+pass = {ObsecurePassword}
+'''
+            command = f"echo '{content}' > {self.ConfigFilePath}"
+            ProcessUtilities.executioner(command, self.website.externalApp, True)
 
             command = f"chmod 600 {self.ConfigFilePath}"
             ProcessUtilities.executioner(command, self.website.externalApp)

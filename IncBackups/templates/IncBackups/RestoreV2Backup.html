@@ -1,0 +1,82 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Backup Website" %}{% endblock %}
+{% block content %}
+
+    {% load static %}
+
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
+    <style>
+
+    </style>
+
+    <div class="container">
+        <div id="page-title">
+            <h2>{% trans "Restore V2 Backup Site" %} - <a  target="_blank" href="http://go.cyberpanel.net/backup" style="height: 23px;line-height: 21px;" class="btn btn-border btn-alt border-red btn-link font-red" title=""><span>{% trans "Backup Docs" %}</span></a></h2>
+            <p>{% trans "This page can be used to restore your backup sites" %}</p>
+        </div>
+
+        <div ng-controller="restorev2backupoage" class="panel">
+            <div class="panel-body">
+                <h3 class="title-hero">
+                    {% trans "Restore V2 Backup Site" %} <img ng-hide="backupLoading" src="{% static 'images/loading.gif' %}">
+                </h3>
+                <div  class="example-box-wrapper">
+
+                    <form action="/IncBackups/static" class="form-horizontal bordered-row">
+
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Select Website" %} </label>
+                            <div class="col-sm-6">
+                                <select id="create-backup-select" ng-change="selectwebsite()" ng-model="selwebsite" class="form-control">
+                                    {% for items in websiteList %}
+                                        <option value="{{ items }}">{{ items }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Select Repo" %} </label>
+                            <div class="col-sm-6">
+                                <select id="reposelectbox" ng-change="selectrepo()" ng-model="testhabbi" class="form-control">
+
+                                </select>
+                            </div>
+                        </div>
+
+                    </form>
+
+
+
+                </div>
+
+                <div ng-hide="runningSnapshot" class="form-group">
+
+                    <div  class="col-sm-12">
+
+                        <table id="snapshotstable" class="table">
+                            <thead>
+                            <tr style="border-bottom: #cccccc solid 1px!important;" >
+                                <th style="border: none">{% trans "Snapshot ID" %}</th>
+                                <th style="border: none">{% trans "Action" %} ></th>
+                            </tr>
+                            </thead>
+                            <tbody id="listsnapshots">
+
+
+                            </tbody>
+
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+
+    </div>
+
+
+{% endblock %}
