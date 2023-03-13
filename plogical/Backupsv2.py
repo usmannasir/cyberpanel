@@ -77,8 +77,6 @@ class CPBackupsV2:
             CurrentContent = ''
 
 
-        CurrentContent =
-
         if type == CPBackupsV2.SFTP:
             ## config = {"name":, "host":, "user":, "port":, "path":, "password":,}
             command = f'rclone obscure {config["password"]}'
