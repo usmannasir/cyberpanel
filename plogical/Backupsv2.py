@@ -70,16 +70,27 @@ class CPBackupsV2:
         command = f'mkdir -p {self.LocalRclonePath}'
         ProcessUtilities.executioner(command, self.website.externalApp)
 
+        command = f'cat {self.ConfigFilePath}'
+        CurrentContent = ProcessUtilities.outputExecutioner(command)
+
+        if CurrentContent.find('No such file or directory'):
+            CurrentContent = ''
+
+
+        CurrentContent =
+
         if type == CPBackupsV2.SFTP:
             ## config = {"name":, "host":, "user":, "port":, "path":, "password":,}
             command = f'rclone obscure {config["password"]}'
             ObsecurePassword = ProcessUtilities.outputExecutioner(command).rstrip('\n')
 
-            content = f'''[{config["name"]}]
+            content = f'''{CurrentContent}
+[{config["name"]}]
 type = sftp
 host = {config["host"]}
 user = {config["user"]}
 pass = {ObsecurePassword}
+
 '''
 
             command = f"echo '{content}' > {self.ConfigFilePath}"
