@@ -1201,7 +1201,7 @@ app.controller('restoreRemoteBackupsInc', function ($scope, $http, $timeout) {
 });
 
 
-app.controller('restorev2backupoage', function ($scope, $http, $timeout) {
+app.controller('restorev2backupoage', function ($scope, $http, $timeout, $compile) {
 
 
     $scope.backupLoading = true;
@@ -1214,6 +1214,7 @@ app.controller('restorev2backupoage', function ($scope, $http, $timeout) {
 
         var data = {
             Selectedwebsite: $scope.selwebsite,
+
         };
         //alert( $scope.selwebsite);
 
@@ -1289,6 +1290,46 @@ app.controller('restorev2backupoage', function ($scope, $http, $timeout) {
         }
     }
 
+    $scope.RestorePathV2 = function (SnapshotId, Path){
+
+        console.log("SnapshotId: " + SnapshotId)
+        console.log("Path: "+Path)
+        var url = "/IncrementalBackups/RestorePathV2";
+        var data ={
+            snapshotid: SnapshotId,
+            path: Path
+        }
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+            if (response.data.status === 1) {
+                $scope.SnapShotId  = response.data.SnapShotId;
+                $scope.tempPath = response.data.Path;
+
+                console.log("Returned ID on ListInitialDatas: " + $scope.SnapShotId)
+                console.log("Returned PATH on ListInitialDatas: " + $scope.tempPath)
+
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+        }
+
+
+
+    }
+
 
     $scope.selectrepo = function () {
        $scope.backupLoading = false;
@@ -1337,8 +1378,10 @@ app.controller('restorev2backupoage', function ($scope, $http, $timeout) {
                         ' <table id="inside" style="margin: 0 auto;">\n';
 
                     for (var j = 0; j < snaphots[i].paths.length; j++) {
-                        tml += '<tr>\n' +
-                            '<td>' + snaphots[i].paths[j] + '</td>\n' +
+                        tml += '<tr style="border-top: 1px #cccccc solid;display: flex;padding: 15px; justify-content: space-between;">\n' +
+                            '<td style="">' + snaphots[i].paths[j] + '</td>\n' +
+                            '<td style="">' +
+                            '<button id="' + snaphots[i].paths[j] + '" style="margin-inline: 30px; color: white!important; background-color: #3051be; border-radius: 6px;" class="btn" ng-click=\'RestorePathV2("' + snaphots[i].id + '","' + snaphots[i].paths[j] + '")\'>Restore</button></td>\n' +
                             '</tr>\n';
                     }
 
@@ -1346,8 +1389,9 @@ app.controller('restorev2backupoage', function ($scope, $http, $timeout) {
                         '</td>\n' +
                         '</tr>\n' +
                         '</tr>\n';
+                    var mp = $compile(tml)($scope);
 
-                    $('#listsnapshots').append(tml);
+                    $('#listsnapshots').append(mp);
                 }
 
                 // $scope.Snaphot_ID
@@ -1399,7 +1443,140 @@ app.controller('restorev2backupoage', function ($scope, $http, $timeout) {
 
 });
 
-app.controller('createV2Backups', function ($scope, $http, $timeout){
+app.controller('CreateV2Backup', function ($scope, $http, $timeout, $compile) {
+
+
+    $scope.backupLoading = true;
+
+    $scope.selectwebsite = function () {
+        document.getElementById('reposelectbox').innerHTML = "";
+        $scope.backupLoading = false;
+        // document.getElementById('CreateV2BackupButton').style.display = "block";
+        var url = "/IncrementalBackups/selectwebsiteRetorev2";
+
+        var data = {
+            Selectedwebsite: $scope.selwebsite,
+            Selectedrepo: $('#reposelectbox').val(),
+        };
+        //alert( $scope.selwebsite);
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.backupLoading = true;
+            if (response.data.status === 1) {
+
+
+
+                const selectBox = document.getElementById('reposelectbox');
+
+
+                const options = response.data.data;
+                const option = document.createElement('option');
+
+
+                option.value = 1;
+                option.text = 'Choose Repooo';
+
+                selectBox.appendChild(option);
+
+                if (options.length >= 1)
+                {
+                    for (let i = 0; i < options.length; i++) {
+
+                        const option = document.createElement('option');
+
+
+                        option.value = options[i];
+                        option.text = options[i];
+
+                        selectBox.appendChild(option);
+                    }
+
+                }
+                else {
+                    new PNotify({
+                        title: 'Error!',
+                        text: 'file empty',
+                        type: 'error'
+                    });
+                }
+
+
+
+            } else {
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.backupLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+        }
+    }
+
+
+    $scope.CreateV2BackupButton = function(){
+        $scope.backupLoading = false;
+
+        var url = "/IncrementalBackups/CreateV2BackupButton";
+
+        var data = {
+            Selectedwebsite: $scope.selwebsite,
+            Selectedrepo: $('#reposelectbox').val(),
+        };
+        alert($scope.selwebsite + "...... repo...." + $('#reposelectbox').val(),);
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.backupLoading = true;
+            if (response.data.status === 1) {
+
+                console.log("Returned Selectedwebsite: " + response.data.Selectedwebsite)
+                console.log("Returned Selectedrepo: " + response.data.Selectedrepo)
+
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+
+        }
+    }
+
+
+
+
+
+});
+
+app.controller('ConfigureV2Backup', function ($scope, $http, $timeout){
     $scope.cyberpanelLoading = true;
     $scope.selectbackuptype = function () {
 
@@ -1435,3 +1612,4 @@ function listpaths(pathid,button){
 
     }
 }
+

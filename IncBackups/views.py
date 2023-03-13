@@ -712,7 +712,7 @@ def add_website(request):
 
 
 
-def createV2Backup(request):
+def ConfigureV2Backup(request):
     try:
         user_id, current_acl = _get_user_acl(request)
         if ACLManager.currentContextPermission(current_acl, 'createBackup') == 0:
@@ -721,14 +721,20 @@ def createV2Backup(request):
         # websites = ACLManager.findAllSites(current_acl, user_id)
         #
         # destinations = _get_destinations(local=True)
-        proc = httpProc(request, 'IncBackups/createV2Backup.html')
+        proc = httpProc(request, 'IncBackups/ConfigureV2Backup.html')
         return proc.render()
 
 
     except BaseException as msg:
         logging.writeToFile(str(msg))
         return redirect(loadLoginPage)
-
+def CreateV2Backup(request):
+    try:
+        userID = request.session['userID']
+        bm = BackupManager()
+        return bm.CreateV2backupSite(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
 
 def createV2BackupSetup(request):
     try:
@@ -761,7 +767,22 @@ def createV2BackupSetup(request):
         return redirect(loadLoginPage)
 
 
+def CreateV2BackupButton(request):
+    import re
+    try:
+        userID = request.session['userID']
+        data = json.loads(request.body)
+        Selectedwebsite = data['Selectedwebsite']
+        Selectedrepo = data['Selectedrepo']
 
+        final_dic = {'status': 1, 'Selectedwebsite': Selectedwebsite, 'Selectedrepo': Selectedrepo}
+        final_json = json.dumps(final_dic)
+        return HttpResponse(final_json)
+
+    except BaseException as msg:
+        final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+        final_json = json.dumps(final_dic)
+        return HttpResponse(final_json)
 
 def RestoreV2backupSite(request):
     try:
@@ -771,6 +792,22 @@ def RestoreV2backupSite(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+def RestorePathV2(request):
+    import re
+    try:
+        userID = request.session['userID']
+        data = json.loads(request.body)
+        SnapShotId = data['snapshotid']
+        Path = data['path']
+
+        final_dic = {'status': 1, 'SnapShotId': SnapShotId, 'Path': Path}
+        final_json = json.dumps(final_dic)
+        return HttpResponse(final_json)
+
+    except BaseException as msg:
+        final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+        final_json = json.dumps(final_dic)
+        return HttpResponse(final_json)
 
 def selectwebsiteRetorev2(request):
     import re

@@ -723,9 +723,11 @@
                             <div class="sidebar-submenu">
 
                                 <ul>
-
-                                        <li><a href="{% url 'createV2Backup' %}"
+                                        <li><a href="{% url 'CreateV2Backup' %}"
                                                title="{% trans "Create V2 Backup" %}"><span>{% trans "Create V2 Backup" %}</span></a>
+                                        </li>
+                                        <li><a href="{% url 'ConfigureV2Backup' %}"
+                                               title="{% trans "Configure V2 Backup" %}"><span>{% trans "Configure V2 Backup" %}</span></a>
                                         </li>
                                         <li><a href="{% url 'RestoreV2backupSite' %}"
                                                    title="{% trans "Restore V2 Backup" %}"><span>{% trans "Restore V2 Backup" %}</span></a>
