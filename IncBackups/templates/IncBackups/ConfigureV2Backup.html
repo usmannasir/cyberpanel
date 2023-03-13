@@ -1,6 +1,6 @@
 {% extends "baseTemplate/index.html" %}
 {% load i18n %}
-{% block title %}{% trans "Create V2 Backup" %}{% endblock %}
+{% block title %}{% trans "Configure V2 Backup" %}{% endblock %}
 {% block content %}
 
     {% load static %}
@@ -10,7 +10,7 @@
 
     <div class="container">
 
-        <div ng-controller="createV2Backups" class="panel">
+        <div ng-controller="ConfigureV2Backup" class="panel">
             <div class="panel-body">
                 <h3 class="title-hero">
                     {% trans "Backup V2" %} <img ng-hide="cyberpanelLoading"
