@@ -71,7 +71,7 @@ class CPBackupsV2:
         ProcessUtilities.executioner(command, self.website.externalApp)
 
         command = f'cat {self.ConfigFilePath}'
-        CurrentContent = ProcessUtilities.outputExecutioner(command)
+        CurrentContent = ProcessUtilities.outputExecutioner(command, self.website.externalApp)
 
         if CurrentContent.find('No such file or directory'):
             CurrentContent = ''
