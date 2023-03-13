@@ -735,6 +735,7 @@ def createV2BackupSetup(request):
         userID = request.session['userID']
 
         req_data={}
+        req_data['name'] = 'GDrive'
         req_data['token'] = request.GET.get('t')
         req_data['refresh_token'] = request.GET.get('r')
         req_data['token_uri'] = request.GET.get('to')

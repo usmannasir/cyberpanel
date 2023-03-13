@@ -102,10 +102,14 @@ pass = {ObsecurePassword}
             ObsecurePassword = ProcessUtilities.outputExecutioner(command).rstrip('\n')
 
             content = f'''[{config["name"]}]
-type = sftp
-host = {config["host"]}
-user = {config["user"]}
-pass = {ObsecurePassword}
+type = Gdrive
+[Gdrive_Mount]
+client_id = ""
+client_secret = ""
+scope = drive
+root_folder_id = ""
+service_account_file = ""
+token = {"access_token":"{config["token"]}","token_type":"Bearer","refresh_token":"{config["refresh_token"]}"}
 '''
             command = f"echo '{content}' > {self.ConfigFilePath}"
             ProcessUtilities.executioner(command, self.website.externalApp, True)
