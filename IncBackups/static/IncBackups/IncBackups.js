@@ -1570,25 +1570,25 @@ app.controller('CreateV2Backup', function ($scope, $http, $timeout, $compile) {
 
 });
 
-app.controller('ConfigureV2Backup', function ($scope, $http, $timeout) {
+app.controller('ConfigureV2Backup', function ($scope, $http, $timeout){
     $scope.cyberpanelLoading = true;
     $scope.selectbackuptype = function () {
 
         $scope.cyberpanelLoading = false;
 
         var backuptype = $scope.v2backuptype
-        if (backuptype === 'GDrive') {
+        if (backuptype === 'GDrive')
+        {
             $scope.cyberpanelLoading = true;
             $('#GdriveModal').modal('show');
         }
     }
 
 
-    $scope.setupAccount = function () {
-        window.open("https://platform.cyberpersons.com/gDrive?name=" + $scope.accountName + '&server=' + window.location.href + 'Setup');
+    $scope.setupAccount = function(){
+        window.open("https://platform.cyberpersons.com/gDrive?name=" + $scope.accountName + '&server=' + window.location.href);
     };
 });
-
 function listpaths(pathid, button) {
 
     console.log("LIST PAYH FUNCTIOB CALLED WITH ID " + pathid);
