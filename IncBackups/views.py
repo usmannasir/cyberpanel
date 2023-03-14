@@ -23,6 +23,8 @@ from .IncBackupsControl import IncJobs
 from .models import IncJob, BackupJob, JobSites
 
 
+
+
 def def_renderer(request, templateName, args, context=None):
     proc = httpProc(request, templateName,
                     args, context)
@@ -759,10 +761,10 @@ def createV2BackupSetup(request):
 
         # wm = BackupManager()
         # return wm.gDriveSetup(userID, request)
-
-        final_dic = {'status': 1}
-        final_json = json.dumps(final_dic)
-        return HttpResponse(final_json)
+        # currentACL = ACLManager.loadedACL(userID)
+        # websitesName = ACLManager.findAllSites(currentACL, userID)
+        # proc = httpProc(request, 'IncBackups/RestoreV2Backup.html', {'websiteList': websitesName}, 'createBackup')
+        # return proc.render()
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -775,12 +777,12 @@ def CreateV2BackupButton(request):
         Selectedwebsite = data['Selectedwebsite']
         Selectedrepo = data['Selectedrepo']
 
-        final_dic = {'status': 1, 'Selectedwebsite': Selectedwebsite, 'Selectedrepo': Selectedrepo}
+        final_dic = {'status': 1, 'data': None}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
     except BaseException as msg:
-        final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+        final_dic = {'status': 0,  'error_message': str(msg)}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 

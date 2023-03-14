@@ -8,6 +8,7 @@ import requests
 sys.path.append('/usr/local/CyberCP')
 import django
 import plogical.CyberCPLogFileWriter as logging
+
 import plogical.mysqlUtilities as mysqlUtilities
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
@@ -64,6 +65,7 @@ class CPBackupsV2:
             return 0, str(msg)
 
     def SetupRcloneBackend(self, type, config):
+
         self.LocalRclonePath = f'/home/{self.website.domain}/.config/rclone'
         self.ConfigFilePath = f'{self.LocalRclonePath}/rclone.conf'
 
@@ -97,9 +99,11 @@ pass = {ObsecurePassword}
             command = f"chmod 600 {self.ConfigFilePath}"
             ProcessUtilities.executioner(command, self.website.externalApp)
         elif type == CPBackupsV2.GDrive:
-            ## config = {"name":, "host":, "user":, "port":, "path":, "password":,}
+            logging.CyberCPLogFileWriter.writeToFile('tes 2,...gdive..........in')
             command = f'rclone obscure {config["password"]}'
             ObsecurePassword = ProcessUtilities.outputExecutioner(command).rstrip('\n')
+
+            token = """{"access_token":"%s","token_type":"Bearer","refresh_token":"%s"}""" %(config["token"], config["refresh_token"])
 
             content = f'''[{config["name"]}]
 type = Gdrive
@@ -109,13 +113,14 @@ client_secret = ""
 scope = drive
 root_folder_id = ""
 service_account_file = ""
-token = {"access_token":"{config["token"]}","token_type":"Bearer","refresh_token":"{config["refresh_token"]}"}
+token = {token}
 '''
             command = f"echo '{content}' > {self.ConfigFilePath}"
             ProcessUtilities.executioner(command, self.website.externalApp, True)
 
             command = f"chmod 600 {self.ConfigFilePath}"
             ProcessUtilities.executioner(command, self.website.externalApp)
+
 
     @staticmethod
     def FetchCurrentTimeStamp():
