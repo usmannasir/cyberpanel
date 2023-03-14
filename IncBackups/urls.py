@@ -26,7 +26,7 @@ urlpatterns = [
 
     url(r'^CreateV2Backup$', views.CreateV2Backup, name='CreateV2Backup'),
     url(r'^ConfigureV2Backup$', views.ConfigureV2Backup, name='ConfigureV2Backup'),
-    url(r'^createV2BackupSetup$', views.createV2BackupSetup, name='createV2BackupSetup'),
+    url(r'^ConfigureV2BackupSetup$', views.createV2BackupSetup, name='ConfigureV2BackupSetup'),
     url(r'^RestoreV2backupSite$', views.RestoreV2backupSite, name='RestoreV2backupSite'),
     url(r'^selectwebsiteRetorev2$', views.selectwebsiteRetorev2, name='selectwebsiteRetorev2'),
     url(r'^selectreporestorev2$', views.selectreporestorev2, name='selectreporestorev2'),

@@ -825,13 +825,13 @@ app.controller('scheduleBackupInc', function ($scope, $http) {
             if (response.data.status === 1) {
                 $scope.websites = response.data.data;
 
-                if(response.data.websiteData === 1){
+                if (response.data.websiteData === 1) {
                     $scope.websiteData = true;
                 }
-                if(response.data.websiteDatabases === 1){
+                if (response.data.websiteDatabases === 1) {
                     $scope.websiteDatabases = true;
                 }
-                if(response.data.websiteEmails === 1){
+                if (response.data.websiteEmails === 1) {
                     $scope.websiteEmails = true;
                 }
 
@@ -1084,9 +1084,9 @@ app.controller('restoreRemoteBackupsInc', function ($scope, $http, $timeout) {
                     $scope.runningBackup = false;
 
                     $scope.fileName = response.data.fileName;
-                    if(response.data.status === 1){
+                    if (response.data.status === 1) {
                         $scope.status = 'Fetching status..'
-                    }else{
+                    } else {
                         $scope.status = response.data.status;
                     }
 
@@ -1208,7 +1208,7 @@ app.controller('restorev2backupoage', function ($scope, $http, $timeout, $compil
 
     $scope.selectwebsite = function () {
         document.getElementById('reposelectbox').innerHTML = "";
-       $scope.backupLoading = false;
+        $scope.backupLoading = false;
 
         var url = "/IncrementalBackups/selectwebsiteRetorev2";
 
@@ -1233,7 +1233,6 @@ app.controller('restorev2backupoage', function ($scope, $http, $timeout, $compil
             if (response.data.status === 1) {
 
 
-
                 const selectBox = document.getElementById('reposelectbox');
 
 
@@ -1246,28 +1245,25 @@ app.controller('restorev2backupoage', function ($scope, $http, $timeout, $compil
 
                 selectBox.appendChild(option);
 
-                if (options.length >= 1)
-                {
+                if (options.length >= 1) {
                     for (let i = 0; i < options.length; i++) {
 
-                      const option = document.createElement('option');
+                        const option = document.createElement('option');
 
 
-                      option.value = options[i];
-                      option.text = options[i];
+                        option.value = options[i];
+                        option.text = options[i];
 
-                      selectBox.appendChild(option);
+                        selectBox.appendChild(option);
                     }
 
+                } else {
+                    new PNotify({
+                        title: 'Error!',
+                        text: 'file empty',
+                        type: 'error'
+                    });
                 }
-                else {
-                     new PNotify({
-                    title: 'Error!',
-                    text: 'file empty',
-                    type: 'error'
-                });
-                }
-
 
 
             } else {
@@ -1290,12 +1286,12 @@ app.controller('restorev2backupoage', function ($scope, $http, $timeout, $compil
         }
     }
 
-    $scope.RestorePathV2 = function (SnapshotId, Path){
+    $scope.RestorePathV2 = function (SnapshotId, Path) {
 
         console.log("SnapshotId: " + SnapshotId)
-        console.log("Path: "+Path)
+        console.log("Path: " + Path)
         var url = "/IncrementalBackups/RestorePathV2";
-        var data ={
+        var data = {
             snapshotid: SnapshotId,
             path: Path
         }
@@ -1313,7 +1309,7 @@ app.controller('restorev2backupoage', function ($scope, $http, $timeout, $compil
         function ListInitialDatas(response) {
 
             if (response.data.status === 1) {
-                $scope.SnapShotId  = response.data.SnapShotId;
+                $scope.SnapShotId = response.data.SnapShotId;
                 $scope.tempPath = response.data.Path;
 
                 console.log("Returned ID on ListInitialDatas: " + $scope.SnapShotId)
@@ -1327,12 +1323,11 @@ app.controller('restorev2backupoage', function ($scope, $http, $timeout, $compil
         }
 
 
-
     }
 
 
     $scope.selectrepo = function () {
-       $scope.backupLoading = false;
+        $scope.backupLoading = false;
 
         var url = "/IncrementalBackups/selectreporestorev2";
 
@@ -1350,7 +1345,6 @@ app.controller('restorev2backupoage', function ($scope, $http, $timeout, $compil
 
 
         $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
-
 
 
         function ListInitialDatas(response) {
@@ -1396,27 +1390,27 @@ app.controller('restorev2backupoage', function ($scope, $http, $timeout, $compil
 
                 // $scope.Snaphot_ID
 
-               // var table = document.getElementById("snapshotstable");
-               //
-               //  // Loop through the data and create a new row for each item
-               //  for (var i = 0; i < data.length; i++) {
-               //    // Create a new row element
-               //    var row = table.insertRow();
-               //
-               //    // Create the first cell and set its value to the current item in the data array
-               //    var idCell = row.insertCell(0);
-               //    idCell.innerHTML = data[i];
-               //
-               //    // Create the second cell and add a delete button to it
-               //    var deleteCell = row.insertCell(1);
-               //    var deleteButton = document.createElement("button");
-               //    deleteButton.innerHTML = "Delete";
-               //    deleteButton.addEventListener("click", function() {
-               //      // Call your delete function here
-               //      console.log("Deleting item:", data[i]);
-               //    });
-               //    deleteCell.appendChild(deleteButton);
-               //  }
+                // var table = document.getElementById("snapshotstable");
+                //
+                //  // Loop through the data and create a new row for each item
+                //  for (var i = 0; i < data.length; i++) {
+                //    // Create a new row element
+                //    var row = table.insertRow();
+                //
+                //    // Create the first cell and set its value to the current item in the data array
+                //    var idCell = row.insertCell(0);
+                //    idCell.innerHTML = data[i];
+                //
+                //    // Create the second cell and add a delete button to it
+                //    var deleteCell = row.insertCell(1);
+                //    var deleteButton = document.createElement("button");
+                //    deleteButton.innerHTML = "Delete";
+                //    deleteButton.addEventListener("click", function() {
+                //      // Call your delete function here
+                //      console.log("Deleting item:", data[i]);
+                //    });
+                //    deleteCell.appendChild(deleteButton);
+                //  }
             } else {
                 new PNotify({
                     title: 'Error!',
@@ -1436,9 +1430,6 @@ app.controller('restorev2backupoage', function ($scope, $http, $timeout, $compil
             });
         }
     }
-
-
-
 
 
 });
@@ -1475,7 +1466,6 @@ app.controller('CreateV2Backup', function ($scope, $http, $timeout, $compile) {
             if (response.data.status === 1) {
 
 
-
                 const selectBox = document.getElementById('reposelectbox');
 
 
@@ -1488,8 +1478,7 @@ app.controller('CreateV2Backup', function ($scope, $http, $timeout, $compile) {
 
                 selectBox.appendChild(option);
 
-                if (options.length >= 1)
-                {
+                if (options.length >= 1) {
                     for (let i = 0; i < options.length; i++) {
 
                         const option = document.createElement('option');
@@ -1501,15 +1490,13 @@ app.controller('CreateV2Backup', function ($scope, $http, $timeout, $compile) {
                         selectBox.appendChild(option);
                     }
 
-                }
-                else {
+                } else {
                     new PNotify({
                         title: 'Error!',
                         text: 'file empty',
                         type: 'error'
                     });
                 }
-
 
 
             } else {
@@ -1533,7 +1520,10 @@ app.controller('CreateV2Backup', function ($scope, $http, $timeout, $compile) {
     }
 
 
-    $scope.CreateV2BackupButton = function(){
+
+
+
+    $scope.CreateV2BackupButton = function () {
         $scope.backupLoading = false;
 
         var url = "/IncrementalBackups/CreateV2BackupButton";
@@ -1542,7 +1532,7 @@ app.controller('CreateV2Backup', function ($scope, $http, $timeout, $compile) {
             Selectedwebsite: $scope.selwebsite,
             Selectedrepo: $('#reposelectbox').val(),
         };
-        alert($scope.selwebsite + "...... repo...." + $('#reposelectbox').val(),);
+
 
         var config = {
             headers: {
@@ -1550,7 +1540,7 @@ app.controller('CreateV2Backup', function ($scope, $http, $timeout, $compile) {
             }
         };
 
-
+        //alert('Done..........')
         $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
 
@@ -1558,20 +1548,24 @@ app.controller('CreateV2Backup', function ($scope, $http, $timeout, $compile) {
             $scope.backupLoading = true;
             if (response.data.status === 1) {
 
-                console.log("Returned Selectedwebsite: " + response.data.Selectedwebsite)
-                console.log("Returned Selectedrepo: " + response.data.Selectedrepo)
+                alert("....................."+response.data.status);
 
+            }
+            else {
+                alert('fail..........'+response.data.status);
             }
 
         }
 
         function cantLoadInitialDatas(response) {
-
+            $scope.backupLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
         }
     }
-
-
-
 
 
 });
@@ -1592,23 +1586,22 @@ app.controller('ConfigureV2Backup', function ($scope, $http, $timeout){
 
 
     $scope.setupAccount = function(){
-        window.open("https://platform.cyberpersons.com/gDrive?name=" + $scope.accountName + '&server=' + window.location.href);
+        window.open("https://platform.cyberpersons.com/gDrive?name=" + $scope.accountName + '&server=' + window.location.href + 'Setup');
     };
 });
+function listpaths(pathid, button) {
 
-function listpaths(pathid,button){
-
-    console.log("LIST PAYH FUNCTIOB CALLED WITH ID "+ pathid);
+    console.log("LIST PAYH FUNCTIOB CALLED WITH ID " + pathid);
     var pathlist = document.getElementById(pathid)
     if (pathlist.style.display === "none") {
         pathlist.style.display = "revert";
 
-        document.getElementById(button).innerText="-"
+        document.getElementById(button).innerText = "-"
 
     } else {
-       pathlist.style.display = "none";
+        pathlist.style.display = "none";
 
-        document.getElementById(button).innerText="+"
+        document.getElementById(button).innerText = "+"
 
     }
 }

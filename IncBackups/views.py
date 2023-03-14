@@ -23,6 +23,8 @@ from .IncBackupsControl import IncJobs
 from .models import IncJob, BackupJob, JobSites
 
 
+
+
 def def_renderer(request, templateName, args, context=None):
     proc = httpProc(request, templateName,
                     args, context)
@@ -718,23 +720,6 @@ def ConfigureV2Backup(request):
         if ACLManager.currentContextPermission(current_acl, 'createBackup') == 0:
             return ACLManager.loadError()
 
-        try:
-            req_data = {}
-            req_data['token'] = request.GET.get('t')
-            req_data['refresh_token'] = request.GET.get('r')
-            req_data['token_uri'] = request.GET.get('to')
-            req_data['scopes'] = request.GET.get('s')
-            req_data['name'] = request.GET.get('n')
-
-            cpbuv2 = CPBackupsV2(
-                {'domain': 'cyberpanel.net', 'BasePath': '/home/backup', 'BackupDatabase': 1, 'BackupData': 1,
-                 'BackupEmails': 1, 'BackendName': 'testremote'})
-
-            # RcloneData = {"name": 'testremote', "host": "staging.cyberpanel.net", "user": "abcds2751", "port": "22",
-            #               "password": "hosting", }
-            cpbuv2.SetupRcloneBackend(CPBackupsV2.GDrive, req_data)
-        except BaseException as msg:
-            logging.writeToFile(str(msg))
 
         # websites = ACLManager.findAllSites(current_acl, user_id)
         #
@@ -746,6 +731,8 @@ def ConfigureV2Backup(request):
     except BaseException as msg:
         logging.writeToFile(str(msg))
         return redirect(loadLoginPage)
+
+
 def CreateV2Backup(request):
     try:
         userID = request.session['userID']
@@ -759,6 +746,7 @@ def createV2BackupSetup(request):
         userID = request.session['userID']
 
         req_data={}
+        req_data['name'] = 'GDrive'
         req_data['token'] = request.GET.get('t')
         req_data['refresh_token'] = request.GET.get('r')
         req_data['token_uri'] = request.GET.get('to')
@@ -772,14 +760,15 @@ def createV2BackupSetup(request):
         # RcloneData = {"name": 'testremote', "host": "staging.cyberpanel.net", "user": "abcds2751", "port": "22",
         #               "password": "hosting", }
         cpbuv2.SetupRcloneBackend(CPBackupsV2.GDrive, req_data)
-        cpbuv2.InitiateBackup()
+
+        return ConfigureV2Backup(request)
 
         # wm = BackupManager()
         # return wm.gDriveSetup(userID, request)
-
-        final_dic = {'status': 1}
-        final_json = json.dumps(final_dic)
-        return HttpResponse(final_json)
+        # currentACL = ACLManager.loadedACL(userID)
+        # websitesName = ACLManager.findAllSites(currentACL, userID)
+        # proc = httpProc(request, 'IncBackups/RestoreV2Backup.html', {'websiteList': websitesName}, 'createBackup')
+        # return proc.render()
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -792,12 +781,12 @@ def CreateV2BackupButton(request):
         Selectedwebsite = data['Selectedwebsite']
         Selectedrepo = data['Selectedrepo']
 
-        final_dic = {'status': 1, 'Selectedwebsite': Selectedwebsite, 'Selectedrepo': Selectedrepo}
+        final_dic = {'status': 1, 'data': None}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
     except BaseException as msg:
-        final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+        final_dic = {'status': 0,  'error_message': str(msg)}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
