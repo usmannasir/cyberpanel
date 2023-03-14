@@ -718,6 +718,24 @@ def ConfigureV2Backup(request):
         if ACLManager.currentContextPermission(current_acl, 'createBackup') == 0:
             return ACLManager.loadError()
 
+        try:
+            req_data = {}
+            req_data['token'] = request.GET.get('t')
+            req_data['refresh_token'] = request.GET.get('r')
+            req_data['token_uri'] = request.GET.get('to')
+            req_data['scopes'] = request.GET.get('s')
+            req_data['name'] = request.GET.get('n')
+
+            cpbuv2 = CPBackupsV2(
+                {'domain': 'cyberpanel.net', 'BasePath': '/home/backup', 'BackupDatabase': 1, 'BackupData': 1,
+                 'BackupEmails': 1, 'BackendName': 'testremote'})
+
+            # RcloneData = {"name": 'testremote', "host": "staging.cyberpanel.net", "user": "abcds2751", "port": "22",
+            #               "password": "hosting", }
+            cpbuv2.SetupRcloneBackend(CPBackupsV2.GDrive, req_data)
+        except BaseException as msg:
+            logging.writeToFile(str(msg))
+
         # websites = ACLManager.findAllSites(current_acl, user_id)
         #
         # destinations = _get_destinations(local=True)

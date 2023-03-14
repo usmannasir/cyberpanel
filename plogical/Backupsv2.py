@@ -98,14 +98,15 @@ pass = {ObsecurePassword}
             ProcessUtilities.executioner(command, self.website.externalApp)
         elif type == CPBackupsV2.GDrive:
             ## config = {"name":, "host":, "user":, "port":, "path":, "password":,}
-            command = f'rclone obscure {config["password"]}'
-            ObsecurePassword = ProcessUtilities.outputExecutioner(command).rstrip('\n')
+            #command = f'rclone obscure {config["password"]}'
+            #ObsecurePassword = ProcessUtilities.outputExecutioner(command).rstrip('\n')
 
             content = f'''[{config["name"]}]
 type = sftp
-host = {config["host"]}
-user = {config["user"]}
-pass = {ObsecurePassword}
+host = hey
+user = hey
+pass = hey
+{str(self.config)}
 '''
             command = f"echo '{content}' > {self.ConfigFilePath}"
             ProcessUtilities.executioner(command, self.website.externalApp, True)
