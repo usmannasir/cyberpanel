@@ -1592,7 +1592,7 @@ app.controller('ConfigureV2Backup', function ($scope, $http, $timeout){
 
 
     $scope.setupAccount = function(){
-        window.open("https://platform.cyberpersons.com/gDrive?name=" + $scope.accountName + '&server=' + window.location.href + 'Setup');
+        window.open("https://platform.cyberpersons.com/gDrive?name=" + $scope.accountName + '&server=' + window.location.href);
     };
 });
 
