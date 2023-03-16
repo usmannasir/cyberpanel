@@ -34,10 +34,14 @@ class Renew:
                     now = datetime.now()
                     diff = finalDate - now
 
-                    if int(diff.days) >= 15:
+                    SSLProvider = x509.get_issuer().get_components()[1][1].decode('utf-8')
+
+                    print(f"Provider: {x509.get_issuer().get_components()[1][1].decode('utf-8')}, Days : {diff.days}")
+
+                    if int(diff.days) >= 15 and SSLProvider!='Denial':
                         logging.writeToFile(
                             'SSL exists for %s and is not ready to renew, skipping..' % (website.domain), 0)
-                    elif x509.get_issuer().get_components()[1][1].decode('utf-8') == 'Denial':
+                    elif SSLProvider == 'Denial':
                         logging.writeToFile(
                             'SSL exists for %s and ready to renew..' % (website.domain), 0)
                         logging.writeToFile(
@@ -45,7 +49,7 @@ class Renew:
 
                         virtualHostUtilities.issueSSL(website.domain, '/home/%s/public_html' % (website.domain),
                                                       website.adminEmail)
-                    elif x509.get_issuer().get_components()[1][1].decode('utf-8') != "Let's Encrypt":
+                    elif SSLProvider != "Let's Encrypt":
                         logging.writeToFile(
                             'Custom SSL exists for %s and ready to renew..' % (website.domain), 1)
                     else:
@@ -101,6 +105,7 @@ class Renew:
                         'SSL does not exist for %s. Obtaining now..' % (website.domain), 0)
                     virtualHostUtilities.issueSSL(website.domain, website.path,
                                                   website.master.adminEmail)
+
             self.file = logging.writeToFile('Restarting mail services for them to see new SSL.', 0)
 
             from plogical.processUtilities import ProcessUtilities
