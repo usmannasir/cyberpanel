@@ -18,9 +18,9 @@ except:
     pass
 
 from plogical.processUtilities import ProcessUtilities
+import threading as multi
 
-
-class CPBackupsV2:
+class CPBackupsV2(multi.Thread):
     PENDING_START = 0
     RUNNING = 1
     COMPLETED = 2
@@ -36,7 +36,10 @@ class CPBackupsV2:
     command = 'rclone obscure hosting'
 
     def __init__(self, data):
+        multi.Thread.__init__(self)
         self.data = data
+
+        self.function = data['function']
 
         ### set self.website as it is needed in many functions
         from websiteFunctions.models import Websites
@@ -53,9 +56,17 @@ class CPBackupsV2:
 
         self.snapshots = []
 
+
         ##
 
         self.StatusFile = f'/home/cyberpanel/{self.website.domain}_rustic_backup_log'
+
+    def run(self):
+        try:
+            if self.function == 'InitiateBackup':
+                self.InitiateBackup()
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [CPBackupsV2.run]')
 
     def FetchSnapShots(self):
         try:
@@ -145,14 +156,14 @@ token = {token}
 
             file = open(self.StatusFile, 'a')
             file.writelines("[" + time.strftime(
-                "%m.%d.%Y_%H-%M-%S") + ":FAILED] " + message + "\n")
+                "%m.%d.%Y_%H-%M-%S") + ":FAILED] " + message + "[404]" +"\n")
             file.close()
         elif status == CPBackupsV2.COMPLETED:
             self.website.BackupLock = 0
             self.website.save()
             file = open(self.StatusFile, 'a')
             file.writelines("[" + time.strftime(
-                "%m.%d.%Y_%H-%M-%S") + ":COMPLETED] " + message + "\n")
+                "%m.%d.%Y_%H-%M-%S") + ":COMPLETED] " + message + "[200]" +"\n")
             file.close()
         else:
             file = open(self.StatusFile, 'a')
