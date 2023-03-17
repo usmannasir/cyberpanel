@@ -54,7 +54,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    pi = CloudLinuxDomains(args.owner, args.name)
+    pi = CloudLinuxDomains(args.name, args.owner)
     try:
         pi.listAll()
     except:
