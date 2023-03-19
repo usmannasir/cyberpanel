@@ -1326,7 +1326,7 @@ class WebsiteManager:
                     'BucketName': BucketName
                 }
             except BaseException as msg:
-                config = {}
+                config = {'BackupType': BackupType}
                 pass
 
             svobj = RemoteBackupSchedule(RemoteBackupConfig=RemoteBackupConfigobj, Name=ScheduleName,

@@ -4,6 +4,7 @@ import os
 import sys
 import time
 import requests
+from django.http import HttpResponse
 
 sys.path.append('/usr/local/CyberCP')
 import django
@@ -112,12 +113,14 @@ pass = {ObsecurePassword}
 '''
 
             command = f"echo '{content}' > {self.ConfigFilePath}"
-            #ProcessUtilities.executioner(command, self.website.externalApp, True)
+            ProcessUtilities.executioner(command, self.website.externalApp, True)
 
             command = f"chmod 600 {self.ConfigFilePath}"
             ProcessUtilities.executioner(command, self.website.externalApp)
+
+            final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": None})
+            return HttpResponse(final_json)
         elif type == CPBackupsV2.GDrive:
-            logging.CyberCPLogFileWriter.writeToFile('tes 2,...gdive..........in')
 
             token = """{"access_token":"%s","token_type":"Bearer","refresh_token":"%s"}""" %(config["token"], config["refresh_token"])
 

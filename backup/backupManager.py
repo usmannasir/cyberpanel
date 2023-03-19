@@ -1795,3 +1795,52 @@ class BackupManager:
             data_ret = {'status': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
+
+    def CreateV2BackupStatus(self, userID=None, data=None):
+        try:
+            domain = data['domain']
+
+            statusFile = f'/home/cyberpanel/{domain}_rustic_backup_log'
+
+            if ACLManager.CheckStatusFilleLoc(statusFile):
+                pass
+            else:
+                data_ret = {'abort': 1, 'installStatus': 0, 'installationProgress': "100",
+                            'currentStatus': 'Invalid status file.'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+            #currentStatus:"cat: /home/cyberpanel/9219: No such file or directory"
+
+            statusData = ProcessUtilities.outputExecutioner("cat " + statusFile).splitlines()
+
+            lastLine = statusData[-1]
+
+            if lastLine.find('[200]') > -1:
+                command = 'rm -f ' + statusFile
+                subprocess.call(shlex.split(command))
+                data_ret = {'abort': 1, 'installStatus': 1, 'installationProgress': "100",
+                            'currentStatus': 'Successfully Installed.'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            elif lastLine.find('[404]') > -1:
+                data_ret = {'abort': 1, 'installStatus': 0, 'installationProgress': "0",
+                            'error_message': ProcessUtilities.outputExecutioner("cat " + statusFile).splitlines()}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+            else:
+                progress = lastLine.split(',')
+                currentStatus = progress[0]
+                try:
+                    installationProgress = progress[1]
+                except:
+                    installationProgress = 0
+                data_ret = {'abort': 0, 'installStatus': 0, 'installationProgress': installationProgress,
+                            'currentStatus': currentStatus}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'abort': 0, 'installStatus': 0, 'installationProgress': "0", 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)

@@ -52,6 +52,47 @@
                             </div>
                         </div>
 
+
+                        <div ng-hide="installationProgress" class="form-group">
+                            <label class="col-sm-2 control-label"></label>
+                            <div class="col-sm-7">
+
+                                <div class="alert alert-success text-center">
+                                    <h2>{$ currentStatus $}</h2>
+                                </div>
+
+                                <div class="progress">
+                                    <div id="installProgress" class="progress-bar" role="progressbar" aria-valuenow="70"
+                                         aria-valuemin="0" aria-valuemax="100" style="width:0%">
+                                        <span class="sr-only">70% Complete</span>
+                                    </div>
+                                </div>
+
+                                <div ng-hide="errorMessageBox" class="alert alert-danger">
+                                    <p>{% trans "Error message:" %} {$ errorMessage $}</p>
+                                </div>
+
+                                <div ng-hide="success" class="alert alert-success">
+                                    <p>{% trans "Website succesfully created." %}</p>
+                                </div>
+
+
+                                <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                    <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                                </div>
+
+
+                            </div>
+                        </div>
+
+                        <div ng-hide="installationProgress" class="form-group">
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-4">
+                                <button type="button" ng-disabled="goBackDisable" ng-click="goBack()"
+                                        class="btn btn-primary btn-lg">{% trans "Go Back" %}</button>
+                            </div>
+                        </div>
+
                     </form>
 
 

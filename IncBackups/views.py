@@ -721,10 +721,10 @@ def ConfigureV2Backup(request):
             return ACLManager.loadError()
 
 
-        # websites = ACLManager.findAllSites(current_acl, user_id)
+        websites = ACLManager.findAllSites(current_acl, user_id)
         #
         # destinations = _get_destinations(local=True)
-        proc = httpProc(request, 'IncBackups/ConfigureV2Backup.html')
+        proc = httpProc(request, 'IncBackups/ConfigureV2Backup.html', {'websiteList': websites})
         return proc.render()
 
 
@@ -752,23 +752,17 @@ def createV2BackupSetup(request):
         req_data['token_uri'] = request.GET.get('to')
         req_data['scopes'] = request.GET.get('s')
         req_data['accountname'] = request.GET.get('n')
+        website = request.GET.get('d')
+        # logging.writeToFile('domainname is ====%s'%(request.GET.get))
 
         cpbuv2 = CPBackupsV2(
-            {'domain': 'cyberpanel.net', 'BasePath': '/home/backup', 'BackupDatabase': 1, 'BackupData': 1,
+            {'domain': website, 'BasePath': '/home/backup', 'BackupDatabase': 1, 'BackupData': 1,
              'BackupEmails': 1, 'BackendName': 'testremote'})
 
-        # RcloneData = {"name": 'testremote', "host": "staging.cyberpanel.net", "user": "abcds2751", "port": "22",
-        #               "password": "hosting", }
         cpbuv2.SetupRcloneBackend(CPBackupsV2.GDrive, req_data)
 
         return ConfigureV2Backup(request)
 
-        # wm = BackupManager()
-        # return wm.gDriveSetup(userID, request)
-        # currentACL = ACLManager.loadedACL(userID)
-        # websitesName = ACLManager.findAllSites(currentACL, userID)
-        # proc = httpProc(request, 'IncBackups/RestoreV2Backup.html', {'websiteList': websitesName}, 'createBackup')
-        # return proc.render()
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -781,14 +775,37 @@ def CreateV2BackupButton(request):
         Selectedwebsite = data['Selectedwebsite']
         Selectedrepo = data['Selectedrepo']
 
-        final_dic = {'status': 1, 'data': None}
-        final_json = json.dumps(final_dic)
-        return HttpResponse(final_json)
+        extraArgs = {}
+
+        extraArgs['function'] = 'InitiateBackup'
+        extraArgs['BackendName'] = Selectedrepo
+        extraArgs['domain'] = Selectedwebsite
+        extraArgs['BasePath']= '/home/backup'
+        extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
+
+        background = CPBackupsV2(extraArgs)
+        background.start()
+
+        time.sleep(2)
+
+        data_ret = {'status': 1, 'installStatus': 1, 'error_message': 'None',
+                    'tempStatusPath': extraArgs['tempStatusPath']}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
 
     except BaseException as msg:
-        final_dic = {'status': 0,  'error_message': str(msg)}
-        final_json = json.dumps(final_dic)
-        return HttpResponse(final_json)
+        data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
+
+
+def CreateV2BackupStatus(request):
+    try:
+        userID = request.session['userID']
+        bm = BackupManager()
+        return bm.CreateV2BackupStatus(userID, json.loads(request.body))
+    except KeyError:
+        return redirect(loadLoginPage)
 
 def RestoreV2backupSite(request):
     try:
@@ -830,7 +847,7 @@ def selectwebsiteRetorev2(request):
         command = 'cat %s'%(path)
         result = pu.outputExecutioner(command)
 
-        if result.find('host') > -1:
+        if result.find('type') > -1:
             pattern = r'\[(.*?)\]'
             matches = re.findall(pattern, result)
             final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": matches})
@@ -842,6 +859,109 @@ def selectwebsiteRetorev2(request):
 
         # final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": 1})
         # return HttpResponse(final_json)
+    except BaseException as msg:
+        final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+        final_json = json.dumps(final_dic)
+        return HttpResponse(final_json)
+
+
+
+def ConfigureSftpV2Backup(request):
+    try:
+        userID = request.session['userID']
+        data = json.loads(request.body)
+        Selectedwebsite = data['Selectedwebsite']
+        sfptpasswd = data['sfptpasswd']
+        hostName = data['hostName']
+        admin = Administrator.objects.get(pk=userID)
+
+        req_data = {}
+        req_data['name'] = 'SFTP'
+        req_data['host'] = Selectedwebsite
+        req_data['user'] = hostName
+        req_data['password'] = sfptpasswd
+
+
+        cpbuv2 = CPBackupsV2(
+            {'domain': Selectedwebsite, 'BasePath': '/home/backup', 'BackupDatabase': 1, 'BackupData': 1,
+             'BackupEmails': 1, 'BackendName': 'SFTP', 'function': None})
+
+        cpbuv2.SetupRcloneBackend(CPBackupsV2.SFTP, req_data)
+
+        return ConfigureV2Backup(request)
+
+        # final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": None})
+        # return HttpResponse(final_json)
+
+
+    except BaseException as msg:
+        final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+        final_json = json.dumps(final_dic)
+        return HttpResponse(final_json)
+
+
+def selectwebsiteCreatev2(request):
+    import re
+    try:
+        userID = request.session['userID']
+        data = json.loads(request.body)
+        Selectedwebsite = data['Selectedwebsite']
+        admin = Administrator.objects.get(pk=userID)
+
+        obj = Websites.objects.get(domain = str(Selectedwebsite), admin = admin)
+        #/home/cyberpanel.net/.config/rclone/rclone.conf
+        path = '/home/%s/.config/rclone/rclone.conf' %(obj.domain)
+
+        command = 'cat %s'%(path)
+        CurrentContent = pu.outputExecutioner(command)
+
+
+        if CurrentContent.find('No such file or directory') > -1:
+            LocalRclonePath = f'/home/{obj.domain}/.config/rclone'
+            command = f'mkdir -p {LocalRclonePath}'
+            pu.executioner(command, obj.externalApp)
+
+            content = '''
+                   [local]
+                   type = local
+                   '''
+            command = f"echo '{content}' > {path}"
+            pu.executioner(command, obj.externalApp, True)
+
+            command = 'cat %s' % (path)
+            result = pu.outputExecutioner(command)
+
+            if result.find('type') > -1:
+                pattern = r'\[(.*?)\]'
+                matches = re.findall(pattern, result)
+                final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": matches})
+                return HttpResponse(final_json)
+            else:
+                final_json = json.dumps({'status': 0, 'fetchStatus': 0, 'error_message': 'Could not Find repo'})
+                return HttpResponse(final_json)
+        else:
+            command = 'cat %s' % (path)
+            result = pu.outputExecutioner(command)
+
+            if result.find('type') > -1:
+                pattern = r'\[(.*?)\]'
+                matches = re.findall(pattern, result)
+                final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": matches})
+                return HttpResponse(final_json)
+            else:
+                final_json = json.dumps({'status': 0, 'fetchStatus': 0, 'error_message': 'Could not Find repo'})
+                return HttpResponse(final_json)
+
+
+
+
+
+        # logging.writeToFile(str(CurrentContent))
+        # final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": None})
+        # return HttpResponse(final_json)
+        #
+
+
     except BaseException as msg:
         final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
         final_json = json.dumps(final_dic)

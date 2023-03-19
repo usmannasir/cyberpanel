@@ -32,5 +32,8 @@ urlpatterns = [
     url(r'^selectreporestorev2$', views.selectreporestorev2, name='selectreporestorev2'),
     url(r'^RestorePathV2$', views.RestorePathV2, name='RestorePathV2'),
     url(r'^CreateV2BackupButton$', views.CreateV2BackupButton, name='CreateV2BackupButton'),
+    url(r'^selectwebsiteCreatev2$', views.selectwebsiteCreatev2, name='selectwebsiteCreatev2'),
+    url(r'^CreateV2BackupStatus$', views.CreateV2BackupStatus, name='CreateV2BackupStatus'),
+    url(r'^ConfigureSftpV2Backup$', views.ConfigureSftpV2Backup, name='ConfigureSftpV2Backup'),
 
 ]
