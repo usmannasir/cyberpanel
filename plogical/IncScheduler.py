@@ -1358,6 +1358,26 @@ Automatic backup failed for %s on %s.
                 Backupobj.config = json.dumps(backupConfig)
                 Backupobj.save()
 
+                #S3 retention
+                #Needs a conversion table, because strings are stored instead of ints
+                retention_conversion = {
+                    "3 Days" : 259200,
+                    "1 Week" : 604800,
+                    "3 Weeks" : 1814400,
+                    "1 Month" : 2629743 
+                }
+                retentionSeconds = retention_conversion[Scheduleobj.fileretention]
+
+                bucket_obj = s3.Bucket(BucketName)
+                ts = time.time()
+                for file in bucket_obj.objects.all():
+                    result = float(ts - file.last_modified.timestamp())
+                    if result > retentionSeconds:
+                        BackupLogs(owner=plan, level='INFO', timeStamp=time.strftime("%b %d %Y, %H:%M:%S"),
+                                msg='File %s expired and deleted according to your retention settings.' % (
+                                    file.key)).save()
+                        file.delete()
+
             except BaseException as msg:
                 print("Version ID Error: %s"%str(msg))
         except BaseException as msg:
