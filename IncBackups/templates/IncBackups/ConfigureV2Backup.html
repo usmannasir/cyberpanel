@@ -109,6 +109,14 @@
                                         </div>
 
                                         <div ng-hide="installationDetailsForm" class="form-group">
+                                            <label class="col-sm-3 control-label">{% trans "Username" %}</label>
+                                            <div class="col-sm-6">
+                                                <input name="accountName" type="text" class="form-control"
+                                                       ng-model="UserName">
+                                            </div>
+                                        </div>
+
+                                        <div ng-hide="installationDetailsForm" class="form-group">
                                             <label class="col-sm-3 control-label">{% trans "Password" %}</label>
                                             <div class="col-sm-6">
                                                 <input name="accountName" type="text" class="form-control"

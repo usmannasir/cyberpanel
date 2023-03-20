@@ -1527,6 +1527,12 @@ app.controller('CreateV2Backup', function ($scope, $http, $timeout, $compile) {
 
     $scope.CreateV2BackupButton = function () {
         $scope.backupLoading = false;
+        $scope.installationDetailsForm = true;
+        $scope.installationProgress = false;
+        $scope.errorMessageBox = true;
+        $scope.success = true;
+        $scope.couldNotConnect = true;
+        $scope.goBackDisable = true;
 
         var url = "/IncrementalBackups/CreateV2BackupButton";
 
@@ -1554,12 +1560,15 @@ app.controller('CreateV2Backup', function ($scope, $http, $timeout, $compile) {
 
             }
             else {
+               $scope.backupLoading = true;
+                $scope.installationDetailsForm = true;
+                $scope.installationProgress = false;
+                $scope.errorMessageBox = false;
+                $scope.success = true;
+                $scope.couldNotConnect = true;
                 $scope.goBackDisable = false;
-                new PNotify({
-                    title: 'Operation Failed!',
-                    text: response.data.error_message,
-                    type: 'error'
-                });
+
+                $scope.errorMessage = response.data.error_message;
             }
 
         }
@@ -1612,8 +1621,8 @@ app.controller('CreateV2Backup', function ($scope, $http, $timeout, $compile) {
                     $scope.currentStatus = response.data.currentStatus;
                     $timeout.cancel();
 
-                } else {
-
+                }
+                else {
                     $scope.webSiteCreationLoading = true;
                     $scope.installationDetailsForm = true;
                     $scope.installationProgress = false;
@@ -1691,6 +1700,7 @@ app.controller('ConfigureV2Backup', function ($scope, $http, $timeout){
                 Selectedwebsite: $scope.selwebsite,
                 sfptpasswd: $scope.sfptpasswd,
                 hostName: $scope.hostName,
+                UserName: $scope.UserName,
             };
 
             var config = {

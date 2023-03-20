@@ -775,21 +775,16 @@ def CreateV2BackupButton(request):
         Selectedwebsite = data['Selectedwebsite']
         Selectedrepo = data['Selectedrepo']
 
-        extraArgs = {}
 
-        extraArgs['function'] = 'InitiateBackup'
-        extraArgs['BackendName'] = Selectedrepo
-        extraArgs['domain'] = Selectedwebsite
-        extraArgs['BasePath']= '/home/backup'
-        extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
 
-        background = CPBackupsV2(extraArgs)
+
+        background = CPBackupsV2({'domain': Selectedwebsite, 'BasePath': '/home/backup', 'BackupDatabase': 1, 'BackupData': 1,
+             'BackupEmails': 1, 'BackendName': Selectedrepo, 'function': 'InitiateBackup', })
         background.start()
 
         time.sleep(2)
 
-        data_ret = {'status': 1, 'installStatus': 1, 'error_message': 'None',
-                    'tempStatusPath': extraArgs['tempStatusPath']}
+        data_ret = {'status': 1, 'installStatus': 1, 'error_message': 'None',}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
@@ -873,12 +868,13 @@ def ConfigureSftpV2Backup(request):
         Selectedwebsite = data['Selectedwebsite']
         sfptpasswd = data['sfptpasswd']
         hostName = data['hostName']
+        UserName = data['UserName']
         admin = Administrator.objects.get(pk=userID)
 
         req_data = {}
         req_data['name'] = 'SFTP'
-        req_data['host'] = Selectedwebsite
-        req_data['user'] = hostName
+        req_data['host'] = hostName
+        req_data['user'] = UserName
         req_data['password'] = sfptpasswd
 
 

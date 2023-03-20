@@ -1820,7 +1820,7 @@ class BackupManager:
                 command = 'rm -f ' + statusFile
                 subprocess.call(shlex.split(command))
                 data_ret = {'abort': 1, 'installStatus': 1, 'installationProgress': "100",
-                            'currentStatus': 'Successfully Installed.'}
+                            'currentStatus': 'Successfully Created.'}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
             elif lastLine.find('[404]') > -1:
