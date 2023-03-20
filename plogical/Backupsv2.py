@@ -61,6 +61,9 @@ class CPBackupsV2(multi.Thread):
 
         self.StatusFile = f'/home/cyberpanel/{self.website.domain}_rustic_backup_log'
 
+        if os.path.exists(self.StatusFile):
+            os.remove(self.StatusFile)
+
     def run(self):
         try:
             if self.function == 'InitiateBackup':
