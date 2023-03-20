@@ -20,7 +20,7 @@ class PackagesManager:
 
     def packagesHome(self):
         proc = httpProc(self.request, 'packages/index.html',
-                        None, 'admin')
+                        None, 'createPackage')
         return proc.render()
 
     def createPacakge(self):
