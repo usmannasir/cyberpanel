@@ -34,7 +34,6 @@ except:
     pass
 import threading as multi
 
-
 class IncScheduler(multi.Thread):
     logPath = '/home/cyberpanel/incbackuplogs'
     gitFolder = '/home/cyberpanel/git'
@@ -122,7 +121,7 @@ class IncScheduler(multi.Thread):
                                     break
 
         except BaseException as msg:
-            logging.writeToFile(str(msg))
+            logging.writeToFile( "%s [startBackup]"%str(msg))
 
     @staticmethod
     def git(type):
@@ -964,29 +963,35 @@ Automatic backup failed for %s on %s.
     @staticmethod
     def RemoteBackup(function):
         try:
+            # print("....start remote backup...............")
             from websiteFunctions.models import RemoteBackupSchedule, RemoteBackupsites, WPSites
             from loginSystem.models import Administrator
             import json
             import time
             from plogical.applicationInstaller import ApplicationInstaller
             for config in RemoteBackupSchedule.objects.all():
+                # print("....start remote backup........site.......%s"%config.Name)
                 try:
                     configbakup = json.loads(config.config)
                     backuptype = configbakup['BackupType']
+                    # print("....start remote backup........site.......%s.. and bakuptype...%s" % (config.Name, backuptype))
                     if backuptype == 'Only DataBase':
                         Backuptype = "3"
                     elif backuptype == 'Only Website':
                         Backuptype = "2"
                     else:
                         Backuptype = "1"
-                except:
+                except BaseException as msg:
+                    print("....backup config type Error.%s" % str(msg))
                     continue
                 try:
-                    allRemoteBackupsiteobj = RemoteBackupsites.objects.filter(owner=config.pk)
+                    allRemoteBackupsiteobj = RemoteBackupsites.objects.filter(owner=config)
+                    # print("store site id.....%s"%str(allRemoteBackupsiteobj))
                     for i in allRemoteBackupsiteobj:
                         try:
                             backupsiteID = i.WPsites
                             wpsite = WPSites.objects.get(pk=backupsiteID)
+                            # print("site name.....%s"%wpsite.title)
                             AdminID = wpsite.owner.admin_id
                             Admin = Administrator.objects.get(pk=AdminID)
 
@@ -1395,7 +1400,7 @@ def main():
         IncScheduler.CalculateAndUpdateDiskUsage()
         return 0
 
-    if args.function == '30 Minutes' or args.function == '30 Minutes' or args.function == '1 Hour' or args.function == '6 Hours' or args.function == '12 Hours' or args.function == '1 Day' or args.function == '3 Days' or args.function == '1 Week':
+    if args.function == '30 Minutes' or args.function == '30 Minutes'or args.function == 'Daily' or args.function == '1 Hour' or args.function == '6 Hours' or args.function == '12 Hours' or args.function == '1 Day' or args.function == '3 Days' or args.function == '1 Week':
         IncScheduler.RemoteBackup(args.function)
         return 0
 

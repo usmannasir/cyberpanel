@@ -1438,12 +1438,17 @@ app.controller('CreateV2Backup', function ($scope, $http, $timeout, $compile) {
 
 
     $scope.backupLoading = true;
+    $scope.installationProgress = true;
+    $scope.errorMessageBox = true;
+    $scope.success = true;
+    $scope.couldNotConnect = true;
+    $scope.goBackDisable = true;
 
     $scope.selectwebsite = function () {
         document.getElementById('reposelectbox').innerHTML = "";
         $scope.backupLoading = false;
         // document.getElementById('CreateV2BackupButton').style.display = "block";
-        var url = "/IncrementalBackups/selectwebsiteRetorev2";
+        var url = "/IncrementalBackups/selectwebsiteCreatev2";
 
         var data = {
             Selectedwebsite: $scope.selwebsite,
@@ -1464,7 +1469,6 @@ app.controller('CreateV2Backup', function ($scope, $http, $timeout, $compile) {
         function ListInitialDatas(response) {
             $scope.backupLoading = true;
             if (response.data.status === 1) {
-
 
                 const selectBox = document.getElementById('reposelectbox');
 
@@ -1519,9 +1523,7 @@ app.controller('CreateV2Backup', function ($scope, $http, $timeout, $compile) {
         }
     }
 
-
-
-
+    var Domain;
 
     $scope.CreateV2BackupButton = function () {
         $scope.backupLoading = false;
@@ -1532,7 +1534,6 @@ app.controller('CreateV2Backup', function ($scope, $http, $timeout, $compile) {
             Selectedwebsite: $scope.selwebsite,
             Selectedrepo: $('#reposelectbox').val(),
         };
-
 
         var config = {
             headers: {
@@ -1548,11 +1549,17 @@ app.controller('CreateV2Backup', function ($scope, $http, $timeout, $compile) {
             $scope.backupLoading = true;
             if (response.data.status === 1) {
 
-                alert("....................."+response.data.status);
+                Domain = $scope.selwebsite;
+                getCreationStatus();
 
             }
             else {
-                alert('fail..........'+response.data.status);
+                $scope.goBackDisable = false;
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
             }
 
         }
@@ -1565,6 +1572,87 @@ app.controller('CreateV2Backup', function ($scope, $http, $timeout, $compile) {
                 type: 'error'
             });
         }
+    }
+
+
+    function getCreationStatus() {
+
+        url = "/IncrementalBackups/CreateV2BackupStatus";
+
+        var data = {
+            domain: Domain
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+            if (response.data.abort === 1) {
+
+                if (response.data.installStatus === 1) {
+
+                    $scope.webSiteCreationLoading = true;
+                    $scope.installationDetailsForm = true;
+                    $scope.installationProgress = false;
+                    $scope.errorMessageBox = true;
+                    $scope.success = false;
+                    $scope.couldNotConnect = true;
+                    $scope.goBackDisable = false;
+
+                    $("#installProgress").css("width", "100%");
+                    $scope.installPercentage = "100";
+                    $scope.currentStatus = response.data.currentStatus;
+                    $timeout.cancel();
+
+                } else {
+
+                    $scope.webSiteCreationLoading = true;
+                    $scope.installationDetailsForm = true;
+                    $scope.installationProgress = false;
+                    $scope.errorMessageBox = false;
+                    $scope.success = true;
+                    $scope.couldNotConnect = true;
+                    $scope.goBackDisable = false;
+
+                    $scope.errorMessage = response.data.error_message;
+
+                    $("#installProgress").css("width", "0%");
+                    $scope.installPercentage = "0";
+                    $scope.goBackDisable = false;
+
+                }
+
+            } else {
+                $scope.webSiteCreationLoading = false;
+                $("#installProgress").css("width", response.data.installationProgress + "%");
+                $scope.installPercentage = response.data.installationProgress;
+                $scope.currentStatus = response.data.currentStatus;
+                $timeout(getCreationStatus, 1000);
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+
+            $scope.webSiteCreationLoading = true;
+            $scope.installationDetailsForm = true;
+            $scope.installationProgress = false;
+            $scope.errorMessageBox = true;
+            $scope.success = true;
+            $scope.couldNotConnect = false;
+            $scope.goBackDisable = false;
+
+        }
+
+
     }
 
 
@@ -1582,12 +1670,65 @@ app.controller('ConfigureV2Backup', function ($scope, $http, $timeout){
             $scope.cyberpanelLoading = true;
             $('#GdriveModal').modal('show');
         }
+        else if(backuptype === 'SFTP')
+        {
+            $scope.cyberpanelLoading = true;
+            $('#SFTPModal').modal('show');
+        }
     }
 
 
+
     $scope.setupAccount = function(){
-        window.open("https://platform.cyberpersons.com/gDrive?name=" + $scope.accountName + '&server=' + window.location.href + 'Setup');
+        window.open("https://platform.cyberpersons.com/gDrive?name=" + $scope.accountName + '&server=' + window.location.href + 'Setup&domain=' + $scope.selwebsite);
     };
+
+    $scope.ConfigerSFTP = function (){
+            $scope.cyberpanelLoading = false;
+            var url = "/IncrementalBackups/ConfigureSftpV2Backup";
+
+            var data = {
+                Selectedwebsite: $scope.selwebsite,
+                sfptpasswd: $scope.sfptpasswd,
+                hostName: $scope.hostName,
+            };
+
+            var config = {
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+            function ListInitialDatas(response) {
+            $scope.backupLoading = true;
+            if (response.data.status === 1) {
+                location.reload()
+
+            }
+            else {
+                $scope.goBackDisable = false;
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+            function cantLoadInitialDatas(response) {
+            $scope.backupLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+        }
+    }
 });
 function listpaths(pathid, button) {
 

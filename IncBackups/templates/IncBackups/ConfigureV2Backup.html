@@ -21,6 +21,17 @@
 
                     <form action="/" class="form-horizontal bordered-row">
 
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Select Website" %} </label>
+                            <div class="col-sm-6">
+                                <select id="selwebsite" ng-change="selectwebsite()" ng-model="selwebsite" class="form-control">
+                                    {% for items in websiteList %}
+                                        <option value="{{ items }}">{{ items }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
 
                         <div class="form-group">
                             <label class="col-sm-3 control-label">{% trans "Select Backup Type" %} </label>
@@ -62,6 +73,55 @@
                                 <div class="modal-footer">
                                     <button type="button" class="btn btn-primary"
                                             ng-click="setupAccount()">Save <img
+                                            ng-hide="cyberpanelLoading"
+                                            src="{% static 'images/loading.gif' %}">
+                                    </button>
+                                    <button type="button" ng-disabled="savingSettings"
+                                            class="btn btn-default" data-dismiss="modal">
+                                        Close
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <div id="SFTPModal" class="modal fade" role="dialog">
+                        <div class="modal-dialog modal-lg">
+
+                            <!-- Modal content-->
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <button type="button" class="close" data-dismiss="modal">&times;
+                                    </button>
+                                    <h4 class="modal-title">{% trans "Set up account" %}</h4>
+                                </div>
+                                <div class="modal-body">
+
+                                    <form name="containerSettingsForm" action="/" class="form-horizontal">
+
+                                        <div ng-hide="installationDetailsForm" class="form-group">
+                                            <label class="col-sm-3 control-label">{% trans "Host Name" %}</label>
+                                            <div class="col-sm-6">
+                                                <input name="accountName" type="text" class="form-control"
+                                                       ng-model="hostName">
+                                            </div>
+                                        </div>
+
+                                        <div ng-hide="installationDetailsForm" class="form-group">
+                                            <label class="col-sm-3 control-label">{% trans "Password" %}</label>
+                                            <div class="col-sm-6">
+                                                <input name="accountName" type="text" class="form-control"
+                                                       ng-model="sfptpasswd">
+                                            </div>
+                                        </div>
+
+                                    </form>
+
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-primary"
+                                            ng-click="ConfigerSFTP()">Save <img
                                             ng-hide="cyberpanelLoading"
                                             src="{% static 'images/loading.gif' %}">
                                     </button>
