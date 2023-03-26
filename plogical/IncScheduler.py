@@ -492,11 +492,12 @@ class IncScheduler(multi.Thread):
 
             if destinationConfig['type'] == 'local':
 
-                finalPath = '%s/%s' % (destinationConfig['path'].rstrip('/'), currentTime)
-                command = 'mkdir -p %s' % (finalPath)
-                ProcessUtilities.executioner(command)
 
                 if jobConfig[IncScheduler.frequency] == type:
+
+                    finalPath = '%s/%s' % (destinationConfig['path'].rstrip('/'), currentTime)
+                    command = 'mkdir -p %s' % (finalPath)
+                    ProcessUtilities.executioner(command)
 
                     ### Check if an old job prematurely killed, then start from there.
                     try:
@@ -600,15 +601,18 @@ Automatic backup failed for %s on %s.
                     backupjob.config = json.dumps(jobConfig)
                     backupjob.save()
             else:
-                import subprocess
-                import shlex
-                finalPath = '%s/%s' % (destinationConfig['path'].rstrip('/'), currentTime)
-                command = "ssh -o StrictHostKeyChecking=no -p " + destinationConfig[
-                    'port'] + " -i /root/.ssh/cyberpanel " + destinationConfig['username'] + "@" + destinationConfig[
-                              'ip'] + " mkdir -p %s" % (finalPath)
-                subprocess.call(shlex.split(command))
+
 
                 if jobConfig[IncScheduler.frequency] == type:
+
+                    import subprocess
+                    import shlex
+                    finalPath = '%s/%s' % (destinationConfig['path'].rstrip('/'), currentTime)
+                    command = "ssh -o StrictHostKeyChecking=no -p " + destinationConfig[
+                        'port'] + " -i /root/.ssh/cyberpanel " + destinationConfig['username'] + "@" + \
+                              destinationConfig[
+                                  'ip'] + " mkdir -p %s" % (finalPath)
+                    subprocess.call(shlex.split(command))
 
                     ### Check if an old job prematurely killed, then start from there.
                     # try:
