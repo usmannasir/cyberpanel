@@ -712,14 +712,14 @@ def add_website(request):
         final_json = json.dumps({'status': 0, 'error_message': str(msg)})
         return HttpResponse(final_json)
 
-
+#### Backups v2
 
 def ConfigureV2Backup(request):
     try:
         user_id, current_acl = _get_user_acl(request)
+
         if ACLManager.currentContextPermission(current_acl, 'createBackup') == 0:
             return ACLManager.loadError()
-
 
         websites = ACLManager.findAllSites(current_acl, user_id)
         #
@@ -727,11 +727,9 @@ def ConfigureV2Backup(request):
         proc = httpProc(request, 'IncBackups/ConfigureV2Backup.html', {'websiteList': websites})
         return proc.render()
 
-
     except BaseException as msg:
         logging.writeToFile(str(msg))
         return redirect(loadLoginPage)
-
 
 def CreateV2Backup(request):
     try:
@@ -753,7 +751,17 @@ def createV2BackupSetup(request):
         req_data['scopes'] = request.GET.get('s')
         req_data['accountname'] = request.GET.get('n')
         website = request.GET.get('d')
+
         # logging.writeToFile('domainname is ====%s'%(request.GET.get))
+
+        currentACL = ACLManager.loadedACL(userID)
+        admin = Administrator.objects.get(pk=userID)
+
+
+        if ACLManager.checkOwnership(website, admin, currentACL) == 1:
+            pass
+        else:
+            return ACLManager.loadError()
 
         cpbuv2 = CPBackupsV2(
             {'domain': website, 'BasePath': '/home/backup', 'BackupDatabase': 1, 'BackupData': 1,
@@ -766,7 +774,6 @@ def createV2BackupSetup(request):
     except KeyError:
         return redirect(loadLoginPage)
 
-
 def CreateV2BackupButton(request):
     import re
     try:
@@ -775,8 +782,13 @@ def CreateV2BackupButton(request):
         Selectedwebsite = data['Selectedwebsite']
         Selectedrepo = data['Selectedrepo']
 
+        currentACL = ACLManager.loadedACL(userID)
+        admin = Administrator.objects.get(pk=userID)
 
-
+        if ACLManager.checkOwnership(Selectedwebsite, admin, currentACL) == 1:
+            pass
+        else:
+            return ACLManager.loadError()
 
         background = CPBackupsV2({'domain': Selectedwebsite, 'BasePath': '/home/backup', 'BackupDatabase': 1, 'BackupData': 1,
              'BackupEmails': 1, 'BackendName': Selectedrepo, 'function': 'InitiateBackup', })
@@ -792,7 +804,6 @@ def CreateV2BackupButton(request):
         data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
-
 
 def CreateV2BackupStatus(request):
     try:
@@ -833,7 +844,14 @@ def selectwebsiteRetorev2(request):
         userID = request.session['userID']
         data = json.loads(request.body)
         Selectedwebsite = data['Selectedwebsite']
+
+        currentACL = ACLManager.loadedACL(userID)
         admin = Administrator.objects.get(pk=userID)
+
+        if ACLManager.checkOwnership(str(Selectedwebsite), admin, currentACL) == 1:
+            pass
+        else:
+            return ACLManager.loadError()
 
         obj = Websites.objects.get(domain = str(Selectedwebsite), admin = admin)
         #/home/cyberpanel.net/.config/rclone/rclone.conf
@@ -859,8 +877,6 @@ def selectwebsiteRetorev2(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
-
-
 def ConfigureSftpV2Backup(request):
     try:
         userID = request.session['userID']
@@ -869,7 +885,13 @@ def ConfigureSftpV2Backup(request):
         sfptpasswd = data['sfptpasswd']
         hostName = data['hostName']
         UserName = data['UserName']
+        currentACL = ACLManager.loadedACL(userID)
         admin = Administrator.objects.get(pk=userID)
+
+        if ACLManager.checkOwnership(str(Selectedwebsite), admin, currentACL) == 1:
+            pass
+        else:
+            return ACLManager.loadError()
 
         req_data = {}
         req_data['name'] = 'SFTP'
@@ -895,14 +917,20 @@ def ConfigureSftpV2Backup(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
-
 def selectwebsiteCreatev2(request):
     import re
     try:
         userID = request.session['userID']
         data = json.loads(request.body)
         Selectedwebsite = data['Selectedwebsite']
+
+        currentACL = ACLManager.loadedACL(userID)
         admin = Administrator.objects.get(pk=userID)
+
+        if ACLManager.checkOwnership(str(Selectedwebsite), admin, currentACL) == 1:
+            pass
+        else:
+            return ACLManager.loadError()
 
         obj = Websites.objects.get(domain = str(Selectedwebsite), admin = admin)
         #/home/cyberpanel.net/.config/rclone/rclone.conf
@@ -963,14 +991,20 @@ def selectwebsiteCreatev2(request):
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
 
-
 def selectreporestorev2(request):
     try:
         userID = request.session['userID']
         data = json.loads(request.body)
         Selectedrepo = data['Selectedrepo']
         Selectedwebsite= data['Selectedwebsite']
+        currentACL = ACLManager.loadedACL(userID)
         admin = Administrator.objects.get(pk=userID)
+
+        if ACLManager.checkOwnership(str(Selectedwebsite), admin, currentACL) == 1:
+            pass
+        else:
+            return ACLManager.loadError()
+
 
         # f'rustic -r testremote snapshots --password "" --json 2>/dev/null'
         # final_json = json.dumps({'status': 0, 'fetchStatus': 1, 'error_message': Selectedrepo })

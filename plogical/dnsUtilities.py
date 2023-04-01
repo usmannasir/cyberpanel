@@ -807,7 +807,6 @@ class DNS:
 
             if CurrentContent.find('PDNS_Url') == -1:
                 PDNSContent = f"""
-{CurrentContent}
 PDNS_Url='http://localhost:8081'
 PDNS_ServerId='localhost'
 PDNS_Token='{APIKey}'
@@ -842,4 +841,30 @@ webserver-allow-from=0.0.0.0/0
 
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(f'ConfigurePowerDNSInAcme, Error: {str(msg)}')
+            return 0, str(msg)
+
+    @staticmethod
+    def ConfigureCloudflareInAcme(SAVED_CF_Key, SAVED_CF_Email):
+        try:
+
+            ## remove existing keys first
+
+            path = '/root/.acme.sh/account.conf'
+
+            command = f"sed -i '/SAVED_CF_Key/d;/SAVED_CF_Email/d' {path}"
+            ProcessUtilities.executioner(command)
+
+
+            CFContent = f"""
+SAVED_CF_Key='{SAVED_CF_Key}'
+SAVED_CF_Email='{SAVED_CF_Email}'
+"""
+
+            command = f'echo "{CFContent}" >> {path}'
+            ProcessUtilities.executioner(command, None, True)
+
+            return 1, None
+
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile(f'ConfigureCloudflareInAcme, Error: {str(msg)}')
             return 0, str(msg)

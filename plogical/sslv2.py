@@ -343,7 +343,7 @@ class sslUtilities:
 
                 extractDomain = tldextract.extract(virtualHostName)
                 topLevelDomain = extractDomain.domain + '.' + extractDomain.suffix
-                logging.CyberCPLogFileWriter.writeToFile(f'domain: {topLevelDomain}')
+                logging.CyberCPLogFileWriter.writeToFile(f'top level domain in cf: {topLevelDomain}')
                 import CloudFlare
 
                 params = {'name': topLevelDomain, 'per_page': 50}
@@ -356,7 +356,7 @@ class sslUtilities:
 
                 for zone in sorted(zones, key=lambda v: v['name']):
                     logging.CyberCPLogFileWriter.writeToFile(f'zone: {zone["name"]}')
-                    if zone['name'] == virtualHostName:
+                    if zone['name'] == topLevelDomain:
                         if zone['status'] == 'active':
                             return 1, None
 
@@ -417,7 +417,6 @@ class sslUtilities:
             else:
                 return 0, 'Domain is not active in any of the configured DNS provider.'
 
-
         try:
             acmePath = '/root/.acme.sh/acme.sh'
 
@@ -437,7 +436,7 @@ class sslUtilities:
                     subprocess.check_output(shlex.split(command))
 
                 try:
-                    command = acmePath + " --issue -d " + virtualHostName + " -d www." + virtualHostName \
+                    command = acmePath + f" --issue -d *.{virtualHostName}" \
                               + ' --cert-file ' + existingCertPath + '/cert.pem' + ' --key-file ' + existingCertPath + '/privkey.pem' \
                               + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + f' --dns {DNS_TO_USE} -k ec-256 --force --server letsencrypt'
                     #ResultText = open(logging.CyberCPLogFileWriter.fileName, 'r').read()

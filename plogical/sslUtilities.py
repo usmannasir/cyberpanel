@@ -329,6 +329,25 @@ class sslUtilities:
 
     @staticmethod
     def obtainSSLForADomain(virtualHostName, adminEmail, sslpath, aliasDomain=None):
+        from plogical.acl import ACLManager
+        from plogical.sslv2 import sslUtilities as sslv2
+        import json
+
+        url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
+        data = {
+            "name": "all",
+            "IP": ACLManager.GetServerIP()
+        }
+
+        import requests
+        response = requests.post(url, data=json.dumps(data))
+        Status = response.json()['status']
+
+        if (Status == 1) or ProcessUtilities.decideServer() == ProcessUtilities.ent:
+            retStatus, message = sslv2.obtainSSLForADomain(virtualHostName, adminEmail, sslpath, aliasDomain)
+            if retStatus == 1:
+                return retStatus
+
         sender_email = 'root@%s' % (socket.gethostname())
 
         if not os.path.exists('/usr/local/lsws/Example/html/.well-known/acme-challenge'):

@@ -32,12 +32,21 @@ def v2ManageSSL(request):
     currentACL = ACLManager.loadedACL(userID)
     websitesName = ACLManager.findAllSites(currentACL, userID)
 
+    data = {}
+
+    if request.method == 'POST':
+        SAVED_CF_Key = request.POST.get('SAVED_CF_Key')
+        SAVED_CF_Email = request.POST.get('SAVED_CF_Email')
+        from plogical.dnsUtilities import DNS
+        DNS.ConfigureCloudflareInAcme(SAVED_CF_Key, SAVED_CF_Email)
+        data['SaveSuccess'] = 1
+
+
+
     RetStatus, SAVED_CF_Key, SAVED_CF_Email = ACLManager.FetchCloudFlareAPIKeyFromAcme()
     from plogical.dnsUtilities import DNS
     DNS.ConfigurePowerDNSInAcme()
 
-
-    data = {}
     data['SAVED_CF_Key'] = SAVED_CF_Key
     data['SAVED_CF_Email'] = SAVED_CF_Email
     data['websiteList'] = websitesName

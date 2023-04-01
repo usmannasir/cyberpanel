@@ -112,10 +112,9 @@ type = sftp
 host = {config["host"]}
 user = {config["user"]}
 pass = {ObsecurePassword}
-
 '''
 
-            command = f"echo '{content}' > {self.ConfigFilePath}"
+            command = f"echo '{content}' >> {self.ConfigFilePath}"
             ProcessUtilities.executioner(command, self.website.externalApp, True)
 
             command = f"chmod 600 {self.ConfigFilePath}"
@@ -138,7 +137,7 @@ root_folder_id = ""
 service_account_file = ""
 token = {token}
 '''
-            command = f"echo '{content}' > {self.ConfigFilePath}"
+            command = f"echo '{content}' >> {self.ConfigFilePath}"
             ProcessUtilities.executioner(command, self.website.externalApp, True)
 
             command = f"chmod 600 {self.ConfigFilePath}"
@@ -429,11 +428,11 @@ token = {token}
                             return 0
                         self.UpdateStatus('Website data backup completed successfully..,70', CPBackupsV2.RUNNING)
 
-                    # if self.data['BackupEmails']:
-                    #     self.UpdateStatus('Backing up emails..,75', CPBackupsV2.RUNNING)
-                    #     if self.BackupEmailsRustic() == 0:
-                    #         return 0
-                    #     self.UpdateStatus('Emails backup completed successfully..,85', CPBackupsV2.RUNNING)
+                    if self.data['BackupEmails']:
+                        self.UpdateStatus('Backing up emails..,75', CPBackupsV2.RUNNING)
+                        if self.BackupEmailsRustic() == 0:
+                            return 0
+                        self.UpdateStatus('Emails backup completed successfully..,85', CPBackupsV2.RUNNING)
 
                     ### Finally change the backup rustic folder to the website user owner
 
@@ -603,7 +602,7 @@ token = {token}
 
         exclude = f' --exclude-if-present rusticbackup  --exclude-if-present logs '
 
-        command = f'rustic -P /home/{self.website.domain}/.config/rclone/rclone.conf -r {self.repo} backup {source} --password "" {exclude} --json 2>/dev/null'
+        command = f'export RCLONE_CONFIG=/home/{self.website.domain}/.config/rclone/rclone.conf && rustic -r {self.repo} backup {source} --password "" {exclude} --json 2>/dev/null'
 
         result = json.loads(ProcessUtilities.outputExecutioner(command, None, True).rstrip('\n'))
 
