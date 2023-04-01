@@ -623,6 +623,242 @@ token = {token}
 
         return 1
 
+    #### Resote Functions
+
+    def InitiateRestore(self):
+
+        from websiteFunctions.models import Websites, Backupsv2
+        from django.forms.models import model_to_dict
+        from plogical.mysqlUtilities import mysqlUtilities
+        self.website = Websites.objects.get(domain=self.data['domain'])
+
+        ## Base path is basically the path set by user where all the backups will be housed
+
+        if not os.path.exists(self.data['BasePath']):
+            command = f"mkdir -p {self.data['BasePath']}"
+            ProcessUtilities.executioner(command)
+
+            command = f"chmod 711 {self.data['BasePath']}"
+            ProcessUtilities.executioner(command)
+
+        self.StartingTimeStamp = CPBackupsV2.FetchCurrentTimeStamp()
+
+        ### Init rustic repo in main func so dont need to do again and again
+
+        while(1):
+
+            self.website = Websites.objects.get(domain=self.data['domain'])
+
+            if self.website.BackupLock == 0:
+
+                Disk1 = f"du -sm /home/{self.website.domain}/"
+                Disk2 = "2>/dev/null | awk '{print $1}'"
+
+                self.WebsiteDiskUsage = int(ProcessUtilities.outputExecutioner(f"{Disk1} {Disk2}", 'root', True).rstrip('\n'))
+
+                self.CurrentFreeSpaceOnDisk = int(ProcessUtilities.outputExecutioner("df -m / | awk 'NR==2 {print $4}'", 'root', True).rstrip('\n'))
+
+                if self.WebsiteDiskUsage > self.CurrentFreeSpaceOnDisk:
+                    self.UpdateStatus(f'Not enough disk space on the server to backup this website.', CPBackupsV2.FAILED)
+                    return 0
+
+                ### Before doing anything install rustic
+
+                statusRes, message = self.InstallRustic()
+
+                if statusRes == 0:
+                    self.UpdateStatus(f'Failed to install Rustic, error: {message}', CPBackupsV2.FAILED)
+                    return 0
+
+
+                # = Backupsv2(website=self.website, fileName='backup-' + self.data['domain'] + "-" + time.strftime("%m.%d.%Y_%H-%M-%S"), status=CPBackupsV2.RUNNING, BasePath=self.data['BasePath'])
+                #self.buv2.save()
+
+                #self.FinalPath = f"{self.data['BasePath']}/{self.buv2.fileName}"
+
+                ### Rustic backup final path
+
+                self.FinalPathRuctic = f"{self.data['BasePath']}/{self.website.domain}"
+
+
+                #command = f"mkdir -p {self.FinalPath}"
+                #ProcessUtilities.executioner(command)
+
+
+
+                #command = f"chown {website.externalApp}:{website.externalApp} {self.FinalPath}"
+                #ProcessUtilities.executioner(command)
+
+                #command = f'chown cyberpanel:cyberpanel {self.FinalPath}'
+                #ProcessUtilities.executioner(command)
+
+                #command = f"chmod 711 {self.FinalPath}"
+                #ProcessUtilities.executioner(command)
+
+                command = f"mkdir -p {self.FinalPathRuctic}"
+                ProcessUtilities.executioner(command)
+
+                command = f'chown cyberpanel:cyberpanel {self.FinalPathRuctic}'
+                ProcessUtilities.executioner(command)
+
+                command = f"chmod 711 {self.FinalPathRuctic}"
+                ProcessUtilities.executioner(command)
+
+                try:
+
+                    self.UpdateStatus('Creating backup config,0', CPBackupsV2.RUNNING)
+
+                    Config = {'MainWebsite': model_to_dict(self.website, fields=['domain', 'adminEmail', 'phpSelection', 'state', 'config'])}
+                    Config['admin'] = model_to_dict(self.website.admin, fields=['userName', 'password', 'firstName', 'lastName',
+                                                                           'email', 'type', 'owner', 'token', 'api', 'securityLevel',
+                                                                           'state', 'initself.websitesLimit', 'twoFA', 'secretKey', 'config'])
+                    Config['acl'] = model_to_dict(self.website.admin.acl)
+
+                    ### Child domains to config
+
+                    ChildsList = []
+
+                    for childDomains in self.website.childdomains_set.all():
+                        print(childDomains.domain)
+                        ChildsList.append(model_to_dict(childDomains))
+
+                    Config['ChildDomains'] = ChildsList
+
+                    #print(str(Config))
+
+                    ### Databases
+
+                    connection, cursor = mysqlUtilities.setupConnection()
+
+                    if connection == 0:
+                        return 0
+
+                    dataBases = self.website.databases_set.all()
+                    DBSList = []
+
+                    for db in dataBases:
+
+                        query = f"SELECT host,user FROM mysql.db WHERE db='{db.dbName}';"
+                        cursor.execute(query)
+                        DBUsers = cursor.fetchall()
+
+                        UserList = []
+
+                        for databaseUser in DBUsers:
+                            query = f"SELECT password FROM `mysql`.`user` WHERE `Host`='{databaseUser[0]}' AND `User`='{databaseUser[1]}';"
+                            cursor.execute(query)
+                            resp = cursor.fetchall()
+                            print(resp)
+                            UserList.append({'user': databaseUser[1], 'host': databaseUser[0], 'password': resp[0][0]})
+
+                        DBSList.append({db.dbName: UserList})
+
+                    Config['databases'] = DBSList
+
+                    WPSitesList = []
+
+                    for wpsite in self.website.wpsites_set.all():
+                        WPSitesList.append(model_to_dict(wpsite,fields=['title', 'path', 'FinalURL', 'AutoUpdates', 'PluginUpdates', 'ThemeUpdates', 'WPLockState']))
+
+                    Config['WPSites'] = WPSitesList
+                    self.config = Config
+
+                    ### DNS Records
+
+                    from dns.models import Domains
+
+                    self.dnsDomain = Domains.objects.get(name=self.website.domain)
+
+                    DNSRecords = []
+
+                    for record in self.dnsDomain.records_set.all():
+                        DNSRecords.append(model_to_dict(record))
+
+                    Config['MainDNSDomain'] = model_to_dict(self.dnsDomain)
+                    Config['DNSRecords'] = DNSRecords
+
+                    ### Email accounts
+
+                    try:
+                        from mailServer.models import Domains
+
+                        self.emailDomain = Domains.objects.get(domain=self.website.domain)
+
+                        EmailAddrList = []
+
+                        for record in self.emailDomain.eusers_set.all():
+                            EmailAddrList.append(model_to_dict(record))
+
+                        Config['MainEmailDomain'] = model_to_dict(self.emailDomain)
+                        Config['EmailAddresses'] = EmailAddrList
+                    except:
+                        pass
+
+                    #command = f"echo '{json.dumps(Config)}' > {self.FinalPath}/config.json"
+                    #ProcessUtilities.executioner(command, self.website.externalApp, True)
+
+                    command = f'chown cyberpanel:cyberpanel {self.FinalPathRuctic}/config.json'
+                    ProcessUtilities.executioner(command)
+
+                    WriteToFile = open(f'{self.FinalPathRuctic}/config.json', 'w')
+                    WriteToFile.write(json.dumps(Config))
+                    WriteToFile.close()
+
+                    command = f"chmod 600 {self.FinalPathRuctic}/config.json"
+                    ProcessUtilities.executioner(command)
+
+                    if self.BackupConfig() == 0:
+                        return 0
+
+                    self.UpdateStatus('Backup config created,5', CPBackupsV2.RUNNING)
+                except BaseException as msg:
+                    self.UpdateStatus(f'Failed during config generation, Error: {str(msg)}', CPBackupsV2.FAILED)
+                    return 0
+
+                try:
+                    if self.data['BackupDatabase']:
+                        self.UpdateStatus('Backing up databases..,10', CPBackupsV2.RUNNING)
+                        if self.BackupDataBasesRustic() == 0:
+                            self.UpdateStatus(f'Failed to create backup for databases.', CPBackupsV2.FAILED)
+                            return 0
+
+                        self.UpdateStatus('Database backups completed successfully..,25', CPBackupsV2.RUNNING)
+
+                    if self.data['BackupData']:
+                        self.UpdateStatus('Backing up website data..,30', CPBackupsV2.RUNNING)
+                        if self.BackupRustic() == 0:
+                            return 0
+                        self.UpdateStatus('Website data backup completed successfully..,70', CPBackupsV2.RUNNING)
+
+                    if self.data['BackupEmails']:
+                        self.UpdateStatus('Backing up emails..,75', CPBackupsV2.RUNNING)
+                        if self.BackupEmailsRustic() == 0:
+                            return 0
+                        self.UpdateStatus('Emails backup completed successfully..,85', CPBackupsV2.RUNNING)
+
+                    ### Finally change the backup rustic folder to the website user owner
+
+                    command = f'chown {self.website.externalApp}:{self.website.externalApp} {self.FinalPathRuctic}'
+                    ProcessUtilities.executioner(command)
+
+                    self.MergeSnapshots()
+
+                    self.UpdateStatus('Completed', CPBackupsV2.COMPLETED)
+
+                    break
+                except BaseException as msg:
+                    self.UpdateStatus(f'Failed, Error: {str(msg)}', CPBackupsV2.FAILED)
+                    return 0
+            else:
+                time.sleep(5)
+
+                ### If website lock is there for more then 20 minutes it means old backup is stucked or backup job failed, thus continue backup
+
+                if float(CPBackupsV2.FetchCurrentTimeStamp()) > (float(self.StartingTimeStamp) + 1200):
+                    self.website = Websites.objects.get(domain=self.data['domain'])
+                    self.website.BackupLock = 0
+                    self.website.save()
+
     # def BackupEmails(self):
     #
     #     ### This function will backup emails of the website, also need to take care of emails that we need to exclude
@@ -743,6 +979,8 @@ token = {token}
         except BaseException as msg:
             print('Error: %s'%msg)
             return 0, str(msg)
+
+
 
 if __name__ == "__main__":
     try:

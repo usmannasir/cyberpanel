@@ -1241,7 +1241,7 @@ app.controller('restorev2backupoage', function ($scope, $http, $timeout, $compil
 
 
                 option.value = 1;
-                option.text = 'Choose Repooo';
+                option.text = 'Choose Repo';
 
                 selectBox.appendChild(option);
 
@@ -1478,7 +1478,7 @@ app.controller('CreateV2Backup', function ($scope, $http, $timeout, $compile) {
 
 
                 option.value = 1;
-                option.text = 'Choose Repooo';
+                option.text = 'Choose Repo';
 
                 selectBox.appendChild(option);
 
