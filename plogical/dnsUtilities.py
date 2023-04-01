@@ -794,3 +794,52 @@ class DNS:
         except:
             ## There does not exist a zone for this domain.
             pass
+
+    @staticmethod
+    def ConfigurePowerDNSInAcme():
+        try:
+            from plogical.randomPassword import generate_pass
+            path = '/root/.acme.sh/account.conf'
+
+            APIKey = generate_pass(16)
+
+            CurrentContent = ProcessUtilities.outputExecutioner(f'cat {path}')
+
+            if CurrentContent.find('PDNS_Url') == -1:
+                PDNSContent = f"""
+{CurrentContent}
+PDNS_Url='http://localhost:8081'
+PDNS_ServerId='localhost'
+PDNS_Token='{APIKey}'
+"""
+
+                command = f'echo "{PDNSContent}" >> {path}'
+                ProcessUtilities.executioner(command,None, True)
+
+                PDNSPath = '/etc/pdns/pdns.conf'
+
+
+                PDNSConf = f"""
+# Turn on the webserver API
+webserver=yes
+webserver-address=0.0.0.0
+webserver-port=8081
+
+# Set the API key for accessing the API
+api=yes
+api-key={APIKey}
+
+webserver-allow-from=0.0.0.0/0
+"""
+                command = f'echo "{PDNSConf}" >> {PDNSPath}'
+                ProcessUtilities.executioner(command,None, True)
+
+                command = 'systemctl restart pdns'
+                ProcessUtilities.executioner(command)
+
+
+            return 1, None
+
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile(f'ConfigurePowerDNSInAcme, Error: {str(msg)}')
+            return 0, str(msg)

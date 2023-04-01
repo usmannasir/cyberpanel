@@ -672,6 +672,29 @@
 
                         {% endif %}
 
+                        <li id="sidebar-menu-item-backupV2">
+                            <a href="{% url 'loadBackupHome' %}" title="{% trans 'BackupV2' %}">
+                                <i class="glyph-icon tooltip-button icon-copy" title=".icon-folder"></i>
+                                <span>{% trans "Backup V2" %}</span>
+                            </a>
+                            <div class="sidebar-submenu">
+
+                                <ul>
+                                        <li><a href="{% url 'CreateV2Backup' %}"
+                                               title="{% trans "Create V2 Backup" %}"><span>{% trans "Create V2 Backup" %}</span></a>
+                                        </li>
+                                        <li><a href="{% url 'ConfigureV2Backup' %}"
+                                               title="{% trans "Configure V2 Backup" %}"><span>{% trans "Configure V2 Backup" %}</span></a>
+                                        </li>
+                                        <li><a href="{% url 'RestoreV2backupSite' %}"
+                                                   title="{% trans "Restore V2 Backup" %}"><span>{% trans "Restore V2 Backup" %}</span></a>
+                                        </li>
+
+                                </ul>
+
+                            </div><!-- .sidebar-submenu -->
+                        </li>
+
                         <li id="sidebar-menu-item-backup">
                             <a href="{% url 'loadBackupHome' %}" title="{% trans 'Backup' %}">
                                 <i class="glyph-icon tooltip-button icon-copy" title=".icon-folder"></i>
@@ -715,30 +738,6 @@
                             </div><!-- .sidebar-submenu -->
                         </li>
 
-                        <li id="sidebar-menu-item-backupV2">
-                            <a href="{% url 'loadBackupHome' %}" title="{% trans 'BackupV2' %}">
-                                <i class="glyph-icon tooltip-button icon-copy" title=".icon-folder"></i>
-                                <span>{% trans "Backup V2" %}</span>
-                            </a>
-                            <div class="sidebar-submenu">
-
-                                <ul>
-                                        <li><a href="{% url 'CreateV2Backup' %}"
-                                               title="{% trans "Create V2 Backup" %}"><span>{% trans "Create V2 Backup" %}</span></a>
-                                        </li>
-                                        <li><a href="{% url 'ConfigureV2Backup' %}"
-                                               title="{% trans "Configure V2 Backup" %}"><span>{% trans "Configure V2 Backup" %}</span></a>
-                                        </li>
-                                        <li><a href="{% url 'RestoreV2backupSite' %}"
-                                                   title="{% trans "Restore V2 Backup" %}"><span>{% trans "Restore V2 Backup" %}</span></a>
-                                        </li>
-
-                                </ul>
-
-                            </div><!-- .sidebar-submenu -->
-                        </li>
-
-
                         <li id="sidebar-menu-item-incremental-backup">
                             <a href="{% url 'loadBackupHome' %}" title="{% trans 'Incremental Backup - Beta' %}">
                                 <i class="glyph-icon tooltip-button icon-save" title="Incremental Backup"></i>
@@ -772,6 +771,23 @@
                             </div>
                         </li>
 
+                        <li id="sidebar-menu-item-ssl">
+                            <a href="{% url 'v2ManageSSL' %}" title="{% trans 'SSL v2' %}">
+                                <i class="glyph-icon tooltip-button icon-lock" title="{% trans 'SSL v2' %}"></i>
+                                <span>{% trans "SSL v2" %}</span>
+                            </a>
+                            <div class="sidebar-submenu">
+
+                                <ul>
+                                    {% if admin or manageSSL %}
+                                        <li class="manageSSL"><a href="{% url 'v2ManageSSL' %}"
+                                                                 title="{% trans 'Manage SSL v2' %}"><span>{% trans "Manage SSL v2" %}</span></a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+
+                            </div>
+                        </li>
 
                         <li id="sidebar-menu-item-ssl">
                             <a href="{% url 'loadSSLHome' %}" title="{% trans 'SSL' %}">

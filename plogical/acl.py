@@ -977,3 +977,21 @@ class ACLManager:
         else:
             return 0
 
+    @staticmethod
+    def FetchCloudFlareAPIKeyFromAcme():
+        try:
+
+            command = 'grep SAVED_CF_Key= /root/.acme.sh/account.conf | cut -d= -f2 | tr -d "\'"'
+            SAVED_CF_Key = ProcessUtilities.outputExecutioner(command).rstrip('\n')
+
+            command = 'grep SAVED_CF_Email= /root/.acme.sh/account.conf | cut -d= -f2 | tr -d "\'"'
+            SAVED_CF_Email = ProcessUtilities.outputExecutioner(command).rstrip('\n')
+
+            if len(SAVED_CF_Key) > 3 and len(SAVED_CF_Email) > 3:
+                return 1, SAVED_CF_Key, SAVED_CF_Email
+            else:
+                return 0, 'Key not defined', SAVED_CF_Email
+
+        except BaseException as msg:
+            return 0, str(msg), None
+

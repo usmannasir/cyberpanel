@@ -310,6 +310,35 @@ class virtualHostUtilities:
             return 0, str(msg)
 
     @staticmethod
+    def issueSSLv2(virtualHost, path, adminEmail):
+        try:
+
+            import plogical.sslv2 as sslv2
+
+            retValues = sslv2.issueSSLForDomain(virtualHost, adminEmail, path)
+
+            if retValues[0] == 0:
+                print("0," + str(retValues[1]))
+                logging.CyberCPLogFileWriter.writeToFile(str(retValues[1]))
+                return 0, str(retValues[1])
+
+            installUtilities.installUtilities.reStartLiteSpeed()
+
+            command = 'systemctl restart postfix'
+            ProcessUtilities.executioner(command)
+
+            command = 'systemctl restart dovecot'
+            ProcessUtilities.executioner(command)
+
+            print(f"1,{str(retValues[1])}")
+            return 1, str(retValues[1])
+
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [issueSSL]")
+            print("0," + str(msg))
+            return 0, str(msg)
+
+    @staticmethod
     def getAccessLogs(fileName, page, externalApp):
         try:
 
@@ -1522,6 +1551,8 @@ def main():
                                           tempStatusPath)
     elif args.function == "issueSSL":
         virtualHostUtilities.issueSSL(args.virtualHostName, args.path, args.administratorEmail)
+    elif args.function == "issueSSLv2":
+        virtualHostUtilities.issueSSLv2(args.virtualHostName, args.path, args.administratorEmail)
     elif args.function == "changePHP":
         vhost.changePHP(args.path, args.phpVersion)
     elif args.function == "getAccessLogs":

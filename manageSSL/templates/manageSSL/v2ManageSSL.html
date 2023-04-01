@@ -1,0 +1,175 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "SSL v2 - CyberPanel" %}{% endblock %}
+{% block content %}
+
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
+
+
+    <div class="container">
+        <div id="page-title">
+            <h2>{% trans "SSL v2" %} - <a target="_blank" href="http://go.cyberpanel.net/dns-records"
+                                          style="height: 23px;line-height: 21px;"
+                                          class="btn btn-border btn-alt border-red btn-link font-red"
+                                          title=""><span>{% trans "DNS Docs" %}</span></a></h2>
+            <p>{% trans "On this page, you have the option to configure DNS providers that CyberPanel can utilize for issuing SSL certificates, providing enhanced flexibility and ease of renewal." %}</p>
+        </div>
+        <div ng-controller="sslIssueCtrlV2" class="panel">
+            <div class="panel-body">
+                <h3 class="content-box-header">
+                    {% trans "Add Records" %}
+                </h3>
+                <div class="example-box-wrapper">
+
+
+                    <ul class="nav nav-tabs">
+
+                        <li class="col-md-4 nav-item tab-mod active">
+                            <a href="#tab-example-1" data-toggle="tab" class="h4 nav-link">
+                                <i class="fa fa-cog btn-icon"></i>
+                                <span>{% trans "Manage DNS" %}</span>
+                            </a>
+
+                        </li>
+                        <li class="col-md-4 tab-mod nav-item">
+                            <a href="#tab-example-3" data-toggle="tab" class="h4 nav-link">
+                                <i class="fa fa-cogs btn-icon"></i>
+                                <span>{% trans "API Settings" %}</span>
+                            </a>
+                        </li>
+                    </ul>
+                    <div class="tab-content">
+                        <div class="tab-pane fade active in" id="tab-example-1">
+                            <div class="example-box-wrapper">
+
+
+                                <form action="/" class="form-horizontal bordered-row panel-body">
+
+
+                                    <div class="form-group">
+                                        <label class="col-sm-2 control-label">{% trans "Select Domain" %} </label>
+                                        <div class="col-sm-6">
+                                            <select ng-model="virtualHost"
+                                                    class="form-control">
+                                                {% for items in websiteList %}
+                                                    <option>{{ items }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="col-sm-4">
+                                            <button style="width: 100%;" type="button"
+                                                    ng-click="issueSSL()"
+                                                    class="btn btn-primary">{% trans "Issue SSL" %} <img
+                                                    ng-hide="manageSSLLoading" src="{% static 'images/loading.gif' %}">
+                                            </button>
+                                        </div>
+
+                                    </div>
+
+                                    <div class="form-group">
+
+                                        <div class="col-sm-12">
+                                            <h3 style="margin: 2%">SSL Status: {$ sslStatus $}</h3>
+                                            <div class="col-sm-12">
+                                                <textarea ng-model="sslLogs" class="form-control" rows="20"></textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </form>
+
+
+                            </div>
+                        </div>
+
+                        <div class="tab-pane fade" id="tab-example-3">
+
+                            <form action="/" class="form-horizontal bordered-row panel-body">
+
+                                <h2 style="margin-bottom: 2%">{% trans "Cloudflare Settings" %}</h2>
+
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">{% trans "CloudFlare Email" %}</label>
+                                    <div class="col-sm-6">
+                                        <input name="SAVED_CF_Email" type="text" class="form-control"
+                                               value="{{ SAVED_CF_Email }}" required>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">{% trans "API Token" %}</label>
+                                    <div class="col-sm-6">
+                                        <input name="SAVED_CF_Key" type="text" class="form-control"
+                                               value="{{ SAVED_CF_Key }}" required>
+                                    </div>
+                                </div>
+
+
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label"></label>
+                                    <div class="col-sm-4">
+                                        <button type="button" ng-click="saveCFConfigs()"
+                                                class="btn btn-primary btn-lg">{% trans "Save" %}</button>
+
+                                    </div>
+                                </div>
+
+                                <!----- Godaddy --->
+
+                                <h2 style="margin-bottom: 2%">{% trans "Godaddy Settings" %}</h2>
+
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">{% trans "CloudFlare Email" %}</label>
+                                    <div class="col-sm-6">
+                                        <input ng-init="cfEmail='{{ cfEmail }}'" name="cfEmail" type="text"
+                                               class="form-control"
+                                               ng-model="cfEmail"
+                                               required>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">{% trans "API Token" %}</label>
+                                    <div class="col-sm-6">
+                                        <input ng-init="cfToken='{{ cfToken }}'" name="cfToken" type="text"
+                                               class="form-control"
+                                               ng-model="cfToken"
+                                               required>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label">{% trans "Sync local Records to CloudFlare" %} </label>
+                                    <div class="col-sm-6">
+                                        <select ng-model="cfSync" class="form-control">
+                                            <option>Enable</option>
+                                            <option>Disable</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="col-sm-3 control-label"></label>
+                                    <div class="col-sm-4">
+                                        <button type="button" ng-click="saveCFConfigs()"
+                                                class="btn btn-primary btn-lg">{% trans "Save" %}</button>
+
+                                    </div>
+                                </div>
+                            </form>
+
+                        </div>
+                    </div>
+
+
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+
+
+{% endblock %}

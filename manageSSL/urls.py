@@ -12,4 +12,9 @@ urlpatterns = [
 
     url(r'^sslForMailServer', views.sslForMailServer, name='sslForMailServer'),
     url(r'^obtainMailServerSSL', views.obtainMailServerSSL, name='obtainMailServerSSL'),
+
+    ## v2 functions
+
+    url(r'^v2ManageSSL', views.v2ManageSSL, name='v2ManageSSL'),
+    url(r'^v2IssueSSL', views.v2IssueSSL, name='v2IssueSSL'),
 ]
