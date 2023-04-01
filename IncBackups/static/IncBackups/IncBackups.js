@@ -1535,10 +1535,23 @@ app.controller('CreateV2Backup', function ($scope, $http, $timeout, $compile) {
         $scope.goBackDisable = true;
 
         var url = "/IncrementalBackups/CreateV2BackupButton";
+        var websiteData = $scope.websiteData;
+        var websiteEmails = $scope.websiteEmails;
+        var websiteDatabases = $scope.websiteDatabases;
+        var chk = 0;
+        if (websiteData === true || websiteDatabases === true || websiteEmails === true) {
+            chk = 1;
+        }
+        var data ={};
 
-        var data = {
+
+         data = {
             Selectedwebsite: $scope.selwebsite,
             Selectedrepo: $('#reposelectbox').val(),
+             websiteDatabases: websiteDatabases,
+             websiteEmails: websiteEmails,
+             websiteData: websiteData,
+
         };
 
         var config = {
@@ -1548,7 +1561,16 @@ app.controller('CreateV2Backup', function ($scope, $http, $timeout, $compile) {
         };
 
         //alert('Done..........')
-        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+        if (chk === 1) {
+            $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+        } else {
+            $scope.backupLoading = true;
+            new PNotify({
+                title: 'Choose Backup Content!',
+                text: 'Please Choose Backup content Data, Database, Email',
+                type: 'error'
+            });
+        }
 
 
         function ListInitialDatas(response) {
@@ -1558,9 +1580,8 @@ app.controller('CreateV2Backup', function ($scope, $http, $timeout, $compile) {
                 Domain = $scope.selwebsite;
                 getCreationStatus();
 
-            }
-            else {
-               $scope.backupLoading = true;
+            } else {
+                $scope.backupLoading = true;
                 $scope.installationDetailsForm = true;
                 $scope.installationProgress = false;
                 $scope.errorMessageBox = false;
@@ -1621,8 +1642,7 @@ app.controller('CreateV2Backup', function ($scope, $http, $timeout, $compile) {
                     $scope.currentStatus = response.data.currentStatus;
                     $timeout.cancel();
 
-                }
-                else {
+                } else {
                     $scope.webSiteCreationLoading = true;
                     $scope.installationDetailsForm = true;
                     $scope.installationProgress = false;
@@ -1667,59 +1687,54 @@ app.controller('CreateV2Backup', function ($scope, $http, $timeout, $compile) {
 
 });
 
-app.controller('ConfigureV2Backup', function ($scope, $http, $timeout){
+app.controller('ConfigureV2Backup', function ($scope, $http, $timeout) {
     $scope.cyberpanelLoading = true;
     $scope.selectbackuptype = function () {
 
         $scope.cyberpanelLoading = false;
 
         var backuptype = $scope.v2backuptype
-        if (backuptype === 'GDrive')
-        {
+        if (backuptype === 'GDrive') {
             $scope.cyberpanelLoading = true;
             $('#GdriveModal').modal('show');
-        }
-        else if(backuptype === 'SFTP')
-        {
+        } else if (backuptype === 'SFTP') {
             $scope.cyberpanelLoading = true;
             $('#SFTPModal').modal('show');
         }
     }
 
 
-
-    $scope.setupAccount = function(){
+    $scope.setupAccount = function () {
         window.open("https://platform.cyberpersons.com/gDrive?name=" + $scope.accountName + '&server=' + window.location.href + 'Setup&domain=' + $scope.selwebsite);
     };
 
-    $scope.ConfigerSFTP = function (){
-            $scope.cyberpanelLoading = false;
-            var url = "/IncrementalBackups/ConfigureSftpV2Backup";
+    $scope.ConfigerSFTP = function () {
+        $scope.cyberpanelLoading = false;
+        var url = "/IncrementalBackups/ConfigureSftpV2Backup";
 
-            var data = {
-                Selectedwebsite: $scope.selwebsite,
-                sfptpasswd: $scope.sfptpasswd,
-                hostName: $scope.hostName,
-                UserName: $scope.UserName,
-            };
+        var data = {
+            Selectedwebsite: $scope.selwebsite,
+            sfptpasswd: $scope.sfptpasswd,
+            hostName: $scope.hostName,
+            UserName: $scope.UserName,
+        };
 
-            var config = {
-                headers: {
-                    'X-CSRFToken': getCookie('csrftoken')
-                }
-            };
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
 
 
         $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
 
-            function ListInitialDatas(response) {
+        function ListInitialDatas(response) {
             $scope.backupLoading = true;
             if (response.data.status === 1) {
                 location.reload()
 
-            }
-            else {
+            } else {
                 $scope.goBackDisable = false;
                 new PNotify({
                     title: 'Operation Failed!',
@@ -1730,7 +1745,7 @@ app.controller('ConfigureV2Backup', function ($scope, $http, $timeout){
 
         }
 
-            function cantLoadInitialDatas(response) {
+        function cantLoadInitialDatas(response) {
             $scope.backupLoading = true;
             new PNotify({
                 title: 'Operation Failed!',
@@ -1740,6 +1755,7 @@ app.controller('ConfigureV2Backup', function ($scope, $http, $timeout){
         }
     }
 });
+
 function listpaths(pathid, button) {
 
     console.log("LIST PAYH FUNCTIOB CALLED WITH ID " + pathid);

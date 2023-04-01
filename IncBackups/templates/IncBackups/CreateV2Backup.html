@@ -44,6 +44,45 @@
                                 </select>
                             </div>
                         </div>
+                        <div  class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Backup Content" %}</label>
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
+                                        <input ng-model="websiteData" type="checkbox" value="">
+                                        Data
+                                    </label>
+                                </div>
+                            </div>
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
+                                        <input ng-model="websiteDatabases" type="checkbox" value="">
+                                        Databases
+                                    </label>
+                                </div>
+                            </div>
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
+                                        <input ng-model="websiteEmails" type="checkbox" value="">
+                                        Emails
+                                    </label>
+                                </div>
+                            </div>
+                            <!---
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
+                                        <input ng-model="websiteSSLs" type="checkbox" value="">
+                                        SSL Certificates
+                                    </label>
+                                </div>
+                            </div> -->
+                        </div>
                         <div class="form-group">
                             <label class="col-sm-3 control-label">{% trans " " %} </label>
                             <div class="col-sm-6">

@@ -782,6 +782,7 @@ def CreateV2BackupButton(request):
         Selectedwebsite = data['Selectedwebsite']
         Selectedrepo = data['Selectedrepo']
 
+
         currentACL = ACLManager.loadedACL(userID)
         admin = Administrator.objects.get(pk=userID)
 
@@ -790,9 +791,22 @@ def CreateV2BackupButton(request):
         else:
             return ACLManager.loadError()
 
-        background = CPBackupsV2({'domain': Selectedwebsite, 'BasePath': '/home/backup', 'BackupDatabase': 1, 'BackupData': 1,
-             'BackupEmails': 1, 'BackendName': Selectedrepo, 'function': 'InitiateBackup', })
+
+        extra_args = {}
+        extra_args['function'] = 'InitiateBackup'
+        extra_args['website'] = Selectedwebsite
+        extra_args['BasePath'] = '/home/backup'
+        extra_args['BackendName'] = Selectedrepo
+        extra_args['BackupData'] = data['websiteData'] if 'websiteData' in data else False
+        extra_args['BackupEmails'] = data['websiteEmails'] if 'websiteEmails' in data else False
+        extra_args['BackupDatabase'] = data['websiteDatabases'] if 'websiteDatabases' in data else False
+
+
+        background = CPBackupsV2(extra_args)
         background.start()
+        # background = CPBackupsV2({'domain': Selectedwebsite, 'BasePath': '/home/backup', 'BackupDatabase': 1, 'BackupData': 1,
+        #      'BackupEmails': 1, 'BackendName': Selectedrepo, 'function': 'InitiateBackup', })
+        # background.start()
 
         time.sleep(2)
 
