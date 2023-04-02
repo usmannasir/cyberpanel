@@ -775,7 +775,6 @@ def createV2BackupSetup(request):
         return redirect(loadLoginPage)
 
 def CreateV2BackupButton(request):
-    import re
     try:
         userID = request.session['userID']
         data = json.loads(request.body)
@@ -795,6 +794,7 @@ def CreateV2BackupButton(request):
         extra_args = {}
         extra_args['function'] = 'InitiateBackup'
         extra_args['website'] = Selectedwebsite
+        extra_args['domain'] = Selectedwebsite
         extra_args['BasePath'] = '/home/backup'
         extra_args['BackendName'] = Selectedrepo
         extra_args['BackupData'] = data['websiteData'] if 'websiteData' in data else False

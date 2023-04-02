@@ -143,7 +143,6 @@ token = {token}
             command = f"chmod 600 {self.ConfigFilePath}"
             ProcessUtilities.executioner(command, self.website.externalApp)
 
-
     @staticmethod
     def FetchCurrentTimeStamp():
         import time
@@ -217,11 +216,17 @@ token = {token}
             snapshots= f'{snapshots} {snapshot}'
 
 
-        command = f'rustic -r {self.repo} merge {snapshots}  --password "" --json 2>/dev/null'
-        result = json.loads(ProcessUtilities.outputExecutioner(command, self.website.externalApp, True).rstrip('\n'))
+        command = f'rustic -r {self.repo} merge {snapshots}  --password "" --json'
+        result = ProcessUtilities.outputExecutioner(command, self.website.externalApp, True)
+
+        if os.path.exists(ProcessUtilities.debugPath):
+            logging.CyberCPLogFileWriter.writeToFile(result)
 
         command = f'rustic -r {self.repo} forget {snapshots}  --password ""'
         result = ProcessUtilities.outputExecutioner(command, self.website.externalApp, True)
+
+        if os.path.exists(ProcessUtilities.debugPath):
+            logging.CyberCPLogFileWriter.writeToFile(result)
 
     def InitiateBackup(self):
 
