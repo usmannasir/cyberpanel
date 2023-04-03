@@ -1355,63 +1355,44 @@ app.controller('restorev2backupoage', function ($scope, $http, $timeout, $compil
                 var data = response.data.data
 
                 console.log(response.data.data)
-                console.log(response.data.data[0][1])
-                var snaphots = response.data.data[0][1]
 
-                for (var i = 0; i < snaphots.length; i++) {
-                    var tml = ' <tr style="">\n' +
-                        '                                <td>' + snaphots[i].id + '</td>' +
-                        '                                <td><button  type="button" \n' +
-                        '                                    class="btn btn-danger">Delete</button></td>\n' +
-                        '                                \n' +
-                        '                            </tr>' +
-                        '<tr style="border: none!important;"> <td colspan="2" style="display: inherit;max-height: 10px;background-color: transparent; border: none">\n' +
-                        '                                            <button id="' + snaphots[i].id + '" class="my-4 mx-4 btn " style="margin-bottom: 15px;margin-top: -8px;background-color: #161a69; color: white;border-radius: 6px" onclick=listpaths("' + i + '","' + snaphots[i].id + '")>+</button>\n' +
-                        '                                        </td></tr>' +
-                        '<tr style="border: none!important;">' +
-                        ' <td colspan="2" style="display: none;border: none"  id="' + i + '">' +
-                        ' <table id="inside" style="margin: 0 auto;">\n';
+                var snapshots = response.data.data
+                console.log("length 0 : "+snapshots.length)
+                console.log("length 0 1 : "+snapshots[0][1].length)
+                console.log("length 1 1 : "+snapshots[1][1].length)
+                for (var i = 0; i < snapshots.length; i++) {
+                    for (var j = 0; j < snapshots[i][1].length; j++) {
+                        var tml = '<tr style="">\n' +
+                            '  <td>' + snapshots[i][1][j].id + '</td>' +
+                            console.log(snapshots[i][1][j].id)
+                        tml += '  <td><button  type="button" class="btn btn-danger">Delete</button></td>\n' +
+                            '</tr>' +
+                            '<tr style="border: none!important;"> <td colspan="2" style="display: inherit;max-height: 10px;background-color: transparent; border: none">\n' +
+                            '  <button id="' + snapshots[i][1][j].id + 'button" class="my-4 mx-4 btn " style="margin-bottom: 15px;margin-top: -8px;background-color: #161a69; color: white;border-radius: 6px" onclick=listpaths("' + snapshots[i][1][j].id + '","' + snapshots[i][1][j].id + 'button")>+</button>\n' +
+                            '</td></tr>' +
+                            '<tr style="border: none!important;">' +
+                            '  <td colspan="2" style="display: none;border: none"  id="' + snapshots[i][1][j].id+ '">' +
+                            '    <table id="inside" style="margin: 0 auto;">\n';
 
-                    for (var j = 0; j < snaphots[i].paths.length; j++) {
-                        tml += '<tr style="border-top: 1px #cccccc solid;display: flex;padding: 15px; justify-content: space-between;">\n' +
-                            '<td style="">' + snaphots[i].paths[j] + '</td>\n' +
-                            '<td style="">' +
-                            '<button id="' + snaphots[i].paths[j] + '" style="margin-inline: 30px; color: white!important; background-color: #3051be; border-radius: 6px;" class="btn" ng-click=\'RestorePathV2("' + snaphots[i].id + '","' + snaphots[i].paths[j] + '")\'>Restore</button></td>\n' +
+                        for (var k = 0; k < snapshots[i][1][j].paths.length; k++) {
+                            tml += '<tr style="border-top: 1px #cccccc solid;display: flex;padding: 15px; justify-content: space-between;">\n' +
+                                '<td style="">' + snapshots[i][1][j].paths[k] + '</td>\n' +
+                                '<td style="">' +
+                                '<button id="' + snapshots[i][1][j].paths[k] + '" style="margin-inline: 30px; color: white!important; background-color: #3051be; border-radius: 6px;" class="btn" ng-click=\'RestorePathV2("' + snapshots[i][1][j].id + '","' + snapshots[i][1][j].paths[k] + '")\'>Restore</button></td>\n' +
+                                '</tr>\n';
+                        }
+
+                        tml += '</table>\n' +
+                            '</td>\n' +
+                            '</tr>\n' +
                             '</tr>\n';
+                        var mp = $compile(tml)($scope);
+
+                        $('#listsnapshots').append(mp);
                     }
-
-                    tml += '</table>\n' +
-                        '</td>\n' +
-                        '</tr>\n' +
-                        '</tr>\n';
-                    var mp = $compile(tml)($scope);
-
-                    $('#listsnapshots').append(mp);
                 }
 
-                // $scope.Snaphot_ID
 
-                // var table = document.getElementById("snapshotstable");
-                //
-                //  // Loop through the data and create a new row for each item
-                //  for (var i = 0; i < data.length; i++) {
-                //    // Create a new row element
-                //    var row = table.insertRow();
-                //
-                //    // Create the first cell and set its value to the current item in the data array
-                //    var idCell = row.insertCell(0);
-                //    idCell.innerHTML = data[i];
-                //
-                //    // Create the second cell and add a delete button to it
-                //    var deleteCell = row.insertCell(1);
-                //    var deleteButton = document.createElement("button");
-                //    deleteButton.innerHTML = "Delete";
-                //    deleteButton.addEventListener("click", function() {
-                //      // Call your delete function here
-                //      console.log("Deleting item:", data[i]);
-                //    });
-                //    deleteCell.appendChild(deleteButton);
-                //  }
             } else {
                 new PNotify({
                     title: 'Error!',
@@ -1759,7 +1740,8 @@ app.controller('ConfigureV2Backup', function ($scope, $http, $timeout) {
 
 function listpaths(pathid, button) {
 
-    console.log("LIST PAYH FUNCTIOB CALLED WITH ID " + pathid);
+    console.log("ID of button used to hide " + button);
+    console.log("  ID of container which we hide on button press" + pathid);
     var pathlist = document.getElementById(pathid)
     if (pathlist.style.display === "none") {
         pathlist.style.display = "revert";
