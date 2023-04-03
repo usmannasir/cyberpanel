@@ -842,6 +842,30 @@ def RestorePathV2(request):
         data = json.loads(request.body)
         SnapShotId = data['snapshotid']
         Path = data['path']
+        Selectedwebsite = data['selwebsite']
+
+        currentACL = ACLManager.loadedACL(userID)
+        admin = Administrator.objects.get(pk=userID)
+
+        if ACLManager.checkOwnership(str(Selectedwebsite), admin, currentACL) == 1:
+            pass
+        else:
+            return ACLManager.loadError()
+
+        # f'rustic -r testremote snapshots --password "" --json 2>/dev/null'
+        # final_json = json.dumps({'status': 0, 'fetchStatus': 1, 'error_message': Selectedrepo })
+        # return HttpResponse(final_json)
+
+        vm = CPBackupsV2({'domain': Selectedwebsite, 'BackendName': Selectedrepo, "function": ""})
+        status, data = vm.FetchSnapShots()
+
+        if status == 1:
+            final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": data})
+            return HttpResponse(final_json)
+        else:
+            # final_json = json.dumps({'status': 0, 'fetchStatus': 1, 'error_message': ac,})
+            final_json = json.dumps({'status': 0, 'fetchStatus': 1, 'error_message': 'Cannot Find!', })
+            return HttpResponse(final_json)
 
         final_dic = {'status': 1, 'SnapShotId': SnapShotId, 'Path': Path}
         final_json = json.dumps(final_dic)

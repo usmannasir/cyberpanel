@@ -57,7 +57,6 @@ class CPBackupsV2(multi.Thread):
 
         self.snapshots = []
 
-
         ##
 
         self.StatusFile = f'/home/cyberpanel/{self.website.domain}_rustic_backup_log'
@@ -1000,5 +999,5 @@ if __name__ == "__main__":
             #cpbuv2.BackupDataBases()
 
     except:
-        cpbuv2 = CPBackupsV2({'domain': 'cyberpanel.net', 'BasePath': '/home/backup', 'BackupDatabase': 1, 'BackupData': 1, 'BackupEmails': 1} )
-        cpbuv2.InitiateBackup()
+        cpbuv2 = CPBackupsV2({'function':'InitiateRestore', 'domain': 'cyberpanel.net', 'BasePath': '/home/backup', 'SnapShotID': 1, 'BackendName': 'usman'} )
+        cpbuv2.InitiateRestore()
