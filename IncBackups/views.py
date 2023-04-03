@@ -843,6 +843,7 @@ def RestorePathV2(request):
         SnapShotId = data['snapshotid']
         Path = data['path']
         Selectedwebsite = data['selwebsite']
+        Selectedrepo = data['selectedrepo']
 
         currentACL = ACLManager.loadedACL(userID)
         admin = Administrator.objects.get(pk=userID)
@@ -852,24 +853,16 @@ def RestorePathV2(request):
         else:
             return ACLManager.loadError()
 
-        # f'rustic -r testremote snapshots --password "" --json 2>/dev/null'
-        # final_json = json.dumps({'status': 0, 'fetchStatus': 1, 'error_message': Selectedrepo })
-        # return HttpResponse(final_json)
-
-        vm = CPBackupsV2({'domain': Selectedwebsite, 'BackendName': Selectedrepo, "function": ""})
-        status, data = vm.FetchSnapShots()
+        vm = CPBackupsV2({'domain': Selectedwebsite, 'BackendName': Selectedrepo, "function": "", 'BasePath': '/home/backup'})
+        status = vm.InitiateRestore(SnapShotId, Path)
 
         if status == 1:
-            final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": data})
+            final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None"})
             return HttpResponse(final_json)
         else:
             # final_json = json.dumps({'status': 0, 'fetchStatus': 1, 'error_message': ac,})
             final_json = json.dumps({'status': 0, 'fetchStatus': 1, 'error_message': 'Cannot Find!', })
             return HttpResponse(final_json)
-
-        final_dic = {'status': 1, 'SnapShotId': SnapShotId, 'Path': Path}
-        final_json = json.dumps(final_dic)
-        return HttpResponse(final_json)
 
     except BaseException as msg:
         final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}

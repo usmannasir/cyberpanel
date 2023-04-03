@@ -1294,7 +1294,8 @@ app.controller('restorev2backupoage', function ($scope, $http, $timeout, $compil
         var data = {
             snapshotid: SnapshotId,
             path: Path,
-            selwebsite: $scope.selwebsite
+            selwebsite: $scope.selwebsite,
+            selectedrepo:$('#reposelectbox').val()
         }
 
         var config = {

@@ -339,7 +339,7 @@ password=%s
             return 0
 
     @staticmethod
-    def restoreDatabaseBackup(databaseName, tempStoragePath, dbPassword, passwordCheck = None, additionalName = None):
+    def restoreDatabaseBackup(databaseName, tempStoragePath, dbPassword, passwordCheck = None, additionalName = None, rustic=0, RusticRepoName = None, externalApp = None, snapshotid = None):
         try:
             passFile = "/etc/cyberpanel/mysqlPassword"
 
@@ -379,38 +379,47 @@ password=%s
                 command = 'chown cyberpanel:cyberpanel %s' % (cnfPath)
                 subprocess.call(shlex.split(command))
 
-            command = 'mysql --defaults-extra-file=/home/cyberpanel/.my.cnf -u %s --host=%s --port %s %s' % (mysqluser, mysqlhost, mysqlport, databaseName)
-            if os.path.exists(ProcessUtilities.debugPath):
-                logging.CyberCPLogFileWriter.writeToFile(f'{command} {tempStoragePath}/{databaseName} ' )
-            cmd = shlex.split(command)
+            if rustic == 0:
 
-            if additionalName == None:
-                with open(tempStoragePath + "/" + databaseName + '.sql', 'r') as f:
-                    res = subprocess.call(cmd, stdin=f)
-                if res != 0:
-                    logging.CyberCPLogFileWriter.writeToFile("Could not restore MYSQL database: " + databaseName +"! [restoreDatabaseBackup]")
-                    return 0
+                command = 'mysql --defaults-extra-file=/home/cyberpanel/.my.cnf -u %s --host=%s --port %s %s' % (mysqluser, mysqlhost, mysqlport, databaseName)
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.CyberCPLogFileWriter.writeToFile(f'{command} {tempStoragePath}/{databaseName} ' )
+                cmd = shlex.split(command)
+
+                if additionalName == None:
+                    with open(tempStoragePath + "/" + databaseName + '.sql', 'r') as f:
+                        res = subprocess.call(cmd, stdin=f)
+                    if res != 0:
+                        logging.CyberCPLogFileWriter.writeToFile("Could not restore MYSQL database: " + databaseName +"! [restoreDatabaseBackup]")
+                        return 0
+                else:
+                    with open(tempStoragePath + "/" + additionalName + '.sql', 'r') as f:
+                        res = subprocess.call(cmd, stdin=f)
+
+                    if res != 0:
+                        logging.CyberCPLogFileWriter.writeToFile("Could not restore MYSQL database: " + additionalName + "! [restoreDatabaseBackup]")
+                        return 0
+
+                if passwordCheck == None:
+
+                    connection, cursor = mysqlUtilities.setupConnection()
+
+                    if connection == 0:
+                        return 0
+
+                    passwordCMD = "use mysql;SET PASSWORD FOR '" + databaseName + "'@'%s' = '" % (mysqlUtilities.LOCALHOST) + dbPassword + "';FLUSH PRIVILEGES;"
+
+                    cursor.execute(passwordCMD)
+                    connection.close()
+
+                return 1
             else:
-                with open(tempStoragePath + "/" + additionalName + '.sql', 'r') as f:
-                    res = subprocess.call(cmd, stdin=f)
+                command = f'sudo -u {externalApp} rustic -r {RusticRepoName} dump {snapshotid}:{databaseName}.sql --password "" 2>/dev/null | mysql --defaults-extra-file=/home/cyberpanel/.my.cnf -u %s --host=%s --port %s %s' % (
+                mysqluser, mysqlhost, mysqlport, databaseName)
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.CyberCPLogFileWriter.writeToFile(f'{command} {tempStoragePath}/{databaseName} ')
+                ProcessUtilities.outputExecutioner(command, None, True)
 
-                if res != 0:
-                    logging.CyberCPLogFileWriter.writeToFile("Could not restore MYSQL database: " + additionalName + "! [restoreDatabaseBackup]")
-                    return 0
-
-            if passwordCheck == None:
-
-                connection, cursor = mysqlUtilities.setupConnection()
-
-                if connection == 0:
-                    return 0
-
-                passwordCMD = "use mysql;SET PASSWORD FOR '" + databaseName + "'@'%s' = '" % (mysqlUtilities.LOCALHOST) + dbPassword + "';FLUSH PRIVILEGES;"
-
-                cursor.execute(passwordCMD)
-                connection.close()
-
-            return 1
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[restoreDatabaseBackup]")
             return 0
