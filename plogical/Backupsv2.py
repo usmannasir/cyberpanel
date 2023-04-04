@@ -66,7 +66,6 @@ class CPBackupsV2(multi.Thread):
 
         self.restore = 0
 
-
         if os.path.exists(self.StatusFile):
             os.remove(self.StatusFile)
 
@@ -76,7 +75,6 @@ class CPBackupsV2(multi.Thread):
                 self.InitiateBackup()
             elif self.function == 'InitiateRestore':
                 self.InitiateRestore()
-
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [CPBackupsV2.run]')
 
@@ -643,14 +641,13 @@ token = {token}
         ### if restore then status file should be restore status file
 
         self.restore = 1
-        self.StatusFile = self.StatusFile_Restore
-
-        if os.path.exists(self.StatusFile):
-            os.remove(self.StatusFile)
+        #self.StatusFile = self.StatusFile_Restore
 
         from websiteFunctions.models import Websites
         from plogical.mysqlUtilities import mysqlUtilities
         self.website = Websites.objects.get(domain=self.data['domain'])
+
+        self.UpdateStatus('Started restoring,20', CPBackupsV2.RUNNING)
 
         ## Base path is basically the path set by user where all the backups will be housed
 
@@ -698,25 +695,24 @@ token = {token}
 
                 ### Find Restore path first, if path is db, only then restore it to cp
 
-                if self.path.find('.sql') > -1:
-                    mysqlUtilities.restoreDatabaseBackup(self.path.rstrip('.sql'), None, None, None, None, 1, self.repo, self.website.externalApp, self.snapshotid)
+                if self.data["path"].find('.sql') > -1:
+                    mysqlUtilities.restoreDatabaseBackup(self.data["path"].rstrip('.sql'), None, None, None, None, 1, self.repo, self.website.externalApp, self.data["snapshotid"])
                 else:
 
-                    if self.path.find('/home/vmail') > -1:
+                    if self.data["path"].find('/home/vmail') > -1:
                         externalApp = None
                     else:
                         externalApp = self.website.externalApp
 
-                    command = f'rustic -r {self.repo} restore {self.snapshotid}:{self.path} {self.path} --password "" --json 2>/dev/null'
+                    command = f'rustic -r {self.repo} restore {self.data["snapshotid"]}:{self.data["path"]} {self.data["path"]} --password ""  2>/dev/null'
                     result = ProcessUtilities.outputExecutioner(command, externalApp, True)
 
-                if os.path.exists(ProcessUtilities.debugPath):
-                    logging.CyberCPLogFileWriter.writeToFile(result)
+                    if os.path.exists(ProcessUtilities.debugPath):
+                        logging.CyberCPLogFileWriter.writeToFile(result)
 
                 self.UpdateStatus('Completed', CPBackupsV2.COMPLETED)
 
                 return 1
-
 
 
             else:

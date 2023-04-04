@@ -872,8 +872,6 @@ def RestorePathV2(request):
         # vm = CPBackupsV2({'domain': Selectedwebsite, 'BackendName': Selectedrepo, "function": "", 'BasePath': '/home/backup'})
         # status = vm.InitiateRestore(SnapShotId, Path)
 
-        time.sleep(2)
-
         data_ret = {'status': 1, 'installStatus': 1, 'error_message': 'None',}
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
