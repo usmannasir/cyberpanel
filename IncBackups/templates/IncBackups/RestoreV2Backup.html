@@ -76,13 +76,13 @@
                         <div class="modal-dialog modal-lg">
 
                             <!-- Modal content-->
-                            <div class="modal-content">
+                            <div class="modal-content" style="height: 80%">
                                 <div class="modal-header">
                                     <button type="button" class="close" data-dismiss="modal">&times;
                                     </button>
                                     <h4 id="restore_header_text" class="modal-title">{% trans "Restore" %}</h4>
                                 </div>
-                                <div class="modal-body">
+                                <div class="modal-body" style="">
 
                                     <span style="font-weight: bolder">ID: <span style="font-weight: normal" id="Snapshot_id"></span></span><br>
                                     <span style="font-weight: bolder">PATH: <span style="font-weight: normal" id="Snapshot_Path_id"></span></span><br>
@@ -100,11 +100,12 @@
                                     </div>
 
                                     <div ng-hide="installationProgress" class="form-group">
-                                        <label class="col-sm-2 control-label"></label>
-                                        <div class="col-sm-7">
+                                        <label class="col-sm-12 control-label"></label>
+                                        <div class="col-sm-12">
 
                                             <div class="alert alert-success text-center">
-                                                <h2>{$ currentStatus $}</h2>
+{#                                                <h2>{$ currentStatus $}</h2>#}
+                                                <h2 class="ng-binding">Successfully Restored</h2>
                                             </div>
 
                                             <div class="progress">
@@ -119,7 +120,7 @@
                                             </div>
 
                                             <div ng-hide="success" class="alert alert-success">
-                                                <p>{% trans "Backup succesfully." %}</p>
+                                                <p>{% trans "Restored succesfully." %}</p>
                                             </div>
 
 
@@ -132,7 +133,7 @@
                                     </div>
 
                                     <div ng-hide="installationProgress" class="form-group">
-                                        <label class="col-sm-3 control-label"></label>
+                                        <label class="col-sm-12 control-label"></label>
                                         <div class="col-sm-4">
                                             <button type="button" ng-disabled="goBackDisable" ng-click="goBack()"
                                                     class="btn btn-primary btn-lg">{% trans "Go Back" %}</button>
@@ -140,17 +141,14 @@
                                     </div>
                                 </div>
                                 <div class="modal-footer">
-{#                                    <button type="button" class="btn btn-primary"#}
-{#                                            ng-click="setupAccount()">Save <img#}
-{#                                            ng-hide="cyberpanelLoading"#}
-{#                                            src="">#}
-{#                                    </button>#}
+
                                     <button type="button" ng-disabled="savingSettings"
                                             class="btn btn-default" data-dismiss="modal">
                                         Close
                                     </button>
                                 </div>
                             </div>
+
                         </div>
                     </div>
                 </div>
