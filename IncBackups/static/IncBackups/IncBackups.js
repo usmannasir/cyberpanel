@@ -1365,15 +1365,15 @@ app.controller('restorev2backupoage', function ($scope, $http, $timeout, $compil
                     for (var j = 0; j < snapshots[i][1].length; j++) {
                         var tml = '<tr style="">\n' +
                             '  <td>' + snapshots[i][1][j].id + '</td>' +
-                            console.log(snapshots[i][1][j].id)
-                        tml += '  <td><button  type="button" class="btn btn-danger">Delete</button></td>\n' +
+                            '  <td>' + snapshots[i][1][j].time + '</td>' +
+                            '  <td><button  type="button" class="btn btn-danger">Delete</button></td>\n' +
                             '</tr>' +
                             '<tr style="border: none!important;"> <td colspan="2" style="display: inherit;max-height: 10px;background-color: transparent; border: none">\n' +
                             '  <button id="' + snapshots[i][1][j].id + 'button" class="my-4 mx-4 btn " style="margin-bottom: 15px;margin-top: -8px;background-color: #161a69; color: white;border-radius: 6px" onclick=listpaths("' + snapshots[i][1][j].id + '","' + snapshots[i][1][j].id + 'button")>+</button>\n' +
                             '</td></tr>' +
                             '<tr style="border: none!important;">' +
                             '  <td colspan="2" style="display: none;border: none"  id="' + snapshots[i][1][j].id+ '">' +
-                            '    <table id="inside" style="margin: 0 auto;">\n';
+                            '    <table id="inside" style="margin: 0 auto; margin-bottom: 30px;border: 1px #ccc solid;">\n';
 
                         for (var k = 0; k < snapshots[i][1][j].paths.length; k++) {
                             tml += '<tr style="border-top: 1px #cccccc solid;display: flex;padding: 15px; justify-content: space-between;">\n' +
