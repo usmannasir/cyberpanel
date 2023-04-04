@@ -642,8 +642,10 @@ token = {token}
         self.restore = 1
         self.StatusFile = self.StatusFile_Restore
 
-        from websiteFunctions.models import Websites, Backupsv2
-        from django.forms.models import model_to_dict
+        if os.path.exists(self.StatusFile):
+            os.remove(self.StatusFile)
+
+        from websiteFunctions.models import Websites
         from plogical.mysqlUtilities import mysqlUtilities
         self.website = Websites.objects.get(domain=self.data['domain'])
 
