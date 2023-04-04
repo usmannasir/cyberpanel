@@ -853,21 +853,35 @@ def RestorePathV2(request):
         else:
             return ACLManager.loadError()
 
-        vm = CPBackupsV2({'domain': Selectedwebsite, 'BackendName': Selectedrepo, "function": "", 'BasePath': '/home/backup'})
-        status = vm.InitiateRestore(SnapShotId, Path)
+        extra_args = {}
+        extra_args['function'] = 'InitiateRestore'
+        extra_args['website'] = Selectedwebsite
+        extra_args['domain'] = Selectedwebsite
+        extra_args['BasePath'] = '/home/backup'
+        extra_args['BackendName'] = Selectedrepo
+        extra_args['path'] = Path
+        extra_args['snapshotid'] = SnapShotId
+        # extra_args['BackupData'] = data['websiteData'] if 'websiteData' in data else False
+        # extra_args['BackupEmails'] = data['websiteEmails'] if 'websiteEmails' in data else False
+        # extra_args['BackupDatabase'] = data['websiteDatabases'] if 'websiteDatabases' in data else False
 
-        if status == 1:
-            final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None"})
-            return HttpResponse(final_json)
-        else:
-            # final_json = json.dumps({'status': 0, 'fetchStatus': 1, 'error_message': ac,})
-            final_json = json.dumps({'status': 0, 'fetchStatus': 1, 'error_message': 'Cannot Find!', })
-            return HttpResponse(final_json)
+
+        background = CPBackupsV2(extra_args)
+        background.start()
+
+        # vm = CPBackupsV2({'domain': Selectedwebsite, 'BackendName': Selectedrepo, "function": "", 'BasePath': '/home/backup'})
+        # status = vm.InitiateRestore(SnapShotId, Path)
+
+        time.sleep(2)
+
+        data_ret = {'status': 1, 'installStatus': 1, 'error_message': 'None',}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
 
     except BaseException as msg:
-        final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
-        final_json = json.dumps(final_dic)
-        return HttpResponse(final_json)
+        data_ret = {'status': 0, 'installStatus': 0, 'error_message': str(msg)}
+        json_data = json.dumps(data_ret)
+        return HttpResponse(json_data)
 
 def selectwebsiteRetorev2(request):
     import re
