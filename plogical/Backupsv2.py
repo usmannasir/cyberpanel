@@ -74,6 +74,9 @@ class CPBackupsV2(multi.Thread):
         try:
             if self.function == 'InitiateBackup':
                 self.InitiateBackup()
+            elif self.function == 'InitiateRestore':
+                self.InitiateRestore()
+
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [CPBackupsV2.run]')
 
@@ -635,7 +638,7 @@ token = {token}
 
     #### Resote Functions
 
-    def InitiateRestore(self, snapshotid, path):
+    def InitiateRestore(self):
 
         ### if restore then status file should be restore status file
 
@@ -695,16 +698,16 @@ token = {token}
 
                 ### Find Restore path first, if path is db, only then restore it to cp
 
-                if path.find('.sql') > -1:
-                    mysqlUtilities.restoreDatabaseBackup(path.rstrip('.sql'), None, None, None, None, 1, self.repo, self.website.externalApp, snapshotid)
+                if self.path.find('.sql') > -1:
+                    mysqlUtilities.restoreDatabaseBackup(self.path.rstrip('.sql'), None, None, None, None, 1, self.repo, self.website.externalApp, self.snapshotid)
                 else:
 
-                    if path.find('/home/vmail') > -1:
+                    if self.path.find('/home/vmail') > -1:
                         externalApp = None
                     else:
                         externalApp = self.website.externalApp
 
-                    command = f'rustic -r {self.repo} restore {snapshotid}:{path} {path} --password "" --json 2>/dev/null'
+                    command = f'rustic -r {self.repo} restore {self.snapshotid}:{self.path} {self.path} --password "" --json 2>/dev/null'
                     result = ProcessUtilities.outputExecutioner(command, externalApp, True)
 
                 if os.path.exists(ProcessUtilities.debugPath):

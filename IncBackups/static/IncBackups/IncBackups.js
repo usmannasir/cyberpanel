@@ -1205,6 +1205,11 @@ app.controller('restorev2backupoage', function ($scope, $http, $timeout, $compil
 
 
     $scope.backupLoading = true;
+    $scope.installationProgress = true;
+    $scope.errorMessageBox = true;
+    $scope.success = true;
+    $scope.couldNotConnect = true;
+    $scope.goBackDisable = true;
 
     $scope.selectwebsite = function () {
         document.getElementById('reposelectbox').innerHTML = "";
@@ -1286,17 +1291,21 @@ app.controller('restorev2backupoage', function ($scope, $http, $timeout, $compil
         }
     }
 
-    $scope.RestorePathV2 = function (SnapshotId, Path) {
+    $scope.RestorePathV2Model = function (SnapshotId, Path) {
+        $('#RestoreSnapshotPath').modal('show');
 
-        console.log("SnapshotId: " + SnapshotId)
-        console.log("Path: " + Path)
-        var url = "/IncrementalBackups/RestorePathV2";
+        document.getElementById('Snapshot_id').innerText = SnapshotId
+        document.getElementById('Snapshot_Path_id').innerText = Path
+
+
+    }
+    function getCreationStatus() {
+
+        url = "/IncrementalBackups/CreateV2BackupStatus";
+
         var data = {
-            snapshotid: SnapshotId,
-            path: Path,
-            selwebsite: $scope.selwebsite,
-            selectedrepo:$('#reposelectbox').val()
-        }
+            domain: Domain
+        };
 
         var config = {
             headers: {
@@ -1310,13 +1319,111 @@ app.controller('restorev2backupoage', function ($scope, $http, $timeout, $compil
 
         function ListInitialDatas(response) {
 
+            if (response.data.abort === 1) {
+
+                if (response.data.installStatus === 1) {
+
+                    $scope.webSiteCreationLoading = true;
+                    $scope.installationDetailsForm = true;
+                    $scope.installationProgress = false;
+                    $scope.errorMessageBox = true;
+                    $scope.success = false;
+                    $scope.couldNotConnect = true;
+                    $scope.goBackDisable = false;
+
+                    $("#installProgress").css("width", "100%");
+                    $scope.installPercentage = "100";
+                    $scope.currentStatus = response.data.currentStatus;
+                    $timeout.cancel();
+
+                } else {
+                    $scope.webSiteCreationLoading = true;
+                    $scope.installationDetailsForm = true;
+                    $scope.installationProgress = false;
+                    $scope.errorMessageBox = false;
+                    $scope.success = true;
+                    $scope.couldNotConnect = true;
+                    $scope.goBackDisable = false;
+
+                    $scope.errorMessage = response.data.error_message;
+
+                    $("#installProgress").css("width", "0%");
+                    $scope.installPercentage = "0";
+                    $scope.goBackDisable = false;
+
+                }
+
+            } else {
+                $scope.webSiteCreationLoading = false;
+                $("#installProgress").css("width", response.data.installationProgress + "%");
+                $scope.installPercentage = response.data.installationProgress;
+                $scope.currentStatus = response.data.currentStatus;
+                $timeout(getCreationStatus, 1000);
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+
+            $scope.webSiteCreationLoading = true;
+            $scope.installationDetailsForm = true;
+            $scope.installationProgress = false;
+            $scope.errorMessageBox = true;
+            $scope.success = true;
+            $scope.couldNotConnect = false;
+            $scope.goBackDisable = false;
+
+        }
+
+
+    }
+    $scope.RestorePathV2 = function (SnapshotId, Path) {
+
+        SnapshotId = document.getElementById('Snapshot_id').innerText
+        Path = document.getElementById('Snapshot_Path_id').innerText
+        console.log("SnapshotId: " + SnapshotId)
+        console.log("Path: " + Path)
+        var url = "/IncrementalBackups/RestorePathV2";
+        var data = {
+            snapshotid: SnapshotId,
+            path: Path,
+            selwebsite: $scope.selwebsite,
+            selectedrepo: $('#reposelectbox').val()
+        }
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
             if (response.data.status === 1) {
                 $scope.SnapShotId = response.data.SnapShotId;
                 $scope.tempPath = response.data.Path;
 
+
                 console.log("Returned ID on ListInitialDatas: " + $scope.SnapShotId)
                 console.log("Returned PATH on ListInitialDatas: " + $scope.tempPath)
 
+
+                Domain = $scope.selwebsite;
+                getCreationStatus();
+
+            } else {
+                $scope.backupLoading = true;
+                $scope.installationDetailsForm = true;
+                $scope.installationProgress = false;
+                $scope.errorMessageBox = false;
+                $scope.success = true;
+                $scope.couldNotConnect = true;
+                $scope.goBackDisable = false;
+
+                $scope.errorMessage = response.data.error_message;
             }
 
         }
@@ -1355,12 +1462,9 @@ app.controller('restorev2backupoage', function ($scope, $http, $timeout, $compil
 
                 var data = response.data.data
 
-                console.log(response.data.data)
 
                 var snapshots = response.data.data
-                console.log("length 0 : "+snapshots.length)
-                console.log("length 0 1 : "+snapshots[0][1].length)
-                console.log("length 1 1 : "+snapshots[1][1].length)
+
                 for (var i = 0; i < snapshots.length; i++) {
                     for (var j = 0; j < snapshots[i][1].length; j++) {
                         var tml = '<tr style="">\n' +
@@ -1372,14 +1476,14 @@ app.controller('restorev2backupoage', function ($scope, $http, $timeout, $compil
                             '  <button id="' + snapshots[i][1][j].id + 'button" class="my-4 mx-4 btn " style="margin-bottom: 15px;margin-top: -8px;background-color: #161a69; color: white;border-radius: 6px" onclick=listpaths("' + snapshots[i][1][j].id + '","' + snapshots[i][1][j].id + 'button")>+</button>\n' +
                             '</td></tr>' +
                             '<tr style="border: none!important;">' +
-                            '  <td colspan="2" style="display: none;border: none"  id="' + snapshots[i][1][j].id+ '">' +
+                            '  <td colspan="2" style="display: none;border: none"  id="' + snapshots[i][1][j].id + '">' +
                             '    <table id="inside" style="margin: 0 auto; margin-bottom: 30px;border: 1px #ccc solid;">\n';
 
                         for (var k = 0; k < snapshots[i][1][j].paths.length; k++) {
                             tml += '<tr style="border-top: 1px #cccccc solid;display: flex;padding: 15px; justify-content: space-between;">\n' +
                                 '<td style="">' + snapshots[i][1][j].paths[k] + '</td>\n' +
                                 '<td style="">' +
-                                '<button id="' + snapshots[i][1][j].paths[k] + '" style="margin-inline: 30px; color: white!important; background-color: #3051be; border-radius: 6px;" class="btn" ng-click=\'RestorePathV2("' + snapshots[i][1][j].id + '","' + snapshots[i][1][j].paths[k] + '")\'>Restore</button></td>\n' +
+                                '<button id="' + snapshots[i][1][j].paths[k] + '" style="margin-inline: 30px; color: white!important; background-color: #3051be; border-radius: 6px;" class="btn" ng-click=\'RestorePathV2Model("' + snapshots[i][1][j].id + '","' + snapshots[i][1][j].paths[k] + '")\'>Restore</button></td>\n' +
                                 '</tr>\n';
                         }
 
@@ -1525,15 +1629,15 @@ app.controller('CreateV2Backup', function ($scope, $http, $timeout, $compile) {
         if (websiteData === true || websiteDatabases === true || websiteEmails === true) {
             chk = 1;
         }
-        var data ={};
+        var data = {};
 
 
-         data = {
+        data = {
             Selectedwebsite: $scope.selwebsite,
             Selectedrepo: $('#reposelectbox').val(),
-             websiteDatabases: websiteDatabases,
-             websiteEmails: websiteEmails,
-             websiteData: websiteData,
+            websiteDatabases: websiteDatabases,
+            websiteEmails: websiteEmails,
+            websiteData: websiteData,
 
         };
 
@@ -1741,8 +1845,6 @@ app.controller('ConfigureV2Backup', function ($scope, $http, $timeout) {
 
 function listpaths(pathid, button) {
 
-    console.log("ID of button used to hide " + button);
-    console.log("  ID of container which we hide on button press" + pathid);
     var pathlist = document.getElementById(pathid)
     if (pathlist.style.display === "none") {
         pathlist.style.display = "revert";
