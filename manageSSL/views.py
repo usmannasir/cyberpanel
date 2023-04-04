@@ -34,13 +34,17 @@ def v2ManageSSL(request):
 
     data = {}
 
+    if ACLManager.CheckForPremFeature('all'):
+        data['PremStat'] = 1
+    else:
+        data['PremStat'] = 0
+
     if request.method == 'POST':
         SAVED_CF_Key = request.POST.get('SAVED_CF_Key')
         SAVED_CF_Email = request.POST.get('SAVED_CF_Email')
         from plogical.dnsUtilities import DNS
         DNS.ConfigureCloudflareInAcme(SAVED_CF_Key, SAVED_CF_Email)
         data['SaveSuccess'] = 1
-
 
 
     RetStatus, SAVED_CF_Key, SAVED_CF_Email = ACLManager.FetchCloudFlareAPIKeyFromAcme()
@@ -60,56 +64,55 @@ def v2IssueSSL(request):
         userID = request.session['userID']
         admin = Administrator.objects.get(pk=userID)
         try:
-            if request.method == 'POST':
-                currentACL = ACLManager.loadedACL(userID)
+            if ACLManager.CheckForPremFeature('all'):
+                if request.method == 'POST':
+                    currentACL = ACLManager.loadedACL(userID)
 
-                if currentACL['admin'] == 1:
-                    pass
-                elif currentACL['manageSSL'] == 1:
-                    pass
-                else:
-                    return ACLManager.loadErrorJson('SSL', 0)
+                    if currentACL['admin'] == 1:
+                        pass
+                    elif currentACL['manageSSL'] == 1:
+                        pass
+                    else:
+                        return ACLManager.loadErrorJson('SSL', 0)
 
-                data = json.loads(request.body)
-                virtualHost = data['virtualHost']
+                    data = json.loads(request.body)
+                    virtualHost = data['virtualHost']
 
-                if ACLManager.checkOwnership(virtualHost, admin, currentACL) == 1:
-                    pass
-                else:
-                    return ACLManager.loadErrorJson()
+                    if ACLManager.checkOwnership(virtualHost, admin, currentACL) == 1:
+                        pass
+                    else:
+                        return ACLManager.loadErrorJson()
 
-                try:
-                    website = ChildDomains.objects.get(domain=virtualHost)
-                    adminEmail = website.master.adminEmail
-                    path = website.path
-                except:
-                    website = Websites.objects.get(domain=virtualHost)
-                    adminEmail = website.adminEmail
-                    path = "/home/" + virtualHost + "/public_html"
+                    try:
+                        website = ChildDomains.objects.get(domain=virtualHost)
+                        adminEmail = website.master.adminEmail
+                        path = website.path
+                    except:
+                        website = Websites.objects.get(domain=virtualHost)
+                        adminEmail = website.adminEmail
+                        path = "/home/" + virtualHost + "/public_html"
 
-                ## ssl issue
+                    ## ssl issue
 
-                execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
-                execPath = execPath + " issueSSLv2 --virtualHostName " + virtualHost + " --administratorEmail " + adminEmail + " --path " + path
-                output = ProcessUtilities.outputExecutioner(execPath)
+                    execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+                    execPath = execPath + " issueSSLv2 --virtualHostName " + virtualHost + " --administratorEmail " + adminEmail + " --path " + path
+                    output = ProcessUtilities.outputExecutioner(execPath)
 
-                if output.find("1,") > -1:
-                    ## ssl issue ends
+                    if output.find("1,") > -1:
+                        ## ssl issue ends
 
-                    website.ssl = 1
-                    website.save()
+                        website.ssl = 1
+                        website.save()
 
-                    data_ret = {'status': 1, "SSL": 1,
-                                'error_message': "None", 'sslLogs': output}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
-                else:
-                    data_ret = {'status': 0, "SSL": 0,
-                                'error_message': output, 'sslLogs': output}
-                    json_data = json.dumps(data_ret)
-                    return HttpResponse(json_data)
-
-
+                        data_ret = {'status': 1, "SSL": 1,
+                                    'error_message': "None", 'sslLogs': output}
+                        json_data = json.dumps(data_ret)
+                        return HttpResponse(json_data)
+                    else:
+                        data_ret = {'status': 0, "SSL": 0,
+                                    'error_message': output, 'sslLogs': output}
+                        json_data = json.dumps(data_ret)
+                        return HttpResponse(json_data)
         except BaseException as msg:
             data_ret = {'status': 0, "SSL": 0,
                         'error_message': str(msg)}
