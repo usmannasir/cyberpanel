@@ -294,6 +294,10 @@ class ProcessUtilities(multi.Thread):
             if getpass.getuser() == 'root':
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.writeToFile(command)
+
+                if user!=None:
+                    if not command.startswith('sudo'):
+                        command = f'sudo -u {user} {command}'
                 if shell == None or shell == True:
                     p = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
                 else:

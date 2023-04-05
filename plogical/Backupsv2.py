@@ -420,6 +420,7 @@ token = {token}
                         return 0
 
                     self.UpdateStatus('Backup config created,5', CPBackupsV2.RUNNING)
+
                 except BaseException as msg:
                     self.UpdateStatus(f'Failed during config generation, Error: {str(msg)}', CPBackupsV2.FAILED)
                     return 0
@@ -453,6 +454,7 @@ token = {token}
                     self.MergeSnapshots()
 
                     self.UpdateStatus('Completed', CPBackupsV2.COMPLETED)
+                    return 1
 
                     break
                 except BaseException as msg:
@@ -724,6 +726,19 @@ token = {token}
                     self.website = Websites.objects.get(domain=self.data['domain'])
                     self.website.BackupLock = 0
                     self.website.save()
+
+    ### Delete Snapshots
+
+    def DeleteSnapshots(self, deleteString):
+
+        ### if restore then status file should be restore status file
+
+        from websiteFunctions.models import Websites
+        self.website = Websites.objects.get(domain=self.data['domain'])
+
+
+        command = f'rustic -r {self.repo} forget {deleteString} --prune --password ""  2>/dev/null'
+        result = ProcessUtilities.outputExecutioner(command, None, True)
 
     # def BackupEmails(self):
     #

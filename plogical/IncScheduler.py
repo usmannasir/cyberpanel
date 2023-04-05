@@ -1393,6 +1393,77 @@ Automatic backup failed for %s on %s.
         for website in Websites.objects.all():
             virtualHostUtilities.setupAutoDiscover(1, '/home/cyberpanel/templogs', website.domain, website.admin)
 
+    @staticmethod
+    def v2Backups(function):
+        try:
+            # print("....start remote backup...............")
+            from websiteFunctions.models import Websites
+            from loginSystem.models import Administrator
+            import json
+            import time
+            if os.path.exists('/home/cyberpanel/v2backups'):
+                for website in Websites.objects.all():
+                    finalConfigPath = f'/home/cyberpanel/v2backups/{website.domain}'
+                    if os.path.exists(finalConfigPath):
+
+                        command = f'cat {finalConfigPath}'
+                        RetResult = ProcessUtilities.outputExecutioner(command)
+                        print(repr(RetResult))
+                        BackupConfig = json.loads(ProcessUtilities.outputExecutioner(command).rstrip('\n'))
+
+                        for key, value in BackupConfig.items():
+                            try:
+                                print(key, '->', value)
+                                if key == 'site':
+                                    continue
+                                if value['frequency'] == function:
+                                    extra_args = {}
+                                    extra_args['function'] = 'InitiateBackup'
+                                    extra_args['website'] = website.domain
+                                    extra_args['domain'] = website.domain
+                                    extra_args['BasePath'] = '/home/backup'
+                                    extra_args['BackendName'] = key
+                                    extra_args['BackupData'] = value['websiteData'] if 'websiteData' in value else False
+                                    extra_args['BackupEmails'] = value['websiteEmails'] if 'websiteEmails' in value else False
+                                    extra_args['BackupDatabase'] = value['websiteDatabases'] if 'websiteDatabases' in value else False
+
+                                    from plogical.Backupsv2 import CPBackupsV2
+                                    background = CPBackupsV2(extra_args)
+                                    RetStatus = background.InitiateBackup()
+
+                                    print(RetStatus)
+
+                                    if RetStatus == 0:
+                                        SUBJECT = "Automatic Backupv2 failed for %s on %s." % (website.domain, time.strftime("%m.%d.%Y_%H-%M-%S"))
+                                        adminEmailPath = '/home/cyberpanel/adminEmail'
+                                        adminEmail = open(adminEmailPath, 'r').read().rstrip('\n')
+                                        sender = 'root@%s' % (socket.gethostname())
+                                        error = ProcessUtilities.outputExecutioner(f'cat {background.StatusFile}')
+                                        TO = [adminEmail]
+                                        message = f"""\
+From: %s
+To: %s
+Subject: %s
+Automatic Backupv2 failed for %s on %s.
+{error}
+""" % (sender, ", ".join(TO), SUBJECT, website.domain, time.strftime("%m.%d.%Y_%H-%M-%S"))
+
+                                        logging.SendEmail(sender, TO, message)
+                                    else:
+                                        BackupConfig[key]['lastRun'] = time.strftime("%m.%d.%Y_%H-%M-%S")
+                            except BaseException as msg:
+                                print("Error: [v2Backups]: %s" % str(msg))
+                                logging.writeToFile('%s. [v2Backups]' % (str(msg)))
+
+                        FinalContent = json.dumps(BackupConfig)
+                        WriteToFile = open(finalConfigPath, 'w')
+                        WriteToFile.write(FinalContent)
+                        WriteToFile.close()
+
+        except BaseException as msg:
+            print("Error: [v2Backups]: %s" % str(msg))
+            logging.writeToFile('%s. [v2Backups]' % (str(msg)))
+
 
 def main():
     parser = argparse.ArgumentParser(description='CyberPanel Installer')
@@ -1404,8 +1475,9 @@ def main():
         IncScheduler.CalculateAndUpdateDiskUsage()
         return 0
 
-    if args.function == '30 Minutes' or args.function == '30 Minutes'or args.function == 'Daily' or args.function == '1 Hour' or args.function == '6 Hours' or args.function == '12 Hours' or args.function == '1 Day' or args.function == '3 Days' or args.function == '1 Week':
+    if args.function == '30 Minutes' or args.function == 'Daily' or args.function == '1 Hour' or args.function == '6 Hours' or args.function == '12 Hours' or args.function == '1 Day' or args.function == '3 Days' or args.function == '1 Week':
         IncScheduler.RemoteBackup(args.function)
+        IncScheduler.v2Backups(args.function)
         return 0
 
     if args.function == 'forceRunAWSBackup':
