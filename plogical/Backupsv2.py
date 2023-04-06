@@ -743,7 +743,10 @@ token = {token}
         self.website = Websites.objects.get(domain=self.data['domain'])
 
         command = f'rustic -r {self.repo} forget {deleteString} --prune --password ""  2>/dev/null'
-        result = ProcessUtilities.outputExecutioner(command, None, True)
+        result = ProcessUtilities.outputExecutioner(command, self.website.externalApp, True)
+
+        if os.path.exists(ProcessUtilities.debugPath):
+            logging.CyberCPLogFileWriter.writeToFile(result)
 
     @staticmethod
     def FetchCurrentSchedules(website):
@@ -759,10 +762,16 @@ token = {token}
                 schedules = []
                 for value in BackupConfig['schedules']:
 
-                    schedules.append({'repo': value['repo'], 'frequency': value['frequency'], 'websiteData': value['websiteData'],
+                    schedules.append({
+                                      'repo': value['repo'],
+                                      'frequency': value['frequency'],
+                                      'websiteData': value['websiteData'],
                                       'websiteEmails': value['websiteEmails'],
-                                      'websiteDatabases': value['websiteDatabases'], 'lastRun': value['lastRun'],
-                                      'domain': website})
+                                      'websiteDatabases': value['websiteDatabases'],
+                                      'lastRun': value['lastRun'],
+                                      'retention': value['retention'],
+                                      'domain': website
+                                      })
 
                 return 1, schedules
             else:
@@ -805,7 +814,7 @@ token = {token}
             return 0, str(msg)
 
     @staticmethod
-    def CreateScheduleV2(website, repo, frequency, websiteData, websiteDatabases, websiteEmails):
+    def CreateScheduleV2(website, repo, frequency, websiteData, websiteDatabases, websiteEmails, retention):
         try:
 
             finalConfigPath = f'/home/cyberpanel/v2backups/{website}'
@@ -819,11 +828,11 @@ token = {token}
                 BackupConfig = json.loads(ProcessUtilities.outputExecutioner(command).rstrip('\n'))
 
                 try:
-                    BackupConfig['schedules'].append({"repo": repo, "retention": "7", "frequency": frequency, "websiteData": websiteData,
+                    BackupConfig['schedules'].append({"repo": repo, "retention": retention, "frequency": frequency, "websiteData": websiteData,
                                       "websiteEmails": websiteEmails, "websiteDatabases": websiteDatabases,
                                       "lastRun": ""})
                 except:
-                    BackupConfig['schedules'] = [{"repo": repo, "retention": "7", "frequency": frequency, "websiteData": websiteData,
+                    BackupConfig['schedules'] = [{"repo": repo, "retention": retention, "frequency": frequency, "websiteData": websiteData,
                                       "websiteEmails": websiteEmails, "websiteDatabases": websiteDatabases,
                                       "lastRun": ""}]
 
@@ -839,7 +848,7 @@ token = {token}
             else:
                 BackupConfig = {'site': website,
                                 'schedules':
-                                    [{"repo": repo, "retention": "7", "frequency": frequency,
+                                    [{"repo": repo, "retention": retention, "frequency": frequency,
                                       "websiteData": websiteData,
                                       "websiteEmails": websiteEmails, "websiteDatabases": websiteDatabases,
                                       "lastRun": ""}]}

@@ -20,7 +20,7 @@
         <div ng-controller="CreateV2Backup" class="panel">
             <div class="panel-body">
                 <h3 class="title-hero">
-                    {% trans "Create v2 Backup" %} <img ng-hide="backupLoading" src="{% static 'images/loading.gif' %}">
+                    {% trans "Create v2 Backup" %} <img ng-hide="backupLoading" src="{% static 'images/loading.gif' %}"> - <a href="{% url 'RestoreV2backupSite' %}">Restore Backups</a>
                 </h3>
                 <div  class="example-box-wrapper">
 

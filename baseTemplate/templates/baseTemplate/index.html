@@ -335,7 +335,8 @@
                                        data-original-title=".icon-cloud-upload" aria-describedby="tooltip896208"></i>
                                     <span>{% trans "Connect" %}</span>
                                 </a>
-                                <a id="sidebar-menu-item-community" target="_blank" href="https://go.cyberpanel.net/community"
+                                <a id="sidebar-menu-item-community" target="_blank"
+                                   href="https://go.cyberpanel.net/community"
                                    title="{% trans 'Connect' %}">
                                     <i class="glyph-icon tooltip-button icon-comments-o" title="{% trans 'Community' %}"
                                        data-original-title=".icon-comments-alt" aria-describedby="tooltip896208"></i>
@@ -397,7 +398,7 @@
                             </div><!-- .sidebar-submenu -->
                         </li>
 
-                            <!-------------WordPress--------------------------->
+                        <!-------------WordPress--------------------------->
                         <li id="sidebar-menu-item-wordpress">
                             <a href="{% url 'loadWebsitesHome' %}" title="{% trans 'WordPress' %}">
                                 <div class="glyph-icon icon-wordpress" title="{% trans 'WordPress' %}"></div>
@@ -680,18 +681,15 @@
                             <div class="sidebar-submenu">
 
                                 <ul>
-                                        <li><a href="{% url 'CreateV2Backup' %}"
-                                               title="{% trans "Create V2 Backup" %}"><span>{% trans "Create V2 Backup" %}</span></a>
-                                        </li>
-                                        <li><a href="{% url 'ConfigureV2Backup' %}"
-                                               title="{% trans "Configure V2 Backup" %}"><span>{% trans "Configure V2 Backup" %}</span></a>
-                                        </li>
-                                        <li><a href="{% url 'RestoreV2backupSite' %}"
-                                                   title="{% trans "Restore V2 Backup" %}"><span>{% trans "Restore V2 Backup" %}</span></a>
-                                        </li>
+                                    <li><a href="{% url 'CreateV2Backup' %}"
+                                           title="{% trans "Create V2 Backup" %}"><span>{% trans "Create/Restore V2 Backup" %}</span></a>
+                                    </li>
+                                    <li><a href="{% url 'ConfigureV2Backup' %}"
+                                           title="{% trans "Configure Backends" %}"><span>{% trans "Configure Backends" %}</span></a>
+                                    </li>
                                     <li><a href="{% url 'schedulev2Backups' %}"
-                                                   title="{% trans "Schedule V2 Backup" %}"><span>{% trans "Schedule V2 Backup" %}</span></a>
-                                        </li>
+                                           title="{% trans "Schedule V2 Backup" %}"><span>{% trans "Schedule V2 Backup" %}</span></a>
+                                    </li>
 
                                 </ul>
 

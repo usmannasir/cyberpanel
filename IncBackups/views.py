@@ -1122,9 +1122,10 @@ def CreateScheduleV2(request):
         Selectedwebsite = data['Selectedwebsite']
         repo = data['repo']
         frequency = data['frequency']
-        websiteData = data['websiteData']
-        websiteDatabases = data['websiteDatabases']
-        websiteEmails = data['websiteEmails']
+        retention = data['retention']
+        websiteData = data['websiteData'] if 'websiteData' in data else False
+        websiteDatabases = data['websiteDatabases'] if 'websiteDatabases' in data else False
+        websiteEmails = data['websiteEmails'] if 'websiteEmails' in data else False
 
         #
         # extra_args['BackupData'] = data['websiteData'] if 'websiteData' in data else False
@@ -1140,7 +1141,7 @@ def CreateScheduleV2(request):
             return ACLManager.loadError()
 
 
-        status, message = CPBackupsV2.CreateScheduleV2(Selectedwebsite, repo, frequency, websiteData, websiteDatabases, websiteEmails)
+        status, message = CPBackupsV2.CreateScheduleV2(Selectedwebsite, repo, frequency, websiteData, websiteDatabases, websiteEmails, retention)
 
         final_dic = {'status': 1, 'error_message': message}
         final_json = json.dumps(final_dic)

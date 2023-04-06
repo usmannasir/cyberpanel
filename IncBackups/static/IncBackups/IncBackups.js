@@ -2027,7 +2027,8 @@ app.controller('ScheduleV2Backup', function ($scope, $http, $timeout, $compile) 
             frequency: $scope.frequency,
             websiteData: $scope.websiteData,
             websiteDatabases: $scope.websiteDatabases,
-            websiteEmails: $scope.websiteEmails
+            websiteEmails: $scope.websiteEmails,
+            retention: $scope.retention
         };
         //alert( $scope.selwebsite);
 

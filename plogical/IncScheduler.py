@@ -1449,6 +1449,8 @@ Automatic Backupv2 failed for %s on %s.
                                         logging.SendEmail(sender, TO, message)
                                     else:
                                         value['lastRun'] = time.strftime("%m.%d.%Y_%H-%M-%S")
+
+                                    background.DeleteSnapshots(f"--keep-daily {value['retention']}")
                             except BaseException as msg:
                                 print("Error: [v2Backups]: %s" % str(msg))
                                 logging.writeToFile('%s. [v2Backups]' % (str(msg)))
