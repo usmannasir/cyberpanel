@@ -36,4 +36,8 @@ urlpatterns = [
     url(r'^CreateV2BackupStatus$', views.CreateV2BackupStatus, name='CreateV2BackupStatus'),
     url(r'^ConfigureSftpV2Backup$', views.ConfigureSftpV2Backup, name='ConfigureSftpV2Backup'),
 
+    url(r'^schedulev2Backups$', views.schedulev2Backups, name='schedulev2Backups'),
+    url(r'^DeleteScheduleV2$', views.DeleteScheduleV2, name='DeleteScheduleV2'),
+    url(r'^CreateScheduleV2$', views.CreateScheduleV2, name='CreateScheduleV2'),
+
 ]

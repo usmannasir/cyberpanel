@@ -1299,6 +1299,7 @@ app.controller('restorev2backupoage', function ($scope, $http, $timeout, $compil
 
 
     }
+
     function getCreationStatus() {
 
         url = "/IncrementalBackups/CreateV2BackupStatus";
@@ -1377,6 +1378,7 @@ app.controller('restorev2backupoage', function ($scope, $http, $timeout, $compil
 
 
     }
+
     $scope.RestorePathV2 = function (SnapshotId, Path) {
 
         SnapshotId = document.getElementById('Snapshot_id').innerText
@@ -1858,4 +1860,377 @@ function listpaths(pathid, button) {
 
     }
 }
+
+app.controller('ScheduleV2Backup', function ($scope, $http, $timeout, $compile) {
+
+
+    $scope.backupLoading = true;
+    $scope.installationProgress = true;
+    $scope.errorMessageBox = true;
+    $scope.success = true;
+    $scope.couldNotConnect = true;
+    $scope.goBackDisable = true;
+
+    var repoG, frequencyG, websiteDataG, websiteDatabasesG, websiteEmailsG;
+
+    $scope.deleteBackupInitialv2 = function (repo, frequency, websiteData, websiteDatabases, websiteEmails) {
+        repoG = repo;
+        frequencyG = frequency;
+        websiteDataG = websiteData;
+        websiteDatabasesG = websiteDatabases;
+        websiteEmailsG = websiteEmails;
+    }
+
+    $scope.DeleteScheduleV2 = function () {
+        $scope.backupLoading = false;
+        // document.getElementById('CreateV2BackupButton').style.display = "block";
+        var url = "/IncrementalBackups/DeleteScheduleV2";
+
+        var data = {
+            Selectedwebsite: $scope.selwebsite,
+            repo: repoG,
+            frequency: frequencyG,
+            websiteData: websiteDataG,
+            websiteDatabases: websiteDatabasesG,
+            websiteEmails: websiteEmailsG
+        };
+        //alert( $scope.selwebsite);
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.backupLoading = true;
+            if (response.data.status === 1) {
+                $scope.selectwebsite();
+                new PNotify({
+                        title: 'Success!',
+                        text: 'Successfully deleted.',
+                        type: 'success'
+                    });
+
+            } else {
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.backupLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+        }
+    }
+
+    $scope.selectwebsite = function () {
+        document.getElementById('reposelectbox').innerHTML = "";
+        $scope.backupLoading = false;
+        // document.getElementById('CreateV2BackupButton').style.display = "block";
+        var url = "/IncrementalBackups/selectwebsiteCreatev2";
+
+        var data = {
+            Selectedwebsite: $scope.selwebsite,
+            Selectedrepo: $('#reposelectbox').val(),
+        };
+        //alert( $scope.selwebsite);
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.backupLoading = true;
+            if (response.data.status === 1) {
+
+                const selectBox = document.getElementById('reposelectbox');
+
+
+                const options = response.data.data;
+                const option = document.createElement('option');
+                $scope.records = response.data.currentSchedules;
+
+
+                option.value = 1;
+                option.text = 'Choose Repo';
+
+                selectBox.appendChild(option);
+
+                if (options.length >= 1) {
+                    for (let i = 0; i < options.length; i++) {
+
+                        const option = document.createElement('option');
+
+
+                        option.value = options[i];
+                        option.text = options[i];
+
+                        selectBox.appendChild(option);
+                    }
+
+                } else {
+                    new PNotify({
+                        title: 'Error!',
+                        text: 'file empty',
+                        type: 'error'
+                    });
+                }
+
+
+            } else {
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.backupLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+        }
+    }
+
+    $scope.CreateScheduleV2 = function () {
+        $scope.backupLoading = false;
+        // document.getElementById('CreateV2BackupButton').style.display = "block";
+        var url = "/IncrementalBackups/CreateScheduleV2";
+
+        var data = {
+            Selectedwebsite: $scope.selwebsite,
+            repo: $('#reposelectbox').val(),
+            frequency: $scope.frequency,
+            websiteData: $scope.websiteData,
+            websiteDatabases: $scope.websiteDatabases,
+            websiteEmails: $scope.websiteEmails
+        };
+        //alert( $scope.selwebsite);
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.backupLoading = true;
+            if (response.data.status === 1) {
+                $scope.selectwebsite();
+                new PNotify({
+                        title: 'Success!',
+                        text: 'Successfully created.',
+                        type: 'success'
+                    });
+
+            } else {
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.backupLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+        }
+    }
+
+    var Domain;
+
+    $scope.CreateV2BackupButton = function () {
+        $scope.backupLoading = false;
+        $scope.installationDetailsForm = true;
+        $scope.installationProgress = false;
+        $scope.errorMessageBox = true;
+        $scope.success = true;
+        $scope.couldNotConnect = true;
+        $scope.goBackDisable = true;
+
+        var url = "/IncrementalBackups/CreateV2BackupButton";
+        var websiteData = $scope.websiteData;
+        var websiteEmails = $scope.websiteEmails;
+        var websiteDatabases = $scope.websiteDatabases;
+        var chk = 0;
+        if (websiteData === true || websiteDatabases === true || websiteEmails === true) {
+            chk = 1;
+        }
+        var data = {};
+
+
+        data = {
+            Selectedwebsite: $scope.selwebsite,
+            Selectedrepo: $('#reposelectbox').val(),
+            websiteDatabases: websiteDatabases,
+            websiteEmails: websiteEmails,
+            websiteData: websiteData,
+
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        //alert('Done..........')
+        if (chk === 1) {
+            $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+        } else {
+            $scope.backupLoading = true;
+            new PNotify({
+                title: 'Choose Backup Content!',
+                text: 'Please Choose Backup content Data, Database, Email',
+                type: 'error'
+            });
+        }
+
+
+        function ListInitialDatas(response) {
+            $scope.backupLoading = true;
+            if (response.data.status === 1) {
+
+                Domain = $scope.selwebsite;
+                getCreationStatus();
+
+            } else {
+                $scope.backupLoading = true;
+                $scope.installationDetailsForm = true;
+                $scope.installationProgress = false;
+                $scope.errorMessageBox = false;
+                $scope.success = true;
+                $scope.couldNotConnect = true;
+                $scope.goBackDisable = false;
+
+                $scope.errorMessage = response.data.error_message;
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.backupLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+        }
+    }
+
+    function getCreationStatus() {
+
+        url = "/IncrementalBackups/CreateV2BackupStatus";
+
+        var data = {
+            domain: Domain
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+            if (response.data.abort === 1) {
+
+                if (response.data.installStatus === 1) {
+
+                    $scope.webSiteCreationLoading = true;
+                    $scope.installationDetailsForm = true;
+                    $scope.installationProgress = false;
+                    $scope.errorMessageBox = true;
+                    $scope.success = false;
+                    $scope.couldNotConnect = true;
+                    $scope.goBackDisable = false;
+
+                    $("#installProgress").css("width", "100%");
+                    $scope.installPercentage = "100";
+                    $scope.currentStatus = response.data.currentStatus;
+                    $timeout.cancel();
+
+                } else {
+                    $scope.webSiteCreationLoading = true;
+                    $scope.installationDetailsForm = true;
+                    $scope.installationProgress = false;
+                    $scope.errorMessageBox = false;
+                    $scope.success = true;
+                    $scope.couldNotConnect = true;
+                    $scope.goBackDisable = false;
+
+                    $scope.errorMessage = response.data.error_message;
+
+                    $("#installProgress").css("width", "0%");
+                    $scope.installPercentage = "0";
+                    $scope.goBackDisable = false;
+
+                }
+
+            } else {
+                $scope.webSiteCreationLoading = false;
+                $("#installProgress").css("width", response.data.installationProgress + "%");
+                $scope.installPercentage = response.data.installationProgress;
+                $scope.currentStatus = response.data.currentStatus;
+                $timeout(getCreationStatus, 1000);
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+
+            $scope.webSiteCreationLoading = true;
+            $scope.installationDetailsForm = true;
+            $scope.installationProgress = false;
+            $scope.errorMessageBox = true;
+            $scope.success = true;
+            $scope.couldNotConnect = false;
+            $scope.goBackDisable = false;
+
+        }
+
+
+    }
+
+
+});
 

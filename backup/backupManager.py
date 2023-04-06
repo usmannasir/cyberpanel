@@ -57,10 +57,17 @@ class BackupManager:
         websitesName = ACLManager.findAllSites(currentACL, userID)
         proc = httpProc(request, 'IncBackups/RestoreV2Backup.html', {'websiteList': websitesName}, 'createBackup')
         return proc.render()
+
     def CreateV2backupSite(self, request=None, userID=None, data=None):
         currentACL = ACLManager.loadedACL(userID)
         websitesName = ACLManager.findAllSites(currentACL, userID)
         proc = httpProc(request, 'IncBackups/CreateV2Backup.html', {'websiteList': websitesName}, 'createBackup')
+        return proc.render()
+
+    def schedulev2Backups(self, request=None, userID=None, data=None):
+        currentACL = ACLManager.loadedACL(userID)
+        websitesName = ACLManager.findAllSites(currentACL, userID)
+        proc = httpProc(request, 'IncBackups/ScheduleV2Backup.html', {'websiteList': websitesName}, 'createBackup')
         return proc.render()
 
     def gDrive(self, request=None, userID=None, data=None):

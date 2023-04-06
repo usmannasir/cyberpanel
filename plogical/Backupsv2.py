@@ -21,6 +21,7 @@ except:
 from plogical.processUtilities import ProcessUtilities
 import threading as multi
 
+
 class CPBackupsV2(multi.Thread):
     PENDING_START = 0
     RUNNING = 1
@@ -106,7 +107,6 @@ class CPBackupsV2(multi.Thread):
         except:
             CurrentContent = ''
 
-
         if type == CPBackupsV2.SFTP:
             ## config = {"name":, "host":, "user":, "port":, "path":, "password":,}
             command = f'rclone obscure {config["password"]}'
@@ -130,7 +130,8 @@ pass = {ObsecurePassword}
             return HttpResponse(final_json)
         elif type == CPBackupsV2.GDrive:
 
-            token = """{"access_token":"%s","token_type":"Bearer","refresh_token":"%s"}""" %(config["token"], config["refresh_token"])
+            token = """{"access_token":"%s","token_type":"Bearer","refresh_token":"%s"}""" % (
+            config["token"], config["refresh_token"])
 
             content = f'''{CurrentContent}
 [{config["name"]}]
@@ -166,14 +167,14 @@ token = {token}
 
             file = open(self.StatusFile, 'a')
             file.writelines("[" + time.strftime(
-                "%m.%d.%Y_%H-%M-%S") + ":FAILED] " + message + "[404]" +"\n")
+                "%m.%d.%Y_%H-%M-%S") + ":FAILED] " + message + "[404]" + "\n")
             file.close()
         elif status == CPBackupsV2.COMPLETED:
             self.website.BackupLock = 0
             self.website.save()
             file = open(self.StatusFile, 'a')
             file.writelines("[" + time.strftime(
-                "%m.%d.%Y_%H-%M-%S") + ":COMPLETED] " + message + "[200]" +"\n")
+                "%m.%d.%Y_%H-%M-%S") + ":COMPLETED] " + message + "[200]" + "\n")
             file.close()
         else:
             file = open(self.StatusFile, 'a')
@@ -191,8 +192,8 @@ token = {token}
         command = f'rustic init -r {self.repo} --password ""'
         ProcessUtilities.executioner(command, self.website.externalApp)
 
-        #command = f'chown cyberpanel:cyberpanel {self.FinalPathRuctic}'
-        #ProcessUtilities.executioner(command)
+        # command = f'chown cyberpanel:cyberpanel {self.FinalPathRuctic}'
+        # ProcessUtilities.executioner(command)
 
         command = f'chown {self.website.externalApp}:{self.website.externalApp} {self.FinalPathRuctic}/config.json'
         ProcessUtilities.executioner(command)
@@ -219,8 +220,7 @@ token = {token}
     def MergeSnapshots(self):
         snapshots = ''
         for snapshot in self.snapshots:
-            snapshots= f'{snapshots} {snapshot}'
-
+            snapshots = f'{snapshots} {snapshot}'
 
         command = f'rustic -r {self.repo} merge {snapshots}  --password "" --json'
         result = ProcessUtilities.outputExecutioner(command, self.website.externalApp, True)
@@ -254,7 +254,7 @@ token = {token}
 
         ### Init rustic repo in main func so dont need to do again and again
 
-        while(1):
+        while (1):
 
             self.website = Websites.objects.get(domain=self.data['domain'])
 
@@ -263,12 +263,15 @@ token = {token}
                 Disk1 = f"du -sm /home/{self.website.domain}/"
                 Disk2 = "2>/dev/null | awk '{print $1}'"
 
-                self.WebsiteDiskUsage = int(ProcessUtilities.outputExecutioner(f"{Disk1} {Disk2}", 'root', True).rstrip('\n'))
+                self.WebsiteDiskUsage = int(
+                    ProcessUtilities.outputExecutioner(f"{Disk1} {Disk2}", 'root', True).rstrip('\n'))
 
-                self.CurrentFreeSpaceOnDisk = int(ProcessUtilities.outputExecutioner("df -m / | awk 'NR==2 {print $4}'", 'root', True).rstrip('\n'))
+                self.CurrentFreeSpaceOnDisk = int(
+                    ProcessUtilities.outputExecutioner("df -m / | awk 'NR==2 {print $4}'", 'root', True).rstrip('\n'))
 
                 if self.WebsiteDiskUsage > self.CurrentFreeSpaceOnDisk:
-                    self.UpdateStatus(f'Not enough disk space on the server to backup this website.', CPBackupsV2.FAILED)
+                    self.UpdateStatus(f'Not enough disk space on the server to backup this website.',
+                                      CPBackupsV2.FAILED)
                     return 0
 
                 ### Before doing anything install rustic
@@ -279,30 +282,26 @@ token = {token}
                     self.UpdateStatus(f'Failed to install Rustic, error: {message}', CPBackupsV2.FAILED)
                     return 0
 
-
                 # = Backupsv2(website=self.website, fileName='backup-' + self.data['domain'] + "-" + time.strftime("%m.%d.%Y_%H-%M-%S"), status=CPBackupsV2.RUNNING, BasePath=self.data['BasePath'])
-                #self.buv2.save()
+                # self.buv2.save()
 
-                #self.FinalPath = f"{self.data['BasePath']}/{self.buv2.fileName}"
+                # self.FinalPath = f"{self.data['BasePath']}/{self.buv2.fileName}"
 
                 ### Rustic backup final path
 
                 self.FinalPathRuctic = f"{self.data['BasePath']}/{self.website.domain}"
 
+                # command = f"mkdir -p {self.FinalPath}"
+                # ProcessUtilities.executioner(command)
 
-                #command = f"mkdir -p {self.FinalPath}"
-                #ProcessUtilities.executioner(command)
+                # command = f"chown {website.externalApp}:{website.externalApp} {self.FinalPath}"
+                # ProcessUtilities.executioner(command)
 
+                # command = f'chown cyberpanel:cyberpanel {self.FinalPath}'
+                # ProcessUtilities.executioner(command)
 
-
-                #command = f"chown {website.externalApp}:{website.externalApp} {self.FinalPath}"
-                #ProcessUtilities.executioner(command)
-
-                #command = f'chown cyberpanel:cyberpanel {self.FinalPath}'
-                #ProcessUtilities.executioner(command)
-
-                #command = f"chmod 711 {self.FinalPath}"
-                #ProcessUtilities.executioner(command)
+                # command = f"chmod 711 {self.FinalPath}"
+                # ProcessUtilities.executioner(command)
 
                 command = f"mkdir -p {self.FinalPathRuctic}"
                 ProcessUtilities.executioner(command)
@@ -317,10 +316,14 @@ token = {token}
 
                     self.UpdateStatus('Creating backup config,0', CPBackupsV2.RUNNING)
 
-                    Config = {'MainWebsite': model_to_dict(self.website, fields=['domain', 'adminEmail', 'phpSelection', 'state', 'config'])}
-                    Config['admin'] = model_to_dict(self.website.admin, fields=['userName', 'password', 'firstName', 'lastName',
-                                                                           'email', 'type', 'owner', 'token', 'api', 'securityLevel',
-                                                                           'state', 'initself.websitesLimit', 'twoFA', 'secretKey', 'config'])
+                    Config = {'MainWebsite': model_to_dict(self.website,
+                                                           fields=['domain', 'adminEmail', 'phpSelection', 'state',
+                                                                   'config'])}
+                    Config['admin'] = model_to_dict(self.website.admin,
+                                                    fields=['userName', 'password', 'firstName', 'lastName',
+                                                            'email', 'type', 'owner', 'token', 'api', 'securityLevel',
+                                                            'state', 'initself.websitesLimit', 'twoFA', 'secretKey',
+                                                            'config'])
                     Config['acl'] = model_to_dict(self.website.admin.acl)
 
                     ### Child domains to config
@@ -333,7 +336,7 @@ token = {token}
 
                     Config['ChildDomains'] = ChildsList
 
-                    #print(str(Config))
+                    # print(str(Config))
 
                     ### Databases
 
@@ -367,7 +370,9 @@ token = {token}
                     WPSitesList = []
 
                     for wpsite in self.website.wpsites_set.all():
-                        WPSitesList.append(model_to_dict(wpsite,fields=['title', 'path', 'FinalURL', 'AutoUpdates', 'PluginUpdates', 'ThemeUpdates', 'WPLockState']))
+                        WPSitesList.append(model_to_dict(wpsite, fields=['title', 'path', 'FinalURL', 'AutoUpdates',
+                                                                         'PluginUpdates', 'ThemeUpdates',
+                                                                         'WPLockState']))
 
                     Config['WPSites'] = WPSitesList
                     self.config = Config
@@ -403,8 +408,8 @@ token = {token}
                     except:
                         pass
 
-                    #command = f"echo '{json.dumps(Config)}' > {self.FinalPath}/config.json"
-                    #ProcessUtilities.executioner(command, self.website.externalApp, True)
+                    # command = f"echo '{json.dumps(Config)}' > {self.FinalPath}/config.json"
+                    # ProcessUtilities.executioner(command, self.website.externalApp, True)
 
                     command = f'chown cyberpanel:cyberpanel {self.FinalPathRuctic}/config.json'
                     ProcessUtilities.executioner(command)
@@ -476,8 +481,8 @@ token = {token}
         ### excluded databases are in a list self.data['ExcludedDatabases'] only backup databases if backupdatabase check is on
         ## For example if self.data['BackupDatabase'] is one then only run this function otherwise not
 
-        #command = f'chown {self.website.externalApp}:{self.website.externalApp} {self.FinalPathRuctic}'
-        #ProcessUtilities.executioner(command)
+        # command = f'chown {self.website.externalApp}:{self.website.externalApp} {self.FinalPathRuctic}'
+        # ProcessUtilities.executioner(command)
 
         command = f'rustic init -r {self.repo} --password ""'
         ProcessUtilities.executioner(command, self.website.externalApp)
@@ -496,19 +501,19 @@ token = {token}
 
                 CurrentDBPath = f"{self.FinalPathRuctic}/{key}.sql"
 
-                DBResult, SnapID = mysqlUtilities.createDatabaseBackup(key, self.FinalPathRuctic, 1, self.repo, self.website.externalApp)
-
+                DBResult, SnapID = mysqlUtilities.createDatabaseBackup(key, self.FinalPathRuctic, 1, self.repo,
+                                                                       self.website.externalApp)
 
                 if DBResult == 1:
                     self.snapshots.append(SnapID)
 
-                    #command = f'chown {self.website.externalApp}:{self.website.externalApp} {CurrentDBPath}'
-                    #ProcessUtilities.executioner(command)
+                    # command = f'chown {self.website.externalApp}:{self.website.externalApp} {CurrentDBPath}'
+                    # ProcessUtilities.executioner(command)
 
                     ## Now pack config into same thing
 
-                    #command = f'chown {self.website.externalApp}:{self.website.externalApp} {self.FinalPathRuctic}/config.json'
-                    #ProcessUtilities.executioner(command)
+                    # command = f'chown {self.website.externalApp}:{self.website.externalApp} {self.FinalPathRuctic}/config.json'
+                    # ProcessUtilities.executioner(command)
 
                     # command = f'rustic -r {self.repo} backup {CurrentDBPath} --password "" --json 2>/dev/null'
                     # print(f'db command rustic: {command}')
@@ -555,16 +560,16 @@ token = {token}
         ### excluded directories are in a list self.data['ExcludedDirectories'] only backup data if backupdata check is on
         ## For example if self.data['BackupData'] is one then only run this function otherwise not
 
-        #command = f'chown {self.website.externalApp}:{self.website.externalApp} {self.FinalPathRuctic}'
-        #ProcessUtilities.executioner(command)
+        # command = f'chown {self.website.externalApp}:{self.website.externalApp} {self.FinalPathRuctic}'
+        # ProcessUtilities.executioner(command)
 
         command = f'rustic init -r {self.repo} --password ""'
         ProcessUtilities.executioner(command, self.website.externalApp)
 
         source = f'/home/{self.website.domain}'
 
-        #command = f'chown {self.website.externalApp}:{self.website.externalApp} {self.FinalPathRuctic}/config.json'
-        #ProcessUtilities.executioner(command)
+        # command = f'chown {self.website.externalApp}:{self.website.externalApp} {self.FinalPathRuctic}/config.json'
+        # ProcessUtilities.executioner(command)
 
         ## Pending add user provided folders in the exclude list
 
@@ -573,23 +578,22 @@ token = {token}
         command = f'rustic -r {self.repo} backup {source} --password "" {exclude} --json 2>/dev/null'
         result = json.loads(ProcessUtilities.outputExecutioner(command, self.website.externalApp, True).rstrip('\n'))
 
-
         try:
-            SnapShotID = result['id'] ## snapshot id that we need to store in db
-            files_new = result['summary']['files_new'] ## basically new files in backup
-            total_duration = result['summary']['total_duration'] ## time taken
+            SnapShotID = result['id']  ## snapshot id that we need to store in db
+            files_new = result['summary']['files_new']  ## basically new files in backup
+            total_duration = result['summary']['total_duration']  ## time taken
 
             self.snapshots.append(SnapShotID)
 
             ### Config is saved with each backup, snapshot of config is attached to data snapshot with parent
 
-            #self.BackupConfig(SnapShotID)
+            # self.BackupConfig(SnapShotID)
 
         except BaseException as msg:
             self.UpdateStatus(f'Backup failed as no snapshot id found, error: {str(msg)}', CPBackupsV2.FAILED)
             return 0
 
-        #self.UpdateStatus(f'Rustic command result id: {SnapShotID}, files new {files_new}, total_duration {total_duration}', CPBackupsV2.RUNNING)
+        # self.UpdateStatus(f'Rustic command result id: {SnapShotID}, files new {files_new}, total_duration {total_duration}', CPBackupsV2.RUNNING)
 
         return 1
 
@@ -599,15 +603,14 @@ token = {token}
         ### excluded emails are in a list self.data['ExcludedEmails'] only backup data if backupemail check is on
         ## For example if self.data['BackupEmails'] is one then only run this function otherwise not
 
-        #command = f'chown {self.website.externalApp}:{self.website.externalApp} {self.FinalPathRuctic}'
-        #ProcessUtilities.executioner(command)
+        # command = f'chown {self.website.externalApp}:{self.website.externalApp} {self.FinalPathRuctic}'
+        # ProcessUtilities.executioner(command)
 
         command = f'rustic init -r {self.repo} --password ""'
         ProcessUtilities.executioner(command, self.website.externalApp)
 
-        #command = f'chown {self.website.externalApp}:{self.website.externalApp} {self.FinalPathRuctic}/config.json'
-        #ProcessUtilities.executioner(command)
-
+        # command = f'chown {self.website.externalApp}:{self.website.externalApp} {self.FinalPathRuctic}/config.json'
+        # ProcessUtilities.executioner(command)
 
         source = f'/home/vmail/{self.website.domain}'
 
@@ -628,7 +631,7 @@ token = {token}
 
             ### Config is saved with each email backup, snapshot of config is attached to email snapshot with parent
 
-            #self.BackupConfig(SnapShotID)
+            # self.BackupConfig(SnapShotID)
 
         except BaseException as msg:
             self.UpdateStatus(f'Backup failed as no snapshot id found, error: {str(msg)}', CPBackupsV2.FAILED)
@@ -643,7 +646,7 @@ token = {token}
         ### if restore then status file should be restore status file
 
         self.restore = 1
-        #self.StatusFile = self.StatusFile_Restore
+        # self.StatusFile = self.StatusFile_Restore
 
         from websiteFunctions.models import Websites
         from plogical.mysqlUtilities import mysqlUtilities
@@ -664,7 +667,7 @@ token = {token}
 
         ### Init rustic repo in main func so dont need to do again and again
 
-        while(1):
+        while (1):
 
             self.website = Websites.objects.get(domain=self.data['domain'])
 
@@ -673,18 +676,20 @@ token = {token}
                 Disk1 = f"du -sm /home/{self.website.domain}/"
                 Disk2 = "2>/dev/null | awk '{print $1}'"
 
-                self.WebsiteDiskUsage = int(ProcessUtilities.outputExecutioner(f"{Disk1} {Disk2}", 'root', True).rstrip('\n'))
+                self.WebsiteDiskUsage = int(
+                    ProcessUtilities.outputExecutioner(f"{Disk1} {Disk2}", 'root', True).rstrip('\n'))
 
-                self.CurrentFreeSpaceOnDisk = int(ProcessUtilities.outputExecutioner("df -m / | awk 'NR==2 {print $4}'", 'root', True).rstrip('\n'))
+                self.CurrentFreeSpaceOnDisk = int(
+                    ProcessUtilities.outputExecutioner("df -m / | awk 'NR==2 {print $4}'", 'root', True).rstrip('\n'))
 
                 if self.WebsiteDiskUsage > self.CurrentFreeSpaceOnDisk:
-                    self.UpdateStatus(f'Not enough disk space on the server to restore this website.', CPBackupsV2.FAILED)
+                    self.UpdateStatus(f'Not enough disk space on the server to restore this website.',
+                                      CPBackupsV2.FAILED)
                     return 0
 
                 ### Rustic backup final path
 
                 self.FinalPathRuctic = f"{self.data['BasePath']}/{self.website.domain}"
-
 
                 command = f"mkdir -p {self.FinalPathRuctic}"
                 ProcessUtilities.executioner(command)
@@ -698,7 +703,8 @@ token = {token}
                 ### Find Restore path first, if path is db, only then restore it to cp
 
                 if self.data["path"].find('.sql') > -1:
-                    mysqlUtilities.restoreDatabaseBackup(self.data["path"].rstrip('.sql'), None, None, None, None, 1, self.repo, self.website.externalApp, self.data["snapshotid"])
+                    mysqlUtilities.restoreDatabaseBackup(self.data["path"].rstrip('.sql'), None, None, None, None, 1,
+                                                         self.repo, self.website.externalApp, self.data["snapshotid"])
                 else:
 
                     if self.data["path"].find('/home/vmail') > -1:
@@ -736,9 +742,117 @@ token = {token}
         from websiteFunctions.models import Websites
         self.website = Websites.objects.get(domain=self.data['domain'])
 
-
         command = f'rustic -r {self.repo} forget {deleteString} --prune --password ""  2>/dev/null'
         result = ProcessUtilities.outputExecutioner(command, None, True)
+
+    @staticmethod
+    def FetchCurrentSchedules(website):
+        try:
+            finalConfigPath = f'/home/cyberpanel/v2backups/{website}'
+
+            if os.path.exists(finalConfigPath):
+                command = f'cat {finalConfigPath}'
+                RetResult = ProcessUtilities.outputExecutioner(command)
+                print(repr(RetResult))
+                BackupConfig = json.loads(ProcessUtilities.outputExecutioner(command).rstrip('\n'))
+
+                schedules = []
+                for value in BackupConfig['schedules']:
+
+                    schedules.append({'repo': value['repo'], 'frequency': value['frequency'], 'websiteData': value['websiteData'],
+                                      'websiteEmails': value['websiteEmails'],
+                                      'websiteDatabases': value['websiteDatabases'], 'lastRun': value['lastRun'],
+                                      'domain': website})
+
+                return 1, schedules
+            else:
+                return 1, []
+
+        except BaseException as msg:
+            return 0, str(msg)
+
+    @staticmethod
+    def DeleteSchedule(website, repo, frequency, websiteData, websiteDatabases, websiteEmails):
+        try:
+            finalConfigPath = f'/home/cyberpanel/v2backups/{website}'
+
+            if os.path.exists(finalConfigPath):
+                command = f'cat {finalConfigPath}'
+                RetResult = ProcessUtilities.outputExecutioner(command)
+                print(repr(RetResult))
+                BackupConfig = json.loads(ProcessUtilities.outputExecutioner(command).rstrip('\n'))
+                counter = 0
+
+                for value in BackupConfig['schedules']:
+
+                    if value['repo'] == repo and value['frequency'] == frequency and value['websiteData'] == websiteData and \
+                            value['websiteEmails'] == websiteEmails and value['websiteDatabases'] == websiteDatabases:
+                        del BackupConfig['schedules'][counter]
+                        break
+                    else:
+                        counter = counter  + 1
+
+                FinalContent = json.dumps(BackupConfig)
+                WriteToFile = open(finalConfigPath, 'w')
+                WriteToFile.write(FinalContent)
+                WriteToFile.close()
+
+                return 1, BackupConfig
+            else:
+                return 1, []
+
+        except BaseException as msg:
+            return 0, str(msg)
+
+    @staticmethod
+    def CreateScheduleV2(website, repo, frequency, websiteData, websiteDatabases, websiteEmails):
+        try:
+
+            finalConfigPath = f'/home/cyberpanel/v2backups/{website}'
+
+            if os.path.exists(finalConfigPath):
+                logging.CyberCPLogFileWriter.writeToFile('22222')
+
+                command = f'cat {finalConfigPath}'
+                RetResult = ProcessUtilities.outputExecutioner(command)
+                print(repr(RetResult))
+                BackupConfig = json.loads(ProcessUtilities.outputExecutioner(command).rstrip('\n'))
+
+                try:
+                    BackupConfig['schedules'].append({"repo": repo, "retention": "7", "frequency": frequency, "websiteData": websiteData,
+                                      "websiteEmails": websiteEmails, "websiteDatabases": websiteDatabases,
+                                      "lastRun": ""})
+                except:
+                    BackupConfig['schedules'] = [{"repo": repo, "retention": "7", "frequency": frequency, "websiteData": websiteData,
+                                      "websiteEmails": websiteEmails, "websiteDatabases": websiteDatabases,
+                                      "lastRun": ""}]
+
+                # BackupConfig['schedules'] = {"retention": "7", "frequency": frequency, "websiteData": websiteData,
+                #                       "websiteEmails": websiteEmails, "websiteDatabases": websiteDatabases,
+                #                       "lastRun": ""}
+
+                FinalContent = json.dumps(BackupConfig)
+                WriteToFile = open(finalConfigPath, 'w')
+                WriteToFile.write(FinalContent)
+                WriteToFile.close()
+                return 1, BackupConfig
+            else:
+                BackupConfig = {'site': website,
+                                'schedules':
+                                    [{"repo": repo, "retention": "7", "frequency": frequency,
+                                      "websiteData": websiteData,
+                                      "websiteEmails": websiteEmails, "websiteDatabases": websiteDatabases,
+                                      "lastRun": ""}]}
+
+                FinalContent = json.dumps(BackupConfig)
+                WriteToFile = open(finalConfigPath, 'w')
+                WriteToFile.write(FinalContent)
+                WriteToFile.close()
+
+                return 1, BackupConfig
+
+        except BaseException as msg:
+            return 0, str(msg)
 
     # def BackupEmails(self):
     #
@@ -835,16 +949,18 @@ token = {token}
 
                 if response.status_code == 200:
                     data = response.json()
-                    version =  data['tag_name']
-                    name =  data['name']
+                    version = data['tag_name']
+                    name = data['name']
                 else:
                     return 0, str(response.content)
 
-                #sudo mv filename /usr/bin/
-                command = 'wget -P /home/rustic https://github.com/rustic-rs/rustic/releases/download/%s/rustic-%s-x86_64-unknown-linux-musl.tar.gz' %(version, version)
+                # sudo mv filename /usr/bin/
+                command = 'wget -P /home/rustic https://github.com/rustic-rs/rustic/releases/download/%s/rustic-%s-x86_64-unknown-linux-musl.tar.gz' % (
+                version, version)
                 ProcessUtilities.executioner(command)
 
-                command = 'tar xzf /home/rustic/rustic-%s-x86_64-unknown-linux-musl.tar.gz -C /home/rustic//'%(version)
+                command = 'tar xzf /home/rustic/rustic-%s-x86_64-unknown-linux-musl.tar.gz -C /home/rustic//' % (
+                    version)
                 ProcessUtilities.executioner(command)
 
                 command = 'sudo mv /home/rustic/rustic /usr/bin/'
@@ -858,9 +974,8 @@ token = {token}
 
 
         except BaseException as msg:
-            print('Error: %s'%msg)
+            print('Error: %s' % msg)
             return 0, str(msg)
-
 
 
 if __name__ == "__main__":
@@ -873,8 +988,10 @@ if __name__ == "__main__":
 
         if args.function == "BackupDataBases":
             cpbuv2 = CPBackupsV2({'finalPath': args.path})
-            #cpbuv2.BackupDataBases()
+            # cpbuv2.BackupDataBases()
 
     except:
-        cpbuv2 = CPBackupsV2({'function':'InitiateRestore', 'domain': 'cyberpanel.net', 'BasePath': '/home/backup', 'SnapShotID': 1, 'BackendName': 'usman'} )
+        cpbuv2 = CPBackupsV2(
+            {'function': 'InitiateRestore', 'domain': 'cyberpanel.net', 'BasePath': '/home/backup', 'SnapShotID': 1,
+             'BackendName': 'usman'})
         cpbuv2.InitiateRestore()

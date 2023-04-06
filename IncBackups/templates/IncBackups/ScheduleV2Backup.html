@@ -1,0 +1,203 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Schedule v2 Backup" %}{% endblock %}
+{% block content %}
+
+    {% load static %}
+
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
+    <style>
+
+    </style>
+
+    <div class="container">
+        <div id="page-title">
+            <h2>{% trans "Schedule V2 Backup" %} - <a target="_blank" href="http://go.cyberpanel.net/backup"
+                                                      style="height: 23px;line-height: 21px;"
+                                                      class="btn btn-border btn-alt border-red btn-link font-red"
+                                                      title=""><span>{% trans "Backup Docs" %}</span></a></h2>
+            <p>{% trans "This page can be used to schedule your backups." %}</p>
+        </div>
+
+        <div ng-controller="ScheduleV2Backup" class="panel">
+            <div class="panel-body">
+                <h3 class="title-hero">
+                    {% trans "Schedule v2 Backup" %} <img ng-hide="backupLoading"
+                                                          src="{% static 'images/loading.gif' %}">
+                </h3>
+                <div class="example-box-wrapper">
+
+                    <form class="form-horizontal bordered-row">
+
+
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Select Website" %} </label>
+                            <div class="col-sm-6">
+                                <select id="create-backup-select" ng-change="selectwebsite()" ng-model="selwebsite"
+                                        class="form-control">
+                                    {% for items in websiteList %}
+                                        <option value="{{ items }}">{{ items }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Select Website" %} </label>
+                            <div class="col-sm-6">
+                                <select id="create-backup-select" ng-model="frequency"
+                                        class="form-control">
+                                    <option>30 Minutes</option>
+                                    <option>1 Hour</option>
+                                    <option>6 Hours</option>
+                                    <option>12 Hours</option>
+                                    <option>1 Day</option>
+                                    <option>3 Days</option>
+                                    <option>1 Week</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Select Repo" %} </label>
+                            <div class="col-sm-6">
+                                <select id="reposelectbox" ng-change="selectrepo()" ng-model="testhabbi"
+                                        class="form-control">
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Backup Content" %}</label>
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
+                                        <input ng-model="websiteData" type="checkbox" value="">
+                                        Data
+                                    </label>
+                                </div>
+                            </div>
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
+                                        <input ng-model="websiteDatabases" type="checkbox" value="">
+                                        Databases
+                                    </label>
+                                </div>
+                            </div>
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
+                                        <input ng-model="websiteEmails" type="checkbox" value="">
+                                        Emails
+                                    </label>
+                                </div>
+                            </div>
+                            <!---
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-9">
+                                <div class="checkbox">
+                                    <label>
+                                        <input ng-model="websiteSSLs" type="checkbox" value="">
+                                        SSL Certificates
+                                    </label>
+                                </div>
+                            </div> -->
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label">{% trans " " %} </label>
+                            <div class="col-sm-6">
+                                <button class="btn" id="CreateV2BackupButton" ng-click="CreateScheduleV2()"
+                                        style="border-radius: 6px;background-color: #3447b7;color: white !important;">
+                                    Create Schedule
+                                </button>
+                            </div>
+                        </div>
+
+                        <!------ List of records --------------->
+
+                        <div class="form-group">
+
+                            <div class="col-sm-12">
+
+                                <table class="table">
+                                    <thead>
+                                    <tr>
+                                        <th>{% trans "Repo" %}</th>
+                                        <th>{% trans "Frequency" %}</th>
+                                        <th>{% trans "Backup Websites?" %}</th>
+                                        <th>{% trans "Backup Databases?" %}</th>
+                                        <th>{% trans "Backup Emails?" %}</th>
+                                        <th>{% trans "Last Run" %}</th>
+                                        <th>{% trans "Delete" %}</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr ng-repeat="record in records track by $index">
+                                        <td ng-bind="record.repo"></td>
+                                        <td ng-bind="record.frequency"></td>
+                                        <td ng-bind="record.websiteData"></td>
+                                        <td ng-bind="record.websiteDatabases"></td>
+                                        <td ng-bind="record.websiteEmails"></td>
+                                        <td ng-bind="record.lastRun"></td>
+                                        <a data-toggle="modal" href="" data-target="#DeleteScheduleV2">
+                                            <td data-toggle="modal" data-target="#DeleteScheduleV2"
+                                                ng-click="deleteBackupInitialv2(record.repo, record.frequency, record.websiteData, record.websiteDatabases, record.websiteEmails)">
+                                                <img
+                                                        src="{% static 'images/delete.png' %}"></td>
+                                        </a>
+                                        <div id="DeleteScheduleV2" class="modal fade" role="dialog">
+                                            <div class="modal-dialog">
+                                                <!-- Modal content-->
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <button type="button" class="close" data-dismiss="modal">&times;
+                                                        </button>
+                                                        <h4 class="modal-title">{% trans "Set up account" %}</h4>
+                                                    </div>
+                                                    <div class="modal-body">
+
+                                                        <form name="containerSettingsForm" action="/"
+                                                              class="form-horizontal">
+                                                            <div ng-hide="installationDetailsForm" class="form-group">
+                                                                <label class="col-sm-3 control-label">{% trans "Are you sure?" %}</label>
+                                                            </div>
+
+                                                        </form>
+
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-primary"
+                                                                ng-click="DeleteScheduleV2()">Delete <img
+                                                                ng-hide="backupLoading"
+                                                                src="{% static 'images/loading.gif' %}">
+                                                        </button>
+                                                        <button type="button"
+                                                                class="btn btn-default" data-dismiss="modal">
+                                                            Close
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!------ List of records --------------->
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+    </div>
+
+
+{% endblock %}

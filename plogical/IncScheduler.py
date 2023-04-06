@@ -1411,18 +1411,16 @@ Automatic backup failed for %s on %s.
                         print(repr(RetResult))
                         BackupConfig = json.loads(ProcessUtilities.outputExecutioner(command).rstrip('\n'))
 
-                        for key, value in BackupConfig.items():
+                        for value in BackupConfig['schedules']:
                             try:
-                                print(key, '->', value)
-                                if key == 'site':
-                                    continue
+
                                 if value['frequency'] == function:
                                     extra_args = {}
                                     extra_args['function'] = 'InitiateBackup'
                                     extra_args['website'] = website.domain
                                     extra_args['domain'] = website.domain
                                     extra_args['BasePath'] = '/home/backup'
-                                    extra_args['BackendName'] = key
+                                    extra_args['BackendName'] = value['repo']
                                     extra_args['BackupData'] = value['websiteData'] if 'websiteData' in value else False
                                     extra_args['BackupEmails'] = value['websiteEmails'] if 'websiteEmails' in value else False
                                     extra_args['BackupDatabase'] = value['websiteDatabases'] if 'websiteDatabases' in value else False
@@ -1450,7 +1448,7 @@ Automatic Backupv2 failed for %s on %s.
 
                                         logging.SendEmail(sender, TO, message)
                                     else:
-                                        BackupConfig[key]['lastRun'] = time.strftime("%m.%d.%Y_%H-%M-%S")
+                                        value['lastRun'] = time.strftime("%m.%d.%Y_%H-%M-%S")
                             except BaseException as msg:
                                 print("Error: [v2Backups]: %s" % str(msg))
                                 logging.writeToFile('%s. [v2Backups]' % (str(msg)))

@@ -982,6 +982,8 @@ def selectwebsiteCreatev2(request):
         command = 'cat %s'%(path)
         CurrentContent = pu.outputExecutioner(command)
 
+        status, currentSchedules = CPBackupsV2.FetchCurrentSchedules(str(Selectedwebsite))
+
 
         if CurrentContent.find('No such file or directory') > -1:
             LocalRclonePath = f'/home/{obj.domain}/.config/rclone'
@@ -1001,7 +1003,7 @@ def selectwebsiteCreatev2(request):
             if result.find('type') > -1:
                 pattern = r'\[(.*?)\]'
                 matches = re.findall(pattern, result)
-                final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": matches})
+                final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": matches, 'currentSchedules': currentSchedules})
                 return HttpResponse(final_json)
             else:
                 final_json = json.dumps({'status': 0, 'fetchStatus': 0, 'error_message': 'Could not Find repo'})
@@ -1013,10 +1015,10 @@ def selectwebsiteCreatev2(request):
             if result.find('type') > -1:
                 pattern = r'\[(.*?)\]'
                 matches = re.findall(pattern, result)
-                final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": matches})
+                final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": matches, 'currentSchedules': currentSchedules})
                 return HttpResponse(final_json)
             else:
-                final_json = json.dumps({'status': 0, 'fetchStatus': 0, 'error_message': 'Could not Find repo'})
+                final_json = json.dumps({'status': 0, 'fetchStatus': 0, 'error_message': 'Could not Find repo', 'currentSchedules': currentSchedules})
                 return HttpResponse(final_json)
 
 
@@ -1063,6 +1065,89 @@ def selectreporestorev2(request):
             # final_json = json.dumps({'status': 0, 'fetchStatus': 1, 'error_message': ac,})
             final_json = json.dumps({'status': 0, 'fetchStatus': 1, 'error_message': 'Cannot Find!',})
             return HttpResponse(final_json)
+
+
+    except BaseException as msg:
+        final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+        final_json = json.dumps(final_dic)
+        return HttpResponse(final_json)
+
+def schedulev2Backups(request):
+    try:
+        userID = request.session['userID']
+        bm = BackupManager()
+        return bm.schedulev2Backups(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def DeleteScheduleV2(request):
+    try:
+        userID = request.session['userID']
+        data = json.loads(request.body)
+        Selectedwebsite = data['Selectedwebsite']
+        repo = data['repo']
+        frequency = data['frequency']
+        websiteData = data['websiteData']
+        websiteDatabases = data['websiteDatabases']
+        websiteEmails = data['websiteEmails']
+
+        currentACL = ACLManager.loadedACL(userID)
+        admin = Administrator.objects.get(pk=userID)
+
+        if ACLManager.checkOwnership(str(Selectedwebsite), admin, currentACL) == 1:
+            pass
+        else:
+            return ACLManager.loadError()
+
+
+        status, message = CPBackupsV2.DeleteSchedule(Selectedwebsite, repo, frequency, websiteData, websiteDatabases, websiteEmails)
+
+        final_dic = {'status': 1, 'error_message': message}
+        final_json = json.dumps(final_dic)
+        return HttpResponse(final_json)
+
+        # final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": None})
+        # return HttpResponse(final_json)
+
+
+    except BaseException as msg:
+        final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+        final_json = json.dumps(final_dic)
+        return HttpResponse(final_json)
+
+def CreateScheduleV2(request):
+    try:
+        userID = request.session['userID']
+        data = json.loads(request.body)
+        Selectedwebsite = data['Selectedwebsite']
+        repo = data['repo']
+        frequency = data['frequency']
+        websiteData = data['websiteData']
+        websiteDatabases = data['websiteDatabases']
+        websiteEmails = data['websiteEmails']
+
+        #
+        # extra_args['BackupData'] = data['websiteData'] if 'websiteData' in data else False
+        # extra_args['BackupEmails'] = data['websiteEmails'] if 'websiteEmails' in data else False
+        # extra_args['BackupDatabase'] = data['websiteDatabases'] if 'websiteDatabases' in data else False
+
+        currentACL = ACLManager.loadedACL(userID)
+        admin = Administrator.objects.get(pk=userID)
+
+        if ACLManager.checkOwnership(str(Selectedwebsite), admin, currentACL) == 1:
+            pass
+        else:
+            return ACLManager.loadError()
+
+
+        status, message = CPBackupsV2.CreateScheduleV2(Selectedwebsite, repo, frequency, websiteData, websiteDatabases, websiteEmails)
+
+        final_dic = {'status': 1, 'error_message': message}
+        final_json = json.dumps(final_dic)
+        return HttpResponse(final_json)
+
+        # final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": None})
+        # return HttpResponse(final_json)
 
 
     except BaseException as msg:
