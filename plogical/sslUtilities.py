@@ -332,16 +332,18 @@ class sslUtilities:
         from plogical.acl import ACLManager
         from plogical.sslv2 import sslUtilities as sslv2
         import json
+        #
+        # url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
+        # data = {
+        #     "name": "all",
+        #     "IP": ACLManager.GetServerIP()
+        # }
+        #
+        # import requests
+        # response = requests.post(url, data=json.dumps(data))
+        #Status = response.json()['status']
 
-        url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
-        data = {
-            "name": "all",
-            "IP": ACLManager.GetServerIP()
-        }
-
-        import requests
-        response = requests.post(url, data=json.dumps(data))
-        Status = response.json()['status']
+        Status = 1
 
         if (Status == 1) or ProcessUtilities.decideServer() == ProcessUtilities.ent:
             retStatus, message = sslv2.obtainSSLForADomain(virtualHostName, adminEmail, sslpath, aliasDomain)
