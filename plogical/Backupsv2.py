@@ -40,8 +40,11 @@ class CPBackupsV2(multi.Thread):
     def __init__(self, data):
         multi.Thread.__init__(self)
         self.data = data
+        try:
 
-        self.function = data['function']
+            self.function = data['function']
+        except:
+            pass
 
         ### set self.website as it is needed in many functions
         from websiteFunctions.models import Websites
@@ -90,50 +93,51 @@ class CPBackupsV2(multi.Thread):
             return 0, str(msg)
 
     def SetupRcloneBackend(self, type, config):
-
-        self.LocalRclonePath = f'/home/{self.website.domain}/.config/rclone'
-        self.ConfigFilePath = f'{self.LocalRclonePath}/rclone.conf'
-
-        command = f'mkdir -p {self.LocalRclonePath}'
-        ProcessUtilities.executioner(command, self.website.externalApp)
-
-        command = f'cat {self.ConfigFilePath}'
-        CurrentContent = ProcessUtilities.outputExecutioner(command, self.website.externalApp)
-
         try:
+            logging.CyberCPLogFileWriter.writeToFile(' [Configure.1]')
+            self.LocalRclonePath = f'/home/{self.website.domain}/.config/rclone'
+            self.ConfigFilePath = f'{self.LocalRclonePath}/rclone.conf'
 
-            if CurrentContent.find('No such file or directory'):
-                CurrentContent = ''
-        except:
-            CurrentContent = ''
-
-        if type == CPBackupsV2.SFTP:
-            ## config = {"name":, "host":, "user":, "port":, "path":, "password":,}
-            command = f'rclone obscure {config["password"]}'
-            ObsecurePassword = ProcessUtilities.outputExecutioner(command).rstrip('\n')
-
-            content = f'''{CurrentContent}
-[{config["name"]}]
-type = sftp
-host = {config["host"]}
-user = {config["user"]}
-pass = {ObsecurePassword}
-'''
-
-            command = f"echo '{content}' >> {self.ConfigFilePath}"
-            ProcessUtilities.executioner(command, self.website.externalApp, True)
-
-            command = f"chmod 600 {self.ConfigFilePath}"
+            command = f'mkdir -p {self.LocalRclonePath}'
             ProcessUtilities.executioner(command, self.website.externalApp)
 
-            final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": None})
-            return HttpResponse(final_json)
-        elif type == CPBackupsV2.GDrive:
+            command = f'cat {self.ConfigFilePath}'
+            CurrentContent = ProcessUtilities.outputExecutioner(command, self.website.externalApp)
+            logging.CyberCPLogFileWriter.writeToFile(' [Configure.2]')
+            try:
 
-            token = """{"access_token":"%s","token_type":"Bearer","refresh_token":"%s"}""" % (
-            config["token"], config["refresh_token"])
+                if CurrentContent.find('No such file or directory'):
+                    CurrentContent = ''
+            except:
+                CurrentContent = ''
+            logging.CyberCPLogFileWriter.writeToFile(' [Configure.3]')
+            if type == CPBackupsV2.SFTP:
+                ## config = {"name":, "host":, "user":, "port":, "path":, "password":,}
+                command = f'rclone obscure {config["password"]}'
+                ObsecurePassword = ProcessUtilities.outputExecutioner(command).rstrip('\n')
 
-            content = f'''{CurrentContent}
+                content = f'''{CurrentContent}
+    [{config["name"]}]
+    type = sftp
+    host = {config["host"]}
+    user = {config["user"]}
+    pass = {ObsecurePassword}
+    '''
+
+                command = f"echo '{content}' >> {self.ConfigFilePath}"
+                ProcessUtilities.executioner(command, self.website.externalApp, True)
+
+                command = f"chmod 600 {self.ConfigFilePath}"
+                ProcessUtilities.executioner(command, self.website.externalApp)
+
+                final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": None})
+                return HttpResponse(final_json)
+            elif type == CPBackupsV2.GDrive:
+                logging.CyberCPLogFileWriter.writeToFile(' [Configure.4]')
+                token = """{"access_token":"%s","token_type":"Bearer","refresh_token":"%s"}""" % (
+                config["token"], config["refresh_token"])
+
+                content = f'''{CurrentContent}
 [{config["name"]}]
 type = Gdrive
 [Gdrive_Mount]
@@ -144,11 +148,14 @@ root_folder_id = ""
 service_account_file = ""
 token = {token}
 '''
-            command = f"echo '{content}' >> {self.ConfigFilePath}"
-            ProcessUtilities.executioner(command, self.website.externalApp, True)
+                command = f"echo '{content}' >> {self.ConfigFilePath}"
+                ProcessUtilities.executioner(command, self.website.externalApp, True)
 
-            command = f"chmod 600 {self.ConfigFilePath}"
-            ProcessUtilities.executioner(command, self.website.externalApp)
+                command = f"chmod 600 {self.ConfigFilePath}"
+                ProcessUtilities.executioner(command, self.website.externalApp)
+            logging.CyberCPLogFileWriter.writeToFile(' [Configure.5]')
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [Configure.run]')
 
     @staticmethod
     def FetchCurrentTimeStamp():

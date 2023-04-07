@@ -23,10 +23,9 @@ urlpatterns = [
     url(r'^removeSite$', views.remove_site, name='removeSite'),
     url(r'^addWebsite$', views.add_website, name='addWebsite'),
     ### V2 Backups URls
-
     url(r'^CreateV2Backup$', views.CreateV2Backup, name='CreateV2Backup'),
     url(r'^ConfigureV2Backup$', views.ConfigureV2Backup, name='ConfigureV2Backup'),
-    url(r'^ConfigureV2BackupSetup$', views.createV2BackupSetup, name='ConfigureV2BackupSetup'),
+    url(r'^ConfigureV2BackupSetup$', views.ConfigureV2BackupSetup, name='ConfigureV2BackupSetup'),
     url(r'^RestoreV2backupSite$', views.RestoreV2backupSite, name='RestoreV2backupSite'),
     url(r'^selectwebsiteRetorev2$', views.selectwebsiteRetorev2, name='selectwebsiteRetorev2'),
     url(r'^selectreporestorev2$', views.selectreporestorev2, name='selectreporestorev2'),

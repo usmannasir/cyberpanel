@@ -731,15 +731,7 @@ def ConfigureV2Backup(request):
         logging.writeToFile(str(msg))
         return redirect(loadLoginPage)
 
-def CreateV2Backup(request):
-    try:
-        userID = request.session['userID']
-        bm = BackupManager()
-        return bm.CreateV2backupSite(request, userID)
-    except KeyError:
-        return redirect(loadLoginPage)
-
-def createV2BackupSetup(request):
+def ConfigureV2BackupSetup(request):
     try:
         userID = request.session['userID']
 
@@ -771,6 +763,15 @@ def createV2BackupSetup(request):
 
         return ConfigureV2Backup(request)
 
+    except BaseException as msg:
+        logging.writeToFile("Error configure"+str(msg))
+        return redirect(loadLoginPage)
+
+def CreateV2Backup(request):
+    try:
+        userID = request.session['userID']
+        bm = BackupManager()
+        return bm.CreateV2backupSite(request, userID)
     except KeyError:
         return redirect(loadLoginPage)
 
@@ -800,7 +801,6 @@ def CreateV2BackupButton(request):
         extra_args['BackupData'] = data['websiteData'] if 'websiteData' in data else False
         extra_args['BackupEmails'] = data['websiteEmails'] if 'websiteEmails' in data else False
         extra_args['BackupDatabase'] = data['websiteDatabases'] if 'websiteDatabases' in data else False
-
 
         background = CPBackupsV2(extra_args)
         background.start()
