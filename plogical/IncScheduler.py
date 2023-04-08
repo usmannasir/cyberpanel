@@ -15,6 +15,7 @@ from websiteFunctions.website import WebsiteManager
 import time
 import datetime
 import google.oauth2.credentials
+from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 from plogical.backupSchedule import backupSchedule
@@ -1476,6 +1477,7 @@ def main():
         return 0
 
     if args.function == '30 Minutes' or args.function == 'Daily' or args.function == '1 Hour' or args.function == '6 Hours' or args.function == '12 Hours' or args.function == '1 Day' or args.function == '3 Days' or args.function == '1 Week':
+        # IncScheduler.refresh_access_token()
         IncScheduler.RemoteBackup(args.function)
         IncScheduler.v2Backups(args.function)
         return 0

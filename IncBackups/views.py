@@ -928,6 +928,7 @@ def ConfigureSftpV2Backup(request):
         sfptpasswd = data['sfptpasswd']
         hostName = data['hostName']
         UserName = data['UserName']
+        Repo_Name = data['Repo_Name']
         currentACL = ACLManager.loadedACL(userID)
         admin = Administrator.objects.get(pk=userID)
 
@@ -941,6 +942,7 @@ def ConfigureSftpV2Backup(request):
         req_data['host'] = hostName
         req_data['user'] = UserName
         req_data['password'] = sfptpasswd
+        req_data['Repo_Name'] = Repo_Name
 
 
         cpbuv2 = CPBackupsV2(
@@ -949,10 +951,10 @@ def ConfigureSftpV2Backup(request):
 
         cpbuv2.SetupRcloneBackend(CPBackupsV2.SFTP, req_data)
 
-        return ConfigureV2Backup(request)
+        # return ConfigureV2Backup(request)
 
-        # final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": None})
-        # return HttpResponse(final_json)
+        final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": None})
+        return HttpResponse(final_json)
 
 
     except BaseException as msg:

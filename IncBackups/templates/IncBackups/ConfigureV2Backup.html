@@ -101,6 +101,14 @@
                                     <form name="containerSettingsForm" action="/" class="form-horizontal">
 
                                         <div ng-hide="installationDetailsForm" class="form-group">
+                                            <label class="col-sm-3 control-label">{% trans "Repo Name" %}</label>
+                                            <div class="col-sm-6">
+                                                <input name="reponame" type="text" class="form-control"
+                                                       ng-model="reponame">
+                                            </div>
+                                        </div>
+
+                                        <div ng-hide="installationDetailsForm" class="form-group">
                                             <label class="col-sm-3 control-label">{% trans "Host Name" %}</label>
                                             <div class="col-sm-6">
                                                 <input name="accountName" type="text" class="form-control"

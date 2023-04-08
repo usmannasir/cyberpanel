@@ -1806,6 +1806,7 @@ app.controller('ConfigureV2Backup', function ($scope, $http, $timeout) {
             sfptpasswd: $scope.sfptpasswd,
             hostName: $scope.hostName,
             UserName: $scope.UserName,
+            Repo_Name: $scope.reponame,
         };
 
         var config = {

@@ -4,6 +4,8 @@ import os
 import sys
 import time
 import requests
+import json
+import configparser
 from django.http import HttpResponse
 
 sys.path.append('/usr/local/CyberCP')
@@ -19,6 +21,8 @@ except:
     pass
 
 from plogical.processUtilities import ProcessUtilities
+from plogical.processUtilities import ProcessUtilities as pu
+
 import threading as multi
 
 
@@ -49,6 +53,51 @@ class CPBackupsV2(multi.Thread):
         ### set self.website as it is needed in many functions
         from websiteFunctions.models import Websites
         self.website = Websites.objects.get(domain=self.data['domain'])
+
+
+
+        # Resresh gdive access_token code
+        try:
+            self.LocalRclonePath = f'/home/{self.website.domain}/.config/rclone'
+            self.ConfigFilePath = f'{self.LocalRclonePath}/rclone.conf'
+
+            reponame =  self.data['BackendName']
+
+            path = '/home/%s/.config/rclone/rclone.conf' % (self.data['domain'])
+
+            command = 'cat %s' % (path)
+            CurrentContent = pu.outputExecutioner(command)
+
+
+            if CurrentContent.find(reponame) > -1:
+                config = configparser.ConfigParser()
+                config.read_string(CurrentContent)
+
+                token_str = config.get(reponame, 'token')
+                token_dict = json.loads(token_str)
+                refresh_token = token_dict['refresh_token']
+
+
+                new_Acess_token = self.refresh_V2Gdive_token(refresh_token)
+
+                old_access_token = token_dict['access_token']
+
+                new_content = CurrentContent.replace(str(old_access_token), new_Acess_token)
+
+                command = f"cat /dev/null > {self.ConfigFilePath}"
+                pu.executioner(command, self.website.externalApp, True)
+
+                command = f"echo '{new_content}' >> {self.ConfigFilePath}"
+                ProcessUtilities.executioner(command, self.website.externalApp, True)
+
+                command = f"chmod 600 {self.ConfigFilePath}"
+                ProcessUtilities.executioner(command, self.website.externalApp)
+            else:
+                logging.CyberCPLogFileWriter.writeToFile("Token Not upadate..........")
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile("Error update token............%s"%msg)
+
+
 
         ## Set up the repo name to be used
 
@@ -94,7 +143,6 @@ class CPBackupsV2(multi.Thread):
 
     def SetupRcloneBackend(self, type, config):
         try:
-            logging.CyberCPLogFileWriter.writeToFile(' [Configure.1]')
             self.LocalRclonePath = f'/home/{self.website.domain}/.config/rclone'
             self.ConfigFilePath = f'{self.LocalRclonePath}/rclone.conf'
 
@@ -103,59 +151,51 @@ class CPBackupsV2(multi.Thread):
 
             command = f'cat {self.ConfigFilePath}'
             CurrentContent = ProcessUtilities.outputExecutioner(command, self.website.externalApp)
-            logging.CyberCPLogFileWriter.writeToFile(' [Configure.2]')
             try:
 
                 if CurrentContent.find('No such file or directory'):
                     CurrentContent = ''
             except:
                 CurrentContent = ''
-            logging.CyberCPLogFileWriter.writeToFile(' [Configure.3]')
             if type == CPBackupsV2.SFTP:
                 ## config = {"name":, "host":, "user":, "port":, "path":, "password":,}
                 command = f'rclone obscure {config["password"]}'
                 ObsecurePassword = ProcessUtilities.outputExecutioner(command).rstrip('\n')
 
                 content = f'''{CurrentContent}
-    [{config["name"]}]
-    type = sftp
-    host = {config["host"]}
-    user = {config["user"]}
-    pass = {ObsecurePassword}
-    '''
+[{config["Repo_Name"]}]
+type = sftp
+host = {config["host"]}
+user = {config["user"]}
+pass = {ObsecurePassword}
+'''
 
                 command = f"echo '{content}' >> {self.ConfigFilePath}"
                 ProcessUtilities.executioner(command, self.website.externalApp, True)
 
                 command = f"chmod 600 {self.ConfigFilePath}"
                 ProcessUtilities.executioner(command, self.website.externalApp)
-
-                final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": None})
-                return HttpResponse(final_json)
+                return 1
             elif type == CPBackupsV2.GDrive:
-                logging.CyberCPLogFileWriter.writeToFile(' [Configure.4]')
-                token = """{"access_token":"%s","token_type":"Bearer","refresh_token":"%s"}""" % (
+                token = """{"access_token":"%s","token_type":"Bearer","refresh_token":"%s", "expiry":"2024-04-08T21:53:00.123456789Z"}""" % (
                 config["token"], config["refresh_token"])
 
                 content = f'''{CurrentContent}
-[{config["name"]}]
-type = Gdrive
-[Gdrive_Mount]
-client_id = ""
-client_secret = ""
+[{config["accountname"]}]
+type = drive
 scope = drive
-root_folder_id = ""
-service_account_file = ""
 token = {token}
+team_drive =
 '''
                 command = f"echo '{content}' >> {self.ConfigFilePath}"
                 ProcessUtilities.executioner(command, self.website.externalApp, True)
 
                 command = f"chmod 600 {self.ConfigFilePath}"
                 ProcessUtilities.executioner(command, self.website.externalApp)
-            logging.CyberCPLogFileWriter.writeToFile(' [Configure.5]')
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [Configure.run]')
+
+
 
     @staticmethod
     def FetchCurrentTimeStamp():
@@ -242,7 +282,7 @@ token = {token}
             logging.CyberCPLogFileWriter.writeToFile(result)
 
     def InitiateBackup(self):
-
+        logging.CyberCPLogFileWriter.writeToFile("[Create Backup start]")
         from websiteFunctions.models import Websites, Backupsv2
         from django.forms.models import model_to_dict
         from plogical.mysqlUtilities import mysqlUtilities
@@ -786,6 +826,19 @@ token = {token}
 
         except BaseException as msg:
             return 0, str(msg)
+
+    @staticmethod
+    def refresh_V2Gdive_token(refresh_token):
+        try:
+            # refresh_token = "1//09pPJHjUgyp09CgYIARAAGAkSNgF-L9IrZ0FLMhuKVfPEwmv_6neFto3JJ-B9uXBYu1kPPdsPhSk1OJXDBA3ZvC3v_AH9S1rTIQ"
+            finalData = json.dumps({'refresh_token': refresh_token})
+            r = requests.post("https://platform.cyberpersons.com/refreshToken", data=finalData
+                              )
+            newtoken = json.loads(r.text)['access_token']
+            return newtoken
+        except BaseException as msg:
+            print("Error Update token:%s" % msg)
+            return None
 
     @staticmethod
     def DeleteSchedule(website, repo, frequency, websiteData, websiteDatabases, websiteEmails):
