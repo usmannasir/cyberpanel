@@ -54,8 +54,6 @@ class CPBackupsV2(multi.Thread):
         from websiteFunctions.models import Websites
         self.website = Websites.objects.get(domain=self.data['domain'])
 
-
-
         # Resresh gdive access_token code
         try:
             self.LocalRclonePath = f'/home/{self.website.domain}/.config/rclone'
@@ -76,7 +74,6 @@ class CPBackupsV2(multi.Thread):
                 token_str = config.get(reponame, 'token')
                 token_dict = json.loads(token_str)
                 refresh_token = token_dict['refresh_token']
-
 
                 new_Acess_token = self.refresh_V2Gdive_token(refresh_token)
 
@@ -149,20 +146,14 @@ class CPBackupsV2(multi.Thread):
             command = f'mkdir -p {self.LocalRclonePath}'
             ProcessUtilities.executioner(command, self.website.externalApp)
 
-            command = f'cat {self.ConfigFilePath}'
-            CurrentContent = ProcessUtilities.outputExecutioner(command, self.website.externalApp)
-            try:
 
-                if CurrentContent.find('No such file or directory'):
-                    CurrentContent = ''
-            except:
-                CurrentContent = ''
             if type == CPBackupsV2.SFTP:
                 ## config = {"name":, "host":, "user":, "port":, "path":, "password":,}
                 command = f'rclone obscure {config["password"]}'
                 ObsecurePassword = ProcessUtilities.outputExecutioner(command).rstrip('\n')
 
-                content = f'''{CurrentContent}
+                content = f'''
+                
 [{config["Repo_Name"]}]
 type = sftp
 host = {config["host"]}
@@ -180,7 +171,7 @@ pass = {ObsecurePassword}
                 token = """{"access_token":"%s","token_type":"Bearer","refresh_token":"%s", "expiry":"2024-04-08T21:53:00.123456789Z"}""" % (
                 config["token"], config["refresh_token"])
 
-                content = f'''{CurrentContent}
+                content = f'''
 [{config["accountname"]}]
 type = drive
 scope = drive
@@ -194,8 +185,6 @@ team_drive =
                 ProcessUtilities.executioner(command, self.website.externalApp)
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + ' [Configure.run]')
-
-
 
     @staticmethod
     def FetchCurrentTimeStamp():
