@@ -61,36 +61,56 @@ class CPBackupsV2(multi.Thread):
 
             reponame =  self.data['BackendName']
 
-            path = '/home/%s/.config/rclone/rclone.conf' % (self.data['domain'])
+            try:
+                ### refresh token if gdrie
+                command = f"rclone config dump"
+                token = json.loads(ProcessUtilities.outputExecutioner(command, self.website.externalApp, True).rstrip('\n'))
 
-            command = 'cat %s' % (path)
-            CurrentContent = pu.outputExecutioner(command)
+                refreshToken = json.loads(token[reponame]['token'])['refresh_token']
+
+                logging.CyberCPLogFileWriter.writeToFile(f"Refresh Token: {refreshToken}")
+
+                new_Acess_token = self.refresh_V2Gdive_token(refreshToken)
+
+                command = f"""rclone config update {reponame} token '{{"access_token":"{new_Acess_token}","token_type":"Bearer","refresh_token":"{refreshToken}","expiry":"2024-04-08T21:53:00.123456789Z"}}' --non-interactive"""
+                result = ProcessUtilities.outputExecutioner(command, self.website.externalApp, True)
+
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.CyberCPLogFileWriter.writeToFile(result)
 
 
-            if CurrentContent.find(reponame) > -1:
-                config = configparser.ConfigParser()
-                config.read_string(CurrentContent)
+            except BaseException as msg:
+                logging.CyberCPLogFileWriter.writeToFile(f"Token Not upadate inside. Error: {str(msg)}")
+                pass
 
-                token_str = config.get(reponame, 'token')
-                token_dict = json.loads(token_str)
-                refresh_token = token_dict['refresh_token']
+            # command = 'cat %s' % (path)
+            # CurrentContent = pu.outputExecutioner(command)
 
-                new_Acess_token = self.refresh_V2Gdive_token(refresh_token)
 
-                old_access_token = token_dict['access_token']
-
-                new_content = CurrentContent.replace(str(old_access_token), new_Acess_token)
-
-                command = f"cat /dev/null > {self.ConfigFilePath}"
-                pu.executioner(command, self.website.externalApp, True)
-
-                command = f"echo '{new_content}' >> {self.ConfigFilePath}"
-                ProcessUtilities.executioner(command, self.website.externalApp, True)
-
-                command = f"chmod 600 {self.ConfigFilePath}"
-                ProcessUtilities.executioner(command, self.website.externalApp)
-            else:
-                logging.CyberCPLogFileWriter.writeToFile("Token Not upadate..........")
+            # if CurrentContent.find(reponame) > -1:
+            #     config = configparser.ConfigParser()
+            #     config.read_string(CurrentContent)
+            #
+            #     token_str = config.get(reponame, 'token')
+            #     token_dict = json.loads(token_str)
+            #     refresh_token = token_dict['refresh_token']
+            #
+            #     new_Acess_token = self.refresh_V2Gdive_token(refresh_token)
+            #
+            #     old_access_token = token_dict['access_token']
+            #
+            #     new_content = CurrentContent.replace(str(old_access_token), new_Acess_token)
+            #
+            #     command = f"cat /dev/null > {self.ConfigFilePath}"
+            #     pu.executioner(command, self.website.externalApp, True)
+            #
+            #     command = f"echo '{new_content}' >> {self.ConfigFilePath}"
+            #     ProcessUtilities.executioner(command, self.website.externalApp, True)
+            #
+            #     command = f"chmod 600 {self.ConfigFilePath}"
+            #     ProcessUtilities.executioner(command, self.website.externalApp)
+            # else:
+            #     logging.CyberCPLogFileWriter.writeToFile("Token Not upadate..........")
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile("Error update token............%s"%msg)
 
@@ -826,6 +846,7 @@ team_drive =
             newtoken = json.loads(r.text)['access_token']
             return newtoken
         except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile(f'Error in tkupdate: {str(msg)}')
             print("Error Update token:%s" % msg)
             return None
 
