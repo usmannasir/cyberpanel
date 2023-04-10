@@ -435,17 +435,20 @@ team_drive =
 
                     ### DNS Records
 
-                    from dns.models import Domains
+                    try:
+                        from dns.models import Domains
 
-                    self.dnsDomain = Domains.objects.get(name=self.website.domain)
+                        self.dnsDomain = Domains.objects.get(name=self.website.domain)
 
-                    DNSRecords = []
+                        DNSRecords = []
 
-                    for record in self.dnsDomain.records_set.all():
-                        DNSRecords.append(model_to_dict(record))
+                        for record in self.dnsDomain.records_set.all():
+                            DNSRecords.append(model_to_dict(record))
 
-                    Config['MainDNSDomain'] = model_to_dict(self.dnsDomain)
-                    Config['DNSRecords'] = DNSRecords
+                        Config['MainDNSDomain'] = model_to_dict(self.dnsDomain)
+                        Config['DNSRecords'] = DNSRecords
+                    except:
+                        pass
 
                     ### Email accounts
 
@@ -670,28 +673,29 @@ team_drive =
 
         source = f'/home/vmail/{self.website.domain}'
 
-        ## Pending add user provided folders in the exclude list
+        if os.path.exists(source):
+            ## Pending add user provided folders in the exclude list
 
-        exclude = f' --exclude-if-present rusticbackup  --exclude-if-present logs '
+            exclude = f' --exclude-if-present rusticbackup  --exclude-if-present logs '
 
-        command = f'export RCLONE_CONFIG=/home/{self.website.domain}/.config/rclone/rclone.conf && rustic -r {self.repo} backup {source} --password "" {exclude} --json 2>/dev/null'
+            command = f'export RCLONE_CONFIG=/home/{self.website.domain}/.config/rclone/rclone.conf && rustic -r {self.repo} backup {source} --password "" {exclude} --json 2>/dev/null'
 
-        result = json.loads(ProcessUtilities.outputExecutioner(command, None, True).rstrip('\n'))
+            result = json.loads(ProcessUtilities.outputExecutioner(command, None, True).rstrip('\n'))
 
-        try:
-            SnapShotID = result['id']  ## snapshot id that we need to store in db
-            files_new = result['summary']['files_new']  ## basically new files in backup
-            total_duration = result['summary']['total_duration']  ## time taken
+            try:
+                SnapShotID = result['id']  ## snapshot id that we need to store in db
+                files_new = result['summary']['files_new']  ## basically new files in backup
+                total_duration = result['summary']['total_duration']  ## time taken
 
-            self.snapshots.append(SnapShotID)
+                self.snapshots.append(SnapShotID)
 
-            ### Config is saved with each email backup, snapshot of config is attached to email snapshot with parent
+                ### Config is saved with each email backup, snapshot of config is attached to email snapshot with parent
 
-            # self.BackupConfig(SnapShotID)
+                # self.BackupConfig(SnapShotID)
 
-        except BaseException as msg:
-            self.UpdateStatus(f'Backup failed as no snapshot id found, error: {str(msg)}', CPBackupsV2.FAILED)
-            return 0
+            except BaseException as msg:
+                self.UpdateStatus(f'Backup failed as no snapshot id found, error: {str(msg)}', CPBackupsV2.FAILED)
+                return 0
 
         return 1
 
@@ -699,6 +703,7 @@ team_drive =
 
     def RestoreConfig(self):
         try:
+
 
             ConfigPath = f'/home/backup/{self.website.domain}/config.json'
             RestoreConfigPath = f'/home/{self.website.domain}/'
@@ -708,29 +713,151 @@ team_drive =
 
             ConfigContent = json.loads(ProcessUtilities.outputExecutioner(f'cat {RestoreConfigPath}/config.json').rstrip('\n'))
 
-            ### First check if the acl exists
-            from loginSystem.models import ACL, Administrator
-            from django.http import HttpRequest
-            requestNew = HttpRequest()
+            ### ACL Creation code
+
+            # ### First check if the acl exists
+            # from loginSystem.models import ACL, Administrator
+            # from django.http import HttpRequest
+            # requestNew = HttpRequest()
+            # try:
+            #     if os.path.exists(ProcessUtilities.debugPath):
+            #         logging.CyberCPLogFileWriter.writeToFile(f'ACL in config: {ConfigContent["acl"]}')
+            #     acl = ACL.objects.get(name=ConfigContent['acl']['name'])
+            # except:
+            #     if os.path.exists(ProcessUtilities.debugPath):
+            #         logging.CyberCPLogFileWriter.writeToFile('ACL Already existed.')
+            #     requestNew.session['userID'] = Administrator.objects.get(userName='admin').id
+            #     from userManagment.views import createACLFunc
+            #     dataToPass = ConfigContent['acl']
+            #     dataToPass['makeAdmin'] = ConfigContent['acl']['adminStatus']
+            #     requestNew._body = json.dumps(dataToPass)
+            #
+            #     if os.path.exists(ProcessUtilities.debugPath):
+            #         logging.CyberCPLogFileWriter.writeToFile(f'Passed content to Create ACL Func: {json.dumps(dataToPass)}')
+            #
+            #     resp = createACLFunc(requestNew)
+            #     if os.path.exists(ProcessUtilities.debugPath):
+            #         logging.CyberCPLogFileWriter.writeToFile(f'CreateACLFunc stats: {str(resp.content)}')
+
+            ### Create DNS Records
+
             try:
-                if os.path.exists(ProcessUtilities.debugPath):
-                    logging.CyberCPLogFileWriter.writeToFile(f'ACL in config: {ConfigContent["acl"]}')
-                acl = ACL.objects.get(name=ConfigContent['acl']['name'])
+                from dns.models import Domains
+                zone = Domains.objects.get(name=self.website.domain)
+                from plogical.dnsUtilities import DNS
+
+                for record in ConfigContent['DNSRecords']:
+                    DNS.createDNSRecord(zone, record['name'], record['type'], record['content'], 0, record['ttl'])
             except:
-                if os.path.exists(ProcessUtilities.debugPath):
-                    logging.CyberCPLogFileWriter.writeToFile('ACL Already existed.')
-                requestNew.session['userID'] = Administrator.objects.get(userName='admin').id
-                from userManagment.views import createACLFunc
-                dataToPass = ConfigContent['acl']
-                dataToPass['makeAdmin'] = ConfigContent['acl']['adminStatus']
-                requestNew._body = json.dumps(dataToPass)
+                pass
+
+
+            ### Create Emails Accounts
+
+
+            #logging.statusWriter(statusPath, "Restoring email accounts!", 1)
+
+            try:
+
+                from plogical.mailUtilities import mailUtilities
+
+                for emailAccount in ConfigContent['EmailAddresses']:
+
+                    email = emailAccount['email']
+                    username = email.split("@")[0]
+                    password = emailAccount['password']
+
+                    result = mailUtilities.createEmailAccount(self.website.domain, username, password)
+                    if result[0] == 0:
+                        # #logging.statusWriter(statusPath,
+                        #                      'Email existed, updating password according to last snapshot. %s' % (
+                        #                          email))
+                        if mailUtilities.changeEmailPassword(email, password, 1)[0] == 0:
+                            # logging.statusWriter(statusPath,
+                            #                      'Failed changing password for: %s' % (
+                            #                          email))
+                            pass
+                        else:
+                            pass
+                            # logging.statusWriter(statusPath,
+                            #                      'Password changed for: %s' % (
+                            #                          email))
+
+                    else:
+                        pass
+                        # logging.statusWriter(statusPath,
+                        #                      'Email created: %s' % (
+                        #                          email))
+            except:
+                pass
+
+
+            ### Restoring DBs
+
+            from databases.models import Databases, DatabasesUsers
+
+            for database in ConfigContent['databases']:
+
+                dbName = list(database.keys())[0]
 
                 if os.path.exists(ProcessUtilities.debugPath):
-                    logging.CyberCPLogFileWriter.writeToFile(f'Passed content to Create ACL Func: {json.dumps(dataToPass)}')
+                    logging.CyberCPLogFileWriter.writeToFile(f'Databasename: {dbName}')
 
-                resp = createACLFunc(requestNew)
-                if os.path.exists(ProcessUtilities.debugPath):
-                    logging.CyberCPLogFileWriter.writeToFile(f'CreateACLFunc stats: {str(resp.content)}')
+                first = 1
+
+                databaseUsers = database[dbName]
+
+                for databaseUser in databaseUsers:
+
+                    dbUser = databaseUser['user']
+                    dbHost = databaseUser['host']
+                    password = databaseUser['password']
+
+                    if os.path.exists(ProcessUtilities.debugPath):
+                        logging.CyberCPLogFileWriter.writeToFile('Database user: %s' % (dbUser))
+                        logging.CyberCPLogFileWriter.writeToFile('Database host: %s' % (dbHost))
+                        logging.CyberCPLogFileWriter.writeToFile('Database password: %s' % (password))
+
+                    if first:
+
+                        first = 0
+
+                        try:
+                            dbExist = Databases.objects.get(dbName=dbName)
+                            logging.CyberCPLogFileWriter.writeToFile('Database exists, changing Database password.. %s' % (dbName))
+
+                            if mysqlUtilities.mysqlUtilities.changePassword(dbUser, password, 1, dbHost) == 0:
+                                logging.CyberCPLogFileWriter.writeToFile('Failed changing password for database: %s' % (dbName))
+                            else:
+                                logging.CyberCPLogFileWriter.writeToFile('Password successfully changed for database: %s.' % (dbName))
+
+                        except:
+
+                            logging.CyberCPLogFileWriter.writeToFile('Database did not exist, creating new.. %s' % (dbName))
+
+                            if mysqlUtilities.mysqlUtilities.createDatabase(dbName, dbUser, "cyberpanel") == 0:
+                                logging.CyberCPLogFileWriter.writeToFile('Failed the creation of database: %s' % (dbName))
+                            else:
+                                logging.CyberCPLogFileWriter.writeToFile('Database: %s successfully created.' % (dbName))
+
+                            mysqlUtilities.mysqlUtilities.changePassword(dbUser, password, 1)
+
+                            if mysqlUtilities.mysqlUtilities.changePassword(dbUser, password, 1) == 0:
+                                logging.CyberCPLogFileWriter.writeToFile('Failed changing password for database: %s' % (dbName))
+                            else:
+                                logging.CyberCPLogFileWriter.writeToFile(
+                                                     'Password successfully changed for database: %s.' % (dbName))
+
+                            try:
+                                newDB = Databases(website=self.website, dbName=dbName, dbUser=dbUser)
+                                newDB.save()
+                            except:
+                                pass
+
+                    ## This function will not create database, only database user is created as third value is 0 for createDB
+
+                    mysqlUtilities.mysqlUtilities.createDatabase(dbName, dbUser, password, 0, dbHost)
+                    mysqlUtilities.mysqlUtilities.changePassword(dbUser, password, 1, dbHost)
 
         except BaseException as msg:
             return 0, str(msg)
