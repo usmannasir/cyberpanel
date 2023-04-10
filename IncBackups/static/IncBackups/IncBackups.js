@@ -1321,7 +1321,7 @@ app.controller('restorev2backupoage', function ($scope, $http, $timeout, $compil
         function ListInitialDatas(response) {
 
             if (response.data.abort === 1) {
-
+                $scope.backupLoading = true;
                 if (response.data.installStatus === 1) {
 
                     $scope.webSiteCreationLoading = true;
@@ -1338,6 +1338,7 @@ app.controller('restorev2backupoage', function ($scope, $http, $timeout, $compil
                     $timeout.cancel();
 
                 } else {
+                    $scope.backupLoading = true;
                     $scope.webSiteCreationLoading = true;
                     $scope.installationDetailsForm = true;
                     $scope.installationProgress = false;
@@ -1380,6 +1381,8 @@ app.controller('restorev2backupoage', function ($scope, $http, $timeout, $compil
     }
 
     $scope.RestorePathV2 = function (SnapshotId, Path) {
+
+        $scope.backupLoading = false;
 
         SnapshotId = document.getElementById('Snapshot_id').innerText
         Path = document.getElementById('Snapshot_Path_id').innerText
@@ -1663,7 +1666,6 @@ app.controller('CreateV2Backup', function ($scope, $http, $timeout, $compile) {
 
 
         function ListInitialDatas(response) {
-            $scope.backupLoading = true;
             if (response.data.status === 1) {
 
                 Domain = $scope.selwebsite;
@@ -1715,7 +1717,7 @@ app.controller('CreateV2Backup', function ($scope, $http, $timeout, $compile) {
         function ListInitialDatas(response) {
 
             if (response.data.abort === 1) {
-
+                $scope.backupLoading = true;
                 if (response.data.installStatus === 1) {
 
                     $scope.webSiteCreationLoading = true;

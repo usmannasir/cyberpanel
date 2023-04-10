@@ -836,7 +836,6 @@ def RestoreV2backupSite(request):
         return redirect(loadLoginPage)
 
 def RestorePathV2(request):
-    import re
     try:
         userID = request.session['userID']
         data = json.loads(request.body)

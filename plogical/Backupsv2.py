@@ -704,7 +704,8 @@ team_drive =
     def RestoreConfig(self):
         try:
 
-
+            self.UpdateStatus(f'Restoring config..,10',
+                              CPBackupsV2.RUNNING)
             ConfigPath = f'/home/backup/{self.website.domain}/config.json'
             RestoreConfigPath = f'/home/{self.website.domain}/'
 
@@ -748,8 +749,9 @@ team_drive =
 
                 for record in ConfigContent['DNSRecords']:
                     DNS.createDNSRecord(zone, record['name'], record['type'], record['content'], 0, record['ttl'])
-            except:
-                pass
+            except BaseException as msg:
+                self.UpdateStatus(f'Error in RestoreConfig while restoring dns config. Error: {str(msg)}',
+                                      CPBackupsV2.RUNNING)
 
 
             ### Create Emails Accounts
@@ -760,7 +762,6 @@ team_drive =
             try:
 
                 from plogical.mailUtilities import mailUtilities
-
                 for emailAccount in ConfigContent['EmailAddresses']:
 
                     email = emailAccount['email']
@@ -788,76 +789,83 @@ team_drive =
                         # logging.statusWriter(statusPath,
                         #                      'Email created: %s' % (
                         #                          email))
-            except:
-                pass
+            except BaseException as msg:
+                self.UpdateStatus(f'Error in RestoreConfig while restoring email config. Error: {str(msg)}',
+                                          CPBackupsV2.RUNNING)
 
 
             ### Restoring DBs
 
-            from databases.models import Databases, DatabasesUsers
+            try:
 
-            for database in ConfigContent['databases']:
+                from databases.models import Databases, DatabasesUsers
 
-                dbName = list(database.keys())[0]
+                for database in ConfigContent['databases']:
 
-                if os.path.exists(ProcessUtilities.debugPath):
-                    logging.CyberCPLogFileWriter.writeToFile(f'Databasename: {dbName}')
-
-                first = 1
-
-                databaseUsers = database[dbName]
-
-                for databaseUser in databaseUsers:
-
-                    dbUser = databaseUser['user']
-                    dbHost = databaseUser['host']
-                    password = databaseUser['password']
+                    dbName = list(database.keys())[0]
 
                     if os.path.exists(ProcessUtilities.debugPath):
-                        logging.CyberCPLogFileWriter.writeToFile('Database user: %s' % (dbUser))
-                        logging.CyberCPLogFileWriter.writeToFile('Database host: %s' % (dbHost))
-                        logging.CyberCPLogFileWriter.writeToFile('Database password: %s' % (password))
+                        logging.CyberCPLogFileWriter.writeToFile(f'Databasename: {dbName}')
 
-                    if first:
+                    first = 1
 
-                        first = 0
+                    databaseUsers = database[dbName]
 
-                        try:
-                            dbExist = Databases.objects.get(dbName=dbName)
-                            logging.CyberCPLogFileWriter.writeToFile('Database exists, changing Database password.. %s' % (dbName))
+                    for databaseUser in databaseUsers:
 
-                            if mysqlUtilities.mysqlUtilities.changePassword(dbUser, password, 1, dbHost) == 0:
-                                logging.CyberCPLogFileWriter.writeToFile('Failed changing password for database: %s' % (dbName))
-                            else:
-                                logging.CyberCPLogFileWriter.writeToFile('Password successfully changed for database: %s.' % (dbName))
+                        dbUser = databaseUser['user']
+                        dbHost = databaseUser['host']
+                        password = databaseUser['password']
 
-                        except:
+                        if os.path.exists(ProcessUtilities.debugPath):
+                            logging.CyberCPLogFileWriter.writeToFile('Database user: %s' % (dbUser))
+                            logging.CyberCPLogFileWriter.writeToFile('Database host: %s' % (dbHost))
+                            logging.CyberCPLogFileWriter.writeToFile('Database password: %s' % (password))
 
-                            logging.CyberCPLogFileWriter.writeToFile('Database did not exist, creating new.. %s' % (dbName))
+                        if first:
 
-                            if mysqlUtilities.mysqlUtilities.createDatabase(dbName, dbUser, "cyberpanel") == 0:
-                                logging.CyberCPLogFileWriter.writeToFile('Failed the creation of database: %s' % (dbName))
-                            else:
-                                logging.CyberCPLogFileWriter.writeToFile('Database: %s successfully created.' % (dbName))
-
-                            mysqlUtilities.mysqlUtilities.changePassword(dbUser, password, 1)
-
-                            if mysqlUtilities.mysqlUtilities.changePassword(dbUser, password, 1) == 0:
-                                logging.CyberCPLogFileWriter.writeToFile('Failed changing password for database: %s' % (dbName))
-                            else:
-                                logging.CyberCPLogFileWriter.writeToFile(
-                                                     'Password successfully changed for database: %s.' % (dbName))
+                            first = 0
 
                             try:
-                                newDB = Databases(website=self.website, dbName=dbName, dbUser=dbUser)
-                                newDB.save()
+                                dbExist = Databases.objects.get(dbName=dbName)
+                                logging.CyberCPLogFileWriter.writeToFile('Database exists, changing Database password.. %s' % (dbName))
+
+                                if mysqlUtilities.mysqlUtilities.changePassword(dbUser, password, 1, dbHost) == 0:
+                                    logging.CyberCPLogFileWriter.writeToFile('Failed changing password for database: %s' % (dbName))
+                                else:
+                                    logging.CyberCPLogFileWriter.writeToFile('Password successfully changed for database: %s.' % (dbName))
+
                             except:
-                                pass
 
-                    ## This function will not create database, only database user is created as third value is 0 for createDB
+                                logging.CyberCPLogFileWriter.writeToFile('Database did not exist, creating new.. %s' % (dbName))
 
-                    mysqlUtilities.mysqlUtilities.createDatabase(dbName, dbUser, password, 0, dbHost)
-                    mysqlUtilities.mysqlUtilities.changePassword(dbUser, password, 1, dbHost)
+                                if mysqlUtilities.mysqlUtilities.createDatabase(dbName, dbUser, "cyberpanel") == 0:
+                                    logging.CyberCPLogFileWriter.writeToFile('Failed the creation of database: %s' % (dbName))
+                                else:
+                                    logging.CyberCPLogFileWriter.writeToFile('Database: %s successfully created.' % (dbName))
+
+                                mysqlUtilities.mysqlUtilities.changePassword(dbUser, password, 1)
+
+                                if mysqlUtilities.mysqlUtilities.changePassword(dbUser, password, 1) == 0:
+                                    logging.CyberCPLogFileWriter.writeToFile('Failed changing password for database: %s' % (dbName))
+                                else:
+                                    logging.CyberCPLogFileWriter.writeToFile(
+                                                         'Password successfully changed for database: %s.' % (dbName))
+
+                                try:
+                                    newDB = Databases(website=self.website, dbName=dbName, dbUser=dbUser)
+                                    newDB.save()
+                                except:
+                                    pass
+
+                        ## This function will not create database, only database user is created as third value is 0 for createDB
+
+                        mysqlUtilities.mysqlUtilities.createDatabase(dbName, dbUser, password, 0, dbHost)
+                        mysqlUtilities.mysqlUtilities.changePassword(dbUser, password, 1, dbHost)
+            except BaseException as msg:
+                self.UpdateStatus(f'Error in RestoreConfig while restoring database config. Error: {str(msg)}', CPBackupsV2.RUNNING)
+
+            return 1, None
 
         except BaseException as msg:
             return 0, str(msg)
@@ -923,7 +931,11 @@ team_drive =
 
                 ### Find Restore path first, if path is db, only then restore it to cp
 
-                self.RestoreConfig()
+                status, message = self.RestoreConfig()
+                if status == 0:
+                    self.UpdateStatus(f'Failed to restore config, Error {message}',
+                                      CPBackupsV2.FAILED)
+                    return 0
 
                 if self.data["path"].find('.sql') > -1:
                     mysqlUtilities.restoreDatabaseBackup(self.data["path"].rstrip('.sql'), None, None, None, None, 1,
