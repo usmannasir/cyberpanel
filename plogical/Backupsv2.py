@@ -697,6 +697,44 @@ team_drive =
 
     #### Resote Functions
 
+    def RestoreConfig(self):
+        try:
+
+            ConfigPath = f'/home/backup/{self.website.domain}/config.json'
+            RestoreConfigPath = f'/home/{self.website.domain}/'
+
+            command = f'rustic -r {self.repo} restore {self.data["snapshotid"]}:{ConfigPath} {RestoreConfigPath} --password ""  2>/dev/null'
+            result = ProcessUtilities.outputExecutioner(command, self.website.externalApp, True)
+
+            ConfigContent = json.loads(ProcessUtilities.outputExecutioner(f'cat {RestoreConfigPath}/config.json').rstrip('\n'))
+
+            ### First check if the acl exists
+            from loginSystem.models import ACL, Administrator
+            from django.http import HttpRequest
+            requestNew = HttpRequest()
+            try:
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.CyberCPLogFileWriter.writeToFile(f'ACL in config: {ConfigContent["acl"]}')
+                acl = ACL.objects.get(name=ConfigContent['acl']['name'])
+            except:
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.CyberCPLogFileWriter.writeToFile('ACL Already existed.')
+                requestNew.session['userID'] = Administrator.objects.get(userName='admin').id
+                from userManagment.views import createACLFunc
+                dataToPass = ConfigContent['acl']
+                dataToPass['makeAdmin'] = ConfigContent['acl']['adminStatus']
+                requestNew._body = json.dumps(dataToPass)
+
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.CyberCPLogFileWriter.writeToFile(f'Passed content to Create ACL Func: {json.dumps(dataToPass)}')
+
+                resp = createACLFunc(requestNew)
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.CyberCPLogFileWriter.writeToFile(f'CreateACLFunc stats: {str(resp.content)}')
+
+        except BaseException as msg:
+            return 0, str(msg)
+
     def InitiateRestore(self):
 
         ### if restore then status file should be restore status file
@@ -758,17 +796,22 @@ team_drive =
 
                 ### Find Restore path first, if path is db, only then restore it to cp
 
+                self.RestoreConfig()
+
                 if self.data["path"].find('.sql') > -1:
                     mysqlUtilities.restoreDatabaseBackup(self.data["path"].rstrip('.sql'), None, None, None, None, 1,
                                                          self.repo, self.website.externalApp, self.data["snapshotid"])
+
                 else:
 
                     if self.data["path"].find('/home/vmail') > -1:
                         externalApp = None
+                        InitialCommand = f'export RCLONE_CONFIG=/home/{self.website.domain}/.config/rclone/rclone.conf && '
                     else:
                         externalApp = self.website.externalApp
+                        InitialCommand = ''
 
-                    command = f'rustic -r {self.repo} restore {self.data["snapshotid"]}:{self.data["path"]} {self.data["path"]} --password ""  2>/dev/null'
+                    command = f'{InitialCommand}rustic -r {self.repo} restore {self.data["snapshotid"]}:{self.data["path"]} {self.data["path"]} --password ""  2>/dev/null'
                     result = ProcessUtilities.outputExecutioner(command, externalApp, True)
 
                     if os.path.exists(ProcessUtilities.debugPath):
