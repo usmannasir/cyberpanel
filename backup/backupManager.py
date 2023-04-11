@@ -53,9 +53,13 @@ class BackupManager:
         return proc.render()
 
     def RestoreV2backupSite(self, request=None, userID=None, data=None):
+        if ACLManager.CheckForPremFeature('all'):
+            BackupStat = 1
+        else:
+            BackupStat = 0
         currentACL = ACLManager.loadedACL(userID)
         websitesName = ACLManager.findAllSites(currentACL, userID)
-        proc = httpProc(request, 'IncBackups/RestoreV2Backup.html', {'websiteList': websitesName}, 'createBackup')
+        proc = httpProc(request, 'IncBackups/RestoreV2Backup.html', {'websiteList': websitesName, 'BackupStat': BackupStat}, 'createBackup')
         return proc.render()
 
     def CreateV2backupSite(self, request=None, userID=None, data=None):
