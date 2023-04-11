@@ -1232,7 +1232,6 @@ team_drive =
 
             return 1, None
 
-
         except BaseException as msg:
             print('Error: %s' % msg)
             return 0, str(msg)

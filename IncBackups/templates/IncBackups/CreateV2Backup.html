@@ -13,16 +13,27 @@
 
     <div class="container">
         <div id="page-title">
-            <h2>{% trans "Create V2 Backup" %} - <a  target="_blank" href="http://go.cyberpanel.net/backup" style="height: 23px;line-height: 21px;" class="btn btn-border btn-alt border-red btn-link font-red" title=""><span>{% trans "Backup Docs" %}</span></a></h2>
+            <h2>{% trans "Create V2 Backup" %} - <a target="_blank" href="http://go.cyberpanel.net/backup"
+                                                    style="height: 23px;line-height: 21px;"
+                                                    class="btn btn-border btn-alt border-red btn-link font-red"
+                                                    title=""><span>{% trans "Backup Docs" %}</span></a></h2>
             <p>{% trans "This page can be used to create your backup" %}</p>
         </div>
 
         <div ng-controller="CreateV2Backup" class="panel">
             <div class="panel-body">
                 <h3 class="title-hero">
-                    {% trans "Create v2 Backup" %} <img ng-hide="backupLoading" src="{% static 'images/loading.gif' %}"> - <a href="{% url 'RestoreV2backupSite' %}">Restore Backups</a>
+                    {% trans "Create v2 Backup" %} <img ng-hide="backupLoading" src="{% static 'images/loading.gif' %}">
+                    - <a href="{% url 'RestoreV2backupSite' %}">Restore Backups</a>
                 </h3>
-                <div  class="example-box-wrapper">
+                <div class="example-box-wrapper">
+
+                    <p align="center" style="margin-top: 2%; margin-bottom: 2%">
+                        <iframe width="788.54" height="443" src="https://youtu.be/kDUANNvtOwE"
+                                title="YouTube video player" frameborder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowfullscreen></iframe>
+                    </p>
 
                     <form class="form-horizontal bordered-row">
 
@@ -30,7 +41,8 @@
                         <div class="form-group">
                             <label class="col-sm-3 control-label">{% trans "Select Website" %} </label>
                             <div class="col-sm-6">
-                                <select id="create-backup-select" ng-change="selectwebsite()" ng-model="selwebsite" class="form-control">
+                                <select id="create-backup-select" ng-change="selectwebsite()" ng-model="selwebsite"
+                                        class="form-control">
                                     {% for items in websiteList %}
                                         <option value="{{ items }}">{{ items }}</option>
                                     {% endfor %}
@@ -40,11 +52,12 @@
                         <div class="form-group">
                             <label class="col-sm-3 control-label">{% trans "Select Repo" %} </label>
                             <div class="col-sm-6">
-                                <select id="reposelectbox" ng-change="selectrepo()" ng-model="testhabbi" class="form-control">
+                                <select id="reposelectbox" ng-change="selectrepo()" ng-model="testhabbi"
+                                        class="form-control">
                                 </select>
                             </div>
                         </div>
-                        <div  class="form-group">
+                        <div class="form-group">
                             <label class="col-sm-3 control-label">{% trans "Backup Content" %}</label>
                             <div class="col-sm-9">
                                 <div class="checkbox">
@@ -86,7 +99,10 @@
                         <div class="form-group">
                             <label class="col-sm-3 control-label">{% trans " " %} </label>
                             <div class="col-sm-6">
-                                <button class="btn" id="CreateV2BackupButton" ng-click="CreateV2BackupButton()" style="border-radius: 6px;background-color: #3447b7;color: white !important;"> Create Backup</button>
+                                <button class="btn" id="CreateV2BackupButton" ng-click="CreateV2BackupButton()"
+                                        style="border-radius: 6px;background-color: #3447b7;color: white !important;">
+                                    Create Backup
+                                </button>
                             </div>
                         </div>
 
@@ -132,7 +148,6 @@
                         </div>
 
                     </form>
-
 
 
                 </div>

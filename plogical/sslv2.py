@@ -436,7 +436,7 @@ class sslUtilities:
                     subprocess.check_output(shlex.split(command))
 
                 try:
-                    command = acmePath + f" --issue -d *.{virtualHostName}" \
+                    command = acmePath + f" --issue -d {virtualHostName} -d *.{virtualHostName}" \
                               + ' --cert-file ' + existingCertPath + '/cert.pem' + ' --key-file ' + existingCertPath + '/privkey.pem' \
                               + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + f' --dns {DNS_TO_USE} -k ec-256 --force --server letsencrypt'
                     #ResultText = open(logging.CyberCPLogFileWriter.fileName, 'r').read()

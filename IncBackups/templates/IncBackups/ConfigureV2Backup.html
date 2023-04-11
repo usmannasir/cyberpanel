@@ -14,7 +14,7 @@
             <div class="panel-body">
                 <h3 class="title-hero">
                     {% trans "Configure v2 Backup Destinations" %} <img ng-hide="cyberpanelLoading"
-                                                 src="{% static 'images/loading.gif' %}">
+                                                                        src="{% static 'images/loading.gif' %}">
                 </h3>
                 <div class="example-box-wrapper">
 
@@ -24,7 +24,8 @@
                         <div class="form-group">
                             <label class="col-sm-3 control-label">{% trans "Select Website" %} </label>
                             <div class="col-sm-6">
-                                <select id="selwebsite" ng-change="selectwebsite()" ng-model="selwebsite" class="form-control">
+                                <select id="selwebsite" ng-change="selectwebsite()" ng-model="selwebsite"
+                                        class="form-control">
                                     {% for items in websiteList %}
                                         <option value="{{ items }}">{{ items }}</option>
                                     {% endfor %}
@@ -37,8 +38,8 @@
                             <label class="col-sm-3 control-label">{% trans "Select Backup Type" %} </label>
                             <div class="col-sm-6">
                                 <select ng-change="selectbackuptype()" ng-model="v2backuptype" class="form-control">
-                                    <option >SFTP</option>
-                                    <option >GDrive</option>
+                                    <option>SFTP</option>
+                                    <option>GDrive</option>
                                 </select>
                             </div>
                         </div>
