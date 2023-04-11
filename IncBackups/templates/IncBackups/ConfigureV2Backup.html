@@ -8,154 +8,205 @@
     {% get_current_language as LANGUAGE_CODE %}
     <!-- Current language: {{ LANGUAGE_CODE }} -->
 
-    <div class="container">
+    {% if BackupStat %}
+        <div class="container">
 
-        <div ng-controller="ConfigureV2Backup" class="panel">
-            <div class="panel-body">
-                <h3 class="title-hero">
-                    {% trans "Configure v2 Backup Destinations" %} <img ng-hide="cyberpanelLoading"
-                                                                        src="{% static 'images/loading.gif' %}">
-                </h3>
-                <div class="example-box-wrapper">
+            <div ng-controller="ConfigureV2Backup" class="panel">
+                <div class="panel-body">
+                    <h3 class="title-hero">
+                        {% trans "Configure v2 Backup Destinations" %} <img ng-hide="cyberpanelLoading"
+                                                                            src="{% static 'images/loading.gif' %}">
+                    </h3>
+                    <div class="example-box-wrapper">
 
 
-                    <form action="/" class="form-horizontal bordered-row">
+                        <form action="/" class="form-horizontal bordered-row">
 
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">{% trans "Select Website" %} </label>
-                            <div class="col-sm-6">
-                                <select id="selwebsite" ng-change="selectwebsite()" ng-model="selwebsite"
-                                        class="form-control">
-                                    {% for items in websiteList %}
-                                        <option value="{{ items }}">{{ items }}</option>
-                                    {% endfor %}
-                                </select>
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">{% trans "Select Website" %} </label>
+                                <div class="col-sm-6">
+                                    <select id="selwebsite" ng-change="selectwebsite()" ng-model="selwebsite"
+                                            class="form-control">
+                                        {% for items in websiteList %}
+                                            <option value="{{ items }}">{{ items }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label">{% trans "Select Backup Type" %} </label>
+                                <div class="col-sm-6">
+                                    <select ng-change="selectbackuptype()" ng-model="v2backuptype" class="form-control">
+                                        <option>SFTP</option>
+                                        <option>GDrive</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                        </form>
+
+                        <div id="GdriveModal" class="modal fade" role="dialog">
+                            <div class="modal-dialog modal-lg">
+
+                                <!-- Modal content-->
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <button type="button" class="close" data-dismiss="modal">&times;
+                                        </button>
+                                        <h4 class="modal-title">{% trans "Set up account" %}</h4>
+                                    </div>
+                                    <div class="modal-body">
+
+                                        <form name="containerSettingsForm" action="/" class="form-horizontal">
+
+                                            <div ng-hide="installationDetailsForm" class="form-group">
+                                                <label class="col-sm-3 control-label">{% trans "Account Name" %}</label>
+                                                <div class="col-sm-6">
+                                                    <input name="accountName" type="text" class="form-control"
+                                                           ng-model="accountName">
+                                                </div>
+                                            </div>
+
+                                        </form>
+
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-primary"
+                                                ng-click="setupAccount()">Save <img
+                                                ng-hide="cyberpanelLoading"
+                                                src="{% static 'images/loading.gif' %}">
+                                        </button>
+                                        <button type="button" ng-disabled="savingSettings"
+                                                class="btn btn-default" data-dismiss="modal">
+                                            Close
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
 
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">{% trans "Select Backup Type" %} </label>
-                            <div class="col-sm-6">
-                                <select ng-change="selectbackuptype()" ng-model="v2backuptype" class="form-control">
-                                    <option>SFTP</option>
-                                    <option>GDrive</option>
-                                </select>
-                            </div>
-                        </div>
+                        <div id="SFTPModal" class="modal fade" role="dialog">
+                            <div class="modal-dialog modal-lg">
 
-                    </form>
+                                <!-- Modal content-->
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <button type="button" class="close" data-dismiss="modal">&times;
+                                        </button>
+                                        <h4 class="modal-title">{% trans "Set up account" %}</h4>
+                                    </div>
+                                    <div class="modal-body">
 
-                    <div id="GdriveModal" class="modal fade" role="dialog">
-                        <div class="modal-dialog modal-lg">
+                                        <form name="containerSettingsForm" action="/" class="form-horizontal">
 
-                            <!-- Modal content-->
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <button type="button" class="close" data-dismiss="modal">&times;
-                                    </button>
-                                    <h4 class="modal-title">{% trans "Set up account" %}</h4>
-                                </div>
-                                <div class="modal-body">
-
-                                    <form name="containerSettingsForm" action="/" class="form-horizontal">
-
-                                        <div ng-hide="installationDetailsForm" class="form-group">
-                                            <label class="col-sm-3 control-label">{% trans "Account Name" %}</label>
-                                            <div class="col-sm-6">
-                                                <input name="accountName" type="text" class="form-control"
-                                                       ng-model="accountName">
+                                            <div ng-hide="installationDetailsForm" class="form-group">
+                                                <label class="col-sm-3 control-label">{% trans "Repo Name" %}</label>
+                                                <div class="col-sm-6">
+                                                    <input name="reponame" type="text" class="form-control"
+                                                           ng-model="reponame">
+                                                </div>
                                             </div>
-                                        </div>
 
-                                    </form>
-
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-primary"
-                                            ng-click="setupAccount()">Save <img
-                                            ng-hide="cyberpanelLoading"
-                                            src="{% static 'images/loading.gif' %}">
-                                    </button>
-                                    <button type="button" ng-disabled="savingSettings"
-                                            class="btn btn-default" data-dismiss="modal">
-                                        Close
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-
-                    <div id="SFTPModal" class="modal fade" role="dialog">
-                        <div class="modal-dialog modal-lg">
-
-                            <!-- Modal content-->
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <button type="button" class="close" data-dismiss="modal">&times;
-                                    </button>
-                                    <h4 class="modal-title">{% trans "Set up account" %}</h4>
-                                </div>
-                                <div class="modal-body">
-
-                                    <form name="containerSettingsForm" action="/" class="form-horizontal">
-
-                                        <div ng-hide="installationDetailsForm" class="form-group">
-                                            <label class="col-sm-3 control-label">{% trans "Repo Name" %}</label>
-                                            <div class="col-sm-6">
-                                                <input name="reponame" type="text" class="form-control"
-                                                       ng-model="reponame">
+                                            <div ng-hide="installationDetailsForm" class="form-group">
+                                                <label class="col-sm-3 control-label">{% trans "Host Name" %}</label>
+                                                <div class="col-sm-6">
+                                                    <input name="accountName" type="text" class="form-control"
+                                                           ng-model="hostName">
+                                                </div>
                                             </div>
-                                        </div>
 
-                                        <div ng-hide="installationDetailsForm" class="form-group">
-                                            <label class="col-sm-3 control-label">{% trans "Host Name" %}</label>
-                                            <div class="col-sm-6">
-                                                <input name="accountName" type="text" class="form-control"
-                                                       ng-model="hostName">
+                                            <div ng-hide="installationDetailsForm" class="form-group">
+                                                <label class="col-sm-3 control-label">{% trans "Username" %}</label>
+                                                <div class="col-sm-6">
+                                                    <input name="accountName" type="text" class="form-control"
+                                                           ng-model="UserName">
+                                                </div>
                                             </div>
-                                        </div>
 
-                                        <div ng-hide="installationDetailsForm" class="form-group">
-                                            <label class="col-sm-3 control-label">{% trans "Username" %}</label>
-                                            <div class="col-sm-6">
-                                                <input name="accountName" type="text" class="form-control"
-                                                       ng-model="UserName">
+                                            <div ng-hide="installationDetailsForm" class="form-group">
+                                                <label class="col-sm-3 control-label">{% trans "Password" %}</label>
+                                                <div class="col-sm-6">
+                                                    <input name="accountName" type="text" class="form-control"
+                                                           ng-model="sfptpasswd">
+                                                </div>
                                             </div>
-                                        </div>
 
-                                        <div ng-hide="installationDetailsForm" class="form-group">
-                                            <label class="col-sm-3 control-label">{% trans "Password" %}</label>
-                                            <div class="col-sm-6">
-                                                <input name="accountName" type="text" class="form-control"
-                                                       ng-model="sfptpasswd">
-                                            </div>
-                                        </div>
+                                        </form>
 
-                                    </form>
-
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-primary"
-                                            ng-click="ConfigerSFTP()">Save <img
-                                            ng-hide="cyberpanelLoading"
-                                            src="{% static 'images/loading.gif' %}">
-                                    </button>
-                                    <button type="button" ng-disabled="savingSettings"
-                                            class="btn btn-default" data-dismiss="modal">
-                                        Close
-                                    </button>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-primary"
+                                                ng-click="ConfigerSFTP()">Save <img
+                                                ng-hide="cyberpanelLoading"
+                                                src="{% static 'images/loading.gif' %}">
+                                        </button>
+                                        <button type="button" ng-disabled="savingSettings"
+                                                class="btn btn-default" data-dismiss="modal">
+                                            Close
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+
+
         </div>
+    {% else %}
+        <style>
+            .feturecard {
+                width: 30%;
+                padding: 46px;
+                margin: 15px
+            }
+        </style>
+        <div class="container">
+            <div id="page-title" align="center">
+                <h1 style="color: black"><strong>Backups v2 - Incremental Backups! </strong></h1>
+                <p style="font-size: 15px; color: black; margin-top: 1%">Is your website's data protection strategy up
+                    to par? Are you tired of dealing with slow and unreliable backup solutions that don't offer the
+                    level of robustness you need? <br><br>
 
+                    Introducing CyberPanel's latest feature, Backups v2! With Backups v2, you can ensure that your
+                    website's data is protected like never before. Our advanced incremental backup system utilizes
+                    rclone, a powerful backup tool that supports over 30+ backends, including popular cloud storage
+                    providers like Google Drive, Dropbox, Amazon S3, and more!<br><br>
 
-    </div>
+                    Gone are the days of slow and cumbersome full backups. With Backups v2, you can take advantage of
+                    incremental backups that only capture changes to your data, making the process lightning-fast and
+                    highly efficient. This means you can save time and bandwidth while still maintaining the highest
+                    level of data integrity.<br><br>
+
+                    Whether you have a small blog or a large e-commerce website, Backups v2 is tailored to meet your
+                    needs. With its robustness and versatility, you can have peace of mind knowing that your website's
+                    data is backed up securely and can be easily restored whenever you need it.
+                    <br></p>
+            </div>
+            <p align="center">
+                <iframe width="560" height="315" src="https://www.youtube.com/embed/7dI1013xvUc"
+                        title="YouTube video player" frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowfullscreen></iframe>
+            </p>
+            <div style="margin-top: 2%">
+                <stripe-pricing-table pricing-table-id="prctbl_1MQtdYJMfY1fWGMszc4tx78j"
+                                      publishable-key="pk_live_51ITXBmJMfY1fWGMs2G0LAydJweIDMp2WaYocM0xyzdn03WaHUbMw6uxfVuktAkgpRyUql7tz7gF5OwdccEZLd6Ot00XX6tGoZx">
+                </stripe-pricing-table>
+                <stripe-pricing-table pricing-table-id="prctbl_1LpSqSJMfY1fWGMsxSNhPLsc"
+                                      publishable-key="pk_live_51ITXBmJMfY1fWGMs2G0LAydJweIDMp2WaYocM0xyzdn03WaHUbMw6uxfVuktAkgpRyUql7tz7gF5OwdccEZLd6Ot00XX6tGoZx">
+                </stripe-pricing-table>
+                <stripe-pricing-table pricing-table-id="prctbl_1M6WpCJMfY1fWGMsQXFlZWcW"
+                                      publishable-key="pk_live_51ITXBmJMfY1fWGMs2G0LAydJweIDMp2WaYocM0xyzdn03WaHUbMw6uxfVuktAkgpRyUql7tz7gF5OwdccEZLd6Ot00XX6tGoZx">
+                </stripe-pricing-table>
+            </div>
+
+        </div>
+    {% endif %}
 
 
 {% endblock %}
