@@ -330,6 +330,8 @@ team_drive =
                                       CPBackupsV2.FAILED)
                     return 0
 
+                self.UpdateStatus('Checking if backup modules installed,0', CPBackupsV2.RUNNING)
+
                 ### Before doing anything install rustic
 
                 statusRes, message = self.InstallRustic()
