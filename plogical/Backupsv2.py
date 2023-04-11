@@ -1205,6 +1205,13 @@ team_drive =
 
             if not os.path.exists(CPBackupsV2.RUSTIC_PATH):
 
+                ### also install rclone
+
+                command = 'curl https://rclone.org/install.sh | sudo bash'
+                ProcessUtilities.executioner(command, None, True)
+
+
+
                 url = "https://api.github.com/repos/rustic-rs/rustic/releases/latest"
                 response = requests.get(url)
 
