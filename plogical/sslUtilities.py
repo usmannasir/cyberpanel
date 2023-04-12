@@ -78,6 +78,55 @@ class sslUtilities:
 
         except BaseException as msg:
             return [0, "347 " + str(msg) + " [issueSSLForDomain]"]
+    @staticmethod
+    def PatchVhostConf(virtualHostName):
+        try:
+            confPath = sslUtilities.Server_root + "/conf/vhosts/" + virtualHostName
+            completePathToConfigFile = confPath + "/vhost.conf"
+
+            DataVhost = open(completePathToConfigFile, 'r').read()
+
+            if DataVhost.find('/.well-known/acme-challenge') == -1:
+                if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+                    WriteToFile = open(completePathToConfigFile, 'a')
+
+                    content = '''
+context /.well-known/acme-challenge {
+  location                /usr/local/lsws/Example/html/.well-known/acme-challenge
+  allowBrowse             1
+
+  rewrite  {
+     enable                  0
+  }
+  addDefaultCharset       off
+  phpIniOverride  {
+
+  }
+}
+'''
+                    WriteToFile.write(content)
+                    WriteToFile.close()
+                else:
+                    data = open(completePathToConfigFile, 'r').readlines()
+                    WriteToFile = open(completePathToConfigFile, 'w')
+                    Check = 0
+                    for items in data:
+                        if items.find('DocumentRoot /home/')> -1:
+                            if Check == 0:
+                                WriteToFile.write(items)
+                                WriteToFile.write('    Alias /.well-known/acme-challenge /usr/local/lsws/Example/html/.well-known/acme-challenge\n')
+                                Check = 1
+                            else:
+                                WriteToFile.write(items)
+                        else:
+                            WriteToFile.write(items)
+
+                    WriteToFile.close()
+
+
+        except BaseException as msg:
+            return 0, str(msg)
+
 
     @staticmethod
     def installSSLForDomain(virtualHostName, adminEmail='example@example.org'):
@@ -351,6 +400,8 @@ class sslUtilities:
                 return retStatus
 
         sender_email = 'root@%s' % (socket.gethostname())
+
+        status, path = sslUtilities.PatchVhostConf(virtualHostName)
 
         if not os.path.exists('/usr/local/lsws/Example/html/.well-known/acme-challenge'):
             command = f'mkdir -p /usr/local/lsws/Example/html/.well-known/acme-challenge'
