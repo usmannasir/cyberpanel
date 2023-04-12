@@ -124,6 +124,10 @@ context /.well-known/acme-challenge {
 
                     WriteToFile.close()
 
+                from plogical import installUtilities
+
+                installUtilities.installUtilities.reStartLiteSpeed()
+
 
         except BaseException as msg:
             return 0, str(msg)
