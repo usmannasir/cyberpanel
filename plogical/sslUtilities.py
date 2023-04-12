@@ -401,7 +401,7 @@ context /.well-known/acme-challenge {
 
         sender_email = 'root@%s' % (socket.gethostname())
 
-        status, path = sslUtilities.PatchVhostConf(virtualHostName)
+        sslUtilities.PatchVhostConf(virtualHostName)
 
         if not os.path.exists('/usr/local/lsws/Example/html/.well-known/acme-challenge'):
             command = f'mkdir -p /usr/local/lsws/Example/html/.well-known/acme-challenge'
