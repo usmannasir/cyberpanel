@@ -721,17 +721,16 @@ def ConfigureV2Backup(request):
         if ACLManager.currentContextPermission(current_acl, 'createBackup') == 0:
             return ACLManager.loadError()
 
-        data = {}
 
         if ACLManager.CheckForPremFeature('all'):
-            data['BackupStat'] = 1
+            BackupStat = 1
         else:
-            data['BackupStat'] = 0
+            BackupStat = 0
 
         websites = ACLManager.findAllSites(current_acl, user_id)
         #
         # destinations = _get_destinations(local=True)
-        proc = httpProc(request, 'IncBackups/ConfigureV2Backup.html', {'websiteList': websites})
+        proc = httpProc(request, 'IncBackups/ConfigureV2Backup.html', {'websiteList': websites, 'BackupStat': BackupStat})
         return proc.render()
 
     except BaseException as msg:
