@@ -91,6 +91,7 @@ class sslUtilities:
                     WriteToFile = open(completePathToConfigFile, 'a')
 
                     content = '''
+                    
 context /.well-known/acme-challenge {
   location                /usr/local/lsws/Example/html/.well-known/acme-challenge
   allowBrowse             1
@@ -411,8 +412,6 @@ context /.well-known/acme-challenge {
         command = f'touch {CustomVerificationFile}'
         ProcessUtilities.normalExecutioner(command)
 
-        WWWStatus = 0
-        NONWWWStatus = 0
 
         URLFetchPathWWW = f'http://www.{virtualHostName}/.well-known/acme-challenge/{virtualHostName}'
         URLFetchPathNONWWW = f'http://{virtualHostName}/.well-known/acme-challenge/{virtualHostName}'
@@ -440,6 +439,9 @@ context /.well-known/acme-challenge {
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 f'Status Code: Unkown for: {URLFetchPathNONWWW}. Error: {str(msg)}')
+
+        WWWStatus = 1
+        NONWWWStatus = 1
 
 
         try:
