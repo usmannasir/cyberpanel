@@ -78,7 +78,7 @@ context /.well-known/acme-challenge {
   allowBrowse             1
 
   rewrite  {
-
+     enable                  0
   }
   addDefaultCharset       off
 
@@ -167,7 +167,7 @@ context /.well-known/acme-challenge {
   allowBrowse             1
 
   rewrite  {
-
+    enable                  0
   }
   addDefaultCharset       off
 
