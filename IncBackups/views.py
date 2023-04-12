@@ -997,12 +997,12 @@ def selectwebsiteCreatev2(request):
             command = f'mkdir -p {LocalRclonePath}'
             pu.executioner(command, obj.externalApp)
 
-            content = '''
-                   [local]
-                   type = local
-                   '''
-            command = f"echo '{content}' > {path}"
-            pu.executioner(command, obj.externalApp, True)
+            # content = '''
+            #        [local]
+            #        type = local
+            #        '''
+            # command = f"echo '{content}' > {path}"
+            # pu.executioner(command, obj.externalApp, True)
 
             command = 'cat %s' % (path)
             result = pu.outputExecutioner(command)
