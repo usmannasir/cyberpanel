@@ -31,7 +31,10 @@ def preDockerRun(function):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
             else:
-                return render(request, 'dockerManager/install.html', {'status':currentACL['admin'], 'conErr':0})
+                from plogical.httpProc import httpProc
+                proc = httpProc(request, 'dockerManager/install.html', {'status':currentACL['admin'], 'conErr':0}, 'admin')
+                return proc.render()
+                #return render(request, 'dockerManager/install.html', {'status':currentACL['admin'], 'conErr':0})
             
         # Check if docker is running and we are able to connect
                 
@@ -45,7 +48,11 @@ def preDockerRun(function):
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
             else:
-                return render(request, 'dockerManager/install.html', {'status':currentACL['admin'], 'conErr':1})
+                from plogical.httpProc import httpProc
+                proc = httpProc(request, 'dockerManager/install.html', {'status': currentACL['admin'], 'conErr': 0},
+                                'admin')
+                return proc.render()
+                #return render(request, 'dockerManager/install.html', {'status':currentACL['admin'], 'conErr':1})
         
         return function(request, *args, **kwargs)
 
