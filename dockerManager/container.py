@@ -137,6 +137,7 @@ class ContainerManager(multi.Thread):
 
         client = docker.from_env()
         dockerAPI = docker.APIClient()
+
         try:
             container = client.containers.get(name)
         except docker.errors.NotFound as err:

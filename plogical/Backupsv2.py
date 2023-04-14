@@ -634,7 +634,7 @@ team_drive =
 
         ## Pending add user provided folders in the exclude list
 
-        exclude = f' --exclude-if-present rusticbackup  --exclude-if-present logs '
+        exclude = f' --exclude-if-present {source}/logs '
 
         command = f'rustic -r {self.repo} backup {source} --password "" {exclude} --json 2>/dev/null'
         result = json.loads(ProcessUtilities.outputExecutioner(command, self.website.externalApp, True).rstrip('\n'))

@@ -721,7 +721,6 @@ def ConfigureV2Backup(request):
         if ACLManager.currentContextPermission(current_acl, 'createBackup') == 0:
             return ACLManager.loadError()
 
-
         if ACLManager.CheckForPremFeature('all'):
             BackupStat = 1
         else:
@@ -1027,9 +1026,6 @@ def selectwebsiteCreatev2(request):
             else:
                 final_json = json.dumps({'status': 0, 'fetchStatus': 0, 'error_message': 'Could not Find repo', 'currentSchedules': currentSchedules})
                 return HttpResponse(final_json)
-
-
-
 
 
         # logging.writeToFile(str(CurrentContent))
