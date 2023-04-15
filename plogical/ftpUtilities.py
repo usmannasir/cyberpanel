@@ -143,8 +143,13 @@ class FTPUtilities:
                 print("0, %s file is symlinked." % (path))
                 return 0
 
-            hash = hashlib.md5()
-            hash.update(password.encode('utf-8'))
+            if ProcessUtilities.ubuntu22Check == 1:
+                from crypt import crypt, METHOD_SHA512
+                FTPPass = crypt(password, METHOD_SHA512)
+            else:
+                hash = hashlib.md5()
+                hash.update(password.encode('utf-8'))
+                FTPPass = hash.hexdigest()
 
             admin = Administrator.objects.get(userName=owner)
 
@@ -153,7 +158,7 @@ class FTPUtilities:
 
 
             if website.package.ftpAccounts == 0:
-                user = Users(domain=website, user=userName, password=hash.hexdigest(), uid=uid, gid=gid,
+                user = Users(domain=website, user=userName, password=FTPPass, uid=uid, gid=gid,
                              dir=path,
                              quotasize=website.package.diskSpace,
                              status="1",
@@ -163,7 +168,7 @@ class FTPUtilities:
 
                 user.save()
             elif website.users_set.all().count() < website.package.ftpAccounts:
-                user = Users(domain=website, user=userName, password=hash.hexdigest(), uid=uid, gid=gid,
+                user = Users(domain=website, user=userName, password=FTPPass, uid=uid, gid=gid,
                              dir=path, quotasize=website.package.diskSpace,
                              status="1",
                              ulbandwidth=500000,
@@ -195,11 +200,16 @@ class FTPUtilities:
     @staticmethod
     def changeFTPPassword(userName, password):
         try:
-            hash = hashlib.md5()
-            hash.update(password.encode('utf-8'))
+            if ProcessUtilities.ubuntu22Check == 1:
+                from crypt import crypt, METHOD_SHA512
+                FTPPass = crypt(password, METHOD_SHA512)
+            else:
+                hash = hashlib.md5()
+                hash.update(password.encode('utf-8'))
+                FTPPass = hash.hexdigest()
 
             ftp = Users.objects.get(user=userName)
-            ftp.password = hash.hexdigest()
+            ftp.password = FTPPass
             ftp.save()
 
             return 1, None

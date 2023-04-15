@@ -17,6 +17,7 @@ class ProcessUtilities(multi.Thread):
     cent8 = 2
     ubuntu = 0
     ubuntu20 = 3
+    ubuntu22Check = 0
     server_address = '/usr/local/lscpd/admin/comm.sock'
     token = "unset"
     portPath = '/usr/local/lscp/conf/bind.conf'
@@ -166,6 +167,10 @@ class ProcessUtilities(multi.Thread):
         distroPath = '/etc/lsb-release'
 
         if os.path.exists(distroPath):
+            ## this is check only
+            if open(distroPath, 'r').read().find('22.04'):
+                ProcessUtilities.ubuntu22Check = 1
+
             if open(distroPath, 'r').read().find('20.04') > -1 or open(distroPath, 'r').read().find('22.04'):
                 return ProcessUtilities.ubuntu20
             return ProcessUtilities.ubuntu
