@@ -143,6 +143,8 @@ class FTPUtilities:
                 print("0, %s file is symlinked." % (path))
                 return 0
 
+            ProcessUtilities.decideDistro()
+
             if ProcessUtilities.ubuntu22Check == 1:
                 from crypt import crypt, METHOD_SHA512
                 FTPPass = crypt(password, METHOD_SHA512)
@@ -200,6 +202,7 @@ class FTPUtilities:
     @staticmethod
     def changeFTPPassword(userName, password):
         try:
+            ProcessUtilities.decideDistro()
             if ProcessUtilities.ubuntu22Check == 1:
                 from crypt import crypt, METHOD_SHA512
                 FTPPass = crypt(password, METHOD_SHA512)
