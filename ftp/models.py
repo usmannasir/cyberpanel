@@ -6,7 +6,7 @@ class Users(models.Model):
     domain = models.ForeignKey(Websites,on_delete=models.CASCADE)
     id = models.AutoField(db_column='ID', primary_key=True)  # Field name made lowercase.
     user = models.CharField(db_column='User', unique=True, max_length=32)  # Field name made lowercase.
-    password = models.CharField(db_column='Password', max_length=64)  # Field name made lowercase.
+    password = models.CharField(db_column='Password', max_length=255)  # Field name made lowercase.
     uid = models.IntegerField(db_column='Uid')  # Field name made lowercase.
     gid = models.IntegerField(db_column='Gid')  # Field name made lowercase.
     dir = models.CharField(db_column='Dir', max_length=255)  # Field name made lowercase.
