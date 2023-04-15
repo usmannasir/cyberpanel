@@ -1098,6 +1098,9 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                 command = "sed -i 's/MYSQLCrypt md5/MYSQLCrypt crypt/g' /etc/pure-ftpd/db/mysql.conf"
                 Upgrade.executioner(command, command, 1)
 
+                command = "systemctl restart pure-ftpd-mysql.service"
+                Upgrade.executioner(command, command, 1)
+
             try:
                 connection.close()
             except:

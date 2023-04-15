@@ -511,6 +511,9 @@ class InstallCyberPanel:
                     command = "sed -i 's/MYSQLCrypt md5/MYSQLCrypt crypt/g' /etc/pure-ftpd/db/mysql.conf"
                     install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
 
+                    command = "systemctl restart pure-ftpd-mysql.service"
+                    install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+
 
             InstallCyberPanel.stdOut("PureFTPD configured!", 1)
 
