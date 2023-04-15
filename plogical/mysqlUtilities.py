@@ -313,7 +313,7 @@ password=%s
             else:
                 SHELL = True
 
-                command = f'mysqldump --defaults-extra-file=/home/cyberpanel/.my.cnf -u {mysqluser} --host={mysqlhost} --port {mysqlport} --add-drop-table --allow-keywords --complete-insert --quote-names --skip-comments {databaseName} | sudo -u {externalApp} rustic -r {RusticRepoName} backup --stdin-filename {databaseName}.sql - --password "" --json 2>/dev/null'
+                command = f'mysqldump --defaults-extra-file=/home/cyberpanel/.my.cnf -u {mysqluser} --host={mysqlhost} --port {mysqlport} --add-drop-table --allow-keywords --complete-insert --quote-names --skip-comments {databaseName} 2>/dev/null | sudo -u {externalApp} rustic -r {RusticRepoName} backup --stdin-filename {databaseName}.sql - --password "" --json 2>/dev/null'
 
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.CyberCPLogFileWriter.writeToFile(command)
