@@ -225,6 +225,19 @@ team_drive =
             file.writelines("[" + time.strftime(
                 "%m.%d.%Y_%H-%M-%S") + ":FAILED] " + message + "[404]" + "\n")
             file.close()
+
+            ### if backup failed, we need to prune snapshots as they are not needed.
+
+            snapshots = ''
+            for snapshot in self.snapshots:
+                snapshots = f'{snapshots} {snapshot}'
+
+            command = f'rustic -r {self.repo} forget {snapshots}  --password ""'
+            result = ProcessUtilities.outputExecutioner(command, self.website.externalApp, True)
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.CyberCPLogFileWriter.writeToFile(result)
+
         elif status == CPBackupsV2.COMPLETED:
             self.website.BackupLock = 0
             self.website.save()
