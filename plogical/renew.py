@@ -125,6 +125,9 @@ class Renew:
             command = 'systemctl restart dovecot'
             ProcessUtilities.normalExecutioner(command)
 
+            command = 'systemctl restart lscpd'
+            ProcessUtilities.normalExecutioner(command)
+
         except BaseException as msg:
            logging.writeToFile(str(msg) + '. Renew.SSLObtainer')
 
