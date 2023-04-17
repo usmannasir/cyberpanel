@@ -1476,8 +1476,9 @@ def main():
         IncScheduler.CalculateAndUpdateDiskUsage()
         return 0
 
-    if args.function == '30 Minutes' or args.function == 'Daily' or args.function == '1 Hour' or args.function == '6 Hours' or args.function == '12 Hours' or args.function == '1 Day' or args.function == '3 Days' or args.function == '1 Week':
+    if args.function == '30 Minutes' or args.function == '1 Hour' or args.function == '6 Hours' or args.function == '12 Hours' or args.function == '1 Day' or args.function == '3 Days' or args.function == '1 Week':
         # IncScheduler.refresh_access_token()
+
         IncScheduler.RemoteBackup(args.function)
         IncScheduler.v2Backups(args.function)
         return 0
