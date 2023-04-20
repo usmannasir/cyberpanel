@@ -49,6 +49,10 @@ class BackupManager:
     def backupSite(self, request=None, userID=None, data=None):
         currentACL = ACLManager.loadedACL(userID)
         websitesName = ACLManager.findAllSites(currentACL, userID)
+
+        command = 'chmod 755 /home/backup'
+        ProcessUtilities.executioner(command)
+
         proc = httpProc(request, 'backup/backup.html', {'websiteList': websitesName}, 'createBackup')
         return proc.render()
 

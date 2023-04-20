@@ -316,8 +316,8 @@ team_drive =
             command = f"mkdir -p {self.data['BasePath']}"
             ProcessUtilities.executioner(command)
 
-            command = f"chmod 711 {self.data['BasePath']}"
-            ProcessUtilities.executioner(command)
+            #command = f"chmod 711 {self.data['BasePath']}"
+            #ProcessUtilities.executioner(command)
 
         self.StartingTimeStamp = CPBackupsV2.FetchCurrentTimeStamp()
 
@@ -904,8 +904,8 @@ team_drive =
             command = f"mkdir -p {self.data['BasePath']}"
             ProcessUtilities.executioner(command)
 
-            command = f"chmod 711 {self.data['BasePath']}"
-            ProcessUtilities.executioner(command)
+            #command = f"chmod 711 {self.data['BasePath']}"
+            #ProcessUtilities.executioner(command)
 
         self.StartingTimeStamp = CPBackupsV2.FetchCurrentTimeStamp()
 
