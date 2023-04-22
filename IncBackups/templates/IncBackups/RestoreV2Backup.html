@@ -47,9 +47,9 @@
                                 <label class="col-sm-3 control-label">{% trans "Select Repo" %} </label>
                                 <div class="col-sm-6">
 
-                                    <select id="reposelectbox" ng-change="selectrepo()" ng-model="testhabbi"
+                                    <select  ng-change="selectrepo()" ng-model="testhabbi"
                                             class="form-control">
-
+                                        <option ng-repeat="repo in repos track by $index">{$ repo $}</option>
                                     </select>
                                 </div>
                             </div>
@@ -201,9 +201,9 @@
             </div>
             <p align="center">
                 <iframe width="788.54" height="443" src="https://www.youtube.com/embed/7dI1013xvUc"
-                                title="YouTube video player" frameborder="0"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                allowfullscreen></iframe>
+                        title="YouTube video player" frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowfullscreen></iframe>
             </p>
             <div style="margin-top: 2%">
                 <stripe-pricing-table pricing-table-id="prctbl_1MQtdYJMfY1fWGMszc4tx78j"

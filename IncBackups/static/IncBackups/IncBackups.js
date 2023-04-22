@@ -1212,7 +1212,7 @@ app.controller('restorev2backupoage', function ($scope, $http, $timeout, $compil
     $scope.goBackDisable = true;
 
     $scope.selectwebsite = function () {
-        document.getElementById('reposelectbox').innerHTML = "";
+        //document.getElementById('reposelectbox').innerHTML = "";
         $scope.backupLoading = false;
 
         var url = "/IncrementalBackups/selectwebsiteRetorev2";
@@ -1237,38 +1237,42 @@ app.controller('restorev2backupoage', function ($scope, $http, $timeout, $compil
             $scope.backupLoading = true;
             if (response.data.status === 1) {
 
+                $scope.repos = response.data.data;
 
-                const selectBox = document.getElementById('reposelectbox');
-
-
-                const options = response.data.data;
-                const option = document.createElement('option');
+                console.log($scope.repos);
 
 
-                option.value = 1;
-                option.text = 'Choose Repo';
-
-                selectBox.appendChild(option);
-
-                if (options.length >= 1) {
-                    for (let i = 0; i < options.length; i++) {
-
-                        const option = document.createElement('option');
-
-
-                        option.value = options[i];
-                        option.text = options[i];
-
-                        selectBox.appendChild(option);
-                    }
-
-                } else {
-                    new PNotify({
-                        title: 'Error!',
-                        text: 'file empty',
-                        type: 'error'
-                    });
-                }
+                // const selectBox = document.getElementById('reposelectbox');
+                //
+                //
+                // const options = response.data.data;
+                // const option = document.createElement('option');
+                //
+                //
+                // option.value = 1;
+                // option.text = 'Choose Repo';
+                //
+                // selectBox.appendChild(option);
+                //
+                // if (options.length >= 1) {
+                //     for (let i = 0; i < options.length; i++) {
+                //
+                //         const option = document.createElement('option');
+                //
+                //
+                //         option.value = options[i];
+                //         option.text = options[i];
+                //
+                //         selectBox.appendChild(option);
+                //     }
+                //
+                // } else {
+                //     new PNotify({
+                //         title: 'Error!',
+                //         text: 'file empty',
+                //         type: 'error'
+                //     });
+                // }
 
 
             } else {
@@ -1393,7 +1397,7 @@ app.controller('restorev2backupoage', function ($scope, $http, $timeout, $compil
             snapshotid: SnapshotId,
             path: Path,
             selwebsite: $scope.selwebsite,
-            selectedrepo: $('#reposelectbox').val()
+            selectedrepo: $scope.testhabbi
         }
 
         var config = {
@@ -1446,7 +1450,7 @@ app.controller('restorev2backupoage', function ($scope, $http, $timeout, $compil
         var url = "/IncrementalBackups/selectreporestorev2";
 
         var data = {
-            Selectedrepo: $('#reposelectbox').val(),
+            Selectedrepo: $scope.testhabbi,
             Selectedwebsite: $scope.selwebsite,
         }
         //alert( $scope.selwebsite);
