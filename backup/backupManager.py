@@ -1820,6 +1820,13 @@ class BackupManager:
     def CreateV2BackupStatus(self, userID=None, data=None):
         try:
             domain = data['domain']
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+
+            if ACLManager.checkOwnership(domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
 
             statusFile = f'/home/cyberpanel/{domain}_rustic_backup_log'
 
