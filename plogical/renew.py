@@ -41,22 +41,33 @@ class Renew:
                     if int(diff.days) >= 15 and SSLProvider!='Denial':
                         logging.writeToFile(
                             'SSL exists for %s and is not ready to renew, skipping..' % (website.domain), 0)
+                        print(
+                            f'SSL exists for %s and is not ready to renew, skipping..' % (website.domain))
                     elif SSLProvider == 'Denial':
                         logging.writeToFile(
                             'SSL exists for %s and ready to renew..' % (website.domain), 0)
                         logging.writeToFile(
                             'Renewing SSL for %s..' % (website.domain), 0)
 
+                        print(
+                            f'SSL exists for %s and ready to renew..' % (website.domain))
+
                         virtualHostUtilities.issueSSL(website.domain, '/home/%s/public_html' % (website.domain),
                                                       website.adminEmail)
                     elif SSLProvider != "Let's Encrypt":
                         logging.writeToFile(
                             'Custom SSL exists for %s and ready to renew..' % (website.domain), 1)
+                        print(
+                            'Custom SSL exists for %s and ready to renew..' % (website.domain))
                     else:
                         logging.writeToFile(
                             'SSL exists for %s and ready to renew..' % (website.domain), 0)
                         logging.writeToFile(
                             'Renewing SSL for %s..' % (website.domain), 0)
+
+                        print(
+                            'SSL exists for %s and ready to renew..' % (website.domain))
+
 
                         virtualHostUtilities.issueSSL(website.domain, '/home/%s/public_html' % (website.domain), website.adminEmail)
                 else:
