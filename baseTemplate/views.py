@@ -19,7 +19,7 @@ from plogical.httpProc import httpProc
 # Create your views here.
 
 VERSION = '2.3'
-BUILD = 3
+BUILD = 4
 
 
 @ensure_csrf_cookie
