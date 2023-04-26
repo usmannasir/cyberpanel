@@ -64,6 +64,8 @@ class WebsiteManager:
         response = requests.post(url, data=json.dumps(data))
         Status = response.json()['status']
 
+        test_domain_status = 0
+
         if (Status == 1) or ProcessUtilities.decideServer() == ProcessUtilities.ent:
             test_domain_status = 1
 
@@ -701,6 +703,8 @@ class WebsiteManager:
         import requests
         response = requests.post(url, data=json.dumps(data))
         Status = response.json()['status']
+
+        test_domain_status = 0
 
         if (Status == 1) or ProcessUtilities.decideServer() == ProcessUtilities.ent:
             test_domain_status = 1
