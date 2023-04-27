@@ -43,7 +43,7 @@ def get_distro():
         distro_file = "/etc/lsb-release"
         with open(distro_file) as f:
             for line in f:
-                if line == "DISTRIB_ID=Ubuntu\n":
+                if line == "DISTRIB_ID=Ubuntu\n" or line == "DISTRIB_ID=PiluX":
                     distro = ubuntu
 
     elif exists("/etc/redhat-release"):
