@@ -996,8 +996,8 @@ class WebsiteManager:
             php = PHPManager.getPHPString(wpsite.owner.phpSelection)
             FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
 
-            command = f'{FinalPHPPath} -d error_reporting=0 /usr/bin/wp config get DB_NAME  --skip-plugins --skip-themes --path={wpsite.path}'
-            retStatus, stdoutput = ProcessUtilities.outputExecutioner(command, wpsite.owner.externalApp, None, None, 1)
+            command = f'{FinalPHPPath} -d error_reporting=0 /usr/bin/wp config get DB_NAME  --skip-plugins --skip-themes --path={wpsite.path} 2>/dev/null'
+            retStatus, stdoutput = ProcessUtilities.outputExecutioner(command, wpsite.owner.externalApp, True, None, 1)
 
             if stdoutput.find('Error:') == -1:
                 DataBaseName = stdoutput.rstrip("\n")
@@ -1007,8 +1007,8 @@ class WebsiteManager:
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-            command = f'{FinalPHPPath} -d error_reporting=0 /usr/bin/wp config get DB_USER  --skip-plugins --skip-themes --path={wpsite.path}'
-            retStatus, stdoutput = ProcessUtilities.outputExecutioner(command, wpsite.owner.externalApp, None, None, 1)
+            command = f'{FinalPHPPath} -d error_reporting=0 /usr/bin/wp config get DB_USER  --skip-plugins --skip-themes --path={wpsite.path} 2>/dev/null'
+            retStatus, stdoutput = ProcessUtilities.outputExecutioner(command, wpsite.owner.externalApp, True, None, 1)
 
             if stdoutput.find('Error:') == -1:
                 DataBaseUser = stdoutput.rstrip("\n")
@@ -1018,8 +1018,8 @@ class WebsiteManager:
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-            command = f'{FinalPHPPath} -d error_reporting=0 /usr/bin/wp config get table_prefix  --skip-plugins --skip-themes --path={wpsite.path}'
-            retStatus, stdoutput = ProcessUtilities.outputExecutioner(command, wpsite.owner.externalApp, None, None, 1)
+            command = f'{FinalPHPPath} -d error_reporting=0 /usr/bin/wp config get table_prefix  --skip-plugins --skip-themes --path={wpsite.path} 2>/dev/null'
+            retStatus, stdoutput = ProcessUtilities.outputExecutioner(command, wpsite.owner.externalApp, True, None, 1)
 
             if stdoutput.find('Error:') == -1:
                 tableprefix = stdoutput.rstrip("\n")
