@@ -799,9 +799,9 @@ class WebsiteManager:
             php = ACLManager.getPHPString(PHPVersion)
             FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
 
-            command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp core version --skip-plugins --skip-themes --path=%s' % (
+            command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp core version --skip-plugins --skip-themes --path=%s 2>/dev/null' % (
             Vhuser, FinalPHPPath, path)
-            version = ProcessUtilities.outputExecutioner(command)
+            version = ProcessUtilities.outputExecutioner(command, None, True)
             version = html.escape(version)
 
             command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp plugin status litespeed-cache --skip-plugins --skip-themes --path=%s' % (
@@ -1480,9 +1480,9 @@ class WebsiteManager:
 
             ###fetch WP version
 
-            command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp core version --skip-plugins --skip-themes --path=%s' % (
+            command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp core version --skip-plugins --skip-themes --path=%s 2>/dev/null' % (
                 Vhuser, FinalPHPPath, path)
-            version = ProcessUtilities.outputExecutioner(command)
+            version = ProcessUtilities.outputExecutioner(command, None, True)
             version = version.rstrip("\n")
 
             ###install wp core

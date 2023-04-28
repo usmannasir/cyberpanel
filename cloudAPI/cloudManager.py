@@ -1974,8 +1974,8 @@ class CloudManager:
             except:
                 path = '/home/%s/public_html' % (self.data['domain'])
 
-            command = 'wp core version --skip-plugins --skip-themes --path=%s' % (path)
-            finalDic['version'] = str(ProcessUtilities.outputExecutioner(command, website.externalApp))
+            command = 'wp core version --skip-plugins --skip-themes --path=%s 2>/dev/null' % (path)
+            finalDic['version'] = str(ProcessUtilities.outputExecutioner(command, website.externalApp, True))
 
             ## LSCache
 
@@ -2633,8 +2633,8 @@ class CloudManager:
 
             path = '/home/%s/public_html' % (self.data['domainName'])
 
-            command = 'wp core version --allow-root --skip-plugins --skip-themes --path=%s' % (path)
-            result = ProcessUtilities.outputExecutioner(command)
+            command = 'wp core version --allow-root --skip-plugins --skip-themes --path=%s 2>/dev/null' % (path)
+            result = ProcessUtilities.outputExecutioner(command, None, True)
 
             if result.find('Error:') > -1:
                 final_dic = {'status': 0, 'fetchStatus': 0,
