@@ -1086,8 +1086,13 @@ team_drive =
 
             finalConfigPath = f'/home/cyberpanel/v2backups/{website}'
 
+            if not os.path.exists('/home/cyberpanel/v2backups/'):
+
+                command = 'mkdir -p /home/cyberpanel/v2backups/'
+                ProcessUtilities.executioner(command, 'cyberpanel')
+
+
             if os.path.exists(finalConfigPath):
-                logging.CyberCPLogFileWriter.writeToFile('22222')
 
                 command = f'cat {finalConfigPath}'
                 RetResult = ProcessUtilities.outputExecutioner(command)
