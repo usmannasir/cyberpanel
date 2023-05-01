@@ -1410,6 +1410,7 @@ class WebsiteManager:
             currentACL = ACLManager.loadedACL(userID)
             admin = Administrator.objects.get(pk=userID)
 
+
             allweb = Websites.objects.all()
 
             childdomain = ChildDomains.objects.all()
@@ -1417,9 +1418,13 @@ class WebsiteManager:
             for web in allweb:
                 webpath = "/home/%s/public_html/" % web.domain
                 command = "cat %swp-config.php" % webpath
-                result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                result = ProcessUtilities.outputExecutioner(command, web.externalApp)
 
-                if result == 1:
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.CyberCPLogFileWriter.writeToFile(result)
+
+
+                if result.find('No such file or directory') == -1:
                     try:
                         WPSites.objects.get(path=webpath)
                     except:
@@ -1432,9 +1437,12 @@ class WebsiteManager:
                 childPath = chlid.path.rstrip('/')
 
                 command = "cat %s/wp-config.php" % childPath
-                result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                result = ProcessUtilities.outputExecutioner(command, chlid.master.externalApp)
 
-                if result == 1:
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.CyberCPLogFileWriter.writeToFile(result)
+
+                if result.find('No such file or directory') == -1:
                     fChildPath = f'{childPath}/'
                     try:
                         WPSites.objects.get(path=fChildPath)
