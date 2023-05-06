@@ -164,12 +164,19 @@ pattern_to_watch = ^/home/.+?/(public_html|public_ftp|private_html)(/.*)?$
 
             ##
 
+            command = 'pkill -f "bash i360deploy.sh"'
+            ServerStatusUtil.executioner(command, statusFile)
+
             if not os.path.exists('i360deploy.sh'):
                 command = 'wget https://repo.imunify360.cloudlinux.com/defence360/i360deploy.sh'
                 ServerStatusUtil.executioner(command, statusFile)
 
-            command = 'bash i360deploy.sh --key %s --beta' % (key)
+            command = 'bash i360deploy.sh --uninstall --yes'
             ServerStatusUtil.executioner(command, statusFile)
+
+            command = 'bash i360deploy.sh --key %s --yes' % (key)
+            ServerStatusUtil.executioner(command, statusFile)
+
 
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
                                                       "Imunify reinstalled..\n", 1)
