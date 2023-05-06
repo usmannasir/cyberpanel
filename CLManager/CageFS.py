@@ -218,11 +218,17 @@ ui_path_owner = lscpd:lscpd
 
             ##
 
+            command = 'pkill -f "bash imav-deploy.sh"'
+            ServerStatusUtil.executioner(command, statusFile)
+
             if not os.path.exists('imav-deploy.sh'):
                 command = 'wget https://repo.imunify360.cloudlinux.com/defence360/imav-deploy.sh'
                 ServerStatusUtil.executioner(command, statusFile)
 
-            command = 'bash imav-deploy.sh'
+            command = 'bash imav-deploy.sh --uninstall --yes'
+            ServerStatusUtil.executioner(command, statusFile)
+
+            command = 'bash imav-deploy.sh --yes'
             ServerStatusUtil.executioner(command, statusFile)
 
             logging.CyberCPLogFileWriter.statusWriter(ServerStatusUtil.lswsInstallStatusPath,
