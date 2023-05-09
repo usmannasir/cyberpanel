@@ -1136,12 +1136,6 @@ CREATE TABLE `websiteFunctions_backupsv2` (`id` integer AUTO_INCREMENT NOT NULL 
 
             if Upgrade.FindOperatingSytem() == Ubuntu22:
 
-                try:
-                    cursor.execute(
-                        'ALTER TABLE `users` CHANGE `Password` `Password` VARCHAR(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL; ')
-                except:
-                    pass
-
                 command = "sed -i 's/MYSQLCrypt md5/MYSQLCrypt crypt/g' /etc/pure-ftpd/db/mysql.conf"
                 Upgrade.executioner(command, command, 1)
 
