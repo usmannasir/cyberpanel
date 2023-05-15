@@ -167,8 +167,9 @@ class ProcessUtilities(multi.Thread):
         distroPath = '/etc/lsb-release'
 
         if os.path.exists(distroPath):
+            
             ## this is check only
-            if open(distroPath, 'r').read().find('22.04'):
+            if open(distroPath, 'r').read().find('22.04') > -1:
                 ProcessUtilities.ubuntu22Check = 1
 
             if open(distroPath, 'r').read().find('20.04') > -1 or open(distroPath, 'r').read().find('22.04'):

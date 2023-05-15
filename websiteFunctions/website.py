@@ -53,16 +53,21 @@ class WebsiteManager:
         self.childDomain = childDomain
 
     def createWebsite(self, request=None, userID=None, data=None):
-        url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
 
-        test_domain_data = {
-            "name": "test-domain",
-            "IP": ACLManager.GetServerIP(),
+        url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
+        data = {
+            "name": "all",
+            "IP": ACLManager.GetServerIP()
         }
 
         import requests
-        response = requests.post(url, data=json.dumps(test_domain_data))
-        test_domain_status = response.json()['status']
+        response = requests.post(url, data=json.dumps(data))
+        Status = response.json()['status']
+
+        test_domain_status = 0
+
+        if (Status == 1) or ProcessUtilities.decideServer() == ProcessUtilities.ent:
+            test_domain_status = 1
 
         currentACL = ACLManager.loadedACL(userID)
         adminNames = ACLManager.loadAllUsers(userID)
@@ -114,14 +119,7 @@ class WebsiteManager:
 
             ##
 
-            test_domain_data = {
-                "name": "test-domain",
-                "IP": ACLManager.GetServerIP(),
-            }
-
-            import requests
-            response = requests.post(url, data=json.dumps(test_domain_data))
-            test_domain_status = response.json()['status']
+            test_domain_status = 1
 
             Data = {'packageList': packagesName, "owernList": adminNames, 'WPVersions': FinalVersions,
                     'Plugins': Plugins, 'Randam_String': rnpss.lower(), 'test_domain_data': test_domain_status}
@@ -184,17 +182,6 @@ class WebsiteManager:
             response = requests.post(url, data=json.dumps(data))
             Status = response.json()['status']
 
-            test_domain_url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
-
-            test_domain_data = {
-                "name": "test-domain",
-                "IP": ACLManager.GetServerIP(),
-            }
-
-            import requests
-            response = requests.post(test_domain_url, data=json.dumps(test_domain_data))
-            test_domain_status = response.json()['status']
-            Data['test_domain_data'] = test_domain_status
 
             rnpss = randomPassword.generate_pass(10)
 
@@ -202,6 +189,7 @@ class WebsiteManager:
 
             if (Status == 1) or ProcessUtilities.decideServer() == ProcessUtilities.ent:
                 Data['wpsite'] = WPobj
+                Data['test_domain_data'] = 1
 
                 try:
                     DeleteID = request.GET.get('DeleteID', None)
@@ -706,16 +694,20 @@ class WebsiteManager:
         currentACL = ACLManager.loadedACL(userID)
         websitesName = ACLManager.findAllSites(currentACL, userID)
 
-        test_domain_url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
-
-        test_domain_data = {
-            "name": "test-domain",
-            "IP": ACLManager.GetServerIP(),
+        url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
+        data = {
+            "name": "all",
+            "IP": ACLManager.GetServerIP()
         }
 
         import requests
-        response = requests.post(test_domain_url, data=json.dumps(test_domain_data))
-        test_domain_status = response.json()['status']
+        response = requests.post(url, data=json.dumps(data))
+        Status = response.json()['status']
+
+        test_domain_status = 0
+
+        if (Status == 1) or ProcessUtilities.decideServer() == ProcessUtilities.ent:
+            test_domain_status = 1
 
         rnpss = randomPassword.generate_pass(10)
         proc = httpProc(request, 'websiteFunctions/createDomain.html',
@@ -807,9 +799,9 @@ class WebsiteManager:
             php = ACLManager.getPHPString(PHPVersion)
             FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
 
-            command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp core version --skip-plugins --skip-themes --path=%s' % (
+            command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp core version --skip-plugins --skip-themes --path=%s 2>/dev/null' % (
             Vhuser, FinalPHPPath, path)
-            version = ProcessUtilities.outputExecutioner(command)
+            version = ProcessUtilities.outputExecutioner(command, None, True)
             version = html.escape(version)
 
             command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp plugin status litespeed-cache --skip-plugins --skip-themes --path=%s' % (
@@ -1004,8 +996,8 @@ class WebsiteManager:
             php = PHPManager.getPHPString(wpsite.owner.phpSelection)
             FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
 
-            command = f'{FinalPHPPath} -d error_reporting=0 /usr/bin/wp config get DB_NAME  --skip-plugins --skip-themes --path={wpsite.path}'
-            retStatus, stdoutput = ProcessUtilities.outputExecutioner(command, wpsite.owner.externalApp, None, None, 1)
+            command = f'{FinalPHPPath} -d error_reporting=0 /usr/bin/wp config get DB_NAME  --skip-plugins --skip-themes --path={wpsite.path} 2>/dev/null'
+            retStatus, stdoutput = ProcessUtilities.outputExecutioner(command, wpsite.owner.externalApp, True, None, 1)
 
             if stdoutput.find('Error:') == -1:
                 DataBaseName = stdoutput.rstrip("\n")
@@ -1015,8 +1007,8 @@ class WebsiteManager:
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-            command = f'{FinalPHPPath} -d error_reporting=0 /usr/bin/wp config get DB_USER  --skip-plugins --skip-themes --path={wpsite.path}'
-            retStatus, stdoutput = ProcessUtilities.outputExecutioner(command, wpsite.owner.externalApp, None, None, 1)
+            command = f'{FinalPHPPath} -d error_reporting=0 /usr/bin/wp config get DB_USER  --skip-plugins --skip-themes --path={wpsite.path} 2>/dev/null'
+            retStatus, stdoutput = ProcessUtilities.outputExecutioner(command, wpsite.owner.externalApp, True, None, 1)
 
             if stdoutput.find('Error:') == -1:
                 DataBaseUser = stdoutput.rstrip("\n")
@@ -1026,8 +1018,8 @@ class WebsiteManager:
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
-            command = f'{FinalPHPPath} -d error_reporting=0 /usr/bin/wp config get table_prefix  --skip-plugins --skip-themes --path={wpsite.path}'
-            retStatus, stdoutput = ProcessUtilities.outputExecutioner(command, wpsite.owner.externalApp, None, None, 1)
+            command = f'{FinalPHPPath} -d error_reporting=0 /usr/bin/wp config get table_prefix  --skip-plugins --skip-themes --path={wpsite.path} 2>/dev/null'
+            retStatus, stdoutput = ProcessUtilities.outputExecutioner(command, wpsite.owner.externalApp, True, None, 1)
 
             if stdoutput.find('Error:') == -1:
                 tableprefix = stdoutput.rstrip("\n")
@@ -1418,6 +1410,7 @@ class WebsiteManager:
             currentACL = ACLManager.loadedACL(userID)
             admin = Administrator.objects.get(pk=userID)
 
+
             allweb = Websites.objects.all()
 
             childdomain = ChildDomains.objects.all()
@@ -1425,9 +1418,13 @@ class WebsiteManager:
             for web in allweb:
                 webpath = "/home/%s/public_html/" % web.domain
                 command = "cat %swp-config.php" % webpath
-                result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                result = ProcessUtilities.outputExecutioner(command, web.externalApp)
 
-                if result == 1:
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.CyberCPLogFileWriter.writeToFile(result)
+
+
+                if result.find('No such file or directory') == -1:
                     try:
                         WPSites.objects.get(path=webpath)
                     except:
@@ -1440,9 +1437,12 @@ class WebsiteManager:
                 childPath = chlid.path.rstrip('/')
 
                 command = "cat %s/wp-config.php" % childPath
-                result, stdout = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+                result = ProcessUtilities.outputExecutioner(command, chlid.master.externalApp)
 
-                if result == 1:
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.CyberCPLogFileWriter.writeToFile(result)
+
+                if result.find('No such file or directory') == -1:
                     fChildPath = f'{childPath}/'
                     try:
                         WPSites.objects.get(path=fChildPath)
@@ -1488,9 +1488,9 @@ class WebsiteManager:
 
             ###fetch WP version
 
-            command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp core version --skip-plugins --skip-themes --path=%s' % (
+            command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp core version --skip-plugins --skip-themes --path=%s 2>/dev/null' % (
                 Vhuser, FinalPHPPath, path)
-            version = ProcessUtilities.outputExecutioner(command)
+            version = ProcessUtilities.outputExecutioner(command, None, True)
             version = version.rstrip("\n")
 
             ###install wp core

@@ -809,6 +809,7 @@ def CreateV2BackupButton(request):
 
         background = CPBackupsV2(extra_args)
         background.start()
+
         # background = CPBackupsV2({'domain': Selectedwebsite, 'BasePath': '/home/backup', 'BackupDatabase': 1, 'BackupData': 1,
         #      'BackupEmails': 1, 'BackendName': Selectedrepo, 'function': 'InitiateBackup', })
         # background.start()
@@ -981,7 +982,7 @@ def selectwebsiteCreatev2(request):
         else:
             return ACLManager.loadError()
 
-        obj = Websites.objects.get(domain = str(Selectedwebsite), admin = admin)
+        obj = Websites.objects.get(domain = str(Selectedwebsite))
         #/home/cyberpanel.net/.config/rclone/rclone.conf
         path = '/home/%s/.config/rclone/rclone.conf' %(obj.domain)
 

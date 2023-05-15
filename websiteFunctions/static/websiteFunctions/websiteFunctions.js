@@ -2405,12 +2405,18 @@ app.controller('createWebsite', function ($scope, $http, $timeout, $window) {
 
         $scope.currentStatus = "Starting creation..";
 
-        var ssl, dkimCheck, openBasedir, mailDomain;
+        var ssl, dkimCheck, openBasedir, mailDomain, apacheBackend;
 
         if ($scope.sslCheck === true) {
             ssl = 1;
         } else {
             ssl = 0
+        }
+
+        if ($scope.apacheBackend === true) {
+            apacheBackend = 1;
+        } else {
+            apacheBackend = 0
         }
 
         if ($scope.dkimCheck === true) {
@@ -2461,8 +2467,10 @@ app.controller('createWebsite', function ($scope, $http, $timeout, $window) {
             websiteOwner: websiteOwner,
             dkimCheck: dkimCheck,
             openBasedir: openBasedir,
-            mailDomain: mailDomain
+            mailDomain: mailDomain,
+            apacheBackend: apacheBackend
         };
+
 
         var config = {
             headers: {

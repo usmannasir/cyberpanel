@@ -16,18 +16,45 @@ import re
 
 class ApacheVhost:
     apacheInstallStatusPath = '/home/cyberpanel/apacheInstallStatus'
-    serverRootPath = '/etc/httpd'
-    configBasePath = '/etc/httpd/conf.d/'
+
+    if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+
+        serverRootPath = '/etc/httpd'
+        configBasePath = '/etc/httpd/conf.d/'
+        php54Path = '/opt/remi/php54/root/etc/php-fpm.d/'
+        php55Path = '/opt/remi/php55/root/etc/php-fpm.d/'
+        php56Path = '/etc/opt/remi/php56/php-fpm.d/'
+        php70Path = '/etc/opt/remi/php70/php-fpm.d/'
+        php71Path = '/etc/opt/remi/php71/php-fpm.d/'
+        php72Path = '/etc/opt/remi/php72/php-fpm.d/'
+        php73Path = '/etc/opt/remi/php73/php-fpm.d/'
+
+    else:
+        serverRootPath = '/etc/apache2'
+        configBasePath = '/etc/apache2/sites-enabled/'
+
+        php54Path = '/etc/php/5.4/fpm/pool.d/'
+        php55Path = '/etc/php/5.5/fpm/pool.d/'
+        php56Path = '/etc/php/5.6/fpm/pool.d/'
+        php70Path = '/etc/php/7.0/fpm/pool.d/'
+        php71Path = '/etc/php/7.1/fpm/pool.d/'
+        php72Path = '/etc/php/7.2/fpm/pool.d/'
+        php73Path = '/etc/php/7.3/fpm/pool.d/'
+
+        php74Path = '/etc/php/7.4/fpm/pool.d/'
+        php80Path = '/etc/php/8.0/fpm/pool.d/'
+        php81Path = '/etc/php/8.1/fpm/pool.d/'
+        php82Path = '/etc/php/8.2/fpm/pool.d/'
+
+
+
     lswsMainConf = "/usr/local/lsws/conf/httpd_config.conf"
-    php54Path = '/opt/remi/php54/root/etc/php-fpm.d/'
-    php55Path = '/opt/remi/php55/root/etc/php-fpm.d/'
-    php56Path = '/etc/opt/remi/php56/php-fpm.d/'
-    php70Path = '/etc/opt/remi/php70/php-fpm.d/'
-    php71Path = '/etc/opt/remi/php71/php-fpm.d/'
-    php72Path = '/etc/opt/remi/php72/php-fpm.d/'
-    php73Path = '/etc/opt/remi/php73/php-fpm.d/'
+
     count = 0
-    sslBasePath = "/etc/httpd/conf.d/ssl/"
+    if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+        sslBasePath = "/etc/httpd/conf.d/ssl/"
+    else:
+        sslBasePath = "/etc/apache2/conf-enabled/"
 
     @staticmethod
     def DecidePHPPath(php, virtualHostName):
@@ -45,6 +72,14 @@ class ApacheVhost:
             finalConfPath = ApacheVhost.php72Path + virtualHostName
         elif php == '73':
             finalConfPath = ApacheVhost.php73Path + virtualHostName
+        elif php == '74':
+            finalConfPath = ApacheVhost.php74Path + virtualHostName
+        elif php == '80':
+            finalConfPath = ApacheVhost.php80Path + virtualHostName
+        elif php == '81':
+            finalConfPath = ApacheVhost.php81Path + virtualHostName
+        elif php == '82':
+            finalConfPath = ApacheVhost.php82Path + virtualHostName
 
         return finalConfPath + '.conf'
 
@@ -74,6 +109,18 @@ class ApacheVhost:
         if os.path.exists(ApacheVhost.php73Path + virtualHostName):
             return ApacheVhost.php73Path + virtualHostName
 
+        if os.path.exists(ApacheVhost.php74Path + virtualHostName):
+            return ApacheVhost.php74Path + virtualHostName
+
+        if os.path.exists(ApacheVhost.php80Path + virtualHostName):
+            return ApacheVhost.php80Path + virtualHostName
+
+        if os.path.exists(ApacheVhost.php81Path + virtualHostName):
+            return ApacheVhost.php81Path + virtualHostName
+
+        if os.path.exists(ApacheVhost.php82Path + virtualHostName):
+            return ApacheVhost.php82Path + virtualHostName
+
     @staticmethod
     def GenerateSelfSignedSSL(virtualHostName):
         if os.path.exists(ApacheVhost.sslBasePath):
@@ -90,6 +137,11 @@ class ApacheVhost:
     def perHostVirtualConf(administratorEmail,externalApp, virtualHostUser, phpVersion, virtualHostName):
         try:
 
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                sockPath = '/var/run/php-fpm/'
+            else:
+                sockPath = '/var/run/php/'
+
             ## Non-SSL Conf
 
             finalConfPath = ApacheVhost.configBasePath + virtualHostName + '.conf'
@@ -104,6 +156,7 @@ class ApacheVhost:
             currentConf = currentConf.replace('{php}', php)
             currentConf = currentConf.replace('{adminEmails}', administratorEmail)
             currentConf = currentConf.replace('{externalApp}', virtualHostUser)
+            currentConf = currentConf.replace('{sockPath}', sockPath)
 
             confFile.write(currentConf)
             confFile.close()
@@ -122,6 +175,8 @@ class ApacheVhost:
             currentConf = currentConf.replace('{php}', php)
             currentConf = currentConf.replace('{adminEmails}', administratorEmail)
             currentConf = currentConf.replace('{externalApp}', virtualHostUser)
+            currentConf = currentConf.replace('{SSLBase}', ApacheVhost.sslBasePath)
+            currentConf = currentConf.replace('{sockPath}', sockPath)
 
             confFile.write(currentConf)
             confFile.close()
@@ -135,6 +190,7 @@ class ApacheVhost:
             currentConf = currentConf.replace('{www}', virtualHostUser)
             currentConf = currentConf.replace('{Sock}', virtualHostName)
             currentConf = currentConf.replace('{externalApp}', externalApp)
+            currentConf = currentConf.replace('{sockPath}', sockPath)
 
             confFile.write(currentConf)
 
@@ -204,6 +260,11 @@ class ApacheVhost:
 
             ## Non - SSL Conf
 
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                sockPath = '/var/run/php-fpm/'
+            else:
+                sockPath = '/var/run/php/'
+
             finalConfPath = ApacheVhost.configBasePath + virtualHostName + '.conf'
             confFile = open(finalConfPath, "w+")
 
@@ -216,6 +277,7 @@ class ApacheVhost:
             currentConf = currentConf.replace('{adminEmails}', administratorEmail)
             currentConf = currentConf.replace('{externalApp}', virtualHostUser)
             currentConf = currentConf.replace('{path}', path)
+            currentConf = currentConf.replace('{sockPath}', sockPath)
 
             confFile.write(currentConf)
             confFile.close()
@@ -234,6 +296,8 @@ class ApacheVhost:
             currentConf = currentConf.replace('{adminEmails}', administratorEmail)
             currentConf = currentConf.replace('{externalApp}', virtualHostUser)
             currentConf = currentConf.replace('{path}', path)
+            currentConf = currentConf.replace('{sockPath}', sockPath)
+            currentConf = currentConf.replace('{SSLBase}', ApacheVhost.sslBasePath)
 
             confFile.write(currentConf)
             confFile.close()
@@ -247,6 +311,7 @@ class ApacheVhost:
             currentConf = currentConf.replace('{www}', "".join(re.findall("[a-zA-Z]+", virtualHostName))[:7])
             currentConf = currentConf.replace('{Sock}', virtualHostName)
             currentConf = currentConf.replace('{externalApp}', externalApp)
+            currentConf = currentConf.replace('{sockPath}', sockPath)
 
             confFile.write(currentConf)
 

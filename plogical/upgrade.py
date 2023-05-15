@@ -17,7 +17,7 @@ import random
 import string
 
 VERSION = '2.3'
-BUILD = 3
+BUILD = 4
 
 CENTOS7 = 0
 CENTOS8 = 1
@@ -50,22 +50,22 @@ class Upgrade:
                '"hostnameSSL": 1, "mailServerSSL": 1 }'
 
     ResellerACL = '{"adminStatus":0, "versionManagement": 1, "createNewUser": 1, "listUsers": 1, "deleteUser": 1 , "resellerCenter": 1, ' \
-               '"changeUserACL": 0, "createWebsite": 1, "modifyWebsite": 1, "suspendWebsite": 1, "deleteWebsite": 1, ' \
-               '"createPackage": 1, "listPackages": 1, "deletePackage": 1, "modifyPackage": 1, "createDatabase": 1, "deleteDatabase": 1, ' \
-               '"listDatabases": 1, "createNameServer": 1, "createDNSZone": 1, "deleteZone": 1, "addDeleteRecords": 1, ' \
-               '"createEmail": 1, "listEmails": 1, "deleteEmail": 1, "emailForwarding": 1, "changeEmailPassword": 1, ' \
-               '"dkimManager": 1, "createFTPAccount": 1, "deleteFTPAccount": 1, "listFTPAccounts": 1, "createBackup": 1,' \
-               ' "restoreBackup": 1, "addDeleteDestinations": 0, "scheduleBackups": 0, "remoteBackups": 0, "googleDriveBackups": 1, "manageSSL": 1, ' \
-               '"hostnameSSL": 0, "mailServerSSL": 0 }'
-
-    UserACL = '{"adminStatus":0, "versionManagement": 1, "createNewUser": 0, "listUsers": 0, "deleteUser": 0 , "resellerCenter": 0, ' \
-                  '"changeUserACL": 0, "createWebsite": 0, "modifyWebsite": 0, "suspendWebsite": 0, "deleteWebsite": 0, ' \
-                  '"createPackage": 0, "listPackages": 0, "deletePackage": 0, "modifyPackage": 0, "createDatabase": 1, "deleteDatabase": 1, ' \
-                  '"listDatabases": 1, "createNameServer": 0, "createDNSZone": 1, "deleteZone": 1, "addDeleteRecords": 1, ' \
+                  '"changeUserACL": 0, "createWebsite": 1, "modifyWebsite": 1, "suspendWebsite": 1, "deleteWebsite": 1, ' \
+                  '"createPackage": 1, "listPackages": 1, "deletePackage": 1, "modifyPackage": 1, "createDatabase": 1, "deleteDatabase": 1, ' \
+                  '"listDatabases": 1, "createNameServer": 1, "createDNSZone": 1, "deleteZone": 1, "addDeleteRecords": 1, ' \
                   '"createEmail": 1, "listEmails": 1, "deleteEmail": 1, "emailForwarding": 1, "changeEmailPassword": 1, ' \
                   '"dkimManager": 1, "createFTPAccount": 1, "deleteFTPAccount": 1, "listFTPAccounts": 1, "createBackup": 1,' \
-                  ' "restoreBackup": 0, "addDeleteDestinations": 0, "scheduleBackups": 0, "remoteBackups": 0, "googleDriveBackups": 1, "manageSSL": 1, ' \
+                  ' "restoreBackup": 1, "addDeleteDestinations": 0, "scheduleBackups": 0, "remoteBackups": 0, "googleDriveBackups": 1, "manageSSL": 1, ' \
                   '"hostnameSSL": 0, "mailServerSSL": 0 }'
+
+    UserACL = '{"adminStatus":0, "versionManagement": 1, "createNewUser": 0, "listUsers": 0, "deleteUser": 0 , "resellerCenter": 0, ' \
+              '"changeUserACL": 0, "createWebsite": 0, "modifyWebsite": 0, "suspendWebsite": 0, "deleteWebsite": 0, ' \
+              '"createPackage": 0, "listPackages": 0, "deletePackage": 0, "modifyPackage": 0, "createDatabase": 1, "deleteDatabase": 1, ' \
+              '"listDatabases": 1, "createNameServer": 0, "createDNSZone": 1, "deleteZone": 1, "addDeleteRecords": 1, ' \
+              '"createEmail": 1, "listEmails": 1, "deleteEmail": 1, "emailForwarding": 1, "changeEmailPassword": 1, ' \
+              '"dkimManager": 1, "createFTPAccount": 1, "deleteFTPAccount": 1, "listFTPAccounts": 1, "createBackup": 1,' \
+              ' "restoreBackup": 0, "addDeleteDestinations": 0, "scheduleBackups": 0, "remoteBackups": 0, "googleDriveBackups": 1, "manageSSL": 1, ' \
+              '"hostnameSSL": 0, "mailServerSSL": 0 }'
 
     @staticmethod
     def decideCentosVersion():
@@ -424,7 +424,8 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             count = 1
 
             while (1):
-                command = 'wget https://github.com/the-djmaze/snappymail/releases/download/v%s/snappymail-%s.zip' % (Upgrade.SnappyVersion, Upgrade.SnappyVersion)
+                command = 'wget https://github.com/the-djmaze/snappymail/releases/download/v%s/snappymail-%s.zip' % (
+                    Upgrade.SnappyVersion, Upgrade.SnappyVersion)
                 cmd = shlex.split(command)
                 res = subprocess.call(cmd)
                 if res != 0:
@@ -515,16 +516,16 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             command = f'/usr/local/lsws/lsphp74/bin/php /usr/local/CyberCP/snappymail_cyberpanel.php'
             Upgrade.executioner(command, 'verify certificate', 0)
 
-            #labsPath = '/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/application.ini'
+            # labsPath = '/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/application.ini'
 
-#             labsData = """[labs]
-# imap_folder_list_limit = 0
-# autocreate_system_folders = On
-# """
-#
-#             writeToFile = open(labsPath, 'a')
-#             writeToFile.write(labsData)
-#             writeToFile.close()
+            #             labsData = """[labs]
+            # imap_folder_list_limit = 0
+            # autocreate_system_folders = On
+            # """
+            #
+            #             writeToFile = open(labsPath, 'a')
+            #             writeToFile.write(labsData)
+            #             writeToFile.close()
 
             includeFileOldPath = '/usr/local/CyberCP/public/snappymail/_include.php'
             includeFileNewPath = '/usr/local/CyberCP/public/snappymail/include.php'
@@ -541,9 +542,8 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             ## Disable local cert verification
 
-            #command = "sed -i 's|verify_certificate = On|verify_certificate = Off|g' %s" % (labsPath)
-            #Upgrade.executioner(command, 'verify certificate', 0)
-
+            # command = "sed -i 's|verify_certificate = On|verify_certificate = Off|g' %s" % (labsPath)
+            # Upgrade.executioner(command, 'verify certificate', 0)
 
             # labsData = open(labsPath, 'r').read()
             # labsDataLines = open(labsPath, 'r').readlines()
@@ -577,64 +577,63 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             ### now download and install actual plugin
 
-#             command = f'mkdir /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect'
-#             Upgrade.executioner(command, 'verify certificate', 0)
-#
-#             command = f'chmod 700 /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect'
-#             Upgrade.executioner(command, 'verify certificate', 0)
-#
-#             command = f'chown lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect'
-#             Upgrade.executioner(command, 'verify certificate', 0)
-#
-#             command = f'wget -O /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect/index.php https://raw.githubusercontent.com/the-djmaze/snappymail/master/plugins/mailbox-detect/index.php'
-#             Upgrade.executioner(command, 'verify certificate', 0)
-#
-#             command = f'chmod 644 /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect/index.php'
-#             Upgrade.executioner(command, 'verify certificate', 0)
-#
-#             command = f'chown lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect/index.php'
-#             Upgrade.executioner(command, 'verify certificate', 0)
-#
-#             ### Enable plugins and enable mailbox creation plugin
-#
-#             labsDataLines = open(labsPath, 'r').readlines()
-#             PluginsActivator = 0
-#             WriteToFile = open(labsPath, 'w')
-#
-#
-#             for lines in labsDataLines:
-#                 if lines.find('[plugins]') > -1:
-#                     PluginsActivator = 1
-#                     WriteToFile.write(lines)
-#                 elif PluginsActivator and lines.find('enable = ') > -1:
-#                     WriteToFile.write(f'enable = On\n')
-#                 elif PluginsActivator and lines.find('enabled_list = ') > -1:
-#                     WriteToFile.write(f'enabled_list = "mailbox-detect"\n')
-#                 elif PluginsActivator == 1 and lines.find('[defaults]') > -1:
-#                     PluginsActivator = 0
-#                     WriteToFile.write(lines)
-#                 else:
-#                     WriteToFile.write(lines)
-#             WriteToFile.close()
-#
-#             ## enable auto create in the enabled plugin
-#             PluginsFilePath = '/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/plugin-mailbox-detect.json'
-#
-#             WriteToFile = open(PluginsFilePath, 'w')
-#             WriteToFile.write("""{
-#     "plugin": {
-#         "autocreate_system_folders": true
-#     }
-# }
-# """)
-#             WriteToFile.close()
-#
-#             command = f'chown lscpd:lscpd {PluginsFilePath}'
-#             Upgrade.executioner(command, 'verify certificate', 0)
-#
-#             command = f'chmod 600 {PluginsFilePath}'
-#             Upgrade.executioner(command, 'verify certificate', 0)
-
+            #             command = f'mkdir /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect'
+            #             Upgrade.executioner(command, 'verify certificate', 0)
+            #
+            #             command = f'chmod 700 /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect'
+            #             Upgrade.executioner(command, 'verify certificate', 0)
+            #
+            #             command = f'chown lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect'
+            #             Upgrade.executioner(command, 'verify certificate', 0)
+            #
+            #             command = f'wget -O /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect/index.php https://raw.githubusercontent.com/the-djmaze/snappymail/master/plugins/mailbox-detect/index.php'
+            #             Upgrade.executioner(command, 'verify certificate', 0)
+            #
+            #             command = f'chmod 644 /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect/index.php'
+            #             Upgrade.executioner(command, 'verify certificate', 0)
+            #
+            #             command = f'chown lscpd:lscpd /usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/plugins/mailbox-detect/index.php'
+            #             Upgrade.executioner(command, 'verify certificate', 0)
+            #
+            #             ### Enable plugins and enable mailbox creation plugin
+            #
+            #             labsDataLines = open(labsPath, 'r').readlines()
+            #             PluginsActivator = 0
+            #             WriteToFile = open(labsPath, 'w')
+            #
+            #
+            #             for lines in labsDataLines:
+            #                 if lines.find('[plugins]') > -1:
+            #                     PluginsActivator = 1
+            #                     WriteToFile.write(lines)
+            #                 elif PluginsActivator and lines.find('enable = ') > -1:
+            #                     WriteToFile.write(f'enable = On\n')
+            #                 elif PluginsActivator and lines.find('enabled_list = ') > -1:
+            #                     WriteToFile.write(f'enabled_list = "mailbox-detect"\n')
+            #                 elif PluginsActivator == 1 and lines.find('[defaults]') > -1:
+            #                     PluginsActivator = 0
+            #                     WriteToFile.write(lines)
+            #                 else:
+            #                     WriteToFile.write(lines)
+            #             WriteToFile.close()
+            #
+            #             ## enable auto create in the enabled plugin
+            #             PluginsFilePath = '/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/plugin-mailbox-detect.json'
+            #
+            #             WriteToFile = open(PluginsFilePath, 'w')
+            #             WriteToFile.write("""{
+            #     "plugin": {
+            #         "autocreate_system_folders": true
+            #     }
+            # }
+            # """)
+            #             WriteToFile.close()
+            #
+            #             command = f'chown lscpd:lscpd {PluginsFilePath}'
+            #             Upgrade.executioner(command, 'verify certificate', 0)
+            #
+            #             command = f'chmod 600 {PluginsFilePath}'
+            #             Upgrade.executioner(command, 'verify certificate', 0)
 
             os.chdir(cwd)
 
@@ -757,7 +756,8 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             connection, cursor = Upgrade.setupConnection('cyberpanel')
 
             try:
-                cursor.execute('CREATE TABLE `baseTemplate_cyberpanelcosmetic` (`id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY, `MainDashboardCSS` longtext NOT NULL)')
+                cursor.execute(
+                    'CREATE TABLE `baseTemplate_cyberpanelcosmetic` (`id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY, `MainDashboardCSS` longtext NOT NULL)')
             except:
                 pass
 
@@ -846,7 +846,8 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                 sleep(10)
 
             try:
-                cursor.execute("UPDATE loginSystem_acl SET config = '%s' where name = 'reseller'" % (Upgrade.ResellerACL))
+                cursor.execute(
+                    "UPDATE loginSystem_acl SET config = '%s' where name = 'reseller'" % (Upgrade.ResellerACL))
             except:
                 pass
 
@@ -992,47 +993,56 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
                 pass
 
             try:
-                cursor.execute('CREATE TABLE `websiteFunctions_wpplugins` (`id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY, `Name` varchar(255) NOT NULL, `config` longtext NOT NULL, `owner_id` integer NOT NULL)')
+                cursor.execute(
+                    'CREATE TABLE `websiteFunctions_wpplugins` (`id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY, `Name` varchar(255) NOT NULL, `config` longtext NOT NULL, `owner_id` integer NOT NULL)')
             except:
                 pass
 
             try:
-                cursor.execute('ALTER TABLE `websiteFunctions_wpplugins` ADD CONSTRAINT `websiteFunctions_wpp_owner_id_493a02c7_fk_loginSyst` FOREIGN KEY (`owner_id`) REFERENCES `loginSystem_administrator` (`id`)')
+                cursor.execute(
+                    'ALTER TABLE `websiteFunctions_wpplugins` ADD CONSTRAINT `websiteFunctions_wpp_owner_id_493a02c7_fk_loginSyst` FOREIGN KEY (`owner_id`) REFERENCES `loginSystem_administrator` (`id`)')
             except:
                 pass
 
             try:
-                cursor.execute('CREATE TABLE `websiteFunctions_wpsites` (`id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY, `title` varchar(255) NOT NULL, `path` varchar(255) NOT NULL, `FinalURL` varchar(255) NOT NULL, `AutoUpdates` varchar(100) NOT NULL, `PluginUpdates` varchar(15) NOT NULL, `ThemeUpdates` varchar(15) NOT NULL, `date` datetime(6) NOT NULL, `WPLockState` integer NOT NULL, `owner_id` integer NOT NULL)')
+                cursor.execute(
+                    'CREATE TABLE `websiteFunctions_wpsites` (`id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY, `title` varchar(255) NOT NULL, `path` varchar(255) NOT NULL, `FinalURL` varchar(255) NOT NULL, `AutoUpdates` varchar(100) NOT NULL, `PluginUpdates` varchar(15) NOT NULL, `ThemeUpdates` varchar(15) NOT NULL, `date` datetime(6) NOT NULL, `WPLockState` integer NOT NULL, `owner_id` integer NOT NULL)')
             except:
                 pass
 
             try:
-                cursor.execute('ALTER TABLE `websiteFunctions_wpsites` ADD CONSTRAINT `websiteFunctions_wps_owner_id_6d67df2a_fk_websiteFu` FOREIGN KEY (`owner_id`) REFERENCES `websiteFunctions_websites` (`id`)')
+                cursor.execute(
+                    'ALTER TABLE `websiteFunctions_wpsites` ADD CONSTRAINT `websiteFunctions_wps_owner_id_6d67df2a_fk_websiteFu` FOREIGN KEY (`owner_id`) REFERENCES `websiteFunctions_websites` (`id`)')
             except:
                 pass
 
             try:
-                cursor.execute('CREATE TABLE `websiteFunctions_wpstaging` (`id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY, `owner_id` integer NOT NULL, `wpsite_id` integer NOT NULL)')
+                cursor.execute(
+                    'CREATE TABLE `websiteFunctions_wpstaging` (`id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY, `owner_id` integer NOT NULL, `wpsite_id` integer NOT NULL)')
             except:
                 pass
 
             try:
-                cursor.execute('ALTER TABLE `websiteFunctions_wpstaging` ADD CONSTRAINT `websiteFunctions_wps_owner_id_543d8aec_fk_websiteFu` FOREIGN KEY (`owner_id`) REFERENCES `websiteFunctions_wpsites` (`id`);')
+                cursor.execute(
+                    'ALTER TABLE `websiteFunctions_wpstaging` ADD CONSTRAINT `websiteFunctions_wps_owner_id_543d8aec_fk_websiteFu` FOREIGN KEY (`owner_id`) REFERENCES `websiteFunctions_wpsites` (`id`);')
             except:
                 pass
 
             try:
-                cursor.execute('ALTER TABLE `websiteFunctions_wpstaging` ADD CONSTRAINT `websiteFunctions_wps_wpsite_id_82843593_fk_websiteFu` FOREIGN KEY (`wpsite_id`) REFERENCES `websiteFunctions_wpsites` (`id`)')
+                cursor.execute(
+                    'ALTER TABLE `websiteFunctions_wpstaging` ADD CONSTRAINT `websiteFunctions_wps_wpsite_id_82843593_fk_websiteFu` FOREIGN KEY (`wpsite_id`) REFERENCES `websiteFunctions_wpsites` (`id`)')
             except:
                 pass
 
             try:
-                cursor.execute("CREATE TABLE `websiteFunctions_wpsitesbackup` (`id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY, `WPSiteID` integer NOT NULL, `WebsiteID` integer NOT NULL, `config` longtext NOT NULL, `owner_id` integer NOT NULL); ")
+                cursor.execute(
+                    "CREATE TABLE `websiteFunctions_wpsitesbackup` (`id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY, `WPSiteID` integer NOT NULL, `WebsiteID` integer NOT NULL, `config` longtext NOT NULL, `owner_id` integer NOT NULL); ")
             except:
                 pass
 
             try:
-                cursor.execute("ALTER TABLE `websiteFunctions_wpsitesbackup` ADD CONSTRAINT `websiteFunctions_wps_owner_id_8a8dd0c5_fk_loginSyst` FOREIGN KEY (`owner_id`) REFERENCES `loginSystem_administrator` (`id`); ")
+                cursor.execute(
+                    "ALTER TABLE `websiteFunctions_wpsitesbackup` ADD CONSTRAINT `websiteFunctions_wps_owner_id_8a8dd0c5_fk_loginSyst` FOREIGN KEY (`owner_id`) REFERENCES `loginSystem_administrator` (`id`); ")
             except:
                 pass
 
@@ -1079,21 +1089,58 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             except:
                 pass
 
+            query = """
+CREATE TABLE `websiteFunctions_backupsv2` (`id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY, `fileName` varchar(255) NOT NULL, `status` integer NOT NULL, `timeStamp` varchar(255) NOT NULL, `BasePath` longtext NOT NULL, `website_id` integer NOT NULL);            
+"""
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+
+            query = "ALTER TABLE `websiteFunctions_backupsv2` ADD CONSTRAINT `websiteFunctions_bac_website_id_3a777e68_fk_websiteFu` FOREIGN KEY (`website_id`) REFERENCES `websiteFunctions_websites` (`id`);"
+
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+            query = "ALTER TABLE `websiteFunctions_backupslogsv2` ADD CONSTRAINT `websiteFunctions_bac_owner_id_9e884ff9_fk_websiteFu` FOREIGN KEY (`owner_id`) REFERENCES `websiteFunctions_backupsv2` (`id`);"
+
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+            query = "CREATE TABLE `websiteFunctions_backupslogsv2` (`id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY, `timeStamp` varchar(255) NOT NULL, `message` longtext NOT NULL, `owner_id` integer NOT NULL);"
+
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
+            query = "ALTER TABLE `websiteFunctions_backupslogsv2` ADD CONSTRAINT `websiteFunctions_bac_owner_id_9e884ff9_fk_websiteFu` FOREIGN KEY (`owner_id`) REFERENCES `websiteFunctions_backupsv2` (`id`);"
+
+            try:
+                cursor.execute(query)
+            except:
+                pass
+
 
             try:
                 cursor.execute("ALTER TABLE websiteFunctions_websites ADD COLUMN BackupLock INT DEFAULT 0;")
             except:
                 pass
 
-
             ### update ftp issue for ubuntu 22
 
-            if Upgrade.FindOperatingSytem() == Ubuntu22:
+            try:
+                cursor.execute(
+                    'ALTER TABLE `users` CHANGE `Password` `Password` VARCHAR(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL; ')
+            except:
+                pass
 
-                try:
-                    cursor.execute('ALTER TABLE `users` CHANGE `Password` `Password` VARCHAR(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL; ')
-                except:
-                    pass
+            if Upgrade.FindOperatingSytem() == Ubuntu22:
 
                 command = "sed -i 's/MYSQLCrypt md5/MYSQLCrypt crypt/g' /etc/pure-ftpd/db/mysql.conf"
                 Upgrade.executioner(command, command, 1)
@@ -1794,9 +1841,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             except:
                 pass
 
-
             query = 'ALTER TABLE IncBackups_backupjob ADD retention integer DEFAULT 0'
-
 
             try:
                 cursor.execute(query)
@@ -2115,8 +2160,6 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             if os.path.exists(lscpdPath):
                 os.remove(lscpdPath)
-
-
 
             lscpdSelection = 'lscpd-0.3.1'
             if os.path.exists(Upgrade.UbuntuPath):
@@ -2463,9 +2506,9 @@ echo $oConfig->Save() ? 'Done' : 'Error';
         CentOSPath = '/etc/redhat-release'
         openEulerPath = '/etc/openEuler-release'
 
-        #if not os.path.exists(CentOSPath) or not os.path.exists(openEulerPath):
-            #command = 'cp /usr/local/lsws/lsphp71/bin/php /usr/bin/'
-            #Upgrade.executioner(command, 'Set default PHP 7.0, 0')
+        # if not os.path.exists(CentOSPath) or not os.path.exists(openEulerPath):
+        # command = 'cp /usr/local/lsws/lsphp71/bin/php /usr/bin/'
+        # Upgrade.executioner(command, 'Set default PHP 7.0, 0')
 
     @staticmethod
     def someDirectories():
@@ -2582,7 +2625,6 @@ echo $oConfig->Save() ? 'Done' : 'Error';
                 # command = 'DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical apt -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" upgrade -y'
                 # subprocess.call(command, shell=True)
 
-
             dovecotConf = '/etc/dovecot/dovecot.conf'
 
             dovecotContent = open(dovecotConf, 'r').read()
@@ -2636,7 +2678,7 @@ echo $oConfig->Save() ? 'Done' : 'Error';
 
                 command = 'apt-get install restic -y'
                 Upgrade.executioner(command, 'Install Restic')
-                
+
                 command = 'restic self-update'
                 Upgrade.executioner(command, 'Install Restic')
 
@@ -2801,7 +2843,6 @@ vmail
 
             writeToFile.close()
 
-
         if not os.path.exists(CentOSPath) or not os.path.exists(openEulerPath):
             command = 'chmod 600 %s' % (cronPath)
             Upgrade.executioner(command, 0)
@@ -2819,14 +2860,22 @@ vmail
             elif acl.config == '{}':
                 acl.config = '{"adminStatus":%s, "versionManagement": %s, "createNewUser": %s, "listUsers": %s, "deleteUser": %s, "resellerCenter": %s, "changeUserACL": %s, "createWebsite": %s, "modifyWebsite": %s, "suspendWebsite": %s, "deleteWebsite": %s, "createPackage": %s, "listPackages": %s, "deletePackage": %s, "modifyPackage": %s, "createDatabase": %s, "deleteDatabase": %s, "listDatabases": %s, "createNameServer": %s, "createDNSZone": %s, "deleteZone": %s, "addDeleteRecords": %s, "createEmail": %s, "listEmails": %s, "deleteEmail": %s, "emailForwarding": %s, "changeEmailPassword": %s, "dkimManager": %s, "createFTPAccount": %s, "deleteFTPAccount": %s, "listFTPAccounts": %s, "createBackup": %s, "restoreBackup": %s, "addDeleteDestinations": %s, "scheduleBackups": %s, "remoteBackups": %s, "googleDriveBackups": %s, "manageSSL": %s, "hostnameSSL": %s, "mailServerSSL": %s }' \
                              % (str(acl.adminStatus), str(acl.versionManagement), str(acl.createNewUser),
-                                str(acl.listUsers), str(acl.deleteUser), str(acl.resellerCenter), str(acl.changeUserACL),
-                                str(acl.createWebsite), str(acl.modifyWebsite), str(acl.suspendWebsite), str(acl.deleteWebsite),
-                                str(acl.createPackage), str(acl.listPackages), str(acl.deletePackage), str(acl.modifyPackage),
-                                str(acl.createDatabase), str(acl.deleteDatabase), str(acl.listDatabases), str(acl.createNameServer),
-                                str(acl.createDNSZone), str(acl.deleteZone), str(acl.addDeleteRecords), str(acl.createEmail),
-                                str(acl.listEmails), str(acl.deleteEmail), str(acl.emailForwarding), str(acl.changeEmailPassword),
-                                str(acl.dkimManager), str(acl.createFTPAccount), str(acl.deleteFTPAccount), str(acl.listFTPAccounts),
-                                str(acl.createBackup), str(acl.restoreBackup), str(acl.addDeleteDestinations), str(acl.scheduleBackups), str(acl.remoteBackups), '1',
+                                str(acl.listUsers), str(acl.deleteUser), str(acl.resellerCenter),
+                                str(acl.changeUserACL),
+                                str(acl.createWebsite), str(acl.modifyWebsite), str(acl.suspendWebsite),
+                                str(acl.deleteWebsite),
+                                str(acl.createPackage), str(acl.listPackages), str(acl.deletePackage),
+                                str(acl.modifyPackage),
+                                str(acl.createDatabase), str(acl.deleteDatabase), str(acl.listDatabases),
+                                str(acl.createNameServer),
+                                str(acl.createDNSZone), str(acl.deleteZone), str(acl.addDeleteRecords),
+                                str(acl.createEmail),
+                                str(acl.listEmails), str(acl.deleteEmail), str(acl.emailForwarding),
+                                str(acl.changeEmailPassword),
+                                str(acl.dkimManager), str(acl.createFTPAccount), str(acl.deleteFTPAccount),
+                                str(acl.listFTPAccounts),
+                                str(acl.createBackup), str(acl.restoreBackup), str(acl.addDeleteDestinations),
+                                str(acl.scheduleBackups), str(acl.remoteBackups), '1',
                                 str(acl.manageSSL), str(acl.hostnameSSL), str(acl.mailServerSSL))
                 acl.save()
 
@@ -2936,7 +2985,6 @@ vmail
         # if os.path.exists(postfixPath):
         #     Upgrade.upgradeDovecot()
 
-
         ## Upgrade version
 
         Upgrade.fixPermissions()
@@ -2993,13 +3041,10 @@ vmail
         #     command = 'chmod +x /usr/local/CyberCP/public/imunifyav/bin/execute.py'
         #     Upgrade.executioner(command, command, 1)
 
-
-
-
         Upgrade.stdOut("Upgrade Completed.")
 
-def main():
 
+def main():
     parser = argparse.ArgumentParser(description='CyberPanel Installer')
     parser.add_argument('branch', help='Install from branch name.')
 

@@ -62,7 +62,7 @@ class virtualHostUtilities:
                                               admin.userName, 0, "/home/cyberpanel/" + str(randint(1000, 9999)))
 
             if result[0] == 0:
-                sslUtilities.issueSSLForDomain(virtualHostName, admin.email, childPath)
+                sslUtilities.issueSSLForDomain(childDomain, admin.email, childPath)
 
             ## update dovecot conf to enable auto-discover
 

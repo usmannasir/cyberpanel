@@ -36,6 +36,69 @@
             </div>
         </div>
 
+        <div ng-controller="installImunifyAV" class="panel">
+            <div class="panel-body">
+                <h3 class="title-hero">
+                    {% trans "ImunifyAV Not Working?" %} <img ng-hide="installDockerStatus"
+                                                    src="{% static 'images/loading.gif' %}">
+                </h3>
+                <div class="example-box-wrapper">
+
+                    <p>{% trans "If for some reason ImunifyAV is not working, you can re-install it using the form below." %}</p><br>
+                    <!------ LSWS Switch box ----------------->
+
+                    <div class="alert alert-info">
+                        <div class="bg-black alert-icon">
+                            <i class="glyph-icon icon-comment"></i>
+                        </div>
+                        <div class="alert-content">
+                            <h4 class="alert-title">We will run following commands again:</h4>
+                            <br>
+                            <p><code>wget https://repo.imunify360.cloudlinux.com/defence360/imav-deploy.sh</code></p>
+                            <br>
+                            <p><code>bash imav-deploy.sh</code></p>
+                            <br>
+
+                            <p>If you can still not access ImunifyAV after re-installation, just run
+                                the above commands on your server terminal.</p>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 2%" ng-hide="installBoxGen" class="col-md-12">
+
+                        <form action="/" id="" class="form-horizontal bordered-row">
+
+                            <div class="form-group">
+                                <div style="margin-top: 2%;" class="col-sm-12">
+                                            <textarea ng-model="requestData" rows="15"
+                                                      class="form-control">{{ requestData }}</textarea>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+
+                    <!----- LSWS Switch box ----------------->
+                    <br>
+
+                    <form action="/" id="" class="form-horizontal bordered-row">
+
+                        <div ng-hide="dockerInstallBTN" ng-hide="installationDetailsForm" class="form-group">
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-6">
+                                <button type="button" class="btn btn-primary"
+                                        ng-click="submitinstallImunify()">
+                                    Install Now
+                                </button>
+                            </div>
+                        </div>
+
+                    </form>
+
+                </div>
+            </div>
+        </div>
+
     </div>
 {% endblock %}
 
