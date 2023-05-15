@@ -293,11 +293,10 @@ LoadModule mpm_event_module modules/mod_mpm_event.so
             if ProcessUtilities.executioner(command, None, True) == 0:
                 return "Failed to ppa:ondrej/php"
 
-            command = "sudo apt-get install -y php-fpm php7.4-fpm php8.0-fpm php7.4-mysql php7.4-curl php7.4-gd php7.4-mbstring php7.4-xml php7.4-zip php8.0-mysql php8.0-curl php8.0-gd php8.0-mbstring php8.0-xml php8.0-zip"
+            command = "DEBIAN_FRONTEND=noninteractive apt-get install -y php-fpm php?.?-fpm php?.?-fpm php?.?-mysql php?.?-curl php?.?-gd php?.?-mbstring php?.?-xml php?.?-zip"
 
             if ProcessUtilities.executioner(command, None, True) == 0:
                 return "Failed to install Apache and PHP-FPM."
-
 
         try:
             wwwConfPath = ApacheVhost.php54Path + "/www.conf"

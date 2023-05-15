@@ -4527,6 +4527,7 @@ StrictHostKeyChecking no
                     data['pmMinSpareServers'] = pmMinSpareServers
                     data['pmMaxSpareServers'] = pmMaxSpareServers
                     data['phpPath'] = phpPath
+                    data['configData'] = ProcessUtilities.outputExecutioner(f'cat {finalConfPath}')
                 else:
                     data = {}
                     data['status'] = 1
@@ -4572,74 +4573,98 @@ StrictHostKeyChecking no
         return HttpResponse(json_data)
 
     def tuneSettings(self, userID=None, data=None):
-
-        currentACL = ACLManager.loadedACL(userID)
-        admin = Administrator.objects.get(pk=userID)
-        domainName = data['domainName']
-        pmMaxChildren = data['pmMaxChildren']
-        pmStartServers = data['pmStartServers']
-        pmMinSpareServers = data['pmMinSpareServers']
-        pmMaxSpareServers = data['pmMaxSpareServers']
-        phpPath = data['phpPath']
-
-        if ACLManager.checkOwnership(domainName, admin, currentACL) == 1:
-            pass
-        else:
-            return ACLManager.loadErrorJson()
-
-        if int(pmStartServers) < int(pmMinSpareServers) or int(pmStartServers) > int(pmMinSpareServers):
-            data_ret = {'status': 0,
-                        'error_message': 'pm.start_servers must not be less than pm.min_spare_servers and not greater than pm.max_spare_servers.'}
-            json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
-
-        if int(pmMinSpareServers) > int(pmMaxSpareServers):
-            data_ret = {'status': 0,
-                        'error_message': 'pm.max_spare_servers must not be less than pm.min_spare_servers'}
-            json_data = json.dumps(data_ret)
-            return HttpResponse(json_data)
-
         try:
-            website = Websites.objects.get(domain=domainName)
-            externalApp = website.externalApp
-        except:
-            website = ChildDomains.objects.get(domain=domainName)
-            externalApp = website.master.externalApp
 
-        tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
+            currentACL = ACLManager.loadedACL(userID)
+            admin = Administrator.objects.get(pk=userID)
+            domainName = data['domainName']
+            pmMaxChildren = data['pmMaxChildren']
+            pmStartServers = data['pmStartServers']
+            pmMinSpareServers = data['pmMinSpareServers']
+            pmMaxSpareServers = data['pmMaxSpareServers']
+            phpPath = data['phpPath']
 
-        phpFPMConf = vhostConfs.phpFpmPoolReplace
-        phpFPMConf = phpFPMConf.replace('{externalApp}', externalApp)
-        phpFPMConf = phpFPMConf.replace('{pmMaxChildren}', pmMaxChildren)
-        phpFPMConf = phpFPMConf.replace('{pmStartServers}', pmStartServers)
-        phpFPMConf = phpFPMConf.replace('{pmMinSpareServers}', pmMinSpareServers)
-        phpFPMConf = phpFPMConf.replace('{pmMaxSpareServers}', pmMaxSpareServers)
-        phpFPMConf = phpFPMConf.replace('{www}', "".join(re.findall("[a-zA-Z]+", domainName))[:7])
-        phpFPMConf = phpFPMConf.replace('{Sock}', domainName)
+            if ACLManager.checkOwnership(domainName, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadErrorJson()
 
-        writeToFile = open(tempStatusPath, 'w')
-        writeToFile.writelines(phpFPMConf)
-        writeToFile.close()
+            if int(pmStartServers) < int(pmMinSpareServers) or int(pmStartServers) > int(pmMinSpareServers):
+                data_ret = {'status': 0,
+                            'error_message': 'pm.start_servers must not be less than pm.min_spare_servers and not greater than pm.max_spare_servers.'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
 
-        command = 'sudo mv %s %s' % (tempStatusPath, phpPath)
-        ProcessUtilities.executioner(command)
+            if int(pmMinSpareServers) > int(pmMaxSpareServers):
+                data_ret = {'status': 0,
+                            'error_message': 'pm.max_spare_servers must not be less than pm.min_spare_servers'}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
 
-        phpPath = phpPath.split('/')
+            try:
+                website = Websites.objects.get(domain=domainName)
+                externalApp = website.externalApp
+            except:
+                website = ChildDomains.objects.get(domain=domainName)
+                externalApp = website.master.externalApp
 
-        if phpPath[1] == 'etc':
-            phpVersion = phpPath[4][3] + phpPath[4][4]
-        else:
-            phpVersion = phpPath[3][3] + phpPath[3][4]
+            tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
 
-        command = "systemctl stop php%s-php-fpm" % (phpVersion)
-        ProcessUtilities.executioner(command)
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                sockPath = '/var/run/php-fpm/'
+                group = 'nobody'
+            else:
+                sockPath = '/var/run/php/'
+                group = 'nogroup'
 
-        command = "systemctl restart php%s-php-fpm" % (phpVersion)
-        ProcessUtilities.executioner(command)
+            phpFPMConf = vhostConfs.phpFpmPoolReplace
+            phpFPMConf = phpFPMConf.replace('{externalApp}', externalApp)
+            phpFPMConf = phpFPMConf.replace('{pmMaxChildren}', pmMaxChildren)
+            phpFPMConf = phpFPMConf.replace('{pmStartServers}', pmStartServers)
+            phpFPMConf = phpFPMConf.replace('{pmMinSpareServers}', pmMinSpareServers)
+            phpFPMConf = phpFPMConf.replace('{pmMaxSpareServers}', pmMaxSpareServers)
+            phpFPMConf = phpFPMConf.replace('{www}', "".join(re.findall("[a-zA-Z]+", domainName))[:7])
+            phpFPMConf = phpFPMConf.replace('{Sock}', domainName)
+            phpFPMConf = phpFPMConf.replace('{sockPath}', sockPath)
+            phpFPMConf = phpFPMConf.replace('{group}', group)
 
-        data_ret = {'status': 1}
-        json_data = json.dumps(data_ret)
-        return HttpResponse(json_data)
+            writeToFile = open(tempStatusPath, 'w')
+            writeToFile.writelines(phpFPMConf)
+            writeToFile.close()
+
+            command = 'sudo mv %s %s' % (tempStatusPath, phpPath)
+            ProcessUtilities.executioner(command)
+
+            phpPath = phpPath.split('/')
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                if phpPath[1] == 'etc':
+                    phpVersion = phpPath[4][3] + phpPath[4][4]
+                else:
+                    phpVersion = phpPath[3][3] + phpPath[3][4]
+            else:
+                phpVersion = f'PHP {phpPath[2]}'
+
+            php = PHPManager.getPHPString(phpVersion)
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                phpService = f'php{php}-php-fpm'
+            else:
+                phpService = f"{phpVersion.replace(' ', '').lower()}-fpm"
+
+            command = f"systemctl stop {phpService}"
+            ProcessUtilities.normalExecutioner(command)
+
+            command = f"systemctl restart {phpService}"
+            ProcessUtilities.normalExecutioner(command)
+
+            data_ret = {'status': 1}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+        except BaseException as msg:
+            data_ret = {'status': 0,  'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
 
     def sshAccess(self, request=None, userID=None, data=None):
         currentACL = ACLManager.loadedACL(userID)
@@ -6394,5 +6419,60 @@ StrictHostKeyChecking no
 
         except BaseException as msg:
             final_dic = {'status': 0, 'add_status': 0, 'error_mssage': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+
+    def ApacheManager(self, request=None, userID=None, data=None):
+        currentACL = ACLManager.loadedACL(userID)
+        admin = Administrator.objects.get(pk=userID)
+
+        if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
+            pass
+        else:
+            return ACLManager.loadError()
+
+        phps = PHPManager.findPHPVersions()
+
+        proc = httpProc(request, 'websiteFunctions/ApacheManager.html', {'domainName': self.domain, 'phps': phps})
+        return proc.render()
+
+    def saveApacheConfigsToFile(self, userID=None, data=None):
+
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] != 1:
+            return ACLManager.loadErrorJson('configstatus', 0)
+
+        configData = data['configData']
+        self.domain = data['domainName']
+
+        mailUtilities.checkHome()
+
+        tempPath = "/home/cyberpanel/" + str(randint(1000, 9999))
+
+        vhost = open(tempPath, "w")
+
+        vhost.write(configData)
+
+        vhost.close()
+
+        ## writing data temporary to file
+
+        filePath = ApacheVhost.configBasePath + self.domain + '.conf'
+
+        ## save configuration data
+
+        execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+        execPath = execPath + " saveApacheConfigsToFile --path " + filePath + " --tempPath " + tempPath
+
+        output = ProcessUtilities.outputExecutioner(execPath)
+
+        if output.find("1,None") > -1:
+            status = {"status": 1}
+            final_json = json.dumps(status)
+            return HttpResponse(final_json)
+        else:
+            final_dic = {'status': 0, 'error_message': output}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)

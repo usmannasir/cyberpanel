@@ -26,13 +26,17 @@
 
                     <h3 class="content-box-header">
                         {% trans "Resource Usage" %}
-                        <a style="float: right; margin-left: 2%" class="btn btn-border btn-alt border-orange btn-link font-orange" href="/websites/{{ childDomain }}/manageGIT" title="Manage Git"><span>{% trans "Manage Git" %}</span></a>
+                        <a style="float: right; margin-left: 2%"
+                           class="btn btn-border btn-alt border-orange btn-link font-orange"
+                           href="/websites/{{ childDomain }}/manageGIT"
+                           title="Manage Git"><span>{% trans "Manage Git" %}</span></a>
                         <a style="float: right; margin-left: 2%"
                            class="btn btn-border btn-alt border-azure btn-link font-azure"
                            href="/websites/{{ domain }}/{{ childDomain }}/syncToMaster"
                            title=""><span>{% trans "Copy/Sync to Master" %}</span></a>
                         <a style="float: right" class="btn btn-border btn-alt border-black btn-link font-black"
-                           href="https://go.cyberpanel.net/StessTest" title=""><span>{% trans "Stress Test" %}</span></a>
+                           href="https://go.cyberpanel.net/StessTest"
+                           title=""><span>{% trans "Stress Test" %}</span></a>
                     </h3>
 
                     <div class="">
@@ -275,6 +279,17 @@
                                     <span class="h4">{% trans "vHost Conf" %}</span>
                                 </a>
 
+                            </div>
+
+                            <div class="col-md-3 panel-body">
+                                <a href="{% url 'ApacheManager' domain=domain %}"
+                                   title="{% trans 'Apache Manager' %}">
+                                    <img src="{% static 'images/icons/file.png' %}" width="65" class="mr-10">
+                                </a>
+                                <a href="{% url 'ApacheManager' domain=childDomain %}"
+                                   title="{% trans 'Apache Manager' %}">
+                                    <span class="h4">{% trans "Apache Manager" %}</span>
+                                </a>
                             </div>
 
                             <div class="col-md-3 panel-body">
@@ -690,17 +705,17 @@
                                 </a>
                             </div>
 
-{#                            <div class="col-md-3 panel-body">#}
-{##}
-{#                                <a href="{$ joomlaInstallURL $}" target="_blank"#}
-{#                                   title="{% trans 'Install Joomla with LSCache' %}">#}
-{#                                    <img src="{% static 'images/icons/joomla-logo.png' %}" width="65" class="mr-10">#}
-{#                                </a>#}
-{#                                <a href="{$ joomlaInstallURL $}" target="_blank"#}
-{#                                   title="{% trans 'Install Joomla with LSCache' %}">#}
-{#                                    <span class="h4">{% trans "Joomla" %}</span>#}
-{#                                </a>#}
-{#                            </div>#}
+                            {#                            <div class="col-md-3 panel-body">#}
+                            {##}
+                            {#                                <a href="{$ joomlaInstallURL $}" target="_blank"#}
+                            {#                                   title="{% trans 'Install Joomla with LSCache' %}">#}
+                            {#                                    <img src="{% static 'images/icons/joomla-logo.png' %}" width="65" class="mr-10">#}
+                            {#                                </a>#}
+                            {#                                <a href="{$ joomlaInstallURL $}" target="_blank"#}
+                            {#                                   title="{% trans 'Install Joomla with LSCache' %}">#}
+                            {#                                    <span class="h4">{% trans "Joomla" %}</span>#}
+                            {#                                </a>#}
+                            {#                            </div>#}
 
                             <div class="col-md-3 panel-body">
                                 <a href="/websites/{{ childDomain }}/manageGIT" target="_blank"
@@ -728,16 +743,16 @@
                             </div>
 
 
-{#                            <div class="col-md-3 panel-body">#}
-{#                                <a href="{$ installMagentoURL $}" target="_blank"#}
-{#                                   title="{% trans 'Install Magento' %}">#}
-{#                                    <img src="{% static 'images/icons/magento.png' %}" width="65" class="mr-10">#}
-{#                                </a>#}
-{#                                <a href="{$ installMagentoURL $}" target="_blank"#}
-{#                                   title="{% trans 'Install Magento' %}">#}
-{#                                    <span class="h4">{% trans "Magento" %}</span>#}
-{#                                </a>#}
-{#                            </div>#}
+                            {#                            <div class="col-md-3 panel-body">#}
+                            {#                                <a href="{$ installMagentoURL $}" target="_blank"#}
+                            {#                                   title="{% trans 'Install Magento' %}">#}
+                            {#                                    <img src="{% static 'images/icons/magento.png' %}" width="65" class="mr-10">#}
+                            {#                                </a>#}
+                            {#                                <a href="{$ installMagentoURL $}" target="_blank"#}
+                            {#                                   title="{% trans 'Install Magento' %}">#}
+                            {#                                    <span class="h4">{% trans "Magento" %}</span>#}
+                            {#                                </a>#}
+                            {#                            </div>#}
 
 
                         </div>

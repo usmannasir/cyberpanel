@@ -533,6 +533,17 @@
                     <div class="content-box-wrapper">
                         <div class="row mx-10">
                             <div class="col-md-3 panel-body">
+                                <a href="{% url 'ApacheManager' domain=domain  %}"
+                                   title="{% trans 'Apache Manager' %}">
+                                    <img src="{% static 'images/icons/file.png' %}" width="65" class="mr-10">
+                                </a>
+                                <a href="{% url 'ApacheManager' domain=domain  %}"
+                                   title="{% trans 'Apache Manager' %}">
+                                    <span class="h4">{% trans "Apache Manager" %}</span>
+                                </a>
+                            </div>
+
+                            <div class="col-md-3 panel-body">
                                 <a ng-click="fetchConfigurations()" href=""
                                    title="{% trans 'Edit vHost Main Configurations' %}">
                                     <img src="{% static 'images/icons/file.png' %}" width="65" class="mr-10">

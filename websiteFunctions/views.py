@@ -1695,3 +1695,58 @@ def webhook(request, domain):
         return wm.webhook(domain, json.loads(request.body))
     except KeyError:
         return redirect(loadLoginPage)
+
+
+def ApacheManager(request, domain):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager(domain)
+        return wm.ApacheManager(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def getSwitchStatus(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.getSwitchStatus(userID, json.loads(request.body))
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def switchServer(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.switchServer(userID, json.loads(request.body))
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def statusFunc(request):
+    try:
+        userID = request.session['userID']
+        data = json.loads(request.body)
+        from cloudAPI.cloudManager import CloudManager
+        admin = Administrator.objects.get(pk=userID)
+        cm = CloudManager(data, admin)
+        return cm.statusFunc()
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def tuneSettings(request):
+    try:
+        userID = request.session['userID']
+        data = json.loads(request.body)
+        wm = WebsiteManager()
+        return wm.tuneSettings(userID, data)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def saveApacheConfigsToFile(request):
+    try:
+        userID = request.session['userID']
+        data = json.loads(request.body)
+        wm = WebsiteManager()
+        return wm.saveApacheConfigsToFile(userID, data)
+    except KeyError:
+        return redirect(loadLoginPage)

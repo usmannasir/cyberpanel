@@ -1,0 +1,218 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Apache Manager - CyberPanel" %}{% endblock %}
+{% block content %}
+
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
+
+    <div class="container">
+        <div id="page-title">
+            <h2>{% trans "Apache Manager" %}</h2>
+            <p>{% trans "Switch between Apache (as reverse proxy) and OpenLiteSpeed." %}</p>
+        </div>
+
+
+        <div ng-controller="ApacheManager" class="panel">
+            <div class="panel-body">
+                <h3 class="title-hero">
+                    <span id="domainNamePage">{{ domainName }}</span> <img ng-hide="cyberpanelloading"
+                                                                           src="{% static 'images/loading.gif' %}">
+                </h3>
+
+                <div class="card card-body">
+                    <h5 ng-hide="apacheOLS" class="card-title">{{ domainName }} is currently using Apache as Reverse
+                        Proxy to
+                        OpenLiteSpeed. <img
+                                style="height: 25px" ng-hide="cyberpanelloading"
+                                src="{% static 'images/loading.gif' %}"></h5>
+                    <!-- Using Apache -->
+                    <div ng-hide="apacheOLS" class="row">
+                        <div class="col-md-12">
+                            <div class="form-group mb-3">
+                                <label for="example-select">PHP</label>
+                                <select ng-model="phpSelection" class="form-control" id="example-select">
+                                    {% for php in phps %}
+                                        <option>{{ php }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div> <!-- end row -->
+                    <a data-toggle="modal" data-target="#bs-example-modal-lg" ng-hide="apacheOLS"
+                       ng-click="switchServer(2)" href="#" class="btn btn-primary">Switch to pure
+                        OpenLiteSpeed.</a>
+
+
+                    <div ng-hide="apacheOLS" class="col-md-12">
+
+                        <form style="margin-top: 2%" class="form-horizontal bordered-row">
+
+                            <div class="form-group">
+                                <h3 style="margin-bottom: 2%"  ng-hide="apacheOLS">Apache Configurations</h3>
+                                <div class="col-sm-12">
+                                    <textarea ng-model="configData" rows="20" class="form-control"></textarea>
+                                </div>
+                                <div ng-hide="saveConfigBtn" class="form-group">
+                                <div style="margin: 2%" class="col-sm-4">
+                                    <button type="button" ng-click="saveApacheConfig()"
+                                            class="btn btn-primary btn-lg">{% trans "Save Apache Configurations" %}</button>
+                                </div>
+                            </div>
+                            </div>
+                        </form>
+
+                        <hr>
+
+                        <!--  Tune FPM -->
+
+                        <div class="card card-body">
+                            <h3 style="margin-bottom: 2%"  ng-hide="apacheOLS">PHP-FPM Configurations <img
+                                    style="height: 25px" ng-hide="cyberpanelloading"
+                                    src="{% static 'images/loading.gif' %}"></h3>
+                            <!-- Using Apache -->
+                            <form ng-hide="apacheOLS">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="billing-town-city">pm.max_children</label>
+                                            <input class="form-control" type="text"
+                                                   ng-model="pmMaxChildren"/>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="billing-town-city">pm.start_servers</label>
+                                            <input class="form-control" type="text"
+                                                   ng-model="pmStartServers"/>
+                                        </div>
+                                    </div>
+                                </div> <!-- end row -->
+
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="billing-town-city">pm.min_spare_servers</label>
+                                            <input class="form-control" type="text"
+                                                   ng-model="pmMinSpareServers"/>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="billing-town-city">pm.max_spare_servers</label>
+                                            <input class="form-control" type="text"
+                                                   ng-model="pmMaxSpareServers"/>
+                                        </div>
+                                    </div>
+                                </div> <!-- end row -->
+                            </form>
+                            <a ng-hide="apacheOLS" ng-click="tuneSettings()"
+                               href="#" class="btn btn-primary">Tune PHP-FPM Settings.</a>
+                            <!-- Using OpenLiteSpeed -->
+                            <p ng-hide="pureOLS" class="card-text">{{ domainName }} is currently using pure
+                                OpenLiteSpeed, PHP-FPM
+                                is
+                                not used with OpenLiteSpeed, thus tuning is disabled.</p>
+                            <!-- Using OpenLiteSpeed -->
+                            <p ng-hide="lswsEnt" class="card-text">{{ domainName }} is using LiteSpeed Enterprise.
+                                PHP-FPM is not
+                                used
+                                with LiteSpeed
+                                Enterprise.</p>
+                        </div> <!-- end card-->
+
+                        <!--  Modal content for the above example -->
+                        <div class="modal fade" id="bs-example-modal-lg" tabindex="-1" role="dialog"
+                             aria-labelledby="myLargeModalLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-lg">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h4 class="modal-title" id="myLargeModalLabel">{$ functionStatus $} <img
+                                                style="height: 25px"
+                                                ng-hide="cyberpanelloading"
+                                                src="{% static 'images/loading.gif' %}">
+                                        </h4>
+                                        <button type="button" class="close" data-dismiss="modal"
+                                                aria-hidden="true">×
+                                        </button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="progress">
+                                            <div ng-style="functionProgress"
+                                                 class="progress-bar progress-bar-striped bg-info"
+                                                 role="progressbar"
+                                                 aria-valuenow="50" aria-valuemin="0"
+                                                 aria-valuemax="100"></div>
+                                        </div>
+                                    </div>
+                                </div><!-- /.modal-content -->
+                            </div><!-- /.modal-dialog -->
+                        </div><!-- /.modal -->
+
+                        <!--  Tune FPM End -->
+
+                    </div>
+                    <!-- Using OpenLiteSpeed -->
+                    <p ng-hide="pureOLS" class="card-text">{{ domainName }} is currently using pure OpenLiteSpeed.</p>
+                    <div ng-hide="pureOLS" class="row">
+                        <div class="col-md-12">
+                            <div class="form-group mb-3">
+                                <label for="example-select">PHP</label>
+                                <select ng-model="phpSelection" class="form-control" id="example-select">
+                                    {% for php in phps %}
+                                        <option>{{ php }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div> <!-- end row -->
+                    <a data-toggle="modal" data-target="#bs-example-modal-lg" ng-hide="pureOLS"
+                       ng-click="switchServer(1)" href="#" class="btn btn-primary">Switch to OpenLiteSpeed +
+                        Apache
+                        as reverse proxy.</a>
+                    <!-- Using OpenLiteSpeed -->
+                    <p ng-hide="lswsEnt" class="card-text">{{ domainName }} is using LiteSpeed Enterprise. When
+                        LiteSpeed
+                        Enterprise is active switching is not required.</p>
+                </div> <!-- end card-->
+
+                <!--  Modal content for the above example -->
+                <div class="modal fade" id="bs-example-modal-lg" tabindex="-1" role="dialog"
+                     aria-labelledby="myLargeModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h4 class="modal-title" id="myLargeModalLabel">{$ functionStatus $} <img
+                                        style="height: 25px"
+                                        ng-hide="cyberpanelloading"
+                                        src="{% static 'images/loading.gif' %}">
+                                </h4>
+                                <button type="button" class="close" data-dismiss="modal"
+                                        aria-hidden="true">×
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="progress">
+                                    <div ng-style="functionProgress"
+                                         class="progress-bar progress-bar-striped bg-info"
+                                         role="progressbar"
+                                         aria-valuenow="50" aria-valuemin="0"
+                                         aria-valuemax="100"></div>
+                                </div>
+                            </div>
+                        </div><!-- /.modal-content -->
+                    </div><!-- /.modal-dialog -->
+                </div><!-- /.modal -->
+
+
+            </div>
+
+
+        </div>
+
+
+    </div>
+
+
+{% endblock %}

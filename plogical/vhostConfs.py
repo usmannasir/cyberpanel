@@ -385,7 +385,7 @@ REWRITERULE ^(.*)$ HTTP://proxyApacheBackendSSL/$1 [P,L]
     phpFpmPool = """[{www}]
 listen = {sockPath}{Sock}.sock
 listen.owner = nobody
-listen.group = nobody
+listen.group = {group}
 listen.mode = 0660
 user = {externalApp}
 group = {externalApp}
@@ -398,7 +398,7 @@ pm.max_spare_servers = 1
     phpFpmPoolReplace = """[{www}]
 listen = {sockPath}{Sock}.sock
 listen.owner = nobody
-listen.group = nobody
+listen.group = {group}
 listen.mode = 0660
 user = {externalApp}
 group = {externalApp}

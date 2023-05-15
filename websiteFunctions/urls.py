@@ -1,7 +1,6 @@
 from django.conf.urls import url
 from . import views
 
-
 urlpatterns = [
     url(r'^$', views.loadWebsitesHome, name='loadWebsitesHome'),
     url(r'^createWebsite$', views.createWebsite, name='createWebsite'),
@@ -15,7 +14,6 @@ urlpatterns = [
 
     url(r'^CreateNewDomain$', views.CreateNewDomain, name='CreateNewDomain'),
 
-
     ### WordPress
     url(r'^createWordpress$', views.WPCreate, name='createWordpress'),
     url(r'^ListWPSites$', views.ListWPSites, name='ListWPSites'),
@@ -27,7 +25,6 @@ urlpatterns = [
     url(r'^BackupfileConfig$', views.BackupfileConfig, name='BackupfileConfig'),
     url(r'^AddRemoteBackupsite$', views.AddRemoteBackupsite, name='AddRemoteBackupsite'),
     url(r'^pricing$', views.WordpressPricing, name='pricing'),
-
 
     ###WordPress Ajax
     url(r'^submitWorpressCreation', views.submitWorpressCreation, name='submitWorpressCreation'),
@@ -56,15 +53,10 @@ urlpatterns = [
     url(r'^UpdateRemoteschedules', views.UpdateRemoteschedules, name='UpdateRemoteschedules'),
     url(r'^ScanWordpressSite', views.ScanWordpressSite, name='ScanWordpressSite'),
 
-
-
-
     #### AddPlugin
     url(r'^ConfigurePlugins$', views.ConfigurePlugins, name='ConfigurePlugins'),
     url(r'^Addnewplugin$', views.Addnewplugin, name='Addnewplugin'),
     url(r'^EidtPlugin$', views.EidtPlugin, name='EidtPlugin'),
-
-
 
     ## AddPlugin Ajax
     url(r'^SearchOnkeyupPlugin$', views.SearchOnkeyupPlugin, name='SearchOnkeyupPlugin'),
@@ -72,9 +64,7 @@ urlpatterns = [
     url(r'^deletesPlgin', views.deletesPlgin, name='deletesPlgin'),
     url(r'^Addplugineidt', views.Addplugineidt, name='Addplugineidt'),
 
-
     # Website modification url
-
 
     url(r'^submitWebsiteCreation$', views.submitWebsiteCreation, name='submitWebsiteCreation'),
     url(r'^submitWebsiteDeletion$', views.submitWebsiteDeletion, name='submitWebsiteDeletion'),
@@ -86,17 +76,15 @@ urlpatterns = [
     url(r'^submitWebsiteModification$', views.deleteWebsite, name='submitWebsiteModification'),
     url(r'^submitWebsiteStatus$', views.submitWebsiteStatus, name='submitWebsiteStatus'),
 
-
     url(r'^getWebsiteDetails$', views.submitWebsiteModify, name='getWebsiteDetails'),
     url(r'^saveWebsiteChanges', views.saveWebsiteChanges, name='saveWebsiteChanges'),
 
     url(r'^getDataFromLogFile$', views.getDataFromLogFile, name='getDataFromLogFile'),
     url(r'^fetchErrorLogs$', views.fetchErrorLogs, name='fetchErrorLogs'),
-    
+
     url(r'^getDataFromConfigFile$', views.getDataFromConfigFile, name='getDataFromConfigFile'),
 
     url(r'^saveConfigsToFile$', views.saveConfigsToFile, name='saveConfigsToFile'),
-
 
     url(r'^getRewriteRules$', views.getRewriteRules, name='getRewriteRules'),
 
@@ -116,31 +104,28 @@ urlpatterns = [
     url(r'^searchChilds$', views.searchChilds, name='searchChilds'),
     # crons
 
-    url(r'^listCron$',views.listCron,name="listCron"),
-    url(r'^getWebsiteCron$',views.getWebsiteCron,name="getWebsiteCron"),
-    url(r'^getCronbyLine$',views.getCronbyLine,name="getCronbyLine"),
-    url(r'^remCronbyLine$',views.remCronbyLine,name="remCronbyLine"),
-    url(r'^saveCronChanges$',views.saveCronChanges,name="saveCronChanges"),
-    url(r'^addNewCron$',views.addNewCron,name="addNewCron"),
-
+    url(r'^listCron$', views.listCron, name="listCron"),
+    url(r'^getWebsiteCron$', views.getWebsiteCron, name="getWebsiteCron"),
+    url(r'^getCronbyLine$', views.getCronbyLine, name="getCronbyLine"),
+    url(r'^remCronbyLine$', views.remCronbyLine, name="remCronbyLine"),
+    url(r'^saveCronChanges$', views.saveCronChanges, name="saveCronChanges"),
+    url(r'^addNewCron$', views.addNewCron, name="addNewCron"),
 
     ## Domain Alias
 
     url(r'^(?P<domain>(.*))/domainAlias$', views.domainAlias, name='domainAlias'),
-    url(r'^submitAliasCreation$',views.submitAliasCreation,name="submitAliasCreation"),
-    url(r'^issueAliasSSL$',views.issueAliasSSL,name="issueAliasSSL"),
-    url(r'^delateAlias$',views.delateAlias,name="delateAlias"),
-
+    url(r'^submitAliasCreation$', views.submitAliasCreation, name="submitAliasCreation"),
+    url(r'^issueAliasSSL$', views.issueAliasSSL, name="issueAliasSSL"),
+    url(r'^delateAlias$', views.delateAlias, name="delateAlias"),
 
     ## Openbasedir
-    url(r'^changeOpenBasedir$',views.changeOpenBasedir,name="changeOpenBasedir"),
+    url(r'^changeOpenBasedir$', views.changeOpenBasedir, name="changeOpenBasedir"),
 
     ## WP Install
 
     url(r'^(?P<domain>(.*))/wordpressInstall$', views.wordpressInstall, name='wordpressInstall'),
-    url(r'^installWordpressStatus$',views.installWordpressStatus,name="installWordpressStatus"),
+    url(r'^installWordpressStatus$', views.installWordpressStatus, name="installWordpressStatus"),
     url(r'^installWordpress$', views.installWordpress, name='installWordpress'),
-
 
     ## Joomla Install
 
@@ -162,7 +147,6 @@ urlpatterns = [
     url(r'^(?P<domain>(.*))/installMautic$', views.installMautic, name='installMautic'),
     url(r'^mauticInstall$', views.mauticInstall, name='mauticInstall'),
 
-
     ## Git
     url(r'^(?P<domain>(.*))/setupGit$', views.setupGit, name='setupGit'),
     url(r'^setupGitRepo$', views.setupGitRepo, name='setupGitRepo'),
@@ -177,7 +161,6 @@ urlpatterns = [
     url(r'^startCloning$', views.startCloning, name='startCloning'),
     url(r'^(?P<domain>(.*))/(?P<childDomain>(.*))/syncToMaster$', views.syncToMaster, name='syncToMaster'),
     url(r'^startSync$', views.startSync, name='startSync'),
-
 
     url(r'^(?P<domain>(.*))/gitNotify$', views.gitNotify, name='gitNotify'),
     url(r'^detachRepo$', views.detachRepo, name='detachRepo'),
@@ -211,8 +194,17 @@ urlpatterns = [
     url(r'^deleteSSHKey$', views.deleteSSHKey, name='deleteSSHKey'),
     url(r'^addSSHKey$', views.addSSHKey, name='addSSHKey'),
 
+    ### Apache Manager
+
+    url(r'^ApacheManager/(?P<domain>(.*))$', views.ApacheManager, name='ApacheManager'),
+    url(r'^getSwitchStatus$', views.getSwitchStatus, name='getSwitchStatus'),
+    url(r'^switchServer$', views.switchServer, name='switchServer'),
+    url(r'^statusFunc$', views.statusFunc, name='statusFunc'),
+    url(r'^tuneSettings$', views.tuneSettings, name='tuneSettings'),
+    url(r'^saveApacheConfigsToFile$', views.saveApacheConfigsToFile, name='saveApacheConfigsToFile'),
 
     ## Catch all for domains
     url(r'^(?P<domain>(.*))/(?P<childDomain>(.*))$', views.launchChild, name='launchChild'),
     url(r'^(?P<domain>(.*))$', views.domain, name='domain'),
+
 ]

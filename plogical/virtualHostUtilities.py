@@ -244,7 +244,13 @@ class virtualHostUtilities:
                         ApacheVhost.perHostVirtualConfOLS(completePathToConfigFile, administratorEmail)
                         installUtilities.installUtilities.reStartLiteSpeed()
                         php = PHPManager.getPHPString(phpVersion)
-                        command = "systemctl restart php%s-php-fpm" % (php)
+
+                        if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                            phpService = f'php{php}-php-fpm'
+                        else:
+                            phpService = f"{phpVersion.replace(' ', '').lower()}-fpm"
+
+                        command = f"systemctl restart {phpService}"
                         ProcessUtilities.normalExecutioner(command)
 
             ## Create Configurations ends here
@@ -435,6 +441,29 @@ class virtualHostUtilities:
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(
                 str(msg) + "  [saveVHostConfigs]")
+            print("0," + str(msg))
+
+    @staticmethod
+    def saveApacheConfigsToFile(fileName, tempPath):
+        try:
+
+            vhost = open(fileName, "w")
+
+            vhost.write(open(tempPath, "r").read())
+
+            vhost.close()
+
+            if os.path.exists(tempPath):
+                os.remove(tempPath)
+
+            command = f"systemctl restart {ApacheVhost.serviceName}"
+            ProcessUtilities.normalExecutioner(command)
+
+            print("1,None")
+
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile(
+                str(msg) + "  [saveApacheConfigsToFile]")
             print("0," + str(msg))
 
     @staticmethod
@@ -1094,7 +1123,13 @@ class virtualHostUtilities:
                         ApacheVhost.perHostVirtualConfOLS(completePathToConfigFile, master.adminEmail)
                         installUtilities.installUtilities.reStartLiteSpeed()
                         php = PHPManager.getPHPString(phpVersion)
-                        command = "systemctl restart php%s-php-fpm" % (php)
+
+                        if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                            phpService = f'php{php}-php-fpm'
+                        else:
+                            phpService = f"{phpVersion.replace(' ', '').lower()}-fpm"
+
+                        command = f"systemctl restart {phpService}"
                         ProcessUtilities.normalExecutioner(command)
 
             ## DKIM Check
@@ -1183,8 +1218,25 @@ class virtualHostUtilities:
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Restarting servers and phps..,90')
 
                 php = PHPManager.getPHPString(phpVersion)
-                command = "systemctl restart php%s-php-fpm" % (php)
+
+                ##
+
+                if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                    phpService = f'php{php}-php-fpm'
+                else:
+                    phpService = f"{phpVersion.replace(' ', '').lower()}-fpm"
+
+                command = f"systemctl stop {phpService}"
                 ProcessUtilities.normalExecutioner(command)
+
+                command = f"systemctl restart {phpService}"
+                ProcessUtilities.normalExecutioner(command)
+
+                command = f"systemctl restart {ApacheVhost.serviceName}"
+                ProcessUtilities.normalExecutioner(command)
+
+                ###
+
                 installUtilities.installUtilities.reStartLiteSpeed()
                 logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Successfully converted.[200]')
             else:
@@ -1561,6 +1613,8 @@ def main():
         virtualHostUtilities.getErrorLogs(args.path, int(args.page))
     elif args.function == "saveVHostConfigs":
         virtualHostUtilities.saveVHostConfigs(args.path, args.tempPath)
+    elif args.function == "saveApacheConfigsToFile":
+        virtualHostUtilities.saveApacheConfigsToFile(args.path, args.tempPath)
     elif args.function == "saveRewriteRules":
         virtualHostUtilities.saveRewriteRules(args.virtualHostName, args.path, args.tempPath)
     elif args.function == "saveSSL":
