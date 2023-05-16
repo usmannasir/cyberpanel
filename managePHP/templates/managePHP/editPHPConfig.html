@@ -18,7 +18,7 @@
         <div ng-controller="editPHPConfig" class="panel">
             <div class="panel-body">
                 <h3 class="content-box-header">
-                    {% trans "Edit PHP Configurations" %}
+                    {% trans "Edit PHP Configurations" %} - {% if apache %}<a href="{% url 'editPHPConfigs' %}?apache=apache">Edit Apache Configurations</a>{% endif %}
                 </h3>
                 <div class="example-box-wrapper">
                     <ul class="nav nav-tabs">

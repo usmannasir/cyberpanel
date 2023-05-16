@@ -100,7 +100,7 @@ class phpUtilities:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [initiateRestore]")
 
     @staticmethod
-    def savePHPConfigBasic(phpVers,allow_url_fopen,display_errors,file_uploads,allow_url_include,memory_limit,max_execution_time,upload_max_filesize,max_input_time,post_max_size):
+    def savePHPConfigBasic(phpVers,allow_url_fopen,display_errors,file_uploads,allow_url_include,memory_limit,max_execution_time,upload_max_filesize,max_input_time,post_max_size, apache):
         try:
             serverLevelPHPRestart = '/usr/local/lsws/admin/tmp/.lsphp_restart.txt'
 
@@ -108,14 +108,17 @@ class phpUtilities:
             command = 'touch %s' % (serverLevelPHPRestart)
             ProcessUtilities.executioner(command)
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
-                path = "/usr/local/lsws/ls" + phpVers + "/etc/php.ini"
-            else:
-                initial = phpVers[3]
-                final = phpVers[4]
+            if int(apache) == 0:
+                if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                    path = "/usr/local/lsws/ls" + phpVers + "/etc/php.ini"
+                else:
+                    initial = phpVers[3]
+                    final = phpVers[4]
 
-                completeName = str(initial) + '.' + str(final)
-                path = "/usr/local/lsws/ls" + phpVers + "/etc/php/" + completeName + "/litespeed/php.ini"
+                    completeName = str(initial) + '.' + str(final)
+                    path = "/usr/local/lsws/ls" + phpVers + "/etc/php/" + completeName + "/litespeed/php.ini"
+            else:
+                path = f'/etc/php/{phpVers[3]}.{phpVers[4]}/fpm/php.ini'
 
             logging.CyberCPLogFileWriter.writeToFile(path)
 
@@ -154,6 +157,16 @@ class phpUtilities:
 
             installUtilities.installUtilities.reStartLiteSpeed()
 
+            if int(apache) == 1:
+
+                if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                    phpService = f'php{phpVers}-php-fpm'
+                else:
+                    phpService = f"php{phpVers[3]}.{phpVers[4]}-fpm"
+
+                command = f"systemctl restart {phpService}"
+                ProcessUtilities.normalExecutioner(command)
+
             print("1,None")
 
         except BaseException as msg:
@@ -177,6 +190,14 @@ class phpUtilities:
                 os.remove(serverLevelPHPRestart)
 
             installUtilities.installUtilities.reStartLiteSpeed()
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                phpService = f'php{phpVers}-php-fpm'
+            else:
+                phpService = f"php{phpVers.split('/')[3]}-fpm"
+
+            command = f"systemctl restart {phpService}"
+            ProcessUtilities.normalExecutioner(command)
 
             print("1,None")
         except BaseException as msg:
@@ -227,6 +248,7 @@ def main():
     parser.add_argument("--max_input_time", help="Process Hard Limit for PHP!")
     parser.add_argument("--post_max_size", help="Process Hard Limit for PHP!")
     parser.add_argument("--extension", help="Process Hard Limit for PHP!")
+    parser.add_argument("--apache", help="Editing apache!")
 
     ## Litespeed Tuning Arguments
 
@@ -237,7 +259,7 @@ def main():
 
     if args.function == "savePHPConfigBasic":
         phpUtilities.savePHPConfigBasic(args.phpVers, args.allow_url_fopen, args.display_errors, args.file_uploads, args.allow_url_include, args.memory_limit,
-                                        args.max_execution_time, args.upload_max_filesize, args.max_input_time, args.post_max_size)
+                                        args.max_execution_time, args.upload_max_filesize, args.max_input_time, args.post_max_size, args.apache)
     elif args.function == "savePHPConfigAdvance":
         phpUtilities.savePHPConfigAdvance(args.phpVers, args.tempPath)
 

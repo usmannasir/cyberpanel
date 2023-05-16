@@ -10,7 +10,7 @@
 
     <div class="container">
         <div id="page-title">
-            <h2>{% trans "Install PHP Extensions" %}</h2>
+            <h2>{% trans "Install PHP Extensions" %} - {% if apache %}<a href="{% url 'installExtensions' %}?apache=apache">Manage Apache Extensions</a>{% endif %}</h2>
             <p>{% trans "Install/uninstall php extensions on this page." %}</p>
         </div>
         <div class="panel">
