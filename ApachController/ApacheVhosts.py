@@ -29,6 +29,11 @@ class ApacheVhost:
         php72Path = '/etc/opt/remi/php72/php-fpm.d/'
         php73Path = '/etc/opt/remi/php73/php-fpm.d/'
 
+        php74Path = '/etc/opt/remi/php74/php-fpm.d/'
+        php80Path = '/etc/opt/remi/php80/php-fpm.d/'
+        php81Path = '/etc/opt/remi/php81/php-fpm.d/'
+        php82Path = '/etc/opt/remi/php82/php-fpm.d/'
+
         serviceName = 'httpd'
 
     else:

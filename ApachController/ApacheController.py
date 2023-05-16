@@ -211,83 +211,14 @@ LoadModule mpm_event_module modules/mod_mpm_event.so
 
         if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
 
-            command = 'yum install -y http://rpms.remirepo.net/enterprise/remi-release-7.rpm'
+            command = 'yum install -y https://rpms.remirepo.net/enterprise/remi-release-8.rpm'
             ApacheController.executioner(command)
 
-            command = 'yum-config-manager --enable remi-php'
-            ApacheController.executioner(command)
-
-
-            command = 'yum install -y php54-php-fpm php54-php-gd php54-php-xml php54-php-twig php54-php-zstd php54-php-tidy' \
-                      'php54-php-suhosin php54-php-soap php54-php-snmp php54-php-snappy php54-php-smbclient' \
-                      'php54-php-process php54-php-pimple php54-php-pgsql php54-php-pear.noarch php54-php-pdo' \
-                      'php54-php-mysqlnd php54-php-mssql php54-php-mcrypt php54-php-mbstring php54-php-maxminddb' \
-                      'php54-php-common php54-php-imap php54-php-intl php54-php-tarantool php54-php-pspell php54-php-oci8' \
-                      'php54-php-bcmath php54-php-litespeed php54-php-recode php54-php-odbc'
-            if ApacheController.executioner(command) == 0:
+            command = "yum install -y php?? php??-php-fpm  php??-php-mysql php??-php-curl php??-php-gd php??-php-mbstring php??-php-xml php??-php-zip php??-php-intl"
+            if ProcessUtilities.executioner(command, None, True) == 0:
                 return "Failed to install php54-fpm"
 
-            # Version 5.5
-            command = 'yum install -y php55-php-fpm php55-php-gd php55-php-xml php55-php-twig php55-php-zstd php55-php-tidy' \
-                      'php55-php-suhosin php55-php-soap php55-php-snmp php55-php-snappy php55-php-smbclient ' \
-                      'php55-php-process php55-php-pimple php55-php-pgsql php55-php-pear.noarch php55-php-pdo' \
-                      'php55-php-mysqlnd php55-php-mssql php55-php-mcrypt php55-php-mbstring php55-php-maxminddb' \
-                      'php55-php-common php55-php-imap php55-php-intl php55-php-tarantool php55-php-pspell php55-php-oci8' \
-                      'php55-php-litespeed php55-php-bcmath php55-php-odbc php55-php-recode'
-            if ApacheController.executioner(command) == 0:
-                return "Failed to install php55-fpm"
 
-            # Version 5.6
-            command = 'yum install -y php56-php-fpm php56-php-gd php56-php-xml php56-php-twig php56-php-zstd php56-php-tidy' \
-                      'php56-php-suhosin php56-php-soap php56-php-snmp php56-php-snappy php56-php-smbclient' \
-                      'php56-php-process php56-php-pimple php56-php-pgsql php56-php-pear.noarch php56-php-pdo ' \
-                      'php56-php-mysqlnd php56-php-mssql php56-php-mcrypt php56-php-mbstring php56-php-maxminddb' \
-                      'php56-php-common php56-php-imap php56-php-intl php56-php-tarantool php56-php-recode' \
-                      'php56-php-odbc php56-php-oci8 php56-php-litespeed php56-php-bcmath php56-php-pspell'
-            if ApacheController.executioner(command) == 0:
-                return "Failed to install php56-fpm"
-
-            # Version 7.0
-            command = 'yum install -y php70-php-fpm php70-php-gd php70-php-xml php70-php-twig php70-php-zstd php70-php-tidy' \
-                      'php70-php-suhosin php70-php-soap php70-php-snmp php70-php-snappy php70-php-smbclient' \
-                      'php70-php-process php70-php-pimple php70-php-pgsql php70-php-pear.noarch php70-php-pdo ' \
-                      'php70-php-mysqlnd php70-php-mssql php70-php-mcrypt php70-php-mbstring php70-php-maxminddb' \
-                      'php70-php-common php70-php-imap php70-php-intl php70-php-tarantool php70-php-recode' \
-                      'php70-php-odbc php70-php-oci8 php70-php-litespeed php70-php-bcmath php70-php-pspell'
-            if ApacheController.executioner(command) == 0:
-                return "Failed to install php70-fpm"
-
-            # Version 7.1
-            command = 'yum install -y php71-php-fpm php71-php-gd php71-php-xml php71-php-twig php71-php-zstd php71-php-tidy' \
-                      'php71-php-suhosin php71-php-soap php71-php-snmp php71-php-snappy php71-php-smbclient' \
-                      'php71-php-process php71-php-pimple php71-php-pgsql php71-php-pear.noarch php71-php-pdo ' \
-                      'php71-php-mysqlnd php71-php-mssql php71-php-mcrypt php71-php-mbstring php71-php-maxminddb' \
-                      'php71-php-common php71-php-imap php71-php-intl php71-php-tarantool php71-php-recode' \
-                      'php71-php-odbc php71-php-oci8 php71-php-litespeed php71-php-bcmath php71-php-pspell'
-            if ApacheController.executioner(command) == 0:
-                return "Failed to install php71-fpm"
-
-            # Version 7.2
-            command = 'yum install -y php72-php-fpm php72-php-gd php72-php-xml php72-php-twig php72-php-zstd php72-php-tidy' \
-                      'php72-php-suhosin php72-php-soap php72-php-snmp php72-php-snappy php72-php-smbclient' \
-                      'php72-php-process php72-php-pimple php72-php-pgsql php72-php-pear.noarch php72-php-pdo ' \
-                      'php72-php-mysqlnd php72-php-mssql php72-php-mcrypt php72-php-mbstring php72-php-maxminddb' \
-                      'php72-php-common php72-php-imap php72-php-intl php72-php-tarantool php72-php-recode' \
-                      'php72-php-odbc php72-php-oci8 php72-php-litespeed php72-php-bcmath php72-php-pspell'
-            if ApacheController.executioner(command) == 0:
-                return "Failed to install php72-fpm"
-
-            # Version 7.3
-            command = 'yum install -y php73-php-fpm php73-php-gd php73-php-xml php73-php-twig php73-php-zstd php73-php-tidy' \
-                      'php73-php-suhosin php73-php-soap php73-php-snmp php73-php-snappy php73-php-smbclient' \
-                      'php73-php-process php73-php-pimple php73-php-pgsql php73-php-pear.noarch php73-php-pdo ' \
-                      'php73-php-mysqlnd php73-php-mssql php73-php-mcrypt php73-php-mbstring php73-php-maxminddb' \
-                      'php73-php-common php73-php-imap php73-php-intl php73-php-tarantool php73-php-recode' \
-                      'php73-php-odbc php73-php-oci8 php73-php-litespeed php73-php-bcmath php73-php-pspell'
-
-
-            if ApacheController.executioner(command) == 0:
-                return "Failed to install php73-fpm"
         else:
 
             command = 'apt install python-software-properties -y'
