@@ -183,6 +183,11 @@ LoadModule mpm_event_module modules/mod_mpm_event.so
                 if ProcessUtilities.executioner(command, None, True) == 0:
                     return "Apache run suexec proxy ssl"
 
+
+                WriteToFile = open(confPath, 'a')
+                WriteToFile.writelines('\nSetEnv LSWS_EDITION Openlitespeed\nSetEnv X-LSCACHE on\n')
+                WriteToFile.close()
+
             ###
 
             if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
