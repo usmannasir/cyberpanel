@@ -1872,12 +1872,15 @@ def getCurrentAdvancedPHPConfig(request):
                 data = json.loads(request.body)
                 phpVers = data['phpSelection']
 
-                phpVersS = phpVers
+                if os.path.exists(ProcessUtilities.debugPath):
+                    logging.writeToFile(f"apache value advanced config {request.GET.get('apache', None)}")
 
-                phpVers = "php" + PHPManager.getPHPString(phpVers)
+                phpVersSApache = phpVers
 
                 if request.GET.get('apache', None) == None:
                     phpVers = "php" + PHPManager.getPHPString(phpVers)
+                    if os.path.exists(ProcessUtilities.debugPath):
+                        logging.writeToFile(f"value of phpvers in ls {phpVers}")
                     if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                         path = "/usr/local/lsws/ls" + phpVers + "/etc/php.ini"
                     else:
@@ -1887,7 +1890,7 @@ def getCurrentAdvancedPHPConfig(request):
                         completeName = str(initial) + '.' + str(final)
                         path = "/usr/local/lsws/ls" + phpVers + "/etc/php/" + completeName + "/litespeed/php.ini"
                 else:
-                    path = f'/etc/php/{phpVersS.split(" ")[1]}/fpm/php.ini'
+                    path = f'/etc/php/{phpVersSApache.split(" ")[1]}/fpm/php.ini'
                     if os.path.exists(ProcessUtilities.debugPath):
                         logging.writeToFile(f'PHP Path {path}')
 
@@ -1922,7 +1925,6 @@ def savePHPConfigAdvance(request):
                 data = json.loads(request.body)
                 phpVers = data['phpSelection']
                 phpVersS = phpVers
-                phpVers = "php" + PHPManager.getPHPString(phpVers)
 
                 if request.GET.get('apache', None) == None:
                     phpVers = "php" + PHPManager.getPHPString(phpVers)
