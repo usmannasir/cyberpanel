@@ -196,7 +196,6 @@ context /.well-known/acme-challenge {
 </VirtualHost>
 """
 
-
     lswsChildConf = """<VirtualHost *:80>
 
     ServerName {virtualHostName}
