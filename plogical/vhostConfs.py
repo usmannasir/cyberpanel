@@ -221,6 +221,7 @@ context /.well-known/acme-challenge {
         ServerAdmin {administratorEmail}
         SuexecUserGroup {externalApp} {externalApp}
         DocumentRoot /home/{virtualHostName}/public_html/
+        Alias /.well-known/acme-challenge /usr/local/lsws/Example/html/.well-known/acme-challenge
         <Proxy "unix:{sockPath}{virtualHostName}.sock|fcgi://php-fpm-{externalApp}">
         ProxySet disablereuse=off
         </proxy>
@@ -368,6 +369,20 @@ accesslog $VH_ROOT/logs/$VH_NAME.access_log {
   rollingSize             10M
   keepDays                10  
   compressArchive         1
+}
+
+context /.well-known/acme-challenge {
+  location                /usr/local/lsws/Example/html/.well-known/acme-challenge
+  allowBrowse             1
+
+  rewrite  {
+    enable                  0
+  }
+  addDefaultCharset       off
+
+  phpIniOverride  {
+
+  }
 }
 
 rewrite  {
