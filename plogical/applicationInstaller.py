@@ -565,6 +565,13 @@ $parameters = array(
                 else:
                     finalPath = "/home/" + domainName + "/public_html/"
 
+                ### check if index file then delete
+
+                IndexFile = f'{finalPath}index.html'
+
+                command = f'rm -f {IndexFile}'
+                ProcessUtilities.executioner(command, externalApp)
+
                 if website.package.dataBases > website.databases_set.all().count():
                     pass
                 else:
