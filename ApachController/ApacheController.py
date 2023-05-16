@@ -298,7 +298,7 @@ LoadModule mpm_event_module modules/mod_mpm_event.so
             if ProcessUtilities.executioner(command, None, True) == 0:
                 return "Failed to ppa:ondrej/php"
 
-            command = "DEBIAN_FRONTEND=noninteractive apt-get install -y php-fpm php?.?-fpm php?.?-fpm php?.?-mysql php?.?-curl php?.?-gd php?.?-mbstring php?.?-xml php?.?-zip"
+            command = "DEBIAN_FRONTEND=noninteractive apt-get install -y php-fpm php?.?-fpm php?.?-fpm php?.?-mysql php?.?-curl php?.?-gd php?.?-mbstring php?.?-xml php?.?-zip php?.?-intl"
 
             if ProcessUtilities.executioner(command, None, True) == 0:
                 return "Failed to install Apache and PHP-FPM."
