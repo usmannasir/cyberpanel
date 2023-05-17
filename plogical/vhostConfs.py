@@ -213,7 +213,7 @@ context /.well-known/acme-challenge {
 
 </VirtualHost>"""
 
-    apacheConf = """<VirtualHost *:8082>
+    apacheConf = """<VirtualHost *:8083>
 
         ServerName {virtualHostName}
         ServerAlias www.{virtualHostName}
