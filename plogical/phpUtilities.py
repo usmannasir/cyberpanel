@@ -108,19 +108,8 @@ class phpUtilities:
             command = 'touch %s' % (serverLevelPHPRestart)
             ProcessUtilities.executioner(command)
 
-            if int(apache) == 0:
-                if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
-                    path = "/usr/local/lsws/ls" + phpVers + "/etc/php.ini"
-                else:
-                    initial = phpVers[3]
-                    final = phpVers[4]
-
-                    completeName = str(initial) + '.' + str(final)
-                    path = "/usr/local/lsws/ls" + phpVers + "/etc/php/" + completeName + "/litespeed/php.ini"
-            else:
-                path = f'/etc/php/{phpVers[3]}.{phpVers[4]}/fpm/php.ini'
-
-            logging.CyberCPLogFileWriter.writeToFile(path)
+            from ApachController.ApacheVhosts import ApacheVhost
+            path = ApacheVhost.DecidePHPPathforManager(int(apache), phpVers)
 
             data = open(path, 'r').readlines()
 
@@ -159,10 +148,7 @@ class phpUtilities:
 
             if int(apache) == 1:
 
-                if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
-                    phpService = f'php{phpVers}-php-fpm'
-                else:
-                    phpService = f"php{phpVers[3]}.{phpVers[4]}-fpm"
+                phpService = ApacheVhost.DecideFPMServiceName(phpVers)
 
                 command = f"systemctl restart {phpService}"
                 ProcessUtilities.normalExecutioner(command)

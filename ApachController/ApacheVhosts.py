@@ -554,10 +554,7 @@ class ApacheVhost:
 
             confFile.write(currentConf)
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
-                phpService = f'php{php}-php-fpm'
-            else:
-                phpService = f"{phpVersion.replace(' ', '').lower()}-fpm"
+            phpService = ApacheVhost.DecideFPMServiceName(phpVersion)
 
             command = f"systemctl stop {phpService}"
             ProcessUtilities.normalExecutioner(command)
@@ -572,3 +569,36 @@ class ApacheVhost:
         except BaseException as msg:
             logging.writeToFile(str(msg))
             return 1
+
+
+    @staticmethod
+    def DecidePHPPathforManager(apache, phpVers):
+        if apache == None:
+            phpVers = "php" + PHPManager.getPHPString(phpVers)
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                path = "/usr/local/lsws/ls" + phpVers + "/etc/php.ini"
+            else:
+                initial = phpVers[3]
+                final = phpVers[4]
+
+                completeName = str(initial) + '.' + str(final)
+                path = "/usr/local/lsws/ls" + phpVers + "/etc/php/" + completeName + "/litespeed/php.ini"
+        else:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                phpVers = "php" + PHPManager.getPHPString(phpVers)
+                path = f'/etc/opt/remi/{phpVers}/php.ini'
+            else:
+                path = f'/etc/php/{phpVers.split(" ")[1]}/fpm/php.ini'
+
+        if os.path.exists(ProcessUtilities.debugPath):
+            logging.writeToFile(f'PHP Path {path}')
+
+        return path
+
+    @staticmethod
+    def DecideFPMServiceName(phpVersion):
+        if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+            php = PHPManager.getPHPString(phpVersion)
+            return f'php{php}-php-fpm'
+        else:
+            return f"{phpVersion.replace(' ', '').lower()}-fpm"

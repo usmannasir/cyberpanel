@@ -4647,10 +4647,7 @@ StrictHostKeyChecking no
 
             php = PHPManager.getPHPString(phpVersion)
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
-                phpService = f'php{php}-php-fpm'
-            else:
-                phpService = f"{phpVersion.replace(' ', '').lower()}-fpm"
+            phpService = ApacheVhost.DecideFPMServiceName(phpVersion)
 
             command = f"systemctl stop {phpService}"
             ProcessUtilities.normalExecutioner(command)

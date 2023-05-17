@@ -245,10 +245,7 @@ class virtualHostUtilities:
                         installUtilities.installUtilities.reStartLiteSpeed()
                         php = PHPManager.getPHPString(phpVersion)
 
-                        if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
-                            phpService = f'php{php}-php-fpm'
-                        else:
-                            phpService = f"{phpVersion.replace(' ', '').lower()}-fpm"
+                        phpService = ApacheVhost.DecideFPMServiceName(phpVersion)
 
                         command = f"systemctl restart {phpService}"
                         ProcessUtilities.normalExecutioner(command)
@@ -1124,10 +1121,7 @@ class virtualHostUtilities:
                         installUtilities.installUtilities.reStartLiteSpeed()
                         php = PHPManager.getPHPString(phpVersion)
 
-                        if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
-                            phpService = f'php{php}-php-fpm'
-                        else:
-                            phpService = f"{phpVersion.replace(' ', '').lower()}-fpm"
+                        phpService = ApacheVhost.DecideFPMServiceName(phpVersion)
 
                         command = f"systemctl restart {phpService}"
                         ProcessUtilities.normalExecutioner(command)
@@ -1221,10 +1215,12 @@ class virtualHostUtilities:
 
                 ##
 
-                if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
-                    phpService = f'php{php}-php-fpm'
-                else:
-                    phpService = f"{phpVersion.replace(' ', '').lower()}-fpm"
+                phpService = ApacheVhost.DecideFPMServiceName(phpVersion)
+
+                # if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                #     phpService = f'php{php}-php-fpm'
+                # else:
+                #     phpService = f"{phpVersion.replace(' ', '').lower()}-fpm"
 
                 command = f"systemctl stop {phpService}"
                 ProcessUtilities.normalExecutioner(command)

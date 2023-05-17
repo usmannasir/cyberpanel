@@ -113,15 +113,15 @@ LoadModule mpm_event_module modules/mod_mpm_event.so
 
             if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
 
-                command = "yum -y install centos-release-scl yum-utils"
-                if ProcessUtilities.executioner(command) == 0:
-                    return "Failed to centos-release-scl and yum-utils"
+                # command = "yum -y install centos-release-scl yum-utils"
+                # if ProcessUtilities.executioner(command) == 0:
+                #     return "Failed to centos-release-scl and yum-utils"
+                #
+                # command = "yum-config-manager --enable rhel-server-rhscl-7-rpms"
+                # if ProcessUtilities.executioner(command) == 0:
+                #     return "Failed to --enable rhel-server-rhscl-7-rpms"
 
-                command = "yum-config-manager --enable rhel-server-rhscl-7-rpms"
-                if ProcessUtilities.executioner(command) == 0:
-                    return "Failed to --enable rhel-server-rhscl-7-rpms"
-
-                sslPath = "/etc/apache2/conf.d/ssl.conf"
+                sslPath = "/etc/httpd/conf.d/ssl.conf"
 
                 if os.path.exists(sslPath):
                     os.remove(sslPath)
@@ -155,8 +155,6 @@ LoadModule mpm_event_module modules/mod_mpm_event.so
 
             else:
 
-
-                sslPath = "/etc/httpd/conf.d/ssl.conf"
                 confPath = ApacheVhost.serverRootPath + "/apache2.conf"
 
                 portsPath = '/etc/apache2/ports.conf'

@@ -1698,20 +1698,8 @@ def getCurrentPHPConfig(request):
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.writeToFile(f"apache value {request.GET.get('apache', None)}")
 
-                if request.GET.get('apache', None) == None:
-                    phpVers = "php" + PHPManager.getPHPString(phpVers)
-                    if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
-                        path = "/usr/local/lsws/ls" + phpVers + "/etc/php.ini"
-                    else:
-                        initial = phpVers[3]
-                        final = phpVers[4]
-
-                        completeName = str(initial) + '.' + str(final)
-                        path = "/usr/local/lsws/ls" + phpVers + "/etc/php/" + completeName + "/litespeed/php.ini"
-                else:
-                    path = f'/etc/php/{phpVers.split(" ")[1]}/fpm/php.ini'
-                    if os.path.exists(ProcessUtilities.debugPath):
-                        logging.writeToFile(f'PHP Path {path}')
+                from ApachController.ApacheVhosts import ApacheVhost
+                path = ApacheVhost.DecidePHPPathforManager(request.GET.get('apache', None), phpVers)
 
                 allow_url_fopen = "0"
                 display_errors = "0"
@@ -1820,7 +1808,7 @@ def savePHPConfigBasic(request):
                 else:
                     allow_url_include = "allow_url_include = Off"
 
-                phpVers = "php" + PHPManager.getPHPString(phpVers)
+                #phpVers = "php" + PHPManager.getPHPString(phpVers)
 
                 if request.GET.get('apache', None) == None:
                     apache = 0
@@ -1830,7 +1818,7 @@ def savePHPConfigBasic(request):
                 ##
 
                 execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/phpUtilities.py"
-                execPath = execPath + " savePHPConfigBasic --phpVers " + phpVers + " --allow_url_fopen '" + allow_url_fopen +\
+                execPath = execPath + " savePHPConfigBasic --phpVers '" + phpVers + "' --allow_url_fopen '" + allow_url_fopen +\
                            "' --display_errors '" + display_errors + "' --file_uploads '" + file_uploads + "' --allow_url_include '" \
                            + allow_url_include + "' --memory_limit " + memory_limit + " --max_execution_time " + \
                            max_execution_time + " --upload_max_filesize " + upload_max_filesize \
@@ -1875,24 +1863,8 @@ def getCurrentAdvancedPHPConfig(request):
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.writeToFile(f"apache value advanced config {request.GET.get('apache', None)}")
 
-                phpVersSApache = phpVers
-
-                if request.GET.get('apache', None) == None:
-                    phpVers = "php" + PHPManager.getPHPString(phpVers)
-                    if os.path.exists(ProcessUtilities.debugPath):
-                        logging.writeToFile(f"value of phpvers in ls {phpVers}")
-                    if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
-                        path = "/usr/local/lsws/ls" + phpVers + "/etc/php.ini"
-                    else:
-                        initial = phpVers[3]
-                        final = phpVers[4]
-
-                        completeName = str(initial) + '.' + str(final)
-                        path = "/usr/local/lsws/ls" + phpVers + "/etc/php/" + completeName + "/litespeed/php.ini"
-                else:
-                    path = f'/etc/php/{phpVersSApache.split(" ")[1]}/fpm/php.ini'
-                    if os.path.exists(ProcessUtilities.debugPath):
-                        logging.writeToFile(f'PHP Path {path}')
+                from ApachController.ApacheVhosts import ApacheVhost
+                path = ApacheVhost.DecidePHPPathforManager(request.GET.get('apache', None), phpVers)
 
                 command = "sudo cat " + path
                 configData = ProcessUtilities.outputExecutioner(command)
@@ -1926,20 +1898,8 @@ def savePHPConfigAdvance(request):
                 phpVers = data['phpSelection']
                 phpVersS = phpVers
 
-                if request.GET.get('apache', None) == None:
-                    phpVers = "php" + PHPManager.getPHPString(phpVers)
-                    if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
-                        path = "/usr/local/lsws/ls" + phpVers + "/etc/php.ini"
-                    else:
-                        initial = phpVers[3]
-                        final = phpVers[4]
-
-                        completeName = str(initial) + '.' + str(final)
-                        path = "/usr/local/lsws/ls" + phpVers + "/etc/php/" + completeName + "/litespeed/php.ini"
-                else:
-                    path = f'/etc/php/{phpVersS.split(" ")[1]}/fpm/php.ini'
-                    if os.path.exists(ProcessUtilities.debugPath):
-                        logging.writeToFile(f'PHP Path {path}')
+                from ApachController.ApacheVhosts import ApacheVhost
+                path = ApacheVhost.DecidePHPPathforManager(request.GET.get('apache', None), phpVers)
 
                 tempPath = "/home/cyberpanel/" + str(randint(1000, 9999))
 
