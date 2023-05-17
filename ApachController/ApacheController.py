@@ -130,32 +130,31 @@ LoadModule mpm_event_module modules/mod_mpm_event.so
 
                 CurrentConf = open(confPath, 'r').read()
 
-                data = open(confPath, 'r').readlines()
-                writeToFile = open(confPath, 'w')
+                if CurrentConf.find('Listen 8083') == -1:
 
-                for items in data:
-                    if items.find("Listen") > -1 and items.find("80") > -1 and items.find('#') == -1:
-                        if CurrentConf.find('Listen 8083') ==-1:
+                    data = open(confPath, 'r').readlines()
+                    writeToFile = open(confPath, 'w')
+
+                    for items in data:
+                        if items.find("Listen") > -1 and items.find("80") > -1 and items.find('#') == -1:
                             writeToFile.writelines("Listen 8083\nListen 8082\n")
-                    elif items.find("User") > -1 and items.find('#') == -1:
-                        if CurrentConf.find('User nobody') == -1:
+                        elif items.find("User") > -1 and items.find('#') == -1:
                             writeToFile.writelines("User nobody\n")
-                    elif items.find("Group") > -1 and items.find('#') == -1:
-                        if CurrentConf.find('Group nobody') == -1:
+                        elif items.find("Group") > -1 and items.find('#') == -1:
                             writeToFile.writelines("Group nobody\n")
                             writeToFile.writelines('SetEnv LSWS_EDITION Openlitespeed\nSetEnv X-LSCACHE on\n')
-                    elif items[0] == "#":
-                        continue
-                    else:
-                        writeToFile.writelines(items)
+                        elif items[0] == "#":
+                            continue
+                        else:
+                            writeToFile.writelines(items)
 
-                writeToFile.close()
+                    writeToFile.close()
 
-                # MPM Module Configurations
+                    # MPM Module Configurations
 
-                writeToFile = open(ApacheController.mpmConfigsPath, 'w')
-                writeToFile.write(ApacheController.mpmConfigs)
-                writeToFile.close()
+                    writeToFile = open(ApacheController.mpmConfigsPath, 'w')
+                    writeToFile.write(ApacheController.mpmConfigs)
+                    writeToFile.close()
 
 
             else:
