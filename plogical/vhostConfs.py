@@ -213,7 +213,7 @@ context /.well-known/acme-challenge {
 
 </VirtualHost>"""
 
-    apacheConf = """<VirtualHost *:8081>
+    apacheConf = """<VirtualHost *:8082>
 
         ServerName {virtualHostName}
         ServerAlias www.{virtualHostName}
@@ -269,7 +269,7 @@ context /.well-known/acme-challenge {
 
 </VirtualHost>
 """
-    apacheConfChild = """<VirtualHost *:8081>
+    apacheConfChild = """<VirtualHost *:8083>
 
         ServerName {virtualHostName}
         ServerAlias www.{virtualHostName}
@@ -325,7 +325,7 @@ context /.well-known/acme-challenge {
 """
     proxyApacheBackend = """extprocessor apachebackend {
   type                    proxy
-  address                 http://127.0.0.1:8081
+  address                 http://127.0.0.1:8083
   maxConns                100
   pcKeepAliveTimeout      60
   initTimeout             60

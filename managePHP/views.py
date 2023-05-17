@@ -1298,7 +1298,10 @@ def getExtensionsInformation(request):
                 if request.GET.get('apache', None) == None:
                     phpVers = f"lsphp{PHPManager.getPHPString(phpVers)}"
                 else:
-                    phpVers = phpVers.replace(' ', '').lower()
+                    if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                        phpVers = f"php{PHPManager.getPHPString(phpVers)}"
+                    else:
+                        phpVers = phpVers.replace(' ', '').lower()
 
                     if os.path.exists(ProcessUtilities.debugPath):
                         logging.writeToFile(f'PHP Version apache {phpVers}')
