@@ -1314,7 +1314,7 @@ def getExtensionsInformation(request):
                     command = 'yum list installed'
                     resultInstalled = ProcessUtilities.outputExecutioner(command)
 
-                    command = f'yum list | grep {phpVers} | xargs -n3 | column -t'
+                    command = f'yum list | grep ^{phpVers} | xargs -n3 | column -t'
 
                 result = ProcessUtilities.outputExecutioner(command).split('\n')
 
