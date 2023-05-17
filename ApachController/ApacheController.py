@@ -221,6 +221,10 @@ LoadModule mpm_event_module modules/mod_mpm_event.so
 
         else:
 
+            command = 'apt-get install software-properties-common -y'
+            if ProcessUtilities.executioner(command, None, True) == 0:
+                return "Failed to install software-properties-common"
+
             command = 'apt install python-software-properties -y'
             if ProcessUtilities.executioner(command, None, True) == 0:
                 return "Failed to install python-software-properties"
