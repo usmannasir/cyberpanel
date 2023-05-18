@@ -1603,6 +1603,18 @@ def main():
 
         ServerStatusUtil.switchTOLSWSCLI(args.licenseKey)
 
+    else:
+        parser.print_help()
+        print(f"\nUnknown function: {args.function}\n")
+        print("Available functions:\n")
+
+        allowed_functions = parser.getAllowedFunctions()
+
+        for category, funcs in allowed_functions.items():
+            print(f"{category}:")
+            for function in funcs:
+                print(f"\t{function}")
+            print()
 
 if __name__ == "__main__":
     main()
