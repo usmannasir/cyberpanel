@@ -573,7 +573,7 @@ class ApacheVhost:
 
     @staticmethod
     def DecidePHPPathforManager(apache, phpVers):
-        if apache == 0:
+        if apache == 0 or apache == None:
             phpVers = "php" + PHPManager.getPHPString(phpVers)
             if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 path = "/usr/local/lsws/ls" + phpVers + "/etc/php.ini"
