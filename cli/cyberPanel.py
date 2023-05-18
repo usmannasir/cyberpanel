@@ -30,10 +30,15 @@ from plogical.backupSchedule import backupSchedule
 # All that we see or seem is but a dream within a dream.
 
 def get_cyberpanel_version():
-    with open('/usr/local/CyberCP/version.txt') as version:
-        version_file = version.read()
-        version = json.loads(str(version_file))
-    return f"{version['version']}.{version['build']}"
+    with open('/usr/local/CyberCP/version.txt') as file:
+        content = file.read()
+        try:
+            data = json.loads(content)
+            version = data['version']
+            build = data['build']
+        except json.JSONDecodeError:
+            version, build = content.split()           
+    return f"{version}.{build}"
 
 
 class cyberPanel:
