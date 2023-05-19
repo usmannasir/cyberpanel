@@ -4637,17 +4637,28 @@ StrictHostKeyChecking no
 
             phpPath = phpPath.split('/')
 
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.CyberCPLogFileWriter.writeToFile(f'PHP path in tune settings {phpPath}')
+
             if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
                 if phpPath[1] == 'etc':
                     phpVersion = phpPath[4][3] + phpPath[4][4]
+                    phpVersion = f'PHP {phpPath[4][3]}.{phpPath[4][4]}'
                 else:
                     phpVersion = phpPath[3][3] + phpPath[3][4]
+                    phpVersion = f'PHP {phpPath[3][3]}.{phpPath[3][4]}'
             else:
                 phpVersion = f'PHP {phpPath[2]}'
 
-            php = PHPManager.getPHPString(phpVersion)
+            #php = PHPManager.getPHPString(phpVersion)
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.CyberCPLogFileWriter.writeToFile(f'PHP Version in tune settings {phpVersion}')
 
             phpService = ApacheVhost.DecideFPMServiceName(phpVersion)
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.CyberCPLogFileWriter.writeToFile(f'PHP service in tune settings {phpService}')
 
             command = f"systemctl stop {phpService}"
             ProcessUtilities.normalExecutioner(command)
