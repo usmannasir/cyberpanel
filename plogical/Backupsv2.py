@@ -119,9 +119,9 @@ class CPBackupsV2(multi.Thread):
         ## Set up the repo name to be used
 
         if self.data['BackendName'] != 'local':
-            self.repo = f"rclone:{self.data['BackendName']}:{self.data['domain']}"
+            self.repo = f"rclone:'{self.data['BackendName']}':{self.data['domain']}"
         else:
-            self.repo = f"rclone:{self.data['BackendName']}:/home/{self.data['domain']}/incrementalbackups"
+            self.repo = f"rclone:'{self.data['BackendName']}':/home/{self.data['domain']}/incrementalbackups"
 
         ### This will contain list of all snapshots id generated and it will be merged
 

@@ -901,7 +901,7 @@ def selectwebsiteRetorev2(request):
         else:
             return ACLManager.loadError()
 
-        obj = Websites.objects.get(domain = str(Selectedwebsite), admin = admin)
+        obj = Websites.objects.get(domain = str(Selectedwebsite))
         #/home/cyberpanel.net/.config/rclone/rclone.conf
         path = '/home/%s/.config/rclone/rclone.conf' %(obj.domain)
 
