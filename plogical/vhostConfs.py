@@ -264,8 +264,8 @@ context /.well-known/acme-challenge {
 
          SSLEngine on
          SSLVerifyClient none
-         SSLCertificateFile {SSLBase}{virtualHostName}.fullchain.pem
-         SSLCertificateKeyFile {SSLBase}{virtualHostName}.privkey.pem
+         SSLCertificateFile {SSLBase}.fullchain.pem
+         SSLCertificateKeyFile {SSLBase}.privkey.pem
 
 </VirtualHost>
 """
@@ -318,8 +318,8 @@ context /.well-known/acme-challenge {
         </Directory>
         SSLEngine on
         SSLVerifyClient none
-        SSLCertificateFile {SSLBase}{virtualHostName}.fullchain.pem
-        SSLCertificateKeyFile {SSLBase}{virtualHostName}.privkey.pem
+        SSLCertificateFile {SSLBase}.fullchain.pem
+        SSLCertificateKeyFile {SSLBase}.privkey.pem
 
 </VirtualHost>
 """

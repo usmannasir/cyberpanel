@@ -137,8 +137,8 @@ class ApacheVhost:
         else:
             os.mkdir(ApacheVhost.sslBasePath)
 
-        pathToStoreSSLPrivKey = ApacheVhost.sslBasePath + virtualHostName + ".privkey.pem"
-        pathToStoreSSLFullChain = ApacheVhost.sslBasePath + virtualHostName + ".fullchain.pem"
+        pathToStoreSSLPrivKey = ApacheVhost.sslBasePath + ".privkey.pem"
+        pathToStoreSSLFullChain = ApacheVhost.sslBasePath + ".fullchain.pem"
         command = 'openssl req -newkey rsa:2048 -new -nodes -x509 -days 3650 -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=www.example.com" -keyout ' + pathToStoreSSLPrivKey + ' -out ' + pathToStoreSSLFullChain
         ProcessUtilities.normalExecutioner(command)
 
