@@ -72,7 +72,7 @@ class CPBackupsV2(multi.Thread):
 
                 new_Acess_token = self.refresh_V2Gdive_token(refreshToken)
 
-                command = f"""rclone config update {reponame} token '{{"access_token":"{new_Acess_token}","token_type":"Bearer","refresh_token":"{refreshToken}","expiry":"2024-04-08T21:53:00.123456789Z"}}' --non-interactive"""
+                command = f"""rclone config update '{reponame}' token '{{"access_token":"{new_Acess_token}","token_type":"Bearer","refresh_token":"{refreshToken}","expiry":"2024-04-08T21:53:00.123456789Z"}}' --non-interactive"""
                 result = ProcessUtilities.outputExecutioner(command, self.website.externalApp, True)
 
                 if os.path.exists(ProcessUtilities.debugPath):
