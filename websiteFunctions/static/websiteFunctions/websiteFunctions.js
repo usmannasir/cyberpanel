@@ -512,21 +512,26 @@ function DeployToProductionInitial(vall) {
 var create_staging_domain_check = 0;
 
 function create_staging_checkbox_function() {
+    
+    try {
 
-    var checkBox = document.getElementById("Create_Staging_Check");
-    // Get the output text
+        var checkBox = document.getElementById("Create_Staging_Check");
+        // Get the output text
 
 
-    // If the checkbox is checked, display the output text
-    if (checkBox.checked == true) {
-        create_staging_domain_check = 0;
-        document.getElementById('Website_Create_Test_Domain').style.display = "block";
-        document.getElementById('Website_Create_Own_Domain').style.display = "none";
+        // If the checkbox is checked, display the output text
+        if (checkBox.checked == true) {
+            create_staging_domain_check = 0;
+            document.getElementById('Website_Create_Test_Domain').style.display = "block";
+            document.getElementById('Website_Create_Own_Domain').style.display = "none";
 
-    } else {
-        document.getElementById('Website_Create_Test_Domain').style.display = "none";
-        document.getElementById('Website_Create_Own_Domain').style.display = "block";
-        create_staging_domain_check = 1;
+        } else {
+            document.getElementById('Website_Create_Test_Domain').style.display = "none";
+            document.getElementById('Website_Create_Own_Domain').style.display = "block";
+            create_staging_domain_check = 1;
+        }
+    }catch (e) {
+        
     }
 
     // alert(domain_check);
