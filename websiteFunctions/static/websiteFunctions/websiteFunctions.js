@@ -305,14 +305,16 @@ app.controller('createWordpress', function ($scope, $http, $timeout, $compile, $
         var websiteOwner = $scope.websiteOwner;
         var WPtitle = $scope.WPtitle;
 
-        if (domain_check == 0) {
-            var Part2_domainNameCreate = document.getElementById('Part2_domainNameCreate').value;
-            var domainNameCreate = document.getElementById('TestDomainNameCreate').value + Part2_domainNameCreate;
-        }
-        if (domain_check == 1) {
+        // if (domain_check == 0) {
+        //     var Part2_domainNameCreate = document.getElementById('Part2_domainNameCreate').value;
+        //     var domainNameCreate = document.getElementById('TestDomainNameCreate').value + Part2_domainNameCreate;
+        // }
+        // if (domain_check == 1) {
+        //
+        //     var domainNameCreate = $scope.own_domainNameCreate;
+        // }
 
-            var domainNameCreate = $scope.own_domainNameCreate;
-        }
+        var domainNameCreate = $scope.domainNameCreate;
 
 
         var WPUsername = $scope.WPUsername;
@@ -529,6 +531,8 @@ function create_staging_checkbox_function() {
 
     // alert(domain_check);
 }
+
+create_staging_checkbox_function();
 
 app.controller('WPsiteHome', function ($scope, $http, $timeout, $compile, $window) {
 
@@ -2442,14 +2446,15 @@ app.controller('createWebsite', function ($scope, $http, $timeout, $window) {
 
         var package = $scope.packageForWebsite;
 
-        if (website_create_domain_check == 0) {
-            var Part2_domainNameCreate = document.getElementById('Part2_domainNameCreate').value;
-            var domainName = document.getElementById('TestDomainNameCreate').value + Part2_domainNameCreate;
-        }
-        if (website_create_domain_check == 1) {
-
-            var domainName = $scope.own_domainNameCreate;
-        }
+        // if (website_create_domain_check == 0) {
+        //     var Part2_domainNameCreate = document.getElementById('Part2_domainNameCreate').value;
+        //     var domainName = document.getElementById('TestDomainNameCreate').value + Part2_domainNameCreate;
+        // }
+        // if (website_create_domain_check == 1) {
+        //
+        //     var domainName = $scope.domainNameCreate;
+        // }
+        var domainName = $scope.domainNameCreate;
 
         // var domainName = $scope.domainNameCreate;
 
@@ -4557,15 +4562,15 @@ app.controller('websitePages', function ($scope, $http, $timeout, $window) {
         }
         var package = $scope.packageForWebsite;
 
-        if (website_child_domain_check == 0) {
-            var Part2_domainNameCreate = document.getElementById('Part2_domainNameCreate').value;
-            var domainName = document.getElementById('TestDomainNameCreate').value + Part2_domainNameCreate;
-        }
-        if (website_child_domain_check == 1) {
-
-            var domainName = $scope.own_domainNameCreate;
-        }
-
+        // if (website_child_domain_check == 0) {
+        //     var Part2_domainNameCreate = document.getElementById('Part2_domainNameCreate').value;
+        //     var domainName = document.getElementById('TestDomainNameCreate').value + Part2_domainNameCreate;
+        // }
+        // if (website_child_domain_check == 1) {
+        //
+        //     var domainName = $scope.own_domainNameCreate;
+        // }
+        var domainName = $scope.domainNameCreate;
 
         var data = {
             domainName: domainName,

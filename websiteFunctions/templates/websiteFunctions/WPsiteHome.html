@@ -393,16 +393,16 @@
                                 <div ng-hide="stagingDetailsForm" class="form-group">
 
                                     <div ng-hide="installationDetailsForm" class="form-group">
-                                        <label class="col-sm-2 control-label" style="margin-top: 10px"
-                                               style="margin-bottom: 15px">{% trans "Test Domain" %}</label>
-                                        <label class="switch ">
-                                            <input type="checkbox" checked id="Create_Staging_Check"
+                                        <label class="col-sm-2 control-label" style="margin-top: 10px; display: none"
+                                               style="margin-bottom: 15px; display: none">{% trans "Test Domain" %}</label>
+                                        <label style="display: none" class="switch ">
+                                            <input type="checkbox" id="Create_Staging_Check"
                                                    onclick="create_staging_checkbox_function()"
                                                    style="margin-top: 10px">
                                             <span class="slider"></span>
                                         </label>
 
-                                        <label id="help">
+                                        <label style=" display: none" id="help">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25"
                                                  style="padding-top: 10px"
                                                  preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24">
@@ -487,8 +487,8 @@
 
                                     </div>
                                 </div>
-{#                                end my work#}
-                                <div ng-hide="stagingDetailsForm" class="center-div mt-5 " >
+                                {#                                end my work#}
+                                <div ng-hide="stagingDetailsForm" class="center-div mt-5 ">
                                     <button ng-click="CreateStagingNow()"
                                             style="margin-bottom: 2%!important;margin-top: 50px"
                                             class="btn btn-alt btn-hover btn-blue-alt">

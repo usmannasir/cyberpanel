@@ -140,95 +140,11 @@
                         {#                    My Work    .    #}
 
                         <div ng-hide="DomainCreateForm" class="form-group">
-                            <label class="col-sm-3 control-label"
-                                   style="margin-bottom: 15px">{% trans "Test Domain" %}</label>
-                            <label class="switch my-3">
-                                <input type="checkbox" checked id="myCheck"
-                                       onclick="website_child_domain_checkbox_function()"
-                                       style="margin-top: 10px">
-                                <span class="slider"></span>
-                            </label>
-
-                            <label id="help">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" style="padding-top: 10px"
-                                     preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24">
-                                    <path fill="currentColor"
-                                          d="M12 6a3.939 3.939 0 0 0-3.934 3.934h2C10.066 8.867 10.934 8 12 8s1.934.867 1.934 1.934c0 .598-.481 1.032-1.216 1.626a9.208 9.208 0 0 0-.691.599c-.998.997-1.027 2.056-1.027 2.174V15h2l-.001-.633c.001-.016.033-.386.441-.793c.15-.15.339-.3.535-.458c.779-.631 1.958-1.584 1.958-3.182A3.937 3.937 0 0 0 12 6zm-1 10h2v2h-2z"/>
-                                    <path fill="currentColor"
-                                          d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10s10-4.486 10-10S17.514 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8s8 3.589 8 8s-3.589 8-8 8z"/>
-                                </svg>
-
-                            </label>
-                            <label class="help_test_domain">
-                                The test domain allows you to deploy websites without the need to add DNS records, it
-                                allows you to create staging environments, deploy test websites, and much more...
-
-                            </label>
-                            <br><br>
-
-
-                            <div id="Website_Create_Test_Domain" class="tabcontent"
-                                 style="border: none;margin-left: 10px">
-                                <div ng-hide="DomainCreateForm" class="form-group"
-                                     ng-if="{{ test_domain_data }} == 1 ">
-                                    <label class="col-sm-3 control-label">{% trans "Domain Name" %}</label>
-                                    <div class="col-sm-6">
-                                        <div class="input-group bootstrap-touchspin">
-                                    <span
-                                            class="input-group-addon bootstrap-touchspin-prefix"
-                                            style="display: none;"></span>
-                                            <input id="TestDomainNameCreate"
-                                                   class="form-control"
-                                                   type="text" value=""
-                                                   name="touchspin-demo-1"
-                                                   style="display: block;"
-                                                   placeholder="{% trans "Enter Subdomain Here" %}">
-
-                                            <span style="width: 48%" class="input-group-btn">
-                                        <input id="Part2_domainNameCreate" class="form-control"
-                                               type="text" name="Part2_domainNameCreate"
-                                               style="display: block;color: black;font-weight: bold;color: black;opacity: 1"
-                                               placeholder=".{{ Randam_String }}.cyberpanel.website"
-                                               value=".{{ Randam_String }}.cyberpanel.website" readonly></span>
-                                        </div>
-                                    </div>
-                                    <div ng-show="websiteCreationForm.dom.$error.pattern"
-                                         class="current-pack">{% trans "Invalid Domain (Note: You don't need to add 'http' or 'https')" %}</div>
-                                </div>
-                                <div ng-if="{{ test_domain_data }} == 0 ">
-                                    <center>Looks like you have not subscribed to temporary domain feature, <a
-                                            href="https://go.cyberpanel.net/TempDomain">click here</a>
-                                        for more details.
-                                    </center>
-                                </div>
+                            <label class="col-sm-3 control-label">{% trans "Domain Name" %}</label>
+                            <div class="col-sm-6">
+                                <input name="dom" type="text" class="form-control"
+                                       ng-model="domainNameCreate" required>
                             </div>
-
-                            <div id="Website_Create_Own_Domain" class="tabcontent"
-                                 style="border: none;display: none;margin-left: 10px">
-
-                                <div ng-hide="DomainCreateForm" class="form-group">
-                                    <label class="col-sm-3 control-label">{% trans "Domain Name" %}</label>
-                                    <div class="col-sm-6">
-                                        <div class="input-group bootstrap-touchspin">
-                                    <span
-                                            class="input-group-addon bootstrap-touchspin-prefix"
-                                            style="display: none;"></span>
-                                            <input ng-model="own_domainNameCreate" id="touchspin-demo-1"
-                                                   class="form-control"
-                                                   type="text" value=""
-                                                   name="touchspin-demo-1"
-                                                   style="display: block;"
-                                                   placeholder="{% trans "Do not enter WWW, it will be auto created!" %}">
-
-                                            <span style="width: 25%" class="input-group-btn">
-                                       </span></div>
-                                    </div>
-                                    <div ng-show="websiteCreationForm.dom.$error.pattern"
-                                         class="current-pack">{% trans "Invalid Domain (Note: You don't need to add 'http' or 'https')" %}</div>
-                                </div>
-                            </div>
-
-
                         </div>
                         <div ng-hide="DomainCreateForm" class="form-group">
                             <label class="col-sm-3 control-label">{% trans "Path" %}: /home/{$ masterDomain
