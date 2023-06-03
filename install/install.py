@@ -1551,11 +1551,36 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             lscpdPath = '/usr/local/lscp/bin/lscpd'
 
-            lscpdSelection = 'lscpd-0.3.1'
-            if os.path.exists('/etc/lsb-release'):
-                result = open('/etc/lsb-release', 'r').read()
-                if result.find('22.04') > -1:
-                    lscpdSelection = 'lscpd.0.4.0'
+            # if subprocess.check_output('uname -a').decode("utf-8").find("aarch64") == -1:
+            #     lscpdPath = '/usr/local/lscp/bin/lscpd'
+            #
+            #     lscpdSelection = 'lscpd-0.3.1'
+            #     if os.path.exists('/etc/lsb-release'):
+            #         result = open('/etc/lsb-release', 'r').read()
+            #         if result.find('22.04') > -1:
+            #             lscpdSelection = 'lscpd.0.4.0'
+            # else:
+            #     lscpdSelection = 'lscpd.aarch64'
+
+            try:
+                result = subprocess.run('uname -a', capture_output=True, text=True, shell=True)
+
+                if result.stdout.find('aarch64') == -1:
+                    lscpdSelection = 'lscpd-0.3.1'
+                    if os.path.exists('/etc/lsb-release'):
+                        result = open('/etc/lsb-release', 'r').read()
+                        if result.find('22.04') > -1:
+                            lscpdSelection = 'lscpd.0.4.0'
+                else:
+                    lscpdSelection = 'lscpd.aarch64'
+
+            except:
+
+                lscpdSelection = 'lscpd-0.3.1'
+                if os.path.exists('/etc/lsb-release'):
+                    result = open('/etc/lsb-release', 'r').read()
+                    if result.find('22.04') > -1:
+                        lscpdSelection = 'lscpd.0.4.0'
 
 
             command = f'cp -f /usr/local/CyberCP/{lscpdSelection} /usr/local/lscp/bin/{lscpdSelection}'
