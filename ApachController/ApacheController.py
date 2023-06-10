@@ -181,7 +181,7 @@ LoadModule mpm_event_module modules/mod_mpm_event.so
                 if ProcessUtilities.executioner(command, None, True) == 0:
                     return "Apache run apache2-suexec-pristine"
 
-                command = 'a2enmod suexec proxy ssl proxy_fcgi proxy rewrite'
+                command = 'a2enmod suexec proxy ssl proxy_fcgi proxy rewrite headers'
                 if ProcessUtilities.executioner(command, None, True) == 0:
                     return "Apache run suexec proxy ssl"
 
