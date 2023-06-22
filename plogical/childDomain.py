@@ -23,17 +23,20 @@ class ChildDomainManager:
         checker = 0
 
         for items in childDomains:
-            dic = {
-                'childDomain': items.domain,
-                'path': items.path,
-                'childLunch': '/websites/' + self.masterDomain + '/' + items.domain
-            }
-
-            if checker == 0:
-                json_data = json_data + json.dumps(dic)
-                checker = 1
+            if items.domain == f'mail.{master.domain}':
+                pass
             else:
-                json_data = json_data + ',' + json.dumps(dic)
+                dic = {
+                    'childDomain': items.domain,
+                    'path': items.path,
+                    'childLunch': '/websites/' + self.masterDomain + '/' + items.domain
+                }
+
+                if checker == 0:
+                    json_data = json_data + json.dumps(dic)
+                    checker = 1
+                else:
+                    json_data = json_data + ',' + json.dumps(dic)
 
         json_data = json_data + ']'
 

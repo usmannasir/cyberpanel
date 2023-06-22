@@ -2382,7 +2382,10 @@ class WebsiteManager:
 
             for web in websites:
                 for child in web.childdomains_set.all():
-                    childDomains.append(child)
+                    if child.domain == f'mail.{web.domain}':
+                        pass
+                    else:
+                        childDomains.append(child)
 
             pagination = self.getPagination(len(childDomains), recordsToShow)
             json_data = self.findChildsListJson(childDomains[finalPageNumber:endPageNumber])
