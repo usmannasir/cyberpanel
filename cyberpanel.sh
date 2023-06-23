@@ -1040,6 +1040,10 @@ else
   DEBIAN_FRONTEND=noninteractive apt install -y python3-venv
     Check_Return
 
+  DEBIAN_FRONTEND=noninteractive apt install -y cron inetutils-ping
+    Check_Return
+# Oracle Ubuntu ARM misses ping and cron 
+
   DEBIAN_FRONTEND=noninteractive apt install -y locales
   locale-gen "en_US.UTF-8"
   update-locale LC_ALL="en_US.UTF-8"
