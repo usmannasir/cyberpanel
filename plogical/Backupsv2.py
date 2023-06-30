@@ -50,6 +50,8 @@ class CPBackupsV2(multi.Thread):
         except:
             pass
 
+        statusRes, message = self.InstallRustic()
+
         ### set self.website as it is needed in many functions
         from websiteFunctions.models import Websites
         self.website = Websites.objects.get(domain=self.data['domain'])
