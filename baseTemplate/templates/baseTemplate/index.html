@@ -448,10 +448,10 @@
                                            title="{% trans 'List Websites' %}"><span>{% trans "List Websites" %}</span></a>
                                     </li>
                                     <li><a href="{% url 'CreateNewDomain' %}"
-                                           title="{% trans 'Create New Domain' %}"><span>{% trans "Create New Domain" %}</span></a>
+                                           title="{% trans 'Create Sub-Domain' %}"><span>{% trans "Create Sub-Domain" %}</span></a>
                                     </li>
                                     <li><a href="{% url 'listChildDomains' %}"
-                                           title="{% trans 'List Domains' %}"><span>{% trans "List Domains" %}</span></a>
+                                           title="{% trans 'List Sub-Domains' %}"><span>{% trans "List Sub-Domains" %}</span></a>
                                     </li>
                                     {% if admin or modifyWebsite %}
                                         <li><a href="{% url 'modifyWebsite' %}"
