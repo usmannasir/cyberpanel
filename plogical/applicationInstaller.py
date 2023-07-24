@@ -1692,7 +1692,7 @@ $parameters = array(
 
             DataToPass['domainName'] = self.data['domainName']
             DataToPass['adminEmail'] = self.data['adminEmail']
-            DataToPass['phpSelection'] = "PHP 7.4"
+            DataToPass['phpSelection'] = "PHP 8.0"
             DataToPass['websiteOwner'] = self.data['websiteOwner']
             DataToPass['package'] = self.data['package']
             DataToPass['ssl'] = 1
@@ -1706,7 +1706,7 @@ $parameters = array(
                 website = Websites.objects.get(domain=DataToPass['domainName'])
 
                 if website.phpSelection == 'PHP 7.3':
-                    website.phpSelection = 'PHP 7.4'
+                    website.phpSelection = 'PHP 8.0'
                     website.save()
 
                 if ACLManager.checkOwnership(website.domain, self.extraArgs['adminID'],
