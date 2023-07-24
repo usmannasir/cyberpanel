@@ -513,7 +513,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             command = f'wget -O /usr/local/CyberCP/snappymail_cyberpanel.php  https://raw.githubusercontent.com/the-djmaze/snappymail/master/integrations/cyberpanel/install.php'
             Upgrade.executioner(command, 'verify certificate', 0)
 
-            command = f'/usr/local/lsws/lsphp74/bin/php /usr/local/CyberCP/snappymail_cyberpanel.php'
+            command = f'/usr/local/lsws/lsphp80/bin/php /usr/local/CyberCP/snappymail_cyberpanel.php'
             Upgrade.executioner(command, 'verify certificate', 0)
 
             # labsPath = '/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/application.ini'
@@ -3021,7 +3021,7 @@ vmail
         except:
             pass
 
-        command = 'cp /usr/local/lsws/lsphp74/bin/lsphp %s' % (phpPath)
+        command = 'cp /usr/local/lsws/lsphp80/bin/lsphp %s' % (phpPath)
         Upgrade.executioner(command, 0)
 
         try:

@@ -301,6 +301,14 @@ app.controller('createWordpress', function ($scope, $http, $timeout, $compile, $
 
         $scope.currentStatus = "Starting creation..";
 
+        var apacheBackend = 0;
+
+        if ($scope.apacheBackend === true) {
+            apacheBackend = 1;
+        } else {
+            apacheBackend = 0
+        }
+
         var package = $scope.packageForWebsite;
         var websiteOwner = $scope.websiteOwner;
         var WPtitle = $scope.WPtitle;
@@ -361,6 +369,7 @@ app.controller('createWordpress', function ($scope, $http, $timeout, $compile, $
             package: package,
             home: home,
             path: path,
+            apacheBackend: apacheBackend
         }
 
         var config = {
@@ -512,7 +521,7 @@ function DeployToProductionInitial(vall) {
 var create_staging_domain_check = 0;
 
 function create_staging_checkbox_function() {
-    
+
     try {
 
         var checkBox = document.getElementById("Create_Staging_Check");
@@ -530,8 +539,8 @@ function create_staging_checkbox_function() {
             document.getElementById('Website_Create_Own_Domain').style.display = "block";
             create_staging_domain_check = 1;
         }
-    }catch (e) {
-        
+    } catch (e) {
+
     }
 
     // alert(domain_check);

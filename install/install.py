@@ -1403,7 +1403,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             command = f'wget -O /usr/local/CyberCP/snappymail_cyberpanel.php  https://raw.githubusercontent.com/the-djmaze/snappymail/master/integrations/cyberpanel/install.php'
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-            command = f'/usr/local/lsws/lsphp74/bin/php /usr/local/CyberCP/snappymail_cyberpanel.php'
+            command = f'/usr/local/lsws/lsphp80/bin/php /usr/local/CyberCP/snappymail_cyberpanel.php'
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
 
@@ -1602,7 +1602,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             try:
                 os.remove("/usr/local/lscp/fcgi-bin/lsphp")
-                shutil.copy("/usr/local/lsws/lsphp74/bin/lsphp", "/usr/local/lscp/fcgi-bin/lsphp")
+                shutil.copy("/usr/local/lsws/lsphp80/bin/lsphp", "/usr/local/lscp/fcgi-bin/lsphp")
             except:
                 pass
 

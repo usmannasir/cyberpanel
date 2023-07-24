@@ -2065,6 +2065,7 @@ class WebsiteManager:
             extraArgs['websiteOwner'] = data['websiteOwner']
             extraArgs['package'] = data['package']
             extraArgs['home'] = data['home']
+            extraArgs['apacheBackend'] = data['apacheBackend']
             try:
                 extraArgs['path'] = data['path']
                 if extraArgs['path'] == '':
@@ -6447,7 +6448,12 @@ StrictHostKeyChecking no
 
         phps = PHPManager.findPHPVersions()
 
-        proc = httpProc(request, 'websiteFunctions/ApacheManager.html', {'domainName': self.domain, 'phps': phps})
+        if ACLManager.CheckForPremFeature('all'):
+            apachemanager = 1
+        else:
+            apachemanager = 0
+
+        proc = httpProc(request, 'websiteFunctions/ApacheManager.html', {'domainName': self.domain, 'phps': phps, 'apachemanager':apachemanager})
         return proc.render()
 
     def saveApacheConfigsToFile(self, userID=None, data=None):
