@@ -166,6 +166,8 @@ app.controller('backupWebsiteControl', function ($scope, $http, $timeout) {
 
     $scope.createBackup = function () {
 
+        var createBackupButton = document.getElementById("createBackup");
+        createBackupButton.disabled = true;
         var websiteToBeBacked = $scope.websiteToBeBacked;
         $scope.backupLoading = false;
 
@@ -182,7 +184,7 @@ app.controller('backupWebsiteControl', function ($scope, $http, $timeout) {
             }
         };
 
-
+        // console.log("-------------------")
         $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
 
 
@@ -191,11 +193,13 @@ app.controller('backupWebsiteControl', function ($scope, $http, $timeout) {
 
             if (response.data.metaStatus === 1) {
                 getBackupStatus();
+                createBackupButton.disabled = false;
             }
 
         }
 
         function cantLoadInitialDatas(response) {
+            createBackupButton.disabled = false;
         }
 
     };
@@ -328,6 +332,8 @@ app.controller('restoreWebsiteControl', function ($scope, $http, $timeout) {
 
 
     $scope.restoreBackup = function () {
+        var restoreBackupButton = document.getElementById("restoreBackup");
+        restoreBackupButton.disabled = true;
         var backupFile = $scope.backupFile;
         $scope.running = "Lets start.."
 
@@ -357,17 +363,19 @@ app.controller('restoreWebsiteControl', function ($scope, $http, $timeout) {
                 $scope.status = "Just Started..";
 
                 getRestoreStatus();
+                restoreBackupButton.disabled = false;
             }
             else {
                 $scope.backupError = false;
                 $scope.errorMessage = response.data.error_message;
+                 restoreBackupButton.disabled = false;
             }
 
         }
 
         function cantLoadInitialDatas(response) {
             $scope.couldNotConnect = false;
-
+             restoreBackupButton.disabled = false;
         }
 
     };
