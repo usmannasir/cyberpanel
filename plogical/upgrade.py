@@ -3046,15 +3046,15 @@ vmail
         #     command = "yum reinstall imunify360-firewall-generic -y"
         #     Upgrade.executioner(command, command, 1)
         #
-        # imunifyAVPath = '/etc/sysconfig/imunify360/integration.conf'
-        #
-        # if os.path.exists(imunifyAVPath):
-        #     execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/CLManager/CageFS.py"
-        #     command = execPath + " --function submitinstallImunifyAV"
-        #     Upgrade.executioner(command, command, 1)
-        #
-        #     command = 'chmod +x /usr/local/CyberCP/public/imunifyav/bin/execute.py'
-        #     Upgrade.executioner(command, command, 1)
+        imunifyAVPath = '/etc/sysconfig/imunify360/integration.conf'
+
+        if os.path.exists(imunifyAVPath):
+            execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/CLManager/CageFS.py"
+            command = execPath + " --function submitinstallImunifyAV"
+            Upgrade.executioner(command, command, 1)
+
+            command = 'chmod +x /usr/local/CyberCP/public/imunifyav/bin/execute.py'
+            Upgrade.executioner(command, command, 1)
 
         Upgrade.stdOut("Upgrade Completed.")
 
