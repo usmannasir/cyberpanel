@@ -3054,7 +3054,7 @@ vmail
             Upgrade.executioner(command, command, 1)
 
             command = 'chmod +x /usr/local/CyberCP/public/imunifyav/bin/execute.py'
-        #     Upgrade.executioner(command, command, 1)
+            Upgrade.executioner(command, command, 1)
 
         Upgrade.stdOut("Upgrade Completed.")
 
