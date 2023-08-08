@@ -518,7 +518,6 @@ class MailServerManager(multi.Thread):
             else:
                 return ACLManager.loadErrorJson()
             try:
-
                 emailDomain = Domains.objects.get(domain=selectedDomain)
             except:
                 raise BaseException('No emails exist for this domain.')

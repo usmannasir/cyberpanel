@@ -38,7 +38,7 @@ class Upgrade:
     UbuntuPath = '/etc/lsb-release'
     openEulerPath = '/etc/openEuler-release'
     FromCloud = 0
-    SnappyVersion = '2.25.3'
+    SnappyVersion = '2.28.1'
 
     AdminACL = '{"adminStatus":1, "versionManagement": 1, "createNewUser": 1, "listUsers": 1, "deleteUser":1 , "resellerCenter": 1, ' \
                '"changeUserACL": 1, "createWebsite": 1, "modifyWebsite": 1, "suspendWebsite": 1, "deleteWebsite": 1, ' \
@@ -513,7 +513,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             command = f'wget -O /usr/local/CyberCP/snappymail_cyberpanel.php  https://raw.githubusercontent.com/the-djmaze/snappymail/master/integrations/cyberpanel/install.php'
             Upgrade.executioner(command, 'verify certificate', 0)
 
-            command = f'/usr/local/lsws/lsphp74/bin/php /usr/local/CyberCP/snappymail_cyberpanel.php'
+            command = f'/usr/local/lsws/lsphp80/bin/php /usr/local/CyberCP/snappymail_cyberpanel.php'
             Upgrade.executioner(command, 'verify certificate', 0)
 
             # labsPath = '/usr/local/lscp/cyberpanel/rainloop/data/_data_/_default_/configs/application.ini'
@@ -2161,11 +2161,26 @@ CREATE TABLE `websiteFunctions_backupsv2` (`id` integer AUTO_INCREMENT NOT NULL 
             if os.path.exists(lscpdPath):
                 os.remove(lscpdPath)
 
-            lscpdSelection = 'lscpd-0.3.1'
-            if os.path.exists(Upgrade.UbuntuPath):
-                result = open(Upgrade.UbuntuPath, 'r').read()
-                if result.find('22.04') > -1:
-                    lscpdSelection = 'lscpd.0.4.0'
+
+            try:
+                result = subprocess.run('uname -a', capture_output=True, text=True, shell=True)
+
+                if result.stdout.find('aarch64') == -1:
+                    lscpdSelection = 'lscpd-0.3.1'
+                    if os.path.exists(Upgrade.UbuntuPath):
+                        result = open(Upgrade.UbuntuPath, 'r').read()
+                        if result.find('22.04') > -1:
+                            lscpdSelection = 'lscpd.0.4.0'
+                else:
+                    lscpdSelection = 'lscpd.aarch64'
+
+            except:
+
+                lscpdSelection = 'lscpd-0.3.1'
+                if os.path.exists(Upgrade.UbuntuPath):
+                    result = open(Upgrade.UbuntuPath, 'r').read()
+                    if result.find('22.04') > -1:
+                        lscpdSelection = 'lscpd.0.4.0'
 
             command = f'cp -f /usr/local/CyberCP/{lscpdSelection} /usr/local/lscp/bin/{lscpdSelection}'
             Upgrade.executioner(command, command, 0)
@@ -3006,7 +3021,7 @@ vmail
         except:
             pass
 
-        command = 'cp /usr/local/lsws/lsphp74/bin/lsphp %s' % (phpPath)
+        command = 'cp /usr/local/lsws/lsphp80/bin/lsphp %s' % (phpPath)
         Upgrade.executioner(command, 0)
 
         try:

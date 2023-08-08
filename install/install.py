@@ -102,7 +102,7 @@ class preFlightsChecks:
     debug = 1
     cyberPanelMirror = "mirror.cyberpanel.net/pip"
     cdn = 'cyberpanel.sh'
-    SnappyVersion = '2.25.3'
+    SnappyVersion = '2.28.1'
 
     def __init__(self, rootPath, ip, path, cwd, cyberPanelPath, distro, remotemysql=None, mysqlhost=None, mysqldb=None,
                  mysqluser=None, mysqlpassword=None, mysqlport=None):
@@ -1403,7 +1403,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
             command = f'wget -O /usr/local/CyberCP/snappymail_cyberpanel.php  https://raw.githubusercontent.com/the-djmaze/snappymail/master/integrations/cyberpanel/install.php'
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
-            command = f'/usr/local/lsws/lsphp74/bin/php /usr/local/CyberCP/snappymail_cyberpanel.php'
+            command = f'/usr/local/lsws/lsphp80/bin/php /usr/local/CyberCP/snappymail_cyberpanel.php'
             preFlightsChecks.call(command, self.distro, command, command, 1, 0, os.EX_OSERR)
 
 
@@ -1551,11 +1551,36 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             lscpdPath = '/usr/local/lscp/bin/lscpd'
 
-            lscpdSelection = 'lscpd-0.3.1'
-            if os.path.exists('/etc/lsb-release'):
-                result = open('/etc/lsb-release', 'r').read()
-                if result.find('22.04') > -1:
-                    lscpdSelection = 'lscpd.0.4.0'
+            # if subprocess.check_output('uname -a').decode("utf-8").find("aarch64") == -1:
+            #     lscpdPath = '/usr/local/lscp/bin/lscpd'
+            #
+            #     lscpdSelection = 'lscpd-0.3.1'
+            #     if os.path.exists('/etc/lsb-release'):
+            #         result = open('/etc/lsb-release', 'r').read()
+            #         if result.find('22.04') > -1:
+            #             lscpdSelection = 'lscpd.0.4.0'
+            # else:
+            #     lscpdSelection = 'lscpd.aarch64'
+
+            try:
+                result = subprocess.run('uname -a', capture_output=True, text=True, shell=True)
+
+                if result.stdout.find('aarch64') == -1:
+                    lscpdSelection = 'lscpd-0.3.1'
+                    if os.path.exists('/etc/lsb-release'):
+                        result = open('/etc/lsb-release', 'r').read()
+                        if result.find('22.04') > -1:
+                            lscpdSelection = 'lscpd.0.4.0'
+                else:
+                    lscpdSelection = 'lscpd.aarch64'
+
+            except:
+
+                lscpdSelection = 'lscpd-0.3.1'
+                if os.path.exists('/etc/lsb-release'):
+                    result = open('/etc/lsb-release', 'r').read()
+                    if result.find('22.04') > -1:
+                        lscpdSelection = 'lscpd.0.4.0'
 
 
             command = f'cp -f /usr/local/CyberCP/{lscpdSelection} /usr/local/lscp/bin/{lscpdSelection}'
@@ -1577,7 +1602,7 @@ $cfg['Servers'][$i]['LogoutURL'] = 'phpmyadminsignin.php?logout';
 
             try:
                 os.remove("/usr/local/lscp/fcgi-bin/lsphp")
-                shutil.copy("/usr/local/lsws/lsphp74/bin/lsphp", "/usr/local/lscp/fcgi-bin/lsphp")
+                shutil.copy("/usr/local/lsws/lsphp80/bin/lsphp", "/usr/local/lscp/fcgi-bin/lsphp")
             except:
                 pass
 

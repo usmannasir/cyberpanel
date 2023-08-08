@@ -209,7 +209,8 @@ class FileManager:
                 try:
                     currentFile = items.split(' ')
                     currentFile = [a for a in currentFile if a != '']
-                    if currentFile[-1] == '.' or currentFile[-1] == '..' or currentFile[0] == 'total':
+
+                    if currentFile[-1] == '.' or currentFile[-1] == '..' or currentFile[0] == 'total' or currentFile[-1].startswith('mail.'):
                         continue
 
                     if len(currentFile) > 9:

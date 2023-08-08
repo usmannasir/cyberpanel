@@ -438,7 +438,7 @@ class sslUtilities:
                 try:
                     command = acmePath + f" --issue -d {virtualHostName} -d *.{virtualHostName}" \
                               + ' --cert-file ' + existingCertPath + '/cert.pem' + ' --key-file ' + existingCertPath + '/privkey.pem' \
-                              + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + f' --dns {DNS_TO_USE} -k ec-256 --force --server letsencrypt'
+                              + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + f' --dns {DNS_TO_USE} -k ec-256 --force --server letsencrypt --dnssleep 20'
                     #ResultText = open(logging.CyberCPLogFileWriter.fileName, 'r').read()
                     #CurrentMessage = "Trying to obtain SSL for: " + virtualHostName + " and: www." + virtualHostName
                     # logging.CyberCPLogFileWriter.writeToFile(CurrentMessage, 0)
@@ -461,7 +461,7 @@ class sslUtilities:
                     try:
                         command = acmePath + " --issue -d " + virtualHostName + ' --cert-file ' + existingCertPath \
                                   + '/cert.pem' + ' --key-file ' + existingCertPath + '/privkey.pem' \
-                                  + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + f' --dns {DNS_TO_USE} -k ec-256 --force --server letsencrypt'
+                                  + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + f' --dns {DNS_TO_USE} -k ec-256 --force --server letsencrypt --dnssleep 20'
 
                         #ResultText = open(logging.CyberCPLogFileWriter.fileName, 'r').read()
                         CurrentMessage = '%s\nTrying to obtain SSL for: %s' % (finalText, virtualHostName)
@@ -495,7 +495,7 @@ class sslUtilities:
                     command = acmePath + " --issue -d " + virtualHostName + " -d www." + virtualHostName \
                               + ' -d ' + aliasDomain + ' -d www.' + aliasDomain\
                               + ' --cert-file ' + existingCertPath + '/cert.pem' + ' --key-file ' + existingCertPath + '/privkey.pem' \
-                              + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + f' --dns {DNS_TO_USE} -k ec-256 --force --server letsencrypt'
+                              + ' --fullchain-file ' + existingCertPath + '/fullchain.pem' + f' --dns {DNS_TO_USE} -k ec-256 --force --server letsencrypt --dnssleep 20'
 
                     output = subprocess.check_output(shlex.split(command)).decode("utf-8")
                     logging.CyberCPLogFileWriter.writeToFile(

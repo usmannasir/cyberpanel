@@ -446,8 +446,10 @@ class WebsiteManager:
         else:
             return ACLManager.loadError()
 
-        # php = VirtualHost.getPHPString(self.data['PHPVersion'])
-        # FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
+        from managePHP.phpManager import PHPManager
+
+        php = PHPManager.getPHPString(WPobj.owner.phpSelection)
+        FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
 
         url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
         data = {
@@ -465,11 +467,11 @@ class WebsiteManager:
 
             password = randomPassword.generate_pass(10)
 
-            command = 'sudo -u %s wp user create autologin %s --role=administrator --user_pass="%s" --path=%s --skip-plugins --skip-themes' % (
+            command = f'sudo -u %s {FinalPHPPath} /usr/bin/wp user create autologin %s --role=administrator --user_pass="%s" --path=%s --skip-plugins --skip-themes' % (
             WPobj.owner.externalApp, 'autologin@cloudpages.cloud', password, WPobj.path)
             ProcessUtilities.executioner(command)
 
-            command = 'sudo -u %s wp user update autologin --user_pass="%s" --path=%s --skip-plugins --skip-themes' % (
+            command = f'sudo -u %s {FinalPHPPath} /usr/bin/wp user update autologin --user_pass="%s" --path=%s --skip-plugins --skip-themes' % (
             WPobj.owner.externalApp, password, WPobj.path)
             ProcessUtilities.executioner(command)
 
@@ -2063,6 +2065,7 @@ class WebsiteManager:
             extraArgs['websiteOwner'] = data['websiteOwner']
             extraArgs['package'] = data['package']
             extraArgs['home'] = data['home']
+            extraArgs['apacheBackend'] = data['apacheBackend']
             try:
                 extraArgs['path'] = data['path']
                 if extraArgs['path'] == '':
@@ -2382,7 +2385,10 @@ class WebsiteManager:
 
             for web in websites:
                 for child in web.childdomains_set.all():
-                    childDomains.append(child)
+                    if child.domain == f'mail.{web.domain}':
+                        pass
+                    else:
+                        childDomains.append(child)
 
             pagination = self.getPagination(len(childDomains), recordsToShow)
             json_data = self.findChildsListJson(childDomains[finalPageNumber:endPageNumber])
@@ -6442,7 +6448,12 @@ StrictHostKeyChecking no
 
         phps = PHPManager.findPHPVersions()
 
-        proc = httpProc(request, 'websiteFunctions/ApacheManager.html', {'domainName': self.domain, 'phps': phps})
+        if ACLManager.CheckForPremFeature('all'):
+            apachemanager = 1
+        else:
+            apachemanager = 0
+
+        proc = httpProc(request, 'websiteFunctions/ApacheManager.html', {'domainName': self.domain, 'phps': phps, 'apachemanager':apachemanager})
         return proc.render()
 
     def saveApacheConfigsToFile(self, userID=None, data=None):

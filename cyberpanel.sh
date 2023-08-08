@@ -1040,6 +1040,10 @@ else
   DEBIAN_FRONTEND=noninteractive apt install -y python3-venv
     Check_Return
 
+  DEBIAN_FRONTEND=noninteractive apt install -y cron inetutils-ping
+    Check_Return
+# Oracle Ubuntu ARM misses ping and cron 
+
   DEBIAN_FRONTEND=noninteractive apt install -y locales
   locale-gen "en_US.UTF-8"
   update-locale LC_ALL="en_US.UTF-8"
@@ -1876,7 +1880,7 @@ echo "echo \$@ > /etc/cyberpanel/adminPass" >> /usr/bin/adminPass
 chmod 700 /usr/bin/adminPass
 
 rm -f /usr/bin/php
-ln -s /usr/local/lsws/lsphp74/bin/php /usr/bin/php
+ln -s /usr/local/lsws/lsphp80/bin/php /usr/bin/php
 
 if [[ "$Server_OS" = "CentOS" ]] ; then
 #all centos 7/8 post change goes here

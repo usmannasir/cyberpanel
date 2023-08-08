@@ -108,8 +108,8 @@ if [[ ! -f /etc/os-release ]] ; then
   exit
 fi
 
-if ! uname -m | grep -q x86_64 ; then
-  echo -e "x86_64 system is required...\n"
+if ! uname -m | grep -qE 'x86_64|aarch64' ; then
+  echo -e "x86_64 or ARM system is required...\n"
   exit
 fi
 

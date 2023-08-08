@@ -31,7 +31,7 @@ class ApplicationInstaller(multi.Thread):
     LOCALHOST = 'localhost'
     REMOTE = 0
     PORT = '3306'
-    MauticVersion = '4.1.2'
+    MauticVersion = '4.4.0'
     PrestaVersion = '1.7.8.3'
 
     def __init__(self, installApp, extraArgs):
@@ -242,7 +242,7 @@ $parameters = array(
             command = 'cp %s %s/app/config/local.php' % (localDB, finalPath)
             ProcessUtilities.executioner(command, externalApp)
 
-            command = "/usr/local/lsws/lsphp74/bin/php bin/console mautic:install http://%s -f" % (finalURL)
+            command = "/usr/local/lsws/lsphp80/bin/php bin/console mautic:install http://%s -f" % (finalURL)
             result = ProcessUtilities.outputExecutioner(command, externalApp, None, finalPath)
 
             if result.find('Install complete') == -1:
@@ -1692,20 +1692,21 @@ $parameters = array(
 
             DataToPass['domainName'] = self.data['domainName']
             DataToPass['adminEmail'] = self.data['adminEmail']
-            DataToPass['phpSelection'] = "PHP 7.4"
+            DataToPass['phpSelection'] = "PHP 8.0"
             DataToPass['websiteOwner'] = self.data['websiteOwner']
             DataToPass['package'] = self.data['package']
             DataToPass['ssl'] = 1
             DataToPass['dkimCheck'] = 0
             DataToPass['openBasedir'] = 0
             DataToPass['mailDomain'] = 0
+            DataToPass['apacheBackend'] = self.extraArgs['apacheBackend']
             UserID = self.data['adminID']
 
             try:
                 website = Websites.objects.get(domain=DataToPass['domainName'])
 
                 if website.phpSelection == 'PHP 7.3':
-                    website.phpSelection = 'PHP 7.4'
+                    website.phpSelection = 'PHP 8.0'
                     website.save()
 
                 if ACLManager.checkOwnership(website.domain, self.extraArgs['adminID'],
