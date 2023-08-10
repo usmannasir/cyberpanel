@@ -99,6 +99,12 @@ class ApplicationInstaller(multi.Thread):
             password = self.extraArgs['password']
             email = self.extraArgs['email']
 
+            ## Open Status File
+
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines('Setting up paths,0')
+            statusFile.close()
+
 
             ### lets first find php path
 
@@ -108,13 +114,18 @@ class ApplicationInstaller(multi.Thread):
 
             phpPath = phpUtilities.GetPHPVersionFromFile(vhFile)
 
+            ### basically for now php 8.0 is being checked
+
+            if not os.path.exists(phpPath):
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines('PHP 8.0 missing installing now..,20')
+                statusFile.close()
+                phpUtilities.InstallSaidPHP('80')
+
+
             FNULL = open(os.devnull, 'w')
 
-            ## Open Status File
 
-            statusFile = open(tempStatusPath, 'w')
-            statusFile.writelines('Setting up paths,0')
-            statusFile.close()
 
             finalPath = ''
             self.permPath = ''

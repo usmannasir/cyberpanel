@@ -232,6 +232,17 @@ class phpUtilities:
             result = result.rsplit("lsphp", 1)[0] + "php"
             return result
 
+    @staticmethod
+    def InstallSaidPHP(php):
+        if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or  ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
+            command = f'DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp{php}*'
+        else:
+            command = f'dnf install lsphp{php}* --exclude lsphp73-pecl-zip --exclude *imagick* -y --skip-broken'
+
+
+        ProcessUtilities.executioner(command, None, True)
+
+
 
 
 
