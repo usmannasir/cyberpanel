@@ -548,6 +548,32 @@ $parameters = array(
             statusFile.writelines('Setting up paths,0')
             statusFile.close()
 
+            #### Before installing wordpress change php to 8.0
+
+            from plogical.virtualHostUtilities import virtualHostUtilities
+
+            completePathToConfigFile = f'/usr/local/lsws/conf/vhosts/{domainName}/vhost.conf'
+
+            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+            execPath = execPath + " changePHP --phpVersion 'PHP 8.0' --path " + completePathToConfigFile
+            ProcessUtilities.executioner(execPath)
+
+            ### lets first find php path
+
+            from plogical.phpUtilities import phpUtilities
+
+            vhFile = f'/usr/local/lsws/conf/vhosts/{domainName}/vhost.conf'
+
+            phpPath = phpUtilities.GetPHPVersionFromFile(vhFile)
+
+            ### basically for now php 8.0 is being checked
+
+            if not os.path.exists(phpPath):
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines('PHP 8.0 missing installing now..,20')
+                statusFile.close()
+                phpUtilities.InstallSaidPHP('80')
+
             finalPath = ''
             self.permPath = ''
 
@@ -604,8 +630,8 @@ $parameters = array(
                 dbName, dbUser, dbPassword = self.dbCreation(tempStatusPath, website)
                 self.permPath = '/home/%s/public_html' % (website.domain)
 
-            php = PHPManager.getPHPString(website.phpSelection)
-            FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
+            #php = PHPManager.getPHPString(website.phpSelection)
+            FinalPHPPath = phpPath
 
             ## Security Check
 
