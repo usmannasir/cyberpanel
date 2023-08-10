@@ -191,7 +191,6 @@ class phpUtilities:
                 str(msg) + " [savePHPConfigAdvance]")
             print("0,"+str(msg))
 
-
     @staticmethod
     def GetStagingInJson(stagings):
         try:
@@ -216,6 +215,25 @@ class phpUtilities:
             return json_data
         except BaseException as msg:
             return msg
+
+    @staticmethod
+    def GetPHPVersionFromFile(vhFile):
+        if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+            command = f'grep -Eo "/usr/local/lsws/lsphp[0-9]+/bin/lsphp" {vhFile}'
+            result = ProcessUtilities.outputExecutioner(command, None, True).rstrip('\n')
+
+            result = result.rsplit("lsphp", 1)[0] + "php"
+            return result
+
+        else:
+            command = f'grep -Eo -m 1 "php[0-9]+" {vhFile}'
+            result = ProcessUtilities.outputExecutioner(command, None, True).rstrip('\n')
+            result = f'/usr/local/lsws/ls{result}/bin/lsphp'
+            result = result.rsplit("lsphp", 1)[0] + "php"
+            return result
+
+
+
 
 
 

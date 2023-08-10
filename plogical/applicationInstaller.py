@@ -31,7 +31,7 @@ class ApplicationInstaller(multi.Thread):
     LOCALHOST = 'localhost'
     REMOTE = 0
     PORT = '3306'
-    MauticVersion = '4.4.0'
+    MauticVersion = '4.4.9'
     PrestaVersion = '1.7.8.3'
 
     def __init__(self, installApp, extraArgs):
@@ -98,6 +98,15 @@ class ApplicationInstaller(multi.Thread):
             username = self.extraArgs['username']
             password = self.extraArgs['password']
             email = self.extraArgs['email']
+
+
+            ### lets first find php path
+
+            from plogical.phpUtilities import phpUtilities
+
+            vhFile = f'/usr/local/lsws/conf/vhosts/{domainName}/vhost.conf'
+
+            phpPath = phpUtilities.GetPHPVersionFromFile(vhFile)
 
             FNULL = open(os.devnull, 'w')
 
@@ -242,7 +251,7 @@ $parameters = array(
             command = 'cp %s %s/app/config/local.php' % (localDB, finalPath)
             ProcessUtilities.executioner(command, externalApp)
 
-            command = "/usr/local/lsws/lsphp80/bin/php bin/console mautic:install http://%s -f" % (finalURL)
+            command = f"{phpPath} bin/console mautic:install http://%s -f" % (finalURL)
             result = ProcessUtilities.outputExecutioner(command, externalApp, None, finalPath)
 
             if result.find('Install complete') == -1:
