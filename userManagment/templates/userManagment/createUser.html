@@ -24,7 +24,7 @@
                         <div class="form-group">
                             <label class="col-sm-3 control-label">{% trans "First Name" %}</label>
                             <div class="col-sm-6">
-                                <input name="firstName" ng-pattern="/^[a-zA-Z]+$/" type="text" class="form-control"
+                                <input name="firstName" ng-pattern="/^[a-zA-Z ]+$/" type="text" class="form-control"
                                        ng-model="firstName" required>
                             </div>
                             <div ng-show="createUser.firstName.$error.pattern"
@@ -34,7 +34,7 @@
                         <div class="form-group">
                             <label class="col-sm-3 control-label">{% trans "Last Name" %}</label>
                             <div class="col-sm-6">
-                                <input name="lastName" ng-pattern="/^[a-zA-Z]+$/" type="text" class="form-control"
+                                <input name="lastName" ng-pattern="/^[a-zA-Z ]+$/" type="text" class="form-control"
                                        ng-model="lastName" required>
                             </div>
                             <div ng-show="createUser.lastName.$error.pattern"
