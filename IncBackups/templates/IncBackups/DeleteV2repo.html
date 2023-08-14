@@ -1,6 +1,6 @@
 {% extends "baseTemplate/index.html" %}
 {% load i18n %}
-{% block title %}{% trans "Create v2 Backup" %}{% endblock %}
+{% block title %}{% trans "Delete v2 Backup" %}{% endblock %}
 {% block content %}
 
     {% load static %}
@@ -12,27 +12,24 @@
     </style>
 
     <div class="container">
+
         <div id="page-title">
-            <h2>{% trans "Create V2 Backup" %} - <a target="_blank" href="http://go.cyberpanel.net/backup"
-                                                    style="height: 23px;line-height: 21px;"
-                                                    class="btn btn-border btn-alt border-red btn-link font-red"
-                                                    title=""><span>{% trans "Backup Docs" %}</span></a></h2>
-            <p>{% trans "This page can be used to create your backup" %}</p>
+            <h2>{% trans "Delete V2 Repo" %} - <a target="_blank" href="http://go.cyberpanel.net/backup"
+                                                  style="height: 23px;line-height: 21px;"
+                                                  class="btn btn-border btn-alt border-red btn-link font-red"
+                                                  title=""><span>{% trans "Backup Docs" %}</span></a></h2>
+            <p>{% trans "This page can be used to delete your backup repo" %}</p>
         </div>
 
-        <div ng-controller="CreateV2Backup" class="panel">
+        <div ng-controller="DeleteBackuprepo" class="panel">
             <div class="panel-body">
                 <h3 class="title-hero">
                     {% trans "Create v2 Backup" %} <img ng-hide="backupLoading" src="{% static 'images/loading.gif' %}">
-                    - <a href="{% url 'RestoreV2backupSite' %}">Restore Backups</a>
+
                 </h3>
                 <div class="example-box-wrapper">
-                    <p align="center" style="margin-top: 2%; margin-bottom: 2%">
-                        <iframe width="788.54" height="443" src="https://www.youtube.com/embed/7dI1013xvUc"
-                                title="YouTube video player" frameborder="0"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                allowfullscreen></iframe>
-                    </p>
+
+
 
                     <form class="form-horizontal bordered-row">
 
@@ -56,51 +53,13 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="form-group">
-                            <label class="col-sm-3 control-label">{% trans "Backup Contents" %}</label>
-                            <div class="col-sm-9">
-                                <div class="checkbox">
-                                    <label>
-                                        <input ng-model="websiteData" type="checkbox" value="">
-                                        Data
-                                    </label>
-                                </div>
-                            </div>
-                            <label class="col-sm-3 control-label"></label>
-                            <div class="col-sm-9">
-                                <div class="checkbox">
-                                    <label>
-                                        <input ng-model="websiteDatabases" type="checkbox" value="">
-                                        Databases
-                                    </label>
-                                </div>
-                            </div>
-                            <label class="col-sm-3 control-label"></label>
-                            <div class="col-sm-9">
-                                <div class="checkbox">
-                                    <label>
-                                        <input ng-model="websiteEmails" type="checkbox" value="">
-                                        Emails
-                                    </label>
-                                </div>
-                            </div>
-                            <!---
-                            <label class="col-sm-3 control-label"></label>
-                            <div class="col-sm-9">
-                                <div class="checkbox">
-                                    <label>
-                                        <input ng-model="websiteSSLs" type="checkbox" value="">
-                                        SSL Certificates
-                                    </label>
-                                </div>
-                            </div> -->
-                        </div>
+
                         <div class="form-group">
                             <label class="col-sm-3 control-label">{% trans " " %} </label>
                             <div class="col-sm-6">
-                                <button class="btn" id="CreateV2BackupButton" ng-click="CreateV2BackupButton()"
+                                <button class="btn" id="DeleteV2BackupButton" ng-click="DeleteV2BackupButton()"
                                         style="border-radius: 6px;background-color: #3447b7;color: white !important;">
-                                    Create Backup
+                                    Delete Backup repo
                                 </button>
                             </div>
                         </div>
