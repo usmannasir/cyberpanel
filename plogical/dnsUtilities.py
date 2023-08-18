@@ -145,7 +145,6 @@ class DNS:
                                                  disabled=0,
                                                  auth=1)
                                 record.save()
-
                         else:
                             zone = Domains(admin=admin, name=topLevelDomain, type="NATIVE")
                     except:
