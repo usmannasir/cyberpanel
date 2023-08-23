@@ -1189,12 +1189,27 @@ class BackupManager:
 
             try:
 
+                #this command is for enable permit root login over SSH:
+                command = "sudo sed -i 's/^PermitRootLogin.*/PermitRootLogin yes/g' /etc/ssh/sshd_config && sudo service ssh restart"
+                ProcessUtilities.executioner(command, None, True)
+
+
+                # this command is for enable permit root login over SSH:
+                command = "sudo sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config && sudo systemctl restart sshd"
+                ProcessUtilities.executioner(command, None, True)
+
+                # this command is for get port of SSH:
+                command = """grep -oP '^Port \K\d+' /etc/ssh/sshd_config | head -n 1"""
+                output = ProcessUtilities.outputExecutioner(command)
+                port = output.strip('\n')
+
+
                 ipFile = os.path.join("/etc", "cyberpanel", "machineIP")
                 f = open(ipFile)
                 ownIP = f.read()
 
                 finalData = json.dumps({'username': "admin", "password": password, "ipAddress": ownIP,
-                                        "accountsToTransfer": accountsToTransfer})
+                                        "accountsToTransfer": accountsToTransfer, 'port': port})
 
                 url = "https://" + ipAddress + ":8090/api/remoteTransfer"
 
@@ -1341,12 +1356,20 @@ class BackupManager:
             command = "sudo cat " + backupLogPath
             status = ProcessUtilities.outputExecutioner(command)
 
+
+            if status.find("Error") > -1:
+                Error_find = "There was an error during the backup process. Please review the log for more information."
+                status = status + Error_find
+
+
+
             if status.find("completed[success]") > -1:
                 command = "rm -rf " + removalPath
                 ProcessUtilities.executioner(command)
                 data_ret = {'remoteTransferStatus': 1, 'error_message': "None", "status": status, "complete": 1}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
+
             elif status.find("[5010]") > -1:
                 command = "sudo rm -rf " + removalPath
                 ProcessUtilities.executioner(command)
@@ -1354,6 +1377,7 @@ class BackupManager:
                         "status": "None", "complete": 0}
                 json_data = json.dumps(data)
                 return HttpResponse(json_data)
+
             else:
                 data_ret = {'remoteTransferStatus': 1, 'error_message': "None", "status": status, "complete": 0}
                 json_data = json.dumps(data_ret)
