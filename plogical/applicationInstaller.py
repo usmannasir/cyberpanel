@@ -1963,11 +1963,14 @@ $parameters = array(
 
             wpobj = WPSites.objects.get(pk=self.data['WPid'])
 
+            php = PHPManager.getPHPString(wpobj.owner.phpSelection)
+            FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
+
 
 
             #get wp version
             path_to_wordpress = wpobj.path
-            command = f"wp --path='{path_to_wordpress}' core version --skip-plugins --skip-themes"
+            command = f"{FinalPHPPath} -d error_reporting=0 /usr/bin/wp --path='{path_to_wordpress}' core version --skip-plugins --skip-themes"
             Wp_version = ProcessUtilities.outputExecutioner(command, wpobj.owner.externalApp)
             old_wp_version = Wp_version.rstrip('\n')
             logging.writeToFile("Old site wp version:%s"% old_wp_version)
