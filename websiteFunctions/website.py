@@ -1850,11 +1850,6 @@ class WebsiteManager:
             else:
                 return ACLManager.loadError()
 
-
-
-
-
-
             background = ApplicationInstaller('CreateStagingNow', extraArgs)
             background.start()
 

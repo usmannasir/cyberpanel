@@ -1963,6 +1963,17 @@ $parameters = array(
 
             wpobj = WPSites.objects.get(pk=self.data['WPid'])
 
+
+
+            #get wp version
+            path_to_wordpress = wpobj.path
+            command = f"wp --path='{path_to_wordpress}' core version --skip-plugins --skip-themes"
+            Wp_version = ProcessUtilities.outputExecutioner(command, wpobj.owner.externalApp)
+            old_wp_version = Wp_version.rstrip('\n')
+            logging.writeToFile("Old site wp version:%s"% old_wp_version)
+
+
+
             ### Create secure folder
             ACLManager.CreateSecureDir()
             tempPath = '%s/%s' % ('/usr/local/CyberCP/tmp', str(randint(1000, 9999)))
@@ -2049,7 +2060,7 @@ $parameters = array(
 
             StagingPath = f'/home/{website.domain}/public_html'
 
-            command = f'{FinalPHPPath} -d error_reporting=0 /usr/bin/wp core download --path={StagingPath}'
+            command = f'{FinalPHPPath} -d error_reporting=0 /usr/bin/wp core download --path={StagingPath} --version={old_wp_version}'
 
             if ProcessUtilities.executioner(command, website.externalApp) == 0:
                 raise BaseException('Failed to download wp core. [404]')
