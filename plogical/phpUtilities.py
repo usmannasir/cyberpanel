@@ -232,6 +232,16 @@ class phpUtilities:
             result = result.rsplit("lsphp", 1)[0] + "php"
             return result
 
+
+    @staticmethod
+    def WrapGetPHPVersionFromFileToGetVersionWithPHP(vhFile):
+        result = phpUtilities.GetPHPVersionFromFile(vhFile)
+        command = result + " -v | awk '/^PHP/ {print $2}'"
+        php_version = ProcessUtilities.outputExecutioner(command, None, True).rstrip('\n')
+        return f"PHP {php_version}"
+
+
+
     @staticmethod
     def InstallSaidPHP(php):
         if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or  ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
