@@ -1390,11 +1390,6 @@ Automatic backup failed for %s on %s.
             logging.writeToFile('%s. [SendToS3Cloud]' % (str(msg)))
 
     @staticmethod
-    def FixMailSSL():
-        for website in Websites.objects.all():
-            virtualHostUtilities.setupAutoDiscover(1, '/home/cyberpanel/templogs', website.domain, website.admin)
-
-    @staticmethod
     def v2Backups(function):
         try:
             # print("....start remote backup...............")
