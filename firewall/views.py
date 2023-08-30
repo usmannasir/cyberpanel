@@ -1,8 +1,11 @@
 from django.shortcuts import redirect
 import json
 from loginSystem.views import loadLoginPage
+from plogical.processUtilities import ProcessUtilities
 from .firewallManager import FirewallManager
 from .pluginManager import pluginManager
+
+
 # Create your views here.
 
 
@@ -13,6 +16,7 @@ def securityHome(request):
         return fm.securityHome(request, userID)
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def firewallHome(request):
     try:
@@ -32,6 +36,7 @@ def firewallHome(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def getCurrentRules(request):
     try:
         userID = request.session['userID']
@@ -39,6 +44,7 @@ def getCurrentRules(request):
         return fm.getCurrentRules(userID)
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def addRule(request):
     try:
@@ -59,6 +65,7 @@ def addRule(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def deleteRule(request):
     try:
         userID = request.session['userID']
@@ -77,6 +84,7 @@ def deleteRule(request):
         return coreResult
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def reloadFirewall(request):
     try:
@@ -97,6 +105,7 @@ def reloadFirewall(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def startFirewall(request):
     try:
         userID = request.session['userID']
@@ -116,6 +125,7 @@ def startFirewall(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def stopFirewall(request):
     try:
         userID = request.session['userID']
@@ -123,7 +133,6 @@ def stopFirewall(request):
         result = pluginManager.preStopFirewall(request)
         if result != 200:
             return result
-
 
         fm = FirewallManager()
         coreResult = fm.stopFirewall(userID)
@@ -135,6 +144,7 @@ def stopFirewall(request):
         return coreResult
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def firewallStatus(request):
     try:
@@ -155,6 +165,7 @@ def firewallStatus(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def secureSSH(request):
     try:
         userID = request.session['userID']
@@ -174,6 +185,7 @@ def secureSSH(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def getSSHConfigs(request):
     try:
         userID = request.session['userID']
@@ -181,6 +193,7 @@ def getSSHConfigs(request):
         return fm.getSSHConfigs(userID, json.loads(request.body))
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def saveSSHConfigs(request):
     try:
@@ -201,6 +214,7 @@ def saveSSHConfigs(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def deleteSSHKey(request):
     try:
         userID = request.session['userID']
@@ -218,6 +232,7 @@ def deleteSSHKey(request):
         return coreResult
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def addSSHKey(request):
     try:
@@ -238,6 +253,7 @@ def addSSHKey(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def loadModSecurityHome(request):
     try:
         userID = request.session['userID']
@@ -257,6 +273,7 @@ def loadModSecurityHome(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def installModSec(request):
     try:
         userID = request.session['userID']
@@ -264,6 +281,7 @@ def installModSec(request):
         return fm.installModSec(userID, json.loads(request.body))
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def installStatusModSec(request):
     try:
@@ -273,6 +291,7 @@ def installStatusModSec(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def fetchModSecSettings(request):
     try:
         userID = request.session['userID']
@@ -280,6 +299,7 @@ def fetchModSecSettings(request):
         return fm.fetchModSecSettings(userID, json.loads(request.body))
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def saveModSecConfigurations(request):
     try:
@@ -300,6 +320,7 @@ def saveModSecConfigurations(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def modSecRules(request):
     try:
         userID = request.session['userID']
@@ -319,6 +340,7 @@ def modSecRules(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def fetchModSecRules(request):
     try:
         userID = request.session['userID']
@@ -326,6 +348,7 @@ def fetchModSecRules(request):
         return fm.fetchModSecRules(userID, json.loads(request.body))
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def saveModSecRules(request):
     try:
@@ -346,6 +369,7 @@ def saveModSecRules(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def modSecRulesPacks(request):
     try:
         userID = request.session['userID']
@@ -364,6 +388,7 @@ def modSecRulesPacks(request):
         return coreResult
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def getOWASPAndComodoStatus(request):
     try:
@@ -384,6 +409,7 @@ def getOWASPAndComodoStatus(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def installModSecRulesPack(request):
     try:
         userID = request.session['userID']
@@ -402,6 +428,7 @@ def installModSecRulesPack(request):
         return coreResult
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def getRulesFiles(request):
     try:
@@ -422,6 +449,7 @@ def getRulesFiles(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def enableDisableRuleFile(request):
     try:
         userID = request.session['userID']
@@ -441,6 +469,7 @@ def enableDisableRuleFile(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def csf(request):
     try:
 
@@ -459,12 +488,14 @@ def csf(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def installCSF(request):
     try:
         fm = FirewallManager(request)
         return fm.installCSF()
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def installStatusCSF(request):
     try:
@@ -473,6 +504,7 @@ def installStatusCSF(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def removeCSF(request):
     try:
         fm = FirewallManager(request)
@@ -480,12 +512,14 @@ def removeCSF(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def fetchCSFSettings(request):
     try:
         fm = FirewallManager(request)
         return fm.fetchCSFSettings()
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def changeStatus(request):
     try:
@@ -505,6 +539,7 @@ def changeStatus(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def modifyPorts(request):
     try:
 
@@ -522,6 +557,7 @@ def modifyPorts(request):
         return coreResult
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def modifyIPs(request):
     try:
@@ -541,6 +577,7 @@ def modifyIPs(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 ## Imunify
 
 def imunify(request):
@@ -552,6 +589,7 @@ def imunify(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def submitinstallImunify(request):
     try:
 
@@ -560,6 +598,7 @@ def submitinstallImunify(request):
 
     except KeyError:
         return redirect(loadLoginPage)
+
 
 ## ImunifyAV
 
@@ -572,11 +611,40 @@ def imunifyAV(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def submitinstallImunifyAV(request):
     try:
 
         fm = FirewallManager(request)
         return fm.submitinstallImunifyAV()
 
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def litespeed_ent_conf(request):
+    try:
+        if ProcessUtilities.decideServer() == ProcessUtilities.ent:
+            userID = request.session['userID']
+            fm = FirewallManager()
+            return fm.litespeed_ent_conf(request, userID)
+        else:
+            return redirect(loadLoginPage)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+def fetchlitespeed_conf(request):
+    try:
+        userID = request.session['userID']
+        fm = FirewallManager()
+        return fm.fetchlitespeed_Conf(userID, json.loads(request.body))
+    except KeyError:
+        return redirect(loadLoginPage)
+def saveLitespeed_conf(request):
+    try:
+        userID = request.session['userID']
+        fm = FirewallManager()
+        return fm.saveLitespeed_conf(userID, json.loads(request.body))
     except KeyError:
         return redirect(loadLoginPage)

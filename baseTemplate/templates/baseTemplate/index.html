@@ -1044,6 +1044,11 @@
                                         <li><a href="{% url 'modSecRulesPacks' %}"
                                                title="{% trans 'ModSecurity Rules Packs' %}"><span>{% trans "ModSecurity Rules Packs" %}</span></a>
                                         </li>
+                                        {% if serverCheck == 1 %}
+                                        <li><a href="{% url 'litespeed_ent_conf' %}"
+                                               title="{% trans 'Litespeed ent conf' %}"><span>{% trans "Litespeed ent conf" %}</span></a>
+                                        </li>
+                                            {% endif %}
                                         <li><a href="{% url 'csf' %}"
                                                title="{% trans 'ConfigServer Security & Firewall (CSF)' %}"><span>{% trans "CSF" %}</span></a>
                                         </li>

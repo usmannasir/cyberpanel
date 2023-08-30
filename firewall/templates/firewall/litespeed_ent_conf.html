@@ -1,0 +1,80 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "LiteSpeed Ent Conf - CyberPanel" %}{% endblock %}
+{% block content %}
+
+{% load static %}
+{% get_current_language as LANGUAGE_CODE %}
+<!-- Current language: {{ LANGUAGE_CODE }} -->
+
+
+<div class="container">
+<div id="page-title">
+   <h2>{% trans "litespeed Ent Conf!" %} - <a  target="_blank" href="http://go.cyberpanel.net/modsec-docs" style="height: 23px;line-height: 21px;" class="btn btn-border btn-alt border-red btn-link font-red" title=""><span>{% trans "litespeed Ent Conf Docs" %}</span></a> </h2>
+   <p>{% trans "On this page you can add/delete litespeed Ent Conf." %}</p>
+</div>
+
+<div ng-controller="litespeed_ent_conf" class="example-box-wrapper">
+        <div class="panel panel-body">
+            <h3 class="content-box-header">
+                {% trans "litespeed Ent Conf" %} <img ng-hide="modsecLoading"  src="/static/images/loading.gif">
+            </h3>
+
+            <div class="content-box-wrapper">
+                <div class="row">
+
+
+                     <div class="col-md-12">
+
+                        <form class="form-horizontal bordered-row">
+
+                            <div style="border-top: none" class="form-group">
+                                <div class="col-sm-12">
+                                    <textarea ng-model="currentLitespeed_conf" rows="15" class="form-control"></textarea>
+                                </div>
+                            </div>
+
+
+
+                            <div class="form-group">
+                                <label class="col-sm-3 control-label"></label>
+                                <div class="col-sm-4">
+                                     <button type="button" ng-click="saveLitespeed_conf()" class="btn btn-primary btn-lg">{% trans "Save LiteSpeed Rules!" %}</button>
+
+                                </div>
+                            </div>
+
+
+                                <div ng-hide="rulesSaved" class="alert alert-success">
+                                        <p>{% trans "Litespeed Conf Saved" %}</p>
+                                    </div>
+
+                                <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                            <p>{% trans "Could not connect. Please refresh this page." %} </p>
+                                </div>
+
+
+                                <div ng-hide="couldNotSave" class="alert alert-danger">
+                                    <p>{% trans "Could not save rules, Error message: " %} {$ errorMessage $}</p>
+                                </div>
+
+
+
+                        </form>
+
+                    </div>
+
+
+
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</div>
+
+
+{% endblock %}

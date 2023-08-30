@@ -62,6 +62,11 @@ urlpatterns = [
     url(r'^submitinstallImunifyAV$', views.submitinstallImunifyAV, name='submitinstallImunifyAV'),
 
 
+    url(r'^litespeed_ent_conf$', views.litespeed_ent_conf, name='litespeed_ent_conf'),
+    url(r'^fetchlitespeed_conf', views.fetchlitespeed_conf, name='fetchlitespeed_conf'),
+    url(r'^saveLitespeed_conf', views.saveLitespeed_conf, name='saveLitespeed_conf'),
+
+
 
 
 ]
