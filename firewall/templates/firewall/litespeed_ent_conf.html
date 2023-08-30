@@ -10,14 +10,14 @@
 
 <div class="container">
 <div id="page-title">
-   <h2>{% trans "litespeed Ent Conf!" %} - <a  target="_blank" href="http://go.cyberpanel.net/modsec-docs" style="height: 23px;line-height: 21px;" class="btn btn-border btn-alt border-red btn-link font-red" title=""><span>{% trans "litespeed Ent Conf Docs" %}</span></a> </h2>
-   <p>{% trans "On this page you can add/delete litespeed Ent Conf." %}</p>
+   <h2>{% trans "LiteSpeed Enterprise Global Conf!" %} </h2>
+   <p>{% trans "Any rewrite rules or server-level configurations added here will be applicable to all virtual hosts/websites. This information is valid for LiteSpeed Enterprise edition exclusively." %}</p>
 </div>
 
 <div ng-controller="litespeed_ent_conf" class="example-box-wrapper">
         <div class="panel panel-body">
             <h3 class="content-box-header">
-                {% trans "litespeed Ent Conf" %} <img ng-hide="modsecLoading"  src="/static/images/loading.gif">
+                {% trans "Litespeed Enterprise Conf (/usr/local/lsws/conf/pre_main_global.conf)" %} <img ng-hide="modsecLoading"  src="/static/images/loading.gif">
             </h3>
 
             <div class="content-box-wrapper">

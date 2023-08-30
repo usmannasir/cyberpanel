@@ -1690,7 +1690,6 @@ class FirewallManager:
 
 
     def saveLitespeed_conf(self, userID = None, data = None):
-        from urllib.parse import unquote
         try:
             currentACL = ACLManager.loadedACL(userID)
 
@@ -1701,14 +1700,22 @@ class FirewallManager:
 
             file_path = "/usr/local/lsws/conf/pre_main_global.conf"
 
+            command = f'rm -f {file_path}'
+            ProcessUtilities.executioner(command)
+
             currentLitespeed_conf = data['modSecRules']
 
+            tempRulesPath = '/home/cyberpanel/pre_main_global.conf'
 
+            WriteToFile = open(tempRulesPath, 'w')
+            WriteToFile.write(currentLitespeed_conf)
+            WriteToFile.close()
 
-            # Use sed to replace content in the file
-            command = f"echo '{currentLitespeed_conf}' > '{file_path}'"
-            logging.CyberCPLogFileWriter.writeToFile(str(command))
+            command = f'mv {tempRulesPath} {file_path}'
             ProcessUtilities.executioner(command)
+
+            command = f'chmod 644 {file_path} && chown lsadm:lsadm {file_path}'
+            ProcessUtilities.executioner(command, None, True)
 
 
             command = f'cat {file_path}'
