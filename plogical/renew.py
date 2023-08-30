@@ -142,6 +142,11 @@ class Renew:
         except BaseException as msg:
            logging.writeToFile(str(msg) + '. Renew.SSLObtainer')
 
+    @staticmethod
+    def FixMailSSL():
+        for website in Websites.objects.all():
+            virtualHostUtilities.setupAutoDiscover(1, '/home/cyberpanel/templogs', website.domain, website.admin)
+
 
 if __name__ == "__main__":
     sslOB = Renew()

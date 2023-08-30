@@ -2411,18 +2411,28 @@ class WebsiteManager:
             logging.CyberCPLogFileWriter.writeToFile("Failed to read machine IP, error:" + str(msg))
             ipAddress = "192.168.100.1"
 
+        ### lets first find php path
+
+        from plogical.phpUtilities import phpUtilities
+
+
+
         for items in websites:
             if items.state == 0:
                 state = "Suspended"
             else:
                 state = "Active"
 
+            vhFile = f'/usr/local/lsws/conf/vhosts/{items.domain}/vhost.conf'
+
+            PHPVersionActual = phpUtilities.WrapGetPHPVersionFromFileToGetVersionWithPHP(vhFile)
+
             DiskUsage, DiskUsagePercentage, bwInMB, bwUsage = virtualHostUtilities.FindStats(items)
             diskUsed = "%sMB" % str(DiskUsage)
 
             dic = {'domain': items.domain, 'adminEmail': items.adminEmail, 'ipAddress': ipAddress,
                    'admin': items.admin.userName, 'package': items.package.packageName, 'state': state,
-                   'diskUsed': diskUsed}
+                   'diskUsed': diskUsed, 'phpVersion': PHPVersionActual}
 
             if checker == 0:
                 json_data = json_data + json.dumps(dic)
@@ -4246,6 +4256,15 @@ StrictHostKeyChecking no
                 pass
             else:
                 return ACLManager.loadErrorJson('installStatus', 0)
+
+
+            #### Before installing mautic change php to 8.0
+
+            completePathToConfigFile = f'/usr/local/lsws/conf/vhosts/{self.domain}/vhost.conf'
+
+            execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
+            execPath = execPath + " changePHP --phpVersion 'PHP 8.0' --path " + completePathToConfigFile
+            ProcessUtilities.executioner(execPath)
 
             mailUtilities.checkHome()
 
