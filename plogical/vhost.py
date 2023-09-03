@@ -5,7 +5,6 @@ import sys
 import django
 
 from plogical.acl import ACLManager
-
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 try:
@@ -628,6 +627,10 @@ class vhost:
             externalApp = child.master.externalApp
         #HomePath = website.externalApp
         virtualHostUser = externalApp
+
+        from plogical.phpUtilities import phpUtilities
+
+        phpVersion = phpUtilities.FindIfSaidPHPIsAvaiableOtherwiseMaketheNextOneAvailableToUse(vhFile, phpVersion)
 
         phpDetachUpdatePath = '/home/%s/.lsphp_restart.txt' % (vhFile.split('/')[-2])
         if ProcessUtilities.decideServer() == ProcessUtilities.OLS:

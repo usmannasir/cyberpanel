@@ -226,19 +226,30 @@ class phpUtilities:
             return result
 
         else:
-            command = f'grep -Eo -m 1 "php[0-9]+" {vhFile}'
+            command = f'grep -Po "php\d+" {vhFile} | head -n 1'
             result = ProcessUtilities.outputExecutioner(command, None, True).rstrip('\n')
             result = f'/usr/local/lsws/ls{result}/bin/lsphp'
             result = result.rsplit("lsphp", 1)[0] + "php"
             return result
 
-
+    ## returns something like PHP 8.2
     @staticmethod
     def WrapGetPHPVersionFromFileToGetVersionWithPHP(vhFile):
         result = phpUtilities.GetPHPVersionFromFile(vhFile)
         command = result + " -v | awk '/^PHP/ {print $2}'"
         php_version = ProcessUtilities.outputExecutioner(command, None, True).rstrip('\n')
         return f"PHP {php_version}"
+
+    @staticmethod
+    def FindIfSaidPHPIsAvaiableOtherwiseMaketheNextOneAvailableToUse(vhFile, phpVersion):
+        result = phpUtilities.GetPHPVersionFromFile(vhFile)
+
+        if os.path.exists(result):
+            return phpVersion
+        else:
+            from managePHP.phpManager import PHPManager
+            return PHPManager.findPHPVersions()[-2]
+
 
 
 
