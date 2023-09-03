@@ -12,15 +12,29 @@ class PHPManager:
 
     @staticmethod
     def findPHPVersions():
-        distro = ProcessUtilities.decideDistro()
-        if distro == ProcessUtilities.centos:
-            return ['PHP 5.3', 'PHP 5.4', 'PHP 5.5', 'PHP 5.6', 'PHP 7.0', 'PHP 7.1', 'PHP 7.2', 'PHP 7.3', 'PHP 7.4', 'PHP 8.0', 'PHP 8.1']
-        elif distro == ProcessUtilities.cent8:
-            return ['PHP 7.1','PHP 7.2', 'PHP 7.3', 'PHP 7.4', 'PHP 8.0', 'PHP 8.1']
-        elif distro == ProcessUtilities.ubuntu20:
-            return ['PHP 7.2', 'PHP 7.3', 'PHP 7.4', 'PHP 8.0', 'PHP 8.1']
-        else:
-            return ['PHP 7.0', 'PHP 7.1', 'PHP 7.2', 'PHP 7.3', 'PHP 7.4', 'PHP 8.0', 'PHP 8.1']
+        import re
+        import os
+        php_versions = []
+        lsws_directory = "/usr/local/lsws"
+
+        if os.path.exists(lsws_directory):
+            for dir_name in os.listdir(lsws_directory):
+                full_path = os.path.join(lsws_directory, dir_name)
+                if os.path.isdir(full_path) and dir_name.startswith("lsphp"):
+                    php_version = dir_name.replace("lsphp", "PHP ").replace("", ".")
+                    php_versions.append(php_version)
+
+        result_list = []
+        for item in sorted(php_versions):
+            # Use regular expression to find numbers in the string
+            numbers = re.findall(r'\d+', item)
+
+            # Join the numbers with dots and add 'PHP' back to the string
+            result = 'PHP ' + '.'.join(numbers)
+
+            result_list.append(result)
+
+        return sorted(result_list)
 
     @staticmethod
     def getPHPString(phpVersion):
