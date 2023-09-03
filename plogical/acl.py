@@ -407,9 +407,9 @@ class ACLManager:
         finalResponse = ACLManager.loadedACL(userID)
 
         if finalResponse['admin'] == 1:
-            return Administrator.objects.all().exclude(pk=userID)
+            return Administrator.objects.all().exclude(pk=userID).order_by('userName')
         else:
-            admins = Administrator.objects.filter(owner=admin.pk)
+            admins = Administrator.objects.filter(owner=admin.pk).order_by('userName')
             for items in admins:
                 adminObjects.append(items)
 
