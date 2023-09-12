@@ -136,68 +136,70 @@ class preFlightsChecks:
 
     def mountTemp(self):
         try:
-            ## On OpenVZ there is an issue using .tempdisk for /tmp as it breaks network on container after reboot.
+            # ## On OpenVZ there is an issue using .tempdisk for /tmp as it breaks network on container after reboot.
+            #
+            # if subprocess.check_output('systemd-detect-virt').decode("utf-8").find("openvz") > -1:
+            #
+            #     varTmp = "/var/tmp /tmp none bind 0 0\n"
+            #
+            #     fstab = "/etc/fstab"
+            #     writeToFile = open(fstab, "a")
+            #     writeToFile.writelines(varTmp)
+            #     writeToFile.close()
+            #
+            # else:
+            #
+            #     command = "dd if=/dev/zero of=/usr/.tempdisk bs=100M count=15"
+            #     preFlightsChecks.call(command, self.distro, command,
+            #                           command,
+            #                           1, 0, os.EX_OSERR)
+            #
+            #     command = "mkfs.ext4 -F /usr/.tempdisk"
+            #     preFlightsChecks.call(command, self.distro, command,
+            #                           command,
+            #                           1, 0, os.EX_OSERR)
+            #
+            #     command = "mkdir -p /usr/.tmpbak/"
+            #     preFlightsChecks.call(command, self.distro, command,
+            #                           command,
+            #                           1, 0, os.EX_OSERR)
+            #
+            #     command = "cp -pr /tmp/* /usr/.tmpbak/"
+            #     subprocess.call(command, shell=True)
+            #
+            #     command = "mount -o loop,rw,nodev,nosuid,noexec,nofail /usr/.tempdisk /tmp"
+            #     preFlightsChecks.call(command, self.distro, command,
+            #                           command,
+            #                           1, 0, os.EX_OSERR)
+            #
+            #     command = "chmod 1777 /tmp"
+            #     preFlightsChecks.call(command, self.distro, command,
+            #                           command,
+            #                           1, 0, os.EX_OSERR)
+            #
+            #     command = "cp -pr /usr/.tmpbak/* /tmp/"
+            #     subprocess.call(command, shell=True)
+            #
+            #     command = "rm -rf /usr/.tmpbak"
+            #     preFlightsChecks.call(command, self.distro, command,
+            #                           command,
+            #                           1, 0, os.EX_OSERR)
+            #
+            #     command = "mount --bind /tmp /var/tmp"
+            #     preFlightsChecks.call(command, self.distro, command,
+            #                           command,
+            #                           1, 0, os.EX_OSERR)
+            #
+            #     tmp = "/usr/.tempdisk /tmp ext4 loop,rw,noexec,nosuid,nodev,nofail 0 0\n"
+            #     varTmp = "/tmp /var/tmp none bind 0 0\n"
+            #
+            #     fstab = "/etc/fstab"
+            #     writeToFile = open(fstab, "a")
+            #     writeToFile.writelines(tmp)
+            #     writeToFile.writelines(varTmp)
+            #     writeToFile.close()
 
-            if subprocess.check_output('systemd-detect-virt').decode("utf-8").find("openvz") > -1:
-
-                varTmp = "/var/tmp /tmp none bind 0 0\n"
-
-                fstab = "/etc/fstab"
-                writeToFile = open(fstab, "a")
-                writeToFile.writelines(varTmp)
-                writeToFile.close()
-
-            else:
-
-                command = "dd if=/dev/zero of=/usr/.tempdisk bs=100M count=15"
-                preFlightsChecks.call(command, self.distro, command,
-                                      command,
-                                      1, 0, os.EX_OSERR)
-
-                command = "mkfs.ext4 -F /usr/.tempdisk"
-                preFlightsChecks.call(command, self.distro, command,
-                                      command,
-                                      1, 0, os.EX_OSERR)
-
-                command = "mkdir -p /usr/.tmpbak/"
-                preFlightsChecks.call(command, self.distro, command,
-                                      command,
-                                      1, 0, os.EX_OSERR)
-
-                command = "cp -pr /tmp/* /usr/.tmpbak/"
-                subprocess.call(command, shell=True)
-
-                command = "mount -o loop,rw,nodev,nosuid,noexec,nofail /usr/.tempdisk /tmp"
-                preFlightsChecks.call(command, self.distro, command,
-                                      command,
-                                      1, 0, os.EX_OSERR)
-
-                command = "chmod 1777 /tmp"
-                preFlightsChecks.call(command, self.distro, command,
-                                      command,
-                                      1, 0, os.EX_OSERR)
-
-                command = "cp -pr /usr/.tmpbak/* /tmp/"
-                subprocess.call(command, shell=True)
-
-                command = "rm -rf /usr/.tmpbak"
-                preFlightsChecks.call(command, self.distro, command,
-                                      command,
-                                      1, 0, os.EX_OSERR)
-
-                command = "mount --bind /tmp /var/tmp"
-                preFlightsChecks.call(command, self.distro, command,
-                                      command,
-                                      1, 0, os.EX_OSERR)
-
-                tmp = "/usr/.tempdisk /tmp ext4 loop,rw,noexec,nosuid,nodev,nofail 0 0\n"
-                varTmp = "/tmp /var/tmp none bind 0 0\n"
-
-                fstab = "/etc/fstab"
-                writeToFile = open(fstab, "a")
-                writeToFile.writelines(tmp)
-                writeToFile.writelines(varTmp)
-                writeToFile.close()
+            pass
 
         except BaseException as msg:
             preFlightsChecks.stdOut('[ERROR] ' + str(msg))

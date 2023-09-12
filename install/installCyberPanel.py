@@ -204,6 +204,9 @@ class InstallCyberPanel:
             command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp81*'
             os.system(command)
 
+            command = 'DEBIAN_FRONTEND=noninteractive apt-get -y install lsphp82*'
+            os.system(command)
+
         elif self.distro == centos:
             command = 'yum -y groupinstall lsphp-all'
             install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
@@ -241,7 +244,7 @@ class InstallCyberPanel:
             command = 'dnf install lsphp71* lsphp72* lsphp73* lsphp74* lsphp80* --exclude lsphp73-pecl-zip --exclude *imagick* -y --skip-broken'
             subprocess.call(command, shell=True)
 
-            command = 'dnf install lsphp81* --exclude *imagick* -y --skip-broken'
+            command = 'dnf install lsphp81* lsphp82* --exclude *imagick* -y --skip-broken'
             subprocess.call(command, shell=True)
         
         if self.distro == openeuler:

@@ -70,7 +70,7 @@ class cPanelImporter:
                 if value[2] == 'main':
                     self.MainSite = value
                     self.PHPVersion = value[9]
-                    self.InheritPHP = self.PHPDecider(key)
+                    self.InheritPHP = self.PHPDecider(None)
                 else:
                     self.OtherDomainNames.append(key)
                     self.OtherDomains.append(value)
@@ -119,7 +119,10 @@ class cPanelImporter:
 
             from plogical.phpUtilities import phpUtilities
 
-            completePathToConfigFile = f'/usr/local/lsws/conf/vhosts/{domainName}/vhost.conf'
+            if domainName !=None:
+                completePathToConfigFile = f'/usr/local/lsws/conf/vhosts/{domainName}/vhost.conf'
+            else:
+                completePathToConfigFile = None
 
             phpVersion = phpUtilities.FindIfSaidPHPIsAvaiableOtherwiseMaketheNextOneAvailableToUse(completePathToConfigFile, self.PHPVersion)
 
@@ -225,7 +228,7 @@ class cPanelImporter:
             logging.statusWriter(self.logFile, message, 1)
 
             self.PHPVersion = self.MainSite[9]
-            self.PHPDecider(self.mainDomain)
+            self.PHPDecider(None)
 
             message = 'PHP version of %s is %s.' % (DomainName, self.PHPVersion)
             logging.statusWriter(self.logFile, message, 1)
@@ -270,7 +273,7 @@ class cPanelImporter:
             if result[0] == 1:
                 pass
             else:
-                message = 'Failed to create main site %s from archive file: %s' % (DomainName, self.backupFile)
+                message = f'Failed to create main site %s from archive file: %s. Error {str(result)}' % (DomainName, self.backupFile)
                 logging.statusWriter(self.logFile, message, 1)
                 return 0
 
@@ -373,7 +376,7 @@ class cPanelImporter:
                     ## Find PHP Version
 
                     self.PHPVersion = self.OtherDomains[counter][9]
-                    self.PHPDecider(items)
+                    self.PHPDecider(None)
 
                     message = 'Calling core to create %s.' % (items)
                     logging.statusWriter(self.logFile, message, 1)

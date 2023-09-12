@@ -242,13 +242,23 @@ class phpUtilities:
 
     @staticmethod
     def FindIfSaidPHPIsAvaiableOtherwiseMaketheNextOneAvailableToUse(vhFile, phpVersion):
-        result = phpUtilities.GetPHPVersionFromFile(vhFile)
+        if vhFile != None:
+            result = phpUtilities.GetPHPVersionFromFile(vhFile)
 
-        if os.path.exists(result):
-            return phpVersion
+            if os.path.exists(result):
+                return phpVersion
+            else:
+                from managePHP.phpManager import PHPManager
+                return PHPManager.findPHPVersions()[-2]
         else:
             from managePHP.phpManager import PHPManager
-            return PHPManager.findPHPVersions()[-2]
+            php = PHPManager.getPHPString(phpVersion)
+            finalPath = f'/usr/local/lsws/lsphp{php}/bin/php'
+            if os.path.exists(finalPath):
+                return phpVersion
+            else:
+                from managePHP.phpManager import PHPManager
+                return PHPManager.findPHPVersions()[-2]
 
 
 
