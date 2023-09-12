@@ -248,7 +248,7 @@ if [ -z "$XDG_CURRENT_DESKTOP" ]; then
     echo -e "Desktop OS not detected. Proceeding\n"
 else
     echo "$XDG_CURRENT_DESKTOP defined appears to be a desktop OS. Bailing as CyberPanel is incompatible."
-    echo -e "\nCyberPanel is supported on server OS types only. Such as Ubuntu 18.04 x86_64, Ubuntu 20.04 x86_64, Ubuntu 20.10 x86_64, CentOS 7.x, CentOS 8.x, AlmaLinux 8.x and CloudLinux 7.x...\n"
+    echo -e "\nCyberPanel is supported on server OS types only. Such as Ubuntu 18.04 x86_64, Ubuntu 20.04 x86_64, Ubuntu 20.10 x86_64, Ubuntu 22.04 x86_64, CentOS 8.x, AlmaLinux 8.x and CloudLinux 7.x...\n"
     exit
 fi
 
