@@ -34,6 +34,7 @@ centos = 0
 ubuntu = 1
 cent8 = 2
 openeuler = 3
+CloudLinux8 = 0
 
 
 def get_distro():
@@ -52,11 +53,14 @@ def get_distro():
 
         data = open('/etc/redhat-release', 'r').read()
 
+
         if data.find('CentOS Linux release 8') > -1:
             return cent8
         if data.find('AlmaLinux release 8') > -1:
             return cent8
         if data.find('Rocky Linux release 8') > -1 or data.find('Rocky Linux 8') > -1 or data.find('rocky:8') > -1:
+            return cent8
+        if data.find('CloudLinux 8') or data.find('cloudlinux 8'):
             return cent8
 
     else:

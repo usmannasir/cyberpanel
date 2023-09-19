@@ -40,6 +40,15 @@ def get_Ubuntu_release():
 class InstallCyberPanel:
     mysql_Root_password = ""
     mysqlPassword = ""
+    CloudLinux8 = 0
+
+    @staticmethod
+    def OSFlags():
+        if os.path.exists("/etc/redhat-release"):
+            data = open('/etc/redhat-release', 'r').read()
+
+            if data.find('CloudLinux 8') > -1 or data.find('cloudlinux 8') > -1:
+                InstallCyberPanel.CloudLinux8 = 1
 
     def __init__(self, rootPath, cwd, distro, ent, serial=None, port=None, ftp=None, dns=None, publicip=None,
                  remotemysql=None, mysqlhost=None, mysqldb=None, mysqluser=None, mysqlpassword=None, mysqlport=None):
@@ -58,6 +67,10 @@ class InstallCyberPanel:
         self.mysqlpassword = mysqlpassword
         self.mysqlport = mysqlport
         self.mysqldb = mysqldb
+
+        ## TURN ON OS FLAGS FOR SPECIFIC NEEDS LATER
+
+        InstallCyberPanel.OSFlags()
 
     @staticmethod
     def stdOut(message, log=0, exit=0, code=os.EX_OK):
