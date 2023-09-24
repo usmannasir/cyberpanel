@@ -1,15 +1,6 @@
-import subprocess
+import secrets
+import string
 
-
-def installCertBot():
-    cmd = []
-
-    cmd.append("yum")
-    cmd.append("-y")
-    cmd.append("install")
-    cmd.append("certbot")
-
-    res = subprocess.call(cmd)
-
-
-installCertBot()
+alphabet = string.ascii_letters + string.digits
+the_password = ''.join(secrets.choice(alphabet) for _ in range(14))
+print(the_password)
