@@ -633,6 +633,9 @@ class DNS:
     def createDNSRecord(zone, name, type, value, priority, ttl):
         try:
 
+            if Records.objects.filter(name=name, type=type).count() > 0:
+                return
+
             if zone.type == 'MASTER':
                 getSOA = Records.objects.get(domainOwner=zone, type='SOA')
                 soaContent = getSOA.content.split(' ')
