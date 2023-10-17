@@ -181,6 +181,9 @@ class remoteTransferUtilities:
                         logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [remoteTransferUtilities.backupProcess:173]")
                         pass
 
+                portpath = "/home/cyberpanel/remote_port"
+                os.remove(portpath)
+
                 writeToFile = open(backupLogPath, "a")
                 writeToFile.writelines("[" + time.strftime(
                     "%m.%d.%Y_%H-%M-%S") + "]" + " Backups are successfully generated and received on: " + ipAddress + "\n")
@@ -191,15 +194,31 @@ class remoteTransferUtilities:
                 # rmtree(dir)
 
             except BaseException as msg:
+                writeToFile = open(backupLogPath, "a")
+                writeToFile.writelines("[" + time.strftime(
+                    "%m.%d.%Y_%H-%M-%S") + "]" + " Backups are not generated "  "\n")
+                writeToFile.close()
                 logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [backupProcess]")
 
     @staticmethod
     def sendBackup(completedPathToSend, IPAddress, folderNumber,writeToFile):
         try:
             ## complete path is a path to the file need to send
+            portpath = "/home/cyberpanel/remote_port"
 
-            command = "sudo scp -o StrictHostKeyChecking=no -i /root/.ssh/cyberpanel " + completedPathToSend + " root@" + IPAddress + ":/home/backup/transfer-" + folderNumber + "/"
-            subprocess.call(shlex.split(command), stdout=writeToFile)
+            logging.CyberCPLogFileWriter.writeToFile("habbi--------open file:%s"%portpath)
+
+            # Read the contents of the file
+            with open(portpath, 'r') as file:
+                sshPort = file.readline().strip()
+
+            command = "sudo scp -o StrictHostKeyChecking=no -i /root/.ssh/cyberpanel -P "+ sshPort + " " + completedPathToSend + " root@" + IPAddress + ":/home/backup/transfer-" + folderNumber + "/"
+            return_Code = subprocess.call(shlex.split(command), stdout=writeToFile)
+            if return_Code == 0:
+                logging.CyberCPLogFileWriter.writeToFile("This backup file is run")
+            else:
+                logging.CyberCPLogFileWriter.writeToFile("This back file is not run")
+
 
             if os.path.exists(ProcessUtilities.debugPath):
                 logging.CyberCPLogFileWriter.writeToFile(command)
@@ -333,6 +352,10 @@ class remoteTransferUtilities:
             writeToFile.writelines("completed[success]")
 
         except BaseException as msg:
+            writeToFile = open(backupLogPath, "a")
+            writeToFile.writelines("[" + time.strftime(
+                "%m.%d.%Y_%H-%M-%S") + "]" + " Backup Restore Failed\n")
+            writeToFile.writelines("Error[Failed]")
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + " [remoteTransferUtilities.startRestore]")
 
 

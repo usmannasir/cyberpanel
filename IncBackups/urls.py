@@ -38,5 +38,7 @@ urlpatterns = [
     url(r'^schedulev2Backups$', views.schedulev2Backups, name='schedulev2Backups'),
     url(r'^DeleteScheduleV2$', views.DeleteScheduleV2, name='DeleteScheduleV2'),
     url(r'^CreateScheduleV2$', views.CreateScheduleV2, name='CreateScheduleV2'),
+    url(r'^DeleteRepoV2$', views.DeleteRepoV2, name='DeleteRepoV2'),
+    url(r'^DeleteV2BackupButton$', views.DeleteV2BackupButton, name='DeleteV2BackupButton'),
 
 ]

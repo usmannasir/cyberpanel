@@ -1918,10 +1918,10 @@ app.controller('ScheduleV2Backup', function ($scope, $http, $timeout, $compile) 
             if (response.data.status === 1) {
                 $scope.selectwebsite();
                 new PNotify({
-                        title: 'Success!',
-                        text: 'Successfully deleted.',
-                        type: 'success'
-                    });
+                    title: 'Success!',
+                    text: 'Successfully deleted.',
+                    type: 'success'
+                });
 
             } else {
                 new PNotify({
@@ -2054,10 +2054,10 @@ app.controller('ScheduleV2Backup', function ($scope, $http, $timeout, $compile) 
             if (response.data.status === 1) {
                 $scope.selectwebsite();
                 new PNotify({
-                        title: 'Success!',
-                        text: 'Successfully created.',
-                        type: 'success'
-                    });
+                    title: 'Success!',
+                    text: 'Successfully created.',
+                    type: 'success'
+                });
 
             } else {
                 new PNotify({
@@ -2240,5 +2240,164 @@ app.controller('ScheduleV2Backup', function ($scope, $http, $timeout, $compile) 
     }
 
 
+});
+
+
+app.controller('DeleteBackuprepo', function ($scope, $http, $timeout, $compile) {
+
+    $scope.backupLoading = true;
+    $scope.installationProgress = true;
+    $scope.errorMessageBox = true;
+    $scope.success = true;
+    $scope.couldNotConnect = true;
+    $scope.goBackDisable = true;
+
+    $scope.selectwebsite = function () {
+        document.getElementById('reposelectbox').innerHTML = "";
+        $scope.backupLoading = false;
+        // document.getElementById('CreateV2BackupButton').style.display = "block";
+        var url = "/IncrementalBackups/selectwebsiteCreatev2";
+
+        var data = {
+            Selectedwebsite: $scope.selwebsite,
+            Selectedrepo: $('#reposelectbox').val(),
+        };
+        //alert( $scope.selwebsite);
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.backupLoading = true;
+            if (response.data.status === 1) {
+
+                const selectBox = document.getElementById('reposelectbox');
+
+
+                const options = response.data.data;
+                const option = document.createElement('option');
+
+
+                option.value = 1;
+                option.text = 'Choose Repo';
+
+                selectBox.appendChild(option);
+
+                if (options.length >= 1) {
+                    for (let i = 0; i < options.length; i++) {
+
+                        const option = document.createElement('option');
+
+
+                        option.value = options[i];
+                        option.text = options[i];
+
+                        selectBox.appendChild(option);
+                    }
+
+                } else {
+                    new PNotify({
+                        title: 'Error!',
+                        text: 'file empty',
+                        type: 'error'
+                    });
+                }
+
+
+            } else {
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.backupLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+        }
+    }
+
+    $scope.DeleteV2BackupButton = function () {
+        $scope.backupLoading = false;
+        $scope.installationDetailsForm = true;
+        $scope.installationProgress = false;
+        $scope.errorMessageBox = true;
+        $scope.success = true;
+        $scope.couldNotConnect = true;
+        $scope.goBackDisable = true;
+
+        var url = "/IncrementalBackups/DeleteV2BackupButton";
+
+
+        data = {
+            Selectedwebsite: $scope.selwebsite,
+            Selectedrepo: $('#reposelectbox').val(),
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        //alert('Done..........')
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+            if (response.data.status === 1) {
+                $scope.backupLoading = true;
+                $scope.installationDetailsForm = true;
+                $scope.installationProgress = true;
+                $scope.errorMessageBox = true;
+                $scope.success = false;
+                $scope.couldNotConnect = true;
+                $scope.goBackDisable = true;
+                new PNotify({
+                    title: 'Operation Done!',
+                    text: 'Delete Successfully',
+                    type: 'sucess'
+                });
+            } else {
+                $scope.backupLoading = true;
+                $scope.installationDetailsForm = true;
+                $scope.installationProgress = false;
+                $scope.errorMessageBox = false;
+                $scope.success = true;
+                $scope.couldNotConnect = true;
+                $scope.goBackDisable = false;
+
+                $scope.errorMessage = response.data.error_message;
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.backupLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+        }
+    }
 });
 

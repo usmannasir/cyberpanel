@@ -70,7 +70,7 @@ class cPanelImporter:
                 if value[2] == 'main':
                     self.MainSite = value
                     self.PHPVersion = value[9]
-                    self.InheritPHP = self.PHPDecider()
+                    self.InheritPHP = self.PHPDecider(None)
                 else:
                     self.OtherDomainNames.append(key)
                     self.OtherDomains.append(value)
@@ -78,7 +78,7 @@ class cPanelImporter:
         except BaseException as msg:
             print(str(msg))
 
-    def PHPDecider(self):
+    def PHPDecider(self, domainName):
 
         if self.PHPVersion == 'inherit':
             self.PHPVersion = 'PHP 7.4'
@@ -104,12 +104,33 @@ class cPanelImporter:
             self.PHPVersion = 'PHP 8.0'
         elif self.PHPVersion.find('81') > -1:
             self.PHPVersion = 'PHP 8.1'
+        elif self.PHPVersion.find('82') > -1:
+            self.PHPVersion = 'PHP 8.2'
             
         if self.PHPVersion == '':
             if self.InheritPHP != '':
                 self.PHPVersion = self.InheritPHP
             else:
                 self.PHPVersion = 'PHP 7.4'
+
+        ### if the PHP Version extracted from file is not available then change it to next available
+
+        try:
+
+            from plogical.phpUtilities import phpUtilities
+
+            if domainName !=None:
+                completePathToConfigFile = f'/usr/local/lsws/conf/vhosts/{domainName}/vhost.conf'
+            else:
+                completePathToConfigFile = None
+
+            phpVersion = phpUtilities.FindIfSaidPHPIsAvaiableOtherwiseMaketheNextOneAvailableToUse(completePathToConfigFile, self.PHPVersion)
+
+            if phpVersion != self.PHPVersion:
+                logging.statusWriter(self.logFile, f'PHP version for {self.mainDomain} has been changed from {self.PHPVersion} to {phpVersion}.', 1)
+                self.PHPVersion = phpVersion
+        except:
+            pass
 
         return self.PHPVersion
 
@@ -207,7 +228,7 @@ class cPanelImporter:
             logging.statusWriter(self.logFile, message, 1)
 
             self.PHPVersion = self.MainSite[9]
-            self.PHPDecider()
+            self.PHPDecider(None)
 
             message = 'PHP version of %s is %s.' % (DomainName, self.PHPVersion)
             logging.statusWriter(self.logFile, message, 1)
@@ -252,7 +273,7 @@ class cPanelImporter:
             if result[0] == 1:
                 pass
             else:
-                message = 'Failed to create main site %s from archive file: %s' % (DomainName, self.backupFile)
+                message = f'Failed to create main site %s from archive file: %s. Error {str(result)}' % (DomainName, self.backupFile)
                 logging.statusWriter(self.logFile, message, 1)
                 return 0
 
@@ -355,7 +376,7 @@ class cPanelImporter:
                     ## Find PHP Version
 
                     self.PHPVersion = self.OtherDomains[counter][9]
-                    self.PHPDecider()
+                    self.PHPDecider(None)
 
                     message = 'Calling core to create %s.' % (items)
                     logging.statusWriter(self.logFile, message, 1)

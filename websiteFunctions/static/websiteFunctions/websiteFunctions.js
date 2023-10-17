@@ -1782,13 +1782,13 @@ var PluginsList = [];
 function AddPluginToArray(cBox, name) {
     if (cBox.checked) {
         PluginsList.push(name);
-        alert(PluginsList);
+        // alert(PluginsList);
     } else {
         const index = PluginsList.indexOf(name);
         if (index > -1) {
             PluginsList.splice(index, 1);
         }
-        alert(PluginsList);
+        // alert(PluginsList);
     }
 }
 
@@ -1797,13 +1797,13 @@ var ThemesList = [];
 function AddThemeToArray(cBox, name) {
     if (cBox.checked) {
         ThemesList.push(name);
-        alert(ThemesList);
+        // alert(ThemesList);
     } else {
         const index = ThemesList.indexOf(name);
         if (index > -1) {
             ThemesList.splice(index, 1);
         }
-        alert(ThemesList);
+        // alert(ThemesList);
     }
 }
 

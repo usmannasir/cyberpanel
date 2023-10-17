@@ -1137,6 +1137,23 @@ team_drive =
         except BaseException as msg:
             return 0, str(msg)
 
+
+
+    @staticmethod
+    def DeleteRepoScheduleV2(website, repo, eu):
+        try:
+            finalConfigPath = f'/home/{website}/.config/rclone/rclone.conf'
+
+            if os.path.exists(finalConfigPath):
+                command = f"sed -i '/\[{repo}\]/,/^$/d' {finalConfigPath}"
+                ProcessUtilities.outputExecutioner(command, eu, True)
+
+
+                return 1, 'Done'
+            else:
+                return 0, "Repo not found!"
+        except BaseException as msg:
+            return 0, str(msg)
     # def BackupEmails(self):
     #
     #     ### This function will backup emails of the website, also need to take care of emails that we need to exclude

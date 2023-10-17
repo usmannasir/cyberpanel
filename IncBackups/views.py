@@ -780,6 +780,15 @@ def CreateV2Backup(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
+def DeleteRepoV2(request):
+    try:
+        userID = request.session['userID']
+        bm = BackupManager()
+        return bm.DeleteRepoV2(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
 def CreateV2BackupButton(request):
     try:
         userID = request.session['userID']
@@ -1150,6 +1159,47 @@ def CreateScheduleV2(request):
         final_dic = {'status': 1, 'error_message': message}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
+
+        # final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": None})
+        # return HttpResponse(final_json)
+
+
+    except BaseException as msg:
+        final_dic = {'status': 0, 'fetchStatus': 0, 'error_message': str(msg)}
+        final_json = json.dumps(final_dic)
+        return HttpResponse(final_json)
+
+
+
+def DeleteV2BackupButton(request):
+    try:
+        userID = request.session['userID']
+        data = json.loads(request.body)
+        Selectedwebsite = data['Selectedwebsite']
+        repo = data['Selectedrepo']
+
+        currentACL = ACLManager.loadedACL(userID)
+        admin = Administrator.objects.get(pk=userID)
+
+        if ACLManager.checkOwnership(str(Selectedwebsite), admin, currentACL) == 1:
+            pass
+        else:
+            return ACLManager.loadError()
+
+
+        obj = Websites.objects.get(domain=Selectedwebsite)
+        usr= obj.externalApp
+
+        status, message = CPBackupsV2.DeleteRepoScheduleV2(Selectedwebsite, repo, usr)
+
+        if status == 1:
+            final_dic = {'status': 1, 'error_message': message}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+        else:
+            final_dic = {'status': 0, 'error_message': message}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
 
         # final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": None})
         # return HttpResponse(final_json)

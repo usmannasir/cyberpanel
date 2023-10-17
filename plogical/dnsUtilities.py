@@ -120,8 +120,11 @@ class DNS:
             command = 'chown cyberpanel:cyberpanel -R /usr/local/CyberCP/lib/python3.8/site-packages/tldextract/.suffix_cache'
             ProcessUtilities.executioner(command)
 
-            command = 'chown cyberpanel:cyberpanel /usr/local/CyberCP/lib/python3.10/site-packages/tldextract/.suffix_cache/urls/*.tldextract.json'
+            command = 'chown cyberpanel:cyberpanel -R /usr/local/CyberCP/lib/python*/site-packages/tldextract/.suffix_cache'
             ProcessUtilities.executioner(command, None, True)
+
+            command = 'chown cyberpanel:cyberpanel -R /usr/local/CyberCP/lib/python3.8/site-packages/tldextract/.suffix_cache'
+            ProcessUtilities.executioner(command)
 
             import tldextract
 
@@ -148,7 +151,6 @@ class DNS:
                                                  disabled=0,
                                                  auth=1)
                                 record.save()
-
                         else:
                             zone = Domains(admin=admin, name=topLevelDomain, type="NATIVE")
                     except:
@@ -530,7 +532,7 @@ class DNS:
             command = 'chown cyberpanel:cyberpanel -R /usr/local/CyberCP/lib/python3.8/site-packages/tldextract/.suffix_cache'
             ProcessUtilities.executioner(command)
 
-            command = 'chown cyberpanel:cyberpanel /usr/local/CyberCP/lib/python3.10/site-packages/tldextract/.suffix_cache/urls/*.tldextract.json'
+            command = 'chown cyberpanel:cyberpanel -R /usr/local/CyberCP/lib/python*/site-packages/tldextract/.suffix_cache'
             ProcessUtilities.executioner(command, None, True)
 
             import tldextract
@@ -633,6 +635,9 @@ class DNS:
     @staticmethod
     def createDNSRecord(zone, name, type, value, priority, ttl):
         try:
+
+            if Records.objects.filter(name=name, type=type).count() > 0:
+                return
 
             if zone.type == 'MASTER':
                 getSOA = Records.objects.get(domainOwner=zone, type='SOA')

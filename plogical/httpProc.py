@@ -2,6 +2,8 @@
 
 from django.shortcuts import render, HttpResponse
 import json
+from plogical.processUtilities import ProcessUtilities
+
 
 class httpProc:
     def __init__(self, request, templateName, data = None, function = None):
@@ -40,6 +42,10 @@ class httpProc:
                 ipAddress = ipData.split('\n', 1)[0]
                 self.data['ipAddress'] = ipAddress
                 self.data['fullName'] = '%s %s' % (admin.firstName, admin.lastName)
+                # self.data['serverCheck'] = 1
+
+                if ProcessUtilities.decideServer() == ProcessUtilities.ent:
+                    self.data['serverCheck'] = 1
 
                 ### Load Custom CSS
                 try:

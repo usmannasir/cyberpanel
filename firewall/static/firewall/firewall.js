@@ -2273,3 +2273,112 @@ app.controller('installImunifyAV', function ($scope, $http, $timeout, $window) {
 
     }
 });
+
+
+app.controller('litespeed_ent_conf', function ($scope, $http, $timeout, $window){
+    $scope.modsecLoading = true;
+    $scope.rulesSaved = true;
+    $scope.couldNotConnect = true;
+    $scope.couldNotSave = true;
+    fetchlitespeed_conf();
+    function fetchlitespeed_conf() {
+
+        $scope.modsecLoading = false;
+        $scope.modsecLoading = true;
+        $scope.rulesSaved = true;
+        $scope.couldNotConnect = true;
+
+
+        url = "/firewall/fetchlitespeed_conf";
+
+        var data = {};
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+            $scope.modsecLoading = true;
+
+            if (response.data.status === 1) {
+
+                $scope.currentLitespeed_conf = response.data.currentLitespeed_conf;
+
+            }
+            else
+            {
+                $scope.errorMessage = response.data.error_message;
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.modsecLoading = true;
+        }
+
+    }
+
+
+
+    $scope.saveLitespeed_conf  = function () {
+        // alert('test-----------------')
+
+        $scope.modsecLoading = false;
+        $scope.rulesSaved = true;
+        $scope.couldNotConnect = true;
+        $scope.couldNotSave = true;
+
+
+        url = "/firewall/saveLitespeed_conf";
+
+        var data = {
+            modSecRules: $scope.currentLitespeed_conf
+
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+            $scope.modsecLoading = true;
+
+            if (response.data.status === 1) {
+
+                $scope.rulesSaved = false;
+                $scope.couldNotConnect = true;
+                $scope.couldNotSave = true;
+
+                $scope.currentLitespeed_conf = response.data.currentLitespeed_conf;
+
+            } else {
+                $scope.rulesSaved = true;
+                $scope.couldNotConnect = false;
+                $scope.couldNotSave = false;
+
+                $scope.errorMessage = response.data.error_message;
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.modsecLoading = true;
+            $scope.rulesSaved = true;
+            $scope.couldNotConnect = false;
+            $scope.couldNotSave = true;
+        }
+    }
+
+});

@@ -2832,7 +2832,7 @@ class CloudManager:
             command = 'chown cyberpanel:cyberpanel -R /usr/local/CyberCP/lib/python3.8/site-packages/tldextract/.suffix_cache'
             ProcessUtilities.executioner(command)
 
-            command = 'chown cyberpanel:cyberpanel /usr/local/CyberCP/lib/python3.10/site-packages/tldextract/.suffix_cache/urls/*.tldextract.json'
+            command = 'chown cyberpanel:cyberpanel -R /usr/local/CyberCP/lib/python*/site-packages/tldextract/.suffix_cache'
             ProcessUtilities.executioner(command, None, True)
 
             ##
@@ -2855,7 +2855,7 @@ class CloudManager:
             command = 'chown cyberpanel:cyberpanel -R /usr/local/CyberCP/lib/python3.8/site-packages/tldextract/.suffix_cache'
             ProcessUtilities.executioner(command)
 
-            command = 'chown cyberpanel:cyberpanel /usr/local/CyberCP/lib/python3.10/site-packages/tldextract/.suffix_cache/urls/*.tldextract.json'
+            command = 'chown cyberpanel:cyberpanel -R /usr/local/CyberCP/lib/python*/site-packages/tldextract/.suffix_cache'
             ProcessUtilities.executioner(command, None, True)
 
             for website in Websites.objects.all():
@@ -2903,7 +2903,7 @@ class CloudManager:
             command = 'chown cyberpanel:cyberpanel -R /usr/local/CyberCP/lib/python3.8/site-packages/tldextract/.suffix_cache'
             ProcessUtilities.executioner(command)
 
-            command = 'chown cyberpanel:cyberpanel /usr/local/CyberCP/lib/python3.10/site-packages/tldextract/.suffix_cache/urls/*.tldextract.json'
+            command = 'chown cyberpanel:cyberpanel -R /usr/local/CyberCP/lib/python*/site-packages/tldextract/.suffix_cache'
             ProcessUtilities.executioner(command, None, True)
 
             from websiteFunctions.models import ChildDomains
