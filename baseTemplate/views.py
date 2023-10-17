@@ -7,13 +7,13 @@ import subprocess
 import shlex
 import os
 import json
-from .plogical.getSystemInformation import SystemInformation
-from .plogical.CyberCPLogFileWriter as logging
-from .plogical.acl import ACLManager
+from plogical.getSystemInformation import SystemInformation
+from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+from plogical.acl import ACLManager
 from manageServices.models import PDNSStatus
 from django.views.decorators.csrf import ensure_csrf_cookie
-from .plogical.processUtilities import ProcessUtilities
-from .plogical.httpProc import httpProc
+from plogical.processUtilities import ProcessUtilities
+from plogical.httpProc import httpProc
 
 VERSION = '2.3'
 BUILD = 4
