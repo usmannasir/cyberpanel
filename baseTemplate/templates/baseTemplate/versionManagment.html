@@ -1,6 +1,6 @@
 {% extends "baseTemplate/index.html" %}
 {% load i18n %}
-{% block title %}{% trans "Version Management - CyberPanel" %}*{% endblock %}
+{% block title %}{% trans "Version Management - CyberPanel" %}"{% endblock %}
 {% block content %}
 
 {% load static %}
@@ -11,9 +11,9 @@
         <p>{% trans "Here you can manage versions and check for updates to CyberPanel" %}</p>
     </div>
     {% if Notecheck %}
-        <div class="alert alert-info">
-            <p style="color:red; font-weight: bold ;">{% trans "Note: Latest commit does not match, please upgrade CyberPanel." %}</p>
-        </div>
+    <div class="alert alert-info">
+        <p style="color:red; font-weight: bold;">{% trans "Note: Latest commit does not match, please upgrade CyberPanel." %}</p>
+    </div>
     {% endif %}
 
     <div class="panel">
@@ -22,9 +22,38 @@
                 CyberPanel
             </h3>
             <div ng-controller="versionManagment" class="example-box-wrapper">
-                <form action="{% url 'upgrade_cyberpanel' %}" method="post">
-                    {% csrf_token %}
-                    <button type="submit">Upgrade CyberPanel</button>
+                <div class="form-group">
+                    <progress id="upgradeProgress" value="0" max="100"></progress>
+                </div>
+                <div class="form-group">
+                    <label for="branchSelect">{% trans "Select Branch:" %}</label>
+                    <select id="branchSelect"></select>
+                </div>
+                <div class="form-group">
+                    <button type="submit" onclick="upgradeCyberPanel()">Upgrade CyberPanel to selected branch</button>
+                    <button type="submit" onclick="refreshPage()" class="line-over">Refresh page</button>
+                </div>
+                <form action="/" class="form-horizontal bordered-row">
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label" style="margin: 0px!important; padding: 0px!important;">{% trans "Current Version:" %}&nbsp&nbsp</label>
+                        <div class="current-pack col-sm-9" style="margin: 0px!important; padding: 0px!important;">{{ currentVersion }}</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label" style="margin: 0px!important; padding: 0px!important;">{% trans "Build:" %}&nbsp&nbsp</label>
+                        <div class="current-pack col-sm-9" style="margin: 0px!important; padding: 0px!important;">{{ build }}</div>
+                        <label class="col-sm-3 control-label" style="margin: 0px!important; padding: 0px!important;">{% trans "Current Commit:" %}&nbsp&nbsp</label>
+                        <div class="current-pack col-sm-9" style="margin: 0px!important; padding: 0px!important;">{{ Currentcomt }}</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label" style="margin: 0px!important; padding: 0px!important;">{% trans "Latest Version:" %}&nbsp&nbsp</label>
+                        <div class="current-pack col-sm-9" style="margin: 0px!important; padding: 0px!important;">{{ latestVersion }}</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-3 control-label" style="margin: 0px!important; padding: 0px!important;">{% trans "Latest Build:" %}&nbsp&nbsp</label>
+                        <div class="current-pack col-sm-9" style="margin: 0px!important; padding: 0px!important;">{{ latestBuild }}</div>
+                        <label class="col-sm-3 control-label" style="margin: 0px!important; padding: 0px!important;">{% trans "Latest Commit:" %}&nbsp&nbsp</label>
+                        <div class="current-pack col-sm-9" style="margin: 0px!important; padding: 0px!important;">{{ latestcomit }}</div>
+                    </div>
                 </form>
                 <div ng-hide="upgradelogBox" class="form-group">
                     <div class="col-sm-12">
@@ -34,47 +63,79 @@
             </div>
         </div>
     </div>
-
-    <div class="panel">
-        <div class panel-body>
-            <h3 class="title-hero">
-                CyberPanel
-            </h3>
-            <div ng-controller="versionManagment" class="example-box-wrapper">
-                <form action="/" class="form-horizontal bordered-row">
-                    <div class="form-group">
-                        <label class="col-sm-3 control-label " style="margin: 0px!important; padding: 0px!important;">{% trans "Current Version:" %}&nbsp&nbsp</label>
-                        <div class="current-pack col-sm-9" style="margin: 0px!important; padding: 0px!important;">{{ currentVersion }} </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="col-sm-3 control-label " style="margin: 0px!important; padding: 0px!important;">{% trans "Build:" %}&nbsp&nbsp</label>
-                        <div class="current-pack col-sm-9" style="margin: 0px!important; padding: 0px!important;">{{ build }} </div>
-                        <label class="col-sm-3 control-label " style="margin: 0px!important; padding: 0px!important;">{% trans "Current Commit:" %}&nbsp&nbsp</label>
-                        <div class="current-pack col-sm-9" style="margin: 0px!important; padding: 0px!important;">{{ Currentcomt }} </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="col-sm-3 control-label " style="margin: 0px!important; padding: 0px!important;">{% trans "Latest Version:" %}&nbsp&nbsp</label>
-                        <div class="current-pack col-sm-9" style="margin: 0px!important; padding: 0px!important;">{{ latestVersion }} </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="col-sm-3 control-label " style="margin: 0px!important; padding: 0px!important;">{% trans "Latest Build:" %}&nbsp&nbsp</label>
-                        <div class="current-pack col-sm-9" style="margin: 0px!important; padding: 0px!important;">{{ latestBuild }} </div>
-                        <label class="col-sm-3 control-label " style="margin: 0px!important; padding: 0px!important;">{% trans "Latest Commit:" %}&nbsp&nbsp</label>
-                        <div class="current-pack col-sm-9" style="margin: 0px!important; padding: 0px!important;">{{ latestcomit }} </div>
-                    </div>
-
-                    <div ng-hide="upgradelogBox" class="form-group">
-                        <div class="col-sm-12">
-                            <textarea ng-model="upgradeLog" rows="30" class="form-control">{{ logs }}</textarea>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
 </div>
+
+<script>
+// Function to populate the branch dropdown
+function populateBranches(branches) {
+    var branchSelect = document.getElementById("branchSelect");
+    branches.forEach((branch) => {
+        var option = document.createElement("option");
+        option.value = branch;
+        option.text = branch;
+        branchSelect.appendChild(option);
+    });
+}
+
+function getBranches(url, branches, page) {
+    if (!page) page = 1;
+    fetch(url + '?page=' + page)
+        .then((response) => response.json())
+        .then((data) => {
+            if (data.length === 0) {
+                populateBranches(branches);
+            } else {
+                const branchNames = data.map(branch => branch.name);
+                branches = branches.concat(branchNames);
+                getBranches(url, branches, page + 1);
+            }
+        })
+        .catch((error) => {
+            console.error('Error fetching branches: ' + error);
+        });
+}
+
+// Call the function to get all branches
+getBranches('https://api.github.com/repos/usmannasir/cyberpanel/branches', [], 1);
+
+function upgradeCyberPanel() {
+    var selectedBranch = document.getElementById("branchSelect").value;
+    var upgradeURL = 'https://raw.githubusercontent.com/usmannasir/cyberpanel/' + selectedBranch + '/preUpgrade.sh';
+
+    if (confirm("Are you sure you want to upgrade to the selected branch from GitHub?")) {
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', upgradeURL, true);
+        xhr.responseType = 'text';
+
+        xhr.onprogress = function (e) {
+            if (e.lengthComputable) {
+                var percent = (e.loaded / e.total) * 100;
+                document.getElementById("upgradeProgress").value = percent;
+            }
+        };
+
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    alert('Upgrade started. Please be patient, the upgrade process may take some time.');
+                } else if (xhr.status === 0) {
+                    alert('Upgrade failed. Server is not responding.');
+                } else if (xhr.status >= 400 && xhr.status < 500) {
+                    alert('Upgrade failed. Client error. Please check your request.');
+                } else if (xhr.status >= 500) {
+                    alert('Upgrade failed. Server error. Please check the server logs.');
+                } else {
+                    alert('Upgrade failed. Please check the logs for details.');
+                }
+            }
+        };
+        xhr.send();
+    }
+}
+
+function refreshPage() {
+    window.location.reload();
+}
+</script>
 
 {% endblock %}
