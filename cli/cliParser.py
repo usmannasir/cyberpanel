@@ -47,7 +47,7 @@ class cliParser:
         ## Database Arguments
 
         parser.add_argument('--dbName', help='Database name.')
-        parser.add_argument('--dbUsername', help='Datbase username.')
+        parser.add_argument('--dbUsername', help='Database username.')
         parser.add_argument('--dbPassword', help='Database password.')
         parser.add_argument('--databaseWebsite', help='Database website.')
 
