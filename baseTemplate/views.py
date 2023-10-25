@@ -150,7 +150,7 @@ def upgrade(request):
         res = subprocess.call(cmd)
 
         vers = version.objects.get(pk=1)
-        from upgrade import Upgrade
+        from plogical.upgrade import Upgrade
         Upgrade.initiateUpgrade(vers.currentVersion, vers.build)
         adminData = {"upgrade": 1}
         json_data = json.dumps(adminData)
