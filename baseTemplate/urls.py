@@ -2,17 +2,22 @@ from django.conf.urls import url
 from . import views
 
 urlpatterns = [
-    path('', views.renderBase, name='index'),
-    path('getSystemStatus', views.getSystemStatus, name='getSystemInformation'),
-    path('getAdminStatus', views.getAdminStatus, name='getSystemInformation'),
-    path('getLoadAverage', views.getLoadAverage, name='getLoadAverage'),
-    path('versionManagment', views.versionManagement, name='versionManagement'),
-    path('design', views.design, name='design'),
-    path('getthemedata', views.getthemedata, name='getthemedata'),
+    url(r'^$', views.renderBase, name='index'),
+    url(r'^getSystemStatus$',views.getSystemStatus, name='getSystemInformation'),
+    url(r'^getAdminStatus',views.getAdminStatus, name='getSystemInformation'),
+    url(r'^getLoadAverage',views.getLoadAverage, name='getLoadAverage'),
+    url(r'^versionManagment',views.versionManagement, name='versionManagment'),
+    url(r'^design', views.design, name='design'),
+    url(r'^getthemedata', views.getthemedata, name='getthemedata'),
+
+    #url(r'^upgrade',views.upgrade, name='upgrade'),
+
+    url(r'^UpgradeStatus',views.upgradeStatus, name='UpgradeStatus'),
+    url(r'^upgradeVersion',views.upgradeVersion, name='upgradeVersion'),
 
     # Add this URL pattern for 'upgrade_cyberpanel'
-    path('upgrade_cyberpanel', views.upgrade_cyberpanel, name='upgrade_cyberpanel'),
+    url(r'upgrade_cyberpanel', views.upgrade_cyberpanel, name='upgrade_cyberpanel'),
+    url(r'UpgradeStatus', views.upgradeStatus, name='UpgradeStatus'),
+    url(r'upgradeVersion', views.upgradeVersion, name='upgradeVersion'),
 
-    path('UpgradeStatus', views.upgradeStatus, name='UpgradeStatus'),
-    path('upgradeVersion', views.upgradeVersion, name='upgradeVersion'),
 ]
