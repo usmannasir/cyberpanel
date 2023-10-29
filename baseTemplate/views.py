@@ -38,7 +38,7 @@ def versionManagement(request):
     currentBuild = str(BUILD)
 
     u = "https://api.github.com/repos/usmannasir/cyberpanel/commits?sha=v%s.%s" % (latestVersion, latestBuild)
-    logging.CyberCPLogFileWriter.writeToFile(u)
+    logging.writeToFile(u)
     r = requests.get(u)
     latestcomit = r.json()[0]['sha']
 
@@ -50,6 +50,7 @@ def versionManagement(request):
 
     if Currentcomt == latestcomit:
         notechk = False
+
 
     template = 'baseTemplate/versionManagment.html'
     finalData = {'build': currentBuild, 'currentVersion': currentVersion, 'latestVersion': latestVersion,
