@@ -356,6 +356,9 @@ class backupUtilities:
 
             domainName = backupMetaData.find('masterDomain').text
 
+            ## Using childdomains to skip their docroot folder, we will copy them in another function
+            childDomains = backupMetaData.findall('ChildDomains/domain')
+
             ## Saving original vhost conf file
 
             #completPathToConf = f'{backupUtilities.Server_root}/conf/vhosts/{domainName}/vhost.conf'
@@ -369,11 +372,32 @@ class backupUtilities:
 
             from shutil import copytree
 
-            #copytree('/home/%s/public_html' % domainName, '%s/%s' % (tempStoragePath, 'public_html'))
-            command = f'cp -R /home/{domainName}/public_html {tempStoragePath}/public_html'
+            ## Get All Subfolders Under Domain name
+            allSubfoldersUnderDomain = [f.name for f in os.scandir(f'/home/{domainName}')]
+            #allSubfoldersUnderDomain = [f.name for f in os.scandir(f'/home/{domainName}') if f.is_dir()]
+            for subfolder in allSubfoldersUnderDomain:
+                isChildDomainRoot = False
+                try:
+                    for childDomain in childDomains:
+                        childPath = childDomain.find('path').text
+                        if(childPath == f'/home/{domainName}/{subfolder}'):
+                            isChildDomainRoot = True
+                            break
+                except BaseException as msg:
+                    pass
 
-            if ProcessUtilities.normalExecutioner(command) == 0:
-                 raise BaseException(f'Failed to run cp command during backup generation.')
+                if subfolder == 'logs' or subfolder == 'backup' or subfolder = '.ssh' or isChildDomainRoot:
+                    continue
+
+                command = f'cp -R /home/{domainName}/{subfolder} {tempStoragePath}/{subfolder}'
+                if ProcessUtilities.normalExecutioner(command) == 0:
+                    raise BaseException(f'Failed to run cp command during backup generation.')
+
+            #copytree('/home/%s/public_html' % domainName, '%s/%s' % (tempStoragePath, 'public_html'))
+            #command = f'cp -R /home/{domainName}/public_html {tempStoragePath}/public_html'
+
+            #if ProcessUtilities.normalExecutioner(command) == 0:
+            #     raise BaseException(f'Failed to run cp command during backup generation.')
 
             # make_archive(os.path.join(tempStoragePath,"public_html"), 'gztar', os.path.join("/home",domainName,"public_html"))
 
