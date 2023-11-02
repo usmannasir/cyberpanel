@@ -135,12 +135,12 @@ def submitUserCreation(request):
             selectedACL = data['selectedACL']
 
             if ACLManager.CheckRegEx("^[\w'\-,.][^0-9_!¡?÷?¿/\\+=@#$%ˆ&*(){}|~<>;:[\]]{2,}$", firstName) == 0:
-                data_ret = {'status': 0, 'createStatus': 0, 'error_message': 'First Name can only contain Alphabets and should be more then 2 characters..'}
+                data_ret = {'status': 0, 'createStatus': 0, 'error_message': 'First Name can only contain alphabetic characters, and should be more than 2 characters long...'}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
             if ACLManager.CheckRegEx("^[\w'\-,.][^0-9_!¡?÷?¿/\\+=@#$%ˆ&*(){}|~<>;:[\]]{2,}$", lastName) == 0:
-                data_ret = {'status': 0, 'createStatus': 0, 'error_message': 'First Name can only contain Alphabets and should be more then 2 characters..'}
+                data_ret = {'status': 0, 'createStatus': 0, 'error_message': 'Last Name can only contain alphabetic characters, and should be more than 2 characters long...'}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
