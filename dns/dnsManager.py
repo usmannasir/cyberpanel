@@ -257,6 +257,10 @@ class DNSManager:
             recordType = data['recordType']
             recordName = data['recordName']
             ttl = int(data['ttl'])
+            if ttl < 0:
+                raise ValueError("TTL: The item must be greater than 0")
+            elif ttl > 86400:
+                raise ValueError("TTL: The item must be lesser than 86401")
 
             admin = Administrator.objects.get(pk=userID)
             if ACLManager.checkOwnershipZone(zoneDomain, admin, currentACL) == 1:
@@ -444,6 +448,10 @@ class DNSManager:
 
             if data['ttlNow'] != None:
                 record.ttl = int(data['ttlNow'])
+                if record.ttl < 0:
+                    raise ValueError("TTL: The item must be greater than 0")
+                elif record.ttl > 86400:
+                    raise ValueError("TTL: The item must be lesser than 86401")
 
             if data['priorityNow'] != None:
                 record.prio = int(data['priorityNow'])
@@ -826,6 +834,10 @@ class DNSManager:
             recordType = data['recordType']
             recordName = data['recordName']
             ttl = int(data['ttl'])
+            if ttl < 0:
+                raise ValueError("TTL: The item must be greater than 0")
+            elif ttl > 86400:
+                raise ValueError("TTL: The item must be lesser than 86401")
 
             admin = Administrator.objects.get(pk=userID)
             self.admin = admin
