@@ -80,38 +80,12 @@ class cPanelImporter:
 
     def PHPDecider(self, domainName):
 
-        if self.PHPVersion == 'inherit':
-            self.PHPVersion = 'PHP 7.4'
-        if self.PHPVersion.find('53') > -1:
-            self.PHPVersion = 'PHP 5.3'
-        elif self.PHPVersion.find('54') > -1:
-            self.PHPVersion = 'PHP 5.4'
-        elif self.PHPVersion.find('55') > -1:
-            self.PHPVersion = 'PHP 5.5'
-        elif self.PHPVersion.find('56') > -1:
-            self.PHPVersion = 'PHP 5.6'
-        elif self.PHPVersion.find('70') > -1:
-            self.PHPVersion = 'PHP 7.0'
-        elif self.PHPVersion.find('71') > -1:
-            self.PHPVersion = 'PHP 7.1'
-        elif self.PHPVersion.find('72') > -1:
-            self.PHPVersion = 'PHP 7.2'
-        elif self.PHPVersion.find('73') > -1:
-            self.PHPVersion = 'PHP 7.3'
-        elif self.PHPVersion.find('74') > -1:
-            self.PHPVersion = 'PHP 7.4'
-        elif self.PHPVersion.find('80') > -1:
-            self.PHPVersion = 'PHP 8.0'
-        elif self.PHPVersion.find('81') > -1:
-            self.PHPVersion = 'PHP 8.1'
-        elif self.PHPVersion.find('82') > -1:
-            self.PHPVersion = 'PHP 8.2'
-            
-        if self.PHPVersion == '':
-            if self.InheritPHP != '':
-                self.PHPVersion = self.InheritPHP
-            else:
-                self.PHPVersion = 'PHP 7.4'
+    if self.PHPVersion == 'inherit' or not self.PHPVersion:
+        self.PHPVersion = self.InheritPHP or 'PHP 7.4'
+    else:
+        version_number = ''.join(filter(str.isdigit, self.PHPVersion))
+        if len(version_number) == 2:  # Ensure there are exactly two digits
+            self.PHPVersion = f'PHP {version_number[0]}.{version_number[1]}'
 
         ### if the PHP Version extracted from file is not available then change it to next available
 
