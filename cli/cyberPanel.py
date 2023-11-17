@@ -120,8 +120,8 @@ class cyberPanel:
 
             websites = Websites.objects.all()
             ipFile = "/etc/cyberpanel/machineIP"
-            f = open(ipFile)
-            ipData = f.read()
+            with open(ipFile, 'r') as f:
+                ipData = f.read()
             ipAddress = ipData.split('\n', 1)[0]
 
             json_data = []
