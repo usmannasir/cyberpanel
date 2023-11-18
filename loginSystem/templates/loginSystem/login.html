@@ -129,7 +129,7 @@
             text-align: center
         }
 
-        .spinner > div {
+        .spinner>div {
             width: 18px;
             height: 18px;
             background-color: #333;
@@ -224,156 +224,160 @@
     </style>
 
     <style>
-        {{ cosmetic.MainDashboardCSS | safe }}
+        {
+                {
+                cosmetic.MainDashboardCSS | safe
+            }
+        }
     </style>
 
 </head>
 
 <body>
-<div id="loading">
-    <div class="spinner">
-        <div class="bounce1"></div>
-        <div class="bounce2"></div>
-        <div class="bounce3"></div>
-    </div>
-</div>
-
-<div class>
-    <div class="col-md-6 col-sm-12 hidden-md col-login col-login-left">
-        <div class="row panel-body my-30" style="padding-bottom: 0px;">
-            <div class="col-lg-6 col-md-12 panel-body">
-                <h2 class="text-transform-upr text-white my-30 text-bold">WEB HOSTING CONTROL PANEL
-                    </br />FOR EVERYONE
-
-                </h2>
-                <h4 class="text-white">Powered By OpenLiteSpeed/LiteSpeed Enterprise. Built For Speed, Security and
-                    Reliability.</h4>
-            </div>
-            <div class="col-lg-6 col-md-12 text-center panel-body">
-                <img class="" src="/static/images/cyberpanel-banner-graphics.png" alt="" width="96%">
-            </div>
-        </div>
-        <div class="row panel-body">
-            <div class="row panel-body">
-                <a class=" login-changelogs" href="https://go.cyberpanel.net/updates" target='_blank'>
-                    <div class="card mb-3" style="max-width: 540px;">
-                        <div class="row g-0">
-                            <div class="col-md-3">
-                                <img src="{% static 'baseTemplate/images/new-design-list-websites-square.png' %}" alt="..."
-                                     class="object-fit">
-                            </div>
-                            <div class="col-md-8 ml-5">
-                                <div class="card-body d-flex flex-column justify-content-around">
-                                    <h3 class="card-title mb-5 font-weight-bold">Change Logs</h3>
-                                    <p class="card-text mt-10">Stay up to date about new releases and features.</p>
-                                    <h4 class="card-learnmore">
-                      <span>
-                        Learn More
-                        <i>
-                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" aria-hidden="true"
-                               focusable="false" data-icon="external-link-alt" role="img" viewBox="0 0 512 512">
-                            <path fill="currentColor"
-                                  d="M432,320H400a16,16,0,0,0-16,16V448H64V128H208a16,16,0,0,0,16-16V80a16,16,0,0,0-16-16H48A48,48,0,0,0,0,112V464a48,48,0,0,0,48,48H400a48,48,0,0,0,48-48V336A16,16,0,0,0,432,320ZM488,0h-128c-21.37,0-32.05,25.91-17,41l35.73,35.73L135,320.37a24,24,0,0,0,0,34L157.67,377a24,24,0,0,0,34,0L435.28,133.32,471,169c15,15,41,4.5,41-17V24A24,24,0,0,0,488,0Z"/>
-                            </svg>
-                          </i>
-                      </span>
-                                    </h4>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </a>
-            </div>
+    <div id="loading">
+        <div class="spinner">
+            <div class="bounce1"></div>
+            <div class="bounce2"></div>
+            <div class="bounce3"></div>
         </div>
     </div>
 
-    <div ng-app="loginSystem" ng-controller="loginSystem" class="col-md-6 col-sm-12 col-login col-login-right" style="">
-        <div class="login-wrapper">
-            <form id="loginForm" action="/" class="col-md-8 col-md-offset-2">
-                <h1 class="text-transform-upr text-center panel-body text-bold"
-                    style="padding-bottom: 0px; color: #33CCCC;">
-                    <img class="center-block text-center my-20" src="{% static 'baseTemplate/cyber-panel-logo.svg' %}">
-                    CyberPanel
-                </h1>
-                <h4 class="text-muted text-center mb-10">Web Hosting Control Panel</h4>
-                <div class="">
-                    <div class="mx-30">
-                        <div class="content-box-wrapper panel-body my-10 mx-30">
-                            <div class="form-group">
-                                <div class="input-group">
-                                    <input ng-model="username" type="text" class="form-control" name="username"
-                                           placeholder="Enter username" required style="height: 45px;">
-                                    <span class="input-group-addon bg-blue">
-                      <i class="glyph-icon icon-envelope-o"></i>
-                    </span>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <div class="input-group">
-                                    <input ng-keypress="initiateLogin($event)" ng-model="password" type="password"
-                                           class="form-control" id="password" placeholder="Password" required
-                                           name="password" style="height: 45px;">
-                                    <span class="input-group-addon bg-blue">
-                      <i class="glyph-icon icon-unlock-alt"></i>
-                    </span>
-                                </div>
-                                <img id="verifyingLogin" class="center-block" src="{% static 'baseTemplate/images/loading.gif' %}">
-                            </div>
-
-                            <div ng-hide="verifyCode" class="form-group">
-                                <div class="input-group">
-                                    <input ng-model="twofa" type="text" class="form-control" name="twofa"
-                                           placeholder="Enter code from Google Authenticator" required
-                                           style="height: 45px;">
-                                    <span class="input-group-addon bg-blue">
-                      <i class="glyph-icon icon-unlock-alt"></i>
-                    </span>
-                                </div>
-                            </div>
-
-
-                            <div class="form-group">
-                                <div class="input-group">
-                                    <select ng-model="languageSelection" ng-init="languageSelection='english'"
-                                            class="form-control">
-                                        <option value="english">English</option>
-                                        <option>Bangla</option>
-                                        <option>Bosnian</option>
-                                        <option>Bulgarian</option>
-                                        <option>Chinese</option>
-                                        <option>French</option>
-                                        <option>German</option>
-                                        <option>Greek</option>
-                                        <option>Italian</option>
-                                        <option>Indonesian</option>
-                                        <option>Japanese</option>
-                                        <option>Polish</option>
-                                        <option>Portuguese</option>
-                                        <option>Russian</option>
-                                        <option>Spanish</option>
-                                        <option>Turkish</option>
-                                        <option>Vietnamese</option>
-                                    </select>
-                                </div>
-                            </div>
-
-
-                            <button type="button" style="background-color: #33CCCC;" ng-click="verifyLoginCredentials()"
-                                    class="btn btn-success btn-block  btn-login">Sign In
-                            </button>
-                        </div>
-                    </div>
+    <div class>
+        <div class="col-md-6 col-sm-12 hidden-md col-login col-login-left">
+            <div class="row panel-body my-30" style="padding-bottom: 0px;">
+                <div class="col-lg-6 col-md-12 panel-body">
+                    <h2 class="text-transform-upr text-white my-30 text-bold">WEB HOSTING CONTROL PANEL</h2>
+                    <h4 class="text-white">Powered By Ibset.Cloud. Built For Speed, Security and Reliability.</h4>
                 </div>
-            </form>
-            <div id="loginFailed" class="alert alert-danger">
-                <p>Could Not Login, Error message: {$ errorMessage $}</p>
+                <div class="col-lg-6 col-md-12 text-center panel-body">
+                    <img class="" src="/static/images/cyberpanel-banner-graphics.png" alt="" width="96%">
+                </div>
+            </div>
+            <!-- <div class="row panel-body">
+                <div class="row panel-body">
+                    <a class=" login-changelogs" href="https://go.cyberpanel.net/updates" target='_blank'>
+                        <div class="card mb-3" style="max-width: 540px;">
+                            <div class="row g-0">
+                                <div class="col-md-3">
+                                    <img src="{% static 'baseTemplate/images/new-design-list-websites-square.png' %}"
+                                        alt="..." class="object-fit">
+                                </div>
+                                <div class="col-md-8 ml-5">
+                                    <div class="card-body d-flex flex-column justify-content-around">
+                                        <h3 class="card-title mb-5 font-weight-bold">Change Logs</h3>
+                                        <p class="card-text mt-10">Stay up to date about new releases and features.</p>
+                                        <h4 class="card-learnmore">
+                                            <span>
+                                                Learn More
+                                                <i>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+                                                        aria-hidden="true" focusable="false"
+                                                        data-icon="external-link-alt" role="img" viewBox="0 0 512 512">
+                                                        <path fill="currentColor"
+                                                            d="M432,320H400a16,16,0,0,0-16,16V448H64V128H208a16,16,0,0,0,16-16V80a16,16,0,0,0-16-16H48A48,48,0,0,0,0,112V464a48,48,0,0,0,48,48H400a48,48,0,0,0,48-48V336A16,16,0,0,0,432,320ZM488,0h-128c-21.37,0-32.05,25.91-17,41l35.73,35.73L135,320.37a24,24,0,0,0,0,34L157.67,377a24,24,0,0,0,34,0L435.28,133.32,471,169c15,15,41,4.5,41-17V24A24,24,0,0,0,488,0Z" />
+                                                    </svg>
+                                                </i>
+                                            </span>
+                                        </h4>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div> -->
+        </div>
+
+        <div ng-app="loginSystem" ng-controller="loginSystem" class="col-md-6 col-sm-12 col-login col-login-right">
+            <div class="login-wrapper">
+                <form id="loginForm" action="/" class="col-md-8 col-md-offset-2">
+                    <h1 class="text-transform-upr text-center panel-body text-bold"
+                        style="padding-bottom: 0px; color: #33CCCC;">
+                        <img class="center-block text-center my-20"
+                            src="{% static 'baseTemplate/cyber-panel-logo.svg' %}">
+                        Ibset - CyberPanel
+                    </h1>
+                    <h4 class="text-muted text-center mb-10">Web Hosting Control Panel</h4>
+                    <div class="">
+                        <div class="mx-30">
+                            <div class="content-box-wrapper panel-body my-10 mx-30">
+                                <div class="form-group">
+                                    <div class="input-group">
+                                        <input ng-model="username" type="text" class="form-control" name="username"
+                                            placeholder="Enter username" required style="height: 45px;">
+                                        <span class="input-group-addon bg-blue">
+                                            <i class="glyph-icon icon-envelope-o"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <div class="input-group">
+                                        <input ng-keypress="initiateLogin($event)" ng-model="password" type="password"
+                                            class="form-control" id="password" placeholder="Password" required
+                                            name="password" style="height: 45px;">
+                                        <span class="input-group-addon bg-blue">
+                                            <i class="glyph-icon icon-unlock-alt"></i>
+                                        </span>
+                                    </div>
+                                    <img id="verifyingLogin" class="center-block"
+                                        src="{% static 'baseTemplate/images/loading.gif' %}">
+                                </div>
+
+                                <div ng-hide="verifyCode" class="form-group">
+                                    <div class="input-group">
+                                        <input ng-model="twofa" type="text" class="form-control" name="twofa"
+                                            placeholder="Enter code from Google Authenticator" required
+                                            style="height: 45px;">
+                                        <span class="input-group-addon bg-blue">
+                                            <i class="glyph-icon icon-unlock-alt"></i>
+                                        </span>
+                                    </div>
+                                </div>
+
+
+                                <div class="form-group">
+                                    <div class="input-group">
+                                        <select ng-model="languageSelection" ng-init="languageSelection='english'"
+                                            class="form-control">
+                                            <option value="english">English</option>
+                                            <option>Bangla</option>
+                                            <option>Bosnian</option>
+                                            <option>Bulgarian</option>
+                                            <option>Chinese</option>
+                                            <option>French</option>
+                                            <option>German</option>
+                                            <option>Greek</option>
+                                            <option>Italian</option>
+                                            <option>Indonesian</option>
+                                            <option>Japanese</option>
+                                            <option>Polish</option>
+                                            <option>Portuguese</option>
+                                            <option>Russian</option>
+                                            <option>Spanish</option>
+                                            <option>Turkish</option>
+                                            <option>Vietnamese</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+
+                                <button type="button" style="background-color: #33CCCC;"
+                                    ng-click="verifyLoginCredentials()"
+                                    class="btn btn-success btn-block  btn-login">Sign In
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+                <div id="loginFailed" class="alert alert-danger">
+                    <p>Could Not Login, Error message: {$ errorMessage $}</p>
+                </div>
             </div>
         </div>
     </div>
-</div>
-<script src="https://code.angularjs.org/1.6.5/angular.min.js"></script>
-<script src="https://code.angularjs.org/1.6.5/angular-route.min.js"></script>
-<script src="{% static 'loginSystem/login-system.js' %}"></script>
+    <script src="https://code.angularjs.org/1.6.5/angular.min.js"></script>
+    <script src="https://code.angularjs.org/1.6.5/angular-route.min.js"></script>
+    <script src="{% static 'loginSystem/login-system.js' %}"></script>
 
 </body>
 
