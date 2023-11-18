@@ -1,0 +1,111 @@
+.TH CLI4 1
+
+.SH NAME
+cli4 \- Command line access to Cloudflare v4 API
+
+.SH SYNOPSIS
+.B cli4
+[\fB\-V\fR|\fB\-\-version]
+[\fB\-h\fR|\fB\-\-help]
+[\fB\-v\fR|\fB\-\-verbose]
+[\fB\-q\fR|\fB\-\-quiet]
+[\fB\-j\fR|\fB\-\-json]
+[\fB\-y\fR|\fB\-\-yaml]
+[\fB\-n\fR|\fB\-\-ndjson]
+[\fB\-r\fR|\fB\-\-raw]
+[\fB\-d\fR|\fB\-\-dump]
+[\fB\-p profile-name\fR|\fB\-\-profile profile-name]
+[\fBitem\fR=\fIvalue\fR ...]
+[\fBitem\fR=@\fIfilename\fR ...]
+[\fB\-G\fR|\fB\-\-get]
+[\fB\-P\fR|\fB\-\-patch]
+[\fB\-O\fR|\fB\-\-post]
+[\fB\-U\fR|\fB\-\-put]
+[\fB\-D\fR|\fB\-\-delete]
+.IR /command ...
+
+.SH DESCRIPTION
+.B cli4
+provides command line access to Cloudflare v4 API
+
+.SH OPTIONS
+.TP
+.IP "[\-V, \-\-version]"
+Display program version number and exit.
+.IP "[\-h, \-\-help]"
+This information (in a terse form).
+.IP "[\-v, \-\-verbose]"
+Provide some protcol debugging information.
+.IP "[\-q, \-\-quiet]"
+Don't output any JSON/YAML responses.
+.IP "[\-j, \-\-json]"
+Output response data in JSON format (the default).
+.IP "[\-y, \-\-yaml]"
+Output response data in YAML format (if yaml package installed).
+.IP "[\-n, \-\-ndjson]"
+Output response data in NDJSON format (if jsonlines package installed).
+.IP "[\-r, \-\-raw]"
+Output JSON results in raw mode without splitting out the errors and results.
+.IP "[\-d, \-\-dump]"
+Output a list of all API calls included in the code.
+.IP "[-p \fIprofile-name\fR, \-\-profile \fIprofile-name\fR]"
+Select a \fIprofile-name\fR from the configuration file (hence select custom \fIemail\fR/\fItoken\fR values).
+.IP "\-\-get"
+Send HTTP request as a \fBGET\fR (the default).
+.IP "\-\-patch"
+Send HTTP request as a \fBPATCH\fR.
+.IP "\-\-post"
+Send HTTP request as a \fBPOST\fR.
+.IP "\-\-put"
+Send HTTP request as a \fBPUT\fR.
+.IP "\-\-delete"
+Send HTTP request as a \fBDELETE\fR.
+.IP "item=\fIvalue\fR"
+Set a paramater or data value to send with a \fBGET\fR, \fBPATCH\fR, \fBPOST\fR, \fBPUT\fR or \fBDELETE\fR command. The value is sent as a string.
+.IP item:=\fIvalue\fR
+Set a paramater or data value to send with a \fBGET\fR, \fBPATCH\fR, \fBPOST\fR, \fBPUT\fR or \fBDELETE\fR command. The value is sent as an interger.
+.IP item=@\fIfilename\fR
+Set a paramater or data value to send with a \fBPOST\fR or \fBPUT\fR command. The value is based on the content of the file.
+.IP "\fI/command ...\fR"
+The API command(s) to execute.
+
+.SH COMMAND(S)
+The command string uses slash (\fB/\fR) to seperate the verbs in the same way that the Cloudflare v4 API documentation does.
+Any verb starting with colon (\fB:\fR) is either converted to zone_id, user_id, organtization_id, or otherwise.
+
+.SH RESULTS
+The output is either JSON or YAML formatted.
+
+.SH EXAMPLES
+.B cli4 /zones
+List infomation for all zones.
+
+.B cli4 /zones/:example.com
+List specific zone info.
+
+.B cli4 /zones/:example.com/settings
+List settings for a specific zone.
+
+.B cli4 --delete purge_everything=true /zones/:example.com/purge_cache
+Purge cache for a specific zone.
+
+.B cli4 --delete files='[http://example.com/css/styles.css]' /zones/:example.com/purge_cache
+Purge cache for a specific zone.
+
+.B cli4 --delete files='[http://example.com/css/styles.css,http://example.com/js/script.js] /zones/:example.com/purge_cache
+Purge cache for a specific zone.
+
+.B cli4 --delete tags='[tag1,tag2,tag3]' /zones/:example.com/purge_cache
+Purge cache for a specific zone.
+
+.B cli4 /zones/:example.com/available_plans
+List available plans for a zone.
+
+.B cli4 --patch status=active /zones/:example.com/dnssec
+Make DNSSEC active for specfic zone.
+
+.B cli4 /zones/:example.com/dnssec
+List DNSSEC infomation and status for a specific zone.
+
+.SH SEE ALSO
+The Cloudflare API can be found https://api.cloudflare.com/. Each API call is provided via a similarly named function within the Cloudflare class.

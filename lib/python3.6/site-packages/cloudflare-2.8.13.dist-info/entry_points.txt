@@ -1,0 +1,3 @@
+[console_scripts]
+cli4 = cli4.__main__:main
+

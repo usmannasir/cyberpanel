@@ -1,0 +1,123 @@
+<div class="form-horizontal">
+	<div class="legend" data-i18n="SETTINGS_SECURITY/LEGEND_SECURITY"></div>
+	<div class="control-group">
+		<label data-i18n="SETTINGS_SECURITY/LABEL_AUTOLOGOUT"></label>
+		<div data-bind="component: {
+			name: 'Select',
+			params: {
+				options: autoLogoutOptions,
+				value: autoLogout,
+				trigger: autoLogoutTrigger,
+				optionsText: 'name',
+				optionsValue: 'id'
+			}
+		}"></div>
+	</div>
+</div>
+
+<div class="legend">OpenPGP</div>
+<button class="btn" data-bind="click: addOpenPgpKey" data-icon="✚" data-i18n="SETTINGS_OPENPGP/BUTTON_IMPORT_KEY"></button>
+<!-- ko if: canOpenPGP || canGnuPG -->
+&nbsp;&nbsp;
+<button class="btn" data-bind="click: generateOpenPgpKey" data-icon="🔑" data-i18n="SETTINGS_OPENPGP/BUTTON_GENERATE_KEY_PAIR"></button>
+<!-- /ko -->
+
+<!-- ko if: canGnuPG -->
+<details>
+<summary class="legend">GnuPG</summary>
+<table class="table table-hover list-table">
+	<tbody><tr><th colspan="4" data-i18n="SETTINGS_OPENPGP/TITLE_PRIVATE">Private keys</th></tr></tbody>
+	<tbody data-bind="foreach: gnupgPrivateKeys, i18nUpdate: gnupgPrivateKeys">
+		<tr>
+			<td data-bind="click: view">
+				<span data-bind="visible: can_sign" class="fontastic" data-i18n="[title]OPENPGP/LABEL_SIGN">✍</span>
+				<span data-bind="visible: can_decrypt" class="fontastic" data-i18n="[title]OPENPGP/BUTTON_DECRYPT">🔓</span>
+				<span class="key-id" data-bind="text: id"></span>
+				<!-- ko foreach: emails -->
+				<span class="key-user" data-bind="text: $data"></span>
+				<!-- /ko -->
+			</td>
+			<td>
+				<a class="btn btn-small btn-danger button-confirm-delete" data-bind="css: {'delete-access': askDelete()}, click: remove"
+					data-i18n="GLOBAL/ARE_YOU_SURE"></a>
+			</td>
+			<td>
+				<span class="delete-key fontastic" data-bind="visible: !askDelete(), click: openForDeletion">🗑</span>
+			</td>
+		</tr>
+	</tbody>
+	<tbody><tr><th colspan="4" data-i18n="SETTINGS_OPENPGP/TITLE_PUBLIC">Public keys</th></tr></tbody>
+	<tbody data-bind="foreach: gnupgPublicKeys, i18nUpdate: gnupgPublicKeys">
+		<tr>
+			<td data-bind="click: view">
+				<span data-bind="visible: can_verify" class="fontastic" data-i18n="[title]OPENPGP/BUTTON_VERIFY">✔</span>
+				<span data-bind="visible: can_encrypt" class="fontastic" data-i18n="[title]OPENPGP/LABEL_ENCRYPT">🔒</span>
+				<span class="key-id" data-bind="text: id"></span>
+				<!-- ko foreach: emails -->
+				<span class="key-user" data-bind="text: $data"></span>
+				<!-- /ko -->
+			</td>
+			<td>
+				<a class="btn btn-small btn-danger button-confirm-delete" data-bind="css: {'delete-access': askDelete()}, click: remove"
+					data-i18n="GLOBAL/ARE_YOU_SURE"></a>
+			</td>
+			<td>
+				<span class="delete-key fontastic" data-bind="visible: !askDelete(), click: openForDeletion">🗑</span>
+			</td>
+		</tr>
+	</tbody>
+</table>
+</details>
+<!-- /ko -->
+
+<!-- ko if: canOpenPGP -->
+<details>
+<summary class="legend">OpenPGP.js</summary>
+<table class="table table-hover list-table">
+	<tbody><tr><th colspan="4" data-i18n="SETTINGS_OPENPGP/TITLE_PRIVATE">Private keys</th></tr></tbody>
+	<tbody data-bind="foreach: openpgpkeysPrivate, i18nUpdate: openpgpkeysPrivate">
+		<tr>
+			<td data-bind="click: view">
+				<span class="fontastic" data-i18n="[title]SETTINGS_OPENPGP/TITLE_PRIVATE">🔒</span>
+				<span class="key-id" data-bind="text: id"></span>
+				<!-- ko foreach: emails -->
+				<span class="key-user" data-bind="text: $data"></span>
+				<!-- /ko -->
+			</td>
+			<td>
+				<a class="btn btn-small btn-danger button-confirm-delete" data-bind="css: {'delete-access': askDelete()}, click: remove"
+					data-i18n="GLOBAL/ARE_YOU_SURE"></a>
+			</td>
+			<td>
+				<span class="delete-key fontastic" data-bind="visible: !askDelete(), click: openForDeletion">🗑</span>
+			</td>
+		</tr>
+	</tbody>
+	<tbody><tr><th colspan="4" data-i18n="SETTINGS_OPENPGP/TITLE_PUBLIC">Public keys</th></tr></tbody>
+	<tbody data-bind="foreach: openpgpkeysPublic, i18nUpdate: openpgpkeysPublic">
+		<tr>
+			<td data-bind="click: view">
+				<span class="fontastic" data-i18n="[title]SETTINGS_OPENPGP/TITLE_PUBLIC">🔑</span>
+				<span class="key-id" data-bind="text: id"></span>
+				<!-- ko foreach: emails -->
+				<span class="key-user" data-bind="text: $data"></span>
+				<!-- /ko -->
+			</td>
+			<td>
+				<a class="btn btn-small btn-danger button-confirm-delete" data-bind="css: {'delete-access': askDelete()}, click: remove"
+					data-i18n="GLOBAL/ARE_YOU_SURE"></a>
+			</td>
+			<td>
+				<span class="delete-key fontastic" data-bind="visible: !askDelete(), click: openForDeletion">🗑</span>
+			</td>
+		</tr>
+	</tbody>
+</table>
+</details>
+<!-- /ko -->
+
+<details>
+<summary class="legend">Mailvelope</summary>
+<a data-bind="visible: !canMailvelope" href="https://mailvelope.com/en/help" target="_blank" data-i18n="SETTINGS_OPENPGP/GET_MAILVELOPE"></a>
+<div id="mailvelope-settings" style="height:40em" data-bind="visible: canMailvelope"></div>
+</details>

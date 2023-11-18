@@ -107,25 +107,25 @@ WSGI_APPLICATION = 'CyberCP.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
 
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'cyberpanel',
         'USER': 'cyberpanel',
-        'PASSWORD': 'VY7ZbcQREu6mSC',
+        'PASSWORD': '93YRkNNrweZtcO',
         'HOST': 'localhost',
-        'PORT': ''
+        'PORT':''
     },
     'rootdb': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'mysql',
         'USER': 'root',
-        'PASSWORD': 'VY7ZbcQREu6mSC',
+        'PASSWORD': '1ve5bpiyMOCtXB',
         'HOST': 'localhost',
         'PORT': '',
     },
 }
-
 DATABASE_ROUTERS = ['backup.backupRouter.backupRouter']
 
 # Password validation
