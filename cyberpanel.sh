@@ -834,7 +834,7 @@ if [[ $Server_OS = "CentOS" ]] ; then
   rm -f /etc/yum.repos.d/epel.repo.rpmsave
 
   if [[ "$Server_OS_Version" = "9" ]]; then
-    grep "Red Hat Enterprise Linux" /etc/os-release >/dev/null
+    grep 'NAME="Red Hat Enterprise Linux"' /etc/os-release >/dev/null
     if [[ $? ]] ; then
       subscription-manager repos --enable codeready-builder-for-rhel-9-$(arch)-rpms
       yum install https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
