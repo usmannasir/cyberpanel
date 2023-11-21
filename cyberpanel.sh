@@ -837,6 +837,8 @@ if [[ $Server_OS = "CentOS" ]] ; then
     subscription-manager repos --enable codeready-builder-for-rhel-9-$(arch)-rpms || yum config-manager --set-enabled crb > /dev/null 2>&1
     yum install -y https://cyberpanel.sh/dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
       Check_Return "yum repo" "no_exit"
+    yum install -y https://rpms.remirepo.net/enterprise/remi-release-9.rpm
+      Check_Return "yum repo" "no_exit"
   fi
 
   if [[ "$Server_OS_Version" = "8" ]]; then
