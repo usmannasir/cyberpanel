@@ -14,11 +14,12 @@ yum update curl wget ca-certificates -y 1> /dev/null
 elif echo $OUTPUT | grep -q "CentOS Stream" ; then
         echo -e "\nDetecting CentOS Stream...\n"
         SERVER_OS="CentOS9"
+yum install wget -y 1> /dev/null
 yum update curl wget ca-certificates -y 1> /dev/null
 elif echo $OUTPUT | grep -q "Red Hat Enterprise Linux" ; then
         echo -e "\nDetecting Red Hat Enterprise Linux...\n"
         SERVER_OS="RHEL"
-        yum install curl wget -y 1> /dev/null
+        yum install wget -y 1> /dev/null
 yum update curl wget ca-certificates -y 1> /dev/null
 elif echo $OUTPUT | grep -q "AlmaLinux 8" ; then
         echo -e "\nDetecting AlmaLinux 8...\n"
