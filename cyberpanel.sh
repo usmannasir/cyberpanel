@@ -834,16 +834,9 @@ if [[ $Server_OS = "CentOS" ]] ; then
   rm -f /etc/yum.repos.d/epel.repo.rpmsave
 
   if [[ "$Server_OS_Version" = "9" ]]; then
-    grep "NAME.*Red Hat Enterprise Linux" /etc/os-release >/dev/null
-    if [[ $? ]] ; then
-      subscription-manager repos --enable codeready-builder-for-rhel-9-$(arch)-rpms
-      yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
-        Check_Return "yum repo" "no_exit"
-    else
-      yum config-manager --set-enabled crb > /dev/null 2>&1
-      yum install -y epel-release epel-next-release
-        Check_Return "yum repo" "no_exit"
-    fi
+    subscription-manager repos --enable codeready-builder-for-rhel-9-$(arch)-rpms || yum config-manager --set-enabled crb > /dev/null 2>&1
+    yum install -y https://cyberpanel.sh/dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
+      Check_Return "yum repo" "no_exit"
   fi
 
   if [[ "$Server_OS_Version" = "8" ]]; then
@@ -1018,6 +1011,11 @@ if [[ "$Server_OS" = "CentOS" ]] || [[ "$Server_OS" = "openEuler" ]] ; then
     yum -y groupinstall development
       Check_Return
   elif [[ "$Server_OS_Version" = "8" ]] ; then
+    dnf install -y libnsl zip wget strace net-tools curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-devel curl-devel git platform-python-devel tar socat python3 zip unzip bind-utils
+      Check_Return
+    dnf install -y gpgme-devel
+      Check_Return
+  elif [[ "$Server_OS_Version" = "9" ]] ; then
     dnf install -y libnsl zip wget strace net-tools curl which bc telnet htop libevent-devel gcc libattr-devel xz-devel mariadb-devel curl-devel git platform-python-devel tar socat python3 zip unzip bind-utils
       Check_Return
     dnf install -y gpgme-devel
@@ -1351,6 +1349,11 @@ if [[ "$Server_OS" = "CentOS" ]] ; then
   #get this set up beforehand.
   fi
 
+  if [[ "$Server_OS_Version" = "9" ]] ; then
+    sed -i 's|rpm -Uvh http://rpms.litespeedtech.com/centos/litespeed-repo-1.1-1.el8.noarch.rpm|curl -o /etc/yum.repos.d/litespeed.repo https://rpms.litespeedtech.com/centos/litespeed.repo|g' install.py
+    sed -i "s|mirrorlist=http://mirrorlist.ghettoforge.org/el/8/gf/\$basearch/mirrorlist|baseurl=https://cyberpanel.sh/mirror.ghettoforge.org/distributions/gf/el/9/gf/x86_64/|g" /etc/yum.repos.d/gf.repo
+    sed -i "s|mirrorlist=http://mirrorlist.ghettoforge.org/el/8/plus/\$basearch/mirrorlist|baseurl=https://cyberpanel.sh/mirror.ghettoforge.org/distributions/gf/el/9/plus/x86_64/|g" /etc/yum.repos.d/gf.repo
+  fi
 fi
 
 sed -i "s|https://www.litespeedtech.com/|https://cyberpanel.sh/www.litespeedtech.com/|g" installCyberPanel.py
@@ -1549,7 +1552,7 @@ fi
 
 Post_Install_Addon_Redis() {
 if [[ "$Server_OS" = "CentOS" ]]; then
-  if [[ "$Server_OS_Version" = "8" ]]; then
+  if [[ "$Server_OS_Version" = "8" || "$Server_OS_Version" = "9" ]]; then
     yum install -y lsphp??-redis redis
   else
     yum -y install http://rpms.remirepo.net/enterprise/remi-release-7.rpm
