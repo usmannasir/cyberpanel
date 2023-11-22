@@ -15,6 +15,10 @@ check_OS() {
 
 	if grep -q -E "CentOS Linux 7|CentOS Linux 8" /etc/os-release ; then
 	  Server_OS="CentOS"
+	elif grep -q "CentOS Stream" /etc/os-release ; then
+	  Server_OS="CentOS"
+	elif grep -q "Red Hat Enterprise Linux" /etc/os-release ; then
+	  Server_OS="CentOS"
 	elif grep -q "AlmaLinux-8" /etc/os-release ; then
 	  Server_OS="AlmaLinux"
 	elif grep -q -E "CloudLinux 7|CloudLinux 8" /etc/os-release ; then
