@@ -172,14 +172,6 @@ class FileManager:
             ProcessUtilities.executioner(command, website.externalApp)
         except:
             print("Permisson not changed")
-
-
-    def bytes_to_human_readable(num, suffix='B'):
-        for unit in ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z']:
-            if abs(num) < 1024.0:
-                return "%3.1f%s%s" % (num, unit, suffix)
-            num /= 1024.0
-        return "%.1f%s%s" % (num, 'Yi', suffix)
     
     
     def listForTable(self):
@@ -230,7 +222,7 @@ class FileManager:
                     if currentFile[0][0] == 'd':
                         dirCheck = 1
 
-                    size = bytes_to_human_readable(int(currentFile[4]))
+                    size = str(int(int(currentFile[4]) / float(1024)))
                     lastModified = currentFile[5] + ' ' + currentFile[6] + ' ' + currentFile[7]
                     finalData[str(counter)] = [currentFile[-1], currentFile[-1], lastModified, size, currentFile[0],
                                                dirCheck]
