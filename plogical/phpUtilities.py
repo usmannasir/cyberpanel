@@ -1,7 +1,4 @@
 import sys
-
-from ApachController.ApacheVhosts import ApacheVhost
-
 sys.path.append('/usr/local/CyberCP')
 from plogical import CyberCPLogFileWriter as logging
 import subprocess
@@ -12,6 +9,7 @@ import argparse
 import os
 from plogical.mailUtilities import mailUtilities
 from plogical.processUtilities import ProcessUtilities
+from ApachController.ApacheVhosts import ApacheVhost
 
 import json
 from django.urls import reverse

@@ -5,8 +5,6 @@ from django.shortcuts import HttpResponse
 from random import randint
 from .models import *
 from xml.etree import ElementTree
-from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
-
 
 class PHPManager:
 
