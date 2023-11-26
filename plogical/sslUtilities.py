@@ -10,6 +10,7 @@ try:
     from websiteFunctions.models import ChildDomains, Websites
 except:
     pass
+from plogical.acl import ACLManager
 
 
 class sslUtilities:
@@ -320,7 +321,8 @@ context /.well-known/acme-challenge {
                     except BaseException as msg:
                         website = Websites.objects.get(domain=virtualHostName)
                         externalApp = website.externalApp
-                        DocumentRoot = '    DocumentRoot /home/' + virtualHostName + '/public_html\n'
+                        docRoot = ACLManager.FindDocRootOfSite(None, virtualHostName)
+                        DocumentRoot = f'    DocumentRoot {docRoot}\n'
 
                     data = open(completePathToConfigFile, 'r').readlines()
                     phpHandler = ''

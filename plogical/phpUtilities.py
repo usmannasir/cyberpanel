@@ -1,4 +1,7 @@
 import sys
+
+from ApachController.ApacheVhosts import ApacheVhost
+
 sys.path.append('/usr/local/CyberCP')
 from plogical import CyberCPLogFileWriter as logging
 import subprocess
@@ -217,7 +220,16 @@ class phpUtilities:
             return msg
 
     @staticmethod
-    def GetPHPVersionFromFile(vhFile):
+    def GetPHPVersionFromFile(vhFile, domainName=None):
+        finalConfPath = ApacheVhost.configBasePath + domainName + '.conf'
+        if os.path.exists(finalConfPath):
+            command = f'grep -Eo -m 1 "php[0-9]+" {finalConfPath} | sed -n "1p"'
+            result = ProcessUtilities.outputExecutioner(command, None, True).rstrip('\n')
+            result = f'/usr/local/lsws/ls{result}/bin/lsphp'
+            result = result.rsplit("lsphp", 1)[0] + "php"
+            return result
+
+
         if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
             command = f'grep -Eo "/usr/local/lsws/lsphp[0-9]+/bin/lsphp" {vhFile}'
             result = ProcessUtilities.outputExecutioner(command, None, True).rstrip('\n')
