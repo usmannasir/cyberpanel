@@ -618,11 +618,17 @@ class ApplicationInstaller(multi.Thread):
 
             ### lets first find php path
 
+
             from plogical.phpUtilities import phpUtilities
 
             vhFile = f'/usr/local/lsws/conf/vhosts/{domainName}/vhost.conf'
 
-            phpPath = phpUtilities.GetPHPVersionFromFile(vhFile)
+            try:
+
+                phpPath = phpUtilities.GetPHPVersionFromFile(vhFile)
+            except:
+                phpPath = '/usr/local/lsws/lsphp80/bin/php'
+
 
             ### basically for now php 8.0 is being checked
 
@@ -631,6 +637,7 @@ class ApplicationInstaller(multi.Thread):
                 statusFile.writelines('PHP 8.0 missing installing now..,20')
                 statusFile.close()
                 phpUtilities.InstallSaidPHP('80')
+
 
             finalPath = ''
             self.permPath = ''

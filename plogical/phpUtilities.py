@@ -227,6 +227,8 @@ class phpUtilities:
             result = result.rsplit("lsphp", 1)[0] + "php"
             return result
 
+        if os.path.exists('/usr/local/CyberCP/debug'):
+            logging.CyberCPLogFileWriter.writeToFile(f'VHFile in GetPHPVersion {vhFile}')
 
         if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
             command = f'grep -Eo "/usr/local/lsws/lsphp[0-9]+/bin/lsphp" {vhFile}'
