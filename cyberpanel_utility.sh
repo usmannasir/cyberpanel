@@ -13,8 +13,10 @@ check_OS() {
 	  exit
 	fi
 
-	if grep -q -E "CentOS Linux 7|CentOS Linux 8" /etc/os-release ; then
-	  Server_OS="CentOS"
+	if grep -q -E "CentOS Linux 7|CentOS Linux 8|CentOS Stream" /etc/os-release ; then
+          Server_OS="CentOS"
+        elif grep -q "Red Hat Enterprise Linux" /etc/os-release ; then
+          Server_OS="RedHat"
 	elif grep -q "AlmaLinux-8" /etc/os-release ; then
 	  Server_OS="AlmaLinux"
 	elif grep -q -E "CloudLinux 7|CloudLinux 8" /etc/os-release ; then
@@ -36,7 +38,7 @@ check_OS() {
 
 	echo -e "System: $Server_OS $Server_OS_Version detected...\n"
 
-	if [[ $Server_OS = "CloudLinux" ]] || [[ "$Server_OS" = "AlmaLinux" ]] || [[ "$Server_OS" = "RockyLinux" ]] ; then
+	if [[ $Server_OS = "CloudLinux" ]] || [[ "$Server_OS" = "AlmaLinux" ]] || [[ "$Server_OS" = "RockyLinux" ]] || [[ "$Server_OS" = "RedHat" ]]; then
 	  Server_OS="CentOS"
   	  #CloudLinux gives version id like 7.8, 7.9, so cut it to show first number only
   	  #treat CloudLinux, Rocky and Alma as CentOS
