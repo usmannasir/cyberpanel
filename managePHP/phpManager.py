@@ -73,6 +73,7 @@ class PHPManager:
         max_execution_time = ""
         upload_max_filesize = ""
         max_input_time = ""
+        post_max_size = ""
 
         command = "cat " + PHPManager.FindPHPFPMPath(phpVersion)
 
