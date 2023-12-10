@@ -4,6 +4,7 @@ import os, sys
 import shutil
 import time
 
+from ApachController.ApacheVhosts import ApacheVhost
 from loginSystem.models import Administrator
 from managePHP.phpManager import PHPManager
 from plogical.acl import ACLManager
@@ -112,7 +113,7 @@ class ApplicationInstaller(multi.Thread):
 
             vhFile = f'/usr/local/lsws/conf/vhosts/{domainName}/vhost.conf'
 
-            phpPath = phpUtilities.GetPHPVersionFromFile(vhFile)
+            phpPath = phpUtilities.GetPHPVersionFromFile(vhFile, domainName)
 
             ### basically for now php 8.0 is being checked
 
@@ -188,6 +189,13 @@ class ApplicationInstaller(multi.Thread):
                 command = 'mkdir -p ' + finalPath
                 ProcessUtilities.executioner(command, externalApp)
 
+            command = f'rm -rf {finalPath}*'
+            ProcessUtilities.executioner(command, externalApp)
+
+            command = f'rm -rf {finalPath}.*'
+            ProcessUtilities.executioner(command, externalApp)
+
+
             ## checking for directories/files
 
             if self.dataLossCheck(finalPath, tempStatusPath, externalApp) == 0:
@@ -199,16 +207,20 @@ class ApplicationInstaller(multi.Thread):
             statusFile.writelines('Downloading Mautic Core,30')
             statusFile.close()
 
-            command = "wget https://github.com/mautic/mautic/releases/download/%s/%s.zip" % (
-            ApplicationInstaller.MauticVersion, ApplicationInstaller.MauticVersion)
-            ProcessUtilities.outputExecutioner(command, externalApp, None, finalPath)
+            #command = "wget https://github.com/mautic/mautic/releases/download/%s/%s.zip" % (
+            #ApplicationInstaller.MauticVersion, ApplicationInstaller.MauticVersion)
+
+            ### replace command with composer install
+            command = f'{phpPath} /usr/bin/composer create-project mautic/recommended-project:^4 {finalPath}'
+            ProcessUtilities.outputExecutioner(command, externalApp, None)
 
             statusFile = open(tempStatusPath, 'w')
             statusFile.writelines('Extracting Mautic Core,50')
             statusFile.close()
 
-            command = "unzip %s.zip" % (ApplicationInstaller.MauticVersion)
-            ProcessUtilities.outputExecutioner(command, externalApp, None, finalPath)
+            ### replace command with composer install
+            #command = "unzip %s.zip" % (ApplicationInstaller.MauticVersion)
+            #ProcessUtilities.outputExecutioner(command, externalApp, None, finalPath)
 
             ##
 
@@ -222,53 +234,99 @@ class ApplicationInstaller(multi.Thread):
             else:
                 finalURL = domainName
 
-            ACLManager.CreateSecureDir()
-            localDB = '%s/%s' % ('/usr/local/CyberCP/tmp', str(randint(1000, 9999)))
 
-            localDBContent = """<?php
-// Example local.php to test install (to adapt of course)
-$parameters = array(
-	// Do not set db_driver and mailer_from_name as they are used to assume Mautic is installed
-	'db_host' => 'localhost',
-	'db_table_prefix' => null,
-	'db_port' => 3306,
-	'db_name' => '%s',
-	'db_user' => '%s',
-	'db_password' => '%s',
-	'db_backup_tables' => true,
-	'db_backup_prefix' => 'bak_',
-	'admin_email' => '%s',
-	'admin_password' => '%s',
-	'mailer_transport' => null,
-	'mailer_host' => null,
-	'mailer_port' => null,
-	'mailer_user' => null,
-	'mailer_password' => null,
-	'mailer_api_key' => null,
-	'mailer_encryption' => null,
-	'mailer_auth_mode' => null,
-);""" % (dbName, dbUser, dbPassword, email, password)
+#            ACLManager.CreateSecureDir()
+#             localDB = '%s/%s' % ('/usr/local/CyberCP/tmp', str(randint(1000, 9999)))
+#
+#             localDBContent = """<?php
+# // Example local.php to test install (to adapt of course)
+# $parameters = array(
+# 	// Do not set db_driver and mailer_from_name as they are used to assume Mautic is installed
+# 	'db_host' => 'localhost',
+# 	'db_table_prefix' => null,
+# 	'db_port' => 3306,
+# 	'db_name' => '%s',
+# 	'db_user' => '%s',
+# 	'db_password' => '%s',
+# 	'db_backup_tables' => true,
+# 	'db_backup_prefix' => 'bak_',
+# 	'admin_email' => '%s',
+# 	'admin_password' => '%s',
+# 	'mailer_transport' => null,
+# 	'mailer_host' => null,
+# 	'mailer_port' => null,
+# 	'mailer_user' => null,
+# 	'mailer_password' => null,
+# 	'mailer_api_key' => null,
+# 	'mailer_encryption' => null,
+# 	'mailer_auth_mode' => null,
+# );""" % (dbName, dbUser, dbPassword, email, password)
+#
+#             writeToFile = open(localDB, 'w')
+#             writeToFile.write(localDBContent)
+#             writeToFile.close()
 
-            writeToFile = open(localDB, 'w')
-            writeToFile.write(localDBContent)
-            writeToFile.close()
+            #command = 'rm -rf %s/app/config/local.php' % (finalPath)
+            #ProcessUtilities.executioner(command, externalApp)
 
-            command = 'rm -rf %s/app/config/local.php' % (finalPath)
-            ProcessUtilities.executioner(command, externalApp)
+            #command = 'chown %s:%s %s' % (externalApp, externalApp, localDB)
+            #ProcessUtilities.executioner(command)
 
-            command = 'chown %s:%s %s' % (externalApp, externalApp, localDB)
-            ProcessUtilities.executioner(command)
+            #command = 'cp %s %s/app/config/local.php' % (localDB, finalPath)
+            #ProcessUtilities.executioner(command, externalApp)
 
-            command = 'cp %s %s/app/config/local.php' % (localDB, finalPath)
-            ProcessUtilities.executioner(command, externalApp)
+            ### replace install command with comspoer soo
+            #command = f"{phpPath} bin/console mautic:install http://%s -f" % (finalURL)
 
-            command = f"{phpPath} bin/console mautic:install http://%s -f" % (finalURL)
+            command = f"{phpPath} bin/console mautic:install --db_host='localhost' --db_name='{dbName}' --db_user='{dbUser}' --db_password='{dbPassword}' --admin_username='{username}' --admin_email='{email}' --admin_password='{password}' --db_port='3306' http://{finalURL} -f"
+
             result = ProcessUtilities.outputExecutioner(command, externalApp, None, finalPath)
 
             if result.find('Install complete') == -1:
                 raise BaseException(result)
 
-            os.remove(localDB)
+
+            ExistingDocRoot = ACLManager.FindDocRootOfSite(None, domainName)
+
+            if ExistingDocRoot.find('docroot') > -1:
+                ExistingDocRoot = ExistingDocRoot.replace('docroot', '')
+
+
+            NewDocRoot = f'{ExistingDocRoot}/docroot'
+            ACLManager.ReplaceDocRoot(None, domainName, NewDocRoot)
+
+            if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+
+                try:
+
+                    ExistingDocRootApache = ACLManager.FindDocRootOfSiteApache(None, domainName)
+
+                    if ExistingDocRootApache.find('docroot') == -1:
+                        NewDocRootApache = f'{ExistingDocRootApache}docroot'
+                    else:
+                        NewDocRootApache = ExistingDocRootApache
+
+                    if ExistingDocRootApache != None:
+                        ACLManager.ReplaceDocRootApache(None, domainName, NewDocRootApache)
+                except:
+                    pass
+
+            ### fix incorrect rules in .htaccess of mautic
+
+            if ProcessUtilities.decideServer() == ProcessUtilities.ent:
+                htAccessPath = f'{finalPath}docroot/.htaccess'
+
+                command = f"sed -i '/# Fallback for Apache < 2.4/,/<\/IfModule>/d' {htAccessPath}"
+                ProcessUtilities.executioner(command, externalApp, True)
+
+                command = f"sed -i '/# Apache 2.4+/,/<\/IfModule>/d' {htAccessPath}"
+                ProcessUtilities.executioner(command, externalApp, True)
+
+
+            #os.remove(localDB)
+            command = f"systemctl restart {ApacheVhost.serviceName}"
+            ProcessUtilities.normalExecutioner(command)
+
             installUtilities.reStartLiteSpeedSocket()
 
             statusFile = open(tempStatusPath, 'w')
@@ -560,11 +618,17 @@ $parameters = array(
 
             ### lets first find php path
 
+
             from plogical.phpUtilities import phpUtilities
 
             vhFile = f'/usr/local/lsws/conf/vhosts/{domainName}/vhost.conf'
 
-            phpPath = phpUtilities.GetPHPVersionFromFile(vhFile)
+            try:
+
+                phpPath = phpUtilities.GetPHPVersionFromFile(vhFile)
+            except:
+                phpPath = '/usr/local/lsws/lsphp80/bin/php'
+
 
             ### basically for now php 8.0 is being checked
 
@@ -573,6 +637,7 @@ $parameters = array(
                 statusFile.writelines('PHP 8.0 missing installing now..,20')
                 statusFile.close()
                 phpUtilities.InstallSaidPHP('80')
+
 
             finalPath = ''
             self.permPath = ''

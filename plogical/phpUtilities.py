@@ -9,6 +9,7 @@ import argparse
 import os
 from plogical.mailUtilities import mailUtilities
 from plogical.processUtilities import ProcessUtilities
+from ApachController.ApacheVhosts import ApacheVhost
 
 import json
 from django.urls import reverse
@@ -217,7 +218,18 @@ class phpUtilities:
             return msg
 
     @staticmethod
-    def GetPHPVersionFromFile(vhFile):
+    def GetPHPVersionFromFile(vhFile, domainName=None):
+        finalConfPath = ApacheVhost.configBasePath + domainName + '.conf'
+        if os.path.exists(finalConfPath):
+            command = f'grep -Eo -m 1 "php[0-9]+" {finalConfPath} | sed -n "1p"'
+            result = ProcessUtilities.outputExecutioner(command, None, True).rstrip('\n')
+            result = f'/usr/local/lsws/ls{result}/bin/lsphp'
+            result = result.rsplit("lsphp", 1)[0] + "php"
+            return result
+
+        if os.path.exists('/usr/local/CyberCP/debug'):
+            logging.CyberCPLogFileWriter.writeToFile(f'VHFile in GetPHPVersion {vhFile}')
+
         if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
             command = f'grep -Eo "/usr/local/lsws/lsphp[0-9]+/bin/lsphp" {vhFile}'
             result = ProcessUtilities.outputExecutioner(command, None, True).rstrip('\n')
