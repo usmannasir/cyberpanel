@@ -14,6 +14,28 @@ function getCookie(name) {
     return cookieValue;
 }
 
+// JavaScript function to convert bytes to a human-readable format
+function bytesToHumanReadable(bytes, suffix = 'B') {
+    let units = ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z'];
+    let i = 0;
+    while (Math.abs(bytes) >= 1024 && i < units.length - 1) {
+        bytes /= 1024;
+        ++i;
+    }
+    return bytes.toFixed(1) + units[i] + suffix;
+}
+
+// JavaScript function to convert kilobytes to a human-readable format
+function kilobytesToHumanReadable(kilobytes, suffix = 'KB') {
+    let units = ['KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+    let i = 0;
+    while (Math.abs(kilobytes) >= 1024 && i < units.length - 1) {
+        kilobytes /= 1024;
+        ++i;
+    }
+    return kilobytes.toFixed(2) + ' ' + units[i];
+}
+
 var fileManager = angular.module('fileManager', ['angularFileUpload']);
 
 fileManager.config(['$interpolateProvider', function ($interpolateProvider) {
@@ -721,7 +743,8 @@ fileManager.controller('fileManagerCtrl', function ($scope, $http, FileUploader,
                     } else {
                         var fileName = filesData[keys[i]][0];
                         var lastModified = filesData[keys[i]][2];
-                        var fileSize = filesData[keys[i]][3];
+                        var fileSizeBytes = parseInt(filesData[keys[i]][3], 10); // Assuming this is the size in kilobytes
+            			var fileSize = kilobytesToHumanReadable(fileSizeBytes); // Convert to human-readable format
                         var permissions = filesData[keys[i]][4];
                         var dirCheck = filesData[keys[i]][5];
                         // console.log(fileName);

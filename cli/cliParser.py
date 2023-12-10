@@ -47,7 +47,7 @@ class cliParser:
         ## Database Arguments
 
         parser.add_argument('--dbName', help='Database name.')
-        parser.add_argument('--dbUsername', help='Datbase username.')
+        parser.add_argument('--dbUsername', help='Database username.')
         parser.add_argument('--dbPassword', help='Database password.')
         parser.add_argument('--databaseWebsite', help='Database website.')
 
@@ -58,7 +58,7 @@ class cliParser:
         ### Additional Arguments for user manager
 
         parser.add_argument('--firstName', help='First name while creating user.')
-        parser.add_argument('--lastName', help='First name while creating user.')
+        parser.add_argument('--lastName', help='Last name while creating user.')
         parser.add_argument('--websitesLimit', help='Website limit while creating user.')
         parser.add_argument('--selectedACL', help='Select ACL while creating user.')
         parser.add_argument('--securityLevel', help='Set security level while creating user.')
