@@ -1,3 +1,7 @@
+#!/usr/local/CyberCP/bin/python
+import sys
+sys.path.append('/usr/local/CyberCP')
+import django
 from plogical.processUtilities import ProcessUtilities
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 
@@ -30,8 +34,9 @@ class DockerSites:
 
 
             command = 'docker --help'
-            ReturnCode = ProcessUtilities.executioner(command)
-            if ReturnCode == 0:
+            result = ProcessUtilities.outputExecutioner(command)
+            print(f'return code of docker install {result}')
+            if result.find("not found") > -1:
                 status, message = self.InstallDocker()
                 if status == 0:
                     logging.statusWriter(self.JobID, 'Failed to installed docker. [404]')
@@ -124,9 +129,9 @@ def Main():
         # port, SitePath, CPUsSite, MemorySite, SiteName
         # finalURL, blogTitle, adminUser, adminPassword, adminEmail
         data = {
-            "JobID": 1122344566667778888,
-            "ComposePath": "/home/dockercloudpagescloud/docker-compose.yml",
-            "MySQLPath": '/home/dockercloudpagescloud/public_html/sqldocker',
+            "JobID": '/home/cyberpanel/error-logs.txt',
+            "ComposePath": "/home/cyberpanel.net/docker-compose.yml",
+            "MySQLPath": '/home/cyberpanel.net/public_html/sqldocker',
             "MySQLRootPass": 'testdbwp12345',
             "MySQLDBName": 'testdbwp',
             "MySQLDBNUser": 'testdbwp',
@@ -134,7 +139,7 @@ def Main():
             "CPUsMySQL": '2',
             "MemoryMySQL": '512',
             "port": '8000',
-            "SitePath": '/home/dockercloudpagescloud/public_html/wpdocker',
+            "SitePath": '/home/cyberpanel.net/public_html/wpdocker',
             "CPUsSite": '2',
             "MemorySite": '512',
             "SiteName": 'wp docker test',

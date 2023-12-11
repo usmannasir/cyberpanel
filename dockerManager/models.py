@@ -3,6 +3,7 @@
 
 from django.db import models
 from loginSystem.models import Administrator
+from websiteFunctions.website import Websites
 
 # Create your models here.
 class Containers(models.Model):
@@ -16,3 +17,30 @@ class Containers(models.Model):
     volumes = models.TextField(default="{}")
     env = models.TextField(default="{}")
     startOnReboot = models.IntegerField(default=0)
+
+# Takes
+# ComposePath, MySQLPath, MySQLRootPass, MySQLDBName, MySQLDBNUser, MySQLPassword, CPUsMySQL, MemoryMySQL,
+# port, SitePath, CPUsSite, MemorySite, SiteName
+# finalURL, blogTitle, adminUser, adminPassword, adminEmail
+
+### Site Type 0=wp, further tbd later
+
+class DockerSites(models.Model):
+    admin = models.ForeignKey(Websites, on_delete=models.CASCADE)
+    ComposePath = models.TextField()
+    SitePath = models.TextField()
+    MySQLPath = models.TextField()
+    state = models.IntegerField(default=1)
+    SiteType = models.IntegerField(default=0) ## WP, Joomla etc
+    MySQLDBName = models.CharField(max_length=100)
+    MySQLDBNUser = models.CharField(max_length=100)
+    CPUsMySQL = models.CharField(max_length=100)
+    MemoryMySQL = models.CharField(max_length=100)
+    port = models.CharField(max_length=100)
+    CPUsSite = models.CharField(max_length=100)
+    MemorySite = models.CharField(max_length=100)
+    SiteName = models.TextField()
+    finalURL = models.TextField()
+    blogTitle = models.TextField()
+    adminUser = models.CharField(max_length=100)
+    adminEmail = models.CharField(max_length=100)
