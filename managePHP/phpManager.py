@@ -9,6 +9,7 @@ from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 
 
 class PHPManager:
+
     @staticmethod
     def findPHPVersions():
         import re
@@ -27,9 +28,12 @@ class PHPManager:
         for item in sorted(php_versions):
             # Use regular expression to find numbers in the string
             numbers = re.findall(r'\d+', item)
+
             # Join the numbers with dots and add 'PHP' back to the string
             result = 'PHP ' + '.'.join(numbers)
+
             result_list.append(result)
+
         return sorted(result_list)
 
     @staticmethod
@@ -37,6 +41,7 @@ class PHPManager:
         # Ex: "PHP 5.3" type string, return Ex: "53" type string
         phpVersion = phpVersion.split()
         php = phpVersion[1].replace(".", "")
+
         return php
 
     @staticmethod
@@ -68,11 +73,9 @@ class PHPManager:
         max_execution_time = ""
         upload_max_filesize = ""
         max_input_time = ""
-        post_max_size = ""
 
         command = "cat " + PHPManager.FindPHPFPMPath(phpVersion)
 
-        # this is repeated code from views.py
         data = ProcessUtilities.outputExecutioner(command).split('\n')
 
         for items in data:
@@ -154,28 +157,36 @@ class PHPManager:
 
         tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
 
-        with open(tempStatusPath, 'w') as writeToFile:
-            for items in data:
-                if items.find("allow_url_fopen") > -1 and items.find("=") > -1:
-                    writeToFile.writelines(allow_url_fopen + "\n")
-                elif items.find("display_errors") > -1 and items.find("=") > -1:
-                    writeToFile.writelines(display_errors + "\n")
-                elif items.find("file_uploads") > -1 and items.find("=") > -1 and not items.find("max_file_uploads") > -1:
-                    writeToFile.writelines(file_uploads + "\n")
-                elif items.find("allow_url_include") > -1 and items.find("=") > -1:
-                    writeToFile.writelines(allow_url_include + "\n")
-                elif items.find("memory_limit") > -1 and items.find("=") > -1:
-                    writeToFile.writelines("memory_limit = " + memory_limit + "\n")
-                elif items.find("max_execution_time") > -1 and items.find("=") > -1:
-                    writeToFile.writelines("max_execution_time = " + max_execution_time + "\n")
-                elif items.find("upload_max_filesize") > -1 and items.find("=") > -1:
-                    writeToFile.writelines("upload_max_filesize = " + upload_max_filesize + "\n")
-                elif items.find("max_input_time") > -1 and items.find("=") > -1:
-                    writeToFile.writelines("max_input_time = " + max_input_time + "\n")
-                elif items.find("post_max_size") > -1 and items.find("=") > -1:
-                    writeToFile.writelines("post_max_size = " + post_max_size + "\n")
-                else:
-                    writeToFile.writelines(items + '\n')
+        writeToFile = open(tempStatusPath, 'w')
+
+        for items in data:
+            if items.find("allow_url_fopen") > -1 and items.find("=") > -1:
+                writeToFile.writelines(allow_url_fopen + "\n")
+            elif items.find("display_errors") > -1 and items.find("=") > -1:
+                writeToFile.writelines(display_errors + "\n")
+            elif items.find("file_uploads") > -1 and items.find("=") > -1 and not items.find(
+                    "max_file_uploads") > -1:
+                writeToFile.writelines(file_uploads + "\n")
+            elif items.find("allow_url_include") > -1 and items.find("=") > -1:
+                writeToFile.writelines(allow_url_include + "\n")
+
+            elif items.find("memory_limit") > -1 and items.find("=") > -1:
+                writeToFile.writelines("memory_limit = " + memory_limit + "\n")
+
+            elif items.find("max_execution_time") > -1 and items.find("=") > -1:
+                writeToFile.writelines("max_execution_time = " + max_execution_time + "\n")
+
+            elif items.find("upload_max_filesize") > -1 and items.find("=") > -1:
+                writeToFile.writelines("upload_max_filesize = " + upload_max_filesize + "\n")
+
+            elif items.find("max_input_time") > -1 and items.find("=") > -1:
+                writeToFile.writelines("max_input_time = " + max_input_time + "\n")
+            elif items.find("post_max_size") > -1 and items.find("=") > -1:
+                writeToFile.writelines("post_max_size = " + post_max_size + "\n")
+            else:
+                writeToFile.writelines(items + '\n')
+
+        writeToFile.close()
 
         command = "mv %s %s" % (tempStatusPath, path)
         ProcessUtilities.executioner(command)
@@ -199,7 +210,9 @@ class PHPManager:
         final_dic = {'fetchStatus': 1,
                      'configData': data,
                      'status': 1}
+
         final_json = json.dumps(final_dic)
+
         return HttpResponse(final_json)
 
     @staticmethod
@@ -211,10 +224,10 @@ class PHPManager:
 
         tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
 
-        with open(tempStatusPath, 'w') as writeToFile:
-            writeToFile.write(configData)
+        writeToFile = open(tempStatusPath, 'w')
+        writeToFile.write(configData)
+        writeToFile.close()
 
-        # this is repeat code from ln 179-192
         command = "mv %s %s" % (tempStatusPath, path)
         ProcessUtilities.executioner(command)
 
@@ -232,42 +245,58 @@ class PHPManager:
 
     @staticmethod
     def fetchPHPExtensions(data):
+
         if ApachePHP.objects.all().count() == 0:
             phpfilePath = '/usr/local/CyberCP/ApachController/phpApache.xml'
 
-            # php versions
             for items in ['54', '55', '56', '70', '71', '72', '73']:
                 phpvers = ApachePHP(phpVers='php' + items)
                 phpvers.save()
+
                 php = ElementTree.parse(phpfilePath)
                 phpExtensions = php.findall('extension')
+
                 for extension in phpExtensions:
                     extensionName = extension.find('extensionName').text % (items)
                     extensionDescription = extension.find('extensionDescription').text
                     status = int(extension.find('status').text)
+
                     phpExtension = installedPackagesApache(phpVers=phpvers,
-                                                           extensionName=extensionName,
-                                                           description=extensionDescription,
-                                                           status=status)
+                                                     extensionName=extensionName,
+                                                     description=extensionDescription,
+                                                     status=status)
+
                     phpExtension.save()
+
         phpVers = "php" + PHPManager.getPHPString(data['phpVersion'])
+
         phpVersion = ApachePHP.objects.get(phpVers=phpVers)
+
         records = phpVersion.installedpackagesapache_set.all()
 
-        json_data = []
+        json_data = "["
+        checker = 0
 
         for items in records:
+
             if items.status == 0:
                 status = "Not-Installed"
             else:
                 status = "Installed"
+
             dic = {'id': items.id,
                    'phpVers': items.phpVers.phpVers,
                    'extensionName': items.extensionName,
                    'description': items.description,
                    'status': status
                    }
-            json_data.append(dic)
 
+            if checker == 0:
+                json_data = json_data + json.dumps(dic)
+                checker = 1
+            else:
+                json_data = json_data + ',' + json.dumps(dic)
+
+        json_data = json_data + ']'
         final_json = json.dumps({'status': 1, 'error_message': "None", "data": json_data})
         return HttpResponse(final_json)
