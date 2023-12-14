@@ -115,16 +115,38 @@ class cyberPanel:
             logger.writeforCLI(str(msg), "Error", stack()[0][3])
             print(0)
 
+    def listChildDomainsJson(self):
+        try:
+            child_domains = ChildDomains.objects.all()
+            ipFile = "/etc/cyberpanel/machineIP"
+            with open(ipFile, 'r') as f:
+                ipData = f.read()
+            ipAddress = ipData.split('\n', 1)[0]
+            json_data = []
+            for items in child_domains:
+                dic = {'parent_site': items.master.domain,
+                       'domain': items.domain,
+                       'path': items.path,
+                       'ssl': items.ssl,
+                       'php_version': items.phpSelection}
+                json_data.append(dic)
+            final_json = json.dumps(json_data)
+            print(final_json)
+        except BaseException as msg:
+            logger.writeforCLI(str(msg), "Error", stack()[0][3])
+            print(0)
+
     def listWebsitesJson(self):
         try:
 
             websites = Websites.objects.all()
             ipFile = "/etc/cyberpanel/machineIP"
-            with open(ipFile, 'r') as f:
-                ipData = f.read()
+            f = open(ipFile)
+            ipData = f.read()
             ipAddress = ipData.split('\n', 1)[0]
 
-            json_data = []
+            json_data = "["
+            checker = 0
 
             for items in websites:
                 if items.state == 0:
@@ -133,8 +155,14 @@ class cyberPanel:
                     state = "Active"
                 dic = {'domain': items.domain, 'adminEmail': items.adminEmail, 'ipAddress': ipAddress,
                        'admin': items.admin.userName, 'package': items.package.packageName, 'state': state}
-                json_data.append(dic)
 
+                if checker == 0:
+                    json_data = json_data + json.dumps(dic)
+                    checker = 1
+                else:
+                    json_data = json_data + ',' + json.dumps(dic)
+
+            json_data = json_data + ']'
             final_json = json.dumps(json_data)
             print(final_json)
 
@@ -824,10 +852,11 @@ def main():
     parser = cliParser()
     args = parser.prepareArguments()
     cyberpanel = cyberPanel()
+    args.function = args.function.lower()
 
     ## Website functions
 
-    if args.function == "createWebsite":
+    if args.function == "createwebsite":
 
         completeCommandExample = 'cyberpanel createWebsite --package Detault --owner admin --domainName cyberpanel.net --email support@cyberpanel.net --php 5.6'
 
@@ -868,7 +897,7 @@ def main():
 
         cyberpanel.createWebsite(args.package, args.owner, args.domainName, args.email, args.php, ssl, dkim,
                                  openBasedir)
-    elif args.function == "deleteWebsite":
+    elif args.function == "deletewebsite":
 
         completeCommandExample = 'cyberpanel deleteWebsite --domainName cyberpanel.net'
 
@@ -877,7 +906,7 @@ def main():
             return
 
         cyberpanel.deleteWebsite(args.domainName)
-    elif args.function == "createChild":
+    elif args.function == "createchild":
 
         completeCommandExample = 'cyberpanel createChild --masterDomain cyberpanel.net --childDomain child.cyberpanel.net' \
                                  ' --owner admin --php 5.6'
@@ -912,14 +941,14 @@ def main():
             openBasedir = int(args.openBasedir)
         else:
             openBasedir = 0
-            
+
         if args.path:
             path = args.path
         else:
             path = "public_html/" + args.childDomain
 
         cyberpanel.createDomain(args.masterDomain, args.childDomain, args.owner, args.php, ssl, dkim, openBasedir, path)
-    elif args.function == "deleteChild":
+    elif args.function == "deletechild":
 
         completeCommandExample = 'cyberpanel deleteChild --childDomain cyberpanel.net'
 
@@ -927,13 +956,16 @@ def main():
             print("\n\nPlease enter the child domain to delete. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
-        cyberpanel.deleteChild(args.childDomain)
-    elif args.function == "listWebsitesJson":
+    elif args.function == "listchilddomainsjson":
+        cyberpanel.listChildDomainsJson()
+
+    elif args.function == "listwebsitesjson":
         cyberpanel.listWebsitesJson()
-    elif args.function == "listWebsitesPretty":
+
+    elif args.function == "listwebsitespretty":
         cyberpanel.listWebsitesPretty()
 
-    elif args.function == "changePHP":
+    elif args.function == "changephp":
 
         completeCommandExample = 'cyberpanel changePHP --domainName cyberpanel.net --php 5.6'
 
@@ -947,7 +979,7 @@ def main():
 
 
         cyberpanel.changePHP(args.domainName, args.php)
-    elif args.function == "changePackage":
+    elif args.function == "changepackage":
 
         completeCommandExample = 'cyberpanel changePackage --domainName cyberpanel.net --packageName CLI'
 
@@ -963,7 +995,7 @@ def main():
 
     ## DNS Functions
 
-    elif args.function == "listDNSJson":
+    elif args.function == "listdnsjson":
 
         completeCommandExample = 'cyberpanel listDNSJson --domainName cyberpanel.net'
 
@@ -972,7 +1004,7 @@ def main():
             return
 
         cyberpanel.listDNSJson(args.domainName)
-    elif args.function == "listDNSPretty":
+    elif args.function == "listdnspretty":
 
         completeCommandExample = 'cyberpanel listDNSPretty --domainName cyberpanel.net'
 
@@ -981,11 +1013,11 @@ def main():
             return
 
         cyberpanel.listDNSPretty(args.domainName)
-    elif args.function == "listDNSZonesJson":
+    elif args.function == "listdnszonesjson":
         cyberpanel.listDNSZonesJson()
-    elif args.function == "listDNSZonesPretty":
+    elif args.function == "listdnszonespretty":
         cyberpanel.listDNSZonesPretty()
-    elif args.function == "createDNSZone":
+    elif args.function == "creatednszone":
         completeCommandExample = 'cyberpanel createDNSZone --owner admin --domainName cyberpanel.net'
 
         if not args.domainName:
@@ -997,7 +1029,7 @@ def main():
             return
 
         cyberpanel.createDNSZone(args.domainName, args.owner)
-    elif args.function == "deleteDNSZone":
+    elif args.function == "deletednszone":
         completeCommandExample = 'cyberpanel deleteDNSZone --domainName cyberpanel.net'
 
         if not args.domainName:
@@ -1005,7 +1037,7 @@ def main():
             return
 
         cyberpanel.deleteDNSZone(args.domainName)
-    elif args.function == "createDNSRecord":
+    elif args.function == "creatednsrecord":
         completeCommandExample = 'cyberpanel createDNSRecord --domainName cyberpanel.net --name cyberpanel.net' \
                                  ' --recordType A --value 192.168.100.1 --priority 0 --ttl 3600'
 
@@ -1034,7 +1066,7 @@ def main():
             return
 
         cyberpanel.createDNSRecord(args.domainName, args.name, args.recordType, args.value, args.priority, args.ttl)
-    elif args.function == "deleteDNSRecord":
+    elif args.function == "deletednsrecord":
         completeCommandExample = 'cyberpanel deleteDNSRecord --recordID 200'
 
         if not args.recordID:
@@ -1045,7 +1077,7 @@ def main():
 
     ## Backup Functions.
 
-    elif args.function == "createBackup":
+    elif args.function == "createbackup":
 
         completeCommandExample = 'cyberpanel createBackup --domainName cyberpanel.net'
 
@@ -1054,7 +1086,7 @@ def main():
             return
 
         cyberpanel.createBackup(args.domainName)
-    elif args.function == "restoreBackup":
+    elif args.function == "restorebackup":
 
         completeCommandExample = 'cyberpanel restoreBackup --fileName /home/talkshosting.com/backup/backup-talksho-01-30-53-Fri-Jun-2018.tar.gz'
 
@@ -1066,7 +1098,7 @@ def main():
 
     ## Package functions.
 
-    elif args.function == "createPackage":
+    elif args.function == "createpackage":
 
         completeCommandExample = 'cyberpanel createPackage --owner admin --packageName CLI --diskSpace 1000 --bandwidth 10000 --emailAccounts 100' \
                                  ' --dataBases 100 --ftpAccounts 100 --allowedDomains 100'
@@ -1103,21 +1135,21 @@ def main():
 
         cyberpanel.createPackage(args.owner, args.packageName, args.diskSpace, args.bandwidth, args.emailAccounts,
                                  args.dataBases, args.ftpAccounts, args.allowedDomains)
-    elif args.function == "deletePackage":
+    elif args.function == "deletepackage":
         completeCommandExample = 'cyberpanel deletePackage --packageName CLI'
         if not args.packageName:
             print("\n\nPlease enter the package name. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         cyberpanel.deletePackage(args.packageName)
-    elif args.function == "listPackagesJson":
+    elif args.function == "listpackagesjson":
         cyberpanel.listPackagesJson()
-    elif args.function == "listPackagesPretty":
+    elif args.function == "listpackagespretty":
         cyberpanel.listPackagesPretty()
 
     ## Database functions.
 
-    elif args.function == "createDatabase":
+    elif args.function == "createdatabase":
 
         completeCommandExample = 'cyberpanel createDatabase --databaseWebsite cyberpanel.net --dbName cyberpanel ' \
                                  '--dbUsername cyberpanel --dbPassword cyberpanel'
@@ -1137,14 +1169,14 @@ def main():
             return
 
         cyberpanel.createDatabase(args.dbName, args.dbUsername, args.dbPassword, args.databaseWebsite)
-    elif args.function == "deleteDatabase":
+    elif args.function == "deletedatabase":
         completeCommandExample = 'cyberpanel deleteDatabase --dbName cyberpanel'
         if not args.dbName:
             print("\n\nPlease enter the database name. For example:\n\n" + completeCommandExample + "\n\n")
             return
 
         cyberpanel.deleteDatabase(args.dbName)
-    elif args.function == "listDatabasesJson":
+    elif args.function == "listdatabasesjson":
 
         completeCommandExample = 'cyberpanel listDatabasesJson --databaseWebsite cyberpanel.net'
 
@@ -1152,7 +1184,7 @@ def main():
             print("\n\nPlease enter database website. For example:\n\n" + completeCommandExample + "\n\n")
             return
         cyberpanel.listDatabasesJson(args.databaseWebsite)
-    elif args.function == "listDatabasesPretty":
+    elif args.function == "listdatabasespretty":
         completeCommandExample = 'cyberpanel listDatabasesPretty --databaseWebsite cyberpanel.net'
 
         if not args.databaseWebsite:
@@ -1163,7 +1195,7 @@ def main():
 
     ## Email Functions
 
-    elif args.function == "createEmail":
+    elif args.function == "createemail":
 
         completeCommandExample = 'cyberpanel createEmail --domainName cyberpanel.net --userName cyberpanel ' \
                                  '--password cyberpanel'
@@ -1180,7 +1212,7 @@ def main():
             return
 
         cyberpanel.createEmail(args.domainName, args.userName, args.password)
-    elif args.function == "deleteEmail":
+    elif args.function == "deleteemail":
         completeCommandExample = 'cyberpanel deleteEmail --email cyberpanel@cyberpanel.net'
 
         if not args.email:
@@ -1188,7 +1220,7 @@ def main():
             return
 
         cyberpanel.deleteEmail(args.email)
-    elif args.function == "changeEmailPassword":
+    elif args.function == "changeemailpassword":
 
         completeCommandExample = 'cyberpanel changeEmailPassword --email cyberpanel@cyberpanel.net --password cyberpanel'
 
@@ -1201,7 +1233,7 @@ def main():
             return
 
         cyberpanel.changeEmailPassword(args.email, args.password)
-    elif args.function == "listEmailsJson":
+    elif args.function == "listemailsjson":
         completeCommandExample = 'cyberpanel listEmailsJson --domainName cyberpanel.net'
 
         if not args.domainName:
@@ -1209,7 +1241,7 @@ def main():
             return
 
         cyberpanel.listEmailsJson(args.domainName)
-    elif args.function == "listEmailsPretty":
+    elif args.function == "listemailspretty":
         completeCommandExample = 'cyberpanel listEmailsPretty --domainName cyberpanel.net'
 
         if not args.domainName:
@@ -1220,7 +1252,7 @@ def main():
 
     ## FTP Functions
 
-    elif args.function == "createFTPAccount":
+    elif args.function == "createftpaccount":
 
         completeCommandExample = 'cyberpanel createFTPAccount --domainName cyberpanel.net --userName cyberpanel ' \
                                  '--password cyberpanel --owner admin'
@@ -1241,7 +1273,7 @@ def main():
             return
 
         cyberpanel.createFTPAccount(args.domainName, args.userName, args.password, args.owner)
-    elif args.function == "deleteFTPAccount":
+    elif args.function == "deleteftpaccount":
         completeCommandExample = 'cyberpanel deleteFTPAccount --userName cyberpanel'
 
         if not args.userName:
@@ -1249,7 +1281,7 @@ def main():
             return
 
         cyberpanel.deleteFTPAccount(args.userName)
-    elif args.function == "changeFTPPassword":
+    elif args.function == "changeftppassword":
 
         completeCommandExample = 'cyberpanel changeFTPPassword --userName cyberpanel --password cyberpanel'
 
@@ -1262,7 +1294,7 @@ def main():
             return
 
         cyberpanel.changeFTPPassword(args.userName, args.password)
-    elif args.function == "listFTPJson":
+    elif args.function == "listftpjson":
         completeCommandExample = 'cyberpanel listFTPJson --domainName cyberpanel.net'
 
         if not args.domainName:
@@ -1270,7 +1302,7 @@ def main():
             return
 
         cyberpanel.listFTPJson(args.domainName)
-    elif args.function == "listFTPPretty":
+    elif args.function == "listftppretty":
         completeCommandExample = 'cyberpanel listFTPPretty --domainName cyberpanel.net'
 
         if not args.domainName:
@@ -1280,7 +1312,7 @@ def main():
         cyberpanel.listFTPPretty(args.domainName)
 
     ## SSL Functions
-    elif args.function == "issueSSL":
+    elif args.function == "issuessl":
         completeCommandExample = 'cyberpanel issueSSL --domainName cyberpanel.net'
 
         if not args.domainName:
@@ -1288,7 +1320,7 @@ def main():
             return
 
         cyberpanel.issueSSL(args.domainName)
-    elif args.function == "hostNameSSL":
+    elif args.function == "hostnamessl":
         completeCommandExample = 'cyberpanel hostNameSSL --domainName cyberpanel.net'
 
         if not args.domainName:
@@ -1296,7 +1328,7 @@ def main():
             return
 
         cyberpanel.issueSSLForHostName(args.domainName)
-    elif args.function == "mailServerSSL":
+    elif args.function == "mailserverssl":
 
         completeCommandExample = 'cyberpanel mailServerSSL --domainName cyberpanel.net'
 
@@ -1306,7 +1338,7 @@ def main():
 
         cyberpanel.issueSSLForMailServer(args.domainName)
 
-    elif args.function == "issueSelfSignedSSL":
+    elif args.function == "issueselfsignedssl":
         completeCommandExample = 'cyberpanel issueSelfSignedSSL --domainName cyberpanel.net'
 
         if not args.domainName:
@@ -1351,7 +1383,7 @@ def main():
 
     ### User Functions
 
-    elif args.function == "createUser":
+    elif args.function == "createuser":
 
         completeCommandExample = 'cyberpanel createUser --firstName Cyber --lastName Panel --email email@cyberpanel.net --userName cyberpanel --password securepassword --websitesLimit 10 --selectedACL user --securityLevel HIGH'
 
@@ -1404,7 +1436,7 @@ def main():
 
         print(response.content.decode())
 
-    elif args.function == "deleteUser":
+    elif args.function == "deleteuser":
 
         completeCommandExample = 'cyberpanel deleteUser --userName cyberpanel'
 
@@ -1422,7 +1454,7 @@ def main():
 
         print(response.content.decode())
 
-    elif args.function == "listUsers":
+    elif args.function == "listusers":
 
         from userManagment.views import fetchTableUsers
         data = {}
@@ -1431,7 +1463,7 @@ def main():
 
         print(response.content.decode())
 
-    elif args.function == "suspendUser":
+    elif args.function == "suspenduser":
 
         completeCommandExample = 'cyberpanel suspendUser --userName cyberpanel --state SUSPEND'
 
@@ -1454,7 +1486,7 @@ def main():
 
         print(response.content.decode())
 
-    elif args.function == "editUser":
+    elif args.function == "edituser":
 
         completeCommandExample = 'cyberpanel editUser --userName cyberpanel --firstName Cyber --lastName Panel --email email@cyberpanel.net --password securepassword --securityLevel HIGH'
 
@@ -1499,7 +1531,7 @@ def main():
 
     ### Application installers
 
-    elif args.function == "installWordPress":
+    elif args.function == "installwordpress":
         completeCommandExample = 'cyberpanel installWordPress --domainName cyberpanel.net --email support@cyberpanel.net --userName cyberpanel --password helloworld --siteTitle "WordPress Site" --path helloworld (this is optional)'
 
         if not args.domainName:
@@ -1543,7 +1575,7 @@ def main():
         wm = WebsiteManager()
         wm.installWordpress(1, data)
 
-    elif args.function == "installJoomla":
+    elif args.function == "installjoomla":
 
         completeCommandExample = 'cyberpanel installJoomla --domainName cyberpanel.net --password helloworld --siteTitle "WordPress Site" --path helloworld (this is optional)'
 
@@ -1579,7 +1611,7 @@ def main():
         wm = WebsiteManager()
         wm.installJoomla(1, data)
 
-    elif args.function == "switchTOLSWS":
+    elif args.function == "switchtolsws":
 
         completeCommandExample = 'cyberpanel switchTOLSWS --licenseKey <Your lsws key here or you can enter TRIAL)'
 
