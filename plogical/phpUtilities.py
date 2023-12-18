@@ -248,6 +248,10 @@ class phpUtilities:
     @staticmethod
     def WrapGetPHPVersionFromFileToGetVersionWithPHP(vhFile):
         result = phpUtilities.GetPHPVersionFromFile(vhFile)
+
+        if os.path.exists(ProcessUtilities.debugPath):
+            logging.CyberCPLogFileWriter.writeToFile(result)
+
         command = result + " -v | awk '/^PHP/ {print $2}'"
         php_version = ProcessUtilities.outputExecutioner(command, None, True).rstrip('\n')
         return f"PHP {php_version}"

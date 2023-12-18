@@ -2354,10 +2354,28 @@ class WebsiteManager:
             pageNumber = int(data['page'])
             recordsToShow = int(data['recordsToShow'])
 
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.CyberCPLogFileWriter.writeToFile(f'Fetch sites step 1..')
+
             endPageNumber, finalPageNumber = self.recordsPointer(pageNumber, recordsToShow)
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.CyberCPLogFileWriter.writeToFile(f'Fetch sites step 2..')
+
             websites = ACLManager.findWebsiteObjects(currentACL, userID)
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.CyberCPLogFileWriter.writeToFile(f'Fetch sites step 3..')
+
             pagination = self.getPagination(len(websites), recordsToShow)
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.CyberCPLogFileWriter.writeToFile(f'Fetch sites step 4..')
+
             json_data = self.findWebsitesListJson(websites[finalPageNumber:endPageNumber])
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.CyberCPLogFileWriter.writeToFile(f'Fetch sites step 5..')
 
             final_dic = {'status': 1, 'listWebSiteStatus': 1, 'error_message': "None", "data": json_data,
                          'pagination': pagination}
@@ -2415,9 +2433,14 @@ class WebsiteManager:
 
         from plogical.phpUtilities import phpUtilities
 
+        if os.path.exists(ProcessUtilities.debugPath):
+            logging.CyberCPLogFileWriter.writeToFile(f'findWebsitesListJson 1')
+
 
 
         for items in websites:
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.CyberCPLogFileWriter.writeToFile(f'findWebsitesListJson 2')
             if items.state == 0:
                 state = "Suspended"
             else:
@@ -2425,10 +2448,25 @@ class WebsiteManager:
 
             vhFile = f'/usr/local/lsws/conf/vhosts/{items.domain}/vhost.conf'
 
-            PHPVersionActual = phpUtilities.WrapGetPHPVersionFromFileToGetVersionWithPHP(vhFile)
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.CyberCPLogFileWriter.writeToFile(vhFile)
+
+            try:
+                PHPVersionActual = phpUtilities.WrapGetPHPVersionFromFileToGetVersionWithPHP(vhFile)
+            except:
+                PHPVersionActual = 'PHP 8.1'
+
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.CyberCPLogFileWriter.writeToFile(f'findWebsitesListJson 3')
 
             DiskUsage, DiskUsagePercentage, bwInMB, bwUsage = virtualHostUtilities.FindStats(items)
-            diskUsed = "%sMB" % str(DiskUsage)
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.CyberCPLogFileWriter.writeToFile(f'findWebsitesListJson 4')
+            try:
+                diskUsed = "%sMB" % str(DiskUsage)
+            except:
+                diskUsed = "%sMB" % str(0)
 
             dic = {'domain': items.domain, 'adminEmail': items.adminEmail, 'ipAddress': ipAddress,
                    'admin': items.admin.userName, 'package': items.package.packageName, 'state': state,
