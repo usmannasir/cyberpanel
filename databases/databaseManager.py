@@ -84,6 +84,27 @@ class DatabaseManager:
         proc = httpProc(request, template, {'websitesList': websitesName}, 'deleteDatabase')
         return proc.render()
 
+    def MySQLManager(self, request = None, userID = None):
+        template = 'databases/mysqlmanager.html'
+        proc = httpProc(request, template, None)
+        return proc.render()
+    def OptimizeMySQL(self, request = None, userID = None):
+        from cloudAPI.cloudManager import CloudManager
+        cm = CloudManager()
+        result = cm.fetchRam(request)
+
+        data1 = json.loads(result.content)
+
+
+
+        data = {}
+        data['ramInGB'] = data1.get('ramInGB')
+        data['conf'] = data1.get('conf')
+
+        template = 'databases/OptimizeMySQL.html'
+        proc = httpProc(request, template, data)
+        return proc.render()
+
     def fetchDatabases(self, userID = None, data = None):
         try:
 
@@ -307,6 +328,8 @@ class DatabaseManager:
 
         except BaseException as msg:
             print("0," + str(msg))
+
+
 
 def main():
 
