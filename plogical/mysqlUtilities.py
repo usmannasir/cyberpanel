@@ -1,4 +1,6 @@
 import os,sys
+from urllib.parse import unquote
+
 sys.path.append('/usr/local/CyberCP')
 import django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
@@ -583,7 +585,8 @@ password=%s
                 command = 'sudo mv /etc/my.cnf /etc/my.cnf.bak'
             else:
                 command = 'sudo mv /etc/mysql/my.cnf /etc/mysql/my.cnf.bak'
-                data['suggestedContent'] = data['suggestedContent'].replace('/var/lib/mysql/mysql.sock', '/var/run/mysqld/mysqld.sock')
+                decoded_content = unquote(data['suggestedContent'])
+                data['suggestedContent'] = decoded_content.replace('/var/lib/mysql/mysql.sock', '/var/run/mysqld/mysqld.sock')
 
 
             ProcessUtilities.executioner(command)

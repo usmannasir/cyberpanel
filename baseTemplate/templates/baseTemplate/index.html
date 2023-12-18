@@ -217,65 +217,6 @@
                        title="{% trans 'CPU Load Average' %}" data-placement="bottom">
                         <span class="badge bg-red" id="load3">{$ three $}</span>
                     </a>{% endcomment %}
-
-                    {#                    <div class="dropdown" id="dashnav-btn">#}
-                    {#                        <a href="#" data-toggle="dropdown" data-placement="bottom"#}
-                    {#                           class="popover-button-header tooltip-button" title="{% trans 'Dashboard Quick Menu' %}">#}
-                    {#                            <i class="glyph-icon icon-linecons-cog"></i>#}
-                    {#                        </a>#}
-                    {#                        <div class="dropdown-menu float-right">#}
-                    {#                            <div class="box-sm">#}
-                    {#                                <div class="pad5T pad5B pad10L pad10R dashboard-buttons clearfix">#}
-                    {#                                    <a href="{% url 'loadWebsitesHome' %}"#}
-                    {#                                       class="btn vertical-button remove-border btn-info" title="{% trans '' %}">#}
-                    {#                            <span class="glyph-icon icon-separator-vertical pad0A medium">#}
-                    {#                                <i class="glyph-icon icon-dashboard opacity-80 font-size-20"></i>#}
-                    {#                            </span>#}
-                    {#                                        {% trans "Websites" %}#}
-                    {#                                    </a>#}
-                    {#                                    <a href="{% url 'packagesHome' %}"#}
-                    {#                                       class="btn vertical-button remove-border btn-danger"#}
-                    {#                                       title="{% trans '' %}">#}
-                    {#                            <span class="glyph-icon icon-separator-vertical pad0A medium">#}
-                    {#                                <i class="glyph-icon icon-tags opacity-80 font-size-20"></i>#}
-                    {#                            </span>#}
-                    {#                                        {% trans "Packages" %}#}
-                    {#                                    </a>#}
-                    {#                                    <a href="{% url 'dnsHome' %}" class="btn vertical-button remove-border btn-purple"#}
-                    {#                                       title="{% trans '' %}">#}
-                    {#                            <span class="glyph-icon icon-separator-vertical pad0A medium">#}
-                    {#                                <i class="glyph-icon icon-fire opacity-80 font-size-20"></i>#}
-                    {#                            </span>#}
-                    {#                                        {% trans "DNS" %}#}
-                    {#                                    </a>#}
-                    {#                                    <a href="{% url 'loadFTPHome' %}"#}
-                    {#                                       class="btn vertical-button remove-border btn-azure"#}
-                    {#                                       title="{% trans '' %}">#}
-                    {#                            <span class="glyph-icon icon-separator-vertical pad0A medium">#}
-                    {#                                <i class="glyph-icon icon-bar-chart-o opacity-80 font-size-20"></i>#}
-                    {#                            </span>#}
-                    {#                                        {% trans "FTP" %}#}
-                    {#                                    </a>#}
-                    {#                                    <a href="{% url 'loadTuningHome' %}"#}
-                    {#                                       class="btn vertical-button remove-border btn-yellow" title="{% trans '' %}">#}
-                    {#                            <span class="glyph-icon icon-separator-vertical pad0A medium">#}
-                    {#                                <i class="glyph-icon icon-laptop opacity-80 font-size-20"></i>#}
-                    {#                            </span>#}
-                    {#                                        {% trans "Tuning" %}#}
-                    {#                                    </a>#}
-                    {#                                    <a href="{% url 'serverStatusHome' %}"#}
-                    {#                                       class="btn vertical-button remove-border btn-warning" title="{% trans '' %}">#}
-                    {#                            <span class="glyph-icon icon-separator-vertical pad0A medium">#}
-                    {#                                <i class="glyph-icon icon-code opacity-80 font-size-20"></i>#}
-                    {#                            </span>#}
-                    {#                                        {% trans "Status" %}#}
-                    {#                                    </a>#}
-                    {##}
-                    {#                                </div>#}
-                    {##}
-                    {#                            </div>#}
-                    {#                        </div>#}
-                    {#                    </div>#}
                     <a class="header-btn" target="_blank"
                        href="https://www.youtube.com/channel/UCS6sgUWEhaFl1TO238Ck0xw?sub_confirmation=1"
                        title="{% trans 'Youtube Channel' %}">
@@ -824,6 +765,18 @@
                         {% if admin %}
 
                             <li class="header"><span>{% trans "Server" %}</span></li>
+
+                            <li >
+                                <a href="{% url 'MysqlManager' %}"
+                                   title="{% trans 'Root File Manager' %}">
+                                    <i class="glyph-icon icon-database"
+                                       title="{% trans 'MySQL Manager' %}"
+                                       data-original-title=".icon-cloud-upload" aria-describedby="tooltip896208"></i>
+                                    <span>{% trans "MySQL Manager" %}</span>
+                                     <span class="bs-label badge-warning">{% trans "NEW" %}</span>
+                                </a>
+                            </li>
+
                             <li id="sidebar-menu-item-root-file-manager">
                                 <a href="{% url 'Filemanager' %}"
                                    title="{% trans 'Root File Manager' %}">
@@ -836,21 +789,6 @@
 
 
 
-                            {#                            <li>#}
-                            {#                                <a href="#" title="{% trans 'Terminal' %}">#}
-                            {#                                    <i class="glyph-icon icon-linecons-fire"></i>#}
-                            {#                                    <span>{% trans "Web Terminal" %}</span>#}
-                            {#                                    <span class="bs-label badge-yellow">{% trans "NEW" %}</span>#}
-                            {#                                </a>#}
-                            {#                                <div class="sidebar-submenu">#}
-                            {##}
-                            {#                                    <ul>#}
-                            {#                                        <li><a href="{% url 'terminal' %}"#}
-                            {#                                               title="{% trans 'Web Based Terminal' %}"><span>{% trans "Terminal" %}</span></a>#}
-                            {#                                        </li>#}
-                            {#                                    </ul>#}
-                            {#                                </div><!-- .sidebar-submenu -->#}
-                            {#                            </li>#}
 
                             <li id="sidebar-menu-item-cloudlinux">
                                 <a href="#" title="{% trans 'CloudLinux' %}">
@@ -1148,6 +1086,8 @@
                     </ul><!-- #sidebar-menu -->
                 </div>
             </div>
+
+
             <div id="page-content-wrapper">
                 <div id="page-content">
 

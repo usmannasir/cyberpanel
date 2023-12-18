@@ -603,3 +603,211 @@ app.controller('phpMyAdmin', function ($scope, $http, $window) {
     }
 
 });
+
+
+app.controller('Mysqlmanager', function ($scope, $http, $compile, $window) {
+    $scope.cyberPanelLoading = true;
+    $scope.mysql_status = 'test'
+
+
+    $scope.getstatus = function () {
+
+        $scope.cyberPanelLoading = false;
+
+        url = "/dataBases/getMysqlstatus";
+
+        var data = {};
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.cyberPanelLoading = true;
+            if (response.data.status === 1) {
+                $scope.uptime = response.data.uptime;
+                $scope.connections = response.data.connections;
+                $scope.Slow_queries = response.data.Slow_queries;
+                $scope.processes = JSON.parse(response.data.processes);
+                $timeout($scope.showStatus, 3000);
+
+                new PNotify({
+                    title: 'Success',
+                    text: 'Successfully Fetched',
+                    type: 'success'
+                });
+            } else {
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberPanelLoading = true;
+            new PNotify({
+                title: 'Error!',
+                text: "cannot load",
+                type: 'error'
+            });
+        }
+
+    }
+
+    $scope.getstatus();
+});
+
+
+app.controller('OptimizeMysql', function ($scope, $http) {
+    $scope.cyberPanelLoading = true;
+
+    $scope.generateRecommendations = function () {
+        $scope.cyberhosting = false;
+        url = "/dataBases/generateRecommendations";
+
+        var data = {
+            detectedRam: $("#detectedRam").text()
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialData, cantLoadInitialData);
+
+
+        function ListInitialData(response) {
+            $scope.cyberhosting = true;
+            if (response.data.status === 1) {
+                $scope.suggestedContent = response.data.generatedConf;
+
+            } else {
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialData(response) {
+            $scope.cyberhosting = true;
+            new PNotify({
+                title: 'Error!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+        }
+
+    };
+
+
+    $scope.applyMySQLChanges = function () {
+        $scope.cyberhosting = false;
+        url = "/dataBases/applyMySQLChanges";
+
+        var encodedContent = encodeURIComponent($scope.suggestedContent);
+
+        var data = {
+            suggestedContent: encodedContent
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialData, cantLoadInitialData);
+
+
+        function ListInitialData(response) {
+            $scope.cyberhosting = true;
+            if (response.data.status === 1) {
+
+                new PNotify({
+                    title: 'Success',
+                    text: 'Changes successfully applied.',
+                    type: 'success'
+                });
+
+
+            } else {
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialData(response) {
+            $scope.cyberhosting = true;
+            new PNotify({
+                title: 'Error!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+        }
+
+    };
+
+
+    $scope.restartMySQL = function () {
+        $scope.cyberPanelLoading = false;
+
+        url = "/dataBases/restartMySQL";
+
+        var data = {};
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.cyberPanelLoading = true;
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success',
+                    text: 'Successfully Done',
+                    type: 'success'
+                });
+            } else {
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialData(response) {
+            $scope.cyberhosting = true;
+            new PNotify({
+                title: 'Error!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+        }
+    }
+})
