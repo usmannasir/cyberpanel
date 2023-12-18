@@ -297,6 +297,8 @@ services:
             command = f"chown -R nobody:{group} /home/docker/{self.data['finalURL']}/data"
             ProcessUtilities.executioner(command)
 
+            logging.statusWriter(self.JobID, 'Completed. [200]')
+
             # command = f"docker-compose -f {self.data['ComposePath']} ps -q wordpress"
             # stdout = ProcessUtilities.outputExecutioner(command)
             #
