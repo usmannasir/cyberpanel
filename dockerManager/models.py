@@ -44,3 +44,15 @@ class DockerSites(models.Model):
     blogTitle = models.TextField()
     adminUser = models.CharField(max_length=100)
     adminEmail = models.CharField(max_length=100)
+
+class DockerPackages(models.Model):
+    CPUs = models.IntegerField()
+    Ram = models.IntegerField()
+    Bandwidth = models.TextField()
+    DiskSpace = models.TextField()
+    config = models.TextField()
+
+
+class PackageAssignment(models.Model):
+    user = models.ForeignKey(Administrator, on_delete=models.CASCADE)
+    package = models.ForeignKey(DockerPackages, on_delete=models.CASCADE)
