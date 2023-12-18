@@ -1069,6 +1069,28 @@ bind-address=%s
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[deleteDatabase]")
             return str(msg)
 
+    @staticmethod
+    def UpgradeMariaDB(tempStatusPath):
+
+        logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Creating backup of MySQL..,10')
+
+        MySQLBackupDir = '/var/lib/mysql-backupcp'
+        from os import getuid
+        if getuid() != 0:
+            logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'This function should run as root. [404]')
+            return 0, 'This function should run as root.'
+
+
+        if not os.path.exists(MySQLBackupDir):
+            command = 'rsync -av /var/lib/mysql/ /var/lib/mysql-backupcp/'
+            ProcessUtilities.executioner(command)
+
+            logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'MySQL backup created..,20')
+
+
+
+
+
 def main():
     parser = argparse.ArgumentParser(description='CyberPanel')
     parser.add_argument('function', help='Specific a function to call!')
