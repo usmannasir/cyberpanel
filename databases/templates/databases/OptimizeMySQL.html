@@ -1,0 +1,70 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Mysql Manager - CyberPanel" %}{% endblock %}
+{% block content %}
+
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
+
+    <div class="container" ng-controller="OptimizeMysql">
+        <div id="page-title">
+            <h2>{% trans "Optimize MySQL" %} <img ng-hide="cyberPanelLoading"
+                                                  src="{% static 'images/loading.gif' %}"></h2>
+        </div>
+
+        <div class="panel">
+            <div class="panel-body">
+
+
+                <button style="margin-bottom: 2%;  display: inline" ng-click="generateRecommendations()" type="button"
+                        class="btn btn-success"><i
+                        class="mdi mdi-dns mr-1"></i>
+                    <span>Generate Recommendations</span>
+                </button>
+
+                <button style="margin-bottom: 2%;  display: inline" ng-click="applyMySQLChanges()" type="button"
+                        class="btn btn-danger"><i
+                        class="mdi mdi-dns mr-1"></i>
+                    <span>Apply Changes</span>
+                </button>
+
+                <button style="margin-bottom: 2%; display: inline" ng-click="restartMySQL()" type="button"
+                        class="btn btn-info"><i
+                        class="mdi mdi-dns mr-1"></i>
+                    <span>Restart MySQL</span>
+                </button>
+
+                <div class="right" style="float: right; display: inline">
+                    <strong> Detected Ram: <b id="detectedRam">{{ ramInGB }}</b></strong>
+                </div>
+
+                <form>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="billing-town-city">Current contents of my.cnf</label>
+                                <textarea placeholder="{{ conf }}" rows="25"
+                                          class="form-control">{{ conf }}</textarea>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="billing-town-city">Suggested Content</label>
+                                <textarea placeholder="Click Generate Recommendations to generate recommentations."
+                                          ng-model="suggestedContent" rows="25"
+                                          class="form-control"></textarea>
+                            </div>
+                        </div>
+                    </div> <!-- end row -->
+                </form>
+            </div>
+
+        </div>
+
+
+    </div>
+
+
+{% endblock %}

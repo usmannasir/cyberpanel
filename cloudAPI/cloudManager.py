@@ -1070,11 +1070,11 @@ class CloudManager:
 
     def fetchRam(self, request):
         try:
-            request.session['userID'] = self.admin.pk
-            currentACL = ACLManager.loadedACL(self.admin.pk)
-
-            if currentACL['admin'] == 0:
-                return self.ajaxPre(0, 'Only administrators can see MySQL status.')
+            # request.session['userID'] = self.admin.pk
+            # currentACL = ACLManager.loadedACL(self.admin.pk)
+            #
+            # if currentACL['admin'] == 0:
+            #     return self.ajaxPre(0, 'Only administrators can see MySQL status.')
 
             # if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
             #    return self.ajaxPre(0, 'This feature is currently only available on CentOS.')

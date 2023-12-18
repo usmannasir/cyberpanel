@@ -7,6 +7,12 @@ urlpatterns = [
     url(r'^submitDBCreation', views.submitDBCreation, name='submitDBCreation'),
     url(r'^deleteDatabase', views.deleteDatabase, name='deleteDatabase'),
     url(r'^fetchDatabases', views.fetchDatabases, name='fetchDatabases'),
+    url(r'^MysqlManager', views.MySQLManager, name='MysqlManager'),
+    url(r'^OptimizeMySQL', views.OptimizeMySQL, name='OptimizeMySQL'),
+    url(r'^getMysqlstatus', views.getMysqlstatus, name='getMysqlstatus'),
+    url(r'^restartMySQL', views.restartMySQL, name='restartMySQL'),
+    url(r'^generateRecommendations', views.generateRecommendations, name='generateRecommendations'),
+    url(r'^applyMySQLChanges', views.applyMySQLChanges, name='applyMySQLChanges'),
 
 
     url(r'^submitDatabaseDeletion', views.submitDatabaseDeletion, name='submitDatabaseDeletion'),
