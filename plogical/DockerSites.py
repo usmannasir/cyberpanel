@@ -37,6 +37,7 @@ class Docker_Sites(multi.Thread):
 
         except BaseException as msg:
             logging.writeToFile(str(msg) + ' [Docker_Sites.run]')
+
     def InstallDocker(self):
 
         command = 'apt install docker-compose -y'
@@ -286,10 +287,21 @@ services:
 
             ### WriteConfig to compose-file
 
+            command = f"mkdir -p /home/docker/{self.data['finalURL']}"
+            ProcessUtilities.executioner(command)
+
+            TempCompose = f'/home/cyberpanel/{self.data["finalURL"]}-docker-compose.yml'
+
 
             WriteToFile = open(self.data['ComposePath'], 'w')
             WriteToFile.write(WPSite)
             WriteToFile.close()
+
+            command = f"mv {TempCompose} {self.data['ComposePath']}"
+            ProcessUtilities.executioner(command)
+
+            command = f"chmod 600 {self.data['ComposePath']} && chown root:root {self.data['ComposePath']}"
+            ProcessUtilities.executioner(command, 'root', True)
 
             ####
 
@@ -447,7 +459,7 @@ services:
             MySQLRootPass = randomPassword.generate_pass()
             f_data = {
                 "JobID": tempStatusPath,
-                "ComposePath": f"/home/{Domain}/docker-compose.yml",
+                "ComposePath": f"/home/docker/{Domain}/docker-compose.yml",
                 "MySQLPath": f'/home/{Domain}/public_html/sqldocker',
                 "MySQLRootPass": MySQLRootPass,
                 "MySQLDBName": dbname,
@@ -498,9 +510,9 @@ def Main():
         args = parser.parse_args()
 
         if args.function == "SetupProxy":
-            DockerSites.SetupProxy(args.port)
+            Docker_Sites.SetupProxy(args.port)
         elif args.function == 'SetupHTAccess':
-            DockerSites.SetupHTAccess(args.port, args.htaccess)
+            Docker_Sites.SetupHTAccess(args.port, args.htaccess)
         elif args.function == 'DeployWPDocker':
             # Takes
             # ComposePath, MySQLPath, MySQLRootPass, MySQLDBName, MySQLDBNUser, MySQLPassword, CPUsMySQL, MemoryMySQL,
@@ -530,7 +542,7 @@ def Main():
                 "externalApp": 'docke8463',
                 "docRoot": "/home/docker.cyberpanel.net"
             }
-            ds = Docker_Sites(data)
+            ds = Docker_Sites('', data)
             ds.DeployWPContainer()
 
 
