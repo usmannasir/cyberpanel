@@ -108,27 +108,6 @@
                     <form name="websiteCreationForm" action="/" id="createPackages"
                           class="form-horizontal bordered-row panel-body">
 
-                        <div ng-hide="installationDetailsForm" class="form-group">
-                            <label class="col-sm-3 control-label">{% trans "Select Package" %}</label>
-                            <div class="col-sm-6">
-                                <select ng-model="packageForWebsite" class="form-control">
-                                    {% for items in packageList %}
-                                        <option>{{ items }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        </div>
-
-                        <div ng-hide="installationDetailsForm" class="form-group">
-                            <label class="col-sm-3 control-label">{% trans "Select Owner" %}</label>
-                            <div class="col-sm-6">
-                                <select ng-model="websiteOwner" class="form-control">
-                                    {% for items in owernList %}
-                                        <option>{{ items }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        </div>
 
                         <div ng-hide="installationDetailsForm" class="form-group">
                             <label class="col-sm-3 control-label">{% trans "Domain Name" %}</label>

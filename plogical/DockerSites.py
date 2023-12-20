@@ -1,19 +1,42 @@
 #!/usr/local/CyberCP/bin/python
+import json
 import os
 import sys
+import time
+
+from plogical import randomPassword
+from plogical.acl import ACLManager
+
 sys.path.append('/usr/local/CyberCP')
 import django
 from plogical.processUtilities import ProcessUtilities
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
 import argparse
+import threading as multi
 
-class DockerSites:
+class Docker_Sites(multi.Thread):
 
-    def __init__(self, data):
+
+    Wordpress = 1
+    Joomla = 2
+
+    def __init__(self, function_run, data):
+        multi.Thread.__init__(self)
+        self.function_run = function_run
         self.data = data
         self.JobID = self.data['JobID'] ##JOBID will be file path where status is being written
         pass
 
+    def run(self):
+        try:
+            if self.function_run == 'DeployWPContainer':
+                self.DeployWPContainer()
+            elif self.function_run =='SubmitDockersiteCreation':
+                self.SubmitDockersiteCreation()
+
+
+        except BaseException as msg:
+            logging.writeToFile(str(msg) + ' [Docker_Sites.run]')
     def InstallDocker(self):
 
         command = 'apt install docker-compose -y'
@@ -335,7 +358,132 @@ services:
             print(str(msg))
             pass
 
+    def SubmitDockersiteCreation(self):
+        try:
 
+            from websiteFunctions.models import DockerSites, Websites
+            from websiteFunctions.website import WebsiteManager
+
+
+            tempStatusPath = self.data['JobID']
+            statusFile = open(tempStatusPath, 'w')
+            statusFile.writelines('Creating Website...,10')
+            statusFile.close()
+
+            Domain = self.data['Domain']
+            WPemal = self.data['WPemal']
+            Owner = self.data['Owner']
+            userID = self.data['userID']
+            MysqlCPU = self.data['MysqlCPU']
+            MYsqlRam = self.data['MYsqlRam']
+            SiteCPU = self.data['SiteCPU']
+            SiteRam = self.data['SiteRam']
+            sitename = self.data['sitename']
+            WPusername = self.data['WPusername']
+            WPpasswd = self.data['WPpasswd']
+            externalApp = self.data['externalApp']
+
+
+            currentTemp = tempStatusPath
+
+
+            DataToPass = {}
+            DataToPass['tempStatusPath'] = tempStatusPath
+            DataToPass['domainName'] = Domain
+            DataToPass['adminEmail'] = WPemal
+            DataToPass['phpSelection'] = "PHP 8.1"
+            DataToPass['websiteOwner'] = Owner
+            DataToPass['package'] = 'Default'
+            DataToPass['ssl'] = 1
+            DataToPass['dkimCheck'] = 0
+            DataToPass['openBasedir'] = 0
+            DataToPass['mailDomain'] = 0
+            DataToPass['apacheBackend'] = 0
+            UserID = userID
+
+            try:
+                website = Websites.objects.get(domain=DataToPass['domainName'])
+
+                if website.phpSelection == 'PHP 7.3':
+                    website.phpSelection = 'PHP 8.0'
+                    website.save()
+
+                if ACLManager.checkOwnership(website.domain, self.data['adminID'],
+                                             self.data['currentACL']) == 0:
+                    statusFile = open(tempStatusPath, 'w')
+                    statusFile.writelines('You dont own this site.[404]')
+                    statusFile.close()
+            except:
+
+                ab = WebsiteManager()
+                coreResult = ab.submitWebsiteCreation(UserID, DataToPass)
+                coreResult1 = json.loads((coreResult).content)
+                logging.writeToFile("Creating website result....%s" % coreResult1)
+                reutrntempath = coreResult1['tempStatusPath']
+                while (1):
+                    lastLine = open(reutrntempath, 'r').read()
+                    logging.writeToFile("Error web creating lastline ....... %s" % lastLine)
+                    if lastLine.find('[200]') > -1:
+                        break
+                    elif lastLine.find('[404]') > -1:
+                        statusFile = open(currentTemp, 'w')
+                        statusFile.writelines('Failed to Create Website: error: %s. [404]' % lastLine)
+                        statusFile.close()
+                        return 0
+                    else:
+                        statusFile = open(currentTemp, 'w')
+                        statusFile.writelines('Creating Website....,20')
+                        statusFile.close()
+                        time.sleep(2)
+
+                statusFile = open(tempStatusPath, 'w')
+                statusFile.writelines('Creating DockerSite....,30')
+                statusFile.close()
+
+
+            dbname = randomPassword.generate_pass()
+            dbpasswd = randomPassword.generate_pass()
+            dbusername = randomPassword.generate_pass()
+            MySQLRootPass = randomPassword.generate_pass()
+            f_data = {
+                "JobID": tempStatusPath,
+                "ComposePath": f"/home/{Domain}/docker-compose.yml",
+                "MySQLPath": f'/home/{Domain}/public_html/sqldocker',
+                "MySQLRootPass": MySQLRootPass,
+                "MySQLDBName": dbname,
+                "MySQLDBNUser": dbusername,
+                "MySQLPassword": dbpasswd,
+                "CPUsMySQL": MysqlCPU,
+                "MemoryMySQL": MYsqlRam,
+                "port": '8000',
+                "SitePath": f'/home/{Domain}/public_html/wpdocker',
+                "CPUsSite": SiteCPU,
+                "MemorySite": SiteRam,
+                "SiteName": sitename,
+                "finalURL": Domain,
+                "blogTitle": sitename,
+                "adminUser": WPusername,
+                "adminPassword": WPpasswd,
+                "adminEmail": WPemal,
+                "htaccessPath": f'/home/{Domain}/public_html/.htaccess',
+                "externalApp": externalApp,
+                "docRoot": f"/home/{Domain}"
+            }
+            webobj = Websites.objects.get(domain=Domain)
+            dockersiteobj = DockerSites(
+                admin = webobj, ComposePath=f"/home/{Domain}/docker-compose.yml", SitePath= f'/home/{Domain}/public_html/wpdocker',
+                MySQLPath=f'/home/{Domain}/public_html/sqldocker', SiteType=Docker_Sites.Wordpress, MySQLDBName=dbname,
+                MySQLDBNUser=dbusername, CPUsMySQL=MysqlCPU, MemoryMySQL=MYsqlRam, port=8000, CPUsSite=SiteCPU, MemorySite=SiteRam,
+                SiteName=sitename, finalURL= Domain, blogTitle=sitename, adminUser=WPusername, adminEmail=WPemal
+            )
+            dockersiteobj.save()
+
+            background = Docker_Sites('DeployWPContainer', f_data)
+            background.start()
+
+        except BaseException as msg:
+            logging.writeToFile("Error Submit Docker site Creation ....... %s" % str(msg))
+            return 0
 
 def Main():
     try:
@@ -382,7 +530,7 @@ def Main():
                 "externalApp": 'docke3339',
                 "docRoot": "/home/docker.cyberpanel.net"
             }
-            ds = DockerSites(data)
+            ds = Docker_Sites(data)
             ds.DeployWPContainer()
 
 

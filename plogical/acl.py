@@ -12,7 +12,7 @@ django.setup()
 from loginSystem.models import Administrator, ACL
 from django.shortcuts import HttpResponse
 from packages.models import Package
-from websiteFunctions.models import Websites, ChildDomains, aliasDomains
+from websiteFunctions.models import Websites, ChildDomains, aliasDomains, DockerSites
 import json
 from subprocess import call, CalledProcessError
 from shlex import split
@@ -619,6 +619,29 @@ class ACLManager:
                     websiteList.append(web)
 
             return websiteList
+
+    @staticmethod
+    def findDockersiteObjects(currentACL, userID):
+        if currentACL['admin'] == 1:
+            return DockerSites.objects.all()
+        else:
+
+            DockersiteList = []
+            admin = Administrator.objects.get(pk=userID)
+
+            websites = admin.DockerSites_set.all()
+
+            for items in websites:
+                DockersiteList.append(items)
+
+            admins = Administrator.objects.filter(owner=admin.pk)
+
+            for items in admins:
+                webs = items.DockerSites_set.all()
+                for web in webs:
+                    DockersiteList.append(web)
+
+            return DockersiteList
 
     @staticmethod
     def findAllDomains(currentACL, userID):

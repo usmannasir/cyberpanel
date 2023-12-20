@@ -1,0 +1,224 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Assign Package - CyberPanel" %}{% endblock %}
+{% block content %}
+
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
+    <style>
+        .switch {
+            margin-top: 7px;
+            margin-left: 12px;
+            position: relative;
+            display: inline-block;
+            width: 32px;
+            height: 19px;
+            border-radius: 10%;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            -webkit-transition: .4s;
+            transition: .4s;
+            border-radius: 10%;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 11px;
+            width: 12px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            -webkit-transition: .4s;
+            transition: .4s;
+            border-radius: 20%;
+        }
+
+
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+
+        input:focus + .slider {
+            box-shadow: 0 0 2px #2196F3;
+        }
+
+        input:checked + .slider:before {
+            -webkit-transform: translateX(12px);
+            -ms-transform: translateX(12px);
+            transform: translateX(12px);
+        }
+
+        .help_test_domain {
+            background-color: black;
+            padding: 10px;
+            display: none;
+            opacity: 0.7;
+            position: absolute;
+            z-index: 9;
+            text-align: justify;
+
+
+        }
+
+        #help:hover + .help_test_domain {
+            display: block;
+            display: inline-block;
+            color: white;
+            font-weight: lighter;
+            font-size: small;
+            border-radius: 5px;
+            width: 200px;
+
+        {#height: auto;#}
+        }
+
+    </style>
+
+    <div class="container">
+        <div id="page-title">
+            <h2>{% trans "Assign Package" %}</h2>
+            <p>{% trans "On this page you can Assign Packages to user." %}</p>
+        </div>
+
+
+        <div ng-controller="AssignPackage" class="panel">
+            <div class="panel-body">
+                <h3 class="content-box-header">
+                    {% trans "Assigning Details" %} <img ng-hide="cyberpanelLoading"
+                                                         src="{% static 'images/loading.gif' %}">
+                </h3>
+
+                <div class="example-box-wrapper">
+                    <form name="websiteCreationForm" action="/" id="createPackages"
+                          class="form-horizontal bordered-row panel-body">
+                        <div ng-hide="installationDetailsForm" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "User" %}</label>
+                            <div class="col-sm-6">
+                                <select ng-model="userSelection" class="form-control">
+                                    {% for admin in adminNames %}
+                                        <option>{{ admin }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div ng-hide="installationDetailsForm" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Select Package" %}</label>
+                            <div class="col-sm-6">
+                                <select ng-model="packageSelection" id="packageSelection" class="form-control">
+                                    {% for package in DockerPackages %}
+                                        <option value="{{ package.id }}">{{ package.Name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+
+                        <div ng-hide="installationDetailsForm" class="form-group">
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-4">
+                                <button
+                                        type="button" ng-click="AddAssignment()"
+                                        class="btn btn-primary btn-lg">{% trans "Save" %}</button>
+
+                            </div>
+                        </div>
+                    </form>
+
+
+                </div>
+
+
+            </div>
+
+            <div class="example-box-wrapper">
+                <div class="panel panel-body">
+                    <h3 class="content-box-header"> Package Assigned</h3>
+                    <div class="content-box-header">
+                        <table class="table table-hover">
+                            <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Package Name</th>
+                                <th>Package Details</th>
+                                <th>Action</th>
+
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for pack in assignpackage %}
+                                <tr>
+                                    <td> {{ pack.user.userName }}</td>
+                                    <td> {{ pack.package.Name }}</td>
+                                    <td><b>CPUs:</b> {{ pack.package.CPUs }}
+                                            <b>Memory:</b> {{ pack.package.Ram }}MB <b>DiskSpace:</b> {{ pack.package.DiskSpace }}
+                                            <b>Bandwidth:</b> {{ pack.package.Bandwidth }}</td>
+
+                                    <td>
+{#                                        <button class="btn btn-warning" ng-click="Getpackage({{ pack.id }})"#}
+{#                                                data-toggle="modal" data-target="#Eidtpackage"> Eidt#}
+{#                                        </button>#}
+                                        <button class="btn btn-danger"
+                                                ng-click="Deleteassingment('{% url 'AssignPackage' %}?DeleteID={{  pack.id }}')"
+                                                data-toggle="modal" data-target="#packagedelete"> Delete
+                                        </button>
+                                    </td>
+
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+
+                </div>
+            <div id="packagedelete" class="modal fade" role="dialog">
+                            <div class="modal-dialog modal-sm">
+
+                                <!-- Modal content-->
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <button type="button" class="close" data-dismiss="modal">
+                                            &times;
+                                        </button>
+                                        <h4 class="modal-title">Delete Package
+                                            <img ng-hide="cyberpanelLoading"
+                                                 src="{% static 'images/loading.gif' %}">
+                                        </h4>
+                                    </div>
+                                    <div class="modal-body">
+
+                                        <h4> Are you sure to delete the packages Assignment?</h4>
+
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button"
+                                                class="btn btn-default" data-dismiss="modal">
+                                            Close
+                                        </button>
+                                        <button type="button"
+                                                class="btn btn-warning" ng-click="ConfirmDelete()">
+                                            Delete
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+{% endblock %}

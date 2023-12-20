@@ -188,6 +188,7 @@ class DockerSites(models.Model):
     adminEmail = models.CharField(max_length=100)
 
 class DockerPackages(models.Model):
+    Name = models.CharField(max_length=100, default='')
     CPUs = models.IntegerField()
     Ram = models.IntegerField()
     Bandwidth = models.TextField()

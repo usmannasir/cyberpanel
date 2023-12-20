@@ -10002,3 +10002,536 @@ app.controller('ApacheManager', function ($scope, $http, $timeout) {
     };
 
 });
+
+
+app.controller('createDockerPackage', function ($scope, $http, $window) {
+    $scope.cyberpanelLoading = true;
+
+    $scope.createdockerpackage = function () {
+
+        $scope.cyberpanelLoading = false;
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        var data = {
+            name: $scope.packagesname,
+            cpu: $scope.CPU,
+            Memory: $scope.Memory,
+            Bandwidth: $scope.Bandwidth,
+            disk: $scope.disk
+        };
+
+
+        dataurl = "/websites/AddDockerpackage";
+
+        $http.post(dataurl, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success',
+                    text: 'Successfully Saved.',
+                    type: 'success'
+                });
+
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+
+
+        }
+    }
+
+
+    $scope.Getpackage = function (packid) {
+
+        $scope.cyberpanelLoading = false;
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        var data = {
+            id: packid,
+        };
+
+
+        dataurl = "/websites/Getpackage";
+
+        $http.post(dataurl, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            if (response.data.status === 1) {
+                $scope.U_Name = response.data.error_message.obj.Name
+                $scope.U_CPU = response.data.error_message.obj.CPU
+                $scope.U_Memory = response.data.error_message.obj.Memory
+                $scope.U_Bandwidth = response.data.error_message.obj.Bandwidth
+                $scope.U_DiskSpace = response.data.error_message.obj.DiskSpace
+
+                $scope.EidtID = packid;
+
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+
+
+        }
+    }
+
+
+    $scope.SaveUpdate = function () {
+
+        $scope.cyberpanelLoading = false;
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        var data = {
+            id: $scope.EidtID,
+            CPU: $scope.U_CPU,
+            RAM: $scope.U_Memory,
+            Bandwidth: $scope.U_Bandwidth,
+            DiskSpace: $scope.U_DiskSpace,
+        };
+
+
+        dataurl = "/websites/Updatepackage";
+
+        $http.post(dataurl, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success',
+                    text: 'Successfully Updated.',
+                    type: 'success'
+                });
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+
+
+        }
+    }
+
+    var FinalDeletepackageURL;
+    $scope.Deletepackage = function (url) {
+        FinalDeletepackageURL = url;
+        // console.log(FinalDeletepackageURL);
+    }
+
+    $scope.ConfirmDelete = function () {
+        window.location.href = FinalDeletepackageURL
+    }
+
+})
+app.controller('AssignPackage', function ($scope, $http,) {
+    $scope.cyberpanelLoading = true;
+    $scope.AddAssignment = function () {
+        $scope.cyberpanelLoading = false;
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        var data = {
+            package: $('#packageSelection').val(),
+            user: $scope.userSelection,
+        };
+
+
+        dataurl = "/websites/AddAssignment";
+
+        $http.post(dataurl, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            if (response.data.status === 1) {
+               new PNotify({
+                    title: 'Success',
+                    text: 'Successfully saved.',
+                    type: 'success'
+                });
+
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberpanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page.',
+                type: 'error'
+            });
+
+
+        }
+    }
+
+        var FinalDeletepackageURL;
+    $scope.Deleteassingment = function (url) {
+        FinalDeletepackageURL = url;
+        // console.log(FinalDeletepackageURL);
+    }
+
+    $scope.ConfirmDelete = function () {
+        window.location.href = FinalDeletepackageURL
+    }
+
+})
+app.controller('createDockerSite', function ($scope, $http,$timeout) {
+    $scope.cyberpanelLoading = true;
+        $scope.installationDetailsForm = false;
+    $scope.installationProgress = true;
+    $scope.errorMessageBox = true;
+    $scope.success = true;
+    $scope.couldNotConnect = true;
+    $scope.goBackDisable = true;
+
+    var statusFile;
+
+    $scope.createdockersite = function () {
+
+        $scope.cyberpanelLoading = false;
+        $scope.installationDetailsForm = true;
+        $scope.installationProgress = false;
+        $scope.errorMessageBox = true;
+        $scope.success = true;
+        $scope.couldNotConnect = true;
+        $scope.goBackDisable = true;
+
+        $scope.currentStatus = "Starting creation..";
+
+
+
+
+        url = "/websites/submitDockerSiteCreation";
+
+        var package = $scope.packageForWebsite;
+
+
+
+
+        var data = {
+            sitename: $scope.siteName,
+            Owner: $scope.userSelection,
+            Domain: $scope.domainNameCreate,
+            MysqlCPU: $scope.CPUMysql,
+            MYsqlRam: $scope.rammysql,
+            SiteCPU: $scope.CPUSite,
+            SiteRam: $scope.RamSite,
+            App: $scope.App,
+            WPusername: $scope.WPUsername,
+            WPemal: $scope.wpEmail,
+            WPpasswd: $scope.WPpassword
+        };
+
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            console.log('.........................')
+            if (response.data.installStatus === 1) {
+                console.log(response.data.installsatus)
+                statusFile = response.data.tempStatusPath;
+                getCreationStatus();
+            } else {
+
+                $scope.cyberpanelLoading = true;
+                $scope.installationDetailsForm = true;
+                $scope.installationProgress = false;
+                $scope.errorMessageBox = false;
+                $scope.success = true;
+                $scope.couldNotConnect = true;
+                $scope.goBackDisable = false;
+
+                $scope.errorMessage = response.data.error_message;
+            }
+
+
+        }
+
+        function cantLoadInitialDatas(response) {
+
+            $scope.cyberpanelLoading = true;
+            $scope.installationDetailsForm = true;
+            $scope.installationProgress = false;
+            $scope.errorMessageBox = true;
+            $scope.success = true;
+            $scope.couldNotConnect = false;
+            $scope.goBackDisable = false;
+
+        }
+
+
+    };
+    $scope.goBack = function () {
+        $scope.cyberpanelLoading = true;
+        $scope.installationDetailsForm = false;
+        $scope.installationProgress = true;
+        $scope.errorMessageBox = true;
+        $scope.success = true;
+        $scope.couldNotConnect = true;
+        $scope.goBackDisable = true;
+        $("#installProgress").css("width", "0%");
+    };
+
+    function getCreationStatus() {
+
+        url = "/websites/installWordpressStatus";
+
+        var data = {
+            statusFile: statusFile
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+
+            if (response.data.abort === 1) {
+
+                if (response.data.installStatus === 1) {
+
+                    $scope.cyberpanelLoading = true;
+                    $scope.installationDetailsForm = true;
+                    $scope.installationProgress = false;
+                    $scope.errorMessageBox = true;
+                    $scope.success = false;
+                    $scope.couldNotConnect = true;
+                    $scope.goBackDisable = false;
+
+                    $("#installProgress").css("width", "100%");
+                    $scope.installPercentage = "100";
+                    $scope.currentStatus = response.data.currentStatus;
+                    $timeout.cancel();
+
+                } else {
+
+                    $scope.cyberpanelLoading = true;
+                    $scope.installationDetailsForm = true;
+                    $scope.installationProgress = false;
+                    $scope.errorMessageBox = false;
+                    $scope.success = true;
+                    $scope.couldNotConnect = true;
+                    $scope.goBackDisable = false;
+
+                    $scope.errorMessage = response.data.error_message;
+
+                    $("#installProgress").css("width", "0%");
+                    $scope.installPercentage = "0";
+                    $scope.goBackDisable = false;
+
+                }
+
+            } else {
+                $("#installProgress").css("width", response.data.installationProgress + "%");
+                $scope.installPercentage = response.data.installationProgress;
+                $scope.currentStatus = response.data.currentStatus;
+                $timeout(getCreationStatus, 1000);
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+
+            $scope.cyberpanelLoading = true;
+            $scope.installationDetailsForm = true;
+            $scope.installationProgress = false;
+            $scope.errorMessageBox = true;
+            $scope.success = true;
+            $scope.couldNotConnect = false;
+            $scope.goBackDisable = false;
+
+        }
+
+
+    }
+
+})
+
+
+app.controller('listDockersite', function ($scope, $http) {
+
+    $scope.cyberPanelLoading = true;
+
+
+    $scope.currentPage = 1;
+    $scope.recordsToShow = 10;
+
+    $scope.fetchDockersiteFromDB = function () {
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        var data = {
+            page: $scope.currentPage,
+            recordsToShow: $scope.recordsToShow
+        };
+
+
+        dataurl = "/websites/fetchDockersite";
+
+        $http.post(dataurl, data, config).then(ListInitialData, cantLoadInitialData);
+
+
+        function ListInitialData(response) {
+            if (response.data.listWebSiteStatus === 1) {
+
+                $scope.WebSitesList = JSON.parse(response.data.data);
+                $scope.pagination = response.data.pagination;
+                $scope.clients = JSON.parse(response.data.data);
+                $("#listFail").hide();
+            } else {
+                $("#listFail").fadeIn();
+                $scope.errorMessage = response.data.error_message;
+
+            }
+        }
+
+        function cantLoadInitialData(response) {
+        }
+
+
+    };
+    $scope.fetchDockersiteFromDB();
+
+    $scope.cyberPanelLoading = true;
+
+
+    $scope.cyberPanelLoading = true;
+
+    $scope.searchWebsites = function () {
+
+        $scope.cyberPanelLoading = false;
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        var data = {
+            patternAdded: $scope.patternAdded
+        };
+
+        dataurl = "/websites/searchWebsites";
+
+        $http.post(dataurl, data, config).then(ListInitialData, cantLoadInitialData);
+
+
+        function ListInitialData(response) {
+            $scope.cyberPanelLoading = true;
+            if (response.data.listWebSiteStatus === 1) {
+
+                var finalData = JSON.parse(response.data.data);
+                $scope.WebSitesList = finalData;
+                $("#listFail").hide();
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+
+            }
+        }
+
+        function cantLoadInitialData(response) {
+            $scope.cyberPanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Connect disrupted, refresh the page.',
+                type: 'error'
+            });
+        }
+
+
+    };
+
+    var deletedockersiteurl;
+    $scope.DeleteDockersite = function (url, id){
+        // console.log(url)
+        // console.log(id)
+        deletedockersiteurl= url+id;
+    }
+
+    $scope.ConfirmDelete = function () {
+        window.location.href = deletedockersiteurl;
+    }
+
+
+});
