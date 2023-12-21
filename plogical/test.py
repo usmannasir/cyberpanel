@@ -1,21 +1,28 @@
-import re
+import docker
 
+# Create a Docker client
+client = docker.from_env()
 
-def extract_domain_parts(domain):
-    # Use a regular expression to extract the domain parts
-    pattern = r'(?:\w+\.)?(\w+)\.(\w+)'
-    match = re.match(pattern, domain)
+# Define the label to filter containers
+label_filter = {'name': 'cyberplanner-new'}
 
-    if match:
-        subdomain = match.group(1)
-        top_level_domain = match.group(2)
-        return subdomain, top_level_domain
-    else:
-        return None, None
+# List containers matching the label filter
+containers = client.containers.list(filters=label_filter)
 
+# Print container information
+for container in containers:
+    print(f"Container ID: {container.id}, Name: {container.name}, Status: {container.status}")
 
-# Example usage
-domain = "sub.example.ae"
-subdomain, top_level_domain = extract_domain_parts(domain)
-print("Subdomain:", subdomain)
-print("Top-Level Domain:", top_level_domain)
+    # Get volume information for the container
+    volumes = container.attrs['HostConfig']['Binds'] if 'HostConfig' in container.attrs else []
+    for volume in volumes:
+        print(f"Volume: {volume}")
+
+    # # Fetch last 50 logs for the container
+    # logs = container.logs(tail=50).decode('utf-8')
+    # print(f"Last 50 Logs:\n{logs}")
+
+    # Get exposed ports for the container
+    ports = container.attrs['HostConfig']['PortBindings'] if 'HostConfig' in container.attrs else {}
+    for port in ports:
+        print(f"Exposed Port: {port}")
