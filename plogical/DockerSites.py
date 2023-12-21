@@ -591,6 +591,35 @@ services:
             logging.writeToFile("List Container ....... %s" % str(msg))
             return 0, str(msg)
 
+        ### pass container id and number of lines to fetch from logs
+    def ContainerInfo(self):
+        try:
+            import docker
+            # Create a Docker client
+            client = docker.from_env()
+
+            # Get the container by ID
+            container = client.containers.get(self.data['containerID'])
+
+            # Fetch container stats
+            stats = container.stats(stream=False)
+
+            dic = {
+                'id': container.short_id,
+                'name': container.name,
+                'status': container.status,
+                'volumes': container.attrs['HostConfig']['Binds'] if 'HostConfig' in container.attrs else [],
+                'logs_50': container.logs(tail=50).decode('utf-8'),
+                'ports': container.attrs['HostConfig']['PortBindings'] if 'HostConfig' in container.attrs else {},
+                'memory': stats['memory_stats']['usage'],
+                'cpu' : stats['cpu_stats']['cpu_usage']['total_usage']
+            }
+
+            return 1, dic
+        except BaseException as msg:
+            logging.writeToFile("List Container ....... %s" % str(msg))
+            return 0, str(msg)
+
 
 def Main():
     try:
