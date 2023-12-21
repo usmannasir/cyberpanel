@@ -6846,15 +6846,26 @@ StrictHostKeyChecking no
 
     def ListDockerSites(self, request=None, userID=None, data=None, DeleteID=None):
         currentACL = ACLManager.loadedACL(userID)
+        fdata={}
         try:
             if DeleteID != None:
                 DockerSitesDelete = DockerSites.objects.get(pk=DeleteID)
+                passdata={}
+                passdata["domain"] = DockerSitesDelete.admin.domain
+                passdata["JobID"] = None
+                da = Docker_Sites(None, passdata)
+                da.DeleteDockerApp()
                 DockerSitesDelete.delete()
-        except:
-            pass
-        pagination = self.DockersitePagination(currentACL, userID)
+                fdata['Deleted'] = 1
+        except BaseException as msg:
+            fdata['LPError'] = 1
+            fdata['LPMessage'] = str(msg)
+
+
+        fdata['pagination'] = self.DockersitePagination(currentACL, userID)
+
         proc = httpProc(request, 'websiteFunctions/ListDockersite.html',
-                        {"pagination": pagination})
+                        fdata)
         return proc.render()
 
     def fetchDockersite(self, userID=None, data=None):
