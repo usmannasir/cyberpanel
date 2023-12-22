@@ -324,7 +324,7 @@ services:
 
             logging.statusWriter(self.JobID, 'Bringing containers online..,50')
 
-            time.sleep(15)
+            time.sleep(25)
 
             ### Set up Proxy
 
