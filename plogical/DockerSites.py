@@ -291,7 +291,11 @@ services:
             ### WriteConfig to compose-file
 
             command = f"mkdir -p /home/docker/{self.data['finalURL']}"
-            ProcessUtilities.executioner(command)
+            result, message = ProcessUtilities.outputExecutioner(command)
+
+            if result == 0:
+                logging.statusWriter(self.JobID, f'Error {str(message)} . [404]')
+                return 0
 
             TempCompose = f'/home/cyberpanel/{self.data["finalURL"]}-docker-compose.yml'
 
@@ -300,7 +304,11 @@ services:
             WriteToFile.close()
 
             command = f"mv {TempCompose} {self.data['ComposePath']}"
-            ProcessUtilities.executioner(command)
+            result, message = ProcessUtilities.outputExecutioner(command)
+
+            if result == 0:
+                logging.statusWriter(self.JobID, f'Error {str(message)} . [404]')
+                return 0
 
             command = f"chmod 600 {self.data['ComposePath']} && chown root:root {self.data['ComposePath']}"
             ProcessUtilities.executioner(command, 'root', True)
@@ -308,10 +316,11 @@ services:
             ####
 
             command = f"docker-compose -f {self.data['ComposePath']} -p '{self.data['SiteName']}' up -d"
-            result = ProcessUtilities.outputExecutioner(command)
+            result, message = ProcessUtilities.outputExecutioner(command)
 
-            if os.path.exists(ProcessUtilities.debugPath):
-                logging.writeToFile(result)
+            if result == 0:
+                logging.statusWriter(self.JobID, f'Error {str(message)} . [404]')
+                return 0
 
             ### Set up Proxy
 

@@ -22,7 +22,7 @@ SITE_NAME=${SITE_NAME:-"CyberPanel Site"}
 
 ### Install LSCache plugin
 
-/usr/local/lsws/lsphp82/bin/php /usr/bin/wp plugin install litespeed-cache --allow-root --path="/usr/local/lsws/Example/html"
+/usr/local/lsws/lsphp82/bin/php /usr/bin/wp plugin install litespeed-cache --allow-root --path="/usr/local/lsws/Example/html" --activate
 
 # Start OpenLiteSpeed
 /usr/local/lsws/bin/lswsctrl start
