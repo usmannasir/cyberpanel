@@ -1,6 +1,6 @@
 {% extends "baseTemplate/index.html" %}
 {% load i18n %}
-{% block title %}{% trans "Create Docker Site - CyberPanel" %}{% endblock %}
+{% block title %}{% trans "Create Docker App - CyberPanel" %}{% endblock %}
 {% block content %}
 
     {% load static %}
@@ -92,15 +92,15 @@
 
     <div class="container">
         <div id="page-title">
-            <h2>{% trans "Create Docker Site" %}</h2>
-            <p>{% trans "On this page you can create docker site on your server." %}</p>
+            <h2>{% trans "Create Docker App" %}</h2>
+            <p>{% trans "On this page you can create docker apps on your server." %}</p>
         </div>
 
 
         <div ng-controller="createDockerSite" class="panel">
             <div class="panel-body">
                 <h3 class="content-box-header">
-                    {% trans "Docker Site Details" %} <img ng-hide="cyberpanelLoading"
+                    {% trans "Docker App Details" %} <img ng-hide="cyberpanelLoading"
                                                            src="{% static 'images/loading.gif' %}">
                 </h3>
 
@@ -140,27 +140,27 @@
                     <div ng-hide="installationDetailsForm" class="form-group">
                         <label class="col-sm-3 control-label">{% trans "MySQL CPU" %}</label>
                         <div class="col-sm-6">
-                            <input type="number" name="email" class="form-control" ng-model="CPUMysql" required>
+                            <input type="number" name="email" class="form-control" ng-model="CPUMysql" value="1" required>
                         </div>
 
                     </div>
                     <div ng-hide="installationDetailsForm" class="form-group">
                         <label class="col-sm-3 control-label">{% trans "MySQL Ram" %}</label>
                         <div class="col-sm-6">
-                            <input type="number" name="email" class="form-control" ng-model="rammysql" required>
+                            <input type="number" name="email" class="form-control" ng-model="rammysql" value="512" required>
                         </div>
                     </div>
                     <div ng-hide="installationDetailsForm" class="form-group">
                         <label class="col-sm-3 control-label">{% trans "CPU Site" %}</label>
                         <div class="col-sm-6">
-                            <input type="number" name="email" class="form-control" ng-model="CPUSite" required>
+                            <input type="number" name="email" class="form-control" ng-model="CPUSite"  value="1" required>
                         </div>
 
                     </div>
                     <div ng-hide="installationDetailsForm" class="form-group">
                         <label class="col-sm-3 control-label">{% trans "Ram Site" %}</label>
                         <div class="col-sm-6">
-                            <input type="number" name="email" class="form-control" ng-model="RamSite" required>
+                            <input type="number" name="email" class="form-control" ng-model="RamSite" value="512" required>
                         </div>
                     </div>
 
@@ -177,14 +177,14 @@
                     <div ng-hide="installationDetailsForm" class="form-group">
                         <label class="col-sm-3 control-label">{% trans "Admin Username" %}</label>
                         <div class="col-sm-6">
-                            <input type="text" name="email" class="form-control" ng-model="WPUsername" required>
+                            <input type="text" name="email" class="form-control" ng-model="WPUsername" value="cyberpanel" required>
                         </div>
                     </div>
 
                     <div ng-hide="installationDetailsForm" class="form-group">
                         <label class="col-sm-3 control-label">{% trans "Admin Email" %}</label>
                         <div class="col-sm-6">
-                            <input type="email" name="email" class="form-control" ng-model="wpEmail" required>
+                            <input type="email" name="email" class="form-control" ng-model="wpEmail" value="example@example.org" required>
                         </div>
                         <div ng-show="websiteCreationForm.email.$error.email"
                              class="current-pack">{% trans "Invalid Email" %}</div>

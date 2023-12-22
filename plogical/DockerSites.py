@@ -322,6 +322,10 @@ services:
                 logging.statusWriter(self.JobID, f'Error {str(message)} . [404]')
                 return 0
 
+            logging.statusWriter(self.JobID, 'Bringing containers online..,50')
+
+            time.sleep(15)
+
             ### Set up Proxy
 
             execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/DockerSites.py"
