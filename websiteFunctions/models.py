@@ -181,7 +181,7 @@ class DockerSites(models.Model):
     port = models.CharField(max_length=100)
     CPUsSite = models.CharField(max_length=100)
     MemorySite = models.CharField(max_length=100)
-    SiteName = models.TextField()
+    SiteName = models.TextField(unique=True)
     finalURL = models.TextField()
     blogTitle = models.TextField()
     adminUser = models.CharField(max_length=100)

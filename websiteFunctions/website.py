@@ -6906,6 +6906,7 @@ StrictHostKeyChecking no
                 passdata={}
                 passdata["domain"] = DockerSitesDelete.admin.domain
                 passdata["JobID"] = None
+                passdata['name'] = DockerSitesDelete.SiteName
                 da = Docker_Sites(None, passdata)
                 da.DeleteDockerApp()
                 DockerSitesDelete.delete()

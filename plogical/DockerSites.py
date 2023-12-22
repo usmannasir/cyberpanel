@@ -525,6 +525,30 @@ services:
             command = f'rm -f /home/{self.data["domain"]}/public_html/.htaccess'
             ProcessUtilities.executioner(command)
 
+
+            ### forcefully delete containers
+
+            import docker
+
+            # Create a Docker client
+            client = docker.from_env()
+
+            # Define the label to filter containers
+            label_filter = {'name': self.data['name'].replace(' ', '-')}
+
+            # List containers matching the label filter
+            containers = client.containers.list(filters=label_filter)
+
+            logging.writeToFile(f'List of containers {str(containers)}')
+
+
+            for container in containers:
+                command = f'docker stop {container.short_id}'
+                ProcessUtilities.executioner(command)
+
+                command = f'docker rm {container.short_id}'
+                ProcessUtilities.executioner(command)
+
             from plogical.installUtilities import installUtilities
             installUtilities.reStartLiteSpeed()
 
@@ -542,7 +566,7 @@ services:
             client = docker.from_env()
 
             # Define the label to filter containers
-            label_filter = {'name': self.data['name']}
+            label_filter = {'name': self.data['name'].replace(' ', '-')}
 
             # List containers matching the label filter
             containers = client.containers.list(filters=label_filter)
