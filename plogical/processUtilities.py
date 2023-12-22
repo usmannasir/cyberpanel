@@ -299,6 +299,7 @@ class ProcessUtilities(multi.Thread):
         try:
             if os.path.exists('/usr/local/CyberCP/debug'):
                 logging.writeToFile(command)
+
             if getpass.getuser() == 'root':
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.writeToFile(command)

@@ -291,7 +291,7 @@ services:
             ### WriteConfig to compose-file
 
             command = f"mkdir -p /home/docker/{self.data['finalURL']}"
-            result, message = ProcessUtilities.outputExecutioner(command)
+            result, message = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
             if result == 0:
                 logging.statusWriter(self.JobID, f'Error {str(message)} . [404]')
@@ -304,7 +304,7 @@ services:
             WriteToFile.close()
 
             command = f"mv {TempCompose} {self.data['ComposePath']}"
-            result, message = ProcessUtilities.outputExecutioner(command)
+            result, message = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
             if result == 0:
                 logging.statusWriter(self.JobID, f'Error {str(message)} . [404]')
@@ -316,7 +316,7 @@ services:
             ####
 
             command = f"docker-compose -f {self.data['ComposePath']} -p '{self.data['SiteName']}' up -d"
-            result, message = ProcessUtilities.outputExecutioner(command)
+            result, message = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
 
             if result == 0:
                 logging.statusWriter(self.JobID, f'Error {str(message)} . [404]')
@@ -345,7 +345,7 @@ services:
             ### just restart ls for htaccess
 
             from plogical.installUtilities import installUtilities
-            installUtilities.reStartLiteSpeed()
+            installUtilities.reStartLiteSpeedSocket()
 
             logging.statusWriter(self.JobID, 'Completed. [200]')
 
