@@ -6654,6 +6654,24 @@ StrictHostKeyChecking no
     def CreateDockersite(self, request=None, userID=None, data=None):
         adminNames = ACLManager.loadAllUsers(userID)
         Data = {'adminNames': adminNames}
+
+
+        if PackageAssignment.objects.all().count() == 0:
+
+            name = 'Default'
+            cpu = 1
+            Memory = 1024
+            Bandwidth = '100'
+            disk = '100'
+
+            saveobj = DockerPackages(Name=name, CPUs=cpu, Ram=Memory, Bandwidth=Bandwidth, DiskSpace=disk, config='')
+            saveobj.save()
+
+            userobj = Administrator.objects.get(pk=1)
+
+            sv = PackageAssignment(user=userobj, package=saveobj)
+            sv.save()
+
         proc = httpProc(request, 'websiteFunctions/CreateDockerSite.html',
                         Data, 'createWebsite')
         return proc.render()
