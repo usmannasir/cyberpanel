@@ -6898,7 +6898,7 @@ StrictHostKeyChecking no
             if DeleteID != None:
 
                 DockerSitesDelete = DockerSites.objects.get(pk=DeleteID)
-                if ACLManager.checkOwnership(DockerSitesDelete.admin, admin, currentACL) == 1:
+                if ACLManager.checkOwnership(DockerSitesDelete.admin.domain, admin, currentACL) == 1:
                     pass
                 else:
                     return ACLManager.loadError()
