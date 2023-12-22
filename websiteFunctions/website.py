@@ -6643,6 +6643,7 @@ StrictHostKeyChecking no
                 DockerPackagesDelete.delete()
         except:
             pass
+
         adminNames = ACLManager.loadAllUsers(userID)
         dockerpackages = DockerPackages.objects.all()
         assignpackage = PackageAssignment.objects.all()
@@ -6788,8 +6789,12 @@ StrictHostKeyChecking no
             package = data['package']
             user = data['user']
 
-            docker_package = DockerPackages.objects.get(pk=int(package))
             userobj = Administrator.objects.get(userName=user)
+
+            delasg = PackageAssignment.objects.get(user=userobj)
+            delasg.delete()
+
+            docker_package = DockerPackages.objects.get(pk=int(package))
 
             sv = PackageAssignment(user=userobj, package=docker_package)
             sv.save()
