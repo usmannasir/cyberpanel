@@ -6608,6 +6608,13 @@ StrictHostKeyChecking no
     def CreateDockerPackage(self, request=None, userID=None, data=None, DeleteID=None):
         Data = {}
 
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
+
         try:
             if DeleteID != None:
                 DockerPackagesDelete = DockerPackages.objects.get(pk=DeleteID)
@@ -6622,6 +6629,13 @@ StrictHostKeyChecking no
         return proc.render()
 
     def AssignPackage(self, request=None, userID=None, data=None, DeleteID=None):
+
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
 
         try:
             if DeleteID != None:
@@ -6647,6 +6661,13 @@ StrictHostKeyChecking no
     def AddDockerpackage(self, userID=None, data=None):
         try:
 
+            currentACL = ACLManager.loadedACL(userID)
+
+            if currentACL['admin'] == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
             admin = Administrator.objects.get(pk=userID)
 
             name = data['name']
@@ -6668,6 +6689,13 @@ StrictHostKeyChecking no
 
     def Getpackage(self, userID=None, data=None):
         try:
+            currentACL = ACLManager.loadedACL(userID)
+
+            if currentACL['admin'] == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
             admin = Administrator.objects.get(pk=userID)
             id = data['id']
 
@@ -6694,6 +6722,14 @@ StrictHostKeyChecking no
 
     def Updatepackage(self, userID=None, data=None):
         try:
+
+            currentACL = ACLManager.loadedACL(userID)
+
+            if currentACL['admin'] == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
             admin = Administrator.objects.get(pk=userID)
             id = data['id']
             CPU = data['CPU']
@@ -6720,6 +6756,15 @@ StrictHostKeyChecking no
 
     def AddAssignment(self, userID=None, data=None):
         try:
+
+            currentACL = ACLManager.loadedACL(userID)
+
+            if currentACL['admin'] == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
+
             admin = Administrator.objects.get(pk=userID)
 
             package = data['package']
@@ -6845,11 +6890,19 @@ StrictHostKeyChecking no
             return HttpResponse(final_json)
 
     def ListDockerSites(self, request=None, userID=None, data=None, DeleteID=None):
+        admin = Administrator.objects.get(pk=userID)
         currentACL = ACLManager.loadedACL(userID)
         fdata={}
+
         try:
             if DeleteID != None:
+
                 DockerSitesDelete = DockerSites.objects.get(pk=DeleteID)
+                if ACLManager.checkOwnership(DockerSitesDelete.admin, admin, currentACL) == 1:
+                    pass
+                else:
+                    return ACLManager.loadError()
+
                 passdata={}
                 passdata["domain"] = DockerSitesDelete.admin.domain
                 passdata["JobID"] = None
@@ -6875,19 +6928,11 @@ StrictHostKeyChecking no
             recordsToShow = int(data['recordsToShow'])
 
 
-
             endPageNumber, finalPageNumber = self.recordsPointer(pageNumber, recordsToShow)
 
-
-
             dockersites = ACLManager.findDockersiteObjects(currentACL, userID)
-
-
-
             pagination = self.getPagination(len(dockersites), recordsToShow)
-
             logging.CyberCPLogFileWriter.writeToFile("Our dockersite" + str(dockersites))
-
 
 
             json_data = self.findDockersitesListJson(dockersites[finalPageNumber:endPageNumber])
@@ -6904,13 +6949,17 @@ StrictHostKeyChecking no
             return HttpResponse(final_json)
 
     def Dockersitehome(self, request=None, userID=None, data=None, DeleteID=None):
+
         currentACL = ACLManager.loadedACL(userID)
         admin = Administrator.objects.get(pk=userID)
-        if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
+
+        ds = DockerSites.objects.get(pk=self.domain)
+
+        if ACLManager.checkOwnership(ds.admin.domain, admin, currentACL) == 1:
             pass
         else:
             return ACLManager.loadError()
 
         proc = httpProc(request, 'websiteFunctions/DockerSiteHome.html',
-                        None)
+                        {'dockerSite': ds})
         return proc.render()

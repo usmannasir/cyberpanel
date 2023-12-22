@@ -97,9 +97,6 @@ REWRITERULE ^(.*)$ HTTP://docker{port}/$1 [P]
             WriteToFile.write(HTAccessContent)
             WriteToFile.close()
 
-            from plogical.installUtilities import installUtilities
-            installUtilities.reStartLiteSpeed()
-
     # Takes
     # ComposePath, MySQLPath, MySQLRootPass, MySQLDBName, MySQLDBNUser, MySQLPassword, CPUsMySQL, MemoryMySQL,
     # port, SitePath, CPUsSite, MemorySite, ComposePath, SiteName
@@ -335,6 +332,11 @@ services:
 
             command = f"chown -R nobody:{group} /home/docker/{self.data['finalURL']}/data"
             ProcessUtilities.executioner(command)
+
+            ### just restart ls for htaccess
+
+            from plogical.installUtilities import installUtilities
+            installUtilities.reStartLiteSpeed()
 
             logging.statusWriter(self.JobID, 'Completed. [200]')
 
@@ -592,6 +594,7 @@ services:
             return 0, str(msg)
 
         ### pass container id and number of lines to fetch from logs
+
     def ContainerInfo(self):
         try:
             import docker

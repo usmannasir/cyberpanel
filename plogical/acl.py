@@ -739,7 +739,6 @@ class ACLManager:
         except:
             return 0
 
-
     @staticmethod
     def checkOwnershipZone(domain, admin, currentACL):
         try:
@@ -1084,5 +1083,6 @@ class ACLManager:
                 ProcessUtilities.executioner(command, 'root', True)
         except:
             pass
+
 
 

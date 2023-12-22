@@ -199,7 +199,7 @@ urlpatterns = [
     url(r'^submitDockerSiteCreation$', views.submitDockerSiteCreation, name='submitDockerSiteCreation'),
     url(r'^ListDockerSites$', views.ListDockerSites, name='ListDockerSites'),
     url(r'^fetchDockersite$', views.fetchDockersite, name='fetchDockersite'),
-    url(r'^(?P<domain>(.*))/Dockersitehome', views.Dockersitehome, name='Dockersitehome'),
+
 
     ### SSH Configs
 

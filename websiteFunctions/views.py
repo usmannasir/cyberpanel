@@ -1846,10 +1846,10 @@ def fetchDockersite(request):
     except KeyError:
         return redirect(loadLoginPage)
 
-def Dockersitehome(request, domain):
+def Dockersitehome(request, dockerapp):
     try:
         userID = request.session['userID']
-        wm = WebsiteManager(domain)
+        wm = WebsiteManager(dockerapp)
         return wm.Dockersitehome(request, userID, None)
     except KeyError:
         return redirect(loadLoginPage)
