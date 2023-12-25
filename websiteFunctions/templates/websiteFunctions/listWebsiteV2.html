@@ -1,0 +1,104 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    <div ng-controller="listWebsitesV2" class="p-8">
+        <div class="flex lg:flex-row justify-between items-center sm:flex-col">
+            <div>
+                <p class="text-4xl font-bold">List Website</p>
+                <p class="text-xs text-gray-600 py-2 font-semibold">On this page you can launch,list,modify and
+                    delete websites
+                    from your server</p>
+            </div>
+            <div>
+                <div class="sm:mt-6">
+                    <a href="{% url 'createWebsiteV2' %}"
+                       class="bg-orange-500 px-3 py-3 rounded-lg text-xl font-semibold text-white">Create
+                        Website
+                    </a>
+                </div>
+            </div>
+        </div>
+        <!-- Search Bar -->
+        <div class="flex justify-between py-1 mt-4">
+            <div class="w-full">
+                <div class="relative flex items-center w-full h-12 rounded-lg bg-gray-200 overflow-hidden">
+                    <div class="grid place-items-center h-full w-12 text-gray-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-500" fill="none"
+                             viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </div>
+                    <input ng-change="searchWebsites()" ng-model="patternAdded" name="dom"
+                           class="h-full w-full bg-gray-200 outline-none text-sm text-gray-700 pr-2" type="text"
+                           id="search" placeholder="Search" required/>
+                </div>
+            </div>
+            <!-- Search Bar End -->
+            <div class="pl-6">
+                <select ng-model="recordsToShow" ng-change="getFurtherWebsitesFromDB()"
+                        class="w-24 bg-gray-200 py-3 px-2 rounded" id="example-select">
+                    <option>10</option>
+                    <option>50</option>
+                    <option>100</option>
+                </select>
+            </div>
+        </div>
+
+        <div ng-repeat="web in WebSitesList track by $index" class="py-8">
+            <div class="border shadow-lg rounded-lg px-3">
+                <div>
+                    <div class="px-2">
+                        <div class="pl-44 gap-20 py-5 flex font-bold">
+                            <div>Owner</div>
+                            <div>IP Address</div>
+                            <div>Disk Usage</div>
+                            <div>Package</div>
+                            <div>SSL</div>
+                            <div class="pl-4">State</div>
+                        </div>
+                    </div>
+                    <div class="px-2">
+                        <div class="bg-gray-200 w-full rounded-t-lg border-b-2 border-gray-400">
+                            <p class="font-bold px-4 py-1" ng-bind="web.domain"></p>
+                        </div>
+                        <div class="w-full rounded-b-lg border-b-2 border-gray-400">
+                            <div class="pl-4 py-5 gap-20 flex items-center text-sm">
+                                <a href="/websites/{$ web.domain $}" class="flex items-center">
+                                    <svg width="25" height="25" viewBox="0 0 30 30" fill="none"
+                                         xmlns="http://www.w3.org/2000/svg">
+                                        <path
+                                                d="M22.5 16.25V23.75C22.5 24.413 22.2366 25.0489 21.7678 25.5178C21.2989 25.9866 20.663 26.25 20 26.25H6.25C5.58696 26.25 4.95107 25.9866 4.48223 25.5178C4.01339 25.0489 3.75 24.413 3.75 23.75V10C3.75 9.33696 4.01339 8.70107 4.48223 8.23223C4.95107 7.76339 5.58696 7.5 6.25 7.5H13.75"
+                                                stroke="#3A6A7E" stroke-width="2" stroke-linecap="round"
+                                                stroke-linejoin="round"/>
+                                        <path d="M18.75 3.75H26.25V11.25" stroke="#3A6A7E" stroke-width="2"
+                                              stroke-linecap="round"
+                                              stroke-linejoin="round"/>
+                                        <path d="M12.5 17.5L26.25 3.75" stroke="#3A6A7E" stroke-width="2"
+                                              stroke-linecap="round"
+                                              stroke-linejoin="round"/>
+                                    </svg>
+                                    <p class="ml-2 text-blue-600 font-semibold">Manage</p>
+                                </a>
+                                <div><span ng-bind="web.admin" style="text-transform: none"></span></div>
+                                <div><span ng-bind="web.ipAddress"></span></div>
+                                <div class="pl-3"><span ng-bind="web.diskUsed" style="text-transform: none"></span>
+                                </div>
+                                <div class="pl-7"><span ng-bind="web.package" style="text-transform: none"></span></div>
+                                <div> <span><a ng-click="issueSSL(web.domain)" href=""
+                                               style="text-transform: none">Issue SSL</a></span></div>
+                                <div class="text-green-700 font-bold"><span ng-bind="web.state"
+                                                                            style="text-transform: none"></span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+{% endblock %}

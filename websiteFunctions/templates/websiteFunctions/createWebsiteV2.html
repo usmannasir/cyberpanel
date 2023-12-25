@@ -1,0 +1,141 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    <div ng-controller="createWebsiteV2" class="p-8">
+        <div>
+            <p class="text-4xl font-bold">Create Website</p>
+            <p class="text-xs text-gray-600 py-2 font-semibold">On this page you can launch,list,modify and
+                delete websites
+                from your server</p>
+        </div>
+        <div>
+            <div class="py-4">
+                <p class="text-xl font-bold">Website Details</p>
+            </div>
+            <hr>
+            <div>
+                <div class="flex mt-4 py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-48">Select Package</p>
+                    </div>
+                    <div>
+                        <select ng-model="packageForWebsite" class="form-control w-80 bg-gray-100 rounded px-2 py-1">
+                            {% for items in packageList %}
+                                <option>{{ items }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="flex py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-48">Select Owner</p>
+                    </div>
+                    <div>
+                        <select ng-model="websiteOwner" class="form-control w-80 bg-gray-100 rounded px-2 py-1">
+                            {% for items in owernList %}
+                                <option>{{ items }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="flex py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-48">Domain Name</p>
+                    </div>
+                    <div>
+                        <input name="dom" type="text" class="form-control w-80 bg-gray-100 rounded px-2 py-1"
+                               ng-model="domainNameCreate"
+                               placeholder="{% trans "Do not enter WWW, it will be auto created!" %}" required>
+                    </div>
+                </div>
+                <div class="flex py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-48">Email</p>
+                    </div>
+                    <div>
+                        <input type="email" name="email" class="form-control w-80 bg-gray-100 rounded px-2 py-1"
+                               ng-model="adminEmail" required>
+                    </div>
+                </div>
+                <div class="flex py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-48">Select PHP</p>
+                    </div>
+                    <div>
+                        <select ng-model="phpSelection" class="form-control w-80 bg-gray-100 rounded px-2 py-1">
+                            {% for php in phps %}
+                                <option>{{ php }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="flex py-2 px-6">
+                    <div class="w-48">
+                        <p class="font-semibold w-48">Additional Features</p></label>
+                    </div>
+                    <div class="text-gray-500 font-semibold">
+                        <div class="col-sm-9">
+                            <div class="checkbox">
+                                <label>
+                                    <input ng-model="sslCheck" type="checkbox" value="">
+                                    SSL
+                                </label>
+                            </div>
+                        </div>
+                        <label class="col-sm-3 control-label"></label>
+                        <div class="col-sm-9">
+                            <div class="checkbox">
+                                <label>
+                                    {% if test_domain_data %}
+                                        <input ng-model="apacheBackend" type="checkbox" value="">
+                                        OpenLiteSpeed + Apache (Backend) (For Ubuntu 22 and AlmaLinux 8)
+                                    {% else %}
+
+                                        <input ng-model="apacheBackend" type="checkbox" value="" disabled>
+                                        OpenLiteSpeed + Apache (Backend) (For Ubuntu 22 and AlmaLinux 8) -
+                                        <strong><a href="https://go.cyberpanel.net/ApacheRev">Premium Feature</a> <i
+                                                class="p fa fa-external-link btn-icon"> </i></strong>
+                                    {% endif %}
+                                </label>
+                            </div>
+                        </div>
+                        <label class="col-sm-3 control-label"></label>
+                        <div class="col-sm-9">
+                            <div class="checkbox">
+                                <label>
+                                    <input ng-model="dkimCheck" type="checkbox" value="">
+                                    DKIM Support
+                                </label>
+                            </div>
+                        </div>
+                        <label class="col-sm-3 control-label"></label>
+                        <div class="col-sm-9">
+                            <div class="checkbox">
+                                <label>
+                                    <input ng-model="openBasedir" type="checkbox" value="">
+                                    open_basedir Protection
+                                </label>
+                            </div>
+                        </div>
+                        <label class="col-sm-3 control-label"></label>
+                        <div class="col-sm-9">
+                            <div class="checkbox">
+                                <label>
+                                    <input ng-model="mailDomain" type="checkbox" value="">
+                                    Create Mail Domain
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="flex justify-center">
+            <button ng-click="goBack()" class="bg-orange-500 px-3 py-4 rounded-lg text-xl font-semibold text-white">Create Website</button>
+        </div>
+    </div>
+{% endblock %}

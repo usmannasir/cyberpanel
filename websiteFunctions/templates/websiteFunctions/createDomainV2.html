@@ -1,0 +1,116 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    <div ng-controller="websitePagesV2" class="p-8">
+        <div>
+            <p class="text-4xl font-bold">Create Child Domain</p>
+            <p class="text-xs text-gray-600 py-2 font-semibold">Create child-domains, child domains are owned by a
+                master website</p>
+        </div>
+        <div>
+            <div class="py-4">
+                <p class="text-xl font-bold">Details</p>
+            </div>
+            <hr>
+            <div>
+                <div class="flex mt-4 py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-60">Select Website</p>
+                    </div>
+                    <div>
+                        <select ng-change="WebsiteSelection()" ng-model="masterDomain"
+                                class="form-control w-80 bg-gray-100 rounded px-2 py-1">
+                            {% for items in websiteList %}
+                                <option>{{ items }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div ng-hide="DomainCreateForm" class="flex py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-60">Domain Name</p>
+                    </div>
+                    <div>
+                        <input name="dom" type="text" class="form-control w-80 bg-gray-100 rounded px-2 py-1"
+                               ng-model="domainNameCreate"
+                               required>
+                    </div>
+                </div>
+                <div ng-hide="DomainCreateForm" class="flex py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-60">Path: /home{$ masterDomain
+                            $}/</p>
+                    </div>
+                    <div>
+                        <input type="email" name="email" class="form-control w-80 bg-gray-100 rounded px-2 py-1"
+                               ng-model="docRootPath" required>
+                    </div>
+                </div>
+                <div ng-hide="DomainCreateForm" class="flex py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-60">Select PHP</p>
+                    </div>
+                    <div>
+                        <select ng-model="phpSelection" class="form-control w-80 bg-gray-100 rounded px-2 py-1">
+                            {% for php in phps %}
+                                <option>{{ php }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div ng-hide="DomainCreateForm" ng-hide="installationDetailsForm" class="flex py-2 px-6">
+                    <div class="w-60">
+                        <p class="font-semibold w-48">Additional Features</p></label>
+                    </div>
+                    <div class="text-gray-500 font-semibold">
+                        <div class="col-sm-9">
+                            <div class="checkbox">
+                                <label>
+                                    <input ng-model="sslCheck" type="checkbox" value="">
+                                    SSL
+                                </label>
+                            </div>
+                        </div>
+                        <label class="col-sm-3 control-label"></label>
+                        <div class="col-sm-9">
+                            <div class="checkbox">
+                                <label>
+                                    <input ng-model="apacheBackend" type="checkbox" value="">
+                                    Apache as Reverse Proxy (Beta, for Ubuntu 22 and AlmaLinux 8)
+                                </label>
+                            </div>
+                        </div>
+                        <label class="col-sm-3 control-label"></label>
+                        <div class="col-sm-9">
+                            <div class="checkbox">
+                                <label>
+                                    <input ng-model="dkimCheck" type="checkbox" value="">
+                                    DKIM Support
+                                </label>
+                            </div>
+                        </div>
+                        <label class="col-sm-3 control-label"></label>
+                        <div class="col-sm-9">
+                            <div class="checkbox">
+                                <label>
+                                    <input ng-model="openBasedir" type="checkbox" value="">
+                                    open_basedir Protection
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div ng-hide="DomainCreateForm" class="flex justify-center mt-4">
+            <button ng-click="createDomain()"
+                    class="bg-orange-500 px-3 py-4 rounded-lg text-xl font-semibold text-white">
+                Create Domain
+            </button>
+        </div>
+    </div>
+{% endblock %}

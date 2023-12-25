@@ -1,0 +1,62 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    <div class="p-8">
+                <div>
+                    <p class="text-4xl font-bold">Vision Management</p>
+                    <p class="text-xs text-gray-600 py-2 font-semibold">Have you can manage versions and check for updates to CyberPanel</p>
+                    <hr>
+                </div>
+                <div class="py-4">
+                    <p class="text-xl font-semibold">CyberPanel</p>
+                    <div class="py-6">
+                        <div class="border border-gray-300 shadow-lg rounded-lg px-6 py-4">
+                            <table class="flex">
+                                <thead>
+                                    <tr class="flex justify-start mb-2">
+                                        <th>Current Version:</th>
+                                    </tr>
+                                    <tr class="flex justify-start mb-2">
+                                        <th>Build:</th>
+                                    </tr>
+                                    <tr class="flex justify-start mb-2">
+                                        <th>Current Commit:</th>
+                                    </tr>
+                                    <tr class="flex justify-start mb-2">
+                                        <th>Latest Version:</th>
+                                    </tr>
+                                    <tr class="flex justify-start mb-2">
+                                        <th>Current Biuld:</th>
+                                    </tr>
+                                    <tr class="flex justify-start mb-2">
+                                        <th>Current Version:</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="px-4">
+                                    <tr class="flex justify-start mb-2">
+                                        <td class="text-orange-400 font-bold">2.3</td>
+                                    </tr>
+                                    <tr class="flex justify-start mb-2">
+                                        <td class="text-orange-400 font-bold">4</td>
+                                    </tr>
+                                    <tr class="flex justify-start mb-2">
+                                        <td class="text-orange-400 font-bold">d65b6b5bcd4e89ce1a0eeb74131f98093e85bb3a</td>
+                                    </tr>
+                                    <tr class="flex justify-start mb-2">
+                                        <td class="text-orange-400 font-bold">2.3</td>
+                                    </tr>
+                                    <tr class="flex justify-start mb-2">
+                                        <td class="text-orange-400 font-bold">4</td>
+                                    </tr>
+                                    <tr class="flex justify-start mb-2">
+                                        <td class="text-orange-400 font-bold">d65b6b5bcd4e89ce1a0eeb74131f98093e85bb3a</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+{% endblock %}

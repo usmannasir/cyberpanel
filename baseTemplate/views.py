@@ -31,6 +31,17 @@ def renderBase(request):
     proc = httpProc(request, template, finaData)
     return proc.render()
 
+def exampleZarak(request):
+    template = 'baseTemplate/example.html'
+    proc = httpProc(request, template)
+    return proc.render()
+
+def visionManagementV2(request):
+    template = 'baseTemplate/visionManagementV2.html'
+    proc = httpProc(request, template)
+    return proc.render()
+
+
 
 def getAdminStatus(request):
     try:

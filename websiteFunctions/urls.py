@@ -6,13 +6,16 @@ urlpatterns = [
     url(r'^createWebsite$', views.createWebsite, name='createWebsite'),
     url(r'^listWebsites$', views.listWebsites, name='listWebsites'),
     url(r'^listChildDomains$', views.listChildDomains, name='listChildDomains'),
+    url(r'^listChildDomainsV2$', views.listChildDomainsV2, name='listChildDomainsV2'),
     url(r'^modifyWebsite$', views.modifyWebsite, name='modifyWebsite'),
     url(r'^deleteWebsite$', views.deleteWebsite, name='deleteWebsite'),
     url(r'^siteState$', views.siteState, name='siteState'),
+    url(r'^createWebsiteV2$', views.createWebsiteV2, name='createWebsiteV2'),
+    url(r'^listWebsitesV2$', views.listWebsitesV2, name='listWebsitesV2'),
 
-    ##
 
     url(r'^CreateNewDomain$', views.CreateNewDomain, name='CreateNewDomain'),
+    url(r'^CreateNewDomainV2$', views.CreateNewDomainV2, name='CreateNewDomainV2'),
 
     ### WordPress
     url(r'^createWordpress$', views.WPCreate, name='createWordpress'),

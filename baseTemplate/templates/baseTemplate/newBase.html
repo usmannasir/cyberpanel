@@ -1,0 +1,1618 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="cybercpV2">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {#    <title>CyberPanel</title>#}
+    <title>{% block titleNew %}Page Title{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/flowbite@1.3.4/dist/flowbite.js"></script>
+    {% load static %}
+    <script src="{% static 'baseTemplate/angularjs.1.6.5.js' %}"></script>
+    <script src="{% static 'baseTemplate/jquery.3.2.1.js' %}"></script>
+</head>
+
+<body>
+<div class="flex">
+    <!-- SideBar Start -->
+    <container>
+        <!-- Logo -->
+        <div id="Main" class="ease-in-out transition duration-500 h-full w-72 bg-cyan-800">
+
+            <div class="justify-start p-6 items-center space-x-3">
+                <div class="flex">
+                    {#                        <img src="images/cyberlogo.png" alt="logo" class="w-16">#}
+                    <img src="{% static 'baseTemplate/newImage/cyberlogo.png' %}" class="w-16"/>
+                    <p class="text-3xl font-bold text-green-200" style="line-height: 0.75;">Cyber panel
+                        <br/>
+                        <span class="text-orange-400 text-sm ml-6">Web Hosting Panel</span>
+                    </p>
+                </div>
+            </div>
+
+            <div class="px-4">
+                <hr>
+            </div>
+            <!-- Overview Section -->
+            <div class="flex flex-col justify-start items-center px-6 border-b border-gray-600 w-full">
+                <button onclick="showMenu1(true)" class=" text-white flex justify-between items-center w-full py-5">
+                    <p class="text-white font-semibold">Overview</p>
+                    <svg id="icon1" class="transform" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                         xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18 15L12 9L6 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                              stroke-linejoin="round"/>
+                    </svg>
+                </button>
+                <div id="menu1">
+                    <hr>
+                    <button
+                            class="flex justify-start mt-1 items-center space-x-6 hover:text-white focus:bg-cyan-400 focus:text-white hover:bg-cyan-400 text-gray-400 rounded px-3 py-1 w-64">
+                        <svg width="24" height="24" viewBox="0 0 40 40" fill="white"
+                             xmlns="http://www.w3.org/2000/svg">
+                            <g clip-path="url(#clip0_55_1871)">
+                                <path
+                                        d="M15.4375 18.6172C17.0938 17.4453 18.1797 15.5312 18.1797 13.3516C18.1797 9.78125 15.2734 6.88281 11.6953 6.88281C8.10938 6.88281 5.21094 9.78125 5.21094 13.3516C5.21094 15.4766 6.25781 17.3516 7.84375 18.5312C3.28906 19.5156 0 22.3203 0 25.6328C0 29.7734 5.125 33.125 11.4531 33.125C17.7812 33.125 22.9062 29.7734 22.9062 25.6328C22.9062 22.4141 19.7969 19.6719 15.4375 18.6172ZM9.22656 10.8672C9.69531 10.8672 10.0703 11.2422 10.0703 11.7109C10.0703 12.1797 9.6875 12.5547 9.22656 12.5547C8.75781 12.5547 8.38281 12.1797 8.38281 11.7109C8.38281 11.25 8.76562 10.8672 9.22656 10.8672ZM11.8906 31.9922L9.3125 29.0078L11.3828 21.2578C11.1406 21.0938 10.9688 20.8281 10.9688 20.5156C10.9688 20.0156 11.375 19.6094 11.8828 19.6094C12.3828 19.6094 12.7969 20.0156 12.7969 20.5156C12.7969 20.8281 12.625 21.0938 12.3828 21.2578L14.2578 29.4609L11.8906 31.9922ZM14.7031 15.1953C14.0234 16.1172 12.9375 16.7266 11.7031 16.7266C10.3672 16.7266 9.19531 16.0156 8.53906 14.9531C8.35156 14.3984 8.73438 14.1562 9.125 14.5625C9.66406 15.4453 10.5938 16.0625 11.7031 16.0625C12.7109 16.0625 13.5625 15.5469 14.125 14.7969C14.5156 14.4609 14.9766 14.8516 14.7031 15.1953ZM14.0547 12.5625C13.5859 12.5625 13.2109 12.1875 13.2109 11.7188C13.2109 11.25 13.5937 10.875 14.0547 10.875C14.5234 10.875 14.8984 11.25 14.8984 11.7188C14.9062 12.1797 14.5234 12.5625 14.0547 12.5625Z"
+                                        fill="white"/>
+                                <path
+                                        d="M38.6797 14.2188H21.3906C20.6641 14.2188 20.0703 13.625 20.0703 12.8984C20.0703 12.1719 20.6641 11.5781 21.3906 11.5781H38.6797C39.4063 11.5781 40 12.1719 40 12.8984C40 13.625 39.4063 14.2188 38.6797 14.2188Z"
+                                        fill="white"/>
+                                <path
+                                        d="M38.6797 19.1484H21.3906C20.6641 19.1484 20.0703 18.5547 20.0703 17.8281C20.0703 17.1016 20.6641 16.5078 21.3906 16.5078H38.6797C39.4063 16.5078 40 17.1016 40 17.8281C40 18.5547 39.4063 19.1484 38.6797 19.1484Z"
+                                        fill="white"/>
+                                <path
+                                        d="M38.6797 23.7109H25.7812C25.0547 23.7109 24.4609 23.1172 24.4609 22.3906C24.4609 21.6641 25.0547 21.0703 25.7812 21.0703H38.6875C39.4141 21.0703 40.0078 21.6641 40.0078 22.3906C40 23.1172 39.4062 23.7109 38.6797 23.7109Z"
+                                        fill="white"/>
+                                <path
+                                        d="M38.6797 28.4297H25.7812C25.0547 28.4297 24.4609 27.8359 24.4609 27.1094C24.4609 26.3828 25.0547 25.7891 25.7812 25.7891H38.6875C39.4141 25.7891 40.0078 26.3828 40.0078 27.1094C40 27.8359 39.4062 28.4297 38.6797 28.4297Z"
+                                        fill="white"/>
+                            </g>
+                            <defs>
+                                <clipPath id="clip0_55_1871">
+                                    <rect width="40" height="40" fill="white"/>
+                                </clipPath>
+                            </defs>
+                        </svg>
+
+                        <p class="text-white text-sm font-semibold">65.108.159.129</p>
+                    </button>
+                    <a href="{% url 'exampleZarak' %}"
+                       class="flex justify-start items-center space-x-6 hover:text-white focus:bg-cyan-400 focus:text-white hover:bg-cyan-400 text-gray-400 rounded px-3 py-1  w-full md:w-52">
+
+                        <svg width="24" height="24" viewBox="0 0 40 40" fill="white"
+                             xmlns="http://www.w3.org/2000/svg">
+                            <g clip-path="url(#clip0_56_2000)">
+                                <path
+                                        d="M9.99992 31.6667C9.99992 33.5083 11.4916 35 13.3333 35H26.6666C28.5083 35 29.9999 33.5083 29.9999 31.6667V11.6667H9.99992V31.6667ZM31.6666 6.66667H25.8333L24.1666 5H15.8333L14.1666 6.66667H8.33325V10H31.6666V6.66667Z"
+                                        fill="white"/>
+                            </g>
+                            <defs>
+                                <clipPath id="clip0_56_2000">
+                                    <rect width="40" height="40" fill="white"/>
+                                </clipPath>
+                            </defs>
+                        </svg>
+
+                        <p class="text-white text-sm font-semibold">Dashboard</p>
+                    </a>
+                    <a href="{% url 'visionManagementV2' %}"
+                       class="flex justify-start items-center space-x-6 hover:text-white focus:bg-cyan-400 focus:text-white hover:bg-cyan-400 text-gray-400 rounded px-3 py-1 w-full md:w-52">
+                        <svg width="24" height="24" viewBox="0 0 20 31" fill="none"
+                             xmlns="http://www.w3.org/2000/svg">
+                            <g clip-path="url(#clip0_725_47)">
+                                <path
+                                        d="M2.5 15.5C3.88125 15.5 5 16.367 5 17.4375V25.1875C5 26.258 3.88125 27.125 2.5 27.125H0V31H20V27.125H17.51C16.1325 27.125 15.01 26.258 15.01 25.1875L15 11.625H0V15.5H2.5Z"
+                                        fill="white"/>
+                                <path
+                                        d="M10 7.75C12.7614 7.75 15 6.0151 15 3.875C15 1.7349 12.7614 0 10 0C7.23858 0 5 1.7349 5 3.875C5 6.0151 7.23858 7.75 10 7.75Z"
+                                        fill="white"/>
+                            </g>
+                            <defs>
+                                <clipPath id="clip0_725_47">
+                                    <rect width="20" height="31" fill="white"/>
+                                </clipPath>
+                            </defs>
+                        </svg>
+                        <p class="text-white text-sm font-semibold">Vision Management</p>
+                    </a>
+                    <button
+                            class="flex justify-start items-center space-x-6 hover:text-white focus:bg-cyan-400 focus:text-white hover:bg-cyan-400 text-gray-400 rounded px-3 py-1  w-full md:w-52">
+                        <svg width="24" height="24" viewBox="0 0 30 30" fill="none"
+                             xmlns="http://www.w3.org/2000/svg">
+                            <g clip-path="url(#clip0_725_53)">
+                                <path
+                                        d="M27.75 18L26.25 17.125C24.625 16.125 24.625 13.75 26.25 12.75L27.75 11.875C29 11.125 29.375 9.625 28.625 8.5L27.375 6.375C26.625 5.125 25.125 4.75 24 5.5L22.5 6.375C20.875 7.375 18.75 6.125 18.75 4.25V2.5C18.75 1.125 17.625 0 16.25 0H13.75C12.375 0 11.25 1.125 11.25 2.5V4.125C11.25 6 9.12505 7.25 7.50005 6.25L6.00005 5.5C4.75005 4.75 3.25005 5.25 2.62505 6.375L1.37505 8.5C0.75005 9.75 1.12505 11.25 2.25005 12L3.75005 12.875C5.37505 13.75 5.37505 16.25 3.75005 17.125L2.25005 18C1.00005 18.75 0.62505 20.25 1.37505 21.375L2.62505 23.5C3.37505 24.75 4.87505 25.125 6.00005 24.375L7.50005 23.625C9.12505 22.625 11.25 23.875 11.25 25.75V27.5C11.25 28.875 12.375 30 13.75 30H16.25C17.625 30 18.75 28.875 18.75 27.5V25.875C18.75 24 20.875 22.75 22.5 23.75L24 24.625C25.25 25.375 26.75 24.875 27.375 23.75L28.625 21.625C29.25 20.25 28.875 18.75 27.75 18ZM15 20C12.25 20 10 17.75 10 15C10 12.25 12.25 10 15 10C17.75 10 20 12.25 20 15C20 17.75 17.75 20 15 20Z"
+                                        fill="white"/>
+                            </g>
+                            <defs>
+                                <clipPath id="clip0_725_53">
+                                    <rect width="30" height="30" fill="white"/>
+                                </clipPath>
+                            </defs>
+                        </svg>
+
+                        <p class="text-white text-sm font-semibold">Design</p>
+                    </button>
+                    <button
+                            class="flex justify-start items-center space-x-6 hover:text-white focus:bg-cyan-400 focus:text-white hover:bg-cyan-400 text-gray-400 rounded px-3 py-1  w-full md:w-52">
+
+                        <svg width="24" height="24" viewBox="0 0 30 30" fill="none"
+                             xmlns="http://www.w3.org/2000/svg">
+                            <path
+                                    d="M21.6247 16.6875C21.2968 16.6861 20.9825 16.5559 20.7497 16.325C20.5169 16.0908 20.3862 15.774 20.3862 15.4438C20.3862 15.1135 20.5169 14.7967 20.7497 14.5625L23.3997 11.9125C23.6321 11.6803 23.8165 11.4046 23.9423 11.1011C24.0681 10.7976 24.1329 10.4723 24.1329 10.1438C24.1329 9.81523 24.0681 9.48991 23.9423 9.18642C23.8165 8.88292 23.6321 8.6072 23.3997 8.37502L21.6247 6.60002C21.1466 6.14817 20.5137 5.89642 19.8559 5.89642C19.1981 5.89642 18.5652 6.14817 18.0872 6.60002L15.4372 9.25002C15.1976 9.44173 14.8958 9.5386 14.5894 9.52219C14.283 9.50577 13.9933 9.37722 13.7755 9.161C13.5578 8.94479 13.4271 8.65603 13.4085 8.34973C13.39 8.04343 13.4847 7.74099 13.6747 7.50002L16.3247 4.85002C17.2779 3.94068 18.5448 3.43335 19.8622 3.43335C21.1796 3.43335 22.4464 3.94068 23.3997 4.85002L25.1622 6.61252C25.6271 7.07688 25.9959 7.62833 26.2475 8.23532C26.4991 8.84231 26.6286 9.49294 26.6286 10.15C26.6286 10.8071 26.4991 11.4577 26.2475 12.0647C25.9959 12.6717 25.6271 13.2232 25.1622 13.6875L22.4997 16.325C22.2669 16.5559 21.9526 16.6861 21.6247 16.6875Z"
+                                    fill="white"/>
+                            <path
+                                    d="M10.1375 26.625C9.48072 26.6256 8.83025 26.4967 8.22328 26.2457C7.6163 25.9948 7.06472 25.6267 6.60003 25.1625L4.83753 23.4C4.37264 22.9357 4.00385 22.3842 3.75223 21.7772C3.50061 21.1703 3.37109 20.5196 3.37109 19.8625C3.37109 19.2055 3.50061 18.5548 3.75223 17.9478C4.00385 17.3409 4.37264 16.7894 4.83753 16.325L7.50003 13.675C7.741 13.485 8.04344 13.3903 8.34974 13.4089C8.65604 13.4275 8.9448 13.5581 9.16101 13.7759C9.37722 13.9936 9.50578 14.2833 9.5222 14.5898C9.53861 14.8962 9.44174 15.1979 9.25003 15.4375L6.60003 18.0875C6.36759 18.3197 6.18319 18.5954 6.05738 18.8989C5.93157 19.2024 5.86681 19.5278 5.86681 19.8563C5.86681 20.1848 5.93157 20.5102 6.05738 20.8136C6.18319 21.1171 6.36759 21.3929 6.60003 21.625L8.37503 23.4C8.8531 23.8519 9.48597 24.1036 10.1438 24.1036C10.8016 24.1036 11.4345 23.8519 11.9125 23.4L14.5625 20.75C14.6716 20.6117 14.8087 20.498 14.9648 20.4163C15.1209 20.3347 15.2925 20.287 15.4683 20.2763C15.6442 20.2656 15.8203 20.2922 15.9851 20.3544C16.15 20.4166 16.2998 20.5129 16.4248 20.637C16.5498 20.7611 16.6472 20.9103 16.7105 21.0746C16.7739 21.239 16.8017 21.415 16.7923 21.5909C16.7829 21.7668 16.7364 21.9387 16.6559 22.0954C16.5753 22.2521 16.4626 22.39 16.325 22.5L13.675 25.15C13.2114 25.6165 12.6602 25.9868 12.0532 26.24C11.4462 26.4931 10.7952 26.6239 10.1375 26.625Z"
+                                    fill="white"/>
+                            <path
+                                    d="M11.0248 20.225C10.8603 20.226 10.6972 20.1945 10.5449 20.1323C10.3926 20.07 10.2541 19.9784 10.1373 19.8625C10.0202 19.7463 9.92717 19.6081 9.86371 19.4558C9.80025 19.3034 9.76758 19.1401 9.76758 18.975C9.76758 18.81 9.80025 18.6466 9.86371 18.4943C9.92717 18.342 10.0202 18.2037 10.1373 18.0875L18.0998 10.1375C18.334 9.90472 18.6508 9.77405 18.9811 9.77405C19.3113 9.77405 19.6281 9.90472 19.8623 10.1375C19.9795 10.2537 20.0725 10.392 20.1359 10.5443C20.1994 10.6966 20.2321 10.86 20.2321 11.025C20.2321 11.1901 20.1994 11.3534 20.1359 11.5058C20.0725 11.6581 19.9795 11.7963 19.8623 11.9125L11.8998 19.8625C11.667 20.0935 11.3528 20.2237 11.0248 20.225Z"
+                                    fill="white"/>
+                        </svg>
+                        <p class="text-white text-sm font-semibold">Connect</p>
+                    </button>
+                    <button
+                            class="flex justify-start items-center space-x-6 hover:text-white focus:bg-cyan-400 focus:text-white hover:bg-cyan-400 text-gray-400 rounded px-3 py-1  w-full md:w-52">
+
+                        <svg width="24" height="24" viewBox="0 0 30 30" fill="none"
+                             xmlns="http://www.w3.org/2000/svg">
+                            <path
+                                    d="M11.155 6.64338C17.1333 6.64338 21.9799 11.4899 21.9799 17.4683C21.9799 19.7413 21.2758 21.9325 19.9488 23.7772L21.6843 27.4963C21.9714 28.11 21.3162 28.7439 20.7124 28.4402L17.0107 26.5718C15.2603 27.7004 13.2381 28.2932 11.155 28.2932C5.17665 28.2932 0.330078 23.4466 0.330078 17.4683C0.330078 11.4899 5.17665 6.64338 11.155 6.64338ZM16.2361 15.1956C17.4912 15.1956 18.5088 16.2132 18.5088 17.4683C18.5088 18.7219 17.489 19.741 16.2361 19.741C14.985 19.741 13.9634 18.7194 13.9634 17.4683C13.9634 16.215 14.9835 15.1956 16.2361 15.1956ZM16.2361 16.6338C15.7741 16.6338 15.4017 17.0052 15.4017 17.4683C15.4017 17.9332 15.7712 18.3027 16.2361 18.3027C16.6992 18.3027 17.0706 17.9314 17.0706 17.4683C17.0706 17.0073 16.6971 16.6338 16.2361 16.6338ZM11.155 15.1956C12.41 15.1956 13.4277 16.2132 13.4277 17.4683C13.4277 18.7219 12.4079 19.741 11.155 19.741C9.90382 19.741 8.88227 18.7194 8.88227 17.4683C8.88227 16.215 9.9024 15.1956 11.155 15.1956ZM11.155 16.6338C10.6929 16.6338 10.3205 17.0052 10.3205 17.4683C10.3205 17.9332 10.6901 18.3027 11.155 18.3027C11.6181 18.3027 11.9894 17.9314 11.9894 17.4683C11.9894 17.0073 11.616 16.6338 11.155 16.6338ZM6.07382 15.1956C7.32746 15.1956 8.34652 16.2153 8.34652 17.4683C8.34652 18.7194 7.32498 19.741 6.07382 19.741C4.82055 19.741 3.80113 18.7208 3.80113 17.4683C3.80113 16.2132 4.81878 15.1956 6.07382 15.1956ZM6.07382 16.6338C5.61284 16.6338 5.23937 17.0073 5.23937 17.4683C5.23937 17.9303 5.61071 18.3027 6.07382 18.3027C6.53871 18.3027 6.90828 17.9332 6.90828 17.4683C6.90828 17.0052 6.53694 16.6338 6.07382 16.6338ZM12.0918 5.78518C11.4377 6.46515 10.4041 5.47053 11.0582 4.79057C13.1031 2.67271 15.9009 1.48145 18.8454 1.48145C24.8237 1.48145 29.6703 6.32802 29.6703 12.3063C29.6703 14.5794 28.9663 16.7706 27.6393 18.6152L29.3748 22.3343C29.6618 22.948 29.0063 23.5819 28.4029 23.2779L24.7011 21.4099C24.1158 21.7869 23.5007 22.1029 22.8536 22.3613C21.9781 22.7085 21.4498 21.3769 22.3257 21.0297C22.9971 20.7614 23.6442 20.4085 24.2359 19.9929C24.4457 19.8462 24.7274 19.8161 24.9718 19.9394L27.2013 21.0648L26.1667 18.847C26.0483 18.6082 26.0689 18.3123 26.2439 18.088C27.5379 16.4343 28.2321 14.4051 28.2321 12.3063C28.2321 7.12208 24.0297 2.91933 18.8454 2.91933C16.2878 2.91933 13.8688 3.94477 12.0918 5.78518ZM11.155 8.08162C5.97071 8.08162 1.76832 12.284 1.76832 17.4683C1.76832 22.6525 5.97071 26.8549 11.155 26.8549C13.0889 26.8549 14.9626 26.2671 16.5454 25.1548C16.7552 25.0081 17.0369 24.9784 17.2814 25.1017L19.5112 26.2267L18.4762 24.0093C18.3579 23.7701 18.3784 23.4742 18.5535 23.2499C19.8478 21.5963 20.5416 19.5673 20.5416 17.4683C20.5416 12.284 16.3392 8.08162 11.155 8.08162Z"
+                                    fill="white"/>
+                        </svg>
+                        <p class="text-white text-sm font-semibold">Community</p>
+                    </button>
+                </div>
+            </div>
+            <!-- Overview Section End -->
+
+            <!-- Main Section -->
+            <div class="flex flex-col justify-start items-center px-6 border-b border-gray-600 w-full  ">
+                <button onclick="showMenu2(true)" class="text-white flex justify-between items-center w-full py-5">
+
+                    <p class="text-white font-semibold">Main</p>
+                    <svg id="icon2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                         stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-white">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12h-15"/>
+                    </svg>
+
+                </button>
+                <div id="menu2">
+                    <hr>
+                    <!-- Users Button -->
+                    <div class="flex justify-between mt-1 items-center space-x-6 focus:bg-cyan-400 text-white hover:bg-cyan-400 rounded px-3 py-1 w-64"
+                         aria-controls="dropdown-example" data-collapse-toggle="dropdown-example">
+                        <div>
+                            <button type="button" class="flex space-x-6">
+                                <svg width="24" height="24" viewBox="0 0 30 30" fill="none"
+                                     xmlns="http://www.w3.org/2000/svg">
+                                    <path
+                                            d="M11.25 11.25C11.25 9.125 12.875 7.5 15 7.5C17.125 7.5 18.75 9.125 18.75 11.25C18.75 13.375 17.125 15 15 15C12.875 15 11.25 13.375 11.25 11.25ZM15 17.5C9.25 17.5 7.5 21.625 7.5 21.625V23.75H22.5V21.625C22.5 21.625 20.75 17.5 15 17.5Z"
+                                            fill="white"/>
+                                    <path
+                                            d="M23.125 13.75C24.8509 13.75 26.25 12.3509 26.25 10.625C26.25 8.89911 24.8509 7.5 23.125 7.5C21.3991 7.5 20 8.89911 20 10.625C20 12.3509 21.3991 13.75 23.125 13.75Z"
+                                            fill="white"/>
+                                    <path
+                                            d="M23.125 16.25C21.625 16.25 20.5 16.625 19.625 17.25C22.5 18.625 23.625 21 23.625 21.25V21.375H28.75V19.75C28.75 19.625 27.375 16.25 23.125 16.25Z"
+                                            fill="white"/>
+                                    <path
+                                            d="M23.125 13.75C24.8509 13.75 26.25 12.3509 26.25 10.625C26.25 8.89911 24.8509 7.5 23.125 7.5C21.3991 7.5 20 8.89911 20 10.625C20 12.3509 21.3991 13.75 23.125 13.75Z"
+                                            fill="white"/>
+                                    <path
+                                            d="M23.125 16.25C21.625 16.25 20.5 16.625 19.625 17.25C22.5 18.625 23.625 21 23.625 21.25V21.375H28.75V19.75C28.75 19.625 27.375 16.25 23.125 16.25Z"
+                                            fill="white"/>
+                                    <path
+                                            d="M6.875 13.75C8.60089 13.75 10 12.3509 10 10.625C10 8.89911 8.60089 7.5 6.875 7.5C5.14911 7.5 3.75 8.89911 3.75 10.625C3.75 12.3509 5.14911 13.75 6.875 13.75Z"
+                                            fill="white"/>
+                                    <path
+                                            d="M6.875 16.25C8.375 16.25 9.5 16.625 10.375 17.25C7.5 18.625 6.375 21 6.375 21.25V21.375H1.25V19.75C1.25 19.625 2.625 16.25 6.875 16.25Z"
+                                            fill="white"/>
+                                </svg>
+                                <span class="text-white text-sm font-semibold" sidebar-toggle-item>Users</span>
+                        </div>
+                        <div>
+                            <svg id="icon1" class="transform" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                 xmlns="http://www.w3.org/2000/svg">
+                                <path d="M18 15L12 9L6 15" stroke="currentColor" stroke-width="1.5"
+                                      stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        </button>
+                    </div>
+                    <ul id="dropdown-example" class="hidden py-2 space-y-2">
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                View
+                                Profile</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Create
+                                New User</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                List
+                                Users</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Modify
+                                User</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Reseller
+                                Center</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Create
+                                New ACL</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Delete
+                                ACL</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Modify
+                                ACL</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                API
+                                Access</a>
+                        </li>
+                    </ul>
+                    <!-- Users Button End -->
+
+                    <!-- Wordpress Button -->
+
+                    <div class="flex justify-between items-center space-x-6 focus:bg-cyan-400 text-white hover:bg-cyan-400 rounded px-3 py-1 w-full"
+                         aria-controls="dropdown-example-2" data-collapse-toggle="dropdown-example-2">
+                        <div>
+                            <button type="button" class="flex space-x-6">
+                                <svg width="24" height="24" viewBox="0 0 30 30" fill="none"
+                                     xmlns="http://www.w3.org/2000/svg">
+                                    <g clip-path="url(#clip0_725_94)">
+                                        <path
+                                                d="M15 0C6.72913 0 0 6.72913 0 15C0 23.2709 6.72913 30 15 30C23.2709 30 30 23.2709 30 15C30 6.72913 23.2709 0 15 0ZM15 28.75C7.41821 28.75 1.25 22.5818 1.25 15C1.25 7.41821 7.41821 1.25 15 1.25C22.5818 1.25 28.75 7.41821 28.75 15C28.75 22.5818 22.5818 28.75 15 28.75Z"
+                                                fill="white"/>
+                                        <path
+                                                d="M3.55087 10C2.8788 11.5327 2.5 13.222 2.5 15C2.5 20.0613 5.52895 24.4199 9.86458 26.3838L4.09599 10H3.55087Z"
+                                                fill="white"/>
+                                        <path
+                                                d="M10.0002 9.375C10.0002 9.72046 9.72066 10 9.3752 10H9.01463L12.5191 20.8716C13.1579 19.0502 13.815 17.1574 14.3251 15.646L12.3372 10H11.8752C11.5297 10 11.2502 9.72046 11.2502 9.375C11.2502 9.02954 11.5297 8.75 11.8752 8.75H17.5002C17.8457 8.75 18.1252 9.02954 18.1252 9.375C18.1252 9.72046 17.8457 10 17.5002 10H17.2556L20.7601 20.8716C21.4864 18.8013 22.2414 16.6254 22.77 15.0385C23.0098 13.8391 22.0791 12.3322 21.2526 10.9949C20.6099 9.95422 20.0545 9.05518 20.0545 8.28796C20.0545 5.94727 21.4168 5.59753 22.2286 5.59753C22.7179 5.59753 23.1655 5.72845 23.5767 5.93048C21.3359 3.81035 18.3213 2.5 15.0002 2.5C10.3854 2.5 6.3567 5.02007 4.19141 8.75H9.3752C9.72066 8.75 10.0002 9.02954 10.0002 9.375Z"
+                                                fill="white"/>
+                                        <path
+                                                d="M11.6641 27.0344C12.7278 27.3297 13.8432 27.5 14.9997 27.5C16.1559 27.5 17.2709 27.3298 18.3344 27.0346L14.9957 17.5522C13.8017 21.0284 12.2137 25.4933 11.6641 27.0344Z"
+                                                fill="white"/>
+                                        <path
+                                                d="M25.1536 7.73682C25.6645 9.33556 25.0376 12.0569 24.3732 14.1559C24.2652 14.4983 24.1309 14.9084 23.9777 15.3693C23.9631 15.4321 23.9466 15.495 23.9277 15.5579C23.9136 15.6061 23.8935 15.6519 23.8691 15.694C22.8045 18.8686 20.9675 24.052 20.1377 26.3828C24.4722 24.4183 27.5001 20.0604 27.5001 15C27.5001 12.2903 26.6241 9.78661 25.1536 7.73682Z"
+                                                fill="white"/>
+                                        <path
+                                                d="M15 0C6.72913 0 0 6.72913 0 15C0 23.2709 6.72913 30 15 30C23.2709 30 30 23.2709 30 15C30 6.72913 23.2709 0 15 0Z"
+                                                fill="url(#paint0_linear_725_94)"/>
+                                    </g>
+                                    <defs>
+                                        <linearGradient id="paint0_linear_725_94" x1="1.40615" y1="8.66108"
+                                                        x2="28.5939" y2="21.3389" gradientUnits="userSpaceOnUse">
+                                            <stop stop-color="white" stop-opacity="0.2"/>
+                                            <stop offset="1" stop-color="white" stop-opacity="0"/>
+                                        </linearGradient>
+                                        <clipPath id="clip0_725_94">
+                                            <rect width="30" height="30" fill="white"/>
+                                        </clipPath>
+                                    </defs>
+                                </svg>
+                                <span class="text-white text-sm font-semibold" sidebar-toggle-item>Wordpress</span>
+                        </div>
+                        <div>
+                            <svg id="icon1" class="transform" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                 xmlns="http://www.w3.org/2000/svg">
+                                <path d="M18 15L12 9L6 15" stroke="currentColor" stroke-width="1.5"
+                                      stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        </button>
+                    </div>
+                    <ul id="dropdown-example-2" class="hidden py-2 space-y-2">
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Deploy Wordpress</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                List Wordpress</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Configure Wordpress</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Restore Backups</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Remote Backup</a>
+                        </li>
+                    </ul>
+                    <!-- Wordpress Press Button End -->
+
+                    <!-- Website Button -->
+                    <div class="flex justify-between items-center space-x-6 focus:bg-cyan-400 text-white hover:bg-cyan-400 rounded px-3 py-1 w-full"
+                         aria-controls="dropdown-example-3" data-collapse-toggle="dropdown-example-3">
+                        <div>
+                            <button type="button" class="flex space-x-6">
+                                <svg width="24" height="24" viewBox="0 0 30 30" fill="none"
+                                     xmlns="http://www.w3.org/2000/svg">
+                                    <g clip-path="url(#clip0_725_94)">
+                                        <path
+                                                d="M15 0C6.72913 0 0 6.72913 0 15C0 23.2709 6.72913 30 15 30C23.2709 30 30 23.2709 30 15C30 6.72913 23.2709 0 15 0ZM15 28.75C7.41821 28.75 1.25 22.5818 1.25 15C1.25 7.41821 7.41821 1.25 15 1.25C22.5818 1.25 28.75 7.41821 28.75 15C28.75 22.5818 22.5818 28.75 15 28.75Z"
+                                                fill="white"/>
+                                        <path
+                                                d="M3.55087 10C2.8788 11.5327 2.5 13.222 2.5 15C2.5 20.0613 5.52895 24.4199 9.86458 26.3838L4.09599 10H3.55087Z"
+                                                fill="white"/>
+                                        <path
+                                                d="M10.0002 9.375C10.0002 9.72046 9.72066 10 9.3752 10H9.01463L12.5191 20.8716C13.1579 19.0502 13.815 17.1574 14.3251 15.646L12.3372 10H11.8752C11.5297 10 11.2502 9.72046 11.2502 9.375C11.2502 9.02954 11.5297 8.75 11.8752 8.75H17.5002C17.8457 8.75 18.1252 9.02954 18.1252 9.375C18.1252 9.72046 17.8457 10 17.5002 10H17.2556L20.7601 20.8716C21.4864 18.8013 22.2414 16.6254 22.77 15.0385C23.0098 13.8391 22.0791 12.3322 21.2526 10.9949C20.6099 9.95422 20.0545 9.05518 20.0545 8.28796C20.0545 5.94727 21.4168 5.59753 22.2286 5.59753C22.7179 5.59753 23.1655 5.72845 23.5767 5.93048C21.3359 3.81035 18.3213 2.5 15.0002 2.5C10.3854 2.5 6.3567 5.02007 4.19141 8.75H9.3752C9.72066 8.75 10.0002 9.02954 10.0002 9.375Z"
+                                                fill="white"/>
+                                        <path
+                                                d="M11.6641 27.0344C12.7278 27.3297 13.8432 27.5 14.9997 27.5C16.1559 27.5 17.2709 27.3298 18.3344 27.0346L14.9957 17.5522C13.8017 21.0284 12.2137 25.4933 11.6641 27.0344Z"
+                                                fill="white"/>
+                                        <path
+                                                d="M25.1536 7.73682C25.6645 9.33556 25.0376 12.0569 24.3732 14.1559C24.2652 14.4983 24.1309 14.9084 23.9777 15.3693C23.9631 15.4321 23.9466 15.495 23.9277 15.5579C23.9136 15.6061 23.8935 15.6519 23.8691 15.694C22.8045 18.8686 20.9675 24.052 20.1377 26.3828C24.4722 24.4183 27.5001 20.0604 27.5001 15C27.5001 12.2903 26.6241 9.78661 25.1536 7.73682Z"
+                                                fill="white"/>
+                                        <path
+                                                d="M15 0C6.72913 0 0 6.72913 0 15C0 23.2709 6.72913 30 15 30C23.2709 30 30 23.2709 30 15C30 6.72913 23.2709 0 15 0Z"
+                                                fill="url(#paint0_linear_725_94)"/>
+                                    </g>
+                                    <defs>
+                                        <linearGradient id="paint0_linear_725_94" x1="1.40615" y1="8.66108"
+                                                        x2="28.5939" y2="21.3389" gradientUnits="userSpaceOnUse">
+                                            <stop stop-color="white" stop-opacity="0.2"/>
+                                            <stop offset="1" stop-color="white" stop-opacity="0"/>
+                                        </linearGradient>
+                                        <clipPath id="clip0_725_94">
+                                            <rect width="30" height="30" fill="white"/>
+                                        </clipPath>
+                                    </defs>
+                                </svg>
+                                <span class="text-white text-sm font-semibold" sidebar-toggle-item>Website</span>
+                        </div>
+                        <div>
+                            <svg id="icon1" class="transform" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                 xmlns="http://www.w3.org/2000/svg">
+                                <path d="M18 15L12 9L6 15" stroke="currentColor" stroke-width="1.5"
+                                      stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        </button>
+                    </div>
+                    <ul id="dropdown-example-3" class="hidden py-2 space-y-2">
+                        <li>
+                            <a href="{% url 'createWebsiteV2' %}"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Create Website</a>
+                        </li>
+                        <li>
+                            <a href="{% url 'listWebsitesV2' %}"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                List Websites</a>
+                        </li>
+                        <li>
+                             <a href="{% url 'CreateNewDomainV2' %}"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Create Sub-Domains</a>
+                        </li>
+                        <li>
+                             <a href="{% url 'listChildDomainsV2' %}"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                List Sub-Domains</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Modify Website</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Suspend/Unsuspend</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Delete Website</a>
+                        </li>
+                    </ul>
+                    <!-- Website Button End -->
+
+                    <!-- Packeges Button -->
+                    <div class="flex justify-between items-center space-x-6 focus:bg-cyan-400 text-white hover:bg-cyan-400 rounded px-3 py-1 w-full"
+                         aria-controls="dropdown-example-4" data-collapse-toggle="dropdown-example-4">
+                        <div>
+                            <button type="button" class="flex space-x-6">
+                                <svg width="24" height="24" viewBox="0 0 30 30" fill="none"
+                                     xmlns="http://www.w3.org/2000/svg">
+                                    <path
+                                            d="M28.6289 14.6602L22.9688 12.5391V6.18164C22.9688 5.30273 22.4238 4.51758 21.5977 4.20703L15.7383 2.00977C15.2637 1.82812 14.7363 1.82812 14.2559 2.00977L8.39648 4.20703C7.57031 4.51758 7.02539 5.30273 7.02539 6.18164V12.5391L1.36523 14.6602C0.544922 14.9707 0 15.7559 0 16.6348V23.0859C0 23.8828 0.451172 24.6152 1.16602 24.9727L7.02539 27.9023C7.61719 28.2012 8.32031 28.2012 8.91211 27.9023L15 24.8555L21.0879 27.9023C21.6797 28.2012 22.3828 28.2012 22.9746 27.9023L28.834 24.9727C29.5488 24.6152 30 23.8828 30 23.0859V16.6348C30 15.7559 29.4551 14.9707 28.6289 14.6602ZM20.9766 12.5859L15.9961 14.4551V10.459L20.9766 8.29102V12.5859ZM9.02344 6.09961L15 3.86133L20.9766 6.09961V6.13477L15 8.56055L9.02344 6.13477V6.09961ZM13.9453 23.1562L8.96484 25.6465V21.0117L13.9453 18.7383V23.1562ZM13.9453 16.5937L7.96875 19.0195L1.99219 16.5937V16.5586L7.96875 14.3203L13.9453 16.5586V16.5937ZM28.0078 23.1562L23.0273 25.6465V21.0117L28.0078 18.7383V23.1562ZM28.0078 16.5937L22.0312 19.0195L16.0547 16.5937V16.5586L22.0312 14.3203L28.0078 16.5586V16.5937Z"
+                                            fill="white"/>
+                                </svg>
+                                <span class="text-white text-sm font-semibold" sidebar-toggle-item>Packeges</span>
+                        </div>
+                        <div>
+                            <svg id="icon1" class="transform" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                 xmlns="http://www.w3.org/2000/svg">
+                                <path d="M18 15L12 9L6 15" stroke="currentColor" stroke-width="1.5"
+                                      stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        </button>
+                    </div>
+                    <ul id="dropdown-example-4" class="hidden py-2 space-y-2">
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Create Package</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                List Packages</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Delete Package</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Modify Package</a>
+                        </li>
+                    </ul>
+                    <!-- Packeges Button End -->
+
+                    <!-- DataBase Button -->
+                    <div class="flex justify-between items-center space-x-6 focus:bg-cyan-400 text-white hover:bg-cyan-400 rounded px-3 py-1 w-full"
+                         aria-controls="dropdown-example-5" data-collapse-toggle="dropdown-example-5">
+                        <div>
+                            <button type="button" class="flex space-x-6">
+                                <svg width="24" height="24" viewBox="0 0 30 30" fill="none"
+                                     xmlns="http://www.w3.org/2000/svg">
+                                    <g clip-path="url(#clip0_725_118)">
+                                        <path
+                                                d="M30 4.28438V6.96504C30 9.32227 23.2768 11.25 15 11.25C6.72321 11.25 0 9.32227 0 6.9668V4.28438C0 1.92656 6.72321 0 15 0C23.2768 0 30 1.92656 30 4.28438ZM30 10.3125V16.3418C30 18.6973 23.2768 20.625 15 20.625C6.72321 20.625 0 18.6973 0 16.3418V10.3125C3.22232 12.2531 9.12053 13.1613 15 13.1613C20.8795 13.1613 26.779 12.252 30 10.3125ZM30 19.6875V25.7168C30 28.0723 23.2768 30 15 30C6.72321 30 0 28.0734 0 25.715V19.6875C3.22232 21.6287 9.12053 22.5369 15 22.5369C20.8795 22.5369 26.779 21.627 30 19.6875Z"
+                                                fill="white"/>
+                                    </g>
+                                    <defs>
+                                        <clipPath id="clip0_725_118">
+                                            <rect width="30" height="30" fill="white"/>
+                                        </clipPath>
+                                    </defs>
+                                </svg>
+                                <span class="text-white text-sm font-semibold" sidebar-toggle-item>Database</span>
+                        </div>
+                        <div>
+                            <svg id="icon1" class="transform" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                 xmlns="http://www.w3.org/2000/svg">
+                                <path d="M18 15L12 9L6 15" stroke="currentColor" stroke-width="1.5"
+                                      stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        </button>
+                    </div>
+                    <ul id="dropdown-example-5" class="hidden py-2 space-y-2">
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Create Database</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                List Database</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Delete Database</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                PHPMYAdmin</a>
+                        </li>
+                    </ul>
+                    <!-- DataBase Button End -->
+
+                    <!-- DNS Button -->
+                    <div class="flex justify-between items-center space-x-6 focus:bg-cyan-400 text-white hover:bg-cyan-400 rounded px-3 py-1 w-full"
+                         aria-controls="dropdown-example-6" data-collapse-toggle="dropdown-example-6">
+                        <div>
+                            <button type="button" class="flex space-x-6">
+                                <svg width="24" height="24" viewBox="0 0 30 30" fill="none"
+                                     xmlns="http://www.w3.org/2000/svg">
+                                    <g clip-path="url(#clip0_725_118)">
+                                        <path
+                                                d="M30 4.28438V6.96504C30 9.32227 23.2768 11.25 15 11.25C6.72321 11.25 0 9.32227 0 6.9668V4.28438C0 1.92656 6.72321 0 15 0C23.2768 0 30 1.92656 30 4.28438ZM30 10.3125V16.3418C30 18.6973 23.2768 20.625 15 20.625C6.72321 20.625 0 18.6973 0 16.3418V10.3125C3.22232 12.2531 9.12053 13.1613 15 13.1613C20.8795 13.1613 26.779 12.252 30 10.3125ZM30 19.6875V25.7168C30 28.0723 23.2768 30 15 30C6.72321 30 0 28.0734 0 25.715V19.6875C3.22232 21.6287 9.12053 22.5369 15 22.5369C20.8795 22.5369 26.779 21.627 30 19.6875Z"
+                                                fill="white"/>
+                                    </g>
+                                    <defs>
+                                        <clipPath id="clip0_725_118">
+                                            <rect width="30" height="30" fill="white"/>
+                                        </clipPath>
+                                    </defs>
+                                </svg>
+                                <span class="text-white text-sm font-semibold" sidebar-toggle-item>DNS</span>
+                        </div>
+                        <div>
+                            <svg id="icon1" class="transform" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                 xmlns="http://www.w3.org/2000/svg">
+                                <path d="M18 15L12 9L6 15" stroke="currentColor" stroke-width="1.5"
+                                      stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        </button>
+                    </div>
+                    <ul id="dropdown-example-6" class="hidden py-2 space-y-2">
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Create NameServer</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Create Default NameServer</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Create DNS Zone</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Delete Zone</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Add/Delete Records</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                CloudFlare</a>
+                        </li>
+                    </ul>
+                    <!-- DNS Button End -->
+                    <!-- Email Button -->
+                    <div class="flex justify-between items-center space-x-6 focus:bg-cyan-400 text-white hover:bg-cyan-400 rounded px-3 py-1 w-full"
+                         aria-controls="dropdown-example-7" data-collapse-toggle="dropdown-example-7">
+                        <div>
+                            <button type="button" class="flex space-x-6">
+                                <svg width="24" height="24" viewBox="0 0 30 30" fill="none"
+                                     xmlns="http://www.w3.org/2000/svg">
+                                    <path
+                                            d="M28.7298 0.797499C28.7576 0.680868 28.7513 0.558705 28.7115 0.44558C28.6718 0.332456 28.6004 0.233144 28.5058 0.159489C28.4112 0.0858344 28.2974 0.0409454 28.178 0.0301758C28.0586 0.0194061 27.9386 0.0432104 27.8323 0.0987495L2.22857 13.5237C1.94528 13.6731 1.70623 13.8943 1.53541 14.1652C1.36458 14.436 1.268 14.7471 1.25533 15.0671C1.24267 15.3871 1.31438 15.7048 1.46326 15.9883C1.61214 16.2718 1.83296 16.5112 2.10357 16.6825L7.80357 20.285C7.86086 20.3214 7.92844 20.3382 7.99609 20.3327C8.06375 20.3273 8.1278 20.3 8.17857 20.255L23.3748 6.67C23.4326 6.61521 23.5092 6.58467 23.5889 6.58467C23.6685 6.58466 23.7452 6.61519 23.803 6.66996C23.8608 6.72474 23.8954 6.7996 23.8997 6.87913C23.904 6.95866 23.8777 7.03681 23.8261 7.0975L11.6823 22.33C11.655 22.3643 11.6352 22.4041 11.6242 22.4466C11.6133 22.4891 11.6114 22.5334 11.6187 22.5767C11.626 22.6199 11.6424 22.6612 11.6667 22.6977C11.691 22.7343 11.7227 22.7653 11.7598 22.7887L19.7998 27.875C20.0445 28.0292 20.3224 28.1227 20.6106 28.1479C20.8987 28.1731 21.1886 28.1292 21.4563 28.0197C21.724 27.9103 21.9618 27.7386 22.1498 27.5189C22.3378 27.2991 22.4707 27.0377 22.5373 26.7562L28.7298 0.797499Z"
+                                            fill="white"/>
+                                    <path
+                                            d="M9.85625 23.9775C9.8089 23.9476 9.75441 23.9309 9.69844 23.9292C9.64247 23.9274 9.58706 23.9407 9.53796 23.9676C9.48885 23.9945 9.44784 24.0341 9.41919 24.0822C9.39053 24.1303 9.37528 24.1852 9.375 24.2412C9.375 25.5612 9.375 28.7225 9.375 28.7225C9.37505 28.9697 9.44839 29.2113 9.58575 29.4168C9.7231 29.6223 9.91831 29.7825 10.1467 29.8771C10.3751 29.9717 10.6263 29.9964 10.8688 29.9482C11.1112 29.9 11.3339 29.781 11.5087 29.6062L14.0313 27.085C14.0642 27.0517 14.0892 27.0116 14.1046 26.9674C14.12 26.9232 14.1253 26.8761 14.1202 26.8296C14.115 26.7831 14.0995 26.7384 14.0748 26.6987C14.0502 26.6589 14.0169 26.6252 13.9775 26.6L9.85625 23.9775Z"
+                                            fill="white"/>
+                                </svg>
+                                <span class="text-white text-sm font-semibold" sidebar-toggle-item>Email</span>
+                        </div>
+                        <div>
+                            <svg id="icon1" class="transform" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                 xmlns="http://www.w3.org/2000/svg">
+                                <path d="M18 15L12 9L6 15" stroke="currentColor" stroke-width="1.5"
+                                      stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        </button>
+                    </div>
+                    <ul id="dropdown-example-7" class="hidden py-2 space-y-2">
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Create Email</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                List Emails</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Delete Email</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Email Forwarding</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Change Password</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                DKIM Manager</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Email Debugger</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Access Webmail</a>
+                        </li>
+                    </ul>
+                    <!-- Email Button End -->
+                    <!-- FTP Button -->
+                    <div class="flex justify-between items-center space-x-6 focus:bg-cyan-400 text-white hover:bg-cyan-400 rounded px-3 py-1 w-full"
+                         aria-controls="dropdown-example-8" data-collapse-toggle="dropdown-example-8">
+                        <div>
+                            <button type="button" class="flex space-x-6">
+                                <svg width="24" height="24" viewBox="0 0 30 24" fill="none"
+                                     xmlns="http://www.w3.org/2000/svg">
+                                    <g clip-path="url(#clip0_725_143)">
+                                        <path fill-rule="evenodd" clip-rule="evenodd"
+                                              d="M24.25 9C23.375 3.9 19.625 0 15 0C11.375 0 8.25 2.4 6.75 6C2.875 6.6 0 10.35 0 15C0 19.95 3.375 24 7.5 24H23.75C27.25 24 30 20.7 30 16.5C30 12.6 27.375 9.3 24.25 9ZM17.5 13.5V19.5H12.5V13.5H8.75L15 6L21.25 13.5H17.5Z"
+                                              fill="white"/>
+                                    </g>
+                                    <defs>
+                                        <clipPath id="clip0_725_143">
+                                            <rect width="30" height="24" fill="white"/>
+                                        </clipPath>
+                                    </defs>
+                                </svg>
+                                <span class="text-white text-sm font-semibold" sidebar-toggle-item>FTP</span>
+                        </div>
+                        <div>
+                            <svg id="icon1" class="transform" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                 xmlns="http://www.w3.org/2000/svg">
+                                <path d="M18 15L12 9L6 15" stroke="currentColor" stroke-width="1.5"
+                                      stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        </button>
+                    </div>
+                    <ul id="dropdown-example-8" class="hidden py-2 space-y-2">
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Create FTP Account</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                List FTP Account</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Delete FTP Account</a>
+                        </li>
+                    </ul>
+                    <!-- FTP Button End -->
+                    <!-- Backup V2 -->
+                    <div class="flex justify-between items-center space-x-6 focus:bg-cyan-400 text-white hover:bg-cyan-400 rounded px-3 py-1 w-full"
+                         aria-controls="dropdown-example-9" data-collapse-toggle="dropdown-example-9">
+                        <div>
+                            <button type="button" class="flex space-x-6">
+                                <svg width="24" height="24" viewBox="0 0 20 20" fill="none"
+                                     xmlns="http://www.w3.org/2000/svg">
+                                    <path
+                                            d="M6.25 4.50781L7.05859 3.75L13.75 10L7.05859 16.25L6.25 15.4961L12.1289 10L6.25 4.50781Z"
+                                            fill="white"/>
+                                </svg>
+                                <span class="text-white text-sm font-semibold" sidebar-toggle-item>Backup V2</span>
+                        </div>
+                        <div>
+                            <svg id="icon1" class="transform" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                 xmlns="http://www.w3.org/2000/svg">
+                                <path d="M18 15L12 9L6 15" stroke="currentColor" stroke-width="1.5"
+                                      stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        </button>
+                    </div>
+                    <ul id="dropdown-example-9" class="hidden py-2 space-y-2">
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Create/Restore V2 Backup</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Configure Backend</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Schedule V2 Backup</a>
+                        </li>
+                    </ul>
+                    <!-- Backup V2 End -->
+                    <!-- Backup Button -->
+                    <div class="flex justify-between items-center space-x-6 focus:bg-cyan-400 text-white hover:bg-cyan-400 rounded px-3 py-1 w-full"
+                         aria-controls="dropdown-example-10" data-collapse-toggle="dropdown-example-10">
+                        <div>
+                            <button type="button" class="flex space-x-6">
+                                <svg width="24" height="24" viewBox="0 0 20 20" fill="none"
+                                     xmlns="http://www.w3.org/2000/svg">
+                                    <path
+                                            d="M6.25 4.50781L7.05859 3.75L13.75 10L7.05859 16.25L6.25 15.4961L12.1289 10L6.25 4.50781Z"
+                                            fill="white"/>
+                                </svg>
+                                <span class="text-white text-sm font-semibold" sidebar-toggle-item>Backup</span>
+                        </div>
+                        <div>
+                            <svg id="icon1" class="transform" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                 xmlns="http://www.w3.org/2000/svg">
+                                <path d="M18 15L12 9L6 15" stroke="currentColor" stroke-width="1.5"
+                                      stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        </button>
+                    </div>
+                    <ul id="dropdown-example-10" class="hidden py-2 space-y-2">
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Create Backup</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Restore Backup</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Add/Delete Backup</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Schedule Backup</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Setup Google Drive</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Remote Backups</a>
+                        </li>
+                    </ul>
+                    <!-- Backup Button End -->
+                    <!-- Incremental Backup -->
+                    <div class="flex justify-between items-center space-x-6 focus:bg-cyan-400 text-white hover:bg-cyan-400 rounded px-3 py-1 w-full"
+                         aria-controls="dropdown-example-11" data-collapse-toggle="dropdown-example-11">
+                        <div>
+                            <button type="button" class="flex space-x-6">
+                                <svg width="24" height="24" viewBox="0 0 30 30" fill="none"
+                                     xmlns="http://www.w3.org/2000/svg">
+                                    <path
+                                            d="M27.1592 5.56106H11.3604V4.95344C11.3604 3.61118 10.2721 2.52286 8.92984 2.52286H2.85344C1.51117 2.52286 0.422852 3.61118 0.422852 4.95344V7.99165V12.2451V25.0057C0.422852 26.3479 1.51117 27.4363 2.85344 27.4363H27.1592C28.5015 27.4363 29.5898 26.3479 29.5898 25.0057V7.99165C29.5898 6.64938 28.5015 5.56106 27.1592 5.56106ZM1.63814 4.95344C1.63814 4.28342 2.18354 3.73815 2.85344 3.73815H8.9299C9.5998 3.73815 10.1452 4.28342 10.1452 4.95344V5.56106V6.77635H11.3605H27.1593C27.8292 6.77635 28.3746 7.32163 28.3746 7.99165V9.20694H1.63814V7.99165V4.95344ZM27.1592 26.221H2.85344C2.18354 26.221 1.63814 25.6757 1.63814 25.0057V12.2452V10.4223H28.3745V25.0058C28.3745 25.6756 27.8292 26.221 27.1592 26.221Z"
+                                            fill="white"/>
+                                </svg>
+                                <span class="text-white text-sm font-semibold" sidebar-toggle-item>Incremental
+                                        Backup
+                                    </span>
+                        </div>
+                        <div>
+                            <svg id="icon1" class="transform" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                 xmlns="http://www.w3.org/2000/svg">
+                                <path d="M18 15L12 9L6 15" stroke="currentColor" stroke-width="1.5"
+                                      stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        </button>
+                    </div>
+                    <ul id="dropdown-example-11" class="hidden py-2 space-y-2">
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Create/Restore Backup</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Add/Remove Destination</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Schedule Backups</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Restore from Remote</a>
+                        </li>
+                    </ul>
+                    <!-- Incremental Button End -->
+                    <!-- SSi V2 -->
+                    <div class="flex justify-between items-center space-x-6 focus:bg-cyan-400 text-white hover:bg-cyan-400 rounded px-3 py-1 w-full"
+                         aria-controls="dropdown-example-12" data-collapse-toggle="dropdown-example-12">
+                        <div>
+                            <button type="button" class="flex space-x-6">
+                                <svg width="24" height="24" viewBox="0 0 30 35" fill="none"
+                                     xmlns="http://www.w3.org/2000/svg">
+                                    <g clip-path="url(#clip0_725_174)">
+                                        <path
+                                                d="M25.7143 15.251L24.6429 15.3125V9.84375C24.6429 4.41533 20.3176 0 15 0C9.68237 0 5.35714 4.41533 5.35714 9.84375V15.3125L4.28571 15.251C1.91853 15.251 0 17.2095 0 19.626V30.5635C0 32.9793 1.91853 34.9385 4.28571 34.9385H25.7143C28.0815 34.9385 30 32.9793 30 30.5635V19.626C30 17.2744 28.0781 15.251 25.7143 15.251ZM9.64286 9.84375C9.64286 6.82773 12.0469 4.375 15 4.375C17.9531 4.375 20.3571 6.82773 20.3571 9.84375V15.3125H9.64286V9.84375Z"
+                                                fill="white"/>
+                                    </g>
+                                    <defs>
+                                        <clipPath id="clip0_725_174">
+                                            <rect width="30" height="35" fill="white"/>
+                                        </clipPath>
+                                    </defs>
+                                </svg>
+                                <span class="text-white text-sm font-semibold" sidebar-toggle-item>SSI V2</span>
+                        </div>
+                        <div>
+                            <svg id="icon1" class="transform" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                 xmlns="http://www.w3.org/2000/svg">
+                                <path d="M18 15L12 9L6 15" stroke="currentColor" stroke-width="1.5"
+                                      stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        </button>
+                    </div>
+                    <ul id="dropdown-example-12" class="hidden py-2 space-y-2">
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Manage SSL V2</a>
+                        </li>
+                    </ul>
+                    <!-- SSI V2 End -->
+                    <!-- SSL Button -->
+                    <div class="flex justify-between items-center space-x-6 focus:bg-cyan-400 text-white hover:bg-cyan-400 rounded px-3 py-1 w-full"
+                         aria-controls="dropdown-example-13" data-collapse-toggle="dropdown-example-13">
+                        <div>
+                            <button type="button" class="flex space-x-6">
+                                <svg width="24" height="24" viewBox="0 0 30 35" fill="none"
+                                     xmlns="http://www.w3.org/2000/svg">
+                                    <g clip-path="url(#clip0_725_174)">
+                                        <path
+                                                d="M25.7143 15.251L24.6429 15.3125V9.84375C24.6429 4.41533 20.3176 0 15 0C9.68237 0 5.35714 4.41533 5.35714 9.84375V15.3125L4.28571 15.251C1.91853 15.251 0 17.2095 0 19.626V30.5635C0 32.9793 1.91853 34.9385 4.28571 34.9385H25.7143C28.0815 34.9385 30 32.9793 30 30.5635V19.626C30 17.2744 28.0781 15.251 25.7143 15.251ZM9.64286 9.84375C9.64286 6.82773 12.0469 4.375 15 4.375C17.9531 4.375 20.3571 6.82773 20.3571 9.84375V15.3125H9.64286V9.84375Z"
+                                                fill="white"/>
+                                    </g>
+                                    <defs>
+                                        <clipPath id="clip0_725_174">
+                                            <rect width="30" height="35" fill="white"/>
+                                        </clipPath>
+                                    </defs>
+                                </svg>
+                                <span class="text-white text-sm font-semibold" sidebar-toggle-item>SSI</span>
+                        </div>
+                        <div>
+                            <svg id="icon1" class="transform" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                 xmlns="http://www.w3.org/2000/svg">
+                                <path d="M18 15L12 9L6 15" stroke="currentColor" stroke-width="1.5"
+                                      stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        </button>
+                    </div>
+                    <ul id="dropdown-example-13" class="hidden py-2 space-y-2">
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Manage SSL</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Hostname SSL</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                MailServer SSL</a>
+                        </li>
+                    </ul>
+                    <!-- SSL End -->
+                </div>
+            </div>
+            <!-- Main Section End -->
+
+            <!-- Server Section -->
+            <div class="flex flex-col justify-start items-center px-6 border-b border-gray-600 w-full  ">
+                <button onclick="showMenu3(true)" class=" text-white flex justify-between items-center w-full py-5">
+
+                    <p class="text-white font-semibold">Server</p>
+                    <svg id="icon3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                         stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-white">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12h-15"/>
+                    </svg>
+
+                </button>
+                <div id="menu3">
+                    <hr>
+                    <!-- Root File Manager -->
+                    <div class="flex justify-between mt-1 items-center space-x-6 focus:bg-cyan-400 text-white hover:bg-cyan-400 rounded px-3 py-1 w-64"
+                         aria-controls="dropdown-example-14" data-collapse-toggle="dropdown-example-14">
+                        <div>
+                            <button type="button" class="flex space-x-6">
+                                <svg width="24" height="24" viewBox="0 0 30 30" fill="none"
+                                     xmlns="http://www.w3.org/2000/svg">
+                                    <path
+                                            d="M21.6247 16.6875C21.2968 16.6861 20.9825 16.5559 20.7497 16.325C20.5169 16.0908 20.3862 15.774 20.3862 15.4438C20.3862 15.1135 20.5169 14.7967 20.7497 14.5625L23.3997 11.9125C23.6321 11.6803 23.8165 11.4046 23.9423 11.1011C24.0681 10.7976 24.1329 10.4723 24.1329 10.1438C24.1329 9.81523 24.0681 9.48991 23.9423 9.18642C23.8165 8.88292 23.6321 8.6072 23.3997 8.37502L21.6247 6.60002C21.1466 6.14817 20.5137 5.89642 19.8559 5.89642C19.1981 5.89642 18.5652 6.14817 18.0872 6.60002L15.4372 9.25002C15.1976 9.44173 14.8958 9.5386 14.5894 9.52219C14.283 9.50577 13.9933 9.37722 13.7755 9.161C13.5578 8.94479 13.4271 8.65603 13.4085 8.34973C13.39 8.04343 13.4847 7.74099 13.6747 7.50002L16.3247 4.85002C17.2779 3.94068 18.5448 3.43335 19.8622 3.43335C21.1796 3.43335 22.4464 3.94068 23.3997 4.85002L25.1622 6.61252C25.6271 7.07688 25.9959 7.62833 26.2475 8.23532C26.4991 8.84231 26.6286 9.49294 26.6286 10.15C26.6286 10.8071 26.4991 11.4577 26.2475 12.0647C25.9959 12.6717 25.6271 13.2232 25.1622 13.6875L22.4997 16.325C22.2669 16.5559 21.9526 16.6861 21.6247 16.6875Z"
+                                            fill="white"/>
+                                    <path
+                                            d="M10.1375 26.625C9.48072 26.6256 8.83025 26.4967 8.22328 26.2457C7.6163 25.9948 7.06472 25.6267 6.60003 25.1625L4.83753 23.4C4.37264 22.9357 4.00385 22.3842 3.75223 21.7772C3.50061 21.1703 3.37109 20.5196 3.37109 19.8625C3.37109 19.2055 3.50061 18.5548 3.75223 17.9478C4.00385 17.3409 4.37264 16.7894 4.83753 16.325L7.50003 13.675C7.741 13.485 8.04344 13.3903 8.34974 13.4089C8.65604 13.4275 8.9448 13.5581 9.16101 13.7759C9.37722 13.9936 9.50578 14.2833 9.5222 14.5898C9.53861 14.8962 9.44174 15.1979 9.25003 15.4375L6.60003 18.0875C6.36759 18.3197 6.18319 18.5954 6.05738 18.8989C5.93157 19.2024 5.86681 19.5278 5.86681 19.8563C5.86681 20.1848 5.93157 20.5102 6.05738 20.8136C6.18319 21.1171 6.36759 21.3929 6.60003 21.625L8.37503 23.4C8.8531 23.8519 9.48597 24.1036 10.1438 24.1036C10.8016 24.1036 11.4345 23.8519 11.9125 23.4L14.5625 20.75C14.6716 20.6117 14.8087 20.498 14.9648 20.4163C15.1209 20.3347 15.2925 20.287 15.4683 20.2763C15.6442 20.2656 15.8203 20.2922 15.9851 20.3544C16.15 20.4166 16.2998 20.5129 16.4248 20.637C16.5498 20.7611 16.6472 20.9103 16.7105 21.0746C16.7739 21.239 16.8017 21.415 16.7923 21.5909C16.7829 21.7668 16.7364 21.9387 16.6559 22.0954C16.5753 22.2521 16.4626 22.39 16.325 22.5L13.675 25.15C13.2114 25.6165 12.6602 25.9868 12.0532 26.24C11.4462 26.4931 10.7952 26.6239 10.1375 26.625Z"
+                                            fill="white"/>
+                                    <path
+                                            d="M11.0248 20.225C10.8603 20.226 10.6972 20.1945 10.5449 20.1323C10.3926 20.07 10.2541 19.9784 10.1373 19.8625C10.0202 19.7463 9.92717 19.6081 9.86371 19.4558C9.80025 19.3034 9.76758 19.1401 9.76758 18.975C9.76758 18.81 9.80025 18.6466 9.86371 18.4943C9.92717 18.342 10.0202 18.2037 10.1373 18.0875L18.0998 10.1375C18.334 9.90472 18.6508 9.77405 18.9811 9.77405C19.3113 9.77405 19.6281 9.90472 19.8623 10.1375C19.9795 10.2537 20.0725 10.392 20.1359 10.5443C20.1994 10.6966 20.2321 10.86 20.2321 11.025C20.2321 11.1901 20.1994 11.3534 20.1359 11.5058C20.0725 11.6581 19.9795 11.7963 19.8623 11.9125L11.8998 19.8625C11.667 20.0935 11.3528 20.2237 11.0248 20.225Z"
+                                            fill="white"/>
+                                </svg>
+                                <span class="text-white text-sm font-semibold" sidebar-toggle-item>Root File
+                                        Manager</span>
+                        </div>
+                        <div>
+                            <svg id="icon1" class="transform" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                 xmlns="http://www.w3.org/2000/svg">
+                                <path d="M18 15L12 9L6 15" stroke="currentColor" stroke-width="1.5"
+                                      stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        </button>
+                    </div>
+                    <ul id="dropdown-example-14" class="hidden py-2 space-y-2">
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                View
+                                Profile</a>
+                        </li>
+                    </ul>
+                    <!-- Root File Manager End -->
+                    <!-- CloudLinus -->
+                    <div class="flex justify-between mt-1 items-center space-x-6 focus:bg-cyan-400 text-white hover:bg-cyan-400 rounded px-3 py-1 w-64"
+                         aria-controls="dropdown-example-15" data-collapse-toggle="dropdown-example-15">
+                        <div>
+                            <button type="button" class="flex space-x-6">
+                                <svg width="24" height="24" viewBox="0 0 30 30" fill="none"
+                                     xmlns="http://www.w3.org/2000/svg">
+                                    <path
+                                            d="M20.625 8.4375C20.5669 10.9453 18.6844 13.0631 18.6844 13.0631C18.6844 8.39812 15 4.6875 15 4.6875C15 4.6875 14.9503 7.46438 13.0847 10.2638C11.2191 3.73219 5.62031 0 5.62031 0C8.41969 10.2638 4.6875 13.9969 4.6875 21.4613C4.6875 25.8403 8.39438 30 14.0625 30C22.4597 30 24.0834 26.9175 24.9516 23.4441C26.1478 18.6619 24.3563 13.1025 20.625 8.4375ZM23.1338 22.9884C22.5309 25.3969 21.8503 28.125 14.0625 28.125C9.3675 28.125 6.5625 24.7369 6.5625 21.4613C6.5625 18.9525 7.02 16.8928 7.50375 14.7122C8.11875 11.9475 8.74875 9.11719 8.47594 5.37375C11.3672 9.37594 12.3966 14.6784 12.3966 14.6784C12.3966 14.6784 15.0881 10.8994 15.8119 9.14437C16.3659 10.2722 16.875 14.0625 16.875 17.8125C16.875 17.8125 19.365 15.7613 21.2325 12.6769C23.1994 16.2038 23.9081 19.8909 23.1338 22.9884Z"
+                                            fill="white"/>
+                                    <path
+                                            d="M21.03 15.7453L20.2331 16.6688C19.2459 17.82 18.3122 18.9113 15.8194 20.1656C15.4622 19.095 15.1378 17.9166 15.1378 16.1128V14.5106L13.7147 16.74C13.2347 17.5003 12.8372 18.1303 12.2447 18.9675C11.3456 16.9406 10.71 15.4416 10.2272 14.0813L9.77813 12.8156L9.29062 14.2313C8.67187 16.0322 8.08594 17.7328 8.08594 22.1475C8.08594 22.4063 8.295 22.6163 8.55469 22.6163C8.8125 22.6163 9.02344 22.4063 9.02344 22.1475C9.02344 18.7641 9.36 17.0888 9.81094 15.6403C10.2984 16.8797 10.9134 18.2888 11.7206 20.0934L12.0506 20.8284L12.5269 20.1797C13.305 19.1203 13.7681 18.4078 14.2753 17.6081C14.4234 18.9947 14.7656 19.9894 15.105 20.9738L15.2756 21.4688L15.75 21.2447C18.2841 20.0409 19.47 18.945 20.4112 17.8931C20.5575 19.6406 20.3269 21.5531 19.7794 22.9116C19.6819 23.1516 19.7991 23.4244 20.0391 23.5209C20.0962 23.5434 20.1562 23.5547 20.2153 23.5547C20.4 23.5547 20.5762 23.4441 20.6494 23.2613C21.3759 21.4575 21.5944 18.8888 21.2044 16.7156L21.03 15.7453Z"
+                                            fill="white"/>
+                                </svg>
+                                <span class="text-white text-sm font-semibold" sidebar-toggle-item>CloudLinus</span>
+                        </div>
+                        <div>
+                            <svg id="icon1" class="transform" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                 xmlns="http://www.w3.org/2000/svg">
+                                <path d="M18 15L12 9L6 15" stroke="currentColor" stroke-width="1.5"
+                                      stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        </button>
+                    </div>
+                    <ul id="dropdown-example-15" class="hidden py-2 space-y-2">
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Create Package</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                List Packages</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Monitor Usage</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                CageFS</a>
+                        </li>
+                    </ul>
+                    <!-- CloudLinus End -->
+                    <!-- Containerization -->
+                    <div class="flex justify-between mt-1 items-center space-x-6 focus:bg-cyan-400 text-white hover:bg-cyan-400 rounded px-3 py-1 w-64"
+                         aria-controls="dropdown-example-16" data-collapse-toggle="dropdown-example-16">
+                        <div>
+                            <button type="button" class="flex space-x-6">
+                                <svg width="24" height="24" viewBox="0 0 30 30" fill="none"
+                                     xmlns="http://www.w3.org/2000/svg">
+                                    <path
+                                            d="M20.625 8.4375C20.5669 10.9453 18.6844 13.0631 18.6844 13.0631C18.6844 8.39812 15 4.6875 15 4.6875C15 4.6875 14.9503 7.46438 13.0847 10.2638C11.2191 3.73219 5.62031 0 5.62031 0C8.41969 10.2638 4.6875 13.9969 4.6875 21.4613C4.6875 25.8403 8.39438 30 14.0625 30C22.4597 30 24.0834 26.9175 24.9516 23.4441C26.1478 18.6619 24.3563 13.1025 20.625 8.4375ZM23.1338 22.9884C22.5309 25.3969 21.8503 28.125 14.0625 28.125C9.3675 28.125 6.5625 24.7369 6.5625 21.4613C6.5625 18.9525 7.02 16.8928 7.50375 14.7122C8.11875 11.9475 8.74875 9.11719 8.47594 5.37375C11.3672 9.37594 12.3966 14.6784 12.3966 14.6784C12.3966 14.6784 15.0881 10.8994 15.8119 9.14437C16.3659 10.2722 16.875 14.0625 16.875 17.8125C16.875 17.8125 19.365 15.7613 21.2325 12.6769C23.1994 16.2038 23.9081 19.8909 23.1338 22.9884Z"
+                                            fill="white"/>
+                                    <path
+                                            d="M21.03 15.7453L20.2331 16.6688C19.2459 17.82 18.3122 18.9113 15.8194 20.1656C15.4622 19.095 15.1378 17.9166 15.1378 16.1128V14.5106L13.7147 16.74C13.2347 17.5003 12.8372 18.1303 12.2447 18.9675C11.3456 16.9406 10.71 15.4416 10.2272 14.0813L9.77813 12.8156L9.29062 14.2313C8.67187 16.0322 8.08594 17.7328 8.08594 22.1475C8.08594 22.4063 8.295 22.6163 8.55469 22.6163C8.8125 22.6163 9.02344 22.4063 9.02344 22.1475C9.02344 18.7641 9.36 17.0888 9.81094 15.6403C10.2984 16.8797 10.9134 18.2888 11.7206 20.0934L12.0506 20.8284L12.5269 20.1797C13.305 19.1203 13.7681 18.4078 14.2753 17.6081C14.4234 18.9947 14.7656 19.9894 15.105 20.9738L15.2756 21.4688L15.75 21.2447C18.2841 20.0409 19.47 18.945 20.4112 17.8931C20.5575 19.6406 20.3269 21.5531 19.7794 22.9116C19.6819 23.1516 19.7991 23.4244 20.0391 23.5209C20.0962 23.5434 20.1562 23.5547 20.2153 23.5547C20.4 23.5547 20.5762 23.4441 20.6494 23.2613C21.3759 21.4575 21.5944 18.8888 21.2044 16.7156L21.03 15.7453Z"
+                                            fill="white"/>
+                                </svg>
+                                <span class="text-white text-sm font-semibold"
+                                      sidebar-toggle-item>Containerization</span>
+                        </div>
+                        <div>
+                            <svg id="icon1" class="transform" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                 xmlns="http://www.w3.org/2000/svg">
+                                <path d="M18 15L12 9L6 15" stroke="currentColor" stroke-width="1.5"
+                                      stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        </button>
+                    </div>
+                    <ul id="dropdown-example-16" class="hidden py-2 space-y-2">
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Create Limits</a>
+                        </li>
+                    </ul>
+                    <!-- Containerization End -->
+                    <!-- Docker Manager -->
+                    <div class="flex justify-between mt-1 items-center space-x-6 focus:bg-cyan-400 text-white hover:bg-cyan-400 rounded px-3 py-1 w-64"
+                         aria-controls="dropdown-example-17" data-collapse-toggle="dropdown-example-17">
+                        <div>
+                            <button type="button" class="flex space-x-6">
+                                <svg width="24" height="24" viewBox="0 0 30 30" fill="none"
+                                     xmlns="http://www.w3.org/2000/svg">
+                                    <g clip-path="url(#clip0_725_53)">
+                                        <path
+                                                d="M27.75 18L26.25 17.125C24.625 16.125 24.625 13.75 26.25 12.75L27.75 11.875C29 11.125 29.375 9.625 28.625 8.5L27.375 6.375C26.625 5.125 25.125 4.75 24 5.5L22.5 6.375C20.875 7.375 18.75 6.125 18.75 4.25V2.5C18.75 1.125 17.625 0 16.25 0H13.75C12.375 0 11.25 1.125 11.25 2.5V4.125C11.25 6 9.12505 7.25 7.50005 6.25L6.00005 5.5C4.75005 4.75 3.25005 5.25 2.62505 6.375L1.37505 8.5C0.75005 9.75 1.12505 11.25 2.25005 12L3.75005 12.875C5.37505 13.75 5.37505 16.25 3.75005 17.125L2.25005 18C1.00005 18.75 0.62505 20.25 1.37505 21.375L2.62505 23.5C3.37505 24.75 4.87505 25.125 6.00005 24.375L7.50005 23.625C9.12505 22.625 11.25 23.875 11.25 25.75V27.5C11.25 28.875 12.375 30 13.75 30H16.25C17.625 30 18.75 28.875 18.75 27.5V25.875C18.75 24 20.875 22.75 22.5 23.75L24 24.625C25.25 25.375 26.75 24.875 27.375 23.75L28.625 21.625C29.25 20.25 28.875 18.75 27.75 18ZM15 20C12.25 20 10 17.75 10 15C10 12.25 12.25 10 15 10C17.75 10 20 12.25 20 15C20 17.75 17.75 20 15 20Z"
+                                                fill="white"/>
+                                    </g>
+                                    <defs>
+                                        <clipPath id="clip0_725_53">
+                                            <rect width="30" height="30" fill="white"/>
+                                        </clipPath>
+                                    </defs>
+                                </svg>
+                                <span class="text-white text-sm font-semibold" sidebar-toggle-item>Docker
+                                        Manager</span>
+                        </div>
+                        <div>
+                            <svg id="icon1" class="transform" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                 xmlns="http://www.w3.org/2000/svg">
+                                <path d="M18 15L12 9L6 15" stroke="currentColor" stroke-width="1.5"
+                                      stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        </button>
+                    </div>
+                    <ul id="dropdown-example-17" class="hidden py-2 space-y-2">
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Manage Images</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Manage Containers</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Create New Container</a>
+                        </li>
+                    </ul>
+                    <!-- Docker Manager End -->
+                    <!-- Tuning -->
+                    <div class="flex justify-between mt-1 items-center space-x-6 focus:bg-cyan-400 text-white hover:bg-cyan-400 rounded px-3 py-1 w-64"
+                         aria-controls="dropdown-example-18" data-collapse-toggle="dropdown-example-18">
+                        <div>
+                            <button type="button" class="flex space-x-6">
+                                <svg width="24" height="24" viewBox="0 0 30 30" fill="none"
+                                     xmlns="http://www.w3.org/2000/svg">
+                                    <path
+                                            d="M14.0625 27.4654C7.59681 26.986 2.5 21.5882 2.5 15C2.5 8.41175 7.59681 3.014 14.0625 2.53463V2.5H15C21.9035 2.5 27.5 8.0965 27.5 15C27.5 21.9036 21.9035 27.5 15 27.5H14.0625V27.4654ZM14.0625 24.9566L14.0625 5.04338C8.97926 5.516 5 9.79325 5 15C5 20.2067 8.97926 24.484 14.0625 24.9566Z"
+                                            fill="white"/>
+                                </svg>
+                                <span class="text-white text-sm font-semibold" sidebar-toggle-item>Tuning</span>
+                        </div>
+                        <div>
+                            <svg id="icon1" class="transform" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                 xmlns="http://www.w3.org/2000/svg">
+                                <path d="M18 15L12 9L6 15" stroke="currentColor" stroke-width="1.5"
+                                      stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        </button>
+                    </div>
+                    <ul id="dropdown-example-18" class="hidden py-2 space-y-2">
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Litespeed Tuning</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                PHP Tuning</a>
+                        </li>
+                    </ul>
+                    <!-- Tuning End -->
+                    <!-- Server Status -->
+                    <div class="flex justify-between mt-1 items-center space-x-6 focus:bg-cyan-400 text-white hover:bg-cyan-400 rounded px-3 py-1 w-64"
+                         aria-controls="dropdown-example-19" data-collapse-toggle="dropdown-example-19">
+                        <div>
+                            <button type="button" class="flex space-x-6">
+                                <svg width="24" height="24" viewBox="0 0 30 30" fill="none"
+                                     xmlns="http://www.w3.org/2000/svg">
+                                    <g clip-path="url(#clip0_725_53)">
+                                        <path
+                                                d="M27.75 18L26.25 17.125C24.625 16.125 24.625 13.75 26.25 12.75L27.75 11.875C29 11.125 29.375 9.625 28.625 8.5L27.375 6.375C26.625 5.125 25.125 4.75 24 5.5L22.5 6.375C20.875 7.375 18.75 6.125 18.75 4.25V2.5C18.75 1.125 17.625 0 16.25 0H13.75C12.375 0 11.25 1.125 11.25 2.5V4.125C11.25 6 9.12505 7.25 7.50005 6.25L6.00005 5.5C4.75005 4.75 3.25005 5.25 2.62505 6.375L1.37505 8.5C0.75005 9.75 1.12505 11.25 2.25005 12L3.75005 12.875C5.37505 13.75 5.37505 16.25 3.75005 17.125L2.25005 18C1.00005 18.75 0.62505 20.25 1.37505 21.375L2.62505 23.5C3.37505 24.75 4.87505 25.125 6.00005 24.375L7.50005 23.625C9.12505 22.625 11.25 23.875 11.25 25.75V27.5C11.25 28.875 12.375 30 13.75 30H16.25C17.625 30 18.75 28.875 18.75 27.5V25.875C18.75 24 20.875 22.75 22.5 23.75L24 24.625C25.25 25.375 26.75 24.875 27.375 23.75L28.625 21.625C29.25 20.25 28.875 18.75 27.75 18ZM15 20C12.25 20 10 17.75 10 15C10 12.25 12.25 10 15 10C17.75 10 20 12.25 20 15C20 17.75 17.75 20 15 20Z"
+                                                fill="white"/>
+                                    </g>
+                                    <defs>
+                                        <clipPath id="clip0_725_53">
+                                            <rect width="30" height="30" fill="white"/>
+                                        </clipPath>
+                                    </defs>
+                                </svg>
+                                <span class="text-white text-sm font-semibold" sidebar-toggle-item>Server
+                                        Status</span>
+                        </div>
+                        <div>
+                            <svg id="icon1" class="transform" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                 xmlns="http://www.w3.org/2000/svg">
+                                <path d="M18 15L12 9L6 15" stroke="currentColor" stroke-width="1.5"
+                                      stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        </button>
+                    </div>
+                    <ul id="dropdown-example-19" class="hidden py-2 space-y-2">
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Top Processes</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                LiteSpeed Status</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Change Port</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Package Manager</a>
+                        </li>
+                    </ul>
+                    <!-- Server Status End -->
+                    <!-- PHP -->
+                    <div class="flex justify-between mt-1 items-center space-x-6 focus:bg-cyan-400 text-white hover:bg-cyan-400 rounded px-3 py-1 w-64"
+                         aria-controls="dropdown-example-20" data-collapse-toggle="dropdown-example-20">
+                        <div>
+                            <button type="button" class="flex space-x-6">
+                                <svg width="24" height="24" viewBox="0 0 30 30" fill="none"
+                                     xmlns="http://www.w3.org/2000/svg">
+                                    <g clip-path="url(#clip0_725_240)">
+                                        <path
+                                                d="M7.76413 7.93616C7.38196 7.61877 6.88966 7.46563 6.39489 7.51024C5.90012 7.55484 5.44314 7.79356 5.12391 8.17419L0.436688 13.7988C0.154596 14.1355 0 14.5607 0 14.9999C0 15.4392 0.154596 15.8644 0.436688 16.201L5.12391 21.8257C5.28115 22.0162 5.4745 22.1738 5.69284 22.2893C5.91118 22.4048 6.1502 22.4761 6.39617 22.4989C6.64213 22.5218 6.89019 22.4958 7.12608 22.4225C7.36197 22.3491 7.58103 22.2299 7.77068 22.0716C7.96033 21.9133 8.11682 21.7191 8.23116 21.5001C8.34549 21.2811 8.41542 21.0417 8.43692 20.7956C8.45842 20.5496 8.43107 20.3016 8.35644 20.0662C8.2818 19.8307 8.16136 19.6123 8.00203 19.4235L4.31463 15L8.00213 10.5764C8.32057 10.1947 8.47438 9.70214 8.42975 9.20703C8.38512 8.71192 8.1457 8.25479 7.76413 7.93616Z"
+                                                fill="white"/>
+                                        <path
+                                                d="M17.241 3.78725C16.754 3.69504 16.2502 3.7976 15.838 4.07288C15.4258 4.34816 15.138 4.77418 15.0366 5.25938L11.2868 24.0082C11.2382 24.2496 11.2377 24.4983 11.2854 24.7399C11.3332 24.9815 11.4282 25.2114 11.5649 25.4162C11.7017 25.621 11.8776 25.7968 12.0825 25.9334C12.2874 26.0701 12.5173 26.1649 12.7589 26.2125C12.8806 26.2376 13.0045 26.2498 13.1288 26.2491C13.5618 26.2485 13.9812 26.0978 14.3157 25.8228C14.6501 25.5477 14.879 25.1654 14.9634 24.7406L18.7131 5.99172C18.7618 5.75027 18.7623 5.50159 18.7146 5.25995C18.6668 5.01831 18.5719 4.78848 18.4351 4.58365C18.2983 4.37882 18.1224 4.20302 17.9175 4.06635C17.7126 3.92968 17.4827 3.83484 17.241 3.78725Z"
+                                                fill="white"/>
+                                        <path
+                                                d="M29.5631 13.7988L24.8759 8.17419C24.7186 7.98368 24.5253 7.82612 24.307 7.71058C24.0886 7.59504 23.8496 7.5238 23.6036 7.50095C23.3577 7.4781 23.1096 7.50409 22.8737 7.57743C22.6378 7.65077 22.4188 7.77001 22.2291 7.9283C22.0395 8.08658 21.883 8.2808 21.7686 8.49977C21.6543 8.71874 21.5844 8.95815 21.5629 9.20424C21.5414 9.45033 21.5687 9.69824 21.6434 9.93372C21.718 10.1692 21.8384 10.3876 21.9978 10.5764L25.6852 15L21.9977 19.4236C21.8383 19.6123 21.7179 19.8308 21.6433 20.0662C21.5686 20.3017 21.5413 20.5496 21.5628 20.7957C21.5843 21.0418 21.6542 21.2812 21.7685 21.5002C21.8829 21.7192 22.0394 21.9134 22.229 22.0717C22.4187 22.2299 22.6377 22.3492 22.8736 22.4225C23.1095 22.4959 23.3576 22.5218 23.6035 22.499C23.8495 22.4761 24.0885 22.4049 24.3069 22.2894C24.5252 22.1738 24.7186 22.0163 24.8758 21.8258L29.5631 16.201C29.8452 15.8644 29.9998 15.4392 29.9998 14.9999C29.9998 14.5607 29.8452 14.1355 29.5631 13.7988Z"
+                                                fill="white"/>
+                                    </g>
+                                    <defs>
+                                        <clipPath id="clip0_725_240">
+                                            <rect width="30" height="30" fill="white"/>
+                                        </clipPath>
+                                    </defs>
+                                </svg>
+                                <span class="text-white text-sm font-semibold" sidebar-toggle-item>PHP</span>
+                        </div>
+                        <div>
+                            <svg id="icon1" class="transform" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                 xmlns="http://www.w3.org/2000/svg">
+                                <path d="M18 15L12 9L6 15" stroke="currentColor" stroke-width="1.5"
+                                      stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        </button>
+                    </div>
+                    <ul id="dropdown-example-20" class="hidden py-2 space-y-2">
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Install Extension</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Edit PHP Configs</a>
+                        </li>
+                    </ul>
+                    <!-- PHP End -->
+                    <!-- Logs -->
+                    <div class="flex justify-between mt-1 items-center space-x-6 focus:bg-cyan-400 text-white hover:bg-cyan-400 rounded px-3 py-1 w-64"
+                         aria-controls="dropdown-example-21" data-collapse-toggle="dropdown-example-21">
+                        <div>
+                            <button type="button" class="flex space-x-6">
+                                <svg width="24" height="24" viewBox="0 0 30 30" fill="none"
+                                     xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M22.5 3.75H26.25L22.5 0V3.75Z" fill="white"/>
+                                    <path d="M20.625 0H3.75V30H26.25V5.625H22.5H20.625V3.75V0Z" fill="white"/>
+                                </svg>
+                                <span class="text-white text-sm font-semibold" sidebar-toggle-item>Logs</span>
+                        </div>
+                        <div>
+                            <svg id="icon1" class="transform" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                 xmlns="http://www.w3.org/2000/svg">
+                                <path d="M18 15L12 9L6 15" stroke="currentColor" stroke-width="1.5"
+                                      stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        </button>
+                    </div>
+                    <ul id="dropdown-example-21" class="hidden py-2 space-y-2">
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Server Mail</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Cyberpanel Main Log File</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Access Log</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Error Logs</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                FTP Logs</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                ModSec Audit Logs</a>
+                        </li>
+                    </ul>
+                    <!-- Logs End -->
+                    <!-- Security -->
+                    <div class="flex justify-between mt-1 items-center space-x-6 focus:bg-cyan-400 text-white hover:bg-cyan-400 rounded px-3 py-1 w-64"
+                         aria-controls="dropdown-example-22" data-collapse-toggle="dropdown-example-22">
+                        <div>
+                            <button type="button" class="flex space-x-6">
+                                <svg width="24" height="24" viewBox="0 0 30 30" fill="none"
+                                     xmlns="http://www.w3.org/2000/svg">
+                                    <path
+                                            d="M15 1.875C10.1953 4.04648 7.11211 5.06602 1.875 5.625C1.875 10.1713 2.18379 13.4391 3.35684 16.4361C4.31603 18.88 5.73704 21.1163 7.54219 23.0227C10.4484 26.1082 13.6459 27.7336 15 28.125C16.3541 27.7336 19.5516 26.1082 22.4578 23.0227C24.263 21.1163 25.684 18.88 26.6432 16.4361C27.8162 13.4391 28.125 10.1713 28.125 5.625C22.8879 5.06602 19.8047 4.04648 15 1.875ZM24.4611 15.5818C23.6105 17.7465 22.3511 19.727 20.7516 21.4154C18.5156 23.7891 16.21 25.0963 15 25.6266V4.44141C17.2705 5.4375 19.0271 6.09961 20.7381 6.60293C22.382 7.08375 24.0581 7.44639 25.7537 7.68809C25.6529 11.2166 25.2639 13.5293 24.4611 15.5818Z"
+                                            fill="white"/>
+                                </svg>
+                                <span class="text-white text-sm font-semibold" sidebar-toggle-item>Security</span>
+                        </div>
+                        <div>
+                            <svg id="icon1" class="transform" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                 xmlns="http://www.w3.org/2000/svg">
+                                <path d="M18 15L12 9L6 15" stroke="currentColor" stroke-width="1.5"
+                                      stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        </button>
+                    </div>
+                    <ul id="dropdown-example-22" class="hidden py-2 space-y-2">
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Firewall</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Security SSH</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                ModSecurity Conf</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                ModSecurity Rules</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                ModSecurity Rules Pack</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                CSF</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Imunify 360</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                ImunifyAV</a>
+                        </li>
+                    </ul>
+                    <!-- Security End -->
+                    <!-- Main Settings -->
+                    <div class="flex justify-between mt-1 items-center space-x-6 focus:bg-cyan-400 text-white hover:bg-cyan-400 rounded px-3 py-1 w-64"
+                         aria-controls="dropdown-example-23" data-collapse-toggle="dropdown-example-23">
+                        <div>
+                            <button type="button" class="flex space-x-6">
+                                <svg width="24" height="24" viewBox="0 0 30 30" fill="none"
+                                     xmlns="http://www.w3.org/2000/svg">
+                                    <path
+                                            d="M25 3.75H5C2.25 3.75 0 6 0 8.75V21.25C0 24 2.25 26.25 5 26.25H25C27.75 26.25 30 24 30 21.25V8.75C30 6 27.75 3.75 25 3.75ZM27 11L17.125 17.625C16.5 18 15.75 18.25 15 18.25C14.25 18.25 13.5 18 12.875 17.625L3 11C2.5 10.625 2.375 9.875 2.75 9.25C3.125 8.75 3.875 8.625 4.5 9L14.375 15.625C14.75 15.875 15.375 15.875 15.75 15.625L25.625 9C26.25 8.625 27 8.75 27.375 9.375C27.625 9.875 27.5 10.625 27 11Z"
+                                            fill="white"/>
+                                </svg>
+                                <span class="text-white text-sm font-semibold" sidebar-toggle-item>Mail
+                                        Settings</span>
+                        </div>
+                        <div>
+                            <svg id="icon1" class="transform" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                 xmlns="http://www.w3.org/2000/svg">
+                                <path d="M18 15L12 9L6 15" stroke="currentColor" stroke-width="1.5"
+                                      stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        </button>
+                    </div>
+                    <ul id="dropdown-example-23" class="hidden py-2 space-y-2">
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Mail Queue</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Email Policy Server</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Email Limits</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                SpamAssassin</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Email Marketing</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                MailScanner</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                RSPAMD</a>
+                        </li>
+                    </ul>
+                    <!-- Main Settings End -->
+                    <!-- Manage Services -->
+                    <div class="flex justify-between mt-1 items-center space-x-6 focus:bg-cyan-400 text-white hover:bg-cyan-400 rounded px-3 py-1 w-64"
+                         aria-controls="dropdown-example-24" data-collapse-toggle="dropdown-example-24">
+                        <div>
+                            <button type="button" class="flex space-x-6">
+                                <svg width="24" height="24" viewBox="0 0 30 30" fill="none"
+                                     xmlns="http://www.w3.org/2000/svg">
+                                    <path
+                                            d="M27.1592 5.56106H11.3604V4.95344C11.3604 3.61118 10.2721 2.52286 8.92984 2.52286H2.85344C1.51117 2.52286 0.422852 3.61118 0.422852 4.95344V7.99165V12.2451V25.0057C0.422852 26.3479 1.51117 27.4363 2.85344 27.4363H27.1592C28.5015 27.4363 29.5898 26.3479 29.5898 25.0057V7.99165C29.5898 6.64938 28.5015 5.56106 27.1592 5.56106ZM1.63814 4.95344C1.63814 4.28342 2.18354 3.73815 2.85344 3.73815H8.9299C9.5998 3.73815 10.1452 4.28342 10.1452 4.95344V5.56106V6.77635H11.3605H27.1593C27.8292 6.77635 28.3746 7.32163 28.3746 7.99165V9.20694H1.63814V7.99165V4.95344ZM27.1592 26.221H2.85344C2.18354 26.221 1.63814 25.6757 1.63814 25.0057V12.2452V10.4223H28.3745V25.0058C28.3745 25.6756 27.8292 26.221 27.1592 26.221Z"
+                                            fill="white"/>
+                                </svg>
+                                <span class="text-white text-sm font-semibold" sidebar-toggle-item>Manage
+                                        Services</span>
+                        </div>
+                        <div>
+                            <svg id="icon1" class="transform" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                 xmlns="http://www.w3.org/2000/svg">
+                                <path d="M18 15L12 9L6 15" stroke="currentColor" stroke-width="1.5"
+                                      stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        </button>
+                    </div>
+                    <ul id="dropdown-example-24" class="hidden py-2 space-y-2">
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Applications</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Services Status</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Manage PowerDNS</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Manage Postfix</a>
+                        </li>
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Manage FTP</a>
+                        </li>
+                    </ul>
+                    <!-- Manage Services End -->
+                    <!-- ConfigServer Services -->
+                    <div class="flex justify-between mt-1 items-center space-x-6 focus:bg-cyan-400 text-white hover:bg-cyan-400 rounded px-3 py-1 w-64"
+                         aria-controls="dropdown-example-25" data-collapse-toggle="dropdown-example-25">
+                        <div>
+                            <button type="button" class="flex space-x-6">
+                                <svg width="24" height="24" viewBox="0 0 30 30" fill="none"
+                                     xmlns="http://www.w3.org/2000/svg">
+                                    <g clip-path="url(#clip0_725_280)">
+                                        <path
+                                                d="M25 10H21.4875C20.925 9.025 20.15 8.18125 19.2188 7.55L21.25 5.51875L19.4812 3.75L16.7625 6.46875C16.2 6.33125 15.6062 6.25 15 6.25C14.3938 6.25 13.8 6.33125 13.2375 6.46875L10.5188 3.75L8.75 5.51875L10.7812 7.55C9.85 8.18125 9.075 9.025 8.5125 10H5V12.5H7.6125C7.54375 12.9062 7.5 13.325 7.5 13.75V15H5V17.5H7.5V18.75C7.5 19.175 7.54375 19.5938 7.6125 20H5V22.5H8.5125C9.80625 24.7375 12.225 26.25 15 26.25C17.775 26.25 20.1938 24.7375 21.4875 22.5H25V20H22.3875C22.4562 19.5938 22.5 19.175 22.5 18.75V17.5H25V15H22.5V13.75C22.5 13.325 22.4562 12.9062 22.3875 12.5H25V10ZM17.5 20H12.5V17.5H17.5V20ZM17.5 15H12.5V12.5H17.5V15Z"
+                                                fill="white"/>
+                                    </g>
+                                    <defs>
+                                        <clipPath id="clip0_725_280">
+                                            <rect width="30" height="30" fill="white"/>
+                                        </clipPath>
+                                    </defs>
+                                </svg>
+                                <span class="text-white text-sm font-semibold" sidebar-toggle-item>ConfigServer
+                                        Service</span>
+                        </div>
+                        <div>
+                            <svg id="icon1" class="transform" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                 xmlns="http://www.w3.org/2000/svg">
+                                <path d="M18 15L12 9L6 15" stroke="currentColor" stroke-width="1.5"
+                                      stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        </button>
+                    </div>
+                    <ul id="dropdown-example-25" class="hidden py-2 space-y-2">
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                ConfigServer Service</a>
+                        </li>
+                    </ul>
+                    <!-- ConfigServer Services End -->
+                    <!-- Plugins -->
+                    <div class="flex justify-between mt-1 items-center space-x-6 focus:bg-cyan-400 text-white hover:bg-cyan-400 rounded px-3 py-1 w-64"
+                         aria-controls="dropdown-example-26" data-collapse-toggle="dropdown-example-26">
+                        <div>
+                            <button type="button" class="flex space-x-6">
+                                <svg width="24" height="24" viewBox="0 0 30 30" fill="none"
+                                     xmlns="http://www.w3.org/2000/svg">
+                                    <g clip-path="url(#clip0_725_288)">
+                                        <path
+                                                d="M29.3806 7.5837C29.7935 7.99665 30 8.49888 30 9.0904C30 9.68192 29.7935 10.1897 29.3806 10.6138L22.6674 17.3103L25.1786 19.8214L22.5 22.5C20.6808 24.3192 18.5073 25.3599 15.9794 25.6222C13.4515 25.8845 11.1551 25.3237 9.0904 23.9397L3.03013 30H0V26.9699L6.06027 20.9096C4.67634 18.8449 4.11551 16.5485 4.37779 14.0206C4.64007 11.4927 5.6808 9.3192 7.5 7.5L10.1786 4.82143L12.6897 7.33259L19.3862 0.61942C19.8103 0.206473 20.3181 0 20.9096 0C21.5011 0 22.0033 0.206473 22.4163 0.61942C22.8292 1.03237 23.0357 1.53739 23.0357 2.13449C23.0357 2.73158 22.8292 3.23661 22.4163 3.64955L15.7199 10.3627L19.6373 14.2801L26.3504 7.5837C26.7746 7.17076 27.2824 6.96429 27.8739 6.96429C28.4654 6.96429 28.9676 7.17076 29.3806 7.5837Z"
+                                                fill="white"/>
+                                    </g>
+                                    <defs>
+                                        <clipPath id="clip0_725_288">
+                                            <rect width="30" height="30" fill="white"/>
+                                        </clipPath>
+                                    </defs>
+                                </svg>
+                                <span class="text-white text-sm font-semibold" sidebar-toggle-item>Plugins</span>
+                        </div>
+                        <div>
+                            <svg id="icon1" class="transform" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                 xmlns="http://www.w3.org/2000/svg">
+                                <path d="M18 15L12 9L6 15" stroke="currentColor" stroke-width="1.5"
+                                      stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </div>
+                        </button>
+                    </div>
+                    <ul id="dropdown-example-26" class="hidden py-2 space-y-2">
+                        <li>
+                            <a href="#"
+                               class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
+                                Installed</a>
+                        </li>
+                    </ul>
+                    <!-- Plugins End -->
+                </div>
+            </div>
+        </div>
+        <!-- Server Section End -->
+    </container>
+    <!-- SideBar End -->
+
+    {#           Second Container#}
+    <container class="w-full">
+        <!-- NavBar Start -->
+        <header class="flex w-full bg-white shadow-md flex items-center justify-end h-20 px-8 py-02">
+
+            <!-- buttons --->
+            <div class="w-3/12 flex justify-end">
+                <a href="">
+                    <img src="{% static 'baseTemplate/newImage/youtube.png' %}" class="px-2"/>
+                </a>
+                <a href="">
+                    <img src="{% static 'baseTemplate/newImage/community.png' %}" class="px-2"/>
+                </a>
+                <a href="">
+                    <img src="{% static 'baseTemplate/newImage/support.png' %}" class="px-2"/>
+                </a>
+                <a href="">
+                    <img src="{% static 'baseTemplate/newImage/youtube.png' %}" class="px-2"/>
+                </a>
+            </div>
+        </header>
+        <!-- NavBar End -->
+        <div>
+            {% block newContent %}
+            {% endblock %}
+        </div>
+    </container>
+
+</div>
+
+<!-- Connecting JS -->
+<script src="homepage.js"></script>
+<script src="{% static 'baseTemplate/newBase.js' %}"></script>
+<script src="{% static 'websiteFunctions/websiteFunctionsV2.js' %}"></script>
+</body>
+
+</html>

@@ -82,6 +82,37 @@ class WebsiteManager:
                         Data, 'createWebsite')
         return proc.render()
 
+
+    def createWebsiteV2(self, request=None, userID=None, data=None):
+
+        url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
+        data = {
+            "name": "all",
+            "IP": ACLManager.GetServerIP()
+        }
+
+        import requests
+        response = requests.post(url, data=json.dumps(data))
+        Status = response.json()['status']
+
+        test_domain_status = 0
+
+        if (Status == 1) or ProcessUtilities.decideServer() == ProcessUtilities.ent:
+            test_domain_status = 1
+
+        currentACL = ACLManager.loadedACL(userID)
+        adminNames = ACLManager.loadAllUsers(userID)
+        packagesName = ACLManager.loadPackages(userID, currentACL)
+        phps = PHPManager.findPHPVersions()
+
+        rnpss = randomPassword.generate_pass(10)
+
+        Data = {'packageList': packagesName, "owernList": adminNames, 'phps': phps, 'Randam_String': rnpss.lower(),
+                'test_domain_data': test_domain_status}
+        proc = httpProc(request, 'websiteFunctions/createWebsiteV2.html',
+                        Data, 'createWebsite')
+        return proc.render()
+
     def WPCreate(self, request=None, userID=None, data=None):
         url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
         data = {
@@ -716,6 +747,30 @@ class WebsiteManager:
                         {'websiteList': websitesName, 'phps': PHPManager.findPHPVersions(), 'Randam_String': rnpss, 'test_domain_data':test_domain_status})
         return proc.render()
 
+    def CreateNewDomainV2(self, request=None, userID=None, data=None):
+        currentACL = ACLManager.loadedACL(userID)
+        websitesName = ACLManager.findAllSites(currentACL, userID)
+
+        url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
+        data = {
+            "name": "all",
+            "IP": ACLManager.GetServerIP()
+        }
+
+        import requests
+        response = requests.post(url, data=json.dumps(data))
+        Status = response.json()['status']
+
+        test_domain_status = 0
+
+        if (Status == 1) or ProcessUtilities.decideServer() == ProcessUtilities.ent:
+            test_domain_status = 1
+
+        rnpss = randomPassword.generate_pass(10)
+        proc = httpProc(request, 'websiteFunctions/createDomainV2.html',
+                        {'websiteList': websitesName, 'phps': PHPManager.findPHPVersions(), 'Randam_String': rnpss, 'test_domain_data':test_domain_status})
+        return proc.render()
+
     def siteState(self, request=None, userID=None, data=None):
         currentACL = ACLManager.loadedACL(userID)
 
@@ -732,6 +787,13 @@ class WebsiteManager:
                         {"pagination": pagination})
         return proc.render()
 
+    def listWebsitesV2(self, request=None, userID=None, data=None):
+        currentACL = ACLManager.loadedACL(userID)
+        pagination = self.websitePagination(currentACL, userID)
+        proc = httpProc(request, 'websiteFunctions/listWebsiteV2.html',
+                        {"pagination": pagination})
+        return proc.render()
+
     def listChildDomains(self, request=None, userID=None, data=None):
         currentACL = ACLManager.loadedACL(userID)
         adminNames = ACLManager.loadAllUsers(userID)
@@ -740,6 +802,17 @@ class WebsiteManager:
 
         Data = {'packageList': packagesName, "owernList": adminNames, 'phps': phps}
         proc = httpProc(request, 'websiteFunctions/listChildDomains.html',
+                        Data)
+        return proc.render()
+
+    def listChildDomainsV2(self, request=None, userID=None, data=None):
+        currentACL = ACLManager.loadedACL(userID)
+        adminNames = ACLManager.loadAllUsers(userID)
+        packagesName = ACLManager.loadPackages(userID, currentACL)
+        phps = PHPManager.findPHPVersions()
+
+        Data = {'packageList': packagesName, "owernList": adminNames, 'phps': phps}
+        proc = httpProc(request, 'websiteFunctions/listChildDomainsV2.html',
                         Data)
         return proc.render()
 

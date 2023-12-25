@@ -1,0 +1,649 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    <div class="p-8" ng-controller="dashboardV2">
+        <!-- Search Functionalities -->
+        <div class="relative flex items-center w-full h-12 rounded-lg bg-gray-100 overflow-hidden">
+            <div class="grid place-items-center h-full w-12 text-gray-300">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                     stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+            </div>
+
+            <input class="h-full w-full bg-gray-100 outline-none text-sm text-gray-700 pr-2" type="text"
+                   id="search" placeholder="Search the available functionalities.."/>
+        </div>
+        <!-- Search Functionalities End -->
+
+        <div class="lg:flex py-10 md:flex-row">
+            <!-- Left Side -->
+            <div class="w-full">
+                <!-- Users -->
+                <div>
+                    <div class="flex justify-between bg-gray-600 p-2 w-full">
+                        <div>
+                            <p class="text-white px-6 text-xl font-bold">Users</p>
+                        </div>
+                        <div>
+                            <svg id="icon2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                 stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-white mr-4">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12h-15"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div>
+                        <ul class="flex w-full grid lg:grid-cols-4">
+                            <li class="px-3 py-3">
+                                <div class="flex items-center">
+                                    <div>
+                                        <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
+                                             xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                    d="M20 23.3333C24.6023 23.3333 28.3333 18.8561 28.3333 13.3333C28.3333 7.8104 24.6023 3.33325 20 3.33325C15.3976 3.33325 11.6666 7.8104 11.6666 13.3333C11.6666 18.8561 15.3976 23.3333 20 23.3333Z"
+                                                    fill="#FF9A00"/>
+                                            <path
+                                                    d="M36.3333 31.8331C34.8333 28.8331 32 26.3331 28.3333 24.8331C27.3333 24.4998 26.1666 24.4998 25.3333 24.9998C23.6666 25.9998 22 26.4998 20 26.4998C18 26.4998 16.3333 25.9998 14.6666 24.9998C13.8333 24.6665 12.6666 24.4998 11.6666 24.9998C7.99995 26.4998 5.16662 28.9998 3.66662 31.9998C2.49995 34.1665 4.33329 36.6665 6.83329 36.6665H33.1666C35.6666 36.6665 37.5 34.1665 36.3333 31.8331Z"
+                                                    fill="#FF9A00"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="px-2 font-bold" style="font-size: 70%;">View Profile</p>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="px-3 py-3">
+                                <div class="flex items-center">
+                                    <div>
+                                        <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
+                                             xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                    d="M20 23.3333C24.6023 23.3333 28.3333 18.8561 28.3333 13.3333C28.3333 7.8104 24.6023 3.33325 20 3.33325C15.3976 3.33325 11.6666 7.8104 11.6666 13.3333C11.6666 18.8561 15.3976 23.3333 20 23.3333Z"
+                                                    fill="#FF9A00"/>
+                                            <path
+                                                    d="M36.3333 31.8331C34.8333 28.8331 32 26.3331 28.3333 24.8331C27.3333 24.4998 26.1666 24.4998 25.3333 24.9998C23.6666 25.9998 22 26.4998 20 26.4998C18 26.4998 16.3333 25.9998 14.6666 24.9998C13.8333 24.6665 12.6666 24.4998 11.6666 24.9998C7.99995 26.4998 5.16662 28.9998 3.66662 31.9998C2.49995 34.1665 4.33329 36.6665 6.83329 36.6665H33.1666C35.6666 36.6665 37.5 34.1665 36.3333 31.8331Z"
+                                                    fill="#FF9A00"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="px-2 font-bold" style="font-size: 70%;">List Users</p>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="px-3 py-3">
+                                <div class="flex items-center">
+                                    <div>
+                                        <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
+                                             xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                    d="M24.9999 20.0001C28.6818 20.0001 31.6666 17.0153 31.6666 13.3334C31.6666 9.65152 28.6818 6.66675 24.9999 6.66675C21.318 6.66675 18.3333 9.65152 18.3333 13.3334C18.3333 17.0153 21.318 20.0001 24.9999 20.0001Z"
+                                                    fill="#FF9A00"/>
+                                            <path
+                                                    d="M25.0001 23.3333C14.8334 23.3333 11.6667 29.9999 11.6667 29.9999V33.3333H38.3334V29.9999C38.3334 29.9999 35.1667 23.3333 25.0001 23.3333Z"
+                                                    fill="#FF9A00"/>
+                                            <path d="M8.33325 11.6667V25.0001" stroke="#FF9A00" stroke-width="2"
+                                                  stroke-miterlimit="10"/>
+                                            <path d="M15.0001 18.3333H1.66675" stroke="#FF9A00" stroke-width="2"
+                                                  stroke-miterlimit="10"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="px-2 font-bold" style="font-size: 70%;">Create Users</p>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="px-3 py-3">
+                                <div class="flex items-center">
+                                    <div>
+
+                                        <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
+                                             xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M38.3333 12.5L29.4999 21.6667L24.8333 17" stroke="#FF9A00"
+                                                  stroke-width="2" stroke-miterlimit="10"/>
+                                            <path
+                                                    d="M14.9999 20.0001C18.6818 20.0001 21.6666 17.0153 21.6666 13.3334C21.6666 9.65152 18.6818 6.66675 14.9999 6.66675C11.318 6.66675 8.33325 9.65152 8.33325 13.3334C8.33325 17.0153 11.318 20.0001 14.9999 20.0001Z"
+                                                    fill="#FF9A00"/>
+                                            <path
+                                                    d="M15.0001 23.3333C4.83341 23.3333 1.66675 29.9999 1.66675 29.9999V33.3333H28.3334V29.9999C28.3334 29.9999 25.1667 23.3333 15.0001 23.3333Z"
+                                                    fill="#FF9A00"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="px-2 font-bold" style="font-size: 70%;">Modify Users</p>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="px-3 py-3">
+                                <div class="flex items-center">
+                                    <div>
+                                        <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
+                                             xmlns="http://www.w3.org/2000/svg">
+                                            <g clip-path="url(#clip0_55_1903)">
+                                                <path
+                                                        d="M10 31.6667C10 33.5083 11.4917 35 13.3334 35H26.6667C28.5084 35 30 33.5083 30 31.6667V11.6667H10V31.6667ZM31.6667 6.66667H25.8334L24.1667 5H15.8334L14.1667 6.66667H8.33337V10H31.6667V6.66667Z"
+                                                        fill="#FF9A00"/>
+                                            </g>
+                                            <defs>
+                                                <clipPath id="clip0_55_1903">
+                                                    <rect width="40" height="40" fill="white"/>
+                                                </clipPath>
+                                            </defs>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="px-2 font-bold" style="font-size: 70%;">Delete Users</p>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- Users End -->
+                <hr>
+                <!-- Website -->
+                <div class="py-6">
+                    <div class="flex justify-between bg-gray-600 p-2 w-full">
+                        <div>
+                            <p class="text-white px-6 text-xl font-bold">Websites</p>
+                        </div>
+                        <div>
+                            <svg id="icon2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                 stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-white mr-4">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12h-15"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div>
+                        <ul class="flex w-full grid lg:grid-cols-4">
+                            <a href="{% url 'createWebsiteV2' %}"
+                            <li class="px-3 py-3">
+                                <div class="flex items-center">
+                                    <div>
+                                        <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
+                                             xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                    d="M20 1.66675C9.83329 1.66675 1.66663 9.83342 1.66663 20.0001C1.66663 30.1667 9.83329 38.3334 20 38.3334C30.1666 38.3334 38.3333 30.1667 38.3333 20.0001C38.3333 9.83342 30.1666 1.66675 20 1.66675ZM28.3333 23.3334H23.3333V28.3334C23.3333 30.1667 21.8333 31.6667 20 31.6667C18.1666 31.6667 16.6666 30.1667 16.6666 28.3334V23.3334H11.6666C9.83329 23.3334 8.33329 21.8334 8.33329 20.0001C8.33329 18.1667 9.83329 16.6667 11.6666 16.6667H16.6666V11.6667C16.6666 9.83342 18.1666 8.33342 20 8.33342C21.8333 8.33342 23.3333 9.83342 23.3333 11.6667V16.6667H28.3333C30.1666 16.6667 31.6666 18.1667 31.6666 20.0001C31.6666 21.8334 30.1666 23.3334 28.3333 23.3334Z"
+                                                    fill="#FF9A00"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="px-2 font-bold" style="font-size: 70%;">Create Website</p>
+                                    </div>
+                                </div>
+                            </li>
+                            </a>
+                            <a href="{% url 'listWebsitesV2' %}"
+                            <li class="px-3 py-3">
+                                <div class="flex items-center">
+                                    <div>
+                                        <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
+                                             xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                    d="M20 23.3333C24.6023 23.3333 28.3333 18.8561 28.3333 13.3333C28.3333 7.8104 24.6023 3.33325 20 3.33325C15.3976 3.33325 11.6666 7.8104 11.6666 13.3333C11.6666 18.8561 15.3976 23.3333 20 23.3333Z"
+                                                    fill="#FF9A00"/>
+                                            <path
+                                                    d="M36.3333 31.8331C34.8333 28.8331 32 26.3331 28.3333 24.8331C27.3333 24.4998 26.1666 24.4998 25.3333 24.9998C23.6666 25.9998 22 26.4998 20 26.4998C18 26.4998 16.3333 25.9998 14.6666 24.9998C13.8333 24.6665 12.6666 24.4998 11.6666 24.9998C7.99995 26.4998 5.16662 28.9998 3.66662 31.9998C2.49995 34.1665 4.33329 36.6665 6.83329 36.6665H33.1666C35.6666 36.6665 37.5 34.1665 36.3333 31.8331Z"
+                                                    fill="#FF9A00"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="px-2 font-bold" style="font-size: 70%;">List Website</p>
+                                    </div>
+                                </div>
+                            </li>
+                            </a>
+                            <li class="px-3 py-3">
+                                <div class="flex items-center">
+                                    <div>
+                                        <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
+                                             xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                    d="M28.3333 36.6667H8.33325C7.00717 36.6667 5.7354 36.14 4.79772 35.2023C3.86004 34.2646 3.33325 32.9928 3.33325 31.6667V11.6667C3.33325 10.3407 3.86004 9.0689 4.79772 8.13121C5.7354 7.19353 7.00717 6.66675 8.33325 6.66675H14.9999C15.4419 6.66675 15.8659 6.84234 16.1784 7.1549C16.491 7.46746 16.6666 7.89139 16.6666 8.33341C16.6666 8.77544 16.491 9.19936 16.1784 9.51193C15.8659 9.82449 15.4419 10.0001 14.9999 10.0001H8.33325C7.89122 10.0001 7.4673 10.1757 7.15474 10.4882C6.84218 10.8008 6.66659 11.2247 6.66659 11.6667V31.6667C6.66659 32.1088 6.84218 32.5327 7.15474 32.8453C7.4673 33.1578 7.89122 33.3334 8.33325 33.3334H28.3333C28.7753 33.3334 29.1992 33.1578 29.5118 32.8453C29.8243 32.5327 29.9999 32.1088 29.9999 31.6667V25.0001C29.9999 24.5581 30.1755 24.1341 30.4881 23.8216C30.8006 23.509 31.2246 23.3334 31.6666 23.3334C32.1086 23.3334 32.5325 23.509 32.8451 23.8216C33.1577 24.1341 33.3333 24.5581 33.3333 25.0001V31.6667C33.3333 32.9928 32.8065 34.2646 31.8688 35.2023C30.9311 36.14 29.6593 36.6667 28.3333 36.6667Z"
+                                                    fill="#FF9A00"/>
+                                            <path
+                                                    d="M24.3334 9.78345L16.0834 18.1168C15.9709 18.2172 15.8947 18.3519 15.8668 18.5001L14.2001 24.8668C14.1597 25.0072 14.1586 25.156 14.1968 25.297C14.235 25.4381 14.311 25.5659 14.4168 25.6668C14.498 25.732 14.5915 25.7803 14.6917 25.8089C14.7918 25.8375 14.8967 25.8458 15.0001 25.8334C15.0716 25.8483 15.1453 25.8483 15.2168 25.8334L21.5834 24.1668C21.7316 24.1388 21.8664 24.0627 21.9668 23.9501L30.2168 15.6668L24.3334 9.78345Z"
+                                                    fill="#FF9A00"/>
+                                            <path
+                                                    d="M35.0001 7.41664L32.5834 4.99998C32.1097 4.5348 31.4723 4.27417 30.8084 4.27417C30.1445 4.27417 29.5071 4.5348 29.0334 4.99998L26.6667 7.41664L32.5834 13.3333L35.0001 10.9666C35.4653 10.4929 35.7259 9.85556 35.7259 9.19164C35.7259 8.52773 35.4653 7.89034 35.0001 7.41664Z"
+                                                    fill="#FF9A00"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="px-2 font-bold" style="font-size: 70%;">Modify Website</p>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="px-3 py-3">
+                                <div class="flex items-center">
+                                    <div>
+                                        <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
+                                             xmlns="http://www.w3.org/2000/svg">
+                                            <g clip-path="url(#clip0_55_1963)">
+                                                <path
+                                                        d="M10 31.6666H16.6667V8.33325H10V31.6666ZM23.3333 8.33325V31.6666H30V8.33325H23.3333Z"
+                                                        fill="#FF9A00"/>
+                                            </g>
+                                            <defs>
+                                                <clipPath id="clip0_55_1963">
+                                                    <rect width="40" height="40" fill="white"/>
+                                                </clipPath>
+                                            </defs>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="px-2 font-bold" style="font-size: 70%;">Suspended/Unsuspended
+                                        </p>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="px-3 py-3">
+                                <div class="flex items-center">
+                                    <div>
+                                        <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
+                                             xmlns="http://www.w3.org/2000/svg">
+                                            <g clip-path="url(#clip0_55_1903)">
+                                                <path
+                                                        d="M10 31.6667C10 33.5083 11.4917 35 13.3334 35H26.6667C28.5084 35 30 33.5083 30 31.6667V11.6667H10V31.6667ZM31.6667 6.66667H25.8334L24.1667 5H15.8334L14.1667 6.66667H8.33337V10H31.6667V6.66667Z"
+                                                        fill="#FF9A00"/>
+                                            </g>
+                                            <defs>
+                                                <clipPath id="clip0_55_1903">
+                                                    <rect width="40" height="40" fill="white"/>
+                                                </clipPath>
+                                            </defs>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="px-2 font-bold" style="font-size: 70%;">Delete Website</p>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- Website End -->
+                <hr>
+                <!-- Packages -->
+                <div class="py-6">
+                    <div class="flex justify-between bg-gray-600 p-2 w-full">
+                        <div>
+                            <p class="text-white px-6 text-xl font-bold">Packages</p>
+                        </div>
+                        <div>
+                            <svg id="icon2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                 stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-white mr-4">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12h-15"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div>
+                        <ul class="flex w-full grid lg:grid-cols-4 ">
+                            <li class="px-3 py-3">
+                                <div class="flex items-center">
+                                    <div>
+                                        <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
+                                             xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                    d="M20 1.66675C9.83329 1.66675 1.66663 9.83342 1.66663 20.0001C1.66663 30.1667 9.83329 38.3334 20 38.3334C30.1666 38.3334 38.3333 30.1667 38.3333 20.0001C38.3333 9.83342 30.1666 1.66675 20 1.66675ZM28.3333 23.3334H23.3333V28.3334C23.3333 30.1667 21.8333 31.6667 20 31.6667C18.1666 31.6667 16.6666 30.1667 16.6666 28.3334V23.3334H11.6666C9.83329 23.3334 8.33329 21.8334 8.33329 20.0001C8.33329 18.1667 9.83329 16.6667 11.6666 16.6667H16.6666V11.6667C16.6666 9.83342 18.1666 8.33342 20 8.33342C21.8333 8.33342 23.3333 9.83342 23.3333 11.6667V16.6667H28.3333C30.1666 16.6667 31.6666 18.1667 31.6666 20.0001C31.6666 21.8334 30.1666 23.3334 28.3333 23.3334Z"
+                                                    fill="#FF9A00"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="px-2 font-bold" style="font-size: 70%;">Create Package</p>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="px-3 py-3">
+                                <div class="flex items-center">
+                                    <div>
+                                        <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
+                                             xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                    d="M20 23.3333C24.6023 23.3333 28.3333 18.8561 28.3333 13.3333C28.3333 7.8104 24.6023 3.33325 20 3.33325C15.3976 3.33325 11.6666 7.8104 11.6666 13.3333C11.6666 18.8561 15.3976 23.3333 20 23.3333Z"
+                                                    fill="#FF9A00"/>
+                                            <path
+                                                    d="M36.3333 31.8331C34.8333 28.8331 32 26.3331 28.3333 24.8331C27.3333 24.4998 26.1666 24.4998 25.3333 24.9998C23.6666 25.9998 22 26.4998 20 26.4998C18 26.4998 16.3333 25.9998 14.6666 24.9998C13.8333 24.6665 12.6666 24.4998 11.6666 24.9998C7.99995 26.4998 5.16662 28.9998 3.66662 31.9998C2.49995 34.1665 4.33329 36.6665 6.83329 36.6665H33.1666C35.6666 36.6665 37.5 34.1665 36.3333 31.8331Z"
+                                                    fill="#FF9A00"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="px-2 font-bold" style="font-size: 70%;">List Package</p>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="px-3 py-3">
+                                <div class="flex items-center">
+                                    <div>
+
+                                        <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
+                                             xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                    d="M28.3333 36.6667H8.33325C7.00717 36.6667 5.7354 36.14 4.79772 35.2023C3.86004 34.2646 3.33325 32.9928 3.33325 31.6667V11.6667C3.33325 10.3407 3.86004 9.0689 4.79772 8.13121C5.7354 7.19353 7.00717 6.66675 8.33325 6.66675H14.9999C15.4419 6.66675 15.8659 6.84234 16.1784 7.1549C16.491 7.46746 16.6666 7.89139 16.6666 8.33341C16.6666 8.77544 16.491 9.19936 16.1784 9.51193C15.8659 9.82449 15.4419 10.0001 14.9999 10.0001H8.33325C7.89122 10.0001 7.4673 10.1757 7.15474 10.4882C6.84218 10.8008 6.66659 11.2247 6.66659 11.6667V31.6667C6.66659 32.1088 6.84218 32.5327 7.15474 32.8453C7.4673 33.1578 7.89122 33.3334 8.33325 33.3334H28.3333C28.7753 33.3334 29.1992 33.1578 29.5118 32.8453C29.8243 32.5327 29.9999 32.1088 29.9999 31.6667V25.0001C29.9999 24.5581 30.1755 24.1341 30.4881 23.8216C30.8006 23.509 31.2246 23.3334 31.6666 23.3334C32.1086 23.3334 32.5325 23.509 32.8451 23.8216C33.1577 24.1341 33.3333 24.5581 33.3333 25.0001V31.6667C33.3333 32.9928 32.8065 34.2646 31.8688 35.2023C30.9311 36.14 29.6593 36.6667 28.3333 36.6667Z"
+                                                    fill="#FF9A00"/>
+                                            <path
+                                                    d="M24.3334 9.78345L16.0834 18.1168C15.9709 18.2172 15.8947 18.3519 15.8668 18.5001L14.2001 24.8668C14.1597 25.0072 14.1586 25.156 14.1968 25.297C14.235 25.4381 14.311 25.5659 14.4168 25.6668C14.498 25.732 14.5915 25.7803 14.6917 25.8089C14.7918 25.8375 14.8967 25.8458 15.0001 25.8334C15.0716 25.8483 15.1453 25.8483 15.2168 25.8334L21.5834 24.1668C21.7316 24.1388 21.8664 24.0627 21.9668 23.9501L30.2168 15.6668L24.3334 9.78345Z"
+                                                    fill="#FF9A00"/>
+                                            <path
+                                                    d="M35.0001 7.41664L32.5834 4.99998C32.1097 4.5348 31.4723 4.27417 30.8084 4.27417C30.1445 4.27417 29.5071 4.5348 29.0334 4.99998L26.6667 7.41664L32.5834 13.3333L35.0001 10.9666C35.4653 10.4929 35.7259 9.85556 35.7259 9.19164C35.7259 8.52773 35.4653 7.89034 35.0001 7.41664Z"
+                                                    fill="#FF9A00"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="px-2 font-bold" style="font-size: 70%;">Modify Package</p>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="px-3 py-3">
+                                <div class="flex items-center">
+                                    <div>
+
+                                        <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
+                                             xmlns="http://www.w3.org/2000/svg">
+                                            <g clip-path="url(#clip0_55_1903)">
+                                                <path
+                                                        d="M10 31.6667C10 33.5083 11.4917 35 13.3334 35H26.6667C28.5084 35 30 33.5083 30 31.6667V11.6667H10V31.6667ZM31.6667 6.66667H25.8334L24.1667 5H15.8334L14.1667 6.66667H8.33337V10H31.6667V6.66667Z"
+                                                        fill="#FF9A00"/>
+                                            </g>
+                                            <defs>
+                                                <clipPath id="clip0_55_1903">
+                                                    <rect width="40" height="40" fill="white"/>
+                                                </clipPath>
+                                            </defs>
+                                        </svg>
+
+                                    </div>
+                                    <div>
+                                        <p class="px-2 font-bold" style="font-size: 70%;">Delete Package</p>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- Packages End -->
+                <hr>
+                <!-- Database -->
+                <div class="py-6">
+                    <div class="flex justify-between bg-gray-600 p-2 w-full">
+                        <div>
+                            <p class="text-white px-6 text-xl font-bold">Database</p>
+                        </div>
+                        <div>
+                            <svg id="icon2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                 stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-white mr-4">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12h-15"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div>
+                        <ul class="flex w-full grid lg:grid-cols-4 ">
+                            <li class="px-3 py-3">
+                                <div class="flex items-center">
+                                    <div>
+
+                                        <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
+                                             xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                    d="M20 1.66675C9.83329 1.66675 1.66663 9.83342 1.66663 20.0001C1.66663 30.1667 9.83329 38.3334 20 38.3334C30.1666 38.3334 38.3333 30.1667 38.3333 20.0001C38.3333 9.83342 30.1666 1.66675 20 1.66675ZM28.3333 23.3334H23.3333V28.3334C23.3333 30.1667 21.8333 31.6667 20 31.6667C18.1666 31.6667 16.6666 30.1667 16.6666 28.3334V23.3334H11.6666C9.83329 23.3334 8.33329 21.8334 8.33329 20.0001C8.33329 18.1667 9.83329 16.6667 11.6666 16.6667H16.6666V11.6667C16.6666 9.83342 18.1666 8.33342 20 8.33342C21.8333 8.33342 23.3333 9.83342 23.3333 11.6667V16.6667H28.3333C30.1666 16.6667 31.6666 18.1667 31.6666 20.0001C31.6666 21.8334 30.1666 23.3334 28.3333 23.3334Z"
+                                                    fill="#FF9A00"/>
+                                        </svg>
+
+                                    </div>
+                                    <div>
+                                        <p class="px-2 font-bold" style="font-size: 70%;">Create Database</p>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="px-3 py-3">
+                                <div class="flex items-center">
+                                    <div>
+                                        <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
+                                             xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                    d="M20 23.3333C24.6023 23.3333 28.3333 18.8561 28.3333 13.3333C28.3333 7.8104 24.6023 3.33325 20 3.33325C15.3976 3.33325 11.6666 7.8104 11.6666 13.3333C11.6666 18.8561 15.3976 23.3333 20 23.3333Z"
+                                                    fill="#FF9A00"/>
+                                            <path
+                                                    d="M36.3333 31.8331C34.8333 28.8331 32 26.3331 28.3333 24.8331C27.3333 24.4998 26.1666 24.4998 25.3333 24.9998C23.6666 25.9998 22 26.4998 20 26.4998C18 26.4998 16.3333 25.9998 14.6666 24.9998C13.8333 24.6665 12.6666 24.4998 11.6666 24.9998C7.99995 26.4998 5.16662 28.9998 3.66662 31.9998C2.49995 34.1665 4.33329 36.6665 6.83329 36.6665H33.1666C35.6666 36.6665 37.5 34.1665 36.3333 31.8331Z"
+                                                    fill="#FF9A00"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="px-2 font-bold" style="font-size: 70%;">List Database</p>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="px-3 py-3">
+                                <div class="flex items-center">
+                                    <div>
+
+                                        <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
+                                             xmlns="http://www.w3.org/2000/svg">
+                                            <g clip-path="url(#clip0_55_1903)">
+                                                <path
+                                                        d="M10 31.6667C10 33.5083 11.4917 35 13.3334 35H26.6667C28.5084 35 30 33.5083 30 31.6667V11.6667H10V31.6667ZM31.6667 6.66667H25.8334L24.1667 5H15.8334L14.1667 6.66667H8.33337V10H31.6667V6.66667Z"
+                                                        fill="#FF9A00"/>
+                                            </g>
+                                            <defs>
+                                                <clipPath id="clip0_55_1903">
+                                                    <rect width="40" height="40" fill="white"/>
+                                                </clipPath>
+                                            </defs>
+                                        </svg>
+
+                                    </div>
+                                    <div>
+                                        <p class="px-2 font-bold" style="font-size: 70%;">Delete Database</p>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="px-3 py-3">
+                                <div class="flex items-center">
+                                    <div>
+                                        <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
+                                             xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                    d="M20 23.3333C24.6023 23.3333 28.3333 18.8561 28.3333 13.3333C28.3333 7.8104 24.6023 3.33325 20 3.33325C15.3976 3.33325 11.6666 7.8104 11.6666 13.3333C11.6666 18.8561 15.3976 23.3333 20 23.3333Z"
+                                                    fill="#FF9A00"/>
+                                            <path
+                                                    d="M36.3333 31.8331C34.8333 28.8331 32 26.3331 28.3333 24.8331C27.3333 24.4998 26.1666 24.4998 25.3333 24.9998C23.6666 25.9998 22 26.4998 20 26.4998C18 26.4998 16.3333 25.9998 14.6666 24.9998C13.8333 24.6665 12.6666 24.4998 11.6666 24.9998C7.99995 26.4998 5.16662 28.9998 3.66662 31.9998C2.49995 34.1665 4.33329 36.6665 6.83329 36.6665H33.1666C35.6666 36.6665 37.5 34.1665 36.3333 31.8331Z"
+                                                    fill="#FF9A00"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="px-2 font-bold" style="font-size: 70%;">PHPMYADMIN</p>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- Database End -->
+                <hr>
+                <!-- DNS -->
+                <div class="py-6">
+                    <div class="flex justify-between bg-gray-600 p-2 w-full">
+                        <div>
+                            <p class="text-white px-6 text-xl font-bold">DNS</p>
+                        </div>
+                        <div>
+                            <svg id="icon2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                 stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-white mr-4">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12h-15"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div>
+                        <ul class="flex w-full grid lg:grid-cols-4 ">
+                            <li class="px-3 py-3">
+                                <div class="flex items-center">
+                                    <div>
+                                        <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
+                                             xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                    d="M20 23.3333C24.6023 23.3333 28.3333 18.8561 28.3333 13.3333C28.3333 7.8104 24.6023 3.33325 20 3.33325C15.3976 3.33325 11.6666 7.8104 11.6666 13.3333C11.6666 18.8561 15.3976 23.3333 20 23.3333Z"
+                                                    fill="#FF9A00"/>
+                                            <path
+                                                    d="M36.3333 31.8331C34.8333 28.8331 32 26.3331 28.3333 24.8331C27.3333 24.4998 26.1666 24.4998 25.3333 24.9998C23.6666 25.9998 22 26.4998 20 26.4998C18 26.4998 16.3333 25.9998 14.6666 24.9998C13.8333 24.6665 12.6666 24.4998 11.6666 24.9998C7.99995 26.4998 5.16662 28.9998 3.66662 31.9998C2.49995 34.1665 4.33329 36.6665 6.83329 36.6665H33.1666C35.6666 36.6665 37.5 34.1665 36.3333 31.8331Z"
+                                                    fill="#FF9A00"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="px-2 font-bold" style="font-size: 70%;">Create NameServer</p>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="px-3 py-3">
+                                <div class="flex items-center">
+                                    <div>
+                                        <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
+                                             xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                    d="M20 23.3333C24.6023 23.3333 28.3333 18.8561 28.3333 13.3333C28.3333 7.8104 24.6023 3.33325 20 3.33325C15.3976 3.33325 11.6666 7.8104 11.6666 13.3333C11.6666 18.8561 15.3976 23.3333 20 23.3333Z"
+                                                    fill="#FF9A00"/>
+                                            <path
+                                                    d="M36.3333 31.8331C34.8333 28.8331 32 26.3331 28.3333 24.8331C27.3333 24.4998 26.1666 24.4998 25.3333 24.9998C23.6666 25.9998 22 26.4998 20 26.4998C18 26.4998 16.3333 25.9998 14.6666 24.9998C13.8333 24.6665 12.6666 24.4998 11.6666 24.9998C7.99995 26.4998 5.16662 28.9998 3.66662 31.9998C2.49995 34.1665 4.33329 36.6665 6.83329 36.6665H33.1666C35.6666 36.6665 37.5 34.1665 36.3333 31.8331Z"
+                                                    fill="#FF9A00"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="px-2 font-bold" style="font-size: 70%;">Create DNS Zone</p>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="px-3 py-3">
+                                <div class="flex items-center">
+                                    <div>
+
+                                        <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
+                                             xmlns="http://www.w3.org/2000/svg">
+                                            <g clip-path="url(#clip0_55_1903)">
+                                                <path
+                                                        d="M10 31.6667C10 33.5083 11.4917 35 13.3334 35H26.6667C28.5084 35 30 33.5083 30 31.6667V11.6667H10V31.6667ZM31.6667 6.66667H25.8334L24.1667 5H15.8334L14.1667 6.66667H8.33337V10H31.6667V6.66667Z"
+                                                        fill="#FF9A00"/>
+                                            </g>
+                                            <defs>
+                                                <clipPath id="clip0_55_1903">
+                                                    <rect width="40" height="40" fill="white"/>
+                                                </clipPath>
+                                            </defs>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="px-2 font-bold" style="font-size: 70%;">Delete Zone</p>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="px-3 py-3">
+                                <div class="flex items-center">
+                                    <div>
+                                        <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
+                                             xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                    d="M20 1.66675C9.83329 1.66675 1.66663 9.83342 1.66663 20.0001C1.66663 30.1667 9.83329 38.3334 20 38.3334C30.1666 38.3334 38.3333 30.1667 38.3333 20.0001C38.3333 9.83342 30.1666 1.66675 20 1.66675ZM28.3333 23.3334H23.3333V28.3334C23.3333 30.1667 21.8333 31.6667 20 31.6667C18.1666 31.6667 16.6666 30.1667 16.6666 28.3334V23.3334H11.6666C9.83329 23.3334 8.33329 21.8334 8.33329 20.0001C8.33329 18.1667 9.83329 16.6667 11.6666 16.6667H16.6666V11.6667C16.6666 9.83342 18.1666 8.33342 20 8.33342C21.8333 8.33342 23.3333 9.83342 23.3333 11.6667V16.6667H28.3333C30.1666 16.6667 31.6666 18.1667 31.6666 20.0001C31.6666 21.8334 30.1666 23.3334 28.3333 23.3334Z"
+                                                    fill="#FF9A00"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="px-2 font-bold" style="font-size: 70%;">Add/Delete Record</p>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- DNS End -->
+            </div>
+            <!-- Left Side End -->
+
+            <!-- Right Side -->
+            <div class="w-96">
+                <div class="px-5 ml-4">
+                    <!-- Gerneral Information -->
+                    <div>
+                        <div class="w-64 bg-gray-600 p-2">
+                            <p class="text-white px-6">General Information</p>
+                        </div>
+                        <div class="px-8 py-1 mb-2">
+                            <p class="font-semibold">Current User</p>
+                            <p class="text-xs">Cpd</p>
+                        </div>
+                        <hr>
+                        <div class="px-8 py-1 mb-2">
+                            <p class="font-semibold">Primary Domain</p>
+                            <p class="text-xs">Cyberpanel.com</p>
+                        </div>
+                        <hr>
+                        <div class="px-8 py-1 mb-2">
+                            <p class="font-semibold">Home Directory</p>
+                            <p class="text-xs">/home/cpd</p>
+                        </div>
+                        <hr>
+                        <div class="px-8 py-1 mb-2">
+                            <p class="font-semibold">Last Login</p>
+                            <p class="text-xs">65.108.159.129</p>
+                        </div>
+                        <hr>
+                        <hr>
+                    </div>
+                    <!-- General Information -->
+
+                    <!-- Resources -->
+                    {#                    <div class="py-6">#}
+                    {#                        <div class="w-64 bg-gray-600 p-2">#}
+                    {#                            <p class="text-white px-6">Resources</p>#}
+                    {#                        </div>#}
+                    {#                        <div class="w-64 p-2">#}
+                    {#                            <p class="text-gray-400 font-semibold px-6">CPU Usage</p>#}
+                    {#                        </div>#}
+                    {#                        <div class="w-64 p-2">#}
+                    {#                            <p class="text-gray-400 font-semibold px-6">RAM Usage</p>#}
+                    {#                        </div>#}
+                    {#                        <div class="w-64 p-2">#}
+                    {#                            <p class="text-gray-400 font-semibold px-6">DISK Usage</p>#}
+                    {#                        </div>#}
+                    {#                       #}
+                    {#                    </div>#}
+
+                    <ul class="progress-box">
+                        <li>
+
+                            <div class="progress-title">
+                                {% trans "CPU Usage" %}
+                                <b>{$ cpuUsage $}%</b>
+                            </div>
+                            <div class="progressbar-small progressbar" data-value="{$ cpuUsage $}">
+                                <div class="progressbar-value bg-yellow tooltip-button" title="{$ cpuUsage $}%">
+                                </div>
+                            </div>
+                        </li>
+                        <li>
+                            <b class="pull-right">{$ ramUsage $}%</b>
+                            <div class="progress-title">
+                                {% trans "RAM Usage" %}
+                            </div>
+                            <div class="progressbar-small progressbar" data-value="{$ ramUsage $}">
+                                <div class="progressbar-value bg-red tooltip-button" title="{$ ramUsage $}%"></div>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="progress-title">
+                                {% trans "Disk Usage" %}
+                                <b>{$ diskUsage $}%</b>
+                            </div>
+                            <div class="progressbar" data-value="{$ diskUsage $}">
+                                <div class="progressbar-value bg-green">
+                                    <div class="progress-label">{$ diskUsage $}%</div>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                    <!-- Resources End -->
+                </div>
+            </div>
+            <!-- Right Side End -->
+        </div>
+    </div>
+{% endblock %}
