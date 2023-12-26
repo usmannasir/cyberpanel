@@ -546,8 +546,10 @@ services:
             # Create a Docker client
             client = docker.from_env()
 
+            FilerValue = f"{self.data['name'].replace(' ', '')}_{self.data['name'].replace(' ', '-')}"
+
             # Define the label to filter containers
-            label_filter = {'name': self.data['name'].replace(' ', '-')}
+            label_filter = {'name': FilerValue}
 
             # List containers matching the label filter
             containers = client.containers.list(filters=label_filter)
@@ -578,8 +580,11 @@ services:
             # Create a Docker client
             client = docker.from_env()
 
+            FilerValue = f"{self.data['name'].replace(' ', '')}_{self.data['name'].replace(' ', '-')}"
+
             # Define the label to filter containers
-            label_filter = {'name': self.data['name'].replace(' ', '-')}
+            label_filter = {'name': FilerValue}
+
 
             # List containers matching the label filter
             containers = client.containers.list(filters=label_filter)
@@ -659,6 +664,10 @@ services:
         except BaseException as msg:
             logging.writeToFile("List Container ....... %s" % str(msg))
             return 0, str(msg)
+
+    def RebuildApp(self):
+        self.DeleteDockerApp()
+        self.SubmitDockersiteCreation()
 
 
 def Main():
