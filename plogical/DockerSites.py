@@ -118,126 +118,6 @@ REWRITERULE ^(.*)$ HTTP://docker{port}/$1 [P]
 
             logging.statusWriter(self.JobID, 'Docker is ready to use..,10')
 
-            #             WPSite = f"""
-            # version: "3.8"
-            #
-            # services:
-            #   db:
-            #     image: mysql:5.7
-            #     restart: always
-            #     volumes:
-            #       - "{self.data['MySQLPath']}:/var/lib/mysql"
-            #     environment:
-            #       MYSQL_ROOT_PASSWORD: {self.data['MySQLRootPass']}
-            #       MYSQL_DATABASE: {self.data['MySQLDBName']}
-            #       MYSQL_USER: {self.data['MySQLDBNUser']}
-            #       MYSQL_PASSWORD: {self.data['MySQLPassword']}
-            #     deploy:
-            #       resources:
-            #         limits:
-            #           cpus: '{self.data['CPUsMySQL']}'  # Use 50% of one CPU core
-            #           memory: {self.data['MemoryMySQL']}M  # Limit memory to 512 megabytes
-            #   wordpress:
-            #     depends_on:
-            #       - db
-            #     image: wordpress:latest
-            #     restart: always
-            #     ports:
-            #       - "{self.data['port']}:80"
-            #     environment:
-            #       WORDPRESS_DB_HOST: db:3306
-            #       WORDPRESS_DB_USER: {self.data['MySQLDBNUser']}
-            #       WORDPRESS_DB_PASSWORD: {self.data['MySQLPassword']}
-            #       WORDPRESS_DB_NAME: {self.data['MySQLDBName']}
-            #     volumes:
-            #       - "{self.data['SitePath']}:/var/www/html"
-            #     deploy:
-            #       resources:
-            #         limits:
-            #           cpus: '{self.data['CPUsSite']}'  # Use 50% of one CPU core
-            #           memory: {self.data['MemorySite']}M  # Limit memory to 512 megabytes
-            #
-            # volumes:
-            #   mysql: {{}}
-            # """
-            #
-            #             WPSite = f"""
-            # # Copyright VMware, Inc.
-            # # SPDX-License-Identifier: APACHE-2.0
-            #
-            # version: '2'
-            # services:
-            #   mariadb:
-            #     image: mariadb:10.5.9
-            #     user: root
-            #     command: --max_allowed_packet=256M
-            #     volumes:
-            #       - "{self.data['MySQLPath']}:/var/lib/mysql:delegated"
-            #     environment:
-            #       - ALLOW_EMPTY_PASSWORD=no
-            #       - MYSQL_USER={self.data['MySQLDBNUser']}
-            #       - MYSQL_PASSWORD={self.data['MySQLPassword']}
-            #       - MYSQL_DATABASE={self.data['MySQLDBName']}
-            #       - MYSQL_ROOT_PASSWORD={self.data['MySQLPassword']}
-            #     deploy:
-            #       resources:
-            #         limits:
-            #           cpus: '{self.data['CPUsMySQL']}'  # Use 50% of one CPU core
-            #           memory: {self.data['MemoryMySQL']}M  # Limit memory to 512 megabytes
-            #   wordpress:
-            #     image: litespeedtech/openlitespeed:latest
-            #     user: root
-            #     ports:
-            #       - "{self.data['port']}:80"
-            #       # - '443:8443'
-            #     volumes:
-            #       - {self.data['docRoot']}/lsws/conf:/usr/local/lsws/conf
-            #       - {self.data['docRoot']}/lsws/admin-conf:/usr/local/lsws/admin/conf
-            #       - {self.data['docRoot']}/bin:/usr/local/bin
-            #       - {self.data['SitePath']}:/var/www/vhosts/
-            #       - {self.data['docRoot']}/acme:/root/.acme.sh/
-            #       - {self.data['docRoot']}/logs:/usr/local/lsws/logs/
-            #     depends_on:
-            #       - mariadb
-            #     environment:
-            #       - TZ=America/New_York
-            #       - PHP_VERSION=lsphp82
-            #       - MYSQL_ROOT_PASSWORD={self.data['MySQLPassword']}
-            #       - DOMAIN={self.data['finalURL']}
-            #       - MYSQL_USER={self.data['MySQLDBNUser']}
-            #       - MYSQL_DATABASE={self.data['MySQLDBName']}
-            #       - MYSQL_PASSWORD={self.data['MySQLPassword']}
-            #     #   - ALLOW_EMPTY_PASSWORD=no
-            #     #   - WORDPRESS_DATABASE_HOST=mariadb
-            #     #   - WORDPRESS_DATABASE_PORT_NUMBER=3306
-            #     #   - WORDPRESS_USERNAME={self.data['adminUser']}
-            #     #   - WORDPRESS_PASSWORD={self.data["adminPassword"]}
-            #     #   - WORDPRESS_EMAIL={self.data["adminEmail"]}
-            #     #   - WORDPRESS_BLOG_NAME={self.data["blogTitle"]}
-            #     #   - WORDPRESS_ENABLE_REVERSE_PROXY=yes
-            #     deploy:
-            #       resources:
-            #         limits:
-            #           cpus: '{self.data['CPUsSite']}'  # Use 50% of one CPU core
-            #           memory: {self.data['MemorySite']}M  # Limit memory to 512 megabytes
-            # #   phpmyadmin:
-            # #     image: bitnami/phpmyadmin:latest
-            # #     ports:
-            # # #      - 8080:8080
-            # # #      - 8443:8443
-            # #     environment:
-            # #         DATABASE_HOST: mysql
-            # #     restart: always
-            # #     networks:
-            # #       - default
-            #
-            # volumes:
-            #   mariadb_data:
-            #     driver: local
-            #   wordpress_data:
-            #     driver: local
-            # """
-
             self.data['ServiceName'] = self.data["SiteName"].replace(' ', '-')
 
             WPSite = f'''
@@ -668,6 +548,144 @@ services:
     def RebuildApp(self):
         self.DeleteDockerApp()
         self.SubmitDockersiteCreation()
+
+    ##### N8N Container
+
+    def DeployN8NContainer(self):
+        try:
+
+            logging.statusWriter(self.JobID, 'Checking if Docker is installed..,0')
+
+            command = 'docker --help'
+            result = ProcessUtilities.outputExecutioner(command)
+            print(f'return code of docker install {result}')
+            if result.find("not found") > -1:
+                status, message = self.InstallDocker()
+                if status == 0:
+                    logging.statusWriter(self.JobID, 'Failed to installed docker. [404]')
+                    return 0, message
+
+            logging.statusWriter(self.JobID, 'Docker is ready to use..,10')
+
+            self.data['ServiceName'] = self.data["SiteName"].replace(' ', '-')
+
+            WPSite = f'''
+version: '3.8'
+
+volumes:
+  db_storage:
+  n8n_storage:
+
+services:
+  '{self.data['ServiceName']}-db':
+    image: postgres:11
+    restart: always
+    environment:
+      - POSTGRES_USER:"root"
+      - POSTGRES_PASSWORD:"{self.data['MySQLPassword']}"
+      - POSTGRES_DB:"{self.data['MySQLDBName']}"
+      - POSTGRES_NON_ROOT_USER:"{self.data['MySQLDBNUser']}"
+      - POSTGRES_NON_ROOT_PASSWORD:"{self.data['MySQLPassword']}"
+    volumes:
+      - "/home/docker/{self.data['finalURL']}/db:/var/lib/postgresql/data"
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -h localhost -U "{self.data['MySQLDBNUser']}" -d "{self.data['MySQLDBName']}"']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  '{self.data['ServiceName']}':
+    image: docker.n8n.io/n8nio/n8n
+    restart: always
+    environment:
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST='{self.data['ServiceName']}-db'
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE="{self.data['MySQLDBName']}"
+      - DB_POSTGRESDB_USER="{self.data['MySQLDBNUser']}"
+      - DB_POSTGRESDB_PASSWORD="{self.data['MySQLPassword']}"
+    ports:
+      - "{self.data['port']}:5678"
+    links:
+      - postgres
+    volumes:
+      - n8n_storage:/home/node/.n8n
+      - "/home/docker/{self.data['finalURL']}/data:/home/node/.n8n"
+    depends_on:
+      postgres:
+        condition: service_healthy
+'''
+
+            ### WriteConfig to compose-file
+
+            command = f"mkdir -p /home/docker/{self.data['finalURL']}"
+            result, message = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+
+            if result == 0:
+                logging.statusWriter(self.JobID, f'Error {str(message)} . [404]')
+                return 0
+
+            TempCompose = f'/home/cyberpanel/{self.data["finalURL"]}-docker-compose.yml'
+
+            WriteToFile = open(TempCompose, 'w')
+            WriteToFile.write(WPSite)
+            WriteToFile.close()
+
+            command = f"mv {TempCompose} {self.data['ComposePath']}"
+            result, message = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+
+            if result == 0:
+                logging.statusWriter(self.JobID, f'Error {str(message)} . [404]')
+                return 0
+
+            command = f"chmod 600 {self.data['ComposePath']} && chown root:root {self.data['ComposePath']}"
+            ProcessUtilities.executioner(command, 'root', True)
+
+            ####
+
+            command = f"docker-compose -f {self.data['ComposePath']} -p '{self.data['SiteName']}' up -d"
+            result, message = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+
+            if result == 0:
+                logging.statusWriter(self.JobID, f'Error {str(message)} . [404]')
+                return 0
+
+            logging.statusWriter(self.JobID, 'Bringing containers online..,50')
+
+            time.sleep(25)
+
+            ### Set up Proxy
+
+            execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/DockerSites.py"
+            execPath = execPath + f" SetupProxy --port {self.data['port']}"
+            ProcessUtilities.executioner(execPath)
+
+            ### Set up ht access
+
+            execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/DockerSites.py"
+            execPath = execPath + f" SetupHTAccess --port {self.data['port']} --htaccess {self.data['htaccessPath']}"
+            ProcessUtilities.executioner(execPath, self.data['externalApp'])
+
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                group = 'nobody'
+            else:
+                group = 'nogroup'
+
+            command = f"chown -R nobody:{group} /home/docker/{self.data['finalURL']}/data"
+            ProcessUtilities.executioner(command)
+
+            ### just restart ls for htaccess
+
+            from plogical.installUtilities import installUtilities
+            installUtilities.reStartLiteSpeedSocket()
+
+            logging.statusWriter(self.JobID, 'Completed. [200]')
+
+        except BaseException as msg:
+            logging.writeToFile(f'{str(msg)}. [DeployN8NContainer]')
+            logging.statusWriter(self.JobID, f'Error {str(msg)} . [404]')
+            print(str(msg))
+            pass
 
 
 def Main():
