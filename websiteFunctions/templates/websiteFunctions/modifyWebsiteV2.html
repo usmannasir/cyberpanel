@@ -1,0 +1,85 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    <div ng-controller="modifyWebsitesControllerV2" class="p-8">
+        <div>
+            <p class="text-4xl font-bold">Modify Website</p>
+            <p class="text-xs text-gray-600 py-2 font-semibold">Packages define resources for your websites, you need to
+                add package before creating a website.</p>
+        </div>
+        <div>
+            <div class="py-4">
+                <p class="text-xl font-bold">Modify Website</p>
+            </div>
+            <hr>
+            <div>
+                <div class="flex mt-4 py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-60">Select Website</p>
+                    </div>
+                    <div>
+                        <select ng-change="fetchWebsites()" ng-model="websiteToBeModified"
+                                class="form-control w-80 bg-gray-100 rounded px-2 py-1">
+                            {% for items in websiteList %}
+                                <option>{{ items }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div id="webSiteDetailsToBeModified">
+                    <div class="flex py-2 px-6">
+                        <div>
+                            <p class="font-semibold w-60">Select Package</p>
+                        </div>
+                        <div>
+                            <select ng-model="selectedPack" class="form-control w-80 bg-gray-100 rounded px-2 py-1">
+                                <option ng-repeat="pack in webpacks">{$ pack.pack $}</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="flex py-2 px-6">
+                        <div>
+                            <p class="font-semibold w-60">Select Owner</p>
+                        </div>
+                        <div>
+                            <select ng-model="selectedAdmin" class="form-control w-80 bg-gray-100 rounded px-2 py-1">
+                                <option ng-repeat="admins in adminNames">{$ admins.adminNames $}</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="flex py-2 px-6">
+                        <div>
+                            <p class="font-semibold w-60">Email</p>
+                        </div>
+                        <div>
+                            <input type="email" class="form-control w-80 bg-gray-100 rounded px-2 py-1"
+                                   ng-model="adminEmail" required>
+                        </div>
+                    </div>
+                    <div class="flex py-2 px-6">
+                        <div>
+                            <p class="font-semibold w-60">Select PHP</p>
+                        </div>
+                        <div>
+                            <select ng-model="phpSelection" class="form-control w-80 bg-gray-100 rounded px-2 py-1">
+                                {% for php in phps %}
+                                    <option>{{ php }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="flex justify-center mt-4">
+            <button id="modifyWebsiteButton" ng-click="modifyWebsiteFunc()"
+                    class="bg-orange-500 px-3 py-4 rounded-lg text-xl font-semibold text-white">
+                Modify Website
+            </button>
+        </div>
+    </div>
+{% endblock %}

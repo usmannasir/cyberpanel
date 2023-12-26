@@ -161,6 +161,54 @@ class WebsiteManager:
             from django.shortcuts import reverse
             return redirect(reverse('pricing'))
 
+    def WPCreateV2(self, request=None, userID=None, data=None):
+        url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
+        data = {
+            "name": "wp-manager",
+            "IP": ACLManager.GetServerIP()
+        }
+
+        import requests
+        response = requests.post(url, data=json.dumps(data))
+        Status = response.json()['status']
+
+        if (Status == 1) or ProcessUtilities.decideServer() == ProcessUtilities.ent:
+            currentACL = ACLManager.loadedACL(userID)
+            adminNames = ACLManager.loadAllUsers(userID)
+            packagesName = ACLManager.loadPackages(userID, currentACL)
+            FinalVersions = []
+            userobj = Administrator.objects.get(pk=userID)
+            counter = 0
+            try:
+                import requests
+                WPVersions = json.loads(requests.get('https://api.wordpress.org/core/version-check/1.7/').text)[
+                    'offers']
+
+                for versions in WPVersions:
+                    if counter == 7:
+                        break
+                    if versions['current'] not in FinalVersions:
+                        FinalVersions.append(versions['current'])
+                        counter = counter + 1
+            except:
+                FinalVersions = ['5.6', '5.5.3', '5.5.2']
+
+            Plugins = wpplugins.objects.filter(owner=userobj)
+            rnpss = randomPassword.generate_pass(10)
+
+            ##
+
+            test_domain_status = 1
+
+            Data = {'packageList': packagesName, "owernList": adminNames, 'WPVersions': FinalVersions,
+                    'Plugins': Plugins, 'Randam_String': rnpss.lower(), 'test_domain_data': test_domain_status}
+            proc = httpProc(request, 'websiteFunctions/WPCreateV2.html',
+                            Data, 'createWebsite')
+            return proc.render()
+        else:
+            from django.shortcuts import reverse
+            return redirect(reverse('pricing'))
+
     def ListWPSites(self, request=None, userID=None, DeleteID=None):
         currentACL = ACLManager.loadedACL(userID)
 
@@ -716,10 +764,26 @@ class WebsiteManager:
                         {'websiteList': websitesName, 'phps': phps}, 'modifyWebsite')
         return proc.render()
 
+    def modifyWebsiteV2(self, request=None, userID=None, data=None):
+        currentACL = ACLManager.loadedACL(userID)
+
+        websitesName = ACLManager.findAllSites(currentACL, userID)
+        phps = PHPManager.findPHPVersions()
+        proc = httpProc(request, 'websiteFunctions/modifyWebsiteV2.html',
+                        {'websiteList': websitesName, 'phps': phps}, 'modifyWebsite')
+        return proc.render()
+
     def deleteWebsite(self, request=None, userID=None, data=None):
         currentACL = ACLManager.loadedACL(userID)
         websitesName = ACLManager.findAllSites(currentACL, userID)
         proc = httpProc(request, 'websiteFunctions/deleteWebsite.html',
+                        {'websiteList': websitesName}, 'deleteWebsite')
+        return proc.render()
+
+    def deleteWebsiteV2(self, request=None, userID=None, data=None):
+        currentACL = ACLManager.loadedACL(userID)
+        websitesName = ACLManager.findAllSites(currentACL, userID)
+        proc = httpProc(request, 'websiteFunctions/deleteWebsiteV2.html',
                         {'websiteList': websitesName}, 'deleteWebsite')
         return proc.render()
 
@@ -777,6 +841,15 @@ class WebsiteManager:
         websitesName = ACLManager.findAllSites(currentACL, userID)
 
         proc = httpProc(request, 'websiteFunctions/suspendWebsite.html',
+                        {'websiteList': websitesName}, 'suspendWebsite')
+        return proc.render()
+
+    def siteStateV2(self, request=None, userID=None, data=None):
+        currentACL = ACLManager.loadedACL(userID)
+
+        websitesName = ACLManager.findAllSites(currentACL, userID)
+
+        proc = httpProc(request, 'websiteFunctions/suspendWebsiteV2.html',
                         {'websiteList': websitesName}, 'suspendWebsite')
         return proc.render()
 

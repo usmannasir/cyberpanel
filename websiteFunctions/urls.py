@@ -8,8 +8,11 @@ urlpatterns = [
     url(r'^listChildDomains$', views.listChildDomains, name='listChildDomains'),
     url(r'^listChildDomainsV2$', views.listChildDomainsV2, name='listChildDomainsV2'),
     url(r'^modifyWebsite$', views.modifyWebsite, name='modifyWebsite'),
+    url(r'^modifyWebsiteV2$', views.modifyWebsiteV2, name='modifyWebsiteV2'),
     url(r'^deleteWebsite$', views.deleteWebsite, name='deleteWebsite'),
+    url(r'^deleteWebsiteV2$', views.deleteWebsiteV2, name='deleteWebsiteV2'),
     url(r'^siteState$', views.siteState, name='siteState'),
+    url(r'^siteStateV2$', views.siteStateV2, name='siteStateV2'),
     url(r'^createWebsiteV2$', views.createWebsiteV2, name='createWebsiteV2'),
     url(r'^listWebsitesV2$', views.listWebsitesV2, name='listWebsitesV2'),
 
@@ -19,6 +22,7 @@ urlpatterns = [
 
     ### WordPress
     url(r'^createWordpress$', views.WPCreate, name='createWordpress'),
+    url(r'^createWordpressV2$', views.WPCreateV2, name='createWordpressV2'),
     url(r'^ListWPSites$', views.ListWPSites, name='ListWPSites'),
     url(r'^WPHome$', views.WPHome, name='WPHome'),
     url(r'^RestoreBackups$', views.RestoreBackups, name='RestoreBackups'),

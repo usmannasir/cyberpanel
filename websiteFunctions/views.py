@@ -49,6 +49,13 @@ def WPCreate(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+def WPCreateV2(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.WPCreateV2(request, userID, )
+    except KeyError:
+        return redirect(loadLoginPage)
 
 def ListWPSites(request):
     try:
@@ -832,6 +839,17 @@ def modifyWebsite(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+def modifyWebsiteV2(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.modifyWebsiteV2(request, userID)
+    except BaseException as msg:
+        return HttpResponse(str(msg))
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
 
 def deleteWebsite(request):
     try:
@@ -841,7 +859,13 @@ def deleteWebsite(request):
     except KeyError:
         return redirect(loadLoginPage)
 
-
+def deleteWebsiteV2(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.deleteWebsiteV2(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
 def CreateNewDomain(request):
     try:
         userID = request.session['userID']
@@ -863,6 +887,14 @@ def siteState(request):
         userID = request.session['userID']
         wm = WebsiteManager()
         return wm.siteState(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def siteStateV2(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.siteStateV2(request, userID)
     except KeyError:
         return redirect(loadLoginPage)
 

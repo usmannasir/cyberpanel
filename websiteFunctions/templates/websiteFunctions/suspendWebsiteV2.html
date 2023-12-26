@@ -1,0 +1,52 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    <div ng-controller="suspendWebsiteControlV2" class="p-8">
+        <div>
+            <p class="text-4xl font-bold">Suspend/Unsuspend Website</p>
+            <p class="text-xs text-gray-600 py-2 font-semibold">This page can be used to suspend/unsuspend website</p>
+        </div>
+        <div>
+            <div class="py-4">
+                <p class="text-xl font-bold">Suspend/Unsuspend Website</p>
+            </div>
+            <hr>
+            <div>
+                <div class="flex mt-4 py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-60">Select Website</p>
+                    </div>
+                    <div>
+                        <select ng-change="showSuspendUnsuspend()" ng-model="websiteToBeSuspended"
+                                class="form-control w-80 bg-gray-100 rounded px-2 py-1">
+                            {% for items in websiteList %}
+                                <option>{{ items }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="flex mt-4 py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-60">Suspend/Unsuspend Website</p>
+                    </div>
+                    <div>
+                        <select ng-model="state" class="form-control w-80 bg-gray-100 rounded px-2 py-1">
+                            <option>{% trans "Suspend" %}</option>
+                            <option>{% trans "Un-Suspend" %}</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="flex justify-center mt-4">
+            <button ng-click="save()"
+                    class="bg-orange-500 px-3 py-4 rounded-lg text-xl font-semibold text-white">
+                Save
+            </button>
+        </div>
+    </div>
+{% endblock %}

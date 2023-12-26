@@ -2609,3 +2609,567 @@ newapp.controller('listChildDomainsMainV2', function ($scope, $http, $timeout) {
     };
 
 });
+
+newapp.controller('modifyWebsitesControllerV2', function ($scope, $http) {
+
+    $scope.fetchWebsites = function () {
+
+        $("#modifyWebsiteLoading").show();
+
+
+        var websiteToBeModified = $scope.websiteToBeModified;
+
+        url = "/websites/getWebsiteDetails";
+
+        var data = {
+            websiteToBeModified: websiteToBeModified,
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+            if (response.data.modifyStatus === 0) {
+                console.log(response.data);
+                $scope.errorMessage = response.data.error_message;
+                $("#websiteModifyFailure").fadeIn();
+                $("#websiteModifySuccess").hide();
+                $("#modifyWebsiteButton").hide();
+                $("#modifyWebsiteLoading").hide();
+                $("#canNotModify").hide();
+
+
+            } else {
+                console.log(response.data);
+                $("#modifyWebsiteButton").fadeIn();
+
+                $scope.adminEmail = response.data.adminEmail;
+                $scope.currentPack = response.data.current_pack;
+                $scope.webpacks = JSON.parse(response.data.packages);
+                $scope.adminNames = JSON.parse(response.data.adminNames);
+                $scope.currentAdmin = response.data.currentAdmin;
+
+                $("#webSiteDetailsToBeModified").fadeIn();
+                $("#websiteModifySuccess").fadeIn();
+                $("#modifyWebsiteButton").fadeIn();
+                $("#modifyWebsiteLoading").hide();
+                $("#canNotModify").hide();
+
+
+            }
+
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $("#websiteModifyFailure").fadeIn();
+        }
+
+    };
+
+
+    $scope.modifyWebsiteFunc = function () {
+
+        var domain = $scope.websiteToBeModified;
+        var packForWeb = $scope.selectedPack;
+        var email = $scope.adminEmail;
+        var phpVersion = $scope.phpSelection;
+        var admin = $scope.selectedAdmin;
+
+
+        $("#websiteModifyFailure").hide();
+        $("#websiteModifySuccess").hide();
+        $("#websiteSuccessfullyModified").hide();
+        $("#canNotModify").hide();
+        $("#modifyWebsiteLoading").fadeIn();
+
+
+        url = "/websites/saveWebsiteChanges";
+
+        var data = {
+            domain: domain,
+            packForWeb: packForWeb,
+            email: email,
+            phpVersion: phpVersion,
+            admin: admin
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+            if (response.data.saveStatus === 0) {
+                $scope.errMessage = response.data.error_message;
+
+                $("#canNotModify").fadeIn();
+                $("#websiteModifyFailure").hide();
+                $("#websiteModifySuccess").hide();
+                $("#websiteSuccessfullyModified").hide();
+                $("#modifyWebsiteLoading").hide();
+
+
+            } else {
+                $("#modifyWebsiteButton").hide();
+                $("#canNotModify").hide();
+                $("#websiteModifyFailure").hide();
+                $("#websiteModifySuccess").hide();
+
+                $("#websiteSuccessfullyModified").fadeIn();
+                $("#modifyWebsiteLoading").hide();
+
+                $scope.websiteModified = domain;
+
+
+            }
+
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.errMessage = response.data.error_message;
+            $("#canNotModify").fadeIn();
+        }
+
+
+    };
+
+});
+
+newapp.controller('suspendWebsiteControlV2', function ($scope, $http) {
+
+    $scope.suspendLoading = true;
+    $scope.stateView = true;
+
+    $scope.websiteSuspendFailure = true;
+    $scope.websiteUnsuspendFailure = true;
+    $scope.websiteSuccess = true;
+    $scope.couldNotConnect = true;
+
+    $scope.showSuspendUnsuspend = function () {
+
+        $scope.stateView = false;
+
+
+    };
+
+    $scope.save = function () {
+
+        $scope.suspendLoading = false;
+
+        var websiteName = $scope.websiteToBeSuspended
+        var state = $scope.state;
+
+
+        url = "/websites/submitWebsiteStatus";
+
+        var data = {
+            websiteName: websiteName,
+            state: state,
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+            if (response.data.websiteStatus === 1) {
+                if (state == "Suspend") {
+
+                    $scope.suspendLoading = true;
+                    $scope.stateView = false;
+
+                    $scope.websiteSuspendFailure = true;
+                    $scope.websiteUnsuspendFailure = true;
+                    $scope.websiteSuccess = false;
+                    $scope.couldNotConnect = true;
+
+                    $scope.websiteStatus = websiteName;
+                    $scope.finalStatus = "Suspended";
+
+                } else {
+                    $scope.suspendLoading = true;
+                    $scope.stateView = false;
+
+                    $scope.websiteSuspendFailure = true;
+                    $scope.websiteUnsuspendFailure = true;
+                    $scope.websiteSuccess = false;
+                    $scope.couldNotConnect = true;
+
+                    $scope.websiteStatus = websiteName;
+                    $scope.finalStatus = "Un-suspended";
+
+                }
+
+            } else {
+
+                if (state == "Suspend") {
+
+                    $scope.suspendLoading = true;
+                    $scope.stateView = false;
+
+                    $scope.websiteSuspendFailure = false;
+                    $scope.websiteUnsuspendFailure = true;
+                    $scope.websiteSuccess = true;
+                    $scope.couldNotConnect = true;
+
+
+                } else {
+                    $scope.suspendLoading = true;
+                    $scope.stateView = false;
+
+                    $scope.websiteSuspendFailure = true;
+                    $scope.websiteUnsuspendFailure = false;
+                    $scope.websiteSuccess = true;
+                    $scope.couldNotConnect = true;
+
+
+                }
+
+
+                $scope.errorMessage = response.data.error_message;
+
+            }
+
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.couldNotConnect = false;
+            $scope.suspendLoading = true;
+            $scope.stateView = true;
+
+            $scope.websiteSuspendFailure = true;
+            $scope.websiteUnsuspendFailure = true;
+            $scope.websiteSuccess = true;
+
+        }
+
+
+    };
+
+});
+
+newapp.controller('deleteWebsiteControlV2', function ($scope, $http) {
+
+
+    $scope.deleteWebsite = function () {
+
+        $("#deleteWebsiteButton").fadeIn();
+
+
+    };
+
+    $scope.deleteWebsiteFinal = function () {
+
+        $("#deleteLoading").show();
+
+        var websiteName = $scope.websiteToBeDeleted;
+
+
+        url = "/websites/submitWebsiteDeletion";
+
+        var data = {
+            websiteName: websiteName
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+            if (response.data.websiteDeleteStatus === 0) {
+                $scope.errorMessage = response.data.error_message;
+                $("#websiteDeleteFailure").fadeIn();
+                $("#websiteDeleteSuccess").hide();
+                $("#deleteWebsiteButton").hide();
+
+
+                $("#deleteLoading").hide();
+
+            } else {
+                $("#websiteDeleteFailure").hide();
+                $("#websiteDeleteSuccess").fadeIn();
+                $("#deleteWebsiteButton").hide();
+                $scope.deletedWebsite = websiteName;
+                $("#deleteLoading").hide();
+
+            }
+
+
+        }
+
+        function cantLoadInitialDatas(response) {
+        }
+
+
+    };
+
+});
+
+newapp.controller('createWordpressV2', function ($scope, $http, $timeout, $compile, $window) {
+    $scope.webSiteCreationLoading = true;
+    $scope.installationDetailsForm = false;
+    $scope.installationProgress = true;
+    $scope.errorMessageBox = true;
+    $scope.success = true;
+    $scope.couldNotConnect = true;
+    $scope.goBackDisable = true;
+
+
+    var statusFile;
+
+    $scope.createWordPresssite = function () {
+
+        $scope.webSiteCreationLoading = false;
+        $scope.installationDetailsForm = true;
+        $scope.installationProgress = false;
+        $scope.errorMessageBox = true;
+        $scope.success = true;
+        $scope.couldNotConnect = true;
+        $scope.goBackDisable = true;
+
+
+        $scope.currentStatus = "Starting creation..";
+
+        var apacheBackend = 0;
+
+        if ($scope.apacheBackend === true) {
+            apacheBackend = 1;
+        } else {
+            apacheBackend = 0
+        }
+
+        var package = $scope.packageForWebsite;
+        var websiteOwner = $scope.websiteOwner;
+        var WPtitle = $scope.WPtitle;
+
+        // if (domain_check == 0) {
+        //     var Part2_domainNameCreate = document.getElementById('Part2_domainNameCreate').value;
+        //     var domainNameCreate = document.getElementById('TestDomainNameCreate').value + Part2_domainNameCreate;
+        // }
+        // if (domain_check == 1) {
+        //
+        //     var domainNameCreate = $scope.own_domainNameCreate;
+        // }
+
+        var domainNameCreate = $scope.domainNameCreate;
+
+
+        var WPUsername = $scope.WPUsername;
+        var adminEmail = $scope.adminEmail;
+        var WPPassword = $scope.WPPassword;
+        var WPVersions = $scope.WPVersions;
+        var pluginbucket = $scope.pluginbucket;
+        var autoupdates = $scope.autoupdates;
+        var pluginupdates = $scope.pluginupdates;
+        var themeupdates = $scope.themeupdates;
+
+        if (domain_check == 0) {
+
+            var path = "";
+
+        }
+        if (domain_check = 1) {
+
+            var path = $scope.installPath;
+
+        }
+
+
+        var home = "1";
+
+        if (typeof path != 'undefined') {
+            home = "0";
+        }
+
+        //alert(domainNameCreate);
+        var data = {
+
+            title: WPtitle,
+            domain: domainNameCreate,
+            WPVersion: WPVersions,
+            pluginbucket: pluginbucket,
+            adminUser: WPUsername,
+            Email: adminEmail,
+            PasswordByPass: WPPassword,
+            AutomaticUpdates: autoupdates,
+            Plugins: pluginupdates,
+            Themes: themeupdates,
+            websiteOwner: websiteOwner,
+            package: package,
+            home: home,
+            path: path,
+            apacheBackend: apacheBackend
+        }
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+        var url = "/websites/submitWorpressCreation";
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.webSiteCreationLoading = true;
+            if (response.data.status === 1) {
+                statusFile = response.data.tempStatusPath;
+                getCreationStatus();
+
+            } else {
+                $scope.goBackDisable = false;
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+
+            alert("Error..." + response)
+
+        }
+
+    };
+    $scope.goBack = function () {
+        $scope.webSiteCreationLoading = true;
+        $scope.installationDetailsForm = false;
+        $scope.installationProgress = true;
+        $scope.errorMessageBox = true;
+        $scope.success = true;
+        $scope.couldNotConnect = true;
+        $scope.goBackDisable = true;
+        $("#installProgress").css("width", "0%");
+    };
+
+    function getCreationStatus() {
+
+        url = "/websites/installWordpressStatus";
+
+        var data = {
+            statusFile: statusFile
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+            if (response.data.abort === 1) {
+
+                if (response.data.installStatus === 1) {
+
+                    $scope.webSiteCreationLoading = true;
+                    $scope.installationDetailsForm = true;
+                    $scope.installationProgress = false;
+                    $scope.errorMessageBox = true;
+                    $scope.success = false;
+                    $scope.couldNotConnect = true;
+                    $scope.goBackDisable = false;
+
+                    $("#installProgress").css("width", "100%");
+                    $scope.installPercentage = "100";
+                    $scope.currentStatus = response.data.currentStatus;
+                    $timeout.cancel();
+
+                } else {
+
+                    $scope.webSiteCreationLoading = true;
+                    $scope.installationDetailsForm = true;
+                    $scope.installationProgress = false;
+                    $scope.errorMessageBox = false;
+                    $scope.success = true;
+                    $scope.couldNotConnect = true;
+                    $scope.goBackDisable = false;
+
+                    $scope.errorMessage = response.data.error_message;
+
+                    $("#installProgress").css("width", "0%");
+                    $scope.installPercentage = "0";
+                    $scope.goBackDisable = false;
+
+                }
+
+            } else {
+                $scope.webSiteCreationLoading = false;
+                $("#installProgress").css("width", response.data.installationProgress + "%");
+                $scope.installPercentage = response.data.installationProgress;
+                $scope.currentStatus = response.data.currentStatus;
+                $timeout(getCreationStatus, 1000);
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+
+            $scope.webSiteCreationLoading = true;
+            $scope.installationDetailsForm = true;
+            $scope.installationProgress = false;
+            $scope.errorMessageBox = true;
+            $scope.success = true;
+            $scope.couldNotConnect = false;
+            $scope.goBackDisable = false;
+
+        }
+
+
+    }
+
+
+});
+
+// function openModalDelete() {
+//     document.getElementById('modal').classList.remove('hidden');
+// }
+//
+// function closeModalDelete() {
+//     document.getElementById('modal').classList.add('hidden');
+// }
+
+
+// function openModal() {
+//     document.getElementById('settings').classList.remove('hidden');
+// }
+//
+// function closeModal() {
+//     document.getElementById('settings').classList.add('hidden');
+// }
+

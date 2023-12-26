@@ -8,7 +8,7 @@ urlpatterns = [
     url(r'^getLoadAverage',views.getLoadAverage, name='getLoadAverage'),
     url(r'^versionManagment',views.versionManagment, name='versionManagment'),
     url(r'^design', views.design, name='design'),
-    url(r'^exampleZarak', views.exampleZarak, name='exampleZarak'),
+    url(r'^dashboardV2', views.dashboardV2, name='dashboardV2'),
     url(r'^visionManagementV2', views.visionManagementV2, name='visionManagementV2'),
 
     url(r'^getthemedata', views.getthemedata, name='getthemedata'),

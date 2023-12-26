@@ -1,0 +1,177 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    <div ng-controller="createWordpressV2" class="p-8">
+        <div>
+            <p class="text-4xl font-bold">Create Wordpress Site</p>
+            <p class="text-xs text-gray-600 py-2 font-semibold">On this page you can launch,list,modify and
+                delete websites
+                from your server</p>
+        </div>
+        <div>
+            <div class="py-4">
+                <p class="text-xl font-bold">Website Details</p>
+            </div>
+            <hr>
+            <div>
+                <div ng-hide="installationDetailsForm" class="flex mt-4 py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-48">Select Package</p>
+                    </div>
+                    <div>
+                        <select ng-model="packageForWebsite" class="form-control w-80 bg-gray-100 rounded px-2 py-1">
+                            {% for items in packageList %}
+                                <option>{{ items }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div ng-hide="installationDetailsForm" class="flex py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-48">Select Owner</p>
+                    </div>
+                    <div>
+                        <select ng-model="websiteOwner" class="form-control w-80 bg-gray-100 rounded px-2 py-1">
+                            {% for items in owernList %}
+                                <option>{{ items }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div ng-hide="installationDetailsForm" class="flex py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-48">Title</p>
+                    </div>
+                    <div>
+                        <input type="text" name="WPtitle" class="form-control w-80 bg-gray-100 rounded px-2 py-1"
+                               ng-model="WPtitle" required>
+                    </div>
+                </div>
+                <div ng-hide="installationDetailsForm" class="flex py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-48">Domain Name</p>
+                    </div>
+                    <div>
+                        <input name="dom" type="text" class="form-control w-80 bg-gray-100 rounded px-2 py-1"
+                               ng-model="domainNameCreate"
+                               placeholder="{% trans "Do not enter WWW, it will be auto created!" %}" required>
+                    </div>
+                </div>
+                <div ng-hide="installationDetailsForm" class="flex py-2 px-6">
+                    <div class="w-48">
+                        <p class="font-semibold w-48">Additional Features</p></label>
+                    </div>
+                    <div class="text-gray-500 font-semibold">
+                        <label class="col-sm-3 control-label"></label>
+                        <div class="col-sm-9">
+                            <div class="checkbox">
+                                <label>
+                                    {% if test_domain_data %}
+                                        <input ng-model="apacheBackend" type="checkbox" value="">
+                                        OpenLiteSpeed + Apache (Backend) (For Ubuntu 22 and AlmaLinux 8)
+                                    {% else %}
+
+                                        <input ng-model="apacheBackend" type="checkbox" value="" disabled>
+                                        OpenLiteSpeed + Apache (Backend) (For Ubuntu 22 and AlmaLinux 8) -
+                                        <strong><a href="https://go.cyberpanel.net/ApacheRev">Premium Feature</a> <i
+                                                class="p fa fa-external-link btn-icon"> </i></strong>
+                                    {% endif %}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div ng-hide="installationDetailsForm" class="flex py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-48">Username</p>
+                    </div>
+                    <div>
+                        <input name="Username" type="text" class="form-control w-80 bg-gray-100 rounded px-2 py-1"
+                               ng-model="WPUsername"
+                               required>
+                    </div>
+                </div>
+                <div ng-hide="installationDetailsForm" class="flex py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-48">Email</p>
+                    </div>
+                    <div>
+                        <input type="email" name="email" class="form-control w-80 bg-gray-100 rounded px-2 py-1"
+                               ng-model="adminEmail" required>
+                    </div>
+                </div>
+                <div ng-hide="installationDetailsForm" class="flex py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-48">Select WP Version</p>
+                    </div>
+                    <div>
+                        <select ng-model="WPVersions" class="form-control w-80 bg-gray-100 rounded px-2 py-1">
+                            {% for wp in WPVersions %}
+                                <option>{{ wp }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div ng-hide="installationDetailsForm" class="flex py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-48">Plugin/Theme</p>
+                    </div>
+                    <div>
+                        <select ng-model="pluginbucket" class="form-control w-80 bg-gray-100 rounded px-2 py-1">
+                            <option value="-1" selected>Select Plugin Bucket</option>
+                            {% for wp in Plugins %}
+                                <option value="{{ wp.id }}">{{ wp.Name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div ng-hide="installationDetailsForm" class="flex py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-48">Automatic Updates</p>
+                    </div>
+                    <div>
+                        <select ng-model="autoupdates" class="form-control w-80 bg-gray-100 rounded px-2 py-1">
+                            <option>Disabled</option>
+                            <option>All minor and major</option>
+                            <option>Minor and Security Updates</option>
+                        </select>
+                    </div>
+                </div>
+                <div ng-hide="installationDetailsForm" class="flex py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-48">Plugin Updates</p>
+                    </div>
+                    <div>
+                        <select ng-model="pluginupdates" class="form-control w-80 bg-gray-100 rounded px-2 py-1">
+
+                            <option>Enabled</option>
+                            <option>Disabled</option>
+
+                        </select>
+                    </div>
+                </div>
+                <div ng-hide="installationDetailsForm" class="flex py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-48">Theme Updates</p>
+                    </div>
+                    <div>
+                        <select ng-model="themeupdates" class="form-control w-80 bg-gray-100 rounded px-2 py-1">
+                            <option>Enabled</option>
+                            <option>Disabled</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div ng-hide="installationDetailsForm" class="flex justify-center mt-3">
+            <button ng-click="createWordPresssite()"
+                    class="bg-orange-500 px-3 py-4 rounded-lg text-xl font-semibold text-white">
+                Create Website
+            </button>
+        </div>
+    </div>
+{% endblock %}

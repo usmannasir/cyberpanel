@@ -1,0 +1,42 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    <div ng-controller="deleteWebsiteControlV2" class="p-8">
+        <div>
+            <p class="text-4xl font-bold">Delete Website</p>
+            <p class="text-xs text-gray-600 py-2 font-semibold">This page can be used to delete website, once deleted it
+                can not be recovered.</p>
+        </div>
+        <div>
+            <div class="py-4">
+                <p class="text-xl font-bold">Delete Website</p>
+            </div>
+            <hr>
+            <div>
+                <div class="flex mt-4 py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-60">Select Website</p>
+                    </div>
+                    <div>
+                        <select ng-change="fetchDetails()" ng-model="websiteToBeDeleted"
+                                class="form-control w-80 bg-gray-100 rounded px-2 py-1">
+                            {% for items in websiteList %}
+                                <option>{{ items }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="flex justify-center mt-4">
+            <button ng-click="deleteWebsite()"
+                    class="bg-orange-500 px-3 py-4 rounded-lg text-xl font-semibold text-white">
+                Delete Website
+            </button>
+        </div>
+    </div>
+{% endblock %}
