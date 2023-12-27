@@ -37,6 +37,8 @@ class Docker_Sites(multi.Thread):
                 self.DeployWPContainer()
             elif self.function_run == 'SubmitDockersiteCreation':
                 self.SubmitDockersiteCreation()
+            elif self.function_run == 'DeployN8NContainer':
+                self.DeployN8NContainer()
 
 
         except BaseException as msg:
@@ -399,8 +401,12 @@ services:
             )
             dockersiteobj.save()
 
-            background = Docker_Sites('DeployWPContainer', f_data)
-            background.start()
+            if self.data['App'] == 'WordPress':
+                background = Docker_Sites('DeployWPContainer', f_data)
+                background.start()
+            elif self.data['App'] == 'n8n':
+                background = Docker_Sites('DeployN8NContainer', f_data)
+                background.start()
 
         except BaseException as msg:
             logging.writeToFile("Error Submit Docker site Creation ....... %s" % str(msg))
@@ -579,12 +585,13 @@ volumes:
 services:
   '{self.data['ServiceName']}-db':
     image: docker.io/bitnami/postgresql:16
+    user: root
     restart: always
     environment:
 #      - POSTGRES_USER:root
-      - POSTGRESQL_USERNAME={self.data['MySQLPassword']}
+      - POSTGRESQL_USERNAME={self.data['MySQLDBNUser']}
       - POSTGRESQL_DATABASE={self.data['MySQLDBName']}
-      - POSTGRESQL_POSTGRES_PASSWORD={self.data['MySQLDBNUser']}
+      - POSTGRESQL_POSTGRES_PASSWORD={self.data['MySQLPassword']}
       - POSTGRESQL_PASSWORD={self.data['MySQLPassword']}
     volumes:
 #      - "/home/docker/{self.data['finalURL']}/db:/var/lib/postgresql/data"
@@ -592,6 +599,7 @@ services:
 
   '{self.data['ServiceName']}':
     image: docker.n8n.io/n8nio/n8n
+    user: root
     restart: always
     environment:
       - DB_TYPE=postgresdb
@@ -704,7 +712,7 @@ def Main():
             # port, SitePath, CPUsSite, MemorySite, SiteName
             # finalURL, blogTitle, adminUser, adminPassword, adminEmail, htaccessPath, externalApp
             data = {
-                "JobID": '/home/cyberpanel/error-logs.txt',
+                "JobID": '/home/cyberpanel/hey.txt',
                 "ComposePath": "/home/docker.cyberpanel.net/docker-compose.yml",
                 "MySQLPath": '/home/docker.cyberpanel.net/public_html/sqldocker',
                 "MySQLRootPass": 'testdbwp12345',
