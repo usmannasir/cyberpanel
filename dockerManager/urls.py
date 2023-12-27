@@ -31,4 +31,8 @@ urlpatterns = [
     url(r'^view/(?P<name>(.*))$', views.viewContainer, name='viewContainer'),
 
     path('manage/<int:dockerapp>/app', Dockersitehome, name='Dockersitehome'),
+    path('getDockersiteList', views.getDockersiteList, name='getDockersiteList'),
+    path('getContainerAppinfo', views.getContainerAppinfo, name='getContainerAppinfo'),
+    path('getContainerApplog', views.getContainerApplog, name='getContainerApplog'),
+    path('recreateappcontainer', views.recreateappcontainer, name='recreateappcontainer'),
 ]

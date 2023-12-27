@@ -131,6 +131,29 @@
                         </div>
 
                         <div ng-hide="installationDetailsForm" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Select Package" %}</label>
+                            <div class="col-sm-6">
+                                <select ng-model="packageForWebsite" class="form-control">
+                                    {% for items in packageList %}
+                                        <option>{{ items }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div ng-hide="installationDetailsForm" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Select Owner" %}</label>
+                            <div class="col-sm-6">
+                                <select ng-model="websiteOwner" class="form-control">
+                                    {% for items in owernList %}
+                                        <option>{{ items }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+
+                        <div ng-hide="installationDetailsForm" class="form-group">
                             <label class="col-sm-3 control-label">{% trans "Domain Name" %}</label>
                             <div class="col-sm-6">
                                 <input name="dom" type="text" class="form-control" ng-model="domainNameCreate"
@@ -180,7 +203,9 @@
                                         {% else %}
 
                                             <input ng-model="apacheBackend" type="checkbox" value="" disabled>
-                                            OpenLiteSpeed + Apache (Backend) (For Ubuntu 22 and AlmaLinux 8) - <strong><a href="https://go.cyberpanel.net/ApacheRev">Premium Feature</a> <i class="p fa fa-external-link btn-icon"> </i></strong>
+                                            OpenLiteSpeed + Apache (Backend) (For Ubuntu 22 and AlmaLinux 8) -
+                                            <strong><a href="https://go.cyberpanel.net/ApacheRev">Premium Feature</a> <i
+                                                    class="p fa fa-external-link btn-icon"> </i></strong>
                                         {% endif %}
                                     </label>
                                 </div>
