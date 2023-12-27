@@ -578,42 +578,36 @@ volumes:
 
 services:
   '{self.data['ServiceName']}-db':
-    image: postgres:11
+    image: docker.io/bitnami/postgresql:16
     restart: always
     environment:
-      - POSTGRES_USER:"root"
-      - POSTGRES_PASSWORD:"{self.data['MySQLPassword']}"
-      - POSTGRES_DB:"{self.data['MySQLDBName']}"
-      - POSTGRES_NON_ROOT_USER:"{self.data['MySQLDBNUser']}"
-      - POSTGRES_NON_ROOT_PASSWORD:"{self.data['MySQLPassword']}"
+#      - POSTGRES_USER:root
+      - POSTGRESQL_USERNAME={self.data['MySQLPassword']}
+      - POSTGRESQL_DATABASE={self.data['MySQLDBName']}
+      - POSTGRESQL_POSTGRES_PASSWORD={self.data['MySQLDBNUser']}
+      - POSTGRESQL_PASSWORD={self.data['MySQLPassword']}
     volumes:
-      - "/home/docker/{self.data['finalURL']}/db:/var/lib/postgresql/data"
-    healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -h localhost -U "{self.data['MySQLDBNUser']}" -d "{self.data['MySQLDBName']}"']
-      interval: 5s
-      timeout: 5s
-      retries: 10
+#      - "/home/docker/{self.data['finalURL']}/db:/var/lib/postgresql/data"
+      - "/home/docker/{self.data['finalURL']}/db:/bitnami/postgresql"
 
   '{self.data['ServiceName']}':
     image: docker.n8n.io/n8nio/n8n
     restart: always
     environment:
       - DB_TYPE=postgresdb
-      - DB_POSTGRESDB_HOST='{self.data['ServiceName']}-db'
+      - DB_POSTGRESDB_HOST={self.data['ServiceName']}-db
       - DB_POSTGRESDB_PORT=5432
-      - DB_POSTGRESDB_DATABASE="{self.data['MySQLDBName']}"
-      - DB_POSTGRESDB_USER="{self.data['MySQLDBNUser']}"
-      - DB_POSTGRESDB_PASSWORD="{self.data['MySQLPassword']}"
+      - DB_POSTGRESDB_DATABASE={self.data['MySQLDBName']}
+      - DB_POSTGRESDB_USER={self.data['MySQLDBNUser']}
+      - DB_POSTGRESDB_PASSWORD={self.data['MySQLPassword']}
     ports:
       - "{self.data['port']}:5678"
     links:
-      - postgres
+      - {self.data['ServiceName']}-db
     volumes:
-      - n8n_storage:/home/node/.n8n
       - "/home/docker/{self.data['finalURL']}/data:/home/node/.n8n"
     depends_on:
-      postgres:
-        condition: service_healthy
+      - '{self.data['ServiceName']}-db'
 '''
 
             ### WriteConfig to compose-file
@@ -666,13 +660,13 @@ services:
             execPath = execPath + f" SetupHTAccess --port {self.data['port']} --htaccess {self.data['htaccessPath']}"
             ProcessUtilities.executioner(execPath, self.data['externalApp'])
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
-                group = 'nobody'
-            else:
-                group = 'nogroup'
-
-            command = f"chown -R nobody:{group} /home/docker/{self.data['finalURL']}/data"
-            ProcessUtilities.executioner(command)
+            # if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+            #     group = 'nobody'
+            # else:
+            #     group = 'nogroup'
+            #
+            # command = f"chown -R nobody:{group} /home/docker/{self.data['finalURL']}/data"
+            # ProcessUtilities.executioner(command)
 
             ### just restart ls for htaccess
 
@@ -734,7 +728,7 @@ def Main():
                 "docRoot": "/home/docker.cyberpanel.net"
             }
             ds = Docker_Sites('', data)
-            ds.DeployWPContainer()
+            ds.DeployN8NContainer()
 
         elif args.function == 'DeleteDockerApp':
             data = {
