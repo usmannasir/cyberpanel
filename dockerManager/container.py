@@ -1177,18 +1177,33 @@ class ContainerManager(multi.Thread):
 
 
             name = data['name']
+            WPusername = data['WPusername']
+            WPemail = data['WPemail']
+            WPpasswd = data['WPpasswd']
 
             dockersite = DockerSites.objects.get(SiteName=name)
-            #-------------------------delete or create docker site wala function call krna hai dekh kr kya kya data pass ho ga
-            # passdata = {}
-            # passdata["JobID"] = None
-            # passdata['name'] = name
-            # passdata['numberOfLines'] = 50
-            # da = Docker_Sites(None, passdata)
-            # retdata = da.ContainerLogs()
+
+            passdata ={}
+            data['JobID'] = ''
+            data['Domain'] = dockersite.admin.domain
+            data['domain'] = dockersite.admin.domain
+            data['WPemal'] = WPemail
+            data['Owner'] = dockersite.admin.admin.userName
+            data['userID'] = userID
+            data['MysqlCPU'] = dockersite.CPUsMySQL
+            data['MYsqlRam'] = dockersite.MemoryMySQL
+            data['SiteCPU'] = dockersite.CPUsSite
+            data['SiteRam'] = dockersite.MemorySite
+            data['sitename'] = dockersite.SiteName
+            data['WPusername'] = WPusername
+            data['WPpasswd'] = WPpasswd
+            data['externalApp'] = dockersite.admin.externalApp
+
+            da = Docker_Sites(None, passdata)
+            da.RebuildApp()
 
 
-            data_ret = {'status': 1, 'error_message': 'None', 'data':"retdata"}
+            data_ret = {'status': 1, 'error_message': 'None',}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 

@@ -10534,6 +10534,7 @@ app.controller('listDockersite', function ($scope, $http) {
 
 app.controller('ListDockersitecontainer', function ($scope, $http) {
     $scope.conatinerview = true
+    $scope.cyberPanelLoading = true;
     $scope.getcontainer = function () {
         url = "/docker/getDockersiteList";
 
@@ -10565,7 +10566,7 @@ app.controller('ListDockersitecontainer', function ($scope, $http) {
         }
 
         function cantLoadInitialData(response) {
-             new PNotify({
+            new PNotify({
                 title: 'Operation Failed!',
                 text: 'Connect disrupted, refresh the page.',
                 type: 'error'
@@ -10575,14 +10576,14 @@ app.controller('ListDockersitecontainer', function ($scope, $http) {
 
     $scope.getcontainer()
 
-    $scope.Lunchcontainer = function (containerid){
+    $scope.Lunchcontainer = function (containerid) {
         // $scope.listcontainerview = true
         var url = "/docker/getContainerAppinfo";
 
         var data = {
             'name': $('#sitename').html(),
             'id': containerid
-            };
+        };
 
         var config = {
             headers: {
@@ -10602,22 +10603,22 @@ app.controller('ListDockersitecontainer', function ($scope, $http) {
                 $scope.cid = response.data.data[1].id
                 $scope.appcpuUsage = 5
                 $scope.appmemoryUsage = 9
-                $scope.name = response.data.data[1].name
+                $scope.cName = response.data.data[1].name
                 $scope.port = response.data.data[1].name
                 $scope.getcontainerlog(containerid)
             } else {
 
-                 new PNotify({
-                title: 'Operation Failed!',
-                text: response.data.error_message,
-                type: 'error'
-            });
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
 
             }
         }
 
         function cantLoadInitialData(response) {
-             new PNotify({
+            new PNotify({
                 title: 'Operation Failed!',
                 text: 'Connect disrupted, refresh the page.',
                 type: 'error'
@@ -10626,7 +10627,7 @@ app.controller('ListDockersitecontainer', function ($scope, $http) {
     }
 
 
-    $scope.getcontainerlog = function (containerid){
+    $scope.getcontainerlog = function (containerid) {
         // $scope.listcontainerview = true
 
         var url = "/docker/getContainerApplog";
@@ -10634,7 +10635,7 @@ app.controller('ListDockersitecontainer', function ($scope, $http) {
         var data = {
             'name': $('#sitename').html(),
             'id': containerid
-            };
+        };
 
         var config = {
             headers: {
@@ -10658,17 +10659,17 @@ app.controller('ListDockersitecontainer', function ($scope, $http) {
                 });
             } else {
 
-                 new PNotify({
-                title: 'Operation Failed!',
-                text: response.data.error_message,
-                type: 'error'
-            });
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
 
             }
         }
 
         function cantLoadInitialData(response) {
-             new PNotify({
+            new PNotify({
                 title: 'Operation Failed!',
                 text: 'Connect disrupted, refresh the page.',
                 type: 'error'
@@ -10677,12 +10678,16 @@ app.controller('ListDockersitecontainer', function ($scope, $http) {
     }
 
 
-    $scope.recreateappcontainer = function (){
+    $scope.recreateappcontainer = function () {
+        $scope.cyberPanelLoading = false;
         var url = "/docker/recreateappcontainer";
 
         var data = {
             'name': $('#sitename').html(),
-            };
+            'WPusername': $scope.WPUsername,
+            'WPemail': $scope.adminEmail,
+            'WPpasswd': $scope.WPPassword,
+        };
 
         var config = {
             headers: {
@@ -10695,32 +10700,173 @@ app.controller('ListDockersitecontainer', function ($scope, $http) {
 
         function ListInitialData(response) {
             $scope.conatinerview = false
-            $scope.logs = response.data.data[1];
+            $scope.cyberPanelLoading = true;
+
+            $scope.getcontainer()
 
 
             if (response.data.status === 1) {
                 new PNotify({
                     title: 'Success!',
-                    text: 'Container info fetched.',
+                    text: 'Container recreated',
                     type: 'success'
                 });
             } else {
 
-                 new PNotify({
-                title: 'Operation Failed!',
-                text: response.data.error_message,
-                type: 'error'
-            });
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
 
             }
         }
 
         function cantLoadInitialData(response) {
-             new PNotify({
+            $scope.cyberPanelLoading = true;
+
+            new PNotify({
                 title: 'Operation Failed!',
                 text: 'Connect disrupted, refresh the page.',
                 type: 'error'
             });
         }
     }
+
+    $scope.refreshStatus = function () {
+        url = "/docker/getContainerStatus";
+        var data = {name: $scope.cName};
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialData, cantLoadInitialData);
+        function ListInitialData(response) {
+            if (response.data.containerStatus === 1) {
+                console.log(response.data.status);
+                $scope.status = response.data.status;
+            }
+            else {
+                new PNotify({
+                    title: 'Unable to complete request',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+
+            }
+        }
+
+        function cantLoadInitialData(response) {
+            PNotify.error({
+                title: 'Unable to complete request',
+                text: "Problem in connecting to server"
+            });
+        }
+
+    };
+    $scope.cAction = function (action) {
+        $('#actionLoading').show();
+        url = "/docker/doContainerAction";
+        var data = {name: $scope.cName, action: action};
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialData, cantLoadInitialData);
+
+
+        function ListInitialData(response) {
+            console.log(response);
+
+            if (response.data.containerActionStatus === 1) {
+                new PNotify({
+                    title: 'Success!',
+                    text: 'Action completed',
+                    type: 'success'
+                });
+                $scope.status = response.data.status;
+                $scope.refreshStatus()
+            }
+            else {
+                new PNotify({
+                    title: 'Unable to complete request',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+
+            }
+            $('#actionLoading').hide();
+        }
+
+        function cantLoadInitialData(response) {
+            PNotify.error({
+                title: 'Unable to complete request',
+                text: "Problem in connecting to server"
+            });
+            $('#actionLoading').hide();
+        }
+
+    };
+    $scope.cRemove = function () {
+        (new PNotify({
+            title: 'Confirmation Needed',
+            text: 'Are you sure?',
+            icon: 'fa fa-question-circle',
+            hide: false,
+            confirm: {
+                confirm: true
+            },
+            buttons: {
+                closer: false,
+                sticker: false
+            },
+            history: {
+                history: false
+            }
+        })).get().on('pnotify.confirm', function () {
+            $('#actionLoading').show();
+
+            url = "/docker/delContainer";
+            var data = {name: $scope.cName, unlisted: false};
+            var config = {
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            };
+
+            $http.post(url, data, config).then(ListInitialData, cantLoadInitialData);
+            function ListInitialData(response) {
+                if (response.data.delContainerStatus === 1) {
+                    new PNotify({
+                        title: 'Container deleted!',
+                        text: 'Redirecting...',
+                        type: 'success'
+                    });
+                    window.location.href = '/docker/listContainers';
+                }
+                else {
+                    new PNotify({
+                        title: 'Unable to complete request',
+                        text: response.data.error_message,
+                        type: 'error'
+                    });
+                }
+                $('#actionLoading').hide();
+            }
+
+            function cantLoadInitialData(response) {
+                PNotify.error({
+                    title: 'Unable to complete request',
+                    text: "Problem in connecting to server"
+                });
+                $('#actionLoading').hide();
+            }
+        })
+    };
+
+
 })
