@@ -6660,7 +6660,7 @@ StrictHostKeyChecking no
         if PackageAssignment.objects.all().count() == 0:
 
             name = 'Default'
-            cpu = 1
+            cpu = 2
             Memory = 1024
             Bandwidth = '100'
             disk = '100'
