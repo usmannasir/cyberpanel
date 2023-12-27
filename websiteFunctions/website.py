@@ -238,6 +238,35 @@ class WebsiteManager:
                         {"wpsite": tata['wpsites']})
         return proc.render()
 
+    def ListWPSitesV2(self, request=None, userID=None, DeleteID=None):
+        currentACL = ACLManager.loadedACL(userID)
+
+        admin = Administrator.objects.get(pk=userID)
+        tata = {}
+        tata['wp'] = []
+        tata['wpsites'] = []
+        tata['wp'] = ACLManager.GetALLWPObjects(currentACL, userID)
+
+        try:
+            if DeleteID != None:
+                WPDelete = WPSites.objects.get(pk=DeleteID)
+
+                if ACLManager.checkOwnership(WPDelete.owner.domain, admin, currentACL) == 1:
+                    WPDelete.delete()
+
+        except BaseException as msg:
+            pass
+
+        for sub in tata['wp']:
+            tata['wpsites'].append({'id': sub.id,
+                                    'title': sub.title,
+                                    'url': sub.FinalURL
+                                    })
+
+        proc = httpProc(request, 'websiteFunctions/WPsitesListV2.html',
+                        {"wpsite": tata['wpsites']})
+        return proc.render()
+
     def WPHome(self, request=None, userID=None, WPid=None, DeleteID=None):
         Data = {}
         currentACL = ACLManager.loadedACL(userID)
@@ -513,6 +542,75 @@ class WebsiteManager:
             from django.shortcuts import reverse
             return redirect(reverse('pricing'))
 
+    def RestoreBackupsV2(self, request=None, userID=None, DeleteID=None):
+        Data = {}
+        currentACL = ACLManager.loadedACL(userID)
+        admin = Administrator.objects.get(pk=userID)
+
+        url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
+        data = {
+            "name": "wp-manager",
+            "IP": ACLManager.GetServerIP()
+        }
+
+        import requests
+        response = requests.post(url, data=json.dumps(data))
+        Status = response.json()['status']
+
+        if (Status == 1) or ProcessUtilities.decideServer() == ProcessUtilities.ent:
+
+            backobj = WPSitesBackup.objects.filter(owner=admin).order_by('-id')
+
+            if ACLManager.CheckIPBackupObjectOwner(currentACL, backobj, admin) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
+            try:
+                if DeleteID != None:
+                    DeleteIDobj = WPSitesBackup.objects.get(pk=DeleteID)
+
+                    if ACLManager.CheckIPBackupObjectOwner(currentACL, DeleteIDobj, admin) == 1:
+                        config = DeleteIDobj.config
+                        conf = json.loads(config)
+                        FileName = conf['name']
+                        command = "rm -r /home/backup/%s.tar.gz" % FileName
+                        ProcessUtilities.executioner(command)
+                        DeleteIDobj.delete()
+
+            except BaseException as msg:
+                pass
+            Data['job'] = []
+
+            for sub in backobj:
+                try:
+                    wpsite = WPSites.objects.get(pk=sub.WPSiteID)
+                    web = wpsite.title
+                except:
+                    web = "Website Not Found"
+
+                try:
+                    config = sub.config
+                    conf = json.loads(config)
+                    Backuptype = conf['Backuptype']
+                    BackupDestination = conf['BackupDestination']
+                except:
+                    Backuptype = "Backup type not exists"
+
+                Data['job'].append({
+                    'id': sub.id,
+                    'title': web,
+                    'Backuptype': Backuptype,
+                    'BackupDestination': BackupDestination
+                })
+
+            proc = httpProc(request, 'websiteFunctions/RestoreBackupsV2.html',
+                            Data, 'createWebsite')
+            return proc.render()
+        else:
+            from django.shortcuts import reverse
+            return redirect(reverse('pricing'))
+
     def AutoLogin(self, request=None, userID=None):
 
         WPid = request.GET.get('id')
@@ -589,6 +687,23 @@ class WebsiteManager:
             from django.shortcuts import reverse
             return redirect(reverse('pricing'))
 
+    def ConfigurePluginsV2(self, request=None, userID=None, data=None):
+
+        if ACLManager.CheckForPremFeature('wp-manager'):
+            currentACL = ACLManager.loadedACL(userID)
+            userobj = Administrator.objects.get(pk=userID)
+
+            Selectedplugins = wpplugins.objects.filter(owner=userobj)
+            # data['Selectedplugins'] = wpplugins.objects.filter(ProjectOwner=HostingCompany)
+
+            Data = {'Selectedplugins': Selectedplugins, }
+            proc = httpProc(request, 'websiteFunctions/WPConfigurePluginsV2.html',
+                            Data, 'createWebsite')
+            return proc.render()
+        else:
+            from django.shortcuts import reverse
+            return redirect(reverse('pricing'))
+
     def Addnewplugin(self, request=None, userID=None, data=None):
         from django.shortcuts import reverse
         if ACLManager.CheckForPremFeature('wp-manager'):
@@ -599,6 +714,21 @@ class WebsiteManager:
 
             Data = {'packageList': packagesName, "owernList": adminNames, 'phps': phps}
             proc = httpProc(request, 'websiteFunctions/WPAddNewPlugin.html',
+                            Data, 'createWebsite')
+            return proc.render()
+
+        return redirect(reverse('pricing'))
+
+    def AddnewpluginV2(self, request=None, userID=None, data=None):
+        from django.shortcuts import reverse
+        if ACLManager.CheckForPremFeature('wp-manager'):
+            currentACL = ACLManager.loadedACL(userID)
+            adminNames = ACLManager.loadAllUsers(userID)
+            packagesName = ACLManager.loadPackages(userID, currentACL)
+            phps = PHPManager.findPHPVersions()
+
+            Data = {'packageList': packagesName, "owernList": adminNames, 'phps': phps}
+            proc = httpProc(request, 'websiteFunctions/WPAddNewPluginV2.html',
                             Data, 'createWebsite')
             return proc.render()
 
@@ -677,6 +807,26 @@ class WebsiteManager:
         Data['BucketName'] = pluginobj.Name
 
         proc = httpProc(request, 'websiteFunctions/WPEidtPlugin.html',
+                        Data, 'createWebsite')
+        return proc.render()
+
+    def EidtPluginV2(self, request=None, userID=None, pluginbID=None):
+        Data = {}
+        currentACL = ACLManager.loadedACL(userID)
+        admin = Administrator.objects.get(pk=userID)
+        pluginobj = wpplugins.objects.get(pk=pluginbID)
+
+        if ACLManager.CheckIPPluginObjectOwner(currentACL, pluginobj, admin) == 1:
+            pass
+        else:
+            return ACLManager.loadError()
+
+        lmo = json.loads(pluginobj.config)
+        Data['Selectedplugins'] = lmo
+        Data['pluginbID'] = pluginbID
+        Data['BucketName'] = pluginobj.Name
+
+        proc = httpProc(request, 'websiteFunctions/WPEditPluginV2.html',
                         Data, 'createWebsite')
         return proc.render()
 

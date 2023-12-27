@@ -1,0 +1,41 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    <div ng-controller="listWebsitesV2" class="p-8">
+        <div>
+            <p class="text-4xl font-bold">Restore Backups</p>
+            <p class="text-xs text-gray-600 py-2 font-semibold">On this page you can restore,list,modify and
+                delete backup wordpress sites
+                from your server</p>
+        </div>
+        <div>
+            <div class="py-4">
+{#                <p class="text-xl font-bold">Website Details</p>#}
+            </div>
+            <hr>
+            <div>
+                <div class="flex mt-4 py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-60">Choose Restoring Method</p>
+                    </div>
+                    <div>
+                        <select ng-model="packageForWebsite" class="form-control w-80 bg-gray-100 rounded px-2 py-1">
+                            {% for items in packageList %}
+                                <option>{{ items }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="flex justify-center mt-3">
+            <button ng-click="goBack()" class="bg-orange-500 px-3 py-4 rounded-lg text-xl font-semibold text-white">
+                Restore Backup Now
+            </button>
+        </div>
+    </div>
+{% endblock %}

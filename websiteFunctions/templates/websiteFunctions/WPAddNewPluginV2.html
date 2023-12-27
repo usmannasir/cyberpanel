@@ -1,0 +1,50 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    <div ng-controller="WPAddNewPluginV2" class="p-8">
+        <div class="flex lg:flex-row justify-between items-center sm:flex-col mb-5">
+            <div>
+                <p class="text-4xl font-bold">Add New Plugin</p>
+            </div>
+        </div>
+        <hr>
+        <div>
+            <div class="flex mt-4 py-2 px-6">
+                <div>
+                    <p class="font-semibold w-48">Plugin Bucket Name</p>
+                </div>
+                <div>
+                    <input name="PluginbucketName" type="text" class="form-control w-80 bg-gray-100 rounded px-2 py-1"
+                           ng-model="PluginbucketName"
+                           required>
+                </div>
+            </div>
+            <div class="flex py-2 px-6">
+                <div>
+                    <p class="font-semibold w-48">Select Plugin Name</p>
+                </div>
+                <div>
+                    <input name="searchcontent" type="text" class="form-control w-80 bg-gray-100 rounded px-2 py-1"
+                           ng-model="searchcontent"
+                           ng-keyup="$event.keyCode == 13 ? SearchPluginName('add') : null"
+                           placeholder="{% trans "Search Plugin...." %}" required>
+                </div>
+            </div>
+        </div>
+        <div class="py-4 px-6 mt-3">
+            <p class="text-gray-500 font-bold">Selected Plugin</p>
+        </div>
+        <hr>
+        <div class="flex justify-center mt-3">
+            <button ng-disabled="websiteCreationForm.dom.$error.required || websiteCreationForm.email.$invalid"
+                    ng-click="AddNewplugin()"
+                    class="bg-orange-500 px-3 py-4 rounded-lg text-xl font-semibold text-white">
+                Add Plugin Bucket
+            </button>
+        </div>
+    </div>
+{% endblock %}

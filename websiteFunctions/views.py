@@ -65,7 +65,14 @@ def ListWPSites(request):
         return wm.ListWPSites(request, userID, DeleteID)
     except KeyError:
         return redirect(loadLoginPage)
-
+def ListWPSitesV2(request):
+    try:
+        userID = request.session['userID']
+        DeleteID = request.GET.get('DeleteID')
+        wm = WebsiteManager()
+        return wm.ListWPSitesV2(request, userID, DeleteID)
+    except KeyError:
+        return redirect(loadLoginPage)
 
 def WPHome(request):
     try:
@@ -144,6 +151,16 @@ def RestoreBackups(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+def RestoreBackupsV2(request):
+    try:
+        userID = request.session['userID']
+
+        DeleteID = request.GET.get('DeleteID')
+        wm = WebsiteManager()
+        return wm.RestoreBackupsV2(request, userID, DeleteID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
 
 def AutoLogin(request):
     try:
@@ -173,6 +190,24 @@ def ConfigurePlugins(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+def ConfigurePluginsV2(request):
+    try:
+        userID = request.session['userID']
+        userobj = Administrator.objects.get(pk=userID)
+        DeleteFileID = request.GET.get('delete', None)
+        if DeleteFileID != None:
+            try:
+                jobobj = wpplugins.objects.get(pk=DeleteFileID, owner=userobj)
+                jobobj.delete()
+                Deleted = 1
+            except BaseException as msg:
+                logging.CyberCPLogFileWriter.writeToFile("DeleteFileID ....... %s....msg.....%s" % (DeleteFileID, msg))
+                Deleted = 0
+        wm = WebsiteManager()
+        return wm.ConfigurePluginsV2(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
 
 def Addnewplugin(request):
     try:
@@ -181,6 +216,15 @@ def Addnewplugin(request):
         return wm.Addnewplugin(request, userID)
     except KeyError:
         return redirect(loadLoginPage)
+
+def AddnewpluginV2(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.AddnewpluginV2(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
 
 
 def SearchOnkeyupPlugin(request):
@@ -234,6 +278,16 @@ def EidtPlugin(request):
         pluginbID = request.GET.get('ID')
         wm = WebsiteManager()
         return wm.EidtPlugin(request, userID, pluginbID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def EidtPluginV2(request):
+    try:
+        userID = request.session['userID']
+
+        pluginbID = request.GET.get('ID')
+        wm = WebsiteManager()
+        return wm.EidtPluginV2(request, userID, pluginbID)
     except KeyError:
         return redirect(loadLoginPage)
 

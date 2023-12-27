@@ -24,8 +24,10 @@ urlpatterns = [
     url(r'^createWordpress$', views.WPCreate, name='createWordpress'),
     url(r'^createWordpressV2$', views.WPCreateV2, name='createWordpressV2'),
     url(r'^ListWPSites$', views.ListWPSites, name='ListWPSites'),
+    url(r'^ListWPSitesV2$', views.ListWPSitesV2, name='ListWPSitesV2'),
     url(r'^WPHome$', views.WPHome, name='WPHome'),
     url(r'^RestoreBackups$', views.RestoreBackups, name='RestoreBackups'),
+    url(r'^RestoreBackupsV2$', views.RestoreBackupsV2, name='RestoreBackupsV2'),
     url(r'^RestoreHome$', views.RestoreHome, name='RestoreHome'),
     url(r'^AutoLogin$', views.AutoLogin, name='AutoLogin'),
     url(r'^RemoteBackupConfig$', views.RemoteBackupConfig, name='RemoteBackupConfig'),
@@ -62,8 +64,11 @@ urlpatterns = [
 
     #### AddPlugin
     url(r'^ConfigurePlugins$', views.ConfigurePlugins, name='ConfigurePlugins'),
+    url(r'^ConfigurePluginsV2$', views.ConfigurePluginsV2, name='ConfigurePluginsV2'),
     url(r'^Addnewplugin$', views.Addnewplugin, name='Addnewplugin'),
+    url(r'^AddnewpluginV2$', views.AddnewpluginV2, name='AddnewpluginV2'),
     url(r'^EidtPlugin$', views.EidtPlugin, name='EidtPlugin'),
+    url(r'^EidtPluginV2$', views.EidtPluginV2, name='EidtPluginV2'),
 
     ## AddPlugin Ajax
     url(r'^SearchOnkeyupPlugin$', views.SearchOnkeyupPlugin, name='SearchOnkeyupPlugin'),

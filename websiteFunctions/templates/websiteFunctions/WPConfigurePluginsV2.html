@@ -1,0 +1,51 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    <div ng-controller="listTableUsersV2" class="p-8">
+        <div class="flex lg:flex-row justify-between items-center sm:flex-col">
+            <div>
+                <p class="text-4xl font-bold">Configure Plugin</p>
+                <p class="text-xs text-gray-600 py-2 font-semibold">You can configure list of plugins that will
+                    automatically get installed while deploying WordPress.</p>
+            </div>
+            <div>
+                <div class="sm:mt-6">
+                    <a href="{% url 'AddnewpluginV2' %}"
+                       class="bg-orange-500 px-3 py-3 rounded-lg text-xl font-semibold text-white">Create
+                        New Bucket
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div class="py-4">
+                <p class="text-xl font-bold">Plugin Buckets</p>
+            </div>
+            <hr>
+        </div>
+        <div class="mt-4">
+            <div>
+                <div class="flex gap-4">
+                    <div class="w-80 bg-gray-100 rounded px-4 py-1">ID</div>
+                    <div class="w-80 bg-gray-100 rounded px-4 py-1">File Name</div>
+                    <div class="w-80 bg-gray-100 rounded px-4 py-1">Action</div>
+                </div>
+                {% for sub in Selectedplugins %}
+                    <div class="flex gap-4 mt-3">
+                        <div class="w-80 px-4 py-1">{{ sub.id }}</div>
+                        <div class="w-80 px-4 py-1">{{ sub.Name }}</div>
+                        <div class="w-80 px-4 py-1">
+                            <a href="{% url 'EidtPluginV2' %}?ID={{ sub.id }}"><button class="bg-orange-500 hover:bg-orange-700 text-white font-bold py-1 px-4 rounded">EDIT</button></a>
+                            <button onclick="DeletePluginBuucket('{% url 'ConfigurePlugins' %}?delete={{ sub.id }}')" class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-4 rounded">DELETE</button>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

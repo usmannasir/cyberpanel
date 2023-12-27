@@ -3155,16 +3155,661 @@ newapp.controller('createWordpressV2', function ($scope, $http, $timeout, $compi
 
 
 });
+newapp.controller('listWebsitesV2', function ($scope, $http) {
+
+
+    $scope.currentPage = 1;
+    $scope.recordsToShow = 10;
+
+    $scope.getFurtherWebsitesFromDB = function () {
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        var data = {
+            page: $scope.currentPage,
+            recordsToShow: $scope.recordsToShow
+        };
+
+
+        dataurl = "/websites/fetchWebsitesList";
+
+        $http.post(dataurl, data, config).then(ListInitialData, cantLoadInitialData);
+
+
+        function ListInitialData(response) {
+            if (response.data.listWebSiteStatus === 1) {
+
+                $scope.WebSitesList = JSON.parse(response.data.data);
+                $scope.pagination = response.data.pagination;
+                $scope.clients = JSON.parse(response.data.data);
+                $("#listFail").hide();
+            } else {
+                $("#listFail").fadeIn();
+                $scope.errorMessage = response.data.error_message;
+
+            }
+        }
+
+        function cantLoadInitialData(response) {
+        }
+
+
+    };
+    $scope.getFurtherWebsitesFromDB();
+
+    $scope.cyberPanelLoading = true;
+
+    $scope.issueSSL = function (virtualHost) {
+        $scope.cyberPanelLoading = false;
+
+        var url = "/manageSSL/issueSSL";
+
+
+        var data = {
+            virtualHost: virtualHost
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.cyberPanelLoading = true;
+            if (response.data.SSL === 1) {
+                new PNotify({
+                    title: 'Success!',
+                    text: 'SSL successfully issued.',
+                    type: 'success'
+                });
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberPanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+        }
+
+
+    };
+
+    $scope.cyberPanelLoading = true;
+
+    $scope.searchWebsites = function () {
+
+        $scope.cyberPanelLoading = false;
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        var data = {
+            patternAdded: $scope.patternAdded
+        };
+
+        dataurl = "/websites/searchWebsites";
+
+        $http.post(dataurl, data, config).then(ListInitialData, cantLoadInitialData);
+
+
+        function ListInitialData(response) {
+            $scope.cyberPanelLoading = true;
+            if (response.data.listWebSiteStatus === 1) {
+
+                var finalData = JSON.parse(response.data.data);
+                $scope.WebSitesList = finalData;
+                $("#listFail").hide();
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+
+            }
+        }
+
+        function cantLoadInitialData(response) {
+            $scope.cyberPanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Connect disrupted, refresh the page.',
+                type: 'error'
+            });
+        }
+
+
+    };
+
+    $scope.ScanWordpressSite = function () {
+
+        $('#cyberPanelLoading').show();
+
+
+        var url = "/websites/ScanWordpressSite";
+
+        var data = {}
+
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+            $('#cyberPanelLoading').hide();
+
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success!',
+                    text: 'Successfully Saved!.',
+                    type: 'success'
+                });
+                location.reload();
+
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $('#cyberPanelLoading').hide();
+            new PNotify({
+                title: 'Operation Failed!',
+                text: response.data.error_message,
+                type: 'error'
+            });
+
+
+        }
+
+
+    };
+
+
+});
+app.controller('listWebsites', function ($scope, $http) {
+
+
+    $scope.currentPage = 1;
+    $scope.recordsToShow = 10;
+
+    $scope.getFurtherWebsitesFromDB = function () {
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        var data = {
+            page: $scope.currentPage,
+            recordsToShow: $scope.recordsToShow
+        };
+
+
+        dataurl = "/websites/fetchWebsitesList";
+
+        $http.post(dataurl, data, config).then(ListInitialData, cantLoadInitialData);
+
+
+        function ListInitialData(response) {
+            if (response.data.listWebSiteStatus === 1) {
+
+                $scope.WebSitesList = JSON.parse(response.data.data);
+                $scope.pagination = response.data.pagination;
+                $scope.clients = JSON.parse(response.data.data);
+                $("#listFail").hide();
+            } else {
+                $("#listFail").fadeIn();
+                $scope.errorMessage = response.data.error_message;
+
+            }
+        }
+
+        function cantLoadInitialData(response) {
+        }
+
+
+    };
+    $scope.getFurtherWebsitesFromDB();
+
+    $scope.cyberPanelLoading = true;
+
+    $scope.issueSSL = function (virtualHost) {
+        $scope.cyberPanelLoading = false;
+
+        var url = "/manageSSL/issueSSL";
+
+
+        var data = {
+            virtualHost: virtualHost
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.cyberPanelLoading = true;
+            if (response.data.SSL === 1) {
+                new PNotify({
+                    title: 'Success!',
+                    text: 'SSL successfully issued.',
+                    type: 'success'
+                });
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $scope.cyberPanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Could not connect to server, please refresh this page',
+                type: 'error'
+            });
+        }
+
+
+    };
+
+    $scope.cyberPanelLoading = true;
+
+    $scope.searchWebsites = function () {
+
+        $scope.cyberPanelLoading = false;
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        var data = {
+            patternAdded: $scope.patternAdded
+        };
+
+        dataurl = "/websites/searchWebsites";
+
+        $http.post(dataurl, data, config).then(ListInitialData, cantLoadInitialData);
+
+
+        function ListInitialData(response) {
+            $scope.cyberPanelLoading = true;
+            if (response.data.listWebSiteStatus === 1) {
+
+                var finalData = JSON.parse(response.data.data);
+                $scope.WebSitesList = finalData;
+                $("#listFail").hide();
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+
+            }
+        }
+
+        function cantLoadInitialData(response) {
+            $scope.cyberPanelLoading = true;
+            new PNotify({
+                title: 'Operation Failed!',
+                text: 'Connect disrupted, refresh the page.',
+                type: 'error'
+            });
+        }
+
+
+    };
+
+    $scope.ScanWordpressSite = function () {
+
+        $('#cyberPanelLoading').show();
+
+
+        var url = "/websites/ScanWordpressSite";
+
+        var data = {}
+
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+            $('#cyberPanelLoading').hide();
+
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success!',
+                    text: 'Successfully Saved!.',
+                    type: 'success'
+                });
+                location.reload();
+
+            } else {
+                new PNotify({
+                    title: 'Operation Failed!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+
+            }
+
+        }
+
+        function cantLoadInitialDatas(response) {
+            $('#cyberPanelLoading').hide();
+            new PNotify({
+                title: 'Operation Failed!',
+                text: response.data.error_message,
+                type: 'error'
+            });
+
+
+        }
+
+
+    };
+
+
+});
+
+newapp.controller('WPAddNewPluginV2', function ($scope, $http, $timeout, $window, $compile) {
+    $scope.webSiteCreationLoading = true;
+
+    $scope.SearchPluginName = function (val) {
+        $scope.webSiteCreationLoading = false;
+        SPVal = val;
+        url = "/websites/SearchOnkeyupPlugin";
+
+        var searchcontent = $scope.searchcontent;
+
+
+        var data = {
+            pluginname: searchcontent
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+            $scope.webSiteCreationLoading = true;
+
+            if (response.data.status === 1) {
+                if (SPVal == 'add') {
+                    $('#mysearch').show()
+                    document.getElementById('mysearch').innerHTML = "";
+                    var res = response.data.plugns.plugins
+                    // console.log(res);
+                    for (i = 0; i <= res.length; i++) {
+                        //
+                        var tml = '<option onclick="selectpluginJs(\'' + res[i].slug + '\')" style="  border-bottom: 1px solid  rgba(90, 91, 92, 0.5); padding: 5px; " value="' + res[i].slug + '">' + res[i].name + '</option> <br>';
+                        $('#mysearch').append(tml);
+                    }
+                } else if (SPVal == 'eidt') {
+                    $('#mysearch').show()
+                    document.getElementById('mysearch').innerHTML = "";
+                    var res = response.data.plugns.plugins
+                    // console.log(res);
+                    for (i = 0; i <= res.length; i++) {
+                        //
+                        var tml = '<option  ng-click="Addplugin(\'' + res[i].slug + '\')" style="  border-bottom: 1px solid  rgba(90, 91, 92, 0.5); padding: 5px; " value="' + res[i].slug + '">' + res[i].name + '</option> <br>';
+                        var temp = $compile(tml)($scope)
+                        angular.element(document.getElementById('mysearch')).append(temp);
+                    }
+
+                }
+
+
+            } else {
+
+                // $scope.errorMessage = response.data.error_message;
+                alert("Status not = 1: Error..." + response.data.error_message)
+            }
+
+
+        }
+
+        function cantLoadInitialDatas(response) {
+
+            alert("Error..." + response)
+
+        }
+    }
+
+    $scope.AddNewplugin = function () {
+
+        url = "/websites/AddNewpluginAjax";
+
+        var bucketname = $scope.PluginbucketName
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+        var data = {
+            config: arry,
+            Name: bucketname
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+        function ListInitialDatas(response) {
+
+            if (response.data.status === 1) {
+                new PNotify({
+                    title: 'Success!',
+                    text: 'Bucket created.',
+                    type: 'success'
+                });
+                location.reload();
+            } else {
+
+                new PNotify({
+                    title: 'Error!',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+            }
+
+
+        }
+
+        function cantLoadInitialDatas(response) {
+
+            alert("Error..." + response)
+
+        }
+    }
+
+    $scope.deletesPlgin = function (val) {
+
+        url = "/websites/deletesPlgin";
+
+
+        var data = {
+            pluginname: val,
+            pluginbBucketID: $('#pluginbID').html()
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+            if (response.data.status === 1) {
+                location.reload();
+
+            } else {
+
+                // $scope.errorMessage = response.data.error_message;
+                alert("Status not = 1: Error..." + response.data.error_message)
+            }
+
+
+        }
+
+        function cantLoadInitialDatas(response) {
+
+            alert("Error..." + response)
+
+        }
+
+    }
+
+    $scope.Addplugin = function (slug) {
+        $('#mysearch').hide()
+
+        url = "/websites/Addplugineidt";
+
+
+        var data = {
+            pluginname: slug,
+            pluginbBucketID: $('#pluginbID').html()
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialDatas, cantLoadInitialDatas);
+
+
+        function ListInitialDatas(response) {
+
+            if (response.data.status === 1) {
+                location.reload();
+
+            } else {
+
+                // $scope.errorMessage = response.data.error_message;
+                alert("Status not = 1: Error..." + response.data.error_message)
+            }
+
+
+        }
+
+        function cantLoadInitialDatas(response) {
+
+            alert("Error..." + response)
+
+        }
+
+
+    }
+
+});
+function openModal() {
+        const modal = document.getElementById("myModal");
+        modal.classList.remove("hidden");
+    }
+
+    function closeModal() {
+        const modal = document.getElementById("myModal");
+        modal.classList.add("hidden");
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const openModalButton = document.getElementById("openModalButton");
+        const closeModalButton = document.getElementById("closeModalButton");
+
+        openModalButton.addEventListener("click", openModal);
+        closeModalButton.addEventListener("click", closeModal);
+    });
+
+
+
 
 // function openModalDelete() {
-//     document.getElementById('modal').classList.remove('hidden');
-// }
+//         var modal = document.getElementById('popup-modal');
+//         modal.classList.remove('hidden');
+//     }
 //
-// function closeModalDelete() {
-//     document.getElementById('modal').classList.add('hidden');
-// }
-
-
+//     function closeModalDelete() {
+//         var modal = document.getElementById('popup-modal');
+//         modal.classList.add('hidden');
+//     }
+//
+//     document.addEventListener("DOMContentLoaded", function () {
+//         var deleteButton = document.querySelector('[data-modal-toggle="popup-modal"]');
+//         var closeButton = document.querySelector('[data-modal-hide="popup-modal"]');
+//
+//         deleteButton.addEventListener("click", openModalDelete);
+//         closeButton.addEventListener("click", closeModalDelete);
+//     });
+//
+//
 // function openModal() {
 //     document.getElementById('settings').classList.remove('hidden');
 // }
@@ -3172,4 +3817,17 @@ newapp.controller('createWordpressV2', function ($scope, $http, $timeout, $compi
 // function closeModal() {
 //     document.getElementById('settings').classList.add('hidden');
 // }
+// function openModal() {
+//         document.getElementById('modal').classList.remove('hidden');
+//     }
+//
+//     function closeModal() {
+//         document.getElementById('modal').classList.add('hidden');
+//     }
+//
+//     function deleteChildDomain() {
+//         // Implement your delete logic here
+//         console.log('Deleting child domain...');
+//         closeModal();
+//     }
 
