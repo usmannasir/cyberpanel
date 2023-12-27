@@ -1175,7 +1175,6 @@ class ContainerManager(multi.Thread):
             if admin.acl.adminStatus != 1:
                 return ACLManager.loadError()
 
-
             name = data['name']
             WPusername = data['WPusername']
             WPemail = data['WPemail']
@@ -1204,6 +1203,58 @@ class ContainerManager(multi.Thread):
 
 
             data_ret = {'status': 1, 'error_message': 'None',}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'removeImageStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def RestartContainerAPP(self, userID=None, data=None):
+        try:
+            admin = Administrator.objects.get(pk=userID)
+
+            if admin.acl.adminStatus != 1:
+                return ACLManager.loadError()
+
+            name = data['name']
+            containerID = data['id']
+
+            passdata = {}
+            passdata['containerID'] = containerID
+
+            da = Docker_Sites(None, passdata)
+            retdata = da.RestartContainer()
+
+
+            data_ret = {'status': 1, 'error_message': 'None', 'data':retdata}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'removeImageStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def StopContainerAPP(self, userID=None, data=None):
+        try:
+            admin = Administrator.objects.get(pk=userID)
+
+            if admin.acl.adminStatus != 1:
+                return ACLManager.loadError()
+
+            name = data['name']
+            containerID = data['id']
+
+            passdata = {}
+            passdata['containerID'] = containerID
+
+            da = Docker_Sites(None, passdata)
+            retdata = da.StopContainer()
+
+
+            data_ret = {'status': 1, 'error_message': 'None', 'data':retdata}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 

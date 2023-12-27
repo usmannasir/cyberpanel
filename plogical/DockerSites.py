@@ -555,6 +555,38 @@ services:
         self.DeleteDockerApp()
         self.SubmitDockersiteCreation()
 
+    def RestartContainer(self):
+        try:
+            import docker
+            # Create a Docker client
+            client = docker.from_env()
+
+            # Get the container by ID
+            container = client.containers.get(self.data['containerID'])
+
+            container.restart()
+
+            return 1, None
+        except BaseException as msg:
+            logging.writeToFile("List Container ....... %s" % str(msg))
+            return 0, str(msg)
+
+    def StopContainer(self):
+        try:
+            import docker
+            # Create a Docker client
+            client = docker.from_env()
+
+            # Get the container by ID
+            container = client.containers.get(self.data['containerID'])
+
+            container.stop()
+
+            return 1, None
+        except BaseException as msg:
+            logging.writeToFile("List Container ....... %s" % str(msg))
+            return 0, str(msg)
+
     ##### N8N Container
 
     def DeployN8NContainer(self):
