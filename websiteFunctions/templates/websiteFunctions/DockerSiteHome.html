@@ -17,7 +17,8 @@
     <div class="container" ng-controller="ListDockersitecontainer">
 
         <div id="page-title">
-            <h2 id="domainNamePage">{% trans "Containers" %}
+            <h2 id="domainNamePage">{% trans "Containers" %} <img id="cyberpanelLoading" ng-hide="cyberpanelLoading"
+                                             src="{% static 'images/loading.gif' %}">
                 <a class="pull-right btn btn-primary" href="{% url "CreateDockersite" %}">Create</a>
             </h2>
             <p>{% trans "Manage containers on server" %}</p>
@@ -42,7 +43,7 @@
                             {#                            <th>Owner</th>#}
                             {#                            <th>Image</th>#}
                             {#                            <th>Tag</th>#}
-                            <th>Actions</th>
+{#                            <th>Actions</th>#}
                         </tr>
                         </thead>
                         <tbody>
@@ -55,12 +56,12 @@
                             {#                            <td ng-bind="web.admin"></td>#}
                             {#                            <td ng-bind="web.image"></td>#}
                             {#                            <td ng-bind="web.tag"></td>#}
-                            <td>
-                                <button class="btn btn-primary" ng-click="delContainer(web.name)"><i
-                                        class="fa fa-trash btn-icon"></i></button>
+{#                            <td>#}
+{#                                <button class="btn btn-primary" ng-click="delContainer(web.name)"><i#}
+{#                                        class="fa fa-trash btn-icon"></i></button>#}
                                 {#                                <button class="btn btn-primary" ng-click="showLog(web.name)"><i#}
                                 {#                                        class="fa fa-file btn-icon"></i></button>#}
-                            </td>
+{#                            </td>#}
                         </tr>
 
                         </tbody>
@@ -263,7 +264,7 @@
                                     <div class="panel">
                                         <div class="panel-body">
                                             <div class="example-box-wrapper">
-                                                <h3 class="title-hero" ng-init="status='{{ status }}'">Main Actions
+                                                <h3 class="title-hero" >Main Actions
                                                     <img id="actionLoading" src="/static/images/loading.gif"
                                                          style="display: none;width: 20px;">
                                                 </h3>
@@ -286,8 +287,7 @@
                                                         ng-click="cAction('stop')"><i
                                                         class="fa fa-stop btn-icon"></i> Stop
                                                 </button>
-                                                <button class="btn  btn-primary" ng-click="cRemove()">Remove
-                                                </button>
+
                                             </div>
                                         </div>
                                     </div>
@@ -308,7 +308,7 @@
                                 <button type="button" class="close"
                                         data-dismiss="modal">&times;
                                 </button>
-                                <h4 class="modal-title">{% trans "Backup logs" %} <img
+                                <h4 class="modal-title">{% trans "Recreate Container" %} <img
                                         ng-hide="cyberPanelLoading"
                                         src="{% static 'images/loading.gif' %}">
                                 </h4>

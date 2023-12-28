@@ -2508,8 +2508,11 @@ class WebsiteManager:
             else:
                 state = "Active"
 
+            dpkg = PackageAssignment.objects.get(user=website.admin)
+
+
             dic = {'id':items.pk, 'domain': website.domain,  'adminEmail': website.adminEmail, 'ipAddress': ipAddress,
-                   'admin': website.admin.userName, 'package': website.package.packageName, 'state': state,
+                   'admin': website.admin.userName, 'package': dpkg.package.Name, 'state': state,
                    'CPU': int(items.CPUsMySQL)+int(items.CPUsSite), 'Ram': int(items.MemorySite)+int(items.MemoryMySQL),  'phpVersion': PHPVersionActual }
 
             if checker == 0:

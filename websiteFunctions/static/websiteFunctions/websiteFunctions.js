@@ -10533,9 +10533,13 @@ app.controller('listDockersite', function ($scope, $http) {
 });
 
 app.controller('ListDockersitecontainer', function ($scope, $http) {
-    $scope.conatinerview = true
     $scope.cyberPanelLoading = true;
+    $scope.conatinerview = true
+    $('#cyberpanelLoading').hide();
+
+
     $scope.getcontainer = function () {
+        $('#cyberpanelLoading').show();
         url = "/docker/getDockersiteList";
 
         var data = {'name': $('#sitename').html()};
@@ -10550,8 +10554,10 @@ app.controller('ListDockersitecontainer', function ($scope, $http) {
 
 
         function ListInitialData(response) {
-
+            $('#cyberpanelLoading').hide();
             if (response.data.status === 1) {
+
+                $scope.cyberPanelLoading = true;
 
                 var finalData = JSON.parse(response.data.data[1]);
 
@@ -10566,6 +10572,9 @@ app.controller('ListDockersitecontainer', function ($scope, $http) {
         }
 
         function cantLoadInitialData(response) {
+            $scope.cyberPanelLoading = true;
+            $('#cyberpanelLoading').hide();
+
             new PNotify({
                 title: 'Operation Failed!',
                 text: 'Connect disrupted, refresh the page.',
@@ -10575,9 +10584,15 @@ app.controller('ListDockersitecontainer', function ($scope, $http) {
     }
 
     $scope.getcontainer()
+    $scope.cyberPanelLoading = true;
+
+
+
 
     $scope.Lunchcontainer = function (containerid) {
         // $scope.listcontainerview = true
+        $scope.cyberpanelLoading = false
+        $('#cyberpanelLoading').show();
         var url = "/docker/getContainerAppinfo";
 
         var data = {
@@ -10595,12 +10610,14 @@ app.controller('ListDockersitecontainer', function ($scope, $http) {
 
 
         function ListInitialData(response) {
-            $scope.conatinerview = false
+            $scope.cyberpanelLoading = true
+            $('#cyberpanelLoading').hide();
             // console.log(response);
 
             if (response.data.status === 1) {
                 console.log(response.data.data);
                 $scope.cid = response.data.data[1].id
+                $scope.status = response.data.data[1].status
                 $scope.appcpuUsage = 5
                 $scope.appmemoryUsage = 9
                 $scope.cName = response.data.data[1].name
@@ -10618,6 +10635,8 @@ app.controller('ListDockersitecontainer', function ($scope, $http) {
         }
 
         function cantLoadInitialData(response) {
+            $scope.cyberpanelLoading = true
+            $('#cyberpanelLoading').hide();
             new PNotify({
                 title: 'Operation Failed!',
                 text: 'Connect disrupted, refresh the page.',
@@ -10628,7 +10647,8 @@ app.controller('ListDockersitecontainer', function ($scope, $http) {
 
 
     $scope.getcontainerlog = function (containerid) {
-        // $scope.listcontainerview = true
+        $scope.cyberpanelLoading = false
+
 
         var url = "/docker/getContainerApplog";
 
@@ -10647,7 +10667,9 @@ app.controller('ListDockersitecontainer', function ($scope, $http) {
 
 
         function ListInitialData(response) {
+            $scope.cyberpanelLoading = true
             $scope.conatinerview = false
+            $('#cyberpanelLoading').hide();
             $scope.logs = response.data.data[1];
 
 
@@ -10669,6 +10691,10 @@ app.controller('ListDockersitecontainer', function ($scope, $http) {
         }
 
         function cantLoadInitialData(response) {
+            $scope.cyberpanelLoading = true
+            $('#cyberpanelLoading').hide();
+            $scope.conatinerview = false
+
             new PNotify({
                 title: 'Operation Failed!',
                 text: 'Connect disrupted, refresh the page.',
@@ -10743,12 +10769,12 @@ app.controller('ListDockersitecontainer', function ($scope, $http) {
         };
 
         $http.post(url, data, config).then(ListInitialData, cantLoadInitialData);
+
         function ListInitialData(response) {
             if (response.data.containerStatus === 1) {
                 console.log(response.data.status);
                 $scope.status = response.data.status;
-            }
-            else {
+            } else {
                 new PNotify({
                     title: 'Unable to complete request',
                     text: response.data.error_message,
@@ -10790,8 +10816,7 @@ app.controller('ListDockersitecontainer', function ($scope, $http) {
                 });
                 $scope.status = response.data.status;
                 $scope.refreshStatus()
-            }
-            else {
+            } else {
                 new PNotify({
                     title: 'Unable to complete request',
                     text: response.data.error_message,
@@ -10839,6 +10864,7 @@ app.controller('ListDockersitecontainer', function ($scope, $http) {
             };
 
             $http.post(url, data, config).then(ListInitialData, cantLoadInitialData);
+
             function ListInitialData(response) {
                 if (response.data.delContainerStatus === 1) {
                     new PNotify({
@@ -10847,8 +10873,7 @@ app.controller('ListDockersitecontainer', function ($scope, $http) {
                         type: 'success'
                     });
                     window.location.href = '/docker/listContainers';
-                }
-                else {
+                } else {
                     new PNotify({
                         title: 'Unable to complete request',
                         text: response.data.error_message,
