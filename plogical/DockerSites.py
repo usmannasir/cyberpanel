@@ -37,6 +37,8 @@ class Docker_Sites(multi.Thread):
                 self.DeployWPContainer()
             elif self.function_run == 'SubmitDockersiteCreation':
                 self.SubmitDockersiteCreation()
+            elif self.function_run == 'DeployN8NContainer':
+                self.DeployN8NContainer()
 
 
         except BaseException as msg:
@@ -399,8 +401,12 @@ services:
             )
             dockersiteobj.save()
 
-            background = Docker_Sites('DeployWPContainer', f_data)
-            background.start()
+            if self.data['App'] == 'WordPress':
+                background = Docker_Sites('DeployWPContainer', f_data)
+                background.start()
+            elif self.data['App'] == 'n8n':
+                background = Docker_Sites('DeployN8NContainer', f_data)
+                background.start()
 
         except BaseException as msg:
             logging.writeToFile("Error Submit Docker site Creation ....... %s" % str(msg))
@@ -549,6 +555,38 @@ services:
         self.DeleteDockerApp()
         self.SubmitDockersiteCreation()
 
+    def RestartContainer(self):
+        try:
+            import docker
+            # Create a Docker client
+            client = docker.from_env()
+
+            # Get the container by ID
+            container = client.containers.get(self.data['containerID'])
+
+            container.restart()
+
+            return 1, None
+        except BaseException as msg:
+            logging.writeToFile("List Container ....... %s" % str(msg))
+            return 0, str(msg)
+
+    def StopContainer(self):
+        try:
+            import docker
+            # Create a Docker client
+            client = docker.from_env()
+
+            # Get the container by ID
+            container = client.containers.get(self.data['containerID'])
+
+            container.stop()
+
+            return 1, None
+        except BaseException as msg:
+            logging.writeToFile("List Container ....... %s" % str(msg))
+            return 0, str(msg)
+
     ##### N8N Container
 
     def DeployN8NContainer(self):
@@ -578,42 +616,38 @@ volumes:
 
 services:
   '{self.data['ServiceName']}-db':
-    image: postgres:11
+    image: docker.io/bitnami/postgresql:16
+    user: root
     restart: always
     environment:
-      - POSTGRES_USER:"root"
-      - POSTGRES_PASSWORD:"{self.data['MySQLPassword']}"
-      - POSTGRES_DB:"{self.data['MySQLDBName']}"
-      - POSTGRES_NON_ROOT_USER:"{self.data['MySQLDBNUser']}"
-      - POSTGRES_NON_ROOT_PASSWORD:"{self.data['MySQLPassword']}"
+#      - POSTGRES_USER:root
+      - POSTGRESQL_USERNAME={self.data['MySQLDBNUser']}
+      - POSTGRESQL_DATABASE={self.data['MySQLDBName']}
+      - POSTGRESQL_POSTGRES_PASSWORD={self.data['MySQLPassword']}
+      - POSTGRESQL_PASSWORD={self.data['MySQLPassword']}
     volumes:
-      - "/home/docker/{self.data['finalURL']}/db:/var/lib/postgresql/data"
-    healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -h localhost -U "{self.data['MySQLDBNUser']}" -d "{self.data['MySQLDBName']}"']
-      interval: 5s
-      timeout: 5s
-      retries: 10
+#      - "/home/docker/{self.data['finalURL']}/db:/var/lib/postgresql/data"
+      - "/home/docker/{self.data['finalURL']}/db:/bitnami/postgresql"
 
   '{self.data['ServiceName']}':
     image: docker.n8n.io/n8nio/n8n
+    user: root
     restart: always
     environment:
       - DB_TYPE=postgresdb
-      - DB_POSTGRESDB_HOST='{self.data['ServiceName']}-db'
+      - DB_POSTGRESDB_HOST={self.data['ServiceName']}-db
       - DB_POSTGRESDB_PORT=5432
-      - DB_POSTGRESDB_DATABASE="{self.data['MySQLDBName']}"
-      - DB_POSTGRESDB_USER="{self.data['MySQLDBNUser']}"
-      - DB_POSTGRESDB_PASSWORD="{self.data['MySQLPassword']}"
+      - DB_POSTGRESDB_DATABASE={self.data['MySQLDBName']}
+      - DB_POSTGRESDB_USER={self.data['MySQLDBNUser']}
+      - DB_POSTGRESDB_PASSWORD={self.data['MySQLPassword']}
     ports:
       - "{self.data['port']}:5678"
     links:
-      - postgres
+      - {self.data['ServiceName']}-db
     volumes:
-      - n8n_storage:/home/node/.n8n
       - "/home/docker/{self.data['finalURL']}/data:/home/node/.n8n"
     depends_on:
-      postgres:
-        condition: service_healthy
+      - '{self.data['ServiceName']}-db'
 '''
 
             ### WriteConfig to compose-file
@@ -666,13 +700,13 @@ services:
             execPath = execPath + f" SetupHTAccess --port {self.data['port']} --htaccess {self.data['htaccessPath']}"
             ProcessUtilities.executioner(execPath, self.data['externalApp'])
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
-                group = 'nobody'
-            else:
-                group = 'nogroup'
-
-            command = f"chown -R nobody:{group} /home/docker/{self.data['finalURL']}/data"
-            ProcessUtilities.executioner(command)
+            # if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+            #     group = 'nobody'
+            # else:
+            #     group = 'nogroup'
+            #
+            # command = f"chown -R nobody:{group} /home/docker/{self.data['finalURL']}/data"
+            # ProcessUtilities.executioner(command)
 
             ### just restart ls for htaccess
 
@@ -710,7 +744,7 @@ def Main():
             # port, SitePath, CPUsSite, MemorySite, SiteName
             # finalURL, blogTitle, adminUser, adminPassword, adminEmail, htaccessPath, externalApp
             data = {
-                "JobID": '/home/cyberpanel/error-logs.txt',
+                "JobID": '/home/cyberpanel/hey.txt',
                 "ComposePath": "/home/docker.cyberpanel.net/docker-compose.yml",
                 "MySQLPath": '/home/docker.cyberpanel.net/public_html/sqldocker',
                 "MySQLRootPass": 'testdbwp12345',
@@ -734,7 +768,7 @@ def Main():
                 "docRoot": "/home/docker.cyberpanel.net"
             }
             ds = Docker_Sites('', data)
-            ds.DeployWPContainer()
+            ds.DeployN8NContainer()
 
         elif args.function == 'DeleteDockerApp':
             data = {

@@ -6663,7 +6663,7 @@ StrictHostKeyChecking no
         if PackageAssignment.objects.all().count() == 0:
 
             name = 'Default'
-            cpu = 1
+            cpu = 2
             Memory = 1024
             Bandwidth = '100'
             disk = '100'
@@ -6866,23 +6866,7 @@ StrictHostKeyChecking no
                 data_ret = {'status': 0, 'createWebSiteStatus': 0, 'error_message': "Blacklisted domain."}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
-            # extraArgs = {}
-            # extraArgs['admin'] = admin
-            # extraArgs['domainName'] = data['domain']
-            # extraArgs['home'] = data['home']
-            # extraArgs['shopName'] = data['shopName']
-            # extraArgs['firstName'] = data['firstName']
-            # extraArgs['lastName'] = data['lastName']
-            # extraArgs['databasePrefix'] = data['databasePrefix']
-            # extraArgs['email'] = data['email']
-            # extraArgs['password'] = data['passwordByPass']
-            # extraArgs['tempStatusPath'] = "/home/cyberpanel/" + str(randint(1000, 9999))
-            #
-            # if data['home'] == '0':
-            #     extraArgs['path'] = data['path']
-            #
-            # background = ApplicationInstaller('prestashop', extraArgs)
-            # background.start()
+
             tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
             data = {}
 
@@ -6899,6 +6883,7 @@ StrictHostKeyChecking no
             data['WPusername'] = WPusername
             data['WPpasswd'] = WPpasswd
             data['externalApp'] = "".join(re.findall("[a-zA-Z]+", Domain))[:5] + str(randint(1000, 9999))
+            data['App'] = App
 
             background = Docker_Sites('SubmitDockersiteCreation', data)
             background.start()
