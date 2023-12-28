@@ -497,3 +497,41 @@ def recreateappcontainer(request):
         return coreResult
     except KeyError:
         return redirect(loadLoginPage)
+
+
+@preDockerRun
+def RestartContainerAPP(request):
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
+
+        cm = ContainerManager()
+        coreResult = cm.RestartContainerAPP(userID, json.loads(request.body))
+
+        return coreResult
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
+@preDockerRun
+def StopContainerAPP(request):
+    try:
+        userID = request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadErrorJson()
+
+        cm = ContainerManager()
+        coreResult = cm.StopContainerAPP(userID, json.loads(request.body))
+
+        return coreResult
+    except KeyError:
+        return redirect(loadLoginPage)

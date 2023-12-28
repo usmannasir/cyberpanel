@@ -35,4 +35,6 @@ urlpatterns = [
     path('getContainerAppinfo', views.getContainerAppinfo, name='getContainerAppinfo'),
     path('getContainerApplog', views.getContainerApplog, name='getContainerApplog'),
     path('recreateappcontainer', views.recreateappcontainer, name='recreateappcontainer'),
+    path('RestartContainerAPP', views.RestartContainerAPP, name='RestartContainerAPP'),
+    path('StopContainerAPP', views.StopContainerAPP, name='StopContainerAPP'),
 ]

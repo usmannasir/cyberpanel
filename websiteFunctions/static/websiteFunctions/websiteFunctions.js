@@ -10587,8 +10587,6 @@ app.controller('ListDockersitecontainer', function ($scope, $http) {
     $scope.cyberPanelLoading = true;
 
 
-
-
     $scope.Lunchcontainer = function (containerid) {
         // $scope.listcontainerview = true
         $scope.cyberpanelLoading = false
@@ -10759,7 +10757,9 @@ app.controller('ListDockersitecontainer', function ($scope, $http) {
         }
     }
 
+
     $scope.refreshStatus = function () {
+         $('#actionLoading').show();
         url = "/docker/getContainerStatus";
         var data = {name: $scope.cName};
         var config = {
@@ -10771,6 +10771,7 @@ app.controller('ListDockersitecontainer', function ($scope, $http) {
         $http.post(url, data, config).then(ListInitialData, cantLoadInitialData);
 
         function ListInitialData(response) {
+             $('#actionLoading').hide();
             if (response.data.containerStatus === 1) {
                 console.log(response.data.status);
                 $scope.status = response.data.status;
@@ -10785,6 +10786,112 @@ app.controller('ListDockersitecontainer', function ($scope, $http) {
         }
 
         function cantLoadInitialData(response) {
+             $('#actionLoading').hide();
+            PNotify.error({
+                title: 'Unable to complete request',
+                text: "Problem in connecting to server"
+            });
+        }
+
+    };
+
+    $scope.restarthStatus = function () {
+         $('#actionLoading').show();
+        url = "/docker/RestartContainerAPP";
+        var data = {
+            name: $scope.cName,
+            id: $scope.cid
+        };
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialData, cantLoadInitialData);
+
+        function ListInitialData(response) {
+             $('#actionLoading').hide();
+            if (response.data.status === 1) {
+                if (response.data.data[0] === 1) {
+                    new PNotify({
+                        title: 'Success!',
+                        text: 'Action completed',
+                        type: 'success'
+                    });
+                    $scope.Lunchcontainer($scope.cid);
+                } else {
+                    new PNotify({
+                        title: 'Error!',
+                        text: response.data.data[1],
+                        type: 'error'
+                    });
+                }
+            } else {
+                new PNotify({
+                    title: 'Unable to complete request',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+
+            }
+        }
+
+        function cantLoadInitialData(response) {
+             $('#actionLoading').hide();
+            PNotify.error({
+                title: 'Unable to complete request',
+                text: "Problem in connecting to server"
+            });
+        }
+
+    };
+    $scope.StopContainerAPP = function () {
+        $('#actionLoading').show();
+        url = "/docker/StopContainerAPP";
+        var data = {
+            name: $scope.cName,
+            id: $scope.cid
+        };
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+        $http.post(url, data, config).then(ListInitialData, cantLoadInitialData);
+
+        function ListInitialData(response) {
+            $('#actionLoading').hide();
+            if (response.data.status === 1) {
+                console.log(response.data.status);
+                if (response.data.data[0] === 1) {
+                    new PNotify({
+                        title: 'Success!',
+                        text: 'Action completed',
+                        type: 'success'
+                    });
+                    $scope.Lunchcontainer($scope.cid);
+                } else {
+                    new PNotify({
+                        title: 'Error!',
+                        text: response.data.data[1],
+                        type: 'error'
+                    });
+                }
+            } else {
+                new PNotify({
+                    title: 'Unable to complete request',
+                    text: response.data.error_message,
+                    type: 'error'
+                });
+
+            }
+        }
+
+        function cantLoadInitialData(response) {
+            $('#actionLoading').hide();
+
             PNotify.error({
                 title: 'Unable to complete request',
                 text: "Problem in connecting to server"
