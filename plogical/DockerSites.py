@@ -640,6 +640,9 @@ services:
       - DB_POSTGRESDB_DATABASE={self.data['MySQLDBName']}
       - DB_POSTGRESDB_USER={self.data['MySQLDBNUser']}
       - DB_POSTGRESDB_PASSWORD={self.data['MySQLPassword']}
+      - N8N_HOST={self.data['finalURL']}
+      - NODE_ENV=production
+      - WEBHOOK_URL=https://{self.data['finalURL']}
     ports:
       - "{self.data['port']}:5678"
     links:
