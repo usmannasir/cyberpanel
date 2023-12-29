@@ -71,12 +71,12 @@
                                         <th class="w-52 pt-2 font-semibold text-sm">
                                             <div class="flex items-center justify-center">
                                                 <button id="openModalButton"
-                                                        onclick="DeleteWPNow('{% url 'ListWPSites' %}?DeleteID={{ sub.id }}')"
+                                                        onclick="DeleteWPNowV2('{% url 'ListWPSites' %}?DeleteID={{ sub.id }}')"
                                                         class="bg-orange-500 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded">
                                                     Delete
                                                 </button>
 
-                                                <div id="myModal" class="fixed inset-0 bg-black bg-opacity-50 hidden">
+                                                <div id="deleteWpModel" class="fixed inset-0 bg-black bg-opacity-50 hidden">
                                                     <div class="flex items-center justify-center h-full">
                                                         <div class="bg-white p-8 rounded max-w-md">
                                                             <h2 class="text-lg font-bold mb-4">Delete WordPress

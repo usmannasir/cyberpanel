@@ -3770,25 +3770,26 @@ newapp.controller('WPAddNewPluginV2', function ($scope, $http, $timeout, $window
     }
 
 });
-function openModal() {
-        const modal = document.getElementById("myModal");
-        modal.classList.remove("hidden");
-    }
 
-    function closeModal() {
-        const modal = document.getElementById("myModal");
-        modal.classList.add("hidden");
-    }
+function DeleteWPNowV2(url) {
+    const modal = document.getElementById("deleteWpModel");
+    $('#deleteWpModel').modal('show');
+    // modal.classList.remove("hidden");
+}
 
-    document.addEventListener("DOMContentLoaded", function () {
-        const openModalButton = document.getElementById("openModalButton");
-        const closeModalButton = document.getElementById("closeModalButton");
+function closeModal() {
+    const modal = document.getElementById("myModal");
+    $('#myModal').modal('hide');
+    // modal.classList.add("hidden");
+}
 
-        openModalButton.addEventListener("click", openModal);
-        closeModalButton.addEventListener("click", closeModal);
-    });
+document.addEventListener("DOMContentLoaded", function () {
+    const openModalButton = document.getElementById("openModalButton");
+    const closeModalButton = document.getElementById("closeModalButton");
 
-
+    openModalButton.addEventListener("click", openModal);
+    closeModalButton.addEventListener("click", closeModal);
+});
 
 
 // function openModalDelete() {
