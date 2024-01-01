@@ -557,6 +557,14 @@ class backupUtilities:
             command = f'tar -czf {backupPath}/{backupName}.tar.gz -C {tempStoragePath} .'
             ProcessUtilities.executioner(command, externalApp, True)
 
+            ### remove leftover storages
+
+            command = f'rm -rf {tempStoragePath}'
+            ProcessUtilities.executioner(command, externalApp)
+
+            command = f'rm -rf {CPHomeStorage}'
+            ProcessUtilities.executioner(command)
+
             ###
 
             backupObs = Backups.objects.filter(fileName=backupName)
@@ -593,6 +601,12 @@ class backupUtilities:
             else:
                 command = f"echo '%s. [511:BackupRoot][[5009]]' > {status}"
                 ProcessUtilities.executioner(command, externalApp)
+
+            command = f'rm -rf {tempStoragePath}'
+            ProcessUtilities.executioner(command, externalApp)
+
+            command = f'rm -rf {CPHomeStorage}'
+            ProcessUtilities.executioner(command)
 
     @staticmethod
     def initiateBackup(tempStoragePath, backupName, backupPath):
