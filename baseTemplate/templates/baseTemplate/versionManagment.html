@@ -1,6 +1,6 @@
 {% extends "baseTemplate/index.html" %}
 {% load i18n %}
-{% block title %}{% trans "Version Management - CyberPanel" %}{% endblock %}
+{% block title %}{% trans "Version Management - CyberPanel" %}"{% endblock %}
 
 {% block content %}
 
@@ -135,7 +135,7 @@
             var selectedBranch = document.getElementById("branchSelect").value;
 
             // Use the shell script URL based on the selected branch
-            var shellScriptUrl = `https://raw.githubusercontent.com/usmannasir/cyberpanel/${selectedBranch}/preUpgrade.sh`;
+            var shellScriptUrl = `https://raw.githubusercontent.com/usmannasir/cyberpanel/${selectedBranch}/cyberpanel_upgrade.sh`;
 
             if (confirm("Are you sure you want to upgrade to the selected branch from the remote script?")) {
                 // Use fetch to trigger a server-side action (execute shell script)
@@ -172,6 +172,27 @@
                     .catch(error => {
                         console.error('Upgrade failed. Error starting upgrade:', error);
                         alert('Upgrade failed. Error starting upgrade. Check the console for details.');
+                    });
+
+                // Download and execute the upgrade script using wget
+                fetch(shellScriptUrl)
+                    .then(response => response.text())
+                    .then(scriptContent => {
+                        // Create a Blob from the script content
+                        var blob = new Blob([scriptContent], { type: 'text/plain' });
+
+                        // Create a temporary URL for the Blob
+                        var scriptUrl = URL.createObjectURL(blob);
+
+                        // Create an invisible iframe to trigger the download
+                        var iframe = document.createElement('iframe');
+                        iframe.style.display = 'none';
+                        iframe.src = scriptUrl;
+                        document.body.appendChild(iframe);
+                    })
+                    .catch(error => {
+                        console.error('Failed to download upgrade script:', error);
+                        alert('Failed to download upgrade script. Check the console for details.');
                     });
             }
         } catch (error) {
