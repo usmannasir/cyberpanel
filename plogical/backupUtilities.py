@@ -10,7 +10,7 @@ try:
 except:
     pass
 
-
+from plogical.randomPassword import generate_pass
 import pexpect
 from plogical import CyberCPLogFileWriter as logging
 import subprocess
@@ -402,7 +402,14 @@ class backupUtilities:
             pass
 
     @staticmethod
-    def BackupRoot(tempStoragePath, backupName, backupPath, metaPath=None, externalApp = None):
+    def BackupRoot(tempStoragePath, backupName, backupPath, metaPath=None, externalApp = None, CPHomeStorage=None):
+
+        ## /home/example.com/backup/backup-example.com-02.13.2018_10-24-52 -- tempStoragePath
+        ## /home/example.com/backup - backupPath
+        ## /home/backup/<random_number> - CPHomeStorage
+
+        ### CPHomeStorage /home/cyberpanel/<random_number>
+
 
         pidFile = '%sBackupRoot' % (backupPath)
 
@@ -421,11 +428,13 @@ class backupUtilities:
 
         if os.path.exists(sslStoragePath):
             try:
-                copy(os.path.join(sslStoragePath, "cert.pem"), os.path.join(tempStoragePath, domainName + ".cert.pem"))
-                copy(os.path.join(sslStoragePath, "fullchain.pem"),
-                     os.path.join(tempStoragePath, domainName + ".fullchain.pem"))
-                copy(os.path.join(sslStoragePath, "privkey.pem"),
-                     os.path.join(tempStoragePath, domainName + ".privkey.pem"))
+
+                copy(os.path.join(sslStoragePath, "cert.pem"), os.path.join(CPHomeStorage, domainName + ".cert.pem"))
+
+                copy(os.path.join(sslStoragePath, "fullchain.pem"),os.path.join(CPHomeStorage, domainName + ".fullchain.pem"))
+
+                copy(os.path.join(sslStoragePath, "privkey.pem"),os.path.join(CPHomeStorage, domainName + ".privkey.pem"))
+
             except BaseException as msg:
                 logging.CyberCPLogFileWriter.writeToFile(f'{str(msg)}. [283:startBackup]')
 
@@ -437,12 +446,15 @@ class backupUtilities:
 
         ### If domain is suspended, this path wont exists, so please check for other
 
+
         if os.path.exists(completPathToConf):
-            copy(completPathToConf, tempStoragePath + '/vhost.conf')
+            copy(completPathToConf, f'{CPHomeStorage}/vhost.conf')
         else:
             completPathToConf = f'{backupUtilities.Server_root}/conf/vhosts/{domainName}-suspended/vhost.conf'
             if os.path.exists(completPathToConf):
-                copy(completPathToConf, tempStoragePath + '/vhost.conf')
+                #copy(completPathToConf, tempStoragePath + '/vhost.conf')
+
+                copy(completPathToConf, f'{CPHomeStorage}/vhost.conf')
 
         childDomains = backupMetaData.findall('ChildDomains/domain')
 
@@ -454,12 +466,17 @@ class backupUtilities:
 
 
                 completPathToConf = f'{backupUtilities.Server_root}/conf/vhosts/{actualChildDomain}/vhost.conf'
+                TempConfPath = f'/home/cyberpanel/{actualChildDomain}.vhost.conf'
+
                 if os.path.exists(completPathToConf):
-                    copy(completPathToConf, f'{tempStoragePath}/{actualChildDomain}.vhost.conf')
+                    #copy(completPathToConf, f'{tempStoragePath}/{actualChildDomain}.vhost.conf')
+                    copy(completPathToConf, f'{CPHomeStorage}/{actualChildDomain}.vhost.conf')
+
                 else:
                     completPathToConf = f'{backupUtilities.Server_root}/conf/vhosts/{actualChildDomain}-suspended/vhost.conf'
                     if os.path.exists(completPathToConf):
-                        copy(completPathToConf, f'{tempStoragePath}/{actualChildDomain}.vhost.conf')
+                        #copy(completPathToConf, f'{tempStoragePath}/{actualChildDomain}.vhost.conf')
+                        copy(completPathToConf, f'{CPHomeStorage}/{actualChildDomain}.vhost.conf')
 
 
                 ### Storing SSL for child domainsa
@@ -468,21 +485,24 @@ class backupUtilities:
 
                 if os.path.exists(sslStoragePath):
                     try:
-                        copy(os.path.join(sslStoragePath, "cert.pem"),
-                             os.path.join(tempStoragePath, actualChildDomain + ".cert.pem"))
-                        copy(os.path.join(sslStoragePath, "fullchain.pem"),
-                             os.path.join(tempStoragePath, actualChildDomain + ".fullchain.pem"))
-                        copy(os.path.join(sslStoragePath, "privkey.pem"),
-                             os.path.join(tempStoragePath, actualChildDomain + ".privkey.pem"))
-                        make_archive(os.path.join(tempStoragePath, "sslData-" + domainName), 'gztar',
-                                     sslStoragePath)
+
+                        #copy(os.path.join(sslStoragePath, "cert.pem"), os.path.join(tempStoragePath, actualChildDomain + ".cert.pem"))
+                        copy(os.path.join(sslStoragePath, "cert.pem"),os.path.join(CPHomeStorage, actualChildDomain + ".cert.pem"))
+
+                        #copy(os.path.join(sslStoragePath, "fullchain.pem"),os.path.join(tempStoragePath, actualChildDomain + ".fullchain.pem"))
+                        copy(os.path.join(sslStoragePath, "fullchain.pem"),os.path.join(CPHomeStorage, actualChildDomain + ".fullchain.pem"))
+
+                        #copy(os.path.join(sslStoragePath, "privkey.pem"),os.path.join(tempStoragePath, actualChildDomain + ".privkey.pem"))
+                        copy(os.path.join(sslStoragePath, "privkey.pem"),os.path.join(CPHomeStorage, actualChildDomain + ".privkey.pem"))
+
+                        #make_archive(os.path.join(tempStoragePath, "sslData-" + domainName), 'gztar', sslStoragePath)
                     except:
                         pass
 
                 if childPath.find(f'/home/{domainName}/public_html') == -1:
                     # copy_tree(childPath, '%s/%s-docroot' % (tempStoragePath, actualChildDomain))
                     command = f'cp -R {childPath} {tempStoragePath}/{actualChildDomain}-docroot'
-                    ProcessUtilities.executioner(command)
+                    ProcessUtilities.executioner(command, externalApp)
 
         except BaseException as msg:
             pass
@@ -511,7 +531,7 @@ class backupUtilities:
 
             if os.path.exists(emailPath):
                 # copy_tree(emailPath, '%s/vmail' % (tempStoragePath), preserve_symlinks=True)
-                command = f'cp -R {emailPath} {tempStoragePath}/vmail'
+                command = f'cp -R {emailPath} {CPHomeStorage}/vmail'
                 ProcessUtilities.executioner(command)
 
             ## shutil.make_archive. Creating final package.
@@ -522,8 +542,20 @@ class backupUtilities:
                 command = f"echo 'Preparing final compressed package..' > {status}"
                 ProcessUtilities.executioner(command, externalApp, True)
 
-            make_archive(os.path.join(backupPath, backupName), 'gztar', tempStoragePath)
-            rmtree(tempStoragePath)
+
+            ### change own of CPHomeStorage and move data
+
+            command = f'chown -R {externalApp}:{externalApp} {CPHomeStorage}'
+            ProcessUtilities.executioner(command)
+
+            command = f'mv {CPHomeStorage}/* {tempStoragePath}/'
+            ProcessUtilities.executioner(command, externalApp, True)
+
+            #make_archive(os.path.join(backupPath, backupName), 'gztar', tempStoragePath)
+            #rmtree(tempStoragePath)
+
+            command = f'tar -czf {backupPath}/{backupName}.tar.gz -C {tempStoragePath} .'
+            ProcessUtilities.executioner(command, externalApp, True)
 
             ###
 
@@ -2000,9 +2032,23 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
         ## backup-example.com-02.13.2018_10-24-52 -- backup name
         ## /home/example.com/backup - backupPath
         ## /home/cyberpanel/1047.xml - metaPath
+        ## /home/backup/<random_number> - CPHomeStorage
+
+
+        ###
+
 
         status = os.path.join(backupPath, 'status')
         website = Websites.objects.get(domain=backupDomain)
+
+        ##
+
+        CPHomeStorage = f'/home/backup/{generate_pass(5)}'
+
+        ### Now make this random directory to store data so taht we dont run any root file operations in user home dir
+
+        command = f'mkdir -p {CPHomeStorage} && chown {website.externalApp}:{website.externalApp} {CPHomeStorage}'
+        ProcessUtilities.executioner(command, 'root', True)
 
         ##
 
@@ -2059,14 +2105,16 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
         databases = backupMetaData.findall('Databases/database')
 
         for database in databases:
+
             dbName = database.find('dbName').text
             res = mysqlUtilities.mysqlUtilities.createDatabaseBackup(dbName, '/home/cyberpanel')
             if res == 0:
                 ## This login can be further improved later.
                 logging.CyberCPLogFileWriter.writeToFile('Failed to create database backup for %s. This could be false positive, moving on.' % (dbName))
 
-            command = 'mv /home/cyberpanel/%s.sql %s/%s.sql' % (dbName, tempStoragePath, dbName)
-            ProcessUtilities.executioner(command, 'root')
+            command = f'mv /home/cyberpanel/{dbName}.sql {CPHomeStorage}/{dbName}.sql'
+            ProcessUtilities.executioner(command)
+
 
         ##
 
@@ -2075,12 +2123,12 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
         execPath = "sudo nice -n 10 /usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/backupUtilities.py"
         execPath = execPath + " BackupRoot --tempStoragePath " + tempStoragePath + " --backupName " \
                    + backupName + " --backupPath " + backupPath + ' --backupDomain ' + backupDomain + ' --metaPath %s --externalApp %s' % (
-                       result[2], website.externalApp)
+                       result[2], website.externalApp) + f' --CPHomeStorage {CPHomeStorage}'
 
         ProcessUtilities.executioner(execPath, 'root')
 
-        command = 'chown -R %s:%s %s' % (website.externalApp, website.externalApp, backupPath)
-        ProcessUtilities.executioner(command)
+        #command = 'chown -R %s:%s %s' % (website.externalApp, website.externalApp, backupPath)
+        #ProcessUtilities.executioner(command)
 
         command = f'rm -f {result[2]}'
         ProcessUtilities.executioner(command, 'cyberpanel')
@@ -2199,6 +2247,10 @@ def main():
     parser.add_argument('--planName', help='')
     parser.add_argument('--externalApp', help='')
 
+    ### CPHomeStorage
+
+    parser.add_argument('--CPHomeStorage', help='')
+
 
     args = parser.parse_args()
 
@@ -2215,7 +2267,7 @@ def main():
     elif args.function == "startBackup":
         backupUtilities.startBackup(args.tempStoragePath, args.backupName, args.backupPath, args.metaPath)
     elif args.function == "BackupRoot":
-        backupUtilities.BackupRoot(args.tempStoragePath, args.backupName, args.backupPath, args.metaPath, args.externalApp)
+        backupUtilities.BackupRoot(args.tempStoragePath, args.backupName, args.backupPath, args.metaPath, args.externalApp, args.CPHomeStorage)
     elif args.function == 'CloudBackup':
         extraArgs = {}
         extraArgs['domain'] = args.backupDomain
