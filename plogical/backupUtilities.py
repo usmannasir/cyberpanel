@@ -2048,11 +2048,29 @@ def submitBackupCreation(tempStoragePath, backupName, backupPath, backupDomain):
         ## /home/cyberpanel/1047.xml - metaPath
         ## /home/backup/<random_number> - CPHomeStorage
 
+        status = os.path.join(backupPath, 'status')
+
+        ### Lets first see if enough space for backups is available
+
+        from plogical.IncScheduler import IncScheduler
+        import json
+        from plogical.getSystemInformation import SystemInformation
+
+        IncScheduler.CalculateAndUpdateDiskUsage()
+
+        website = Websites.objects.get(domain=backupDomain)
+        DiskUsageOfSite = json.loads(website.config)['DiskUsage']
+        used_disk, free_disk, percent_used = SystemInformation.GetRemainingDiskUsageInMBs()
+
+        if float(free_disk) <= float(DiskUsageOfSite):
+            command = f"echo 'Disk space exceeded the website size. [2065][5009]' > %s"
+            ProcessUtilities.executioner(command, website.externalApp)
+            return 0
 
         ###
 
 
-        status = os.path.join(backupPath, 'status')
+
         website = Websites.objects.get(domain=backupDomain)
 
         ##

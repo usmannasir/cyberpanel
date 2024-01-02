@@ -5,6 +5,7 @@ sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 import django
 django.setup()
+from plogical.getSystemInformation import SystemInformation
 from IncBackups.IncBackupsControl import IncJobs
 from IncBackups.models import BackupJob
 from random import randint
@@ -68,7 +69,16 @@ class IncScheduler(multi.Thread):
                 logging.statusWriter(IncScheduler.logPath, 'Job Description:\n\n Destination: %s, Frequency: %s.\n ' % (
                     job.destination, job.frequency), 1)
                 if job.frequency == type:
+
+
+
+                    ### now run backups
                     for web in job.jobsites_set.all():
+
+                        ### Lets first update disk usage of all sites, to see if enough space for backups
+
+                        IncScheduler.CalculateAndUpdateDiskUsage()
+
                         logging.statusWriter(IncScheduler.logPath, 'Backing up %s.' % (web.website), 1)
 
                         extraArgs = {}
