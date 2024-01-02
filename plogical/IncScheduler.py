@@ -75,10 +75,6 @@ class IncScheduler(multi.Thread):
                     ### now run backups
                     for web in job.jobsites_set.all():
 
-                        ### Lets first update disk usage of all sites, to see if enough space for backups
-
-                        IncScheduler.CalculateAndUpdateDiskUsage()
-
                         logging.statusWriter(IncScheduler.logPath, 'Backing up %s.' % (web.website), 1)
 
                         extraArgs = {}
