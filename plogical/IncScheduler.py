@@ -71,7 +71,6 @@ class IncScheduler(multi.Thread):
                 if job.frequency == type:
 
 
-
                     ### now run backups
                     for web in job.jobsites_set.all():
 
@@ -431,14 +430,28 @@ class IncScheduler(multi.Thread):
                                         # print('Fetch all folders in main folder: %s (%s) time:-%s' % (file.get('name'), file.get('id'), file.get('createdTime')))
                                         # logging.writeToFile('Fetch all folders in main folder: %s (%s) time:-%s' % (file.get('name'), file.get('id'),file.get('createdTime')))
                                         ab = file.get('createdTime')[:10]
-                                        filename = file.get('name')
+                                        print(f'File from gdrive {file.get("name")}')
+                                        filename = file.get("name")
                                         fileDeleteID = file.get('id')
                                         timestamp = time.mktime(datetime.datetime.strptime(ab, "%Y-%m-%d").timetuple())
+
+                                        print(f'Folder creation time on gdrive {timestamp}')
+                                        logging.writeToFile(f'Folder creation time on gdrive {timestamp}')
+
                                         CUrrenttimestamp = time.time()
-                                        timerrtention = gDriveData['FileRetentiontime']
+                                        try:
+                                            timerrtention = gDriveData['FileRetentiontime']
+                                            print(f'Retention time {timerrtention}')
+                                            logging.writeToFile(f'Retention time {timerrtention}')
+                                        except:
+                                            print(f'Retention time not defined.')
+
                                         if (timerrtention == '1d'):
                                             new = CUrrenttimestamp - float(86400)
+                                            print(f'New time {new}')
                                             if (new >= timestamp):
+                                                print(f'New time {new}, Folder created time {timestamp}')
+                                                logging.writeToFile(f'New time {new}, Folder created time {timestamp}')
                                                 resp = drive.files().delete(fileId=fileDeleteID).execute()
                                                 logging.writeToFile('Delete file %s ' % filename)
                                         elif (timerrtention == '1w'):

@@ -110,7 +110,6 @@ class SystemInformation:
 
         return used_disk, free_disk, percent_used
 
-
     @staticmethod
     def populateOLSReport():
         SystemInformation.olsReport = open("/tmp/lshttpd/.rtreport", "r").readlines()
