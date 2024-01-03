@@ -1,28 +1,184 @@
 let icon1 = document.getElementById("icon1");
 let menu1 = document.getElementById("menu1");
 const showMenu1 = (flag) => {
-  if (flag) {
-    icon1.classList.toggle("rotate-180");
-    menu1.classList.toggle("hidden");
-  }
+    if (flag) {
+        icon1.classList.toggle("rotate-180");
+        menu1.classList.toggle("hidden");
+    }
 };
 let icon2 = document.getElementById("icon2");
 let menu2 = document.getElementById("menu2");
 
 const showMenu2 = (flag) => {
-  if (flag) {
-    icon2.classList.toggle("rotate-180");
-    menu2.classList.toggle("hidden");
-  }
+    if (flag) {
+        icon2.classList.toggle("rotate-180");
+        menu2.classList.toggle("hidden");
+    }
 };
 let icon3 = document.getElementById("icon3");
 let menu3 = document.getElementById("menu3");
 
 const showMenu3 = (flag) => {
-  if (flag) {
-    icon3.classList.toggle("rotate-180");
-    menu3.classList.toggle("hidden");
-  }
+    if (flag) {
+        icon3.classList.toggle("rotate-180");
+        menu3.classList.toggle("hidden");
+    }
+};
+let icon40 = document.getElementById("icon40");
+let icon41 = document.getElementById("icon41");
+let icon42 = document.getElementById("icon42");
+let icon43 = document.getElementById("icon43");
+let icon44 = document.getElementById("icon44");
+let icon45 = document.getElementById("icon45");
+let icon46 = document.getElementById("icon46");
+let icon47 = document.getElementById("icon47");
+let icon48 = document.getElementById("icon48");
+let icon49 = document.getElementById("icon49");
+let icon450 = document.getElementById("icon450");
+let icon451 = document.getElementById("icon451");
+let icon452 = document.getElementById("icon452");
+let icon453 = document.getElementById("icon453");
+let icon454 = document.getElementById("icon454");
+let icon455 = document.getElementById("icon455");
+let icon456 = document.getElementById("icon456");
+let icon457 = document.getElementById("icon457");
+let icon458 = document.getElementById("icon458");
+let icon459 = document.getElementById("icon459");
+let icon460 = document.getElementById("icon460");
+let icon461 = document.getElementById("icon461");
+let icon462 = document.getElementById("icon462");
+let icon463 = document.getElementById("icon463");
+let icon464 = document.getElementById("icon464");
+let icon465 = document.getElementById("icon465");
+const rotate1 = (flag) => {
+    if (flag) {
+        icon40.classList.toggle("rotate-90");
+    }
+};
+const rotate2 = (flag) => {
+    if (flag) {
+        icon41.classList.toggle("rotate-90");
+    }
+};
+const rotate3 = (flag) => {
+    if (flag) {
+        icon42.classList.toggle("rotate-90");
+    }
+};
+const rotate4 = (flag) => {
+    if (flag) {
+        icon43.classList.toggle("rotate-90");
+    }
+};
+const rotate5 = (flag) => {
+    if (flag) {
+        icon44.classList.toggle("rotate-90");
+    }
+};
+const rotate6 = (flag) => {
+    if (flag) {
+        icon45.classList.toggle("rotate-90");
+    }
+};
+const rotate7 = (flag) => {
+    if (flag) {
+        icon46.classList.toggle("rotate-90");
+    }
+};
+const rotate8 = (flag) => {
+    if (flag) {
+        icon47.classList.toggle("rotate-90");
+    }
+};
+const rotate9 = (flag) => {
+    if (flag) {
+        icon48.classList.toggle("rotate-90");
+    }
+};
+const rotate10 = (flag) => {
+    if (flag) {
+        icon49.classList.toggle("rotate-90");
+    }
+};
+const rotate11 = (flag) => {
+    if (flag) {
+        icon450.classList.toggle("rotate-90");
+    }
+};
+const rotate12 = (flag) => {
+    if (flag) {
+        icon451.classList.toggle("rotate-90");
+    }
+};
+const rotate13 = (flag) => {
+    if (flag) {
+        icon452.classList.toggle("rotate-90");
+    }
+};
+const rotate14 = (flag) => {
+    if (flag) {
+        icon453.classList.toggle("rotate-90");
+    }
+};
+const rotate15 = (flag) => {
+    if (flag) {
+        icon454.classList.toggle("rotate-90");
+    }
+};
+const rotate16 = (flag) => {
+    if (flag) {
+        icon455.classList.toggle("rotate-90");
+    }
+};
+const rotate17 = (flag) => {
+    if (flag) {
+        icon456.classList.toggle("rotate-90");
+    }
+};
+const rotate18 = (flag) => {
+    if (flag) {
+        icon457.classList.toggle("rotate-90");
+    }
+};
+const rotate19 = (flag) => {
+    if (flag) {
+        icon458.classList.toggle("rotate-90");
+    }
+};
+const rotate20 = (flag) => {
+    if (flag) {
+        icon459.classList.toggle("rotate-90");
+    }
+};
+const rotate21 = (flag) => {
+    if (flag) {
+        icon460.classList.toggle("rotate-90");
+    }
+};
+const rotate22 = (flag) => {
+    if (flag) {
+        icon461.classList.toggle("rotate-90");
+    }
+};
+const rotate23 = (flag) => {
+    if (flag) {
+        icon462.classList.toggle("rotate-90");
+    }
+};
+const rotate24 = (flag) => {
+    if (flag) {
+        icon463.classList.toggle("rotate-90");
+    }
+};
+const rotate25 = (flag) => {
+    if (flag) {
+        icon464.classList.toggle("rotate-90");
+    }
+};
+const rotate26 = (flag) => {
+    if (flag) {
+        icon465.classList.toggle("rotate-90");
+    }
 };
 
 function getCookie(name) {
@@ -41,15 +197,16 @@ function getCookie(name) {
     return cookieValue;
 }
 
-var newapp =angular.module('cybercpV2',[]);
+var newapp = angular.module('cybercpV2', []);
 
 newapp.config(['$interpolateProvider', function ($interpolateProvider) {
     $interpolateProvider.startSymbol('{$');
     $interpolateProvider.endSymbol('$}');
 }]);
 newapp.controller('dashboardV2', function ($scope, $http, $timeout) {
-alert('dashboardV2');
- function getStuff() {
+    alert('dashboardV2');
+
+    function getStuff() {
 
 
         url = "/base/getSystemStatus";
@@ -150,6 +307,7 @@ alert('dashboardV2');
         $timeout(getStuff, 2000);
 
     }
+
     getStuff();
 });
 

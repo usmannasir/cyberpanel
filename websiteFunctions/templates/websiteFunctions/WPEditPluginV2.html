@@ -1,10 +1,51 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
 
-</body>
-</html>
+    {% load static %}
+
+    <div class="p-4">
+        <span id="pluginbID" style="display: none">{{ pluginbID }}</span>
+        <div ng-controller="WPAddNewPlugin" class="panel">
+            <div>
+                <div>
+                    <h2 class="font-bold text-xl">{{ BucketName }}</h2>
+
+                    <form name="websiteCreationForm" action="/" id="createPackages">
+                        <p class="mt-6">Search Plugin Name</p>
+                        <input name="searchcontent" type="text" class="form-control w-80 bg-gray-100 rounded px-2 py-1"
+                               ng-model="searchcontent"
+                               ng-keyup="SearchPluginName('eidt')"
+                               placeholder="Search Plugin...." required>
+
+
+                        <div id="mysearch" class="col-lg-12" style="display: none; border-top: none!important;
+                                                            border: 1px solid  rgba(90, 91, 92, 0.7);
+                                                            position: absolute; z-index: 1;
+                                                            background-color: #FFFFFF">
+                        </div>
+                        <h3 class="font-bold mt-5">Selected Plugin</h3>
+                        <div id="sedplugn">
+                            {% for plugin in Selectedplugins %}
+                                <div id="selplug"
+                                     class="bg-blue-200 px-2 py-1 mb-1">
+                                    {{ plugin }}
+                                    <svg ng-click="deletesPlgin('{{ plugin }}')" xmlns="http://www.w3.org/2000/svg"
+                                         aria-hidden="true"
+                                         role="img" width="1em" height="1em"
+                                         preserveAspectRatio="xMidYMid meet" viewBox="0 0 16 16">
+                                        <path fill="none" stroke="currentColor" stroke-linecap="round"
+                                              stroke-linejoin="round"
+                                              stroke-width="1.5" d="m11.25 4.75l-6.5 6.5m0-6.5l6.5 6.5"/>
+                                    </svg>
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

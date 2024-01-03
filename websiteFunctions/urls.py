@@ -15,7 +15,7 @@ urlpatterns = [
     url(r'^siteStateV2$', views.siteStateV2, name='siteStateV2'),
     url(r'^createWebsiteV2$', views.createWebsiteV2, name='createWebsiteV2'),
     url(r'^listWebsitesV2$', views.listWebsitesV2, name='listWebsitesV2'),
-
+    url(r'^V2/(?P<domain>(.*))$', views.domainV2, name='domainv2'),
 
     url(r'^CreateNewDomain$', views.CreateNewDomain, name='CreateNewDomain'),
     url(r'^CreateNewDomainV2$', views.CreateNewDomainV2, name='CreateNewDomainV2'),
@@ -26,6 +26,7 @@ urlpatterns = [
     url(r'^ListWPSites$', views.ListWPSites, name='ListWPSites'),
     url(r'^ListWPSitesV2$', views.ListWPSitesV2, name='ListWPSitesV2'),
     url(r'^WPHome$', views.WPHome, name='WPHome'),
+    url(r'^WPHomeV2$', views.WPHomeV2, name='WPHomeV2'),
     url(r'^RestoreBackups$', views.RestoreBackups, name='RestoreBackups'),
     url(r'^RestoreBackupsV2$', views.RestoreBackupsV2, name='RestoreBackupsV2'),
     url(r'^RestoreHome$', views.RestoreHome, name='RestoreHome'),

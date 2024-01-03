@@ -85,6 +85,17 @@ def WPHome(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+def WPHomeV2(request):
+    try:
+        userID = request.session['userID']
+
+        WPid = request.GET.get('ID')
+        DeleteID = request.GET.get('DeleteID')
+        wm = WebsiteManager()
+        return wm.WPHomeV2(request, userID, WPid, DeleteID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
 
 def RestoreHome(request):
     try:
@@ -1206,6 +1217,30 @@ def domain(request, domain):
         userID = request.session['userID']
         wm = WebsiteManager(domain)
         coreResult = wm.loadDomainHome(request, userID)
+
+        result = pluginManager.postDomain(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def domainV2(request, domain):
+    try:
+
+        if not request.GET._mutable:
+            request.GET._mutable = True
+        request.GET['domain'] = domain
+
+        result = pluginManager.preDomain(request)
+        if result != 200:
+            return result
+
+        userID = request.session['userID']
+        wm = WebsiteManager(domain)
+        coreResult = wm.loadDomainHomeV2(request, userID)
 
         result = pluginManager.postDomain(request, coreResult)
         if result != 200:

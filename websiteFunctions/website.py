@@ -320,6 +320,59 @@ class WebsiteManager:
                             Data, 'createWebsite')
             return proc.render()
 
+    def WPHomeV2(self, request=None, userID=None, WPid=None, DeleteID=None):
+        Data = {}
+        currentACL = ACLManager.loadedACL(userID)
+        WPobj = WPSites.objects.get(pk=WPid)
+        admin = Administrator.objects.get(pk=userID)
+
+        if ACLManager.checkOwnership(WPobj.owner.domain, admin, currentACL) == 1:
+            pass
+        else:
+            return ACLManager.loadError()
+
+        try:
+
+            url = "https://platform.cyberpersons.com/CyberpanelAdOns/Adonpermission"
+            data = {
+                "name": "wp-manager",
+                "IP": ACLManager.GetServerIP()
+            }
+
+            import requests
+            response = requests.post(url, data=json.dumps(data))
+            Status = response.json()['status']
+
+
+            rnpss = randomPassword.generate_pass(10)
+
+            Data['Randam_String'] = rnpss.lower()
+
+            if (Status == 1) or ProcessUtilities.decideServer() == ProcessUtilities.ent:
+                Data['wpsite'] = WPobj
+                Data['test_domain_data'] = 1
+
+                try:
+                    DeleteID = request.GET.get('DeleteID', None)
+
+                    if DeleteID != None:
+                        wstagingDelete = WPStaging.objects.get(pk=DeleteID, owner=WPobj)
+                        wstagingDelete.delete()
+
+                except BaseException as msg:
+                    da = str(msg)
+
+                proc = httpProc(request, 'websiteFunctions/WPsiteHomeV2.html',
+                                Data, 'createWebsite')
+                return proc.render()
+            else:
+                from django.shortcuts import reverse
+                return redirect(reverse('pricing'))
+        except:
+            proc = httpProc(request, 'websiteFunctions/WPsiteHome.html',
+                            Data, 'createWebsite')
+            return proc.render()
+
     def RestoreHome(self, request=None, userID=None, BackupID=None):
         Data = {}
         currentACL = ACLManager.loadedACL(userID)
@@ -3208,6 +3261,93 @@ class WebsiteManager:
             return proc.render()
         else:
             proc = httpProc(request, 'websiteFunctions/website.html',
+                            {"error": 1, "domain": "This domain does not exists."})
+            return proc.render()
+
+    def loadDomainHomeV2(self, request=None, userID=None, data=None):
+
+        if Websites.objects.filter(domain=self.domain).exists():
+
+            currentACL = ACLManager.loadedACL(userID)
+            website = Websites.objects.get(domain=self.domain)
+            admin = Administrator.objects.get(pk=userID)
+
+            if ACLManager.checkOwnership(self.domain, admin, currentACL) == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
+            Data = {}
+
+            marketingStatus = emACL.checkIfEMEnabled(admin.userName)
+
+            Data['marketingStatus'] = marketingStatus
+            Data['ftpTotal'] = website.package.ftpAccounts
+            Data['ftpUsed'] = website.users_set.all().count()
+
+            Data['databasesUsed'] = website.databases_set.all().count()
+            Data['databasesTotal'] = website.package.dataBases
+
+            Data['domain'] = self.domain
+
+            DiskUsage, DiskUsagePercentage, bwInMB, bwUsage = virtualHostUtilities.FindStats(website)
+
+            ## bw usage calculations
+
+            Data['bwInMBTotal'] = website.package.bandwidth
+            Data['bwInMB'] = bwInMB
+            Data['bwUsage'] = bwUsage
+
+            if DiskUsagePercentage > 100:
+                DiskUsagePercentage = 100
+
+            Data['diskUsage'] = DiskUsagePercentage
+            Data['diskInMB'] = DiskUsage
+            Data['diskInMBTotal'] = website.package.diskSpace
+
+            Data['phps'] = PHPManager.findPHPVersions()
+
+            servicePath = '/home/cyberpanel/postfix'
+            if os.path.exists(servicePath):
+                Data['email'] = 1
+            else:
+                Data['email'] = 0
+
+            ## Getting SSL Information
+            try:
+                import OpenSSL
+                from datetime import datetime
+                filePath = '/etc/letsencrypt/live/%s/fullchain.pem' % (self.domain)
+                x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM,
+                                                       open(filePath, 'r').read())
+                expireData = x509.get_notAfter().decode('ascii')
+                finalDate = datetime.strptime(expireData, '%Y%m%d%H%M%SZ')
+
+                now = datetime.now()
+                diff = finalDate - now
+                Data['viewSSL'] = 1
+                Data['days'] = str(diff.days)
+                Data['authority'] = x509.get_issuer().get_components()[1][1].decode('utf-8')
+
+                if Data['authority'] == 'Denial':
+                    Data['authority'] = '%s has SELF-SIGNED SSL.' % (self.domain)
+                else:
+                    Data['authority'] = '%s has SSL from %s.' % (self.domain, Data['authority'])
+
+            except BaseException as msg:
+                Data['viewSSL'] = 0
+                logging.CyberCPLogFileWriter.writeToFile(str(msg))
+
+            servicePath = '/home/cyberpanel/pureftpd'
+            if os.path.exists(servicePath):
+                Data['ftp'] = 1
+            else:
+                Data['ftp'] = 0
+
+            proc = httpProc(request, 'websiteFunctions/websiteV2.html', Data)
+            return proc.render()
+        else:
+            proc = httpProc(request, 'websiteFunctions/websiteV2.html',
                             {"error": 1, "domain": "This domain does not exists."})
             return proc.render()
 

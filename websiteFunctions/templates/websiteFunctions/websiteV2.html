@@ -1,0 +1,670 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    <div ng-controller="websitePagesV2" class="p-8">
+        <div class="flex lg:flex-row justify-between items-center sm:flex-col">
+            <div>
+                <p id="domainNamePage" class="text-4xl font-bold">{{ domain }}</p>
+                <p class="text-xs text-gray-600 py-2 font-semibold">All functions related to a particular site.
+                </p>
+            </div>
+            <div>
+                <div class="sm:mt-6">
+                    <a target="_blank" href="{$ previewUrl $}"
+                       class="bg-orange-500 px-3 py-3 rounded-lg text-xl font-semibold text-white">Preview
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% if not error %}
+            <div class="py-8">
+                <div class="py-4">
+                    <p class="text-xl font-bold">Resources Usage</p>
+                </div>
+                <div class="flex lg:flex-row sm:flex-col gap-4">
+                    <div class="sm:mt-6">
+                        <a href="/websites/{{ domain }}/sshAccess"
+                           class="bg-orange-500 px-3 py-3 rounded-lg text-xl font-semibold text-white">Set Up
+                            SSH/SFTP
+                            Access
+                        </a>
+                    </div>
+                    <div class="sm:mt-6">
+                        <a href="/websites/{{ domain }}/setupStaging"
+                           class="bg-orange-500 px-3 py-3 rounded-lg text-xl font-semibold text-white">Clone/Staging
+                        </a>
+                    </div>
+                    <div class="sm:mt-6">
+                        <a href="/websites/{{ domain }}/manageGIT"
+                           class="bg-orange-500 px-3 py-3 rounded-lg text-xl font-semibold text-white">Manage Git
+                        </a>
+                    </div>
+                    <div class="sm:mt-6">
+                        <a href="https://go.cyberpanel.net/StessTest"
+                           class="bg-orange-500 px-3 py-3 rounded-lg text-xl font-semibold text-white">Stress Test
+                        </a>
+                    </div>
+                </div>
+                <div class="mt-6">
+                    <hr>
+                </div>
+                <table class="table-fixed w-full overflow-x-auto">
+                    <thead>
+                    <tr class="bg-gray-200 border text-xl font-bold text-orange-400">
+                        <td class="px-4 py-2">Resources</td>
+                        <td>Usage</td>
+                        <td>Allowed</td>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr class="border font-semibold">
+                        <td class="px-4 py-2">FTP</td>
+                        <td>{{ ftpUsed }}</td>
+                        <td>{{ ftpTotal }}</td>
+                    </tr>
+                    <tr class="bg-gray-200 border font-semibold">
+                        <td class="px-4 py-2">Databases</td>
+                        <td>{{ databasesUsed }}</td>
+                        <td>{{ databasesTotal }}</td>
+                    </tr>
+                    <tr class="border font-semibold">
+                        <td class="px-4 py-2">Disk Usage</td>
+                        <td>{{ diskInMB }} (MB)</td>
+                        <td>{{ diskInMBTotal }} (MB)</td>
+                    </tr>
+                    <tr class="bg-gray-200 border font-semibold">
+                        <td class="px-4 py-2">Bandwidth Usage</td>
+                        <td>{{ bwInMB }} (MB)</td>
+                        <td>{{ bwInMBTotal }} (MB)</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="mt-4 border shadow-lg">
+                <div class="flex justify-between bg-gray-600 p-2 w-full">
+                    <div>
+                        <p class="text-white px-6 text-xl font-bold">Logs</p>
+                    </div>
+                    <div>
+                        <svg id="icon2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                             stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-white mr-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12h-15"/>
+                        </svg>
+                    </div>
+                </div>
+                <div>
+                    <ul class="flex w-full grid lg:grid-cols-4">
+                        <li class="px-3 py-3">
+                            <div class="flex items-center">
+                                <div>
+                                    <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
+                                         xmlns="http://www.w3.org/2000/svg">
+                                        <path
+                                                d="M20 23.3333C24.6023 23.3333 28.3333 18.8561 28.3333 13.3333C28.3333 7.8104 24.6023 3.33325 20 3.33325C15.3976 3.33325 11.6666 7.8104 11.6666 13.3333C11.6666 18.8561 15.3976 23.3333 20 23.3333Z"
+                                                fill="#FF9A00"/>
+                                        <path
+                                                d="M36.3333 31.8331C34.8333 28.8331 32 26.3331 28.3333 24.8331C27.3333 24.4998 26.1666 24.4998 25.3333 24.9998C23.6666 25.9998 22 26.4998 20 26.4998C18 26.4998 16.3333 25.9998 14.6666 24.9998C13.8333 24.6665 12.6666 24.4998 11.6666 24.9998C7.99995 26.4998 5.16662 28.9998 3.66662 31.9998C2.49995 34.1665 4.33329 36.6665 6.83329 36.6665H33.1666C35.6666 36.6665 37.5 34.1665 36.3333 31.8331Z"
+                                                fill="#FF9A00"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="px-2 font-bold" style="font-size: 70%;">Access Logs</p>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="px-3 py-3">
+                            <div class="flex items-center">
+                                <div>
+                                    <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
+                                         xmlns="http://www.w3.org/2000/svg">
+                                        <path
+                                                d="M20 23.3333C24.6023 23.3333 28.3333 18.8561 28.3333 13.3333C28.3333 7.8104 24.6023 3.33325 20 3.33325C15.3976 3.33325 11.6666 7.8104 11.6666 13.3333C11.6666 18.8561 15.3976 23.3333 20 23.3333Z"
+                                                fill="#FF9A00"/>
+                                        <path
+                                                d="M36.3333 31.8331C34.8333 28.8331 32 26.3331 28.3333 24.8331C27.3333 24.4998 26.1666 24.4998 25.3333 24.9998C23.6666 25.9998 22 26.4998 20 26.4998C18 26.4998 16.3333 25.9998 14.6666 24.9998C13.8333 24.6665 12.6666 24.4998 11.6666 24.9998C7.99995 26.4998 5.16662 28.9998 3.66662 31.9998C2.49995 34.1665 4.33329 36.6665 6.83329 36.6665H33.1666C35.6666 36.6665 37.5 34.1665 36.3333 31.8331Z"
+                                                fill="#FF9A00"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="px-2 font-bold" style="font-size: 70%;">Error Logs</p>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="mt-4 border shadow-lg">
+                <div class="flex justify-between bg-gray-600 p-2 w-full">
+                    <div>
+                        <p class="text-white px-6 text-xl font-bold">Domains</p>
+                    </div>
+                    <div>
+                        <svg id="icon2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                             stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-white mr-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12h-15"/>
+                        </svg>
+                    </div>
+                </div>
+                <div>
+                    <ul class="flex w-full grid lg:grid-cols-4">
+                        <li class="px-3 py-3">
+                            <div class="flex items-center">
+                                <div>
+                                    <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
+                                         xmlns="http://www.w3.org/2000/svg">
+                                        <path
+                                                d="M20 23.3333C24.6023 23.3333 28.3333 18.8561 28.3333 13.3333C28.3333 7.8104 24.6023 3.33325 20 3.33325C15.3976 3.33325 11.6666 7.8104 11.6666 13.3333C11.6666 18.8561 15.3976 23.3333 20 23.3333Z"
+                                                fill="#FF9A00"/>
+                                        <path
+                                                d="M36.3333 31.8331C34.8333 28.8331 32 26.3331 28.3333 24.8331C27.3333 24.4998 26.1666 24.4998 25.3333 24.9998C23.6666 25.9998 22 26.4998 20 26.4998C18 26.4998 16.3333 25.9998 14.6666 24.9998C13.8333 24.6665 12.6666 24.4998 11.6666 24.9998C7.99995 26.4998 5.16662 28.9998 3.66662 31.9998C2.49995 34.1665 4.33329 36.6665 6.83329 36.6665H33.1666C35.6666 36.6665 37.5 34.1665 36.3333 31.8331Z"
+                                                fill="#FF9A00"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="px-2 font-bold" style="font-size: 70%;">Add Domains</p>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="px-3 py-3">
+                            <div class="flex items-center">
+                                <div>
+                                    <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
+                                         xmlns="http://www.w3.org/2000/svg">
+                                        <path
+                                                d="M20 23.3333C24.6023 23.3333 28.3333 18.8561 28.3333 13.3333C28.3333 7.8104 24.6023 3.33325 20 3.33325C15.3976 3.33325 11.6666 7.8104 11.6666 13.3333C11.6666 18.8561 15.3976 23.3333 20 23.3333Z"
+                                                fill="#FF9A00"/>
+                                        <path
+                                                d="M36.3333 31.8331C34.8333 28.8331 32 26.3331 28.3333 24.8331C27.3333 24.4998 26.1666 24.4998 25.3333 24.9998C23.6666 25.9998 22 26.4998 20 26.4998C18 26.4998 16.3333 25.9998 14.6666 24.9998C13.8333 24.6665 12.6666 24.4998 11.6666 24.9998C7.99995 26.4998 5.16662 28.9998 3.66662 31.9998C2.49995 34.1665 4.33329 36.6665 6.83329 36.6665H33.1666C35.6666 36.6665 37.5 34.1665 36.3333 31.8331Z"
+                                                fill="#FF9A00"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="px-2 font-bold" style="font-size: 70%;">List Domains</p>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="px-3 py-3">
+                            <div class="flex items-center">
+                                <div>
+                                    <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
+                                         xmlns="http://www.w3.org/2000/svg">
+                                        <path
+                                                d="M24.9999 20.0001C28.6818 20.0001 31.6666 17.0153 31.6666 13.3334C31.6666 9.65152 28.6818 6.66675 24.9999 6.66675C21.318 6.66675 18.3333 9.65152 18.3333 13.3334C18.3333 17.0153 21.318 20.0001 24.9999 20.0001Z"
+                                                fill="#FF9A00"/>
+                                        <path
+                                                d="M25.0001 23.3333C14.8334 23.3333 11.6667 29.9999 11.6667 29.9999V33.3333H38.3334V29.9999C38.3334 29.9999 35.1667 23.3333 25.0001 23.3333Z"
+                                                fill="#FF9A00"/>
+                                        <path d="M8.33325 11.6667V25.0001" stroke="#FF9A00" stroke-width="2"
+                                              stroke-miterlimit="10"/>
+                                        <path d="M15.0001 18.3333H1.66675" stroke="#FF9A00" stroke-width="2"
+                                              stroke-miterlimit="10"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="px-2 font-bold" style="font-size: 70%;">Domain Alias</p>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="px-3 py-3">
+                            <div class="flex items-center">
+                                <div>
+
+                                    <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
+                                         xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M38.3333 12.5L29.4999 21.6667L24.8333 17" stroke="#FF9A00"
+                                              stroke-width="2" stroke-miterlimit="10"/>
+                                        <path
+                                                d="M14.9999 20.0001C18.6818 20.0001 21.6666 17.0153 21.6666 13.3334C21.6666 9.65152 18.6818 6.66675 14.9999 6.66675C11.318 6.66675 8.33325 9.65152 8.33325 13.3334C8.33325 17.0153 11.318 20.0001 14.9999 20.0001Z"
+                                                fill="#FF9A00"/>
+                                        <path
+                                                d="M15.0001 23.3333C4.83341 23.3333 1.66675 29.9999 1.66675 29.9999V33.3333H28.3334V29.9999C28.3334 29.9999 25.1667 23.3333 15.0001 23.3333Z"
+                                                fill="#FF9A00"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="px-2 font-bold" style="font-size: 70%;">Cron Jobs</p>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="mt-4 border shadow-lg">
+                <div class="flex justify-between bg-gray-600 p-2 w-full">
+                    <div>
+                        <p class="text-white px-6 text-xl font-bold">Configuration</p>
+                    </div>
+                    <div>
+                        <svg id="icon2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                             stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-white mr-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12h-15"/>
+                        </svg>
+                    </div>
+                </div>
+                <div>
+                    <ul class="flex w-full grid lg:grid-cols-4">
+                        <li class="px-3 py-3">
+                            <div class="flex items-center">
+                                <div>
+                                    <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
+                                         xmlns="http://www.w3.org/2000/svg">
+                                        <path
+                                                d="M20 23.3333C24.6023 23.3333 28.3333 18.8561 28.3333 13.3333C28.3333 7.8104 24.6023 3.33325 20 3.33325C15.3976 3.33325 11.6666 7.8104 11.6666 13.3333C11.6666 18.8561 15.3976 23.3333 20 23.3333Z"
+                                                fill="#FF9A00"/>
+                                        <path
+                                                d="M36.3333 31.8331C34.8333 28.8331 32 26.3331 28.3333 24.8331C27.3333 24.4998 26.1666 24.4998 25.3333 24.9998C23.6666 25.9998 22 26.4998 20 26.4998C18 26.4998 16.3333 25.9998 14.6666 24.9998C13.8333 24.6665 12.6666 24.4998 11.6666 24.9998C7.99995 26.4998 5.16662 28.9998 3.66662 31.9998C2.49995 34.1665 4.33329 36.6665 6.83329 36.6665H33.1666C35.6666 36.6665 37.5 34.1665 36.3333 31.8331Z"
+                                                fill="#FF9A00"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="px-2 font-bold" style="font-size: 70%;">Apache Manager</p>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="px-3 py-3">
+                            <div class="flex items-center">
+                                <div>
+                                    <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
+                                         xmlns="http://www.w3.org/2000/svg">
+                                        <path
+                                                d="M20 23.3333C24.6023 23.3333 28.3333 18.8561 28.3333 13.3333C28.3333 7.8104 24.6023 3.33325 20 3.33325C15.3976 3.33325 11.6666 7.8104 11.6666 13.3333C11.6666 18.8561 15.3976 23.3333 20 23.3333Z"
+                                                fill="#FF9A00"/>
+                                        <path
+                                                d="M36.3333 31.8331C34.8333 28.8331 32 26.3331 28.3333 24.8331C27.3333 24.4998 26.1666 24.4998 25.3333 24.9998C23.6666 25.9998 22 26.4998 20 26.4998C18 26.4998 16.3333 25.9998 14.6666 24.9998C13.8333 24.6665 12.6666 24.4998 11.6666 24.9998C7.99995 26.4998 5.16662 28.9998 3.66662 31.9998C2.49995 34.1665 4.33329 36.6665 6.83329 36.6665H33.1666C35.6666 36.6665 37.5 34.1665 36.3333 31.8331Z"
+                                                fill="#FF9A00"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="px-2 font-bold" style="font-size: 70%;">VHost Conf</p>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="px-3 py-3">
+                            <div class="flex items-center">
+                                <div>
+                                    <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
+                                         xmlns="http://www.w3.org/2000/svg">
+                                        <path
+                                                d="M24.9999 20.0001C28.6818 20.0001 31.6666 17.0153 31.6666 13.3334C31.6666 9.65152 28.6818 6.66675 24.9999 6.66675C21.318 6.66675 18.3333 9.65152 18.3333 13.3334C18.3333 17.0153 21.318 20.0001 24.9999 20.0001Z"
+                                                fill="#FF9A00"/>
+                                        <path
+                                                d="M25.0001 23.3333C14.8334 23.3333 11.6667 29.9999 11.6667 29.9999V33.3333H38.3334V29.9999C38.3334 29.9999 35.1667 23.3333 25.0001 23.3333Z"
+                                                fill="#FF9A00"/>
+                                        <path d="M8.33325 11.6667V25.0001" stroke="#FF9A00" stroke-width="2"
+                                              stroke-miterlimit="10"/>
+                                        <path d="M15.0001 18.3333H1.66675" stroke="#FF9A00" stroke-width="2"
+                                              stroke-miterlimit="10"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="px-2 font-bold" style="font-size: 70%;">Rewrite rules</p>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="px-3 py-3">
+                            <div class="flex items-center">
+                                <div>
+
+                                    <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
+                                         xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M38.3333 12.5L29.4999 21.6667L24.8333 17" stroke="#FF9A00"
+                                              stroke-width="2" stroke-miterlimit="10"/>
+                                        <path
+                                                d="M14.9999 20.0001C18.6818 20.0001 21.6666 17.0153 21.6666 13.3334C21.6666 9.65152 18.6818 6.66675 14.9999 6.66675C11.318 6.66675 8.33325 9.65152 8.33325 13.3334C8.33325 17.0153 11.318 20.0001 14.9999 20.0001Z"
+                                                fill="#FF9A00"/>
+                                        <path
+                                                d="M15.0001 23.3333C4.83341 23.3333 1.66675 29.9999 1.66675 29.9999V33.3333H28.3334V29.9999C28.3334 29.9999 25.1667 23.3333 15.0001 23.3333Z"
+                                                fill="#FF9A00"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="px-2 font-bold" style="font-size: 70%;">Add SSL</p>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="px-3 py-3">
+                            <div class="flex items-center">
+                                <div>
+                                    <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
+                                         xmlns="http://www.w3.org/2000/svg">
+                                        <g clip-path="url(#clip0_55_1903)">
+                                            <path
+                                                    d="M10 31.6667C10 33.5083 11.4917 35 13.3334 35H26.6667C28.5084 35 30 33.5083 30 31.6667V11.6667H10V31.6667ZM31.6667 6.66667H25.8334L24.1667 5H15.8334L14.1667 6.66667H8.33337V10H31.6667V6.66667Z"
+                                                    fill="#FF9A00"/>
+                                        </g>
+                                        <defs>
+                                            <clipPath id="clip0_55_1903">
+                                                <rect width="40" height="40" fill="white"/>
+                                            </clipPath>
+                                        </defs>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="px-2 font-bold" style="font-size: 70%;">Change PHP</p>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="mt-4 border shadow-lg">
+                <div class="flex justify-between bg-gray-600 p-2 w-full">
+                    <div>
+                        <p class="text-white px-6 text-xl font-bold">Files</p>
+                    </div>
+                    <div>
+                        <svg id="icon2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                             stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-white mr-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12h-15"/>
+                        </svg>
+                    </div>
+                </div>
+                <div>
+                    <ul class="flex w-full grid lg:grid-cols-4">
+                        <li class="px-3 py-3">
+                            <div class="flex items-center">
+                                <div>
+                                    <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
+                                         xmlns="http://www.w3.org/2000/svg">
+                                        <path
+                                                d="M20 23.3333C24.6023 23.3333 28.3333 18.8561 28.3333 13.3333C28.3333 7.8104 24.6023 3.33325 20 3.33325C15.3976 3.33325 11.6666 7.8104 11.6666 13.3333C11.6666 18.8561 15.3976 23.3333 20 23.3333Z"
+                                                fill="#FF9A00"/>
+                                        <path
+                                                d="M36.3333 31.8331C34.8333 28.8331 32 26.3331 28.3333 24.8331C27.3333 24.4998 26.1666 24.4998 25.3333 24.9998C23.6666 25.9998 22 26.4998 20 26.4998C18 26.4998 16.3333 25.9998 14.6666 24.9998C13.8333 24.6665 12.6666 24.4998 11.6666 24.9998C7.99995 26.4998 5.16662 28.9998 3.66662 31.9998C2.49995 34.1665 4.33329 36.6665 6.83329 36.6665H33.1666C35.6666 36.6665 37.5 34.1665 36.3333 31.8331Z"
+                                                fill="#FF9A00"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="px-2 font-bold" style="font-size: 70%;">File Manager</p>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="px-3 py-3">
+                            <div class="flex items-center">
+                                <div>
+                                    <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
+                                         xmlns="http://www.w3.org/2000/svg">
+                                        <path
+                                                d="M20 23.3333C24.6023 23.3333 28.3333 18.8561 28.3333 13.3333C28.3333 7.8104 24.6023 3.33325 20 3.33325C15.3976 3.33325 11.6666 7.8104 11.6666 13.3333C11.6666 18.8561 15.3976 23.3333 20 23.3333Z"
+                                                fill="#FF9A00"/>
+                                        <path
+                                                d="M36.3333 31.8331C34.8333 28.8331 32 26.3331 28.3333 24.8331C27.3333 24.4998 26.1666 24.4998 25.3333 24.9998C23.6666 25.9998 22 26.4998 20 26.4998C18 26.4998 16.3333 25.9998 14.6666 24.9998C13.8333 24.6665 12.6666 24.4998 11.6666 24.9998C7.99995 26.4998 5.16662 28.9998 3.66662 31.9998C2.49995 34.1665 4.33329 36.6665 6.83329 36.6665H33.1666C35.6666 36.6665 37.5 34.1665 36.3333 31.8331Z"
+                                                fill="#FF9A00"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="px-2 font-bold" style="font-size: 70%;">Open_basedir</p>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="px-3 py-3">
+                            <div class="flex items-center">
+                                <div>
+                                    <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
+                                         xmlns="http://www.w3.org/2000/svg">
+                                        <path
+                                                d="M24.9999 20.0001C28.6818 20.0001 31.6666 17.0153 31.6666 13.3334C31.6666 9.65152 28.6818 6.66675 24.9999 6.66675C21.318 6.66675 18.3333 9.65152 18.3333 13.3334C18.3333 17.0153 21.318 20.0001 24.9999 20.0001Z"
+                                                fill="#FF9A00"/>
+                                        <path
+                                                d="M25.0001 23.3333C14.8334 23.3333 11.6667 29.9999 11.6667 29.9999V33.3333H38.3334V29.9999C38.3334 29.9999 35.1667 23.3333 25.0001 23.3333Z"
+                                                fill="#FF9A00"/>
+                                        <path d="M8.33325 11.6667V25.0001" stroke="#FF9A00" stroke-width="2"
+                                              stroke-miterlimit="10"/>
+                                        <path d="M15.0001 18.3333H1.66675" stroke="#FF9A00" stroke-width="2"
+                                              stroke-miterlimit="10"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="px-2 font-bold" style="font-size: 70%;">Create FTP Account</p>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="px-3 py-3">
+                            <div class="flex items-center">
+                                <div>
+
+                                    <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
+                                         xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M38.3333 12.5L29.4999 21.6667L24.8333 17" stroke="#FF9A00"
+                                              stroke-width="2" stroke-miterlimit="10"/>
+                                        <path
+                                                d="M14.9999 20.0001C18.6818 20.0001 21.6666 17.0153 21.6666 13.3334C21.6666 9.65152 18.6818 6.66675 14.9999 6.66675C11.318 6.66675 8.33325 9.65152 8.33325 13.3334C8.33325 17.0153 11.318 20.0001 14.9999 20.0001Z"
+                                                fill="#FF9A00"/>
+                                        <path
+                                                d="M15.0001 23.3333C4.83341 23.3333 1.66675 29.9999 1.66675 29.9999V33.3333H28.3334V29.9999C28.3334 29.9999 25.1667 23.3333 15.0001 23.3333Z"
+                                                fill="#FF9A00"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="px-2 font-bold" style="font-size: 70%;">Delete FTP Account</p>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="mt-4 border shadow-lg">
+                <div class="flex justify-between bg-gray-600 p-2 w-full">
+                    <div>
+                        <p class="text-white px-6 text-xl font-bold">Email Marketing</p>
+                    </div>
+                    <div>
+                        <svg id="icon2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                             stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-white mr-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12h-15"/>
+                        </svg>
+                    </div>
+                </div>
+                <div>
+                    <ul class="flex w-full grid lg:grid-cols-4">
+                        <li class="px-3 py-3">
+                            <div class="flex items-center">
+                                <div>
+                                    <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
+                                         xmlns="http://www.w3.org/2000/svg">
+                                        <path
+                                                d="M20 23.3333C24.6023 23.3333 28.3333 18.8561 28.3333 13.3333C28.3333 7.8104 24.6023 3.33325 20 3.33325C15.3976 3.33325 11.6666 7.8104 11.6666 13.3333C11.6666 18.8561 15.3976 23.3333 20 23.3333Z"
+                                                fill="#FF9A00"/>
+                                        <path
+                                                d="M36.3333 31.8331C34.8333 28.8331 32 26.3331 28.3333 24.8331C27.3333 24.4998 26.1666 24.4998 25.3333 24.9998C23.6666 25.9998 22 26.4998 20 26.4998C18 26.4998 16.3333 25.9998 14.6666 24.9998C13.8333 24.6665 12.6666 24.4998 11.6666 24.9998C7.99995 26.4998 5.16662 28.9998 3.66662 31.9998C2.49995 34.1665 4.33329 36.6665 6.83329 36.6665H33.1666C35.6666 36.6665 37.5 34.1665 36.3333 31.8331Z"
+                                                fill="#FF9A00"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="px-2 font-bold" style="font-size: 70%;">Create Lists</p>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="px-3 py-3">
+                            <div class="flex items-center">
+                                <div>
+                                    <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
+                                         xmlns="http://www.w3.org/2000/svg">
+                                        <path
+                                                d="M20 23.3333C24.6023 23.3333 28.3333 18.8561 28.3333 13.3333C28.3333 7.8104 24.6023 3.33325 20 3.33325C15.3976 3.33325 11.6666 7.8104 11.6666 13.3333C11.6666 18.8561 15.3976 23.3333 20 23.3333Z"
+                                                fill="#FF9A00"/>
+                                        <path
+                                                d="M36.3333 31.8331C34.8333 28.8331 32 26.3331 28.3333 24.8331C27.3333 24.4998 26.1666 24.4998 25.3333 24.9998C23.6666 25.9998 22 26.4998 20 26.4998C18 26.4998 16.3333 25.9998 14.6666 24.9998C13.8333 24.6665 12.6666 24.4998 11.6666 24.9998C7.99995 26.4998 5.16662 28.9998 3.66662 31.9998C2.49995 34.1665 4.33329 36.6665 6.83329 36.6665H33.1666C35.6666 36.6665 37.5 34.1665 36.3333 31.8331Z"
+                                                fill="#FF9A00"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="px-2 font-bold" style="font-size: 70%;">Manage Lists</p>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="px-3 py-3">
+                            <div class="flex items-center">
+                                <div>
+                                    <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
+                                         xmlns="http://www.w3.org/2000/svg">
+                                        <path
+                                                d="M24.9999 20.0001C28.6818 20.0001 31.6666 17.0153 31.6666 13.3334C31.6666 9.65152 28.6818 6.66675 24.9999 6.66675C21.318 6.66675 18.3333 9.65152 18.3333 13.3334C18.3333 17.0153 21.318 20.0001 24.9999 20.0001Z"
+                                                fill="#FF9A00"/>
+                                        <path
+                                                d="M25.0001 23.3333C14.8334 23.3333 11.6667 29.9999 11.6667 29.9999V33.3333H38.3334V29.9999C38.3334 29.9999 35.1667 23.3333 25.0001 23.3333Z"
+                                                fill="#FF9A00"/>
+                                        <path d="M8.33325 11.6667V25.0001" stroke="#FF9A00" stroke-width="2"
+                                              stroke-miterlimit="10"/>
+                                        <path d="M15.0001 18.3333H1.66675" stroke="#FF9A00" stroke-width="2"
+                                              stroke-miterlimit="10"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="px-2 font-bold" style="font-size: 70%;">SMTP Hosts</p>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="px-3 py-3">
+                            <div class="flex items-center">
+                                <div>
+
+                                    <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
+                                         xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M38.3333 12.5L29.4999 21.6667L24.8333 17" stroke="#FF9A00"
+                                              stroke-width="2" stroke-miterlimit="10"/>
+                                        <path
+                                                d="M14.9999 20.0001C18.6818 20.0001 21.6666 17.0153 21.6666 13.3334C21.6666 9.65152 18.6818 6.66675 14.9999 6.66675C11.318 6.66675 8.33325 9.65152 8.33325 13.3334C8.33325 17.0153 11.318 20.0001 14.9999 20.0001Z"
+                                                fill="#FF9A00"/>
+                                        <path
+                                                d="M15.0001 23.3333C4.83341 23.3333 1.66675 29.9999 1.66675 29.9999V33.3333H28.3334V29.9999C28.3334 29.9999 25.1667 23.3333 15.0001 23.3333Z"
+                                                fill="#FF9A00"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="px-2 font-bold" style="font-size: 70%;">Compose</p>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="px-3 py-3">
+                            <div class="flex items-center">
+                                <div>
+                                    <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
+                                         xmlns="http://www.w3.org/2000/svg">
+                                        <g clip-path="url(#clip0_55_1903)">
+                                            <path
+                                                    d="M10 31.6667C10 33.5083 11.4917 35 13.3334 35H26.6667C28.5084 35 30 33.5083 30 31.6667V11.6667H10V31.6667ZM31.6667 6.66667H25.8334L24.1667 5H15.8334L14.1667 6.66667H8.33337V10H31.6667V6.66667Z"
+                                                    fill="#FF9A00"/>
+                                        </g>
+                                        <defs>
+                                            <clipPath id="clip0_55_1903">
+                                                <rect width="40" height="40" fill="white"/>
+                                            </clipPath>
+                                        </defs>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="px-2 font-bold" style="font-size: 70%;">Send Emails</p>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="mt-4 border shadow-lg">
+                <div class="flex justify-between bg-gray-600 p-2 w-full">
+                    <div>
+                        <p class="text-white px-6 text-xl font-bold">Application Installer</p>
+                    </div>
+                    <div>
+                        <svg id="icon2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                             stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-white mr-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 12h-15"/>
+                        </svg>
+                    </div>
+                </div>
+                <div>
+                    <ul class="flex w-full grid lg:grid-cols-4">
+                        <li class="px-3 py-3">
+                            <div class="flex items-center">
+                                <div>
+                                    <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
+                                         xmlns="http://www.w3.org/2000/svg">
+                                        <path
+                                                d="M20 23.3333C24.6023 23.3333 28.3333 18.8561 28.3333 13.3333C28.3333 7.8104 24.6023 3.33325 20 3.33325C15.3976 3.33325 11.6666 7.8104 11.6666 13.3333C11.6666 18.8561 15.3976 23.3333 20 23.3333Z"
+                                                fill="#FF9A00"/>
+                                        <path
+                                                d="M36.3333 31.8331C34.8333 28.8331 32 26.3331 28.3333 24.8331C27.3333 24.4998 26.1666 24.4998 25.3333 24.9998C23.6666 25.9998 22 26.4998 20 26.4998C18 26.4998 16.3333 25.9998 14.6666 24.9998C13.8333 24.6665 12.6666 24.4998 11.6666 24.9998C7.99995 26.4998 5.16662 28.9998 3.66662 31.9998C2.49995 34.1665 4.33329 36.6665 6.83329 36.6665H33.1666C35.6666 36.6665 37.5 34.1665 36.3333 31.8331Z"
+                                                fill="#FF9A00"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="px-2 font-bold" style="font-size: 70%;">WP + LSCache</p>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="px-3 py-3">
+                            <div class="flex items-center">
+                                <div>
+                                    <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
+                                         xmlns="http://www.w3.org/2000/svg">
+                                        <path
+                                                d="M20 23.3333C24.6023 23.3333 28.3333 18.8561 28.3333 13.3333C28.3333 7.8104 24.6023 3.33325 20 3.33325C15.3976 3.33325 11.6666 7.8104 11.6666 13.3333C11.6666 18.8561 15.3976 23.3333 20 23.3333Z"
+                                                fill="#FF9A00"/>
+                                        <path
+                                                d="M36.3333 31.8331C34.8333 28.8331 32 26.3331 28.3333 24.8331C27.3333 24.4998 26.1666 24.4998 25.3333 24.9998C23.6666 25.9998 22 26.4998 20 26.4998C18 26.4998 16.3333 25.9998 14.6666 24.9998C13.8333 24.6665 12.6666 24.4998 11.6666 24.9998C7.99995 26.4998 5.16662 28.9998 3.66662 31.9998C2.49995 34.1665 4.33329 36.6665 6.83329 36.6665H33.1666C35.6666 36.6665 37.5 34.1665 36.3333 31.8331Z"
+                                                fill="#FF9A00"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="px-2 font-bold" style="font-size: 70%;">Git</p>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="px-3 py-3">
+                            <div class="flex items-center">
+                                <div>
+                                    <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
+                                         xmlns="http://www.w3.org/2000/svg">
+                                        <path
+                                                d="M24.9999 20.0001C28.6818 20.0001 31.6666 17.0153 31.6666 13.3334C31.6666 9.65152 28.6818 6.66675 24.9999 6.66675C21.318 6.66675 18.3333 9.65152 18.3333 13.3334C18.3333 17.0153 21.318 20.0001 24.9999 20.0001Z"
+                                                fill="#FF9A00"/>
+                                        <path
+                                                d="M25.0001 23.3333C14.8334 23.3333 11.6667 29.9999 11.6667 29.9999V33.3333H38.3334V29.9999C38.3334 29.9999 35.1667 23.3333 25.0001 23.3333Z"
+                                                fill="#FF9A00"/>
+                                        <path d="M8.33325 11.6667V25.0001" stroke="#FF9A00" stroke-width="2"
+                                              stroke-miterlimit="10"/>
+                                        <path d="M15.0001 18.3333H1.66675" stroke="#FF9A00" stroke-width="2"
+                                              stroke-miterlimit="10"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="px-2 font-bold" style="font-size: 70%;">Prestashop</p>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="px-3 py-3">
+                            <div class="flex items-center">
+                                <div>
+
+                                    <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
+                                         xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M38.3333 12.5L29.4999 21.6667L24.8333 17" stroke="#FF9A00"
+                                              stroke-width="2" stroke-miterlimit="10"/>
+                                        <path
+                                                d="M14.9999 20.0001C18.6818 20.0001 21.6666 17.0153 21.6666 13.3334C21.6666 9.65152 18.6818 6.66675 14.9999 6.66675C11.318 6.66675 8.33325 9.65152 8.33325 13.3334C8.33325 17.0153 11.318 20.0001 14.9999 20.0001Z"
+                                                fill="#FF9A00"/>
+                                        <path
+                                                d="M15.0001 23.3333C4.83341 23.3333 1.66675 29.9999 1.66675 29.9999V33.3333H28.3334V29.9999C28.3334 29.9999 25.1667 23.3333 15.0001 23.3333Z"
+                                                fill="#FF9A00"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="px-2 font-bold" style="font-size: 70%;">Mautic</p>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        {% else %}
+            <div class="alert alert-danger">
+                <p>{{ domain }}</p>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

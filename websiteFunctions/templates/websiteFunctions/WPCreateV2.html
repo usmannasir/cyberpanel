@@ -106,6 +106,15 @@
                 </div>
                 <div ng-hide="installationDetailsForm" class="flex py-2 px-6">
                     <div>
+                        <p class="font-semibold w-48">Password</p>
+                    </div>
+                    <div>
+                        <input name="password" type="password" class="form-control w-80 bg-gray-100 rounded px-2 py-1"
+                               ng-model="WPPassword" required>
+                    </div>
+                </div>
+                <div ng-hide="installationDetailsForm" class="flex py-2 px-6">
+                    <div>
                         <p class="font-semibold w-48">Select WP Version</p>
                     </div>
                     <div>
@@ -171,6 +180,37 @@
             <button ng-click="createWordPresssite()"
                     class="bg-orange-500 px-3 py-4 rounded-lg text-xl font-semibold text-white">
                 Create Website
+            </button>
+        </div>
+        <div ng-hide="installationProgress" class="form-group">
+
+            <div class="flex justify-center font-bold text-xl">
+                <h2>{$ currentStatus $}</h2>
+            </div>
+            <div class="w-full bg-gray-100 rounded-full mt-3">
+                <div id="installProgress"
+                     class="bg-green-600 text-xs font-medium text-white text-center p-2 leading-none rounded-full"
+                     style="width:0%">
+                </div>
+            </div>
+            <div ng-hide="errorMessageBox" class="flex justify-center font-bold text-xl mt-3">
+                <h2>{$ errorMessage $}</h2>
+            </div>
+            <div ng-hide="success" class="flex justify-center font-bold text-xl mt-3">
+                <h2>Website succesfully created.</h2>
+            </div>
+            <div ng-hide="couldNotConnect" class="flex justify-center font-bold text-xl mt-3">
+                <h2>Could not connect to server. Please refresh this page.</h2>
+            </div>
+
+
+        </div>
+
+        <div ng-hide="installationProgress" class="flex justify-center mt-3">
+            <button ng-disabled="goBackDisable"
+                    ng-click="goBack()"
+                    class="bg-blue-500 px-3 py-2 rounded-lg text-xl font-semibold text-white">
+                Go Back
             </button>
         </div>
     </div>

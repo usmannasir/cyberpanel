@@ -35,11 +35,19 @@
                 </div>
             </div>
         </div>
+        <div id="mysearch" class="col-lg-12" style="display: none; border-top: none!important;
+                                                            border: 1px solid  rgba(90, 91, 92, 0.7);
+                                                            position: absolute; z-index: 1;
+                                                            background-color: #FFFFFF">
+                        </div>
         <div class="py-4 px-6 mt-3">
             <p class="text-gray-500 font-bold">Selected Plugin</p>
         </div>
+        <div id="selJS" style="display: none; display: flex; flex-direction: row; margin-top: 10px;">
+
+                        </div>
         <hr>
-        <div class="flex justify-center mt-3">
+        <div ng-hide="installationDetailsForm" class="flex justify-center mt-3">
             <button ng-disabled="websiteCreationForm.dom.$error.required || websiteCreationForm.email.$invalid"
                     ng-click="AddNewplugin()"
                     class="bg-orange-500 px-3 py-4 rounded-lg text-xl font-semibold text-white">
