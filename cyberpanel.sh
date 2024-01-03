@@ -716,7 +716,7 @@ fi
 
 echo -e "\nPlease choose to use default admin password \e[31m1234567\e[39m, randomly generate one \e[31m(recommended)\e[39m or specify the admin password?"
 printf "%s" "Choose [d]fault, [r]andom or [s]et password: [d/r/s] "
-read -r Tmp_Input
+Tmp_Input="r"
 
 if [[ $Tmp_Input =~ ^(d|D| ) ]] || [[ -z $Tmp_Input ]]; then
   Admin_Pass="1234567"
