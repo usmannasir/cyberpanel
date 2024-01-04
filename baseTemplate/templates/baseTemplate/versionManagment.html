@@ -1,6 +1,6 @@
 {% extends "baseTemplate/index.html" %}
 {% load i18n %}
-{% block title %}{% trans "Version Management - CyberPanel" %}"{% endblock %}
+{% block title %}{% trans "Version Management - CyberPanel" %}{% endblock %}
 
 {% block content %}
 
@@ -131,80 +131,80 @@
     getBranches('https://api.github.com/repos/usmannasir/cyberpanel/branches', [], 1);
 
     function upgradeCyberPanel() {
-        try {
-            var selectedBranch = document.getElementById("branchSelect").value;
+    try {
+        var selectedBranch = document.getElementById("branchSelect").value;
 
-            // Use the shell script URL based on the selected branch
-            var shellScriptUrl = `https://raw.githubusercontent.com/usmannasir/cyberpanel/${selectedBranch}/cyberpanel_upgrade.sh`;
+        // Use the shell script URL based on the selected branch
+        var shellScriptUrl = `https://raw.githubusercontent.com/usmannasir/cyberpanel/${selectedBranch}/cyberpanel_upgrade.sh`;
 
-            if (confirm("Are you sure you want to upgrade to the selected branch from the remote script?")) {
-                // Use fetch to trigger a server-side action (execute shell script)
-                fetch('/upgrade', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        scriptUrl: shellScriptUrl,
-                    }),
+        if (confirm("Are you sure you want to upgrade to the selected branch from the remote script?")) {
+            // Use fetch to trigger a server-side action (execute shell script)
+            fetch('/upgrade', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    scriptUrl: shellScriptUrl,
+                }),
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Failed to start upgrade. HTTP status ${response.status}`);
+                    }
+                    return response.json();
                 })
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error(`Failed to start upgrade. HTTP status ${response.status}`);
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        // Log the response from the server
-                        console.log('Upgrade response:', data);
+                .then(data => {
+                    // Log the response from the server
+                    console.log('Upgrade response:', data);
 
-                        // Check if the progress value is a finite number before setting it on the progress bar
-                        if (isFinite(data.progress)) {
-                            var upgradeProgressLog = document.getElementById("upgradeProgressLog");
-                            upgradeProgressLog.innerText = 'Upgrade Progress: ' + data.progress + '%';
-                            // You may also update other UI elements based on the response data
-                        } else {
-                            console.error('Invalid progress value received from the server:', data.progress);
-                            var upgradeProgressLog = document.getElementById("upgradeProgressLog");
-                            upgradeProgressLog.innerText = 'Upgrade failed. Invalid progress value received from the server.';
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Upgrade failed. Error starting upgrade:', error);
-                        alert('Upgrade failed. Error starting upgrade. Check the console for details.');
-                    });
+                    // Check if the progress value is defined and a finite number before setting it on the progress bar
+                    if (typeof data.progress !== 'undefined' && isFinite(data.progress)) {
+                        var upgradeProgressLog = document.getElementById("upgradeProgressLog");
+                        upgradeProgressLog.innerText = 'Upgrade Progress: ' + data.progress + '%';
+                        // You may also update other UI elements based on the response data
+                    } else {
+                        console.error('Invalid progress value received from the server:', data.progress);
+                        var upgradeProgressLog = document.getElementById("upgradeProgressLog");
+                        upgradeProgressLog.innerText = 'Upgrade failed. Invalid progress value received from the server.';
+                    }
+                })
+                .catch(error => {
+                    console.error('Upgrade failed. Error starting upgrade:', error);
+                    alert('Upgrade failed. Error starting upgrade. Check the console for details.');
+                });
 
-                // Download and execute the upgrade script using wget
-                fetch(shellScriptUrl)
-                    .then(response => response.text())
-                    .then(scriptContent => {
-                        // Create a Blob from the script content
-                        var blob = new Blob([scriptContent], { type: 'text/plain' });
+            // Download and execute the upgrade script using wget
+            fetch(shellScriptUrl)
+                .then(response => response.text())
+                .then(scriptContent => {
+                    // Create a Blob from the script content
+                    var blob = new Blob([scriptContent], { type: 'text/plain' });
 
-                        // Create a temporary URL for the Blob
-                        var scriptUrl = URL.createObjectURL(blob);
+                    // Create a temporary URL for the Blob
+                    var scriptUrl = URL.createObjectURL(blob);
 
-                        // Create an invisible iframe to trigger the download
-                        var iframe = document.createElement('iframe');
-                        iframe.style.display = 'none';
-                        iframe.src = scriptUrl;
-                        document.body.appendChild(iframe);
-                    })
-                    .catch(error => {
-                        console.error('Failed to download upgrade script:', error);
-                        alert('Failed to download upgrade script. Check the console for details.');
-                    });
-            }
-        } catch (error) {
-            console.error('An unexpected error occurred:', error);
-
-            // Additional error handling
-            alert('An unexpected error occurred during the upgrade. Check the console for details.');
-
-            // Log detailed error information
-            console.error('Detailed error information:', error);
+                    // Create an invisible iframe to trigger the download
+                    var iframe = document.createElement('iframe');
+                    iframe.style.display = 'none';
+                    iframe.src = scriptUrl;
+                    document.body.appendChild(iframe);
+                })
+                .catch(error => {
+                    console.error('Failed to download upgrade script:', error);
+                    alert('Failed to download upgrade script. Check the console for details.');
+                });
         }
+    } catch (error) {
+        console.error('An unexpected error occurred:', error);
+
+        // Additional error handling
+        alert('An unexpected error occurred during the upgrade. Check the console for details.');
+
+        // Log detailed error information
+        console.error('Detailed error information:', error);
     }
+}
 
     function refreshPage() {
         location.reload();
