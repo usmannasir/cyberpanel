@@ -46,7 +46,15 @@ class Docker_Sites(multi.Thread):
 
     def InstallDocker(self):
 
-        command = 'apt install docker-compose -y'
+        if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+            command = 'sudo curl -L "https://github.com/docker/compose/releases/download/v2.17.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose'
+            ProcessUtilities.executioner(command)
+
+            command = 'chmod +x /usr/local/bin/docker-compose'
+
+        else:
+            command = 'apt install docker-compose -y'
+
         ReturnCode = ProcessUtilities.executioner(command)
 
         if ReturnCode:
