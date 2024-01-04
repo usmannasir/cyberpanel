@@ -2612,6 +2612,15 @@ class WebsiteManager:
             execPath = execPath + " deleteVirtualHostConfigurations --virtualHostName " + websiteName
             ProcessUtilities.popenExecutioner(execPath)
 
+            ### delete site from dgdrive backups
+
+            try:
+
+                from websiteFunctions.models import GDriveSites
+                GDriveSites.objects.filter(domain=websiteName).delete()
+            except:
+                pass
+
             data_ret = {'status': 1, 'websiteDeleteStatus': 1, 'error_message': "None"}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
