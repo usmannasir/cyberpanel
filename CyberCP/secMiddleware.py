@@ -1,11 +1,11 @@
 # coding=utf-8
+from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+from django.shortcuts import HttpResponse, render
 import json
 import re
-from django.shortcuts import HttpResponse, render
 from loginSystem.models import Administrator
 
 class secMiddleware:
-
     HIGH = 0
     LOW = 1
 
@@ -22,7 +22,7 @@ class secMiddleware:
         try:
             uID = request.session['userID']
             admin = Administrator.objects.get(pk=uID)
-            ipAddr = self.get_client_ip(request)
+            ipAddr = get_client_ip(request)
 
             if ipAddr.find('.') > -1:
                 if request.session['ipAddr'] == ipAddr or admin.securityLevel == secMiddleware.LOW:
@@ -30,17 +30,19 @@ class secMiddleware:
                 else:
                     del request.session['userID']
                     del request.session['ipAddr']
+                    logging.writeToFile(get_client_ip(request))
                     final_dic = {'error_message': "Session reuse detected, IPAddress logged.",
                                  "errorMessage": "Session reuse detected, IPAddress logged."}
                     final_json = json.dumps(final_dic)
                     return HttpResponse(final_json)
             else:
-                ipAddr = self.get_client_ip(request).split(':')[:3]
+                ipAddr = get_client_ip(request).split(':')[:3]
                 if request.session['ipAddr'] == ipAddr or admin.securityLevel == secMiddleware.LOW:
                     pass
                 else:
                     del request.session['userID']
                     del request.session['ipAddr']
+                    logging.writeToFile(get_client_ip(request))
                     final_dic = {'error_message': "Session reuse detected, IPAddress logged.",
                                  "errorMessage": "Session reuse detected, IPAddress logged."}
                     final_json = json.dumps(final_dic)
@@ -50,6 +52,7 @@ class secMiddleware:
 
         if request.method == 'POST':
             try:
+                #logging.writeToFile(request.body)
                 data = json.loads(request.body)
                 for key, value in data.items():
                     if request.path.find('gitNotify') > -1:
@@ -58,10 +61,17 @@ class secMiddleware:
                         pass
                     elif type(value) == list:
                         for items in value:
-                            if any(char in items for char in ['$','&','(',')','[',']','{','}',';','‘','<','>']):
+                            if items.find('- -') > -1 or items.find('\n') > -1 or items.find(';') > -1 or items.find(
+                                    '&&') > -1 or items.find('|') > -1 or items.find('...') > -1 \
+                                    or items.find("`") > -1 or items.find("$") > -1 or items.find(
+                                "(") > -1 or items.find(")") > -1 \
+                                    or items.find("'") > -1 or items.find("[") > -1 or items.find(
+                                "]") > -1 or items.find("{") > -1 or items.find("}") > -1 \
+                                    or items.find(":") > -1 or items.find("<") > -1 or items.find(">") > -1:
+                                logging.writeToFile(request.body)
                                 final_dic = {
-                                    'error_message': "Data supplied is not accepted, following characters are not allowed in the input `$ & ( ) [ ] { } ; : ‘ < >.",
-                                    "errorMessage": "Data supplied is not accepted, following characters are not allowed in the input `$ & ( ) [ ] { } ; : ‘ < >."}
+                                    'error_message': "Data supplied is not accepted, following characters are not allowed in the input ` $ & ( ) [ ] { } ; : ‘ < >.",
+                                    "errorMessage": "Data supplied is not accepted, following characters are not allowed in the input ` $ & ( ) [ ] { } ; : ‘ < >."}
                                 final_json = json.dumps(final_dic)
                                 return HttpResponse(final_json)
                     else:
@@ -69,6 +79,7 @@ class secMiddleware:
 
                     if key == 'backupDestinations':
                         if re.match('^[a-z|0-9]+:[a-z|0-9|\.]+\/?[A-Z|a-z|0-9|\.]*$', value) == None and value != 'local':
+                            logging.writeToFile(request.body)
                             final_dic = {'error_message': "Data supplied is not accepted.",
                                          "errorMessage": "Data supplied is not accepted."}
                             final_json = json.dumps(final_dic)
@@ -76,7 +87,7 @@ class secMiddleware:
 
                     if request.build_absolute_uri().find(
                             'api/remoteTransfer') > -1 or request.build_absolute_uri().find(
-                            'api/verifyConn') >-1 or request.build_absolute_uri().find(
+                            'api/verifyConn') > -1 or request.build_absolute_uri().find(
                             'webhook') > -1 or request.build_absolute_uri().find(
                             'saveSpamAssassinConfigurations') > -1 or request.build_absolute_uri().find(
                             'docker') > -1 or request.build_absolute_uri().find(
@@ -95,10 +106,11 @@ class secMiddleware:
                         ")") > -1 \
                             or value.find("'") > -1 or value.find("[") > -1 or value.find("]") > -1 or value.find(
                         "{") > -1 or value.find("}") > -1 \
-                            or value.find(":") > -1 or value.find("<") > -1 or value.find(">") > -1:
+                            or value.find(":") > -1 or value.find("<") >-1 or value.find(">") > -1:
+                        logging.writeToFile(request.body)
                         final_dic = {
-                            'error_message': "Data supplied is not accepted, following characters are not allowed in the input `$ & ( ) [ ] { } ; : ‘ < >.",
-                            "errorMessage": "Data supplied is not accepted, following characters are not allowed in the input `$ & ( ) [ ] { } ; : ‘ < >."}
+                            'error_message': "Data supplied is not accepted, following characters are not allowed in the input ` $ & ( ) [ ] { } ; : ‘ < >.",
+                            "errorMessage": "Data supplied is not accepted, following characters are not allowed in the input ` $ & ( ) [ ] { } ; : ‘ < >."}
                         final_json = json.dumps(final_dic)
                         return HttpResponse(final_json)
                     if key.find(';') > -1 or key.find('&&') > -1 or key.find('|') > -1 or key.find('...') > -1 \
@@ -106,8 +118,9 @@ class secMiddleware:
                             or key.find("'") > -1 or key.find("[") > -1 or key.find("]") > -1 or key.find(
                         "{") > -1 or key.find("}") > -1 \
                             or key.find(":") > -1 or key.find("<") > -1 or key.find(">") > -1:
+                        logging.writeToFile(request.body)
                         final_dic = {'error_message': "Data supplied is not accepted.",
-                                     "errorMessage": "Data supplied is not accepted following characters are not allowed in the input `$ & ( ) [ ] { } ; : ‘ < >."}
+                                     "errorMessage": "Data supplied is not accepted following characters are not allowed in the input ` $ & ( ) [ ] { } ; : ‘ < >."}
                         final_json = json.dumps(final_dic)
                         return HttpResponse(final_json)
 
@@ -115,6 +128,14 @@ class secMiddleware:
                 logging.writeToFile(str(msg))
                 response = self.get_response(request)
                 return response
+        # else:
+        #     try:
+        #         if request.path.find('cloudAPI/') > -1 or request.path.find('api/') > -1:
+        #             pass
+        #         else:
+        #             uID = request.session['userID']
+        #     except:
+        #         return render(request, 'loginSystem/login.html', {})
 
         response = self.get_response(request)
 
