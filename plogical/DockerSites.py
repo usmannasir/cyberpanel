@@ -47,7 +47,6 @@ class Docker_Sites(multi.Thread):
     def InstallDocker(self):
 
         if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
-            #command = 'sudo curl -L "https://github.com/docker/compose/releases/download/v2.17.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose'
 
             command = 'dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo'
 
@@ -66,7 +65,7 @@ class Docker_Sites(multi.Thread):
             else:
                 return 0, ReturnCode
 
-            command = 'sudo systemctl enable docker'
+            command = 'systemctl enable docker'
             ReturnCode = ProcessUtilities.executioner(command)
 
             if ReturnCode:
@@ -74,7 +73,23 @@ class Docker_Sites(multi.Thread):
             else:
                 return 0, ReturnCode
 
-            command = 'sudo systemctl start docker'
+            command = 'systemctl start docker'
+            ReturnCode = ProcessUtilities.executioner(command)
+
+            if ReturnCode:
+                pass
+            else:
+                return 0, ReturnCode
+
+            command = 'curl -L "https://github.com/docker/compose/releases/download/v2.17.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose'
+            ReturnCode = ProcessUtilities.executioner(command)
+
+            if ReturnCode:
+                pass
+            else:
+                return 0, ReturnCode
+
+            command = 'chmod +x /usr/local/bin/docker-compose'
             ReturnCode = ProcessUtilities.executioner(command)
 
             if ReturnCode:
@@ -237,6 +252,9 @@ services:
 
             command = f"docker-compose -f {self.data['ComposePath']} -p '{self.data['SiteName']}' up -d"
             result, message = ProcessUtilities.outputExecutioner(command, None, None, None, 1)
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.writeToFile(message)
 
             if result == 0:
                 logging.statusWriter(self.JobID, f'Error {str(message)} . [404]')
