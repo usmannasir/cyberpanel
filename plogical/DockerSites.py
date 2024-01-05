@@ -30,6 +30,14 @@ class Docker_Sites(multi.Thread):
             self.JobID = self.data['JobID']  ##JOBID will be file path where status is being written
         except:
             pass
+        try:
+            ### set docker name for listing/deleting etc
+            if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+                self.DockerAppName = f"{self.data['name'].replace(' ', '')}-{self.data['name'].replace(' ', '-')}"
+            else:
+                self.DockerAppName = f"{self.data['name'].replace(' ', '')}_{self.data['name'].replace(' ', '-')}"
+        except:
+            pass
 
     def run(self):
         try:
@@ -488,7 +496,7 @@ services:
             # Create a Docker client
             client = docker.from_env()
 
-            FilerValue = f"{self.data['name'].replace(' ', '')}_{self.data['name'].replace(' ', '-')}"
+            FilerValue = self.DockerAppName
 
             # Define the label to filter containers
             label_filter = {'name': FilerValue}
@@ -522,7 +530,7 @@ services:
             # Create a Docker client
             client = docker.from_env()
 
-            FilerValue = f"{self.data['name'].replace(' ', '')}_{self.data['name'].replace(' ', '-')}"
+            FilerValue = self.DockerAppName
 
             # Define the label to filter containers
             label_filter = {'name': FilerValue}
