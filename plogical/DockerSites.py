@@ -81,7 +81,7 @@ class Docker_Sites(multi.Thread):
             else:
                 return 0, ReturnCode
 
-            command = 'curl -L "https://github.com/docker/compose/releases/download/v2.23.2/docker-compose-linux-x86_64" -o /usr/local/bin/docker-compose'
+            command = 'curl -L "https://github.com/docker/compose/releases/download/v2.23.2/docker-compose-linux-x86_64" -o /usr/bin/docker-compose'
             ReturnCode = ProcessUtilities.executioner(command, 'root', True)
 
             if ReturnCode:
@@ -89,7 +89,7 @@ class Docker_Sites(multi.Thread):
             else:
                 return 0, ReturnCode
 
-            command = 'chmod +x /usr/local/bin/docker-compose && ln -s /usr/bin/docker-compose /usr/local/bin/docker-compose'
+            command = 'chmod +x /usr/bin/docker-compose'
             ReturnCode = ProcessUtilities.executioner(command, 'root', True)
 
             if ReturnCode:
