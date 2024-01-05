@@ -62,6 +62,22 @@ class Docker_Sites(multi.Thread):
             ReturnCode = ProcessUtilities.executioner(command)
 
             if ReturnCode:
+                pass
+            else:
+                return 0, ReturnCode
+
+            command = 'sudo systemctl enable docker'
+            ReturnCode = ProcessUtilities.executioner(command)
+
+            if ReturnCode:
+                pass
+            else:
+                return 0, ReturnCode
+
+            command = 'sudo systemctl start docker'
+            ReturnCode = ProcessUtilities.executioner(command)
+
+            if ReturnCode:
                 return 1, None
             else:
                 return 0, ReturnCode
