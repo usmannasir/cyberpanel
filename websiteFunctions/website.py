@@ -6837,6 +6837,15 @@ StrictHostKeyChecking no
             WPemal = data['WPemal']
             WPpasswd = data['WPpasswd']
 
+            pattern = r"^[a-z0-9][a-z0-9]*$"
+
+            if re.match(pattern, sitename):
+                return True
+            else:
+                final_dic = {'status': 0, 'error_message': f'invalid site name "{sitename}": must consist only of lowercase alphanumeric characters, as well as start with a letter or number.'}
+                final_json = json.dumps(final_dic)
+                return HttpResponse(final_json)
+
             loggedUser = Administrator.objects.get(pk=userID)
             newOwner = Administrator.objects.get(userName=Owner)
 
