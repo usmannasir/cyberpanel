@@ -47,20 +47,34 @@ class Docker_Sites(multi.Thread):
     def InstallDocker(self):
 
         if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
-            command = 'sudo curl -L "https://github.com/docker/compose/releases/download/v2.17.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose'
-            ProcessUtilities.executioner(command)
+            #command = 'sudo curl -L "https://github.com/docker/compose/releases/download/v2.17.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose'
 
-            command = 'chmod +x /usr/local/bin/docker-compose'
+            command = 'dnf config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo'
+
+            ReturnCode = ProcessUtilities.executioner(command)
+
+            if ReturnCode:
+                pass
+            else:
+                return 0, ReturnCode
+
+            command = 'dnf install docker-ce docker-ce-cli containerd.io docker-compose-plugin -y'
+            ReturnCode = ProcessUtilities.executioner(command)
+
+            if ReturnCode:
+                return 1, None
+            else:
+                return 0, ReturnCode
 
         else:
             command = 'apt install docker-compose -y'
 
-        ReturnCode = ProcessUtilities.executioner(command)
+            ReturnCode = ProcessUtilities.executioner(command)
 
-        if ReturnCode:
-            return 1, None
-        else:
-            return 0, ReturnCode
+            if ReturnCode:
+                return 1, None
+            else:
+                return 0, ReturnCode
 
     @staticmethod
     def SetupProxy(port):
