@@ -81,7 +81,7 @@ class Docker_Sites(multi.Thread):
             else:
                 return 0, ReturnCode
 
-            command = 'curl -L "https://github.com/docker/compose/releases/download/v2.17.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose'
+            command = 'curl -L "https://github.com/docker/compose/releases/download/v2.19.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose'
             ReturnCode = ProcessUtilities.executioner(command)
 
             if ReturnCode:
