@@ -1,22 +1,26 @@
 # -*- coding: utf-8 -*-
 from django.shortcuts import render, redirect
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse
+from plogical.getSystemInformation import SystemInformation
+import json
+from loginSystem.views import loadLoginPage
 from .models import version
 import requests
 import subprocess
 import shlex
 import os
-import json
-from plogical.getSystemInformation import SystemInformation
-from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+import plogical.CyberCPLogFileWriter as logging
 from plogical.acl import ACLManager
 from manageServices.models import PDNSStatus
 from django.views.decorators.csrf import ensure_csrf_cookie
 from plogical.processUtilities import ProcessUtilities
 from plogical.httpProc import httpProc
 
+# Create your views here.
+
 VERSION = '2.3'
 BUILD = 4
+
 
 @ensure_csrf_cookie
 def renderBase(request):
@@ -26,6 +30,7 @@ def renderBase(request):
                 'diskUsage': cpuRamDisk['diskUsage']}
     proc = httpProc(request, template, finaData)
     return proc.render()
+
 
 @ensure_csrf_cookie
 def versionManagement(request):
@@ -73,13 +78,12 @@ def upgrade_cyberpanel(request):
         except Exception as e:
             response_data = {'success': False, 'message': 'An error occurred during the upgrade: ' + str(e)}
 
-        return JsonResponse(response_data)
 
-@ensure_csrf_cookie
 def getAdminStatus(request):
     try:
         val = request.session['userID']
         currentACL = ACLManager.loadedACL(val)
+
 
         if os.path.exists('/home/cyberpanel/postfix'):
             currentACL['emailAsWhole'] = 1
@@ -111,6 +115,7 @@ def getAdminStatus(request):
     except KeyError:
         return HttpResponse("Can not get admin Status")
 
+
 def getSystemStatus(request):
     try:
         val = request.session['userID']
@@ -120,6 +125,7 @@ def getSystemStatus(request):
         return HttpResponse(json_data)
     except KeyError:
         return HttpResponse("Can not get admin Status")
+
 
 def getLoadAverage(request):
     try:
@@ -136,7 +142,53 @@ def getLoadAverage(request):
     except KeyError:
         return HttpResponse("Not allowed.")
 
+
 @ensure_csrf_cookie
+def versionManagment(request):
+    ## Get latest version
+
+    getVersion = requests.get('https://cyberpanel.net/version.txt')
+    latest = getVersion.json()
+    latestVersion = latest['version']
+    latestBuild = latest['build']
+
+    ## Get local version
+
+    currentVersion = VERSION
+    currentBuild = str(BUILD)
+
+    u = "https://api.github.com/repos/usmannasir/cyberpanel/commits?sha=v%s.%s" % (latestVersion, latestBuild)
+    logging.CyberCPLogFileWriter.writeToFile(u)
+    r = requests.get(u)
+    latestcomit = r.json()[0]['sha']
+
+    command ="git -C /usr/local/CyberCP/ rev-parse HEAD"
+    output = ProcessUtilities.outputExecutioner(command)
+
+    Currentcomt = output.rstrip("\n")
+    notechk = True
+    
+    # command ="git fetch -C /usr/local/CyberCP/"
+    # output = ProcessUtilities.outputExecutioner(command)
+    #
+    # command ="git -C /usr/local/CyberCP/ log %s..%s --pretty=oneline | wc -l" % ( Currentcomt, latestcomit)
+    # output = ProcessUtilities.outputExecutioner(command)
+    #
+    # numCommits = output.rstrip("\n")
+
+    if(Currentcomt == latestcomit):
+        notechk = False
+
+
+    template = 'baseTemplate/versionManagment.html'
+    finalData = {'build': currentBuild, 'currentVersion': currentVersion, 'latestVersion': latestVersion,
+                 'latestBuild': latestBuild, 'latestcomit': latestcomit, "Currentcomt": Currentcomt, "Notecheck" : notechk }
+
+
+    proc = httpProc(request, template, finalData, 'versionManagement')
+    return proc.render()
+
+
 def upgrade(request):
     try:
         admin = request.session['userID']
@@ -147,28 +199,38 @@ def upgrade(request):
             pass
 
         command = 'wget http://cyberpanel.net/upgrade.py'
+
         cmd = shlex.split(command)
+
         res = subprocess.call(cmd)
 
         vers = version.objects.get(pk=1)
-        from plogical.upgrade import Upgrade
+
+        from upgrade import Upgrade
+
         Upgrade.initiateUpgrade(vers.currentVersion, vers.build)
+
         adminData = {"upgrade": 1}
+
         json_data = json.dumps(adminData)
+
         return HttpResponse(json_data)
+
 
     except KeyError:
         adminData = {"upgrade": 1, "error_message": "Please login or refresh this page."}
         json_data = json.dumps(adminData)
         return HttpResponse(json_data)
 
-@ensure_csrf_cookie
+
 def upgradeStatus(request):
     try:
         val = request.session['userID']
         try:
             if request.method == 'POST':
+
                 path = "/usr/local/lscp/logs/upgradeLog"
+
                 try:
                     upgradeLog = open(path, "r").read()
                 except:
@@ -178,13 +240,16 @@ def upgradeStatus(request):
                     return HttpResponse(final_json)
 
                 if upgradeLog.find("Upgrade Completed") > -1:
+
                     vers = version.objects.get(pk=1)
                     getVersion = requests.get('https://cyberpanel.net/version.txt')
                     latest = getVersion.json()
                     vers.currentVersion = latest['version']
                     vers.build = latest['build']
                     vers.save()
+
                     os.remove(path)
+
                     final_json = json.dumps({'finished': 1, 'upgradeStatus': 1,
                                              'error_message': "None",
                                              'upgradeLog': upgradeLog})
@@ -194,6 +259,8 @@ def upgradeStatus(request):
                                              'error_message': "None",
                                              'upgradeLog': upgradeLog})
                     return HttpResponse(final_json)
+
+
         except BaseException as msg:
             final_dic = {'upgradeStatus': 0, 'error_message': str(msg)}
             final_json = json.dumps(final_dic)
@@ -202,6 +269,7 @@ def upgradeStatus(request):
         final_dic = {'upgradeStatus': 0, 'error_message': "Not Logged In, please refresh the page or login again."}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
+
 
 def upgradeVersion(request):
     try:
@@ -216,8 +284,10 @@ def upgradeVersion(request):
         logging.CyberCPLogFileWriter.writeToFile(str(msg))
         return HttpResponse(str(msg))
 
+
 @ensure_csrf_cookie
 def design(request):
+    ### Load Custom CSS
     try:
         from baseTemplate.models import CyberPanelCosmetic
         cosmetic = CyberPanelCosmetic.objects.get(pk=1)
@@ -241,8 +311,12 @@ def design(request):
         cosmetic.save()
         finalData['saved'] = 1
 
+    ####### Fetch sha...
+
     sha_url = "https://api.github.com/repos/usmannasir/CyberPanel-Themes/commits"
+
     sha_res = requests.get(sha_url)
+
     sha = sha_res.json()[0]['sha']
 
     l = "https://api.github.com/repos/usmannasir/CyberPanel-Themes/git/trees/%s" % sha
@@ -259,6 +333,7 @@ def design(request):
     proc = httpProc(request, template, finalData, 'versionManagement')
     return proc.render()
 
+
 def getthemedata(request):
     try:
         val = request.session['userID']
@@ -270,9 +345,12 @@ def getthemedata(request):
         else:
             return ACLManager.loadErrorJson('reboot', 0)
 
+        #logging.CyberCPLogFileWriter.writeToFile(str(data) + "  [themedata]")
+
         url = "https://raw.githubusercontent.com/usmannasir/CyberPanel-Themes/main/%s/design.css" % data['Themename']
 
         res = requests.get(url)
+
         rsult = res.text
         final_dic = {'status': 1, 'csscontent': rsult}
         final_json = json.dumps(final_dic)
@@ -281,3 +359,4 @@ def getthemedata(request):
         final_dic = {'status': 0, 'error_message': str(msg)}
         final_json = json.dumps(final_dic)
         return HttpResponse(final_json)
+

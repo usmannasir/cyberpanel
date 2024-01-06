@@ -1,12 +1,11 @@
 # coding=utf-8
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
-import json
 from django.shortcuts import HttpResponse, render
+import json
 import re
 from loginSystem.models import Administrator
 
 class secMiddleware:
-
     HIGH = 0
     LOW = 1
 
@@ -107,7 +106,7 @@ class secMiddleware:
                         ")") > -1 \
                             or value.find("'") > -1 or value.find("[") > -1 or value.find("]") > -1 or value.find(
                         "{") > -1 or value.find("}") > -1 \
-                            or value.find(":") > -1 or value.find("<") > -1 or value.find(">") > -1:
+                            or value.find(":") > -1 or value.find("<") >-1 or value.find(">") > -1:
                         logging.writeToFile(request.body)
                         final_dic = {
                             'error_message': "Data supplied is not accepted, following characters are not allowed in the input ` $ & ( ) [ ] { } ; : ‘ < >.",
