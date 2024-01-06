@@ -5,6 +5,7 @@ import json
 import re
 from loginSystem.models import Administrator
 
+
 class secMiddleware:
     HIGH = 0
     LOW = 1
@@ -52,7 +53,7 @@ class secMiddleware:
 
         if request.method == 'POST':
             try:
-                #logging.writeToFile(request.body)
+                # logging.writeToFile(request.body)
                 data = json.loads(request.body)
                 for key, value in data.items():
                     if request.path.find('gitNotify') > -1:
@@ -78,7 +79,8 @@ class secMiddleware:
                         continue
 
                     if key == 'backupDestinations':
-                        if re.match('^[a-z|0-9]+:[a-z|0-9|\.]+\/?[A-Z|a-z|0-9|\.]*$', value) == None and value != 'local':
+                        if re.match('^[a-z|0-9]+:[a-z|0-9|\.]+\/?[A-Z|a-z|0-9|\.]*$',
+                                    value) == None and value != 'local':
                             logging.writeToFile(request.body)
                             final_dic = {'error_message': "Data supplied is not accepted.",
                                          "errorMessage": "Data supplied is not accepted."}
@@ -87,14 +89,14 @@ class secMiddleware:
 
                     if request.build_absolute_uri().find(
                             'api/remoteTransfer') > -1 or request.build_absolute_uri().find(
-                            'api/verifyConn') > -1 or request.build_absolute_uri().find(
-                            'webhook') > -1 or request.build_absolute_uri().find(
-                            'saveSpamAssassinConfigurations') > -1 or request.build_absolute_uri().find(
-                            'docker') > -1 or request.build_absolute_uri().find(
-                            'cloudAPI') > -1 or request.build_absolute_uri().find(
-                            'verifyLogin') > -1 or request.build_absolute_uri().find('submitUserCreation') > -1:
+                        'api/verifyConn') > -1 or request.build_absolute_uri().find(
+                        'webhook') > -1 or request.build_absolute_uri().find(
+                        'saveSpamAssassinConfigurations') > -1 or request.build_absolute_uri().find(
+                        'docker') > -1 or request.build_absolute_uri().find(
+                        'cloudAPI') > -1 or request.build_absolute_uri().find(
+                        'verifyLogin') > -1 or request.build_absolute_uri().find('submitUserCreation') > -1:
                         continue
-                    if key == 'CLAMAV_VIRUS' or key == "Rspamdserver" or key == 'smtpd_milters' or key == 'non_smtpd_milters' or key == 'key' or key == 'cert' or key == 'recordContentAAAA' or key == 'backupDestinations' or key == 'ports' \
+                    if key == 'scriptUrl' or key == 'CLAMAV_VIRUS' or key == "Rspamdserver" or key == 'smtpd_milters' or key == 'non_smtpd_milters' or key == 'key' or key == 'cert' or key == 'recordContentAAAA' or key == 'backupDestinations' or key == 'ports' \
                             or key == 'imageByPass' or key == 'passwordByPass' or key == 'cronCommand' \
                             or key == 'emailMessage' or key == 'configData' or key == 'rewriteRules' \
                             or key == 'modSecRules' or key == 'recordContentTXT' or key == 'SecAuditLogRelevantStatus' \
@@ -106,7 +108,7 @@ class secMiddleware:
                         ")") > -1 \
                             or value.find("'") > -1 or value.find("[") > -1 or value.find("]") > -1 or value.find(
                         "{") > -1 or value.find("}") > -1 \
-                            or value.find(":") > -1 or value.find("<") >-1 or value.find(">") > -1:
+                            or value.find(":") > -1 or value.find("<") > -1 or value.find(">") > -1:
                         logging.writeToFile(request.body)
                         final_dic = {
                             'error_message': "Data supplied is not accepted, following characters are not allowed in the input ` $ & ( ) [ ] { } ; : ‘ < >.",
@@ -143,9 +145,11 @@ class secMiddleware:
         response['X-Frame-Options'] = "sameorigin"
         response['Content-Security-Policy'] = "script-src 'self' https://www.jsdelivr.com"
         response['Content-Security-Policy'] = "connect-src *;"
-        response['Content-Security-Policy'] = "font-src 'self' 'unsafe-inline' https://www.jsdelivr.com https://fonts.googleapis.com"
-        response['Content-Security-Policy'] = "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://www.jsdelivr.com https://cdnjs.cloudflare.com https://maxcdn.bootstrapcdn.com https://cdn.jsdelivr.net"
-        #response['Content-Security-Policy'] = "default-src 'self' cyberpanel.cloud *.cyberpanel.cloud"
+        response[
+            'Content-Security-Policy'] = "font-src 'self' 'unsafe-inline' https://www.jsdelivr.com https://fonts.googleapis.com"
+        response[
+            'Content-Security-Policy'] = "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://www.jsdelivr.com https://cdnjs.cloudflare.com https://maxcdn.bootstrapcdn.com https://cdn.jsdelivr.net"
+        # response['Content-Security-Policy'] = "default-src 'self' cyberpanel.cloud *.cyberpanel.cloud"
         response['X-Content-Type-Options'] = "nosniff"
         response['Referrer-Policy'] = "same-origin"
 

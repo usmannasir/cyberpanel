@@ -10,7 +10,7 @@ urlpatterns = [
     url(r'^design', views.design, name='design'),
     url(r'^getthemedata', views.getthemedata, name='getthemedata'),
 
-    #url(r'^upgrade',views.upgrade, name='upgrade'),
+    url(r'^upgrade',views.upgrade, name='upgrade'),
 
     url(r'^UpgradeStatus',views.upgradeStatus, name='UpgradeStatus'),
     url(r'^upgradeVersion',views.upgradeVersion, name='upgradeVersion'),

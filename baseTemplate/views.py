@@ -206,7 +206,7 @@ def upgrade(request):
 
         vers = version.objects.get(pk=1)
 
-        from upgrade import Upgrade
+        from plogical.upgrade import Upgrade
 
         Upgrade.initiateUpgrade(vers.currentVersion, vers.build)
 

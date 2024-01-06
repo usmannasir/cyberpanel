@@ -2907,163 +2907,168 @@ vmail
         # Upgrade.stdOut("Upgrades are currently disabled")
         # return 0
 
-        if os.path.exists(Upgrade.CentOSPath) or os.path.exists(Upgrade.openEulerPath):
-            command = 'yum list installed'
-            Upgrade.installedOutput = subprocess.check_output(shlex.split(command)).decode()
+        if branch.find('SoftUpgrade') == -1:
+
+            if os.path.exists(Upgrade.CentOSPath) or os.path.exists(Upgrade.openEulerPath):
+                command = 'yum list installed'
+                Upgrade.installedOutput = subprocess.check_output(shlex.split(command)).decode()
+            else:
+                command = 'apt list'
+                Upgrade.installedOutput = subprocess.check_output(shlex.split(command)).decode()
+
+            command = 'systemctl stop cpssh'
+            Upgrade.executioner(command, 'fix csf if there', 0)
+
+            ## Add LSPHP7.4 TO LSWS Ent configs
+
+            if not os.path.exists('/usr/local/lsws/bin/openlitespeed'):
+
+                if os.path.exists('httpd_config.xml'):
+                    os.remove('httpd_config.xml')
+
+                command = 'wget https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/install/litespeed/httpd_config.xml'
+                Upgrade.executioner(command, command, 0)
+                # os.remove('/usr/local/lsws/conf/httpd_config.xml')
+                # shutil.copy('httpd_config.xml', '/usr/local/lsws/conf/httpd_config.xml')
+
+            postfixPath = '/home/cyberpanel/postfix'
+            pdns = '/home/cyberpanel/pdns'
+            pureftpd = '/home/cyberpanel/ftp'
+
+            Upgrade.updateRepoURL()
+
+            os.chdir("/usr/local")
+
+            command = 'yum remove yum-plugin-priorities -y'
+            Upgrade.executioner(command, 'remove yum-plugin-priorities', 0)
+
+            ## Current Version
+
+            command = "systemctl stop lscpd"
+            Upgrade.executioner(command, 'stop lscpd', 0)
+
+            Upgrade.fixSudoers()
+            Upgrade.mountTemp()
+            Upgrade.dockerUsers()
+            Upgrade.setupComposer()
+
+            ##
+
+            versionNumbring = Upgrade.downloadLink()
+
+            if os.path.exists('/usr/local/CyberPanel.' + versionNumbring):
+                os.remove('/usr/local/CyberPanel.' + versionNumbring)
+
+            ##
+
+            Upgrade.downloadAndUpgrade(versionNumbring, branch)
+            Upgrade.download_install_phpmyadmin()
+            Upgrade.downoad_and_install_raindloop()
+
+            ##
+
+            ##
+
+            Upgrade.mailServerMigrations()
+            Upgrade.emailMarketingMigrationsa()
+            Upgrade.dockerMigrations()
+            Upgrade.CLMigrations()
+            Upgrade.IncBackupMigrations()
+            Upgrade.installRestic()
+
+            ##
+
+            # Upgrade.setupVirtualEnv()
+
+            ##
+
+            Upgrade.applyLoginSystemMigrations()
+
+            ## Put function here to update custom ACLs
+
+            Upgrade.UpdateConfigOfCustomACL()
+
+            Upgrade.s3BackupMigrations()
+            Upgrade.containerMigrations()
+            Upgrade.manageServiceMigrations()
+            Upgrade.enableServices()
+
+            Upgrade.installPHP73()
+            Upgrade.setupCLI()
+            Upgrade.someDirectories()
+            Upgrade.installLSCPD(branch)
+
+            ### General migrations are not needed any more
+
+            # Upgrade.GeneralMigrations()
+
+            # Upgrade.p3()
+
+            ## Also disable email service upgrade
+
+            # if os.path.exists(postfixPath):
+            #     Upgrade.upgradeDovecot()
+
+            ## Upgrade version
+
+            Upgrade.fixPermissions()
+
+            ##
+
+            ### Disable version upgrade too
+
+            # Upgrade.upgradeVersion()
+
+            Upgrade.UpdateMaxSSLCons()
+
+            ## Update LSCPD PHP
+
+            phpPath = '/usr/local/lscp/fcgi-bin/lsphp'
+
+            try:
+                os.remove(phpPath)
+            except:
+                pass
+
+            command = 'cp /usr/local/lsws/lsphp80/bin/lsphp %s' % (phpPath)
+            Upgrade.executioner(command, 0)
+
+            try:
+                command = "systemctl start lscpd"
+                Upgrade.executioner(command, 'Start LSCPD', 0)
+            except:
+                pass
+
+            command = 'csf -uf'
+            Upgrade.executioner(command, 'fix csf if there', 0)
+            command = 'systemctl stop cpssh'
+            Upgrade.executioner(command, 'fix csf if there', 0)
+            Upgrade.AutoUpgradeAcme()
+            Upgrade.installCLScripts()
+            Upgrade.runSomeImportantBash()
+
+            # ## Move static files
+            #
+            # imunifyPath = '/usr/local/CyberCP/public/imunify'
+            #
+            # if os.path.exists(imunifyPath):
+            #     command = "yum reinstall imunify360-firewall-generic -y"
+            #     Upgrade.executioner(command, command, 1)
+            #
+            imunifyAVPath = '/etc/sysconfig/imunify360/integration.conf'
+
+            if os.path.exists(imunifyAVPath):
+                execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/CLManager/CageFS.py"
+                command = execPath + " --function submitinstallImunifyAV"
+                Upgrade.executioner(command, command, 1)
+
+                command = 'chmod +x /usr/local/CyberCP/public/imunifyav/bin/execute.py'
+                Upgrade.executioner(command, command, 1)
+
+            Upgrade.stdOut("Upgrade Completed.")
         else:
-            command = 'apt list'
-            Upgrade.installedOutput = subprocess.check_output(shlex.split(command)).decode()
-
-        command = 'systemctl stop cpssh'
-        Upgrade.executioner(command, 'fix csf if there', 0)
-
-        ## Add LSPHP7.4 TO LSWS Ent configs
-
-        if not os.path.exists('/usr/local/lsws/bin/openlitespeed'):
-
-            if os.path.exists('httpd_config.xml'):
-                os.remove('httpd_config.xml')
-
-            command = 'wget https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/install/litespeed/httpd_config.xml'
-            Upgrade.executioner(command, command, 0)
-            # os.remove('/usr/local/lsws/conf/httpd_config.xml')
-            # shutil.copy('httpd_config.xml', '/usr/local/lsws/conf/httpd_config.xml')
-
-        postfixPath = '/home/cyberpanel/postfix'
-        pdns = '/home/cyberpanel/pdns'
-        pureftpd = '/home/cyberpanel/ftp'
-
-        Upgrade.updateRepoURL()
-
-        os.chdir("/usr/local")
-
-        command = 'yum remove yum-plugin-priorities -y'
-        Upgrade.executioner(command, 'remove yum-plugin-priorities', 0)
-
-        ## Current Version
-
-        command = "systemctl stop lscpd"
-        Upgrade.executioner(command, 'stop lscpd', 0)
-
-        Upgrade.fixSudoers()
-        Upgrade.mountTemp()
-        Upgrade.dockerUsers()
-        Upgrade.setupComposer()
-
-        ##
-
-        versionNumbring = Upgrade.downloadLink()
-
-        if os.path.exists('/usr/local/CyberPanel.' + versionNumbring):
-            os.remove('/usr/local/CyberPanel.' + versionNumbring)
-
-        ##
-
-        Upgrade.downloadAndUpgrade(versionNumbring, branch)
-        Upgrade.download_install_phpmyadmin()
-        Upgrade.downoad_and_install_raindloop()
-
-        ##
-
-        ##
-
-        Upgrade.mailServerMigrations()
-        Upgrade.emailMarketingMigrationsa()
-        Upgrade.dockerMigrations()
-        Upgrade.CLMigrations()
-        Upgrade.IncBackupMigrations()
-        Upgrade.installRestic()
-
-        ##
-
-        # Upgrade.setupVirtualEnv()
-
-        ##
-
-        Upgrade.applyLoginSystemMigrations()
-
-        ## Put function here to update custom ACLs
-
-        Upgrade.UpdateConfigOfCustomACL()
-
-        Upgrade.s3BackupMigrations()
-        Upgrade.containerMigrations()
-        Upgrade.manageServiceMigrations()
-        Upgrade.enableServices()
-
-        Upgrade.installPHP73()
-        Upgrade.setupCLI()
-        Upgrade.someDirectories()
-        Upgrade.installLSCPD(branch)
-
-        ### General migrations are not needed any more
-
-        # Upgrade.GeneralMigrations()
-
-        # Upgrade.p3()
-
-        ## Also disable email service upgrade
-
-        # if os.path.exists(postfixPath):
-        #     Upgrade.upgradeDovecot()
-
-        ## Upgrade version
-
-        Upgrade.fixPermissions()
-
-        ##
-
-        ### Disable version upgrade too
-
-        # Upgrade.upgradeVersion()
-
-        Upgrade.UpdateMaxSSLCons()
-
-        ## Update LSCPD PHP
-
-        phpPath = '/usr/local/lscp/fcgi-bin/lsphp'
-
-        try:
-            os.remove(phpPath)
-        except:
             pass
 
-        command = 'cp /usr/local/lsws/lsphp80/bin/lsphp %s' % (phpPath)
-        Upgrade.executioner(command, 0)
-
-        try:
-            command = "systemctl start lscpd"
-            Upgrade.executioner(command, 'Start LSCPD', 0)
-        except:
-            pass
-
-        command = 'csf -uf'
-        Upgrade.executioner(command, 'fix csf if there', 0)
-        command = 'systemctl stop cpssh'
-        Upgrade.executioner(command, 'fix csf if there', 0)
-        Upgrade.AutoUpgradeAcme()
-        Upgrade.installCLScripts()
-        Upgrade.runSomeImportantBash()
-
-        # ## Move static files
-        #
-        # imunifyPath = '/usr/local/CyberCP/public/imunify'
-        #
-        # if os.path.exists(imunifyPath):
-        #     command = "yum reinstall imunify360-firewall-generic -y"
-        #     Upgrade.executioner(command, command, 1)
-        #
-        imunifyAVPath = '/etc/sysconfig/imunify360/integration.conf'
-
-        if os.path.exists(imunifyAVPath):
-            execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/CLManager/CageFS.py"
-            command = execPath + " --function submitinstallImunifyAV"
-            Upgrade.executioner(command, command, 1)
-
-            command = 'chmod +x /usr/local/CyberCP/public/imunifyav/bin/execute.py'
-            Upgrade.executioner(command, command, 1)
-
-        Upgrade.stdOut("Upgrade Completed.")
 
 
 def main():
