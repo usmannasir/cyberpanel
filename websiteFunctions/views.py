@@ -1750,3 +1750,106 @@ def saveApacheConfigsToFile(request):
         return wm.saveApacheConfigsToFile(userID, data)
     except KeyError:
         return redirect(loadLoginPage)
+
+
+def CreateDockerPackage(request):
+    try:
+        val = request.session['userID']
+        admin = Administrator.objects.get(pk=val)
+        proc = httpProc(request, 'websiteFunctions/CreateDockerPackage.html',
+                        {"type": admin.type})
+        return proc.render()
+    except BaseException as msg:
+        return HttpResponse(msg)
+
+def CreateDockerPackage(request):
+    try:
+        userID = request.session['userID']
+        DeleteID = request.GET.get('DeleteID')
+        wm = WebsiteManager()
+        return wm.CreateDockerPackage(request, userID, None, DeleteID)
+    except KeyError:
+        return redirect(loadLoginPage)
+def AssignPackage(request):
+    try:
+        userID = request.session['userID']
+        DeleteID = request.GET.get('DeleteID')
+        wm = WebsiteManager()
+        return wm.AssignPackage(request, userID, None, DeleteID)
+    except KeyError:
+        return redirect(loadLoginPage)
+def CreateDockersite(request):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager()
+        return wm.CreateDockersite(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def AddDockerpackage(request):
+    try:
+        userID = request.session['userID']
+        data = json.loads(request.body)
+        wm = WebsiteManager()
+        return wm.AddDockerpackage(userID, data)
+    except KeyError:
+        return redirect(loadLoginPage)
+def Getpackage(request):
+    try:
+        userID = request.session['userID']
+        data = json.loads(request.body)
+        wm = WebsiteManager()
+        return wm.Getpackage(userID, data)
+    except KeyError:
+        return redirect(loadLoginPage)
+def Updatepackage(request):
+    try:
+        userID = request.session['userID']
+        data = json.loads(request.body)
+        wm = WebsiteManager()
+        return wm.Updatepackage(userID, data)
+    except KeyError:
+        return redirect(loadLoginPage)
+def AddAssignment(request):
+    try:
+        userID = request.session['userID']
+        data = json.loads(request.body)
+        wm = WebsiteManager()
+        return wm.AddAssignment(userID, data)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def submitDockerSiteCreation(request):
+    try:
+        userID = request.session['userID']
+        data = json.loads(request.body)
+        wm = WebsiteManager()
+        return wm.submitDockerSiteCreation(userID, data)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def ListDockerSites(request):
+    try:
+        userID = request.session['userID']
+        DeleteID = request.GET.get('DeleteID')
+        wm = WebsiteManager()
+        return wm.ListDockerSites(request, userID, None, DeleteID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def fetchDockersite(request):
+    try:
+        userID = request.session['userID']
+        data = json.loads(request.body)
+        wm = WebsiteManager()
+        return wm.fetchDockersite(userID, data)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+def Dockersitehome(request, dockerapp):
+    try:
+        userID = request.session['userID']
+        wm = WebsiteManager(dockerapp)
+        return wm.Dockersitehome(request, userID, None)
+    except KeyError:
+        return redirect(loadLoginPage)

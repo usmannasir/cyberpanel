@@ -270,7 +270,8 @@ class sslUtilities:
                     except BaseException as msg:
                         website = Websites.objects.get(domain=virtualHostName)
                         externalApp = website.externalApp
-                        DocumentRoot = '    DocumentRoot /home/' + virtualHostName + '/public_html\n'
+                        docRoot = ACLManager.FindDocRootOfSite(None, virtualHostName)
+                        DocumentRoot = f'    DocumentRoot {docRoot}\n'
 
                     data = open(completePathToConfigFile, 'r').readlines()
                     phpHandler = ''

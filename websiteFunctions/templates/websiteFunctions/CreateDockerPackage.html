@@ -1,0 +1,336 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Create Package - CyberPanel" %}{% endblock %}
+{% block content %}
+
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
+    <style>
+        .switch {
+            margin-top: 7px;
+            margin-left: 12px;
+            position: relative;
+            display: inline-block;
+            width: 32px;
+            height: 19px;
+            border-radius: 10%;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            -webkit-transition: .4s;
+            transition: .4s;
+            border-radius: 10%;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 11px;
+            width: 12px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            -webkit-transition: .4s;
+            transition: .4s;
+            border-radius: 20%;
+        }
+
+
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+
+        input:focus + .slider {
+            box-shadow: 0 0 2px #2196F3;
+        }
+
+        input:checked + .slider:before {
+            -webkit-transform: translateX(12px);
+            -ms-transform: translateX(12px);
+            transform: translateX(12px);
+        }
+
+        .help_test_domain {
+            background-color: black;
+            padding: 10px;
+            display: none;
+            opacity: 0.7;
+            position: absolute;
+            z-index: 9;
+            text-align: justify;
+
+
+        }
+
+        #help:hover + .help_test_domain {
+            display: block;
+            display: inline-block;
+            color: white;
+            font-weight: lighter;
+            font-size: small;
+            border-radius: 5px;
+            width: 200px;
+
+        {#height: auto;#}
+        }
+
+    </style>
+
+    <div class="container">
+        <div id="page-title">
+            <h2>{% trans "Create Package" %}</h2>
+            <p>{% trans "On this page you can create, list, modify and delete Packages from your server." %}</p>
+        </div>
+
+
+        <div ng-controller="createDockerPackage" class="panel">
+            <div class="panel-body">
+                <h3 class="content-box-header">
+                    {% trans "Packages Details" %} <img ng-hide="cyberpanelLoading"
+                                                        src="{% static 'images/loading.gif' %}">
+                </h3>
+                <div class="example-box-wrapper">
+
+                    <form name="websiteCreationForm" action="/" id="createPackages"
+                          class="form-horizontal bordered-row panel-body">
+
+
+                        <div ng-hide="installationDetailsForm" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Package Name" %}</label>
+                            <div class="col-sm-6">
+                                <input name="dom" type="text" class="form-control" ng-model="packagesname"
+                                       placeholder="{% trans "Enter Name" %}" required>
+                            </div>
+
+                        </div>
+                        <div ng-hide="installationDetailsForm" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "CPU" %}</label>
+                            <div class="col-sm-6">
+                                <input name="dom" type="number" class="form-control" ng-model="CPU"
+                                       placeholder="{% trans "Enter CPU e.g. 2,3,4" %}" required>
+                            </div>
+
+                        </div>
+                        <div ng-hide="installationDetailsForm" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Memory" %}</label>
+                            <div class="col-sm-6">
+                                <input name="dom" type="number" class="form-control" ng-model="Memory"
+                                       placeholder="{% trans "Enter Memory in MB e.g. 256, 512, 1024" %}" required>
+                            </div>
+
+                        </div>
+                        <div ng-hide="installationDetailsForm" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Bandwidth" %}</label>
+                            <div class="col-sm-6">
+                                <input name="dom" type="text" class="form-control" ng-model="Bandwidth"
+                                       placeholder="{% trans "Enter Bandwidth" %}" required>
+                            </div>
+
+                        </div>
+                        <div ng-hide="installationDetailsForm" class="form-group">
+                            <label class="col-sm-3 control-label">{% trans "Disk Space" %}</label>
+                            <div class="col-sm-6">
+                                <input name="dom" type="text" class="form-control" ng-model="disk"
+                                       placeholder="{% trans "Enter Disk Space" %}" required>
+                            </div>
+
+                        </div>
+
+
+                        <div ng-hide="installationDetailsForm" class="form-group">
+                            <label class="col-sm-3 control-label"></label>
+                            <div class="col-sm-4">
+                                <button
+                                        type="button" ng-click="createdockerpackage()"
+                                        class="btn btn-primary btn-lg">{% trans "Create Docker Package" %}</button>
+
+                            </div>
+                        </div>
+
+
+                    </form>
+
+                </div>
+
+            </div>
+
+            <div class="example-box-wrapper">
+                <div class="panel panel-body">
+                    <h3 class="content-box-header"> Docker Packages</h3>
+                    <div class="content-box-header">
+                        <table class="table table-hover">
+                            <thead>
+                            <tr>
+                                <th>Package Name</th>
+                                <th>CPUs</th>
+                                <th>Memory</th>
+                                <th>Bandwidth</th>
+                                <th>Disk Space</th>
+                                <th>Action</th>
+
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for pack in packages %}
+                                <tr>
+                                    <td> {{ pack.Name }}</td>
+                                    <td> {{ pack.CPUs }}</td>
+                                    <td>{{ pack.Ram }}</td>
+                                    <td>{{ pack.Bandwidth }}</td>
+                                    <td> {{ pack.DiskSpace }}</td>
+                                    <td>
+                                        <button class="btn btn-warning" ng-click="Getpackage({{ pack.id }})"
+                                                data-toggle="modal" data-target="#Eidtpackage"> Eidt
+                                        </button>
+                                        <button class="btn btn-danger" ng-click="Deletepackage('{% url 'CreateDockerPackage' %}?DeleteID={{  pack.id }}')"  data-toggle="modal" data-target="#packagedelete"> Delete</button>
+                                    </td>
+
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                        <div id="Eidtpackage" class="modal fade" role="dialog">
+                            <div class="modal-dialog modal-lg">
+
+                                <!-- Modal content-->
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <button type="button" class="close" data-dismiss="modal">
+                                            &times;
+                                        </button>
+                                        <h4 class="modal-title">Eidt Package
+                                            <img ng-hide="cyberpanelLoading"
+                                                 src="{% static 'images/loading.gif' %}">
+                                        </h4>
+                                    </div>
+                                    <div class="modal-body">
+
+                                        <form name="websiteCreationForm" action="/" id="createPackages"
+                                              class="form-horizontal bordered-row panel-body">
+
+
+                                            <div ng-hide="installationDetailsForm" class="form-group">
+                                                <label class="col-sm-3 control-label">{% trans "Package Name" %}</label>
+                                                <div class="col-sm-6">
+                                                    <input name="dom" type="text" class="form-control" ng-model="U_Name"
+                                                           readonly required>
+                                                </div>
+
+                                            </div>
+                                            <div ng-hide="installationDetailsForm" class="form-group">
+                                                <label class="col-sm-3 control-label">{% trans "CPU" %}</label>
+                                                <div class="col-sm-6">
+                                                    <input name="dom" type="number" class="form-control" ng-model="U_CPU"
+                                                           placeholder="{% trans "Enter CPU e.g. 2,3,4" %}" required>
+                                                </div>
+
+                                            </div>
+                                            <div ng-hide="installationDetailsForm" class="form-group">
+                                                <label class="col-sm-3 control-label">{% trans "Memory" %}</label>
+                                                <div class="col-sm-6">
+                                                    <input name="dom" type="number" class="form-control"
+                                                           ng-model="U_Memory"
+                                                           placeholder="{% trans "Enter Memory in MB e.g. 256, 512, 1024" %}"
+                                                           required>
+                                                </div>
+
+                                            </div>
+                                            <div ng-hide="installationDetailsForm" class="form-group">
+                                                <label class="col-sm-3 control-label">{% trans "Bandwidth" %}</label>
+                                                <div class="col-sm-6">
+                                                    <input name="dom" type="text" class="form-control"
+                                                           ng-model="U_Bandwidth"
+                                                           placeholder="{% trans "Enter Bandwidth" %}" required>
+                                                </div>
+
+                                            </div>
+                                            <div ng-hide="installationDetailsForm" class="form-group">
+                                                <label class="col-sm-3 control-label">{% trans "Disk Space" %}</label>
+                                                <div class="col-sm-6">
+                                                    <input name="dom" type="text" class="form-control" ng-model="U_DiskSpace"
+                                                           placeholder="{% trans "Enter Disk Space" %}" required>
+                                                </div>
+
+                                            </div>
+
+
+                                            <div ng-hide="installationDetailsForm" class="form-group">
+                                                <label class="col-sm-3 control-label"></label>
+                                                <div class="col-sm-4">
+                                                    <button
+                                                            type="button" ng-click="SaveUpdate()"
+                                                            class="btn btn-primary btn-lg">{% trans "Update Package" %}</button>
+
+                                                </div>
+                                            </div>
+
+
+                                        </form>
+
+
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button"
+                                                class="btn btn-default" data-dismiss="modal">
+                                            Close
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="packagedelete" class="modal fade" role="dialog">
+                            <div class="modal-dialog modal-sm">
+
+                                <!-- Modal content-->
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <button type="button" class="close" data-dismiss="modal">
+                                            &times;
+                                        </button>
+                                        <h4 class="modal-title">Delete Package
+                                            <img ng-hide="cyberpanelLoading"
+                                                 src="{% static 'images/loading.gif' %}">
+                                        </h4>
+                                    </div>
+                                    <div class="modal-body">
+
+                                        <h4> Are you sure to delete the packages?</h4>
+
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button"
+                                                class="btn btn-default" data-dismiss="modal">
+                                            Close
+                                        </button>
+                                        <button type="button"
+                                                class="btn btn-warning" ng-click="ConfirmDelete()">
+                                            Delete
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+
+
+{% endblock %}

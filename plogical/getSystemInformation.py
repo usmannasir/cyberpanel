@@ -100,6 +100,17 @@ class SystemInformation:
         return SystemInfo
 
     @staticmethod
+    def GetRemainingDiskUsageInMBs():
+        import psutil
+
+        total_disk = psutil.disk_usage('/').total / (1024 * 1024)  # Total disk space in MB
+        used_disk = psutil.disk_usage('/').used / (1024 * 1024)  # Used disk space in MB
+        free_disk = psutil.disk_usage('/').free / (1024 * 1024)  # Free disk space in MB
+        percent_used = psutil.disk_usage('/').percent  # Percentage of disk used
+
+        return used_disk, free_disk, percent_used
+
+    @staticmethod
     def populateOLSReport():
         SystemInformation.olsReport = open("/tmp/lshttpd/.rtreport", "r").readlines()
 

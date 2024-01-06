@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  wordpress:
+    image: cyberpanel/openlitespeed:latest
+    ports:
+      - "8000:8088"
+#      - "443:443"
+    environment:
+      DB_NAME: "wordpress"
+      DB_USER: "wpuser"
+      DB_PASSWORD: "wppassword"
+      WP_ADMIN_EMAIL: "admin@example.com"
+      WP_ADMIN_USER: "admin"
+      WP_ADMIN_PASSWORD: "adminpass"
+      WP_URL: docker.cyberpanel.net
+      DB_Host: mariadb:3306
+      SITE_NAME: "CyberPanel Docker Site"
+    depends_on:
+      - mariadb
+  mariadb:
+    image: mariadb
+    restart: always
+    environment:
+      ALLOW_EMPTY_PASSWORD=no
+      MYSQL_DATABASE: 'wordpress'
+      MYSQL_USER: 'wpuser'
+      MYSQL_PASSWORD: 'wppassword'
+      MYSQL_ROOT_PASSWORD: 'rootpassword'

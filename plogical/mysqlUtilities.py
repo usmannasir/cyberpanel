@@ -1,4 +1,6 @@
 import os,sys
+from urllib.parse import unquote
+
 sys.path.append('/usr/local/CyberCP')
 import django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
@@ -583,7 +585,8 @@ password=%s
                 command = 'sudo mv /etc/my.cnf /etc/my.cnf.bak'
             else:
                 command = 'sudo mv /etc/mysql/my.cnf /etc/mysql/my.cnf.bak'
-                data['suggestedContent'] = data['suggestedContent'].replace('/var/lib/mysql/mysql.sock', '/var/run/mysqld/mysqld.sock')
+                decoded_content = unquote(data['suggestedContent'])
+                data['suggestedContent'] = decoded_content.replace('/var/lib/mysql/mysql.sock', '/var/run/mysqld/mysqld.sock')
 
 
             ProcessUtilities.executioner(command)
@@ -1065,6 +1068,28 @@ bind-address=%s
         except BaseException as msg:
             logging.CyberCPLogFileWriter.writeToFile(str(msg) + "[deleteDatabase]")
             return str(msg)
+
+    @staticmethod
+    def UpgradeMariaDB(tempStatusPath):
+
+        logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Creating backup of MySQL..,10')
+
+        MySQLBackupDir = '/var/lib/mysql-backupcp'
+        from os import getuid
+        if getuid() != 0:
+            logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'This function should run as root. [404]')
+            return 0, 'This function should run as root.'
+
+
+        if not os.path.exists(MySQLBackupDir):
+            command = 'rsync -av /var/lib/mysql/ /var/lib/mysql-backupcp/'
+            ProcessUtilities.executioner(command)
+
+            logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'MySQL backup created..,20')
+
+
+
+
 
 def main():
     parser = argparse.ArgumentParser(description='CyberPanel')

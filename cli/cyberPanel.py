@@ -120,12 +120,11 @@ class cyberPanel:
 
             websites = Websites.objects.all()
             ipFile = "/etc/cyberpanel/machineIP"
-            f = open(ipFile)
-            ipData = f.read()
+            with open(ipFile, 'r') as f:
+                ipData = f.read()
             ipAddress = ipData.split('\n', 1)[0]
 
-            json_data = "["
-            checker = 0
+            json_data = []
 
             for items in websites:
                 if items.state == 0:
@@ -134,14 +133,8 @@ class cyberPanel:
                     state = "Active"
                 dic = {'domain': items.domain, 'adminEmail': items.adminEmail, 'ipAddress': ipAddress,
                        'admin': items.admin.userName, 'package': items.package.packageName, 'state': state}
+                json_data.append(dic)
 
-                if checker == 0:
-                    json_data = json_data + json.dumps(dic)
-                    checker = 1
-                else:
-                    json_data = json_data + ',' + json.dumps(dic)
-
-            json_data = json_data + ']'
             final_json = json.dumps(json_data)
             print(final_json)
 

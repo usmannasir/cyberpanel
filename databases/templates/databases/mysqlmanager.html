@@ -1,0 +1,129 @@
+{% extends "baseTemplate/index.html" %}
+{% load i18n %}
+{% block title %}{% trans "Mysql Manager - CyberPanel" %}{% endblock %}
+{% block content %}
+
+    {% load static %}
+    {% get_current_language as LANGUAGE_CODE %}
+    <!-- Current language: {{ LANGUAGE_CODE }} -->
+
+    <div class="container" ng-controller="Mysqlmanager">
+        <div id="page-title">
+            <h2>{% trans "MySQL Manager" %} <img ng-hide="cyberPanelLoading"
+                                                 src="{% static 'images/loading.gif' %}"></h2>
+        </div>
+
+        <div class="example-box-wrapper">
+            <div class="panel panel-body">
+                <div class="row">
+                    <h3 style="display: inline-block;" class="content-box-header">MySQL status</h3>
+
+                    <a style="display: inline-block;" href="{% url 'OptimizeMySQL' %}" class="btn btn-primary">
+                        <i class="glyph-icon icon-database"></i> Optimize MySQL
+                    </a>
+                </div>
+
+                <div class="content-box-header">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <!-- project card -->
+                            <div class="panel">
+                                <div class="panel-body">
+                                    <!-- project title-->
+                                    <h4 style="display: inline" class="mt-0">
+                                        <strong>MySQL Uptime</strong>
+                                    </h4>
+                                    <img style="float: right; display: inline; height: 46px"
+                                         src="{% static 'databases/hourglass.png' %}">
+
+
+                                    <h4 class="mt-5"><b>{$ uptime $}</b></h4>
+
+                                    <!-- project detail-->
+                                </div> <!-- end card-body-->
+                            </div> <!-- end card-->
+                        </div>
+                        <div class="col-md-4">
+                            <!-- project card -->
+                            <div class="panel">
+                                <div class="panel-body">
+                                    <!-- project title-->
+                                    <h4 style="display: inline" class="mt-0">
+                                        <strong>Connections</strong>
+                                    </h4>
+                                    <img style="float: right; display: inline; height: 46px"
+                                         src="{% static 'databases/link.png' %}">
+
+
+                                    <h4 class="mt-5"><b>{$ connections $}</b></h4>
+
+                                    <!-- project detail-->
+                                </div> <!-- end card-body-->
+                            </div> <!-- end card-->
+                        </div>
+                        <div class="col-md-4">
+                            <!-- project card -->
+                            <div class="panel">
+                                <div class="panel-body">
+                                    <!-- project title-->
+                                    <h4 style="display: inline" class="mt-0">
+                                        <strong>Slow Queries</strong>
+                                    </h4>
+                                    <img style="float: right; display: inline; height: 46px"
+                                         src="{% static 'databases/snail.png' %}">
+
+
+                                    <h4 class="mt-5"><b>{$ Slow_queries $}</b></h4>
+
+                                    <!-- project detail-->
+                                </div> <!-- end card-body-->
+                            </div> <!-- end card-->
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
+
+        </div>
+
+        <div class="example-box-wrapper">
+            <div class="panel panel-body">
+                <h3 class="content-box-header"> MySQL Processes</h3>
+                <div class="content-box-header">
+                    <table class="table table-hover">
+                        <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>User</th>
+                            <th>Database</th>
+                            <th>Command</th>
+                            <th>Time</th>
+                            <th>State</th>
+                            <th>Info</th>
+                            <th>Progress</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr ng-repeat="process in processes">
+                            <td ng-bind="process.id"></td>
+                            <td ng-bind="process.user"></td>
+                            <td ng-bind="process.database"></td>
+                            <td ng-bind="process.command"></td>
+                            <td ng-bind="process.time"></td>
+                            <td ng-bind="process.state"></td>
+                            <td ng-bind="process.info"></td>
+                            <td ng-bind="process.progress"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+
+
+{% endblock %}

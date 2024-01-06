@@ -3,6 +3,9 @@
 import os.path
 import sys
 import django
+
+from plogical.DockerSites import Docker_Sites
+
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
@@ -1075,5 +1078,187 @@ class ContainerManager(multi.Thread):
             return HttpResponse(json_data)
         except BaseException as msg:
             data_ret = {'getTagsStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+
+    def getDockersiteList(self, userID=None, data=None):
+        try:
+            admin = Administrator.objects.get(pk=userID)
+
+            if admin.acl.adminStatus != 1:
+                return ACLManager.loadError()
+
+
+            name = data['name']
+
+            passdata = {}
+            passdata["JobID"] = None
+            passdata['name'] = name
+            da = Docker_Sites(None, passdata)
+            retdata = da.ListContainers()
+
+
+            data_ret = {'status': 1, 'error_message': 'None', 'data':retdata}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'removeImageStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+            # Internal function for recreating containers
+
+    def getContainerAppinfo(self, userID=None, data=None):
+        try:
+            admin = Administrator.objects.get(pk=userID)
+
+            if admin.acl.adminStatus != 1:
+                return ACLManager.loadError()
+
+
+            name = data['name']
+            containerID = data['id']
+
+            passdata = {}
+            passdata["JobID"] = None
+            passdata['name'] = name
+            passdata['containerID'] = containerID
+            da = Docker_Sites(None, passdata)
+            retdata = da.ContainerInfo()
+
+
+            data_ret = {'status': 1, 'error_message': 'None', 'data':retdata}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'removeImageStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def getContainerApplog(self, userID=None, data=None):
+        try:
+            admin = Administrator.objects.get(pk=userID)
+
+            if admin.acl.adminStatus != 1:
+                return ACLManager.loadError()
+
+
+            name = data['name']
+            containerID = data['id']
+
+            passdata = {}
+            passdata["JobID"] = None
+            passdata['name'] = name
+            passdata['containerID'] = containerID
+            passdata['numberOfLines'] = 50
+            da = Docker_Sites(None, passdata)
+            retdata = da.ContainerLogs()
+
+
+            data_ret = {'status': 1, 'error_message': 'None', 'data':retdata}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'removeImageStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def recreateappcontainer(self, userID=None, data=None):
+        try:
+            from websiteFunctions.models import DockerSites
+            admin = Administrator.objects.get(pk=userID)
+
+            if admin.acl.adminStatus != 1:
+                return ACLManager.loadError()
+
+            name = data['name']
+            WPusername = data['WPusername']
+            WPemail = data['WPemail']
+            WPpasswd = data['WPpasswd']
+
+            dockersite = DockerSites.objects.get(SiteName=name)
+
+            passdata ={}
+            data['JobID'] = ''
+            data['Domain'] = dockersite.admin.domain
+            data['domain'] = dockersite.admin.domain
+            data['WPemal'] = WPemail
+            data['Owner'] = dockersite.admin.admin.userName
+            data['userID'] = userID
+            data['MysqlCPU'] = dockersite.CPUsMySQL
+            data['MYsqlRam'] = dockersite.MemoryMySQL
+            data['SiteCPU'] = dockersite.CPUsSite
+            data['SiteRam'] = dockersite.MemorySite
+            data['sitename'] = dockersite.SiteName
+            data['WPusername'] = WPusername
+            data['WPpasswd'] = WPpasswd
+            data['externalApp'] = dockersite.admin.externalApp
+
+            da = Docker_Sites(None, passdata)
+            da.RebuildApp()
+
+
+            data_ret = {'status': 1, 'error_message': 'None',}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'removeImageStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def RestartContainerAPP(self, userID=None, data=None):
+        try:
+            admin = Administrator.objects.get(pk=userID)
+
+            if admin.acl.adminStatus != 1:
+                return ACLManager.loadError()
+
+            name = data['name']
+            containerID = data['id']
+
+            passdata = {}
+            passdata['containerID'] = containerID
+
+            da = Docker_Sites(None, passdata)
+            retdata = da.RestartContainer()
+
+
+            data_ret = {'status': 1, 'error_message': 'None', 'data':retdata}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'removeImageStatus': 0, 'error_message': str(msg)}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+    def StopContainerAPP(self, userID=None, data=None):
+        try:
+            admin = Administrator.objects.get(pk=userID)
+
+            if admin.acl.adminStatus != 1:
+                return ACLManager.loadError()
+
+            name = data['name']
+            containerID = data['id']
+
+            passdata = {}
+            passdata['containerID'] = containerID
+
+            da = Docker_Sites(None, passdata)
+            retdata = da.StopContainer()
+
+
+            data_ret = {'status': 1, 'error_message': 'None', 'data':retdata}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            data_ret = {'removeImageStatus': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)

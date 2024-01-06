@@ -188,6 +188,19 @@ urlpatterns = [
     url(r'^saveGitConfigurations$', views.saveGitConfigurations, name='saveGitConfigurations'),
     url(r'^fetchGitLogs$', views.fetchGitLogs, name='fetchGitLogs'),
 
+    # Docker Site & Packages
+    url(r'^CreateDockerPackage$', views.CreateDockerPackage, name='CreateDockerPackage'),
+    url(r'^AssignPackage$', views.AssignPackage, name='AssignPackage'),
+    url(r'^CreateDockersite$', views.CreateDockersite, name='CreateDockersite'),
+    url(r'^AddDockerpackage$', views.AddDockerpackage, name='AddDockerpackage'),
+    url(r'^Getpackage$', views.Getpackage, name='Getpackage'),
+    url(r'^Updatepackage$', views.Updatepackage, name='Updatepackage'),
+    url(r'^AddAssignment$', views.AddAssignment, name='AddAssignment'),
+    url(r'^submitDockerSiteCreation$', views.submitDockerSiteCreation, name='submitDockerSiteCreation'),
+    url(r'^ListDockerSites$', views.ListDockerSites, name='ListDockerSites'),
+    url(r'^fetchDockersite$', views.fetchDockersite, name='fetchDockersite'),
+
+
     ### SSH Configs
 
     url(r'^getSSHConfigs$', views.getSSHConfigs, name='getSSHConfigs'),

@@ -6,6 +6,7 @@ import sys
 import django
 
 from databases.models import Databases
+from plogical.DockerSites import Docker_Sites
 from plogical.httpProc import httpProc
 
 sys.path.append('/usr/local/CyberCP')
@@ -15,7 +16,7 @@ import json
 from plogical.acl import ACLManager
 import plogical.CyberCPLogFileWriter as logging
 from websiteFunctions.models import Websites, ChildDomains, GitLogs, wpplugins, WPSites, WPStaging, WPSitesBackup, \
-    RemoteBackupConfig, RemoteBackupSchedule, RemoteBackupsites
+    RemoteBackupConfig, RemoteBackupSchedule, RemoteBackupsites, DockerPackages, PackageAssignment, DockerSites
 from plogical.virtualHostUtilities import virtualHostUtilities
 import subprocess
 import shlex
@@ -181,7 +182,6 @@ class WebsiteManager:
             import requests
             response = requests.post(url, data=json.dumps(data))
             Status = response.json()['status']
-
 
             rnpss = randomPassword.generate_pass(10)
 
@@ -468,11 +468,11 @@ class WebsiteManager:
             password = randomPassword.generate_pass(10)
 
             command = f'sudo -u %s {FinalPHPPath} /usr/bin/wp user create autologin %s --role=administrator --user_pass="%s" --path=%s --skip-plugins --skip-themes' % (
-            WPobj.owner.externalApp, 'autologin@cloudpages.cloud', password, WPobj.path)
+                WPobj.owner.externalApp, 'autologin@cloudpages.cloud', password, WPobj.path)
             ProcessUtilities.executioner(command)
 
             command = f'sudo -u %s {FinalPHPPath} /usr/bin/wp user update autologin --user_pass="%s" --path=%s --skip-plugins --skip-themes' % (
-            WPobj.owner.externalApp, password, WPobj.path)
+                WPobj.owner.externalApp, password, WPobj.path)
             ProcessUtilities.executioner(command)
 
             data = {}
@@ -713,7 +713,8 @@ class WebsiteManager:
 
         rnpss = randomPassword.generate_pass(10)
         proc = httpProc(request, 'websiteFunctions/createDomain.html',
-                        {'websiteList': websitesName, 'phps': PHPManager.findPHPVersions(), 'Randam_String': rnpss, 'test_domain_data':test_domain_status})
+                        {'websiteList': websitesName, 'phps': PHPManager.findPHPVersions(), 'Randam_String': rnpss,
+                         'test_domain_data': test_domain_status})
         return proc.render()
 
     def siteState(self, request=None, userID=None, data=None):
@@ -802,12 +803,12 @@ class WebsiteManager:
             FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
 
             command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp core version --skip-plugins --skip-themes --path=%s 2>/dev/null' % (
-            Vhuser, FinalPHPPath, path)
+                Vhuser, FinalPHPPath, path)
             version = ProcessUtilities.outputExecutioner(command, None, True)
             version = html.escape(version)
 
             command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp plugin status litespeed-cache --skip-plugins --skip-themes --path=%s' % (
-            Vhuser, FinalPHPPath, path)
+                Vhuser, FinalPHPPath, path)
             lscachee = ProcessUtilities.outputExecutioner(command)
 
             if lscachee.find('Status: Active') > -1:
@@ -816,7 +817,7 @@ class WebsiteManager:
                 lscache = 0
 
             command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp config list --skip-plugins --skip-themes --path=%s' % (
-            Vhuser, FinalPHPPath, path)
+                Vhuser, FinalPHPPath, path)
             stdout = ProcessUtilities.outputExecutioner(command)
             debugging = 0
             for items in stdout.split('\n'):
@@ -825,12 +826,12 @@ class WebsiteManager:
                     break
 
             command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp option get blog_public --skip-plugins --skip-themes --path=%s' % (
-            Vhuser, FinalPHPPath, path)
+                Vhuser, FinalPHPPath, path)
             stdoutput = ProcessUtilities.outputExecutioner(command)
             searchindex = int(stdoutput.splitlines()[-1])
 
             command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp maintenance-mode status --skip-plugins --skip-themes --path=%s' % (
-            Vhuser, FinalPHPPath, path)
+                Vhuser, FinalPHPPath, path)
             maintenanceMod = ProcessUtilities.outputExecutioner(command)
 
             result = maintenanceMod.splitlines()[-1]
@@ -901,7 +902,7 @@ class WebsiteManager:
             FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
 
             command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp plugin list --skip-plugins --skip-themes --format=json --path=%s' % (
-            Vhuser, FinalPHPPath, path)
+                Vhuser, FinalPHPPath, path)
             stdoutput = ProcessUtilities.outputExecutioner(command)
             json_data = stdoutput.splitlines()[-1]
 
@@ -939,7 +940,7 @@ class WebsiteManager:
             FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
 
             command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp theme list --skip-plugins --skip-themes --format=json --path=%s' % (
-            Vhuser, FinalPHPPath, path)
+                Vhuser, FinalPHPPath, path)
             stdoutput = ProcessUtilities.outputExecutioner(command)
             json_data = stdoutput.splitlines()[-1]
 
@@ -1282,7 +1283,7 @@ class WebsiteManager:
             Rconfig = json.loads(RemoteBackupConfigobj.config)
 
             try:
-                #This code is only supposed to run if backups are s3, not for SFTP
+                # This code is only supposed to run if backups are s3, not for SFTP
                 provider = Rconfig['Provider']
                 if provider == "Backblaze":
                     EndURl = Rconfig['EndUrl']
@@ -1412,7 +1413,6 @@ class WebsiteManager:
             currentACL = ACLManager.loadedACL(userID)
             admin = Administrator.objects.get(pk=userID)
 
-
             allweb = Websites.objects.all()
 
             childdomain = ChildDomains.objects.all()
@@ -1424,7 +1424,6 @@ class WebsiteManager:
 
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.CyberCPLogFileWriter.writeToFile(result)
-
 
                 if result.find('No such file or directory') == -1:
                     try:
@@ -1761,19 +1760,19 @@ class WebsiteManager:
             FinalPHPPath = '/usr/local/lsws/lsphp%s/bin/php' % (php)
 
             command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp plugin status %s --skip-plugins --skip-themes --path=%s' % (
-            Vhuser, FinalPHPPath, plugin, path)
+                Vhuser, FinalPHPPath, plugin, path)
             stdoutput = ProcessUtilities.outputExecutioner(command)
 
             if stdoutput.find('Status: Active') > -1:
                 command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp plugin deactivate %s --skip-plugins --skip-themes --path=%s' % (
-                Vhuser, FinalPHPPath, plugin, path)
+                    Vhuser, FinalPHPPath, plugin, path)
                 stdoutput = ProcessUtilities.outputExecutioner(command)
                 time.sleep(3)
 
             else:
 
                 command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp plugin activate %s --skip-plugins --skip-themes --path=%s' % (
-                Vhuser, FinalPHPPath, plugin, path)
+                    Vhuser, FinalPHPPath, plugin, path)
                 stdoutput = ProcessUtilities.outputExecutioner(command)
                 time.sleep(3)
 
@@ -1901,27 +1900,27 @@ class WebsiteManager:
                 if settingValue:
 
                     command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp plugin install litespeed-cache --path=%s --skip-plugins --skip-themes" % (
-                    Vhuser, FinalPHPPath, path)
+                        Vhuser, FinalPHPPath, path)
                     stdoutput = ProcessUtilities.outputExecutioner(command)
 
                     command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp plugin activate litespeed-cache --path=%s --skip-plugins --skip-themes" % (
-                    Vhuser, FinalPHPPath, path)
+                        Vhuser, FinalPHPPath, path)
                     stdoutput = ProcessUtilities.outputExecutioner(command)
 
 
                 else:
                     command = 'sudo -u %s %s -d error_reporting=0 /usr/bin/wp plugin deactivate litespeed-cache --path=%s --skip-plugins --skip-themes' % (
-                    Vhuser, FinalPHPPath, path)
+                        Vhuser, FinalPHPPath, path)
                     stdoutput = ProcessUtilities.outputExecutioner(command)
             elif setting == 'debugging':
 
                 command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp litespeed-purge all --path=%s --skip-plugins --skip-themes" % (
-                Vhuser, FinalPHPPath, path)
+                    Vhuser, FinalPHPPath, path)
                 stdoutput = ProcessUtilities.outputExecutioner(command)
 
                 if settingValue:
                     command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp config set WP_DEBUG true --path=%s --skip-plugins --skip-themes" % (
-                    Vhuser, FinalPHPPath, path)
+                        Vhuser, FinalPHPPath, path)
                     stdoutput = ProcessUtilities.outputExecutioner(command)
                     logging.CyberCPLogFileWriter.writeToFile("Debugging mk true 1  output:" + str(stdoutput))
 
@@ -1933,7 +1932,7 @@ class WebsiteManager:
 
                 else:
                     command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp config set WP_DEBUG false --path=%s --skip-plugins --skip-themes" % (
-                    Vhuser, FinalPHPPath, path)
+                        Vhuser, FinalPHPPath, path)
                     stdoutput = ProcessUtilities.outputExecutioner(command)
                     logging.CyberCPLogFileWriter.writeToFile("Debugging mk false 0  output:" + str(stdoutput))
 
@@ -1944,35 +1943,35 @@ class WebsiteManager:
             elif setting == 'searchIndex':
 
                 command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp litespeed-purge all --path=%s --skip-plugins --skip-themes" % (
-                Vhuser, FinalPHPPath, path)
+                    Vhuser, FinalPHPPath, path)
                 stdoutput = ProcessUtilities.outputExecutioner(command)
 
                 if settingValue:
                     command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp option update blog_public 1 --path=%s --skip-plugins --skip-themes" % (
-                    Vhuser, FinalPHPPath, path)
+                        Vhuser, FinalPHPPath, path)
                     stdoutput = ProcessUtilities.outputExecutioner(command)
 
 
                 else:
                     command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp option update blog_public 0 --path=%s --skip-plugins --skip-themes" % (
-                    Vhuser, FinalPHPPath, path)
+                        Vhuser, FinalPHPPath, path)
                     stdoutput = ProcessUtilities.outputExecutioner(command)
             elif setting == 'maintenanceMode':
 
                 command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp litespeed-purge all --path=%s --skip-plugins --skip-themes" % (
-                Vhuser, FinalPHPPath, path)
+                    Vhuser, FinalPHPPath, path)
                 stdoutput = ProcessUtilities.outputExecutioner(command)
 
                 if settingValue:
 
                     command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp maintenance-mode activate --path=%s --skip-plugins --skip-themes" % (
-                    Vhuser, FinalPHPPath, path)
+                        Vhuser, FinalPHPPath, path)
                     stdoutput = ProcessUtilities.outputExecutioner(command)
 
 
                 else:
                     command = "sudo -u %s %s -d error_reporting=0 /usr/bin/wp maintenance-mode deactivate --path=%s --skip-plugins --skip-themes" % (
-                    Vhuser, FinalPHPPath, path)
+                        Vhuser, FinalPHPPath, path)
                     stdoutput = ProcessUtilities.outputExecutioner(command)
             elif setting == 'PasswordProtection':
                 execPath = f"/usr/local/CyberCP/bin/python {virtualHostUtilities.cyberPanel}/plogical/virtualHostUtilities.py"
@@ -2037,8 +2036,6 @@ class WebsiteManager:
         try:
             currentACL = ACLManager.loadedACL(userID)
             admin = Administrator.objects.get(pk=userID)
-
-
 
             extraArgs = {}
             extraArgs['currentACL'] = currentACL
@@ -2354,10 +2351,28 @@ class WebsiteManager:
             pageNumber = int(data['page'])
             recordsToShow = int(data['recordsToShow'])
 
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.CyberCPLogFileWriter.writeToFile(f'Fetch sites step 1..')
+
             endPageNumber, finalPageNumber = self.recordsPointer(pageNumber, recordsToShow)
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.CyberCPLogFileWriter.writeToFile(f'Fetch sites step 2..')
+
             websites = ACLManager.findWebsiteObjects(currentACL, userID)
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.CyberCPLogFileWriter.writeToFile(f'Fetch sites step 3..')
+
             pagination = self.getPagination(len(websites), recordsToShow)
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.CyberCPLogFileWriter.writeToFile(f'Fetch sites step 4..')
+
             json_data = self.findWebsitesListJson(websites[finalPageNumber:endPageNumber])
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.CyberCPLogFileWriter.writeToFile(f'Fetch sites step 5..')
 
             final_dic = {'status': 1, 'listWebSiteStatus': 1, 'error_message': "None", "data": json_data,
                          'pagination': pagination}
@@ -2415,9 +2430,12 @@ class WebsiteManager:
 
         from plogical.phpUtilities import phpUtilities
 
-
+        if os.path.exists(ProcessUtilities.debugPath):
+            logging.CyberCPLogFileWriter.writeToFile(f'findWebsitesListJson 1')
 
         for items in websites:
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.CyberCPLogFileWriter.writeToFile(f'findWebsitesListJson 2')
             if items.state == 0:
                 state = "Suspended"
             else:
@@ -2425,14 +2443,77 @@ class WebsiteManager:
 
             vhFile = f'/usr/local/lsws/conf/vhosts/{items.domain}/vhost.conf'
 
-            PHPVersionActual = phpUtilities.WrapGetPHPVersionFromFileToGetVersionWithPHP(vhFile)
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.CyberCPLogFileWriter.writeToFile(vhFile)
+
+            try:
+                PHPVersionActual = phpUtilities.WrapGetPHPVersionFromFileToGetVersionWithPHP(vhFile)
+            except:
+                PHPVersionActual = 'PHP 8.1'
+
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.CyberCPLogFileWriter.writeToFile(f'findWebsitesListJson 3')
 
             DiskUsage, DiskUsagePercentage, bwInMB, bwUsage = virtualHostUtilities.FindStats(items)
-            diskUsed = "%sMB" % str(DiskUsage)
+            if os.path.exists(ProcessUtilities.debugPath):
+                logging.CyberCPLogFileWriter.writeToFile(f'findWebsitesListJson 4')
+            try:
+                diskUsed = "%sMB" % str(DiskUsage)
+            except:
+                diskUsed = "%sMB" % str(0)
 
             dic = {'domain': items.domain, 'adminEmail': items.adminEmail, 'ipAddress': ipAddress,
                    'admin': items.admin.userName, 'package': items.package.packageName, 'state': state,
                    'diskUsed': diskUsed, 'phpVersion': PHPVersionActual}
+
+            if checker == 0:
+                json_data = json_data + json.dumps(dic)
+                checker = 1
+            else:
+                json_data = json_data + ',' + json.dumps(dic)
+
+        json_data = json_data + ']'
+
+        return json_data
+
+
+
+    def findDockersitesListJson(self, Dockersite):
+
+        json_data = "["
+        checker = 0
+
+        try:
+            ipFile = "/etc/cyberpanel/machineIP"
+            f = open(ipFile)
+            ipData = f.read()
+            ipAddress = ipData.split('\n', 1)[0]
+        except BaseException as msg:
+            logging.CyberCPLogFileWriter.writeToFile("Failed to read machine IP, error:" + str(msg))
+            ipAddress = "192.168.100.1"
+
+        from plogical.phpUtilities import phpUtilities
+        for items in Dockersite:
+            website = Websites.objects.get(pk=items.admin.pk)
+            vhFile = f'/usr/local/lsws/conf/vhosts/{website.domain}/vhost.conf'
+
+            try:
+                PHPVersionActual = phpUtilities.WrapGetPHPVersionFromFileToGetVersionWithPHP(website)
+            except:
+                PHPVersionActual = 'PHP 8.1'
+
+
+            if items.state == 0:
+                state = "Suspended"
+            else:
+                state = "Active"
+
+            dpkg = PackageAssignment.objects.get(user=website.admin)
+
+
+            dic = {'id':items.pk, 'domain': website.domain,  'adminEmail': website.adminEmail, 'ipAddress': ipAddress,
+                   'admin': website.admin.userName, 'package': dpkg.package.Name, 'state': state,
+                   'CPU': int(items.CPUsMySQL)+int(items.CPUsSite), 'Ram': int(items.MemorySite)+int(items.MemoryMySQL),  'phpVersion': PHPVersionActual }
 
             if checker == 0:
                 json_data = json_data + json.dumps(dic)
@@ -2530,6 +2611,15 @@ class WebsiteManager:
             execPath = "/usr/local/CyberCP/bin/python " + virtualHostUtilities.cyberPanel + "/plogical/virtualHostUtilities.py"
             execPath = execPath + " deleteVirtualHostConfigurations --virtualHostName " + websiteName
             ProcessUtilities.popenExecutioner(execPath)
+
+            ### delete site from dgdrive backups
+
+            try:
+
+                from websiteFunctions.models import GDriveSites
+                GDriveSites.objects.filter(domain=websiteName).delete()
+            except:
+                pass
 
             data_ret = {'status': 1, 'websiteDeleteStatus': 1, 'error_message': "None"}
             json_data = json.dumps(data_ret)
@@ -2815,9 +2905,9 @@ class WebsiteManager:
 
             ## Fix https://github.com/usmannasir/cyberpanel/issues/998
 
-            #from plogical.IncScheduler import IncScheduler
-            #isPU = IncScheduler('CalculateAndUpdateDiskUsage', {})
-            #isPU.start()
+            # from plogical.IncScheduler import IncScheduler
+            # isPU = IncScheduler('CalculateAndUpdateDiskUsage', {})
+            # isPU.start()
 
             command = '/usr/local/CyberCP/bin/python /usr/local/CyberCP/plogical/IncScheduler.py UpdateDiskUsageForce'
             ProcessUtilities.outputExecutioner(command)
@@ -4257,7 +4347,6 @@ StrictHostKeyChecking no
             else:
                 return ACLManager.loadErrorJson('installStatus', 0)
 
-
             #### Before installing mautic change php to 8.0
 
             completePathToConfigFile = f'/usr/local/lsws/conf/vhosts/{self.domain}/vhost.conf'
@@ -4496,6 +4585,24 @@ StrictHostKeyChecking no
 
         return pagination
 
+    def DockersitePagination(self, currentACL, userID):
+        websites = DockerSites.objects.all()
+
+        pages = float(len(websites)) / float(10)
+        pagination = []
+
+        if pages <= 1.0:
+            pages = 1
+            pagination.append('<li><a href="\#"></a></li>')
+        else:
+            pages = ceil(pages)
+            finalPages = int(pages) + 1
+
+            for i in range(1, finalPages):
+                pagination.append('<li><a href="\#">' + str(i) + '</a></li>')
+
+        return pagination
+
     def getSwitchStatus(self, userID=None, data=None):
         try:
 
@@ -4670,7 +4777,7 @@ StrictHostKeyChecking no
             else:
                 phpVersion = f'PHP {phpPath[2]}'
 
-            #php = PHPManager.getPHPString(phpVersion)
+            # php = PHPManager.getPHPString(phpVersion)
 
             if os.path.exists(ProcessUtilities.debugPath):
                 logging.CyberCPLogFileWriter.writeToFile(f'PHP Version in tune settings {phpVersion}')
@@ -4690,7 +4797,7 @@ StrictHostKeyChecking no
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
         except BaseException as msg:
-            data_ret = {'status': 0,  'error_message': str(msg)}
+            data_ret = {'status': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -6450,7 +6557,6 @@ StrictHostKeyChecking no
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-
     def ApacheManager(self, request=None, userID=None, data=None):
         currentACL = ACLManager.loadedACL(userID)
         admin = Administrator.objects.get(pk=userID)
@@ -6467,7 +6573,8 @@ StrictHostKeyChecking no
         else:
             apachemanager = 0
 
-        proc = httpProc(request, 'websiteFunctions/ApacheManager.html', {'domainName': self.domain, 'phps': phps, 'apachemanager':apachemanager})
+        proc = httpProc(request, 'websiteFunctions/ApacheManager.html',
+                        {'domainName': self.domain, 'phps': phps, 'apachemanager': apachemanager})
         return proc.render()
 
     def saveApacheConfigsToFile(self, userID=None, data=None):
@@ -6509,3 +6616,380 @@ StrictHostKeyChecking no
             final_dic = {'status': 0, 'error_message': output}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
+
+    def CreateDockerPackage(self, request=None, userID=None, data=None, DeleteID=None):
+        Data = {}
+
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
+
+        try:
+            if DeleteID != None:
+                DockerPackagesDelete = DockerPackages.objects.get(pk=DeleteID)
+                DockerPackagesDelete.delete()
+        except:
+            pass
+
+        Data['packages'] = DockerPackages.objects.all()
+
+        proc = httpProc(request, 'websiteFunctions/CreateDockerPackage.html',
+                        Data, 'createWebsite')
+        return proc.render()
+
+    def AssignPackage(self, request=None, userID=None, data=None, DeleteID=None):
+
+        currentACL = ACLManager.loadedACL(userID)
+
+        if currentACL['admin'] == 1:
+            pass
+        else:
+            return ACLManager.loadError()
+
+        try:
+            if DeleteID != None:
+                DockerPackagesDelete = PackageAssignment.objects.get(pk=DeleteID)
+                DockerPackagesDelete.delete()
+        except:
+            pass
+
+        adminNames = ACLManager.loadAllUsers(userID)
+        dockerpackages = DockerPackages.objects.all()
+        assignpackage = PackageAssignment.objects.all()
+        Data = {'adminNames': adminNames, 'DockerPackages': dockerpackages, 'assignpackage': assignpackage}
+        proc = httpProc(request, 'websiteFunctions/assignPackage.html',
+                        Data, 'createWebsite')
+        return proc.render()
+
+    def CreateDockersite(self, request=None, userID=None, data=None):
+        adminNames = ACLManager.loadAllUsers(userID)
+        Data = {'adminNames': adminNames}
+
+
+        if PackageAssignment.objects.all().count() == 0:
+
+            name = 'Default'
+            cpu = 2
+            Memory = 1024
+            Bandwidth = '100'
+            disk = '100'
+
+            saveobj = DockerPackages(Name=name, CPUs=cpu, Ram=Memory, Bandwidth=Bandwidth, DiskSpace=disk, config='')
+            saveobj.save()
+
+            userobj = Administrator.objects.get(pk=1)
+
+            sv = PackageAssignment(user=userobj, package=saveobj)
+            sv.save()
+
+        proc = httpProc(request, 'websiteFunctions/CreateDockerSite.html',
+                        Data, 'createWebsite')
+        return proc.render()
+
+    def AddDockerpackage(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+
+            if currentACL['admin'] == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
+            admin = Administrator.objects.get(pk=userID)
+
+            name = data['name']
+            cpu = data['cpu']
+            Memory = data['Memory']
+            Bandwidth = data['Bandwidth']
+            disk = data['disk']
+
+            saveobj = DockerPackages(Name=name, CPUs=cpu, Ram=Memory, Bandwidth=Bandwidth, DiskSpace=disk, config='')
+            saveobj.save()
+
+            status = {"status": 1, 'error_message': None}
+            final_json = json.dumps(status)
+            return HttpResponse(final_json)
+        except BaseException as msg:
+            final_dic = {'status': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+    def Getpackage(self, userID=None, data=None):
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+
+            if currentACL['admin'] == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
+            admin = Administrator.objects.get(pk=userID)
+            id = data['id']
+
+            docker_package = DockerPackages.objects.get(pk=id)
+
+            # Convert DockerPackages object to dictionary
+            package_data = {
+                'Name': docker_package.Name,
+                'CPU': docker_package.CPUs,
+                'Memory': docker_package.Ram,
+                'Bandwidth': docker_package.Bandwidth,
+                'DiskSpace': docker_package.DiskSpace,
+            }
+
+            rdata = {'obj': package_data}
+
+            status = {"status": 1, 'error_message': rdata}
+            final_json = json.dumps(status)
+            return HttpResponse(final_json)
+        except BaseException as msg:
+            final_dic = {'status': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+    def Updatepackage(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+
+            if currentACL['admin'] == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
+            admin = Administrator.objects.get(pk=userID)
+            id = data['id']
+            CPU = data['CPU']
+            RAM = data['RAM']
+            Bandwidth = data['Bandwidth']
+            DiskSpace = data['DiskSpace']
+
+            docker_package = DockerPackages.objects.get(pk=id)
+
+            docker_package.CPUs = CPU
+            docker_package.Ram = RAM
+            docker_package.Bandwidth = Bandwidth
+            docker_package.DiskSpace = DiskSpace
+            docker_package.save()
+
+            status = {"status": 1, 'error_message': None}
+            final_json = json.dumps(status)
+            return HttpResponse(final_json)
+
+        except BaseException as msg:
+            final_dic = {'status': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+    def AddAssignment(self, userID=None, data=None):
+        try:
+
+            currentACL = ACLManager.loadedACL(userID)
+
+            if currentACL['admin'] == 1:
+                pass
+            else:
+                return ACLManager.loadError()
+
+
+            admin = Administrator.objects.get(pk=userID)
+
+            package = data['package']
+            user = data['user']
+
+            userobj = Administrator.objects.get(userName=user)
+
+            delasg = PackageAssignment.objects.get(user=userobj)
+            delasg.delete()
+
+            docker_package = DockerPackages.objects.get(pk=int(package))
+
+            sv = PackageAssignment(user=userobj, package=docker_package)
+            sv.save()
+
+            status = {"status": 1, 'error_message': None}
+            final_json = json.dumps(status)
+            return HttpResponse(final_json)
+
+        except BaseException as msg:
+            final_dic = {'status': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+    def submitDockerSiteCreation(self, userID=None, data=None):
+        try:
+            admin = Administrator.objects.get(pk=userID)
+            currentACL = ACLManager.loadedACL(userID)
+
+            sitename = data['sitename']
+            Owner = data['Owner']
+            Domain = data['Domain']
+            MysqlCPU = int(data['MysqlCPU'])
+            MYsqlRam = int(data['MYsqlRam'])
+            SiteCPU = int(data['SiteCPU'])
+            SiteRam = int(data['SiteRam'])
+            App = data['App']
+            WPusername = data['WPusername']
+            WPemal = data['WPemal']
+            WPpasswd = data['WPpasswd']
+
+            pattern = r"^[a-z0-9][a-z0-9]*$"
+
+            if re.match(pattern, sitename):
+                pass
+            else:
+                final_dic = {'status': 0, 'error_message': f'invalid site name "{sitename}": must consist only of lowercase alphanumeric characters, as well as start with a letter or number.'}
+                final_json = json.dumps(final_dic)
+                return HttpResponse(final_json)
+
+            loggedUser = Administrator.objects.get(pk=userID)
+            newOwner = Administrator.objects.get(userName=Owner)
+
+            try:
+                pkaobj = PackageAssignment.objects.get(user=newOwner)
+            except:
+                final_dic = {'status': 0, 'error_message': str('Please assign package to selected user')}
+                final_json = json.dumps(final_dic)
+                return HttpResponse(final_json)
+
+            Dpkgobj = DockerPackages.objects.get(pk=pkaobj.package.id)
+
+            pkg_cpu = Dpkgobj.CPUs
+            pkg_Ram = Dpkgobj.Ram
+
+            totalcup = SiteCPU + MysqlCPU
+            totalRam = SiteRam + MYsqlRam
+
+            if (totalcup > pkg_cpu):
+                final_dic = {'status': 0, 'error_message': str(f'You can add {pkg_cpu} or less then {pkg_cpu} CPUs.')}
+                final_json = json.dumps(final_dic)
+                return HttpResponse(final_json)
+
+            if (totalRam > pkg_Ram):
+                final_dic = {'status': 0, 'error_message': str(f'You can add {pkg_Ram} or less then {pkg_Ram} Ram.')}
+                final_json = json.dumps(final_dic)
+                return HttpResponse(final_json)
+
+            if ACLManager.currentContextPermission(currentACL, 'createWebsite') == 0:
+                return ACLManager.loadErrorJson('createWebSiteStatus', 0)
+
+            if ACLManager.checkOwnerProtection(currentACL, loggedUser, newOwner) == 0:
+                return ACLManager.loadErrorJson('createWebSiteStatus', 0)
+
+            if ACLManager.CheckDomainBlackList(Domain) == 0:
+                data_ret = {'status': 0, 'createWebSiteStatus': 0, 'error_message': "Blacklisted domain."}
+                json_data = json.dumps(data_ret)
+                return HttpResponse(json_data)
+
+            tempStatusPath = "/home/cyberpanel/" + str(randint(1000, 9999))
+            data = {}
+
+            data['JobID'] = tempStatusPath
+            data['Domain'] = Domain
+            data['WPemal'] = WPemal
+            data['Owner'] = Owner
+            data['userID'] = userID
+            data['MysqlCPU'] = MysqlCPU
+            data['MYsqlRam'] = MYsqlRam
+            data['SiteCPU'] = SiteCPU
+            data['SiteRam'] = SiteRam
+            data['sitename'] = sitename
+            data['WPusername'] = WPusername
+            data['WPpasswd'] = WPpasswd
+            data['externalApp'] = "".join(re.findall("[a-zA-Z]+", Domain))[:5] + str(randint(1000, 9999))
+            data['App'] = App
+
+            background = Docker_Sites('SubmitDockersiteCreation', data)
+            background.start()
+
+            time.sleep(2)
+
+            data_ret = {'status': 1, 'installStatus': 1, 'error_message': 'None',
+                        'tempStatusPath': tempStatusPath}
+            json_data = json.dumps(data_ret)
+            return HttpResponse(json_data)
+
+        except BaseException as msg:
+            final_dic = {'status': 0, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+    def ListDockerSites(self, request=None, userID=None, data=None, DeleteID=None):
+        admin = Administrator.objects.get(pk=userID)
+        currentACL = ACLManager.loadedACL(userID)
+        fdata={}
+
+        try:
+            if DeleteID != None:
+
+                DockerSitesDelete = DockerSites.objects.get(pk=DeleteID)
+                if ACLManager.checkOwnership(DockerSitesDelete.admin.domain, admin, currentACL) == 1:
+                    pass
+                else:
+                    return ACLManager.loadError()
+
+                passdata={}
+                passdata["domain"] = DockerSitesDelete.admin.domain
+                passdata["JobID"] = None
+                passdata['name'] = DockerSitesDelete.SiteName
+                da = Docker_Sites(None, passdata)
+                da.DeleteDockerApp()
+                DockerSitesDelete.delete()
+                fdata['Deleted'] = 1
+        except BaseException as msg:
+            fdata['LPError'] = 1
+            fdata['LPMessage'] = str(msg)
+
+
+        fdata['pagination'] = self.DockersitePagination(currentACL, userID)
+
+        proc = httpProc(request, 'websiteFunctions/ListDockersite.html',
+                        fdata)
+        return proc.render()
+
+    def fetchDockersite(self, userID=None, data=None):
+        try:
+            currentACL = ACLManager.loadedACL(userID)
+            pageNumber = int(data['page'])
+            recordsToShow = int(data['recordsToShow'])
+
+
+            endPageNumber, finalPageNumber = self.recordsPointer(pageNumber, recordsToShow)
+
+            dockersites = ACLManager.findDockersiteObjects(currentACL, userID)
+            pagination = self.getPagination(len(dockersites), recordsToShow)
+            logging.CyberCPLogFileWriter.writeToFile("Our dockersite" + str(dockersites))
+
+
+            json_data = self.findDockersitesListJson(dockersites[finalPageNumber:endPageNumber])
+
+
+            final_dic = {'status': 1, 'listWebSiteStatus': 1, 'error_message': "None", "data": json_data,
+                         'pagination': pagination}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+        except BaseException as msg:
+            final_dic = {'status': 0, 'listWebSiteStatus': 1, 'error_message': str(msg)}
+            final_json = json.dumps(final_dic)
+            return HttpResponse(final_json)
+
+    def Dockersitehome(self, request=None, userID=None, data=None, DeleteID=None):
+
+        currentACL = ACLManager.loadedACL(userID)
+        admin = Administrator.objects.get(pk=userID)
+
+        ds = DockerSites.objects.get(pk=self.domain)
+
+        if ACLManager.checkOwnership(ds.admin.domain, admin, currentACL) == 1:
+            pass
+        else:
+            return ACLManager.loadError()
+
+        proc = httpProc(request, 'websiteFunctions/DockerSiteHome.html',
+                        {'dockerSite': ds})
+        return proc.render()

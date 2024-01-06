@@ -32,6 +32,53 @@ def renderBase(request):
     return proc.render()
 
 
+@ensure_csrf_cookie
+def versionManagement(request):
+    getVersion = requests.get('https://cyberpanel.net/version.txt')
+    latest = getVersion.json()
+    latestVersion = latest['version']
+    latestBuild = latest['build']
+
+    currentVersion = VERSION
+    currentBuild = str(BUILD)
+
+    u = "https://api.github.com/repos/usmannasir/cyberpanel/commits?sha=v%s.%s" % (latestVersion, latestBuild)
+    logging.writeToFile(u)
+    r = requests.get(u)
+    latestcomit = r.json()[0]['sha']
+
+    command = "git -C /usr/local/CyberCP/ rev-parse HEAD"
+    output = ProcessUtilities.outputExecutioner(command)
+
+    Currentcomt = output.rstrip("\n")
+    notechk = True
+
+    if Currentcomt == latestcomit:
+        notechk = False
+
+
+    template = 'baseTemplate/versionManagment.html'
+    finalData = {'build': currentBuild, 'currentVersion': currentVersion, 'latestVersion': latestVersion,
+                 'latestBuild': latestBuild, 'latestcomit': latestcomit, "Currentcomt": Currentcomt, "Notecheck": notechk}
+
+    proc = httpProc(request, template, finalData, 'versionManagement')
+    return proc.render()
+
+@ensure_csrf_cookie
+def upgrade_cyberpanel(request):
+    if request.method == 'POST':
+        try:
+            upgrade_command = 'sh <(curl https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/preUpgrade.sh || wget -O - https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/preUpgrade.sh)'
+            result = subprocess.run(upgrade_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+
+            if result.returncode == 0:
+                response_data = {'success': True, 'message': 'CyberPanel upgrade completed successfully.'}
+            else:
+                response_data = {'success': False, 'message': 'CyberPanel upgrade failed. Error output: ' + result.stderr}
+        except Exception as e:
+            response_data = {'success': False, 'message': 'An error occurred during the upgrade: ' + str(e)}
+
+
 def getAdminStatus(request):
     try:
         val = request.session['userID']

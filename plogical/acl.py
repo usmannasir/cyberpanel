@@ -1,6 +1,7 @@
 #!/usr/local/CyberCP/bin/python
 import os,sys
 
+from ApachController.ApacheVhosts import ApacheVhost
 from manageServices.models import PDNSStatus
 from .processUtilities import ProcessUtilities
 
@@ -11,7 +12,7 @@ django.setup()
 from loginSystem.models import Administrator, ACL
 from django.shortcuts import HttpResponse
 from packages.models import Package
-from websiteFunctions.models import Websites, ChildDomains, aliasDomains
+from websiteFunctions.models import Websites, ChildDomains, aliasDomains, DockerSites
 import json
 from subprocess import call, CalledProcessError
 from shlex import split
@@ -620,6 +621,29 @@ class ACLManager:
             return websiteList
 
     @staticmethod
+    def findDockersiteObjects(currentACL, userID):
+        if currentACL['admin'] == 1:
+            return DockerSites.objects.all()
+        else:
+
+            DockersiteList = []
+            admin = Administrator.objects.get(pk=userID)
+
+            websites = admin.DockerSites_set.all()
+
+            for items in websites:
+                DockersiteList.append(items)
+
+            admins = Administrator.objects.filter(owner=admin.pk)
+
+            for items in admins:
+                webs = items.DockerSites_set.all()
+                for web in webs:
+                    DockersiteList.append(web)
+
+            return DockersiteList
+
+    @staticmethod
     def findAllDomains(currentACL, userID):
         domainsList = []
 
@@ -676,8 +700,6 @@ class ACLManager:
 
     @staticmethod
     def checkOwnership(domain, admin, currentACL):
-
-
         try:
             childDomain = ChildDomains.objects.get(domain=domain)
 
@@ -716,7 +738,6 @@ class ACLManager:
             return 0
         except:
             return 0
-
 
     @staticmethod
     def checkOwnershipZone(domain, admin, currentACL):
@@ -996,4 +1017,72 @@ class ACLManager:
 
         except BaseException as msg:
             return 0, str(msg), None
+
+
+    @staticmethod
+    def FindDocRootOfSite(vhostConf,domainName):
+        try:
+            if vhostConf == None:
+                vhostConf = f'/usr/local/lsws/conf/vhosts/{domainName}/vhost.conf'
+
+            if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+                command = "awk '/docRoot/ {print $2}' " + vhostConf
+                docRoot = ProcessUtilities.outputExecutioner(command, 'root', True).rstrip('\n')
+                #docRoot = docRoot.replace('$VH_ROOT', f'/home/{domainName}')
+                return docRoot
+            else:
+                command = "awk '/DocumentRoot/ {print $2; exit}' " + vhostConf
+                docRoot = ProcessUtilities.outputExecutioner(command, 'root', True).rstrip('\n')
+                return docRoot
+        except:
+            pass
+
+    @staticmethod
+    def ReplaceDocRoot(vhostConf, domainName, NewDocRoot):
+        try:
+            if vhostConf == None:
+                vhostConf = f'/usr/local/lsws/conf/vhosts/{domainName}/vhost.conf'
+
+            if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+                #command = f"sed -i 's/docRoot\s\s*.*/docRoot                   {NewDocRoot}/g " + vhostConf
+                command = f"sed -i 's#docRoot\s\s*.*#docRoot                   {NewDocRoot}#g' " + vhostConf
+                ProcessUtilities.executioner(command, 'root', True)
+            else:
+                command = f"sed -i 's#DocumentRoot\s\s*[^[:space:]]*#DocumentRoot {NewDocRoot}#g' " + vhostConf
+                ProcessUtilities.executioner(command, 'root', True)
+                
+        except:
+            pass
+
+    @staticmethod
+    def FindDocRootOfSiteApache(vhostConf, domainName):
+        try:
+            finalConfPath = ApacheVhost.configBasePath + domainName + '.conf'
+
+            if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+
+                if os.path.exists(finalConfPath):
+                    command = "awk '/DocumentRoot/ {print $2; exit}' " + finalConfPath
+                    docRoot = ProcessUtilities.outputExecutioner(command, 'root', True).rstrip('\n')
+                    return docRoot
+                else:
+                    return None
+            else:
+                return None
+
+        except:
+            return None
+
+    @staticmethod
+    def ReplaceDocRootApache(vhostConf, domainName, NewDocRoot):
+        try:
+            finalConfPath = ApacheVhost.configBasePath + domainName + '.conf'
+
+            if ProcessUtilities.decideServer() == ProcessUtilities.OLS:
+                command = f"sed -i 's#DocumentRoot\s\s*[^[:space:]]*#DocumentRoot {NewDocRoot}#g' " + finalConfPath
+                ProcessUtilities.executioner(command, 'root', True)
+        except:
+            pass
+
+
 

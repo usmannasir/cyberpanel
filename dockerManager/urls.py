@@ -1,5 +1,8 @@
 from django.conf.urls import url
+from django.urls import path
+
 from . import views
+from websiteFunctions.views import Dockersitehome
 
 urlpatterns = [
     url(r'^$', views.loadDockerHome, name='dockerHome'),
@@ -26,4 +29,12 @@ urlpatterns = [
     url(r'^installDocker', views.installDocker, name='installDocker'),
     url(r'^images', views.images, name='containerImage'),
     url(r'^view/(?P<name>(.*))$', views.viewContainer, name='viewContainer'),
+
+    path('manage/<int:dockerapp>/app', Dockersitehome, name='Dockersitehome'),
+    path('getDockersiteList', views.getDockersiteList, name='getDockersiteList'),
+    path('getContainerAppinfo', views.getContainerAppinfo, name='getContainerAppinfo'),
+    path('getContainerApplog', views.getContainerApplog, name='getContainerApplog'),
+    path('recreateappcontainer', views.recreateappcontainer, name='recreateappcontainer'),
+    path('RestartContainerAPP', views.RestartContainerAPP, name='RestartContainerAPP'),
+    path('StopContainerAPP', views.StopContainerAPP, name='StopContainerAPP'),
 ]
