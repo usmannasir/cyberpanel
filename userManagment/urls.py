@@ -4,8 +4,8 @@ from . import views
 urlpatterns = [
 
     url(r'^$', views.loadUserHome, name='loadUsersHome'),
-    url(r'^viewProfile', views.viewProfile, name='viewProfile'),
-    url(r'^viewProfileV2', views.viewProfileV2, name='viewProfileV2'),
+    url(r'^viewProfile$', views.viewProfile, name='viewProfile'),
+    url(r'^viewProfileV2$', views.viewProfileV2, name='viewProfileV2'),
     url(r'^createUser', views.createUser, name='createUser'),
 
 
