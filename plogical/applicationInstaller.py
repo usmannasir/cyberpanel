@@ -127,7 +127,6 @@ class ApplicationInstaller(multi.Thread):
             FNULL = open(os.devnull, 'w')
 
 
-
             finalPath = ''
             self.permPath = ''
 
@@ -207,9 +206,6 @@ class ApplicationInstaller(multi.Thread):
             statusFile.writelines('Downloading Mautic Core,30')
             statusFile.close()
 
-            #command = "wget https://github.com/mautic/mautic/releases/download/%s/%s.zip" % (
-            #ApplicationInstaller.MauticVersion, ApplicationInstaller.MauticVersion)
-
             ### replace command with composer install
             command = f'{phpPath} /usr/bin/composer create-project mautic/recommended-project:^4 {finalPath}'
             ProcessUtilities.outputExecutioner(command, externalApp, None)
@@ -218,9 +214,6 @@ class ApplicationInstaller(multi.Thread):
             statusFile.writelines('Extracting Mautic Core,50')
             statusFile.close()
 
-            ### replace command with composer install
-            #command = "unzip %s.zip" % (ApplicationInstaller.MauticVersion)
-            #ProcessUtilities.outputExecutioner(command, externalApp, None, finalPath)
 
             ##
 
@@ -234,49 +227,6 @@ class ApplicationInstaller(multi.Thread):
             else:
                 finalURL = domainName
 
-
-#            ACLManager.CreateSecureDir()
-#             localDB = '%s/%s' % ('/usr/local/CyberCP/tmp', str(randint(1000, 9999)))
-#
-#             localDBContent = """<?php
-# // Example local.php to test install (to adapt of course)
-# $parameters = array(
-# 	// Do not set db_driver and mailer_from_name as they are used to assume Mautic is installed
-# 	'db_host' => 'localhost',
-# 	'db_table_prefix' => null,
-# 	'db_port' => 3306,
-# 	'db_name' => '%s',
-# 	'db_user' => '%s',
-# 	'db_password' => '%s',
-# 	'db_backup_tables' => true,
-# 	'db_backup_prefix' => 'bak_',
-# 	'admin_email' => '%s',
-# 	'admin_password' => '%s',
-# 	'mailer_transport' => null,
-# 	'mailer_host' => null,
-# 	'mailer_port' => null,
-# 	'mailer_user' => null,
-# 	'mailer_password' => null,
-# 	'mailer_api_key' => null,
-# 	'mailer_encryption' => null,
-# 	'mailer_auth_mode' => null,
-# );""" % (dbName, dbUser, dbPassword, email, password)
-#
-#             writeToFile = open(localDB, 'w')
-#             writeToFile.write(localDBContent)
-#             writeToFile.close()
-
-            #command = 'rm -rf %s/app/config/local.php' % (finalPath)
-            #ProcessUtilities.executioner(command, externalApp)
-
-            #command = 'chown %s:%s %s' % (externalApp, externalApp, localDB)
-            #ProcessUtilities.executioner(command)
-
-            #command = 'cp %s %s/app/config/local.php' % (localDB, finalPath)
-            #ProcessUtilities.executioner(command, externalApp)
-
-            ### replace install command with comspoer soo
-            #command = f"{phpPath} bin/console mautic:install http://%s -f" % (finalURL)
 
             command = f"{phpPath} bin/console mautic:install --db_host='localhost' --db_name='{dbName}' --db_user='{dbUser}' --db_password='{dbPassword}' --admin_username='{username}' --admin_email='{email}' --admin_password='{password}' --db_port='3306' http://{finalURL} -f"
 

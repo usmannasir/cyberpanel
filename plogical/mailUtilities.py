@@ -1402,6 +1402,10 @@ class MailServerManagerUtils(multi.Thread):
                 for items in postFixLines:
                     if items.find('myhostname') > -1 and items[0] != '#':
                         self.mailHostName = items.split('=')[1].strip(' ')
+
+                        if os.path.exists(ProcessUtilities.debugPath):
+                            logging.CyberCPLogFileWriter.writeToFile(f'Mail server SSL is issued with value: {self.mailHostName}')
+
                         self.MailSSL = 1
             except BaseException as msg:
                 self.MailSSL = 0

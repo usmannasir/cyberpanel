@@ -2145,85 +2145,87 @@ CREATE TABLE `websiteFunctions_backupsv2` (`id` integer AUTO_INCREMENT NOT NULL 
     def installLSCPD(branch):
         try:
 
-            Upgrade.stdOut("Starting LSCPD installation..")
+            if branch.find('SoftUpgrade') == -1:
 
-            cwd = os.getcwd()
+                Upgrade.stdOut("Starting LSCPD installation..")
 
-            os.chdir('/usr/local')
+                cwd = os.getcwd()
 
-            command = 'yum -y install gcc gcc-c++ make autoconf glibc rcs'
-            Upgrade.executioner(command, 'LSCPD Pre-reqs [one]', 0)
+                os.chdir('/usr/local')
 
-            ##
+                command = 'yum -y install gcc gcc-c++ make autoconf glibc rcs'
+                Upgrade.executioner(command, 'LSCPD Pre-reqs [one]', 0)
 
-            lscpdPath = '/usr/local/lscp/bin/lscpd'
+                ##
 
-            if os.path.exists(lscpdPath):
-                os.remove(lscpdPath)
+                lscpdPath = '/usr/local/lscp/bin/lscpd'
+
+                if os.path.exists(lscpdPath):
+                    os.remove(lscpdPath)
 
 
-            try:
-                result = subprocess.run('uname -a', capture_output=True, text=True, shell=True)
+                try:
+                    result = subprocess.run('uname -a', capture_output=True, text=True, shell=True)
 
-                if result.stdout.find('aarch64') == -1:
+                    if result.stdout.find('aarch64') == -1:
+                        lscpdSelection = 'lscpd-0.3.1'
+                        if os.path.exists(Upgrade.UbuntuPath):
+                            result = open(Upgrade.UbuntuPath, 'r').read()
+                            if result.find('22.04') > -1:
+                                lscpdSelection = 'lscpd.0.4.0'
+                    else:
+                        lscpdSelection = 'lscpd.aarch64'
+
+                except:
+
                     lscpdSelection = 'lscpd-0.3.1'
                     if os.path.exists(Upgrade.UbuntuPath):
                         result = open(Upgrade.UbuntuPath, 'r').read()
                         if result.find('22.04') > -1:
                             lscpdSelection = 'lscpd.0.4.0'
-                else:
-                    lscpdSelection = 'lscpd.aarch64'
 
-            except:
+                command = f'cp -f /usr/local/CyberCP/{lscpdSelection} /usr/local/lscp/bin/{lscpdSelection}'
+                Upgrade.executioner(command, command, 0)
 
-                lscpdSelection = 'lscpd-0.3.1'
-                if os.path.exists(Upgrade.UbuntuPath):
-                    result = open(Upgrade.UbuntuPath, 'r').read()
-                    if result.find('22.04') > -1:
-                        lscpdSelection = 'lscpd.0.4.0'
+                command = 'rm -f /usr/local/lscp/bin/lscpd'
+                Upgrade.executioner(command, command, 0)
 
-            command = f'cp -f /usr/local/CyberCP/{lscpdSelection} /usr/local/lscp/bin/{lscpdSelection}'
-            Upgrade.executioner(command, command, 0)
+                command = f'mv /usr/local/lscp/bin/{lscpdSelection} /usr/local/lscp/bin/lscpd'
+                Upgrade.executioner(command, command, 0)
 
-            command = 'rm -f /usr/local/lscp/bin/lscpd'
-            Upgrade.executioner(command, command, 0)
+                command = f'chmod 755 {lscpdPath}'
+                Upgrade.executioner(command, 'LSCPD Download.', 0)
 
-            command = f'mv /usr/local/lscp/bin/{lscpdSelection} /usr/local/lscp/bin/lscpd'
-            Upgrade.executioner(command, command, 0)
+                command = 'yum -y install pcre-devel openssl-devel expat-devel geoip-devel zlib-devel udns-devel which curl'
+                Upgrade.executioner(command, 'LSCPD Pre-reqs [two]', 0)
 
-            command = f'chmod 755 {lscpdPath}'
-            Upgrade.executioner(command, 'LSCPD Download.', 0)
+                try:
+                    pwd.getpwnam('lscpd')
+                except KeyError:
+                    command = 'adduser lscpd -M -d /usr/local/lscp'
+                    Upgrade.executioner(command, 'Add user LSCPD', 0)
 
-            command = 'yum -y install pcre-devel openssl-devel expat-devel geoip-devel zlib-devel udns-devel which curl'
-            Upgrade.executioner(command, 'LSCPD Pre-reqs [two]', 0)
+                try:
+                    grp.getgrnam('lscpd')
+                except KeyError:
+                    command = 'groupadd lscpd'
+                    Upgrade.executioner(command, 'Add group LSCPD', 0)
 
-            try:
-                pwd.getpwnam('lscpd')
-            except KeyError:
-                command = 'adduser lscpd -M -d /usr/local/lscp'
-                Upgrade.executioner(command, 'Add user LSCPD', 0)
-
-            try:
-                grp.getgrnam('lscpd')
-            except KeyError:
-                command = 'groupadd lscpd'
+                command = 'usermod -a -G lscpd lscpd'
                 Upgrade.executioner(command, 'Add group LSCPD', 0)
 
-            command = 'usermod -a -G lscpd lscpd'
-            Upgrade.executioner(command, 'Add group LSCPD', 0)
+                command = 'usermod -a -G lsadm lscpd'
+                Upgrade.executioner(command, 'Add group LSCPD', 0)
 
-            command = 'usermod -a -G lsadm lscpd'
-            Upgrade.executioner(command, 'Add group LSCPD', 0)
+                command = 'systemctl daemon-reload'
+                Upgrade.executioner(command, 'daemon-reload LSCPD', 0)
 
-            command = 'systemctl daemon-reload'
-            Upgrade.executioner(command, 'daemon-reload LSCPD', 0)
+                command = 'systemctl restart lscpd'
+                Upgrade.executioner(command, 'Restart LSCPD', 0)
 
-            command = 'systemctl restart lscpd'
-            Upgrade.executioner(command, 'Restart LSCPD', 0)
+                os.chdir(cwd)
 
-            os.chdir(cwd)
-
-            Upgrade.stdOut("LSCPD successfully installed!")
+                Upgrade.stdOut("LSCPD successfully installed!")
 
         except BaseException as msg:
             Upgrade.stdOut(str(msg) + " [installLSCPD]")
@@ -2907,168 +2909,165 @@ vmail
         # Upgrade.stdOut("Upgrades are currently disabled")
         # return 0
 
-        if branch.find('SoftUpgrade') == -1:
+        if os.path.exists(Upgrade.CentOSPath) or os.path.exists(Upgrade.openEulerPath):
+            command = 'yum list installed'
+            Upgrade.installedOutput = subprocess.check_output(shlex.split(command)).decode()
+        else:
+            command = 'apt list'
+            Upgrade.installedOutput = subprocess.check_output(shlex.split(command)).decode()
 
-            if os.path.exists(Upgrade.CentOSPath) or os.path.exists(Upgrade.openEulerPath):
-                command = 'yum list installed'
-                Upgrade.installedOutput = subprocess.check_output(shlex.split(command)).decode()
-            else:
-                command = 'apt list'
-                Upgrade.installedOutput = subprocess.check_output(shlex.split(command)).decode()
+        command = 'systemctl stop cpssh'
+        Upgrade.executioner(command, 'fix csf if there', 0)
 
-            command = 'systemctl stop cpssh'
-            Upgrade.executioner(command, 'fix csf if there', 0)
+        ## Add LSPHP7.4 TO LSWS Ent configs
 
-            ## Add LSPHP7.4 TO LSWS Ent configs
+        if not os.path.exists('/usr/local/lsws/bin/openlitespeed'):
 
-            if not os.path.exists('/usr/local/lsws/bin/openlitespeed'):
+            if os.path.exists('httpd_config.xml'):
+                os.remove('httpd_config.xml')
 
-                if os.path.exists('httpd_config.xml'):
-                    os.remove('httpd_config.xml')
+            command = 'wget https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/install/litespeed/httpd_config.xml'
+            Upgrade.executioner(command, command, 0)
+            # os.remove('/usr/local/lsws/conf/httpd_config.xml')
+            # shutil.copy('httpd_config.xml', '/usr/local/lsws/conf/httpd_config.xml')
 
-                command = 'wget https://raw.githubusercontent.com/usmannasir/cyberpanel/stable/install/litespeed/httpd_config.xml'
-                Upgrade.executioner(command, command, 0)
-                # os.remove('/usr/local/lsws/conf/httpd_config.xml')
-                # shutil.copy('httpd_config.xml', '/usr/local/lsws/conf/httpd_config.xml')
 
-            postfixPath = '/home/cyberpanel/postfix'
-            pdns = '/home/cyberpanel/pdns'
-            pureftpd = '/home/cyberpanel/ftp'
+        Upgrade.updateRepoURL()
 
-            Upgrade.updateRepoURL()
+        os.chdir("/usr/local")
 
-            os.chdir("/usr/local")
-
+        if os.path.exists(Upgrade.CentOSPath) or os.path.exists(Upgrade.openEulerPath):
             command = 'yum remove yum-plugin-priorities -y'
             Upgrade.executioner(command, 'remove yum-plugin-priorities', 0)
 
-            ## Current Version
+        ## Current Version
 
+
+        ### if this is a soft upgrade from front end do not stop lscpd, as lscpd is controlling the front end
+
+        if branch.find('SoftUpgrade') == -1:
             command = "systemctl stop lscpd"
             Upgrade.executioner(command, 'stop lscpd', 0)
 
-            Upgrade.fixSudoers()
-            Upgrade.mountTemp()
-            Upgrade.dockerUsers()
-            Upgrade.setupComposer()
+        Upgrade.fixSudoers()
+        #Upgrade.mountTemp()
+        Upgrade.dockerUsers()
+        Upgrade.setupComposer()
 
-            ##
+        ##
 
-            versionNumbring = Upgrade.downloadLink()
+        versionNumbring = Upgrade.downloadLink()
 
-            if os.path.exists('/usr/local/CyberPanel.' + versionNumbring):
-                os.remove('/usr/local/CyberPanel.' + versionNumbring)
+        if os.path.exists('/usr/local/CyberPanel.' + versionNumbring):
+            os.remove('/usr/local/CyberPanel.' + versionNumbring)
 
-            ##
+        ##
 
-            Upgrade.downloadAndUpgrade(versionNumbring, branch)
-            Upgrade.download_install_phpmyadmin()
-            Upgrade.downoad_and_install_raindloop()
+        Upgrade.downloadAndUpgrade(versionNumbring, branch)
+        Upgrade.download_install_phpmyadmin()
+        Upgrade.downoad_and_install_raindloop()
 
-            ##
+        ##
 
-            ##
+        ##
 
-            Upgrade.mailServerMigrations()
-            Upgrade.emailMarketingMigrationsa()
-            Upgrade.dockerMigrations()
-            Upgrade.CLMigrations()
-            Upgrade.IncBackupMigrations()
-            Upgrade.installRestic()
+        Upgrade.mailServerMigrations()
+        Upgrade.emailMarketingMigrationsa()
+        Upgrade.dockerMigrations()
+        Upgrade.CLMigrations()
+        Upgrade.IncBackupMigrations()
+        Upgrade.installRestic()
 
-            ##
+        ##
 
-            # Upgrade.setupVirtualEnv()
+        # Upgrade.setupVirtualEnv()
 
-            ##
+        ##
 
-            Upgrade.applyLoginSystemMigrations()
+        Upgrade.applyLoginSystemMigrations()
 
-            ## Put function here to update custom ACLs
+        ## Put function here to update custom ACLs
 
-            Upgrade.UpdateConfigOfCustomACL()
+        Upgrade.UpdateConfigOfCustomACL()
 
-            Upgrade.s3BackupMigrations()
-            Upgrade.containerMigrations()
-            Upgrade.manageServiceMigrations()
-            Upgrade.enableServices()
+        Upgrade.s3BackupMigrations()
+        Upgrade.containerMigrations()
+        Upgrade.manageServiceMigrations()
+        Upgrade.enableServices()
 
-            Upgrade.installPHP73()
-            Upgrade.setupCLI()
-            Upgrade.someDirectories()
-            Upgrade.installLSCPD(branch)
+        Upgrade.installPHP73()
+        Upgrade.setupCLI()
+        Upgrade.someDirectories()
+        Upgrade.installLSCPD(branch)
 
-            ### General migrations are not needed any more
+        ### General migrations are not needed any more
 
-            # Upgrade.GeneralMigrations()
+        # Upgrade.GeneralMigrations()
 
-            # Upgrade.p3()
+        # Upgrade.p3()
 
-            ## Also disable email service upgrade
+        ## Also disable email service upgrade
 
-            # if os.path.exists(postfixPath):
-            #     Upgrade.upgradeDovecot()
+        # if os.path.exists(postfixPath):
+        #     Upgrade.upgradeDovecot()
 
-            ## Upgrade version
+        ## Upgrade version
 
-            Upgrade.fixPermissions()
+        Upgrade.fixPermissions()
 
-            ##
+        ##
 
-            ### Disable version upgrade too
+        ### Disable version upgrade too
 
-            # Upgrade.upgradeVersion()
+        # Upgrade.upgradeVersion()
 
-            Upgrade.UpdateMaxSSLCons()
+        Upgrade.UpdateMaxSSLCons()
 
-            ## Update LSCPD PHP
+        ## Update LSCPD PHP
 
-            phpPath = '/usr/local/lscp/fcgi-bin/lsphp'
+        phpPath = '/usr/local/lscp/fcgi-bin/lsphp'
 
-            try:
-                os.remove(phpPath)
-            except:
-                pass
-
-            command = 'cp /usr/local/lsws/lsphp80/bin/lsphp %s' % (phpPath)
-            Upgrade.executioner(command, 0)
-
-            try:
-                command = "systemctl start lscpd"
-                Upgrade.executioner(command, 'Start LSCPD', 0)
-            except:
-                pass
-
-            command = 'csf -uf'
-            Upgrade.executioner(command, 'fix csf if there', 0)
-            command = 'systemctl stop cpssh'
-            Upgrade.executioner(command, 'fix csf if there', 0)
-            Upgrade.AutoUpgradeAcme()
-            Upgrade.installCLScripts()
-            Upgrade.runSomeImportantBash()
-
-            # ## Move static files
-            #
-            # imunifyPath = '/usr/local/CyberCP/public/imunify'
-            #
-            # if os.path.exists(imunifyPath):
-            #     command = "yum reinstall imunify360-firewall-generic -y"
-            #     Upgrade.executioner(command, command, 1)
-            #
-            imunifyAVPath = '/etc/sysconfig/imunify360/integration.conf'
-
-            if os.path.exists(imunifyAVPath):
-                execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/CLManager/CageFS.py"
-                command = execPath + " --function submitinstallImunifyAV"
-                Upgrade.executioner(command, command, 1)
-
-                command = 'chmod +x /usr/local/CyberCP/public/imunifyav/bin/execute.py'
-                Upgrade.executioner(command, command, 1)
-
-            Upgrade.stdOut("Upgrade Completed.")
-        else:
+        try:
+            os.remove(phpPath)
+        except:
             pass
 
+        command = 'cp /usr/local/lsws/lsphp80/bin/lsphp %s' % (phpPath)
+        Upgrade.executioner(command, 0)
+
+        try:
+            command = "systemctl start lscpd"
+            Upgrade.executioner(command, 'Start LSCPD', 0)
+        except:
+            pass
+
+        command = 'csf -uf'
+        Upgrade.executioner(command, 'fix csf if there', 0)
+        command = 'systemctl stop cpssh'
+        Upgrade.executioner(command, 'fix csf if there', 0)
+        Upgrade.AutoUpgradeAcme()
+        Upgrade.installCLScripts()
+        Upgrade.runSomeImportantBash()
+
+        # ## Move static files
+        #
+        # imunifyPath = '/usr/local/CyberCP/public/imunify'
+        #
+        # if os.path.exists(imunifyPath):
+        #     command = "yum reinstall imunify360-firewall-generic -y"
+        #     Upgrade.executioner(command, command, 1)
+        #
+        imunifyAVPath = '/etc/sysconfig/imunify360/integration.conf'
+
+        if os.path.exists(imunifyAVPath):
+            execPath = "/usr/local/CyberCP/bin/python /usr/local/CyberCP/CLManager/CageFS.py"
+            command = execPath + " --function submitinstallImunifyAV"
+            Upgrade.executioner(command, command, 1)
+
+            command = 'chmod +x /usr/local/CyberCP/public/imunifyav/bin/execute.py'
+            Upgrade.executioner(command, command, 1)
+
+        Upgrade.stdOut("Upgrade Completed.")
 
 
 def main():
