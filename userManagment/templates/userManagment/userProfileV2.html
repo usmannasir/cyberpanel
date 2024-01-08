@@ -1,0 +1,72 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    <div ng-controller="createPackage" class="p-8">
+        <div>
+            <p class="text-4xl font-bold">Account Details</p>
+            <p class="text-xs text-gray-600 py-2 font-semibold">List the account details for the currently logged in
+                user.</p>
+        </div>
+        <div>
+            <div class="py-4">
+                <p class="text-xl font-bold">General Information</p>
+            </div>
+            <hr>
+            <div>
+                <div class="flex mt-4 py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-60">First Name</p>
+                    </div>
+                    <div>
+                        <p class="w-80 bg-gray-100 rounded px-2 py-1">{{ firstName }}</p>
+                    </div>
+                </div>
+                <div class="flex py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-60">Last Name</p>
+                    </div>
+                    <div>
+                       <p class="w-80 bg-gray-100 rounded px-2 py-1">{{ lastName }}</p>
+                    </div>
+                </div>
+                <div class="flex py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-60">Username</p>
+                    </div>
+                    <div>
+                         <p class="w-80 bg-gray-100 rounded px-2 py-1">{{ userName }}</p>
+                    </div>
+                </div>
+                <div class="flex py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-60">Email</p>
+                    </div>
+                    <div>
+                       <p class="w-80 bg-gray-100 rounded px-2 py-1">{{ email }}</p>
+                    </div>
+                </div>
+                <div class="flex py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-60">Account ACL</p>
+                    </div>
+                    <div>
+                        <p class="w-80 bg-gray-100 rounded px-2 py-1">{{ accountACL }}</p>
+                    </div>
+                </div>
+                <div class="flex py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-60">Website Limit</p>
+                    </div>
+                    <div>
+                        <p class="w-80 bg-gray-100 rounded px-2 py-1">{{ websitesLimit }} {% trans "( 0 = Unlimited )" %}</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+{% endblock %}

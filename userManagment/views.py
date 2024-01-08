@@ -47,6 +47,22 @@ def viewProfile(request):
                     AdminData)
     return proc.render()
 
+def viewProfileV2(request):
+    userID = request.session['userID']
+    admin = Administrator.objects.get(pk=userID)
+
+    AdminData = {}
+
+    AdminData['userName'] = admin.userName
+    AdminData['firstName'] = admin.firstName
+    AdminData['lastName'] = admin.lastName
+    AdminData['websitesLimit'] = admin.initWebsitesLimit
+    AdminData['email'] = admin.email
+    AdminData['accountACL'] = admin.acl.name
+
+    proc = httpProc(request, 'userManagment/userProfileV2.html',
+                    AdminData)
+    return proc.render()
 
 def createUser(request):
     userID = request.session['userID']

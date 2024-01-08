@@ -22,7 +22,7 @@
         <div class="p-8 border shadow-lg mt-6">
             <p class="text-2xl font-bold">WORDPRESS MANAGER</p>
             <div>
-                <ul class="flex mt-4 text-xl font-semibold text-gray-600 px-2 justify-between">
+                <ul class="flex mt-4 text-xl font-semibold text-gray-600 px-2 gap-8">
                     <li class="hover:text-orange-600 active"><a href="#" onclick="showTab('tab1')" aria-selected="true">General</a>
                     </li>
                     <li class="hover:text-orange-600"><a href="#" ng-click="GetCurrentPlugins()"
@@ -121,7 +121,6 @@
                 </div>
                 <div class="mt-2">
                     <p class="font-semibold">WordPress Version</p>
-                    <p id="WPVersion" class="text-sm lh-150"></p>
                     <p id="WPVersion" class="font-bold text-orange-600"></p>
                 </div>
                 <div class="mt-2">
@@ -219,6 +218,8 @@
                         <thead class="text-xs text-gray-700 uppercase bg-gray-50">
                         <tr>
                             <th scope="col" class="px-6 py-3">
+                            </th>
+                            <th scope="col" class="px-6 py-3">
                                 Plugin
                             </th>
                             <th scope="col" class="px-6 py-3">
@@ -238,6 +239,9 @@
                         <tbody id="PluginBody">
                         </tbody>
                     </table>
+                    <div class="mt-4">
+                        <hr>
+                    </div>
                 </div>
             </div>
             <div id="tab3" class="tab-content" style="display: none;">
@@ -276,6 +280,8 @@
                         <thead class="text-xs text-gray-700 uppercase bg-gray-50">
                         <tr>
                             <th scope="col" class="px-6 py-3">
+                            </th>
+                            <th scope="col" class="px-6 py-3">
                                 Theme
                             </th>
                             <th scope="col" class="px-6 py-3">
@@ -292,9 +298,12 @@
                             </th>
                         </tr>
                         </thead>
-                        <tbody id="PluginBody">
+                        <tbody id="ThemeBody">
                         </tbody>
                     </table>
+                    <div class="mt-4">
+                        <hr>
+                    </div>
                 </div>
             </div>
             <div id="tab4" class="tab-content" style="display: none;">
@@ -302,22 +311,189 @@
                     <div>
                         <p class="text-xl font-bold">Create Staging site</p>
                     </div>
-                    <div class="flex mt-3">
+                    <div ng-hide="stagingDetailsForm" class="flex mt-3">
                         <p class="w-40 font-semibold">Name</p>
                         <input id="stagingName" class="w-full border" type="text">
                     </div>
-                    <div class="flex mt-3">
+
+                    <div ng-hide="stagingDetailsForm" class="flex mt-3">
                         <p class="w-40 font-semibold">Domain Name</p>
-                        <input class="w-full border" type="text"
-                               placeholder=" Do not enter WWW, it will be auto created!">
+                        <input id="TestDomainNameCreate" class="w-full border" type="text">
                     </div>
-                    <div class="flex justify-center mt-3">
-                        <button class="bg-orange-600 px-2 py-2 text-white font-semibold">Create Now</button>
+
+{#                    <div ng-hide="stagingDetailsForm" class="form-group">#}
+{##}
+{#                        <div ng-hide="installationDetailsForm" class="form-group">#}
+{#                            <label class="col-sm-2 control-label" style="margin-top: 10px; display: none"#}
+{#                                   style="margin-bottom: 15px; display: none">{% trans "Test Domain" %}</label>#}
+{#                            <label style="display: none" class="switch ">#}
+{#                                <input type="checkbox" id="Create_Staging_Check"#}
+{#                                       onclick="create_staging_checkbox_function()"#}
+{#                                       style="margin-top: 10px">#}
+{#                                <span class="slider"></span>#}
+{#                            </label>#}
+{##}
+{#                            <label style=" display: none" id="help">#}
+{#                                <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25"#}
+{#                                     style="padding-top: 10px"#}
+{#                                     preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24">#}
+{#                                    <path fill="currentColor"#}
+{#                                          d="M12 6a3.939 3.939 0 0 0-3.934 3.934h2C10.066 8.867 10.934 8 12 8s1.934.867 1.934 1.934c0 .598-.481 1.032-1.216 1.626a9.208 9.208 0 0 0-.691.599c-.998.997-1.027 2.056-1.027 2.174V15h2l-.001-.633c.001-.016.033-.386.441-.793c.15-.15.339-.3.535-.458c.779-.631 1.958-1.584 1.958-3.182A3.937 3.937 0 0 0 12 6zm-1 10h2v2h-2z"/>#}
+{#                                    <path fill="currentColor"#}
+{#                                          d="M12 2C6.486 2 2 6.486 2 12s4.486 10 10 10s10-4.486 10-10S17.514 2 12 2zm0 18c-4.411 0-8-3.589-8-8s3.589-8 8-8s8 3.589 8 8s-3.589 8-8 8z"/>#}
+{#                                </svg>#}
+{##}
+{#                            </label>#}
+{#                            <label class="help_test_domain">#}
+{#                                The test domain allows you to deploy websites without the need to add DNS#}
+{#                                records, it#}
+{#                                allows you to create staging environments, deploy test websites, and much#}
+{#                                more...#}
+{##}
+{#                            </label>#}
+{#                            <br><br>#}
+{##}
+{##}
+{#                            <div id="Website_Create_Test_Domain" class="tabcontent"#}
+{#                                 style="border: none">#}
+{#                                <div ng-hide="installationDetailsForm" class="form-group"#}
+{#                                     ng-if="{{ test_domain_data }} == 1 ">#}
+{#                                    <label class="col-sm-2 control-label">{% trans "Domain Name" %}</label>#}
+{#                                    <div class="col-sm-10">#}
+{#                                        <div class="input-group bootstrap-touchspin">#}
+{#                                    <span#}
+{#                                            class="input-group-addon bootstrap-touchspin-prefix"#}
+{#                                            style="display: none;"></span>#}
+{#                                            <input id="TestDomainNameCreate"#}
+{#                                                   class="form-control"#}
+{#                                                   type="text" value=""#}
+{#                                                   name="touchspin-demo-1"#}
+{#                                                   style="display: block;"#}
+{#                                                   placeholder="{% trans "Enter Subdomain Here" %}">#}
+{##}
+{#                                            <span style="width: 48%" class="input-group-btn">#}
+{#                                        <input id="Part2_domainNameCreate" class="form-control"#}
+{#                                               type="text" name="Part2_domainNameCreate"#}
+{#                                               style="display: block;color: black;font-weight: bold;color: black;opacity: 1"#}
+{#                                               placeholder=".{{ Randam_String }}.cyberpanel.website"#}
+{#                                               value=".{{ Randam_String }}.cyberpanel.website" readonly></span>#}
+{#                                        </div>#}
+{#                                    </div>#}
+{#                                    <div ng-show="websiteCreationForm.dom.$error.pattern"#}
+{#                                         class="current-pack">{% trans "Invalid Domain (Note: You don't need to add 'http' or 'https')" %}</div>#}
+{#                                </div>#}
+{#                                <div ng-if="{{ test_domain_data }} == 0 ">#}
+{#                                    <center>Looks like you have not subscribed to temporary domain feature,#}
+{#                                        <a#}
+{#                                                href="https://go.cyberpanel.net/TempDomain">click here</a>#}
+{#                                        for more details.#}
+{#                                    </center>#}
+{#                                </div>#}
+{#                            </div>#}
+{##}
+{#                            <div id="Website_Create_Own_Domain" class="tabcontent"#}
+{#                                 style="border: none;display: none">#}
+{##}
+{#                                <div ng-hide="installationDetailsForm" class="form-group">#}
+{#                                    <label class="col-sm-2 control-label">{% trans "Domain Name" %}</label>#}
+{#                                    <div class="col-sm-10">#}
+{#                                        <div class="input-group bootstrap-touchspin">#}
+{#                                    <span#}
+{#                                            class="input-group-addon bootstrap-touchspin-prefix"#}
+{#                                            style="display: none;"></span>#}
+{#                                            <input ng-model="own_domainNameCreate" id="touchspin-demo-1"#}
+{#                                                   class="col-sm-10 form-control"#}
+{#                                                   type="text" value=""#}
+{#                                                   name="touchspin-demo-1"#}
+{#                                                   style="display: block;"#}
+{#                                                   placeholder="{% trans "Do not enter WWW, it will be auto created!" %}">#}
+{##}
+{#                                            <span style="width: 25%" class="input-group-btn">#}
+{#                                       </span></div>#}
+{#                                    </div>#}
+{#                                    <div ng-show="websiteCreationForm.dom.$error.pattern"#}
+{#                                         class="current-pack">{% trans "Invalid Domain (Note: You don't need to add 'http' or 'https')" %}</div>#}
+{#                                </div>#}
+{#                            </div>#}
+{##}
+{#                        </div>#}
+{#                    </div>#}
+
+
+                    <div ng-hide="stagingDetailsForm" class="flex justify-center mt-3">
+                        <button ng-click="CreateStagingNow()" class="bg-orange-600 px-2 py-2 text-white font-semibold">
+                            Create Now
+                            <i class="glyph-icon icon-arrow-right"></i></button>
+                    </div>
+
+
+                    <div style="margin-top: 1%" ng-hide="installationProgress" class="form-group">
+                        <label class="col-sm-2 control-label"></label>
+                        <div class="col-sm-7">
+
+                            <div class="alert alert-success text-center">
+                                <h2>{$ currentStatus $}</h2>
+                            </div>
+
+                            <div class="progress">
+                                <div class="w-full bg-gray-100 rounded-full mt-3">
+                                    <div id="installProgress"
+                                         class="bg-green-600 text-xs font-medium text-white text-center p-2 leading-none rounded-full"
+                                         style="width:0%">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div ng-hide="errorMessageBox" class="alert alert-danger">
+                                <p>{% trans "Error message:" %} {$ errorMessage $}</p>
+                            </div>
+
+                            <div ng-hide="success" class="alert alert-success">
+                                <p>{% trans "Website succesfully created." %}</p>
+                            </div>
+
+
+                            <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                            </div>
+
+
+                        </div>
+                    </div>
+                    <div ng-hide="installationProgress" class="flex justify-center mt-3">
+                        <button ng-disabled="goBackDisable"
+                                ng-click="goBack()"
+                                class="bg-blue-500 px-3 py-2 rounded-lg text-xl font-semibold text-white">
+                            Go Back
+                        </button>
+                    </div>
+                    <table class="w-full text-sm text-left rtl:text-right text-gray-500 mt-6">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3">
+                                Name
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                Domain
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                Path
+                            </th>
+                            <th scope="col" class="px-6 py-3">
+                                Action
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody id="StagingBody">
+                        </tbody>
+                    </table>
+                    <div class="mt-4">
+                        <hr>
                     </div>
                 </div>
             </div>
             <div id="tab5" class="tab-content" style="display: none;">
-                <div class="p-8">
+                <div name="websiteCreationForm" action="/" id="createPackages" class="p-8">
                     <div class="flex items-center">
                         <p class="text-xl font-bold">Create Backup</p>
                         <a class="ml-3" href="{% url 'RestoreBackups' %}">{% trans "Restore Backups " %}></a>
@@ -325,7 +501,7 @@
                     <div class="mt-3">
                         <hr>
                     </div>
-                    <div class="flex mt-3">
+                    <div ng-hide="installationDetailsForm" class="flex mt-3">
                         <p class="w-40 font-semibold">Select Backup Type</p>
                         <select id="backuptype" class="form-control border">
                             <option value="1">Website and Database Both</option>
@@ -336,13 +512,54 @@
                     <div class="mt-3">
                         <hr>
                     </div>
-                    <div class="flex justify-center mt-3">
+                    <div ng-hide="installationDetailsForm" id="createbackupbutton" class="flex justify-center mt-3">
                         <button ng-click="CreateBackup()" class="bg-orange-600 px-2 py-2 text-white font-semibold">
                             Create Backup
                         </button>
                         <img style="display: none"
                              ng-hide="wordpresshomeloading"
                              src="{% static 'images/loading.gif' %}">
+                    </div>
+                    <div style="margin-top: 1%" ng-hide="installationProgress"
+                         class="form-group">
+                        <label class="col-sm-2 control-label"></label>
+                        <div class="col-sm-7">
+
+                            <div class="alert alert-success text-center">
+                                <h2>{$ currentStatus $}</h2>
+                            </div>
+
+                            <div class="progress">
+                                <div class="w-full bg-gray-100 rounded-full mt-3">
+                                    <div id="installProgressbackup"
+                                         class="bg-green-600 text-xs font-medium text-white text-center p-2 leading-none rounded-full"
+                                         style="width:0%">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div ng-hide="errorMessageBox" class="alert alert-danger">
+                                <p>{% trans "Error message:" %} {$ errorMessage $}</p>
+                            </div>
+
+                            <div ng-hide="success" class="alert alert-success">
+                                <p>{% trans "Backup succesfully created." %}</p>
+                            </div>
+
+
+                            <div ng-hide="couldNotConnect" class="alert alert-danger">
+                                <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                            </div>
+
+
+                        </div>
+                    </div>
+                    <div ng-hide="installationProgress" class="flex justify-center mt-3">
+                        <button ng-disabled="goBackDisable"
+                                ng-click="goBack()"
+                                class="bg-blue-500 px-3 py-2 rounded-lg text-xl font-semibold text-white">
+                            Go Back
+                        </button>
                     </div>
                 </div>
             </div>
@@ -358,7 +575,7 @@
                     <div class="flex mt-3">
                         <p class="w-40 font-semibold">Database Name</p>
                         <a target="_blank" href="{% url 'phpMyAdmin' %}">
-                            <div id="DB_Name" class="mb-10 text-bold"></div>
+                            <div id="DB_Name" class="mb-10 font-semibold text-blue-600"></div>
                         </a>
                     </div>
                     <div class="mt-3">
@@ -380,9 +597,11 @@
                     </div>
                 </div>
             </div>
+
+
             <div class="mt-4 px-4">
                 <ul class="flex gap-10">
-                    <a href="/websites/{{ wpsite.owner.domain }}">
+                    <a href="/websites/V2/{{ wpsite.owner.domain }}">
                         <li class="flex items-center">
                             <div>
                                 <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
@@ -402,41 +621,126 @@
                             <div class="ml-2">Manage Applications</div>
                         </li>
                     </a>
-                    <li class="flex items-center">
-                        <div>
-                            <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
-                                 xmlns="http://www.w3.org/2000/svg">
-                                <path
-                                        d="M24.9999 20.0001C28.6818 20.0001 31.6666 17.0153 31.6666 13.3334C31.6666 9.65152 28.6818 6.66675 24.9999 6.66675C21.318 6.66675 18.3333 9.65152 18.3333 13.3334C18.3333 17.0153 21.318 20.0001 24.9999 20.0001Z"
-                                        fill="#FF9A00"/>
-                                <path
-                                        d="M25.0001 23.3333C14.8334 23.3333 11.6667 29.9999 11.6667 29.9999V33.3333H38.3334V29.9999C38.3334 29.9999 35.1667 23.3333 25.0001 23.3333Z"
-                                        fill="#FF9A00"/>
-                                <path d="M8.33325 11.6667V25.0001" stroke="#FF9A00" stroke-width="2"
-                                      stroke-miterlimit="10"/>
-                                <path d="M15.0001 18.3333H1.66675" stroke="#FF9A00" stroke-width="2"
-                                      stroke-miterlimit="10"/>
-                            </svg>
+                    <li>
+                        <div class="flex items-center cursor-pointer" id="openAutoupdateConfiguration">
+                            <div>
+                                <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
+                                     xmlns="http://www.w3.org/2000/svg">
+                                    <path
+                                            d="M24.9999 20.0001C28.6818 20.0001 31.6666 17.0153 31.6666 13.3334C31.6666 9.65152 28.6818 6.66675 24.9999 6.66675C21.318 6.66675 18.3333 9.65152 18.3333 13.3334C18.3333 17.0153 21.318 20.0001 24.9999 20.0001Z"
+                                            fill="#FF9A00"/>
+                                    <path
+                                            d="M25.0001 23.3333C14.8334 23.3333 11.6667 29.9999 11.6667 29.9999V33.3333H38.3334V29.9999C38.3334 29.9999 35.1667 23.3333 25.0001 23.3333Z"
+                                            fill="#FF9A00"/>
+                                    <path d="M8.33325 11.6667V25.0001" stroke="#FF9A00" stroke-width="2"
+                                          stroke-miterlimit="10"/>
+                                    <path d="M15.0001 18.3333H1.66675" stroke="#FF9A00" stroke-width="2"
+                                          stroke-miterlimit="10"/>
+                                </svg>
+                            </div>
+                            <div class="ml-2">Autoupdate Configuration</div>
                         </div>
-                        <div class="ml-2">Autoupdate Configuration</div>
+                        <!-- Modal -->
+                        <div id="autoupdateConfiguration"
+                             class="modal hidden fixed inset-0 z-50 overflow-auto bg-black bg-opacity-50">
+                            <div class="modal-content relative bg-white mx-auto my-8 p-6 max-w-md rounded shadow-md">
+                                {#                                    <span id="closeAutoupdateConfiguration"#}
+                                {#                                          class="absolute top-0 right-0 mt-4 mr-4 cursor-pointer text-gray-700">&times;</span>#}
+                                <p class="text-xl font-semibold">Updates !</p>
+                                <div class="mt-3">
+                                    <hr>
+                                </div>
+                                <p class="mt-3">Configure Settings For Automatic Updates.</p>
+                                <div>
+                                    <div class="mt-3 flex justify-between">
+                                        <p class="font-semibold w-40">Automatic Updates
+                                            (Currently: {{ wpsite.AutoUpdates }})</p>
+                                        <select class="w-40 border" id="AutomaticUpdates">
+                                            <option>Disabled</option>
+                                            <option>Minor and Security Updates</option>
+                                            <option>All (minor and major)</option>
+                                        </select>
+                                    </div>
+                                    <div class="mt-3 flex justify-between">
+                                        <p class="font-semibold w-40">Plugins
+                                            (Currently: {{ wpsite.PluginUpdates }})</p>
+                                        <select class="w-40 border" id="Plugins">
+                                            <option>Enabled</option>
+                                            <option>Disabled</option>
+                                        </select>
+                                    </div>
+                                    <div class="mt-3 flex justify-between">
+                                        <p class="font-semibold w-40">Themes (Currently: {{ wpsite.ThemeUpdates }})</p>
+                                        <select class="w-40 border" id="Themes">
+                                            <option>Enabled</option>
+                                            <option>Disabled</option>
+                                        </select>
+                                    </div>
+                                    <div class="mt-3">
+                                        <hr>
+                                    </div>
+                                    <div class="flex justify-end gap-2 mt-3">
+                                        <button ng-click="SaveUpdateConfig()" class="bg-blue-500 text-white px-2 py-1">
+                                            Save
+                                        </button>
+                                        <button id="closeAutoupdateConfiguration" ng-disabled="savingSettings"
+                                                class="bg-red-500 text-white px-2 py-1">Close
+                                        </button>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
                     </li>
-                    <li class="flex items-center">
-                        <div>
-                            <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
-                                 xmlns="http://www.w3.org/2000/svg">
-                                <path
-                                        d="M24.9999 20.0001C28.6818 20.0001 31.6666 17.0153 31.6666 13.3334C31.6666 9.65152 28.6818 6.66675 24.9999 6.66675C21.318 6.66675 18.3333 9.65152 18.3333 13.3334C18.3333 17.0153 21.318 20.0001 24.9999 20.0001Z"
-                                        fill="#FF9A00"/>
-                                <path
-                                        d="M25.0001 23.3333C14.8334 23.3333 11.6667 29.9999 11.6667 29.9999V33.3333H38.3334V29.9999C38.3334 29.9999 35.1667 23.3333 25.0001 23.3333Z"
-                                        fill="#FF9A00"/>
-                                <path d="M8.33325 11.6667V25.0001" stroke="#FF9A00" stroke-width="2"
-                                      stroke-miterlimit="10"/>
-                                <path d="M15.0001 18.3333H1.66675" stroke="#FF9A00" stroke-width="2"
-                                      stroke-miterlimit="10"/>
-                            </svg>
+                    <li>
+                        <div class="flex items-center cursor-pointer" id="openSecurity">
+                            <div>
+                                <svg width="20" height="20" viewBox="0 0 40 40" fill="none"
+                                     xmlns="http://www.w3.org/2000/svg">
+                                    <path
+                                            d="M24.9999 20.0001C28.6818 20.0001 31.6666 17.0153 31.6666 13.3334C31.6666 9.65152 28.6818 6.66675 24.9999 6.66675C21.318 6.66675 18.3333 9.65152 18.3333 13.3334C18.3333 17.0153 21.318 20.0001 24.9999 20.0001Z"
+                                            fill="#FF9A00"/>
+                                    <path
+                                            d="M25.0001 23.3333C14.8334 23.3333 11.6667 29.9999 11.6667 29.9999V33.3333H38.3334V29.9999C38.3334 29.9999 35.1667 23.3333 25.0001 23.3333Z"
+                                            fill="#FF9A00"/>
+                                    <path d="M8.33325 11.6667V25.0001" stroke="#FF9A00" stroke-width="2"
+                                          stroke-miterlimit="10"/>
+                                    <path d="M15.0001 18.3333H1.66675" stroke="#FF9A00" stroke-width="2"
+                                          stroke-miterlimit="10"/>
+                                </svg>
+                            </div>
+                            <div class="ml-2">Security</div>
                         </div>
-                        <div class="ml-2">Security</div>
+                        <!-- Modal -->
+                        <div id="security"
+                             class="modal hidden fixed inset-0 z-50 overflow-auto bg-black bg-opacity-50">
+                            <div class="modal-content relative bg-white mx-auto my-8 p-6 max-w-md rounded shadow-md">
+                                    <span id="closeSecurity"
+                                          class="absolute top-0 right-0 mt-4 mr-4 cursor-pointer text-gray-700">&times;</span>
+                                <p class="text-xl font-semibold">Security !
+                                    <img style="display: none"
+                                         id="wordpresshomeloadingsec"
+                                         ng-hide="wordpresshomeloading"
+                                         src="{% static 'images/loading.gif' %}"></p>
+                                <div class="mt-3">
+                                    <hr>
+                                </div>
+                                <div class="px-3 py-4">
+                                    <div class="w-full bg-pink-100">
+                                        <h4 class="px-3 py-2 font-semibold">Status</h4>
+                                        <p id="SecurityResult"></p>
+                                    </div>
+                                </div>
+                                <div class="flex justify-center gap-3">
+                                    <button ng-click="dataintegrity()" class="px-2 py-1 bg-blue-500 text-white">DATA
+                                        INTEGRITY
+                                    </button>
+                                    <button ng-click="installwpcore()" class="px-2 py-1 bg-blue-500 text-white">
+                                        RE-INSTALL WP CORE
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </li>
                 </ul>
             </div>

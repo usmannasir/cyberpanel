@@ -227,6 +227,15 @@ newapp.controller('createWebsiteV2', function ($scope, $http, $timeout, $window)
     }
 
 });
+var FurlDeleteWP;
+
+function DeleteWPNow(url) {
+    FurlDeleteWP = url;
+}
+
+function FinalDeleteWPNow() {
+    window.location.href = FurlDeleteWP;
+}
 
 newapp.controller('listWebsitesV2', function ($scope, $http) {
 
@@ -433,6 +442,30 @@ newapp.controller('listWebsitesV2', function ($scope, $http) {
     };
 
 
+});
+var modalDeleteWPList = document.getElementById('deleteWPList');
+var openDeleteWPList = document.getElementById('openDeleteWPList');
+var closeDeleteWPList = document.getElementById('closeDeleteWPList');
+
+// Function to open the modal
+function openModalDeleteWPList() {
+    modalDeleteWPList.style.display = 'block';
+}
+
+// Function to close the modal
+function closeModelDeleteWPList() {
+    modalDeleteWPList.style.display = 'none';
+}
+
+// Event listeners for opening and closing the modal
+openDeleteWPList.addEventListener('click', openModalDeleteWPList);
+closeDeleteWPList.addEventListener('click', closeModelDeleteWPList);
+
+// Close the modal if the user clicks outside of it
+window.addEventListener('click', function (event) {
+    if (event.target === modalDeleteWPList) {
+        closeModal();
+    }
 });
 
 newapp.controller('websitePagesV2', function ($scope, $http, $timeout, $window) {
@@ -2932,6 +2965,7 @@ newapp.controller('deleteWebsiteControlV2', function ($scope, $http) {
 
 });
 
+
 newapp.controller('createWordpressV2', function ($scope, $http, $timeout, $compile, $window) {
     $scope.webSiteCreationLoading = true;
     $scope.installationDetailsForm = false;
@@ -3824,25 +3858,25 @@ newapp.controller('WPsiteHomeV2', function ($scope, $http, $timeout, $compile, $
 
     function AddPlugins(value, index, array) {
         var FinalMarkup = '<tr>'
-        FinalMarkup = FinalMarkup + '<td><input onclick="AddPluginToArray(this,\'' + value.name + '\')" type="checkbox" id="' + value.name + '"><label for="' + value.name + '"></label></td>';
+        FinalMarkup = FinalMarkup + '<td class="px-6 py-3"><input onclick="AddPluginToArray(this,\'' + value.name + '\')" type="checkbox" id="' + value.name + '"><label for="' + value.name + '"></label></td>';
         for (let x in value) {
             if (x === 'status') {
                 if (value[x] === 'inactive') {
-                    FinalMarkup = FinalMarkup + '<td><div ng-click="ChangeStatus(\'' + value.name + '\')" class="form-check form-check-inline switch"><input type="checkbox" id="' + value.name + 'State"><label for="' + value.name + 'State"></label></div></td>';
+                    FinalMarkup = FinalMarkup + '<td class="px-6 py-3"><div ng-click="ChangeStatus(\'' + value.name + '\')" class="form-check form-check-inline switch"><input type="checkbox" id="' + value.name + 'State"><label for="' + value.name + 'State"></label></div></td>';
                 } else {
-                    FinalMarkup = FinalMarkup + '<td><div ng-click="ChangeStatus(\'' + value.name + '\')" class="form-check form-check-inline switch"><input type="checkbox" id="' + value.name + 'State" checked=""><label for="' + value.name + 'State"></label></div></td>';
+                    FinalMarkup = FinalMarkup + '<td class="px-6 py-3"><div ng-click="ChangeStatus(\'' + value.name + '\')" class="form-check form-check-inline switch"><input type="checkbox" id="' + value.name + 'State" checked=""><label for="' + value.name + 'State"></label></div></td>';
                 }
             } else if (x === 'update') {
                 if (value[x] === 'none') {
-                    FinalMarkup = FinalMarkup + '<td><span class="label label-success">Upto Date</span></td>';
+                    FinalMarkup = FinalMarkup + '<td class="px-6 py-3"><span class="label label-success">Upto Date</span></td>';
                 } else {
-                    FinalMarkup = FinalMarkup + '<td><button ng-click="UpdatePlugins(\'' + value.name + '\')" aria-label="" type="button" class="btn btn-outline-danger">Update</button></td>';
+                    FinalMarkup = FinalMarkup + '<td class="px-6 py-3"><button ng-click="UpdatePlugins(\'' + value.name + '\')" aria-label="" type="button" class="btn btn-outline-danger">Update</button></td>';
                 }
             } else {
-                FinalMarkup = FinalMarkup + '<td>' + value[x] + "</td>";
+                FinalMarkup = FinalMarkup + '<td class="px-6 py-3">' + value[x] + "</td>";
             }
         }
-        FinalMarkup = FinalMarkup + '<td><button ng-click="DeletePlugins(\'' + value.name + '\')" aria-label="" class="btn btn-danger btn-icon-left m-b-10" type="button">Delete</button></td>'
+        FinalMarkup = FinalMarkup + '<td class="px-6 py-3"><button ng-click="DeletePlugins(\'' + value.name + '\')" aria-label="" class="bg-red-600 px-2 py-1 text-white" type="button">Delete</button></td>'
         FinalMarkup = FinalMarkup + '</tr>'
         var temp = $compile(FinalMarkup)($scope)
         AppendToTable('#PluginBody', temp)
@@ -4005,25 +4039,25 @@ newapp.controller('WPsiteHomeV2', function ($scope, $http, $timeout, $compile, $
 
     function AddThemes(value, index, array) {
         var FinalMarkup = '<tr>'
-        FinalMarkup = FinalMarkup + '<td><input onclick="AddThemeToArray(this,\'' + value.name + '\')" type="checkbox" id="' + value.name + '"><label for="' + value.name + '"></label></td>';
+        FinalMarkup = FinalMarkup + '<td class="px-6 py-3"><input onclick="AddThemeToArray(this,\'' + value.name + '\')" type="checkbox" id="' + value.name + '"><label for="' + value.name + '"></label></td>';
         for (let x in value) {
             if (x === 'status') {
                 if (value[x] === 'inactive') {
-                    FinalMarkup = FinalMarkup + '<td><div ng-click="ChangeStatusThemes(\'' + value.name + '\')" class="form-check form-check-inline switch"><input type="checkbox" id="' + value.name + 'State"><label for="' + value.name + 'State"></label></div></td>';
+                    FinalMarkup = FinalMarkup + '<td class="px-6 py-3"><div ng-click="ChangeStatusThemes(\'' + value.name + '\')" class="form-check form-check-inline switch"><input type="checkbox" id="' + value.name + 'State"><label for="' + value.name + 'State"></label></div></td>';
                 } else {
-                    FinalMarkup = FinalMarkup + '<td><div ng-click="ChangeStatusThemes(\'' + value.name + '\')" class="form-check form-check-inline switch"><input type="checkbox" id="' + value.name + 'State" checked=""><label for="' + value.name + 'State"></label></div></td>';
+                    FinalMarkup = FinalMarkup + '<td class="px-6 py-3"><div ng-click="ChangeStatusThemes(\'' + value.name + '\')" class="form-check form-check-inline switch"><input type="checkbox" id="' + value.name + 'State" checked=""><label for="' + value.name + 'State"></label></div></td>';
                 }
             } else if (x === 'update') {
                 if (value[x] === 'none') {
-                    FinalMarkup = FinalMarkup + '<td><span class="label label-success">Upto Date</span></td>';
+                    FinalMarkup = FinalMarkup + '<td class="px-6 py-3"><span class="label label-success">Upto Date</span></td>';
                 } else {
-                    FinalMarkup = FinalMarkup + '<td><button ng-click="UpdateThemes(\'' + value.name + '\')" aria-label="" type="button" class="btn btn-outline-danger">Update</button></td>';
+                    FinalMarkup = FinalMarkup + '<td class="px-6 py-3"><button ng-click="UpdateThemes(\'' + value.name + '\')" aria-label="" type="button" class="btn btn-outline-danger">Update</button></td>';
                 }
             } else {
-                FinalMarkup = FinalMarkup + '<td>' + value[x] + "</td>";
+                FinalMarkup = FinalMarkup + '<td class="px-6 py-3">' + value[x] + "</td>";
             }
         }
-        FinalMarkup = FinalMarkup + '<td><button ng-click="DeleteThemes(\'' + value.name + '\')" aria-label="" class="btn btn-danger btn-icon-left m-b-10" type="button">Delete</button></td>'
+        FinalMarkup = FinalMarkup + '<td class="px-6 py-3"><button ng-click="DeleteThemes(\'' + value.name + '\')" aria-label="" class="bg-red-600 px-2 py-1 text-white" type="button">Delete</button></td>'
         FinalMarkup = FinalMarkup + '</tr>'
         var temp = $compile(FinalMarkup)($scope)
         AppendToTable('#ThemeBody', temp)
@@ -4346,13 +4380,13 @@ newapp.controller('WPsiteHomeV2', function ($scope, $http, $timeout, $compile, $
         var FinalMarkup = '<tr>'
         for (let x in value) {
             if (x === 'name') {
-                FinalMarkup = FinalMarkup + '<td><a href=/websites/WPHome?ID=' + value.id + '>' + value[x] + '</a></td>';
+                FinalMarkup = FinalMarkup + '<td class="px-6 py-3"><a href=/websites/WPHome?ID=' + value.id + '>' + value[x] + '</a></td>';
             } else if (x !== 'url' && x !== 'deleteURL' && x !== 'id') {
-                FinalMarkup = FinalMarkup + '<td>' + value[x] + "</td>";
+                FinalMarkup = FinalMarkup + '<td class="px-6 py-3">' + value[x] + "</td>";
             }
         }
-        FinalMarkup = FinalMarkup + '<td><button onclick="DeployToProductionInitial(' + value.id + ')" data-toggle="modal" data-target="#DeployToProduction" style="margin-bottom: 2%; display: block" aria-label="" type="button" class="btn btn-outline-primary">Deploy to Production</button>' +
-            '<a href="' + value.deleteURL + '"> <button aria-label="" class="btn btn-danger btn-icon-left m-b-10" type="button">Delete</button></a></td>'
+        FinalMarkup = FinalMarkup + '<td class="px-6 py-3"><button onclick="DeployToProductionInitial(' + value.id + ')" data-toggle="modal" data-target="#DeployToProduction" style="margin-bottom: 2%; display: block" aria-label="" type="button" class="bg-gray-200 px-2 py-1 text-black font-semibold">Deploy to Production</button>' +
+            '<a href="' + value.deleteURL + '"> <button aria-label="" class="bg-red-600 text-white px-2 py-1" type="button">Delete</button></a></td>'
         FinalMarkup = FinalMarkup + '</tr>'
         AppendToTable('#StagingBody', FinalMarkup);
     }
@@ -4589,6 +4623,41 @@ newapp.controller('WPsiteHomeV2', function ($scope, $http, $timeout, $compile, $
 
 });
 
+var PluginsList = [];
+
+
+function AddPluginToArray(cBox, name) {
+    if (cBox.checked) {
+        PluginsList.push(name);
+        alert(PluginsList);
+    } else {
+        const index = PluginsList.indexOf(name);
+        if (index > -1) {
+            PluginsList.splice(index, 1);
+        }
+        alert(PluginsList);
+    }
+}
+
+var ThemesList = [];
+
+function AddThemeToArray(cBox, name) {
+    if (cBox.checked) {
+        ThemesList.push(name);
+        alert(ThemesList);
+    } else {
+        const index = ThemesList.indexOf(name);
+        if (index > -1) {
+            ThemesList.splice(index, 1);
+        }
+        alert(ThemesList);
+    }
+}
+
+function AppendToTable(table, markup) {
+    $(table).append(markup);
+}
+
 newapp.controller('WPAddNewPluginV2', function ($scope, $http, $timeout, $window, $compile) {
     $scope.webSiteCreationLoading = true;
 
@@ -4812,96 +4881,58 @@ function selectpluginJsV2(val) {
 
 var domain_check = 0;
 
-// function checkbox_function() {
-//
-//     var checkBox = document.getElementById("myCheck");
-//     // Get the output text
-//
-//
-//     // If the checkbox is checked, display the output text
-//     if (checkBox.checked == true) {
-//         domain_check = 0;
-//         document.getElementById('Test_Domain').style.display = "block";
-//         document.getElementById('Own_Domain').style.display = "none";
-//
-//     } else {
-//         document.getElementById('Test_Domain').style.display = "none";
-//         document.getElementById('Own_Domain').style.display = "block";
-//         domain_check = 1;
-//     }
-//
-//     // alert(domain_check);
-// }
+// Get the modal element and the buttons to open and close it
+var modalAutoupdateConfiguration = document.getElementById('autoupdateConfiguration');
+var openAutoupdateConfiguration = document.getElementById('openAutoupdateConfiguration');
+var closeAutoupdateConfiguration = document.getElementById('closeAutoupdateConfiguration');
+
+// Function to open the modal
+function openModalAutoupdateConfiguration() {
+    modalAutoupdateConfiguration.style.display = 'block';
+}
+
+// Function to close the modal
+function closeModalAutoupdateConfiguration() {
+    modalAutoupdateConfiguration.style.display = 'none';
+}
+
+// Event listeners for opening and closing the modal
+openAutoupdateConfiguration.addEventListener('click', openModalAutoupdateConfiguration);
+closeAutoupdateConfiguration.addEventListener('click', closeModalAutoupdateConfiguration);
+
+// Close the modal if the user clicks outside of it
+window.addEventListener('click', function (event) {
+    if (event.target === modalAutoupdateConfiguration) {
+        closeModal();
+    }
+});
+var modalSecurity = document.getElementById('security');
+var openSecurity = document.getElementById('openSecurity');
+var closeSecurity = document.getElementById('closeSecurity');
+
+// Function to open the modal
+function openModalSecurity() {
+    modalSecurity.style.display = 'block';
+}
+
+// Function to close the modal
+function closeModalSecurity() {
+    modalSecurity.style.display = 'none';
+}
+
+// Event listeners for opening and closing the modal
+openSecurity.addEventListener('click', openModalSecurity);
+closeSecurity.addEventListener('click', closeModalSecurity);
+
+// Close the modal if the user clicks outside of it
+window.addEventListener('click', function (event) {
+    if (event.target === modalSecurity) {
+        closeModal();
+    }
+});
 
 
-// function DeleteWPNow(url) {
-//     FurlDeleteWP = url;
-// }
-
-// function FinalDeleteWPNow() {
-//     window.location.href = FurlDeleteWP;
-// }
-
-// function openModal() {
-//     const modal = document.getElementById("myModal");
-//     modal.classList.remove("hidden");
-// }
-//
-// function closeModal() {
-//     const modal = document.getElementById("myModal");
-//     modal.classList.add("hidden");
-// }
-//
-// document.addEventListener("DOMContentLoaded", function () {
-//     const openModalButton = document.getElementById("openModalButton");
-//     const closeModalButton = document.getElementById("closeModalButton");
-//
-//     openModalButton.addEventListener("click", openModal);
-//     closeModalButton.addEventListener("click", closeModal);
-// });
-
-// function openModalDelete() {
-//         var modal = document.getElementById('popup-modal');
-//         modal.classList.remove('hidden');
-//     }
-//
-//     function closeModalDelete() {
-//         var modal = document.getElementById('popup-modal');
-//         modal.classList.add('hidden');
-//     }
-//
-//     document.addEventListener("DOMContentLoaded", function () {
-//         var deleteButton = document.querySelector('[data-modal-toggle="popup-modal"]');
-//         var closeButton = document.querySelector('[data-modal-hide="popup-modal"]');
-//
-//         deleteButton.addEventListener("click", openModalDelete);
-//         closeButton.addEventListener("click", closeModalDelete);
-//     });
-//
-//
-// function openModal() {
-//     document.getElementById('settings').classList.remove('hidden');
-// }
-//
-// function closeModal() {
-//     document.getElementById('settings').classList.add('hidden');
-// }
-// function openModal() {
-//         document.getElementById('modal').classList.remove('hidden');
-//     }
-//
-//     function closeModal() {
-//         document.getElementById('modal').classList.add('hidden');
-//     }
-//
-//     function deleteChildDomain() {
-//         // Implement your delete logic here
-//         console.log('Deleting child domain...');
-//         closeModal();
-//     }
-
-
-function showTab(tabId) {
+function showTab(tabId,tabColour) {
     // Hide all tabs
     var tabs = document.getElementsByClassName('tab-content');
     for (var i = 0; i < tabs.length; i++) {
@@ -4914,4 +4945,6 @@ function showTab(tabId) {
         selectedTab.style.display = 'block';
     }
 }
+
+
 
