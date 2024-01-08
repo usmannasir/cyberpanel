@@ -1872,7 +1872,7 @@ class MailServerManagerUtils(multi.Thread):
             command = "chmod 755 " + main
             ProcessUtilities.executioner(command)
 
-            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
+            if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
                 command = "mkdir -p /etc/pki/dovecot/private/"
                 ProcessUtilities.executioner(command)
 
@@ -1887,7 +1887,7 @@ class MailServerManagerUtils(multi.Thread):
 
                 ## Ubuntu 18.10 ssl_dh for dovecot 2.3.2.1
 
-                if ProcessUtilities.ubuntu:
+                if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
                     dovecotConf = '/etc/dovecot/dovecot.conf'
 
                     data = open(dovecotConf, 'r').readlines()
