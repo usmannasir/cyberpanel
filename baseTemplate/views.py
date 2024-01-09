@@ -233,6 +233,9 @@ def upgradeStatus(request):
 
                 if upgradeLog.find("Upgrade Completed") > -1:
 
+                    command = f'rm -rf {path}'
+                    ProcessUtilities.executioner(command)
+
                     final_json = json.dumps({'finished': 1, 'upgradeStatus': 1,
                                              'error_message': "None",
                                              'upgradeLog': upgradeLog})
