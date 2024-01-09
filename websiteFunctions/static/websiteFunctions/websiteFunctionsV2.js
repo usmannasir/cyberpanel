@@ -3410,12 +3410,6 @@ function create_staging_checkbox_function() {
 newapp.controller('WPsiteHomeV2', function ($scope, $http, $timeout, $compile, $window) {
 
 
-    new PNotify({
-        title: 'Operation Failed!',
-        text: 'hanbokjnjdknvjfsnkjg habbi',
-        type: 'error'
-    });
-
 
     var CheckBoxpasssword = 0;
 

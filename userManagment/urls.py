@@ -6,14 +6,13 @@ urlpatterns = [
     url(r'^$', views.loadUserHome, name='loadUsersHome'),
     url(r'^viewProfile$', views.viewProfile, name='viewProfile'),
     url(r'^viewProfileV2$', views.viewProfileV2, name='viewProfileV2'),
-    url(r'^createUser', views.createUser, name='createUser'),
-
+    url(r'^createUser$', views.createUser, name='createUser'),
+    url(r'^createUserV2$', views.createUserV2, name='createUserV2'),
 
     url(r'^submitUserCreation', views.submitUserCreation, name='submitUserCreation'),
     url(r'^modifyUsers', views.modifyUsers, name="modifyUsers"),
     url(r'^fetchUserDetails', views.fetchUserDetails, name="fetchUserDetails"),
     url(r'^saveModifications', views.saveModifications, name="saveModifications"),
-
 
     url(r'^deleteUser', views.deleteUser, name="deleteUser"),
     url(r'^submitUserDeletion', views.submitUserDeletion, name="submitUserDeletion"),
@@ -32,6 +31,7 @@ urlpatterns = [
     url(r'^apiAccess$', views.apiAccess, name="apiAccess"),
     url(r'^saveChangesAPIAccess$', views.saveChangesAPIAccess, name="saveChangesAPIAccess"),
     url(r'^listUsers$', views.listUsers, name="listUsers"),
+    url(r'^listUsersV2$', views.listUsersV2, name="listUsersV2"),
     url(r'^fetchTableUsers$', views.fetchTableUsers, name="fetchTableUsers"),
     url(r'^controlUserState$', views.controlUserState, name="controlUserState"),
 ]

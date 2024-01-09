@@ -11,6 +11,7 @@
     {% load static %}
     <script src="{% static 'baseTemplate/angularjs.1.6.5.js' %}"></script>
     <script src="{% static 'baseTemplate/jquery.3.2.1.js' %}"></script>
+    <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/custom-js/pnotify.custom.min.css' %}">
 </head>
 
 <body>
@@ -228,13 +229,13 @@
                                 Profile</a>
                         </li>
                         <li>
-                            <a href="#"
+                            <a href="{% url 'createUserV2' %}"
                                class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
                                 Create
                                 New User</a>
                         </li>
                         <li>
-                            <a href="#"
+                            <a href="{% url 'listUsersV2' %}"
                                class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
                                 List
                                 Users</a>
@@ -1662,9 +1663,11 @@
 </div>
 
 <!-- Connecting JS -->
-<script src="homepage.js"></script>
+{#<script src="homepage.js"></script>#}
+<script src="{% static 'baseTemplate/custom-js/pnotify.custom.min.js' %}"></script>
 <script src="{% static 'baseTemplate/newBase.js' %}"></script>
 <script src="{% static 'websiteFunctions/websiteFunctionsV2.js' %}"></script>
+<script src="{% static 'userManagment/userManagementV2.js' %}"></script>
 </body>
 
 </html>

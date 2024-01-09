@@ -86,6 +86,27 @@ def createUser(request):
     else:
         return ACLManager.loadError()
 
+def createUserV2(request):
+    userID = request.session['userID']
+    currentACL = ACLManager.loadedACL(userID)
+
+    if currentACL['admin'] == 1:
+        aclNames = ACLManager.unFileteredACLs()
+        proc = httpProc(request, 'userManagment/createUserV2.html',
+                        {'aclNames': aclNames, 'securityLevels': SecurityLevel.list()})
+        return proc.render()
+    elif currentACL['changeUserACL'] == 1:
+        aclNames = ACLManager.unFileteredACLs()
+        proc = httpProc(request, 'userManagment/createUserV2.html',
+                        {'aclNames': aclNames, 'securityLevels': SecurityLevel.list()})
+        return proc.render()
+    elif currentACL['createNewUser'] == 1:
+        aclNames = ['user']
+        proc = httpProc(request, 'userManagment/createUserV2.html',
+                        {'aclNames': aclNames, 'securityLevels': SecurityLevel.list()})
+        return proc.render()
+    else:
+        return ACLManager.loadError()
 
 def apiAccess(request):
     userID = request.session['userID']
@@ -816,6 +837,37 @@ def listUsers(request):
         return proc.render()
     elif currentACL['listUsers'] == 1:
         proc = httpProc(request, 'userManagment/listUsers.html',
+                        {'aclNames': aclNames, 'resellerPrivUsers': resellerPrivUsers})
+        return proc.render()
+    else:
+        return ACLManager.loadError()
+
+def listUsersV2(request):
+    userID = request.session['userID']
+    currentACL = ACLManager.loadedACL(userID)
+
+    if currentACL['admin'] == 1:
+        aclNames = ACLManager.unFileteredACLs()
+    elif currentACL['changeUserACL'] == 1:
+        aclNames = ACLManager.unFileteredACLs()
+    elif currentACL['createNewUser'] == 1:
+        aclNames = ['user']
+    else:
+        aclNames = []
+
+    if currentACL['admin'] == 1:
+        resellerPrivUsers = ACLManager.userWithResellerPriv(userID)
+    elif currentACL['resellerCenter'] == 1:
+        resellerPrivUsers = ACLManager.userWithResellerPriv(userID)
+    else:
+        resellerPrivUsers = []
+
+    if currentACL['admin'] == 1:
+        proc = httpProc(request, 'userManagment/listUsersV2.html',
+                        {'aclNames': aclNames, 'resellerPrivUsers': resellerPrivUsers})
+        return proc.render()
+    elif currentACL['listUsers'] == 1:
+        proc = httpProc(request, 'userManagment/listUsersV2.html',
                         {'aclNames': aclNames, 'resellerPrivUsers': resellerPrivUsers})
         return proc.render()
     else:
