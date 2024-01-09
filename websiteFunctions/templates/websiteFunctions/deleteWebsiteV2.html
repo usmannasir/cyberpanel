@@ -38,7 +38,11 @@
                     class="bg-orange-500 px-3 py-4 rounded-lg text-xl font-semibold text-white">
                 Delete Website
             </button>
+
         </div>
+
+
+
         <div class="mt-3">
             <hr>
         </div>
@@ -53,6 +57,7 @@
                 <div id="websiteDeleteFailure" class="text-red-500 font-semibold">
                     <p>{% trans "Cannot delete website, Error message: " %} {$ errorMessage $}</p>
                 </div>
+                <br>
                 <div id="websiteDeleteSuccess" class="text-green-500 font-semibold">
                     <p>{% trans "Website" %} <strong>{$ deletedWebsite $}</strong> {% trans "Successfully Deleted." %}
                     </p>

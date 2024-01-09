@@ -229,11 +229,11 @@ newapp.controller('createWebsiteV2', function ($scope, $http, $timeout, $window)
 });
 var FurlDeleteWP;
 
-function DeleteWPNow(url) {
+function DeleteWPNowV2(url) {
     FurlDeleteWP = url;
 }
 
-function FinalDeleteWPNow() {
+function FinalDeleteWPNowV2() {
     window.location.href = FurlDeleteWP;
 }
 
@@ -443,30 +443,7 @@ newapp.controller('listWebsitesV2', function ($scope, $http) {
 
 
 });
-var modalDeleteWPList = document.getElementById('deleteWPList');
-var openDeleteWPList = document.getElementById('openDeleteWPList');
-var closeDeleteWPList = document.getElementById('closeDeleteWPList');
 
-// Function to open the modal
-function openModalDeleteWPList() {
-    modalDeleteWPList.style.display = 'block';
-}
-
-// Function to close the modal
-function closeModelDeleteWPList() {
-    modalDeleteWPList.style.display = 'none';
-}
-
-// Event listeners for opening and closing the modal
-openDeleteWPList.addEventListener('click', openModalDeleteWPList);
-closeDeleteWPList.addEventListener('click', closeModelDeleteWPList);
-
-// Close the modal if the user clicks outside of it
-window.addEventListener('click', function (event) {
-    if (event.target === modalDeleteWPList) {
-        closeModal();
-    }
-});
 
 newapp.controller('websitePagesV2', function ($scope, $http, $timeout, $window) {
 
@@ -2904,6 +2881,11 @@ newapp.controller('suspendWebsiteControlV2', function ($scope, $http) {
 
 newapp.controller('deleteWebsiteControlV2', function ($scope, $http) {
 
+    $("#deleteLoading").hide();
+    $("#websiteDeleteFailure").hide();
+    $("#websiteDeleteSuccess").hide();
+    $("#deleteWebsiteButton").hide();
+
 
     $scope.deleteWebsite = function () {
 
@@ -3396,7 +3378,44 @@ newapp.controller('listWebsitesV2', function ($scope, $http) {
 
 });
 
+
+var create_staging_domain_check = 1;
+
+function create_staging_checkbox_function() {
+
+    try {
+
+        var checkBox = document.getElementById("Create_Staging_Check");
+        // Get the output text
+
+
+        // If the checkbox is checked, display the output text
+        if (checkBox.checked == true) {
+            create_staging_domain_check = 0;
+            document.getElementById('Website_Create_Test_Domain').style.display = "block";
+            document.getElementById('Website_Create_Own_Domain').style.display = "none";
+
+        } else {
+            document.getElementById('Website_Create_Test_Domain').style.display = "none";
+            document.getElementById('Website_Create_Own_Domain').style.display = "block";
+            create_staging_domain_check = 1;
+        }
+    } catch (e) {
+
+    }
+
+    // alert(domain_check);
+}
+
 newapp.controller('WPsiteHomeV2', function ($scope, $http, $timeout, $compile, $window) {
+
+
+    new PNotify({
+        title: 'Operation Failed!',
+        text: 'hanbokjnjdknvjfsnkjg habbi',
+        type: 'error'
+    });
+
 
     var CheckBoxpasssword = 0;
 
@@ -4897,14 +4916,19 @@ function closeModalAutoupdateConfiguration() {
 }
 
 // Event listeners for opening and closing the modal
-openAutoupdateConfiguration.addEventListener('click', openModalAutoupdateConfiguration);
-closeAutoupdateConfiguration.addEventListener('click', closeModalAutoupdateConfiguration);
+if (openAutoupdateConfiguration && closeAutoupdateConfiguration) {
+    openAutoupdateConfiguration.addEventListener('click', openModalAutoupdateConfiguration);
+    closeAutoupdateConfiguration.addEventListener('click', closeModalAutoupdateConfiguration);
+}
+
 
 // Close the modal if the user clicks outside of it
-window.addEventListener('click', function (event) {
-    if (event.target === modalAutoupdateConfiguration) {
-        closeModal();
-    }
+document.addEventListener('DOMContentLoaded', function () {
+    window.addEventListener('click', function (event) {
+        if (event.target === modalAutoupdateConfiguration) {
+            closeModal();
+        }
+    });
 });
 var modalSecurity = document.getElementById('security');
 var openSecurity = document.getElementById('openSecurity');
@@ -4920,9 +4944,13 @@ function closeModalSecurity() {
     modalSecurity.style.display = 'none';
 }
 
+if (openSecurity && closeSecurity) {
+    // Your code here
+    openSecurity.addEventListener('click', openModalSecurity);
+    closeSecurity.addEventListener('click', closeModalSecurity);
+}
 // Event listeners for opening and closing the modal
-openSecurity.addEventListener('click', openModalSecurity);
-closeSecurity.addEventListener('click', closeModalSecurity);
+
 
 // Close the modal if the user clicks outside of it
 window.addEventListener('click', function (event) {
@@ -4932,7 +4960,7 @@ window.addEventListener('click', function (event) {
 });
 
 
-function showTab(tabId,tabColour) {
+function showTab(tabId, tabColour) {
     // Hide all tabs
     var tabs = document.getElementsByClassName('tab-content');
     for (var i = 0; i < tabs.length; i++) {
