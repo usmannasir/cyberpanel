@@ -39,6 +39,8 @@ class Upgrade:
     openEulerPath = '/etc/openEuler-release'
     FromCloud = 0
     SnappyVersion = '2.28.1'
+    LogPathNew = '/home/cyberpanel/upgrade_logs'
+    SoftUpgrade = 0
 
     AdminACL = '{"adminStatus":1, "versionManagement": 1, "createNewUser": 1, "listUsers": 1, "deleteUser":1 , "resellerCenter": 1, ' \
                '"changeUserACL": 1, "createWebsite": 1, "modifyWebsite": 1, "suspendWebsite": 1, "deleteWebsite": 1, ' \
@@ -112,6 +114,10 @@ class Upgrade:
         print(("[" + time.strftime("%m.%d.%Y_%H-%M-%S") + "] " + message + "\n"))
         print(("[" + time.strftime(
             "%m.%d.%Y_%H-%M-%S") + "] #########################################################################\n"))
+
+        WriteToFile = open(Upgrade.LogPathNew, 'a')
+        WriteToFile.write(message)
+        WriteToFile.close()
 
         if do_exit:
             if Upgrade.FromCloud == 0:
@@ -1142,11 +1148,13 @@ CREATE TABLE `websiteFunctions_backupsv2` (`id` integer AUTO_INCREMENT NOT NULL 
 
             if Upgrade.FindOperatingSytem() == Ubuntu22:
 
+                ### If ftp not installed then upgrade will fail so this command should not do exit
+
                 command = "sed -i 's/MYSQLCrypt md5/MYSQLCrypt crypt/g' /etc/pure-ftpd/db/mysql.conf"
-                Upgrade.executioner(command, command, 1)
+                Upgrade.executioner(command, command, 0)
 
                 command = "systemctl restart pure-ftpd-mysql.service"
-                Upgrade.executioner(command, command, 1)
+                Upgrade.executioner(command, command, 0)
 
             try:
                 connection.close()
@@ -2145,7 +2153,7 @@ CREATE TABLE `websiteFunctions_backupsv2` (`id` integer AUTO_INCREMENT NOT NULL 
     def installLSCPD(branch):
         try:
 
-            if branch.find('SoftUpgrade') == -1:
+            if Upgrade.SoftUpgrade == 0:
 
                 Upgrade.stdOut("Starting LSCPD installation..")
 
@@ -2472,7 +2480,7 @@ echo $oConfig->Save() ? 'Done' : 'Error';
             Upgrade.stdOut("Permissions updated.")
 
         except BaseException as msg:
-            Upgrade.stdOut(str(msg) + " [installLSCPD]")
+            Upgrade.stdOut(str(msg) + " [fixPermissions]")
 
     @staticmethod
     def AutoUpgradeAcme():
@@ -2906,6 +2914,10 @@ vmail
     @staticmethod
     def upgrade(branch):
 
+        if branch.find('SoftUpgrade') > -1:
+            Upgrade.SoftUpgrade = 1
+            branch = branch.split(',')[1]
+
         # Upgrade.stdOut("Upgrades are currently disabled")
         # return 0
 
@@ -2945,7 +2957,7 @@ vmail
 
         ### if this is a soft upgrade from front end do not stop lscpd, as lscpd is controlling the front end
 
-        if branch.find('SoftUpgrade') == -1:
+        if Upgrade.SoftUpgrade == 0:
             command = "systemctl stop lscpd"
             Upgrade.executioner(command, 'stop lscpd', 0)
 
@@ -3035,11 +3047,12 @@ vmail
         command = 'cp /usr/local/lsws/lsphp80/bin/lsphp %s' % (phpPath)
         Upgrade.executioner(command, 0)
 
-        try:
-            command = "systemctl start lscpd"
-            Upgrade.executioner(command, 'Start LSCPD', 0)
-        except:
-            pass
+        if Upgrade.SoftUpgrade == 0:
+            try:
+                command = "systemctl start lscpd"
+                Upgrade.executioner(command, 'Start LSCPD', 0)
+            except:
+                pass
 
         command = 'csf -uf'
         Upgrade.executioner(command, 'fix csf if there', 0)

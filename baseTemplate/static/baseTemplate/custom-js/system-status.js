@@ -564,10 +564,22 @@ app.controller('versionManagment', function ($scope, $http, $timeout) {
         $scope.updateFinish = true;
         $scope.couldNotConnect = true;
 
+        var data = {
+            branchSelect: document.getElementById("branchSelect").value,
+
+        };
+
+        var config = {
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        };
+
+
+
 
         url = "/base/upgrade";
-
-        $http.get(url).then(ListInitialData, cantLoadInitialData);
+        $http.post(url, data, config).then(ListInitialData, cantLoadInitialData);
 
 
         function ListInitialData(response) {
@@ -620,6 +632,7 @@ app.controller('versionManagment', function ($scope, $http, $timeout) {
 
 
         function ListInitialDatas(response) {
+            console.log(response.data.upgradeLog);
 
 
             if (response.data.upgradeStatus === 1) {

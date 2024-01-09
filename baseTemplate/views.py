@@ -192,30 +192,21 @@ def versionManagment(request):
 def upgrade(request):
     try:
         admin = request.session['userID']
+        currentACL = ACLManager.loadedACL(admin)
 
-        try:
-            os.remove('upgrade.py')
-        except:
+        data = json.loads(request.body)
+
+        if currentACL['admin'] == 1:
             pass
+        else:
+            return ACLManager.loadErrorJson('fetchStatus', 0)
 
-        command = 'wget http://cyberpanel.net/upgrade.py'
-
-        cmd = shlex.split(command)
-
-        res = subprocess.call(cmd)
-
-        vers = version.objects.get(pk=1)
-
-        from plogical.upgrade import Upgrade
-
-        Upgrade.initiateUpgrade(vers.currentVersion, vers.build)
+        command = f'/usr/local/CyberPanel/bin/python /usr/local/CyberCP/plogical/upgrade.py "SoftUpgrade,{data["branchSelect"]}"'
+        ProcessUtilities.popenExecutioner(command)
 
         adminData = {"upgrade": 1}
-
         json_data = json.dumps(adminData)
-
         return HttpResponse(json_data)
-
 
     except KeyError:
         adminData = {"upgrade": 1, "error_message": "Please login or refresh this page."}
@@ -228,11 +219,12 @@ def upgradeStatus(request):
         val = request.session['userID']
         try:
             if request.method == 'POST':
+                from plogical.upgrade import Upgrade
 
-                path = "/usr/local/lscp/logs/upgradeLog"
+                path = Upgrade.LogPathNew
 
                 try:
-                    upgradeLog = open(path, "r").read()
+                    upgradeLog = ProcessUtilities.outputExecutioner(f'cat {path}')
                 except:
                     final_json = json.dumps({'finished': 0, 'upgradeStatus': 1,
                                              'error_message': "None",
@@ -240,15 +232,6 @@ def upgradeStatus(request):
                     return HttpResponse(final_json)
 
                 if upgradeLog.find("Upgrade Completed") > -1:
-
-                    vers = version.objects.get(pk=1)
-                    getVersion = requests.get('https://cyberpanel.net/version.txt')
-                    latest = getVersion.json()
-                    vers.currentVersion = latest['version']
-                    vers.build = latest['build']
-                    vers.save()
-
-                    os.remove(path)
 
                     final_json = json.dumps({'finished': 1, 'upgradeStatus': 1,
                                              'error_message': "None",

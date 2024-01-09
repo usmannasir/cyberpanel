@@ -31,7 +31,7 @@
     }
 </style>
 
-<div class="container">
+<div class="container" ng-controller="versionManagment">
     <div id="page-title">
         <h2>{% trans "Version Management" %}</h2>
         <p>{% trans "Here you can manage versions and check for updates to CyberPanel" %}</p>
@@ -47,13 +47,13 @@
             <h3 class="title-hero">
                 CyberPanel
             </h3>
-            <div ng-controller="versionManagment" class="example-box-wrapper">
+            <div class="example-box-wrapper">
                 <div class="form-group">
                     <label for="branchSelect">{% trans "Select Branch:" %}</label>
-                    <select id="branchSelect" class="button-style"></select>
+                    <select ng-model="branchSelect" id="branchSelect" class="button-style"></select>
                 </div>
                 <div class="form-group">
-                    <button type="submit" onclick="upgradeCyberPanel()" class="button-style">{% trans "Upgrade CyberPanel to selected branch" %}</button>
+                    <button type="submit" ng-click="upgrade()" class="button-style">{% trans "Upgrade CyberPanel to selected branch" %}</button>
                     <button type="submit" onclick="refreshPage()" class="button-style line-over">{% trans "Refresh page" %}</button>
                 </div>
 
@@ -135,14 +135,15 @@
         var selectedBranch = document.getElementById("branchSelect").value;
 
         // Use the shell script URL based on the selected branch
-        var shellScriptUrl = `https://raw.githubusercontent.com/usmannasir/cyberpanel/${selectedBranch}/cyberpanel_upgrade.sh`;
+        var shellScriptUrl = selectedBranch;
 
         if (confirm("Are you sure you want to upgrade to the selected branch from the remote script?")) {
             // Use fetch to trigger a server-side action (execute shell script)
-            fetch('/upgrade', {
+            fetch('/base/upgrade', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
                 },
                 body: JSON.stringify({
                     scriptUrl: shellScriptUrl,
