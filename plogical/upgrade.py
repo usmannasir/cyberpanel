@@ -116,7 +116,11 @@ class Upgrade:
             "%m.%d.%Y_%H-%M-%S") + "] #########################################################################\n"))
 
         WriteToFile = open(Upgrade.LogPathNew, 'a')
-        WriteToFile.write(message)
+        WriteToFile.write(("[" + time.strftime(
+            "%m.%d.%Y_%H-%M-%S") + "] #########################################################################\n"))
+        WriteToFile.write(("[" + time.strftime("%m.%d.%Y_%H-%M-%S") + "] " + message + "\n"))
+        WriteToFile.write(("[" + time.strftime(
+            "%m.%d.%Y_%H-%M-%S") + "] #########################################################################\n"))
         WriteToFile.close()
 
         if do_exit:
