@@ -2932,8 +2932,8 @@ vmail
             command = 'apt list'
             Upgrade.installedOutput = subprocess.check_output(shlex.split(command)).decode()
 
-        command = 'systemctl stop cpssh'
-        Upgrade.executioner(command, 'fix csf if there', 0)
+        #command = 'systemctl stop cpssh'
+        #Upgrade.executioner(command, 'fix csf if there', 0)
 
         ## Add LSPHP7.4 TO LSWS Ent configs
 
