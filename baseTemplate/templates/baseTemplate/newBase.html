@@ -241,37 +241,37 @@
                                 Users</a>
                         </li>
                         <li>
-                            <a href="#"
+                            <a href="{% url 'modifyUsersV2' %}"
                                class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
                                 Modify
                                 User</a>
                         </li>
                         <li>
-                            <a href="#"
+                            <a href="{% url 'resellerCenterV2' %}"
                                class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
                                 Reseller
                                 Center</a>
                         </li>
                         <li>
-                            <a href="#"
+                            <a href="{% url 'createNewACLV2' %}"
                                class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
                                 Create
                                 New ACL</a>
                         </li>
                         <li>
-                            <a href="#"
+                            <a href="{% url 'deleteACLV2' %}"
                                class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
                                 Delete
                                 ACL</a>
                         </li>
                         <li>
-                            <a href="#"
+                            <a href="{% url 'modifyACLV2' %}"
                                class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
                                 Modify
                                 ACL</a>
                         </li>
                         <li>
-                            <a href="#"
+                            <a href="{% url 'apiAccessV2' %}"
                                class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
                                 API
                                 Access</a>
@@ -1664,6 +1664,7 @@
 
 <!-- Connecting JS -->
 {#<script src="homepage.js"></script>#}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.js"></script>
 <script src="{% static 'baseTemplate/custom-js/pnotify.custom.min.js' %}"></script>
 <script src="{% static 'baseTemplate/newBase.js' %}"></script>
 <script src="{% static 'websiteFunctions/websiteFunctionsV2.js' %}"></script>

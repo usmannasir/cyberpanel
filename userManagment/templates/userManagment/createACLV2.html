@@ -1,0 +1,404 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    <div ng-controller="createACLCTRLV2" class="p-8">
+        <div>
+            <p class="text-4xl font-bold">Create New ACL</p>
+            <p class="text-xs text-gray-600 py-2 font-semibold">Create New Access Control defination, that specifies
+                what CyberPanel users can do.</p>
+        </div>
+        <div>
+            <div class="py-4">
+                <p class="text-xl font-bold">ACL Details</p>
+                <img ng-hide="aclLoading"
+                     src="{% static 'images/loading.gif' %}">
+            </div>
+            <hr>
+            <div>
+                <div class="flex mt-4 py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-60">ACL Name</p>
+                    </div>
+                    <div>
+                        <input placeholder="E.g support" type="text" class="w-80 bg-gray-100 rounded px-2 py-1"
+                               ng-model="aclName"
+                               required>
+                    </div>
+                </div>
+                <div class="flex py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-60"></p>
+                    </div>
+                    <div>
+                        <input ng-change="adminHook()" ng-model="makeAdmin" type="checkbox" value="">
+                        {% trans "Make Admin" %}
+                    </div>
+                </div>
+                <div class="flex py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-60">Version Management</p>
+                    </div>
+                    <div>
+                        <input ng-model="versionManagement" type="checkbox" value="">
+                        {% trans "Version Management" %}
+                    </div>
+                </div>
+                <div class="flex pt-3 px-6">
+                    <div>
+                        <p class="font-semibold w-60">User Management</p>
+                    </div>
+                    <div>
+                        <input ng-model="versionManagement" type="checkbox" value="">
+                        {% trans "Create New User" %}
+                    </div>
+                </div>
+                <div class="flex py-1 px-6">
+                    <div>
+                        <p class="font-semibold w-60"></p>
+                    </div>
+                    <div>
+                        <input ng-model="listUsers" type="checkbox" value="">
+                        {% trans "List Users" %}
+                    </div>
+                </div>
+                <div class="flex py-1 px-6">
+                    <div>
+                        <p class="font-semibold w-60"></p>
+                    </div>
+                    <div>
+                        <input ng-model="resellerCenter" type="checkbox" value="">
+                        {% trans "Reseller Center" %}
+                    </div>
+                </div>
+                <div class="flex py-1 px-6">
+                    <div>
+                        <p class="font-semibold w-60"></p>
+                    </div>
+                    <div>
+                        <input ng-model="deleteUser" type="checkbox" value="">
+                        {% trans "Delete User" %}
+                    </div>
+                </div>
+                <div class="flex py-1 px-6">
+                    <div>
+                        <p class="font-semibold w-60"></p>
+                    </div>
+                    <div>
+                        <input ng-model="changeUserACL" type="checkbox" value="">
+                        {% trans "Change User ACL" %}
+                    </div>
+                </div>
+                <div class="flex pt-3 px-6">
+                    <div>
+                        <p class="font-semibold w-60">Website Management</p>
+                    </div>
+                    <div>
+                        <input ng-model="createWebsite" type="checkbox" value="">
+                        {% trans "Create Website" %}
+                    </div>
+                </div>
+                <div class="flex py-1 px-6">
+                    <div>
+                        <p class="font-semibold w-60"></p>
+                    </div>
+                    <div>
+                        <input ng-model="modifyWebsite" type="checkbox" value="">
+                        {% trans "Modify Website" %}
+                    </div>
+                </div>
+                <div class="flex py-1 px-6">
+                    <div>
+                        <p class="font-semibold w-60"></p>
+                    </div>
+                    <div>
+                        <input ng-model="suspendWebsite" type="checkbox" value="">
+                        {% trans "Suspend Website" %}
+                    </div>
+                </div>
+                <div class="flex py-1 px-6">
+                    <div>
+                        <p class="font-semibold w-60"></p>
+                    </div>
+                    <div>
+                        <input ng-model="deleteWebsite" type="checkbox" value="">
+                        {% trans "Delete Website" %}
+                    </div>
+                </div>
+                <div class="flex pt-3 px-6">
+                    <div>
+                        <p class="font-semibold w-60">Package Management</p>
+                    </div>
+                    <div>
+                        <input ng-model="createPackage" type="checkbox" value="">
+                        {% trans "Create Package" %}
+                    </div>
+                </div>
+                <div class="flex py-1 px-6">
+                    <div>
+                        <p class="font-semibold w-60"></p>
+                    </div>
+                    <div>
+                        <input ng-model="listPackages" type="checkbox" value="">
+                        {% trans "List Packages" %}
+                    </div>
+                </div>
+                <div class="flex py-1 px-6">
+                    <div>
+                        <p class="font-semibold w-60"></p>
+                    </div>
+                    <div>
+                        <input ng-model="deletePackage" type="checkbox" value="">
+                        {% trans "Delete Package" %}
+                    </div>
+                </div>
+                <div class="flex py-1 px-6">
+                    <div>
+                        <p class="font-semibold w-60"></p>
+                    </div>
+                    <div>
+                        <input ng-model="modifyPackage" type="checkbox" value="">
+                        {% trans "Modify Package" %}
+                    </div>
+                </div>
+                <div class="flex pt-3 px-6">
+                    <div>
+                        <p class="font-semibold w-60">Database Management</p>
+                    </div>
+                    <div>
+                        <input ng-model="createDatabase" type="checkbox" value="">
+                        {% trans "Create Database" %}
+                    </div>
+                </div>
+                <div class="flex py-1 px-6">
+                    <div>
+                        <p class="font-semibold w-60"></p>
+                    </div>
+                    <div>
+                        <input ng-model="deleteDatabase" type="checkbox" value="">
+                        {% trans "Delete Database" %}
+                    </div>
+                </div>
+                <div class="flex py-1 px-6">
+                    <div>
+                        <p class="font-semibold w-60"></p>
+                    </div>
+                    <div>
+                        <input ng-model="listDatabases" type="checkbox" value="">
+                        {% trans "List Databases" %}
+                    </div>
+                </div>
+                <div class="flex pt-3 px-6">
+                    <div>
+                        <p class="font-semibold w-60">DNS Management</p>
+                    </div>
+                    <div>
+                        <input ng-model="createNameServer" type="checkbox" value="">
+                        {% trans "Create Nameserver" %}
+                    </div>
+                </div>
+                <div class="flex py-1 px-6">
+                    <div>
+                        <p class="font-semibold w-60"></p>
+                    </div>
+                    <div>
+                        <input ng-model="createDNSZone" type="checkbox" value="">
+                        {% trans "Delete DNS Zone" %}
+                    </div>
+                </div>
+                <div class="flex py-1 px-6">
+                    <div>
+                        <p class="font-semibold w-60"></p>
+                    </div>
+                    <div>
+                        <input ng-model="deleteZone" type="checkbox" value="">
+                        {% trans "Delete Zone" %}
+                    </div>
+                </div>
+                <div class="flex py-1 px-6">
+                    <div>
+                        <p class="font-semibold w-60"></p>
+                    </div>
+                    <div>
+                        <input ng-model="addDeleteRecords" type="checkbox" value="">
+                        {% trans "Add/Delete" %}
+                    </div>
+                </div>
+                <div class="flex pt-3 px-6">
+                    <div>
+                        <p class="font-semibold w-60">Email Management</p>
+                    </div>
+                    <div>
+                        <input ng-model="createEmail" type="checkbox" value="">
+                        {% trans "Create Email" %}
+                    </div>
+                </div>
+                <div class="flex py-1 px-6">
+                    <div>
+                        <p class="font-semibold w-60"></p>
+                    </div>
+                    <div>
+                        <input ng-model="listEmails" type="checkbox" value="">
+                        {% trans "List Emails" %}
+                    </div>
+                </div>
+                <div class="flex py-1 px-6">
+                    <div>
+                        <p class="font-semibold w-60"></p>
+                    </div>
+                    <div>
+                        <input ng-model="deleteEmail" type="checkbox" value="">
+                        {% trans "Delete Email" %}
+                    </div>
+                </div>
+                <div class="flex py-1 px-6">
+                    <div>
+                        <p class="font-semibold w-60"></p>
+                    </div>
+                    <div>
+                        <input ng-model="emailForwarding" type="checkbox" value="">
+                        {% trans "Email Forwarding" %}
+                    </div>
+                </div>
+                <div class="flex py-1 px-6">
+                    <div>
+                        <p class="font-semibold w-60"></p>
+                    </div>
+                    <div>
+                        <input ng-model="changeEmailPassword" type="checkbox" value="">
+                        {% trans "Change Email Password" %}
+                    </div>
+                </div>
+                <div class="flex py-1 px-6">
+                    <div>
+                        <p class="font-semibold w-60"></p>
+                    </div>
+                    <div>
+                        <input ng-model="dkimManager" type="checkbox" value="">
+                        {% trans "DKIM Manager" %}
+                    </div>
+                </div>
+                <div class="flex pt-3 px-6">
+                    <div>
+                        <p class="font-semibold w-60">FTP Management</p>
+                    </div>
+                    <div>
+                        <input ng-model="createFTPAccount" type="checkbox" value="">
+                        {% trans "Create FTP Account" %}
+                    </div>
+                </div>
+                <div class="flex py-1 px-6">
+                    <div>
+                        <p class="font-semibold w-60"></p>
+                    </div>
+                    <div>
+                        <input ng-model="deleteFTPAccount" type="checkbox" value="">
+                        {% trans "Delete FTP Account" %}
+                    </div>
+                </div>
+                <div class="flex py-1 px-6">
+                    <div>
+                        <p class="font-semibold w-60"></p>
+                    </div>
+                    <div>
+                        <input ng-model="listFTPAccounts" type="checkbox" value="">
+                        {% trans "List FTP Accounts" %}
+                    </div>
+                </div>
+                <div class="flex pt-3 px-6">
+                    <div>
+                        <p class="font-semibold w-60">Backup Management</p>
+                    </div>
+                    <div>
+                        <input ng-model="createBackup" type="checkbox" value="">
+                        {% trans "Create Backup" %}
+                    </div>
+                </div>
+                <div class="flex py-1 px-6">
+                    <div>
+                        <p class="font-semibold w-60"></p>
+                    </div>
+                    <div>
+                        <input ng-model="googleDriveBackups" type="checkbox" value="">
+                        {% trans "Google Drive Backups" %}
+                    </div>
+                </div>
+                <div class="flex py-1 px-6">
+                    <div>
+                        <p class="font-semibold w-60"></p>
+                    </div>
+                    <div>
+                        <input ng-model="restoreBackup" type="checkbox" value="">
+                        {% trans "Restore Backup" %}
+                    </div>
+                </div>
+                <div class="flex py-1 px-6">
+                    <div>
+                        <p class="font-semibold w-60"></p>
+                    </div>
+                    <div>
+                        <input ng-model="addDeleteDestinations" type="checkbox" value="">
+                        {% trans "Add/Delete Destination" %}
+                    </div>
+                </div>
+                <div class="flex py-1 px-6">
+                    <div>
+                        <p class="font-semibold w-60"></p>
+                    </div>
+                    <div>
+                        <input ng-model="scheduleBackups" type="checkbox" value="">
+                        {% trans "Schedule Backup" %}
+                    </div>
+                </div>
+                <div class="flex py-1 px-6">
+                    <div>
+                        <p class="font-semibold w-60"></p>
+                    </div>
+                    <div>
+                        <input ng-model="remoteBackups" type="checkbox" value="">
+                        {% trans "Remote Backups" %}
+                    </div>
+                </div>
+                <div class="flex pt-3 px-6">
+                    <div>
+                        <p class="font-semibold w-60">SSL Management</p>
+                    </div>
+                    <div>
+                        <input ng-model="manageSSL" type="checkbox" value="">
+                        {% trans "Manage SSL" %}
+                    </div>
+                </div>
+                <div class="flex py-1 px-6">
+                    <div>
+                        <p class="font-semibold w-60"></p>
+                    </div>
+                    <div>
+                        <input ng-model="hostnameSSL" type="checkbox" value="">
+                        {% trans "Hostname SSL" %}
+                    </div>
+                </div>
+                <div class="flex py-1 px-6">
+                    <div>
+                        <p class="font-semibold w-60"></p>
+                    </div>
+                    <div>
+                        <input ng-model="mailServerSSL" type="checkbox" value="">
+                        {% trans "MailServer SSL" %}
+                    </div>
+                </div>
+
+
+                <div class="flex justify-center mt-6">
+                    <button ng-click="createACLFunc()"
+                            class="bg-orange-500 text-white font-bold px-4 py-2 text-xl">
+                        Create ACL
+                        <img ng-hide="aclLoading" src="{% static 'images/loading.gif' %}">
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -98,14 +98,21 @@
                         </button>
                     </div>
                 </div>
-                <div ng-hide="generatedPasswordView" class="form-group">
-                    <label class="col-sm-3 control-label">{% trans "Generated Password" %}</label>
-                    <div class="col-sm-6">
-                        <input type="text" name="email" class="form-control" ng-model="password" required>
-                    </div>
-                    <div class="col-sm-3">
-                        <button type="button" ng-click="usePassword()"
-                                class="btn btn-primary">{% trans "Use" %}</button>
+                <div ng-hide="generatedPasswordView">
+                    <div class="flex py-2 px-6">
+                        <div>
+                            <p class="font-semibold w-60">Generated Password</p>
+                        </div>
+                        <div>
+                            <input type="text" name="email" class="w-80 bg-gray-100 rounded px-2 py-1"
+                                   ng-model="password" required>
+                        </div>
+                        <div class="w-80 ml-4">
+                            <button ng-click="usePassword()"
+                                    class="bg-orange-500 text-white font-semibold px-2 py-1">
+                                Use
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <div class="flex py-2 px-6">
@@ -120,28 +127,32 @@
                     </div>
                 </div>
                 <div class="flex justify-center mt-6">
-                    <button ng-click="createUserFunc()" class="bg-orange-500 text-white font-bold px-4 py-2">
+                    <button ng-click="createUserFunc()" class="bg-orange-500 text-white font-bold px-4 py-2 text-xl">
                         Create User
                     </button>
                 </div>
 
-                <div class="form-group">
+                <div class="mt-4">
                     <label class="col-sm-3 control-label"></label>
-                    <div class="col-sm-6">
-                        <div ng-hide="userCreated" class="alert alert-success">
+                    <div>
+                        <div ng-hide="userCreated"
+                             class="flex justify-center bg-green-500 px-2 rounded-lg py-1 font-semibold">
                             <p>{% trans "Account with username:" %} <strong>{$ userName
                                 $}</strong> {% trans "is successfully created." %}</p>
                         </div>
 
-                        <div ng-hide="userCreationFailed" class="alert alert-danger">
+                        <div ng-hide="userCreationFailed"
+                             class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
                             <p>{% trans "Cannot create user. Error message:" %} {$ errorMessage $}</p>
                         </div>
 
-                        <div ng-hide="couldNotConnect" class="alert alert-danger">
+                        <div ng-hide="couldNotConnect"
+                             class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
                             <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
                         </div>
 
-                        <div ng-hide="combinedLength" class="alert alert-danger">
+                        <div ng-hide="combinedLength"
+                             class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
                             <p>{% trans "Length of first and last name combined should be less than or equal to 20 characters" %}</p>
                         </div>
                     </div>

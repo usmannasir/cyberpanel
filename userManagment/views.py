@@ -15,7 +15,6 @@ from CyberCP.SecurityLevel import SecurityLevel
 
 
 def loadUserHome(request):
-
     val = request.session['userID']
     admin = Administrator.objects.get(pk=val)
     currentACL = ACLManager.loadedACL(val)
@@ -47,6 +46,7 @@ def viewProfile(request):
                     AdminData)
     return proc.render()
 
+
 def viewProfileV2(request):
     userID = request.session['userID']
     admin = Administrator.objects.get(pk=userID)
@@ -63,6 +63,7 @@ def viewProfileV2(request):
     proc = httpProc(request, 'userManagment/userProfileV2.html',
                     AdminData)
     return proc.render()
+
 
 def createUser(request):
     userID = request.session['userID']
@@ -86,6 +87,7 @@ def createUser(request):
     else:
         return ACLManager.loadError()
 
+
 def createUserV2(request):
     userID = request.session['userID']
     currentACL = ACLManager.loadedACL(userID)
@@ -108,12 +110,23 @@ def createUserV2(request):
     else:
         return ACLManager.loadError()
 
+
 def apiAccess(request):
     userID = request.session['userID']
     currentACL = ACLManager.loadedACL(userID)
     adminNames = ACLManager.loadDeletionUsers(userID, currentACL)
     adminNames.append("admin")
     proc = httpProc(request, 'userManagment/apiAccess.html',
+                    {'acctNames': adminNames}, 'admin')
+    return proc.render()
+
+
+def apiAccessV2(request):
+    userID = request.session['userID']
+    currentACL = ACLManager.loadedACL(userID)
+    adminNames = ACLManager.loadDeletionUsers(userID, currentACL)
+    adminNames.append("admin")
+    proc = httpProc(request, 'userManagment/apiAccessV2.html',
                     {'acctNames': adminNames}, 'admin')
     return proc.render()
 
@@ -172,12 +185,14 @@ def submitUserCreation(request):
             selectedACL = data['selectedACL']
 
             if ACLManager.CheckRegEx("^[\w'\-,.][^0-9_!¡?÷?¿/\\+=@#$%ˆ&*(){}|~<>;:[\]]{2,}$", firstName) == 0:
-                data_ret = {'status': 0, 'createStatus': 0, 'error_message': 'First Name can only contain Alphabets and should be more then 2 characters..'}
+                data_ret = {'status': 0, 'createStatus': 0,
+                            'error_message': 'First Name can only contain Alphabets and should be more then 2 characters..'}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
             if ACLManager.CheckRegEx("^[\w'\-,.][^0-9_!¡?÷?¿/\\+=@#$%ˆ&*(){}|~<>;:[\]]{2,}$", lastName) == 0:
-                data_ret = {'status': 0, 'createStatus': 0, 'error_message': 'First Name can only contain Alphabets and should be more then 2 characters..'}
+                data_ret = {'status': 0, 'createStatus': 0,
+                            'error_message': 'First Name can only contain Alphabets and should be more then 2 characters..'}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
@@ -296,6 +311,14 @@ def modifyUsers(request):
     userID = request.session['userID']
     userNames = ACLManager.loadAllUsers(userID)
     proc = httpProc(request, 'userManagment/modifyUser.html',
+                    {"acctNames": userNames, 'securityLevels': SecurityLevel.list()})
+    return proc.render()
+
+
+def modifyUsersV2(request):
+    userID = request.session['userID']
+    userNames = ACLManager.loadAllUsers(userID)
+    proc = httpProc(request, 'userManagment/modifyUserV2.html',
                     {"acctNames": userNames, 'securityLevels': SecurityLevel.list()})
     return proc.render()
 
@@ -466,7 +489,6 @@ def deleteUser(request):
 
 
 def submitUserDeletion(request):
-
     try:
         try:
             userID = request.session['userID']
@@ -535,7 +557,10 @@ def createNewACL(request):
     proc = httpProc(request, 'userManagment/createACL.html',
                     None, 'admin')
     return proc.render()
-
+def createNewACLV2(request):
+    proc = httpProc(request, 'userManagment/createACLV2.html',
+                    None, 'admin')
+    return proc.render()
 
 def createACLFunc(request):
     try:
@@ -575,6 +600,13 @@ def deleteACL(request):
     return proc.render()
 
 
+def deleteACLV2(request):
+    aclNames = ACLManager.findAllACLs()
+    proc = httpProc(request, 'userManagment/deleteACLV2.html',
+                    {'aclNames': aclNames}, 'admin')
+    return proc.render()
+
+
 def deleteACLFunc(request):
     try:
         val = request.session['userID']
@@ -605,6 +637,13 @@ def deleteACLFunc(request):
 def modifyACL(request):
     aclNames = ACLManager.findAllACLs()
     proc = httpProc(request, 'userManagment/modifyACL.html',
+                    {'aclNames': aclNames}, 'admin')
+    return proc.render()
+
+
+def modifyACLV2(request):
+    aclNames = ACLManager.findAllACLs()
+    proc = httpProc(request, 'userManagment/modifyACLV2.html',
                     {'aclNames': aclNames}, 'admin')
     return proc.render()
 
@@ -672,6 +711,7 @@ def submitACLModifications(request):
         finalResponse = {'status': 0, 'errorMessage': str(msg), 'error_message': str(msg)}
         json_data = json.dumps(finalResponse)
         return HttpResponse(json_data)
+
 
 def changeUserACL(request):
     userID = request.session['userID']
@@ -754,6 +794,26 @@ def resellerCenter(request):
         return ACLManager.loadError()
 
 
+def resellerCenterV2(request):
+    userID = request.session['userID']
+    currentACL = ACLManager.loadedACL(userID)
+
+    if currentACL['admin'] == 1:
+        userNames = ACLManager.loadDeletionUsers(userID, currentACL)
+        resellerPrivUsers = ACLManager.userWithResellerPriv(userID)
+        proc = httpProc(request, 'userManagment/resellerCenterV2.html',
+                        {'userToBeModified': userNames, 'resellerPrivUsers': resellerPrivUsers})
+        return proc.render()
+    elif currentACL['resellerCenter'] == 1:
+        userNames = ACLManager.loadDeletionUsers(userID, currentACL)
+        resellerPrivUsers = ACLManager.userWithResellerPriv(userID)
+        proc = httpProc(request, 'userManagment/resellerCenterV2.html',
+                        {'userToBeModified': userNames, 'resellerPrivUsers': resellerPrivUsers})
+        return proc.render()
+    else:
+        return ACLManager.loadError()
+
+
 def saveResellerChanges(request):
     try:
         val = request.session['userID']
@@ -782,7 +842,9 @@ def saveResellerChanges(request):
 
         ### Check user owners
 
-        if ACLManager.checkUserOwnerShip(currentACL, loggedUser, userToBeModified) == 0 or ACLManager.checkUserOwnerShip(currentACL, loggedUser, newOwner) == 0:
+        if ACLManager.checkUserOwnerShip(currentACL, loggedUser,
+                                         userToBeModified) == 0 or ACLManager.checkUserOwnerShip(currentACL, loggedUser,
+                                                                                                 newOwner) == 0:
             return ACLManager.loadErrorJson()
 
         try:
@@ -842,6 +904,7 @@ def listUsers(request):
     else:
         return ACLManager.loadError()
 
+
 def listUsersV2(request):
     userID = request.session['userID']
     currentACL = ACLManager.loadedACL(userID)
@@ -872,6 +935,7 @@ def listUsersV2(request):
         return proc.render()
     else:
         return ACLManager.loadError()
+
 
 def fetchTableUsers(request):
     try:

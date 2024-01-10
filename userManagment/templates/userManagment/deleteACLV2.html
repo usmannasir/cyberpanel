@@ -1,0 +1,46 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    <div ng-controller="deleteACTCTRLV2" class="p-8">
+        <div>
+            <p class="text-4xl font-bold">Delete ACL</p>
+            <p class="text-xs text-gray-600 py-2 font-semibold">This page can be used to delete ACL.</p>
+        </div>
+        <div>
+            <div class="py-4">
+                <p class="text-xl font-bold">Delete Website</p>
+                <img ng-hide="aclLoading"
+                     src="{% static 'images/loading.gif' %}">
+            </div>
+            <hr>
+            <div>
+                <div class="flex mt-4 py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-60">Select ACL</p>
+                    </div>
+                    <div>
+                        <select ng-model="aclToBeDeleted" class="w-80 bg-gray-100 rounded px-2 py-1">
+                            {% for items in aclNames %}
+                                <option>{{ items }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="flex justify-center mt-6">
+                    <button ng-click="deleteACLFunc()"
+                            class="bg-orange-500 text-white font-bold px-4 py-2 text-xl">
+                        Delete ACL
+                    </button>
+                </div>
+                <div ng-hide="deleteACLButton" class="flex justify-center mt-6">
+                    <button type="button" ng-click="deleteACLFinal()"
+                            class="bg-gray-500 text-white font-bold px-4 py-2 text-xl">{% trans "Are you sure?" %}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

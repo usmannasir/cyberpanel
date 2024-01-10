@@ -17,62 +17,65 @@
             <img ng-hide="cyberpanelLoading" src="{% static 'images/loading.gif' %}">
         </div>
         <hr>
-
-        <div class="py-8 overflow-x-auto">
-            <div class="px-5">
-                <table>
-                    <thead>
-                    <div>
-                        <tr>
-                            <th class="w-36 text-xl">Username</th>
-                            <th class="w-36 text-xl">Website Limit</th>
-                            <th class="w-36 text-xl">Disk Usage</th>
-                            <th class="w-28 text-xl">ACL</th>
-                            <th class="w-28 text-xl">Owner</th>
-                            <th class="w-28 text-xl">State</th>
-                            <th class="w-28 text-xl">Action</th>
-                        </tr>
-                    </div>
-                    </thead>
-                </table>
-            </div>
-
-            <div class="rounded-lg px-3 mt-5">
-                <div class="px-2" ng-repeat="record in records track by $index">
-                    <div class="border shadow-lg py-3 mb-3 rounded-b-lg">
-                        <table>
-                            <tbody>
-                            <tr>
-                                <th class="w-36 pt-2 font-semibold text-sm">
-                                <td ng-bind="record.name"></td>
-                                </th>
-                                <th class="w-36 pt-2 font-semibold text-sm flex justify-center">
-                                <td ng-bind="record.websites"></td>
-                                </th>
-                                <th class="w-36 pt-2 font-semibold text-sm">
-                                <td ng-bind="record.diskUsage"></td>
-                                </th>
-                                <th class="w-28 pt-2 font-semibold text-sm">
-                                <td ng-bind="record.acl"></td>
-                                </th>
-                                <th class="w-28 pt-2 font-semibold text-sm">
-                                <td ng-bind="record.owner"></td>
-                                </th>
-                                <th class="w-28 pt-2 font-semibold text-sm">
-                                <td ng-bind="record.state"></td>
-                                </th>
-                                <th class="w-52 flex pt-2 font-semibold text-sm">
-                                    <button class="bg-orange-500 px-2 py-1 text-white">Suspend</button>
-                                    <button class="bg-orange-500 px-2 py-1 text-white">Edit</button>
-                                    <button class="bg-orange-500 px-2 py-1 text-white">Delete</button>
-                                </th>
-                            </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-            </div>
+        <div class="relative py-5 overflow-x-auto">
+            <table class="w-full text-sm text-left rtl:text-right">
+                <thead>
+                <tr>
+                    <th scope="col" class="px-6 py-3">
+                        Username
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        Website Limit
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        Disk Usage
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        ACL
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        Owner
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        State
+                    </th>
+                    <th scope="col" class="px-6 py-3">
+                        Action
+                    </th>
+                </tr>
+                </thead>
+                <tbody ng-repeat="record in records track by $index"
+                       class="border shadow-lg py-3 px-6 rounded-b-lg">
+                <tr>
+                    <td ng-bind="record.name" class="px-6 py-4">
+                    </td>
+                    <td ng-bind="record.websites" class="px-6 py-4">
+                    </td>
+                    <td ng-bind="record.diskUsage" class="px-6 py-4">
+                    </td>
+                    <td ng-bind="record.acl" class="px-6 py-4">
+                    </td>
+                    <td ng-bind="record.owner" class="px-6 py-4">
+                    </td>
+                    <td ng-bind="record.state" class="px-6 py-4 text-green-500 font-semibold">
+                    </td>
+                    <td class="px-6 py-4">
+                        <a ng-show="record.state=='ACTIVE'"
+                           class="bg-orange-500 px-2 py-1 text-white" href="#"
+                           ng-click="controlUserState(record.name, 'SUSPEND')"
+                           title=""><span>{% trans 'Suspend' %}</span></a>
+                        <a ng-show="record.state=='SUSPENDED'"
+                           class="bg-orange-500 px-2 py-1 text-white" href="#"
+                           ng-click="controlUserState(record.name, 'ACTIVATE')"
+                           title=""><span>{% trans 'Activate' %}</span></a>
+                        <button class="bg-orange-500 px-2 py-1 text-white ml-2">Edit</button>
+                        <button class="bg-orange-500 px-2 py-1 text-white ml-2">Delete</button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
         </div>
     </div>
+
+
 {% endblock %}
