@@ -124,6 +124,14 @@ class Upgrade:
         WriteToFile.close()
 
         if do_exit:
+
+            ### remove log file path incase its there
+
+            if Upgrade.SoftUpgrade:
+                time.sleep(10)
+                if os.path.exists(Upgrade.LogPathNew):
+                    os.remove(Upgrade.LogPathNew)
+
             if Upgrade.FromCloud == 0:
                 os._exit(0)
 
@@ -3085,6 +3093,14 @@ vmail
             Upgrade.executioner(command, command, 1)
 
         Upgrade.stdOut("Upgrade Completed.")
+
+
+        ### remove log file path incase its there
+
+        if Upgrade.SoftUpgrade:
+            time.sleep(10)
+            if os.path.exists(Upgrade.LogPathNew):
+                os.remove(Upgrade.LogPathNew)
 
 
 def main():

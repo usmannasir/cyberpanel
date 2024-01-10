@@ -4,213 +4,231 @@
 
 {% block content %}
 
-{% load static %}
+    {% load static %}
 
-<style>
-    /* Add these styles for the buttons and select dropdown */
-    .button-style,
-    #branchSelect {
-        background-color: rgb(62, 72, 85);
-        color: #fff;
-        padding: 10px 20px;
-        border: none;
-        cursor: pointer;
-        transition: background-color 0.3s ease;
-    }
+    <style>
+        /* Add these styles for the buttons and select dropdown */
+        .button-style,
+        #branchSelect {
+            background-color: rgb(62, 72, 85);
+            color: #fff;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
 
-    /* Apply these styles when hovering over the buttons or select dropdown */
-    .button-style:hover,
-    #branchSelect:hover {
-        background-color: darken(rgb(62, 72, 85), 10%);
-    }
+        /* Apply these styles when hovering over the buttons or select dropdown */
+        .button-style:hover,
+        #branchSelect:hover {
+            background-color: darken(rgb(62, 72, 85), 10%);
+        }
 
-    /* Add these styles for the textarea */
-    textarea {
-        background-color: rgb(62, 72, 85);
-        color: #fff;
-    }
-</style>
+        /* Add these styles for the textarea */
+        textarea {
+            background-color: rgb(62, 72, 85);
+            color: #fff;
+        }
+    </style>
 
-<div class="container" ng-controller="versionManagment">
-    <div id="page-title">
-        <h2>{% trans "Version Management" %}</h2>
-        <p>{% trans "Here you can manage versions and check for updates to CyberPanel" %}</p>
-    </div>
-    {% if Notecheck %}
-        <div class="alert alert-info">
-            <p style="color:red; font-weight: bold;">{% trans "Note: Latest commit does not match, please upgrade CyberPanel." %}</p>
+    <div class="container" ng-controller="versionManagment">
+        <div id="page-title">
+            <h2>{% trans "Version Management" %}</h2>
+            <p>{% trans "Here you can manage versions and check for updates to CyberPanel" %}</p>
         </div>
-    {% endif %}
+        {% if Notecheck %}
+            <div class="alert alert-info">
+                <p style="color:red; font-weight: bold;">{% trans "Note: Latest commit does not match, please upgrade CyberPanel." %}</p>
+            </div>
+        {% endif %}
 
-    <div class="panel">
-        <div class="panel-body">
-            <h3 class="title-hero">
-                CyberPanel
-            </h3>
-            <div class="example-box-wrapper">
-                <div class="form-group">
-                    <label for="branchSelect">{% trans "Select Branch:" %}</label>
-                    <select ng-model="branchSelect" id="branchSelect" class="button-style"></select>
-                </div>
-                <div class="form-group">
-                    <button type="submit" ng-click="upgrade()" class="button-style">{% trans "Upgrade CyberPanel to selected branch" %}</button>
-                    <button type="submit" onclick="refreshPage()" class="button-style line-over">{% trans "Refresh page" %}</button>
-                </div>
-
-                <form action="/" class="form-horizontal bordered-row">
-                    <!-- Existing Commit Information -->
+        <div class="panel">
+            <div class="panel-body">
+                <h3 class="title-hero">
+                    CyberPanel
+                </h3>
+                <div class="example-box-wrapper">
                     <div class="form-group">
-                        <label class="col-sm-3 control-label" style="margin: 0px!important; padding: 0px!important;">{% trans "Current Version:" %}&nbsp&nbsp</label>
-                        <div class="current-pack col-sm-9" style="margin: 0px!important; padding: 0px!important;">{{ currentVersion }}</div>
+                        <label for="branchSelect">{% trans "Select Branch:" %}</label>
+                        <select ng-model="branchSelect" id="branchSelect" class="button-style"></select>
                     </div>
                     <div class="form-group">
-                        <label class="col-sm-3 control-label" style="margin: 0px!important; padding: 0px!important;">{% trans "Build:" %}&nbsp&nbsp</label>
-                        <div class="current-pack col-sm-9" style="margin: 0px!important; padding: 0px!important;">{{ build }}</div>
-                        <label class="col-sm-3 control-label" style="margin: 0px!important; padding: 0px!important;">{% trans "Current Commit:" %}&nbsp&nbsp</label>
-                        <div class="current-pack col-sm-9" style="margin: 0px!important; padding: 0px!important;">{{ Currentcomt }}</div>
-                    </div>
-                    <div class="form-group">
-                        <label class="col-sm-3 control-label" style="margin: 0px!important; padding: 0px!important;">{% trans "Latest Version:" %}&nbsp&nbsp</label>
-                        <div class="current-pack col-sm-9" style="margin: 0px!important; padding: 0px!important;">{{ latestVersion }}</div>
-                    </div>
-                    <div class="form-group">
-                        <label class="col-sm-3 control-label" style="margin: 0px!important; padding: 0px!important;">{% trans "Latest Build:" %}&nbsp&nbsp</label>
-                        <div class="current-pack col-sm-9" style="margin: 0px!important; padding: 0px!important;">{{ latestBuild }}</div>
-                       <label class="col-sm-3 control-label" style="margin: 0px!important; padding: 0px!important;">{% trans "Latest Commit:" %}&nbsp&nbsp</label>
-                        <div class="current-pack col-sm-9" style="margin: 0px!important; padding: 0px!important;">{{ latestcomit }}</div>
+                        <button type="submit" ng-click="upgrade()"
+                                class="button-style">{% trans "Upgrade CyberPanel to selected branch (Beta)" %}</button>
+                        <button type="submit" onclick="refreshPage()"
+                                class="button-style line-over">{% trans "Refresh page" %}</button>
                     </div>
 
-                    <!-- New Upgrade Progress Log Section -->
-                    <div class="form-group">
-                        <label class="col-sm-3 control-label" style="margin: 0px!important; padding: 0px!important;">{% trans "Upgrade Progress Log:" %}</label>
-                        <div id="upgradeProgressLog" class="current-pack col-sm-9" style="margin: 0px!important; padding: 0px!important;"></div>
-                    </div>
-                </form>
+                    <form action="/" class="form-horizontal bordered-row">
+                        <!-- Existing Commit Information -->
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label"
+                                   style="margin: 0px!important; padding: 0px!important;">{% trans "Current Version:" %}&nbsp&nbsp</label>
+                            <div class="current-pack col-sm-9"
+                                 style="margin: 0px!important; padding: 0px!important;">{{ currentVersion }}</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label"
+                                   style="margin: 0px!important; padding: 0px!important;">{% trans "Build:" %}&nbsp&nbsp</label>
+                            <div class="current-pack col-sm-9"
+                                 style="margin: 0px!important; padding: 0px!important;">{{ build }}</div>
+                            <label class="col-sm-3 control-label"
+                                   style="margin: 0px!important; padding: 0px!important;">{% trans "Current Commit:" %}&nbsp&nbsp</label>
+                            <div class="current-pack col-sm-9"
+                                 style="margin: 0px!important; padding: 0px!important;">{{ Currentcomt }}</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label"
+                                   style="margin: 0px!important; padding: 0px!important;">{% trans "Latest Version:" %}&nbsp&nbsp</label>
+                            <div class="current-pack col-sm-9"
+                                 style="margin: 0px!important; padding: 0px!important;">{{ latestVersion }}</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label"
+                                   style="margin: 0px!important; padding: 0px!important;">{% trans "Latest Build:" %}&nbsp&nbsp</label>
+                            <div class="current-pack col-sm-9"
+                                 style="margin: 0px!important; padding: 0px!important;">{{ latestBuild }}</div>
+                            <label class="col-sm-3 control-label"
+                                   style="margin: 0px!important; padding: 0px!important;">{% trans "Latest Commit:" %}&nbsp&nbsp</label>
+                            <div class="current-pack col-sm-9"
+                                 style="margin: 0px!important; padding: 0px!important;">{{ latestcomit }}</div>
+                        </div>
 
-                <div ng-hide="upgradelogBox" class="form-group">
-                    <div class="col-sm-12">
-                        <textarea ng-model="upgradeLog" rows="30" class="form-control">{{ logs }}</textarea>
+                        <!-- New Upgrade Progress Log Section -->
+                        <div class="form-group">
+                            <label class="col-sm-3 control-label"
+                                   style="margin: 0px!important; padding: 0px!important;">{% trans "Upgrade Progress Log:" %}
+                                <img ng-hide="upgradeLoading"
+                                     src="{% static 'images/loading.gif' %}"></label>
+                            <div id="upgradeProgressLog" class="current-pack col-sm-9"
+                                 style="margin: 0px!important; padding: 0px!important;"></div>
+                        </div>
+                    </form>
+
+                    <div ng-hide="upgradelogBox" class="form-group">
+                        <div class="col-sm-12">
+                            <textarea ng-model="upgradeLog" rows="30" class="form-control">{{ logs }}</textarea>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<script>
-    // Function to populate the branch dropdown
-    function populateBranches(branches) {
-        var branchSelect = document.getElementById("branchSelect");
-        branches.forEach((branch) => {
-            var option = document.createElement("option");
-            option.value = branch;
-            option.text = branch;
-            branchSelect.appendChild(option);
-        });
-    }
-
-    function getBranches(url, branches, page) {
-        if (!page) page = 1;
-        fetch(url + '?page=' + page)
-            .then((response) => response.json())
-            .then((data) => {
-                if (data.length === 0) {
-                    populateBranches(branches);
-                } else {
-                    const branchNames = data.map(branch => branch.name);
-                    branches = branches.concat(branchNames);
-                    getBranches(url, branches, page + 1);
-                }
-            })
-            .catch((error) => {
-                console.error('Error fetching branches: ' + error);
+    <script>
+        // Function to populate the branch dropdown
+        function populateBranches(branches) {
+            var branchSelect = document.getElementById("branchSelect");
+            branches.forEach((branch) => {
+                var option = document.createElement("option");
+                option.value = branch;
+                option.text = branch;
+                branchSelect.appendChild(option);
             });
-    }
+        }
 
-    // Call the function to get all branches
-    getBranches('https://api.github.com/repos/usmannasir/cyberpanel/branches', [], 1);
-
-    function upgradeCyberPanel() {
-    try {
-        var selectedBranch = document.getElementById("branchSelect").value;
-
-        // Use the shell script URL based on the selected branch
-        var shellScriptUrl = selectedBranch;
-
-        if (confirm("Are you sure you want to upgrade to the selected branch from the remote script?")) {
-            // Use fetch to trigger a server-side action (execute shell script)
-            fetch('/base/upgrade', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
-                },
-                body: JSON.stringify({
-                    scriptUrl: shellScriptUrl,
-                }),
-            })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`Failed to start upgrade. HTTP status ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    // Log the response from the server
-                    console.log('Upgrade response:', data);
-
-                    // Check if the progress value is defined and a finite number before setting it on the progress bar
-                    if (typeof data.progress !== 'undefined' && isFinite(data.progress)) {
-                        var upgradeProgressLog = document.getElementById("upgradeProgressLog");
-                        upgradeProgressLog.innerText = 'Upgrade Progress: ' + data.progress + '%';
-                        // You may also update other UI elements based on the response data
+        function getBranches(url, branches, page) {
+            if (!page) page = 1;
+            fetch(url + '?page=' + page)
+                .then((response) => response.json())
+                .then((data) => {
+                    if (data.length === 0) {
+                        populateBranches(branches);
                     } else {
-                        console.error('Invalid progress value received from the server:', data.progress);
-                        var upgradeProgressLog = document.getElementById("upgradeProgressLog");
-                        upgradeProgressLog.innerText = 'Upgrade failed. Invalid progress value received from the server.';
+                        const branchNames = data.map(branch => branch.name);
+                        branches = branches.concat(branchNames);
+                        getBranches(url, branches, page + 1);
                     }
                 })
-                .catch(error => {
-                    console.error('Upgrade failed. Error starting upgrade:', error);
-                    alert('Upgrade failed. Error starting upgrade. Check the console for details.');
-                });
-
-            // Download and execute the upgrade script using wget
-            fetch(shellScriptUrl)
-                .then(response => response.text())
-                .then(scriptContent => {
-                    // Create a Blob from the script content
-                    var blob = new Blob([scriptContent], { type: 'text/plain' });
-
-                    // Create a temporary URL for the Blob
-                    var scriptUrl = URL.createObjectURL(blob);
-
-                    // Create an invisible iframe to trigger the download
-                    var iframe = document.createElement('iframe');
-                    iframe.style.display = 'none';
-                    iframe.src = scriptUrl;
-                    document.body.appendChild(iframe);
-                })
-                .catch(error => {
-                    console.error('Failed to download upgrade script:', error);
-                    alert('Failed to download upgrade script. Check the console for details.');
+                .catch((error) => {
+                    console.error('Error fetching branches: ' + error);
                 });
         }
-    } catch (error) {
-        console.error('An unexpected error occurred:', error);
 
-        // Additional error handling
-        alert('An unexpected error occurred during the upgrade. Check the console for details.');
+        // Call the function to get all branches
+        getBranches('https://api.github.com/repos/usmannasir/cyberpanel/branches', [], 1);
 
-        // Log detailed error information
-        console.error('Detailed error information:', error);
-    }
-}
+        function upgradeCyberPanel() {
+            try {
+                var selectedBranch = document.getElementById("branchSelect").value;
 
-    function refreshPage() {
-        location.reload();
-    }
+                // Use the shell script URL based on the selected branch
+                var shellScriptUrl = selectedBranch;
 
-</script>
+                if (confirm("Are you sure you want to upgrade to the selected branch from the remote script?")) {
+                    // Use fetch to trigger a server-side action (execute shell script)
+                    fetch('/base/upgrade', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCookie('csrftoken')
+                        },
+                        body: JSON.stringify({
+                            scriptUrl: shellScriptUrl,
+                        }),
+                    })
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`Failed to start upgrade. HTTP status ${response.status}`);
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            // Log the response from the server
+                            console.log('Upgrade response:', data);
+
+                            // Check if the progress value is defined and a finite number before setting it on the progress bar
+                            if (typeof data.progress !== 'undefined' && isFinite(data.progress)) {
+                                var upgradeProgressLog = document.getElementById("upgradeProgressLog");
+                                upgradeProgressLog.innerText = 'Upgrade Progress: ' + data.progress + '%';
+                                // You may also update other UI elements based on the response data
+                            } else {
+                                console.error('Invalid progress value received from the server:', data.progress);
+                                var upgradeProgressLog = document.getElementById("upgradeProgressLog");
+                                upgradeProgressLog.innerText = 'Upgrade failed. Invalid progress value received from the server.';
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Upgrade failed. Error starting upgrade:', error);
+                            alert('Upgrade failed. Error starting upgrade. Check the console for details.');
+                        });
+
+                    // Download and execute the upgrade script using wget
+                    fetch(shellScriptUrl)
+                        .then(response => response.text())
+                        .then(scriptContent => {
+                            // Create a Blob from the script content
+                            var blob = new Blob([scriptContent], {type: 'text/plain'});
+
+                            // Create a temporary URL for the Blob
+                            var scriptUrl = URL.createObjectURL(blob);
+
+                            // Create an invisible iframe to trigger the download
+                            var iframe = document.createElement('iframe');
+                            iframe.style.display = 'none';
+                            iframe.src = scriptUrl;
+                            document.body.appendChild(iframe);
+                        })
+                        .catch(error => {
+                            console.error('Failed to download upgrade script:', error);
+                            alert('Failed to download upgrade script. Check the console for details.');
+                        });
+                }
+            } catch (error) {
+                console.error('An unexpected error occurred:', error);
+
+                // Additional error handling
+                alert('An unexpected error occurred during the upgrade. Check the console for details.');
+
+                // Log detailed error information
+                console.error('Detailed error information:', error);
+            }
+        }
+
+        function refreshPage() {
+            location.reload();
+        }
+
+    </script>
 
 {% endblock %}
