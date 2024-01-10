@@ -84,9 +84,15 @@ class ApplicationInstaller(multi.Thread):
                 self.WPCreateBackup()
             elif self.installApp == 'RestoreWPbackupNow':
                 self.RestoreWPbackupNow()
+            elif self.installApp == 'UpgradeCP':
+                self.UpgradeCP()
 
         except BaseException as msg:
             logging.writeToFile(str(msg) + ' [ApplicationInstaller.run]')
+
+    def UpgradeCP(self):
+        command = f'/usr/local/CyberPanel/bin/python /usr/local/CyberCP/plogical/upgrade.py "SoftUpgrade,{self.data["branchSelect"]}"'
+        ProcessUtilities.executioner(command)
 
     def installMautic(self):
         try:

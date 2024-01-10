@@ -201,8 +201,12 @@ def upgrade(request):
         else:
             return ACLManager.loadErrorJson('fetchStatus', 0)
 
-        command = f'/usr/local/CyberPanel/bin/python /usr/local/CyberCP/plogical/upgrade.py "SoftUpgrade,{data["branchSelect"]}"'
-        ProcessUtilities.popenExecutioner(command)
+        from plogical.applicationInstaller import ApplicationInstaller
+
+        extraArgs = {}
+        extraArgs['branchSelect'] = data["branchSelect"]
+        background = ApplicationInstaller('UpgradeCP', extraArgs)
+        background.start()
 
         adminData = {"upgrade": 1}
         json_data = json.dumps(adminData)
