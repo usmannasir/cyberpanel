@@ -1070,11 +1070,22 @@ bind-address=%s
             return str(msg)
 
     @staticmethod
-    def UpgradeMariaDB(tempStatusPath):
+    def UpgradeMariaDB(versionToInstall, tempStatusPath):
+
+        ### first check if provided version is already installed
+
+        command = 'mysql --version'
+        result = ProcessUtilities.outputExecutioner(command)
+
+        if result.find(versionToInstall) > -1:
+            print(f'MySQL is already {result}. [200]')
+            logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, f'MySQL is already {result}. [200]')
+            return 0
 
         logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Creating backup of MySQL..,10')
 
         MySQLBackupDir = '/var/lib/mysql-backupcp'
+
         from os import getuid
         if getuid() != 0:
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'This function should run as root. [404]')
@@ -1087,18 +1098,66 @@ bind-address=%s
 
             logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'MySQL backup created..,20')
 
+        if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu20:
 
+            CNFCurrentPath = '/etc/mysql/ '
+            CNFBackupPath = '/etc/cnfbackup/'
+
+            command = f'rsync -av {CNFCurrentPath} {CNFBackupPath}'
+            ProcessUtilities.executioner(command)
+
+            command = 'sudo apt-get remove --purge mariadb-server mariadb-client galera -y && sudo apt autoremove -y'
+            ProcessUtilities.executioner(command, 'root', True)
+
+            command = 'apt-get install apt-transport-https curl -y'
+            ProcessUtilities.executioner(command, 'root', True)
+
+            command = 'mkdir -p /etc/apt/keyrings '
+            ProcessUtilities.executioner(command, 'root', True)
+
+            command = "curl -o /etc/apt/keyrings/mariadb-keyring.pgp 'https://mariadb.org/mariadb_release_signing_key.pgp'"
+            ProcessUtilities.executioner(command, 'root', True)
+
+            RepoPath = '/etc/apt/sources.list.d/mariadb.sources'
+            RepoContent = f"""
+# MariaDB {versionToInstall} repository list - created 2023-12-11 07:53 UTC
+# https://mariadb.org/download/
+X-Repolib-Name: MariaDB
+Types: deb
+# deb.mariadb.org is a dynamic mirror if your preferred mirror goes offline. See https://mariadb.org/mirrorbits/ for details.
+# URIs: https://deb.mariadb.org/{versionToInstall}/ubuntu
+URIs: https://mirrors.gigenet.com/mariadb/repo/{versionToInstall}/ubuntu
+Suites: jammy
+Components: main main/debug
+Signed-By: /etc/apt/keyrings/mariadb-keyring.pgp
+"""
+
+            WriteToFile = open(RepoPath, 'w')
+            WriteToFile.write(RepoContent)
+            WriteToFile.close()
+
+            command = 'apt-get update -y'
+            ProcessUtilities.executioner(command, 'root', True)
+
+            command = 'DEBIAN_FRONTEND=noninteractive sudo apt-get install mariadb-server -y'
+            ProcessUtilities.executioner(command, 'root', True)
+
+            logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Completed [200]')
 
 
 
 def main():
     parser = argparse.ArgumentParser(description='CyberPanel')
     parser.add_argument('function', help='Specific a function to call!')
+    parser.add_argument('--version', help='MySQL version to upgrade to.')
 
     args = parser.parse_args()
 
+
     if args.function == "enableRemoteMYSQL":
         mysqlUtilities.enableRemoteMYSQL()
+    elif args.function == "UpgradeMariaDB":
+        mysqlUtilities.UpgradeMariaDB(args.version, '/home/cyberpanel/upgrade_mysql_logs')
 
 
 if __name__ == "__main__":
