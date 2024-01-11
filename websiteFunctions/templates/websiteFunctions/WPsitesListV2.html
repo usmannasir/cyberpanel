@@ -72,11 +72,11 @@
                                     <th class="w-52 pt-2 font-semibold text-sm">
                                         <div class="flex items-center justify-center">
 
-
                                             <button data-modal-target="Deletewpsite" data-modal-toggle="Deletewpsite"
-                                                    class="block text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-800"
-                                                    type="button" onclick="DeleteWPNowV2('{% url 'ListWPSitesV2' %}?DeleteID={{ sub.id }}')">
-                                                Deleteee
+                                                    class="block text-white bg-orange-500 hover:bg-orange-700 font-medium rounded-lg text-sm px-5 py-2.5 text-center"
+                                                    type="button"
+                                                    onclick="DeleteWPNowV2('{% url 'ListWPSitesV2' %}?DeleteID={{ sub.id }}')">
+                                                Delete
                                             </button>
 
                                             <div id="Deletewpsite" tabindex="-1"
@@ -108,7 +108,8 @@
                                                                 Are you sure you want to
                                                                 delete this WordPress site?</h3>
                                                             <button data-modal-hide="Deletewpsite" type="button"
-                                                                    data-modal-toggle="Deletewpsite" onclick="FinalDeleteWPNowV2()"
+                                                                    data-modal-toggle="Deletewpsite"
+                                                                    onclick="FinalDeleteWPNowV2()"
                                                                     class="text-white bg-red-600 hover:bg-red-800 focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 text-center me-2">
                                                                 Yes, I'm sure
                                                             </button>
