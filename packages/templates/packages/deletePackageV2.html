@@ -1,0 +1,60 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    <div ng-controller="deletePackageV2" class="p-8">
+        <div>
+            <p class="text-4xl font-bold">Delete Package</p>
+            <p class="text-xs text-gray-600 py-2 font-semibold">Websites owned by this user will automatically transfer
+                to the root.</p>
+        </div>
+        <div>
+            <div class="py-4">
+                <p class="text-xl font-bold">Delete Package</p>
+            </div>
+            <hr>
+            <div>
+                <div class="flex mt-4 py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-60">Select Package</p>
+                    </div>
+                    <div>
+                        <select ng-model="packageToBeDeleted" class="w-80 bg-gray-100 rounded px-2 py-1">
+                            {% for items in packageList %}
+                                <option>{{ items }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="flex justify-center mt-6">
+                    <button ng-click="deletePackage()"
+                            class="bg-orange-500 text-white font-bold px-4 py-2 text-xl">
+                        Delete Package
+                    </button>
+                </div>
+                <div id="deletePackageButton" class="flex justify-center mt-6">
+                    <button type="button" ng-click="deletePackageFinal()"
+                            class="bg-gray-500 text-white font-bold px-4 py-2 text-xl">{% trans "Are you sure?" %}</button>
+                </div>
+
+                <div class="mt-4">
+                    <label class="col-sm-3 control-label"></label>
+                    <div>
+                        <div id="deleteSuccess"
+                             class="flex justify-center bg-green-500 px-2 rounded-lg py-1 font-semibold">
+                            <p>{% trans "Package" %} <strong>{$ deletedPackage
+                                $}</strong>{% trans " Successfully Deleted." %}</p>
+                        </div>
+                        <div id="deleteFailure"
+                             class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                            <p>{% trans "Cannot delete package. Error message:" %} {$ errorMessage $}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

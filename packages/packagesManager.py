@@ -3,6 +3,7 @@ import os.path
 import sys
 import django
 from plogical.httpProc import httpProc
+
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
@@ -14,9 +15,10 @@ import json
 from .models import Package
 from plogical.acl import ACLManager
 
+
 class PackagesManager:
-    def __init__(self, request = None):
-        self.request  = request
+    def __init__(self, request=None):
+        self.request = request
 
     def packagesHome(self):
         proc = httpProc(self.request, 'packages/index.html',
@@ -30,11 +32,26 @@ class PackagesManager:
                         {"adminNamePackage": admin.userName}, 'createPackage')
         return proc.render()
 
+    def createPacakgeV2(self):
+        userID = self.request.session['userID']
+        admin = Administrator.objects.get(pk=userID)
+        proc = httpProc(self.request, 'packages/createPackageV2.html',
+                        {"adminNamePackage": admin.userName}, 'createPackage')
+        return proc.render()
+
     def deletePacakge(self):
         userID = self.request.session['userID']
         currentACL = ACLManager.loadedACL(userID)
         packageList = ACLManager.loadPackages(userID, currentACL)
         proc = httpProc(self.request, 'packages/deletePackage.html',
+                        {"packageList": packageList}, 'deletePackage')
+        return proc.render()
+
+    def deletePacakgeV2(self):
+        userID = self.request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+        packageList = ACLManager.loadPackages(userID, currentACL)
+        proc = httpProc(self.request, 'packages/deletePackageV2.html',
                         {"packageList": packageList}, 'deletePackage')
         return proc.render()
 
@@ -71,7 +88,6 @@ class PackagesManager:
             except:
                 enforceDiskLimits = 0
 
-
             if packageSpace < 0 or packageBandwidth < 0 or packageDatabases < 0 or ftpAccounts < 0 or emails < 0 or allowedDomains < 0:
                 data_ret = {'saveStatus': 0, 'error_message': "All values should be positive or 0."}
                 json_data = json.dumps(data_ret)
@@ -84,7 +100,8 @@ class PackagesManager:
 
             package = Package(admin=admin, packageName=packageName, diskSpace=packageSpace,
                               bandwidth=packageBandwidth, ftpAccounts=ftpAccounts, dataBases=packageDatabases,
-                              emailAccounts=emails, allowedDomains=allowedDomains, allowFullDomain=allowFullDomain, enforceDiskLimits=enforceDiskLimits)
+                              emailAccounts=emails, allowedDomains=allowedDomains, allowFullDomain=allowFullDomain,
+                              enforceDiskLimits=enforceDiskLimits)
 
             package.save()
 
@@ -135,6 +152,14 @@ class PackagesManager:
                         {"packList": packageList}, 'modifyPackage')
         return proc.render()
 
+    def modifyPackageV2(self):
+        userID = self.request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+        packageList = ACLManager.loadPackages(userID, currentACL)
+        proc = httpProc(self.request, 'packages/modifyPackageV2.html',
+                        {"packList": packageList}, 'modifyPackage')
+        return proc.render()
+
     def submitModify(self):
         try:
             userID = self.request.session['userID']
@@ -159,10 +184,11 @@ class PackagesManager:
             dataBases = modifyPack.dataBases
             emails = modifyPack.emailAccounts
 
-
             data_ret = {'emails': emails, 'modifyStatus': 1, 'error_message': "None",
                         "diskSpace": diskSpace, "bandwidth": bandwidth, "ftpAccounts": ftpAccounts,
-                        "dataBases": dataBases, "allowedDomains": modifyPack.allowedDomains, 'allowFullDomain': modifyPack.allowFullDomain, 'enforceDiskLimits': modifyPack.enforceDiskLimits}
+                        "dataBases": dataBases, "allowedDomains": modifyPack.allowedDomains,
+                        'allowFullDomain': modifyPack.allowFullDomain,
+                        'enforceDiskLimits': modifyPack.enforceDiskLimits}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -187,7 +213,7 @@ class PackagesManager:
 
             if data['diskSpace'] < 0 or data['bandwidth'] < 0 or data['ftpAccounts'] < 0 or data[
                 'dataBases'] < 0 or \
-                            data['emails'] < 0 or data['allowedDomains'] < 0:
+                    data['emails'] < 0 or data['allowedDomains'] < 0:
                 data_ret = {'saveStatus': 0, 'error_message': "All values should be positive or 0."}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
@@ -238,7 +264,6 @@ class PackagesManager:
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-
     def listPackages(self):
         userID = self.request.session['userID']
         currentACL = ACLManager.loadedACL(userID)
@@ -247,7 +272,15 @@ class PackagesManager:
                         {"packList": packageList}, 'listPackages')
         return proc.render()
 
-    def listPackagesAPI(self,data=None):
+    def listPackagesV2(self):
+        userID = self.request.session['userID']
+        currentACL = ACLManager.loadedACL(userID)
+        packageList = ACLManager.loadPackages(userID, currentACL)
+        proc = httpProc(self.request, 'packages/listPackagesV2.html',
+                        {"packList": packageList}, 'listPackages')
+        return proc.render()
+
+    def listPackagesAPI(self, data=None):
         """
             List of packages for API
         :param data:
@@ -272,7 +305,6 @@ class PackagesManager:
 
             if ACLManager.currentContextPermission(currentACL, 'listPackages') == 0:
                 return ACLManager.loadErrorJson()
-
 
             packages = ACLManager.loadPackageObjects(userID, currentACL)
 

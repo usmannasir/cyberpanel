@@ -1,0 +1,138 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    <div ng-controller="createPackageV2" class="p-8">
+        <div>
+            <p class="text-4xl font-bold">Create Package</p>
+            <p class="text-xs text-gray-600 py-2 font-semibold">Packages define resources for your websites, you need to
+                add package before creating a website.</p>
+        </div>
+        <div>
+            <div class="py-4">
+                <p class="text-xl font-bold">Package Details</p>
+            </div>
+            <hr>
+            <div id="createPackages">
+                <div class="flex mt-4 py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-60">Package Name</p>
+                    </div>
+                    <div>
+                        <input name="pname" type="text" class="w-80 bg-gray-100 rounded px-2 py-1"
+                               ng-model="packageName" required>
+                    </div>
+                    <div class="text-orange-500 font-semibold ml-3">
+                        <p>{{ adminNamePackage }}_{$ packageName $}</p>
+                    </div>
+                </div>
+                <div class="flex py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-60">Domains</p>
+                    </div>
+                    <div>
+                        <input name="dspace" type="number" class="w-80 bg-gray-100 rounded px-2 py-1"
+                               ng-model="allowedDomains"
+                               required>
+                    </div>
+                    <div class="text-orange-500 font-semibold ml-3">
+                        <p>{% trans "(0 = Unlimited)" %}</p>
+                    </div>
+                </div>
+                <div class="flex py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-60">Disk Space</p>
+                    </div>
+                    <div>
+                        <input name="dspace" type="number" class="w-80 bg-gray-100 rounded px-2 py-1"
+                               ng-model="diskSpace" required>
+                    </div>
+                    <div class="text-orange-500 font-semibold ml-3"><p>{% trans "MB (0 = Unlimited)" %}</p></div>
+                </div>
+                <div class="flex py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-60">Bandwidth</p>
+                    </div>
+                    <div>
+                        <input name="bwidth" type="number" class="w-80 bg-gray-100 rounded px-2 py-1"
+                               ng-model="bandwidth" required>
+                    </div>
+                    <div class="text-orange-500 font-semibold ml-3"><p>{% trans "MB (0 = Unlimited)" %}</p></div>
+                </div>
+                <div class="flex py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-60">FTP Account</p>
+                    </div>
+                    <div>
+                        <input name="eaccts" type="number" class="w-80 bg-gray-100 rounded px-2 py-1"
+                               ng-model="ftpAccounts" required>
+                    </div>
+                </div>
+                <div class="flex py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-60">Databases</p>
+                    </div>
+                    <div>
+                        <input name="dbases" type="number" class="w-80 bg-gray-100 rounded px-2 py-1"
+                               ng-model="dataBases" required>
+                    </div>
+                </div>
+                <div class="flex py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-60">Emails</p>
+                    </div>
+                    <div>
+                        <input name="emails" type="number" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="emails"
+                               required>
+                    </div>
+                </div>
+                <div ng-hide="installationDetailsForm">
+                    <div class="flex py-2 px-6">
+                        <div>
+                            <p class="font-semibold w-60">Additional Features</p>
+                        </div>
+                        <div>
+                            <div class="checkbox">
+                                <label>
+                                    <input ng-model="allowFullDomain" type="checkbox" value="">
+                                    Allow Creation of Fully Qualified Domain as Child-Domains
+                                </label>
+                            </div>
+                            <div class="checkbox">
+                                <label>
+                                    <input ng-model="enforceDiskLimits" type="checkbox" value="">
+                                    Enforce Disk Limits
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-center mt-6">
+                    <button ng-click="insertPackInDB()" class="bg-orange-500 text-white font-bold px-4 py-2 text-xl">
+                        Create Package
+                    </button>
+                </div>
+
+                <div class="mt-4">
+                    <label class="col-sm-3 control-label"></label>
+                    <div>
+                        <div id="packageCreated"
+                             class="flex justify-center bg-green-500 px-2 rounded-lg py-1 font-semibold">
+                            <p>{% trans "Package" %} <strong>{$ createdPackage
+                                $}</strong> {% trans "Successfully Created" %}</p>
+                        </div>
+                        <div id="packageCreationFailed"
+                             class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                            <p>{% trans "Cannot create package. Error message:" %} {$ errorMessage $}</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+{% endblock %}
