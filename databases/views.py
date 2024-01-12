@@ -14,6 +14,8 @@ from plogical import randomPassword
 from cryptography.fernet import Fernet
 from plogical.mysqlUtilities import mysqlUtilities
 from plogical.CyberCPLogFileWriter import CyberCPLogFileWriter as logging
+
+
 # Create your views here.
 
 def loadDatabaseHome(request):
@@ -23,6 +25,7 @@ def loadDatabaseHome(request):
         return dm.loadDatabaseHome(request, userID)
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def createDatabase(request):
     try:
@@ -39,9 +42,30 @@ def createDatabase(request):
             return result
 
         return coreResult
-    
+
     except KeyError:
         return redirect(loadLoginPage)
+
+
+def createDatabaseV2(request):
+    try:
+        result = pluginManager.preCreateDatabase(request)
+        if result != 200:
+            return result
+
+        userID = request.session['userID']
+        dm = DatabaseManager()
+        coreResult = dm.createDatabaseV2(request, userID)
+
+        result = pluginManager.postCreateDatabase(request, coreResult)
+        if result != 200:
+            return result
+
+        return coreResult
+
+    except KeyError:
+        return redirect(loadLoginPage)
+
 
 def submitDBCreation(request):
     try:
@@ -63,6 +87,7 @@ def submitDBCreation(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def deleteDatabase(request):
     try:
         userID = request.session['userID']
@@ -71,6 +96,16 @@ def deleteDatabase(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
+def deleteDatabaseV2(request):
+    try:
+        userID = request.session['userID']
+        dm = DatabaseManager()
+        return dm.deleteDatabaseV2(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
+
 def fetchDatabases(request):
     try:
         userID = request.session['userID']
@@ -78,6 +113,7 @@ def fetchDatabases(request):
         return dm.fetchDatabases(userID, json.loads(request.body))
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def submitDatabaseDeletion(request):
     try:
@@ -97,6 +133,7 @@ def submitDatabaseDeletion(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def listDBs(request):
     try:
         userID = request.session['userID']
@@ -104,6 +141,16 @@ def listDBs(request):
         return dm.listDBs(request, userID)
     except KeyError:
         return redirect(loadLoginPage)
+
+
+def listDBsV2(request):
+    try:
+        userID = request.session['userID']
+        dm = DatabaseManager()
+        return dm.listDBsV2(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
+
 
 def changePassword(request):
     try:
@@ -124,6 +171,7 @@ def changePassword(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def remoteAccess(request):
     try:
         userID = request.session['userID']
@@ -134,6 +182,7 @@ def remoteAccess(request):
         return coreResult
     except KeyError:
         return redirect(loadLoginPage)
+
 
 def allowRemoteIP(request):
     try:
@@ -146,6 +195,7 @@ def allowRemoteIP(request):
     except KeyError:
         return redirect(loadLoginPage)
 
+
 def phpMyAdmin(request):
     try:
         userID = request.session['userID']
@@ -153,13 +203,19 @@ def phpMyAdmin(request):
         return dm.phpMyAdmin(request, userID)
     except KeyError:
         return redirect(loadLoginPage)
+def phpMyAdminV2(request):
+    try:
+        userID = request.session['userID']
+        dm = DatabaseManager()
+        return dm.phpMyAdminV2(request, userID)
+    except KeyError:
+        return redirect(loadLoginPage)
 
 def generateAccess(request):
     try:
 
-
         userID = request.session['userID']
-        admin = Administrator.objects.get(id = userID)
+        admin = Administrator.objects.get(id=userID)
         currentACL = ACLManager.loadedACL(userID)
 
         ## if user ACL is admin login as root
@@ -181,12 +237,11 @@ def generateAccess(request):
 
             password = randomPassword.generate_pass()
             token = randomPassword.generate_pass()
-            GlobalUserDB(username=admin.userName, password=password,token=token).save()
+            GlobalUserDB(username=admin.userName, password=password, token=token).save()
 
             data_ret = {'status': 1, 'token': token, 'username': admin.userName}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
-
 
         keySavePath = '/home/cyberpanel/phpmyadmin_%s' % (admin.userName)
         try:
@@ -237,17 +292,16 @@ def generateAccess(request):
         json_data = json.dumps(data_ret)
         return HttpResponse(json_data)
 
+
 def fetchDetailsPHPMYAdmin(request):
     try:
 
-
         userID = request.session['userID']
-        admin = Administrator.objects.get(id = userID)
+        admin = Administrator.objects.get(id=userID)
         currentACL = ACLManager.loadedACL(userID)
 
         token = request.GET.get('token')
         username = request.GET.get('username')
-
 
         if username != admin.userName:
             return redirect(loadLoginPage)
@@ -268,7 +322,7 @@ def fetchDetailsPHPMYAdmin(request):
                     password = jsonData['mysqlpassword']
 
                     returnURL = '/phpmyadmin/phpmyadminsignin.php?username=%s&password=%s' % (
-                    mysqluser, password)
+                        mysqluser, password)
                     return redirect(returnURL)
 
                 except BaseException:

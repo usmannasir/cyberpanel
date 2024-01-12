@@ -1,0 +1,96 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    <div ng-controller="createDatabaseV2" class="p-8">
+        <div>
+            <p class="text-4xl font-bold">Create Database</p>
+            <p class="text-xs text-gray-600 py-2 font-semibold">Create a new database on this page.</p>
+        </div>
+        <div>
+            <div class="py-4">
+                <p class="text-xl font-bold">Create Database</p>
+                <img ng-hide="createDatabaseLoading" src="{% static 'images/loading.gif' %}">
+            </div>
+            <hr>
+            <div>
+                <div class="flex mt-4 py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-60">Select Website</p>
+                    </div>
+                    <div>
+                        <select id="create-database-select" ng-model="databaseWebsite"
+                                class="w-80 bg-gray-100 rounded px-2 py-1">
+                            {% for items in websitesList %}
+                                <option>{{ items }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="flex py-2 px-6 dbDetails">
+                    <div>
+                        <p class="font-semibold w-60">Database Name</p>
+                    </div>
+                    <div>
+                        <input name="dom" type="text" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="dbName"
+                               required>
+                    </div>
+                    <div class="text-orange-500 font-semibold ml-3">
+                        <p><span id="domainDatabase"></span>_{$ dbName $}</p>
+                    </div>
+                </div>
+                <div class="flex py-2 px-6 dbDetails">
+                    <div>
+                        <p class="font-semibold w-60">Username</p>
+                    </div>
+                    <div>
+                        <input type="text" name="email" class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="dbUsername"
+                               required>
+                    </div>
+                    <div class="text-orange-500 font-semibold ml-3"><p><span id="domainUsername"></span>_{$ dbUsername
+                        $}</p></div>
+                </div>
+                <div class="flex py-2 px-6 dbDetails">
+                    <div>
+                        <p class="font-semibold w-60">Password</p>
+                    </div>
+                    <div>
+                        <input type="password" name="email" class="w-80 bg-gray-100 rounded px-2 py-1"
+                               ng-model="dbPassword" required>
+                    </div>
+                    <div class="w-80 ml-4">
+                        <button ng-click="generatePassword()" class="bg-orange-500 text-white font-semibold px-2 py-1">
+                            Generate
+                        </button>
+                    </div>
+                </div>
+                <div>
+                    <div class="flex py-2 px-6 generatedPasswordDetails">
+                        <div>
+                            <p class="font-semibold w-60">Generated Password</p>
+                        </div>
+                        <div>
+                            <input type="text" name="email" class="w-80 bg-gray-100 rounded px-2 py-1"
+                                   ng-model="dbPassword" required>
+                        </div>
+                        <div class="w-80 ml-4">
+                            <button ng-click="usePassword()"
+                                    class="bg-orange-500 text-white font-semibold px-2 py-1">
+                                Use
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-center mt-6 dbDetails">
+                    <button ng-click="createDatabase()" class="bg-orange-500 text-white font-bold px-4 py-2 text-xl">
+                        Create Database
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

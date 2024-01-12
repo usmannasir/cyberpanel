@@ -2,6 +2,7 @@
 import os.path
 import sys
 import django
+
 sys.path.append('/usr/local/CyberCP')
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
@@ -18,28 +19,40 @@ import plogical.randomPassword as randomPassword
 from plogical.httpProc import httpProc
 from backup.models import DBUsers
 
-class DatabaseManager:
 
+class DatabaseManager:
     REMOTE_ACCESS = 'remote_access'
 
-    def loadDatabaseHome(self, request = None, userID = None):
+    def loadDatabaseHome(self, request=None, userID=None):
         template = 'databases/index.html'
         proc = httpProc(request, template, None, 'createDatabase')
         return proc.render()
 
-    def phpMyAdmin(self, request = None, userID = None):
+    def phpMyAdmin(self, request=None, userID=None):
         template = 'databases/phpMyAdmin.html'
         proc = httpProc(request, template, None, 'createDatabase')
         return proc.render()
 
-    def createDatabase(self, request = None, userID = None):
+    def phpMyAdminV2(self, request=None, userID=None):
+        template = 'databases/phpMyAdminV2.html'
+        proc = httpProc(request, template, None, 'createDatabase')
+        return proc.render()
+
+    def createDatabase(self, request=None, userID=None):
         currentACL = ACLManager.loadedACL(userID)
         websitesName = ACLManager.findAllSites(currentACL, userID)
         template = 'databases/createDatabase.html'
         proc = httpProc(request, template, {'websitesList': websitesName}, 'createDatabase')
         return proc.render()
 
-    def submitDBCreation(self, userID = None, data = None, rAPI = None):
+    def createDatabaseV2(self, request=None, userID=None):
+        currentACL = ACLManager.loadedACL(userID)
+        websitesName = ACLManager.findAllSites(currentACL, userID)
+        template = 'databases/createDatabaseV2.html'
+        proc = httpProc(request, template, {'websitesList': websitesName}, 'createDatabase')
+        return proc.render()
+
+    def submitDBCreation(self, userID=None, data=None, rAPI=None):
         try:
 
             currentACL = ACLManager.loadedACL(userID)
@@ -77,14 +90,21 @@ class DatabaseManager:
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-    def deleteDatabase(self, request = None, userID = None):
+    def deleteDatabase(self, request=None, userID=None):
         currentACL = ACLManager.loadedACL(userID)
         websitesName = ACLManager.findAllSites(currentACL, userID)
         template = 'databases/deleteDatabase.html'
         proc = httpProc(request, template, {'websitesList': websitesName}, 'deleteDatabase')
         return proc.render()
 
-    def fetchDatabases(self, userID = None, data = None):
+    def deleteDatabaseV2(self, request=None, userID=None):
+        currentACL = ACLManager.loadedACL(userID)
+        websitesName = ACLManager.findAllSites(currentACL, userID)
+        template = 'databases/deleteDatabaseV2.html'
+        proc = httpProc(request, template, {'websitesList': websitesName}, 'deleteDatabase')
+        return proc.render()
+
+    def fetchDatabases(self, userID=None, data=None):
         try:
 
             currentACL = ACLManager.loadedACL(userID)
@@ -126,7 +146,7 @@ class DatabaseManager:
             final_json = json.dumps({'status': 0, 'fetchStatus': 0, 'error_message': str(msg)})
             return HttpResponse(final_json)
 
-    def submitDatabaseDeletion(self, userID = None, data = None):
+    def submitDatabaseDeletion(self, userID=None, data=None):
         try:
             currentACL = ACLManager.loadedACL(userID)
             admin = Administrator.objects.get(pk=userID)
@@ -157,14 +177,21 @@ class DatabaseManager:
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-    def listDBs(self, request = None, userID = None):
+    def listDBs(self, request=None, userID=None):
         currentACL = ACLManager.loadedACL(userID)
         AllWebsites = ACLManager.findAllSites(currentACL, userID)
         template = 'databases/listDataBases.html'
         proc = httpProc(request, template, {'AllWebsites': AllWebsites}, 'listDatabases')
         return proc.render()
 
-    def changePassword(self, userID = None, data = None):
+    def listDBsV2(self, request=None, userID=None):
+        currentACL = ACLManager.loadedACL(userID)
+        AllWebsites = ACLManager.findAllSites(currentACL, userID)
+        template = 'databases/listDataBasesV2.html'
+        proc = httpProc(request, template, {'AllWebsites': AllWebsites}, 'listDatabases')
+        return proc.render()
+
+    def changePassword(self, userID=None, data=None):
         try:
             currentACL = ACLManager.loadedACL(userID)
 
@@ -192,7 +219,8 @@ class DatabaseManager:
             res = mysqlUtilities.changePassword(userName, dbPassword, None, host)
 
             if res == 0:
-                data_ret = {'status': 0, 'changePasswordStatus': 0,'error_message': "Please see CyberPanel main log file."}
+                data_ret = {'status': 0, 'changePasswordStatus': 0,
+                            'error_message': "Please see CyberPanel main log file."}
                 json_data = json.dumps(data_ret)
                 return HttpResponse(json_data)
 
@@ -205,7 +233,7 @@ class DatabaseManager:
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-    def remoteAccess(self, userID = None, data = None):
+    def remoteAccess(self, userID=None, data=None):
         try:
             currentACL = ACLManager.loadedACL(userID)
 
@@ -234,11 +262,11 @@ class DatabaseManager:
                 return HttpResponse(json_data)
 
         except BaseException as msg:
-            data_ret = {'status': 0,'error_message': str(msg)}
+            data_ret = {'status': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
-    def allowRemoteIP(self, userID = None, data = None):
+    def allowRemoteIP(self, userID=None, data=None):
         try:
             currentACL = ACLManager.loadedACL(userID)
 
@@ -269,14 +297,14 @@ class DatabaseManager:
                 meta.value = json.dumps(metaData)
                 meta.save()
             except:
-                DBMeta(database=db[0], value = json.dumps(metaData), key=DatabaseManager.REMOTE_ACCESS).save()
+                DBMeta(database=db[0], value=json.dumps(metaData), key=DatabaseManager.REMOTE_ACCESS).save()
 
             data_ret = {'status': 1}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
         except BaseException as msg:
-            data_ret = {'status': 0,'error_message': str(msg)}
+            data_ret = {'status': 0, 'error_message': str(msg)}
             json_data = json.dumps(data_ret)
             return HttpResponse(json_data)
 
@@ -286,7 +314,6 @@ class DatabaseManager:
 
             admin = Administrator.objects.get(id=userID)
             path = '/etc/cyberpanel/' + admin.userName
-
 
             currentACL = ACLManager.loadedACL(userID)
             websiteOBJs = ACLManager.findWebsiteObjects(currentACL, userID)
@@ -308,13 +335,12 @@ class DatabaseManager:
         except BaseException as msg:
             print("0," + str(msg))
 
-def main():
 
+def main():
     parser = argparse.ArgumentParser(description='CyberPanel Installer')
     parser.add_argument('function', help='Specific a function to call!')
 
     parser.add_argument('--userID', help='Logged in user ID')
-
 
     args = parser.parse_args()
 

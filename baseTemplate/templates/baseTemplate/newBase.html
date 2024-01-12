@@ -12,6 +12,8 @@
     <script src="{% static 'baseTemplate/angularjs.1.6.5.js' %}"></script>
     <script src="{% static 'baseTemplate/jquery.3.2.1.js' %}"></script>
     <link rel="stylesheet" type="text/css" href="{% static 'baseTemplate/custom-js/pnotify.custom.min.css' %}">
+    <link type="text/css" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css"
+          rel="stylesheet"/>
 </head>
 
 <body>
@@ -531,22 +533,22 @@
                     </div>
                     <ul id="dropdown-example-5" class="hidden py-2 space-y-2">
                         <li>
-                            <a href="#"
+                            <a href="{% url 'createDatabaseV2' %}"
                                class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
                                 Create Database</a>
                         </li>
                         <li>
-                            <a href="#"
+                            <a href="{% url 'listDBsV2' %}"
                                class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
                                 List Database</a>
                         </li>
                         <li>
-                            <a href="#"
+                            <a href="{% url 'deleteDatabaseV2' %}"
                                class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
                                 Delete Database</a>
                         </li>
                         <li>
-                            <a href="#"
+                            <a href="{% url 'phpMyAdminV2' %}"
                                class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
                                 PHPMYAdmin</a>
                         </li>
@@ -1665,11 +1667,13 @@
 <!-- Connecting JS -->
 {#<script src="homepage.js"></script>#}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="{% static 'baseTemplate/custom-js/pnotify.custom.min.js' %}"></script>
 <script src="{% static 'baseTemplate/newBase.js' %}"></script>
 <script src="{% static 'websiteFunctions/websiteFunctionsV2.js' %}"></script>
 <script src="{% static 'userManagment/userManagementV2.js' %}"></script>
 <script src="{% static 'packages/packagesV2.js' %}"></script>
+<script src="{% static 'databases/databasesV2.js' %}"></script>
 </body>
 
 </html>

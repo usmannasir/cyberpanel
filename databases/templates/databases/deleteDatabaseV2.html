@@ -1,0 +1,71 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    <div ng-controller="deleteDatabaseV2" class="p-8">
+        <div>
+            <p class="text-4xl font-bold">Delete Database</p>
+            <p class="text-xs text-gray-600 py-2 font-semibold">Delete an existing database on this page.</p>
+        </div>
+        <div>
+            <div class="py-4">
+                <p class="text-xl font-bold">Delete Database</p>
+                <img ng-hide="deleteDatabaseLoading" src="{% static 'images/loading.gif' %}">
+            </div>
+            <hr>
+            <div>
+                <div class="flex mt-4 py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-60">Select Website</p>
+                    </div>
+                    <div>
+                        <select ng-change="fetchDatabases()" ng-model="databaseWebsite"
+                                class="w-80 bg-gray-100 rounded px-2 py-1">
+                            {% for items in websitesList %}
+                                <option>{{ items }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div ng-hide="fetchedDatabases" class="flex mt-4 py-2 px-6">
+                    <div>
+                        <p class="font-semibold w-60">Select Database</p>
+                    </div>
+                    <div>
+                        <select ng-model="selectedDB" class="w-80 bg-gray-100 rounded px-2 py-1">
+                            <option ng-repeat="db in dbnames track by $index">{$ db.dbName $}</option>
+                        </select>
+                    </div>
+                </div>
+                <div ng-hide="fetchedDatabases" class="flex justify-center mt-6">
+                    <button ng-click="deleteDatabase()"
+                            class="bg-orange-500 text-white font-bold px-4 py-2 text-xl">
+                        Delete Database
+                    </button>
+                </div>
+
+
+                <div class="mt-4">
+                    <label class="col-sm-3 control-label"></label>
+                    <div>
+                        <div ng-hide="databaseDeleted"
+                             class="flex justify-center bg-green-500 px-2 rounded-lg py-1 font-semibold">
+                            <p>{% trans "Database deleted successfully." %}</p>
+                        </div>
+                        <div ng-hide="databaseDeletionFailed"
+                             class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                            <p>{% trans "Error message:" %} {$ errorMessage $}</p>
+                        </div>
+                        <div ng-hide="couldNotConnect"
+                             class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                            <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
