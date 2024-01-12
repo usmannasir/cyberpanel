@@ -1,4 +1,5 @@
 import os,sys
+import shutil
 from urllib.parse import unquote
 
 sys.path.append('/usr/local/CyberCP')
@@ -1142,8 +1143,54 @@ Signed-By: /etc/apt/keyrings/mariadb-keyring.pgp
             command = 'DEBIAN_FRONTEND=noninteractive sudo apt-get install mariadb-server -y'
             ProcessUtilities.executioner(command, 'root', True)
 
-            logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Completed [200]')
 
+        else:
+            CNFCurrentPath = '/etc/my.cnf.d/ '
+            CNFBackupPath = '/etc/cnfbackup/'
+
+            command = f'rsync -av {CNFCurrentPath} {CNFBackupPath}'
+            ProcessUtilities.executioner(command)
+
+            if os.path.exists('/etc/my.cnf'):
+                shutil.copy('/etc/my.cnf', f'{CNFBackupPath}/my.cnf')
+
+            command = 'yum remove mariadb* -y'
+            ProcessUtilities.executioner(command, 'root', True)
+
+
+            RepoPath = '/etc/yum.repos.d/mariadb.repo'
+            RepoContent = f"""
+[mariadb]
+name = MariaDB
+baseurl = http://yum.mariadb.org/{versionToInstall}/rhel8-amd64
+module_hotfixes=1
+gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
+gpgcheck=1            
+"""
+
+            WriteToFile = open(RepoPath, 'w')
+            WriteToFile.write(RepoContent)
+            WriteToFile.close()
+
+
+
+            command = 'dnf update -y'
+            result = ProcessUtilities.outputExecutioner(command, 'root', True)
+
+            print(result)
+
+            command = 'dnf install mariadb-server -y'
+            result = ProcessUtilities.outputExecutioner(command, 'root', True)
+
+            print(result)
+
+            command = 'systemctl start mariadb && systemctl enable mariadb'
+            result = ProcessUtilities.outputExecutioner(command, 'root', True)
+
+            print(result)
+
+
+        logging.CyberCPLogFileWriter.statusWriter(tempStatusPath, 'Completed [200]')
 
 
 def main():
