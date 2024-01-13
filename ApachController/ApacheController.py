@@ -9,7 +9,12 @@ from plogical.processUtilities import ProcessUtilities
 
 class ApacheController:
     apacheInstallStatusPath = '/home/cyberpanel/apacheInstallStatus'
-    serverRootPath = '/etc/httpd'
+
+    if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+        serverRootPath = '/etc/httpd'
+    else:
+        serverRootPath = '/etc/apache2'
+
     mpmConfigs = """# Select the MPM module which should be used by uncommenting exactly
 # one of the following LoadModule lines:
 
@@ -44,44 +49,44 @@ LoadModule mpm_event_module modules/mod_mpm_event.so
     def checkIfApacheInstalled():
         try:
             if os.path.exists(ApacheController.serverRootPath):
-                pass
-            else:
-                return 0
-
-            if os.path.exists(ApacheVhost.php54Path):
-                pass
-            else:
-                return 0
-
-            if os.path.exists(ApacheVhost.php55Path):
-                pass
-            else:
-                return 0
-
-            if os.path.exists(ApacheVhost.php56Path):
-                pass
-            else:
-                return 0
-
-            if os.path.exists(ApacheVhost.php70Path):
-                pass
-            else:
-                return 0
-
-            if os.path.exists(ApacheVhost.php71Path):
-                pass
-            else:
-                return 0
-
-            if os.path.exists(ApacheVhost.php72Path):
-                pass
-            else:
-                return 0
-
-            if os.path.exists(ApacheVhost.php73Path):
                 return 1
             else:
                 return 0
+
+            # if os.path.exists(ApacheVhost.php54Path):
+            #     pass
+            # else:
+            #     return 0
+            #
+            # if os.path.exists(ApacheVhost.php55Path):
+            #     pass
+            # else:
+            #     return 0
+            #
+            # if os.path.exists(ApacheVhost.php56Path):
+            #     pass
+            # else:
+            #     return 0
+            #
+            # if os.path.exists(ApacheVhost.php70Path):
+            #     pass
+            # else:
+            #     return 0
+            #
+            # if os.path.exists(ApacheVhost.php71Path):
+            #     pass
+            # else:
+            #     return 0
+            #
+            # if os.path.exists(ApacheVhost.php72Path):
+            #     pass
+            # else:
+            #     return 0
+            #
+            # if os.path.exists(ApacheVhost.php73Path):
+            #     return 1
+            # else:
+            #     return 0
         except BaseException as msg:
             message = "%s. [%s]" % (str(msg), '[ApacheController.checkIfApacheInstalled]')
             logging.CyberCPLogFileWriter.writeToFile(message)
