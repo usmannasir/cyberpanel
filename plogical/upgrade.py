@@ -2250,6 +2250,55 @@ CREATE TABLE `websiteFunctions_backupsv2` (`id` integer AUTO_INCREMENT NOT NULL 
         except BaseException as msg:
             Upgrade.stdOut(str(msg) + " [installLSCPD]")
 
+    ### disable dkim signing in rspamd in ref to https://github.com/usmannasir/cyberpanel/issues/1176
+    @staticmethod
+    def FixRSPAMDConfig():
+        RSPAMDConf = '/etc/rspamd'
+        postfixConf = '/etc/postfix/main.cf'
+
+        if os.path.exists(RSPAMDConf):
+            DKIMPath = '/etc/rspamd/local.d/dkim_signing.conf'
+
+            WriteToFile = open(DKIMPath, 'w')
+            WriteToFile.write('enabled = false;\n')
+            WriteToFile.close()
+
+
+            if os.path.exists(postfixConf):
+                appendpath = "/etc/postfix/main.cf"
+
+                lines = open(appendpath, 'r').readlines()
+
+                WriteToFile = open(appendpath, 'w')
+
+                for line in lines:
+
+                    if line.find('smtpd_milters') > -1:
+                        continue
+                    elif line.find('non_smtpd_milters') > -1:
+                        continue
+                    elif line.find('milter_default_action') > -1:
+                        continue
+                    else:
+                        WriteToFile.write(line)
+
+
+                RSPAMDConfContent = '''
+### Please do not edit this line, editing this line could break configurations
+smtpd_milters = inet:127.0.0.1:8891, inet:127.0.0.1:11332
+non_smtpd_milters = $smtpd_milters
+milter_default_action = accept
+'''
+                WriteToFile.write(RSPAMDConfContent)
+
+                WriteToFile.close()
+
+                command = 'systemctl restart postfix && systemctl restart rspamd'
+                Upgrade.executioner(command, 'postfix and rspamd restart', 0, True)
+
+
+
+
     @staticmethod
     def fixPermissions():
         try:

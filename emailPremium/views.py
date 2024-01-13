@@ -1450,15 +1450,12 @@ def fetchRspamdSettings(request):
                         postdata = ProcessUtilities.outputExecutioner(command).splitlines()
                         for i in postdata:
                             if i.find('smtpd_milters=') > -1 and i.find('non_smtpd_milters') < 0:
-                                tempData = i.split(' ')
-                                x = tempData[0]
-                                y = x.split('=')
-                                smtpd_milters = y[1]
+                                ### non_smtpd_milters = inet:127.0.0.1:8891, inet:127.0.0.1:11332
+                                tempData = i.split(',')
+                                smtpd_milters = tempData[1].lstrip(' ')
                             if i.find('non_smtpd_milters=') > -1:
-                                tempData = i.split(' ')
-                                x = tempData[0]
-                                y = x.split('=')
-                                non_smtpd_milters = y[1]
+                                tempData = i.split('=')
+                                non_smtpd_milters = tempData[1].lstrip(' ')
 
                         ###Redis
                         Redispath = "/etc/rspamd/local.d/redis.conf"

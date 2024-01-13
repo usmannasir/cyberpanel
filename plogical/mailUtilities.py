@@ -716,8 +716,6 @@ clamav {
             WriteToFile.close()
 
 
-
-
             appendpath = "/etc/postfix/main.cf"
 
             lines = open(appendpath, 'r').readlines()
@@ -728,6 +726,7 @@ clamav {
                 if line.find('inet:127.0.0.1:8891') > -1:
                     cLine = line
                     content = f'{cLine}, inet:127.0.0.1:11332\n'
+                    WriteToFile.write('### Please do not edit this line, editing this line could break configurations\n')
                     WriteToFile.write(content)
                 elif line.find('non_smtpd_milters') > -1:
                     WriteToFile.write('non_smtpd_milters = $smtpd_milters\n')
@@ -1030,11 +1029,11 @@ LogFile /var/log/clamav/clamav.log
             writeDataToFile = open(postfixpath, "w")
             for i in data:
                 if i.find('smtpd_milters=') > -1 and i.find('non_smtpd_milters') < 0:
-                    newitem = 'smtpd_milters=%s' % smtpd_milters
+                    newitem = f'non_smtpd_milters = inet:127.0.0.1:8891, {smtpd_milters}\n'
                     writeDataToFile.writelines(newitem + '\n')
                 elif i.find('non_smtpd_milters=') > -1:
-                    newitem = 'non_smtpd_milters=%s' % non_smtpd_milters
-                    writeDataToFile.writelines(newitem + '\n')
+                    #newitem = 'non_smtpd_milters=%s' % non_smtpd_milters
+                    writeDataToFile.writelines('non_smtpd_milters = $smtpd_milters\n')
                 else:
                     writeDataToFile.writelines(i + '\n')
 
