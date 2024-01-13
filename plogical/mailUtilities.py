@@ -1028,10 +1028,10 @@ LogFile /var/log/clamav/clamav.log
 
             writeDataToFile = open(postfixpath, "w")
             for i in data:
-                if i.find('smtpd_milters=') > -1 and i.find('non_smtpd_milters') < 0:
-                    newitem = f'non_smtpd_milters = inet:127.0.0.1:8891, {smtpd_milters}\n'
+                if (i.find('smtpd_milters=') > -1 or i.find('smtpd_milters =') > -1) and i.find('non_smtpd_milters') < 0:
+                    newitem = f'smtpd_milters = inet:127.0.0.1:8891, {smtpd_milters}\n'
                     writeDataToFile.writelines(newitem + '\n')
-                elif i.find('non_smtpd_milters=') > -1:
+                elif i.find('non_smtpd_milters=') > -1 or i.find('non_smtpd_milters =') > -1:
                     #newitem = 'non_smtpd_milters=%s' % non_smtpd_milters
                     writeDataToFile.writelines('non_smtpd_milters = $smtpd_milters\n')
                 else:
