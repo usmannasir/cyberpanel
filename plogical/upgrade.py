@@ -3122,6 +3122,7 @@ vmail
         Upgrade.AutoUpgradeAcme()
         Upgrade.installCLScripts()
         Upgrade.runSomeImportantBash()
+        Upgrade.FixRSPAMDConfig()
 
         # ## Move static files
         #
