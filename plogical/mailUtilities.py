@@ -707,14 +707,34 @@ clamav {
             wirtedata.close()
 
 
+            ### disable dkim signing in rspamd in ref to https://github.com/usmannasir/cyberpanel/issues/1176
+
+            DKIMPath = '/etc/rspamd/local.d/dkim_signing.conf'
+
+            WriteToFile = open(DKIMPath, 'w')
+            WriteToFile.write('enabled = false;\n')
+            WriteToFile.close()
+
+
+
+
             appendpath = "/etc/postfix/main.cf"
-            appenddata = """
-smtpd_milters=inet:127.0.0.1:11332
-non_smtpd_milters=inet:127.0.0.1:11332
-"""
-            wirtedata1 = open(appendpath, 'a')
-            wirtedata1.writelines(appenddata)
-            wirtedata1.close()
+
+            lines = open(appendpath, 'r').readlines()
+
+            WriteToFile = open(appendpath, 'w')
+
+            for line in lines:
+                if line.find('inet:127.0.0.1:8891') > -1:
+                    cLine = line
+                    content = f'{cLine}, inet:127.0.0.1:11332\n'
+                    WriteToFile.write(content)
+                elif line.find('non_smtpd_milters') > -1:
+                    WriteToFile.write('non_smtpd_milters = $smtpd_milters\n')
+                else:
+                    WriteToFile.write(line)
+
+            WriteToFile.close()
 
 
             wpath = "/etc/rspamd/local.d/redis.conf"
