@@ -245,43 +245,43 @@ LoadModule mpm_event_module modules/mod_mpm_event.so
             if ProcessUtilities.executioner(command, None, True) == 0:
                 return "Failed to install Apache and PHP-FPM."
 
-        try:
-            wwwConfPath = ApacheVhost.php54Path + "/www.conf"
-
-            if os.path.exists(wwwConfPath):
-                os.remove(wwwConfPath)
-
-            wwwConfPath = ApacheVhost.php55Path + "/www.conf"
-
-            if os.path.exists(wwwConfPath):
-                os.remove(wwwConfPath)
-
-            wwwConfPath = ApacheVhost.php56Path + "/www.conf"
-
-            if os.path.exists(wwwConfPath):
-                os.remove(wwwConfPath)
-
-            wwwConfPath = ApacheVhost.php70Path + "/www.conf"
-
-            if os.path.exists(wwwConfPath):
-                os.remove(wwwConfPath)
-
-            wwwConfPath = ApacheVhost.php71Path + "/www.conf"
-
-            if os.path.exists(wwwConfPath):
-                os.remove(wwwConfPath)
-
-            wwwConfPath = ApacheVhost.php72Path + "/www.conf"
-
-            if os.path.exists(wwwConfPath):
-                os.remove(wwwConfPath)
-
-            wwwConfPath = ApacheVhost.php73Path + "/www.conf"
-
-            if os.path.exists(wwwConfPath):
-                os.remove(wwwConfPath)
-        except:
-            pass
+        # try:
+        #     wwwConfPath = ApacheVhost.php54Path + "/www.conf"
+        #
+        #     if os.path.exists(wwwConfPath):
+        #         os.remove(wwwConfPath)
+        #
+        #     wwwConfPath = ApacheVhost.php55Path + "/www.conf"
+        #
+        #     if os.path.exists(wwwConfPath):
+        #         os.remove(wwwConfPath)
+        #
+        #     wwwConfPath = ApacheVhost.php56Path + "/www.conf"
+        #
+        #     if os.path.exists(wwwConfPath):
+        #         os.remove(wwwConfPath)
+        #
+        #     wwwConfPath = ApacheVhost.php70Path + "/www.conf"
+        #
+        #     if os.path.exists(wwwConfPath):
+        #         os.remove(wwwConfPath)
+        #
+        #     wwwConfPath = ApacheVhost.php71Path + "/www.conf"
+        #
+        #     if os.path.exists(wwwConfPath):
+        #         os.remove(wwwConfPath)
+        #
+        #     wwwConfPath = ApacheVhost.php72Path + "/www.conf"
+        #
+        #     if os.path.exists(wwwConfPath):
+        #         os.remove(wwwConfPath)
+        #
+        #     wwwConfPath = ApacheVhost.php73Path + "/www.conf"
+        #
+        #     if os.path.exists(wwwConfPath):
+        #         os.remove(wwwConfPath)
+        # except:
+        #     pass
 
         return 1
 
