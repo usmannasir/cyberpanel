@@ -298,6 +298,9 @@ Signed-By: /etc/apt/keyrings/mariadb-keyring.pgp
             WriteToFile.write(RepoContent)
             WriteToFile.close()
 
+            command = 'DEBIAN_FRONTEND=noninteractive apt-get update -y'
+            install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
+
 
             command = "DEBIAN_FRONTEND=noninteractive apt-get install mariadb-server -y"
         elif self.distro == centos:
