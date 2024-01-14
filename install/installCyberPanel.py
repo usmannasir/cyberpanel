@@ -274,7 +274,7 @@ class InstallCyberPanel:
             install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
 
             command = "DEBIAN_FRONTEND=noninteractive apt-get install apt-transport-https curl -y"
-            install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
+            install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
 
             command = "mkdir -p /etc/apt/keyrings"
             install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR)
@@ -299,12 +299,12 @@ Signed-By: /etc/apt/keyrings/mariadb-keyring.pgp
             WriteToFile.close()
 
 
-            command = "DEBIAN_FRONTEND=noninteractive sudo apt-get install mariadb-server -y"
+            command = "DEBIAN_FRONTEND=noninteractive apt-get install mariadb-server -y"
         elif self.distro == centos:
 
             RepoPath = '/etc/yum.repos.d/mariadb.repo'
             RepoContent = f"""
-            [mariadb]
+[mariadb]
 name = MariaDB
 baseurl = http://yum.mariadb.org/10.11/rhel8-amd64
 module_hotfixes=1
@@ -317,19 +317,20 @@ gpgcheck=1
 
             command = 'dnf install mariadb-server -y'
         elif self.distro == cent8 or self.distro == openeuler:
-            ### check if cent8 which means Alma8 then add Mariadb 10.6 repo
-#             if self.distro == cent8:
-#                 content = """
-# [mariadb]
-# name = MariaDB
-# baseurl = http://yum.mariadb.org/10.6/rhel8-amd64
-# module_hotfixes=1
-# gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
-# gpgcheck=1
-# """
-#                 writeToFile = open('/etc/yum.repos.d/mariadb.repo', 'w')
-#                 writeToFile.write(content)
-#                 writeToFile.close()
+
+            RepoPath = '/etc/yum.repos.d/mariadb.repo'
+            RepoContent = f"""
+[mariadb]
+name = MariaDB
+baseurl = http://yum.mariadb.org/10.11/rhel8-amd64
+module_hotfixes=1
+gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
+gpgcheck=1            
+"""
+            WriteToFile = open(RepoPath, 'w')
+            WriteToFile.write(RepoContent)
+            WriteToFile.close()
+
 
             command = 'dnf -y install mariadb-server'
 
