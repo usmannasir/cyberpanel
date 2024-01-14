@@ -3375,6 +3375,7 @@ pm.max_spare_servers = 3
         Upgrade.installCLScripts()
         Upgrade.runSomeImportantBash()
         Upgrade.FixRSPAMDConfig()
+        Upgrade.CreateMissingPoolsforFPM()
 
         # ## Move static files
         #
