@@ -31,6 +31,7 @@ Ubuntu22 = 8
 
 
 class Upgrade:
+
     logPath = "/usr/local/lscp/logs/upgradeLog"
     cdn = 'cdn.cyberpanel.sh'
     installedOutput = ''
@@ -2296,9 +2297,6 @@ milter_default_action = accept
                 command = 'systemctl restart postfix && systemctl restart rspamd'
                 Upgrade.executioner(command, 'postfix and rspamd restart', 0, True)
 
-
-
-
     @staticmethod
     def fixPermissions():
         try:
@@ -2971,6 +2969,260 @@ vmail
                                 str(acl.scheduleBackups), str(acl.remoteBackups), '1',
                                 str(acl.manageSSL), str(acl.hostnameSSL), str(acl.mailServerSSL))
                 acl.save()
+
+    @staticmethod
+    def CreateMissingPoolsforFPM():
+        ##### apache configs
+
+        CentOSPath = '/etc/redhat-release'
+
+        if os.path.exists(CentOSPath):
+
+            serverRootPath = '/etc/httpd'
+            configBasePath = '/etc/httpd/conf.d/'
+            php54Path = '/opt/remi/php54/root/etc/php-fpm.d/'
+            php55Path = '/opt/remi/php55/root/etc/php-fpm.d/'
+            php56Path = '/etc/opt/remi/php56/php-fpm.d/'
+            php70Path = '/etc/opt/remi/php70/php-fpm.d/'
+            php71Path = '/etc/opt/remi/php71/php-fpm.d/'
+            php72Path = '/etc/opt/remi/php72/php-fpm.d/'
+            php73Path = '/etc/opt/remi/php73/php-fpm.d/'
+
+            php74Path = '/etc/opt/remi/php74/php-fpm.d/'
+
+            php80Path = '/etc/opt/remi/php80/php-fpm.d/'
+            php81Path = '/etc/opt/remi/php81/php-fpm.d/'
+            php82Path = '/etc/opt/remi/php82/php-fpm.d/'
+
+            serviceName = 'httpd'
+            sockPath = '/var/run/php-fpm/'
+        else:
+            serverRootPath = '/etc/apache2'
+            configBasePath = '/etc/apache2/sites-enabled/'
+
+            php54Path = '/etc/php/5.4/fpm/pool.d/'
+            php55Path = '/etc/php/5.5/fpm/pool.d/'
+            php56Path = '/etc/php/5.6/fpm/pool.d/'
+            php70Path = '/etc/php/7.0/fpm/pool.d/'
+            php71Path = '/etc/php/7.1/fpm/pool.d/'
+            php72Path = '/etc/php/7.2/fpm/pool.d/'
+            php73Path = '/etc/php/7.3/fpm/pool.d/'
+
+            php74Path = '/etc/php/7.4/fpm/pool.d/'
+            php80Path = '/etc/php/8.0/fpm/pool.d/'
+            php81Path = '/etc/php/8.1/fpm/pool.d/'
+            php82Path = '/etc/php/8.2/fpm/pool.d/'
+
+            serviceName = 'apache2'
+            sockPath = '/var/run/php/'
+
+        #####
+
+        if not os.path.exists(serverRootPath):
+            return 1
+
+        if os.path.exists(php54Path):
+            content = f"""
+[php54default]
+user = www-data
+group = www-data
+listen ={sockPath}php5.4-fpm.sock
+listen.owner = www-data
+listen.group = www-data
+pm = dynamic
+pm.max_children = 5
+pm.start_servers = 2
+pm.min_spare_servers = 1
+pm.max_spare_servers = 3
+"""
+            WriteToFile = open(f'{php54Path}www.conf', 'w')
+            WriteToFile.write(content)
+            WriteToFile.close()
+
+        if os.path.exists(php55Path):
+            content = f'''
+[php55default]
+user = www-data
+group = www-data
+listen ={sockPath}php5.5-fpm.sock
+listen.owner = www-data
+listen.group = www-data
+pm = dynamic
+pm.max_children = 5
+pm.start_servers = 2
+pm.min_spare_servers = 1
+pm.max_spare_servers = 3
+'''
+            WriteToFile = open(f'{php55Path}www.conf', 'w')
+            WriteToFile.write(content)
+            WriteToFile.close()
+
+        if os.path.exists(php56Path):
+            content = f'''
+[php56default]
+user = www-data
+group = www-data
+listen ={sockPath}php5.6-fpm.sock
+listen.owner = www-data
+listen.group = www-data
+pm = dynamic
+pm.max_children = 5
+pm.start_servers = 2
+pm.min_spare_servers = 1
+pm.max_spare_servers = 3
+'''
+            WriteToFile = open(f'{php56Path}www.conf', 'w')
+            WriteToFile.write(content)
+            WriteToFile.close()
+
+        if os.path.exists(php70Path):
+            content = f'''
+[php70default]
+user = www-data
+group = www-data
+listen ={sockPath}php7.0-fpm.sock
+listen.owner = www-data
+listen.group = www-data
+pm = dynamic
+pm.max_children = 5
+pm.start_servers = 2
+pm.min_spare_servers = 1
+pm.max_spare_servers = 3
+'''
+            WriteToFile = open(f'{php70Path}www.conf', 'w')
+            WriteToFile.write(content)
+            WriteToFile.close()
+
+        if os.path.exists(php71Path):
+            content = f'''
+[php71default]
+user = www-data
+group = www-data
+listen ={sockPath}php7.1-fpm.sock
+listen.owner = www-data
+listen.group = www-data
+pm = dynamic
+pm.max_children = 5
+pm.start_servers = 2
+pm.min_spare_servers = 1
+pm.max_spare_servers = 3
+'''
+            WriteToFile = open(f'{php71Path}www.conf', 'w')
+            WriteToFile.write(content)
+            WriteToFile.close()
+
+        if os.path.exists(php72Path):
+            content = f'''
+[php72default]
+user = www-data
+group = www-data
+listen ={sockPath}php7.2-fpm.sock
+listen.owner = www-data
+listen.group = www-data
+pm = dynamic
+pm.max_children = 5
+pm.start_servers = 2
+pm.min_spare_servers = 1
+pm.max_spare_servers = 3
+'''
+            WriteToFile = open(f'{php72Path}www.conf', 'w')
+            WriteToFile.write(content)
+            WriteToFile.close()
+
+        if os.path.exists(php73Path):
+            content = f'''
+[php73default]
+user = www-data
+group = www-data
+listen ={sockPath}php7.3-fpm.sock
+listen.owner = www-data
+listen.group = www-data
+pm = dynamic
+pm.max_children = 5
+pm.start_servers = 2
+pm.min_spare_servers = 1
+pm.max_spare_servers = 3
+'''
+            WriteToFile = open(f'{php73Path}www.conf', 'w')
+            WriteToFile.write(content)
+            WriteToFile.close()
+
+        if os.path.exists(php74Path):
+            content = f'''
+[php74default]
+user = www-data
+group = www-data
+listen ={sockPath}php7.3-fpm.sock
+listen.owner = www-data
+listen.group = www-data
+pm = dynamic
+pm.max_children = 5
+pm.start_servers = 2
+pm.min_spare_servers = 1
+pm.max_spare_servers = 3
+'''
+            WriteToFile = open(f'{php74Path}www.conf', 'w')
+            WriteToFile.write(content)
+            WriteToFile.close()
+
+        if os.path.exists(php80Path):
+            content = f'''
+[php80default]
+user = www-data
+group = www-data
+listen ={sockPath}php8.0-fpm.sock
+listen.owner = www-data
+listen.group = www-data
+pm = dynamic
+pm.max_children = 5
+pm.start_servers = 2
+pm.min_spare_servers = 1
+pm.max_spare_servers = 3
+
+'''
+            WriteToFile = open(f'{php80Path}www.conf', 'w')
+            WriteToFile.write(content)
+            WriteToFile.close()
+
+        if os.path.exists(php81Path):
+            content = f'''
+[php81default]
+user = www-data
+group = www-data
+listen ={sockPath}php8.1-fpm.sock
+listen.owner = www-data
+listen.group = www-data
+pm = dynamic
+pm.max_children = 5
+pm.start_servers = 2
+pm.min_spare_servers = 1
+pm.max_spare_servers = 3
+
+'''
+            WriteToFile = open(f'{php81Path}www.conf', 'w')
+            WriteToFile.write(content)
+            WriteToFile.close()
+        if os.path.exists(php82Path):
+            content = f'''
+[php82default]
+user = www-data
+group = www-data
+listen ={sockPath}php8.2-fpm.sock
+listen.owner = www-data
+listen.group = www-data
+pm = dynamic
+pm.max_children = 5
+pm.start_servers = 2
+pm.min_spare_servers = 1
+pm.max_spare_servers = 3
+            
+'''
+            WriteToFile = open(f'{php82Path}www.conf', 'w')
+            WriteToFile.write(content)
+            WriteToFile.close()
+
+
+
 
     @staticmethod
     def upgrade(branch):

@@ -47,8 +47,8 @@ class ApacheVhost:
         php71Path = '/etc/php/7.1/fpm/pool.d/'
         php72Path = '/etc/php/7.2/fpm/pool.d/'
         php73Path = '/etc/php/7.3/fpm/pool.d/'
-
         php74Path = '/etc/php/7.4/fpm/pool.d/'
+
         php80Path = '/etc/php/8.0/fpm/pool.d/'
         php81Path = '/etc/php/8.1/fpm/pool.d/'
         php82Path = '/etc/php/8.2/fpm/pool.d/'
