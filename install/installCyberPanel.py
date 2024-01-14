@@ -321,21 +321,20 @@ gpgcheck=1
             command = 'dnf install mariadb-server -y'
         elif self.distro == cent8 or self.distro == openeuler:
 
-            RepoPath = '/etc/yum.repos.d/mariadb.repo'
-            RepoContent = f"""
-[mariadb]
-name = MariaDB
-baseurl = http://yum.mariadb.org/10.11/rhel8-amd64
-module_hotfixes=1
-gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
-gpgcheck=1            
-"""
-            WriteToFile = open(RepoPath, 'w')
-            WriteToFile.write(RepoContent)
-            WriteToFile.close()
+            command = 'curl -LsS https://downloads.mariadb.com/MariaDB/mariadb_repo_setup | sudo bash -s -- --mariadb-server-version=10.11'
+            install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
+
+            command = 'yum remove mariadb* -y'
+            install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
+
+            command = 'sudo dnf -qy module disable mariadb'
+            install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
+
+            command = 'sudo dnf module reset mariadb -y'
+            install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
 
 
-            command = 'dnf -y install mariadb-server'
+            command = 'dnf install MariaDB-server MariaDB-client MariaDB-backup'
 
         install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
 
