@@ -1173,7 +1173,6 @@ gpgcheck=1
             WriteToFile.close()
 
 
-
             command = 'dnf update -y'
             result = ProcessUtilities.outputExecutioner(command, 'root', True)
 
