@@ -87,6 +87,8 @@ LoadModule mpm_event_module modules/mod_mpm_event.so
             #     return 1
             # else:
             #     return 0
+
+
         except BaseException as msg:
             message = "%s. [%s]" % (str(msg), '[ApacheController.checkIfApacheInstalled]')
             logging.CyberCPLogFileWriter.writeToFile(message)
@@ -244,6 +246,9 @@ LoadModule mpm_event_module modules/mod_mpm_event.so
 
             if ProcessUtilities.executioner(command, None, True) == 0:
                 return "Failed to install Apache and PHP-FPM."
+
+        from plogical.upgrade import Upgrade
+        Upgrade.CreateMissingPoolsforFPM()
 
         # try:
         #     wwwConfPath = ApacheVhost.php54Path + "/www.conf"
