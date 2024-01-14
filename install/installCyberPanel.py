@@ -334,7 +334,7 @@ gpgcheck=1
             install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
 
 
-            command = 'dnf install MariaDB-server MariaDB-client MariaDB-backup'
+            command = 'dnf install MariaDB-server MariaDB-client MariaDB-backup -y'
 
         install.preFlightsChecks.call(command, self.distro, command, command, 1, 1, os.EX_OSERR, True)
 
