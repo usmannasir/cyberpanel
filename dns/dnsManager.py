@@ -10,21 +10,23 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "CyberCP.settings")
 django.setup()
 from django.http import HttpResponse
 import json
+
 try:
     from plogical.dnsUtilities import DNS
     from loginSystem.models import Administrator
-    from .models import Domains,Records
+    from .models import Domains, Records
     from plogical.mailUtilities import mailUtilities
 except:
     pass
 import os
-from re import match,I,M
+from re import match, I, M
 from plogical.acl import ACLManager
 import CloudFlare
 import re
 import plogical.CyberCPLogFileWriter as logging
 from plogical.processUtilities import ProcessUtilities
 from plogical.httpProc import httpProc
+
 
 class DNSManager:
     defaultNameServersPath = '/home/cyberpanel/defaultNameservers'
@@ -38,13 +40,13 @@ class DNSManager:
         self.email = data[0].rstrip('\n')
         self.key = data[1].rstrip('\n')
 
-    def loadDNSHome(self, request = None, userID = None):
+    def loadDNSHome(self, request=None, userID=None):
         admin = Administrator.objects.get(pk=userID)
         template = 'dns/index.html'
         proc = httpProc(request, template, {"type": admin.type}, 'createDNSZone')
         return proc.render()
 
-    def createNameserver(self, request = None, userID = None):
+    def createNameserver(self, request=None, userID=None):
         mailUtilities.checkHome()
 
         if os.path.exists('/home/cyberpanel/powerdns'):
@@ -56,14 +58,25 @@ class DNSManager:
         proc = httpProc(request, template, finalData, 'createNameServer')
         return proc.render()
 
-    def NSCreation(self, userID = None, data = None):
+    def createNameserverV2(self, request=None, userID=None):
+        mailUtilities.checkHome()
+
+        if os.path.exists('/home/cyberpanel/powerdns'):
+            finalData = {"status": 1}
+        else:
+            finalData = {"status": 0}
+
+        template = 'dns/createNameServerV2.html'
+        proc = httpProc(request, template, finalData, 'createNameServer')
+        return proc.render()
+
+    def NSCreation(self, userID=None, data=None):
         try:
             admin = Administrator.objects.get(pk=userID)
             currentACL = ACLManager.loadedACL(userID)
 
             if ACLManager.currentContextPermission(currentACL, 'createNameServer') == 0:
                 return ACLManager.loadErrorJson('NSCreation', 0)
-
 
             domainForNS = data['domainForNS']
             ns1 = data['ns1']
@@ -76,7 +89,6 @@ class DNSManager:
             newZone = Domains.objects.get(name=domainForNS)
 
             ## NS1
-
 
             record = Records(domainOwner=newZone,
                              domain_id=newZone.id,
@@ -112,7 +124,7 @@ class DNSManager:
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-    def createDNSZone(self, request = None, userID = None):
+    def createDNSZone(self, request=None, userID=None):
 
         if os.path.exists('/home/cyberpanel/powerdns'):
             finalData = {'status': 1}
@@ -123,7 +135,18 @@ class DNSManager:
         proc = httpProc(request, template, finalData, 'createDNSZone')
         return proc.render()
 
-    def zoneCreation(self, userID = None, data = None):
+    def createDNSZoneV2(self, request=None, userID=None):
+
+        if os.path.exists('/home/cyberpanel/powerdns'):
+            finalData = {'status': 1}
+        else:
+            finalData = {'status': 0}
+
+        template = 'dns/createDNSZoneV2.html'
+        proc = httpProc(request, template, finalData, 'createDNSZone')
+        return proc.render()
+
+    def zoneCreation(self, userID=None, data=None):
         try:
             admin = Administrator.objects.get(pk=userID)
 
@@ -158,7 +181,7 @@ class DNSManager:
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-    def addDeleteDNSRecords(self, request = None, userID = None):
+    def addDeleteDNSRecords(self, request=None, userID=None):
         currentACL = ACLManager.loadedACL(userID)
 
         if not os.path.exists('/home/cyberpanel/powerdns'):
@@ -171,14 +194,13 @@ class DNSManager:
         proc = httpProc(request, template, finalData, 'addDeleteRecords')
         return proc.render()
 
-    def getCurrentRecordsForDomain(self, userID = None, data = None):
+    def getCurrentRecordsForDomain(self, userID=None, data=None):
         try:
 
             currentACL = ACLManager.loadedACL(userID)
 
             if ACLManager.currentContextPermission(currentACL, 'addDeleteRecords') == 0:
                 return ACLManager.loadErrorJson('fetchStatus', 0)
-
 
             zoneDomain = data['selectedZone']
             currentSelection = data['currentSelection']
@@ -245,7 +267,7 @@ class DNSManager:
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-    def addDNSRecord(self, userID = None, data = None):
+    def addDNSRecord(self, userID=None, data=None):
         try:
 
             currentACL = ACLManager.loadedACL(userID)
@@ -416,7 +438,7 @@ class DNSManager:
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-    def updateRecord(self, userID = None, data = None):
+    def updateRecord(self, userID=None, data=None):
         try:
 
             currentACL = ACLManager.loadedACL(userID)
@@ -462,7 +484,7 @@ class DNSManager:
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-    def deleteDNSRecord(self, userID = None, data = None):
+    def deleteDNSRecord(self, userID=None, data=None):
         try:
             currentACL = ACLManager.loadedACL(userID)
 
@@ -480,7 +502,6 @@ class DNSManager:
             else:
                 return ACLManager.loadError()
 
-
             delRecord.delete()
 
             final_dic = {'status': 1, 'delete_status': 1, 'error_message': "None"}
@@ -492,7 +513,7 @@ class DNSManager:
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-    def deleteDNSZone(self, request = None, userID = None):
+    def deleteDNSZone(self, request=None, userID=None):
         currentACL = ACLManager.loadedACL(userID)
         if not os.path.exists('/home/cyberpanel/powerdns'):
             finalData = {"status": 0}
@@ -504,7 +525,19 @@ class DNSManager:
         proc = httpProc(request, template, finalData, 'deleteZone')
         return proc.render()
 
-    def submitZoneDeletion(self, userID = None, data = None):
+    def deleteDNSZoneV2(self, request=None, userID=None):
+        currentACL = ACLManager.loadedACL(userID)
+        if not os.path.exists('/home/cyberpanel/powerdns'):
+            finalData = {"status": 0}
+        else:
+            finalData = {"status": 1}
+
+        finalData['domainsList'] = ACLManager.findAllDomains(currentACL, userID)
+        template = 'dns/deleteDNSZoneV2.html'
+        proc = httpProc(request, template, finalData, 'deleteZone')
+        return proc.render()
+
+    def submitZoneDeletion(self, userID=None, data=None):
         try:
             zoneDomain = data['zoneDomain']
 
@@ -512,7 +545,6 @@ class DNSManager:
             admin = Administrator.objects.get(pk=userID)
             if ACLManager.currentContextPermission(currentACL, 'deleteZone') == 0:
                 return ACLManager.loadErrorJson('delete_status', 0)
-
 
             if ACLManager.checkOwnershipZone(zoneDomain, admin, currentACL) == 1:
                 pass
@@ -568,7 +600,7 @@ class DNSManager:
         proc = httpProc(request, template, data, 'admin')
         return proc.render()
 
-    def saveNSConfigurations(self, userID = None, data = None):
+    def saveNSConfigurations(self, userID=None, data=None):
         try:
             currentACL = ACLManager.loadedACL(userID)
 
@@ -580,10 +612,13 @@ class DNSManager:
             nsContent = ''
 
             try:
-                nsContent = '%s\n%s\n%s\n%s\n' % (data['firstNS'].rstrip('\n'), data['secondNS'].rstrip('\n'), data['thirdNS'].rstrip('\n'), data['forthNS'].rstrip('\n'))
+                nsContent = '%s\n%s\n%s\n%s\n' % (
+                    data['firstNS'].rstrip('\n'), data['secondNS'].rstrip('\n'), data['thirdNS'].rstrip('\n'),
+                    data['forthNS'].rstrip('\n'))
             except:
                 try:
-                    nsContent = '%s\n%s\n%s\n' % (data['firstNS'].rstrip('\n'), data['secondNS'].rstrip('\n'), data['thirdNS'].rstrip('\n'))
+                    nsContent = '%s\n%s\n%s\n' % (
+                        data['firstNS'].rstrip('\n'), data['secondNS'].rstrip('\n'), data['thirdNS'].rstrip('\n'))
                 except:
                     try:
                         nsContent = '%s\n%s\n' % (data['firstNS'].rstrip('\n'), data['secondNS'].rstrip('\n'))
@@ -597,7 +632,6 @@ class DNSManager:
             writeToFile.write(nsContent.rstrip('\n'))
             writeToFile.close()
 
-
             final_dic = {'status': 1, 'error_message': "None"}
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
@@ -607,7 +641,7 @@ class DNSManager:
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-    def addDeleteDNSRecordsCloudFlare(self, request = None, userID = None):
+    def addDeleteDNSRecordsCloudFlare(self, request=None, userID=None):
         currentACL = ACLManager.loadedACL(userID)
         if not os.path.exists('/home/cyberpanel/powerdns'):
             status = 0
@@ -633,7 +667,7 @@ class DNSManager:
         proc = httpProc(request, template, data, 'addDeleteRecords')
         return proc.render()
 
-    def saveCFConfigs(self, userID = None, data = None):
+    def saveCFConfigs(self, userID=None, data=None):
         try:
             cfEmail = data['cfEmail']
             cfToken = data['cfToken']
@@ -662,14 +696,13 @@ class DNSManager:
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-    def getCurrentRecordsForDomainCloudFlare(self, userID = None, data = None):
+    def getCurrentRecordsForDomainCloudFlare(self, userID=None, data=None):
         try:
 
             currentACL = ACLManager.loadedACL(userID)
 
             if ACLManager.currentContextPermission(currentACL, 'addDeleteRecords') == 0:
                 return ACLManager.loadErrorJson('fetchStatus', 0)
-
 
             zoneDomain = data['selectedZone']
             currentSelection = data['currentSelection']
@@ -684,8 +717,8 @@ class DNSManager:
 
             self.loadCFKeys()
 
-            params = {'name': zoneDomain, 'per_page':50}
-            cf = CloudFlare.CloudFlare(email=self.email,token=self.key)
+            params = {'name': zoneDomain, 'per_page': 50}
+            cf = CloudFlare.CloudFlare(email=self.email, token=self.key)
 
             try:
                 zones = cf.zones.get(params=params)
@@ -727,7 +760,7 @@ class DNSManager:
                     fetchType = 'CAA'
 
                 try:
-                    dns_records = cf.zones.dns_records.get(zone_id, params={'per_page':50, 'type':fetchType})
+                    dns_records = cf.zones.dns_records.get(zone_id, params={'per_page': 50, 'type': fetchType})
                 except CloudFlare.exceptions.CloudFlareAPIError as e:
                     final_json = json.dumps({'status': 0, 'fetchStatus': 0, 'error_message': str(e), "data": '[]'})
                     return HttpResponse(final_json)
@@ -760,7 +793,6 @@ class DNSManager:
                     else:
                         json_data = json_data + ',' + json.dumps(dic)
 
-
                 json_data = json_data + ']'
                 final_json = json.dumps({'status': 1, 'fetchStatus': 1, 'error_message': "None", "data": json_data})
                 return HttpResponse(final_json)
@@ -770,7 +802,7 @@ class DNSManager:
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-    def deleteDNSRecordCloudFlare(self, userID = None, data = None):
+    def deleteDNSRecordCloudFlare(self, userID=None, data=None):
         try:
             currentACL = ACLManager.loadedACL(userID)
 
@@ -813,8 +845,7 @@ class DNSManager:
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-
-    def addDNSRecordCloudFlare(self, userID = None, data = None):
+    def addDNSRecordCloudFlare(self, userID=None, data=None):
         try:
 
             currentACL = ACLManager.loadedACL(userID)
@@ -1001,7 +1032,7 @@ class DNSManager:
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-    def syncCF(self, userID = None, data = None):
+    def syncCF(self, userID=None, data=None):
         try:
 
             currentACL = ACLManager.loadedACL(userID)
@@ -1039,8 +1070,7 @@ class DNSManager:
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-
-    def enableProxy(self, userID = None, data = None):
+    def enableProxy(self, userID=None, data=None):
         try:
             currentACL = ACLManager.loadedACL(userID)
 
@@ -1078,7 +1108,6 @@ class DNSManager:
             dns_records = cf.zones.dns_records.get(zone_id, params=params)
 
             ##
-
 
             if value == True:
                 new_r_proxied_flag = False
@@ -1126,12 +1155,10 @@ class DNSManager:
         try:
 
             if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
-
                 command = 'systemctl stop systemd-resolved'
                 ProcessUtilities.executioner(command)
                 command = 'systemctl disable systemd-resolved.service'
                 ProcessUtilities.executioner(command)
-
 
             if ProcessUtilities.decideDistro() == ProcessUtilities.ubuntu:
 
@@ -1184,7 +1211,6 @@ class DNSManager:
                     writeDataToFile.writelines(items)
 
             writeDataToFile.close()
-
 
             if self.remotemysql == 'ON':
                 command = "sed -i 's|gmysql-host=localhost|gmysql-host=%s|g' %s" % (self.mysqlhost, dnsPath)
@@ -1242,7 +1268,8 @@ class DNSManager:
                 if os.path.exists(ProcessUtilities.debugPath):
                     logging.CyberCPLogFileWriter.writeToFile('%s. [setupConnection:75]' % (str(msg)))
 
-            logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Removing and re-installing DNS..,5')
+            logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
+                                                      'Removing and re-installing DNS..,5')
 
             if self.installPowerDNS() == 0:
                 logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
@@ -1259,7 +1286,8 @@ class DNSManager:
             logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'Configurations reset..,70')
 
             if self.installPowerDNSConfigurations(settings.DATABASES['default']['PASSWORD']) == 0:
-                logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'], 'installPowerDNSConfigurations failed. [404].')
+                logging.CyberCPLogFileWriter.statusWriter(self.extraArgs['tempStatusPath'],
+                                                          'installPowerDNSConfigurations failed. [404].')
                 return 0
 
             if self.startPowerDNS() == 0:
@@ -1278,8 +1306,8 @@ class DNSManager:
             final_json = json.dumps(final_dic)
             return HttpResponse(final_json)
 
-def main():
 
+def main():
     parser = argparse.ArgumentParser(description='CyberPanel')
     parser.add_argument('function', help='Specify a function to call!')
     parser.add_argument('--tempStatusPath', help='Path of temporary status file.')
@@ -1290,6 +1318,7 @@ def main():
         extraArgs = {'tempStatusPath': args.tempStatusPath}
         ftp = DNSManager(extraArgs)
         ftp.ResetDNSConfigurations()
+
 
 if __name__ == "__main__":
     main()

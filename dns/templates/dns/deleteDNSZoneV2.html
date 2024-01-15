@@ -1,0 +1,85 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    <div ng-controller="deleteDNSZoneV2" class="p-8">
+        {% if not status %}
+            <div>
+                <div class="flex justify-between">
+                    <div>
+                        <p class="text-4xl font-bold">Delete DNS Zone</p>
+                    </div>
+                    <div>
+                        <h3>{% trans "PowerDNS is disabled." %}
+                            <a href="{% url 'managePowerDNS' %}">
+                                <button class="bg-orange-500 text-white font-bold px-4 py-2 text-xl">
+                                    <span>{% trans "Enable Now" %}</span>
+                                    <i class="glyph-icon icon-arrow-right"></i>
+                                </button>
+                            </a></h3>
+                    </div>
+                </div>
+                <p class="text-xs text-gray-600 py-2 font-semibold">This page can be used to delete DNS Zone. Deleting
+                    the DNS zone will remove all its related records as well.</p>
+            </div>
+        {% else %}
+            <div>
+                <div class="py-4">
+                    <p class="text-xl font-bold">Details</p>
+                    <img ng-hide="createDNSZoneLoading" src="{% static 'images/loading.gif' %}">
+                </div>
+                <hr>
+                <div id="createPackages">
+                    <div class="flex mt-4 py-2 px-6">
+                        <div>
+                            <p class="font-semibold w-60">Select Zone</p>
+                        </div>
+                        <div>
+                            <select ng-model="selectedZone" class="w-80 bg-gray-100 rounded px-2 py-1">
+                                {% for items in domainsList %}
+                                    <option>{{ items }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="flex justify-center mt-6">
+                        <button ng-click="deleteZone()"
+                                class="bg-orange-500 text-white font-bold px-4 py-2 text-xl">
+                            Delete Zone
+                        </button>
+                    </div>
+
+                    <div ng-hide="deleteZoneButton" class="flex justify-center mt-6">
+                        <button type="button" ng-click="deleteZoneFinal()"
+                                class="bg-gray-500 text-white font-bold px-4 py-2 text-xl">{% trans "Are you sure?" %}</button>
+                    </div>
+
+                    <div class="mt-4">
+                        <label class="col-sm-3 control-label"></label>
+                        <div>
+                            <div ng-hide="deleteSuccess"
+                                 class="flex justify-center bg-green-500 px-2 rounded-lg py-1 font-semibold">
+                                <p>{% trans "Zone for domain:" %} <strong>{$ deletedZone
+                                    $}</strong> {% trans "is successfully erased." %}</p>
+                            </div>
+
+                            <div ng-hide="deleteFailure"
+                                 class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                                <p>{% trans "Cannot delete zone. Error message: " %}{$ errorMessage $}</p>
+                            </div>
+
+                            <div ng-hide="couldNotConnect"
+                                 class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                                <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

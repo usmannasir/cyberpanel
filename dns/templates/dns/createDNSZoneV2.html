@@ -1,0 +1,78 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    <div ng-controller="createDNSZoneV2" class="p-8">
+        {% if not status %}
+            <div>
+                <div class="flex justify-between">
+                    <div>
+                        <p class="text-4xl font-bold">Create DNS Zone</p>
+                    </div>
+                    <div>
+                        <h3>{% trans "PowerDNS is disabled." %}
+                            <a href="{% url 'managePowerDNS' %}">
+                                <button class="bg-orange-500 text-white font-bold px-4 py-2 text-xl">
+                                    <span>{% trans "Enable Now" %}</span>
+                                    <i class="glyph-icon icon-arrow-right"></i>
+                                </button>
+                            </a></h3>
+                    </div>
+                </div>
+                <p class="text-xs text-gray-600 py-2 font-semibold">This page is used to create DNS zone, to edit dns
+                    zone you can visit Modify DNS Zone Page.</p>
+            </div>
+        {% else %}
+            <div>
+                <div class="py-4">
+                    <p class="text-xl font-bold">Details</p>
+                    <img ng-hide="createDNSZoneLoading" src="{% static 'images/loading.gif' %}">
+                </div>
+                <hr>
+                <div id="createPackages">
+                    <div class="flex mt-4 py-2 px-6">
+                        <div>
+                            <p class="font-semibold w-60">Domain Name</p>
+                        </div>
+                        <div>
+                            <input name="dom" type="text" class="w-80 bg-gray-100 rounded px-2 py-1"
+                                   ng-model="zoneDomain" required>
+                        </div>
+                        <div class="text-orange-500 font-semibold ml-3">
+                            <div class="current-pack">example.com</div>
+                        </div>
+                    </div>
+                    <div class="flex justify-center mt-6">
+                        <button ng-click="createDNSZone()"
+                                class="bg-orange-500 text-white font-bold px-4 py-2 text-xl">
+                            Create DNS Zone
+                        </button>
+                    </div>
+
+                    <div class="mt-4">
+                        <label class="col-sm-3 control-label"></label>
+                        <div>
+                            <div ng-hide="dnsZoneCreated"
+                                 class="flex justify-center bg-green-500 px-2 rounded-lg py-1 font-semibold">
+                                <p>{% trans "DNS Zone for domain:" %} <strong>{$ zoneDomain $}</strong> created<br>
+                                </p>
+                            </div>
+                            <div ng-hide="dnsZoneCreationFailed"
+                                 class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                                <p>{% trans "Cannot create DNS Zone. Error message:" %} {$ errorMessage $}</p>
+                            </div>
+                            <div ng-hide="couldNotConnect"
+                                 class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                                <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

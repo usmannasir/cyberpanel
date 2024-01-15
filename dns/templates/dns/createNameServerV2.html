@@ -1,0 +1,126 @@
+{% extends "baseTemplate/newBase.html" %}
+{% load i18n %}
+{% block titleNew %}{% trans "Home - CyberPanel" %}{% endblock %}
+{% block newContent %}
+
+    {% load static %}
+
+    <div ng-controller="createNameserverV2" class="p-8">
+        {% if not status %}
+            <div>
+                <div class="flex justify-between">
+                    <div>
+                        <p class="text-4xl font-bold">Create NameServer</p>
+                    </div>
+                    <div>
+                        <h3>{% trans "PowerDNS is disabled." %}
+                            <a href="{% url 'managePowerDNS' %}">
+                                <button class="bg-orange-500 text-white font-bold px-4 py-2 text-xl">
+                                    <span>{% trans "Enable Now" %}</span>
+                                    <i class="glyph-icon icon-arrow-right"></i>
+                                </button>
+                            </a></h3>
+                    </div>
+                </div>
+                <p class="text-xs text-gray-600 py-2 font-semibold">You can use this page to setup nameservers using
+                    which
+                    people on the internet can resolve websites hosted on this server.</p>
+            </div>
+        {% else %}
+            <div>
+                <div class="py-4">
+                    <p class="text-xl font-bold">Details</p>
+                    <img ng-hide="createNameserverLoading" src="{% static 'images/loading.gif' %}">
+                </div>
+                <hr>
+                <div id="createPackages">
+                    <div class="flex mt-4 py-2 px-6">
+                        <div>
+                            <p class="font-semibold w-60">Domain Name</p>
+                        </div>
+                        <div>
+                            <input name="dom" type="text" class="w-80 bg-gray-100 rounded px-2 py-1"
+                                   ng-model="domainForNS" required>
+                        </div>
+                        <div class="text-orange-500 font-semibold ml-3">
+                            <div class="current-pack">example.com</div>
+                        </div>
+                    </div>
+                    <div class="flex py-2 px-6">
+                        <div>
+                            <p class="font-semibold w-60">First NameServer</p>
+                        </div>
+                        <div>
+                            <input name="firstNS" type="text" class="w-80 bg-gray-100 rounded px-2 py-1"
+                                   ng-model="firstNS" required>
+                        </div>
+                        <div class="text-orange-500 font-semibold ml-3">
+                            <div class="current-pack">ns1.example.com</div>
+                        </div>
+                    </div>
+                    <div class="flex py-2 px-6">
+                        <div>
+                            <p class="font-semibold w-60">IP Address</p>
+                        </div>
+                        <div>
+                            <input value="IP Address for first nameserver." name="firstNSIP" type="text"
+                                   class="w-80 bg-gray-100 rounded px-2 py-1" ng-model="firstNSIP" required>
+                        </div>
+                        <div class="text-orange-500 font-semibold ml-3"><p>{% trans "MB (0 = Unlimited)" %}</p></div>
+                    </div>
+                    <div class="flex py-2 px-6">
+                        <div>
+                            <p class="font-semibold w-60">Second NameServer (Backup)</p>
+                        </div>
+                        <div>
+                            <input name="secondNS" type="text" class="w-80 bg-gray-100 rounded px-2 py-1"
+                                   ng-model="secondNS" required>
+                        </div>
+                        <div class="text-orange-500 font-semibold ml-3">
+                            <div class="current-pack">ns2.example.com</div>
+                        </div>
+                    </div>
+                    <div class="flex py-2 px-6">
+                        <div>
+                            <p class="font-semibold w-60">IP Address</p>
+                        </div>
+                        <div>
+                            <input name="secondNSIP" type="text" class="w-80 bg-gray-100 rounded px-2 py-1"
+                                   ng-model="secondNSIP" required>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-center mt-6">
+                        <button ng-click="createNameserverFunc()"
+                                class="bg-orange-500 text-white font-bold px-4 py-2 text-xl">
+                            Create NameServer
+                        </button>
+                    </div>
+
+                    <div class="mt-4">
+                        <label class="col-sm-3 control-label"></label>
+                        <div>
+                            <div ng-hide="nameserverCreated"
+                                 class="flex justify-center bg-green-500 px-2 rounded-lg py-1 font-semibold">
+                                <p>{% trans "The following nameservers were successfully created:" %} <br>
+                                    <strong>{$ nameServerOne $}</strong> <br>
+                                    <strong>{$ nameServerTwo $}</strong> <br>
+                                </p>
+                            </div>
+
+                            <div ng-hide="nameserverCreationFailed"
+                                 class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                                <p>{% trans "Nameserver cannot be created. Error message:" %} {$ errorMessage $}</p>
+                            </div>
+                            <div ng-hide="couldNotConnect"
+                                 class="flex justify-center bg-red-500 rounded-lg text-white px-2 py-1 font-semibold">
+                                <p>{% trans "Could not connect to server. Please refresh this page." %}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

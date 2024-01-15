@@ -203,6 +203,7 @@ def phpMyAdmin(request):
         return dm.phpMyAdmin(request, userID)
     except KeyError:
         return redirect(loadLoginPage)
+
 def phpMyAdminV2(request):
     try:
         userID = request.session['userID']

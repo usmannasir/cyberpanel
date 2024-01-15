@@ -548,7 +548,7 @@
                                 Delete Database</a>
                         </li>
                         <li>
-                            <a href="{% url 'phpMyAdminV2' %}"
+                            <a href="{% url 'phpMyAdminV2 ' %}"
                                class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
                                 PHPMYAdmin</a>
                         </li>
@@ -588,7 +588,7 @@
                     </div>
                     <ul id="dropdown-example-6" class="hidden py-2 space-y-2">
                         <li>
-                            <a href="#"
+                            <a href="{% url 'createNameserverV2' %}"
                                class="flex items-center w-full text-base font-normal text-white transition duration-75 rounded-lg group hover:bg-cyan-400 dark:text-white dark:hover:bg-gray-700 pl-11">•
                                 Create NameServer</a>
                         </li>
@@ -1674,6 +1674,7 @@
 <script src="{% static 'userManagment/userManagementV2.js' %}"></script>
 <script src="{% static 'packages/packagesV2.js' %}"></script>
 <script src="{% static 'databases/databasesV2.js' %}"></script>
+<script src="{% static 'dns/dnsV2.js' %}"></script>
 </body>
 
 </html>
