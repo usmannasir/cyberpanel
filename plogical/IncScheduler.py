@@ -1505,7 +1505,10 @@ def main():
     IncScheduler.WPUpdates()
 
     if args.function == 'Weekly':
-        IncScheduler.FixMailSSL()
+        try:
+            IncScheduler.FixMailSSL()
+        except:
+            pass
 
     ### Run incremental backups in sep thread
 
