@@ -11,9 +11,42 @@ class ApacheController:
     apacheInstallStatusPath = '/home/cyberpanel/apacheInstallStatus'
 
     if ProcessUtilities.decideDistro() == ProcessUtilities.centos or ProcessUtilities.decideDistro() == ProcessUtilities.cent8:
+
         serverRootPath = '/etc/httpd'
+        configBasePath = '/etc/httpd/conf.d/'
+        php54Path = '/opt/remi/php54/root/etc/php-fpm.d/'
+        php55Path = '/opt/remi/php55/root/etc/php-fpm.d/'
+        php56Path = '/etc/opt/remi/php56/php-fpm.d/'
+        php70Path = '/etc/opt/remi/php70/php-fpm.d/'
+        php71Path = '/etc/opt/remi/php71/php-fpm.d/'
+        php72Path = '/etc/opt/remi/php72/php-fpm.d/'
+        php73Path = '/etc/opt/remi/php73/php-fpm.d/'
+
+        php74Path = '/etc/opt/remi/php74/php-fpm.d/'
+        php80Path = '/etc/opt/remi/php80/php-fpm.d/'
+        php81Path = '/etc/opt/remi/php81/php-fpm.d/'
+        php82Path = '/etc/opt/remi/php82/php-fpm.d/'
+
+        serviceName = 'httpd'
+
     else:
         serverRootPath = '/etc/apache2'
+        configBasePath = '/etc/apache2/sites-enabled/'
+
+        php54Path = '/etc/php/5.4/fpm/pool.d/'
+        php55Path = '/etc/php/5.5/fpm/pool.d/'
+        php56Path = '/etc/php/5.6/fpm/pool.d/'
+        php70Path = '/etc/php/7.0/fpm/pool.d/'
+        php71Path = '/etc/php/7.1/fpm/pool.d/'
+        php72Path = '/etc/php/7.2/fpm/pool.d/'
+        php73Path = '/etc/php/7.3/fpm/pool.d/'
+        php74Path = '/etc/php/7.4/fpm/pool.d/'
+
+        php80Path = '/etc/php/8.0/fpm/pool.d/'
+        php81Path = '/etc/php/8.1/fpm/pool.d/'
+        php82Path = '/etc/php/8.2/fpm/pool.d/'
+
+        serviceName = 'apache2'
 
     mpmConfigs = """# Select the MPM module which should be used by uncommenting exactly
 # one of the following LoadModule lines:
