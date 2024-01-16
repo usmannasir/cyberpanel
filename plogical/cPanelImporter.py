@@ -80,33 +80,33 @@ class cPanelImporter:
 
     def PHPDecider(self, domainName):
 
-    if self.PHPVersion == 'inherit' or not self.PHPVersion:
-        self.PHPVersion = self.InheritPHP or 'PHP 7.4'
-    else:
-        version_number = ''.join(filter(str.isdigit, self.PHPVersion))
-        if len(version_number) == 2:  # Ensure there are exactly two digits
-            self.PHPVersion = f'PHP {version_number[0]}.{version_number[1]}'
+        if self.PHPVersion == 'inherit' or not self.PHPVersion:
+            self.PHPVersion = self.InheritPHP or 'PHP 7.4'
+        else:
+            version_number = ''.join(filter(str.isdigit, self.PHPVersion))
+            if len(version_number) == 2:  # Ensure there are exactly two digits
+                self.PHPVersion = f'PHP {version_number[0]}.{version_number[1]}'
 
-        ### if the PHP Version extracted from file is not available then change it to next available
+            ### if the PHP Version extracted from file is not available then change it to next available
 
-        try:
+            try:
 
-            from plogical.phpUtilities import phpUtilities
+                from plogical.phpUtilities import phpUtilities
 
-            if domainName !=None:
-                completePathToConfigFile = f'/usr/local/lsws/conf/vhosts/{domainName}/vhost.conf'
-            else:
-                completePathToConfigFile = None
+                if domainName !=None:
+                    completePathToConfigFile = f'/usr/local/lsws/conf/vhosts/{domainName}/vhost.conf'
+                else:
+                    completePathToConfigFile = None
 
-            phpVersion = phpUtilities.FindIfSaidPHPIsAvaiableOtherwiseMaketheNextOneAvailableToUse(completePathToConfigFile, self.PHPVersion)
+                phpVersion = phpUtilities.FindIfSaidPHPIsAvaiableOtherwiseMaketheNextOneAvailableToUse(completePathToConfigFile, self.PHPVersion)
 
-            if phpVersion != self.PHPVersion:
-                logging.statusWriter(self.logFile, f'PHP version for {self.mainDomain} has been changed from {self.PHPVersion} to {phpVersion}.', 1)
-                self.PHPVersion = phpVersion
-        except:
-            pass
+                if phpVersion != self.PHPVersion:
+                    logging.statusWriter(self.logFile, f'PHP version for {self.mainDomain} has been changed from {self.PHPVersion} to {phpVersion}.', 1)
+                    self.PHPVersion = phpVersion
+            except:
+                pass
 
-        return self.PHPVersion
+            return self.PHPVersion
 
     def SetupSSL(self, path, domain):
 

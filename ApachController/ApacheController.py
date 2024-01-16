@@ -48,7 +48,7 @@ LoadModule mpm_event_module modules/mod_mpm_event.so
     @staticmethod
     def checkIfApacheInstalled():
         try:
-            if os.path.exists(ApacheController.serverRootPath):
+            if os.path.exists(ApacheController.php80Path):
                 return 1
             else:
                 return 0
