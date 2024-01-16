@@ -1085,4 +1085,18 @@ class ACLManager:
             pass
 
 
+    @staticmethod
+    def ISARM():
+
+        command = 'uname -a'
+        result = ProcessUtilities.outputExecutioner(command)
+
+        if result.find('aarch64') > -1:
+            return True
+        else:
+            return False
+
+
+
+
 

@@ -1262,13 +1262,25 @@ team_drive =
                     return 0, str(response.content)
 
                 # sudo mv filename /usr/bin/
-                command = 'wget -P /home/rustic https://github.com/rustic-rs/rustic/releases/download/%s/rustic-%s-x86_64-unknown-linux-musl.tar.gz' % (
-                version, version)
-                ProcessUtilities.executioner(command)
+                from plogical.acl import ACLManager
 
-                command = 'tar xzf /home/rustic/rustic-%s-x86_64-unknown-linux-musl.tar.gz -C /home/rustic//' % (
-                    version)
-                ProcessUtilities.executioner(command)
+                if ACLManager.ISARM():
+                    command = 'wget -P /home/rustic https://github.com/rustic-rs/rustic/releases/download/%s/rustic-%s-aarch64-unknown-linux-gnu.tar.gz' % (
+                        version, version)
+                    ProcessUtilities.executioner(command)
+
+                    command = 'tar xzf /home/rustic/rustic-%s-aarch64-unknown-linux-gnu.tar.gz -C /home/rustic//' % (
+                        version)
+                    ProcessUtilities.executioner(command)
+
+                else:
+                    command = 'wget -P /home/rustic https://github.com/rustic-rs/rustic/releases/download/%s/rustic-%s-x86_64-unknown-linux-musl.tar.gz' % (
+                version, version)
+                    ProcessUtilities.executioner(command)
+
+                    command = 'tar xzf /home/rustic/rustic-%s-x86_64-unknown-linux-musl.tar.gz -C /home/rustic//' % (
+                        version)
+                    ProcessUtilities.executioner(command)
 
                 command = 'sudo mv /home/rustic/rustic /usr/bin/'
                 ProcessUtilities.executioner(command)
